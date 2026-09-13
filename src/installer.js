@@ -27,6 +27,7 @@ import {
   rmdir,
   stat,
 } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from './posixpath.js';
 import {
   MANIFEST_VERSION,
@@ -109,10 +110,17 @@ async function canonicalProfileFile(profilePath) {
 function homeDir() {
   // Bun has no homedir() API; $HOME is the POSIX source of truth. A missing,
   // empty, or non-absolute HOME yields null so callers fail closed instead
-  // of guessing (no passwd/FFI layer).
+  // of guessing (no passwd/FFI layer). A resolvable HOME is canonicalized
+  // (realpath) so symlink aliases (/var -> /private/var on macOS, or any
+  // aliased HOME) compare equal to canonicalized targets; an unresolvable
+  // HOME also yields null and fails closed rather than bypassing the guard.
   const home = Bun.env.HOME;
   if (!home || !home.startsWith('/')) return null;
-  return home;
+  try {
+    return realpathSync(home);
+  } catch {
+    return null;
+  }
 }
 
 export function assertOutsideHome(target, { yes = false, kind = 'target' } = {}) {
