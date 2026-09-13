@@ -28,8 +28,8 @@ spec, or ticket mapping:
   fan out distinct questions only when useful.
 - `axstack-explain` — source-backed explanations of systems, changes, current
   versus intended behavior, and implementation gaps. Simple requests stay in
-  the current chat; complex visuals use the explainer profiles. Project
-  documentation remains supported. Preserve requested format and theme,
+  the current chat; complex visuals use the explainer profiles. Use project
+  documentation as evidence where relevant. Preserve requested format and theme,
   verify rendered behavior where applicable, and report unavailable evidence.
   Publication needs its own authority. If an ordinary upgrade leaves the old
   `axstack-docs` skill installed, `axstack-explain` supersedes it; do not route

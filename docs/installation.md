@@ -181,8 +181,8 @@ using the transfer route. Axstack’s own run-record and authority context are
 carried into the handoff, rather than implemented as another skill.
 
 The bundle also replaces `axstack-docs` with `axstack-explain` and retires the
-`axstack-docs` prose profile. Explanation retains project documentation while
-also covering systems, changes, current versus intended behavior, and bounded
+`axstack-docs` prose profile. Explanation uses project documentation as evidence
+while covering systems, changes, current versus intended behavior, and bounded
 implementation gaps. If both skills are discoverable during migration,
 `axstack-explain` supersedes the old route.
 

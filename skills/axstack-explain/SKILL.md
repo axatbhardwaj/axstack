@@ -6,8 +6,8 @@ description: When understanding a system, change, or implementation gap, use axs
 # Explain
 
 Explain a system, change, current behavior, intended behavior, or implementation
-gap from inspected evidence. This direct route needs no spec ceremony and still
-supports project documentation. It supersedes `axstack-docs`; if a stale install
+gap from inspected evidence. This direct route needs no spec ceremony. Use
+project documentation as evidence where relevant. It supersedes `axstack-docs`; if a stale install
 exposes both skills, route the request here only.
 
 Before acting, load [Standing contracts](../axstack/references/contracts.md),

@@ -10,7 +10,7 @@ for its next action.
   questions only when useful.
 - Understanding a system, change, or implementation gap -> `axstack-explain`.
   Show current and intended behavior, evidence dimensions, and bounded gaps;
-  retain project documentation and verify rendered behavior when applicable.
+  use project documentation as evidence where relevant and verify rendered behavior when applicable.
   A stale axstack-docs install is superseded and must not also route the
   request. Publication needs separate authority.
 - Preparation completion, watch expiry, ordinary resume, or reconciliation ->
