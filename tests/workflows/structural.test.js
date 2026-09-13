@@ -240,8 +240,8 @@ test('structural: contracts carry Fable triggers and the high-stakes gate', () =
   assert.ok(text.includes('Fable'), 'contracts must name the Fable advisor split');
   assert.ok(/factual checks/i.test(text), 'contracts must trigger consultation only after factual checks');
   assert.ok(/AGREE/i.test(text), 'contracts must require plain AGREE for high-stakes decisions');
-  assert.ok(/driver.*accept|accept.*driver/i.test(text), 'contracts must require driver acceptance alongside AGREE');
-  assert.ok(/no silent fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback');
+  assert.ok(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE');
+  assert.ok(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback');
   assert.ok(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing');
 });
 
