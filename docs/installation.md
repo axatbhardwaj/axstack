@@ -152,7 +152,10 @@ decision. The installer only writes the requested JSON file; it does not call
 Paseo's native config API, hot-reload a running daemon, or verify
 `list_profiles` readback. Applying or reloading that file is a separate host
 operation. Profiles observed from the host are authoritative at runtime;
-bundled values are setup defaults, not a claim of actual model availability.
+bundled values are bootstrap defaults, not a claim of actual model
+availability. Axstack has no runtime profile registry or profile editor;
+manage live model, effort, and permission settings in Paseo. The merge
+preserves existing user-configured profiles and unrelated fields.
 
 ## Examples
 

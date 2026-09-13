@@ -70,8 +70,10 @@ existing configured checker is preserved. No model is substituted.
 
 `install --profile` writes the selected JSON config file only. It does not
 apply a native config patch, hot-reload a daemon, or prove runtime readback;
-perform and verify any host application step separately. Phase skills live in
-[skills/](skills/).
+perform and verify any host application step separately. Axstack has no
+runtime profile registry or profile editor: manage live models, effort, and
+permissions in Paseo, and existing live user configuration stays authoritative.
+Phase skills live in [skills/](skills/).
 
 ## Verification status
 
