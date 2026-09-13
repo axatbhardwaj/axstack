@@ -4,20 +4,18 @@
 // top-level keys; handle absent config; reject malformed config without
 // mutation; retain user edits; pristine owned profiles upgrade without
 // --force; uninstall removes only unchanged owned profiles.
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { expect, test } from 'bun:test';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from '../../src/posixpath.js';
 import {
   mergeProfiles,
   planUninstallProfiles,
 } from '../../src/profiles.js';
 import { hashObject } from '../../src/manifest.js';
-import { makeTempRoot, representativeHostConfig, writeFixtureBundle } from './helpers.js';
+import { makeTempRoot, representativeHostConfig, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
-const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
+const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
 const BUNDLE_PROFILES = [
   {
@@ -40,20 +38,20 @@ test('merge preserves custom profiles, daemon fields and top-level keys', () => 
   const existing = representativeHostConfig();
   const { config, report } = mergeProfiles(existing, BUNDLE_PROFILES, {});
   const ids = config.daemon.agentProfiles.map((p) => p.id).sort();
-  assert.deepEqual(ids, ['axstack-driver', 'custom-mine']);
-  assert.deepEqual(config.daemon.schedules, [{ id: 'daily-check', cron: '0 9 * * *' }]);
-  assert.deepEqual(config.daemon.notifications, { level: 'all' });
-  assert.equal(config.cliClientId, 'fixture-client-id');
-  assert.ok(report.added.includes('axstack-driver'));
+  expect(ids).toEqual(['axstack-driver', 'custom-mine']);
+  expect(config.daemon.schedules).toEqual([{ id: 'daily-check', cron: '0 9 * * *' }]);
+  expect(config.daemon.notifications).toEqual({ level: 'all' });
+  expect(config.cliClientId).toBe('fixture-client-id');
+  expect(report.added.includes('axstack-driver')).toBe(true);
   // inputs are never mutated
-  assert.deepEqual(existing.daemon.agentProfiles.map((p) => p.id), ['custom-mine']);
+  expect(existing.daemon.agentProfiles.map((p) => p.id)).toEqual(['custom-mine']);
 });
 
 test('merge handles absent config by creating host-shaped config', () => {
   const { config, report } = mergeProfiles(null, BUNDLE_PROFILES, {});
-  assert.ok(Array.isArray(config.daemon.agentProfiles));
-  assert.ok(config.daemon.agentProfiles.some((p) => p.id === 'axstack-driver'));
-  assert.ok(report.created);
+  expect(Array.isArray(config.daemon.agentProfiles)).toBe(true);
+  expect(config.daemon.agentProfiles.some((p) => p.id === 'axstack-driver')).toBe(true);
+  expect(report.created).toBe(true);
 });
 
 test('merge rejects malformed daemon config without mutation', () => {
@@ -62,28 +60,21 @@ test('merge rejects malformed daemon config without mutation', () => {
     { daemon: 'nope' },
     { daemon: { agentProfiles: [{ id: 'custom-mine' }] }, version: 1 },
   ];
-  assert.throws(
-    () => mergeProfiles(badShapes[0], BUNDLE_PROFILES, {}),
-    /malformed|invalid/i,
-  );
-  assert.throws(
-    () => mergeProfiles(badShapes[1], BUNDLE_PROFILES, {}),
-    /malformed|invalid/i,
-  );
+  expect(() => mergeProfiles(badShapes[0], BUNDLE_PROFILES, {})).toThrow(/malformed|invalid/i);
+  expect(() => mergeProfiles(badShapes[1], BUNDLE_PROFILES, {})).toThrow(/malformed|invalid/i);
   // well-formed host config merges fine and keeps the custom profile
   const { config } = mergeProfiles(badShapes[2], BUNDLE_PROFILES, {});
-  assert.ok(config.daemon.agentProfiles.some((p) => p.id === 'custom-mine'));
-  assert.deepEqual(badShapes[0], { daemon: { agentProfiles: 'nope' } });
+  expect(config.daemon.agentProfiles.some((p) => p.id === 'custom-mine')).toBe(true);
+  expect(badShapes[0]).toEqual({ daemon: { agentProfiles: 'nope' } });
 });
 
 test('merge retains user edits to an owned profile instead of replacing', () => {
   const existing = hostWith([{ ...BUNDLE_PROFILES[0], model: 'user-choice' }]);
   const { config, report } = mergeProfiles(existing, BUNDLE_PROFILES, {});
-  assert.equal(
+  expect(
     config.daemon.agentProfiles.find((p) => p.id === 'axstack-driver').model,
-    'user-choice',
-  );
-  assert.ok(report.preserved.includes('axstack-driver'));
+  ).toBe('user-choice');
+  expect(report.preserved.includes('axstack-driver')).toBe(true);
 });
 
 test('pristine owned profile upgrades to newer bundle version without force', () => {
@@ -92,11 +83,10 @@ test('pristine owned profile upgrades to newer bundle version without force', ()
   const newer = [{ ...BUNDLE_PROFILES[0], model: 'v2-model' }];
   const owned = { 'axstack-driver': hashObject(installed) };
   const { config, report } = mergeProfiles(existing, newer, { owned });
-  assert.equal(
+  expect(
     config.daemon.agentProfiles.find((p) => p.id === 'axstack-driver').model,
-    'v2-model',
-  );
-  assert.deepEqual(report.updated, ['axstack-driver']);
+  ).toBe('v2-model');
+  expect(report.updated).toEqual(['axstack-driver']);
 });
 
 test('user-edited owned profile is preserved without force, replaced with force', () => {
@@ -106,18 +96,16 @@ test('user-edited owned profile is preserved without force, replaced with force'
   const owned = { 'axstack-driver': hashObject(pristine) };
 
   const kept = mergeProfiles(hostWith([edited]), newer, { owned });
-  assert.equal(
+  expect(
     kept.config.daemon.agentProfiles.find((p) => p.id === 'axstack-driver').model,
-    'user-choice',
-  );
-  assert.deepEqual(kept.report.preserved, ['axstack-driver']);
+  ).toBe('user-choice');
+  expect(kept.report.preserved).toEqual(['axstack-driver']);
 
   const forced = mergeProfiles(hostWith([edited]), newer, { owned, force: true });
-  assert.equal(
+  expect(
     forced.config.daemon.agentProfiles.find((p) => p.id === 'axstack-driver').model,
-    'v2-model',
-  );
-  assert.deepEqual(forced.report.updated, ['axstack-driver']);
+  ).toBe('v2-model');
+  expect(forced.report.updated).toEqual(['axstack-driver']);
 });
 
 test('uninstall plan removes only unchanged owned profiles', () => {
@@ -137,9 +125,9 @@ test('uninstall plan removes only unchanged owned profiles', () => {
       p.id === 'axstack-driver' ? 'hash-of-pristine' : 'hash-of-something-else',
   });
   const ids = config.daemon.agentProfiles.map((p) => p.id).sort();
-  assert.deepEqual(ids, ['axstack-edited', 'custom-mine']);
-  assert.deepEqual(report.removed, ['axstack-driver']);
-  assert.deepEqual(report.preserved, ['axstack-edited']);
+  expect(ids).toEqual(['axstack-edited', 'custom-mine']);
+  expect(report.removed).toEqual(['axstack-driver']);
+  expect(report.preserved).toEqual(['axstack-edited']);
 });
 
 test('CLI profile install preserves custom profiles and daemon fields end to end', () => {
@@ -148,10 +136,10 @@ test('CLI profile install preserves custom profiles and daemon fields end to end
   const skillsDir = join(root, 'skills');
   const profile = join(root, 'paseo.json');
   writeFileSync(profile, JSON.stringify(representativeHostConfig()));
-  execFileSync(process.execPath, [CLI, 'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile], { encoding: 'utf8' });
+  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   const after = JSON.parse(readFileSync(profile, 'utf8'));
   const ids = after.daemon.agentProfiles.map((p) => p.id).sort();
-  assert.deepEqual(ids, ['axstack-driver', 'custom-mine']);
-  assert.deepEqual(after.daemon.schedules, [{ id: 'daily-check', cron: '0 9 * * *' }]);
-  assert.equal(after.cliClientId, 'fixture-client-id');
+  expect(ids).toEqual(['axstack-driver', 'custom-mine']);
+  expect(after.daemon.schedules).toEqual([{ id: 'daily-check', cron: '0 9 * * *' }]);
+  expect(after.cliClientId).toBe('fixture-client-id');
 });

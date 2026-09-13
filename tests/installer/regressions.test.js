@@ -1,36 +1,21 @@
 // Regression tests for independent-review findings (temp fixtures only,
 // never live home): ownership adoption, symlink escapes, mutation ordering,
 // and partial-failure recovery.
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { expect, test } from 'bun:test';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { join } from '../../src/posixpath.js';
+import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
-const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
-
-function runCli(args, { expectFail = false } = {}) {
-  try {
-    const out = execFileSync(process.execPath, [CLI, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    assert.ok(!expectFail, `expected failure but succeeded: ${out}`);
-    return { ok: true, out };
-  } catch (err) {
-    assert.ok(expectFail, `CLI failed unexpectedly: ${err.stderr ?? err.message}`);
-    return { ok: false, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
-  }
-}
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
+const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
 const OWNER_PROFILE = {
   id: 'axstack-owner',
@@ -65,23 +50,17 @@ test('USER_EDIT profile survives install, reinstall and uninstall cycle', () => 
   const profile = join(root, 'paseo.json');
 
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  assert.equal(
-    readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model,
-    'original',
-  );
+  expect(readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model).toBe('original');
 
   setProfileModel(profile, 'USER_EDIT');
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  assert.equal(
-    readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model,
-    'USER_EDIT',
-  );
+  expect(readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model).toBe('USER_EDIT');
 
   runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
   const after = readProfile(profile);
   const owner = after.daemon.agentProfiles.find((p) => p.id === 'axstack-owner');
-  assert.ok(owner, 'USER_EDIT profile must survive uninstall');
-  assert.equal(owner.model, 'USER_EDIT');
+  expect(owner).toBeTruthy();
+  expect(owner.model).toBe('USER_EDIT');
 });
 
 test('unknown identical pre-existing skill file is neither adopted nor removed', () => {
@@ -97,10 +76,7 @@ test('unknown identical pre-existing skill file is neither adopted nor removed',
 
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir]);
   runCli(['uninstall', '--skills-dir', skillsDir]);
-  assert.equal(
-    readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'),
-    '# Axstack Demo\n\nFixture skill for installer tests.\n',
-  );
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe('# Axstack Demo\n\nFixture skill for installer tests.\n');
 });
 
 test('switched profile path: rebind only after uninstalling the bound config', () => {
@@ -126,23 +102,20 @@ test('switched profile path: rebind only after uninstalling the bound config', (
     ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB],
     { expectFail: true },
   );
-  assert.match(refused.out.toLowerCase(), /different|bound|ownership|refus|uninstall/);
-  assert.equal(readFileSync(profileB, 'utf8'), beforeB);
+  expect(refused.out.toLowerCase()).toMatch(/different|bound|ownership|refus|uninstall/);
+  expect(readFileSync(profileB, 'utf8')).toBe(beforeB);
 
   // Proper path: uninstall the bound config, then bind the new one. The
   // pre-existing entry in B is preserved through the whole cycle.
   runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileA]);
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB]);
-  assert.equal(
-    readProfile(profileB).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model,
-    'user-in-B',
-  );
+  expect(readProfile(profileB).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model).toBe('user-in-B');
   runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileB]);
   const after = readProfile(profileB).daemon.agentProfiles.find(
     (p) => p.id === 'axstack-owner',
   );
-  assert.ok(after, 'pre-existing entry in switched profile file must survive');
-  assert.equal(after.model, 'user-in-B');
+  expect(after).toBeTruthy();
+  expect(after.model).toBe('user-in-B');
 });
 
 test('symlinked skill subdir is refused before any outside write', () => {
@@ -158,10 +131,10 @@ test('symlinked skill subdir is refused before any outside write', () => {
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /symlink|unsafe|refus/);
-  assert.equal(readFileSync(join(outside, 'sentinel.txt'), 'utf8'), 'outside data\n');
-  assert.ok(!existsSync(join(outside, 'SKILL.md')));
-  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
+  expect(r.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
+  expect(readFileSync(join(outside, 'sentinel.txt'), 'utf8')).toBe('outside data\n');
+  expect(!existsSync(join(outside, 'SKILL.md'))).toBe(true);
+  expect(!existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(true);
 });
 
 test('uninstall refuses to delete through a symlinked subdir', () => {
@@ -174,12 +147,12 @@ test('uninstall refuses to delete through a symlinked subdir', () => {
   const outside = join(root, 'outside');
   mkdirSync(outside, { recursive: true });
   writeFileSync(join(outside, 'SKILL.md'), 'outside decoy\n');
-  execFileSync('rm', ['-rf', join(skillsDir, 'axstack-demo')]);
+  rmSync(join(skillsDir, 'axstack-demo'), { recursive: true, force: true });
   symlinkSync(outside, join(skillsDir, 'axstack-demo'));
 
   const r = runCli(['uninstall', '--skills-dir', skillsDir], { expectFail: true });
-  assert.match(r.out.toLowerCase(), /symlink|unsafe|refus/);
-  assert.equal(readFileSync(join(outside, 'SKILL.md'), 'utf8'), 'outside decoy\n');
+  expect(r.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
+  expect(readFileSync(join(outside, 'SKILL.md'), 'utf8')).toBe('outside decoy\n');
 });
 
 test('symlinked target root is canonicalized and stays contained', () => {
@@ -191,9 +164,9 @@ test('symlinked target root is canonicalized and stays contained', () => {
   symlinkSync(real, linked);
 
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', linked]);
-  assert.ok(r.ok);
-  assert.ok(existsSync(join(real, 'axstack-demo', 'SKILL.md')));
-  assert.ok(existsSync(join(real, '.axstack-manifest.json')));
+  expect(r.ok).toBe(true);
+  expect(existsSync(join(real, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(join(real, '.axstack-manifest.json'))).toBe(true);
 });
 
 test('symlinked profile file is refused before any skill write', () => {
@@ -209,8 +182,8 @@ test('symlinked profile file is refused before any skill write', () => {
     ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /symlink|unsafe|refus/);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  expect(r.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
+  expect(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
 });
 
 test('bundle with symlinked skills root is rejected before any write', () => {
@@ -230,8 +203,8 @@ test('bundle with symlinked skills root is rejected before any write', () => {
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /symlink|unsafe|reject/);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  expect(r.out.toLowerCase()).toMatch(/symlink|unsafe|reject/);
+  expect(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
 });
 
 test('uninstall with malformed profile JSON fails before deleting skills', () => {
@@ -245,9 +218,9 @@ test('uninstall with malformed profile JSON fails before deleting skills', () =>
   const r = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /malformed|valid json|parse/i);
-  assert.ok(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
-  assert.ok(existsSync(join(skillsDir, '.axstack-manifest.json')));
+  expect(r.out.toLowerCase()).toMatch(/malformed|valid json|parse/i);
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(true);
 });
 
 test('mid-run profile failure restores updated skills and keeps manifest', () => {
@@ -276,15 +249,9 @@ test('mid-run profile failure restores updated skills and keeps manifest', () =>
   } finally {
     chmodSync(profileDir, 0o755);
   }
-  assert.match(r.out.toLowerCase(), /denied|permission|eperm|eacces|failed/i);
-  assert.equal(
-    readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'),
-    '# Axstack Demo\n\nFixture skill for installer tests.\n',
-  );
-  assert.equal(
-    readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model,
-    'original',
-  );
+  expect(r.out.toLowerCase()).toMatch(/denied|permission|eperm|eacces|failed/i);
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe('# Axstack Demo\n\nFixture skill for installer tests.\n');
+  expect(readProfile(profile).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model).toBe('original');
   // Manifest still describes v1: reinstalling v1 is a clean no-op.
   const again = runCli([
     'install',
@@ -295,8 +262,8 @@ test('mid-run profile failure restores updated skills and keeps manifest', () =>
     '--profile',
     profile,
   ]);
-  assert.ok(again.ok);
-  assert.match(again.out.toLowerCase(), /no changes|idempotent|unchanged/);
+  expect(again.ok).toBe(true);
+  expect(again.out.toLowerCase()).toMatch(/no changes|idempotent|unchanged/);
 });
 
 test('uninstall without --profile names the bound path, keeps bytes and ownership', () => {
@@ -310,27 +277,20 @@ test('uninstall without --profile names the bound path, keeps bytes and ownershi
   // No --profile: skills go, but the bound profile must be reported, not
   // silently left behind.
   const r = runCli(['uninstall', '--skills-dir', skillsDir]);
-  assert.ok(r.ok);
-  assert.ok(
-    r.out.includes(profile),
-    `uninstall output must name the bound config path:\n${r.out}`,
-  );
-  assert.equal(readFileSync(profile, 'utf8'), beforeProfile);
-  assert.ok(
-    readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner'),
-  );
+  expect(r.ok).toBe(true);
+  expect(r.out.includes(profile)).toBe(true);
+  expect(readFileSync(profile, 'utf8')).toBe(beforeProfile);
+  expect(readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner')).toBe(true);
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
   );
-  assert.equal(manifest.profiles.path, profile);
-  assert.ok('axstack-owner' in manifest.profiles.entries);
+  expect(manifest.profiles.path).toBe(profile);
+  expect('axstack-owner' in manifest.profiles.entries).toBe(true);
 
   // Completing removal with the named path works and clears ownership.
   const done = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(done.ok);
-  assert.ok(
-    !readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner'),
-  );
+  expect(done.ok).toBe(true);
+  expect(!readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner')).toBe(true);
 });
 
 test('mixed real and symlinked top-level skill entries are rejected pre-write', () => {
@@ -353,8 +313,8 @@ test('mixed real and symlinked top-level skill entries are rejected pre-write', 
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /symlink|malformed|reject|unsafe/);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-real', 'SKILL.md')));
-  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
-  assert.equal(readFileSync(join(outside, 'sentinel.txt'), 'utf8'), 'outside data\n');
+  expect(r.out.toLowerCase()).toMatch(/symlink|malformed|reject|unsafe/);
+  expect(!existsSync(join(skillsDir, 'axstack-real', 'SKILL.md'))).toBe(true);
+  expect(!existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(true);
+  expect(readFileSync(join(outside, 'sentinel.txt'), 'utf8')).toBe('outside data\n');
 });

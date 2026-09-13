@@ -3,11 +3,43 @@
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files)
 //   <bundle>/profiles/paseo.json ({ version: 1, agentProfiles: [...] axstack-* ids })
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join } from '../../src/posixpath.js';
+
+export const BUN_BIN = Bun.which('bun') ?? 'bun';
+
+export function tempDir() {
+  return Bun.env.TMPDIR ?? '/tmp';
+}
 
 export function makeTempRoot(prefix = 'axstack-test-') {
-  return mkdtempSync(join(tmpdir(), prefix));
+  return mkdtempSync(join(tempDir(), prefix));
+}
+
+// Run the real CLI under Bun and assert on exit codes (Bun.spawnSync
+// reports nonzero via exitCode instead of throwing).
+export function runCli(
+  cli,
+  args,
+  { expectFail = false, cwd, env, timeout = 60000 } = {},
+) {
+  const result = Bun.spawnSync([BUN_BIN, cli, ...args], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+    ...(cwd ? { cwd } : {}),
+    env: { ...Bun.env, ...(env ?? {}) },
+    timeout,
+  });
+  const out = result.stdout.toString() + result.stderr.toString();
+  if (expectFail) {
+    if (result.exitCode === 0) {
+      throw new Error(`expected CLI failure but succeeded: ${out}`);
+    }
+    return { ok: false, out };
+  }
+  if (result.exitCode !== 0) {
+    throw new Error(`CLI failed unexpectedly (exit ${result.exitCode}): ${out}`);
+  }
+  return { ok: true, out };
 }
 
 // Representative Paseo HOST config shape (profiles at daemon.agentProfiles).
@@ -29,7 +61,8 @@ export function representativeHostConfig() {
 export function writeFixtureBundle(
   root,
   {
-    name = 'bundle',    skillName = 'axstack-demo',
+    name = 'bundle',
+    skillName = 'axstack-demo',
     skillBody = '# Axstack Demo\n\nFixture skill for installer tests.\n',
     supportFiles = { 'helper.md': '# Helper\n\nSupporting fixture.\n' },
     profiles = [
@@ -48,8 +81,8 @@ export function writeFixtureBundle(
   const skillDir = join(bundle, 'skills', skillName);
   mkdirSync(skillDir, { recursive: true });
   writeFileSync(join(skillDir, 'SKILL.md'), skillBody);
-  for (const [name, body] of Object.entries(supportFiles)) {
-    writeFileSync(join(skillDir, name), body);
+  for (const [fileName, body] of Object.entries(supportFiles)) {
+    writeFileSync(join(skillDir, fileName), body);
   }
   const profilesDir = join(bundle, 'profiles');
   mkdirSync(profilesDir, { recursive: true });

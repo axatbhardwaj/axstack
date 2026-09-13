@@ -1,23 +1,22 @@
 // R2 regressions: profile ownership bound to config identity, manifest
 // shape/symlink validation, manifest-write failure + rollback reporting,
 // real gh-stack probing, --like option values, and no shipped fixtures.
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { expect, test } from 'bun:test';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
+  rmSync,
   readFileSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from '../../src/posixpath.js';
 import { readManifest } from '../../src/manifest.js';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
+const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
-const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
 
 const OWNER_PROFILE = {
   id: 'axstack-owner',
@@ -33,20 +32,6 @@ function ownerBundle(root, name = 'bundle') {
   });
 }
 
-function runCli(args, { expectFail = false, cwd } = {}) {
-  try {
-    const out = execFileSync(process.execPath, [CLI, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...(cwd ? { cwd } : {}),
-    });
-    assert.ok(!expectFail, `expected failure but succeeded: ${out}`);
-    return { ok: true, out };
-  } catch (err) {
-    assert.ok(expectFail, `CLI failed unexpectedly: ${err.stderr ?? err.message}`);
-    return { ok: false, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
-  }
-}
 
 test('uninstall with a different profile path is refused before any mutation', () => {
   const root = makeTempRoot();
@@ -64,17 +49,14 @@ test('uninstall with a different profile path is refused before any mutation', (
   const r = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileB], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /different|bound|bound|ownership|refus/);
+  expect(r.out.toLowerCase()).toMatch(/different|bound|bound|ownership|refus/);
   // Nothing mutated: B intact and S skills still on disk.
-  assert.equal(readFileSync(profileB, 'utf8'), beforeB);
-  assert.ok(
-    JSON.parse(readFileSync(profileB, 'utf8')).daemon.agentProfiles.some(
+  expect(readFileSync(profileB, 'utf8')).toBe(beforeB);
+  expect(JSON.parse(readFileSync(profileB, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-owner',
-    ),
-    'B profile must survive a refused uninstall',
-  );
-  assert.equal(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'), beforeSkill);
-  assert.ok(existsSync(join(skillsDir, '.axstack-manifest.json')));
+    )).toBeTruthy();
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe(beforeSkill);
+  expect(existsSync(join(skillsDir, '.axstack-manifest.json'))).toBeTruthy();
 });
 
 test('install with a different profile path than the bound manifest is refused', () => {
@@ -89,8 +71,8 @@ test('install with a different profile path than the bound manifest is refused',
     ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /different|bound|ownership|refus|uninstall/);
-  assert.ok(!existsSync(profileB), 'refused install must not create the other config');
+  expect(r.out.toLowerCase()).toMatch(/different|bound|ownership|refus|uninstall/);
+  expect(!existsSync(profileB)).toBeTruthy();
 });
 
 test('uninstall with a missing profile file clears ownership and removes skills', () => {
@@ -99,11 +81,11 @@ test('uninstall with a missing profile file clears ownership and removes skills'
   const skillsDir = join(root, 'skills');
   const profileA = join(root, 'A.json');
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
-  execFileSync('rm', [profileA]);
+  rmSync(profileA, { force: true });
 
   const r = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileA]);
-  assert.ok(r.ok);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  expect(r.ok).toBeTruthy();
+  expect(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBeTruthy();
 
   // Ownership released: a later install may bind a new config path.
   const profileB = join(root, 'B.json');
@@ -116,12 +98,10 @@ test('uninstall with a missing profile file clears ownership and removes skills'
     '--profile',
     profileB,
   ]);
-  assert.ok(again.ok);
-  assert.ok(
-    JSON.parse(readFileSync(profileB, 'utf8')).daemon.agentProfiles.some(
+  expect(again.ok).toBeTruthy();
+  expect(JSON.parse(readFileSync(profileB, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-owner',
-    ),
-  );
+    )).toBeTruthy();
 });
 
 test('manifest symlink is rejected before mutations', async () => {
@@ -133,18 +113,18 @@ test('manifest symlink is rejected before mutations', async () => {
   const before = readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8');
   const elsewhere = join(root, 'elsewhere.json');
   writeFileSync(elsewhere, '{}\n');
-  execFileSync('rm', [manifest]);
+  rmSync(manifest, { force: true });
   symlinkSync(elsewhere, manifest);
 
   const installR = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(installR.out.toLowerCase(), /symlink|unsafe|refus/);
+  expect(installR.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
   const uninstallR = runCli(['uninstall', '--skills-dir', skillsDir], { expectFail: true });
-  assert.match(uninstallR.out.toLowerCase(), /symlink|unsafe|refus/);
-  assert.equal(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'), before);
+  expect(uninstallR.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe(before);
 
-  await assert.rejects(() => readManifest(skillsDir), /symlink|unsafe|refus/i);
+  await expect(readManifest(skillsDir)).rejects.toThrow(/symlink|unsafe|refus/i);
 });
 
 test('malformed manifests are rejected with shape errors', async () => {
@@ -154,19 +134,14 @@ test('malformed manifests are rejected with shape errors', async () => {
     writeFileSync(join(dir, '.axstack-manifest.json'), JSON.stringify(obj));
     return dir;
   };
-  await assert.rejects(() => readManifest(mk({ version: 2, files: {}, profiles: {} })), /version/i);
-  await assert.rejects(
-    () => readManifest(mk({ version: 1, files: [], profiles: {} })),
-    /files/i,
-  );
-  await assert.rejects(
-    () => readManifest(mk({ version: 1, files: { '../evil': 'abc' }, profiles: {} })),
-    /unsafe|path|invalid/i,
-  );
-  await assert.rejects(
-    () => readManifest(mk({ version: 1, files: {}, profiles: { path: 42, entries: {} } })),
-    /profile/i,
-  );
+  await expect(readManifest(mk({ version: 2, files: {}, profiles: {} }))).rejects.toThrow(/version/i);
+  await expect(readManifest(mk({ version: 1, files: [], profiles: {} }))).rejects.toThrow(/files/i);
+  await expect(
+    readManifest(mk({ version: 1, files: { '../evil': 'abc' }, profiles: {} })),
+  ).rejects.toThrow(/unsafe|path|invalid/i);
+  await expect(
+    readManifest(mk({ version: 1, files: {}, profiles: { path: 42, entries: {} } })),
+  ).rejects.toThrow(/profile/i);
 });
 
 test('manifest-write failure keeps pre-run state and reports the failure', () => {
@@ -184,9 +159,9 @@ test('manifest-write failure keeps pre-run state and reports the failure', () =>
     ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /manifest/);
-  assert.equal(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'), beforeSkill);
-  assert.equal(readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'), beforeManifest);
+  expect(r.out.toLowerCase()).toMatch(/manifest/);
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe(beforeSkill);
+  expect(readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8')).toBe(beforeManifest);
 });
 
 test('failed restores are reported instead of swallowed', () => {
@@ -207,7 +182,7 @@ test('failed restores are reported instead of swallowed', () => {
   } finally {
     chmodSync(skillDir, 0o755);
   }
-  assert.match(r.out.toLowerCase(), /rollback|incomplete|restore/i);
+  expect(r.out.toLowerCase()).toMatch(/rollback|incomplete|restore/i);
 });
 
 test('gh-stack probe requires the real gh stack command', () => {
@@ -224,19 +199,12 @@ test('gh-stack probe requires the real gh stack command', () => {
       'echo "unknown command: $*" >&2; exit 1\n',
   );
   chmodSync(gh, 0o755);
-  const env = { ...process.env, PATH: `${fakeBin}:/usr/bin:/bin` };
-  let out = '';
-  try {
-    execFileSync(process.execPath, [CLI, 'check'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env,
-    });
-  } catch (err) {
-    out = `${err.stdout ?? ''}${err.stderr ?? ''}`;
-  }
-  assert.match(out.toLowerCase(), /gh stack extension/);
-  assert.match(out, /MISSING.*gh stack extension/);
+  const r = runCli(['check'], {
+    expectFail: true,
+    env: { PATH: `${fakeBin}:/usr/bin:/bin` },
+  });
+  expect(r.out.toLowerCase()).toMatch(/gh stack extension/);
+  expect(r.out).toMatch(/MISSING.*gh stack extension/);
 });
 
 test('option values beginning with -- fail as missing values before mutation', () => {
@@ -247,12 +215,12 @@ test('option values beginning with -- fail as missing values before mutation', (
     expectFail: true,
     cwd: root,
   });
-  assert.match(r.out.toLowerCase(), /requires a value|missing value/);
-  assert.ok(!existsSync(skillsDir), 'no target mutation on bad arguments');
-  assert.ok(!existsSync(join(root, '--skills-dir')));
+  expect(r.out.toLowerCase()).toMatch(/requires a value|missing value/);
+  expect(!existsSync(skillsDir)).toBeTruthy();
+  expect(!existsSync(join(root, '--skills-dir'))).toBeTruthy();
 });
 
 test('shipped profiles module exposes no test fixtures', async () => {
   const mod = await import('../../src/profiles.js');
-  assert.ok(!('representativeHostConfig' in mod), 'test fixture must not ship in src');
+  expect(!('representativeHostConfig' in mod)).toBeTruthy();
 });

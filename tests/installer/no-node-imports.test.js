@@ -39,6 +39,7 @@ describe('bun-native import surface', () => {
     const offenders = [];
     for (const dir of SCAN_DIRS) {
       for (const file of sourceFiles(join(ROOT, dir))) {
+        if (file.endsWith('no-node-imports.test.js')) continue; // this lock's own patterns
         const text = readFileSync(file, 'utf8');
         if (/\bexecFileSync\b/.test(text)) offenders.push(`${file}: execFileSync`);
         if (/from\s+['"]node:test['"]/.test(text)) offenders.push(`${file}: node:test`);

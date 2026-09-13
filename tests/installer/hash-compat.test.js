@@ -5,17 +5,16 @@
 // ownership (or, worse, gain it spuriously).
 import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join } from '../../src/posixpath.js';
 import { hashContent, hashObject, readManifest } from '../../src/manifest.js';
 
-const FIX = new URL('./fixtures/old-impl', import.meta.url).pathname;
+const FIX = join(import.meta.dir, './fixtures/old-impl');
 
 describe('old-implementation hash compatibility', () => {
   test('identical bytes reproduce the recorded ownership hashes', () => {
     const manifest = JSON.parse(readFileSync(join(FIX, 'manifest.json'), 'utf8'));
     for (const [rel, expected] of Object.entries(manifest.files)) {
-      const bytes = readFileSync(join(FIX, rel));
+      const bytes = readFileSync(join(FIX, rel.split('/').pop()));
       expect(hashContent(bytes)).toBe(expected);
     }
     const profile = JSON.parse(readFileSync(join(FIX, 'profile.json'), 'utf8'));
@@ -27,7 +26,7 @@ describe('old-implementation hash compatibility', () => {
   });
 
   test('manifest shape from the old implementation still parses', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'axstack-compat-'));
+    const dir = mkdtempSync(join(Bun.env.TMPDIR ?? '/tmp', 'axstack-compat-'));
     writeFileSync(join(dir, '.axstack-manifest.json'), readFileSync(join(FIX, 'manifest.json'), 'utf8'));
     const parsed = await readManifest(dir);
     expect(parsed.version).toBe(1);

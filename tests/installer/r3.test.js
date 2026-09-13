@@ -1,47 +1,31 @@
 // R3 regressions: exclusive temp creation (symlink/EEXIST safety), permission
 // preservation, and the Node >= 22 test-discovery floor. Temp fixtures only.
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { expect, test } from 'bun:test';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
+  rmSync,
   readFileSync,
   statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { join } from '../../src/posixpath.js';
+import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
+const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
 // writeAtomic is imported dynamically per-test so an unexported helper fails
 // that test rather than the whole file.
 async function loadWriteAtomic() {
   const mod = await import('../../src/installer.js');
-  assert.ok(typeof mod.writeAtomic === 'function', 'writeAtomic must be exported for testing');
+  expect(typeof mod.writeAtomic === 'function').toBeTruthy();
   return mod.writeAtomic;
 }
 
-const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const MANIFEST_TMP = '.axstack-manifest.json.tmp';
 
-function runCli(args, { expectFail = false, cwd, env } = {}) {
-  try {
-    const out = execFileSync(process.execPath, [CLI, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...(cwd ? { cwd } : {}),
-      ...(env ? { env: { ...process.env, ...env } } : {}),
-    });
-    assert.ok(!expectFail, `expected failure but succeeded: ${out}`);
-    return { ok: true, out };
-  } catch (err) {
-    assert.ok(expectFail, `CLI failed unexpectedly: ${err.stderr ?? err.message}`);
-    return { ok: false, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
-  }
-}
 
 const OWNER_PROFILE = {
   id: 'axstack-owner',
@@ -62,9 +46,9 @@ test('manifest temp symlink to outside is not followed or renamed', () => {
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /temporary|tmp|refus|exists|symlink|unsafe/);
-  assert.equal(readFileSync(outside, 'utf8'), 'outside data\n');
-  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
+  expect(r.out.toLowerCase()).toMatch(/temporary|tmp|refus|exists|symlink|unsafe/);
+  expect(readFileSync(outside, 'utf8')).toBe('outside data\n');
+  expect(!existsSync(join(skillsDir, '.axstack-manifest.json'))).toBeTruthy();
 });
 
 test('writeAtomic never writes through a temp symlink nor truncates temp entries', async () => {
@@ -76,16 +60,16 @@ test('writeAtomic never writes through a temp symlink nor truncates temp entries
   writeFileSync(outside, 'outside data\n');
   symlinkSync(outside, tmp);
 
-  await assert.rejects(() => writeAtomic(dest, 'payload\n'), /temporary|tmp|exists|symlink|unsafe|refus/i);
-  assert.equal(readFileSync(outside, 'utf8'), 'outside data\n');
-  assert.ok(!existsSync(dest));
+  await expect(writeAtomic(dest, 'payload\n')).rejects.toThrow(/temporary|tmp|exists|symlink|unsafe|refus/i);
+  expect(readFileSync(outside, 'utf8')).toBe('outside data\n');
+  expect(!existsSync(dest)).toBeTruthy();
 
   // A pre-existing regular temp entry is refused, never truncated.
-  execFileSync('rm', [tmp]);
+  rmSync(tmp, { force: true });
   writeFileSync(tmp, 'someone else\n');
-  await assert.rejects(() => writeAtomic(dest, 'payload\n'), /temporary|tmp|exists|refus/i);
-  assert.equal(readFileSync(tmp, 'utf8'), 'someone else\n');
-  assert.ok(!existsSync(dest));
+  await expect(writeAtomic(dest, 'payload\n')).rejects.toThrow(/temporary|tmp|exists|refus/i);
+  expect(readFileSync(tmp, 'utf8')).toBe('someone else\n');
+  expect(!existsSync(dest)).toBeTruthy();
 });
 
 test('existing config mode 0600 survives the atomic profile merge', () => {
@@ -97,13 +81,11 @@ test('existing config mode 0600 survives the atomic profile merge', () => {
   chmodSync(profile, 0o600);
 
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(r.ok);
-  assert.ok(
-    JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
+  expect(r.ok).toBeTruthy();
+  expect(JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-owner',
-    ),
-  );
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+    )).toBeTruthy();
+  expect(statSync(profile).mode & 0o777).toBe(0o600);
 });
 
 test('new config files are created restrictive (0600)', () => {
@@ -113,8 +95,8 @@ test('new config files are created restrictive (0600)', () => {
   const profile = join(root, 'fresh.json');
 
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(r.ok);
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+  expect(r.ok).toBeTruthy();
+  expect(statSync(profile).mode & 0o777).toBe(0o600);
 });
 
 test('updated skill files keep their existing permissions', () => {
@@ -127,17 +109,15 @@ test('updated skill files keep their existing permissions', () => {
 
   const v2 = writeFixtureBundle(root, { name: 'bundle-v2', skillBody: '# v2\n' });
   const r = runCli(['install', '--bundle', v2, '--skills-dir', skillsDir]);
-  assert.ok(r.ok);
-  assert.equal(readFileSync(skill, 'utf8'), '# v2\n');
-  assert.equal(statSync(skill).mode & 0o777, 0o600);
+  expect(r.ok).toBeTruthy();
+  expect(readFileSync(skill, 'utf8')).toBe('# v2\n');
+  expect(statSync(skill).mode & 0o777).toBe(0o600);
 });
 
-test('npm test does not rely on bare directory discovery', () => {
+test('package test script runs the Bun suite without bare directory discovery', () => {
   const pkg = JSON.parse(
-    readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'),
+    readFileSync(join(import.meta.dir, '../../package.json'), 'utf8'),
   );
-  assert.ok(
-    !/(^|\s)node --test tests\/?(\s|$)/.test(pkg.scripts.test),
-    'test script must not pass a bare tests/ directory (breaks Node 22)',
-  );
+  expect(pkg.scripts.test).toMatch(/bun test/);
+  expect(/(^|\s)node --test tests\/?(\s|$)/.test(pkg.scripts.test)).toBe(false);
 });

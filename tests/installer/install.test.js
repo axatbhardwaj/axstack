@@ -1,9 +1,7 @@
 // Behavioral contract: install into an explicit temp target, idempotent
 // reinstall, unrelated files survive, user edits preserved, uninstall only
 // removes unchanged owned assets, escaping bundles rejected pre-write.
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { expect, test } from 'bun:test';
 import {
   existsSync,
   mkdirSync,
@@ -11,26 +9,11 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { join } from '../../src/posixpath.js';
+import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
-const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
-
-function runCli(args, { expectFail = false, env } = {}) {
-  try {
-    const out = execFileSync(process.execPath, [CLI, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...(env ? { env: { ...process.env, ...env } } : {}),
-    });
-    assert.ok(!expectFail, `expected failure but succeeded: ${out}`);
-    return { ok: true, out };
-  } catch (err) {
-    assert.ok(expectFail, `CLI failed unexpectedly: ${err.stderr ?? err.message}`);
-    return { ok: false, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
-  }
-}
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
+const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
 function installTargets(root) {
   return {
@@ -56,14 +39,14 @@ test('install copies fixture bundle, keeps unrelated sentinel byte-identical', (
     '--profile',
     profile,
   ]);
-  assert.ok(r.ok);
+  expect(r.ok).toBe(true);
 
   const installed = readFileSync(
     join(skillsDir, 'axstack-demo', 'SKILL.md'),
     'utf8',
   );
-  assert.ok(installed.includes('Axstack Demo'));
-  assert.equal(readFileSync(sentinel, 'utf8'), 'do not touch\n');
+  expect(installed.includes('Axstack Demo')).toBe(true);
+  expect(readFileSync(sentinel, 'utf8')).toBe('do not touch\n');
 });
 
 test('second install is idempotent (no content changes)', () => {
@@ -82,9 +65,9 @@ test('second install is idempotent (no content changes)', () => {
     '--profile',
     profile,
   ]);
-  assert.ok(second.ok);
-  assert.equal(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'), before);
-  assert.match(second.out.toLowerCase(), /idempotent|no changes|up to date|unchanged/);
+  expect(second.ok).toBe(true);
+  expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe(before);
+  expect(second.out.toLowerCase()).toMatch(/idempotent|no changes|up to date|unchanged/);
 });
 
 test('user-edited owned asset survives reinstall and uninstall', () => {
@@ -104,12 +87,12 @@ test('user-edited owned asset survives reinstall and uninstall', () => {
     '--profile',
     profile,
   ]);
-  assert.ok(reinstall.ok);
-  assert.equal(readFileSync(owned, 'utf8'), '# User edited\n\nHands off.\n');
+  expect(reinstall.ok).toBe(true);
+  expect(readFileSync(owned, 'utf8')).toBe('# User edited\n\nHands off.\n');
 
   const un = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(un.ok);
-  assert.equal(readFileSync(owned, 'utf8'), '# User edited\n\nHands off.\n');
+  expect(un.ok).toBe(true);
+  expect(readFileSync(owned, 'utf8')).toBe('# User edited\n\nHands off.\n');
 });
 
 test('uninstall removes unchanged owned assets but preserves sentinel', () => {
@@ -121,10 +104,10 @@ test('uninstall removes unchanged owned assets but preserves sentinel', () => {
   writeFileSync(sentinel, 'sentinel\n');
 
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
   runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
-  assert.equal(readFileSync(sentinel, 'utf8'), 'sentinel\n');
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
+  expect(readFileSync(sentinel, 'utf8')).toBe('sentinel\n');
 });
 
 test('bundle with escaping symlink is rejected before any target write', () => {
@@ -140,8 +123,8 @@ test('bundle with escaping symlink is rejected before any target write', () => {
     ['install', '--bundle', bundle, '--skills-dir', skillsDir],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /symlink|escape|reject|unsafe/);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-evil', 'SKILL.md')));
+  expect(r.out.toLowerCase()).toMatch(/symlink|escape|reject|unsafe/);
+  expect(existsSync(join(skillsDir, 'axstack-evil', 'SKILL.md'))).toBe(false);
 });
 
 test('unknown pre-existing file at bundle path is not silently overwritten', () => {
@@ -155,23 +138,23 @@ test('unknown pre-existing file at bundle path is not silently overwritten', () 
     ['install', '--bundle', bundle, '--skills-dir', skillsDir],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /already exists|unknown|refus|overwrite|force/);
-  assert.equal(
+  expect(r.out.toLowerCase()).toMatch(/already exists|unknown|refus|overwrite|force/);
+  expect(
     readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8'),
-    '# Someone else\n',
-  );
+  ).toBe('# Someone else\n');
 });
 
-test('install into real home requires explicit confirmation', () => {  const root = makeTempRoot();
+test('install into real home requires explicit confirmation', () => {
+  const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
-  const home = process.env.HOME ?? '/root';
+  const home = Bun.env.HOME ?? '/root';
   const guarded = join(home, '.axstack-installer-probe-nope');
   const r = runCli(
     ['install', '--bundle', bundle, '--skills-dir', guarded],
     { expectFail: true },
   );
-  assert.match(r.out.toLowerCase(), /confirm|--yes|explicit|home/);
-  assert.ok(!existsSync(join(guarded, 'axstack-demo', 'SKILL.md')));
+  expect(r.out.toLowerCase()).toMatch(/confirm|--yes|explicit|home/);
+  expect(existsSync(join(guarded, 'axstack-demo', 'SKILL.md'))).toBe(false);
 });
 
 test('--harness grok is rejected without an explicit --skills-dir override', () => {
@@ -180,7 +163,7 @@ test('--harness grok is rejected without an explicit --skills-dir override', () 
   const r = runCli(['install', '--bundle', bundle, '--harness', 'grok'], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /--skills-dir|explicit|unverified/);
+  expect(r.out.toLowerCase()).toMatch(/--skills-dir|explicit|unverified/);
 });
 
 test('partial failure rolls back created files and writes no manifest', () => {
@@ -196,10 +179,10 @@ test('partial failure rolls back created files and writes no manifest', () => {
   const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /axstack/);
+  expect(r.out.toLowerCase()).toMatch(/axstack/);
   // axstack-aaa was created in this run: rolled back, manifest never written.
-  assert.ok(!existsSync(join(skillsDir, 'axstack-aaa', 'SKILL.md')));
-  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
+  expect(existsSync(join(skillsDir, 'axstack-aaa', 'SKILL.md'))).toBe(false);
+  expect(existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(false);
 });
 
 test('--harness codex honors CODEX_HOME outside the home guard', () => {
@@ -210,8 +193,8 @@ test('--harness codex honors CODEX_HOME outside the home guard', () => {
   const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
     env: { CODEX_HOME: codexHome },
   });
-  assert.ok(r.ok);
-  assert.ok(existsSync(join(codexHome, 'skills', 'axstack-demo', 'SKILL.md')));
+  expect(r.ok).toBe(true);
+  expect(existsSync(join(codexHome, 'skills', 'axstack-demo', 'SKILL.md'))).toBe(true);
 });
 
 test('--harness codex without CODEX_HOME needs explicit home confirmation', () => {
@@ -220,7 +203,7 @@ test('--harness codex without CODEX_HOME needs explicit home confirmation', () =
   const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
     expectFail: true,
   });
-  assert.match(r.out.toLowerCase(), /confirm|--yes|explicit|home/);
+  expect(r.out.toLowerCase()).toMatch(/confirm|--yes|explicit|home/);
 });
 
 test('uninstall with a home profile requires --yes even when skills are external', () => {
@@ -235,38 +218,37 @@ test('uninstall with a home profile requires --yes even when skills are external
     ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { env },
   );
-  assert.ok(installed.ok);
-  assert.ok(
+  expect(installed.ok).toBe(true);
+  expect(
     JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-driver',
     ),
-  );
+  ).toBe(true);
 
   // Without --yes: refuse before any skill/profile/manifest mutation.
   const refused = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile], {
     expectFail: true,
     env,
   });
-  assert.match(refused.out.toLowerCase(), /confirm|--yes|explicit|home/);
-  assert.ok(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
-  assert.ok(
+  expect(refused.out.toLowerCase()).toMatch(/confirm|--yes|explicit|home/);
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(
     JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-driver',
     ),
-    'home profile must be untouched by a refused uninstall',
-  );
-  assert.ok(existsSync(join(skillsDir, '.axstack-manifest.json')));
+  ).toBe(true);
+  expect(existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(true);
 
   // With --yes: the intended uninstall succeeds.
   const removed = runCli(
     ['uninstall', '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { env },
   );
-  assert.ok(removed.ok);
-  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
-  assert.ok(
-    !JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
+  expect(removed.ok).toBe(true);
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
+  expect(
+    JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-driver',
     ),
-  );
+  ).toBe(false);
 });
