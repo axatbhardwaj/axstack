@@ -15,8 +15,12 @@ const HERE = import.meta.dir;
 const PACKAGE_ROOT = resolve(HERE, '..');
 
 function homeDir() {
+  // Tilde expansion needs a known absolute home; with HOME missing, empty,
+  // or relative the destination is unknown, so refuse even with --yes.
   const home = Bun.env.HOME;
-  if (!home) throw new Error('HOME is not set; pass explicit paths instead of ~');
+  if (!home || !home.startsWith('/')) {
+    throw new Error('HOME is missing, empty, or not absolute; pass explicit paths instead of ~');
+  }
   return home;
 }
 

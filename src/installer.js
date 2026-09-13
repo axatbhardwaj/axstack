@@ -107,13 +107,26 @@ async function canonicalProfileFile(profilePath) {
 }
 
 function homeDir() {
-  // Bun has no homedir() API; $HOME is the POSIX source of truth. An unset
-  // HOME disables the home guard rather than guessing (tests set it).
-  return Bun.env.HOME || null;
+  // Bun has no homedir() API; $HOME is the POSIX source of truth. A missing,
+  // empty, or non-absolute HOME yields null so callers fail closed instead
+  // of guessing (no passwd/FFI layer).
+  const home = Bun.env.HOME;
+  if (!home || !home.startsWith('/')) return null;
+  return home;
 }
 
 export function assertOutsideHome(target, { yes = false, kind = 'target' } = {}) {
   const home = homeDir();
+  if (home === null) {
+    // Home boundary cannot be checked: treat every target as potentially
+    // inside home and require explicit confirmation.
+    if (!yes) {
+      throw new Error(
+        `refusing to touch ${kind} (${target}) without explicit confirmation: HOME is missing, empty, or not absolute, so the home boundary cannot be checked; re-run with --yes`,
+      );
+    }
+    return;
+  }
   if (home && (target === home || withinRoot(target, home)) && !yes) {
     throw new Error(
       `refusing to touch ${kind} inside your home (${target}) without explicit confirmation; re-run with --yes`,
