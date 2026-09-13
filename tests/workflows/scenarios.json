@@ -143,6 +143,48 @@
         "forbidden": ["Accepting post-hoc tests as TDD", "Accepting missing-module failure as behavioral red", "Silently waiving TDD or fabricating checklist tests"],
         "on_blocked": "Report limitation and request scoped user decision before dependent implementation"
       }
+    },
+    {
+      "id": "missing-mcp-access",
+      "title": "Spec phase preflights Linear access before any document write",
+      "spec_ref": "Linear mode: before use, check the actual session's required MCP tools and access. Missing access is a setup gap, not permission to silently switch stores.",
+      "input": {
+        "run_state": "New run in Linear mode. Approved store not yet resolved. Session MCP tool access unknown.",
+        "event": "Driver enters spec phase and prepares to create the native Linear document."
+      },
+      "expected": {
+        "required": ["Resolve source store first (Linear default vs explicit Markdown alternative)", "Per-session read/create/update access check on the Linear document before writing", "On missing access: report actionable setup gap, do not write, do not silently switch stores"],
+        "forbidden": ["Creating/updating the Linear document before preflight", "Silent fallback to Markdown without explicit user selection", "Tickets-phase preflight as the first check (too late)"],
+        "evidence": "Record MCP tool availability, access check result, and store resolution"
+      }
+    },
+    {
+      "id": "model-materialization",
+      "title": "Launched sessions match profile provider/model; unset checker blocks dispatch",
+      "spec_ref": "Model roles: configured profiles materialize as actual sessions; unavailable model pauses affected work pending user decision, never auto-fallback. Checker model chosen at setup.",
+      "input": {
+        "run_state": "PR ready for final review. Profiles: reviewer-opus=claude/claude-opus-5, reviewer-sol=codex/gpt-5.6-sol, checker model null (setup not done).",
+        "event": "Owner launches both final reviewers and considers dispatching the checker."
+      },
+      "expected": {
+        "required": ["Opus review session runs claude/claude-opus-5; Sol review session runs codex/gpt-5.6-sol", "Verify session model/ownership receipt for each launch", "Checker dispatch blocked until setup selects its model"],
+        "forbidden": ["Launching a native GPT session and calling it the Opus review", "Substituting another model for an unavailable role without user decision", "Dispatching checker with a provider default when its model is null"],
+        "evidence": "Session receipts showing provider/model per role; blocked-checker record with setup requirement"
+      }
+    },
+    {
+      "id": "rollout-publish",
+      "title": "Publishing requires a current verified receipt and no urgent hold",
+      "spec_ref": "Two-reviewer contract: changes require a refreshed review receipt for the new revision. Prompt-only urgent escalation holds approval and merge-ready declarations.",
+      "input": {
+        "run_state": "PR candidate rev X+1 pushed after review of rev X. No new review yet. No open urgent escalation.",
+        "event": "Owner considers declaring rev X+1 merge-ready."
+      },
+      "expected": {
+        "required": ["Obtain refreshed review receipt for rev X+1 (reuse unchanged evidence, review delta plus affected behavior; broader review for bigger scope/base/behavior changes)", "Confirm no open urgent hold", "Receipt shows verdict APPROVE with candidate SHA, coverage, and limitations"],
+        "forbidden": ["Publishing on the stale rev X receipt", "Declaring merge-ready under an open urgent hold", "Treating reviewer unanimity or passing tests as merge authority (human merges)"],
+        "evidence": "Current receipt with SHA, verdict, coverage, limitations; hold-state record"
+      }
     }
   ]
 }

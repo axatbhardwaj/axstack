@@ -8,7 +8,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..', '..');
 
 // Structural validation of the evaluation contract itself (not behavior proof).
-test('scenarios: nine required cases with inputs and expected decisions', () => {
+test('scenarios: twelve required cases with inputs and expected decisions', () => {
   const data = JSON.parse(readFileSync(join(root, 'tests', 'workflows', 'scenarios.json'), 'utf8'));
   assert.equal(data.version, 1);
   const ids = data.cases.map((c) => c.id);
@@ -22,6 +22,9 @@ test('scenarios: nine required cases with inputs and expected decisions', () => 
     'linear-done-drift',
     'watch-expiry',
     'strict-tdd-violation',
+    'missing-mcp-access',
+    'model-materialization',
+    'rollout-publish',
   ]) {
     assert.ok(ids.includes(required), `missing scenario: ${required}`);
   }
