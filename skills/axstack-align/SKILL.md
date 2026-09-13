@@ -1,6 +1,6 @@
 ---
 name: axstack-align
-description: When engineering work has unclear or substantial scope decisions, use axstack-align to settle its execution boundary.
+description: When exploring or planning engineering work, use axstack-align to settle scope, decisions, and its execution boundary.
 ---
 
 # Align
@@ -19,11 +19,12 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 1. **Research the facts.** Inspect the available code, docs, and tools before
    asking the user. End with verified facts, named evidence gaps, and only the
    decisions or constraints the user must resolve.
-2. **Close the decision frontier.** Ask the smallest set of questions that
-   resolves material scope edges, trade-offs, or priorities. In each round,
-   state what is already settled and recommend a choice for every open
-   question. Stop asking when no unanswered choice can materially
-   change scope, acceptance, design, or dependencies.
+2. **Close the decision frontier.** A frontier contains only questions whose
+   prerequisite decisions are settled; hold dependent questions for a later
+   round. Ask the smallest current frontier that resolves material scope edges,
+   trade-offs, or priorities. State what is already settled and recommend a
+   choice for every question. Stop asking when no unanswered choice can
+   materially change scope, acceptance, design, or dependencies.
 3. **Preserve settled decisions.** Carry them across phases and resumes.
    Reopen one only when material new evidence changes it; otherwise restate it
    and proceed. Every reopened decision names the evidence that invalidated it.
@@ -52,10 +53,13 @@ user-resolved choice. The driver owns the outcome.
    - For substantial work, proceed through `axstack-spec` and then
      `axstack-tickets`; return an approved spec identity and a matching
      ticket map handoff. Never repeat a still-valid approval.
-3. Record substantive or resumable preparation through the shared lifecycle
-   and run record. Use native Paseo handoff when that capability is available;
-   otherwise return the compact handoff in the current chat and report the
-   capability gap without inventing a command.
+3. Record substantive or resumable preparation through the
+   [shared lifecycle](../axstack/references/lifecycle.md) and
+   [run record](../axstack/references/run-record.md). Return the compact scope
+   and record pointer in the current chat. Native transfer is separate: use it
+   only when the user explicitly requests transfer, loading
+   [Paseo launch](../axstack/references/paseo-launch.md) immediately before
+   actual dispatch. Alignment completion never dispatches a recipient.
 
 Alignment stops for both sizes only when the handoff is usable, its next scope
 identity is explicit, and execution has not started. The user invokes `axstack`
