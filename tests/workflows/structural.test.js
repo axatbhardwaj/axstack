@@ -138,7 +138,7 @@ test('structural: launch reference gives ordered Paseo materialization steps', (
   assert.ok(/persist/i.test(text) && /reuse/i.test(text), 'must persist/reuse agent and workspace IDs');
 });
 
-test('structural: profiles use verified provider/model/mode IDs with display names', () => {
+test('structural: profiles use verified provider/model/mode IDs with names', () => {
   const p = join(root, 'profiles', 'paseo.json');
   assert.ok(existsSync(p), 'missing profiles/paseo.json');
   const data = JSON.parse(readFileSync(p, 'utf8'));
@@ -160,7 +160,8 @@ test('structural: profiles use verified provider/model/mode IDs with display nam
     assert.equal(prof.provider, want.provider, `${id}: provider must be ${want.provider}`);
     assert.equal(prof.model, want.model, `${id}: model must be ${want.model}`);
     assert.equal(prof.modeId, want.modeId, `${id}: modeId must be ${want.modeId}`);
-    assert.ok(prof.displayName && prof.displayName.length > 0, `${id}: missing displayName`);
+    assert.ok(prof.name && prof.name.length > 0, `${id}: missing name (live list_profiles exposes name)`);
+    assert.ok(!('displayName' in prof), `${id}: must not use displayName (not a live profile field)`);
     assert.ok(prof.notes && prof.notes.length > 0, `${id}: missing notes`);
     assert.ok('thinkingOptionId' in prof, `${id}: missing thinkingOptionId`);
   }
@@ -221,6 +222,44 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
   for (const field of ['sha', 'coverage', 'limitation']) {
     assert.ok(receipt.toLowerCase().includes(field), `receipt template must include ${field}`);
   }
+});
+
+test('structural: launch reference treats live profiles as authoritative', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'paseo-launch.md'), 'utf8');
+  assert.ok(/live.*authoritative|authoritative.*live/i.test(text), 'must state installed live profiles are authoritative');
+  assert.ok(/setup default/i.test(text), 'must describe bundled profiles as setup defaults');
+  assert.ok(/no guaranteed|not guaranteed/i.test(text), 'must not assume profiles/paseo.json exists at runtime');
+  assert.ok(/reconcile/i.test(text), 'must reconcile existing workspace/session before creating');
+  assert.ok(/projectId/i.test(text), 'must pass canonical project lookup (projectId/workspaceId)');
+  assert.ok(/setup gap/i.test(text), 'must treat missing canonical owner as setup gap');
+  assert.ok(/never.*override|do not.*override/i.test(text), 'must never override configured models at runtime');
+});
+
+test('structural: contracts carry Fable triggers and the high-stakes gate', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
+  assert.ok(text.includes('Fable'), 'contracts must name the Fable advisor split');
+  assert.ok(/factual checks/i.test(text), 'contracts must trigger consultation only after factual checks');
+  assert.ok(/AGREE/i.test(text), 'contracts must require plain AGREE for high-stakes decisions');
+  assert.ok(/driver.*accept|accept.*driver/i.test(text), 'contracts must require driver acceptance alongside AGREE');
+  assert.ok(/no silent fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback');
+  assert.ok(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing');
+});
+
+test('structural: align reads back understanding without a pre-spec agreement gate', () => {
+  const text = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
+  assert.ok(!/explicit user agreement before/i.test(text), 'align must not require agreement before producing the spec');
+  assert.ok(!/reconfirm|re-confirm|ask only for confirmation/i.test(text), 'align must not reconfirm settled decisions routinely');
+  assert.ok(/draft spec/i.test(text), 'align must read back understanding as part of the draft spec');
+  assert.ok(/material new evidence/i.test(text), 'settled decisions stand unless material new evidence changes them');
+});
+
+test('structural: publishing needs both reviewers current; watch stops all registrations', () => {
+  const review = readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8');
+  assert.ok(/both reviewers/i.test(review), 'publishing rule must require both reviewers current');
+  assert.ok(/without vot/i.test(review), 'owner must synthesize findings without voting');
+  const watch = readFileSync(join(skillsDir, 'axstack-watch', 'SKILL.md'), 'utf8');
+  assert.ok(/all owned|all.*registrations/i.test(watch), 'watch must stop ALL owned registrations at expiry');
+  assert.ok(/open PR/i.test(watch), 'watch expiry must explicitly cover open PRs');
 });
 
 test('structural: docs/workflows.md exists and references phase skills', () => {
