@@ -18,23 +18,44 @@ function clone(value) {
   return value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
 
-function assertBundleProfiles(bundleProfiles) {
+export function assertBundleProfiles(bundleProfiles) {
   if (!Array.isArray(bundleProfiles) || bundleProfiles.length === 0) {
     throw new Error('invalid bundle profiles: expected a non-empty agentProfiles array');
   }
   for (const p of bundleProfiles) {
-    if (!p || typeof p.id !== 'string' || !p.id.startsWith('axstack-')) {
+    if (!p || typeof p !== 'object' || Array.isArray(p)) {
+      throw new Error('invalid bundle profiles: every profile must be an object');
+    }
+    for (const field of ['id', 'name', 'provider']) {
+      if (typeof p[field] !== 'string' || p[field].trim() === '') {
+        throw new Error(`invalid bundle profiles: every profile needs a non-empty ${field} string`);
+      }
+    }
+    if (!p.id.startsWith('axstack-')) {
       throw new Error('invalid bundle profiles: every profile needs a namespaced axstack-* id');
+    }
+    if (!Object.hasOwn(p, 'model')) {
+      throw new Error('invalid bundle profiles: model must be a non-empty string or explicit null');
+    }
+    if (p.model !== null && (typeof p.model !== 'string' || p.model.trim() === '')) {
+      throw new Error('invalid bundle profiles: model must be a non-empty string or explicit null');
+    }
+    for (const field of ['icon', 'color', 'modeId', 'thinkingOptionId', 'notes']) {
+      if (p[field] !== undefined && typeof p[field] !== 'string') {
+        throw new Error(`invalid bundle profiles: ${field} must be a string when present`);
+      }
+    }
+    if (
+      p.featureValues !== undefined &&
+      (typeof p.featureValues !== 'object' || p.featureValues === null || Array.isArray(p.featureValues))
+    ) {
+      throw new Error('invalid bundle profiles: featureValues must be an object when present');
     }
   }
 }
 
 function profileEqual(a, b) {
   return hashObject(a) === hashObject(b);
-}
-
-function isConfiguredProfile(profile) {
-  return typeof profile?.model === 'string' && profile.model.length > 0;
 }
 
 function daemonProfiles(existing) {
@@ -68,46 +89,21 @@ export function mergeProfiles(
   { force = false, owned = {}, hash = hashObject } = {},
 ) {
   assertBundleProfiles(bundleProfiles);
+  if (bundleProfiles.some((profile) => profile.model === null)) {
+    throw new Error('invalid profile merge: explicit-null profiles must be deferred before merge');
+  }
   const report = {
     created: existing === null || existing === undefined,
     added: [],
     updated: [],
     preserved: [],
-    deferred: [],
-    removed: [],
-    released: [],
   };
-  const configured = bundleProfiles.filter((profile) => {
-    if (isConfiguredProfile(profile)) return true;
-    report.deferred.push(profile.id);
-    return false;
-  });
   const current = report.created
     ? []
     : daemonProfiles(existing); // validates shape, throws before mutation
   const next = clone(current);
 
-  // A setup-only bundle entry is never written to Paseo. Upgrade cleanup is
-  // narrower: remove only an unconfigured live entry whose current bytes
-  // still match Axstack's bound ownership hash. User-edited or unknown entries
-  // survive even with --force; a missing entry merely releases stale ownership.
-  for (const id of report.deferred) {
-    const idx = next.findIndex((profile) => profile?.id === id);
-    if (idx === -1) {
-      if (id in owned) report.released.push(id);
-    } else if (
-      !isConfiguredProfile(next[idx]) &&
-      id in owned &&
-      hash(next[idx]) === owned[id]
-    ) {
-      next.splice(idx, 1);
-      report.removed.push(id);
-    } else {
-      report.preserved.push(id);
-    }
-  }
-
-  for (const wanted of configured) {
+  for (const wanted of bundleProfiles) {
     const idx = next.findIndex((p) => p && p.id === wanted.id);
     if (idx === -1) {
       next.push(clone(wanted));
@@ -124,6 +120,43 @@ export function mergeProfiles(
     }
   }
   return { config: withDaemonProfiles(existing, next), report };
+}
+
+// Reconcile explicit-null setup templates before merge. Deferred IDs never
+// remain owned. Only the exact hash-owned null placeholder written by an older
+// Axstack installer may be removed; every other live entry is preserved.
+export function reconcileDeferredProfiles(
+  existing,
+  deferredProfiles,
+  { owned = {}, hash = hashObject } = {},
+) {
+  assertBundleProfiles(deferredProfiles);
+  if (deferredProfiles.some((profile) => profile.model !== null)) {
+    throw new Error('invalid deferred profiles: expected explicit null model');
+  }
+  const created = existing === null || existing === undefined;
+  const next = clone(created ? [] : daemonProfiles(existing));
+  const report = { deferred: [], removed: [], released: [], preserved: [] };
+
+  for (const wanted of deferredProfiles) {
+    const id = wanted.id;
+    report.deferred.push(id);
+    const idx = next.findIndex((profile) => profile?.id === id);
+    if (
+      idx !== -1 &&
+      next[idx]?.model === null &&
+      id in owned &&
+      hash(next[idx]) === owned[id]
+    ) {
+      next.splice(idx, 1);
+      report.removed.push(id);
+      continue;
+    }
+    if (idx !== -1) report.preserved.push(id);
+    if (id in owned) report.released.push(id);
+  }
+
+  return { config: withDaemonProfiles(existing, next), report, created };
 }
 
 // Decide which Axstack-owned profiles an uninstall may remove. Only profiles
