@@ -80,3 +80,14 @@ test('improve: normal TDD and bounded ownership remain intact', () => {
   expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-improve')).toBe(false);
   expect(profiles.agentProfiles.length).toBe(17);
 });
+
+test('improve: implementation receipt and audit accept the applicable evidence path', () => {
+  const implement = compact('skills/axstack-implement/SKILL.md');
+  const audit = `${compact('skills/axstack-audit/SKILL.md')} ${compact('skills/axstack-audit/references/record.md')}`;
+  expect(implement).toMatch(/TDD:[^>]*normal red\/green[^>]*structure-preserving[^>]*old-green[^>]*same-check-new-green/i);
+  expect(audit).toMatch(/normal[^.]*real red[- ]green|red[- ]green[^.]*normal/i);
+  expect(audit).toMatch(/structure-preserving[^.]*old revision[^.]*green[^.]*same checks[^.]*new revision[^.]*green/i);
+  expect(audit).toMatch(/missing|absent/i);
+  expect(audit).toMatch(/noncompliance|UNKNOWN/i);
+  expect(audit).toMatch(/applicable[^.]*evidence path|evidence path[^.]*applicable/i);
+});

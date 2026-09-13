@@ -65,7 +65,12 @@ counts with denominators plus the evidence behind the count:
 - Acceptance criteria passed, failed, and unverified, each traced to its tests plus SHA.
 - Planned steps completed and deviated, each deviation with why and approval.
 - Fable coverage across spec creation, spec revision, design, and consequential decisions, under the broader rule rather than an unresolved-only trigger.
-- TDD red-green proof, or recorded noncompliance where the proof is absent.
+- Applicable test-first evidence: normal behavior changes have real red-green
+  proof; explicitly accepted structure-preserving work has the old revision
+  green before edits and the same checks green on the new revision, plus
+  applicable equivalence evidence. Record noncompliance when the applicable
+  evidence path is absent, or `UNKNOWN` with the reason when its records are
+  unavailable.
 - Independent exact-revision review status and unresolved findings.
 - Rework cycles with causes.
 - Avoidable user interventions where records support the call, and no call where they do not.
