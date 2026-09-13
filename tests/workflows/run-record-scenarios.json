@@ -40,6 +40,16 @@
         "facts": "The task is complete, but a required PR remains unmerged."
       },
       "expected": "Record the task complete while the capability remains In Review until all required PRs merge and acceptance checks pass."
+    },
+    {
+      "id": "proportional-scope-identity",
+      "title": "Mixed small and substantial work receives proportional scope identities",
+      "skill_ref": "axstack",
+      "input": {
+        "request": "Apply a small bounded wording fix and build a new multi-PR feature.",
+        "facts": "The wording request has explicit acceptance checks; the feature has no approved spec or ticket map."
+      },
+      "expected": "Record a brief size reason for each: the wording fix may proceed on a snapshotted small-change intent, while the feature reports its exact preparation gap, names axstack-align, and launches nothing."
     }
   ]
 }

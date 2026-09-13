@@ -113,7 +113,7 @@ test('descriptions: every shipped skill is one-line, intent-first, and named', (
   );
 });
 
-test('run-record scenarios: four bounded decisions have the owned scenario shape', () => {
+test('run-record scenarios: five bounded decisions have the owned scenario shape', () => {
   const data = JSON.parse(read('tests/workflows/run-record-scenarios.json'));
   expect(data.version).toBe(1);
   const ids = data.cases.map((entry) => entry.id);
@@ -122,6 +122,7 @@ test('run-record scenarios: four bounded decisions have the owned scenario shape
     'ownership-seize-refused',
     'stale-evidence-hold',
     'task-done-vs-capability-merged',
+    'proportional-scope-identity',
   ]);
   expect(new Set(ids).size).toBe(ids.length);
   for (const entry of data.cases) {
