@@ -20,8 +20,11 @@ owner is never its own independent reviewer. Authoring disqualifies a
 session from reviewing that candidate; the same model family in a fresh
 non-author session is allowed. Materialize reviewers via
 [Paseo launch](../axstack/references/paseo-launch.md): the Opus reviewer is
-a claude session, the Sol reviewer a codex session. Reuse eligible reviewer
-sessions for checkpoints where evidence and scope allow.
+a claude session, the Sol reviewer a codex session. Reuse a reviewer
+session for a checkpoint only when it is a non-author session with
+unchanged or revalidated scope and evidence under the same instantiated
+brief, recording checkpoint scope in the receipt; otherwise launch a new
+session.
 
 Both reviewers cover all six angles:
 
@@ -72,7 +75,10 @@ Findings: <evidence + consequence each>
 
 ## Publishing rule
 
-Declaring merge-ready requires current verified receipts from both
+Confirm the approved spec identity first: a missing baseline, or a
+materially changed and unaccepted one, blocks approval and merge-ready
+declarations, while read-only investigation may proceed. Declaring
+merge-ready then requires current verified receipts from both
 reviewers for the exact candidate revision: each shows verdict APPROVE with
 its candidate SHA, coverage, and limitations, and no material finding
 remains unresolved. The owner synthesizes both reviews into the decision

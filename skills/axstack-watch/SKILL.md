@@ -25,7 +25,9 @@ watchers for the same PR.
 
 Changed heads, CI results, and review feedback route to the same author
 session where evidence allows, followed by a refreshed independent review
-before anything is republished (see `axstack-review`). Publishing still
+before anything is republished (see `axstack-review`). Repairs route only
+under a confirmed approved baseline: a missing or unaccepted baseline holds
+repair routing while monitoring and read-only checks continue. Publishing still
 requires a current verified receipt and no open urgent hold.
 
 ## End conditions and cleanup

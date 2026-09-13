@@ -34,9 +34,8 @@ Acceptance: <checks from approved spec rev>
 
 ## Done rule (exact)
 
-A reviewed but unmerged capability stays **In Review** — never
-in-progress/not-done as a substitute, never Done. Done requires all
-required PRs merged plus the capability's acceptance checks passing.
+A reviewed but unmerged capability stays **In Review**; never mark Done
+before all required PRs merge and the capability's acceptance checks pass.
 
 ## Drift reports
 

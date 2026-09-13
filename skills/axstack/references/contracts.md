@@ -2,11 +2,12 @@
 
 ## Scope approval
 
-No implementation or ticket work without an approved spec revision as the
-execution baseline — whether invoked from entry or standalone. A standalone
-`axstack-implement` or `axstack-tickets` call must first confirm the
-approved spec identity (see `axstack-spec`) and hold if the scope is
-unapproved or materially changed and unaccepted.
+Confirm the approved spec identity (see `axstack-spec`) before execution
+readiness, review readiness and approval, and watch-triggered repairs —
+whether invoked from entry or standalone. A missing baseline, or a
+materially changed and unaccepted one, blocks those dependent actions.
+Pre-approval alignment and spec writing, and safe read-only investigation
+and review, remain allowed without a baseline.
 
 ## Model discipline
 

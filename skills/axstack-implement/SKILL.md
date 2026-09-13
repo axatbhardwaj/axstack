@@ -45,7 +45,9 @@ On restart or resume, reconcile recorded ownership with actual Paseo
 sessions, Git revisions, GitHub state, and the approved spec. Reuse owners
 and workers where appropriate. Reporting an ambiguous launch is not
 permission to create another writer: resolve ownership first and report
-unresolved launch state before any duplicate writer.
+unresolved launch state before any duplicate writer. Also reconcile Linear
+issue state per `axstack-tickets` and watch registrations per
+`axstack-watch`.
 
 ## Template: compact handoff
 
