@@ -2,7 +2,7 @@
 // closed before any mutation unless --yes supplies explicit confirmation.
 // Temp fixtures only; the real HOME is never touched.
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
@@ -95,4 +95,69 @@ test('tilde expansion without HOME errors even with --yes', () => {
     { unset: ['HOME'], expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/home|unknown|destination|refus/);
+});
+
+test('symlink-aliased HOME still guards install without --yes', () => {
+  const root = makeTempRoot();
+  const realHome = join(root, 'real-home');
+  mkdirSync(realHome, { recursive: true });
+  const aliasHome = join(root, 'alias-home');
+  symlinkSync(realHome, aliasHome);
+  const { bundle, skillsDir } = seed(root);
+  const profile = join(aliasHome, '.config', 'paseo', 'config.json');
+  const env = { HOME: aliasHome };
+
+  const installed = runCli(
+    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    { env },
+  );
+  expect(installed.ok).toBe(true);
+  const before = snapshot([
+    join(skillsDir, 'axstack-demo', 'SKILL.md'),
+    join(skillsDir, '.axstack-manifest.json'),
+    profile,
+  ]);
+  // The profile canonicalizes through the alias while raw HOME does not:
+  // the guard must still refuse before any mutation.
+  const r = runCli(
+    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
+    { env, expectFail: true },
+  );
+  expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
+  expectUnchanged(before);
+});
+
+test('symlink-aliased HOME still guards uninstall without --yes', () => {
+  const root = makeTempRoot();
+  const realHome = join(root, 'real-home');
+  mkdirSync(realHome, { recursive: true });
+  const aliasHome = join(root, 'alias-home');
+  symlinkSync(realHome, aliasHome);
+  const { bundle, skillsDir } = seed(root);
+  const profile = join(aliasHome, '.config', 'paseo', 'config.json');
+  const env = { HOME: aliasHome };
+
+  const installed = runCli(
+    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    { env },
+  );
+  expect(installed.ok).toBe(true);
+  const before = snapshot([
+    join(skillsDir, 'axstack-demo', 'SKILL.md'),
+    join(skillsDir, '.axstack-manifest.json'),
+    profile,
+  ]);
+  const r = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile], {
+    env,
+    expectFail: true,
+  });
+  expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
+  expectUnchanged(before);
+
+  const removed = runCli(
+    ['uninstall', '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    { env },
+  );
+  expect(removed.ok).toBe(true);
+  expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
 });

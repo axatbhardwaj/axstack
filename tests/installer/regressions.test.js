@@ -7,6 +7,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -278,13 +279,14 @@ test('uninstall without --profile names the bound path, keeps bytes and ownershi
   // silently left behind.
   const r = runCli(['uninstall', '--skills-dir', skillsDir]);
   expect(r.ok).toBe(true);
-  expect(r.out.includes(profile)).toBe(true);
+  // The note names the canonical bound path (macOS /var -> /private/var).
+  expect(r.out.includes(realpathSync(profile))).toBe(true);
   expect(readFileSync(profile, 'utf8')).toBe(beforeProfile);
   expect(readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner')).toBe(true);
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
   );
-  expect(manifest.profiles.path).toBe(profile);
+  expect(manifest.profiles.path).toBe(realpathSync(profile));
   expect('axstack-owner' in manifest.profiles.entries).toBe(true);
 
   // Completing removal with the named path works and clears ownership.
