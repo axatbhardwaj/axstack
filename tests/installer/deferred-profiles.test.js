@@ -85,7 +85,7 @@ test('CLI defers a null-model preset, owns only configured profiles, and stays i
   expect(second.out).toMatch(/axstack-checker/i);
 });
 
-test('CLI preserves a setup-selected checker without acquiring ownership', () => {
+test('CLI preserves a setup-selected checker without acquiring ownership even with force', () => {
   const root = makeTempRoot('axstack-configured-checker-');
   const bundle = fixture(root);
   const skillsDir = join(root, 'skills');
@@ -99,7 +99,9 @@ test('CLI preserves a setup-selected checker without acquiring ownership', () =>
   host.daemon.agentProfiles.push(selected);
   writeFileSync(profilePath, JSON.stringify(host, null, 2) + '\n');
 
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
+  runCli([
+    'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath, '--force',
+  ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   assertPaseo08ModelFields(config);
   expect(config.daemon.agentProfiles.find((profile) => profile.id === selected.id)).toEqual(selected);
