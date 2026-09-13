@@ -122,7 +122,7 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 108 workflow structural and contract checks pass under Bun. The repository
+- 113 workflow structural and contract checks pass under Bun. The repository
   contains 36 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.

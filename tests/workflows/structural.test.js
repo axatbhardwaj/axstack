@@ -229,11 +229,11 @@ test('structural: shape levels require matching autonomous evidence and review',
   expect(review).toMatch(/missing rationale[^.]*blocks approval/i);
   expect(review).toMatch(/judgment[^.]*measurement[^.]*split\s+failure[^.]*not[^.]*number/i);
   expect(review).toMatch(/bulk buckets[^.]*reproducible command/i);
-  expect(review).toMatch(/weak rationale[^.]*author[^.]*split|rework request/i);
+  expect(review).toMatch(/weak rationale[^.]*author[^.]*(split|rework)/i);
   expect(review).toMatch(/rationale band[^.]*only[^.]*cohesion rationale/i);
   expect(review).toMatch(/exception\s+band[^.]*full\s+exception\s+record/i);
   expect(review).toMatch(/level[^.]*matching[^.]*measured total/i);
-  expect(review).toMatch(/never[^.]*user/i);
+  expect(review).toMatch(/weak rationale[^.]*fix loop[^.]*never\s+(to\s+)?the\s+user/i);
   expect(review).not.toMatch(/over-band/i);
   expect(review).not.toMatch(/^\s*7\.\s/m);
 });

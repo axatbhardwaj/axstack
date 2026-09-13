@@ -114,8 +114,8 @@ or recursive teams.
    failure is real, not the number itself. A weak rationale returns to the
    author as a split or rework request through the normal fix loop, never to the
    user. Routine shape decisions remain autonomous driver decisions; size alone
-   never requires user approval. Escalate only
-   when that work exposes an existing material-scope, security, downtime,
+   never requires user approval. Escalate only when that work exposes an
+   existing material-scope, security, downtime,
    data-loss, major-design-risk, or unavailable-model hold.
 
    Verify the applicable spec, ticket, or intent acceptance, executable

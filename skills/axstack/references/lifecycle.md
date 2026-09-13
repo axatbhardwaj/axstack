@@ -21,10 +21,10 @@ Substantive delegated or resumable work uses a driver-owned
 - Auditor (`axstack-auditor`): report-only evidence collector. Never edits,
   merges, activates, or audits itself.
 
-Prefer parallel independent bounded work; no redundant workers. Per
-[PR shape](pr-shape.md), dependencies/capacity drive uncapped fanout.
-Keep one host/run, one persistent owner/PR, and exactly one writer/candidate.
-Queue conflicts/dependencies; use `gh stack` for dependent PRs.
+Prefer parallel independent bounded work; no redundant workers.
+Per [standing contracts](contracts.md), dependency- and capacity-driven fanout
+has no fixed count within configured host resource and spending limits.
+[PR shape](pr-shape.md) covers theme/size; queue via `gh stack`.
 
 ## Ownership
 
