@@ -49,20 +49,33 @@ contracts, plus routing and lifecycle/receipt references.
   spec; authored mode retains the approved baseline and accepts an
   adopted maintenance scope snapshot without repeated approval. Exactly
   two independent Sol and Opus final reviewers, same six-angle brief, no
-  first-pass cross-reading, no votes. Report-only writes nothing to
-  GitHub; authorized submission binds the commit and verifies the
-  receipt, with lookup before retry on ambiguity. Peer code stays
-  readonly. Prompt-only urgent escalation holds approval, merge-ready
-  declarations, and dependent dangerous actions; Hermes relay is optional
-  with Paseo chat fallback.
-- `axstack-watch` — adopts an existing PR into a recorded maintenance
-  scope; observation-only dispatch launches no author and sends no reply.
-  Authorized repairs reuse the original author with reviewed code and
-  exact public reply text, confirmed against fresh remote head/base and
-  feedback, delivered via scoped `gh stack` with receipt verification.
-  One persistent owner per PR; independent read-only monitor and
-  watchdog on native Paseo timers with verified handshakes,
-  snapshot-only healthy ticks, deduped events, and reconciled sends.
+  first-pass cross-reading, no votes. Completeness is separate from the
+  recommendation: complete evidence with validated defects submits
+  REQUEST_CHANGES, complete evidence with no blockers submits APPROVE,
+  incomplete review submits nothing. Report-only writes nothing to
+  GitHub but records an internal verdict; authorized submission binds
+  the actual commit parameter with lookup before retry on ambiguity.
+  Peer code stays readonly. Prompt-only urgent escalation holds approval
+  and dangerous actions but never blocks reporting validated risk;
+  Hermes relay is optional with Paseo chat fallback.
+- `axstack-watch` — adopts an existing PR after verifying writable
+  ownership and user maintenance authority, into a recorded maintenance
+  scope needing no new spec or ticket ceremony; observation-only dispatch
+  launches no author and sends no reply, dominating every repair path,
+  and peer mode never repairs. Authorized repairs reuse the original
+  author with reviewed code and exact reply bodies keyed to feedback
+  IDs, confirmed against fresh remote head/base, body identity, and
+  feedback freshness (expected-old SHA before any history rewrite, no
+  blind overwrite), delivered via scoped `gh stack` with receipt
+  verification; unknown send outcomes stay blocked until inspected.
+  One persistent owner per PR (materialized standalone as
+  `axstack-owner`; only the owner launches writer, reviewers, monitor,
+  and watchdog; workers never recurse); independent read-only monitor
+  (product state, default 5min) and watchdog (watch health only,
+  default hourly) on native Paseo timers with verified handshakes,
+  snapshot-only healthy ticks, deduped and acknowledged events, and
+  reconciled sends. Owner validates readiness against current required
+  checks — a review approval alone is not merge-ready.
   Bounded monitoring (default 24h, open PRs included) ending early on
   full merge; resumable handoff carries PR, revision, owner, spec or
   accepted intent, CI/review states, remaining actions, and resume refs.
@@ -73,14 +86,19 @@ contracts, plus routing and lifecycle/receipt references.
 
 `profiles/paseo.json` (`version: 1`, `agentProfiles` array, `axstack-*`
 IDs with `name` fields matching the live list_profiles schema) covers the preferred driver (current chat stays
-driver; never auto-launch), Fable advisor (claude `plan`), Opus owner
+driver; never auto-launch), Fable advisor (claude `plan`, involved in
+spec creation/revision, solution design, and consequential decisions;
+driver owns the decision, user approves the spec, cached receipts avoid
+repeat consultation), Opus owner
 (claude `default`), Sol author (codex `auto`), independent Opus
 (claude) and Sol (codex) reviewers, and the report-only checker. The
 checker model stays null until user setup and must never dispatch a
 provider default. Namespaced role defaults extend the same file for
 research requirements/code/web, docs authorship, visual explanation and
-its review, codebase and execution exploration, and the monitor and
-watchdog roles. Conservative presets are claude `default` and codex
+its review, codebase and execution exploration, the monitor and
+watchdog roles, and the read-only Luna auditor (evidence with counts
+and denominators; proposals return as tested, reviewed PRs for human
+merge; raw run records stay local). Conservative presets are claude `default` and codex
 `auto`; validate model availability at launch. An
 unavailable model pauses affected work pending user decision — never
 automatic substitution. Selected live profiles are authoritative; the

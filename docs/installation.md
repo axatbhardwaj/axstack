@@ -130,8 +130,8 @@ Role presets (driver, advisor, PR owners, reviewers) ship as data in
 `profiles/paseo.json` and are merged by `axstack install --profile`.
 Namespaced role defaults extend the same file: research requirements,
 research code, research web, docs authorship, visual explanation and its
-review, codebase and execution exploration, plus the monitor and
-watchdog roles. Review them before installing: the installer applies explicit
+review, codebase and execution exploration, the monitor and watchdog
+roles, plus the read-only auditor. Review them before installing: the installer applies explicit
 configuration only and never auto-installs into your live home. No model is
 ever substituted automatically; outages pause affected work for your
 decision. Selected live profiles are authoritative at runtime; bundled
