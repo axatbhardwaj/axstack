@@ -153,6 +153,15 @@
       "thinkingOptionId": "medium",
       "notes": "Independent read-only watch health-checker on native Paseo timers. Verifies handshakes, dedups events, reconciles uncertain sends. Snapshot-only healthy ticks; never authors, reviews, or replies. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack watchdog (Opus)"
+    },
+    {
+      "id": "axstack-auditor",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
+      "modeId": "auto",
+      "thinkingOptionId": "max",
+      "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators (PASS/FAIL/UNKNOWN); never invents numbers. Launches no child team and never edits, merges, or activates anything: improvement proposals return to the driver as ordinary tested, reviewed PRs for human merge. Raw run records stay local; sanitized publication needs its own authority. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
+      "name": "Axstack auditor (Luna)"
     }
   ]
 }
