@@ -84,6 +84,10 @@ or recursive teams.
    seeded regressions, inadequate checks, and every unverified boundary. Each
    receipt must record concrete evidence and consequences, coverage,
    limitations, and findings without a finding quota.
+
+   Example: `Ticket criterion: an expired invite returns 410. Observed: the
+   handler returns 200 and creates a session. Consequence: expired links remain
+   usable.`
 4. **Reconcile findings without voting.** The owner verifies findings and uses
    focused checks to resolve contradictions. Unresolved material disagreement
    leaves the review incomplete; reviewer votes never settle correctness.
@@ -148,7 +152,9 @@ private host paths, recipients, credentials, or relay configuration.
 
 ## Publishing rule
 
-Choose the output only after the exact-revision verdict is complete:
+Exact-revision completeness gates external approval or merge-ready
+declarations and authorized submission. It never gates returning evidence,
+limitations, validated risk, or an internal `INCOMPLETE` report.
 
 - Peer mode requires both current reviews and no unresolved material finding
   beyond the validated defects reported by `REQUEST_CHANGES`.
