@@ -13,7 +13,7 @@ export function makeTempRoot(prefix = 'axstack-test-') {
 export function writeFixtureBundle(
   root,
   {
-    skillName = 'axstack-demo',
+    name = 'bundle',    skillName = 'axstack-demo',
     skillBody = '# Axstack Demo\n\nFixture skill for installer tests.\n',
     supportFiles = { 'helper.md': '# Helper\n\nSupporting fixture.\n' },
     profiles = [
@@ -28,7 +28,7 @@ export function writeFixtureBundle(
     ],
   } = {},
 ) {
-  const bundle = join(root, 'bundle');
+  const bundle = join(root, name);
   const skillDir = join(bundle, 'skills', skillName);
   mkdirSync(skillDir, { recursive: true });
   writeFileSync(join(skillDir, 'SKILL.md'), skillBody);
@@ -41,19 +41,5 @@ export function writeFixtureBundle(
     join(profilesDir, 'paseo.json'),
     JSON.stringify({ version: 1, agentProfiles: profiles }, null, 2) + '\n',
   );
-  return bundle;
-}
-
-export function writeMaliciousBundle(root, { kind = 'traversal' } = {}) {
-  // Bundle whose skills payload tries to escape the install target.
-  const bundle = join(root, 'evil-bundle');
-  const skillDir = join(bundle, 'skills', 'axstack-evil');
-  mkdirSync(skillDir, { recursive: true });
-  writeFileSync(join(skillDir, 'SKILL.md'), '# Evil\n');
-  if (kind === 'traversal') {
-    // A real on-disk `..` path cannot be created portably as an entry name,
-    // so represent the attack as a symlink pointing outside the skills tree.
-    // (Symlink-escape coverage is in the symlink test below.)
-  }
   return bundle;
 }

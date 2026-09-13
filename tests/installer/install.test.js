@@ -161,8 +161,7 @@ test('unknown pre-existing file at bundle path is not silently overwritten', () 
   );
 });
 
-test('install into real home requires explicit confirmation', () => {
-  const root = makeTempRoot();
+test('install into real home requires explicit confirmation', () => {  const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
   const home = process.env.HOME ?? '/root';
   const guarded = join(home, '.axstack-installer-probe-nope');
@@ -172,4 +171,32 @@ test('install into real home requires explicit confirmation', () => {
   );
   assert.match(r.out.toLowerCase(), /confirm|--yes|explicit|home/);
   assert.ok(!existsSync(join(guarded, 'axstack-demo', 'SKILL.md')));
+});
+
+test('--harness grok is rejected without an explicit --skills-dir override', () => {
+  const root = makeTempRoot();
+  const bundle = writeFixtureBundle(root);
+  const r = runCli(['install', '--bundle', bundle, '--harness', 'grok'], {
+    expectFail: true,
+  });
+  assert.match(r.out.toLowerCase(), /--skills-dir|explicit|unverified/);
+});
+
+test('partial failure rolls back created files and writes no manifest', () => {
+  const root = makeTempRoot();
+  // Two skills sort: axstack-aaa installs first, axstack-zzz fails second.
+  const bundle = writeFixtureBundle(root, { skillName: 'axstack-aaa' });
+  writeFixtureBundle(root, { skillName: 'axstack-zzz' });
+  const { skillsDir } = installTargets(root);
+  // A directory where a bundle file must go makes that write fail midway.
+  mkdirSync(join(skillsDir, 'axstack-zzz'), { recursive: true });
+  mkdirSync(join(skillsDir, 'axstack-zzz', 'SKILL.md'));
+
+  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
+    expectFail: true,
+  });
+  assert.match(r.out.toLowerCase(), /axstack/);
+  // axstack-aaa was created in this run: rolled back, manifest never written.
+  assert.ok(!existsSync(join(skillsDir, 'axstack-aaa', 'SKILL.md')));
+  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
 });
