@@ -24,8 +24,9 @@ The current chat remains the driver; Paseo owns runtime orchestration.
 3. Invoke exactly the selected phase. A directly invoked later phase starts
    there and must pass its own identity check; entry never prepares missing
    scope automatically. If identity is missing, mismatched, or invalidated,
-   report that exact gap and route substantial or genuinely unclear work to
-   `axstack-align` without launching execution.
+   report that exact gap, name `axstack-align` for substantial or genuinely
+   unclear preparation, and launch nothing. Never admit work that a deeper
+   phase would reject.
 
 The route is settled when one applicable phase is named with its valid scope
 identity, or the exact preparation/setup gap is reported with affected work

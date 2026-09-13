@@ -12,8 +12,8 @@ or tool help; a missing step is a setup gap, never a reason to guess a call.
 1. `list_profiles` — read the installed, user-configured live profiles; they are authoritative.
    Bundled `profiles/paseo.json` contains setup defaults only and has no
    guaranteed installed path; its runtime presence is not guaranteed. Select
-   the matching `axstack-*` profile without
-   overriding its model. If `axstack-checker` is absent or unconfigured, hold
+   the matching `axstack-*` profile. Never override its configured model. If
+   `axstack-checker` is absent or unconfigured, hold
    checker dispatch while the driver checks directly or reports the gap.
 2. `list_providers` — confirm the selected profile's provider is configured.
    Reuse unchanged capability discovery across phases.
@@ -31,8 +31,10 @@ or tool help; a missing step is a setup gap, never a reason to guess a call.
    setup gap, not permission to invent a scratch project.
 6. `create_agent` — create the role session with `${provider}/${model}` plus
    the configured mode and thinking settings. Its brief includes the task,
-   applicable scope identity, exact candidate revision, and profile notes. An
-   Opus role is a Claude session running Opus.
+   applicable identity — approved spec revision for substantial work,
+   small-change intent for small work, maintenance snapshot for adoption, or
+   linked intent for peer review — plus exact candidate revision and profile
+   notes. An Opus role is a Claude session running Opus.
 7. Verify the returned agent/workspace IDs, role, provider, and model. Persist
    that session receipt in the run record. If creation is ambiguous, mark the
    receipt pending and reconcile actual runtime state before any retry.

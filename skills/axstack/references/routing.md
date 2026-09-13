@@ -33,23 +33,25 @@ that needs no run record, put the size and reason in the normal brief.
 - **Substantial:** substantial features, multi-PR work, or stacked work. A
   bounded small feature is not substantial merely because it is labelled a
   feature. Require an approved spec plus a ticket map tied to that exact
-  revision, carrying acceptance checks and dependencies in the explicitly
+  spec revision, carrying acceptance checks and dependencies in the explicitly
   selected Markdown or Linear store. Prepare through `axstack-align` ->
   `axstack-spec` (one approval) -> `axstack-tickets` -> handoff, then stop.
 - **Small:** clear, bounded one-PR work. The driver captures the named
-  **small-change intent** from the current request or user-chosen issue plus
-  explicit acceptance checks and exclusions, snapshots it once, and proceeds.
-  No earlier snapshot, spec, ticket ceremony, or second approval is required.
+  **small-change intent** from the current request or user-chosen existing
+  issue plus explicit acceptance checks and exclusions, snapshots it once, and
+  proceeds. No earlier snapshot, spec, ticket ceremony, or second approval is
+  required. Do not route to `axstack-align` solely because that snapshot is not
+  yet written.
   Strict TDD, two-reviewer, model, risk, and human-merge contracts still apply.
 - **Unclear:** clarify the uncertainty through `axstack-align` or one bounded
   question, then classify it as small or substantial. A small ambiguity does
   not force substantial-work paperwork.
 
-Reassess size when growth adds a PR, materially expands an execution
-dependency, introduces an unsettled material design question, or crosses a
-security/infrastructure boundary. A test-then-code sequence and minor file
-dependencies do not alone make work substantial. Hold affected unsafe work
-under the material-change rule while reassessing.
+Reassess size when growth adds an additional PR, adds a new execution
+dependency that materially expands scope, introduces an unsettled material
+design question, or crosses a security/infrastructure boundary. An ordinary
+test-then-code sequence is not multi-task growth; a minor file dependency does
+not alone require a formal spec. Hold affected unsafe work while reassessing.
 
 ## Lifecycle routes (mode-specific scope identity required)
 

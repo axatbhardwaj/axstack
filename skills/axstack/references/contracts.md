@@ -12,14 +12,14 @@ it never audits itself.
 
 ## Scope identity (conditional — see routing and lifecycle)
 
-Use the identity for the selected mode from the
+Confirm the identity for the selected mode from the
 [proportional scope identity](routing.md#proportional-scope-identity):
 
 - Substantial new implementation: approved spec identity plus a matching
   ticket map before execution or authored review.
-- Small new implementation: the named **small-change intent** — current
-  request or user-chosen issue plus explicit acceptance checks and exclusions,
-  snapshotted once — before building or approving.
+- Small new implementation: the named **small-change intent** — recorded
+  current request or user-chosen existing issue plus acceptance checks and
+  exclusions, snapshotted once — before building or approving.
 - Adopted own PR: the accepted maintenance intent snapshot described in
   [Shared lifecycle](lifecycle.md), never a new spec ceremony.
 - Peer review: linked issue, PR description, and repository requirements as

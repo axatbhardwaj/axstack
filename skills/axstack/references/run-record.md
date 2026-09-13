@@ -2,7 +2,8 @@
 
 One compact Markdown `progress.md` is required for substantive delegated or
 resumable work. One-step direct answers need no record ceremony, but still
-obey their applicable scope identity.
+obey their applicable scope identity. This tiny-task exemption is not a
+scope-identity exemption.
 
 ## Location and identity
 
@@ -49,8 +50,8 @@ verifies exact SHAs and receipts before recording a transition; a worker claim
 alone is not verification.
 
 Before changing `Driver` or a task `Owner`, verify that the prior driver is
-inactive against actual Paseo session state, or that an explicit accepted
-transfer permits reassignment. Idle alone never reassigns ownership.
+inactive against actual Paseo session state, or that an explicit accepted transfer
+permits reassignment. Idle alone never reassigns ownership.
 Uncertain state or a live conflict holds the transfer; never overwrite the
 field to seize control. A prior driver that sees a different valid accepted
 owner stops.
