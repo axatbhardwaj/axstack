@@ -148,6 +148,17 @@ export async function validateBundle(bundleDir) {
     throw new Error('bundle skills/ must be a real directory, not a symlink');
   }
   let entries = await readdir(skillsRoot, { withFileTypes: true });
+  // Symlinked (or non-directory) top-level skill entries must be rejected,
+  // not silently skipped: Dirent.isDirectory() is false for symlinks.
+  for (const entry of entries) {
+    if (!entry.name.startsWith('axstack')) continue;
+    const entryStat = await lstat(join(skillsRoot, entry.name));
+    if (entryStat.isSymbolicLink() || !entryStat.isDirectory()) {
+      throw new Error(
+        `unsafe bundle: skill entry ${entry.name} must be a real directory, not a symlink`,
+      );
+    }
+  }
   const skillDirs = entries.filter((e) => e.isDirectory() && e.name.startsWith('axstack'));
   if (skillDirs.length === 0) {
     throw new Error('bundle contains no axstack-* skill directories under skills/');
@@ -498,6 +509,14 @@ export async function uninstallBundle({
   const boundProfilePath = manifest.profiles?.path ?? null;
   const ownedProfiles = manifest.profiles?.entries ?? {};
   const remainingFiles = { ...ownedFiles };
+
+  // No --profile with bound ownership: leave profile bytes and ownership
+  // untouched, but say so loudly with the bound path and the remedy.
+  if (!profileFile && Object.keys(ownedProfiles).length > 0) {
+    summary.note = boundProfilePath
+      ? `Axstack profiles remain in ${boundProfilePath}; re-run uninstall with --profile ${boundProfilePath} to remove them`
+      : 'Axstack-owned profiles remain in their bound config; re-run uninstall with --profile <config> to remove them';
+  }
 
   // Validate the profile input (identity, read, parse, plan) BEFORE deleting
   // anything: a wrong-path or malformed profile must fail with skills intact.
