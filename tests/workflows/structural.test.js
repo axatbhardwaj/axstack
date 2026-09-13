@@ -153,6 +153,25 @@ test('structural: standalone phases explicitly load shared references', () => {
   }
 });
 
+test('structural: active PR parallelism has no fixed count', () => {
+  const currentPolicyFiles = [
+    ...readdirSync(skillsDir, { recursive: true })
+      .filter((p) => p.endsWith('.md'))
+      .map((p) => join(skillsDir, p)),
+    join(root, 'README.md'),
+    join(root, 'docs', 'workflows.md'),
+  ];
+  const fixedTwoCap = /two active PRs|default (limit|is) .*two/i;
+  for (const p of currentPolicyFiles) {
+    expect(readFileSync(p, 'utf8'), `${p} retains a fixed two-PR cap`).not.toMatch(fixedTwoCap);
+  }
+
+  const contracts = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
+  expect(contracts).toMatch(/no fixed active-PR count/i);
+  expect(contracts).toMatch(/one Paseo execution host owns a run/i);
+  expect(contracts).toMatch(/exactly one writer per candidate/i);
+});
+
 test('structural: launch reference gives ordered Paseo materialization steps', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'paseo-launch.md'), 'utf8');
   const steps = [
