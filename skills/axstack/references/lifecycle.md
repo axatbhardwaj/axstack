@@ -1,7 +1,7 @@
 # Shared lifecycle and receipts
 
-Loaded by entry, review, and watch; reached from every other phase
-through the conditional pointers in [Standing contracts](contracts.md).
+Loaded directly by core phases or through the required edge in
+[Standing contracts](contracts.md).
 
 ## Roster (compact)
 
@@ -68,7 +68,9 @@ Auditing is enabled by default for every substantive run: at run end,
 the driver dispatches the auditor (`axstack-auditor`), and also does so
 at useful checkpoints such as a material deviation or repeated repair.
 Load the bundled [audit skill](../../axstack-audit/SKILL.md) before the
-audit. The auditor collects read-only evidence against the run record:
+audit. An `axstack-audit` run is excluded from this hook: it writes its
+assigned audit record and stops, launching no children. The auditor
+collects read-only evidence against the run record:
 scope, outcome evidence, and metric counts with denominators. Findings
 are PASS/FAIL/UNKNOWN with evidence — never invented numbers, including
 cost figures. Improvement proposals change nothing by themselves: the

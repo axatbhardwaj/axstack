@@ -1,5 +1,13 @@
 # Standing contracts (standalone phases load this, then follow its pointers)
 
+## Required lifecycle load
+
+Except for `axstack-audit` itself, every independently called phase
+follows this edge. Load and follow [Shared lifecycle](lifecycle.md)
+before acting, then apply its audit hook when a substantive run ends.
+The audit phase loads these standing contracts but stops after its own
+record instead of auditing itself.
+
 ## Scope identity (conditional — see routing and lifecycle)
 
 One global spec gate contradicts peer and adoption modes. The required

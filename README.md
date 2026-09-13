@@ -67,9 +67,12 @@ decision — never automatic substitution. Phase skills live in [skills/](skills
 
 ## Verification status
 
-- 14 workflow checks (structural packaging plus the 12-scenario evaluation
-  contract) pass under Bun; prior Muse simulation evidence for the 12
-  scenarios stands separately. None of this is live harness support.
+- 73 workflow structural and contract checks pass under Bun. The repository
+  contains 25 declared scenarios; their shape checks are not model behavior.
+- A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
+  intended decisions for the 25 declared scenarios plus 8 baseline cases.
+  Its private artifact is not shipped. This is model simulation, not live
+  runtime or harness-support proof.
 - CI targets Ubuntu and macOS with Bun 1.3.14 and 1.4.2 (`bun test` and
   `bun pm pack --dry-run` on pushes and pull requests) — see
   [GitHub Actions](https://github.com/axatbhardwaj/axstack/actions).

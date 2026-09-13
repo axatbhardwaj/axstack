@@ -17,7 +17,7 @@ These need no alignment interview, approved spec, or ticket mapping:
 - Handoff or resume (`axstack-handoff`): compact handoff, resume
   reconciliation, routing back into the lifecycle below.
 
-## Lifecycle routes (approved scope required)
+## Lifecycle routes (mode-specific scope identity required)
 
 - New work: `axstack-align` -> `axstack-spec` (user approves; the approved
   revision is the execution baseline) -> `axstack-tickets` ->
