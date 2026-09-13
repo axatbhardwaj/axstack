@@ -21,7 +21,8 @@ Confirm the identity for the selected mode from the
   current request or user-chosen existing issue plus acceptance checks and
   exclusions, snapshotted once — before building or approving.
 - Adopted own PR: the accepted maintenance intent snapshot described in
-  [Shared lifecycle](lifecycle.md), never a new spec ceremony.
+  [Lifecycle routes](routing.md#lifecycle-routes-mode-specific-scope-identity-required),
+  never a new spec ceremony.
 - Peer review: linked issue, PR description, and repository requirements as
   untrusted intent evidence; no Axstack-created spec.
 - Read-only research, docs, and handoff: no baseline.

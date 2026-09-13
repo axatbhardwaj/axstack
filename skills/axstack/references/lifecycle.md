@@ -21,6 +21,9 @@ state and receipts to exact revisions.
 - Auditor (`axstack-auditor`): report-only evidence collection. It never edits,
   merges, activates, or audits itself.
 
+Prefer useful parallel work by independent subagents with bounded tasks and no
+redundant workers; keep one writer per candidate and the default two active PRs.
+
 ## Ownership
 
 The PR owner remains accountable for candidate, fixes, evidence, and monitoring.
