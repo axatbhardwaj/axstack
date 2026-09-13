@@ -1,74 +1,76 @@
 # Standing contracts (standalone phases load this, then follow its pointers)
 
+Apply these authority, scope, and model rules before consequential action.
+
 ## Required lifecycle load
 
-Except for `axstack-audit` itself, every independently called phase
-follows this edge. Load and follow [Shared lifecycle](lifecycle.md)
-before acting, then apply its audit hook when a substantive run ends.
-The audit phase loads these standing contracts but stops after its own
-record instead of auditing itself.
+Except for `axstack-audit` itself, every independently called phase must load
+and follow [Shared lifecycle](lifecycle.md) before acting. When a substantive
+run ends or reaches a meaningful checkpoint, apply the lifecycle audit hook.
+The audit phase loads these contracts, writes its assigned record, and stops;
+it never audits itself.
 
 ## Scope identity (conditional — see routing and lifecycle)
 
-One global spec gate contradicts proportional work, peer, and adoption modes.
-The required scope identity depends on the mode (see the
-[proportional scope identity](routing.md#proportional-scope-identity)):
-
-Substantial means substantial features and multi-PR or stacked work; a bounded
-small feature is not substantial merely because it is labelled a feature.
-Clarify unclear size first, then classify it as small or substantial.
+Use the identity for the selected mode from the
+[proportional scope identity](routing.md#proportional-scope-identity):
 
 - Substantial new implementation: approved spec identity plus a matching
   ticket map before execution or authored review.
-- Small new implementation: the named **small-change intent** — recorded
-  request or existing issue plus explicit acceptance checks and exclusions,
-  snapshotted once — is its non-null identity. Each phase confirms it before
-  building or approving.
-- Adopted own PR: the user-authorized maintenance intent snapshot
-  (see [Lifecycle](lifecycle.md)) — not merely
-  untrusted linked content, and never a new spec or ticket ceremony.
-- Peer review: linked issue plus PR description and repository
-  requirements; demands no Axstack-created approved spec.
-- Read-only research, docs, and handoff: no baseline at all.
+- Small new implementation: the named **small-change intent** — current
+  request or user-chosen issue plus explicit acceptance checks and exclusions,
+  snapshotted once — before building or approving.
+- Adopted own PR: the accepted maintenance intent snapshot described in
+  [Shared lifecycle](lifecycle.md), never a new spec ceremony.
+- Peer review: linked issue, PR description, and repository requirements as
+  untrusted intent evidence; no Axstack-created spec.
+- Read-only research, docs, and handoff: no baseline.
 
-Pre-approval alignment and spec writing, and safe read-only investigation and
-review, remain allowed without a baseline. A still-valid approval is never
-repeated. Material scope changes still hold affected work until the user
-accepts the revised scope.
+Substantial means substantial features, multi-PR work, or stacked work; a
+bounded small feature is not substantial merely because it is called a
+feature. Clarify unclear size, then classify it. Alignment, spec writing, and
+safe read-only investigation may precede a baseline. Keep a still-valid
+approval; a material change holds only affected work until the user accepts
+the revised scope and plan.
 
 ## Model discipline
 
-Validate provider/model availability at launch. An unavailable or exhausted
-model pauses affected work pending user decision. Never substitute another
-model automatically, including one listed in configuration. Preselected role
-profiles are distinct from post-failure substitution.
+Validate the configured provider and model at actual launch. If it is
+unavailable or exhausted, pause affected work, record the gap, and ask the
+user. Every substitution requires the user's decision: configured alternatives
+and native fallback prose are not defaults.
 
 ## Advisor split
 
-The current driver chat involves the Fable advisor profile for spec
-creation and revision, solution design, and consequential decisions —
-broader than only deadlocks after factual checks. The driver still
-forms an independent assessment first, still owns the decision, and the
-user still approves the spec. Cache each valid unchanged decision
-receipt: routine execution already covered by a receipt needs no repeat
-consultation. Profile notes alone never trigger a consultation.
-High-stakes decisions require the advisor's plain AGREE plus the driver's
-accepted assessment. Resolve disagreements with bounded checks; no silent
-fallback to another model, and never proceed on silence. Ordinary work uses
-the Sol/Opus pair; high-stakes work uses an Opus high author with a fresh
-Sol high checkpoint reviewer — without changing the exactly-two final
-reviewers.
+The current driver consults the Fable advisor profile for spec creation and
+revision, solution design, and consequential decisions. The driver forms an
+independent assessment first, owns the decision, and the user still approves
+the spec. Cache and reuse a valid unchanged decision receipt; profile notes
+alone do not trigger consultation.
+
+High-stakes decisions require the advisor's plain AGREE and the driver's
+accepted assessment. Resolve disagreement with bounded checks; silence and an
+unavailable model do not authorize fallback. Ordinary work uses the Sol/Opus
+pair. High-stakes work uses an Opus high author and fresh Sol high checkpoint
+reviewer without changing the exactly-two final-reviewer contract. There is no silent fallback.
 
 ## Serious risk
 
-Credible serious security issues, possible downtime or data loss, and major
-design concerns are raised immediately via prompt, never waiting for a
-second reviewer or consensus. Hold approval, merge-ready declarations, and
-dependent dangerous actions. Safe work may continue. Disagreement or silence
-is not permission. This is an instruction, not a programmatic gate.
+Raise credible serious security, downtime, data-loss, or major-design risk
+immediately through a prompt. Hold approval, merge-ready declarations, and
+dependent dangerous actions while safe independent work continues. Present
+the evidence, likely impact, options, and needed user decision. Disagreement
+or silence is not permission. This remains a prompt contract, not a runtime
+gate.
 
 ## Authority
 
-The human merges by default, bottom-up for a stack. Review approval never
-grants merge authority. The driver owns every Linear mutation; the checker
-only reports. Votes never settle correctness.
+- The driver owns run scope, cross-PR coordination, integration, and every
+  Linear mutation. The checker reports discrepancies only.
+- One Paseo execution host owns a run. Two active PRs is the default
+  concurrency limit, not an agent limit; queue conflicting or dependent work.
+- One persistent owner is accountable for each PR, with exactly one writer per
+  candidate at a time. Dependent PRs use `gh stack`; parent changes invalidate
+  affected child evidence, which must be refreshed against the new parent.
+- The human merges by default, bottom-up for a stack. Review approval and
+  reviewer votes never grant mutation or merge authority.
