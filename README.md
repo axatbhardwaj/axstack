@@ -40,9 +40,12 @@ Updated 2026-09-13 by user-requested change: scope readiness is proportional.
     maintenance scope snapshot; monitoring stays bounded with one owner,
     an independent read-only monitor and watchdog, and no silent renewal.
 
-Defaults: one execution host per run, two active PRs, 24-hour bounded
-monitoring with a resumable handoff. Details: [docs/workflows.md](docs/workflows.md),
-spec: [issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
+Active PRs have no fixed count. Parallelism is bounded by one execution host
+per run, one persistent owner per PR, exactly one writer per candidate, and
+configured budgets. The driver queues conflicting or dependent work and uses
+`gh stack` for dependent PRs. Monitoring remains bounded to 24 hours by default
+with a resumable handoff. Details: [docs/workflows.md](docs/workflows.md), spec:
+[issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
 
 Linear is the default integration (native document, report-only checker,
 driver-owned updates); repository Markdown is an explicit alternative.

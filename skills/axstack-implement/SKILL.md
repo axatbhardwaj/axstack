@@ -55,14 +55,16 @@ lifecycle's native capability preflight for that transfer. An ordinary restart
 or resume reconciles the existing sessions and run record without creating a
 fresh recipient.
 
-The default limit is two active PRs. The driver queues conflicting or dependent
-work and coordinates dependent PRs through `gh stack`. A dependent candidate
-starts from its reviewed parent. If that parent changes, hold reliance on stale
-child evidence and child merge readiness, update the child to the new parent
-revision, and re-run every affected check. A green parent does not prove the
-combined stack, but the parent need not wait for an independently reviewed
-child. Dispatch only when ownership, worktree, dependency revisions, and
-writer exclusivity agree with live state.
+There is no fixed active-PR count. Parallelism is bounded by one execution host
+per run, one persistent owner per PR, exactly one writer per candidate, and
+configured budgets. The driver queues conflicting or dependent work and
+coordinates dependent PRs through `gh stack`. A dependent candidate starts
+from its reviewed parent. If that parent changes, hold reliance on stale child
+evidence and child merge readiness, update the child to the new parent revision,
+and re-run every affected check. A green parent does not prove the combined
+stack, but the parent need not wait for an independently reviewed child.
+Dispatch only when ownership, worktree, dependency revisions, and writer
+exclusivity agree with live state.
 
 ## 3. Establish test-first evidence
 

@@ -61,7 +61,10 @@ Progressive loading: invoke only the phase needed. Each phase loads standing con
 Procedure-specific references are loaded at their point of use, including
 Paseo launch materialization before dispatch.
 
-- `axstack` — entry router: lifecycle, holds, one host, two PRs, one owner per PR.
+- `axstack` — entry router: lifecycle and holds; no fixed active-PR count.
+  Parallelism is bounded by one execution host per run, one persistent owner
+  per PR, exactly one writer per candidate, and configured budgets. The driver
+  queues conflicting or dependent work and uses `gh stack` for dependent PRs.
 - `axstack-align` — interview and resolve factual questions.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.

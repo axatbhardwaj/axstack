@@ -22,7 +22,10 @@ Substantive delegated or resumable work uses a driver-owned
   merges, activates, or audits itself.
 
 Prefer useful parallel work by independent subagents with bounded tasks and no
-redundant workers; keep one writer per candidate and the default two active PRs.
+redundant workers. There is no fixed active-PR count; one execution host per
+run, one persistent owner per PR, exactly one writer per candidate, and
+configured budgets bound parallelism. The driver queues conflicting or
+dependent work and uses `gh stack` for dependent PRs.
 
 ## Ownership
 

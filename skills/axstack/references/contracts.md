@@ -71,8 +71,10 @@ gate.
 
 - The driver owns run scope, cross-PR coordination, integration, and every
   Linear mutation. The checker reports discrepancies only.
-- One Paseo execution host owns a run. Two active PRs is the default
-  concurrency limit, not an agent limit; queue conflicting or dependent work.
+- One Paseo execution host owns a run. There is no fixed active-PR count.
+  Parallelism is bounded by that host, one persistent owner per PR, configured
+  budgets, and exactly one writer per candidate. The driver queues conflicting
+  or dependent work and uses `gh stack` for dependent PRs.
 - One persistent owner is accountable for each PR, with exactly one writer per
   candidate at a time. Dependent PRs use `gh stack`; parent changes invalidate
   affected child evidence, which must be refreshed against the new parent.
