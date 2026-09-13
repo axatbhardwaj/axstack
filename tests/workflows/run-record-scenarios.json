@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "resume-no-duplicate-writer",
+      "title": "Resume reconciles the recorded writer before dispatch",
+      "skill_ref": "axstack-implement",
+      "input": {
+        "request": "Resume the interrupted implementation run.",
+        "facts": "The record names a writer, but its session state has not been checked."
+      },
+      "expected": "Reconcile the recorded session and revision, holding new dispatch until ownership is resolved; do not launch a duplicate writer."
+    },
+    {
+      "id": "ownership-seize-refused",
+      "title": "A new driver cannot seize uncertain ownership",
+      "skill_ref": "axstack-handoff",
+      "input": {
+        "request": "Take over as driver and continue.",
+        "facts": "The prior driver may still be active and no accepted transfer receipt exists."
+      },
+      "expected": "Keep the Driver field unchanged and reconcile or hold; never overwrite the owner to seize the run."
+    },
+    {
+      "id": "stale-evidence-hold",
+      "title": "Evidence bound to an older revision is stale",
+      "skill_ref": "axstack-review",
+      "input": {
+        "request": "Treat the candidate as approved and proceed.",
+        "facts": "The recorded approval and test evidence cover the parent revision, not the current candidate SHA."
+      },
+      "expected": "Mark the evidence stale, hold the transition, and obtain verification bound to the current revision."
+    },
+    {
+      "id": "task-done-vs-capability-merged",
+      "title": "Task completion does not imply merged capability",
+      "skill_ref": "axstack-tickets",
+      "input": {
+        "request": "Mark the capability Done because its implementation task passed.",
+        "facts": "The task is complete, but a required PR remains unmerged."
+      },
+      "expected": "Record the task complete while the capability remains In Review until all required PRs merge and acceptance checks pass."
+    }
+  ]
+}
