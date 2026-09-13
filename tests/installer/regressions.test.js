@@ -298,3 +298,63 @@ test('mid-run profile failure restores updated skills and keeps manifest', () =>
   assert.ok(again.ok);
   assert.match(again.out.toLowerCase(), /no changes|idempotent|unchanged/);
 });
+
+test('uninstall without --profile names the bound path, keeps bytes and ownership', () => {
+  const root = makeTempRoot();
+  const bundle = ownerBundle(root);
+  const skillsDir = join(root, 'skills');
+  const profile = join(root, 'paseo.json');
+  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  const beforeProfile = readFileSync(profile, 'utf8');
+
+  // No --profile: skills go, but the bound profile must be reported, not
+  // silently left behind.
+  const r = runCli(['uninstall', '--skills-dir', skillsDir]);
+  assert.ok(r.ok);
+  assert.ok(
+    r.out.includes(profile),
+    `uninstall output must name the bound config path:\n${r.out}`,
+  );
+  assert.equal(readFileSync(profile, 'utf8'), beforeProfile);
+  assert.ok(
+    readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner'),
+  );
+  const manifest = JSON.parse(
+    readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
+  );
+  assert.equal(manifest.profiles.path, profile);
+  assert.ok('axstack-owner' in manifest.profiles.entries);
+
+  // Completing removal with the named path works and clears ownership.
+  const done = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
+  assert.ok(done.ok);
+  assert.ok(
+    !readProfile(profile).daemon.agentProfiles.some((p) => p.id === 'axstack-owner'),
+  );
+});
+
+test('mixed real and symlinked top-level skill entries are rejected pre-write', () => {
+  const root = makeTempRoot();
+  const bundle = join(root, 'bundle');
+  const realSkill = join(bundle, 'skills', 'axstack-real');
+  mkdirSync(realSkill, { recursive: true });
+  writeFileSync(join(realSkill, 'SKILL.md'), '# Real\n');
+  const outside = join(root, 'outside');
+  mkdirSync(outside, { recursive: true });
+  writeFileSync(join(outside, 'sentinel.txt'), 'outside data\n');
+  symlinkSync(outside, join(bundle, 'skills', 'axstack-evil'));
+  mkdirSync(join(bundle, 'profiles'), { recursive: true });
+  writeFileSync(
+    join(bundle, 'profiles', 'paseo.json'),
+    JSON.stringify({ version: 1, agentProfiles: [{ ...OWNER_PROFILE }] }),
+  );
+
+  const skillsDir = join(root, 'skills');
+  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
+    expectFail: true,
+  });
+  assert.match(r.out.toLowerCase(), /symlink|malformed|reject|unsafe/);
+  assert.ok(!existsSync(join(skillsDir, 'axstack-real', 'SKILL.md')));
+  assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
+  assert.equal(readFileSync(join(outside, 'sentinel.txt'), 'utf8'), 'outside data\n');
+});
