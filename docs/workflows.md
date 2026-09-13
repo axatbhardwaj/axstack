@@ -62,13 +62,23 @@ Procedure-specific references are loaded at their point of use, including
 Paseo launch materialization before dispatch.
 
 - `axstack` — entry router: lifecycle and holds; no fixed active-PR count.
-  Parallelism is bounded by one execution host per run, one persistent owner
-  per PR, exactly one writer per candidate, and configured budgets. The driver
-  queues conflicting or dependent work and uses `gh stack` for dependent PRs.
+  Fanout is dependency- and capacity-driven within configured host resource and
+  spending limits, with one host per run, one persistent owner per PR, and one
+  writer per candidate. Each PR follows the shared
+  [PR-shape policy](../skills/axstack/references/pr-shape.md): one theme and a
+  measured full size. Routine shape, split, fanout, and exception decisions are
+  autonomous driver decisions inside the approved spec; size alone never
+  requires user approval. The rationale band requires only a recorded cohesion
+  rationale and no split-attempt record. The exception band gets a reasonable
+  split attempt and, when cohesion requires proceeding, the full exception
+  record. The independent reviewer applies the level matching the measured total
+  under angle 6. Weak rationale returns to the author through the normal fix
+  loop. Existing material-scope, serious-risk, unavailable-model, and
+  human-merge holds remain unchanged.
 - `axstack-align` — interview and resolve factual questions.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
-- `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
-- `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; `gh stack` coordination; restart reconciliation (ambiguity never authorizes a duplicate writer).
+- `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map with a theme and coarse size estimate per task, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
+- `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; measured shape receipts; `gh stack` coordination and remeasurement after parent changes; restart reconciliation (ambiguity never authorizes a duplicate writer).
 - `axstack-improve` — direct codebase-quality discovery with bounded evidence,
   a small ranked candidate set, and no automatic source edits. It may use
   `axstack-explain` for useful before/after visuals without forcing HTML.
@@ -94,6 +104,11 @@ Paseo launch materialization before dispatch.
   Peer code stays readonly. Prompt-only urgent escalation holds approval
   and dangerous actions but never blocks reporting validated risk;
   Hermes relay is optional with Paseo chat fallback.
+  Under angle 6, reviewers verify recorded PR shape against the pinned head and
+  base, then apply the matching rationale or exception level. They judge whether
+  a stated split failure is real, not the number itself; missing or weak evidence
+  is a normal blocking finding returned to the author, never a routine user
+  prompt.
 - `axstack-watch` — adopts an existing PR after verifying writable
   ownership and user maintenance authority, into a recorded maintenance
   scope needing no new spec or ticket ceremony; observation-only dispatch
