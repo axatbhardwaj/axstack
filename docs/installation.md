@@ -86,7 +86,7 @@ Behavior:
 axstack check [--bundle <dir>]
 ```
 
-Probes `node`, `git`, `gh`, the `gh stack` extension (via the real
+Probes `bun`, `git`, `gh`, the `gh stack` extension (via the real
 `gh stack --help`), and `paseo`, then
 reports gaps with a non-zero exit when anything is missing. With `--bundle`,
 also validates the bundle layout.
