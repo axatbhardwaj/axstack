@@ -185,7 +185,7 @@ test('owned-audit: metrics carry counts, denominators, and evidence', () => {
 test('owned-audit: judgment separates outcome, adherence, and coverage', () => {
   const text = readAudit();
   expect(/execution outcome.*procedural adherence.*measurement coverage/i.test(text), 'must distinguish outcome vs adherence vs coverage').toBeTruthy();
-  expect(/never count missing evidence as.*pass/i.test(text), 'missing evidence is never a pass').toBeTruthy();
+  expect(/never counts? missing evidence as.*pass/i.test(text), 'missing evidence is never a pass').toBeTruthy();
   expect(/vanity score/i.test(text), 'no collapse to a vanity score').toBeTruthy();
   expect(/not.*game|never.*game/i.test(text), 'parallelism is not a metric to game').toBeTruthy();
 });
