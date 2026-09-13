@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "files": {
+    "axstack-demo/SKILL.md": "a7d9173c2524e6675b752aa121054e57eaa78d2cd6dd6a99b89580d2550fd3f0",
+    "axstack-demo/helper.md": "a8b00d91c214d6ef77ce622aacaeed57d197eeb8fe4b4a9d73be92b85bf769ba"
+  },
+  "profiles": {
+    "path": "/tmp/axstack-oldimpl-Tn7s1C/paseo.json",
+    "entries": {
+      "axstack-driver": "b5ac99e8059cf7e713c14b35852382fa46597ebc365c9f02b62683c86848a912"
+    }
+  }
+}

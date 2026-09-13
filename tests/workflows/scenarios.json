@@ -1,0 +1,190 @@
+{
+  "version": 1,
+  "spec": "docs/specs/v1.md",
+  "note": "Behavioral evaluation cases for Axstack workflow skills. Each case gives observable scenario inputs and expected decisions. An independent Muse evaluator executes these against skill prompts; keyword matching is not behavior.",
+  "cases": [
+    {
+      "id": "model-outage",
+      "title": "Required model unavailable pauses affected work without substitution",
+      "spec_ref": "Model roles: unavailable or exhausted model pauses affected work and requires user decision before another model is used. No automatic fallback.",
+      "input": {
+        "run_state": "Two-PR stack in progress. PR-A owner=Opus medium implementing; PR-B queued behind PR-A.",
+        "event": "Opus medium reports quota-exhausted mid-implementation on PR-A. Sol medium reviewers remain available.",
+        "user_instruction": "No model substitution authorized."
+      },
+      "expected": {
+        "hold": ["PR-A implementation, verification, and review dependent on Opus medium"],
+        "continue": ["Independent safe work not requiring Opus medium may continue if explicitly unaffected"],
+        "forbidden": ["No automatic fallback to Sol/another model for the Opus role", "No silent reassignment of PR ownership"],
+        "decision_required_from_user": "Which model to use for PR-A, or wait for quota recovery",
+        "evidence": "Record exhausted model, affected PR/tasks, and paused state"
+      }
+    },
+    {
+      "id": "changed-parent",
+      "title": "Changed parent invalidates affected child evidence",
+      "spec_ref": "Hosts, ownership, and parallelism: parent changes invalidate affected descendant evidence and require update plus re-verification.",
+      "input": {
+        "run_state": "Two-PR stack. Parent PR-A reviewed green at rev A@r3. Child PR-B built on A@r3, verified green.",
+        "event": "Parent PR-A amends to A@r4 (behavioral change in shared module) and re-verifies green standalone."
+      },
+      "expected": {
+        "hold": ["Child PR-B prior green evidence is invalid for affected behavior"],
+        "required": ["Rebase/update PR-B onto A@r4", "Re-run affected checks and verification for PR-B"],
+        "forbidden": ["Claiming green parent proves combined stack works", "Merging PR-B on stale A@r3 evidence"],
+        "evidence": "Record parent rev change, affected child files/behavior, and refreshed verification"
+      }
+    },
+    {
+      "id": "spec-drift",
+      "title": "Material spec edit holds affected implementation",
+      "spec_ref": "Linear mode: if approved spec changes materially, hold affected code changes until user accepts revised scope; preserve prior baseline. Material scope changes hold affected work; independent safe work may continue.",
+      "input": {
+        "run_state": "Approved spec rev s1 baseline. PR-A implements capability C1; PR-B implements unrelated capability C2.",
+        "event": "User proposes material change to C1 acceptance criteria (new auth boundary). No acceptance yet of revised scope."
+      },
+      "expected": {
+        "hold": ["Affected PR-A code changes until user accepts revised scope/plan"],
+        "continue": ["Unrelated PR-B work may continue"],
+        "required": ["Identify affected work", "Propose revised scope and plan", "Preserve s1 baseline while resolving"],
+        "forbidden": ["Implementing revised C1 scope before user acceptance", "Discarding s1 baseline"],
+        "evidence": "Record spec delta, affected PRs/tasks, hold state, and proposal"
+      }
+    },
+    {
+      "id": "two-reviewer-disagreement",
+      "title": "Reviewer disagreement means incomplete review, resolved by evidence",
+      "spec_ref": "Two-reviewer contract: same brief/scope/revision, all six angles, no cross-reading initial findings, no vote-based resolution. Unresolved material disagreement means incomplete review.",
+      "input": {
+        "run_state": "PR candidate rev X ready for final review. Owner launched independent Sol and Opus reviewers with identical brief.",
+        "event": "Sol reports no material findings. Opus reports material correctness failure with failing-input evidence. Findings were produced independently."
+      },
+      "expected": {
+        "verdict": "Review is incomplete; neither unanimity shortcut nor majority vote applies",
+        "required": ["Owner verifies Opus finding with focused check", "Reconcile contradiction with evidence, not votes", "Return accepted fixes to author and obtain refreshed review receipt for new revision"],
+        "forbidden": ["Merging on one clean review", "Resolving by counting votes", "Reviewers reading each other initial findings before reporting"],
+        "coverage": "Both reviewers cover all six angles: (1) security/trust, (2) correctness/failures/edge, (3) integration/regressions, (4) requirements/acceptance/behavior, (5) architecture/SOLID/alternatives, (6) simplicity/KISS/YAGNI/complexity"
+      }
+    },
+    {
+      "id": "serious-risk-relay-failure",
+      "title": "Serious risk escalates prompt-only; relay failure falls back to chat",
+      "spec_ref": "Prompt-only urgent escalation: credible serious security/infra-downtime/data-loss/major-design concern raised immediately. Hold approval/merge-ready/dependent dangerous actions. Instruction in skills, not programmatic gate. Hermes relay optional; Paseo chat fallback; failed delivery never resolves concern.",
+      "input": {
+        "run_state": "Final review in progress on PR-A.",
+        "event": "Reviewer finds credible serious security issue (auth bypass with exploit steps) during review. Configured Hermes relay delivery fails."
+      },
+      "expected": {
+        "immediate": "Raise to owner/driver and user without waiting for second reviewer or consensus",
+        "hold": ["Approval, merge-ready declarations, and dependent dangerous actions"],
+        "continue": ["Safe investigation and unrelated work may continue"],
+        "fallback": "Deliver via Paseo chat when Hermes relay fails; failed delivery never resolves the concern",
+        "forbidden": ["Implementing a programmatic escalation gate/hook/engine", "Proceeding on disagreement or silence as permission"],
+        "evidence": "Present evidence, likely impact, options, and needed user decision"
+      }
+    },
+    {
+      "id": "duplicate-launch-uncertainty",
+      "title": "Interrupted launch reconciles before creating writers",
+      "spec_ref": "Monitoring and recovery: reconcile recorded ownership with actual Paseo sessions, Git revisions, GitHub state, and approved spec. Reuse owners/workers where appropriate. Report unresolved launch state before creating duplicate writer.",
+      "input": {
+        "run_state": "Driver restart after interruption. Recorded owner session S1 for PR-A; actual Paseo shows S1 status ambiguous (no heartbeat, candidate rev exists in worktree W-A).",
+        "event": "Driver considers launching replacement worker for PR-A files."
+      },
+      "expected": {
+        "required": ["Reconcile recorded ownership vs actual session/Git-revision/GitHub/spec state", "Reuse existing owner/worker where appropriate", "Report unresolved launch state before creating any duplicate writer"],
+        "hold": ["No replacement writer until reconciliation completes or ambiguity is reported"],
+        "forbidden": ["Spawning replacement merely because context was lost or notification ambiguous", "Two concurrent writers on the same candidate (exclusive-writer violation)"],
+        "evidence": "Record session IDs, revs, worktree ownership, and reconciliation outcome"
+      }
+    },
+    {
+      "id": "linear-done-drift",
+      "title": "Reviewed unmerged capability stays In Review; checker reports only",
+      "spec_ref": "Linear: reviewed but unmerged capability stays In Review. Done requires all required PRs merged plus acceptance checks passing. Checker reports run-scoped discrepancies only; driver verifies before applying updates.",
+      "input": {
+        "run_state": "Capability C1 has two required PRs. Both reviewed. PR-1 merged; PR-2 open and unmerged. Acceptance checks for C1 not all passing.",
+        "event": "Linear shows C1 as Done (drift). Checker run detects mismatch."
+      },
+      "expected": {
+        "verdict": "C1 must be In Review, not Done",
+        "checker": ["Report discrepancy with evidence (PR merge states, acceptance results)", "No Linear mutation by checker"],
+        "driver": ["Independently verify evidence before applying any Linear update", "Move C1 to In Review if verified"],
+        "forbidden": ["Checker mutating Linear directly", "Marking Done before all required PRs merged and acceptance checks pass"],
+        "evidence": "PR merge SHAs/URLs, acceptance check outputs, Linear state before/after"
+      }
+    },
+    {
+      "id": "watch-expiry",
+      "title": "Monitoring ends at deadline or completion with resumable handoff",
+      "spec_ref": "Monitoring: 24h configurable window, ending earlier when all required PRs merge. Work remaining at expiry receives resumable handoff, not silent renewal.",
+      "input": {
+        "run_state": "PR owner monitoring delivered PR-A and PR-B. Configured window 24h from delivery T0.",
+        "event": "At T0+24h, PR-A merged, PR-B still open with failing CI. No user extension granted."
+      },
+      "expected": {
+        "required": ["End monitoring at deadline (no silent renewal)", "Produce resumable handoff for PR-B: state, rev, CI status, next steps, ownership"],
+        "early_exit": "If all required PRs had merged before deadline, end monitoring earlier",
+        "forbidden": ["Silently renewing/extending monitoring", "Keeping models reasoning continuously while waiting (use Paseo wake-ups)"],
+        "evidence": "Record delivery T0, deadline, merge states, handoff contents"
+      }
+    },
+    {
+      "id": "strict-tdd-violation",
+      "title": "Post-hoc tests and inadequate checks do not satisfy strict TDD",
+      "spec_ref": "Strict TDD: red then green then refactor. Checks derive from acceptance/failure/integration boundaries, not source restatement. Inadequate tests detected by verification/review. Missing-prerequisite failures are not red. Report limitation and ask scoped decision if meaningful test-first cannot be established.",
+      "input": {
+        "run_state": "Author submits candidate with tests written after implementation.",
+        "event": "Verification shows: (a) tests mirror implementation text, (b) seeded regression not caught, (c) claimed red was a missing-module import error, not the intended behavioral failure."
+      },
+      "expected": {
+        "verdict": "TDD requirement not satisfied",
+        "required": ["Define meaningful behavior check from acceptance criteria first", "Execute and observe intended behavioral failure (real red)", "Implement smallest change to green, then refactor keeping green", "Capture red/green evidence tied to candidate rev"],
+        "forbidden": ["Accepting post-hoc tests as TDD", "Accepting missing-module failure as behavioral red", "Silently waiving TDD or fabricating checklist tests"],
+        "on_blocked": "Report limitation and request scoped user decision before dependent implementation"
+      }
+    },
+    {
+      "id": "missing-mcp-access",
+      "title": "Spec phase preflights Linear access before any document write",
+      "spec_ref": "Linear mode: before use, check the actual session's required MCP tools and access. Missing access is a setup gap, not permission to silently switch stores.",
+      "input": {
+        "run_state": "New run in Linear mode. Approved store not yet resolved. Session MCP tool access unknown.",
+        "event": "Driver enters spec phase and prepares to create the native Linear document."
+      },
+      "expected": {
+        "required": ["Resolve source store first (Linear default vs explicit Markdown alternative)", "Per-session read/create/update access check on the Linear document before writing", "On missing access: report actionable setup gap, do not write, do not silently switch stores"],
+        "forbidden": ["Creating/updating the Linear document before preflight", "Silent fallback to Markdown without explicit user selection", "Tickets-phase preflight as the first check (too late)"],
+        "evidence": "Record MCP tool availability, access check result, and store resolution"
+      }
+    },
+    {
+      "id": "model-materialization",
+      "title": "Launched sessions match profile provider/model; unset checker blocks dispatch",
+      "spec_ref": "Model roles: configured profiles materialize as actual sessions; unavailable model pauses affected work pending user decision, never auto-fallback. Checker model chosen at setup.",
+      "input": {
+        "run_state": "PR ready for final review. Profiles: reviewer-opus=claude/claude-opus-5, reviewer-sol=codex/gpt-5.6-sol, checker model null (setup not done).",
+        "event": "Owner launches both final reviewers and considers dispatching the checker."
+      },
+      "expected": {
+        "required": ["Opus review session runs claude/claude-opus-5; Sol review session runs codex/gpt-5.6-sol", "Verify session model/ownership receipt for each launch", "Checker dispatch blocked until setup selects its model"],
+        "forbidden": ["Launching a native GPT session and calling it the Opus review", "Substituting another model for an unavailable role without user decision", "Dispatching checker with a provider default when its model is null"],
+        "evidence": "Session receipts showing provider/model per role; blocked-checker record with setup requirement"
+      }
+    },
+    {
+      "id": "rollout-publish",
+      "title": "Publishing requires a current verified receipt and no urgent hold",
+      "spec_ref": "Two-reviewer contract: changes require a refreshed review receipt for the new revision. Prompt-only urgent escalation holds approval and merge-ready declarations.",
+      "input": {
+        "run_state": "PR candidate rev X+1 pushed after review of rev X. No new review yet. No open urgent escalation.",
+        "event": "Owner considers declaring rev X+1 merge-ready."
+      },
+      "expected": {
+        "required": ["Obtain refreshed review receipt for rev X+1 (reuse unchanged evidence, review delta plus affected behavior; broader review for bigger scope/base/behavior changes)", "Confirm no open urgent hold", "Receipt shows verdict APPROVE with candidate SHA, coverage, and limitations"],
+        "forbidden": ["Publishing on the stale rev X receipt", "Declaring merge-ready under an open urgent hold", "Treating reviewer unanimity or passing tests as merge authority (human merges)"],
+        "evidence": "Current receipt with SHA, verdict, coverage, limitations; hold-state record"
+      }
+    }
+  ]
+}

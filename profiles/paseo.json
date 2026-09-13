@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "agentProfiles": [
+    {
+      "id": "axstack-driver",
+      "provider": "codex",
+      "model": "gpt-6-astra",
+      "modeId": "auto",
+      "thinkingOptionId": "low",
+      "notes": "Preferred driver profile only. The current chat remains the driver; NEVER auto-launch this profile instead of the current chat and never switch models implicitly. Owns scope, Linear mutations, stack coordination, capability completion. Validate availability at launch; an unavailable model pauses affected work pending user decision, never auto-fallback.",
+      "name": "Axstack driver (preferred)"
+    },
+    {
+      "id": "axstack-advisor",
+      "provider": "claude",
+      "model": "claude-fable-5-1",
+      "modeId": "plan",
+      "thinkingOptionId": "medium",
+      "notes": "Consequential planning advisor. Consulted after cheap factual checks for unresolved consequential decisions. High-stakes decisions need advisor plain AGREE plus driver accepted assessment. Validate availability at launch.",
+      "name": "Axstack planning advisor (Fable)"
+    },
+    {
+      "id": "axstack-owner",
+      "provider": "claude",
+      "model": "claude-opus-5",
+      "modeId": "default",
+      "thinkingOptionId": "medium",
+      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches its own independent reviewers.",
+      "name": "Axstack PR owner (Opus)"
+    },
+    {
+      "id": "axstack-author",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "auto",
+      "thinkingOptionId": "medium",
+      "notes": "Ordinary implementation and repairs. Strict red-green-refactor. Exclusive writer per candidate. Validate availability at launch; never substitute another model without user approval.",
+      "name": "Axstack implementer (Sol)"
+    },
+    {
+      "id": "axstack-reviewer-opus",
+      "provider": "claude",
+      "model": "claude-opus-5",
+      "modeId": "default",
+      "thinkingOptionId": "medium",
+      "notes": "Independent Opus final reviewer: fresh non-author claude session running claude-opus-5, never a native GPT session. Exact candidate revision, same six-angle brief, no cross-reading of the other reviewer. Reports evidence, coverage, limitations, findings. Votes never settle correctness.",
+      "name": "Axstack independent reviewer (Opus)"
+    },
+    {
+      "id": "axstack-reviewer-sol",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "auto",
+      "thinkingOptionId": "medium",
+      "notes": "Second independent final PR reviewer: fresh non-author codex session running gpt-5.6-sol. Same instantiated scope/spec/ticket/base/revision/exclusions/instructions as the Opus reviewer. Covers all six angles independently.",
+      "name": "Axstack independent reviewer (Sol)"
+    },
+    {
+      "id": "axstack-checker",
+      "provider": "codex",
+      "model": null,
+      "modeId": "auto",
+      "thinkingOptionId": "low",
+      "notes": "Report-only Linear discrepancy checker. Inexpensive model chosen at user setup; model is null here by design. Require setup selection before dispatch: a null model must never result in launching a provider default. Never mutates Linear; driver independently verifies checker evidence before applying updates.",
+      "name": "Axstack Linear checker (setup-selected)"
+    }
+  ]
+}
