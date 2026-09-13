@@ -346,6 +346,9 @@ test('owned-core: review separates completeness from verdict; binds commit param
 });
 
 test('owned-core: standalone review/watch materialize axstack-owner; workers never recurse', () => {
+  const lifecycle = readFileSync(join(skillsDir, 'axstack/references/lifecycle.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(lifecycle).toMatch(/prefer[^.]*parallel[^.]*independent[^.]*bounded|prefer[^.]*independent[^.]*parallel[^.]*bounded/i);
+  expect(lifecycle).toMatch(/no redundant workers/i);
   for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();
