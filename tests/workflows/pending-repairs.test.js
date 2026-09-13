@@ -34,10 +34,10 @@ test('repairs: mutation authority distinguishes driver scope from PR owner scope
 
 test('repairs: authored publishing accepts the mode-specific scope identity', () => {
   const review = read('skills/axstack-review/SKILL.md');
-  const publishing = review.slice(review.indexOf('## Publishing rule'), review.indexOf('## Report-only scope'));
+  const publishing = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Standalone owner')) + review.slice(review.indexOf('## Publishing rule'), review.indexOf('## Report-only scope'));
   expect(publishing).toMatch(/new work[^.]*approved spec\s+identity/i);
-  expect(publishing).toMatch(/adopted[^.]*accepted maintenance scope\s+snapshot/i);
-  expect(publishing).toMatch(/mode-specific scope identity/i);
+  expect(publishing).toMatch(/adopted[^.]*accepted maintenance scope[\s\S]*?snapshot/i);
+  expect(publishing).toMatch(/applicable scope identity|proportional scope identity/i);
 });
 
 test('repairs: every skill route target resolves in the package', () => {
@@ -50,6 +50,11 @@ test('repairs: every skill route target resolves in the package', () => {
 });
 
 test('repairs: ordinary handoff and resume explicitly load shared lifecycle', () => {
-  const handoff = read('skills/axstack-handoff/SKILL.md');
-  expect(handoff).toContain('../axstack/references/lifecycle.md');
+  const handoff = read('skills/axstack/SKILL.md');
+  expect(handoff).toContain('references/lifecycle.md');
+  const lifecycle = read('skills/axstack/references/lifecycle.md');
+  expect(lifecycle).toContain('paseo-handoff');
+  expect(lifecycle).toMatch(/both native[\s\S]*paseo-handoff[\s\S]*required[\s\S]*`paseo`[\s\S]*discoverable/i);
+  expect(lifecycle).toMatch(/only an explicit user request to transfer\s+ownership/i);
+  expect(lifecycle).toMatch(/keep the current\s+owner[\s\S]*no replacement or ownership transfer launches/i);
 });

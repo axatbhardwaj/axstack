@@ -73,7 +73,7 @@ test('run-record: reconciliation protects ownership and revision evidence', () =
   expect(text).toMatch(/explicit[^.]*accepted transfer/i);
   expect(text).toMatch(/uncertain[^.]*live conflict[^.]*hold|live conflict[^.]*uncertain[^.]*hold/i);
   expect(text).toMatch(/never[^.]*overwrite/i);
-  expect(text).toMatch(/prior driver[^.]*different valid owner[^.]*stop/i);
+  expect(text).toMatch(/prior driver[^.]*different valid accepted\s+owner[^.]*stop/i);
   expect(text).toMatch(/derived progress[^.]*not authority/i);
   for (const source of ['Paseo sessions', 'Git revisions', 'forge/PR state', 'approved spec']) {
     expect(text).toContain(source);
@@ -104,7 +104,7 @@ test('run-record: feature remains prose-only with no runtime companion', () => {
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {
   const skillFiles = filesBelow(`${root}/skills`).filter((path) => path.endsWith('/SKILL.md'));
-  expect(skillFiles).toHaveLength(11);
+  expect(skillFiles).toHaveLength(10);
   for (const path of skillFiles) {
     const lines = readFileSync(path, 'utf8').split('\n');
     const descriptions = lines.filter((line) => line.startsWith('description:'));

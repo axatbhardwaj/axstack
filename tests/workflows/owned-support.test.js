@@ -45,7 +45,7 @@ const here = import.meta.dir;
 const root = dirname(dirname(here));
 const skillsDir = join(root, 'skills');
 
-const OWNED = ['axstack-research', 'axstack-docs', 'axstack-handoff'];
+const OWNED = ['axstack-research', 'axstack-docs'];
 
 function readSkill(name) {
   return readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
@@ -65,7 +65,7 @@ function linkEscapesBundle(skillDir, fromDir, link) {
   return !(target === skillDir || target.startsWith(skillDir + '/'));
 }
 
-test('owned-support: three owned skills exist with SKILL.md', () => {
+test('owned-support: two owned support skills exist with SKILL.md', () => {
   for (const name of OWNED) {
     const p = join(skillsDir, name, 'SKILL.md');
     expect(existsSync(p), `missing ${p}`).toBeTruthy();
@@ -170,8 +170,8 @@ test('owned-support: docs separates prose from visual verification', () => {
   for (const profile of ['axstack-docs', 'axstack-explainer', 'axstack-explainer-review']) {
     expect(text.includes(profile), `docs must list route ${profile}`).toBeTruthy();
   }
-  expect(/no mandatory intermediate artifact|without.*intermediate/i.test(text), 'prose must not require a mandatory intermediate artifact').toBeTruthy();
-  expect(/no mandatory html|html.*not required|prose.*without html/i.test(text), 'prose must not mandate HTML').toBeTruthy();
+  expect(/no mandatory intermediate artifact|without.*intermediate|no intermediate artifact is required/i.test(text), 'prose must not require a mandatory intermediate artifact').toBeTruthy();
+  expect(/no mandatory html|html.*not required|prose.*without html|no HTML conversion/i.test(text), 'prose must not mandate HTML').toBeTruthy();
   expect(/self-contained html|requested artifact/i.test(text), 'visual must be self-contained HTML or the requested artifact').toBeTruthy();
   expect(/explicit.*theme|theme.*explicit/i.test(text), 'explicit user theme must win').toBeTruthy();
   expect(/dark/i.test(text), 'dark default theme must be stated').toBeTruthy();
@@ -184,9 +184,9 @@ test('owned-support: docs separates prose from visual verification', () => {
 });
 
 test('owned-support: handoff is explicit, compact, and non-destructive', () => {
-  const text = readSkill('axstack-handoff');
+  const text = readFileSync(join(skillsDir, 'axstack/references/lifecycle.md'), 'utf8') + '\n' + readFileSync(join(skillsDir, 'axstack/references/run-record.md'), 'utf8');
   const lower = text.toLowerCase();
-  expect(/recipient acceptance|accepted by/i.test(text), 'transfer must change driver only through recipient acceptance').toBeTruthy();
+  expect(/recipient.s explicit\s+acceptance receipt before changing ownership/i.test(text), 'transfer must change driver only through recipient acceptance').toBeTruthy();
   for (const field of ['goal', 'scope', 'authority', 'revision', 'evidence', 'pending', 'unresolved']) {
     expect(lower.includes(field), `handoff record must include ${field}`).toBeTruthy();
   }

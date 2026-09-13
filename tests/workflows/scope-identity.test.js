@@ -5,7 +5,7 @@ const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 test('scope identity: routing defines proportional substantial, small, and unclear paths', () => {
-  const routing = read('skills/axstack/references/routing.md');
+  const routing = read('skills/axstack/references/routing.md').replace(/\s+/g, ' ');
   expect(routing).toMatch(/proportional scope identity/i);
   expect(routing).toMatch(/substantial features[^.]*multi-PR[^.]*stacked/i);
   expect(routing).toMatch(/bounded\s+small\s+feature[^.]*not[^.]*substantial[^.]*label/i);
@@ -22,7 +22,7 @@ test('scope identity: routing defines proportional substantial, small, and uncle
   expect(routing).toMatch(/security[^.]*infrastructure boundary/i);
   expect(routing).toMatch(/ordinary test[^.]*code[^.]*not[^.]*growth/i);
   expect(routing).toMatch(/minor file dependency[^.]*not[^.]*formal spec/i);
-  expect(routing).toMatch(/later phase[^.]*own identity check/i);
+  expect(routing).toMatch(/later phase[^.]*pass that phase.s identity check/i);
   expect(routing).not.toMatch(/later phase invoked directly with its required inputs starts there/i);
   expect(routing).not.toMatch(/New work:[\s\S]*?axstack-align[\s\S]*?axstack-spec[\s\S]*?axstack-tickets[\s\S]*?axstack-implement/i);
 });
@@ -30,7 +30,7 @@ test('scope identity: routing defines proportional substantial, small, and uncle
 test('scope identity: entry reports missing substantial prerequisites and launches nothing', () => {
   const entry = read('skills/axstack/SKILL.md');
   expect(entry).toMatch(/small-change intent/i);
-  expect(entry).toMatch(/substantial[^.]*small[^.]*unclear/i);
+  for (const size of ['small', 'substantial', 'unclear']) expect(entry).toContain('`' + size + '`');
   expect(entry).toMatch(/record[^.]*brief reason/i);
   expect(entry).toMatch(/report[^.]*exact gap/i);
   expect(entry).toMatch(/name[^.]*axstack-align/i);
@@ -38,14 +38,16 @@ test('scope identity: entry reports missing substantial prerequisites and launch
   expect(entry).toMatch(/never\s+admit[^.]*deeper\s+phase[^.]*reject/i);
   expect(entry).not.toMatch(/starting at the earliest phase whose required inputs are missing/i);
   expect(entry).not.toMatch(/start at `axstack-align`/i);
-  const lifecycle = entry.slice(entry.indexOf('## Lifecycle'), entry.indexOf('## Autonomous progress'));
-  expect(lifecycle.match(/substantial work only/gi)).toHaveLength(3);
+  expect(entry).toContain('references/routing.md#proportional-scope-identity');
+  expect(entry).toMatch(/small clear change[^.]*snapshotted small-change intent/i);
+  expect(entry).toMatch(/substantial work[^.]*approved spec[^.]*matching ticket\s+map/i);
 });
 
 test('scope identity: driver captures a current small-change intent without bouncing to alignment', () => {
+  // Entry explicitly delegates the definition to routing; do not require duplicate prose.
+  expect(read('skills/axstack/SKILL.md')).toContain('references/routing.md#proportional-scope-identity');
   for (const [name, text] of [
-    ['routing', read('skills/axstack/references/routing.md')],
-    ['entry', read('skills/axstack/SKILL.md')],
+    ['routing', read('skills/axstack/references/routing.md').replace(/\s+/g, ' ')],
   ]) {
     expect(text, `${name}: missing driver capture`).toMatch(
       /driver[^.]*captures[^.]*small-change intent[^.]*current\s+request[^.]*user[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshots[^.]*proceeds/i,
@@ -60,11 +62,11 @@ test('scope identity: execution boundaries accept the same two identities', () =
   const contracts = read('skills/axstack/references/contracts.md');
   const implement = read('skills/axstack-implement/SKILL.md');
   const review = read('skills/axstack-review/SKILL.md');
-  const authored = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Two-reviewer contract'));
+  const authored = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Standalone owner'));
   const launch = read('skills/axstack/references/paseo-launch.md');
   const launchStep = launch.slice(launch.indexOf('6. `create_agent`'), launch.indexOf('7. Verify'));
   const watch = read('skills/axstack-watch/SKILL.md');
-  const feedback = watch.slice(watch.indexOf('## Feedback routing'), watch.indexOf('## End conditions'));
+  const feedback = watch.slice(watch.indexOf('### Feedback routing'), watch.indexOf('## 5. State readiness')).replace(/\s+/g, ' ');
   for (const [name, text] of [
     ['contracts', contracts],
     ['implement', implement],
@@ -82,7 +84,7 @@ test('scope identity: execution boundaries accept the same two identities', () =
   ]) {
     expect(text, `${name}: missing independent identity check`).toMatch(/confirm|check|verify/i);
   }
-  expect(contracts).toMatch(/recorded\s+request[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
+  expect(contracts).toMatch(/recorded\s+(?:current\s+)?request[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
 });
 
 test('scope identity: alignment stops with a handoff for both sizes and tickets carry dependencies', () => {

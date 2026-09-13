@@ -14,7 +14,7 @@
     {
       "id": "ownership-seize-refused",
       "title": "A new driver cannot seize uncertain ownership",
-      "skill_ref": "axstack-handoff",
+      "skill_ref": "axstack",
       "input": {
         "request": "Take over as driver and continue.",
         "facts": "The prior driver may still be active and no accepted transfer receipt exists."
