@@ -18,8 +18,8 @@
     "docs/workflows.md"
   ],
   "scripts": {
-    "test": "node --test tests/",
-    "test:all": "node --test tests/"
+    "test": "node --test $(find tests -name '*.test.js' | sort)",
+    "test:all": "node --test $(find tests -name '*.test.js' | sort)"
   },
   "license": "MIT"
 }

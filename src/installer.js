@@ -16,6 +16,7 @@
 // - Partial failures roll back files created in that run and never write
 //   the manifest, so a retry starts from a known state.
 import {
+  chmod,
   lstat,
   mkdir,
   readdir,
@@ -25,7 +26,6 @@ import {
   rm,
   rmdir,
   stat,
-  writeFile,
 } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -35,6 +35,7 @@ import {
   hashContent,
   hashObject,
   readManifest,
+  writeFileExclusive,
   writeManifest,
 } from './manifest.js';
 import { mergeProfiles, planUninstallProfiles } from './profiles.js';
@@ -217,11 +218,37 @@ async function walkSkills(dir, skillsRoot, out) {
   }
 }
 
-async function writeAtomic(dest, bytes) {
+// Atomic file replace with a pid-namespaced temp file. Temp creation is
+// exclusive and restrictive (0600): pre-existing temp entries are refused,
+// never followed or truncated. After the rename, existing permissions are
+// preserved; new files take an explicit `mode` (e.g. 0600 for configs) or
+// the umask default. Guards pre-existing entries, not active races.
+export async function writeAtomic(dest, bytes, { mode } = {}) {
   await mkdir(dirname(dest), { recursive: true });
+  let existingMode = null;
+  try {
+    existingMode = (await stat(dest)).mode & 0o777;
+  } catch (err) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
   const tmp = `${dest}.tmp-${process.pid}`;
-  await writeFile(tmp, bytes);
-  await rename(tmp, dest);
+  await writeFileExclusive(tmp, bytes);
+  try {
+    await rename(tmp, dest);
+  } catch (err) {
+    try {
+      await rm(tmp); // only unlink: this run created it exclusively
+    } catch {
+      // best effort cleanup of a temp file this run created
+    }
+    throw err;
+  }
+  const finalMode = mode ?? existingMode ?? (0o666 & ~process.umask());
+  try {
+    await chmod(dest, finalMode);
+  } catch (err) {
+    throw new Error(`wrote ${dest} but could not set permissions: ${err.message}`);
+  }
 }
 
 export async function installBundle({
@@ -384,7 +411,8 @@ export async function installBundle({
       profileReport = report;
       const nextRaw = JSON.stringify(config, null, 2) + '\n';
       if (existingProfileRaw === null || nextRaw !== existingProfileRaw) {
-        await writeAtomic(profileFile, nextRaw);
+        // New configs are restrictive; existing configs keep their mode.
+        await writeAtomic(profileFile, nextRaw, existingProfileRaw === null ? { mode: 0o600 } : {});
         profileWritten = true;
       }
       for (const id of [...report.added, ...report.updated]) {
