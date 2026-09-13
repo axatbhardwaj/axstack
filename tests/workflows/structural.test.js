@@ -193,7 +193,7 @@ test('structural: shared PR-shape reference is complete, bounded, and sole sourc
   expect(shape).toMatch(/one (behavior|component)[^.]*callers[^.]*tests[^.]*types[^.]*docs[^.]*migrations/i);
   expect(shape).toMatch(/not a folder restriction/i);
   expect(shape).toMatch(/unrelated themes[^.]*split[^.]*under the target/i);
-  expect(shape).toMatch(/smaller cohesive PRs[^.]*encouraged/i);
+  expect(shape).toMatch(/smaller\s+cohesive\s+PRs[^.]*encouraged/i);
   expect(shape).toMatch(/no padding/i);
 
   const productionPolicyFiles = [
@@ -213,6 +213,7 @@ test('structural: over-band exceptions are autonomous, recorded, and independent
   const shape = readFileSync(join(skillsDir, 'axstack', 'references', 'pr-shape.md'), 'utf8');
   expect(shape).toMatch(/reasonable split/i);
   expect(shape).toMatch(/full total[^.]*bulk buckets[^.]*head[^.]*base/i);
+  expect(shape).toMatch(/mandatory record[^.]*bulk buckets[^.]*reproducible command/i);
   expect(shape).toMatch(/split attempts[^.]*atomicity[^.]*green[^.]*reviewability/i);
   expect(shape).toMatch(/inseparable[^.]*reproducible bulk[^.]*dominates/i);
   expect(shape).toMatch(/size alone[^.]*never[^.]*user approval/i);
@@ -223,6 +224,7 @@ test('structural: over-band exceptions are autonomous, recorded, and independent
   expect(review).toMatch(/mismatch[^.]*measured total[^.]*finding/i);
   expect(review).toMatch(/missing rationale[^.]*blocks approval/i);
   expect(review).toMatch(/judgment[^.]*measurement[^.]*split failure[^.]*not[^.]*number/i);
+  expect(review).toMatch(/bulk buckets[^.]*reproducible command/i);
   expect(review).toMatch(/weak rationale[^.]*author[^.]*split|rework request/i);
   expect(review).toMatch(/never[^.]*user/i);
   expect(review).not.toMatch(/^\s*7\.\s/m);
@@ -239,6 +241,10 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   };
   for (const [name, text] of Object.entries(callers)) {
     expect(text.includes('pr-shape.md'), `${name} must link the shared PR-shape reference`).toBeTruthy();
+  }
+  for (const name of ['contracts', 'tickets', 'implement', 'review', 'audit']) {
+    expect(callers[name], `${name} must keep routine shape decisions autonomous`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
+    expect(callers[name], `${name} must not escalate size alone`).toMatch(/size alone[^.]*never[^.]*user approval/i);
   }
   expect(callers.contracts).toMatch(/fanout[^.]*dependency[^.]*capacity/i);
   expect(callers.contracts).toMatch(/resource[^.]*spending limits/i);
