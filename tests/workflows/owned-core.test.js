@@ -108,7 +108,7 @@ test('owned-core: exactly two independent reviewers, same brief, exact rev, no c
   const text = skill('axstack-review');
   expect(/exactly two/i.test(text), 'must require exactly two final reviewers').toBeTruthy();
   expect(/same.*six-angle|six-angle.*same/i.test(text), 'both reviewers must get the same six-angle brief').toBeTruthy();
-  expect(/exact.*revision|exact.*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
+  expect(/exact[\s\S]*revision|exact[\s\S]*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
   expect(
     /no.*cross-read|without.*cross-read|neither.*reads the other/i.test(text),
     'must forbid first-pass cross-reading between reviewers',
@@ -181,7 +181,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
     'authorized repairs must reuse the original author',
   ).toBeTruthy();
   expect(
-    /exact.*(reply|response|public) text|exact text/i.test(text),
+    /exact[\s\S]*(reply|response|public)[\s\S]*(text|bodies)|exact text/i.test(text),
     'authorized publication requires the exact public reply text reviewed',
   ).toBeTruthy();
   expect(
@@ -313,6 +313,121 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
     const conservative = want.provider === 'claude' ? 'default' : 'auto';
     expect(byId[id].modeId, `${id}: must keep conservative mode ${conservative}`).toBe(conservative);
   }
+});
+
+test('owned-core: review separates completeness from verdict; binds commit parameter', () => {
+  const text = skill('axstack-review');
+  expect(
+    /complete[\s\S]*evidence/i.test(text) && /REQUEST_CHANGES/i.test(text),
+    'complete two-reviewer evidence with validated defects must permit REQUEST_CHANGES',
+  ).toBeTruthy();
+  expect(
+    /INCOMPLETE/i.test(text) && /never.*fabricat|no.*fabricat/i.test(text),
+    'incomplete/stale review must never fabricate a verdict',
+  ).toBeTruthy();
+  expect(
+    /urgent hold[\s\S]{0,400}not.*block.*report|report[\s\S]{0,200}validated risk/i.test(text),
+    'urgent holds must not block reporting validated risk',
+  ).toBeTruthy();
+  expect(
+    /commit parameter|commitSha/i.test(text),
+    'submission must bind the actual GitHub commit parameter, not SHA text alone',
+  ).toBeTruthy();
+  expect(
+    /internal verdict/i.test(text),
+    'report-only must permit an internal verdict with no external writes',
+  ).toBeTruthy();
+});
+
+test('owned-core: standalone review/watch materialize axstack-owner; workers never recurse', () => {
+  for (const name of ['axstack-review', 'axstack-watch']) {
+    const text = skill(name);
+    expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();
+    expect(
+      /only[\s\S]*owner[\s\S]*launch/i.test(text),
+      `${name}: only the owner launches writer/reviewers/monitor/watchdog`,
+    ).toBeTruthy();
+    expect(
+      /no.*recursive|never.*recursive/i.test(text),
+      `${name}: workers must launch no recursive teams`,
+    ).toBeTruthy();
+  }
+  const watch = skill('axstack-watch');
+  expect(
+    /watcher.*never.*writ|never.*writer/i.test(watch),
+    'adoption watcher itself must never be the writer',
+  ).toBeTruthy();
+  expect(
+    /competing coordinator|no.*compet/i.test(watch),
+    'current chat must avoid a competing coordinator',
+  ).toBeTruthy();
+});
+
+test('owned-core: observation-only dominates every repair path; adoption verifies authority', () => {
+  const text = skill('axstack-watch');
+  expect(
+    /dominat|every repair path/i.test(text),
+    'observation-only restriction must dominate every repair path',
+  ).toBeTruthy();
+  expect(
+    /writable ownership|maintenance authority/i.test(text),
+    'adoption must verify writable ownership and user maintenance authority',
+  ).toBeTruthy();
+  expect(
+    /peer mode[\s\S]{0,200}never/i.test(text),
+    'peer mode must never repair',
+  ).toBeTruthy();
+});
+
+test('owned-core: monitor reads product state, watchdog reads health, same expiry', () => {
+  const text = skill('axstack-watch');
+  expect(/5\s?min/i.test(text), 'monitor cadence default 5min must be stated').toBeTruthy();
+  expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
+  expect(/same[\s\S]*24h/i.test(text), 'both must share the same 24h expiry').toBeTruthy();
+  expect(/own timer/i.test(text), 'each must own its timer and snapshot').toBeTruthy();
+  expect(/acknowledged/i.test(text), 'actionable events must be acknowledged').toBeTruthy();
+  expect(
+    /approval alone/i.test(text),
+    'a review approval alone must not count as merge-ready',
+  ).toBeTruthy();
+});
+
+test('owned-core: publication keys reply bodies to feedback IDs with freshness checks', () => {
+  const text = skill('axstack-watch');
+  expect(/feedback IDs/i.test(text), 'reply bodies must key to feedback IDs').toBeTruthy();
+  expect(/expected-old/i.test(text), 'history rewrite needs expected-old SHA').toBeTruthy();
+  expect(
+    /body identity/i.test(text),
+    'publication must verify reply body identity',
+  ).toBeTruthy();
+  expect(
+    /remain blocked|stays blocked|stay blocked/i.test(text),
+    'ambiguous send outcome must remain blocked',
+  ).toBeTruthy();
+});
+
+test('owned-core: lifecycle carries roster, idle-complete protocol, and audit hook', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'lifecycle.md'), 'utf8');
+  expect(/roster/i.test(text), 'lifecycle must include a compact roster').toBeTruthy();
+  expect(/archive|retain/i.test(text), 'lifecycle must define idle-complete archive/retain').toBeTruthy();
+  expect(/audit/i.test(text), 'lifecycle must define the end-of-run audit hook').toBeTruthy();
+});
+
+test('owned-core: align and spec involve Fable; auditor profile exists', () => {
+  for (const name of ['axstack-align', 'axstack-spec']) {
+    expect(skill(name).includes('Fable'), `${name}: must involve the Fable advisor`).toBeTruthy();
+  }
+  const data = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
+  const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
+  const auditor = byId['axstack-auditor'];
+  expect(auditor, 'missing profile axstack-auditor').toBeTruthy();
+  expect(auditor.provider, 'auditor provider must be codex').toBe('codex');
+  expect(auditor.model, 'auditor model must be gpt-5.6-luna').toBe('gpt-5.6-luna');
+  expect(auditor.thinkingOptionId, 'auditor thinking must be max').toBe('max');
+  expect(
+    /readonly|read-only/i.test(auditor.notes),
+    'auditor notes must state readonly',
+  ).toBeTruthy();
 });
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {

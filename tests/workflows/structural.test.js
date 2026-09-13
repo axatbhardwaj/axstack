@@ -270,7 +270,15 @@ test('structural: launch reference treats live profiles as authoritative', () =>
 test('structural: contracts carry Fable triggers and the high-stakes gate', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
   expect(text.includes('Fable'), 'contracts must name the Fable advisor split').toBeTruthy();
-  expect(/factual checks/i.test(text), 'contracts must trigger consultation only after factual checks').toBeTruthy();
+  // User steering (accepted scope extension): Fable is involved in spec
+  // creation/revision, solution design, and consequential decisions —
+  // broader than only unresolved-after-factual-checks. Flagged to root:
+  // this replaces the prior narrow trigger expectation.
+  expect(/spec[\s\S]*creation|spec[\s\S]*revision/i.test(text), 'contracts must involve Fable in spec creation/revision').toBeTruthy();
+  expect(/solution design/i.test(text), 'contracts must involve Fable in solution design').toBeTruthy();
+  expect(/consequential/i.test(text), 'contracts must involve Fable in consequential decisions').toBeTruthy();
+  expect(/driver.*owns|owns.*decision/i.test(text), 'contracts must keep decision ownership with the driver').toBeTruthy();
+  expect(/cach/i.test(text), 'contracts must cache decision receipts against repeat consultation').toBeTruthy();
   expect(/AGREE/i.test(text), 'contracts must require plain AGREE for high-stakes decisions').toBeTruthy();
   expect(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE').toBeTruthy();
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
