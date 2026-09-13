@@ -58,7 +58,7 @@ export function representativeHostConfig() {
       schedules: [{ id: 'daily-check', cron: '0 9 * * *' }],
       notifications: { level: 'all' },
       agentProfiles: [
-        { id: 'custom-mine', provider: 'custom', model: 'mine', notes: 'user profile' },
+        { id: 'custom-mine', name: 'Custom mine', provider: 'custom', model: 'mine', notes: 'user profile' },
       ],
     },
   };
@@ -74,6 +74,7 @@ export function writeFixtureBundle(
     profiles = [
       {
         id: 'axstack-driver',
+        name: 'Axstack driver',
         provider: 'example',
         model: 'example-model',
         modeId: 'default',

@@ -20,6 +20,7 @@ const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
 const OWNER_PROFILE = {
   id: 'axstack-owner',
+  name: 'Axstack owner',
   provider: 'example',
   model: 'original',
   modeId: 'default',

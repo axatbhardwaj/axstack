@@ -1,0 +1,90 @@
+# Shared lifecycle and receipts
+
+Loaded directly by core phases or through the required edge in
+[Standing contracts](contracts.md).
+
+## Roster (compact)
+
+- Driver: current chat. Owns run scope, decisions, cross-PR dependencies,
+  Linear mutations, and integration. Coordinates via existing shared
+  contracts only.
+- Owner (`axstack-owner`): one persistent owner per PR. Only the owner
+  launches the writer, reviewers, monitor, and watchdog, and performs
+  authorized PR-scoped publication within user authority. The human
+  merges by default.
+- Author: exactly one writer per candidate at a time. Accepted fixes
+  return to the original author. Workers launch no recursive teams.
+- Reviewers: exactly two independent final reviewers (Sol + Opus), same
+  brief, no first-pass cross-read.
+- Monitor / watchdog: independent, read-only Opus medium sessions on
+  native Paseo timers.
+- Auditor (`axstack-auditor`): read-only evidence collection only; never
+  edits, merges, or activates anything. See audit hook below.
+
+Prefer independent parallel subagent work with bounded tasks: one
+writer per candidate, default two active PRs, no redundant workers.
+
+## Ownership
+
+One persistent owner per PR, accountable for candidate, fixes,
+verification evidence, and monitoring. Exactly one writer per candidate
+at a time. Peer code under review stays readonly; the reviewer never
+edits it.
+
+## Receipts (bind each decision to evidence)
+
+- Session receipt: agent and workspace IDs run the requested
+  provider/model for the requested role. Persist actual IDs; reuse on
+  resume instead of spawning replacements.
+- Review receipt: reviewer, candidate SHA, verdict
+  (APPROVE | REQUEST_CHANGES | INCOMPLETE), coverage, limitations,
+  findings. Changed code needs a refreshed receipt for the new revision.
+- Submission receipt: the actual commit parameter bound, the
+  consolidated review submitted, and the remote confirmation. On
+  ambiguous submission, lookup before retry — never resubmit blindly.
+- Audit receipt: scope, outcome evidence with counts and denominators
+  (PASS/FAIL/UNKNOWN), and any improvement proposals. Raw run records
+  stay local; only sanitized summaries publish, and only with authority.
+
+## Deadline (one rule for every owned timer)
+
+The configured default 24h deadline applies to all task-owned timers —
+monitor and watchdog alike, including still-open PRs. Both stop at the
+deadline; work remaining gets a resumable handoff, never a silent
+renewal. Merge-ready is an observed state, distinct from merged; the
+human merges by default.
+
+## Watch health
+
+Monitor and watchdog are independent, read-only, Opus medium sessions
+on native Paseo timers. Require initial verified handshakes; healthy
+ticks are snapshot-only and never wake the driver. Dedup event IDs;
+uncertain sends are reconciled before any retry; restart reuses prior
+watch state instead of registering duplicates.
+
+## Audit hook (end of run and meaningful checkpoints)
+
+Auditing is enabled by default for every substantive run: at run end,
+the driver dispatches the auditor (`axstack-auditor`), and also does so
+at useful checkpoints such as a material deviation or repeated repair.
+Load the bundled [audit skill](../../axstack-audit/SKILL.md) before the
+audit. An `axstack-audit` run is excluded from this hook: it writes its
+assigned audit record and stops, launching no children. The auditor
+collects read-only evidence against the run record:
+scope, outcome evidence, and metric counts with denominators. Findings
+are PASS/FAIL/UNKNOWN with evidence — never invented numbers, including
+cost figures. Improvement proposals change nothing by themselves: the
+driver follows each accepted proposal up as ordinary tested,
+independently reviewed work, with a regression scenario and unchanged
+holdout checks, delivered as PRs the human merges. No automatic
+self-edit, merge, or activation. Raw run records stay local (user
+privacy); sanitized publication needs its own authority.
+
+## Idle-complete archive and retain
+
+After actual work is done — all required PRs merged or handed off, all
+owned timers stopped and receipts verified — the driver archives the
+run record (scope, revisions, evidence, receipts, timer expiries) and
+retains it locally. Archive only idle-complete runs: never active or
+waiting workers, never reassign ownership on idle, no global sweeps.
+Only task-owned records are archived; unrelated host state is untouched.

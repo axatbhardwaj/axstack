@@ -20,6 +20,7 @@ const runCli = (args, opts) => runBunCli(CLI, args, opts);
 const BUNDLE_PROFILES = [
   {
     id: 'axstack-driver',
+    name: 'Axstack driver',
     provider: 'example',
     model: 'example-model',
     modeId: 'default',
@@ -58,7 +59,7 @@ test('merge rejects malformed daemon config without mutation', () => {
   const badShapes = [
     { daemon: { agentProfiles: 'nope' } },
     { daemon: 'nope' },
-    { daemon: { agentProfiles: [{ id: 'custom-mine' }] }, version: 1 },
+    { daemon: { agentProfiles: [{ id: 'custom-mine', name: 'Custom mine', provider: 'custom', model: 'mine' }] }, version: 1 },
   ];
   expect(() => mergeProfiles(badShapes[0], BUNDLE_PROFILES, {})).toThrow(/malformed|invalid/i);
   expect(() => mergeProfiles(badShapes[1], BUNDLE_PROFILES, {})).toThrow(/malformed|invalid/i);
@@ -111,8 +112,8 @@ test('user-edited owned profile is preserved without force, replaced with force'
 test('uninstall plan removes only unchanged owned profiles', () => {
   const existing = hostWith([
     { ...BUNDLE_PROFILES[0] },
-    { id: 'axstack-edited', provider: 'x' },
-    { id: 'custom-mine', provider: 'x' },
+    { id: 'axstack-edited', name: 'Edited', provider: 'x', model: 'x' },
+    { id: 'custom-mine', name: 'Custom mine', provider: 'x', model: 'x' },
   ]);
   const manifest = {
     profiles: {

@@ -9,9 +9,16 @@ Load before acting:
 
 - [Paseo launch](../axstack/references/paseo-launch.md)
 - [Standing contracts](../axstack/references/contracts.md)
+- [Shared routing](../axstack/references/routing.md)
+- [Lifecycle and receipts](../axstack/references/lifecycle.md)
 
-Requires an approved spec baseline (entry or standalone). Confirm the
-approved spec identity before building; hold on unapproved scope.
+Requires a scope identity matching the mode (see
+[Shared routing](../axstack/references/routing.md) and
+[Lifecycle](../axstack/references/lifecycle.md)): new implementation
+confirms the approved spec identity before building and holds on
+unapproved scope; repairs to an adopted own PR proceed on its accepted
+user-authorized maintenance snapshot with no new spec or ticket
+ceremony. Material scope changes still hold affected work.
 
 ## Strict TDD (red, green, refactor)
 

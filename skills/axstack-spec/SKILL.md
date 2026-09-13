@@ -24,11 +24,19 @@ Missing access is an actionable setup gap: report it, do not write, do not
 switch stores silently. The tickets-phase check is too late; it never
 substitutes for this one.
 
-## 3. Write the spec
+## 3. Write the spec (with Fable on design)
 
 Produce the specification the user approves, with observable acceptance
 criteria and explicit exclusions. In Linear mode the authoritative spec is
 the native Linear document; in Markdown mode it is the agreed repo path.
+Involve the Fable advisor in spec creation and revision, solution design,
+and consequential decisions (per
+[Standing contracts](../axstack/references/contracts.md)): driver
+assessment first, then advisor evidence; cache the decision receipt with
+the draft. The driver owns the draft; the user approves it — advisor
+input never substitutes for user approval. Reuse a cached receipt only
+while its evidence and scope remain unchanged; routine execution of a
+settled plan does not require repeat consultation.
 
 ## 4. Approval baseline snapshot
 

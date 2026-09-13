@@ -12,6 +12,27 @@ Shared references (load when launching sessions or checking authority):
 
 - [Paseo launch](../axstack/references/paseo-launch.md)
 - [Standing contracts](../axstack/references/contracts.md)
+- [Shared routing](../axstack/references/routing.md)
+- [Lifecycle and receipts](../axstack/references/lifecycle.md)
+
+## Route first
+
+Classify the request per [Shared routing](../axstack/references/routing.md)
+and invoke exactly the phase skill named:
+
+- Bounded research question -> `axstack-research`, directly, without spec
+  ceremony: no alignment interview, no approved spec, no ticket mapping.
+- Source-backed prose or requested visual explanation -> `axstack-docs`,
+  directly, without spec ceremony. Verify actual rendered behavior where
+  applicable; report unavailable evidence. Publication needs its own
+  authority.
+- Handoff, resume, or reconciliation -> `axstack-handoff`, directly,
+  without spec ceremony.
+- New engineering work -> the lifecycle below, starting at the earliest
+  phase whose required inputs are missing.
+- Colleague PR review -> `axstack-review` in peer mode.
+- Own PR maintenance or monitoring -> `axstack-review` in authored mode
+  and `axstack-watch` (adoption for existing PRs).
 
 ## Lifecycle
 

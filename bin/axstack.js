@@ -178,7 +178,8 @@ async function main() {
       });
       const changed =
         summary.added.length + summary.updated.length + (summary.profiles?.added?.length ?? 0) +
-        (summary.profiles?.updated?.length ?? 0);
+        (summary.profiles?.updated?.length ?? 0) + (summary.profiles?.removed?.length ?? 0) +
+        (summary.profiles?.released?.length ?? 0);
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
       } else {
@@ -200,6 +201,17 @@ async function main() {
         if (p.updated?.length) console.log(`profiles updated: ${p.updated.join(', ')}`);
         if (p.preserved?.length) {
           console.log(`profiles preserved (user edits kept): ${p.preserved.join(', ')}`);
+        }
+        if (p.deferred?.length) {
+          console.log(
+            `profiles deferred until setup selects a model: ${p.deferred.join(', ')}`,
+          );
+        }
+        if (p.removed?.length) {
+          console.log(`obsolete owned profile placeholders removed: ${p.removed.join(', ')}`);
+        }
+        if (p.released?.length) {
+          console.log(`missing deferred profile ownership released: ${p.released.join(', ')}`);
         }
       }
       return;

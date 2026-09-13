@@ -38,7 +38,12 @@ import {
   writeFileExclusive,
   writeManifest,
 } from './manifest.js';
-import { mergeProfiles, planUninstallProfiles } from './profiles.js';
+import {
+  assertBundleProfiles,
+  mergeProfiles,
+  planUninstallProfiles,
+  reconcileDeferredProfiles,
+} from './profiles.js';
 
 function withinRoot(target, root) {
   const rel = relative(root, target);
@@ -216,15 +221,18 @@ export async function validateBundle(bundleDir) {
     if (!parsed || !Array.isArray(parsed.agentProfiles) || parsed.agentProfiles.length === 0) {
       throw new Error('bundle profiles/paseo.json must define a non-empty agentProfiles array');
     }
-    for (const p of parsed.agentProfiles) {
-      if (!p || typeof p.id !== 'string' || !p.id.startsWith('axstack-')) {
-        throw new Error('bundle profiles must use namespaced axstack-* ids');
-      }
-    }
+    assertBundleProfiles(parsed.agentProfiles);
     bundleProfiles = parsed.agentProfiles;
   }
 
-  return { root, skillsRoot, files, bundleProfiles };
+  return {
+    root,
+    skillsRoot,
+    files,
+    bundleProfiles,
+    configuredProfiles: bundleProfiles?.filter((profile) => profile.model !== null) ?? null,
+    deferredProfiles: bundleProfiles?.filter((profile) => profile.model === null) ?? null,
+  };
 }
 
 async function walkSkills(dir, skillsRoot, out) {
@@ -314,7 +322,11 @@ export async function installBundle({
       }
     }
     // Dry run: catches malformed host shape before any skill file is written.
-    mergeProfiles(existingProfile, bundle.bundleProfiles, {});
+    if (bundle.configuredProfiles.length > 0) {
+      mergeProfiles(existingProfile, bundle.configuredProfiles, {});
+    } else {
+      reconcileDeferredProfiles(existingProfile, bundle.deferredProfiles, {});
+    }
   }
 
   const prevManifest = (await readManifest(skillsRoot)) ?? {
@@ -432,19 +444,42 @@ export async function installBundle({
     if (profileFile && bundle.bundleProfiles) {
       const existingProfile =
         existingProfileRaw === null ? null : JSON.parse(existingProfileRaw);
-      const { config, report } = mergeProfiles(existingProfile, bundle.bundleProfiles, {
-        force,
-        owned: ownedProfiles,
-        hash: hashObject,
-      });
-      profileReport = report;
+      const deferred = bundle.deferredProfiles.length > 0
+        ? reconcileDeferredProfiles(existingProfile, bundle.deferredProfiles, {
+          owned: ownedProfiles,
+          hash: hashObject,
+        })
+        : {
+          config: existingProfile,
+          report: { deferred: [], removed: [], released: [], preserved: [] },
+        };
+      const merged = bundle.configuredProfiles.length > 0
+        ? mergeProfiles(deferred.config, bundle.configuredProfiles, {
+          force,
+          owned: ownedProfiles,
+          hash: hashObject,
+        })
+        : {
+          config: deferred.config,
+          report: { created: existingProfile === null, added: [], updated: [], preserved: [] },
+        };
+      const { config } = merged;
+      profileReport = {
+        ...merged.report,
+        ...deferred.report,
+        created: existingProfile === null,
+        preserved: [...deferred.report.preserved, ...merged.report.preserved],
+      };
+      for (const id of bundle.deferredProfiles.map((profile) => profile.id)) {
+        delete nextProfileHashes[id];
+      }
       const nextRaw = JSON.stringify(config, null, 2) + '\n';
       if (existingProfileRaw === null || nextRaw !== existingProfileRaw) {
         // New configs are restrictive; existing configs keep their mode.
         await writeAtomic(profileFile, nextRaw, existingProfileRaw === null ? { mode: 0o600 } : {});
         profileWritten = true;
       }
-      for (const id of [...report.added, ...report.updated]) {
+      for (const id of [...merged.report.added, ...merged.report.updated]) {
         const p = config.daemon.agentProfiles.find((entry) => entry?.id === id);
         if (p) nextProfileHashes[id] = hashObject(p);
       }

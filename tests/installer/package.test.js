@@ -104,9 +104,9 @@ function skillAssets(pkgDir) {
   return rels;
 }
 
-function profileIds(pkgDir) {
+function profileRecords(pkgDir) {
   const profiles = JSON.parse(readFileSync(join(pkgDir, 'profiles', 'paseo.json'), 'utf8'));
-  return profiles.agentProfiles.map((p) => p.id);
+  return profiles.agentProfiles;
 }
 
 // Augment an installer-branch extract with a labeled fixture bundle. Both
@@ -150,8 +150,15 @@ function fullCycle(pkgDir, neutral, label) {
   const rels = skillAssets(pkgDir);
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
-  const ids = profileIds(pkgDir);
-  expect(ids.length).toBeGreaterThan(0);
+  const bundledProfiles = profileRecords(pkgDir);
+  const configuredIds = bundledProfiles
+    .filter((profile) => typeof profile.model === 'string' && profile.model.length > 0)
+    .map((profile) => profile.id);
+  const deferredIds = bundledProfiles
+    .filter((profile) => profile.model === null)
+    .map((profile) => profile.id);
+  expect(bundledProfiles.length).toBeGreaterThan(0);
+  expect(configuredIds.length).toBeGreaterThan(0);
 
   const installed = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(installed.ok).toBe(true);
@@ -159,7 +166,16 @@ function fullCycle(pkgDir, neutral, label) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(readFileSync(join(pkgDir, 'skills', rel), 'utf8'));
   }
   const merged = JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.map((p) => p.id);
-  for (const id of ids) expect(merged.includes(id)).toBe(true);
+  for (const id of configuredIds) expect(merged.includes(id)).toBe(true);
+  for (const id of deferredIds) {
+    expect(merged.includes(id)).toBe(false);
+    expect(installed.out).toContain(id);
+  }
+  const ownedProfiles = JSON.parse(
+    readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
+  ).profiles.entries;
+  for (const id of configuredIds) expect(id in ownedProfiles).toBe(true);
+  for (const id of deferredIds) expect(id in ownedProfiles).toBe(false);
 
   const again = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(again.ok).toBe(true);
@@ -190,7 +206,8 @@ function fullCycle(pkgDir, neutral, label) {
   expect(removed.ok).toBe(true);
   for (const rel of rels) expect(existsSync(join(skillsDir, rel))).toBe(false);
   const remaining = JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.map((p) => p.id);
-  for (const id of ids) expect(remaining.includes(id)).toBe(false);
+  for (const id of configuredIds) expect(remaining.includes(id)).toBe(false);
+  for (const id of deferredIds) expect(remaining.includes(id)).toBe(false);
 }
 
 test('tarball members match the full source tree with no silent omissions', () => {
@@ -263,7 +280,7 @@ test('combined-like fixture package packs and cycles end to end', () => {
     join(pkgDir, 'profiles', 'paseo.json'),
     JSON.stringify({
       version: 1,
-      agentProfiles: profileIds.map((id) => ({ id, provider: 'example', model: 'm' })),
+      agentProfiles: profileIds.map((id) => ({ id, name: id, provider: 'example', model: 'm' })),
     }),
   );
   writeFileSync(join(pkgDir, 'README.md'), '# Combined fixture\n');
