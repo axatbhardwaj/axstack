@@ -172,3 +172,19 @@ axstack check --bundle ./bundle
 # Remove only unchanged owned assets
 axstack uninstall --skills-dir /tmp/ax-skills --profile /tmp/paseo.json
 ```
+
+## Retiring the former handoff skill
+
+The bundle no longer contains `axstack-handoff`; task transfer uses Paseo’s
+native `paseo-handoff` and `paseo` skills. Enable those through Paseo before
+using the transfer route. Axstack’s own run-record and authority context are
+carried into the handoff, rather than implemented as another skill.
+
+An ordinary installer upgrade reports previously owned assets absent from
+the bundle as stale and preserves them. It does not silently retire an old
+installed handoff. To refresh an existing skills target, use the documented
+uninstall/install cycle for that target, without `--force`: unchanged owned
+files are removed, user-edited files survive and must be resolved explicitly.
+Keep the same profile binding if also cycling profiles; a skills-only cycle
+can omit `--profile` to leave profiles intact. Apply this separately to each
+selected harness target and verify the resulting discovery catalog.

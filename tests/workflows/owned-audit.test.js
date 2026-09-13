@@ -152,10 +152,10 @@ test('owned-audit: cadence is bounded with no new runtime service', () => {
   expect(/substantive run.*default|default.*substantive run/i.test(text), 'enabled per substantive run by default').toBeTruthy();
   expect(/checkpoint/i.test(text) && lower.includes('deviation'), 'checkpoint after material deviation').toBeTruthy();
   expect(/repair pattern/i.test(text), 'checkpoint after repair pattern when useful').toBeTruthy();
-  expect(/reuse.*evidence|no repeated.*rescan/i.test(text), 'reuse audit evidence, no repeated whole-run rescans').toBeTruthy();
+  expect(/reuse.*evidence|no repeated.*rescan/is.test(text), 'reuse audit evidence, no repeated whole-run rescans').toBeTruthy();
   expect(/compact audit record/i.test(text), 'routine small lookup may end with a compact audit record').toBeTruthy();
   expect(/never force|do not force/i.test(text), 'must not force the full implementation pipeline for research').toBeTruthy();
-  expect(/no extra daemon|no.*daemon.*timer|no new runtime/i.test(text), 'no extra daemon/timer/analytics service').toBeTruthy();
+  expect(/no extra daemon|no.*daemon.*timer|no new runtime/is.test(text), 'no extra daemon/timer/analytics service').toBeTruthy();
 });
 
 test('owned-audit: metrics carry counts, denominators, and evidence', () => {
@@ -185,7 +185,7 @@ test('owned-audit: metrics carry counts, denominators, and evidence', () => {
 test('owned-audit: judgment separates outcome, adherence, and coverage', () => {
   const text = readAudit();
   expect(/execution outcome.*procedural adherence.*measurement coverage/i.test(text), 'must distinguish outcome vs adherence vs coverage').toBeTruthy();
-  expect(/never counts? missing evidence as.*pass/i.test(text), 'missing evidence is never a pass').toBeTruthy();
+  expect(/never count(?:s)? missing evidence as\s+(?:a\s+)?pass/is.test(text), 'missing evidence is never a pass').toBeTruthy();
   expect(/vanity score/i.test(text), 'no collapse to a vanity score').toBeTruthy();
   expect(/not.*game|never.*game/i.test(text), 'parallelism is not a metric to game').toBeTruthy();
 });
@@ -204,10 +204,10 @@ test('owned-audit: prohibitions and privacy guard the loop', () => {
   const text = readAudit();
   const lower = text.toLowerCase();
   expect(/no self-edit/i.test(text), 'no self-edit').toBeTruthy();
-  expect(/no changing acceptance|acceptance.*after failure/i.test(text), 'no changing acceptance/metrics after failures').toBeTruthy();
-  expect(/no external transmission of raw traces/i.test(text), 'no external transmission of raw traces').toBeTruthy();
-  expect(/no hidden.*memory mutation/i.test(text), 'no hidden per-user memory mutation').toBeTruthy();
-  expect(/no automatic merge/i.test(text), 'no automatic merge or activation').toBeTruthy();
+  expect(/no changing acceptance|preserve the accepted\s+criteria and metrics after failures/i.test(text), 'no changing acceptance/metrics after failures').toBeTruthy();
+  expect(/no external transmission of raw traces|keep raw traces and run artifacts local\s+and private/i.test(text), 'no external transmission of raw traces').toBeTruthy();
+  expect(/no hidden.*memory mutation|perform no self-edit, hidden per-user memory mutation/is.test(text), 'no hidden per-user memory mutation').toBeTruthy();
+  expect(/no automatic merge|perform no self-edit[^.]*automatic merge/i.test(text), 'no automatic merge or activation').toBeTruthy();
   expect(/local.*private by default|private by default/i.test(text), 'run artifacts local/private by default').toBeTruthy();
   expect(/sanitized summar/i.test(text), 'sanitized summaries only when authorized').toBeTruthy();
   expect(/compatible runs|qualify causal/i.test(text), 'compare compatible runs and qualify causality').toBeTruthy();

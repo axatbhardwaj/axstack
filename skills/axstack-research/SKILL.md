@@ -1,62 +1,57 @@
 ---
 name: axstack-research
-description: Source-first bounded research — verify primary sources, separate verified claims from inference, save a source-linked note.
+description: When one bounded question needs verified answers, use axstack-research to produce a source-linked note with limitations.
 ---
 
 # Research
 
-Load before acting:
+Produce a source-linked Markdown note that answers one bounded question and
+makes every evidentiary gap visible.
 
-- [Paseo launch](../axstack/references/paseo-launch.md)
-- [Standing contracts](../axstack/references/contracts.md)
-- [Source checklist](references/checklist.md)
+Before researching, load [Standing contracts](../axstack/references/contracts.md)
+and the lifecycle it requires, then read the
+[source standards](references/checklist.md).
 
-Independently callable. A research-only run never requires a spec
-baseline, ticket mapping, or author pipeline, and never writes product
-code or publishes anything unless requested.
+This skill is independently callable. A research-only run needs no spec
+baseline, ticket map, or author pipeline. Keep it read-only unless requested
+and separately authorized to change product code or publish; otherwise, neither
+is part of research.
 
-## Bounded question
+## Procedure
 
-Restate the bounded question and its edges before fetching: what is in
-scope, what is excluded, and which claims would change the answer. One
-bounded question stays one run; split only genuinely independent
-questions.
+1. **Frame the question.** Restate the question, what is in scope, what is
+   excluded, and which claims could change the answer. Keep one bounded
+   question in one run; separate only genuinely independent questions. Start
+   gathering evidence only after the target and stopping boundary are explicit.
 
-## Source-first evidence
+2. **Choose the smallest route.** Handle a single factual lookup directly in
+   the current chat. Use a profile only when its specialization or independent
+   work is useful. Before an actual dispatch, read and follow the
+   [Paseo launch sequence](../axstack/references/paseo-launch.md). Give each
+   research branch one owner; keep implementation out of every branch.
 
-Fetch the actual primary sources — docs, code, or tool output — instead
-of reasoning from memory. Date and pin claims when needed: record source
-versions, revisions, and access dates so a later reader can recheck.
-Detail steps live in the [source checklist](references/checklist.md).
+   These routes are data presets, not proof of live readiness. Confirm profile
+   availability through the shared launch sequence:
 
-## Verdicts, not vibes
+   - `axstack-research-requirements` (Opus medium): requirements and intent.
+   - `axstack-research-code` (Sol medium): code behavior.
+   - `axstack-research-web` (Opus low): web and external sources.
+   - `axstack-explore-codebase` (Sonnet xhigh): broad codebase mapping.
+   - `axstack-explore-execution` (Terra low): execution and runtime traces.
 
-Tag every material claim as verified (inspected source cited), inference
-(explicit reasoning from verified claims), or unverified (boundary the
-run could not check). Never present inference or unverified material as
-verified. End with explicit limitations.
+3. **Gather primary source evidence.** Inspect the actual documentation, code,
+   or tool output for every answer-changing claim. Apply the source standards
+   for citations, freshness, revisions, and access dates. Continue until each
+   material claim has direct evidence or a named evidence gap.
 
-## Direct first, fan out only when useful
+4. **Form the verdict.** Mark every material claim as **verified**,
+   **inference**, or **unverified** using the source standards. Derive
+   inferences only from cited verified facts. A finished verdict leaves no
+   inference or unchecked claim presented as verified.
 
-A single direct factual lookup stays direct in the current chat. Launch
-subagents only when bounded independent work is useful — for example
-parallel distinct questions — never as an automatic research team, and
-never as implementation.
-
-## Routes (data presets, not readiness claims)
-
-Core provides these routes as profiles; pick the smallest useful set,
-and do not require all of them. Confirm live availability per the shared
-launch sequence; nothing here claims live model readiness:
-
-- `axstack-research-requirements` (Opus medium): requirement and intent questions.
-- `axstack-research-code` (Sol medium): code-behavior questions.
-- `axstack-research-web` (Opus low): web and external-source questions.
-- `axstack-explore-codebase` (Sonnet xhigh): broad codebase mapping.
-- `axstack-explore-execution` (Terra low): execution and runtime traces.
-
-## Output
-
-Deliver a source-linked Markdown artifact for the requested research:
-question, bounds, each claim with its source link and verified /
-inference / unverified tag, then limitations. No code changes.
+5. **Deliver and stop.** Save or return the requested Markdown artifact with
+   the question, bounds, source-linked claims and labels, verdict, and explicit
+   limitations. Apply the audit hook required by the shared lifecycle when the
+   run is substantive. Once the artifact is recheckable, stop: no spec, tickets,
+   implementation, publication, or follow-on workflow starts without separate
+   authority.

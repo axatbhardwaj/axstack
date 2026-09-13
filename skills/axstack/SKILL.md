@@ -1,65 +1,67 @@
 ---
 name: axstack
-description: Axstack entry workflow — route a run through align, spec, tickets, implement, review, watch without routine confirmations.
+description: When routing an engineering run through Axstack, use axstack to select the applicable phase and scope identity.
 ---
 
 # Axstack entry
 
-You are the driver in the current chat. Paseo owns sessions, workspaces,
-delegation, notifications, schedules, and heartbeats. This skill only routes.
+Route the current request to one Axstack phase with the right scope identity.
+The current chat remains the driver; Paseo owns runtime orchestration.
 
-Shared references (load when launching sessions or checking authority):
+## Route the request
 
-- [Paseo launch](../axstack/references/paseo-launch.md)
-- [Standing contracts](../axstack/references/contracts.md)
-- [Shared routing](../axstack/references/routing.md)
-- [Lifecycle and receipts](../axstack/references/lifecycle.md)
+1. Classify the request with [Shared routing](references/routing.md). Direct
+   research, docs, peer-review, adopted-watch, and handoff routes need no spec
+   ceremony. Only an explicit user-requested ownership transfer can use the
+   capability-gated native route in
+   [Lifecycle and receipts](references/lifecycle.md#native-handoff-and-resume),
+   not an Axstack handoff phase. Preparation completion, watch expiry, and
+   ordinary resume update or reconcile the run record without launching it.
+2. For new engineering work, validate scope identity before invoking any phase.
+   Record `small`, `substantial`, or `unclear` plus a brief reason, then apply the
+   [proportional scope identity](references/routing.md#proportional-scope-identity).
+   A small clear change proceeds from its snapshotted small-change intent.
+   Substantial work proceeds only from an approved spec and matching ticket
+   map. Clarify unclear size before dispatch.
+3. Only after validation passes, invoke exactly the selected phase. A directly
+   invoked later phase starts there and must pass its own identity check. When
+   substantial work lacks an approved spec or matching ticket map, return that
+   exact gap, name `axstack-align` as the next route, and stop the current
+   invocation; do not invoke align, spec, or tickets. Apply the same stop to a
+   mismatched or invalidated identity. Never admit work that a deeper phase
+   would reject.
 
-## Route first
+The route is settled when one applicable phase is named with its valid scope
+identity, or the exact preparation/setup gap is reported with affected work
+held.
 
-Classify the request per [Shared routing](../axstack/references/routing.md)
-and invoke exactly the phase skill named:
+## Load at the action boundary
 
-- Bounded research question -> `axstack-research`, directly, without spec
-  ceremony: no alignment interview, no approved spec, no ticket mapping.
-- Source-backed prose or requested visual explanation -> `axstack-docs`,
-  directly, without spec ceremony. Verify actual rendered behavior where
-  applicable; report unavailable evidence. Publication needs its own
-  authority.
-- Handoff, resume, or reconciliation -> `axstack-handoff`, directly,
-  without spec ceremony.
-- New engineering work -> the lifecycle below, starting at the earliest
-  phase whose required inputs are missing.
-- Colleague PR review -> `axstack-review` in peer mode.
-- Own PR maintenance or monitoring -> `axstack-review` in authored mode
-  and `axstack-watch` (adoption for existing PRs).
+- Every independently called phase loads [Standing contracts](references/contracts.md),
+  which requires lifecycle and audit loading before action.
+- Before an actual Axstack role dispatch, load
+  [Paseo launch](references/paseo-launch.md). Ordinary reading, writing, and
+  local checks do not require launch discovery.
+- Substantive delegated or resumable work uses the
+  [Local run record](references/run-record.md).
 
 ## Lifecycle
 
-1. Align (`axstack-align`): bounded frontier interview, settled decisions.
-2. Spec (`axstack-spec`): observable acceptance criteria plus explicit exclusions. User approves; the approved revision is the execution baseline.
-3. Tickets (`axstack-tickets`): capabilities to internal tasks.
-4. Implement (`axstack-implement`): owners build candidates with strict TDD.
-5. Review (`axstack-review`): exactly two independent final reviewers, all six angles.
-6. Watch (`axstack-watch`): bounded monitoring with resumable handoff.
-7. Human merges by default, bottom-up for a stack. Review approval never grants merge authority.
+This is a phase map, not an automatic dispatch sequence.
 
-## Autonomous progress and holds
+1. `axstack-align` settles substantial scope and decisions.
+2. `axstack-spec` creates the single user-approved execution baseline.
+3. `axstack-tickets` maps capabilities, tasks, and dependencies, then
+   preparation stops with a resumable handoff.
+4. `axstack-implement` produces owned candidates with strict TDD.
+5. `axstack-review` gives each exact revision two independent same-brief,
+   six-angle final reviews.
+6. `axstack-watch` monitors within the shared deadline and hands off remaining
+   work.
+7. The human merges by default, bottom-up for a stack. Review approval never
+   grants merge authority.
 
-Execute without routine confirmations between phases. Holds apply to
-affected work only; independent safe work may continue:
-
-- Material scope changes: hold affected code until the user accepts the revised scope and plan.
-- Required model unavailable or exhausted: pause affected work, record the gap, ask the user. Never substitute another model automatically.
-- Serious risk (credible security, downtime, data loss, major design concern): prompt-only urgent escalation. Hold approval, merge-ready declarations, and dependent dangerous actions. Safe work may continue. Disagreement or silence is not permission.
-
-## One host, two PRs, one owner
-
-- One Paseo execution host per run. Default two active PRs (a concurrency limit, not an agent limit). The driver queues dependent or conflicting work.
-- Each PR has one persistent owner accountable for candidate, fixes, verification evidence, and monitoring. Exactly one writer per candidate at a time.
-- Dependent PRs build on reviewed parent candidates via `gh stack`. A parent change invalidates affected child evidence; re-verify the child. A green parent alone never proves the stack.
-
-## Next
-
-Invoke the phase skill matching the current state with its required inputs,
-or start at `axstack-align`. Load only the phase skill needed.
+Autonomous progress, model holds, serious-risk handling, mutation authority,
+and the one-host ownership contract live in
+[Standing contracts](references/contracts.md). Load only the selected phase
+and the references its action requires.

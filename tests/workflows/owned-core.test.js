@@ -36,7 +36,13 @@ const root = dirname(dirname(here));
 const skillsDir = join(root, 'skills');
 
 function skill(name) {
-  return readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
+  const dir = join(skillsDir, name);
+  const main = readFileSync(join(dir, 'SKILL.md'), 'utf8');
+  // Conditional branch rules may live in files explicitly linked by this skill.
+  const local = [...main.matchAll(/\]\((references\/[^)#]+)(?:#[^)]*)?\)/g)]
+    .map((match) => match[1]);
+  return [main, ...new Set(local)].map((value, index) =>
+    index === 0 ? value : readFileSync(join(dir, value), 'utf8')).join('\n').replace(/\s+/g, ' ');
 }
 
 // NOTE: interface/invariant checks only. They verify packaging and stated
@@ -53,11 +59,11 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
   for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(
-      text.includes('../axstack/references/routing.md'),
+      text.includes('references/routing.md'),
       `${name}: must explicitly load shared routing reference`,
     ).toBeTruthy();
     expect(
-      text.includes('../axstack/references/lifecycle.md'),
+      text.includes('references/lifecycle.md'),
       `${name}: must explicitly load shared lifecycle/receipt reference`,
     ).toBeTruthy();
   }
@@ -65,11 +71,11 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
 
 test('owned-core: entry routes research/docs/handoff directly without spec ceremony', () => {
   const text = skill('axstack');
-  for (const name of ['axstack-research', 'axstack-docs', 'axstack-handoff']) {
+  for (const name of ['axstack-research', 'axstack-docs', 'paseo-handoff']) {
     expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
   }
   expect(
-    /research|docs|handoff[\s\S]{0,400}without.*spec|no spec.*(research|docs|handoff)/i.test(text),
+    /research/i.test(text) && /docs/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
     'entry must state research/docs/handoff need no spec ceremony',
   ).toBeTruthy();
 });
@@ -82,7 +88,7 @@ test('owned-core: review peer mode accepts linked intent without Axstack spec', 
     'peer mode must accept the linked issue as intent',
   ).toBeTruthy();
   expect(
-    /no Axstack(-created)? approved spec|without.*(new|Axstack) spec|does not demand.*spec/i.test(text),
+    /no Axstack(-created)? approved\s+spec|without.*(new|Axstack) spec|does not demand.*spec/i.test(text),
     'peer mode must not demand an Axstack-created approved spec',
   ).toBeTruthy();
   expect(
@@ -110,7 +116,7 @@ test('owned-core: exactly two independent reviewers, same brief, exact rev, no c
   expect(/same.*six-angle|six-angle.*same/i.test(text), 'both reviewers must get the same six-angle brief').toBeTruthy();
   expect(/exact[\s\S]*revision|exact[\s\S]*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
   expect(
-    /no.*cross-read|without.*cross-read|neither.*reads the other/i.test(text),
+    /no.*cross-read|without.*cross-read|neither reviewer reads the\s+other[’']s initial findings/is.test(text),
     'must forbid first-pass cross-reading between reviewers',
   ).toBeTruthy();
   expect(/without vot/i.test(text), 'owner must validate findings without voting').toBeTruthy();
@@ -193,7 +199,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
     'must confirm fresh review feedback before publication',
   ).toBeTruthy();
   expect(
-    /gh stack/i.test(text) && /no overwrite|scoped|without.*overwrit/i.test(text),
+    /gh stack/i.test(text) && /no overwrite|scoped|without.*overwrit|adopted PR only, preserving unrelated stack entries/i.test(text) && /expected-old SHA[^.]*mismatch holds publication/i.test(text),
     'delivery must be gh stack scoped with no overwrite',
   ).toBeTruthy();
   expect(
@@ -340,6 +346,9 @@ test('owned-core: review separates completeness from verdict; binds commit param
 });
 
 test('owned-core: standalone review/watch materialize axstack-owner; workers never recurse', () => {
+  const lifecycle = readFileSync(join(skillsDir, 'axstack/references/lifecycle.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(lifecycle).toMatch(/prefer[^.]*parallel[^.]*independent[^.]*bounded|prefer[^.]*independent[^.]*parallel[^.]*bounded/i);
+  expect(lifecycle).toMatch(/no redundant workers/i);
   for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();
@@ -348,7 +357,7 @@ test('owned-core: standalone review/watch materialize axstack-owner; workers nev
       `${name}: only the owner launches writer/reviewers/monitor/watchdog`,
     ).toBeTruthy();
     expect(
-      /no.*recursive|never.*recursive/i.test(text),
+      /no.*recursive|never.*recursive/is.test(text),
       `${name}: workers must launch no recursive teams`,
     ).toBeTruthy();
   }
@@ -384,7 +393,7 @@ test('owned-core: monitor reads product state, watchdog reads health, same expir
   expect(/5\s?min/i.test(text), 'monitor cadence default 5min must be stated').toBeTruthy();
   expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
   expect(/same[\s\S]*24h/i.test(text), 'both must share the same 24h expiry').toBeTruthy();
-  expect(/own timer/i.test(text), 'each must own its timer and snapshot').toBeTruthy();
+  expect(/own timer|each owns its timer and snapshot/i.test(text), 'each must own its timer and snapshot').toBeTruthy();
   expect(/acknowledged/i.test(text), 'actionable events must be acknowledged').toBeTruthy();
   expect(
     /approval alone/i.test(text),
@@ -432,7 +441,7 @@ test('owned-core: align and spec involve Fable; auditor profile exists', () => {
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-docs', 'axstack-handoff']) {
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-docs', 'paseo-handoff']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();

@@ -22,23 +22,14 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 function explicitLoads(path) {
   const text = readFileSync(path, 'utf8');
   const links = [];
-  let loadList = false;
-  let sawListItem = false;
-  for (const line of text.split('\n')) {
-    if (/load before acting:|shared references \(load/i.test(line)) {
-      loadList = true;
-      sawListItem = false;
-      continue;
-    }
-    const listLink = loadList && line.match(/^\s*-\s+\[[^\]]+\]\(([^)]+)\)/);
-    if (listLink) {
-      links.push(listLink[1]);
-      sawListItem = true;
-      continue;
-    }
-    if (loadList && sawListItem && line.trim()) loadList = false;
-    if (/\bload(?:s|ed)?\b/i.test(line)) {
-      for (const match of line.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) links.push(match[1]);
+  const paragraphs = text.split(/\n\s*\n/);
+  for (let index = 0; index < paragraphs.length; index++) {
+    const paragraph = paragraphs[index];
+    if (!/\bload(?:s|ed)?\b/i.test(paragraph)) continue;
+    for (const match of paragraph.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) links.push(match[1]);
+    // A load directive may introduce a link list in the following paragraph.
+    if (paragraph.trimEnd().endsWith(':') && /^\s*[-*]\s+\[/m.test(paragraphs[index + 1] ?? '')) {
+      for (const match of paragraphs[index + 1].matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) links.push(match[1]);
     }
   }
   return [...new Set(links)]
@@ -76,7 +67,7 @@ test('every independently callable substantive phase has an explicit load path t
   const phases = [
     'axstack', 'axstack-align', 'axstack-spec', 'axstack-tickets',
     'axstack-implement', 'axstack-review', 'axstack-watch',
-    'axstack-research', 'axstack-docs', 'axstack-handoff',
+    'axstack-research', 'axstack-docs',
   ];
   const audit = `${root}/skills/axstack-audit/SKILL.md`;
   for (const phase of phases) {
@@ -91,7 +82,7 @@ test('audit hook excludes audit runs and auditor children', () => {
   const audit = read('skills/axstack-audit/SKILL.md');
   expect(contracts).toMatch(/except[^.]*axstack-audit/i);
   expect(lifecycle).toMatch(/axstack-audit[^.]*excluded/i);
-  expect(audit).toMatch(/launches no child/i);
+  expect(audit).toMatch(/launch(?:es)? no child/i);
 });
 
 test('routing labels lifecycle scope as mode-specific', () => {
@@ -118,8 +109,8 @@ test('persistent owner consolidates report-only review and driver presents it', 
 
 test('README separates checks, declarations, private simulation, and live proof', () => {
   const readme = read('README.md');
-  expect(readme).toMatch(/73 workflow[^.]*structural[^.]*contract checks/i);
-  expect(readme).toMatch(/25 declared scenarios/i);
+  expect(readme).toMatch(/89 workflow[^.]*structural[^.]*contract checks/i);
+  expect(readme).toMatch(/contains 30 declared scenarios/i);
   expect(readme).toMatch(/33-case[^.]*a97c1a7[^.]*25[^.]*8 baseline/i);
   expect(readme).toMatch(/private[^.]*not shipped/i);
   expect(readme).toMatch(/not[^.]*live\s+runtime/i);
