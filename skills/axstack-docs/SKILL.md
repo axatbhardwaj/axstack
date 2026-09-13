@@ -12,13 +12,11 @@ Load before acting:
 - [Visual QA](references/visual-qa.md)
 
 Independently callable. Source-check material claims against inspected
-sources, then deliver the requested format. No mandatory intermediate
-artifact sits between the request and delivery.
+sources, then deliver the requested format. No mandatory intermediate artifact sits between the request and delivery.
 
 ## Prose
 
-Ordinary prose runs on the `axstack-docs` route (Opus low). No mandatory
-HTML for prose: if the user asked for Markdown, notes, or another text
+Ordinary prose runs on the `axstack-docs` route (Opus low). No mandatory HTML for prose: if the user asked for Markdown, notes, or another text
 shape, deliver exactly that. Verify material claims against sources;
 mark what could not be verified.
 
