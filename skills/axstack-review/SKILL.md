@@ -5,6 +5,11 @@ description: Exactly two independent Sol and Opus final reviewers, same six-angl
 
 # Review
 
+Load before acting:
+
+- [Paseo launch](../axstack/references/paseo-launch.md)
+- [Standing contracts](../axstack/references/contracts.md)
+
 ## Two-reviewer contract (exact)
 
 Each PR owner launches exactly two independent final reviewers — Sol and
@@ -13,8 +18,10 @@ candidate revision, exclusions, and review instructions. Neither reviewer
 reads the other's initial findings, and neither creates children. The PR
 owner is never its own independent reviewer. Authoring disqualifies a
 session from reviewing that candidate; the same model family in a fresh
-non-author session is allowed. Reuse eligible reviewer sessions for
-checkpoints where evidence and scope allow.
+non-author session is allowed. Materialize reviewers via
+[Paseo launch](../axstack/references/paseo-launch.md): the Opus reviewer is
+a claude session, the Sol reviewer a codex session. Reuse eligible reviewer
+sessions for checkpoints where evidence and scope allow.
 
 Both reviewers cover all six angles:
 
@@ -25,15 +32,25 @@ Both reviewers cover all six angles:
 5. Architecture and solution design, including SOLID and credible simpler alternatives.
 6. Simplicity and maintainability: KISS, YAGNI, cyclomatic complexity where measurement is useful. Never invent a metric or demand abstractions to satisfy a principle.
 
+## Evidence bar
+
+Reviewers verify executable evidence of spec and ticket acceptance, the
+affected integration boundary, and rendered interaction evidence for UI work
+where relevant. Unverified boundaries are reported as limitations, never
+implied as covered. A test passing is not enough if it checks the wrong
+behavior; seeded regressions and inadequate checks must be called out.
+
 ## Findings and re-review
 
 Reviewers report concrete evidence and consequences, coverage, limitations,
 and findings tied to the candidate. No finding quota. The owner verifies
 findings, reconciles contradictions with focused checks, and returns
 accepted fixes to the author. Unresolved material disagreement means
-incomplete review; votes do not settle correctness. Changes require a
-refreshed review receipt for the new revision; reuse unchanged evidence and
-review the delta plus affected behavior when sufficient.
+incomplete review; votes do not settle correctness.
+
+Changed code requires a refreshed receipt for the new revision: reuse
+unchanged evidence and review the delta plus affected behavior when
+sufficient; bigger scope, base, or behavior changes require broader review.
 
 ## Template: candidate review brief
 
@@ -43,14 +60,22 @@ Scope: <spec rev + ticket + base + exclusions>
 Angles: <all six, same brief for both reviewers>
 ```
 
-## Template: review evidence
+## Template: review receipt (one block per revision)
 
 ```text
-Reviewer: <Sol | Opus> session <id> rev <sha>
-Coverage: <angles covered + limits>
+Reviewer: <Sol | Opus> session <id> rev <candidate sha>
+Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
+Coverage: <angles covered + executable evidence checked>
+Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
-Verdict: <blocking | non-blocking> (no merge authority)
 ```
+
+## Publishing rule
+
+Declaring merge-ready requires a current verified receipt for the exact
+candidate revision with verdict APPROVE and no open urgent hold. Neither
+reviewer unanimity nor passing tests grants merge authority; the human
+merges.
 
 ## Prompt-only urgent escalation
 

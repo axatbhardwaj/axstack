@@ -5,6 +5,14 @@ description: Build candidates with strict TDD, exclusive writers, owner accounta
 
 # Implement
 
+Load before acting:
+
+- [Paseo launch](../axstack/references/paseo-launch.md)
+- [Standing contracts](../axstack/references/contracts.md)
+
+Requires an approved spec baseline (entry or standalone). Confirm the
+approved spec identity before building; hold on unapproved scope.
+
 ## Strict TDD (red, green, refactor)
 
 1. Define a behavior check from approved acceptance criteria, failure behavior, or an integration boundary. Do not restate source text or mirror the implementation.
@@ -15,6 +23,14 @@ description: Build candidates with strict TDD, exclusive writers, owner accounta
 Historical noncompliance cannot be erased: tests added after code never
 retroactively prove TDD. Report the noncompliance honestly; any corrective
 work starts from a new real red followed by green.
+
+## Meaningful acceptance checks
+
+Derive executable checks from the spec and ticket acceptance: the commands
+run, outputs observed, and states verified. Cover the affected integration
+boundary, and add rendered interaction evidence for UI work when relevant.
+Name every boundary you did not verify (unavailable OS, harness, or
+credential) instead of implying coverage.
 
 ## Ownership and parallelism
 
@@ -37,5 +53,6 @@ unresolved launch state before any duplicate writer.
 PR: <URL> rev <sha> owner <profile> worktree <path>
 Spec: <approved rev> capability <issue>
 State: <checks + evidence links>
+Unverified: <boundaries not verified + why>
 Next: <actions + who>
 ```

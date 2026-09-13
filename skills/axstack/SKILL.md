@@ -8,9 +8,14 @@ description: Axstack entry workflow — route a run through align, spec, tickets
 You are the driver in the current chat. Paseo owns sessions, workspaces,
 delegation, notifications, schedules, and heartbeats. This skill only routes.
 
+Shared references (load when launching sessions or checking authority):
+
+- [Paseo launch](../axstack/references/paseo-launch.md)
+- [Standing contracts](../axstack/references/contracts.md)
+
 ## Lifecycle
 
-1. Align (`axstack-align`): interview, resolve factual questions.
+1. Align (`axstack-align`): bounded frontier interview, settled decisions.
 2. Spec (`axstack-spec`): observable acceptance criteria plus explicit exclusions. User approves; the approved revision is the execution baseline.
 3. Tickets (`axstack-tickets`): capabilities to internal tasks.
 4. Implement (`axstack-implement`): owners build candidates with strict TDD.
