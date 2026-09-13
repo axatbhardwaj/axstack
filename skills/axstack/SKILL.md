@@ -54,8 +54,9 @@ This is a phase map, not an automatic dispatch sequence.
 3. `axstack-tickets` maps capabilities, tasks, and dependencies, then
    preparation stops with a resumable handoff.
 4. `axstack-implement` produces owned candidates with strict TDD.
-5. `axstack-review` gives each exact revision two independent same-brief,
-   six-angle final reviews.
+5. `axstack-review` gives peer PRs two independent same-brief Sol and Opus
+   reviews; authored PRs get one complete cross-family non-author review based
+   on actual author provenance.
 6. `axstack-watch` monitors within the shared deadline and hands off remaining
    work.
 7. The human merges by default, bottom-up for a stack. Review approval never

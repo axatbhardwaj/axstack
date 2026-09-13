@@ -23,7 +23,9 @@ For an existing own PR, read the
 [proportional scope identities](../axstack/references/routing.md#proportional-scope-identity),
 verify writable ownership and user maintenance authority, then snapshot the
 accepted maintenance intent once: authorized scope, actual head and base,
-current owner, and watch state. It needs no new spec, ticket, or repeated
+current owner, actual author provenance, and watch state. Check authoring
+session evidence; the orchestrator identity is not author evidence, and never
+assume Sol for an imported own PR. It needs no new spec, ticket, or repeated
 approval. Monitoring-only adoption grants no repair or reply authority.
 
 Adoption is settled when the record names one persistent owner, one watch, the
@@ -79,8 +81,10 @@ matching ticket map for substantial work, or a snapshotted **small-change
 intent** for small work. An adopted own PR instead uses its accepted maintenance
 snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
-session where evidence allows, then receive refreshed independent review before
-publication.
+session where evidence allows, then receive refreshed review under the authored
+mode rule before publication. Unknown or mixed author provenance that cannot
+establish the cross-family reviewer is an exact gap to report to the user, not
+permission to invent a model fallback.
 
 A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.

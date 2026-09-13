@@ -30,8 +30,9 @@ Updated 2026-09-13 by user-requested change: scope readiness is proportional.
    one spec approval and stops with a handoff; small ambiguity can instead
    return a snapshotted small-change intent.
 3. Invoke `axstack` to execute prepared work. Capabilities become internal
-   tasks and reviewed PRs with one persistent owner per PR and exactly two
-   independent final reviewers.
+   tasks and reviewed PRs with one persistent owner per PR. Peer PRs receive
+   independent Sol and Opus review; authored PRs receive one independent
+   reviewer from a different model family than the actual author.
 4. You merge by default, bottom-up for a stack. Review approval never
     grants merge authority. Colleague PRs review in peer mode against
     their linked intent with no Axstack spec required; adopted PRs keep a
@@ -105,8 +106,8 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 89 workflow structural and contract checks pass under Bun. The repository
-  contains 30 declared scenarios; their shape checks are not model behavior.
+- 97 workflow structural and contract checks pass under Bun. The repository
+  contains 36 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
   Its private artifact is not shipped. This is model simulation, not live

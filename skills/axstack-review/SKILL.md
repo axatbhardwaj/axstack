@@ -1,13 +1,13 @@
 ---
 name: axstack-review
-description: When a candidate PR needs independent final review, use axstack-review for the same six-angle exact-revision Sol and Opus coverage.
+description: When a candidate PR needs final review, use axstack-review for peer Sol plus Opus or one authored cross-family reviewer.
 ---
 
 # Review
 
-Produce one evidence-bound verdict for an exact candidate revision from two
-independent reviews. Report the result within the requested authority; the
-human merges unless separately authorized otherwise.
+Produce one evidence-bound verdict for an exact candidate revision using the
+review count and model routing required by its mode. Report within the
+requested authority; the human merges unless separately authorized otherwise.
 
 Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
@@ -26,7 +26,7 @@ limitation instead of implying coverage. Peer code stays readonly; the
 reviewer never edits it.
 
 Mode is established when the linked intent, repository requirements, exact
-head and base, and writing authority are recorded.
+head and current base, and writing authority are recorded.
 
 ## Authored mode (own PR)
 
@@ -38,12 +38,22 @@ before an approval or merge-ready declaration:
   map.
 - Small new work: confirm the snapshotted **small-change intent**.
 - Adopted existing PR: record its accepted maintenance scope once — linked
-  issue, acceptance criteria, actual head/base, and current ownership. That
+  issue, acceptance criteria, actual head/base, current ownership, and actual
+  author provenance. Never assume an imported own PR was Sol-authored. That
   snapshot is accepted without repeated approval.
 
 The mode is ready when the applicable identity matches the candidate and no
 material scope change remains unaccepted. Readonly investigation may continue
 while an identity gap holds declarations.
+
+Resolve actual author provenance from authoring session receipts and candidate
+history. The orchestrator model, provider, profile, or owner name is not author
+evidence. The PR owner session may not independently review in either mode, and
+no author session may review its own candidate. The default Opus owner therefore
+needs a separate Opus reviewer for a Sol-authored PR. When unknown or mixed
+provenance cannot establish the required cross-model family, report the exact
+author-provenance gap, mark review `INCOMPLETE`, and ask the user. Never assume
+Sol or invent a family or model fallback.
 
 ## Standalone owner
 
@@ -56,18 +66,31 @@ or recursive teams.
 
 ## Review the candidate
 
-1. **Pin the brief.** Record the PR URL, exact candidate revision and base,
-   applicable intent or spec/ticket identity, exclusions, authority, and all
-   six angles below, producing one immutable brief for both reviewers.
-2. **Materialize exactly two independent final reviewers.** Immediately before
-   dispatch, read [Paseo launch](../axstack/references/paseo-launch.md). The
-   owner sends the same instantiated brief to Sol and Opus by default: Opus is
-   a Claude session and Sol is a Codex session. Neither reviewer reads the
-   other's initial findings or creates children. The owner cannot review its
-   own PR; any authoring session is disqualified, though a fresh non-author
-   session from the same model family is eligible. Continue once both session
-   receipts prove the requested model, independence, and exact brief.
-3. **Inspect all six angles.** Each reviewer covers:
+1. **Pin the brief.** Record the PR URL, exact candidate SHA and current base,
+   applicable intent or spec/ticket identity and acceptance, exclusions,
+   authority, actual author provenance for authored mode, and all six angles.
+2. **Materialize the mode-required review.** Immediately before dispatch, read
+   [Paseo launch](../axstack/references/paseo-launch.md), then apply exactly one
+   branch:
+   - **Peer:** exactly two independent final reviewers, Sol medium and Opus
+     medium. Send both the identical six-angle brief with no first-pass
+     cross-read: neither reads the other's initial findings or creates children.
+   - **Authored:** exactly one independent reviewer from a different model
+     family than the actual author. Sol author -> Opus medium; Opus author ->
+     Sol medium. The reviewer covers the complete brief alone. No author
+     session may review, even if its role or provider label changes.
+
+   For the existing high-stakes Opus high author / Sol high checkpoint route,
+   an eligible current non-author, non-owner checkpoint can satisfy the authored
+   final review after revalidation against the pinned brief. Preserve Sol high
+   effort and spawn no redundant final reviewer. If a required reviewer is
+   unavailable, report that exact model gap, mark review `INCOMPLETE`, and ask
+   the user; do not lower effort or choose any automatic fallback.
+
+   Continue only when session receipts prove the required models, non-author
+   independence, actual author provenance where applicable, and exact brief.
+3. **Inspect all six angles.** In peer mode each reviewer covers every angle;
+   in authored mode the one reviewer covers all six angles:
    1. Security and trust boundaries.
    2. Correctness, failures, and edge cases.
    3. Integration and regressions.
@@ -78,11 +101,12 @@ or recursive teams.
       where measurement is useful. Never invent a metric or demand an
       abstraction merely to satisfy a principle.
 
-   Verify executable acceptance evidence and the affected integration
+   Verify the applicable spec, ticket, or intent acceptance, executable
+   evidence, exact candidate SHA, current base, and affected integration
    boundary, plus rendered interaction evidence for relevant UI work. A
    passing test is insufficient when it checks the wrong behavior. Call out
-   seeded regressions, inadequate checks, and every unverified boundary. Each
-   receipt must record concrete evidence and consequences, coverage,
+   seeded regressions, inadequate checks, and every unverified boundary. Every
+   mode-required receipt records concrete evidence and consequences, coverage,
    limitations, and findings without a finding quota.
 
    Example: `Ticket criterion: an expired invite returns 410. Observed: the
@@ -90,45 +114,51 @@ or recursive teams.
    usable.`
 4. **Reconcile findings without voting.** The owner verifies findings and uses
    focused checks to resolve contradictions. Unresolved material disagreement
-   leaves the review incomplete; reviewer votes never settle correctness.
-   Accepted fixes return to the author. Account for each finding as validated,
-   rejected with evidence, fixed, or explicitly unresolved.
-5. **Bind the current revision.** Any code change requires a refreshed receipt
-   for the new revision. Reuse unchanged evidence and inspect the delta plus
-   affected behavior when sufficient; broaden review after a larger scope,
-   base, or behavior change. A checkpoint reviewer may be reused only when it
-   remains a non-author under the same instantiated brief with unchanged or
-   revalidated scope and evidence, and its checkpoint scope is recorded. This
-   condition failing requires a new eligible session. Finish with both receipts
-   bound to the exact current revision.
+   leaves peer review incomplete; reviewer votes never settle correctness.
+   Accepted fixes return to the actual author. Account for each finding as
+   validated, rejected with evidence, fixed, or explicitly unresolved.
+5. **Bind the current revision and base.** Any authoring change makes prior
+   receipts stale. Refresh each mode-required receipt for the new exact SHA and
+   current base. Reuse unchanged evidence and inspect the delta plus affected
+   behavior when sufficient; broaden review after a larger scope, base, or
+   behavior change. A checkpoint receipt is reusable only after revalidation
+   proves its reviewer remains eligible and its scope, evidence, all six angles,
+   and acceptance cover the current brief. Otherwise obtain a new eligible
+   receipt, without adding reviewers beyond the selected mode.
 
-## Completeness before verdict (not dual-APPROVE gate)
+## Mode-specific completeness before verdict
 
-- **Complete:** both reviewers have current, verified receipts for the exact
-  candidate revision, with coverage and limitations recorded. Validated
-  blocking defects permit `REQUEST_CHANGES`; complete evidence with no blocker
-  permits `APPROVE`.
+- **Peer complete:** both Sol and Opus have current, verified receipts for the
+  exact candidate SHA and current base, each covering the identical brief.
+- **Authored complete:** the one required cross-family non-author reviewer has
+  a current verified receipt for the exact candidate SHA and current base,
+  covering the whole brief, all six angles, and applicable acceptance.
+- **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
+  complete evidence with no blocker permits `APPROVE`.
 - **Incomplete or stale:** use `INCOMPLETE`; never fabricate `APPROVE` or
   `REQUEST_CHANGES`.
 
-The owner synthesizes both reviewers' evidence without voting. A single receipt
-never satisfies the exactly-two requirement. Passing tests or reviewer
-unanimity grants no merge authority.
+The owner verifies and synthesizes the mode-required evidence without voting.
+A peer receipt count of one is incomplete; an authored receipt count other
+than one is not the selected mode. Passing tests or reviewer unanimity grants
+no merge authority.
 
 ## Template: candidate review brief
 
 ```text
 Candidate: <PR URL> rev <sha> (immutable checkout)
-Scope: <spec rev or linked issue + ticket + base + exclusions>
-Angles: <all six, same brief for both reviewers>
+Mode: <peer | authored> Actual author: <session/model evidence | n/a>
+Scope: <spec rev or linked issue + ticket + current base + exclusions>
+Angles: <all six; identical brief for peer reviewers>
 ```
 
 ## Template: review receipt (one block per revision)
 
 ```text
-Reviewer: <Sol | Opus> session <id> rev <candidate sha>
+Mode: <peer | authored>
+Reviewer: <Sol | Opus> session <id> rev <candidate sha> base <current base>
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
-Coverage: <angles covered + executable evidence checked>
+Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
 ```
@@ -136,8 +166,8 @@ Findings: <evidence + consequence each>
 ## Prompt-only urgent escalation
 
 At any point, promptly raise credible serious security issues, possible
-downtime or data loss, and major design concerns without waiting for the second
-reviewer or consensus. Present evidence, likely impact, options, and the user
+downtime or data loss, and major design concerns without waiting for every
+mode-required reviewer. Present evidence, likely impact, options, and the user
 decision needed. An urgent hold blocks approval, merge-ready declarations, and
 dependent dangerous actions, but does not block safe investigation, unrelated
 work, or reporting validated risk as `REQUEST_CHANGES`. Disagreement and
@@ -152,16 +182,16 @@ private host paths, recipients, credentials, or relay configuration.
 
 ## Publishing rule
 
-Exact-revision completeness gates external approval or merge-ready
-declarations and authorized submission. It never gates returning evidence,
-limitations, validated risk, or an internal `INCOMPLETE` report.
+Mode-required exact-revision completeness gates external approval,
+merge-ready declarations, and authorized submission. It never gates returning
+evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
 - Peer mode requires both current reviews and no unresolved material finding
   beyond the validated defects reported by `REQUEST_CHANGES`.
-- Authored mode also requires its applicable scope identity to remain valid.
-  A missing, mismatched, or materially changed and unaccepted identity blocks
-  approval and merge-ready declarations while readonly investigation
-  continues.
+- Authored mode requires its one current cross-family review and applicable
+  scope identity to remain valid.
+- A missing, mismatched, stale, or materially changed input blocks approval and
+  merge-ready declarations while readonly investigation continues.
 
 The human merges by default. Review approval never supplies merge authority.
 
@@ -170,7 +200,7 @@ The human merges by default. Review approval never supplies merge authority.
 Report-only writes nothing to GitHub: no review submission, reply, mutation,
 or merge action. Record an internal verdict (`APPROVE`, `REQUEST_CHANGES`, or
 `INCOMPLETE`) with evidence, coverage, and limitations. The persistent owner
-consolidates both receipts; the current driver presents that consolidated
+consolidates the mode-required receipts; the current driver presents that
 report without declaring approval or merge-ready status.
 
 This output is complete when the report identifies the exact candidate,
@@ -186,8 +216,8 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
    candidate.
 2. Bind the submission to the actual GitHub commit parameter for that revision;
    SHA text in prose is not binding.
-3. Publish the owner-synthesized review with both receipts as evidence, then
-   verify the submission receipt.
+3. Publish the owner-synthesized review with both peer receipts as evidence,
+   then verify the submission receipt.
 4. If submission is ambiguous, lookup before retry: read remote state and
    submit only when absent. Never resubmit blindly.
 

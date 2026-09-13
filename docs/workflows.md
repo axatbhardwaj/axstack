@@ -61,9 +61,16 @@ Paseo launch materialization before dispatch.
   and repository requirements as intent with no Axstack-created approved
   spec; authored mode retains the approved baseline for substantial work or
   the snapshotted small-change intent for small work, and accepts an adopted
-  maintenance scope snapshot without repeated approval. Exactly
-  two independent Sol and Opus final reviewers, same six-angle brief, no
-  first-pass cross-reading, no votes. Completeness is separate from the
+  maintenance scope snapshot without repeated approval. Peer review uses
+  exactly two independent Sol and Opus reviewers with an identical six-angle
+  brief and first-pass isolation. Authored review uses one independent
+  different-family reviewer based on actual author provenance: Sol author ->
+  Opus medium; Opus author -> Sol medium. No owner or author session reviews;
+  unknown/mixed provenance or unavailable required models are reported to the
+  user without invented fallback. An eligible current Sol high checkpoint for
+  an Opus high author satisfies authored final review after revalidation,
+  without lower effort or a redundant reviewer. Completeness is mode-specific
+  and separate from the
   recommendation: complete evidence with validated defects submits
   REQUEST_CHANGES, complete evidence with no blockers submits APPROVE,
   incomplete review submits nothing. Report-only writes nothing to

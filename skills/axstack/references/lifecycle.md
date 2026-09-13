@@ -13,8 +13,9 @@ Substantive delegated or resumable work uses a driver-owned
   publication within user authority. The human merges by default.
 - Author: exactly one writer per candidate at a time. Accepted fixes return to
   the original author. Workers launch no recursive teams.
-- Reviewers: exactly two independent final reviewers (Sol + Opus), receiving
-  the same brief and no first-pass cross-read.
+- Reviewers: peer = two independent Sol + Opus, identical brief, no first-pass
+  cross-read; authored = one independent different-model-family reviewer from the
+  actual author. Owner and author sessions never review.
 - Monitor/watchdog: independent read-only Opus medium sessions on native Paseo
   timers.
 - Auditor (`axstack-auditor`): report-only evidence collector. Never edits,
@@ -68,7 +69,8 @@ Store concise receipt references, not raw worker output, in the
   role. Reuse it on resume rather than spawning a replacement.
 - Acceptance receipt: named sender and recipient, accepted scope/authority,
   timestamp, and the session receipt taking ownership.
-- Review receipt: reviewer, candidate SHA, verdict
+- Review receipt: mode, author provenance when applicable, reviewer, SHA/base,
+  verdict
   (`APPROVE | REQUEST_CHANGES | INCOMPLETE`), coverage, limitations, and
   findings. Changed code needs a refreshed receipt for its new revision.
 - Submission receipt: actual commit parameter, consolidated review, and remote

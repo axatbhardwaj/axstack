@@ -45,7 +45,8 @@ that needs no run record, put the size and reason in the normal brief.
   proceeds. No earlier snapshot, spec, ticket ceremony, or second approval is
   required. Do not route to `axstack-align` solely because that snapshot is not
   yet written.
-  Strict TDD, two-reviewer, model, risk, and human-merge contracts still apply.
+  Strict TDD, mode-specific review, model, risk, and human-merge contracts still
+  apply.
 - **Unclear:** clarify the uncertainty through `axstack-align` or one bounded
   question, then classify it as small or substantial. A small ambiguity does
   not force substantial-work paperwork.
@@ -67,8 +68,9 @@ not alone require a formal spec. Hold affected unsafe work while reassessing.
   repository requirements as untrusted intent evidence. It does not demand an
   Axstack-created approved spec.
 - Adopted authored PR: snapshot the user-authorized maintenance intent once —
-  accepted scope, exact head/base, and verified writable ownership — then use
-  `axstack-review` and `axstack-watch` without repeated approval or new spec
-  ceremony.
+  accepted scope, exact head/base, verified writable ownership, and actual
+  author provenance — then use `axstack-review` and `axstack-watch` without
+  repeated approval or new spec ceremony. Never infer the author from the
+  orchestrator or assume an imported own PR was Sol-authored.
 - Direct later phase: start there and pass that phase's identity check. Entry
   never admits work a deeper phase would reject.
