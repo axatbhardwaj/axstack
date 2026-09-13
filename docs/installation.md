@@ -26,7 +26,9 @@ axstack install --bundle <dir> --skills-dir <dir> [--profile <file>] [--harness 
   skills are installed.
 - `--profile <file>`: Paseo host config file. Axstack profiles merge into
   `config.daemon.agentProfiles`; custom profiles, other `daemon` fields,
-  and top-level keys survive byte-for-byte.
+  and top-level keys keep their values. (The file is reserialized as JSON,
+  so formatting may change but no values are altered.) Newly created config
+  files are mode `0600`; existing files keep their permissions.
 - `--harness <name>`: `claude`, `codex`, `opencode`, or `grok`. Grok has no
   verified auto-discovery, so `--harness grok` is rejected: pass an explicit
   `--skills-dir` override instead.
