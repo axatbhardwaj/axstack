@@ -2,7 +2,8 @@
 
 Chat drives execution; the CLI installs and checks assets. Paseo owns
 sessions, workspaces, delegation, notifications, schedules, and heartbeats.
-No Axstack daemon, multi-host scheduler, or upstream skill dependency.
+No Axstack daemon, multi-host scheduler, or dependency on Matt Pocock or
+Poteto skills. Native handoff uses Paseo’s own skills.
 
 Axstack ships its own self-contained skills. Design inspiration comes from
 disciplined user alignment and accountable PR ownership workflows; those
@@ -29,8 +30,9 @@ spec, or ticket mapping:
   explanations. Preserve the requested format and theme; verify actual
   rendered behavior where applicable and report unavailable evidence.
   Publication needs its own authority.
-- `axstack-handoff` — compact handoffs, resume reconciliation, and
-  routing back into the lifecycle.
+- `paseo-handoff` (provided by Paseo) — transfer the task with the Axstack
+  run-record pointer and current authority; see [Native handoff](#native-handoff).
+  Resume reconciles existing state through Axstack’s shared lifecycle.
 
 Scope readiness is proportional (2026-09-13, user-requested amendment).
 Substantial features and multi-PR or stacked work need an approved spec and a
@@ -46,10 +48,9 @@ phase checks that identity again.
 
 ## Phase skills
 
-Progressive loading: invoke only the phase needed. Every lifecycle phase
-loads the shared bundled references (`skills/axstack/references/`):
-Paseo launch materialization and standing scope/model/risk/authority
-contracts, plus routing and lifecycle/receipt references.
+Progressive loading: invoke only the phase needed. Each phase loads standing contracts and their lifecycle/audit path.
+Procedure-specific references are loaded at their point of use, including
+Paseo launch materialization before dispatch.
 
 - `axstack` — entry router: lifecycle, holds, one host, two PRs, one owner per PR.
 - `axstack-align` — interview and resolve factual questions.
@@ -94,6 +95,25 @@ contracts, plus routing and lifecycle/receipt references.
   accepted intent, CI/review states, remaining actions, and resume refs.
   No silent renewal. Merge-ready is an observed state, distinct from
   merged; the human merges.
+
+## Native handoff
+
+Axstack no longer ships `axstack-handoff`. Enable Paseo's native
+`paseo-handoff` and its `paseo` prerequisite through Paseo's own skill
+management when you need to transfer a run. Axstack's installer does not
+install or enable those host-managed skills.
+
+The entry checks that both are discoverable before dispatching. If either is
+missing, it reports the setup gap, keeps the current owner, and leaves a
+resumable run-record pointer. It does not guess a launch command, silently
+choose another model, or claim that installation alone proves availability.
+
+The handoff briefing includes Axstack's scope, acceptance, authority, local
+`progress.md` path, exact revisions, evidence references, current owners,
+pending external receipts, unresolved decisions and timer expiries. Actual
+recipient acceptance and ownership reconciliation precede any driver change.
+A native fallback suggestion never overrides the user's model choice.
+Paseo owns transfer mechanics; Axstack owns the workflow state being transferred.
 
 ## Role profiles
 

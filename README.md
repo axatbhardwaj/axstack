@@ -7,14 +7,16 @@ Axstack daemon, scheduler, or workflow state machine.
 
 Design inspiration comes from disciplined user alignment and accountable PR
 ownership workflows; Axstack ships its own self-contained skills and has no
-upstream skill dependency.
+dependency on Matt Pocock or Poteto skills. Native session handoff is
+provided by Paseo; see [workflow prerequisites](docs/workflows.md#native-handoff).
 
 ## How a run works
 
 Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
 `axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`,
-plus direct `axstack-research`, `axstack-docs`, `axstack-handoff` routes
-that need no spec ceremony):
+plus direct `axstack-research` and `axstack-docs` routes that need no spec
+ceremony). Handoffs use Paseo’s native `paseo-handoff` when available;
+Axstack retains the run-record and ownership context:
 
 Updated 2026-09-13 by user-requested change: scope readiness is proportional.
 
@@ -85,7 +87,7 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 87 workflow structural and contract checks pass under Bun. The repository
+- 89 workflow structural and contract checks pass under Bun. The repository
   contains 30 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
