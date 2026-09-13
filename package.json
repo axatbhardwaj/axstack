@@ -1,0 +1,25 @@
+{
+  "name": "axstack",
+  "version": "0.1.0",
+  "description": "Axstack installer and setup CLI: bundles and installs owned chat skills, merges Paseo profiles, and checks host capabilities. Chat drives execution; this CLI performs installation bookkeeping only.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "axstack": "bin/axstack.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "profiles/",
+    "docs/installation.md",
+    "docs/workflows.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/installer/",
+    "test:all": "node --test tests/"
+  },
+  "license": "MIT"
+}
