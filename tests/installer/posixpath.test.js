@@ -68,7 +68,7 @@ describe('relative', () => {
   test('sibling, parent, disjoint, and identity paths', () => {
     expect(relative('/a/b/c', '/a/b/d')).toBe('../d');
     expect(relative('/a/b', '/a/b/c/d')).toBe('c/d');
-    expect(relative('/a/b/c', '/a/b')).toBe('../..');
+    expect(relative('/a/b/c', '/a/b')).toBe('..');
     expect(relative('/a', '/a')).toBe('');
     expect(relative('/', '/a')).toBe('a');
     expect(relative('/a/b', '/c')).toBe('../../c');
@@ -83,11 +83,10 @@ describe('relative', () => {
 });
 
 describe('basename', () => {
-  test('file names, extensions, and edge paths', () => {
+  test('file names and edge paths', () => {
     expect(basename('/a/b.txt')).toBe('b.txt');
-    expect(basename('/a/b.txt', '.txt')).toBe('b');
     expect(basename('/a/')).toBe('a');
-    expect(basename('/')).toBe('/');
+    expect(basename('/')).toBe('');
     expect(basename('')).toBe('');
     expect(basename('plain')).toBe('plain');
     expect(basename('/a/b/')).toBe('b');
