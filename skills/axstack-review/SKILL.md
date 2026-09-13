@@ -72,10 +72,13 @@ Findings: <evidence + consequence each>
 
 ## Publishing rule
 
-Declaring merge-ready requires a current verified receipt for the exact
-candidate revision with verdict APPROVE and no open urgent hold. Neither
-reviewer unanimity nor passing tests grants merge authority; the human
-merges.
+Declaring merge-ready requires current verified receipts from both
+reviewers for the exact candidate revision: each shows verdict APPROVE with
+its candidate SHA, coverage, and limitations, and no material finding
+remains unresolved. The owner synthesizes both reviews into the decision
+without voting — a single receipt can never satisfy the exactly-two
+requirement. An open urgent hold blocks any declaration. Neither reviewer
+unanimity nor passing tests grants merge authority; the human merges.
 
 ## Prompt-only urgent escalation
 

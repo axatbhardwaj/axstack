@@ -22,7 +22,7 @@ contracts.
 ## Role profiles
 
 `profiles/paseo.json` (`version: 1`, `agentProfiles` array, `axstack-*`
-IDs with display names) covers the preferred driver (current chat stays
+IDs with `name` fields matching the live list_profiles schema) covers the preferred driver (current chat stays
 driver; never auto-launch), Fable advisor (claude `plan`), Opus owner
 (claude `default`), Sol author (codex `auto`), independent Opus
 (claude) and Sol (codex) reviewers, and the report-only checker. The

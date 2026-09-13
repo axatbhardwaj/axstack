@@ -30,8 +30,8 @@ requires a current verified receipt and no open urgent hold.
 
 ## End conditions and cleanup
 
-- End early when all required PRs merge; release the watch registration.
-- Otherwise end at the configured deadline and release it. Work remaining at expiry gets a resumable handoff, never silently renewed monitoring.
+- End early when all required PRs merge; stop all owned watch registrations.
+- Otherwise end at the configured deadline and stop all owned watch registrations — including registrations for still-open PRs, which continue only via their resumable handoffs. Work remaining at expiry gets a resumable handoff, never silently renewed monitoring.
 
 ## Template: resumable handoff (all fields required)
 
