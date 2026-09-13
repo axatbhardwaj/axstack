@@ -7,13 +7,13 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 test('scope identity: routing defines proportional substantial, small, and unclear paths', () => {
   const routing = read('skills/axstack/references/routing.md');
   expect(routing).toMatch(/proportional scope identity/i);
-  expect(routing).toMatch(/substantial[^.]*feature[^.]*multi-PR[^.]*stacked[^.]*unclear/i);
+  expect(routing).toMatch(/substantial[^.]*feature[^.]*multi-PR[^.]*stacked/i);
   expect(routing).toMatch(/approved spec[^.]*ticket map[^.]*spec revision/i);
   expect(routing).toMatch(/ticket map[^.]*acceptance[^.]*dependencies/i);
   expect(routing).toMatch(/Markdown[^.]*Linear|Linear[^.]*Markdown/i);
   expect(routing).toMatch(/small-change intent/i);
   expect(routing).toMatch(/recorded request[^.]*existing issue[^.]*acceptance checks[^.]*exclusions[^.]*snapshot/i);
-  expect(routing).toMatch(/unclear[^.]*axstack-align/i);
+  expect(routing).toMatch(/unclear[^.]*clarif[^.]*then[^.]*classif[^.]*small[^.]*substantial/i);
   expect(routing).toMatch(/classif[^.]*brief reason/i);
   expect(routing).toMatch(/additional PR/i);
   expect(routing).toMatch(/new execution dependency[^.]*materially expands/i);
@@ -23,6 +23,7 @@ test('scope identity: routing defines proportional substantial, small, and uncle
   expect(routing).toMatch(/minor file dependency[^.]*not[^.]*formal spec/i);
   expect(routing).toMatch(/later phase[^.]*own identity check/i);
   expect(routing).not.toMatch(/later phase invoked directly with its required inputs starts there/i);
+  expect(routing).not.toMatch(/New work:[\s\S]*?axstack-align[\s\S]*?axstack-spec[\s\S]*?axstack-tickets[\s\S]*?axstack-implement/i);
 });
 
 test('scope identity: entry reports missing substantial prerequisites and launches nothing', () => {
@@ -35,6 +36,21 @@ test('scope identity: entry reports missing substantial prerequisites and launch
   expect(entry).toMatch(/launch nothing/i);
   expect(entry).toMatch(/never\s+admit[^.]*deeper\s+phase[^.]*reject/i);
   expect(entry).not.toMatch(/starting at the earliest phase whose required inputs are missing/i);
+  expect(entry).not.toMatch(/start at `axstack-align`/i);
+});
+
+test('scope identity: driver captures a current small-change intent without bouncing to alignment', () => {
+  for (const [name, text] of [
+    ['routing', read('skills/axstack/references/routing.md')],
+    ['entry', read('skills/axstack/SKILL.md')],
+  ]) {
+    expect(text, `${name}: missing driver capture`).toMatch(
+      /driver[^.]*captures[^.]*small-change intent[^.]*current request[^.]*user[^.]*existing issue[^.]*acceptance checks[^.]*exclusions[^.]*snapshots[^.]*proceeds/i,
+    );
+    expect(text, `${name}: missing no-bounce rule`).toMatch(
+      /not[^.]*axstack-align[^.]*solely[^.]*not yet written/i,
+    );
+  }
 });
 
 test('scope identity: contracts, implement, and authored review accept the same two identities', () => {

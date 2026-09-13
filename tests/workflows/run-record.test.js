@@ -106,7 +106,7 @@ test('descriptions: every shipped skill is one-line, intent-first, and named', (
     /^description: When coordinating engineering tasks and PRs through Axstack and tracking their progress, use axstack to route the run to the right phase\.$/m,
   );
   expect(read('skills/axstack-align/SKILL.md')).toMatch(
-    /^description: When exploring or planning an idea and settling its scope and decisions, use axstack-align for a bounded interview before any spec\.$/m,
+    /^description: When exploring or planning an idea and settling its scope and decisions, use axstack-align to prepare scope and, when applicable, a spec plus tickets\.$/m,
   );
   expect(read('skills/axstack-watch/SKILL.md')).toMatch(
     /^description: When .*babysit.*existing PR.*use axstack-watch /im,
