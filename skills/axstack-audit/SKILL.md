@@ -13,7 +13,8 @@ are bounded follow-up candidates; this audit changes nothing itself.
 ## 1. Establish the audit boundary
 
 Load [Standing contracts](../axstack/references/contracts.md) before inspecting
-the run, then use the [audit record schema](references/record.md). Keep the
+the run, apply [PR shape](../axstack/references/pr-shape.md), then use the
+[audit record schema](references/record.md). Keep the
 shared load edge explicit: Standing contracts require
 [Shared lifecycle](../axstack/references/lifecycle.md) for independently called
 substantive phases, and lifecycle's audit hook loads this skill. This audit is
@@ -75,6 +76,12 @@ counts with denominators plus the evidence behind the count:
 - Rework cycles with causes.
 - Avoidable user interventions where records support the call, and no call where they do not.
 - Parallelizable tasks identified versus dispatched, judged with dependency and writer isolation.
+- PRs within band / total PRs using the actual denominator. Apply the level
+  matching the measured total. For the rationale band, record cohesion
+  rationale presence; for the exception band, record the full driver exception
+  record. Record `UNKNOWN` when a receipt lacks the measurement.
+  This is evidence, not a score to game. Audit treats routine shape choices as
+  autonomous driver decisions; size alone never requires user approval.
 - Actual model, tool, time, token, and cost figures when provider receipts are available, unknown otherwise.
 
 Record `UNKNOWN` where evidence is absent. Never count missing evidence as a

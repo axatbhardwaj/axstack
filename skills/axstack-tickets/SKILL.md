@@ -12,6 +12,7 @@ in the repository, reconcile lifecycle state, and stop before implementation.
 Before mapping, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required edge to [Shared lifecycle](../axstack/references/lifecycle.md),
 including the lifecycle audit hook. Read the
+[PR-shape policy](../axstack/references/pr-shape.md) before sizing tasks. Read the
 [Paseo launch sequence](../axstack/references/paseo-launch.md) immediately before
 an actual checker dispatch, not for ordinary mapping or state reconciliation.
 
@@ -32,8 +33,16 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    capabilities; one capability may span several tasks and PRs. Keep detailed
    execution breakdowns in the repository. For every capability, derive
    acceptance checks from the pinned spec and identify internal tasks,
-   dependencies, PR ownership, and worktrees. Every capability ends with the
-   fields in the map below and an explicit dependency list.
+   dependencies, PR ownership, and worktrees. For each task the driver records
+   one theme and a coarse size estimate from the ownership, interface, and
+   dependency map. A task estimated in the exception band is assessed for a
+   split at mapping time and split where a green, atomic, reviewable split
+   exists. If the driver judges it inseparable, record the coarse planning
+   rationale with the task; actual measurement and exception evidence follow in
+   the implement receipt. Mapping time requires no actual SHAs or line counts.
+   Every capability ends with the fields below and an explicit dependency list.
+   These routine mapping and split choices are autonomous driver decisions
+   within the approved spec; size alone never requires user approval.
 
    The driver performs every Linear mutation. Other roles return proposed
    changes and evidence to the driver.
@@ -43,7 +52,9 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
 ```text
 Spec: <approved revision>
 Capability: <Markdown ref or Linear issue URL> <title>
-Internal tasks: <task> -> <PR owner> -> <worktree>
+Internal task: <task> -> <PR owner> -> <worktree>
+Theme: <one behavior or component>
+Size est: <coarse band estimate>
 Acceptance: <checks from approved spec rev>
 Depends: <task IDs or none>
 ```

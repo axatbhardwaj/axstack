@@ -71,10 +71,17 @@ gate.
 
 - The driver owns run scope, cross-PR coordination, integration, and every
   Linear mutation. The checker reports discrepancies only.
-- One Paseo execution host owns a run. Two active PRs is the default
-  concurrency limit, not an agent limit; queue conflicting or dependent work.
-- One persistent owner is accountable for each PR, with exactly one writer per
-  candidate at a time. Dependent PRs use `gh stack`; parent changes invalidate
+- One Paseo execution host owns a run. There is no fixed active-PR count;
+  fanout is dependency- and capacity-driven within configured host resource and
+  spending limits. The driver reduces fanout when the run record shows rework,
+  review backlog, or resource pressure, queues conflicting or dependent work,
+  and uses `gh stack` for dependent PRs. Routine shape, split, fanout, and
+  exception choices are autonomous driver decisions within the approved scope;
+  size alone never requires user approval.
+- Exactly one writer per candidate acts at a time, with one persistent owner
+  accountable for each PR. Each PR carries one theme and a measured size under
+  [PR shape](pr-shape.md). Unknown capacity metrics are reported as unknown,
+  never as a telemetry prerequisite or blocker. Parent changes invalidate
   affected child evidence, which must be refreshed against the new parent.
 - The human merges by default, bottom-up for a stack. Review approval and
   reviewer votes never grant mutation or merge authority.

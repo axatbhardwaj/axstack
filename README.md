@@ -40,9 +40,23 @@ Updated 2026-09-13 by user-requested change: scope readiness is proportional.
     maintenance scope snapshot; monitoring stays bounded with one owner,
     an independent read-only monitor and watchdog, and no silent renewal.
 
-Defaults: one execution host per run, two active PRs, 24-hour bounded
-monitoring with a resumable handoff. Details: [docs/workflows.md](docs/workflows.md),
-spec: [issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
+Active PRs have no fixed count. Fanout is dependency- and capacity-driven
+within configured host resource and spending limits, with one execution host
+per run, one persistent owner per PR, and exactly one writer per candidate.
+Each PR has one theme and a measured size under the shared
+[PR-shape policy](skills/axstack/references/pr-shape.md). Routine shape, split,
+fanout, and exception decisions are autonomous driver decisions within the
+approved spec; size alone never requires user approval. The rationale band
+requires only a recorded cohesion rationale, with no split-attempt record. The
+exception band gets a reasonable split attempt and a full exception record when
+splitting would compromise atomicity, greenness, or independent reviewability,
+or reproducible bulk dominates. The independent reviewer applies the level
+matching the measured total under the existing simplicity angle; weak rationale
+returns to the author for normal rework. Existing material-scope, serious-risk,
+unavailable-model, and human-merge holds remain unchanged. Monitoring remains
+bounded to 24 hours by default with a resumable handoff. Details:
+[docs/workflows.md](docs/workflows.md), spec:
+[issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
 
 Linear is the default integration (native document, report-only checker,
 driver-owned updates); repository Markdown is an explicit alternative.
@@ -108,7 +122,7 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 108 workflow structural and contract checks pass under Bun. The repository
+- 113 workflow structural and contract checks pass under Bun. The repository
   contains 36 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
