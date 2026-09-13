@@ -6,7 +6,10 @@ No Axstack daemon, multi-host scheduler, or upstream skill dependency.
 
 ## Phase skills
 
-Progressive loading: invoke only the phase needed.
+Progressive loading: invoke only the phase needed. Every standalone phase
+loads the shared bundled references (`skills/axstack/references/`):
+Paseo launch materialization and standing scope/model/risk/authority
+contracts.
 
 - `axstack` — entry router: lifecycle, holds, one host, two PRs, one owner per PR.
 - `axstack-align` — interview and resolve factual questions.
@@ -19,11 +22,19 @@ Progressive loading: invoke only the phase needed.
 ## Role profiles
 
 `profiles/paseo.json` (`version: 1`, `agentProfiles` array, `axstack-*`
-IDs) covers driver, Fable advisor, Opus owner, Sol author, independent Opus
-and Sol reviewers, and the report-only checker. The checker model stays
-unset until user setup. Validate model availability at launch; an
+IDs with display names) covers the preferred driver (current chat stays
+driver; never auto-launch), Fable advisor (claude `plan`), Opus owner
+(claude `default`), Sol author (codex `auto`), independent Opus
+(claude) and Sol (codex) reviewers, and the report-only checker. The
+checker model stays null until user setup and must never dispatch a
+provider default. Conservative presets are claude `default` and codex
+`auto`; validate model availability at launch. An
 unavailable model pauses affected work pending user decision — never
-automatic substitution. Configure permissions explicitly and validate
+automatic substitution. Launch order per the bundled reference:
+list_profiles, list_providers, list_models (selected provider only),
+inspect_provider, create_workspace, create_agent as
+`${provider}/${model}`; verify session model/ownership receipts and
+persist actual IDs. Configure permissions explicitly and validate
 capability (including Linear MCP access) per session.
 
 ## Compatibility
