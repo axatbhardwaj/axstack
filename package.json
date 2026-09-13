@@ -18,8 +18,8 @@
     "docs/workflows.md"
   ],
   "scripts": {
-    "test": "bun test tests/installer/",
-    "test:all": "bun test tests/installer/"
+    "test": "bun test",
+    "test:all": "bun test"
   },
   "license": "MIT"
 }
