@@ -43,6 +43,9 @@ function resolve(from, rel) {
 const here = import.meta.dir;
 const root = dirname(dirname(here));
 const skillsDir = join(root, 'skills');
+const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
+  .filter((p) => p.endsWith('.md'))
+  .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
   'axstack',
@@ -155,9 +158,7 @@ test('structural: standalone phases explicitly load shared references', () => {
 
 test('structural: active PR parallelism has no fixed count', () => {
   const currentPolicyFiles = [
-    ...readdirSync(skillsDir, { recursive: true })
-      .filter((p) => p.endsWith('.md'))
-      .map((p) => join(skillsDir, p)),
+    ...skillMarkdownFiles,
     join(root, 'README.md'),
     join(root, 'docs', 'workflows.md'),
   ];
@@ -170,6 +171,106 @@ test('structural: active PR parallelism has no fixed count', () => {
   expect(contracts).toMatch(/no fixed active-PR count/i);
   expect(contracts).toMatch(/one Paseo execution host owns a run/i);
   expect(contracts).toMatch(/exactly one writer per candidate/i);
+});
+
+test('structural: shared PR-shape reference is complete, bounded, and sole source of bands', () => {
+  const p = join(skillsDir, 'axstack', 'references', 'pr-shape.md');
+  const shape = readFileSync(p, 'utf8');
+  expect(shape.split('\n').length, 'pr-shape.md must stay within 40 lines').toBeLessThanOrEqual(40);
+  expect(shape).toContain('git diff -M --numstat $(git merge-base <base> <head>)..<head>');
+  expect(shape).toMatch(/actual PR base/i);
+  expect(shape).toMatch(/parent branch.*stacked child/i);
+  expect(shape).toMatch(/main.*root/i);
+  expect(shape).toMatch(/additions\s*\+\s*deletions/i);
+  expect(shape).toMatch(/moves.*-M|-M.*moves/i);
+  expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
+  for (const bucket of ['generated', 'lockfile', 'formatter-only']) expect(shape).toContain(bucket);
+  expect(shape).toMatch(/full total[^.]*controls? the band/i);
+  expect(shape).toMatch(/reproducible recorded command/i);
+  expect(shape).toMatch(/never automatically subtract|never.*shift.*bands/i);
+  expect(shape).toMatch(/silent exclusion[^.]*forbidden/i);
+  for (const band of ['≤2000', '2001–2500', '>2500']) expect(shape).toContain(band);
+  expect(shape).toMatch(/one (behavior|component)[^.]*callers[^.]*tests[^.]*types[^.]*docs[^.]*migrations/i);
+  expect(shape).toMatch(/not a folder restriction/i);
+  expect(shape).toMatch(/unrelated themes[^.]*split[^.]*under the target/i);
+  expect(shape).toMatch(/smaller cohesive PRs[^.]*encouraged/i);
+  expect(shape).toMatch(/no padding/i);
+
+  const productionPolicyFiles = [
+    ...skillMarkdownFiles.filter((file) => file !== p),
+    join(root, 'README.md'),
+    join(root, 'docs', 'workflows.md'),
+    join(root, 'docs', 'specs', 'v1.md'),
+    join(root, 'docs', 'plans', 'v1.md'),
+  ];
+  for (const file of productionPolicyFiles) {
+    expect(readFileSync(file, 'utf8'), `${file} duplicates numeric PR-shape bands`)
+      .not.toMatch(/≤2000|2001[–-]2500|>2500/);
+  }
+});
+
+test('structural: over-band exceptions are autonomous, recorded, and independently reviewed', () => {
+  const shape = readFileSync(join(skillsDir, 'axstack', 'references', 'pr-shape.md'), 'utf8');
+  expect(shape).toMatch(/reasonable split/i);
+  expect(shape).toMatch(/full total[^.]*bulk buckets[^.]*head[^.]*base/i);
+  expect(shape).toMatch(/split attempts[^.]*atomicity[^.]*green[^.]*reviewability/i);
+  expect(shape).toMatch(/inseparable[^.]*reproducible bulk[^.]*dominates/i);
+  expect(shape).toMatch(/size alone[^.]*never[^.]*user approval/i);
+  expect(shape).toMatch(/already written[^.]*deadlines[^.]*rebase pain[^.]*not reasons/i);
+
+  const review = readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8');
+  expect(review).toMatch(/angle 6[^.]*recorded shape|recorded shape[^.]*angle 6/i);
+  expect(review).toMatch(/mismatch[^.]*measured total[^.]*finding/i);
+  expect(review).toMatch(/missing rationale[^.]*blocks approval/i);
+  expect(review).toMatch(/judgment[^.]*measurement[^.]*split failure[^.]*not[^.]*number/i);
+  expect(review).toMatch(/weak rationale[^.]*author[^.]*split|rework request/i);
+  expect(review).toMatch(/never[^.]*user/i);
+  expect(review).not.toMatch(/^\s*7\.\s/m);
+});
+
+test('structural: PR-shape callers carry planning, delivery, and audit evidence', () => {
+  const callers = {
+    contracts: readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8'),
+    lifecycle: readFileSync(join(skillsDir, 'axstack', 'references', 'lifecycle.md'), 'utf8'),
+    tickets: readFileSync(join(skillsDir, 'axstack-tickets', 'SKILL.md'), 'utf8'),
+    implement: readFileSync(join(skillsDir, 'axstack-implement', 'SKILL.md'), 'utf8'),
+    review: readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8'),
+    audit: readFileSync(join(skillsDir, 'axstack-audit', 'SKILL.md'), 'utf8'),
+  };
+  for (const [name, text] of Object.entries(callers)) {
+    expect(text.includes('pr-shape.md'), `${name} must link the shared PR-shape reference`).toBeTruthy();
+  }
+  expect(callers.contracts).toMatch(/fanout[^.]*dependency[^.]*capacity/i);
+  expect(callers.contracts).toMatch(/resource[^.]*spending limits/i);
+  expect(callers.contracts).toMatch(/one theme[^.]*measured size/i);
+  expect(callers.contracts).toMatch(/unknown[^.]*never[^.]*telemetry prerequisite[^.]*blocker/i);
+  expect(callers.tickets).toMatch(/Theme:\s*<[^>]+>/);
+  expect(callers.tickets).toMatch(/Size est:\s*<[^>]+>/);
+  expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
+  expect(callers.tickets).toMatch(/above the upper band[^.]*split[^.]*mapping/i);
+  expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
+  expect(callers.implement).toMatch(/parent change[^.]*remeasure[^.]*re-record/i);
+  expect(callers.implement).toMatch(/over-band[^.]*re-checks? the rationale[^.]*not an automatic hold/i);
+  expect(callers.audit).toMatch(/PRs within band\s*\/\s*total PRs/i);
+  expect(callers.audit).toMatch(/rationale presence[^.]*every over-band PR/i);
+  expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
+  expect(callers.audit).not.toMatch(/user[- ]exception|user receipt/i);
+});
+
+test('structural: public docs carry the current autonomous PR-shape policy', () => {
+  const readme = readFileSync(join(root, 'README.md'), 'utf8');
+  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
+  const spec = readFileSync(join(root, 'docs', 'specs', 'v1.md'), 'utf8');
+  const plan = readFileSync(join(root, 'docs', 'plans', 'v1.md'), 'utf8');
+  for (const [name, text] of Object.entries({ readme, workflows })) {
+    expect(text.includes('pr-shape.md'), `${name} must link PR-shape policy`).toBeTruthy();
+    expect(text, `${name} must state autonomous driver shape decisions`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
+    expect(text, `${name} must state size alone does not require user approval`).toMatch(/size alone[^.]*never[^.]*user approval/i);
+  }
+  expect(spec).toMatch(/Amendment \(2026-09-14\)/);
+  expect(spec).toMatch(/dependency- and capacity-driven/i);
+  expect(spec).toContain('skills/axstack/references/pr-shape.md');
+  expect(plan).toMatch(/\*\*Historical:\*\*/);
 });
 
 test('structural: launch reference gives ordered Paseo materialization steps', () => {
