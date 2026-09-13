@@ -32,9 +32,11 @@ test('scope identity: entry reports missing substantial prerequisites and launch
   expect(entry).toMatch(/small-change intent/i);
   for (const size of ['small', 'substantial', 'unclear']) expect(entry).toContain('`' + size + '`');
   expect(entry).toMatch(/record[^.]*brief reason/i);
-  expect(entry).toMatch(/report[^.]*exact gap/i);
+  expect(entry).toMatch(/(?:report|return)[^.]*exact gap/i);
   expect(entry).toMatch(/name[^.]*axstack-align/i);
-  expect(entry).toMatch(/launch nothing/i);
+  expect(entry).toMatch(/stop the current\s+invocation; do not invoke align, spec, or tickets/i);
+  expect(entry).toMatch(/validate scope identity before invoking any phase/i);
+  expect(entry).toMatch(/phase map, not an automatic dispatch sequence/i);
   expect(entry).toMatch(/never\s+admit[^.]*deeper\s+phase[^.]*reject/i);
   expect(entry).not.toMatch(/starting at the earliest phase whose required inputs are missing/i);
   expect(entry).not.toMatch(/start at `axstack-align`/i);

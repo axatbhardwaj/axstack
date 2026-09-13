@@ -8,7 +8,7 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 test('repairs: substantive runs require the explicitly loaded audit skill and holdouts', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/enabled by default[^.]*substantive run/i);
+  expect(lifecycle).toMatch(/(?:enabled by default|defaults on)[^.]*substantive run/i);
   expect(lifecycle).toMatch(/load[^\n]*axstack-audit\/SKILL\.md/i);
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });
@@ -27,7 +27,7 @@ test('repairs: Fable profile covers spec, design, and consequential decisions', 
 
 test('repairs: mutation authority distinguishes driver scope from PR owner scope', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/driver[\s\S]{0,160}Linear mutations/i);
+  expect(lifecycle).toMatch(/driver[\s\S]{0,160}Linear\s+mutations/i);
   expect(lifecycle).toMatch(/owner[\s\S]{0,240}PR-scoped[^.]*publication/i);
   expect(lifecycle).toMatch(/within user authority/i);
 });
