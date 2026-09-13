@@ -26,8 +26,7 @@ accepted assessment. Resolve disagreements with bounded checks; no silent
 fallback to another model, and never proceed on silence. Ordinary work uses
 the Sol/Opus pair; high-stakes work uses an Opus high author with a fresh
 Sol high checkpoint reviewer — without changing the exactly-two final
-reviewers. The Muse-only model restriction applies to this build, not to
-the shipped presets, which stay user-configurable.
+reviewers.
 
 ## Serious risk
 
