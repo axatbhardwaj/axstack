@@ -26,7 +26,9 @@ These need no alignment interview, approved spec, or ticket mapping:
   plus PR description and repository requirements are the intent. Demands
   no Axstack-created approved spec.
 - Authored PR maintenance (`axstack-watch` adoption, `axstack-review` in
-  authored mode): record the accepted maintenance scope snapshot once;
-  it is accepted without repeated approval.
+  authored mode): record the user-authorized maintenance intent snapshot
+  once (accepted scope, actual head/base, verified writable ownership);
+  it is accepted without repeated approval and needs no new spec or
+  ticket ceremony.
 - A later phase invoked directly with its required inputs starts there;
   lifecycle phases still confirm their required baseline first.

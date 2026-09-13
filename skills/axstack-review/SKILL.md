@@ -96,37 +96,60 @@ Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
 ```
 
+## Standalone owner
+
+Standalone peer review or watch adoption materializes `axstack-owner`
+via [Paseo launch](../axstack/references/paseo-launch.md); reuse the
+existing owner where live. The current chat stays out of coordination
+once the owner exists — no competing coordinator. Only the owner
+launches the writer, reviewers, monitor, and watchdog. Workers launch
+no recursive teams and create no children.
+
+## Completeness before verdict (not dual-APPROVE gate)
+
+Internal review completeness is separate from the recommendation:
+
+- Complete: current verified receipts from both reviewers for the exact
+  candidate revision, with coverage and limitations recorded. Validated
+  blocking defects permit verdict REQUEST_CHANGES; no blockers with
+  complete evidence permits verdict APPROVE.
+- Incomplete or stale: verdict INCOMPLETE — never fabricate APPROVE or
+  REQUEST_CHANGES, and submit nothing.
+
+An open urgent hold blocks APPROVE declarations and dangerous actions
+(push, replies, merge) but never blocks reporting validated risk as
+REQUEST_CHANGES.
+
 ## Publishing rule
 
-Peer mode: approval and merge-ready declarations need current verified
-receipts from both reviewers for the exact candidate revision — each
-shows verdict APPROVE with its candidate SHA, coverage, and limitations —
-and no material finding remains unresolved. Authored mode additionally
-confirms the approved spec identity first: a missing baseline, or a
-materially changed and unaccepted one, blocks approval and merge-ready
-declarations, while read-only investigation may proceed. The owner
-synthesizes both reviews into the decision without voting — a single
-receipt can never satisfy the exactly-two requirement. An open urgent
-hold blocks any declaration. Neither reviewer unanimity nor passing
-tests grants merge authority; the human merges.
+Peer mode: declarations need a complete review for the exact candidate
+revision per the rule above, with no material finding unresolved except
+the validated defects a REQUEST_CHANGES reports. Authored mode
+additionally confirms the approved spec identity first: a missing
+baseline, or a materially changed and unaccepted one, blocks approval
+and merge-ready declarations, while read-only investigation may
+proceed. The owner synthesizes both reviews into the decision without
+voting — a single receipt can never satisfy the exactly-two
+requirement. Neither reviewer unanimity nor passing tests grants merge
+authority; the human merges.
 
 ## Report-only scope
 
 An explicit report-only scope writes nothing to GitHub: no review
-submission, no reply, no mutation, no merge action. Synthesize both
-receipts informationally in the current driver chat with evidence,
-coverage, and limitations, and declare neither approval nor merge-ready
-status.
+submission, no reply, no mutation, no merge action. It still records an
+internal verdict (APPROVE, REQUEST_CHANGES, or INCOMPLETE) with
+evidence, coverage, and limitations, synthesized in the current driver
+chat — declaring neither approval nor merge-ready status.
 
 ## Authorized submission (peer review)
 
 Submit the consolidated peer review only within user authority, and only
-after the publishing rule above is met:
+for a complete review with verdict APPROVE or REQUEST_CHANGES:
 
 1. Confirm fresh remote head and base are unchanged for the exact
    candidate revision (exact-head readback).
-2. Bind the submission to that commit: the review text names the exact
-   SHA it covers.
+2. Bind the submission to the actual GitHub commit parameter for that
+   revision — SHA text in prose alone is not binding.
 3. Publish the consolidated review (owner-synthesized, both receipts
    attached as evidence), then verify the submission receipt.
 4. On ambiguous submission (unknown whether it landed), lookup before

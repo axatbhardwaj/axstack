@@ -19,6 +19,14 @@ Research facts yourself; spend user questions on decisions and constraints.
 3. Reuse: settled decisions carry forward across phases and resumes unless material new evidence changes them. When revisiting, restate the settled decision and proceed; reopen it only on such evidence.
 4. Read-back: include the alignment summary — decisions, constraints, exclusions — as part of the draft spec in `axstack-spec`. The ONE human phase checkpoint is spec approval; this read-back informs it and adds no separate gate.
 
+## Fable hook
+
+Involve the Fable advisor for consequential scoping trade-offs (per
+[Standing contracts](../axstack/references/contracts.md)): driver
+assessment first, then advisor evidence; cache the decision receipt and
+carry it into `axstack-spec` so covered ground is not re-consulted.
+The driver owns the outcome; the user resolves decisions.
+
 Output: an agreed decision/constraint list ready for `axstack-spec`. If the
 user invoked a later phase directly with its required inputs, skip to that
-phase skill (which still requires an approved spec baseline).
+phase skill (which still requires its mode's scope identity).

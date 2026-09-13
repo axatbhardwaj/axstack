@@ -1,13 +1,25 @@
-# Standing contracts (every standalone phase loads this)
+# Standing contracts (standalone phases load this, then follow its pointers)
 
-## Scope approval
+## Scope identity (conditional — see routing and lifecycle)
 
-Confirm the approved spec identity (see `axstack-spec`) before execution
-readiness, review readiness and approval, and watch-triggered repairs —
-whether invoked from entry or standalone. A missing baseline, or a
-materially changed and unaccepted one, blocks those dependent actions.
-Pre-approval alignment and spec writing, and safe read-only investigation
-and review, remain allowed without a baseline.
+One global spec gate contradicts peer and adoption modes. The required
+scope identity depends on the mode (see [Shared routing](routing.md)):
+
+- New implementation: approved spec identity (see `axstack-spec`)
+  before execution readiness, review readiness and approval, and
+  watch-triggered repairs. A missing baseline, or a materially changed
+  and unaccepted one, blocks those dependent actions.
+- Adopted own PR: the user-authorized maintenance intent snapshot
+  (see [Lifecycle](lifecycle.md)) — not merely
+  untrusted linked content, and never a new spec or ticket ceremony.
+- Peer review: linked issue plus PR description and repository
+  requirements; demands no Axstack-created approved spec.
+- Read-only research, docs, and handoff: no baseline at all.
+
+Pre-approval alignment and spec writing, and safe read-only
+investigation and review, remain allowed without a baseline. Material
+scope changes still hold affected work until the user accepts the
+revised scope.
 
 ## Model discipline
 
@@ -18,10 +30,13 @@ profiles are distinct from post-failure substitution.
 
 ## Advisor split
 
-The current driver chat consults the Fable advisor profile only for
-consequential decisions still unresolved after factual checks — not every
-task or phase. The driver forms an independent assessment first, then takes
-advisor evidence; profile notes alone never trigger a consultation.
+The current driver chat involves the Fable advisor profile for spec
+creation and revision, solution design, and consequential decisions —
+broader than only deadlocks after factual checks. The driver still
+forms an independent assessment first, still owns the decision, and the
+user still approves the spec. Cache each valid unchanged decision
+receipt: routine execution already covered by a receipt needs no repeat
+consultation. Profile notes alone never trigger a consultation.
 High-stakes decisions require the advisor's plain AGREE plus the driver's
 accepted assessment. Resolve disagreements with bounded checks; no silent
 fallback to another model, and never proceed on silence. Ordinary work uses
