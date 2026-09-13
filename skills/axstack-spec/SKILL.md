@@ -1,6 +1,6 @@
 ---
 name: axstack-spec
-description: Resolve the source store with preflight, write the Linear document, snapshot the approval baseline.
+description: When agreed work needs an approved baseline, use axstack-spec to write and snapshot the execution specification.
 ---
 
 # Spec

@@ -1,6 +1,6 @@
 ---
 name: axstack-research
-description: Source-first bounded research — verify primary sources, separate verified claims from inference, save a source-linked note.
+description: When one bounded question needs verified answers, use axstack-research to produce a source-linked note with limitations.
 ---
 
 # Research

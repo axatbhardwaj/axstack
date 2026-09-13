@@ -1,6 +1,6 @@
 ---
 name: axstack-align
-description: Bounded frontier interview — agent researches facts, user resolves decisions and constraints.
+description: When exploring or planning an idea before a spec, use axstack-align to resolve decisions that lead to a spec and tickets.
 ---
 
 # Align

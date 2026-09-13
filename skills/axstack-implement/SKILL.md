@@ -1,6 +1,6 @@
 ---
 name: axstack-implement
-description: Build candidates with strict TDD, exclusive writers, owner accountability, and stack discipline.
+description: When an approved task is ready to build or repair, use axstack-implement for strict TDD and owned delivery.
 ---
 
 # Implement
@@ -53,12 +53,13 @@ sessions, Git revisions, GitHub state, and the approved spec. Reuse owners
 and workers where appropriate. Reporting an ambiguous launch is not
 permission to create another writer: resolve ownership first and report
 unresolved launch state before any duplicate writer. Also reconcile Linear
-issue state per `axstack-tickets` and watch registrations per
+issue state per `axstack-tickets`, the shared local run record, and watch registrations per
 `axstack-watch`.
 
 ## Template: compact handoff
 
 ```text
+Record: <progress.md path>
 PR: <URL> rev <sha> owner <profile> worktree <path>
 Spec: <approved rev> capability <issue>
 State: <checks + evidence links>

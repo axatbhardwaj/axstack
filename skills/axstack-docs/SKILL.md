@@ -1,6 +1,6 @@
 ---
 name: axstack-docs
-description: Source-checked prose and requested visual explanations — deliver the asked format, verify actual rendering, report missing evidence.
+description: When source-backed prose or a visual explanation is requested, use axstack-docs to create and verify the artifact.
 ---
 
 # Docs

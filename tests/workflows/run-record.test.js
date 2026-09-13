@@ -52,7 +52,7 @@ test('run-record: reconciliation protects ownership and revision evidence', () =
   expect(text).toMatch(/match[^.]*repo[^.]*scope|match[^.]*scope[^.]*repo/i);
   expect(text).toMatch(/never[^.]*blindly[^.]*latest/i);
   expect(text).toMatch(/duplicate writer/i);
-  expect(text).toMatch(/approval[^.]*evidence[^.]*older revision|stale[^.]*evidence[^.]*revision/i);
+  expect(text).toMatch(/approval[^.]*evidence[^.]*older\s+revision|stale[^.]*evidence[^.]*revision/i);
   expect(text).toMatch(/task completion[^.]*capability[^.]*merged/i);
   expect(text).toMatch(/prior driver[^.]*inactive|inactive[^.]*prior driver/i);
   expect(text).toMatch(/explicit[^.]*accepted transfer/i);
@@ -65,7 +65,7 @@ test('run-record: use is proportional and content stays compact and private', ()
   const text = read('skills/axstack/references/run-record.md');
   expect(text).toMatch(/required[^.]*substantive[^.]*delegated[^.]*resumable/i);
   expect(text).toMatch(/one-step direct[^.]*no|not required[^.]*one-step direct/i);
-  for (const excluded of ['tokens', 'transcripts', 'full worker output']) {
+  for (const excluded of ['tokens', 'transcripts', 'full\\s+worker\\s+output']) {
     expect(text).toMatch(new RegExp(`no[^.]*${excluded}`, 'i'));
   }
   expect(text).toMatch(/Git metadata[^.]*not pushed/i);
@@ -89,7 +89,7 @@ test('descriptions: every shipped skill is one-line, intent-first, and named', (
     const descriptions = lines.filter((line) => line.startsWith('description:'));
     expect(descriptions, `${path}: exactly one description line`).toHaveLength(1);
     expect(descriptions[0], `${path}: intent-first description`).toMatch(
-      /^description: When .+, use axstack-[a-z-]+ /,
+      /^description: When .+, use axstack(?:-[a-z-]+)? /,
     );
   }
   expect(read('skills/axstack-align/SKILL.md')).toMatch(

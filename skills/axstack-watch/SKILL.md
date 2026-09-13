@@ -1,6 +1,6 @@
 ---
 name: axstack-watch
-description: Bounded 24h monitoring with Paseo wake ownership, resumable handoff, and feedback routing.
+description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.
 ---
 
 # Watch
@@ -131,6 +131,7 @@ hold.
 ## Template: resumable handoff (all fields required)
 
 ```text
+Record: <progress.md path>
 PR: <URL> rev <sha>
 Owner: <profile> Worktree: <path>
 Spec: <approved rev or accepted linked intent> Capability: <issue + state>

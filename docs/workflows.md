@@ -116,6 +116,16 @@ A compatibility claim requires evidence for the actual adapter, model
 configuration, skill loading, and tools. An installable skill alone is not
 proof of end-to-end support.
 
+## Run record
+
+Substantive delegated or resumable work uses one compact local `progress.md`.
+In Git, its root comes from `git rev-parse --git-common-dir`, which resolves to
+the main repository's `.git` for the main checkout and every linked worktree.
+The resulting `axstack/runs/<UTCdate>-<slug>/progress.md` is therefore shared
+across worktrees and is never part of the tracked tree. Non-Git work uses
+private host state. The driver is the sole writer; the record supports resume
+and reconciliation without adding a runtime engine or lock.
+
 ## Runtime
 
 Bun >= 1.3.14 only; no Node.js runtime. Workflow checks run with

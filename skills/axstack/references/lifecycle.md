@@ -3,6 +3,10 @@
 Loaded directly by core phases or through the required edge in
 [Standing contracts](contracts.md).
 
+Substantive delegated or resumable work uses the shared
+[Run record](run-record.md); its driver-owned task ledger binds the state and
+receipts below to exact revisions.
+
 ## Roster (compact)
 
 - Driver: current chat. Owns run scope, decisions, cross-PR dependencies,
@@ -32,6 +36,9 @@ at a time. Peer code under review stays readonly; the reviewer never
 edits it.
 
 ## Receipts (bind each decision to evidence)
+
+Store concise receipt references in the [Run record](run-record.md), not full
+worker output.
 
 - Session receipt: agent and workspace IDs run the requested
   provider/model for the requested role. Persist actual IDs; reuse on
@@ -70,7 +77,7 @@ at useful checkpoints such as a material deviation or repeated repair.
 Load the bundled [audit skill](../../axstack-audit/SKILL.md) before the
 audit. An `axstack-audit` run is excluded from this hook: it writes its
 assigned audit record and stops, launching no children. The auditor
-collects read-only evidence against the run record:
+collects read-only evidence against the [Run record](run-record.md):
 scope, outcome evidence, and metric counts with denominators. Findings
 are PASS/FAIL/UNKNOWN with evidence — never invented numbers, including
 cost figures. Improvement proposals change nothing by themselves: the
@@ -83,8 +90,9 @@ privacy); sanitized publication needs its own authority.
 ## Idle-complete archive and retain
 
 After actual work is done — all required PRs merged or handed off, all
-owned timers stopped and receipts verified — the driver archives the
-run record (scope, revisions, evidence, receipts, timer expiries) and
+owned timers stopped and receipts verified — the driver marks the same
+[Run record](run-record.md) Archived in place (scope, revisions, evidence,
+receipts, timer expiries) and
 retains it locally. Archive only idle-complete runs: never active or
 waiting workers, never reassign ownership on idle, no global sweeps.
 Only task-owned records are archived; unrelated host state is untouched.

@@ -1,6 +1,6 @@
 ---
 name: axstack
-description: Axstack entry workflow — route a run through align, spec, tickets, implement, review, watch without routine confirmations.
+description: When executing planned Axstack work, use axstack to select the applicable direct or lifecycle phase.
 ---
 
 # Axstack entry
@@ -14,6 +14,7 @@ Shared references (load when launching sessions or checking authority):
 - [Standing contracts](../axstack/references/contracts.md)
 - [Shared routing](../axstack/references/routing.md)
 - [Lifecycle and receipts](../axstack/references/lifecycle.md)
+- [Local run record](../axstack/references/run-record.md)
 
 ## Route first
 

@@ -1,6 +1,6 @@
 ---
 name: axstack-audit
-description: Readonly run audits with evidenced metrics and a bounded proposal loop — tested reviewed PRs, human merges.
+description: When a substantive run needs evidence review, use axstack-audit to measure outcomes and propose bounded improvements.
 ---
 
 # Audit
@@ -19,7 +19,7 @@ The auditor is a non-author reader: readonly over the run except for writing the
 
 ## What the auditor inspects
 
-Actual records, never memory: the approved spec or the accepted peer, research, or maintenance scope; the decision log and Fable receipts; git revisions; test and review evidence; and the run execution record.
+Actual records, never memory: the approved spec or the accepted peer, research, or maintenance scope; the decision log and Fable receipts; git revisions; test and review evidence; and the run execution record at its recorded `progress.md` path.
 
 ## Cadence
 

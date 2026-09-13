@@ -1,6 +1,7 @@
 # Handoff record template
 
 ```text
+Record: <progress.md path; task table remains there>
 Goal: <task goal>
 Scope/authority: <scope + who authorized it>
 Intent: <approved baseline rev | peer mode | research mode>

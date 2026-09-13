@@ -1,6 +1,6 @@
 ---
 name: axstack-tickets
-description: Map capabilities to tasks with Linear preflight, report-only checker, driver-owned updates, In Review Done rule.
+description: When an approved capability needs executable tasks, use axstack-tickets to map work and track lifecycle state.
 ---
 
 # Tickets

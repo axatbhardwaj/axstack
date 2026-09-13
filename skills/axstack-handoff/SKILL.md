@@ -1,6 +1,6 @@
 ---
 name: axstack-handoff
-description: Compact ownership handoffs — explicit transfer on recipient acceptance, resume reconciliation, never archive or sweep on idle.
+description: When ownership must transfer or work must resume, use axstack-handoff to reconcile state and leave a compact record.
 ---
 
 # Handoff

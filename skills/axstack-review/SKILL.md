@@ -1,6 +1,6 @@
 ---
 name: axstack-review
-description: Exactly two independent Sol and Opus final reviewers, same six-angle brief, prompt-only urgent escalation.
+description: When a candidate PR needs independent final review, use axstack-review for the same six-angle exact-revision Sol and Opus coverage.
 ---
 
 # Review
