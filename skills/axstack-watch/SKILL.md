@@ -5,138 +5,115 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 
 # Watch
 
-Load before acting:
+Leave each adopted PR with one accountable owner, current readiness evidence,
+and a bounded watch that ends cleanly or preserves enough state to resume.
 
-- [Paseo launch](../axstack/references/paseo-launch.md)
-- [Standing contracts](../axstack/references/contracts.md)
-- [Shared routing](../axstack/references/routing.md)
-- [Lifecycle and receipts](../axstack/references/lifecycle.md)
+Before acting, load [Standing contracts](../axstack/references/contracts.md).
+Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
+including the end-of-run audit hook. Reach other references only at the steps
+that name them.
 
-PR owners remain responsible during the configured monitoring window
-(default 24 hours). One persistent owner per PR; one watch per PR.
+## 1. Adopt and reconcile
 
-## Standalone owner
+Start from actual state. Reconcile the PR's remote head and base, ownership,
+existing Paseo sessions, private run record, and watch registrations. Reuse the
+live owner and watch; uncertain state holds new registrations until resolved.
 
-Standalone watch adoption materializes `axstack-owner` via
-[Paseo launch](../axstack/references/paseo-launch.md); reuse the
-existing owner where live. The current chat stays out of coordination
-once the owner exists — no competing coordinator. Only the owner
-launches the writer, reviewers, monitor, and watchdog. Workers launch
-no recursive teams and create no children. The adoption watcher itself
-is never the writer.
+For an existing own PR, read the
+[proportional scope identities](../axstack/references/routing.md#proportional-scope-identity),
+verify writable ownership and user maintenance authority, then snapshot the
+accepted maintenance intent once: authorized scope, actual head and base,
+current owner, and watch state. It needs no new spec, ticket, or repeated
+approval. Monitoring-only adoption grants no repair or reply authority.
 
-## Adopt an existing PR
+Adoption is settled when the record names one persistent owner, one watch, the
+exact PR revision and base, and the applicable authority snapshot. If write
+authority is unverified, record the hold and continue read-only.
 
-Babysitting starts by adopting the PR, not by re-specifying it: verify
-writable ownership and user maintenance authority first, then record
-the accepted maintenance scope snapshot once (user-authorized
-maintenance intent, actual remote head and base, current ownership and
-watch state). The snapshot is accepted without repeated approval and
-needs no new spec or ticket ceremony. Without verified authority, all
-write paths hold; monitoring and read-only checks may continue.
-Monitoring-only adoption never authorizes repairs or replies. Reuse the
-recorded owner and watch where live; reconcile before registering
-anything new.
+## 2. Fix the operating mode
 
-## Wake ownership
+Choose one mode from the user's authority and record it before dispatch:
 
-The owner registers wake-ups through existing Paseo mechanisms (CI/review
-state changes, bounded scheduled checks) and records what is watched and
-who wakes. Do not keep models reasoning continuously while waiting. On
-resume, reconcile against recorded watch state first; never spawn duplicate
-watchers for the same PR.
+- **Observation-only:** reconcile and report CI, reviews, and PR state. It
+  dispatches no author and sends no reply. This restriction dominates every
+  repair path, including obvious fixes after changed heads or feedback.
+- **Peer:** observe and report a colleague's PR. Peer mode never repairs.
+- **Authorized maintenance:** repair an adopted own PR only within the accepted
+  maintenance snapshot and publication authority.
 
-## Observation-only dispatch (dominates every repair path)
+Every later wake must be classifiable from this recorded mode without inferring
+new authority.
 
-Observation-only monitoring dispatches no author and sends no reply: the
-driver (or the read-only monitor below) reconciles recorded watch state,
-runs read-only CI and review checks, and reports observations in chat.
-This restriction dominates every repair path — changed heads, CI
-results, and review feedback never route to a writer in this mode, no
-matter how obvious the fix; product code is untouched. Peer mode never
-repairs: colleague PRs are read-only by definition.
+## 3. Start the bounded watch
 
-## Authorized repairs (adopted own PRs only)
+Read-only checks and updates to the already-owned local record need no launch
+load. When the watch needs a new owner, monitor, watchdog, or timer, first read
+[Watch runtime](references/watch-runtime.md) and then
+[Paseo launch](../axstack/references/paseo-launch.md). Reconcile before creating
+anything.
 
-Writable babysitting requires verified author ownership and authorized
-publication. Route accepted fixes to the original author session (the
-same author where evidence allows), followed by a refreshed independent
-review before anything is republished (see `axstack-review`). Before
-an authorized push or reply, all of the following hold:
+For standalone adoption, materialize `axstack-owner` only when no live owner
+exists. Once it exists, the current chat is not a competing coordinator. Only
+the owner launches the writer, reviewers, monitor, and watchdog. Workers create
+no children or recursive teams, and the adoption watcher is never the writer.
 
-- The repaired code and the exact public reply bodies — keyed to their
-  feedback IDs and bound to the exact revision under review — were both
-  reviewed.
-- Fresh remote head and base, reply body identity, and feedback
-  freshness were confirmed (exact-head readback; stale reads never
-  authorize publication).
-- The expected-old SHA was confirmed before any history rewrite; no
-  blind overwrite, ever.
-- Current verified receipts from both reviewers cover the exact new
-  revision, with no unresolved material finding and no open urgent hold.
+A live watch has verified role and timer receipts, handshakes, watched scope,
+wake ownership, and a common expiry. A missing runtime capability is a setup gap,
+not a reason to invent a call or create a duplicate registration. Wait through
+native wake-ups; no model remains active between events.
 
-Deliver through `gh stack` scoped to the adopted PR only, with no
-overwrite of unrelated stack entries. Verify the submission receipt
-after publication; on unknown send outcome, inspect remote IDs, bodies,
-and actor before any retry, and remain blocked while the outcome stays
-ambiguous.
+## 4. Route each wake
 
-## Monitor and watchdog
+Re-read the remote head and base, then reconcile the event against acknowledged
+IDs and the recorded mode. A changed head, CI result, or review comment is an
+event, not repair authority. Stale or ambiguous observations authorize nothing.
 
-The monitor and the watchdog are independent, read-only Opus medium
-sessions on native Paseo timers — not authors, not reviewers, not
-repliers. No new scheduler: each owns its own timer and snapshot.
+Observation-only and peer wakes produce a read-only report and stop. For an
+authorized maintenance wake that may require a repair or public reply, read and
+follow [Repair and publication](references/repair-publication.md).
 
-- Monitor: reads GitHub and all PR feedback plus the latest check runs
-  (default 5min cadence). Surfaces actionable events with persisted,
-  acknowledged event IDs so a retried wake never triggers a duplicate
-  repair.
-- Watchdog: reads only watch health — timer liveness, handshake state,
-  snapshot freshness (default hourly cadence). Reports its handshake to
-  the owner; owns its timer and snapshot.
+### Feedback routing
 
-Both require initial verified handshakes and emit snapshot-only healthy
-ticks that wake neither owner nor driver. Both dedup event IDs and
-reconcile uncertain sends before any retry. On restart they reuse prior
-watch state instead of registering duplicates. Both stop at the same
-configured default 24h deadline, including registrations for still-open
-PRs — never silently renewed. Timer receipts are verified and cleaned
-up on early PR closure, cancel, or expiry.
+New work routes only under its confirmed scope identity: an approved spec and
+matching ticket map for substantial work, or a snapshotted **small-change
+intent** for small work. An adopted own PR instead uses its accepted maintenance
+snapshot. Missing, stale, or materially changed identity holds repair routing
+while monitoring continues. Accepted fixes return to the same original author
+session where evidence allows, then receive refreshed independent review before
+publication.
 
-## Readiness (owner validates)
+A handled wake has an acknowledged event ID, an observation or action bound to
+the current revision, and a recorded hold or next owner where work remains.
 
-API errors block readiness — never imply coverage. The owner validates
-readiness against current required checks, feedback, approvals, and
-mergeability before any merge-ready statement. A review approval alone
-is not merge-ready.
+## 5. State readiness precisely
 
-## Feedback routing
+The owner checks current required checks, all feedback, approvals, mergeability,
+and exact-revision receipts before any merge-ready statement. API errors leave
+readiness `UNKNOWN`; review approval alone is not merge-ready. Merge-ready is an
+observed state distinct from merged, and the human merges by default.
 
-Changed heads, CI results, and review feedback route to the same author
-session where evidence allows, followed by a refreshed independent review
-before anything is republished (see `axstack-review`). Repairs route only
-under a confirmed approved spec baseline (substantial new work), a
-snapshotted small-change intent (small new work), or an accepted maintenance
-snapshot (adopted own PRs): a missing or unaccepted scope holds repair routing
-while monitoring and read-only checks continue.
-Publishing still requires a current verified receipt and no open urgent
-hold.
+## 6. End and preserve continuity
 
-## End conditions and cleanup
+End early when all required PRs merge, or at cancel or the shared default 24h
+deadline. In every case, stop and verify all owned registrations. The deadline
+also stops timers for open PRs; never silently renew them.
 
-- End early when all required PRs merge; stop all owned watch registrations.
-- Otherwise end at the configured deadline and stop all owned watch registrations — including registrations for still-open PRs, which continue only via their resumable handoffs. Work remaining at expiry gets a resumable handoff, never silently renewed monitoring.
-- Merge-ready is an observed state, distinct from merged; the human
-  merges by default, bottom-up for a stack.
-
-## Template: resumable handoff (all fields required)
+If work remains, use native Paseo handoff when that capability is available.
+Otherwise leave the compact resumable state below in the private run record and
+report it in chat. Do not invent a native command or assume an installed handoff
+skill.
 
 ```text
 Record: <progress.md path>
-PR: <URL> rev <sha>
-Owner: <profile> Worktree: <path>
-Spec: <approved rev or accepted linked intent> Capability: <issue + state>
-CI/review: <states + links>
-Remaining: <next actions + who>
-Resume: <commands/refs to restart from this rev>
+PR: <URL> rev <sha> base <sha>
+Owner: <profile + session> Worktree: <path>
+Scope: <approved rev, small-change intent, or maintenance snapshot>
+Capability: <issue + lifecycle state>
+CI/review: <current states + evidence refs>
+Watch: <stopped timer receipts + expiry>
+Remaining: <next actions + owner>
+Resume: <known commands or verified refs needed to reconcile from this revision>
 ```
+
+The watch ends only when registrations are stopped, receipts are recorded, and
+the PR is either merged or represented by this resumable state.
