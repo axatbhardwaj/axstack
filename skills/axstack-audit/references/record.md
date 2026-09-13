@@ -1,7 +1,8 @@
 # Audit record schema
 
-One record per audited run or checkpoint, using the field order below.
-Counts always carry denominators; missing evidence is recorded, never a pass.
+Write one record per audited run or checkpoint in the field order below. Every
+count includes its denominator and evidence reference. Use `UNKNOWN` with the
+reason when evidence is missing; missing evidence is never a pass.
 
 ```text
 Run: <run identity + scope/authority + audit mode (end-of-run | checkpoint)>
@@ -19,3 +20,7 @@ Judgment: <execution outcome vs procedural adherence vs measurement coverage>
 Proposals: <bounded hypothesized changes with regression-first plan, or none>
 Privacy: <local/private default; sanitized summary only when authorized>
 ```
+
+The record is complete when its counts reconcile, its judgments remain
+separate, every proposal has a regression-first validation path, and all
+unknowns and evidence limitations are explicit.

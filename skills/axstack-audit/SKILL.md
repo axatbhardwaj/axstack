@@ -5,29 +5,62 @@ description: When a substantive run needs evidence review, use axstack-audit to 
 
 # Audit
 
-Load before acting:
+Produce one evidence-bound audit record for the assigned substantive run or
+checkpoint. Separate what the run achieved, how it followed the workflow, and
+how completely the evidence supports either judgment. Improvement proposals
+are bounded follow-up candidates; this audit changes nothing itself.
 
-- [Paseo launch](../axstack/references/paseo-launch.md)
-- [Standing contracts](../axstack/references/contracts.md)
-- [Audit record schema](references/record.md)
+## 1. Establish the audit boundary
 
-Core invokes the `axstack-auditor` profile (codex/gpt-5.6-luna max) at run end and at meaningful checkpoints; that profile and its invocation are core-owned. This skill defines what the auditor may read, measure, and propose. The user-chose mode is fixed: propose a tested, reviewed PR; human merges.
+Load [Standing contracts](../axstack/references/contracts.md) before inspecting
+the run, then use the [audit record schema](references/record.md). Keep the
+shared load edge explicit: Standing contracts require
+[Shared lifecycle](../axstack/references/lifecycle.md) for independently called
+substantive phases, and lifecycle's audit hook loads this skill. This audit is
+the terminal exception: it writes its assigned record and does not audit itself.
 
-## Role: non-author reader
+The dispatching driver reads [Paseo launch](../axstack/references/paseo-launch.md)
+immediately before an actual auditor profile or session dispatch. Ordinary
+audit reading and record writing do not load it, and the auditor never
+dispatches.
 
-The auditor is a non-author reader: readonly over the run except for writing the assigned audit artifact. It makes no edits to product, skills, or config and launches no child sessions.
+Core owns the `axstack-auditor` profile (codex/gpt-5.6-luna max) and its
+invocation. This skill governs what that auditor reads, measures, and proposes.
+The user-chosen improvement mode is a tested, independently reviewed PR that a
+human merges.
 
-## What the auditor inspects
+Act as a non-author, read-only reader of the run. The assigned audit artifact is
+the only writable output. Make no edits to product, skills, or config, and
+launch no child sessions.
 
-Actual records, never memory: the approved spec or the accepted peer, research, or maintenance scope; the decision log and Fable receipts; git revisions; test and review evidence; and the run execution record at its recorded `progress.md` path.
+Proceed only when the record path, audit mode (`end-of-run` or `checkpoint`),
+accepted scope, and read-only authority are explicit. Record any gap without
+expanding authority to fill it.
 
-## Cadence
+## 2. Build the evidence set
 
-Enabled for every substantive run by default. Run a checkpoint after a material deviation or repair pattern when useful. Reuses prior audit evidence instead of repeated whole-run rescans. A routine small lookup may end with a compact audit record, and the auditor never forces the full implementation pipeline for research. No extra daemon, timer, or analytics service is created.
+Use actual records, never memory:
 
-## Metrics with denominators
+- the approved spec, or the accepted peer, research, or maintenance scope;
+- the decision log and Fable receipts;
+- exact git revisions;
+- test and review evidence; and
+- the run execution record at its recorded `progress.md` path.
 
-Every metric carries counts with denominators plus its evidence, following the [audit record schema](references/record.md):
+Auditing is enabled for every substantive run by default. A material deviation
+or repeated repair pattern can justify a checkpoint. Reuse still-valid prior
+audit evidence rather than repeating a whole-run rescan. A routine small lookup
+may end with a compact audit record; never force research through the full
+implementation pipeline. Cadence uses the core-owned invocation and creates no
+extra daemon, timer, or analytics service.
+
+The evidence set is ready when every claimed input has a source and revision
+where applicable, and every missing input is named as missing.
+
+## 3. Measure with denominators
+
+Follow the [audit record schema](references/record.md). Every metric carries
+counts with denominators plus the evidence behind the count:
 
 - Acceptance criteria passed, failed, and unverified, each traced to its tests plus SHA.
 - Planned steps completed and deviated, each deviation with why and approval.
@@ -39,12 +72,48 @@ Every metric carries counts with denominators plus its evidence, following the [
 - Parallelizable tasks identified versus dispatched, judged with dependency and writer isolation.
 - Actual model, tool, time, token, and cost figures when provider receipts are available, unknown otherwise.
 
-Distinguish execution outcome, procedural adherence, and measurement coverage as three separate judgments. The auditor never counts missing evidence as a pass and never collapses gaps into a vanity score. Parallelism is preferred for independent decomposable work, and is never gamed by spawning needless agents.
+Record `UNKNOWN` where evidence is absent. Never count missing evidence as a
+pass or collapse gaps into a vanity score. Prefer parallelism for genuinely
+independent decomposable work, while respecting dependencies and writer
+isolation; never game the measure by spawning needless agents.
 
-## Proposal loop
+Accept the tally only when every count reconciles with its denominator, every
+item traces to evidence or an explicit unknown, and no inferred provider
+figures or retroactive TDD proof remain.
 
-Each proposal carries observed failure or inefficiency, root cause with evidence and counterevidence, and a bounded hypothesized skill change. The change earns a regression scenario first, then an unchanged holdout evaluation, with cost and quality comparison when measured. The auditor suggests; the driver arranges the authorized author and independent review, and delivery is a reviewed PR with human merge. The loop borrows one structural principle from the public hermes-agent-self-evolution project (https://github.com/NousResearch/hermes-agent-self-evolution) — it separates evaluation data, candidate changes, and validation — re-expressed here as original Axstack workflow with no outside dependency and no extra frameworks to install.
+## 4. State three judgments
 
-## Prohibitions and privacy
+State execution outcome, procedural adherence, and measurement coverage as
+three separate judgments. Qualify causality and compare only compatible runs:
+report what the evidence supports, not what it merely suggests.
 
-No self-edit. No changing acceptance criteria or metrics after failures. No external transmission of raw traces. No hidden per-user memory mutation. No automatic merge or activation. Run artifacts stay local and private by default; sanitized summaries leave the run only when authorized. Compare compatible runs only and qualify causality: report what the evidence supports, not what it suggests.
+Keep the judgments independent: evidence that changes one must not implicitly
+change either of the other two.
+
+## 5. Propose only bounded improvements
+
+Each proposal names:
+
+1. the observed failure or inefficiency;
+2. the hypothesized root cause, with evidence and counterevidence;
+3. one bounded hypothesized skill change;
+4. a regression scenario first, followed by an unchanged holdout evaluation;
+5. a cost and quality comparison when those values were measured; and
+6. the authorized delivery path: the auditor suggests, the driver arranges an
+   author and independent review, a reviewed PR is proposed, and a human merges.
+
+Keep evaluation data, candidate changes, and validation separate. This is an
+original Axstack workflow with no outside dependency or extra framework to
+install.
+
+Omit any proposal that is not testable, does not preserve unchanged
+expectations, or would grant the auditor implementation or activation
+authority.
+
+## 6. Write the record and stop
+
+Write the assigned artifact in the schema's field order. Preserve the accepted
+criteria and metrics after failures. Keep raw traces and run artifacts local
+and private by default; only an authorized sanitized summary may leave the run.
+Perform no self-edit, hidden per-user memory mutation, automatic merge, or
+activation. Stop after the record is complete.
