@@ -12,7 +12,9 @@ upstream skill dependency.
 ## How a run works
 
 Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
-`axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`):
+`axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`,
+plus direct `axstack-research`, `axstack-docs`, `axstack-handoff` routes
+that need no spec ceremony):
 
 1. Align on decisions and constraints, then write a spec with observable
    acceptance criteria and explicit exclusions.
@@ -20,8 +22,11 @@ Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
    then work proceeds autonomously phase to phase.
 3. Capabilities become internal tasks and a reviewed PR stack with one
    persistent owner per PR and exactly two independent final reviewers.
-4. You merge by default, bottom-up for a stack. Review approval never
-   grants merge authority.
+ 4. You merge by default, bottom-up for a stack. Review approval never
+    grants merge authority. Colleague PRs review in peer mode against
+    their linked intent with no Axstack spec required; adopted PRs keep a
+    maintenance scope snapshot; monitoring stays bounded with one owner,
+    an independent read-only monitor and watchdog, and no silent renewal.
 
 Defaults: one execution host per run, two active PRs, 24-hour bounded
 monitoring with a resumable handoff. Details: [docs/workflows.md](docs/workflows.md),

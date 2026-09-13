@@ -4,20 +4,70 @@ Chat drives execution; the CLI installs and checks assets. Paseo owns
 sessions, workspaces, delegation, notifications, schedules, and heartbeats.
 No Axstack daemon, multi-host scheduler, or upstream skill dependency.
 
+Axstack ships its own self-contained skills. Design inspiration comes from
+disciplined user alignment and accountable PR ownership workflows; those
+principles are restated in Axstack's own words, not copied. Retiring
+specialist skills does not claim their domain capabilities are
+reimplemented by Axstack.
+
+## Routing
+
+The entry (`axstack`) classifies the request first and loads only the
+phase skill needed, plus the shared bundled references
+(`skills/axstack/references/`): routing, lifecycle and receipts, Paseo
+launch materialization, and standing scope/model/risk/authority
+contracts.
+
+Direct routes need no spec ceremony — no alignment interview, approved
+spec, or ticket mapping:
+
+- `axstack-research` — one bounded question at a time. Verify primary
+  sources and code, cite material claims and limitations, save the
+  requested artifact. One question needs no panel and no implementation;
+  fan out distinct questions only when useful.
+- `axstack-docs` — source-backed prose and requested visual
+  explanations. Preserve the requested format and theme; verify actual
+  rendered behavior where applicable and report unavailable evidence.
+  Publication needs its own authority.
+- `axstack-handoff` — compact handoffs, resume reconciliation, and
+  routing back into the lifecycle.
+
 ## Phase skills
 
-Progressive loading: invoke only the phase needed. Every standalone phase
+Progressive loading: invoke only the phase needed. Every lifecycle phase
 loads the shared bundled references (`skills/axstack/references/`):
 Paseo launch materialization and standing scope/model/risk/authority
-contracts.
+contracts, plus routing and lifecycle/receipt references.
 
 - `axstack` — entry router: lifecycle, holds, one host, two PRs, one owner per PR.
 - `axstack-align` — interview and resolve factual questions.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
 - `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; `gh stack` coordination; restart reconciliation (ambiguity never authorizes a duplicate writer).
-- `axstack-review` — exactly two independent Sol and Opus final reviewers, same six-angle brief, no cross-reading, no votes. Prompt-only urgent escalation holds approval, merge-ready declarations, and dependent dangerous actions; Hermes relay is optional with Paseo chat fallback.
-- `axstack-watch` — bounded monitoring (default 24h) ending early on full merge; resumable handoff carries PR, revision, owner, spec, CI/review states, remaining actions, and resume refs. No silent renewal.
+- `axstack-review` — peer mode accepts the PR description, linked issue,
+  and repository requirements as intent with no Axstack-created approved
+  spec; authored mode retains the approved baseline and accepts an
+  adopted maintenance scope snapshot without repeated approval. Exactly
+  two independent Sol and Opus final reviewers, same six-angle brief, no
+  first-pass cross-reading, no votes. Report-only writes nothing to
+  GitHub; authorized submission binds the commit and verifies the
+  receipt, with lookup before retry on ambiguity. Peer code stays
+  readonly. Prompt-only urgent escalation holds approval, merge-ready
+  declarations, and dependent dangerous actions; Hermes relay is optional
+  with Paseo chat fallback.
+- `axstack-watch` — adopts an existing PR into a recorded maintenance
+  scope; observation-only dispatch launches no author and sends no reply.
+  Authorized repairs reuse the original author with reviewed code and
+  exact public reply text, confirmed against fresh remote head/base and
+  feedback, delivered via scoped `gh stack` with receipt verification.
+  One persistent owner per PR; independent read-only monitor and
+  watchdog on native Paseo timers with verified handshakes,
+  snapshot-only healthy ticks, deduped events, and reconciled sends.
+  Bounded monitoring (default 24h, open PRs included) ending early on
+  full merge; resumable handoff carries PR, revision, owner, spec or
+  accepted intent, CI/review states, remaining actions, and resume refs.
+  No silent renewal. Merge-ready is an observed state, distinct from
+  merged; the human merges.
 
 ## Role profiles
 
@@ -27,15 +77,20 @@ driver; never auto-launch), Fable advisor (claude `plan`), Opus owner
 (claude `default`), Sol author (codex `auto`), independent Opus
 (claude) and Sol (codex) reviewers, and the report-only checker. The
 checker model stays null until user setup and must never dispatch a
-provider default. Conservative presets are claude `default` and codex
+provider default. Namespaced role defaults extend the same file for
+research requirements/code/web, docs authorship, visual explanation and
+its review, codebase and execution exploration, and the monitor and
+watchdog roles. Conservative presets are claude `default` and codex
 `auto`; validate model availability at launch. An
 unavailable model pauses affected work pending user decision — never
-automatic substitution. Launch order per the bundled reference:
+automatic substitution. Selected live profiles are authoritative; the
+bundled file ships setup defaults only. Launch order per the bundled reference:
 list_profiles, list_providers, list_models (selected provider only),
 inspect_provider, create_workspace, create_agent as
 `${provider}/${model}`; verify session model/ownership receipts and
 persist actual IDs. Configure permissions explicitly and validate
-capability (including Linear MCP access) per session.
+capability (including Linear MCP access) per session. No selected model
+is a claim of actual runtime availability.
 
 ## Compatibility
 
