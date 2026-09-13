@@ -33,11 +33,13 @@ spec, or ticket mapping:
   routing back into the lifecycle.
 
 Scope readiness is proportional (2026-09-13, user-requested amendment).
-Substantial feature, multi-PR, stacked, or unclear work needs an approved spec
-and a matching ticket map before execution. Small, clear, bounded one-PR work
-may instead use its recorded request or existing issue plus explicit acceptance
-checks and exclusions, snapshotted once as a small-change intent. Alignment
-prepares either handoff and stops; the user invokes `axstack` to execute.
+Substantial features and multi-PR or stacked work need an approved spec and a
+matching ticket map before execution; a bounded small feature is not
+substantial merely because it is labelled a feature. Unclear work is clarified
+first, then classified as small or substantial. Small, clear, bounded one-PR
+work may instead use its recorded request or existing issue plus explicit
+acceptance checks and exclusions, snapshotted once as a small-change intent.
+Alignment prepares either handoff and stops; the user invokes `axstack` to execute.
 Entry records the size and a brief reason, reports an exact missing-identity
 gap, and launches nothing until the applicable identity is present. Each later
 phase checks that identity again.

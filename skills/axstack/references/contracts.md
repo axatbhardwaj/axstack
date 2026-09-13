@@ -14,6 +14,10 @@ One global spec gate contradicts proportional work, peer, and adoption modes.
 The required scope identity depends on the mode (see the
 [proportional scope identity](routing.md#proportional-scope-identity)):
 
+Substantial means substantial features and multi-PR or stacked work; a bounded
+small feature is not substantial merely because it is labelled a feature.
+Clarify unclear size first, then classify it as small or substantial.
+
 - Substantial new implementation: approved spec identity plus a matching
   ticket map before execution or authored review.
 - Small new implementation: the named **small-change intent** — recorded

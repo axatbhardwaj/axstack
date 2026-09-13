@@ -23,19 +23,23 @@ Classify new engineering work as substantial, small, or unclear and record the
 classification with a brief reason in the run record. For tiny direct work
 that needs no run record, put the size and reason in the normal brief.
 
-- Substantial means a feature, multi-PR or stacked work, or work whose scope is
-  unclear. It requires an approved spec plus a ticket map tied to that exact
-  spec revision. The ticket map carries acceptance checks and dependencies,
-  with Markdown or Linear selected explicitly as its store. Prepare it through
+- Substantial means substantial features, multi-PR, or stacked work. A bounded
+  small feature is not substantial merely because it is labelled a feature.
+  Substantial work requires an approved spec plus a ticket map tied to that
+  exact spec revision. The ticket map carries acceptance checks and
+  dependencies, with Markdown or Linear selected explicitly as its store. Prepare it through
   `axstack-align` -> `axstack-spec` (one approval) -> `axstack-tickets` ->
   handoff; preparation stops there and never auto-executes.
-- Small, clear, bounded one-PR work may use the named **small-change intent**:
-  the recorded request or existing issue plus explicit acceptance checks and
-  exclusions, snapshotted once before building. It needs no spec, ticket
-  ceremony, or second approval. All TDD, exactly-two cross-model review, risk,
-  model, and human-merge contracts remain unchanged.
-- Unclear work starts with `axstack-align`. A small ambiguity may be resolved
-  by one bounded clarifying question without forcing full paperwork.
+- For small, clear, bounded one-PR work, the driver captures the named
+  **small-change intent** from the current request or the user-chosen existing
+  issue plus explicit acceptance checks and exclusions, snapshots it once, and
+  proceeds. No pre-existing snapshot, spec, ticket ceremony, or second approval
+  is required. Do not bounce to `axstack-align` solely because the snapshot is
+  not yet written. All TDD, exactly-two cross-model review, risk, model, and
+  human-merge contracts remain unchanged.
+- Unclear work is clarified first through `axstack-align` or one bounded
+  clarifying question, then classified as small or substantial. A small
+  ambiguity does not force full paperwork.
 
 Reassess size when growth adds an additional PR, a new execution dependency
 that materially expands approved scope, an unsettled material design question,
@@ -46,8 +50,10 @@ rule while reassessing.
 
 ## Lifecycle routes (mode-specific scope identity required)
 
-- New work: `axstack-align` -> `axstack-spec` (user approves; the approved
-  revision is the execution baseline) -> `axstack-tickets` ->
+- Preparation: substantial work only follows `axstack-align` -> `axstack-spec`
+  (one approval) -> `axstack-tickets` -> handoff, then stops. Small work uses
+  the driver-captured small-change intent above.
+- Execution: with the applicable identity present, entry routes
   `axstack-implement` -> `axstack-review` -> `axstack-watch`.
 - Peer (colleague) PR review (`axstack-review` in peer mode): linked issue
   plus PR description and repository requirements are the intent. Demands

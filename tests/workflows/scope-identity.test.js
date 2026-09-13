@@ -7,12 +7,13 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 test('scope identity: routing defines proportional substantial, small, and unclear paths', () => {
   const routing = read('skills/axstack/references/routing.md');
   expect(routing).toMatch(/proportional scope identity/i);
-  expect(routing).toMatch(/substantial[^.]*feature[^.]*multi-PR[^.]*stacked/i);
+  expect(routing).toMatch(/substantial features[^.]*multi-PR[^.]*stacked/i);
+  expect(routing).toMatch(/bounded\s+small\s+feature[^.]*not[^.]*substantial[^.]*label/i);
   expect(routing).toMatch(/approved spec[^.]*ticket map[^.]*spec revision/i);
   expect(routing).toMatch(/ticket map[^.]*acceptance[^.]*dependencies/i);
   expect(routing).toMatch(/Markdown[^.]*Linear|Linear[^.]*Markdown/i);
   expect(routing).toMatch(/small-change intent/i);
-  expect(routing).toMatch(/recorded request[^.]*existing issue[^.]*acceptance checks[^.]*exclusions[^.]*snapshot/i);
+  expect(routing).toMatch(/current\s+request[^.]*user-chosen\s+existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
   expect(routing).toMatch(/unclear[^.]*clarif[^.]*then[^.]*classif[^.]*small[^.]*substantial/i);
   expect(routing).toMatch(/classif[^.]*brief reason/i);
   expect(routing).toMatch(/additional PR/i);
@@ -45,7 +46,7 @@ test('scope identity: driver captures a current small-change intent without boun
     ['entry', read('skills/axstack/SKILL.md')],
   ]) {
     expect(text, `${name}: missing driver capture`).toMatch(
-      /driver[^.]*captures[^.]*small-change intent[^.]*current request[^.]*user[^.]*existing issue[^.]*acceptance checks[^.]*exclusions[^.]*snapshots[^.]*proceeds/i,
+      /driver[^.]*captures[^.]*small-change intent[^.]*current\s+request[^.]*user[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshots[^.]*proceeds/i,
     );
     expect(text, `${name}: missing no-bounce rule`).toMatch(
       /not[^.]*axstack-align[^.]*solely[^.]*not yet written/i,

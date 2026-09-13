@@ -1,6 +1,6 @@
 ---
 name: axstack-align
-description: When exploring or planning an idea and settling its scope and decisions, use axstack-align for a bounded interview before any spec.
+description: When exploring or planning an idea and settling its scope and decisions, use axstack-align to prepare scope and, when applicable, a spec plus tickets.
 ---
 
 # Align

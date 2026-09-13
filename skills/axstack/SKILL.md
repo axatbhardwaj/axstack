@@ -37,12 +37,18 @@ and invoke exactly the phase skill named:
   and `axstack-watch` (adoption for existing PRs).
 
 For new engineering work, classify the request as substantial, small, or
-unclear and record the classification with a brief reason. Substantial work
-needs its current approved spec identity and matching ticket map; small work
-needs its snapshotted **small-change intent**. If the applicable identity is
-missing, unapproved, mismatched, or invalidated by an unaccepted material
-change, report the exact gap, name `axstack-align`, and launch nothing. Never
-admit work that a deeper phase would reject; do not auto-run preparation.
+unclear and record the classification with a brief reason. Substantial means
+substantial features and multi-PR or stacked work; a bounded small feature is
+not substantial merely because it is labelled a feature. Clarify unclear size
+first, then classify it as small or substantial. For a small, clear current
+request, the driver captures the **small-change intent** from the
+current request or the user-chosen existing issue plus explicit acceptance
+checks and exclusions, snapshots it once, and proceeds. Do not bounce to
+`axstack-align` solely because the snapshot is not yet written. For substantial
+work whose approved spec or matching ticket identity is missing, unapproved,
+mismatched, or invalidated by an unaccepted material change — or for genuinely
+unclear scope — report the exact gap, name `axstack-align`, and launch nothing.
+Never admit work that a deeper phase would reject; do not auto-run preparation.
 
 ## Lifecycle
 
@@ -71,5 +77,7 @@ affected work only; independent safe work may continue:
 
 ## Next
 
-Invoke the phase skill matching the current state with its required inputs,
-or start at `axstack-align`. Load only the phase skill needed.
+Prepared substantial work and small, clear work with its driver-captured intent
+execute through the applicable phase. If substantial work lacks its identity,
+report the exact gap and point to `axstack-align`; launch nothing automatically.
+Clarify unclear work before classifying it. Load only the phase skill needed.

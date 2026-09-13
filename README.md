@@ -19,12 +19,14 @@ that need no spec ceremony):
 Updated 2026-09-13 by user-requested change: scope readiness is proportional.
 
 1. Classify new engineering work as substantial, small, or unclear and record
-   a brief reason. Small, clear, bounded one-PR work may use its request or
+   a brief reason. Clarify unclear scope first, then classify it as small or
+   substantial. Small, clear, bounded one-PR work may use its request or
    existing issue plus explicit acceptance checks and exclusions.
-2. Substantial feature, multi-PR, stacked, or unclear work needs an approved
-   spec and matching ticket map. Alignment prepares that identity through one
-   spec approval and stops with a handoff; small ambiguity can instead return a
-   snapshotted small-change intent.
+2. Substantial features and multi-PR or stacked work need an approved spec and
+   matching ticket map; a bounded small feature is not substantial merely
+   because it is labelled a feature. Alignment prepares that identity through
+   one spec approval and stops with a handoff; small ambiguity can instead
+   return a snapshotted small-change intent.
 3. Invoke `axstack` to execute prepared work. Capabilities become internal
    tasks and reviewed PRs with one persistent owner per PR and exactly two
    independent final reviewers.
@@ -83,7 +85,7 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 86 workflow structural and contract checks pass under Bun. The repository
+- 87 workflow structural and contract checks pass under Bun. The repository
   contains 30 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
