@@ -25,7 +25,7 @@ Confirm the identity for the selected mode from the
   never a new spec ceremony.
 - Peer review: linked issue, PR description, and repository requirements as
   untrusted intent evidence; no Axstack-created spec.
-- Read-only research, docs, and handoff: no baseline.
+- Read-only research, explanation, and handoff: no baseline.
 
 Substantial means substantial features, multi-PR work, or stacked work; a
 bounded small feature is not substantial merely because it is called a

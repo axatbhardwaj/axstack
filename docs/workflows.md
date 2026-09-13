@@ -26,10 +26,14 @@ spec, or ticket mapping:
   sources and code, cite material claims and limitations, save the
   requested artifact. One question needs no panel and no implementation;
   fan out distinct questions only when useful.
-- `axstack-docs` — source-backed prose and requested visual
-  explanations. Preserve the requested format and theme; verify actual
-  rendered behavior where applicable and report unavailable evidence.
-  Publication needs its own authority.
+- `axstack-explain` — source-backed explanations of systems, changes, current
+  versus intended behavior, and implementation gaps. Simple requests stay in
+  the current chat; complex visuals use the explainer profiles. Project
+  documentation remains supported. Preserve requested format and theme,
+  verify rendered behavior where applicable, and report unavailable evidence.
+  Publication needs its own authority. If an ordinary upgrade leaves the old
+  `axstack-docs` skill installed, `axstack-explain` supersedes it; do not route
+  both. Use the documented uninstall/install migration below.
 - `paseo-handoff` (provided by Paseo) — transfer the task with the Axstack
   run-record pointer and current authority; see [Native handoff](#native-handoff).
   Resume reconciles existing state through Axstack’s shared lifecycle.
@@ -134,7 +138,7 @@ repeat consultation), Opus owner
 (claude) and Sol (codex) reviewers, and the report-only checker. The
 checker model stays null until user setup and must never dispatch a
 provider default. Namespaced role defaults extend the same file for
-research requirements/code/web, docs authorship, visual explanation and
+research requirements/code/web, visual explanation and
 its review, codebase and execution exploration, the monitor and
 watchdog roles, and the read-only Luna auditor (evidence with counts
 and denominators; proposals return as tested, reviewed PRs for human
@@ -149,6 +153,15 @@ inspect_provider, create_workspace, create_agent as
 persist actual IDs. Configure permissions explicitly and validate
 capability (including Linear MCP access) per session. No selected model
 is a claim of actual runtime availability.
+
+## Retired explanation assets
+
+An ordinary upgrade retains stale owned assets, so it can leave both the
+`axstack-docs` skill and profile beside `axstack-explain`. The new skill
+supersedes that old route. Use the [no-force uninstall/install
+cycle](installation.md#retiring-former-skills-and-profiles) to remove pristine
+retired assets; edited, custom, and unknown assets survive for explicit
+resolution. This migration adds no deletion behavior.
 
 ## Compatibility
 

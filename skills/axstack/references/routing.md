@@ -8,10 +8,11 @@ for its next action.
 - One bounded research question -> `axstack-research`. Verify primary sources
   and code, then return a cited note with limitations. Fan out distinct
   questions only when useful.
-- Source-backed prose or a requested visual explanation -> `axstack-docs`.
-  Preserve requested format and theme, verify rendered behavior when
-  applicable, and report unavailable evidence. Publication needs separate
-  authority.
+- Understanding a system, change, or implementation gap -> `axstack-explain`.
+  Show current and intended behavior, evidence dimensions, and bounded gaps;
+  retain project documentation and verify rendered behavior when applicable.
+  A stale axstack-docs install is superseded and must not also route the
+  request. Publication needs separate authority.
 - Preparation completion, watch expiry, ordinary resume, or reconciliation ->
   the [handoff and resume lifecycle](lifecycle.md#native-handoff-and-resume).
   Update or reconcile the run record; keep the current owner and launch no
@@ -23,7 +24,7 @@ for its next action.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.
 
-Research, docs, handoff, peer review, and adopted maintenance do not require
+Research, explanation, handoff, peer review, and adopted maintenance do not require
 alignment, an Axstack-approved spec, or ticket mapping. Their own authority and
 intent boundaries still apply.
 

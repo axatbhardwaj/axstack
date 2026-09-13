@@ -92,21 +92,12 @@
       "name": "Axstack research web (Opus)"
     },
     {
-      "id": "axstack-docs",
-      "provider": "claude",
-      "model": "claude-opus-5",
-      "modeId": "default",
-      "thinkingOptionId": "low",
-      "notes": "Source-backed prose author: writes and checks documentation and requested artifacts from inspected sources. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
-      "name": "Axstack docs author (Opus)"
-    },
-    {
       "id": "axstack-explainer",
       "provider": "claude",
       "model": "claude-sonnet-5",
       "modeId": "default",
       "thinkingOptionId": "xhigh",
-      "notes": "Visual explanation author: builds requested visual explanations and verifies actual rendered behavior where applicable. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested visual artifacts and verifies actual rendered behavior where applicable. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer (Sonnet)"
     },
     {
@@ -115,7 +106,7 @@
       "model": "gpt-5.6-luna",
       "modeId": "auto",
       "thinkingOptionId": "max",
-      "notes": "Visual explanation reviewer: independently checks explainer output for fidelity to sources and rendered behavior. Maximum reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
+      "notes": "Visual explanation reviewer: independently checks the exact explainer artifact for fidelity to sources and rendered behavior where warranted. Any artifact change invalidates its review. Maximum reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer reviewer (Luna)"
     },
     {

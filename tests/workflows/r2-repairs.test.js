@@ -67,7 +67,7 @@ test('every independently callable substantive phase has an explicit load path t
   const phases = [
     'axstack', 'axstack-align', 'axstack-spec', 'axstack-tickets',
     'axstack-implement', 'axstack-review', 'axstack-watch',
-    'axstack-research', 'axstack-docs',
+    'axstack-research', 'axstack-explain',
   ];
   const audit = `${root}/skills/axstack-audit/SKILL.md`;
   for (const phase of phases) {
@@ -109,7 +109,7 @@ test('persistent owner consolidates report-only review and driver presents it', 
 
 test('README separates checks, declarations, private simulation, and live proof', () => {
   const readme = read('README.md');
-  expect(readme).toMatch(/97 workflow[^.]*structural[^.]*contract checks/i);
+  expect(readme).toMatch(/102 workflow[^.]*structural[^.]*contract checks/i);
   expect(readme).toMatch(/contains 36 declared scenarios/i);
   expect(readme).toMatch(/33-case[^.]*a97c1a7[^.]*25[^.]*8 baseline/i);
   expect(readme).toMatch(/private[^.]*not shipped/i);

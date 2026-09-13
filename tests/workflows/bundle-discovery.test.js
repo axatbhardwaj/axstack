@@ -6,7 +6,7 @@ const skills = readdirSync(root).filter((name) => existsSync(`${root}/${name}/SK
 
 test('skill catalog exposes ten owned entrypoints and leaves handoff to Paseo', () => {
   expect(skills).toEqual([
-    'axstack', 'axstack-align', 'axstack-audit', 'axstack-docs',
+    'axstack', 'axstack-align', 'axstack-audit', 'axstack-explain',
     'axstack-implement', 'axstack-research', 'axstack-review',
     'axstack-spec', 'axstack-tickets', 'axstack-watch',
   ]);
