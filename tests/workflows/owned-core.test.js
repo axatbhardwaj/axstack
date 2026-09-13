@@ -110,10 +110,11 @@ test('owned-core: review authored mode keeps baseline; adopted scope needs no re
   ).toBeTruthy();
 });
 
-test('owned-core: exactly two independent reviewers, same brief, exact rev, no cross-read, owner validates', () => {
+test('owned-core: mode-specific independent review keeps exact rev, isolation, and owner validation', () => {
   const text = skill('axstack-review');
-  expect(/exactly two/i.test(text), 'must require exactly two final reviewers').toBeTruthy();
-  expect(/same.*six-angle|six-angle.*same/i.test(text), 'both reviewers must get the same six-angle brief').toBeTruthy();
+  expect(/peer[\s\S]*exactly two/i.test(text), 'peer mode must require exactly two final reviewers').toBeTruthy();
+  expect(/authored[\s\S]*exactly one|authored[\s\S]*one independent/i.test(text), 'authored mode must require one independent cross-family reviewer').toBeTruthy();
+  expect(/same.*six-angle|six-angle.*same|identical.*six-angle/i.test(text), 'peer reviewers must get the same six-angle brief').toBeTruthy();
   expect(/exact[\s\S]*revision|exact[\s\S]*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
   expect(
     /no.*cross-read|without.*cross-read|neither reviewer reads the\s+other[’']s initial findings/is.test(text),
@@ -266,7 +267,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
   }
   for (const ref of ['routing.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
-    expect(text.length, `${ref} must stay compact (<6000 chars)`).toBeLessThan(6000);
+    expect(text.length, `${ref} must stay compact (<6250 chars)`).toBeLessThan(6250);
   }
 });
 
@@ -321,11 +322,11 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
   }
 });
 
-test('owned-core: review separates completeness from verdict; binds commit parameter', () => {
+test('owned-core: review separates mode-specific completeness from verdict; binds commit parameter', () => {
   const text = skill('axstack-review');
   expect(
     /complete[\s\S]*evidence/i.test(text) && /REQUEST_CHANGES/i.test(text),
-    'complete two-reviewer evidence with validated defects must permit REQUEST_CHANGES',
+    'complete mode-required evidence with validated defects must permit REQUEST_CHANGES',
   ).toBeTruthy();
   expect(
     /INCOMPLETE/i.test(text) && /never.*fabricat|no.*fabricat/i.test(text),

@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "note": "Raw policy scenarios for the 2026-09-14 review-mode amendment. Assertions validate the declared contract and shipped prompt coverage; they are not claims about model behavior.",
+  "cases": [
+    {
+      "id": "sol-authored-own",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored",
+        "actual_author": "Sol medium session author-sol",
+        "candidate": "SHA A on current base B",
+        "scope": "accepted small-change intent"
+      },
+      "expected": {
+        "reviewers": ["one independent Opus medium non-author session"],
+        "coverage": "all six angles plus acceptance against intent, exact SHA A, and current base B"
+      }
+    },
+    {
+      "id": "opus-authored-own",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored",
+        "actual_author": "Opus medium session author-opus",
+        "candidate": "SHA C on current base D",
+        "scope": "approved spec and matching ticket"
+      },
+      "expected": {
+        "reviewers": ["one independent Sol medium non-author session"],
+        "coverage": "all six angles plus acceptance against spec and ticket, exact SHA C, and current base D"
+      }
+    },
+    {
+      "id": "peer",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "peer",
+        "actual_author": "colleague outside the reviewing sessions",
+        "candidate": "SHA E on current base F",
+        "scope": "linked issue, PR description, and repository requirements"
+      },
+      "expected": {
+        "reviewers": ["independent Sol medium", "independent Opus medium"],
+        "coverage": "each gets the identical six-angle brief and performs its first pass in isolation"
+      }
+    },
+    {
+      "id": "unknown-author",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored",
+        "actual_author": "unknown or mixed provenance",
+        "candidate": "SHA G on current base H",
+        "scope": "imported own PR maintenance snapshot"
+      },
+      "expected": {
+        "status": "INCOMPLETE",
+        "action": "report the exact author-provenance gap and ask the user",
+        "forbidden": ["assume Sol", "infer author from orchestrator provider", "invent a reviewer family"]
+      }
+    },
+    {
+      "id": "unavailable-cross-model-reviewer",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored",
+        "actual_author": "Sol medium session author-sol",
+        "candidate": "SHA I on current base J",
+        "availability": "Opus reviewer unavailable"
+      },
+      "expected": {
+        "status": "INCOMPLETE",
+        "action": "report the unavailable required Opus medium reviewer and ask the user",
+        "forbidden": ["same-family reviewer", "automatic model fallback", "second redundant final reviewer"]
+      }
+    },
+    {
+      "id": "stale-authoring-change",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored high-stakes",
+        "actual_author": "Opus high session author-opus",
+        "checkpoint": "Sol high non-author receipt for SHA K on base L",
+        "candidate": "author changed candidate to SHA M on current base N"
+      },
+      "expected": {
+        "status": "INCOMPLETE until revalidated",
+        "action": "revalidate the eligible Sol high checkpoint against SHA M, base N, scope, evidence, all six angles, and acceptance",
+        "forbidden": ["lower Sol effort", "reuse stale receipt", "spawn a redundant final reviewer", "allow author session to review"]
+      }
+    }
+  ]
+}
