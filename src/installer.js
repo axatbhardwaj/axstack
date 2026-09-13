@@ -486,6 +486,7 @@ export async function uninstallBundle({
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
   const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
+  if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
 
   const manifest = await readManifest(skillsRoot);
   const summary = { removed: [], preserved: [], missing: [], profiles: null };
