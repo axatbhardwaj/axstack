@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "agentProfiles": [
+    {
+      "id": "axstack-driver",
+      "provider": "codex",
+      "model": "gpt-5.4",
+      "modeId": "default",
+      "thinkingOptionId": "medium",
+      "notes": "Main driver: current chat. Owns scope, Linear mutations, stack coordination, capability completion. Consults axstack-advisor for unresolved consequential decisions. Validate provider/model availability at launch; an unavailable model pauses affected work pending user decision, never auto-fallback."
+    },
+    {
+      "id": "axstack-advisor",
+      "provider": "codex",
+      "model": "fable-medium",
+      "modeId": "plan",
+      "thinkingOptionId": "medium",
+      "notes": "Consequential planning advisor (Fable medium). Consulted after cheap factual checks for unresolved consequential decisions. High-stakes decisions need advisor plain AGREE plus driver accepted assessment. Validate availability at launch."
+    },
+    {
+      "id": "axstack-owner",
+      "provider": "codex",
+      "model": "opus-medium",
+      "modeId": "default",
+      "thinkingOptionId": "medium",
+      "notes": "Persistent PR owner (Opus medium): one owner per PR, accountable for candidate, fixes, verification evidence, monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches its own independent reviewers."
+    },
+    {
+      "id": "axstack-author",
+      "provider": "codex",
+      "model": "sol-medium",
+      "modeId": "default",
+      "thinkingOptionId": "medium",
+      "notes": "Ordinary implementation and repairs (Sol medium). Strict red-green-refactor. Exclusive writer per candidate; high-stakes pair is Opus high author with fresh Sol high reviewer. Validate availability at launch."
+    },
+    {
+      "id": "axstack-reviewer-opus",
+      "provider": "codex",
+      "model": "opus-medium",
+      "modeId": "review",
+      "thinkingOptionId": "medium",
+      "notes": "Independent Opus final reviewer: fresh non-author session, exact candidate revision, same six-angle brief, no cross-reading of the other reviewer. Reports evidence, coverage, limitations, findings. Votes never settle correctness."
+    },
+    {
+      "id": "axstack-reviewer-sol",
+      "provider": "codex",
+      "model": "sol-medium",
+      "modeId": "review",
+      "thinkingOptionId": "medium",
+      "notes": "Second independent final PR reviewer (fresh Sol medium session): same instantiated scope/spec/ticket/base/revision/exclusions/instructions as Opus reviewer. Covers all six angles independently."
+    },
+    {
+      "id": "axstack-checker",
+      "provider": "codex",
+      "model": null,
+      "modeId": "readonly",
+      "thinkingOptionId": "low",
+      "notes": "Report-only Linear discrepancy checker. Inexpensive model chosen at user setup; left unset here by design. Never mutates Linear; driver independently verifies checker evidence before applying updates. Configure permissions read-only and validate Linear MCP access per session."
+    }
+  ]
+}
