@@ -48,10 +48,11 @@ reading and writing does not require that launch reference.
 One persistent owner remains accountable for the PR, fixes, evidence, and
 monitoring. Exactly one author writes a candidate at a time; accepted review
 repairs return to that author when its evidence is still usable. When the owner
-delegates writing, the owner does not edit that candidate concurrently. Use
-native Paseo handoff when a transfer or resumable boundary needs it and that
-capability is available. Otherwise preserve the run-record receipts and report
-the native capability gap without inventing a command.
+delegates writing, the owner does not edit that candidate concurrently. An
+ownership transfer occurs only when explicitly requested; follow the shared
+lifecycle's native capability preflight for that transfer. An ordinary restart
+or resume reconciles the existing sessions and run record without creating a
+fresh recipient.
 
 The default limit is two active PRs. The driver queues conflicting or dependent
 work and coordinates dependent PRs through `gh stack`. A dependent candidate
@@ -69,6 +70,11 @@ real integration boundary. Test it through an observable interface rather than
 restating source text or mirroring the intended implementation. Execute the
 check before changing production behavior and capture the expected behavioral
 failure. A missing-module error or unrelated setup failure is not red.
+
+For example, retry the same payment ID and observe one charge through the
+public interface. Counting internal helper calls alone would not prove that
+behavior. This illustrates the boundary test; it does not require a payment
+scenario in unrelated work.
 
 If no meaningful test-first check can be established, report why and hold
 dependent implementation for a scoped decision. Historical tests added after
