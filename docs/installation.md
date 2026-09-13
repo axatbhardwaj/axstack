@@ -54,13 +54,26 @@ Behavior:
   created or updated entries gain manifest records. Pre-existing unrelated
   files — even byte-identical ones — are never adopted as owned, so a later
   uninstall cannot remove them.
+- Owned profile hashes are bound to the canonical config file they were
+  installed into. Running install or uninstall with a different `--profile`
+  is refused before any file mutation: identical bytes in an unrelated file
+  never authorize removal. If the bound file is gone, uninstall releases the
+  ownership so a new path can bind; otherwise uninstall the bound config
+  first, then install with the new path.
+- The manifest itself is validated (version, file/profiles shape, safe
+  relative paths) and a symlinked manifest is refused; corrupt or
+  foreign-shape manifests stop the run before any mutation.
 - Unknown pre-existing files are never silently overwritten.
+- Option values beginning with `--` are rejected as missing values before
+  any mutation (so `--bundle --skills-dir X` cannot misroute a path).
 - Uninstall reads, parses, and plans the profile change before deleting any
   skill file, so a malformed profile fails with skills still on disk.
 - Partial failures restore overwritten files (skills and profile) from
   backups, remove files created in that run, and leave the manifest
   untouched, so the pre-run state holds again and a retry converges
-  (deleted-then-retried entries reconcile as `missing`).
+  (deleted-then-retried entries reconcile as `missing`). If a restore step
+  itself fails, the error says rollback is incomplete and names what needs
+  manual repair instead of silently swallowing it.
 
 ### `axstack check`
 
@@ -68,7 +81,8 @@ Behavior:
 axstack check [--bundle <dir>]
 ```
 
-Probes `node`, `git`, `gh`, the `gh stack` extension, and `paseo`, then
+Probes `node`, `git`, `gh`, the `gh stack` extension (via the real
+`gh stack --help`), and `paseo`, then
 reports gaps with a non-zero exit when anything is missing. With `--bundle`,
 also validates the bundle layout.
 
@@ -92,16 +106,18 @@ is nothing to remove instead of guessing.
 
 ## Harness skill locations
 
-| Harness  | Default directory              | Discovery  |
-| -------- | ------------------------------ | ---------- |
-| claude   | `~/.claude/skills`             | docs       |
-| codex    | `~/.codex/skills`              | docs       |
-| opencode | `~/.config/opencode/skills`    | docs       |
-| grok     | (explicit `--skills-dir` only) | unverified |
+| Harness  | Default directory                          | Source (verified 2026-09-13)                          |
+| -------- | ------------------------------------------ | ----------------------------------------------------- |
+| claude   | `~/.claude/skills`                         | [Agent Skills in the SDK](https://docs.claude.com/en/api/agent-sdk/skills) |
+| codex    | `$CODEX_HOME/skills` (default `~/.codex`)  | [Agent Skills – Codex](https://developers.openai.com/codex/skills) |
+| opencode | `~/.config/opencode/skills`                | [Skills - OpenCode](https://opencode.ai/docs/skills)  |
+| grok     | (explicit `--skills-dir` only)             | unverified — no auto-discovery                        |
 
-Defaults come from upstream docs; confirm against local CLI help when in
-doubt. Installing files never proves harness behavior: compatibility needs a
-real end-to-end run and is reported only at the level actually verified.
+Each default above names the upstream page that documents it; the installer
+also honors `$CODEX_HOME` for Codex. Paths change upstream, so confirm
+against local CLI help when in doubt and prefer an explicit `--skills-dir`.
+Installing files never proves harness behavior: compatibility needs a real
+end-to-end run and is reported only at the level actually verified.
 
 ## Model presets
 
