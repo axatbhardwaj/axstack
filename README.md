@@ -46,9 +46,27 @@ Linear is the default integration (native document, report-only checker,
 driver-owned updates); repository Markdown is an explicit alternative.
 The checker's inexpensive model stays unset until setup.
 
+## Install a release
+
+Download the complete Bun package from [GitHub Releases](https://github.com/axatbhardwaj/axstack/releases).
+It is not published to the npm registry. The CLI installs and checks skills;
+Paseo remains the runtime.
+
+```sh
+bun add --global https://github.com/axatbhardwaj/axstack/releases/download/v0.2.0/axstack-0.2.0.tgz
+axstack --version
+axstack check
+axstack install --harness codex --yes
+# Or select --harness claude; add --profile <paseo-config> to bootstrap profiles.
+```
+
+Upgrading from 0.1.0 requires explicit cleanup of the retired handoff skill;
+an ordinary reinstall preserves stale files. Follow the
+[handoff migration instructions](docs/installation.md#retiring-the-former-handoff-skill).
+
 ## Install from source
 
-Not released to any npm registry; install from a source checkout.
+Alternatively, install from a source checkout.
 Requires Bun >= 1.3.14, no runtime dependencies. Filesystem access uses the
 approved narrow exception: node:fs and node:fs/promises are Bun-implemented
 built-ins; no Node.js runtime is used. `bin/axstack.js` is the
