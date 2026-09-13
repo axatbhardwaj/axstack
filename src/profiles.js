@@ -33,6 +33,10 @@ function profileEqual(a, b) {
   return hashObject(a) === hashObject(b);
 }
 
+function isConfiguredProfile(profile) {
+  return typeof profile?.model === 'string' && profile.model.length > 0;
+}
+
 function daemonProfiles(existing) {
   if (typeof existing !== 'object' || existing === null || Array.isArray(existing)) {
     throw new Error('malformed Paseo config: expected a JSON object');
@@ -64,21 +68,46 @@ export function mergeProfiles(
   { force = false, owned = {}, hash = hashObject } = {},
 ) {
   assertBundleProfiles(bundleProfiles);
-  const report = { created: false, added: [], updated: [], preserved: [] };
-
-  if (existing === null || existing === undefined) {
-    report.created = true;
-    report.added = bundleProfiles.map((p) => p.id);
-    return {
-      config: withDaemonProfiles(null, clone(bundleProfiles)),
-      report,
-    };
-  }
-
-  const current = daemonProfiles(existing); // validates shape, throws before mutation
+  const report = {
+    created: existing === null || existing === undefined,
+    added: [],
+    updated: [],
+    preserved: [],
+    deferred: [],
+    removed: [],
+    released: [],
+  };
+  const configured = bundleProfiles.filter((profile) => {
+    if (isConfiguredProfile(profile)) return true;
+    report.deferred.push(profile.id);
+    return false;
+  });
+  const current = report.created
+    ? []
+    : daemonProfiles(existing); // validates shape, throws before mutation
   const next = clone(current);
 
-  for (const wanted of bundleProfiles) {
+  // A setup-only bundle entry is never written to Paseo. Upgrade cleanup is
+  // narrower: remove only an unconfigured live entry whose current bytes
+  // still match Axstack's bound ownership hash. User-edited or unknown entries
+  // survive even with --force; a missing entry merely releases stale ownership.
+  for (const id of report.deferred) {
+    const idx = next.findIndex((profile) => profile?.id === id);
+    if (idx === -1) {
+      if (id in owned) report.released.push(id);
+    } else if (
+      !isConfiguredProfile(next[idx]) &&
+      id in owned &&
+      hash(next[idx]) === owned[id]
+    ) {
+      next.splice(idx, 1);
+      report.removed.push(id);
+    } else {
+      report.preserved.push(id);
+    }
+  }
+
+  for (const wanted of configured) {
     const idx = next.findIndex((p) => p && p.id === wanted.id);
     if (idx === -1) {
       next.push(clone(wanted));

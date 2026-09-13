@@ -438,6 +438,9 @@ export async function installBundle({
         hash: hashObject,
       });
       profileReport = report;
+      for (const id of [...report.removed, ...report.released]) {
+        delete nextProfileHashes[id];
+      }
       const nextRaw = JSON.stringify(config, null, 2) + '\n';
       if (existingProfileRaw === null || nextRaw !== existingProfileRaw) {
         // New configs are restrictive; existing configs keep their mode.
