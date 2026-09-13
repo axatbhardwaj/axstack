@@ -280,7 +280,7 @@ test('combined-like fixture package packs and cycles end to end', () => {
     join(pkgDir, 'profiles', 'paseo.json'),
     JSON.stringify({
       version: 1,
-      agentProfiles: profileIds.map((id) => ({ id, provider: 'example', model: 'm' })),
+      agentProfiles: profileIds.map((id) => ({ id, name: id, provider: 'example', model: 'm' })),
     }),
   );
   writeFileSync(join(pkgDir, 'README.md'), '# Combined fixture\n');

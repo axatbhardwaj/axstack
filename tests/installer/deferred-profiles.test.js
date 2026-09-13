@@ -1,6 +1,6 @@
-// Regression coverage at the public CLI seam. Paseo 0.8 accepts an omitted
-// model or a string, but rejects null; Axstack's null bundle entry is setup
-// data and must never be projected into the host config.
+// Regression coverage at the public CLI seam. The pinned Paseo protocol
+// fixture proves null is not native profile data; Axstack's explicit-null
+// bundle entry is setup data and must never be projected into host config.
 import { expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
@@ -11,22 +11,18 @@ const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const runCli = (args) => runBunCli(CLI, args);
 const EXECUTABLE = {
   id: 'axstack-driver',
+  name: 'Axstack driver',
   provider: 'example',
   model: 'example-model',
   notes: 'Executable fixture.',
 };
 const DEFERRED = {
   id: 'axstack-checker',
+  name: 'Axstack checker',
   provider: 'codex',
   model: null,
   notes: 'Select a model during setup.',
 };
-
-function assertPaseo08ModelFields(config) {
-  for (const profile of config.daemon.agentProfiles) {
-    expect(profile.model === undefined || typeof profile.model === 'string').toBe(true);
-  }
-}
 
 function fixture(root) {
   return writeFixtureBundle(root, { profiles: [EXECUTABLE, DEFERRED] });
@@ -60,8 +56,7 @@ test('CLI defers a null-model preset, owns only configured profiles, and stays i
     'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
-  assertPaseo08ModelFields(config);
-  expect(config.daemon.agentProfiles.map((profile) => profile.id)).toEqual(['axstack-driver']);
+  expect(config.daemon.agentProfiles).toEqual([EXECUTABLE]);
   expect(first.out).toMatch(/axstack-checker/i);
   expect(first.out).toMatch(/defer|setup|select.*model/i);
 
@@ -103,7 +98,6 @@ test('CLI preserves a setup-selected checker without acquiring ownership even wi
     'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath, '--force',
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
-  assertPaseo08ModelFields(config);
   expect(config.daemon.agentProfiles.find((profile) => profile.id === selected.id)).toEqual(selected);
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
@@ -122,7 +116,6 @@ test('CLI removes only an exact previously-owned null placeholder during upgrade
     'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
-  assertPaseo08ModelFields(config);
   expect(config.daemon.agentProfiles.some((profile) => profile.id === DEFERRED.id)).toBe(false);
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
@@ -141,7 +134,6 @@ test('CLI releases stale placeholder ownership when the live entry is already mi
 
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
-  assertPaseo08ModelFields(config);
   expect(config.daemon.agentProfiles.some((profile) => profile.id === DEFERRED.id)).toBe(false);
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
@@ -149,7 +141,7 @@ test('CLI releases stale placeholder ownership when the live entry is already mi
   expect(manifest.profiles.entries['axstack-checker']).toBeUndefined();
 });
 
-test('CLI keeps a user-edited previously-owned checker because its hash changed', () => {
+test('CLI releases old deferred ownership while preserving a configured checker', () => {
   const root = makeTempRoot('axstack-edited-placeholder-');
   const bundle = fixture(root);
   const skillsDir = join(root, 'skills');
@@ -163,5 +155,11 @@ test('CLI keeps a user-edited previously-owned checker because its hash changed'
   const manifest = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
   );
-  expect(manifest.profiles.entries['axstack-checker']).toBe(hashObject(DEFERRED));
+  expect(manifest.profiles.entries['axstack-checker']).toBeUndefined();
+
+  runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profilePath, '--force']);
+  const afterUninstall = JSON.parse(readFileSync(profilePath, 'utf8'));
+  expect(
+    afterUninstall.daemon.agentProfiles.find((profile) => profile.id === DEFERRED.id),
+  ).toEqual(selected);
 });
