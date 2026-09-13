@@ -1,6 +1,6 @@
 {
   "name": "axstack",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Axstack installer and setup CLI: bundles and installs owned chat skills, merges Paseo profiles, and checks host capabilities. Chat drives execution; this CLI performs installation bookkeeping only.",
   "type": "module",
   "engines": {
