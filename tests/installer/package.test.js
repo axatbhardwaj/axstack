@@ -220,15 +220,11 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
 });
 
 test('partial asset tree fails loudly instead of augmenting', () => {
-  const outDir = join(makeTempRoot('axstack-pack-'), 'out');
-  mkdirSync(outDir, { recursive: true });
-  const tgz = packDir(ROOT, outDir);
-  const neutral = makeTempRoot('axstack-partial-');
-  const extractDir = join(neutral, 'extract');
-  mkdirSync(extractDir, { recursive: true });
-  expect(run('tar', ['-xzf', tgz, '-C', extractDir]).exitCode).toBe(0);
-  const pkgDir = join(extractDir, 'package');
-  // Simulate a malformed bundle: skills present, profiles missing.
+  // Deliberately partial fixture independent of the package branch: a fresh
+  // temp dir holding skills-only must trip the guard. (Building it from the
+  // real extract would silently pass on branches whose extract already ships
+  // profiles, which is exactly the combined failure this guards against.)
+  const pkgDir = makeTempRoot('axstack-partial-');
   mkdirSync(join(pkgDir, 'skills', 'axstack-demo'), { recursive: true });
   writeFileSync(join(pkgDir, 'skills', 'axstack-demo', 'SKILL.md'), '# Partial\n');
   expect(() => ensureBundleAssets(pkgDir, 'partial-package')).toThrow(/incomplete bundle/);

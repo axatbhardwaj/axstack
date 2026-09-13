@@ -3,7 +3,7 @@
 // Spawn-boundary tests pin the Bun semantics runRealCheck depends on:
 // missing binaries throw, nonzero exits report codes, timeouts kill.
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { checkCapabilities, meetsFloor, runRealCheck } from '../../src/capabilities.js';
 import { BUN_BIN, makeTempRoot, runCli as runBunCli } from './helpers.js';
@@ -53,10 +53,35 @@ test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => 
   expect(r.out.toLowerCase()).toMatch(/gap|missing|not found/);
 });
 
-test('CLI check passes against the real toolchain', () => {
-  const r = runCli(['check']);
+test('CLI check succeeds with a controlled fake toolchain', () => {
+  // Hermetic success case: every external binary is a fixture script, so the
+  // test never depends on the host's live paseo/gh-stack setup. The Bun
+  // runtime/version assertion stays real; missing-tool checks are untouched.
+  const fakeBin = join(makeTempRoot(), 'fake-bin');
+  mkdirSync(fakeBin, { recursive: true });
+  const log = join(fakeBin, 'argv.log');
+  const script = (name, body) => {
+    const p = join(fakeBin, name);
+    writeFileSync(p, `#!/bin/sh\n${body}\n`);
+    chmodSync(p, 0o755);
+  };
+  script('git', 'echo "git version 9.9.9-fake"');
+  script('paseo', 'echo "paseo 9.9.9-fake"');
+  writeFileSync(
+    join(fakeBin, 'gh'),
+    '#!/bin/sh\n' +
+      `echo "gh $*" >> "${log}"\n` +
+      'if [ "$1" = "--version" ]; then echo "gh version 9.9.9-fake"; exit 0; fi\n' +
+      'if [ "$1" = "stack" ] && [ "$2" = "--help" ]; then echo "fake gh stack help"; exit 0; fi\n' +
+      'echo "unexpected gh args: $*" >&2; exit 1\n',
+  );
+  chmodSync(join(fakeBin, 'gh'), 0o755);
+  const r = runCli(['check'], { env: { PATH: fakeBin } });
   expect(r.ok).toBe(true);
-  expect(r.out).toMatch(/bun >= 1\.3\.14 runtime/);
+  expect(r.out).toContain('git version 9.9.9-fake');
+  expect(r.out).toContain('paseo 9.9.9-fake');
+  expect(r.out).toContain(`v${Bun.version}`);
+  expect(readFileSync(log, 'utf8')).toContain('gh stack --help');
 });
 
 describe('Bun runtime floor', () => {
