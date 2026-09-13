@@ -98,10 +98,15 @@ End early when all required PRs merge, or at cancel or the shared default 24h
 deadline. In every case, stop and verify all owned registrations. The deadline
 also stops timers for open PRs; never silently renew them.
 
-If work remains, use native Paseo handoff when that capability is available.
-Otherwise leave the compact resumable state below in the private run record and
-report it in chat. Do not invent a native command or assume an installed handoff
-skill.
+At every end condition, leave the compact state below in the private run record
+and report it in the current chat, even when work remains. Expiry grants neither
+silent renewal nor ownership-transfer authority.
+
+Transfer ownership through native Paseo handoff only when the user explicitly
+requests it. Before transfer, follow the lifecycle-owned preflight for native
+capability availability, the configured model, and recipient acceptance. A
+failed or incomplete preflight preserves the current owner and reports the gap;
+never invent a native command or assume an installed handoff skill.
 
 ```text
 Record: <progress.md path>
