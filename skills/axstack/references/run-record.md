@@ -2,6 +2,7 @@
 
 One compact Markdown `progress.md` is required for substantive delegated or
 resumable work. One-step direct answers do not require this ceremony.
+That tiny-task exemption is not a scope-identity exemption.
 
 ## Location and identity
 

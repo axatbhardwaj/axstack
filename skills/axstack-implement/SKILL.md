@@ -12,13 +12,13 @@ Load before acting:
 - [Shared routing](../axstack/references/routing.md)
 - [Lifecycle and receipts](../axstack/references/lifecycle.md)
 
-Requires a scope identity matching the mode (see
-[Shared routing](../axstack/references/routing.md) and
-[Lifecycle](../axstack/references/lifecycle.md)): new implementation
-confirms the approved spec identity before building and holds on
-unapproved scope; repairs to an adopted own PR proceed on its accepted
-user-authorized maintenance snapshot with no new spec or ticket
-ceremony. Material scope changes still hold affected work.
+Independently check the scope identity before building (see
+[proportional scope identity](../axstack/references/routing.md#proportional-scope-identity)
+and [Lifecycle](../axstack/references/lifecycle.md)). Substantial new work
+confirms an approved spec identity plus its matching ticket map; small work
+confirms its snapshotted **small-change intent**. Repairs to an adopted own PR
+use its accepted maintenance snapshot. Missing, mismatched, or materially
+changed and unaccepted identity holds affected work.
 
 ## Strict TDD (red, green, refactor)
 

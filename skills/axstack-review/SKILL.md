@@ -24,12 +24,14 @@ stays readonly; the reviewer never edits it.
 
 ## Authored mode (own PR)
 
-New work retains the approved baseline from `axstack-spec`: confirm its
-identity before approval or merge-ready declarations. An existing PR
-adopted for maintenance instead records its accepted maintenance scope
-snapshot once — linked issue, acceptance criteria, actual head/base,
-current ownership — and that snapshot is accepted without repeated
-approval.
+Independently check the authored
+[proportional scope identity](../axstack/references/routing.md#proportional-scope-identity)
+before approval or merge-ready declarations. Substantial new work confirms its
+approved spec identity plus matching ticket map; small new work confirms its snapshotted
+**small-change intent**. An existing PR adopted for maintenance instead records
+its accepted maintenance scope snapshot once — linked issue, acceptance
+criteria, actual head/base, current ownership — and that snapshot is accepted
+without repeated approval.
 
 ## Two-reviewer contract (exact)
 
@@ -127,10 +129,10 @@ Peer mode: declarations need a complete review for the exact candidate
 revision per the rule above, with no material finding unresolved except
 the validated defects a REQUEST_CHANGES reports. Authored mode confirms
 its mode-specific scope identity first: new work uses the approved spec
-identity, while an adopted PR uses its accepted maintenance scope
-snapshot. A missing identity, or a materially changed and unaccepted
-one, blocks approval and merge-ready declarations, while read-only
-investigation may proceed. The owner synthesizes both reviews into the
+identity plus matching ticket map or the named small-change intent, while an
+adopted PR uses its accepted maintenance scope snapshot. A missing identity,
+or a materially changed and unaccepted one, blocks approval and merge-ready
+declarations, while read-only investigation may proceed. The owner synthesizes both reviews into the
 decision without voting — a single receipt can never satisfy the
 exactly-two requirement. Neither reviewer unanimity nor passing tests
 grants merge authority; the human merges.

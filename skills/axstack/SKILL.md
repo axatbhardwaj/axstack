@@ -29,11 +29,20 @@ and invoke exactly the phase skill named:
   authority.
 - Handoff, resume, or reconciliation -> `axstack-handoff`, directly,
   without spec ceremony.
-- New engineering work -> the lifecycle below, starting at the earliest
-  phase whose required inputs are missing.
+- New engineering work -> apply the
+  [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity)
+  before choosing a lifecycle phase.
 - Colleague PR review -> `axstack-review` in peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode
   and `axstack-watch` (adoption for existing PRs).
+
+For new engineering work, classify the request as substantial, small, or
+unclear and record the classification with a brief reason. Substantial work
+needs its current approved spec identity and matching ticket map; small work
+needs its snapshotted **small-change intent**. If the applicable identity is
+missing, unapproved, mismatched, or invalidated by an unaccepted material
+change, report the exact gap, name `axstack-align`, and launch nothing. Never
+admit work that a deeper phase would reject; do not auto-run preparation.
 
 ## Lifecycle
 

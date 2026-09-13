@@ -33,7 +33,7 @@ test('scope identity: entry reports missing substantial prerequisites and launch
   expect(entry).toMatch(/report[^.]*exact gap/i);
   expect(entry).toMatch(/name[^.]*axstack-align/i);
   expect(entry).toMatch(/launch nothing/i);
-  expect(entry).toMatch(/never admit[^.]*deeper phase[^.]*reject/i);
+  expect(entry).toMatch(/never\s+admit[^.]*deeper\s+phase[^.]*reject/i);
   expect(entry).not.toMatch(/starting at the earliest phase whose required inputs are missing/i);
 });
 
@@ -51,7 +51,7 @@ test('scope identity: contracts, implement, and authored review accept the same 
     expect(text, `${name}: missing substantial identity`).toMatch(/approved spec/i);
     expect(text, `${name}: missing independent identity check`).toMatch(/confirm|check|verify/i);
   }
-  expect(contracts).toMatch(/recorded request[^.]*existing issue[^.]*acceptance checks[^.]*exclusions[^.]*snapshot/i);
+  expect(contracts).toMatch(/recorded\s+request[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
 });
 
 test('scope identity: alignment stops with a handoff for both sizes and tickets carry dependencies', () => {
@@ -76,7 +76,7 @@ test('scope identity: public docs and local-record exemption describe the propor
     ['workflow docs', workflows],
     ['spec', spec],
   ]) {
-    expect(text, `${name}: missing substantial path`).toMatch(/substantial[^.]*approved spec[^.]*ticket/i);
+    expect(text, `${name}: missing substantial path`).toMatch(/substantial[^.]*approved\s+spec[^.]*ticket/i);
     expect(text, `${name}: missing small-change path`).toMatch(/small[^.]*request|small[^.]*issue/i);
   }
   expect(workflows).toMatch(/2026-09-13[^.]*user-requested/i);

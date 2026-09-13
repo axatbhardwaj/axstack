@@ -10,13 +10,16 @@ record instead of auditing itself.
 
 ## Scope identity (conditional — see routing and lifecycle)
 
-One global spec gate contradicts peer and adoption modes. The required
-scope identity depends on the mode (see [Shared routing](routing.md)):
+One global spec gate contradicts proportional work, peer, and adoption modes.
+The required scope identity depends on the mode (see the
+[proportional scope identity](routing.md#proportional-scope-identity)):
 
-- New implementation: approved spec identity (see `axstack-spec`)
-  before execution readiness, review readiness and approval, and
-  watch-triggered repairs. A missing baseline, or a materially changed
-  and unaccepted one, blocks those dependent actions.
+- Substantial new implementation: approved spec identity plus a matching
+  ticket map before execution or authored review.
+- Small new implementation: the named **small-change intent** — recorded
+  request or existing issue plus explicit acceptance checks and exclusions,
+  snapshotted once — is its non-null identity. Each phase confirms it before
+  building or approving.
 - Adopted own PR: the user-authorized maintenance intent snapshot
   (see [Lifecycle](lifecycle.md)) — not merely
   untrusted linked content, and never a new spec or ticket ceremony.
@@ -24,10 +27,10 @@ scope identity depends on the mode (see [Shared routing](routing.md)):
   requirements; demands no Axstack-created approved spec.
 - Read-only research, docs, and handoff: no baseline at all.
 
-Pre-approval alignment and spec writing, and safe read-only
-investigation and review, remain allowed without a baseline. Material
-scope changes still hold affected work until the user accepts the
-revised scope.
+Pre-approval alignment and spec writing, and safe read-only investigation and
+review, remain allowed without a baseline. A still-valid approval is never
+repeated. Material scope changes still hold affected work until the user
+accepts the revised scope.
 
 ## Model discipline
 

@@ -16,13 +16,19 @@ Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
 plus direct `axstack-research`, `axstack-docs`, `axstack-handoff` routes
 that need no spec ceremony):
 
-1. Align on decisions and constraints, then write a spec with observable
-   acceptance criteria and explicit exclusions.
-2. You approve the spec. The approved revision is the execution baseline,
-   then work proceeds autonomously phase to phase.
-3. Capabilities become internal tasks and a reviewed PR stack with one
-   persistent owner per PR and exactly two independent final reviewers.
- 4. You merge by default, bottom-up for a stack. Review approval never
+Updated 2026-09-13 by user-requested change: scope readiness is proportional.
+
+1. Classify new engineering work as substantial, small, or unclear and record
+   a brief reason. Small, clear, bounded one-PR work may use its request or
+   existing issue plus explicit acceptance checks and exclusions.
+2. Substantial feature, multi-PR, stacked, or unclear work needs an approved
+   spec and matching ticket map. Alignment prepares that identity through one
+   spec approval and stops with a handoff; small ambiguity can instead return a
+   snapshotted small-change intent.
+3. Invoke `axstack` to execute prepared work. Capabilities become internal
+   tasks and reviewed PRs with one persistent owner per PR and exactly two
+   independent final reviewers.
+4. You merge by default, bottom-up for a stack. Review approval never
     grants merge authority. Colleague PRs review in peer mode against
     their linked intent with no Axstack spec required; adopted PRs keep a
     maintenance scope snapshot; monitoring stays bounded with one owner,
@@ -77,8 +83,8 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 81 workflow structural and contract checks pass under Bun. The repository
-  contains 29 declared scenarios; their shape checks are not model behavior.
+- 86 workflow structural and contract checks pass under Bun. The repository
+  contains 30 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
   Its private artifact is not shipped. This is model simulation, not live

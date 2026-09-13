@@ -12,6 +12,8 @@ Load before acting:
 
 Requires an approved spec baseline (entry or standalone). Confirm the
 approved spec identity before mapping; hold on unapproved or changed scope.
+A still-valid approval is never repeated. Use the explicitly selected Markdown
+or Linear store; missing Linear access never silently changes that choice.
 
 ## Session preflight
 
@@ -27,9 +29,10 @@ do not silently switch stores. Markdown mode works independently when explicitly
 ## Template: capability to task map
 
 ```text
-Capability: <Linear issue URL> <title>
+Capability: <Markdown ref or Linear issue URL> <title>
 Internal tasks: <task> -> <PR owner> -> <worktree>
 Acceptance: <checks from approved spec rev>
+Depends: <task IDs or none>
 ```
 
 ## Done rule (exact)
