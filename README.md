@@ -25,7 +25,7 @@ Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
 
 Defaults: one execution host per run, two active PRs, 24-hour bounded
 monitoring with a resumable handoff. Details: [docs/workflows.md](docs/workflows.md),
-[docs/specs/v1.md](docs/specs/v1.md).
+spec: [issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
 
 Linear is the default integration (native document, report-only checker,
 driver-owned updates); repository Markdown is an explicit alternative.
@@ -38,11 +38,12 @@ Requires Node.js >= 22, no runtime dependencies. `bin/axstack.js` is the
 `axstack` binary.
 
 ```sh
-# Check host tools (node, git, gh + gh stack extension, paseo)
+# From the source checkout root. Check host tools (node, git, gh + gh stack extension, paseo)
 node bin/axstack.js check --bundle .
 
 # Install skills into an explicit target and merge profiles
-node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
+# (--yes is required when the target or profile lives under your home directory)
+node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> [--yes]
 
 # Re-run: expect "no changes (idempotent, everything unchanged)"
 node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
@@ -51,8 +52,7 @@ node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-confi
 node bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
 ```
 
-Full command reference: [docs/installation.md](docs/installation.md) (ships
-with the installer stream; resolves after integration).
+Full command reference: [docs/installation.md](docs/installation.md).
 
 Model presets ship as data in [profiles/paseo.json](profiles/paseo.json)
 and are configurable; an unavailable model pauses affected work for your
@@ -61,10 +61,12 @@ decision — never automatic substitution. Phase skills live in [skills/](skills
 ## Verification status
 
 - 14 structural packaging checks plus 12 simulated Muse scenario evaluations
-  pass; these are not live harness support claims.
-- Linux local runs on this host's Node are dev evidence only; the formal
-  Node 22/26 matrix is still pending.
-- macOS, WSL, and Claude/Codex/OpenCode/Grok runtime behavior are unverified.
+  pass locally on this host; these are not live harness support claims.
+- CI runs `npm test` and `npm pack --dry-run` on Ubuntu and macOS with
+  Node 22 and 24 for pushes and pull requests — see
+  [GitHub Actions](https://github.com/axatbhardwaj/axstack/actions).
+- macOS, WSL, and Claude/Codex/OpenCode/Grok runtime behavior remain
+  unverified until observed.
 
 ## License
 
