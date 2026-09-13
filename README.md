@@ -62,15 +62,15 @@ decision — never automatic substitution. Phase skills live in [skills/](skills
 
 ## Verification status
 
-- 14 structural packaging checks plus 12 simulated Muse scenario evaluations
-  pass under Bun (`bun test tests/workflows/`); these are not live harness
-  support claims.
-- CI runs `bun test tests/workflows/` and `bun pm pack --dry-run` on Ubuntu
-  and macOS with Bun 1.3.14 and 1.4.2 for pushes and pull requests — see
+- 14 workflow checks (structural packaging plus the 12-scenario evaluation
+  contract) pass under Bun; prior Muse simulation evidence for the 12
+  scenarios stands separately. None of this is live harness support.
+- CI targets Ubuntu and macOS with Bun 1.3.14 and 1.4.2 (`bun test` and
+  `bun pm pack --dry-run` on pushes and pull requests) — see
   [GitHub Actions](https://github.com/axatbhardwaj/axstack/actions).
-- Tested platforms are Linux and macOS via CI; Windows is intended through
-  WSL (unverified). Live harness, Linear, and model compatibility remain
-  unverified until observed.
+  Bun results are pending until observed.
+- Windows is intended through WSL (unverified). Live harness, Linear, and
+  model compatibility remain unverified until observed.
 
 ## License
 
