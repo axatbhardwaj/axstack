@@ -3,46 +3,46 @@ name: axstack-spec
 description: When agreed work needs an approved baseline, use axstack-spec to write and snapshot the execution specification.
 ---
 
-# Spec
+# Specification baseline
+
+Produce one user-approved specification whose exact revision can govern
+ticketing and execution.
 
 Load before acting:
 
 - [Paseo launch](../axstack/references/paseo-launch.md)
-- [Standing contracts](../axstack/references/contracts.md)
+- [Standing contracts](../axstack/references/contracts.md), including its
+  required lifecycle and audit path
 
-## 1. Resolve the source store first
+## Procedure
 
-Default is the Linear native document; repository Markdown is an explicit
-alternative. Record the resolution before any write. Never silently switch
-stores.
-
-## 2. Preflight before writing (Linear mode)
-
-Check the actual session's required MCP tools and access for document
-read, create, and update — before creating or updating the document.
-Missing access is an actionable setup gap: report it, do not write, do not
-switch stores silently. The tickets-phase check is too late; it never
-substitutes for this one.
-
-## 3. Write the spec (with Fable on design)
-
-Produce the specification the user approves, with observable acceptance
-criteria and explicit exclusions. In Linear mode the authoritative spec is
-the native Linear document; in Markdown mode it is the agreed repo path.
-Involve the Fable advisor in spec creation and revision, solution design,
-and consequential decisions (per
-[Standing contracts](../axstack/references/contracts.md)): driver
-assessment first, then advisor evidence; cache the decision receipt with
-the draft. The driver owns the draft; the user approves it — advisor
-input never substitutes for user approval. Reuse a cached receipt only
-while its evidence and scope remain unchanged; routine execution of a
-settled plan does not require repeat consultation.
-
-## 4. Approval baseline snapshot
-
-On user approval, snapshot the approved revision identity and its explicit
-Markdown counterpart (a concise repo copy of the approved revision for
-reference; the Linear document stays authoritative):
+1. **Select the authoritative store.** Use a native Linear document by
+   default, or repository Markdown when the user explicitly selects it.
+   Record the selection before writing. This step is complete when one store
+   is named and no implicit fallback remains.
+2. **Preflight Linear access.** In Linear mode, verify that the current
+   session can read, create, and update documents before any document write.
+   Missing access is an actionable setup gap: report it and stop this phase
+   without writing or changing stores. This step is complete only when all
+   three operations are available; a later tickets-phase check cannot replace
+   it. Skip this step in Markdown mode.
+3. **Draft with decision evidence.** Write observable acceptance criteria and
+   explicit exclusions in the selected store. Involve the Fable advisor in
+   spec creation and revision, solution design, and consequential decisions
+   under [Standing contracts](../axstack/references/contracts.md): the driver
+   records an independent assessment first, then advisor evidence, and caches
+   the receipt with the draft. Reuse a receipt only while its evidence and
+   scope remain unchanged. This step is complete when the draft covers the
+   agreed outcome, acceptance criteria, exclusions, and every required Fable
+   receipt or reported consultation gap.
+4. **Obtain the specification checkpoint.** The driver owns the draft and the
+   user approves it; advisor input cannot grant approval. Ask for this one spec
+   approval only after the draft is reviewable. This step is complete when the
+   user has approved an identified revision.
+5. **Snapshot the baseline.** Record the approved revision identity and a
+   concise repository Markdown counterpart. In Linear mode, the native
+   document remains authoritative; in Markdown mode, the agreed repository
+   path does. Use this shape:
 
 ```text
 Approved spec: <title> rev <id> (<date>)
@@ -52,8 +52,15 @@ Baseline preserved at: <ref>
 Material change: <none | description + affected PRs/tasks + hold state>
 ```
 
-## Material change rule
+   This step is complete when the authoritative revision, counterpart, and
+   preserved ref resolve to the approved content. Return that exact identity
+   to ticketing; routine execution of the settled plan needs no repeat Fable
+   consultation or spec approval.
 
-If the approved spec changes materially: identify affected work, propose the
-revised scope and plan, hold affected code changes until the user accepts,
-preserve the previous baseline. Unrelated work may continue.
+## Material revisions
+
+For a material change, preserve the previous baseline, identify affected
+tasks and PRs, and propose the revised scope and plan. Hold affected code
+changes until the user accepts the revision; unrelated safe work may continue.
+The revision is complete only after acceptance and a new snapshot in the same
+format above.
