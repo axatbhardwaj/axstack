@@ -20,13 +20,15 @@ export function makeTempRoot(prefix = 'axstack-test-') {
 export function runCli(
   cli,
   args,
-  { expectFail = false, cwd, env, timeout = 60000 } = {},
+  { expectFail = false, cwd, env, unset = [], timeout = 60000 } = {},
 ) {
+  const fullEnv = { ...Bun.env, ...(env ?? {}) };
+  for (const key of unset) delete fullEnv[key];
   const result = Bun.spawnSync([BUN_BIN, cli, ...args], {
     stdout: 'pipe',
     stderr: 'pipe',
     ...(cwd ? { cwd } : {}),
-    env: { ...Bun.env, ...(env ?? {}) },
+    env: fullEnv,
     timeout,
   });
   const out = result.stdout.toString() + result.stderr.toString();
