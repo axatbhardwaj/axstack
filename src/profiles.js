@@ -33,22 +33,6 @@ function profileEqual(a, b) {
   return hashObject(a) === hashObject(b);
 }
 
-// Representative host-shaped config used by tests and docs. Never read from
-// or written to a live home; tests copy this fixture into temp dirs.
-export function representativeHostConfig() {
-  return {
-    version: 1,
-    cliClientId: 'fixture-client-id',
-    daemon: {
-      schedules: [{ id: 'daily-check', cron: '0 9 * * *' }],
-      notifications: { level: 'all' },
-      agentProfiles: [
-        { id: 'custom-mine', provider: 'custom', model: 'mine', notes: 'user profile' },
-      ],
-    },
-  };
-}
-
 function daemonProfiles(existing) {
   if (typeof existing !== 'object' || existing === null || Array.isArray(existing)) {
     throw new Error('malformed Paseo config: expected a JSON object');

@@ -3,10 +3,11 @@
 // exact bytes Axstack installed, so updates and uninstalls only touch
 // unchanged owned assets.
 import { createHash } from 'node:crypto';
-import { rename, writeFile, readFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { lstat, rename, writeFile, readFile, mkdir } from 'node:fs/promises';
+import { isAbsolute, join, sep } from 'node:path';
 
 export const MANIFEST_NAME = '.axstack-manifest.json';
+export const MANIFEST_TMP_NAME = '.axstack-manifest.json.tmp';
 export const MANIFEST_VERSION = 1;
 
 export function hashContent(content) {
@@ -30,27 +31,111 @@ export function manifestPath(skillsDir) {
   return join(skillsDir, MANIFEST_NAME);
 }
 
+export function assertSafeRel(rel) {
+  if (
+    !rel ||
+    typeof rel !== 'string' ||
+    isAbsolute(rel) ||
+    rel.split(sep).includes('..') ||
+    rel.split('/').includes('..') ||
+    rel.includes('\0') ||
+    /^[a-zA-Z]:/.test(rel) ||
+    rel === MANIFEST_NAME
+  ) {
+    throw new Error(`unsafe manifest path rejected: ${rel || '(empty)'}`);
+  }
+}
+
+function isHashMap(value) {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every((v) => typeof v === 'string')
+  );
+}
+
+// Normalized shape: { version, files: {rel: hash}, profiles: { path, entries } }.
+// `profiles.path` binds owned profile hashes to the canonical config file
+// they were installed into; `path: null` marks legacy unbound entries, which
+// callers must reset rather than honor for removal.
+function normalizeManifest(parsed) {
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('invalid ownership manifest: expected a JSON object');
+  }
+  if (parsed.version !== MANIFEST_VERSION) {
+    throw new Error(
+      `unsupported ownership manifest version: ${JSON.stringify(parsed.version)}`,
+    );
+  }
+  if (!isHashMap(parsed.files)) {
+    throw new Error('invalid ownership manifest: files must be an object of path hashes');
+  }
+  for (const rel of Object.keys(parsed.files)) assertSafeRel(rel);
+  const rawProfiles = parsed.profiles ?? { path: null, entries: {} };
+  if (isHashMap(rawProfiles)) {
+    return { version: MANIFEST_VERSION, files: { ...parsed.files }, profiles: { path: null, entries: { ...rawProfiles } } };
+  }
+  if (
+    typeof rawProfiles === 'object' &&
+    rawProfiles !== null &&
+    (rawProfiles.path === null || typeof rawProfiles.path === 'string') &&
+    isHashMap(rawProfiles.entries ?? {})
+  ) {
+    return {
+      version: MANIFEST_VERSION,
+      files: { ...parsed.files },
+      profiles: { path: rawProfiles.path, entries: { ...(rawProfiles.entries ?? {}) } },
+    };
+  }
+  throw new Error('invalid ownership manifest: profiles must bind a config path to id hashes');
+}
+
 export async function readManifest(skillsDir) {
+  const dest = manifestPath(skillsDir);
+  try {
+    if ((await lstat(dest)).isSymbolicLink()) {
+      throw new Error('unsafe ownership manifest: manifest path is a symlink; refusing');
+    }
+  } catch (err) {
+    if (err?.code === 'ENOENT') return null;
+    throw err?.code ? new Error(`cannot read ownership manifest: ${err.message}`) : err;
+  }
   let raw;
   try {
-    raw = await readFile(manifestPath(skillsDir), 'utf8');
+    raw = await readFile(dest, 'utf8');
   } catch (err) {
     if (err?.code === 'ENOENT') return null;
     throw new Error(`cannot read ownership manifest: ${err.message}`);
   }
+  let parsed;
   try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return parsed;
-    return null;
+    parsed = JSON.parse(raw);
   } catch {
     throw new Error('ownership manifest is corrupt; refusing to proceed');
   }
+  return normalizeManifest(parsed);
 }
 
 export async function writeManifest(skillsDir, manifest) {
   await mkdir(skillsDir, { recursive: true });
   const dest = manifestPath(skillsDir);
-  const tmp = `${dest}.tmp-${process.pid}`;
-  await writeFile(tmp, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
-  await rename(tmp, dest);
+  // Fixed temp name (single-writer assumption for a user-invoked installer;
+  // a failed run leaves either the old manifest or no manifest, and retries
+  // converge). A fixed name also keeps manifest-write failures testable.
+  const tmp = join(skillsDir, MANIFEST_TMP_NAME);
+  const normalized = normalizeManifest(manifest);
+  let detail = '';
+  try {
+    await writeFile(tmp, JSON.stringify(normalized, null, 2) + '\n', 'utf8');
+  } catch (err) {
+    detail = err?.message ?? String(err);
+    throw new Error(`cannot write ownership manifest: ${detail}`);
+  }
+  try {
+    await rename(tmp, dest);
+  } catch (err) {
+    detail = err?.message ?? String(err);
+    throw new Error(`cannot write ownership manifest: ${detail}`);
+  }
 }

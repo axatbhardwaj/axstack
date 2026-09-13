@@ -31,6 +31,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import {
   MANIFEST_VERSION,
+  assertSafeRel,
   hashContent,
   hashObject,
   readManifest,
@@ -119,18 +120,6 @@ export function assertOutsideHome(target, { yes = false, kind = 'target' } = {})
     throw new Error(
       `refusing to touch ${kind} inside your home (${target}) without explicit confirmation; re-run with --yes`,
     );
-  }
-}
-
-function assertSafeRel(rel) {
-  if (
-    !rel ||
-    isAbsolute(rel) ||
-    rel.split(sep).includes('..') ||
-    rel.includes('\0') ||
-    /^[a-zA-Z]:/.test(rel)
-  ) {
-    throw new Error(`unsafe bundle entry rejected: ${rel || '(empty)'}`);
   }
 }
 
@@ -275,10 +264,27 @@ export async function installBundle({
   const prevManifest = (await readManifest(skillsRoot)) ?? {
     version: MANIFEST_VERSION,
     files: {},
-    profiles: {},
+    profiles: { path: null, entries: {} },
   };
   const ownedFiles = prevManifest.files ?? {};
-  const ownedProfiles = prevManifest.profiles ?? {};
+  // Owned profile hashes are bound to the canonical config file they were
+  // installed into. A different --profile is refused before any mutation so
+  // identical bytes in an unrelated file can never authorize removal.
+  const boundProfilePath = prevManifest.profiles?.path ?? null;
+  let ownedProfiles = prevManifest.profiles?.entries ?? {};
+  let profileNote = null;
+  if (profileFile && bundle.bundleProfiles && Object.keys(ownedProfiles).length > 0) {
+    if (boundProfilePath === null) {
+      // Legacy unbound ownership: reset rather than honor for removal.
+      ownedProfiles = {};
+      profileNote = 'legacy unbound profile ownership reset; recording only profiles this run writes';
+    } else if (boundProfilePath !== profileFile) {
+      throw new Error(
+        `refusing: owned profiles are bound to a different config (${boundProfilePath}); ` +
+          `uninstall with --profile ${boundProfilePath} first, or install without --profile`,
+      );
+    }
+  }
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
   // Destination ancestry is checked for symlink escapes here, before mutation.
@@ -399,33 +405,43 @@ export async function installBundle({
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
-      profiles: nextProfileHashes,
+      profiles: {
+        path: profileFile && bundle.bundleProfiles ? profileFile : boundProfilePath,
+        entries: nextProfileHashes,
+      },
     });
+    if (profileNote) summary.notes = [...(summary.notes ?? []), profileNote];
     return { ...summary, profiles: profileReport };
   } catch (err) {
     // Restore updated files, remove creations, restore/remove the profile so
     // pre-run state (which the untouched manifest describes) holds again.
+    // Restore failures are collected and reported: a swallowed restore would
+    // leave ownership claims describing bytes that are not on disk.
+    const rollbackErrors = [];
     for (const [dest, bytes] of backups) {
       try {
         await writeAtomic(dest, bytes);
-      } catch {
-        // best effort restore; original error is what matters
+      } catch (restoreErr) {
+        rollbackErrors.push(`${dest}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
     for (const createdFile of created) {
       try {
         await rm(createdFile);
-      } catch {
-        // best effort rollback; original error is what matters
+      } catch (restoreErr) {
+        rollbackErrors.push(`${createdFile}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
     if (profileWritten) {
       try {
         if (profileExisted) await writeAtomic(profileFile, existingProfileRaw);
         else await rm(profileFile);
-      } catch {
-        // best effort restore; original error is what matters
+      } catch (restoreErr) {
+        rollbackErrors.push(`${profileFile}: ${restoreErr?.message ?? restoreErr}`);
       }
+    }
+    if (rollbackErrors.length > 0) {
+      err.message += ` (incomplete rollback; manual repair needed: ${rollbackErrors.join('; ')})`;
     }
     throw err;
   }
@@ -450,20 +466,33 @@ export async function uninstallBundle({
     return summary;
   }
   const ownedFiles = manifest.files ?? {};
-  const ownedProfiles = manifest.profiles ?? {};
+  const boundProfilePath = manifest.profiles?.path ?? null;
+  const ownedProfiles = manifest.profiles?.entries ?? {};
   const remainingFiles = { ...ownedFiles };
 
-  // Validate the profile input (read, parse, plan) BEFORE deleting anything:
-  // a malformed profile must fail with skills still on disk.
+  // Validate the profile input (identity, read, parse, plan) BEFORE deleting
+  // anything: a wrong-path or malformed profile must fail with skills intact.
   let profilePlan = null;
   let existingProfileRaw = null;
+  let remainingBoundPath = boundProfilePath;
   if (profileFile && Object.keys(ownedProfiles).length > 0) {
+    if (boundProfilePath !== null && boundProfilePath !== profileFile) {
+      throw new Error(
+        `refusing: owned profiles are bound to a different config (${boundProfilePath}); ` +
+          `re-run uninstall with --profile ${boundProfilePath}`,
+      );
+    }
     try {
       existingProfileRaw = await readFile(profileFile, 'utf8');
     } catch (err) {
       if (err?.code !== 'ENOENT') throw err;
     }
-    if (existingProfileRaw !== null) {
+    if (existingProfileRaw === null) {
+      // Bound config file is gone: nothing to protect, release ownership so
+      // a later install can bind a new path.
+      remainingBoundPath = null;
+      summary.profiles = { removed: [], preserved: [], note: 'bound profile file missing; ownership released' };
+    } else {
       let existing;
       try {
         existing = JSON.parse(existingProfileRaw);
@@ -521,6 +550,8 @@ export async function uninstallBundle({
       await writeAtomic(profileFile, JSON.stringify(profilePlan.config, null, 2) + '\n');
     }
     for (const id of profilePlan.report.removed) delete remainingProfiles[id];
+  } else if (summary.profiles?.note) {
+    remainingProfiles = {};
   }
 
   if (Object.keys(remainingFiles).length === 0 && Object.keys(remainingProfiles).length === 0) {
@@ -534,7 +565,7 @@ export async function uninstallBundle({
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: remainingFiles,
-      profiles: remainingProfiles,
+      profiles: { path: remainingBoundPath, entries: remainingProfiles },
     });
   }
   return summary;

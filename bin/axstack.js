@@ -3,13 +3,12 @@
 // Paseo profiles, and checks host capabilities. Chat drives execution; this
 // CLI performs installation bookkeeping only (no runtime, scheduler, or
 // model calls).
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { installBundle, uninstallBundle, validateBundle } from '../src/installer.js';
-import { checkCapabilities } from '../src/capabilities.js';
+import { checkCapabilities, runRealCheck } from '../src/capabilities.js';
 import { harnessLocations } from '../src/locations.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -74,7 +73,9 @@ function parseArgs(argv) {
     const tok = rest.shift();
     if (wantsValue.has(tok)) {
       const val = rest.shift();
-      if (val === undefined) throw new Error(`${tok} requires a value`);
+      if (val === undefined || val.startsWith('--')) {
+        throw new Error(`${tok} requires a value (got ${val ?? 'nothing'}); refusing`);
+      }
       out.flags[tok.slice(2)] = val;
     } else if (tok === '--force') out.flags.force = true;
     else if (tok === '--yes') out.flags.yes = true;
@@ -99,38 +100,12 @@ function resolveHarnessTarget(harness) {
       `harness '${harness}' has no verified auto-discovery; pass an explicit --skills-dir override`,
     );
   }
+  if (entry.harness === 'codex') {
+    // User skills live under $CODEX_HOME/skills; CODEX_HOME defaults to ~/.codex.
+    const home = process.env.CODEX_HOME ? expandHome(process.env.CODEX_HOME) : join(homedir(), '.codex');
+    return join(home, 'skills');
+  }
   return expandHome(entry.skillsDir);
-}
-
-function realCheck(name) {
-  if (name === 'node') {
-    const major = Number(String(process.versions.node).split('.')[0]);
-    return Promise.resolve({
-      ok: Number.isInteger(major) && major >= 22,
-      stdout: `v${process.versions.node}`,
-    });
-  }
-  const cmds = {
-    git: ['git', ['--version']],
-    gh: ['gh', ['--version']],
-    'gh-stack': ['gh', ['extension', 'list']],
-    paseo: ['paseo', ['--version']],
-  };
-  const [cmd, args] = cmds[name];
-  try {
-    const stdout = execFileSync(cmd, args, {
-      encoding: 'utf8',
-      timeout: 10000,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim();
-    if (name === 'gh-stack') {
-      const ok = /stack/i.test(stdout);
-      return Promise.resolve({ ok, stdout: ok ? stdout : 'gh extensions listed (stack not found)' });
-    }
-    return Promise.resolve({ ok: true, stdout });
-  } catch {
-    return Promise.resolve({ ok: false, stdout: 'not found' });
-  }
 }
 
 function printCheckReport(report) {
@@ -195,6 +170,9 @@ async function main() {
         console.log(`preserved user edits (use --force to overwrite): ${summary.preserved.join(', ')}`);
       }
       if (summary.stale.length) console.log(`stale owned files left on disk: ${summary.stale.join(', ')}`);
+      if (summary.notes?.length) {
+        for (const note of summary.notes) console.log(`note: ${note}`);
+      }
       if (summary.profiles) {
         const p = summary.profiles;
         if (p.created) console.log('profile config created.');
@@ -207,7 +185,7 @@ async function main() {
       return;
     }
     if (command === 'check') {
-      const report = await checkCapabilities(realCheck);
+      const report = await checkCapabilities(runRealCheck);
       printCheckReport(report);
       if (flags.bundle) {
         const bundle = await validateBundle(resolve(flags.bundle));
