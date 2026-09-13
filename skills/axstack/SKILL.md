@@ -17,18 +17,19 @@ The current chat remains the driver; Paseo owns runtime orchestration.
    [Lifecycle and receipts](references/lifecycle.md#native-handoff-and-resume),
    not an Axstack handoff phase. Preparation completion, watch expiry, and
    ordinary resume update or reconcile the run record without launching it.
-2. For new engineering work, record `small`, `substantial`, or `unclear` plus
-   a brief reason, then apply the
+2. For new engineering work, validate scope identity before invoking any phase.
+   Record `small`, `substantial`, or `unclear` plus a brief reason, then apply the
    [proportional scope identity](references/routing.md#proportional-scope-identity).
    A small clear change proceeds from its snapshotted small-change intent.
    Substantial work proceeds only from an approved spec and matching ticket
    map. Clarify unclear size before dispatch.
-3. Invoke exactly the selected phase. A directly invoked later phase starts
-   there and must pass its own identity check; entry never prepares missing
-   scope automatically. If identity is missing, mismatched, or invalidated,
-   report that exact gap, name `axstack-align` for substantial or genuinely
-   unclear preparation, and launch nothing. Never admit work that a deeper
-   phase would reject.
+3. Only after validation passes, invoke exactly the selected phase. A directly
+   invoked later phase starts there and must pass its own identity check. When
+   substantial work lacks an approved spec or matching ticket map, return that
+   exact gap, name `axstack-align` as the next route, and stop the current
+   invocation; do not invoke align, spec, or tickets. Apply the same stop to a
+   mismatched or invalidated identity. Never admit work that a deeper phase
+   would reject.
 
 The route is settled when one applicable phase is named with its valid scope
 identity, or the exact preparation/setup gap is reported with affected work
@@ -45,6 +46,8 @@ held.
   [Local run record](references/run-record.md).
 
 ## Lifecycle
+
+This is a phase map, not an automatic dispatch sequence.
 
 1. `axstack-align` settles substantial scope and decisions.
 2. `axstack-spec` creates the single user-approved execution baseline.
