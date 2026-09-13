@@ -5,7 +5,11 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 
-export const BUN_BIN = Bun.which('bun') ?? 'bun';
+// Absolute path of the CURRENT executing Bun binary. Never PATH-resolved:
+// a matrix job must test the runtime it actually runs, not whichever bun
+// the environment resolves (process.execPath is Bun-implemented and needs
+// no Node.js runtime).
+export const BUN_BIN = process.execPath;
 
 export function tempDir() {
   return Bun.env.TMPDIR ?? '/tmp';
