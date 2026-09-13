@@ -179,8 +179,9 @@ test('structural: shared PR-shape reference is complete, bounded, and sole sourc
   expect(shape.split('\n').length, 'pr-shape.md must stay within 40 lines').toBeLessThanOrEqual(40);
   expect(shape).toContain('git diff -M --numstat $(git merge-base <base> <head>)..<head>');
   expect(shape).toMatch(/actual PR base/i);
-  expect(shape).toMatch(/parent branch.*stacked child/i);
-  expect(shape).toMatch(/main.*root/i);
+  expect(shape).toMatch(/stacked child[^.]*parent branch/i);
+  expect(shape).toMatch(/root PR[^.]*actual target branch/i);
+  expect(shape).toMatch(/main[^.]*example/i);
   expect(shape).toMatch(/additions\s*\+\s*deletions/i);
   expect(shape).toMatch(/moves.*-M|-M.*moves/i);
   expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
@@ -209,8 +210,10 @@ test('structural: shared PR-shape reference is complete, bounded, and sole sourc
   }
 });
 
-test('structural: over-band exceptions are autonomous, recorded, and independently reviewed', () => {
+test('structural: shape levels require matching autonomous evidence and review', () => {
   const shape = readFileSync(join(skillsDir, 'axstack', 'references', 'pr-shape.md'), 'utf8');
+  expect(shape).toMatch(/2001–2500[^.]*only[^.]*recorded cohesion rationale/i);
+  expect(shape).toMatch(/>2500[^.]*full exception record/i);
   expect(shape).toMatch(/reasonable split/i);
   expect(shape).toMatch(/full total[^.]*bulk buckets[^.]*head[^.]*base/i);
   expect(shape).toMatch(/mandatory record[^.]*bulk buckets[^.]*reproducible command/i);
@@ -218,6 +221,7 @@ test('structural: over-band exceptions are autonomous, recorded, and independent
   expect(shape).toMatch(/inseparable[^.]*reproducible bulk[^.]*dominates/i);
   expect(shape).toMatch(/size alone[^.]*never[^.]*user approval/i);
   expect(shape).toMatch(/already written[^.]*deadlines[^.]*rebase pain[^.]*not reasons/i);
+  expect(shape).not.toMatch(/over-band/i);
 
   const review = readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8');
   expect(review).toMatch(/angle 6[^.]*recorded shape|recorded shape[^.]*angle 6/i);
@@ -226,7 +230,11 @@ test('structural: over-band exceptions are autonomous, recorded, and independent
   expect(review).toMatch(/judgment[^.]*measurement[^.]*split failure[^.]*not[^.]*number/i);
   expect(review).toMatch(/bulk buckets[^.]*reproducible command/i);
   expect(review).toMatch(/weak rationale[^.]*author[^.]*split|rework request/i);
+  expect(review).toMatch(/rationale band[^.]*only[^.]*cohesion rationale/i);
+  expect(review).toMatch(/exception band[^.]*full exception record/i);
+  expect(review).toMatch(/level[^.]*matching[^.]*measured total/i);
   expect(review).toMatch(/never[^.]*user/i);
+  expect(review).not.toMatch(/over-band/i);
   expect(review).not.toMatch(/^\s*7\.\s/m);
 });
 
@@ -244,7 +252,7 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   }
   for (const name of ['contracts', 'tickets', 'implement', 'review', 'audit']) {
     expect(callers[name], `${name} must keep routine shape decisions autonomous`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
-    expect(callers[name], `${name} must not escalate size alone`).toMatch(/size alone[^.]*never[^.]*user approval/i);
+    expect(callers[name], `${name} must not escalate size alone`).toMatch(/size alone[^.]*never[^.]*user\s+approval/i);
   }
   expect(callers.contracts).toMatch(/fanout[^.]*dependency[^.]*capacity/i);
   expect(callers.contracts).toMatch(/resource[^.]*spending limits/i);
@@ -255,10 +263,14 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
   expect(callers.tickets).toMatch(/above the upper band[^.]*split[^.]*mapping/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
-  expect(callers.implement).toMatch(/parent change[^.]*remeasure[^.]*re-record/i);
-  expect(callers.implement).toMatch(/over-band[^.]*re-checks? the rationale[^.]*not an automatic hold/i);
+  expect(callers.implement).toMatch(/reviewed parent changes[^.]*hold reliance[^.]*stale child evidence[^.]*child merge readiness/i);
+  expect(callers.implement).toMatch(/rebase[^.]*new parent revision[^.]*re-run[^.]*affected checks[^.]*remeasure shape/i);
+  expect(callers.implement).toMatch(/size growth alone[^.]*not an automatic hold/i);
   expect(callers.audit).toMatch(/PRs within band\s*\/\s*total PRs/i);
-  expect(callers.audit).toMatch(/rationale presence[^.]*every over-band PR/i);
+  expect(callers.audit).toMatch(/rationale band[^.]*cohesion rationale/i);
+  expect(callers.audit).toMatch(/exception band[^.]*full exception record/i);
+  expect(callers.audit).toMatch(/level[^.]*matching[^.]*measured total/i);
+  expect(callers.audit).not.toMatch(/over-band/i);
   expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
   expect(callers.audit).not.toMatch(/user[- ]exception|user receipt/i);
 });
@@ -272,6 +284,8 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
     expect(text.includes('pr-shape.md'), `${name} must link PR-shape policy`).toBeTruthy();
     expect(text, `${name} must state autonomous driver shape decisions`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
     expect(text, `${name} must state size alone does not require user approval`).toMatch(/size alone[^.]*never[^.]*user approval/i);
+    expect(text, `${name} must distinguish rationale-band evidence`).toMatch(/rationale band[^.]*cohesion rationale/i);
+    expect(text, `${name} must distinguish exception-band evidence`).toMatch(/exception band[^.]*full exception record/i);
   }
   expect(spec).toMatch(/Amendment \(2026-09-14\)/);
   expect(spec).toMatch(/dependency- and capacity-driven/i);
