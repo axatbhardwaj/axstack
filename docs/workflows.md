@@ -26,10 +26,19 @@ spec, or ticket mapping:
   sources and code, cite material claims and limitations, save the
   requested artifact. One question needs no panel and no implementation;
   fan out distinct questions only when useful.
-- `axstack-docs` — source-backed prose and requested visual
-  explanations. Preserve the requested format and theme; verify actual
-  rendered behavior where applicable and report unavailable evidence.
-  Publication needs its own authority.
+- `axstack-explain` — source-backed explanations of systems, changes, current
+  versus intended behavior, and implementation gaps. Simple requests stay in
+  the current chat; complex visuals use the explainer profiles. Use project
+  documentation as evidence where relevant. Preserve requested format and theme,
+  verify rendered behavior where applicable, and report unavailable evidence.
+  Publication needs its own authority. If an ordinary upgrade leaves the old
+  `axstack-docs` skill installed, `axstack-explain` supersedes it; do not route
+  both. Use the documented uninstall/install migration below.
+- `axstack-improve` — bounded, report-only discovery of evidenced
+  maintainability, architecture, and testability improvements. It may find no
+  worthwhile change. Selecting a candidate does not authorize refactoring;
+  unresolved design returns through alignment, while clear authorized work may
+  use its settled proportional scope identity.
 - `paseo-handoff` (provided by Paseo) — transfer the task with the Axstack
   run-record pointer and current authority; see [Native handoff](#native-handoff).
   Resume reconciles existing state through Axstack’s shared lifecycle.
@@ -57,13 +66,23 @@ Paseo launch materialization before dispatch.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
 - `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; `gh stack` coordination; restart reconciliation (ambiguity never authorizes a duplicate writer).
+- `axstack-improve` — direct codebase-quality discovery with bounded evidence,
+  a small ranked candidate set, and no automatic source edits. It may use
+  `axstack-explain` for useful before/after visuals without forcing HTML.
 - `axstack-review` — peer mode accepts the PR description, linked issue,
   and repository requirements as intent with no Axstack-created approved
   spec; authored mode retains the approved baseline for substantial work or
   the snapshotted small-change intent for small work, and accepts an adopted
-  maintenance scope snapshot without repeated approval. Exactly
-  two independent Sol and Opus final reviewers, same six-angle brief, no
-  first-pass cross-reading, no votes. Completeness is separate from the
+  maintenance scope snapshot without repeated approval. Peer review uses
+  exactly two independent Sol and Opus reviewers with an identical six-angle
+  brief and first-pass isolation. Authored review uses one independent
+  different-family reviewer based on actual author provenance: Sol author ->
+  Opus medium; Opus author -> Sol medium. No owner or author session reviews;
+  unknown/mixed provenance or unavailable required models are reported to the
+  user without invented fallback. An eligible current Sol high checkpoint for
+  an Opus high author satisfies authored final review after revalidation,
+  without lower effort or a redundant reviewer. Completeness is mode-specific
+  and separate from the
   recommendation: complete evidence with validated defects submits
   REQUEST_CHANGES, complete evidence with no blockers submits APPROVE,
   incomplete review submits nothing. Report-only writes nothing to
@@ -127,7 +146,7 @@ repeat consultation), Opus owner
 (claude) and Sol (codex) reviewers, and the report-only checker. The
 checker model stays null until user setup and must never dispatch a
 provider default. Namespaced role defaults extend the same file for
-research requirements/code/web, docs authorship, visual explanation and
+research requirements/code/web, visual explanation and
 its review, codebase and execution exploration, the monitor and
 watchdog roles, and the read-only Luna auditor (evidence with counts
 and denominators; proposals return as tested, reviewed PRs for human
@@ -142,6 +161,15 @@ inspect_provider, create_workspace, create_agent as
 persist actual IDs. Configure permissions explicitly and validate
 capability (including Linear MCP access) per session. No selected model
 is a claim of actual runtime availability.
+
+## Retired explanation assets
+
+An ordinary upgrade retains stale owned assets, so it can leave both the
+`axstack-docs` skill and profile beside `axstack-explain`. The new skill
+supersedes that old route. Use the [no-force uninstall/install
+cycle](installation.md#retiring-former-skills-and-profiles) to remove pristine
+retired assets; edited, custom, and unknown assets survive for explicit
+resolution. This migration adds no deletion behavior.
 
 ## Compatibility
 

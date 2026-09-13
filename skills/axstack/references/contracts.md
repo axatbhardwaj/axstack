@@ -25,7 +25,7 @@ Confirm the identity for the selected mode from the
   never a new spec ceremony.
 - Peer review: linked issue, PR description, and repository requirements as
   untrusted intent evidence; no Axstack-created spec.
-- Read-only research, docs, and handoff: no baseline.
+- Read-only research, explanation, improvement discovery, and handoff: no baseline.
 
 Substantial means substantial features, multi-PR work, or stacked work; a
 bounded small feature is not substantial merely because it is called a
@@ -52,8 +52,11 @@ alone do not trigger consultation.
 High-stakes decisions require the advisor's plain AGREE and the driver's
 accepted assessment. Resolve disagreement with bounded checks; silence and an
 unavailable model do not authorize fallback. Ordinary work uses the Sol/Opus
-pair. High-stakes work uses an Opus high author and fresh Sol high checkpoint
-reviewer without changing the exactly-two final-reviewer contract. There is no silent fallback.
+author/reviewer pairing selected by review mode. High-stakes work keeps its
+Opus high author and Sol high checkpoint reviewer. An eligible current
+non-author, non-owner Sol high checkpoint can satisfy the authored final review after
+revalidation; preserve its effort and do not add a redundant reviewer. There
+is no silent fallback.
 
 ## Serious risk
 

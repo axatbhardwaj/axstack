@@ -12,23 +12,26 @@ stale, or materially changed boundary holds the repair while read-only
 monitoring continues.
 
 Record the exact defect, allowed files and actions, current revision, feedback
-IDs, and author without expanding scope.
+IDs, and actual author without expanding scope. If actual author information is
+unknown or mixed and cannot establish a cross-family reviewer, report that exact
+gap and ask the user; do not assume Sol from the importing owner or orchestrator.
 
 ## 2. Produce a reviewable candidate
 
 The author prepares the smallest in-scope repair and the exact public reply
 bodies, each keyed to its feedback ID and bound to the candidate revision. Both
-code and reply bodies receive refreshed independent review under
-`axstack-review`.
+code and reply bodies receive the one complete cross-family non-author review
+required by the authored review rule in `axstack-review`.
 
-Publication stays held until both reviewer receipts cover the exact new
-revision, the reply body identities, and every affected boundary, with no
-unresolved material finding or urgent hold.
+Publication stays held until the current authored review receipt covers the
+exact new revision and base, all six angles, applicable acceptance, the reply
+body identities, and every affected boundary, with no unresolved material
+finding or urgent hold.
 
 ## 3. Revalidate immediately before publication
 
 Confirm fresh remote head and base, feedback freshness, reply body identity,
-and the exact revision covered by both review receipts. Before a history
+and the exact revision covered by the mode-required review receipt. Before a history
 rewrite, confirm the expected-old SHA; a mismatch holds publication.
 
 All publication inputs must still match their reviewed values at the final

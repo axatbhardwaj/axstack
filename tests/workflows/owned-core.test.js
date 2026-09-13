@@ -69,14 +69,14 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
   }
 });
 
-test('owned-core: entry routes research/docs/handoff directly without spec ceremony', () => {
+test('owned-core: entry routes research/explain/improve/handoff directly without spec ceremony', () => {
   const text = skill('axstack');
-  for (const name of ['axstack-research', 'axstack-docs', 'paseo-handoff']) {
+  for (const name of ['axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
     expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
   }
   expect(
-    /research/i.test(text) && /docs/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
-    'entry must state research/docs/handoff need no spec ceremony',
+    /research/i.test(text) && /explain/i.test(text) && /improve/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
+    'entry must state research/explain/improve/handoff need no spec ceremony',
   ).toBeTruthy();
 });
 
@@ -110,10 +110,11 @@ test('owned-core: review authored mode keeps baseline; adopted scope needs no re
   ).toBeTruthy();
 });
 
-test('owned-core: exactly two independent reviewers, same brief, exact rev, no cross-read, owner validates', () => {
+test('owned-core: mode-specific independent review keeps exact rev, isolation, and owner validation', () => {
   const text = skill('axstack-review');
-  expect(/exactly two/i.test(text), 'must require exactly two final reviewers').toBeTruthy();
-  expect(/same.*six-angle|six-angle.*same/i.test(text), 'both reviewers must get the same six-angle brief').toBeTruthy();
+  expect(/peer[\s\S]*exactly two/i.test(text), 'peer mode must require exactly two final reviewers').toBeTruthy();
+  expect(/authored[\s\S]*exactly one|authored[\s\S]*one independent/i.test(text), 'authored mode must require one independent cross-family reviewer').toBeTruthy();
+  expect(/same.*six-angle|six-angle.*same|identical.*six-angle/i.test(text), 'peer reviewers must get the same six-angle brief').toBeTruthy();
   expect(/exact[\s\S]*revision|exact[\s\S]*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
   expect(
     /no.*cross-read|without.*cross-read|neither reviewer reads the\s+other[’']s initial findings/is.test(text),
@@ -266,7 +267,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
   }
   for (const ref of ['routing.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
-    expect(text.length, `${ref} must stay compact (<6000 chars)`).toBeLessThan(6000);
+    expect(text.length, `${ref} must stay compact (<6250 chars)`).toBeLessThan(6250);
   }
 });
 
@@ -277,7 +278,6 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
     'axstack-research-requirements': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
     'axstack-research-code': { provider: 'codex', model: 'gpt-5.6-sol', thinkingOptionId: 'medium' },
     'axstack-research-web': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'low' },
-    'axstack-docs': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'low' },
     'axstack-explainer': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
     'axstack-explainer-review': { provider: 'codex', model: 'gpt-5.6-luna', thinkingOptionId: 'max' },
     'axstack-explore-codebase': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
@@ -321,11 +321,11 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
   }
 });
 
-test('owned-core: review separates completeness from verdict; binds commit parameter', () => {
+test('owned-core: review separates mode-specific completeness from verdict; binds commit parameter', () => {
   const text = skill('axstack-review');
   expect(
     /complete[\s\S]*evidence/i.test(text) && /REQUEST_CHANGES/i.test(text),
-    'complete two-reviewer evidence with validated defects must permit REQUEST_CHANGES',
+    'complete mode-required evidence with validated defects must permit REQUEST_CHANGES',
   ).toBeTruthy();
   expect(
     /INCOMPLETE/i.test(text) && /never.*fabricat|no.*fabricat/i.test(text),
@@ -441,7 +441,7 @@ test('owned-core: align and spec involve Fable; auditor profile exists', () => {
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-docs', 'paseo-handoff']) {
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();
@@ -450,4 +450,7 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   expect(readme.includes('axstack-review'), 'README must reference axstack-review').toBeTruthy();
   expect(readme.includes('axstack-watch'), 'README must reference axstack-watch').toBeTruthy();
+  const spec = readFileSync(join(root, 'docs', 'specs', 'v1.md'), 'utf8');
+  expect(spec).toMatch(/axstack-explain/);
+  expect(spec).toMatch(/project documentation/i);
 });

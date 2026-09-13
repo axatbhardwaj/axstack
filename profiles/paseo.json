@@ -43,7 +43,7 @@
       "model": "claude-opus-5",
       "modeId": "default",
       "thinkingOptionId": "medium",
-      "notes": "Independent Opus final reviewer: fresh non-author claude session running claude-opus-5, never a native GPT session. Exact candidate revision, same six-angle brief, no cross-reading of the other reviewer. Reports evidence, coverage, limitations, findings. Votes never settle correctness.",
+      "notes": "Independent Opus medium final reviewer: used with Sol medium for peer review, or as a separate session for a Sol-authored PR. Never the owner or an author session. Reviews the exact SHA/current base and all six angles plus acceptance; peer first pass is isolated. Validate actual author provenance and availability; no invented family or model fallback.",
       "name": "Axstack independent reviewer (Opus)"
     },
     {
@@ -52,7 +52,7 @@
       "model": "gpt-5.6-sol",
       "modeId": "auto",
       "thinkingOptionId": "medium",
-      "notes": "Second independent final PR reviewer: fresh non-author codex session running gpt-5.6-sol. Same instantiated scope/spec/ticket/base/revision/exclusions/instructions as the Opus reviewer. Covers all six angles independently.",
+      "notes": "Independent Sol medium final reviewer: used with Opus medium for peer review, or as a separate session for an Opus-authored PR. Never the owner or an author session. Reviews the exact SHA/current base and all six angles plus acceptance; peer first pass is isolated. Preserve Sol high for an eligible high-stakes checkpoint; no automatic fallback.",
       "name": "Axstack independent reviewer (Sol)"
     },
     {
@@ -92,21 +92,12 @@
       "name": "Axstack research web (Opus)"
     },
     {
-      "id": "axstack-docs",
-      "provider": "claude",
-      "model": "claude-opus-5",
-      "modeId": "default",
-      "thinkingOptionId": "low",
-      "notes": "Source-backed prose author: writes and checks documentation and requested artifacts from inspected sources. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
-      "name": "Axstack docs author (Opus)"
-    },
-    {
       "id": "axstack-explainer",
       "provider": "claude",
       "model": "claude-sonnet-5",
       "modeId": "default",
       "thinkingOptionId": "xhigh",
-      "notes": "Visual explanation author: builds requested visual explanations and verifies actual rendered behavior where applicable. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested visual artifacts and verifies actual rendered behavior where applicable. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer (Sonnet)"
     },
     {
@@ -115,7 +106,7 @@
       "model": "gpt-5.6-luna",
       "modeId": "auto",
       "thinkingOptionId": "max",
-      "notes": "Visual explanation reviewer: independently checks explainer output for fidelity to sources and rendered behavior. Maximum reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
+      "notes": "Visual explanation reviewer: independently checks the exact explainer artifact for fidelity to sources and rendered behavior where warranted. Any artifact change invalidates its review. Maximum reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer reviewer (Luna)"
     },
     {

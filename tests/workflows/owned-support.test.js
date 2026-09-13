@@ -45,7 +45,7 @@ const here = import.meta.dir;
 const root = dirname(dirname(here));
 const skillsDir = join(root, 'skills');
 
-const OWNED = ['axstack-research', 'axstack-docs'];
+const OWNED = ['axstack-research', 'axstack-explain', 'axstack-improve'];
 
 function readSkill(name) {
   return readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
@@ -65,7 +65,7 @@ function linkEscapesBundle(skillDir, fromDir, link) {
   return !(target === skillDir || target.startsWith(skillDir + '/'));
 }
 
-test('owned-support: two owned support skills exist with SKILL.md', () => {
+test('owned-support: owned support skills exist with SKILL.md', () => {
   for (const name of OWNED) {
     const p = join(skillsDir, name, 'SKILL.md');
     expect(existsSync(p), `missing ${p}`).toBeTruthy();
@@ -83,6 +83,13 @@ test('owned-support: frontmatter name matches directory with description', () =>
     );
     expect(m[1], `${name}: frontmatter needs description`).toMatch(/^description:\s*\S+/m);
   }
+});
+
+test('owned-support: explain advertises the approved intent exactly', () => {
+  const text = readSkill('axstack-explain');
+  expect(text).toContain(
+    'description: When understanding a system, change, or implementation gap, use axstack-explain to show how it works and what exists, is missing, or remains unverified.',
+  );
 });
 
 test('owned-support: independently callable via shared references', () => {
@@ -164,14 +171,15 @@ test('owned-support: research is source-first with verified boundaries', () => {
   expect(/data preset|confirm.*launch|availability.*launch/i.test(text), 'routes are data presets; live availability per shared launch').toBeTruthy();
 });
 
-test('owned-support: docs separates prose from visual verification', () => {
-  const text = readSkill('axstack-docs');
+test('owned-support: explain scales from direct answers to verified visuals', () => {
+  const text = readSkill('axstack-explain');
   const lower = text.toLowerCase();
-  for (const profile of ['axstack-docs', 'axstack-explainer', 'axstack-explainer-review']) {
-    expect(text.includes(profile), `docs must list route ${profile}`).toBeTruthy();
+  for (const profile of ['axstack-explainer', 'axstack-explainer-review']) {
+    expect(text.includes(profile), `explain must list route ${profile}`).toBeTruthy();
   }
-  expect(/no mandatory intermediate artifact|without.*intermediate|no intermediate artifact is required/i.test(text), 'prose must not require a mandatory intermediate artifact').toBeTruthy();
-  expect(/no mandatory html|html.*not required|prose.*without html|no HTML conversion/i.test(text), 'prose must not mandate HTML').toBeTruthy();
+  expect(/simple[^.]*current chat|current chat[^.]*simple/i.test(text), 'simple explanations must stay in the current chat').toBeTruthy();
+  expect(/no mandatory agent|without.*agent|needs no.*agent/i.test(text), 'simple explanations must not require an agent').toBeTruthy();
+  expect(/compact diagram|diagram.*useful/i.test(text), 'simple output may use a compact diagram when useful').toBeTruthy();
   expect(/self-contained html|requested artifact/i.test(text), 'visual must be self-contained HTML or the requested artifact').toBeTruthy();
   expect(/explicit.*theme|theme.*explicit/i.test(text), 'explicit user theme must win').toBeTruthy();
   expect(/dark/i.test(text), 'dark default theme must be stated').toBeTruthy();
@@ -181,6 +189,50 @@ test('owned-support: docs separates prose from visual verification', () => {
   expect(/invalidate|exact artifact/i.test(text), 'changed artifact must invalidate affected review').toBeTruthy();
   expect(/publish/i.test(text), 'local output vs publish authority must be distinct').toBeTruthy();
   expect(lower.includes('source'), 'material claims must be source-checked').toBeTruthy();
+});
+
+test('owned-support: explain distinguishes evidence and bounds every gap', () => {
+  const text = readSkill('axstack-explain');
+  for (const label of ['source implemented', 'tested', 'live observed', 'planned/proposed', 'unknown']) {
+    expect(text.toLowerCase().includes(label), `explain must preserve ${label} evidence`).toBeTruthy();
+  }
+  expect(/coexist|independent/i.test(text), 'evidence dimensions must be independent and may coexist').toBeTruthy();
+  expect(/gap[\s\S]{0,300}(inspected|scope)[\s\S]{0,240}(revision|stable source identity|content hash)/i.test(text), 'each gap must identify inspected scope and applicable stable source identity').toBeTruthy();
+  expect(/stable source identity|content hash/i.test(text), 'non-versioned evidence must use a stable identity or content hash').toBeTruthy();
+  expect(/non-versioned|screenshot|exported snippet/i.test(text), 'non-Git evidence must be explicitly supported').toBeTruthy();
+  expect(/history[^.]*unavailable[^.]*limitation|unavailable history[^.]*limitation/i.test(text), 'unavailable history must be reported as a limitation').toBeTruthy();
+  expect(/not found[\s\S]{0,180}(app-wide|whole app|entire app)[\s\S]{0,100}(without|unless)/i.test(text), 'not-found evidence must not become an app-wide absence claim').toBeTruthy();
+});
+
+test('owned-support: explain traces behavior without silently starting delivery', () => {
+  const text = readSkill('axstack-explain');
+  for (const marker of ['flow', 'boundaries', 'dependencies', 'current', 'intended', 'gap']) {
+    expect(text.toLowerCase().includes(marker), `explain must cover ${marker}`).toBeTruthy();
+  }
+  expect(/project documentation|documentation/i.test(text), 'project documentation must remain supported').toBeTruthy();
+  expect(/no automatic[^.]*design|does not[^.]*design/i.test(text), 'explanation must not automatically start design').toBeTruthy();
+  expect(/no automatic[^.]*implementation|does not[^.]*implementation/i.test(text), 'explanation must not automatically start implementation').toBeTruthy();
+  expect(/supersed[^.]*axstack-docs/i.test(text), 'new route must supersede a stale axstack-docs install').toBeTruthy();
+});
+
+test('owned-support: every HTML explanation triggers full exact-artifact QA', () => {
+  const text = readSkill('axstack-explain');
+  expect(/(?:any|every|the moment|when)[^.]*html[^.]*visual QA|html[^.]*full[^.]*visual QA/i.test(text), 'HTML must trigger full visual QA').toBeTruthy();
+  expect(/desktop/i.test(text) && /mobile/i.test(text), 'HTML QA must cover desktop and mobile').toBeTruthy();
+  expect(/interaction/i.test(text) && /accessibility/i.test(text) && /reduced-motion|reduced motion/i.test(text), 'HTML QA must cover interaction, accessibility, and reduced motion').toBeTruthy();
+  expect(/public[\s\S]{0,240}(private|privacy|credential|identifier)/i.test(text), 'public artifacts must protect private data').toBeTruthy();
+});
+
+test('owned-support: profile retirement and stale-upgrade migration are explicit', () => {
+  const profiles = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
+  expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-docs'), 'retired prose profile must be absent').toBe(false);
+  expect(profiles.agentProfiles.length, 'only the prose profile is retired').toBe(17);
+  const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +
+    readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
+  expect(docs).toMatch(/ordinary[^.]*upgrade[^.]*retain[^.]*axstack-docs/i);
+  expect(docs).toMatch(/uninstall[^.]*install/i);
+  expect(docs).toMatch(/edited|custom|unknown/i);
+  expect(docs).toMatch(/without `--force`|no[^.]*--force/i);
 });
 
 test('owned-support: handoff is explicit, compact, and non-destructive', () => {
@@ -199,13 +251,13 @@ test('owned-support: handoff is explicit, compact, and non-destructive', () => {
 
 test('owned-support negative fixtures: validators reject bad packaging', () => {
   expect(hasFrontmatter('# No frontmatter here'), 'missing frontmatter must fail').toBe(false);
-  expect(hasFrontmatter('---\nname: axstack-docs\ndescription: ok\n---\nbody'), 'good frontmatter must pass').toBeTruthy();
+  expect(hasFrontmatter('---\nname: axstack-explain\ndescription: ok\n---\nbody'), 'good frontmatter must pass').toBeTruthy();
   expect(
-    linkEscapesBundle(skillsDir, join(skillsDir, 'axstack-docs'), '../../elsewhere/x.md'),
+    linkEscapesBundle(skillsDir, join(skillsDir, 'axstack-explain'), '../../elsewhere/x.md'),
     'escaping link must be flagged',
   ).toBe(true);
   expect(
-    linkEscapesBundle(skillsDir, join(skillsDir, 'axstack-docs'), '../axstack/references/contracts.md'),
+    linkEscapesBundle(skillsDir, join(skillsDir, 'axstack-explain'), '../axstack/references/contracts.md'),
     'shared reference link must pass',
   ).toBe(false);
 });

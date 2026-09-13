@@ -134,16 +134,16 @@ end-to-end run and is reported only at the level actually verified.
 
 ## Model presets
 
-The public `profiles/paseo.json` contains 18 role presets. Seventeen have
+The public `profiles/paseo.json` contains 17 role presets. Sixteen have
 configured models and are executable defaults that `axstack install
---profile` can merge. `axstack-checker` is the eighteenth: its explicit
+--profile` can merge. `axstack-checker` is the seventeenth: its explicit
 `model: null` records that setup must choose the inexpensive checker model,
 so the installer reports and defers it instead of writing invalid host data or
 inventing a provider/model default. A checker already configured by the user
 is kept and is not newly claimed in the ownership manifest.
 
 Namespaced role defaults extend the same file: research requirements,
-research code, research web, docs authorship, visual explanation and its
+research code, research web, visual explanation and its
 review, codebase and execution exploration, the monitor and watchdog
 roles, plus the read-only auditor. Review them before installing: the installer applies explicit
 configuration only and never auto-installs into your live home. No model is
@@ -173,18 +173,26 @@ axstack check --bundle ./bundle
 axstack uninstall --skills-dir /tmp/ax-skills --profile /tmp/paseo.json
 ```
 
-## Retiring the former handoff skill
+## Retiring former skills and profiles
 
 The bundle no longer contains `axstack-handoff`; task transfer uses Paseo’s
 native `paseo-handoff` and `paseo` skills. Enable those through Paseo before
 using the transfer route. Axstack’s own run-record and authority context are
 carried into the handoff, rather than implemented as another skill.
 
-An ordinary installer upgrade reports previously owned assets absent from
-the bundle as stale and preserves them. It does not silently retire an old
-installed handoff. To refresh an existing skills target, use the documented
-uninstall/install cycle for that target, without `--force`: unchanged owned
-files are removed, user-edited files survive and must be resolved explicitly.
-Keep the same profile binding if also cycling profiles; a skills-only cycle
-can omit `--profile` to leave profiles intact. Apply this separately to each
-selected harness target and verify the resulting discovery catalog.
+The bundle also replaces `axstack-docs` with `axstack-explain` and retires the
+`axstack-docs` prose profile. Explanation uses project documentation as evidence
+while covering systems, changes, current versus intended behavior, and bounded
+implementation gaps. If both skills are discoverable during migration,
+`axstack-explain` supersedes the old route.
+
+An ordinary installer upgrade reports previously owned assets absent from the
+bundle as stale and preserves them. It therefore retains an installed
+`axstack-handoff` or `axstack-docs` skill and the `axstack-docs` profile. To
+refresh an existing target, use the documented uninstall/install cycle without
+`--force`: pristine owned assets are removed, while edited, custom, and unknown
+files or profiles survive for explicit resolution. Keep the same profile
+binding when cycling profiles; a skills-only cycle can omit `--profile` to
+leave profiles intact. Apply this separately to each selected harness target
+and verify both the discovery catalog and configured profiles. No new deletion
+logic is involved.

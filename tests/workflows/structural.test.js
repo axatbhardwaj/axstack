@@ -293,9 +293,9 @@ test('structural: align reads back understanding without a pre-spec agreement ga
   expect(/material new evidence/i.test(text), 'settled decisions stand unless material new evidence changes them').toBeTruthy();
 });
 
-test('structural: publishing needs both reviewers current; watch stops all registrations', () => {
+test('structural: publishing needs mode-required review current; watch stops all registrations', () => {
   const review = readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8');
-  expect(/both reviewers/i.test(review), 'publishing rule must require both reviewers current').toBeTruthy();
+  expect(/mode-required|selected mode|mode-specific/i.test(review), 'publishing rule must require the selected mode review current').toBeTruthy();
   expect(/without vot/i.test(review), 'owner must synthesize findings without voting').toBeTruthy();
   const watch = readFileSync(join(skillsDir, 'axstack-watch', 'SKILL.md'), 'utf8');
   expect(/all owned|all.*registrations/i.test(watch), 'watch must stop ALL owned registrations at expiry').toBeTruthy();

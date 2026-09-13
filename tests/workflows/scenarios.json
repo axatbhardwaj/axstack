@@ -54,9 +54,9 @@
     {
       "id": "two-reviewer-disagreement",
       "title": "Reviewer disagreement means incomplete review, resolved by evidence",
-      "spec_ref": "Two-reviewer contract: same brief/scope/revision, all six angles, no cross-reading initial findings, no vote-based resolution. Unresolved material disagreement means incomplete review.",
+      "spec_ref": "Peer review contract: exactly two reviewers, same brief/scope/revision, all six angles, isolated first passes, no vote-based resolution. Unresolved material disagreement means incomplete review.",
       "input": {
-        "run_state": "PR candidate rev X ready for final review. Owner launched independent Sol and Opus reviewers with identical brief.",
+        "run_state": "Peer PR candidate rev X ready for final review. Owner launched independent Sol and Opus reviewers with identical brief.",
         "event": "Sol reports no material findings. Opus reports material correctness failure with failing-input evidence. Findings were produced independently."
       },
       "expected": {
@@ -161,9 +161,9 @@
     {
       "id": "model-materialization",
       "title": "Launched sessions match profile provider/model; unset checker blocks dispatch",
-      "spec_ref": "Model roles: configured profiles materialize as actual sessions; unavailable model pauses affected work pending user decision, never auto-fallback. Checker model chosen at setup.",
+      "spec_ref": "Peer review model roles: configured profiles materialize as actual sessions; unavailable model pauses affected work pending user decision, never auto-fallback. Checker model chosen at setup.",
       "input": {
-        "run_state": "PR ready for final review. Profiles: reviewer-opus=claude/claude-opus-5, reviewer-sol=codex/gpt-5.6-sol, checker model null (setup not done).",
+        "run_state": "Peer PR ready for final review. Profiles: reviewer-opus=claude/claude-opus-5, reviewer-sol=codex/gpt-5.6-sol, checker model null (setup not done).",
         "event": "Owner launches both final reviewers and considers dispatching the checker."
       },
       "expected": {
@@ -175,7 +175,7 @@
     {
       "id": "rollout-publish",
       "title": "Publishing requires a current verified receipt and no urgent hold",
-      "spec_ref": "Two-reviewer contract: changes require a refreshed review receipt for the new revision. Prompt-only urgent escalation holds approval and merge-ready declarations.",
+      "spec_ref": "Mode-specific review contract: changes require refreshed required receipts for the new revision and current base. Prompt-only urgent escalation holds approval and merge-ready declarations.",
       "input": {
         "run_state": "PR candidate rev X+1 pushed after review of rev X. No new review yet. No open urgent escalation.",
         "event": "Owner considers declaring rev X+1 merge-ready."

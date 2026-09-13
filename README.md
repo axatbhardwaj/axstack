@@ -14,7 +14,8 @@ provided by Paseo; see [workflow prerequisites](docs/workflows.md#native-handoff
 
 Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
 `axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`,
-plus direct `axstack-research` and `axstack-docs` routes that need no spec
+plus direct `axstack-research`, `axstack-explain`, and `axstack-improve` routes
+that need no spec
 ceremony). Handoffs use Paseo’s native `paseo-handoff` when available;
 Axstack retains the run-record and ownership context:
 
@@ -30,8 +31,9 @@ Updated 2026-09-13 by user-requested change: scope readiness is proportional.
    one spec approval and stops with a handoff; small ambiguity can instead
    return a snapshotted small-change intent.
 3. Invoke `axstack` to execute prepared work. Capabilities become internal
-   tasks and reviewed PRs with one persistent owner per PR and exactly two
-   independent final reviewers.
+   tasks and reviewed PRs with one persistent owner per PR. Peer PRs receive
+   independent Sol and Opus review; authored PRs receive one independent
+   reviewer from a different model family than the actual author.
 4. You merge by default, bottom-up for a stack. Review approval never
     grants merge authority. Colleague PRs review in peer mode against
     their linked intent with no Axstack spec required; adopted PRs keep a
@@ -60,9 +62,10 @@ axstack install --harness codex --yes
 # Or select --harness claude; add --profile <paseo-config> to bootstrap profiles.
 ```
 
-Upgrading from 0.1.0 requires explicit cleanup of the retired handoff skill;
-an ordinary reinstall preserves stale files. Follow the
-[handoff migration instructions](docs/installation.md#retiring-the-former-handoff-skill).
+Ordinary upgrades preserve retired owned assets. Existing installations must
+remove the former handoff and docs assets through the documented no-force
+uninstall/install cycle. Follow the [retired asset migration
+instructions](docs/installation.md#retiring-former-skills-and-profiles).
 
 ## Install from source
 
@@ -89,8 +92,8 @@ bun bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
 
 Full command reference: [docs/installation.md](docs/installation.md).
 
-The public bundle contains 18 presets in
-[profiles/paseo.json](profiles/paseo.json): 17 configured defaults that the
+The public bundle contains 17 presets in
+[profiles/paseo.json](profiles/paseo.json): 16 configured defaults that the
 installer can merge, plus the `axstack-checker` setup placeholder whose model
 is intentionally unset. The placeholder stays bundled but is deferred from
 the Paseo config and ownership manifest until you select its model; an
@@ -105,8 +108,8 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 89 workflow structural and contract checks pass under Bun. The repository
-  contains 30 declared scenarios; their shape checks are not model behavior.
+- 108 workflow structural and contract checks pass under Bun. The repository
+  contains 36 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.
   Its private artifact is not shipped. This is model simulation, not live
