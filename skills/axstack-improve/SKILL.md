@@ -27,8 +27,10 @@ specialization materially helps; create no new profile.
    when available; unavailable history is a named limitation, never an invented
    window. Claims outside the inspected set are unknown.
 3. Read the relevant code, history, and tests. Look for actual friction in
-   maintainability, architecture, and testability: smaller interfaces, deeper
-   modules, locality, hidden state, needless layers, or unclear seams.
+   maintainability, architecture, and testability: shallow interfaces that
+   leak details, lost locality, hidden state, needless layers, or unclear
+   seams. Prefer simpler targets with smaller interfaces, deeper modules, and
+   restored locality when the evidence supports them.
 4. Apply KISS, YAGNI, and SOLID as judgment, not a mandatory scorecard. Use no
    invented metrics and no arbitrary complexity targets.
 
@@ -60,6 +62,8 @@ and execution separate:
    small-change intent and route to `axstack-implement` without forcing a new
    approval. Substantial work keeps its approved spec and ticket identity.
 3. The accepted refactor scope records listed files, current and target shape,
-   preserved behavior contract, and test evidence. Work outside the listed
-   files, a broader campaign, or a new security or infrastructure boundary
-   triggers the existing scope reassessment; never silently expand it.
+   preserved behavior contract, and test evidence. When the accepted intent is
+   structure-preserving, record that explicit tag in the scope; never infer
+   the tag from “refactor” alone. Work outside the listed files, a broader
+   campaign, or a new security or infrastructure boundary triggers the existing
+   scope reassessment; never silently expand it.

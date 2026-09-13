@@ -37,8 +37,9 @@ test('improve: findings are evidenced, ranked, and decision-useful', () => {
   expect(text).toMatch(/KISS[^.]*YAGNI[^.]*SOLID[^.]*judg/i);
   expect(text).toMatch(/no invented metrics|never invent[^.]*metric/i);
   expect(text).toMatch(/no arbitrary[^.]*complexity|never[^.]*arbitrary[^.]*complexity/i);
+  expect(text).toMatch(/shallow interfaces|lost locality/i);
+  expect(text).toMatch(/hidden state|needless layers/i);
   expect(text).toMatch(/smaller interfaces|deeper modules/i);
-  expect(text).toMatch(/locality|hidden state|needless layers/i);
 });
 
 test('improve: explanation is optional and selection preserves the phase boundary', () => {
@@ -51,6 +52,9 @@ test('improve: explanation is optional and selection preserves the phase boundar
   expect(text).toMatch(/no[^.]*new approval|without[^.]*new approval/i);
   expect(text).toMatch(/preparation[^.]*execution[^.]*separate|preparation[^.]*execution[^.]*boundary/i);
   expect(text).toMatch(/report card[^.]*not[^.]*authoriz|selection[^.]*not[^.]*authoriz/i);
+  expect(text).toMatch(/structure-preserving/i);
+  expect(text).toMatch(/record[^.]*explicit tag|record that explicit tag/i);
+  expect(text).toMatch(/never infer[^.]*tag[^.]*refactor|refactor[^.]*alone[^.]*tag/i);
 });
 
 test('improve: structure-preserving work uses old-green same-check evidence', () => {
