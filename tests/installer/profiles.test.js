@@ -13,10 +13,9 @@ import { fileURLToPath } from 'node:url';
 import {
   mergeProfiles,
   planUninstallProfiles,
-  representativeHostConfig,
 } from '../../src/profiles.js';
 import { hashObject } from '../../src/manifest.js';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { makeTempRoot, representativeHostConfig, writeFixtureBundle } from './helpers.js';
 
 const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
 

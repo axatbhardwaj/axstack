@@ -10,6 +10,22 @@ export function makeTempRoot(prefix = 'axstack-test-') {
   return mkdtempSync(join(tmpdir(), prefix));
 }
 
+// Representative Paseo HOST config shape (profiles at daemon.agentProfiles).
+// Test-only fixture; never read from or written to a live home.
+export function representativeHostConfig() {
+  return {
+    version: 1,
+    cliClientId: 'fixture-client-id',
+    daemon: {
+      schedules: [{ id: 'daily-check', cron: '0 9 * * *' }],
+      notifications: { level: 'all' },
+      agentProfiles: [
+        { id: 'custom-mine', provider: 'custom', model: 'mine', notes: 'user profile' },
+      ],
+    },
+  };
+}
+
 export function writeFixtureBundle(
   root,
   {

@@ -17,11 +17,12 @@ import { makeTempRoot, writeFixtureBundle } from './helpers.js';
 
 const CLI = fileURLToPath(new URL('../../bin/axstack.js', import.meta.url));
 
-function runCli(args, { expectFail = false } = {}) {
+function runCli(args, { expectFail = false, env } = {}) {
   try {
     const out = execFileSync(process.execPath, [CLI, ...args], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      ...(env ? { env: { ...process.env, ...env } } : {}),
     });
     assert.ok(!expectFail, `expected failure but succeeded: ${out}`);
     return { ok: true, out };
@@ -199,4 +200,25 @@ test('partial failure rolls back created files and writes no manifest', () => {
   // axstack-aaa was created in this run: rolled back, manifest never written.
   assert.ok(!existsSync(join(skillsDir, 'axstack-aaa', 'SKILL.md')));
   assert.ok(!existsSync(join(skillsDir, '.axstack-manifest.json')));
+});
+
+test('--harness codex honors CODEX_HOME outside the home guard', () => {
+  const root = makeTempRoot();
+  const bundle = writeFixtureBundle(root);
+  const codexHome = join(root, 'codex-home');
+  mkdirSync(codexHome, { recursive: true });
+  const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
+    env: { CODEX_HOME: codexHome },
+  });
+  assert.ok(r.ok);
+  assert.ok(existsSync(join(codexHome, 'skills', 'axstack-demo', 'SKILL.md')));
+});
+
+test('--harness codex without CODEX_HOME needs explicit home confirmation', () => {
+  const root = makeTempRoot();
+  const bundle = writeFixtureBundle(root);
+  const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
+    expectFail: true,
+  });
+  assert.match(r.out.toLowerCase(), /confirm|--yes|explicit|home/);
 });

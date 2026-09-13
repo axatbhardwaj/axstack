@@ -24,8 +24,18 @@ test('grok has no verified auto-discovery and requires explicit override', () =>
   assert.match(grok.notes.toLowerCase(), /explicit|--skills-dir|override/);
 });
 
-test('no entry claims end-to-end compatibility from install alone', () => {
+test('every verified entry cites its primary-source docs URL', () => {
   const table = harnessLocations();
+  for (const entry of table) {
+    if (entry.discovery === 'unverified') continue;
+    assert.ok(
+      typeof entry.source === 'string' && entry.source.startsWith('https://'),
+      `${entry.harness} needs a verified primary-source URL`,
+    );
+  }
+});
+
+test('no entry claims end-to-end compatibility from install alone', () => {  const table = harnessLocations();
   for (const entry of table) {
     assert.ok(
       !/end-to-end|fully supported|verified working/i.test(entry.notes),

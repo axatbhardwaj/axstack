@@ -103,7 +103,7 @@ test('unknown identical pre-existing skill file is neither adopted nor removed',
   );
 });
 
-test('switched profile path: pre-existing axstack-* entry in second file survives', () => {
+test('switched profile path: rebind only after uninstalling the bound config', () => {
   const root = makeTempRoot();
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
@@ -118,8 +118,20 @@ test('switched profile path: pre-existing axstack-* entry in second file survive
       },
     }),
   );
+  const beforeB = readFileSync(profileB, 'utf8');
 
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
+  // Switching files mid-ownership is refused before any mutation.
+  const refused = runCli(
+    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB],
+    { expectFail: true },
+  );
+  assert.match(refused.out.toLowerCase(), /different|bound|ownership|refus|uninstall/);
+  assert.equal(readFileSync(profileB, 'utf8'), beforeB);
+
+  // Proper path: uninstall the bound config, then bind the new one. The
+  // pre-existing entry in B is preserved through the whole cycle.
+  runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileA]);
   runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB]);
   assert.equal(
     readProfile(profileB).daemon.agentProfiles.find((p) => p.id === 'axstack-owner').model,
