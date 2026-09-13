@@ -17,7 +17,10 @@ repository's `.git` directory for the main checkout and all linked worktrees.
 Without `--path-format=absolute`, the main checkout returns a relative `.git`,
 making the persisted path ambiguous across worktrees and the current working
 directory. The path is shared across those worktrees and is never part of the
-tracked tree. Form the run id as `<UTCdate>-<slug>` and add a collision-safe
+tracked tree. In `<UTCdate>-<slug>`, UTCdate is `YYYYMMDD`, as in
+`20260913-local-progress`. The driver chooses the slug using lowercase letters,
+digits, and hyphens only, never raw request text. A slug has no path separators
+or path segments, so the record stays inside `axstack/runs/`. Add a collision-safe
 suffix when that id already exists. For non-Git work, use private host state
 instead of the working directory.
 
@@ -44,10 +47,12 @@ forge/PR state, and the approved spec remain the sources of truth. The driver
 verifies exact SHAs and receipts itself before recording a transition; a
 worker's claim is not verification.
 
-Before changing the Driver field, verify that the prior driver is inactive or
-that an explicit accepted transfer exists. If ownership is uncertain or there
-is a live conflict, reconcile or hold and never overwrite the field to seize
-control. A prior driver that sees a different valid owner stops.
+Before changing the Driver field, verify that the prior driver is inactive
+against actual Paseo session state, or that an explicit accepted transfer
+exists; idle or old timestamps are not proof. Idle alone never reassigns
+ownership. If ownership is uncertain or there is a live conflict, reconcile or
+hold and never overwrite the field to seize control. A prior driver that sees a
+different valid owner stops.
 
 `Archived` is a status in the same record and path. Nothing is moved or deleted.
 
@@ -67,7 +72,7 @@ Source base: <exact revision or source identity>
 
 | Task | Dependencies | Owner | State | Revision evidence | Next action |
 | --- | --- | --- | --- | --- | --- |
-| <task> | <task IDs or none> | <role + session ID + worktree | receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
+| <task> | <task IDs or none> | <role + session ID + worktree, or receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
 
 Status: <active/held/complete/Archived>
 Updated: <UTC timestamp>

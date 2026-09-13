@@ -28,7 +28,8 @@ test('run-record: path, identity, fallback, and archive stay local and stable', 
   expect(text).toMatch(/never[^.]*tracked tree/i);
   expect(text).toMatch(/<UTCdate>-<slug>/i);
   expect(text).toMatch(/UTCdate[^.]*YYYYMMDD[^.]*20260913-local-progress/i);
-  expect(text).toMatch(/slug[^.]*driver[^.]*lowercase letters[^.]*digits[^.]*hyphens[^.]*only/i);
+  expect(text).toMatch(/driver[^.]*chooses[^.]*slug/i);
+  expect(text).toMatch(/slug[^.]*lowercase letters[^.]*digits[^.]*hyphens[^.]*only/i);
   expect(text).toMatch(/never[^.]*raw request text/i);
   expect(text).toMatch(/no[^.]*separators[^.]*path segments[^.]*inside `?axstack\/runs\/?`?/i);
   expect(text).toMatch(/collision[^.]*suffix/i);

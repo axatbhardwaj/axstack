@@ -115,9 +115,10 @@ is not merge-ready.
 Changed heads, CI results, and review feedback route to the same author
 session where evidence allows, followed by a refreshed independent review
 before anything is republished (see `axstack-review`). Repairs route only
-under a confirmed approved baseline (new work) or an accepted
-maintenance snapshot (adopted own PRs): a missing or unaccepted scope
-holds repair routing while monitoring and read-only checks continue.
+under a confirmed approved spec baseline (substantial new work), a
+snapshotted small-change intent (small new work), or an accepted maintenance
+snapshot (adopted own PRs): a missing or unaccepted scope holds repair routing
+while monitoring and read-only checks continue.
 Publishing still requires a current verified receipt and no open urgent
 hold.
 

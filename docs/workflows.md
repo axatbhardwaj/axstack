@@ -58,8 +58,9 @@ contracts, plus routing and lifecycle/receipt references.
 - `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; `gh stack` coordination; restart reconciliation (ambiguity never authorizes a duplicate writer).
 - `axstack-review` — peer mode accepts the PR description, linked issue,
   and repository requirements as intent with no Axstack-created approved
-  spec; authored mode retains the approved baseline and accepts an
-  adopted maintenance scope snapshot without repeated approval. Exactly
+  spec; authored mode retains the approved baseline for substantial work or
+  the snapshotted small-change intent for small work, and accepts an adopted
+  maintenance scope snapshot without repeated approval. Exactly
   two independent Sol and Opus final reviewers, same six-angle brief, no
   first-pass cross-reading, no votes. Completeness is separate from the
   recommendation: complete evidence with validated defects submits

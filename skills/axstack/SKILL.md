@@ -52,9 +52,9 @@ Never admit work that a deeper phase would reject; do not auto-run preparation.
 
 ## Lifecycle
 
-1. Align (`axstack-align`): bounded frontier interview, settled decisions.
-2. Spec (`axstack-spec`): observable acceptance criteria plus explicit exclusions. User approves; the approved revision is the execution baseline.
-3. Tickets (`axstack-tickets`): capabilities to internal tasks.
+1. Align (`axstack-align`) (substantial work only): bounded frontier interview, settled decisions.
+2. Spec (`axstack-spec`) (substantial work only): observable acceptance criteria plus explicit exclusions. User approves; the approved revision is the execution baseline.
+3. Tickets (`axstack-tickets`) (substantial work only): capabilities to internal tasks.
 4. Implement (`axstack-implement`): owners build candidates with strict TDD.
 5. Review (`axstack-review`): exactly two independent final reviewers, all six angles.
 6. Watch (`axstack-watch`): bounded monitoring with resumable handoff.
