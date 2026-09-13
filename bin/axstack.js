@@ -1,18 +1,24 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // axstack — installation/setup CLI. Installs owned skill bundles, merges
 // Paseo profiles, and checks host capabilities. Chat drives execution; this
 // CLI performs installation bookkeeping only (no runtime, scheduler, or
 // model calls).
 import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
+import { join, resolve } from '../src/posixpath.js';
 import { installBundle, uninstallBundle, validateBundle } from '../src/installer.js';
-import { checkCapabilities, runRealCheck } from '../src/capabilities.js';
+import { BUN_FLOOR, checkCapabilities, meetsFloor, runRealCheck } from '../src/capabilities.js';
 import { harnessLocations } from '../src/locations.js';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+// import.meta.dir is already a filesystem path (no URL conversion, so
+// spaces/percent/hash characters survive verbatim).
+const HERE = import.meta.dir;
 const PACKAGE_ROOT = resolve(HERE, '..');
+
+function homeDir() {
+  const home = Bun.env.HOME;
+  if (!home) throw new Error('HOME is not set; pass explicit paths instead of ~');
+  return home;
+}
 
 function packageVersion() {
   try {
@@ -33,7 +39,7 @@ Usage:
 Commands:
   install    Validate a skill bundle, then copy owned skills, merge Paseo
              profiles (config.daemon.agentProfiles) and record ownership hashes.
-  check      Probe host tools (node, git, gh, gh stack extension, paseo) and
+  check      Probe host tools (bun, git, gh, gh stack extension, paseo) and
              report gaps. A binary probe cannot prove Linear MCP access or
              model quotas; skill prompts perform a session preflight.
   uninstall  Remove only unchanged Axstack-owned assets. User edits survive.
@@ -86,8 +92,8 @@ function parseArgs(argv) {
 }
 
 function expandHome(p) {
-  if (p === '~') return homedir();
-  if (p.startsWith('~/')) return join(homedir(), p.slice(2));
+  if (p === '~') return homeDir();
+  if (p.startsWith('~/')) return join(homeDir(), p.slice(2));
   return p;
 }
 
@@ -102,7 +108,7 @@ function resolveHarnessTarget(harness) {
   }
   if (entry.harness === 'codex') {
     // User skills live under $CODEX_HOME/skills; CODEX_HOME defaults to ~/.codex.
-    const home = process.env.CODEX_HOME ? expandHome(process.env.CODEX_HOME) : join(homedir(), '.codex');
+    const home = Bun.env.CODEX_HOME ? expandHome(Bun.env.CODEX_HOME) : join(homeDir(), '.codex');
     return join(home, 'skills');
   }
   return expandHome(entry.skillsDir);
@@ -123,10 +129,20 @@ function printCheckReport(report) {
   for (const line of report.limitations) console.log(`  - ${line}`);
 }
 
+function checkRuntimeFloor() {
+  if (!meetsFloor(Bun.version, BUN_FLOOR)) {
+    console.error(`axstack: requires Bun >= ${BUN_FLOOR} (running ${Bun.version})`);
+    process.exitCode = 1;
+    return false;
+  }
+  return true;
+}
+
 async function main() {
+  if (!checkRuntimeFloor()) return;
   let parsed;
   try {
-    parsed = parseArgs(process.argv.slice(2));
+    parsed = parseArgs(Bun.argv.slice(2));
   } catch (err) {
     console.error(`axstack: ${err.message}`);
     console.error(HELP);

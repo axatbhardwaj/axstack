@@ -27,8 +27,7 @@ import {
   rmdir,
   stat,
 } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from './posixpath.js';
 import {
   MANIFEST_VERSION,
   assertSafeRel,
@@ -74,7 +73,7 @@ async function assertNoSymlinksBelow(root, destDir) {
     throw new Error(`unsafe target: ${destDir} escapes ${root}; refusing`);
   }
   let cur = root;
-  for (const part of rel.split(sep)) {
+  for (const part of rel.split('/')) {
     cur = join(cur, part);
     let st = null;
     try {
@@ -108,11 +107,9 @@ async function canonicalProfileFile(profilePath) {
 }
 
 function homeDir() {
-  try {
-    return homedir();
-  } catch {
-    return null;
-  }
+  // Bun has no homedir() API; $HOME is the POSIX source of truth. An unset
+  // HOME disables the home guard rather than guessing (tests set it).
+  return Bun.env.HOME || null;
 }
 
 export function assertOutsideHome(target, { yes = false, kind = 'target' } = {}) {

@@ -2,17 +2,24 @@
 // The manifest lives at <skillsDir>/.axstack-manifest.json and records the
 // exact bytes Axstack installed, so updates and uninstalls only touch
 // unchanged owned assets.
-import { createHash } from 'node:crypto';
 import { chmod, lstat, mkdir, open, rename, readFile, rm, stat } from 'node:fs/promises';
-import { isAbsolute, join, sep } from 'node:path';
+import { isAbsolute, join } from './posixpath.js';
 
 export const MANIFEST_NAME = '.axstack-manifest.json';
 export const MANIFEST_TMP_NAME = '.axstack-manifest.json.tmp';
 export const MANIFEST_VERSION = 1;
 
 export function hashContent(content) {
-  const bytes = typeof content === 'string' ? content : JSON.stringify(content);
-  return createHash('sha256').update(bytes, 'utf8').digest('hex');
+  // Byte-for-byte compatible with the pre-migration implementation:
+  // strings hash as UTF-8; every other input (including Buffers read from
+  // skill files) hashes as its JSON serialization. Do NOT "fix" Buffers to
+  // hash as raw bytes without a manifest migration: every recorded
+  // ownership hash would stop matching and unchanged owned files would lose
+  // ownership. Proven by fixtures/old-impl under both runtimes.
+  const input = typeof content === 'string' ? content : JSON.stringify(content);
+  const hasher = new Bun.CryptoHasher('sha256');
+  hasher.update(input, 'utf8');
+  return hasher.digest('hex');
 }
 
 // Deterministic object hash for profile entries (key order independent).
@@ -36,7 +43,6 @@ export function assertSafeRel(rel) {
     !rel ||
     typeof rel !== 'string' ||
     isAbsolute(rel) ||
-    rel.split(sep).includes('..') ||
     rel.split('/').includes('..') ||
     rel.includes('\0') ||
     /^[a-zA-Z]:/.test(rel) ||
