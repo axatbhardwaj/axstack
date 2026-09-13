@@ -5,7 +5,13 @@ description: Map capabilities to tasks with Linear preflight, report-only checke
 
 # Tickets
 
-Linear is the default integration; repository Markdown is an explicit alternative.
+Load before acting:
+
+- [Paseo launch](../axstack/references/paseo-launch.md)
+- [Standing contracts](../axstack/references/contracts.md)
+
+Requires an approved spec baseline (entry or standalone). Confirm the
+approved spec identity before mapping; hold on unapproved or changed scope.
 
 ## Session preflight
 
@@ -16,7 +22,7 @@ do not silently switch stores. Markdown mode works independently when explicitly
 ## Mapping
 
 - Linear issues are user-visible capabilities. One capability may span several implementation tasks and PRs. Detailed breakdowns live in the repository.
-- The driver owns every Linear mutation. A small inexpensive checker only reports discrepancies in run issues, with evidence. It never mutates Linear.
+- The driver owns every Linear mutation. A small inexpensive checker only reports discrepancies in run issues, with evidence. It never mutates Linear. A null checker model blocks dispatch until setup selects one — never launch a provider default.
 
 ## Template: capability to task map
 
