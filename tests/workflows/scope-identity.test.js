@@ -38,6 +38,8 @@ test('scope identity: entry reports missing substantial prerequisites and launch
   expect(entry).toMatch(/never\s+admit[^.]*deeper\s+phase[^.]*reject/i);
   expect(entry).not.toMatch(/starting at the earliest phase whose required inputs are missing/i);
   expect(entry).not.toMatch(/start at `axstack-align`/i);
+  const lifecycle = entry.slice(entry.indexOf('## Lifecycle'), entry.indexOf('## Autonomous progress'));
+  expect(lifecycle.match(/substantial work only/gi)).toHaveLength(3);
 });
 
 test('scope identity: driver captures a current small-change intent without bouncing to alignment', () => {
@@ -54,18 +56,30 @@ test('scope identity: driver captures a current small-change intent without boun
   }
 });
 
-test('scope identity: contracts, implement, and authored review accept the same two identities', () => {
+test('scope identity: execution boundaries accept the same two identities', () => {
   const contracts = read('skills/axstack/references/contracts.md');
   const implement = read('skills/axstack-implement/SKILL.md');
   const review = read('skills/axstack-review/SKILL.md');
   const authored = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Two-reviewer contract'));
+  const launch = read('skills/axstack/references/paseo-launch.md');
+  const launchStep = launch.slice(launch.indexOf('6. `create_agent`'), launch.indexOf('7. Verify'));
+  const watch = read('skills/axstack-watch/SKILL.md');
+  const feedback = watch.slice(watch.indexOf('## Feedback routing'), watch.indexOf('## End conditions'));
+  for (const [name, text] of [
+    ['contracts', contracts],
+    ['implement', implement],
+    ['authored review', authored],
+    ['Paseo launch brief', launchStep],
+    ['watch feedback routing', feedback],
+  ]) {
+    expect(text, `${name}: missing named small identity`).toMatch(/small-change intent/i);
+    expect(text, `${name}: missing substantial identity`).toMatch(/approved spec/i);
+  }
   for (const [name, text] of [
     ['contracts', contracts],
     ['implement', implement],
     ['authored review', authored],
   ]) {
-    expect(text, `${name}: missing named small identity`).toMatch(/small-change intent/i);
-    expect(text, `${name}: missing substantial identity`).toMatch(/approved spec/i);
     expect(text, `${name}: missing independent identity check`).toMatch(/confirm|check|verify/i);
   }
   expect(contracts).toMatch(/recorded\s+request[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
@@ -97,6 +111,9 @@ test('scope identity: public docs and local-record exemption describe the propor
     expect(text, `${name}: missing small-change path`).toMatch(/small[^.]*request|small[^.]*issue/i);
   }
   expect(workflows).toMatch(/2026-09-13[^.]*user-requested/i);
+  const reviewDocs = workflows.slice(workflows.indexOf('- `axstack-review`'), workflows.indexOf('- `axstack-watch`'));
+  expect(reviewDocs).toMatch(/approved baseline[^.]*substantial/i);
+  expect(reviewDocs).toMatch(/small-change intent[^.]*small/i);
   expect(spec).toMatch(/2026-09-13[^.]*user-requested/i);
   expect(record).toMatch(/tiny-task exemption[^.]*not[^.]*scope-identity exemption/i);
 });

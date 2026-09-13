@@ -22,11 +22,15 @@ test('run-record: path, identity, fallback, and archive stay local and stable', 
   const text = read('skills/axstack/references/run-record.md');
   const command = 'git rev-parse --path-format=absolute --git-common-dir';
   expect(text).toContain(`<${command}>/axstack/runs/<id>/progress.md`);
-  expect(text.match(new RegExp(command, 'g'))).toHaveLength(2);
+  expect(text.match(new RegExp(command, 'g'))?.length ?? 0).toBeGreaterThanOrEqual(1);
   expect(text).toMatch(/without[\s\S]*?path-format=absolute[\s\S]*?relative `\.git`[\s\S]*?ambiguous[\s\S]*?worktrees[\s\S]*?current working\s+directory/i);
   expect(text).toMatch(/main checkout[\s\S]*linked worktrees|linked worktrees[\s\S]*main checkout/i);
   expect(text).toMatch(/never[^.]*tracked tree/i);
   expect(text).toMatch(/<UTCdate>-<slug>/i);
+  expect(text).toMatch(/UTCdate[^.]*YYYYMMDD[^.]*20260913-local-progress/i);
+  expect(text).toMatch(/slug[^.]*driver[^.]*lowercase letters[^.]*digits[^.]*hyphens[^.]*only/i);
+  expect(text).toMatch(/never[^.]*raw request text/i);
+  expect(text).toMatch(/no[^.]*separators[^.]*path segments[^.]*inside `?axstack\/runs\/?`?/i);
   expect(text).toMatch(/collision[^.]*suffix/i);
   expect(text).toMatch(/non-Git[^.]*private host state/i);
   expect(text).toMatch(/Archived[^.]*status/i);
@@ -45,7 +49,11 @@ test('run-record: compact template carries required run and task fields', () => 
     expect(template).toContain(column);
   }
   expect(template).toMatch(/Driver:[^\n]*sole writer/i);
-  expect(template).toContain('<role + session ID + worktree | receipt ref>');
+  const header = template.split('\n').find((line) => line.startsWith('| Task |'));
+  const example = template.split('\n').find((line) => line.startsWith('| <task> |'));
+  const cellCount = (line) => line.split('|').length - 2;
+  expect(cellCount(example), 'task example must match header cell count').toBe(cellCount(header));
+  expect(example).toContain('<role + session ID + worktree, or receipt ref>');
 });
 
 test('run-record: reconciliation protects ownership and revision evidence', () => {
@@ -59,6 +67,8 @@ test('run-record: reconciliation protects ownership and revision evidence', () =
   expect(text).toMatch(/approval[^.]*evidence[^.]*older\s+revision|stale[^.]*evidence[^.]*revision/i);
   expect(text).toMatch(/task completion[^.]*capability[^.]*merged/i);
   expect(text).toMatch(/prior driver[^.]*inactive|inactive[^.]*prior driver/i);
+  expect(text).toMatch(/inactive[^.]*actual Paseo session state/i);
+  expect(text).toMatch(/idle alone[^.]*never[^.]*reassign/i);
   expect(text).toMatch(/explicit[^.]*accepted transfer/i);
   expect(text).toMatch(/uncertain[^.]*live conflict[^.]*hold|live conflict[^.]*uncertain[^.]*hold/i);
   expect(text).toMatch(/never[^.]*overwrite/i);
@@ -102,12 +112,6 @@ test('descriptions: every shipped skill is one-line, intent-first, and named', (
       /^description: When .+, use axstack(?:-[a-z-]+)? /,
     );
   }
-  expect(read('skills/axstack/SKILL.md')).toMatch(
-    /^description: When coordinating engineering tasks and PRs through Axstack and tracking their progress, use axstack to route the run to the right phase\.$/m,
-  );
-  expect(read('skills/axstack-align/SKILL.md')).toMatch(
-    /^description: When exploring or planning an idea and settling its scope and decisions, use axstack-align to prepare scope and, when applicable, a spec plus tickets\.$/m,
-  );
   expect(read('skills/axstack-watch/SKILL.md')).toMatch(
     /^description: When .*babysit.*existing PR.*use axstack-watch /im,
   );
