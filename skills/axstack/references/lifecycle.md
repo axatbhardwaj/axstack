@@ -1,15 +1,14 @@
 # Shared lifecycle and receipts
 
-Phases load this directly or through the mandatory edge in
-[Standing contracts](contracts.md). Substantive delegated or resumable work
-uses the [Run record](run-record.md), whose driver-owned ledger binds lifecycle
-state and receipts to exact revisions.
+Phases load through [Standing contracts](contracts.md)' mandatory edge.
+Substantive delegated or resumable work uses a driver-owned
+[Run record](run-record.md) to bind state and receipts to exact revisions.
 
 ## Roster (compact)
 
-- Driver: current chat. Owns run scope, decisions, cross-PR dependencies,
-  Linear mutations, and integration.
-- Owner (`axstack-owner`): one persistent owner per PR. Launches its author,
+- Driver: current chat. Owns scope, decisions, cross-PR dependencies, Linear
+  mutations, and integration.
+- Owner (`axstack-owner`): one persistent owner per PR; launches its author,
   reviewers, monitor, and watchdog; may perform authorized PR-scoped
   publication within user authority. The human merges by default.
 - Author: exactly one writer per candidate at a time. Accepted fixes return to
@@ -18,7 +17,7 @@ state and receipts to exact revisions.
   the same brief and no first-pass cross-read.
 - Monitor/watchdog: independent read-only Opus medium sessions on native Paseo
   timers.
-- Auditor (`axstack-auditor`): report-only evidence collection. It never edits,
+- Auditor (`axstack-auditor`): report-only evidence collector. Never edits,
   merges, activates, or audits itself.
 
 Prefer useful parallel work by independent subagents with bounded tasks and no
@@ -31,10 +30,10 @@ Peer code stays read-only. A missing or idle session never transfers ownership.
 
 ## Native handoff and resume
 
-Axstack stores resumable state. Preparation completion and watch expiry write a
-resumable record; ordinary resume reconciles it. These cases keep the current
-owner and launch no native handoff. Only an explicit user request to transfer
-ownership enters the native `paseo-handoff` branch below.
+Preparation completion and watch expiry write a resumable record; ordinary
+resume reconciles it. They keep the current owner and launch no native handoff.
+Only an explicit user request to transfer ownership enters the native
+`paseo-handoff` branch below.
 
 1. Reconcile the [Run record](run-record.md) with Paseo sessions, Git revisions,
    forge state, pending receipts, and timer expiries. Actual live owners and
@@ -56,14 +55,14 @@ ownership enters the native `paseo-handoff` branch below.
    the current owner remains accountable. A prior owner that observes a
    different valid accepted owner stops.
 
-A resumable record is complete when it points to goal, authority, intent, IDs,
+The record is complete when it points to goal, authority, intent, IDs,
 revisions, evidence, pending receipts/timers, unresolved decisions, and next
 action. A transfer record also points to accepted ownership or the retaining gap.
 
 ## Receipts (bind each decision to evidence)
 
-Store concise receipt references in the [Run record](run-record.md), not raw
-worker output.
+Store concise receipt references, not raw worker output, in the
+[Run record](run-record.md).
 
 - Session receipt: actual agent/workspace IDs, requested provider/model, and
   role. Reuse it on resume rather than spawning a replacement.
@@ -93,8 +92,8 @@ retry, and reuse watch state after restart.
 
 ## Audit hook (end of run and meaningful checkpoints)
 
-Auditing is enabled by default for every substantive run. At run end and useful
-checkpoints such as material deviation or repeated repair, load the bundled [audit skill](../../axstack-audit/SKILL.md)
+Auditing defaults on for every substantive run. At run end and checkpoints
+such as material deviation or repeated repair, load the bundled [audit skill](../../axstack-audit/SKILL.md)
 and dispatch the auditor. An `axstack-audit` run is excluded: it writes its
 record and launches no children.
 
