@@ -1,0 +1,329 @@
+import { test, expect } from 'bun:test';
+// Filesystem access uses the approved narrow exception: node:fs and
+// node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
+// required. Path handling below is local (import.meta.dir), not node:.
+import { readFileSync, existsSync } from 'node:fs';
+
+function dirname(p) {
+  const clean = p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+  const i = clean.lastIndexOf('/');
+  if (i < 0) return '.';
+  if (i === 0) return '/';
+  return clean.slice(0, i);
+}
+
+function splitSegs(p) {
+  return p.split('/').filter((s) => s !== '');
+}
+
+function normalizeSegs(segs) {
+  const out = [];
+  for (const s of segs) {
+    if (s === '.' || s === '') continue;
+    else if (s === '..') out.pop();
+    else out.push(s);
+  }
+  return out;
+}
+
+function join(...parts) {
+  const absolute = parts.length > 0 && parts[0].startsWith('/');
+  return (absolute ? '/' : '') + normalizeSegs(parts.flatMap(splitSegs)).join('/');
+}
+
+const here = import.meta.dir;
+const root = dirname(dirname(here));
+const skillsDir = join(root, 'skills');
+
+function skill(name) {
+  return readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
+}
+
+// NOTE: interface/invariant checks only. They verify packaging and stated
+// contracts, not instruction-following behavior (same boundary as the
+// structural checks; behavioral evidence comes from scenario evaluation).
+
+test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
+  for (const ref of ['paseo-launch.md', 'contracts.md', 'routing.md', 'lifecycle.md']) {
+    expect(
+      existsSync(join(skillsDir, 'axstack', 'references', ref)),
+      `missing shared reference skills/axstack/references/${ref}`,
+    ).toBeTruthy();
+  }
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
+    const text = skill(name);
+    expect(
+      text.includes('../axstack/references/routing.md'),
+      `${name}: must explicitly load shared routing reference`,
+    ).toBeTruthy();
+    expect(
+      text.includes('../axstack/references/lifecycle.md'),
+      `${name}: must explicitly load shared lifecycle/receipt reference`,
+    ).toBeTruthy();
+  }
+});
+
+test('owned-core: entry routes research/docs/handoff directly without spec ceremony', () => {
+  const text = skill('axstack');
+  for (const name of ['axstack-research', 'axstack-docs', 'axstack-handoff']) {
+    expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
+  }
+  expect(
+    /research|docs|handoff[\s\S]{0,400}without.*spec|no spec.*(research|docs|handoff)/i.test(text),
+    'entry must state research/docs/handoff need no spec ceremony',
+  ).toBeTruthy();
+});
+
+test('owned-core: review peer mode accepts linked intent without Axstack spec', () => {
+  const text = skill('axstack-review');
+  expect(/peer/i.test(text), 'review must name a peer (colleague PR) mode').toBeTruthy();
+  expect(
+    /linked issue/i.test(text),
+    'peer mode must accept the linked issue as intent',
+  ).toBeTruthy();
+  expect(
+    /no Axstack(-created)? approved spec|without.*(new|Axstack) spec|does not demand.*spec/i.test(text),
+    'peer mode must not demand an Axstack-created approved spec',
+  ).toBeTruthy();
+  expect(
+    /missing|contradictory/i.test(text) && /coverage/i.test(text),
+    'peer mode must report missing/contradictory intent as incomplete coverage',
+  ).toBeTruthy();
+});
+
+test('owned-core: review authored mode keeps baseline; adopted scope needs no repeated approval', () => {
+  const text = skill('axstack-review');
+  expect(/authored/i.test(text), 'review must name an authored mode').toBeTruthy();
+  expect(
+    /adopt/i.test(text),
+    'authored mode must cover adopting an existing PR',
+  ).toBeTruthy();
+  expect(
+    /without repeated approval|accepted without.*approval|snapshot.*accepted/i.test(text),
+    'adopted maintenance scope snapshot must be accepted without repeated approval',
+  ).toBeTruthy();
+});
+
+test('owned-core: exactly two independent reviewers, same brief, exact rev, no cross-read, owner validates', () => {
+  const text = skill('axstack-review');
+  expect(/exactly two/i.test(text), 'must require exactly two final reviewers').toBeTruthy();
+  expect(/same.*six-angle|six-angle.*same/i.test(text), 'both reviewers must get the same six-angle brief').toBeTruthy();
+  expect(/exact.*revision|exact.*sha/i.test(text), 'review must bind to the exact revision').toBeTruthy();
+  expect(
+    /no.*cross-read|without.*cross-read|neither.*reads the other/i.test(text),
+    'must forbid first-pass cross-reading between reviewers',
+  ).toBeTruthy();
+  expect(/without vot/i.test(text), 'owner must validate findings without voting').toBeTruthy();
+});
+
+test('owned-core: report-only writes nothing; authorized submit binds commit and verifies receipt', () => {
+  const text = skill('axstack-review');
+  expect(
+    /report-only/i.test(text) && /no GitHub writes|no external|writes nothing/i.test(text),
+    'report-only must state explicitly that no GitHub writes occur',
+  ).toBeTruthy();
+  expect(
+    /submit/i.test(text) && /authoriz/i.test(text),
+    'must gate consolidated peer review submission on authorization',
+  ).toBeTruthy();
+  expect(
+    /bind.*commit|commit.*bind/i.test(text),
+    'submission must bind the commit under review',
+  ).toBeTruthy();
+  expect(
+    /verify.*receipt|receipt.*verif/i.test(text),
+    'submission must verify the review receipt',
+  ).toBeTruthy();
+  expect(
+    /ambiguous/i.test(text) && /lookup\s+before\s+retry|look\s+up\s+before\s+retry/i.test(text),
+    'ambiguous submission must require lookup before retry',
+  ).toBeTruthy();
+  expect(
+    /peer code[\s\S]*readonly|readonly[\s\S]*peer/i.test(text),
+    'peer code must remain readonly',
+  ).toBeTruthy();
+});
+
+test('owned-core: prompt-only escalation with optional relay and concrete chat fallback', () => {
+  const text = skill('axstack-review');
+  expect(/prompt-only/i.test(text), 'escalation must stay prompt-only').toBeTruthy();
+  expect(
+    /optional/i.test(text) && /relay/i.test(text),
+    'relay must be optional and configured',
+  ).toBeTruthy();
+  expect(
+    /chat[\s\S]*fallback|fallback[\s\S]*chat/i.test(text),
+    'must name a concrete chat fallback when relay delivery fails',
+  ).toBeTruthy();
+});
+
+test('owned-core: watch adopts existing PR; observation-only dispatches nothing writable', () => {
+  const text = skill('axstack-watch');
+  expect(/adopt/i.test(text), 'watch must adopt an existing PR').toBeTruthy();
+  expect(
+    /observation-only|monitoring-only/i.test(text),
+    'watch must name an observation-only mode',
+  ).toBeTruthy();
+  expect(
+    /no author|without.*author|never.*author/i.test(text),
+    'observation-only dispatch must launch no author',
+  ).toBeTruthy();
+  expect(
+    /no reply|without.*reply|never.*repl/i.test(text),
+    'observation-only dispatch must send no reply',
+  ).toBeTruthy();
+});
+
+test('owned-core: authorized repairs use original author with reviewed code and exact text', () => {
+  const text = skill('axstack-watch');
+  expect(
+    /original author|same author/i.test(text),
+    'authorized repairs must reuse the original author',
+  ).toBeTruthy();
+  expect(
+    /exact.*(reply|response|public) text|exact text/i.test(text),
+    'authorized publication requires the exact public reply text reviewed',
+  ).toBeTruthy();
+  expect(
+    /fresh/i.test(text) && /remote head|head.*base|base.*head/i.test(text),
+    'must confirm fresh remote head/base before publication',
+  ).toBeTruthy();
+  expect(
+    /feedback/i.test(text),
+    'must confirm fresh review feedback before publication',
+  ).toBeTruthy();
+  expect(
+    /gh stack/i.test(text) && /no overwrite|scoped|without.*overwrit/i.test(text),
+    'delivery must be gh stack scoped with no overwrite',
+  ).toBeTruthy();
+  expect(
+    /receipt/i.test(text),
+    'publication must verify the review receipt',
+  ).toBeTruthy();
+});
+
+test('owned-core: one persistent owner; independent read-only monitor/watchdog on native timers', () => {
+  const text = skill('axstack-watch');
+  expect(
+    /one (persistent )?owner/i.test(text),
+    'must keep one persistent owner per PR',
+  ).toBeTruthy();
+  expect(/monitor/i.test(text) && /watchdog/i.test(text), 'must name monitor and watchdog roles').toBeTruthy();
+  expect(
+    /independent/i.test(text) && /read-only/i.test(text),
+    'monitor/watchdog must be independent and read-only',
+  ).toBeTruthy();
+  expect(
+    /native Paseo|Paseo.*timer|timer.*Paseo/i.test(text),
+    'monitor/watchdog must use native Paseo timers',
+  ).toBeTruthy();
+  expect(/handshake/i.test(text), 'must require initial verified handshakes').toBeTruthy();
+  expect(
+    /snapshot-only|healthy ticks/i.test(text),
+    'healthy ticks must be snapshot-only',
+  ).toBeTruthy();
+  expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
+  expect(
+    /uncertain/i.test(text) && /reconcil/i.test(text),
+    'uncertain sends must be reconciled',
+  ).toBeTruthy();
+  expect(/restart/i.test(text) && /reuse/i.test(text), 'restart must reuse prior state').toBeTruthy();
+});
+
+test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from merged', () => {
+  const text = skill('axstack-watch');
+  expect(/24h|24-hour|24 hour/i.test(text), 'must state the 24h default deadline').toBeTruthy();
+  expect(/open PR/i.test(text), 'deadline must explicitly cover open PRs').toBeTruthy();
+  expect(
+    /no silent renewal|never.*renew/i.test(text),
+    'must forbid silent renewals',
+  ).toBeTruthy();
+  expect(
+    /merge-ready.*(distinct|not|observed)|observed state/i.test(text),
+    'merge-ready must be distinct from merged',
+  ).toBeTruthy();
+  expect(
+    /human.*merg|merg.*human/i.test(text),
+    'human merge authority must be stated',
+  ).toBeTruthy();
+});
+
+test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
+    const text = skill(name);
+    expect(/daemon/i.test(text), `${name}: must not introduce a daemon`).toBe(false);
+    expect(/state machine/i.test(text), `${name}: must not introduce a state machine`).toBe(false);
+    expect(
+      /programmatic gate|decision engine/i.test(text),
+      `${name}: must not introduce a programmatic gate/engine`,
+    ).toBe(false);
+  }
+  for (const ref of ['routing.md', 'lifecycle.md']) {
+    const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
+    expect(text.length, `${ref} must stay compact (<6000 chars)`).toBeLessThan(6000);
+  }
+});
+
+test('owned-core: profiles add namespaced role defaults; existing seven unchanged', () => {
+  const data = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
+  const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
+  const expected = {
+    'axstack-research-requirements': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
+    'axstack-research-code': { provider: 'codex', model: 'gpt-5.6-sol', thinkingOptionId: 'medium' },
+    'axstack-research-web': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'low' },
+    'axstack-docs': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'low' },
+    'axstack-explainer': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
+    'axstack-explainer-review': { provider: 'codex', model: 'gpt-5.6-luna', thinkingOptionId: 'max' },
+    'axstack-explore-codebase': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
+    'axstack-explore-execution': { provider: 'codex', model: 'gpt-5.6-terra', thinkingOptionId: 'low' },
+    'axstack-monitor': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
+    'axstack-watchdog': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
+  };
+  for (const [id, want] of Object.entries(expected)) {
+    const prof = byId[id];
+    expect(prof, `missing profile ${id}`).toBeTruthy();
+    expect(prof.provider, `${id}: provider must be ${want.provider}`).toBe(want.provider);
+    expect(prof.model, `${id}: model must be ${want.model}`).toBe(want.model);
+    expect(prof.thinkingOptionId, `${id}: thinking must be ${want.thinkingOptionId}`).toBe(want.thinkingOptionId);
+    expect(prof.name && prof.name.length > 0, `${id}: missing name`).toBeTruthy();
+    expect(prof.notes && prof.notes.length > 0, `${id}: missing notes`).toBeTruthy();
+    expect(
+      /never.*substitut|no.*fallback|never.*fallback/i.test(prof.notes),
+      `${id}: notes must disclaim automatic substitution/fallback`,
+    ).toBeTruthy();
+  }
+  // Existing seven keep their provider/model/mode IDs.
+  const existing = {
+    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'auto' },
+    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'plan' },
+    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
+    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
+    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
+    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
+  };
+  for (const [id, want] of Object.entries(existing)) {
+    const prof = byId[id];
+    expect(prof, `missing profile ${id}`).toBeTruthy();
+    expect(prof.provider, `${id}: provider changed`).toBe(want.provider);
+    expect(prof.model, `${id}: model changed`).toBe(want.model);
+    expect(prof.modeId, `${id}: modeId changed`).toBe(want.modeId);
+  }
+  // New profiles keep public conservative modes.
+  for (const [id, want] of Object.entries(expected)) {
+    const conservative = want.provider === 'claude' ? 'default' : 'auto';
+    expect(byId[id].modeId, `${id}: must keep conservative mode ${conservative}`).toBe(conservative);
+  }
+});
+
+test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
+  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-docs', 'axstack-handoff']) {
+    expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
+  }
+  expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();
+  const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
+  expect(/Model presets|role presets/i.test(install), 'installation doc must document role presets').toBeTruthy();
+  const readme = readFileSync(join(root, 'README.md'), 'utf8');
+  expect(readme.includes('axstack-review'), 'README must reference axstack-review').toBeTruthy();
+  expect(readme.includes('axstack-watch'), 'README must reference axstack-watch').toBeTruthy();
+});
