@@ -61,9 +61,17 @@ bun bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
 
 Full command reference: [docs/installation.md](docs/installation.md).
 
-Model presets ship as data in [profiles/paseo.json](profiles/paseo.json)
-and are configurable; an unavailable model pauses affected work for your
-decision — never automatic substitution. Phase skills live in [skills/](skills/).
+The public bundle contains 18 presets in
+[profiles/paseo.json](profiles/paseo.json): 17 configured defaults that the
+installer can merge, plus the `axstack-checker` setup placeholder whose model
+is intentionally unset. The placeholder stays bundled but is deferred from
+the Paseo config and ownership manifest until you select its model; an
+existing configured checker is preserved. No model is substituted.
+
+`install --profile` writes the selected JSON config file only. It does not
+apply a native config patch, hot-reload a daemon, or prove runtime readback;
+perform and verify any host application step separately. Phase skills live in
+[skills/](skills/).
 
 ## Verification status
 

@@ -1,7 +1,7 @@
 # Installation
 
-Axstack ships a setup CLI that installs owned chat skills, merges Paseo
-agent profiles, and checks host capabilities. Chat drives execution; the CLI
+Axstack ships a setup CLI that installs owned chat skills, merges configured
+Paseo agent profiles, and checks host capabilities. Chat drives execution; the CLI
 performs installation bookkeeping only. There is no Axstack daemon, run
 scheduler, or workflow state machine in this package.
 
@@ -53,6 +53,14 @@ Behavior:
   run instead of writing, reading-for-delete, or removing through the link.
   A symlinked target root is canonicalized first, so it stays contained.
 - Reinstalls are idempotent: unchanged files report `no changes`.
+- Bundle profiles without a selected model are setup placeholders, not
+  executable defaults. They are reported but omitted from both the Paseo
+  config and ownership manifest. An existing configured profile with the same
+  ID is preserved and never replaced by an unset value, including with
+  `--force`.
+- Upgrades remove an older unconfigured placeholder only when its current
+  bytes still match the hash bound in Axstack's manifest. A changed entry is
+  preserved; an already-missing entry only releases its stale ownership.
 - Edited owned files and profiles are detected via sha256 ownership hashes
   (`.axstack-manifest.json` in the skills directory) and preserved with a
   report. Preserved entries keep their prior install hashes; only actually
@@ -126,16 +134,25 @@ end-to-end run and is reported only at the level actually verified.
 
 ## Model presets
 
-Role presets (driver, advisor, PR owners, reviewers) ship as data in
-`profiles/paseo.json` and are merged by `axstack install --profile`.
+The public `profiles/paseo.json` contains 18 role presets. Seventeen have
+configured models and are executable defaults that `axstack install
+--profile` can merge. `axstack-checker` is the eighteenth: its explicit
+`model: null` records that setup must choose the inexpensive checker model,
+so the installer reports and defers it instead of writing invalid host data or
+inventing a provider/model default. A checker already configured by the user
+is kept and is not newly claimed in the ownership manifest.
+
 Namespaced role defaults extend the same file: research requirements,
 research code, research web, docs authorship, visual explanation and its
 review, codebase and execution exploration, the monitor and watchdog
 roles, plus the read-only auditor. Review them before installing: the installer applies explicit
 configuration only and never auto-installs into your live home. No model is
 ever substituted automatically; outages pause affected work for your
-decision. Selected live profiles are authoritative at runtime; bundled
-values are setup defaults, not a claim of actual model availability.
+decision. The installer only writes the requested JSON file; it does not call
+Paseo's native config API, hot-reload a running daemon, or verify
+`list_profiles` readback. Applying or reloading that file is a separate host
+operation. Profiles observed from the host are authoritative at runtime;
+bundled values are setup defaults, not a claim of actual model availability.
 
 ## Examples
 
