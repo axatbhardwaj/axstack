@@ -69,14 +69,14 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
   }
 });
 
-test('owned-core: entry routes research/explain/handoff directly without spec ceremony', () => {
+test('owned-core: entry routes research/explain/improve/handoff directly without spec ceremony', () => {
   const text = skill('axstack');
-  for (const name of ['axstack-research', 'axstack-explain', 'paseo-handoff']) {
+  for (const name of ['axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
     expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
   }
   expect(
-    /research/i.test(text) && /explain/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
-    'entry must state research/explain/handoff need no spec ceremony',
+    /research/i.test(text) && /explain/i.test(text) && /improve/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
+    'entry must state research/explain/improve/handoff need no spec ceremony',
   ).toBeTruthy();
 });
 
@@ -441,7 +441,7 @@ test('owned-core: align and spec involve Fable; auditor profile exists', () => {
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'paseo-handoff']) {
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();

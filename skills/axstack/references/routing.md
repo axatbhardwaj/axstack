@@ -13,6 +13,11 @@ for its next action.
   use project documentation as evidence where relevant and verify rendered behavior when applicable.
   A stale axstack-docs install is superseded and must not also route the
   request. Publication needs separate authority.
+- Codebase-quality or refactor discovery -> `axstack-improve`. Inspect a
+  bounded scope, rank evidenced maintainability, architecture, or testability
+  candidates, and write the requested report only. Discovery needs no spec or
+  tickets and authorizes no source edit. A selected change returns through the
+  proportional preparation or execution boundary.
 - Preparation completion, watch expiry, ordinary resume, or reconciliation ->
   the [handoff and resume lifecycle](lifecycle.md#native-handoff-and-resume).
   Update or reconcile the run record; keep the current owner and launch no
@@ -24,7 +29,7 @@ for its next action.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.
 
-Research, explanation, handoff, peer review, and adopted maintenance do not require
+Research, explanation, improvement discovery, handoff, peer review, and adopted maintenance do not require
 alignment, an Axstack-approved spec, or ticket mapping. Their own authority and
 intent boundaries still apply.
 

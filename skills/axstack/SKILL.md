@@ -11,7 +11,8 @@ The current chat remains the driver; Paseo owns runtime orchestration.
 ## Route the request
 
 1. Classify the request with [Shared routing](references/routing.md). Direct
-   research, explanation, peer-review, adopted-watch, and handoff routes need no spec
+   research, explanation, improvement discovery, peer-review, adopted-watch,
+   and handoff routes need no spec
    ceremony. Only an explicit user-requested ownership transfer can use the
    capability-gated native route in
    [Lifecycle and receipts](references/lifecycle.md#native-handoff-and-resume),

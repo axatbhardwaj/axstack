@@ -14,7 +14,8 @@ provided by Paseo; see [workflow prerequisites](docs/workflows.md#native-handoff
 
 Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
 `axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`,
-plus direct `axstack-research` and `axstack-explain` routes that need no spec
+plus direct `axstack-research`, `axstack-explain`, and `axstack-improve` routes
+that need no spec
 ceremony). Handoffs use Paseo’s native `paseo-handoff` when available;
 Axstack retains the run-record and ownership context:
 
@@ -107,7 +108,7 @@ Phase skills live in [skills/](skills/).
 
 ## Verification status
 
-- 102 workflow structural and contract checks pass under Bun. The repository
+- 107 workflow structural and contract checks pass under Bun. The repository
   contains 36 declared scenarios; their shape checks are not model behavior.
 - A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
   intended decisions for the 25 declared scenarios plus 8 baseline cases.

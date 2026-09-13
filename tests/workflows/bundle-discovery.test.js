@@ -4,10 +4,10 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 const root = `${import.meta.dir}/../../skills`;
 const skills = readdirSync(root).filter((name) => existsSync(`${root}/${name}/SKILL.md`)).sort();
 
-test('skill catalog exposes ten owned entrypoints and leaves handoff to Paseo', () => {
+test('skill catalog exposes eleven owned entrypoints and leaves handoff to Paseo', () => {
   expect(skills).toEqual([
     'axstack', 'axstack-align', 'axstack-audit', 'axstack-explain',
-    'axstack-implement', 'axstack-research', 'axstack-review',
+    'axstack-implement', 'axstack-improve', 'axstack-research', 'axstack-review',
     'axstack-spec', 'axstack-tickets', 'axstack-watch',
   ]);
   expect(existsSync(`${root}/axstack-handoff`)).toBe(false);

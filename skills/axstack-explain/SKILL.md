@@ -20,15 +20,19 @@ immediately before an actual profile dispatch.
 
 1. Identify the audience, question, requested format, theme, and publication
    boundary.
-2. Record the inspected paths and exact revision, plus any live target and
-   observation method. Trace the relevant flow, boundaries, dependencies, and
-   actual behavior before comparing current versus intended behavior.
+2. Record the inspected paths. Use an exact revision for Git sources; for a
+   non-versioned file, screenshot, or exported snippet, use a stable source
+   identity or content hash. Record any live target and observation method.
+   Record the history window when available; unavailable history is a named
+   limitation, never an invented window. Trace the relevant flow, boundaries,
+   dependencies, and actual behavior before comparing current versus intended
+   behavior.
 3. Mark material claims independently as **source implemented**, **tested**,
    **live observed**, **planned/proposed**, or **unknown**. These dimensions can
    coexist; none implies another.
-4. For every gap, cite its inspected scope and revision. “Not found” never
-   means app-wide missing without app-wide evidence; anything outside the
-   inspected scope is unknown.
+4. For every gap, cite its inspected scope and applicable revision, stable
+   source identity, or content hash. “Not found” never means app-wide missing
+   without app-wide evidence; anything outside the inspected scope is unknown.
 
 ## 2. Choose proportional output
 

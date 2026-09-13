@@ -34,6 +34,11 @@ spec, or ticket mapping:
   Publication needs its own authority. If an ordinary upgrade leaves the old
   `axstack-docs` skill installed, `axstack-explain` supersedes it; do not route
   both. Use the documented uninstall/install migration below.
+- `axstack-improve` — bounded, report-only discovery of evidenced
+  maintainability, architecture, and testability improvements. It may find no
+  worthwhile change. Selecting a candidate does not authorize refactoring;
+  unresolved design returns through alignment, while clear authorized work may
+  use its settled proportional scope identity.
 - `paseo-handoff` (provided by Paseo) — transfer the task with the Axstack
   run-record pointer and current authority; see [Native handoff](#native-handoff).
   Resume reconciles existing state through Axstack’s shared lifecycle.
@@ -61,6 +66,9 @@ Paseo launch materialization before dispatch.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
 - `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; `gh stack` coordination; restart reconciliation (ambiguity never authorizes a duplicate writer).
+- `axstack-improve` — direct codebase-quality discovery with bounded evidence,
+  a small ranked candidate set, and no automatic source edits. It may use
+  `axstack-explain` for useful before/after visuals without forcing HTML.
 - `axstack-review` — peer mode accepts the PR description, linked issue,
   and repository requirements as intent with no Axstack-created approved
   spec; authored mode retains the approved baseline for substantial work or

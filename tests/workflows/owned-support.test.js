@@ -45,7 +45,7 @@ const here = import.meta.dir;
 const root = dirname(dirname(here));
 const skillsDir = join(root, 'skills');
 
-const OWNED = ['axstack-research', 'axstack-explain'];
+const OWNED = ['axstack-research', 'axstack-explain', 'axstack-improve'];
 
 function readSkill(name) {
   return readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
@@ -65,7 +65,7 @@ function linkEscapesBundle(skillDir, fromDir, link) {
   return !(target === skillDir || target.startsWith(skillDir + '/'));
 }
 
-test('owned-support: two owned support skills exist with SKILL.md', () => {
+test('owned-support: owned support skills exist with SKILL.md', () => {
   for (const name of OWNED) {
     const p = join(skillsDir, name, 'SKILL.md');
     expect(existsSync(p), `missing ${p}`).toBeTruthy();
@@ -197,7 +197,10 @@ test('owned-support: explain distinguishes evidence and bounds every gap', () =>
     expect(text.toLowerCase().includes(label), `explain must preserve ${label} evidence`).toBeTruthy();
   }
   expect(/coexist|independent/i.test(text), 'evidence dimensions must be independent and may coexist').toBeTruthy();
-  expect(/gap[\s\S]{0,300}(inspected|scope)[\s\S]{0,200}revision/i.test(text), 'each gap must identify inspected scope and revision').toBeTruthy();
+  expect(/gap[\s\S]{0,300}(inspected|scope)[\s\S]{0,240}(revision|stable source identity|content hash)/i.test(text), 'each gap must identify inspected scope and applicable stable source identity').toBeTruthy();
+  expect(/stable source identity|content hash/i.test(text), 'non-versioned evidence must use a stable identity or content hash').toBeTruthy();
+  expect(/non-versioned|screenshot|exported snippet/i.test(text), 'non-Git evidence must be explicitly supported').toBeTruthy();
+  expect(/history[^.]*unavailable[^.]*limitation|unavailable history[^.]*limitation/i.test(text), 'unavailable history must be reported as a limitation').toBeTruthy();
   expect(/not found[\s\S]{0,180}(app-wide|whole app|entire app)[\s\S]{0,100}(without|unless)/i.test(text), 'not-found evidence must not become an app-wide absence claim').toBeTruthy();
 });
 

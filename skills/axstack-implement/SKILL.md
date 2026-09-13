@@ -5,10 +5,11 @@ description: When an approved task is ready to build or repair, use axstack-impl
 
 # Implement
 
-Deliver one reviewable candidate at an exact revision. Its accepted behavior
-has real red -> green -> refactor evidence, its unverified boundaries are
-named, and its ownership remains unambiguous. Review and merge are later
-phases.
+Deliver one reviewable candidate at an exact revision. Normal behavior changes
+have real red -> green -> refactor evidence; a narrowly accepted
+structure-preserving change has old-green characterization evidence. Name
+unverified boundaries and keep ownership unambiguous. Review and merge are
+later phases.
 
 ## 1. Admit the work
 
@@ -63,7 +64,12 @@ combined stack, but the parent need not wait for an independently reviewed
 child. Dispatch only when ownership, worktree, dependency revisions, and
 writer exclusivity agree with live state.
 
-## 3. Make one behavior slice red
+## 3. Establish test-first evidence
+
+Use the normal behavior path unless the accepted improvement scope is
+explicitly marked **structure-preserving**. The author never chooses that tag.
+
+### Normal behavior path
 
 Choose a behavior from the accepted scope, including its failure behavior or a
 real integration boundary. Test it through an observable interface rather than
@@ -82,13 +88,33 @@ code remain noncompliant; they never become retroactive TDD evidence.
 Corrective work begins with a new behavior slice that can go real red. This
 slice may turn green only after the intended failure is observed and recorded.
 
+### Structure-preserving path
+
+The accepted scope records the listed files, current and target shape,
+preserved behavior contract, and expected test evidence. Write or identify a
+behavioral baseline or characterization check. The old revision must run green
+before any structural edit. After the edit, run the same checks on the new
+revision green, plus appropriate actual artifact or equivalence checks.
+
+No behavioral red is expected here; never manufacture red. A mutation
+sensitivity check is optional evidence that the baseline detects meaningful
+change. If it detects nothing, record that sensitivity as an unverified
+boundary rather than changing acceptance tests to create a failure.
+
+Any bug or new behavior found during the refactor is separately accepted and
+returns to the normal strict real red -> green path. If work exceeds the listed
+files or crosses a new security or infrastructure boundary, stop and reassess
+scope through shared routing. Do not turn a bounded refactor into a sweeping
+campaign.
+
 ## 4. Turn the slice green, then refactor
 
-Implement only what makes the red check pass. Run it and capture green evidence,
-then refactor while keeping it green. Repeat steps 3 and 4 for the next behavior
-slice until every accepted behavior assigned to this candidate is covered.
-All assigned slices must have observed red and green evidence and remain green
-after refactoring.
+For the normal behavior path, implement only what makes the red check pass.
+Run it and capture green evidence, then refactor while keeping it green. Repeat
+for each accepted behavior slice; every normal slice needs observed red and
+green evidence. For structure-preserving work, make only the accepted
+structural edits and keep the unchanged baseline and equivalence evidence
+green.
 
 ## 5. Verify and return the candidate
 
@@ -105,7 +131,7 @@ Record: <progress.md path or tiny-task brief>
 Candidate: <PR or branch> base <sha> revision <sha>
 Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
-TDD: <red and green commands + evidence references>
+TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
 Unverified: <boundaries + reasons>

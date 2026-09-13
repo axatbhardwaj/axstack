@@ -109,6 +109,12 @@ or recursive teams.
    mode-required receipt records concrete evidence and consequences, coverage,
    limitations, and findings without a finding quota.
 
+   For an accepted scope explicitly marked structure-preserving, verify its
+   preserved contract, listed files, old-revision green characterization, and
+   the same checks green on the new revision, plus applicable artifact or
+   equivalence evidence. Do not demand a fabricated red. Bugs or new behavior
+   require separately accepted scope and the normal strict red-green path.
+
    Example: `Ticket criterion: an expired invite returns 410. Observed: the
    handler returns 200 and creates a session. Consequence: expired links remain
    usable.`
