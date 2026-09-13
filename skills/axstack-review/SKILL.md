@@ -23,9 +23,9 @@ readonly; the reviewer never edits it.
 
 ## Authored mode (own PR)
 
-Retains the approved baseline from `axstack-spec`: confirm the approved
-spec identity before approval or merge-ready declarations. An existing
-PR adopted for maintenance records its accepted maintenance scope
+New work retains the approved baseline from `axstack-spec`: confirm its
+identity before approval or merge-ready declarations. An existing PR
+adopted for maintenance instead records its accepted maintenance scope
 snapshot once — linked issue, acceptance criteria, actual head/base,
 current ownership — and that snapshot is accepted without repeated
 approval.
@@ -124,14 +124,15 @@ REQUEST_CHANGES.
 
 Peer mode: declarations need a complete review for the exact candidate
 revision per the rule above, with no material finding unresolved except
-the validated defects a REQUEST_CHANGES reports. Authored mode
-additionally confirms the approved spec identity first: a missing
-baseline, or a materially changed and unaccepted one, blocks approval
-and merge-ready declarations, while read-only investigation may
-proceed. The owner synthesizes both reviews into the decision without
-voting — a single receipt can never satisfy the exactly-two
-requirement. Neither reviewer unanimity nor passing tests grants merge
-authority; the human merges.
+the validated defects a REQUEST_CHANGES reports. Authored mode confirms
+its mode-specific scope identity first: new work uses the approved spec
+identity, while an adopted PR uses its accepted maintenance scope
+snapshot. A missing identity, or a materially changed and unaccepted
+one, blocks approval and merge-ready declarations, while read-only
+investigation may proceed. The owner synthesizes both reviews into the
+decision without voting — a single receipt can never satisfy the
+exactly-two requirement. Neither reviewer unanimity nor passing tests
+grants merge authority; the human merges.
 
 ## Report-only scope
 

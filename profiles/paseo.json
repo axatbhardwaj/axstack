@@ -16,7 +16,7 @@
       "model": "claude-fable-5-1",
       "modeId": "plan",
       "thinkingOptionId": "medium",
-      "notes": "Consequential planning advisor. Consulted after cheap factual checks for unresolved consequential decisions. High-stakes decisions need advisor plain AGREE plus driver accepted assessment. Validate availability at launch.",
+      "notes": "Planning advisor involved in spec creation and revision, solution design, and consequential decisions, including initial choices that are not disputed. The driver assesses first and owns the decision; cached receipts apply only while evidence and scope stay unchanged. High-stakes decisions need advisor plain AGREE plus driver accepted assessment. Validate availability at launch.",
       "name": "Axstack planning advisor (Fable)"
     },
     {

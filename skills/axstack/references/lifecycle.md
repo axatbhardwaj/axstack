@@ -5,10 +5,13 @@ through the conditional pointers in [Standing contracts](contracts.md).
 
 ## Roster (compact)
 
-- Driver: current chat. Owns scope, decisions, cross-PR dependencies,
-  and all mutations. Coordinates via existing shared contracts only.
+- Driver: current chat. Owns run scope, decisions, cross-PR dependencies,
+  Linear mutations, and integration. Coordinates via existing shared
+  contracts only.
 - Owner (`axstack-owner`): one persistent owner per PR. Only the owner
-  launches the writer, reviewers, monitor, and watchdog.
+  launches the writer, reviewers, monitor, and watchdog, and performs
+  authorized PR-scoped publication within user authority. The human
+  merges by default.
 - Author: exactly one writer per candidate at a time. Accepted fixes
   return to the original author. Workers launch no recursive teams.
 - Reviewers: exactly two independent final reviewers (Sol + Opus), same
@@ -61,16 +64,19 @@ watch state instead of registering duplicates.
 
 ## Audit hook (end of run and meaningful checkpoints)
 
-At end of run and at meaningful checkpoints, the driver may dispatch
-the auditor (`axstack-auditor`) for read-only evidence collection
-against the run record: scope, outcome evidence, and metric counts with
-denominators. Findings are PASS/FAIL/UNKNOWN with evidence — never
-invented numbers, including cost figures. Improvement proposals change
-nothing by themselves: the driver follows each accepted proposal up as
-ordinary tested, independently reviewed work, delivered as PRs the
-human merges. No automatic self-edit, merge, or activation. Raw run
-records stay local (user privacy); sanitized publication needs its own
-authority.
+Auditing is enabled by default for every substantive run: at run end,
+the driver dispatches the auditor (`axstack-auditor`), and also does so
+at useful checkpoints such as a material deviation or repeated repair.
+Load the bundled [audit skill](../../axstack-audit/SKILL.md) before the
+audit. The auditor collects read-only evidence against the run record:
+scope, outcome evidence, and metric counts with denominators. Findings
+are PASS/FAIL/UNKNOWN with evidence — never invented numbers, including
+cost figures. Improvement proposals change nothing by themselves: the
+driver follows each accepted proposal up as ordinary tested,
+independently reviewed work, with a regression scenario and unchanged
+holdout checks, delivered as PRs the human merges. No automatic
+self-edit, merge, or activation. Raw run records stay local (user
+privacy); sanitized publication needs its own authority.
 
 ## Idle-complete archive and retain
 

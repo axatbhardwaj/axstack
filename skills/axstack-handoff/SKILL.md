@@ -9,13 +9,14 @@ Load before acting:
 
 - [Paseo launch](../axstack/references/paseo-launch.md)
 - [Standing contracts](../axstack/references/contracts.md)
+- [Lifecycle and receipts](../axstack/references/lifecycle.md)
 - [Record template](references/record.md)
 
 Independently callable. An explicit requested transfer changes the
 driver only through concrete recipient acceptance: the current owner
 stays accountable until the named recipient accepts. Coordinate with
-core-owned lifecycle references through the existing shared contracts;
-this skill adds the record shape, not a new lifecycle engine.
+the shared lifecycle directly; this skill adds the record shape, not a
+new lifecycle engine.
 
 ## Record (all fields required)
 
