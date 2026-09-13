@@ -1,6 +1,6 @@
 ---
 name: axstack
-description: When executing planned Axstack work, use axstack to select the applicable direct or lifecycle phase.
+description: When coordinating engineering tasks and PRs through Axstack and tracking their progress, use axstack to route the run to the right phase.
 ---
 
 # Axstack entry

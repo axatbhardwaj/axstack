@@ -20,7 +20,10 @@ test('run-record: shared reference exists and lifecycle links to it', () => {
 
 test('run-record: path, identity, fallback, and archive stay local and stable', () => {
   const text = read('skills/axstack/references/run-record.md');
-  expect(text).toContain('<git rev-parse --git-common-dir>/axstack/runs/<id>/progress.md');
+  const command = 'git rev-parse --path-format=absolute --git-common-dir';
+  expect(text).toContain(`<${command}>/axstack/runs/<id>/progress.md`);
+  expect(text.match(new RegExp(command, 'g'))).toHaveLength(2);
+  expect(text).toMatch(/without[\s\S]*?path-format=absolute[\s\S]*?relative `\.git`[\s\S]*?ambiguous[\s\S]*?worktrees[\s\S]*?current working\s+directory/i);
   expect(text).toMatch(/main checkout[\s\S]*linked worktrees|linked worktrees[\s\S]*main checkout/i);
   expect(text).toMatch(/never[^.]*tracked tree/i);
   expect(text).toMatch(/<UTCdate>-<slug>/i);
@@ -42,6 +45,7 @@ test('run-record: compact template carries required run and task fields', () => 
     expect(template).toContain(column);
   }
   expect(template).toMatch(/Driver:[^\n]*sole writer/i);
+  expect(template).toContain('<role + session ID + worktree | receipt ref>');
 });
 
 test('run-record: reconciliation protects ownership and revision evidence', () => {
@@ -59,6 +63,12 @@ test('run-record: reconciliation protects ownership and revision evidence', () =
   expect(text).toMatch(/uncertain[^.]*live conflict[^.]*hold|live conflict[^.]*uncertain[^.]*hold/i);
   expect(text).toMatch(/never[^.]*overwrite/i);
   expect(text).toMatch(/prior driver[^.]*different valid owner[^.]*stop/i);
+  expect(text).toMatch(/derived progress[^.]*not authority/i);
+  for (const source of ['Paseo sessions', 'Git revisions', 'forge/PR state', 'approved spec']) {
+    expect(text).toContain(source);
+  }
+  expect(text).toMatch(/driver[^.]*verifies[^.]*exact SHAs[^.]*receipts[^.]*before recording a transition/i);
+  expect(text).toMatch(/worker[^.]*claim[^.]*not verification/i);
 });
 
 test('run-record: use is proportional and content stays compact and private', () => {
@@ -92,8 +102,11 @@ test('descriptions: every shipped skill is one-line, intent-first, and named', (
       /^description: When .+, use axstack(?:-[a-z-]+)? /,
     );
   }
+  expect(read('skills/axstack/SKILL.md')).toMatch(
+    /^description: When coordinating engineering tasks and PRs through Axstack and tracking their progress, use axstack to route the run to the right phase\.$/m,
+  );
   expect(read('skills/axstack-align/SKILL.md')).toMatch(
-    /^description: When .*(?:explor|plan).*idea.*before.*spec.*use axstack-align /im,
+    /^description: When exploring or planning an idea and settling its scope and decisions, use axstack-align for a bounded interview before any spec\.$/m,
   );
   expect(read('skills/axstack-watch/SKILL.md')).toMatch(
     /^description: When .*babysit.*existing PR.*use axstack-watch /im,

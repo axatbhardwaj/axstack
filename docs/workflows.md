@@ -119,12 +119,15 @@ proof of end-to-end support.
 ## Run record
 
 Substantive delegated or resumable work uses one compact local `progress.md`.
-In Git, its root comes from `git rev-parse --git-common-dir`, which resolves to
-the main repository's `.git` for the main checkout and every linked worktree.
-The resulting `axstack/runs/<UTCdate>-<slug>/progress.md` is therefore shared
-across worktrees and is never part of the tracked tree. Non-Git work uses
-private host state. The driver is the sole writer; the record supports resume
-and reconciliation without adding a runtime engine or lock.
+In Git, its root comes from
+`git rev-parse --path-format=absolute --git-common-dir`, which resolves to the
+main repository's `.git` for the main checkout and every linked worktree.
+Without the absolute path option, the main checkout returns a relative
+`.git`, making a persisted path depend on the current working directory. The
+resulting `axstack/runs/<UTCdate>-<slug>/progress.md` is shared across worktrees
+and is never part of the tracked tree. Non-Git work uses private host state.
+The driver is the sole writer; the record supports resume and reconciliation
+without adding a runtime engine or lock.
 
 ## Runtime
 
