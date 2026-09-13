@@ -21,43 +21,41 @@ state and receipts to exact revisions.
 - Auditor (`axstack-auditor`): report-only evidence collection. It never edits,
   merges, activates, or audits itself.
 
-Use bounded independent work. Two active PRs is the default; exactly one writer
-owns each candidate.
-
 ## Ownership
 
-The PR owner remains accountable for candidate, fixes, verification, and
-monitoring. Peer code stays read-only. A missing,
-idle, or stale-looking session never transfers ownership by itself.
+The PR owner remains accountable for candidate, fixes, evidence, and monitoring.
+Peer code stays read-only. A missing or idle session never transfers ownership.
 
 ## Native handoff and resume
 
-Axstack stores the resumable state; native `paseo-handoff` performs a requested
-agent transfer. Keep these boundaries in order:
+Axstack stores resumable state. Preparation completion and watch expiry write a
+resumable record; ordinary resume reconciles it. These cases keep the current
+owner and launch no native handoff. Only an explicit user request to transfer
+ownership enters the native `paseo-handoff` branch below.
 
-1. Reconcile the [Run record](run-record.md) with actual Paseo sessions, Git
-   revisions, forge state, pending receipts, and timer expiries. Existing live
-   owners and sessions win over inferred or stale record state.
-2. Confirm that both native `paseo-handoff` and its required `paseo` skill are
+1. Reconcile the [Run record](run-record.md) with Paseo sessions, Git revisions,
+   forge state, pending receipts, and timer expiries. Actual live owners and
+   sessions win over stale record state.
+2. For an explicit user-requested ownership transfer, confirm that both native
+   `paseo-handoff` and its required `paseo` skill are
    discoverable in the current session. Only then load them and
-   follow their current instructions; Axstack neither copies their procedure
-   nor guesses commands, paths, profiles, or fallback models. Package or
-   install claims do not prove current-session discoverability.
+   follow their instructions. Axstack neither copies their procedure nor
+   guesses commands, paths, profiles, or fallback models. Packaging does not
+   prove current-session discoverability.
 3. If either skill is missing, report the exact setup gap and keep the current
    owner. Safe read-only reconciliation, investigation, and run-record updates
    may continue, but no replacement or ownership transfer launches.
-4. Before a native launch, record a pending launch-receipt pointer and intended
-   recipient. If the result is uncertain, reconcile the actual workspace and
-   session before retrying. One verified session receipt resolves the launch;
-   duplicate writers, watches, replies, and delivery attempts remain blocked.
+4. Record the intended recipient and pending launch receipt before launch. If
+   the result is uncertain, reconcile the actual workspace/session before
+   retrying; keep duplicate writers, watches, replies, and deliveries blocked.
 5. A launched recipient is not yet the owner. Record the recipient's explicit
    acceptance receipt, then change the Driver/Owner field. Until acceptance,
    the current owner remains accountable. A prior owner that observes a
    different valid accepted owner stops.
 
-A resumable handoff is complete when the same record points to goal, authority,
-intent, IDs, revisions, evidence, pending receipts/timers, unresolved decisions,
-and next action — plus accepted ownership or the gap retaining it.
+A resumable record is complete when it points to goal, authority, intent, IDs,
+revisions, evidence, pending receipts/timers, unresolved decisions, and next
+action. A transfer record also points to accepted ownership or the retaining gap.
 
 ## Receipts (bind each decision to evidence)
 

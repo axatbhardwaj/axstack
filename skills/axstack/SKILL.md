@@ -12,9 +12,11 @@ The current chat remains the driver; Paseo owns runtime orchestration.
 
 1. Classify the request with [Shared routing](references/routing.md). Direct
    research, docs, peer-review, adopted-watch, and handoff routes need no spec
-   ceremony. A handoff uses the capability-gated native route in
+   ceremony. Only an explicit user-requested ownership transfer can use the
+   capability-gated native route in
    [Lifecycle and receipts](references/lifecycle.md#native-handoff-and-resume),
-   not an Axstack handoff phase.
+   not an Axstack handoff phase. Preparation completion, watch expiry, and
+   ordinary resume update or reconcile the run record without launching it.
 2. For new engineering work, record `small`, `substantial`, or `unclear` plus
    a brief reason, then apply the
    [proportional scope identity](references/routing.md#proportional-scope-identity).

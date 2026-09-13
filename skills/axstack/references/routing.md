@@ -12,10 +12,13 @@ for its next action.
   Preserve requested format and theme, verify rendered behavior when
   applicable, and report unavailable evidence. Publication needs separate
   authority.
-- Handoff, resume, or reconciliation -> the
-  [native handoff route](lifecycle.md#native-handoff-and-resume). Preflight
-  discoverability before loading the native skills; a missing capability is a
-  setup gap, not permission to invent a replacement.
+- Preparation completion, watch expiry, ordinary resume, or reconciliation ->
+  the [handoff and resume lifecycle](lifecycle.md#native-handoff-and-resume).
+  Update or reconcile the run record; keep the current owner and launch no
+  native handoff.
+- Explicit user-requested ownership transfer -> the same lifecycle section.
+  Preflight discoverability before loading native `paseo-handoff`; a missing
+  capability is a setup gap, not permission to invent a replacement.
 - Colleague PR review -> `axstack-review` in peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.
