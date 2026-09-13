@@ -261,7 +261,11 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/Theme:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/Size est:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
-  expect(callers.tickets).toMatch(/exception band[^.]*split[^.]*mapping/i);
+  expect(callers.tickets).toMatch(/exception band[^.]*assessed\s+for\s+a\s+split[^.]*mapping/i);
+  expect(callers.tickets).toMatch(/split\s+where[^.]*green[^.]*atomic[^.]*reviewable/i);
+  expect(callers.tickets).toMatch(/inseparable[^.]*coarse\s+planning\s+rationale[^.]*task/i);
+  expect(callers.tickets).toMatch(/actual\s+measurement[^.]*exception\s+evidence[^.]*implement\s+receipt/i);
+  expect(callers.tickets).toMatch(/mapping\s+time[^.]*no actual SHAs or line counts/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
   expect(callers.implement).toMatch(/reviewed parent changes[^.]*hold reliance[^.]*stale child evidence[^.]*child merge readiness/i);
   expect(callers.implement).toMatch(/rebase[^.]*new parent revision[^.]*re-run[^.]*affected checks[^.]*remeasure shape/i);

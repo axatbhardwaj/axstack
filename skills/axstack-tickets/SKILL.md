@@ -35,9 +35,13 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    acceptance checks from the pinned spec and identify internal tasks,
    dependencies, PR ownership, and worktrees. For each task the driver records
    one theme and a coarse size estimate from the ownership, interface, and
-   dependency map. A task estimated in the exception band is split at mapping
-   time. Every capability ends with the fields below and an explicit dependency
-   list. These routine mapping and split choices are autonomous driver decisions
+   dependency map. A task estimated in the exception band is assessed for a
+   split at mapping time and split where a green, atomic, reviewable split
+   exists. If the driver judges it inseparable, record the coarse planning
+   rationale with the task; actual measurement and exception evidence follow in
+   the implement receipt. Mapping time requires no actual SHAs or line counts.
+   Every capability ends with the fields below and an explicit dependency list.
+   These routine mapping and split choices are autonomous driver decisions
    within the approved spec; size alone never requires user approval.
 
    The driver performs every Linear mutation. Other roles return proposed
