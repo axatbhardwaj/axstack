@@ -15,6 +15,7 @@ Review: <exact-rev independent review status + unresolved findings>
 Rework: <cycles + causes>
 Interventions: <avoidable user interventions, or unsupported by records>
 Parallelism: <identified vs dispatched + dependency/writer isolation>
+Shape: <PRs within band / total PRs + rationale-band cohesion rationale + exception-band full driver exception record; missing measurement: UNKNOWN>
 Cost: <model/tool/time/token/cost figures, or unknown otherwise>
 Judgment: <execution outcome vs procedural adherence vs measurement coverage>
 Proposals: <bounded hypothesized changes with regression-first plan, or none>

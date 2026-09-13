@@ -186,9 +186,9 @@ test('structural: shared PR-shape reference is complete, bounded, and sole sourc
   expect(shape).toMatch(/moves.*-M|-M.*moves/i);
   expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
   for (const bucket of ['generated', 'lockfile', 'formatter-only']) expect(shape).toContain(bucket);
-  expect(shape).toMatch(/full total[^.]*controls? the band/i);
+  expect(shape).toMatch(/full total[^.]*controls? the (band|level)/i);
   expect(shape).toMatch(/reproducible recorded command/i);
-  expect(shape).toMatch(/never automatically subtract|never.*shift.*bands/i);
+  expect(shape).toMatch(/never\s+automatically subtract|never.*shift.*bands/i);
   expect(shape).toMatch(/silent exclusion[^.]*forbidden/i);
   for (const band of ['≤2000', '2001–2500', '>2500']) expect(shape).toContain(band);
   expect(shape).toMatch(/one (behavior|component)[^.]*callers[^.]*tests[^.]*types[^.]*docs[^.]*migrations/i);
@@ -227,11 +227,11 @@ test('structural: shape levels require matching autonomous evidence and review',
   expect(review).toMatch(/angle 6[^.]*recorded shape|recorded shape[^.]*angle 6/i);
   expect(review).toMatch(/mismatch[^.]*measured total[^.]*finding/i);
   expect(review).toMatch(/missing rationale[^.]*blocks approval/i);
-  expect(review).toMatch(/judgment[^.]*measurement[^.]*split failure[^.]*not[^.]*number/i);
+  expect(review).toMatch(/judgment[^.]*measurement[^.]*split\s+failure[^.]*not[^.]*number/i);
   expect(review).toMatch(/bulk buckets[^.]*reproducible command/i);
   expect(review).toMatch(/weak rationale[^.]*author[^.]*split|rework request/i);
   expect(review).toMatch(/rationale band[^.]*only[^.]*cohesion rationale/i);
-  expect(review).toMatch(/exception band[^.]*full exception record/i);
+  expect(review).toMatch(/exception\s+band[^.]*full\s+exception\s+record/i);
   expect(review).toMatch(/level[^.]*matching[^.]*measured total/i);
   expect(review).toMatch(/never[^.]*user/i);
   expect(review).not.toMatch(/over-band/i);
@@ -261,14 +261,14 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/Theme:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/Size est:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
-  expect(callers.tickets).toMatch(/above the upper band[^.]*split[^.]*mapping/i);
+  expect(callers.tickets).toMatch(/exception band[^.]*split[^.]*mapping/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
   expect(callers.implement).toMatch(/reviewed parent changes[^.]*hold reliance[^.]*stale child evidence[^.]*child merge readiness/i);
   expect(callers.implement).toMatch(/rebase[^.]*new parent revision[^.]*re-run[^.]*affected checks[^.]*remeasure shape/i);
-  expect(callers.implement).toMatch(/size growth alone[^.]*not an automatic hold/i);
+  expect(callers.implement).toMatch(/size\s+growth alone[^.]*not an automatic hold/i);
   expect(callers.audit).toMatch(/PRs within band\s*\/\s*total PRs/i);
-  expect(callers.audit).toMatch(/rationale band[^.]*cohesion rationale/i);
-  expect(callers.audit).toMatch(/exception band[^.]*full exception record/i);
+  expect(callers.audit).toMatch(/rationale\s+band[^.]*cohesion\s+rationale/i);
+  expect(callers.audit).toMatch(/exception\s+band[^.]*full\s+driver exception\s+record/i);
   expect(callers.audit).toMatch(/level[^.]*matching[^.]*measured total/i);
   expect(callers.audit).not.toMatch(/over-band/i);
   expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
@@ -284,8 +284,8 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
     expect(text.includes('pr-shape.md'), `${name} must link PR-shape policy`).toBeTruthy();
     expect(text, `${name} must state autonomous driver shape decisions`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
     expect(text, `${name} must state size alone does not require user approval`).toMatch(/size alone[^.]*never[^.]*user approval/i);
-    expect(text, `${name} must distinguish rationale-band evidence`).toMatch(/rationale band[^.]*cohesion rationale/i);
-    expect(text, `${name} must distinguish exception-band evidence`).toMatch(/exception band[^.]*full exception record/i);
+    expect(text, `${name} must distinguish rationale-band evidence`).toMatch(/rationale\s+band[^.]*cohesion\s+rationale/i);
+    expect(text, `${name} must distinguish exception-band evidence`).toMatch(/exception\s+band[^.]*full\s+exception\s+record/i);
   }
   expect(spec).toMatch(/Amendment \(2026-09-14\)/);
   expect(spec).toMatch(/dependency- and capacity-driven/i);

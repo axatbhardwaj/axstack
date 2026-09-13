@@ -12,7 +12,8 @@ requested authority; the human merges unless separately authorized otherwise.
 Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
 audit edge remains active. Load [Shared routing](../axstack/references/routing.md)
-to select the mode and scope identity.
+to select the mode and scope identity, and apply the shared
+[PR-shape policy](../axstack/references/pr-shape.md).
 
 ## Peer mode (colleague PR)
 
@@ -100,6 +101,22 @@ or recursive teams.
    6. Simplicity and maintainability: KISS, YAGNI, and cyclomatic complexity
       where measurement is useful. Never invent a metric or demand an
       abstraction merely to satisfy a principle.
+
+   Under angle 6, verify the recorded shape against the pinned head and base.
+   A mismatch between the recorded and measured total is a finding. Apply the
+   level matching the measured total. The rationale band requires only its
+   recorded cohesion rationale, not a split-attempt record. For the exception
+   band, verify the full exception record: total, bulk buckets with their
+   reproducible command, measured head/base, split attempts tried, and why each
+   fails on atomicity, green state, or reviewability. Missing rationale is a
+   validated angle 6 finding that blocks approval like any other. Reviewer
+   judgment is bounded to verifying the measurement and whether the stated split
+   failure is real, not the number itself. A weak rationale returns to the
+   author as a split or rework request through the normal fix loop, never to the
+   user. Routine shape decisions remain autonomous driver decisions; size alone
+   never requires user approval. Escalate only
+   when that work exposes an existing material-scope, security, downtime,
+   data-loss, major-design-risk, or unavailable-model hold.
 
    Verify the applicable spec, ticket, or intent acceptance, executable
    evidence, exact candidate SHA, current base, and affected integration

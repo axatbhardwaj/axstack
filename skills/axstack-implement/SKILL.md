@@ -19,6 +19,7 @@ edge into the lifecycle (including its audit hook), then apply shared routing:
 - [Standing contracts](../axstack/references/contracts.md)
 - [Lifecycle and receipts](../axstack/references/lifecycle.md)
 - [Shared routing](../axstack/references/routing.md)
+- [PR-shape policy](../axstack/references/pr-shape.md)
 
 Independently confirm the applicable
 [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):
@@ -55,16 +56,21 @@ lifecycle's native capability preflight for that transfer. An ordinary restart
 or resume reconciles the existing sessions and run record without creating a
 fresh recipient.
 
-There is no fixed active-PR count. Parallelism is bounded by one execution host
-per run, one persistent owner per PR, exactly one writer per candidate, and
-configured budgets. The driver queues conflicting or dependent work and
-coordinates dependent PRs through `gh stack`. A dependent candidate starts
-from its reviewed parent. If that parent changes, hold reliance on stale child
-evidence and child merge readiness, update the child to the new parent revision,
-and re-run every affected check. A green parent does not prove the combined
-stack, but the parent need not wait for an independently reviewed child.
-Dispatch only when ownership, worktree, dependency revisions, and writer
-exclusivity agree with live state.
+There is no fixed active-PR count. Fanout is dependency- and capacity-driven
+within configured host resource and spending limits, while one host owns the
+run and one writer owns each candidate. The driver queues conflicting or
+dependent work and coordinates dependent PRs through `gh stack`. Routine shape,
+split, fanout, and exception choices are autonomous driver decisions within the
+approved spec; size alone never requires user approval. A dependent candidate
+starts from its reviewed parent. When a reviewed parent changes, hold reliance
+on stale child evidence and child merge readiness. Rebase the child onto the
+new parent revision, re-run affected checks, and remeasure shape against the new
+actual base. Re-record the shape and re-check its level-matching rationale; size
+growth alone is not an automatic hold. A green parent does not prove the
+combined stack, but the parent need not wait for an independently reviewed
+child. Dispatch only when ownership, worktree, dependency revisions, writer
+exclusivity, and configured capacity agree with live state. Escalation occurs
+only if a split exposes an existing shared-contract hold.
 
 ## 3. Establish test-first evidence
 
@@ -133,6 +139,7 @@ Record: <progress.md path or tiny-task brief>
 Candidate: <PR or branch> base <sha> revision <sha>
 Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
+Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
