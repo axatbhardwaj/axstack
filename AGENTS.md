@@ -5,8 +5,10 @@ The spec issue is https://github.com/axatbhardwaj/axstack/issues/1.
 
 ## This build
 
-- Only OpenCode Muse Spark 1.3 Free implementation agents are authorized.
-- Do not launch Claude or Codex children, switch models, or use paid APIs.
+- Implementation started with OpenCode Muse Spark 1.3 Free. After its quota
+  exhausted, the user explicitly authorized Codex Sol medium to finish.
+- Fable 5.1 planning advice and Luna max run audits are user-authorized.
+  Preserve independent review; no unapproved model substitution or paid API.
 - Driver owns orchestration, GitHub mutations and integration; workers stay within their assigned files.
 - Strict TDD: write and run meaningful checks before implementing behavior; record red/green evidence. Missing module failures alone are not sufficient behavioral evidence.
 - KISS, YAGNI and SOLID. No runtime orchestration engine or programmatic escalation gate.
