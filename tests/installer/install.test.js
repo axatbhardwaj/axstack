@@ -222,3 +222,51 @@ test('--harness codex without CODEX_HOME needs explicit home confirmation', () =
   });
   assert.match(r.out.toLowerCase(), /confirm|--yes|explicit|home/);
 });
+
+test('uninstall with a home profile requires --yes even when skills are external', () => {
+  const root = makeTempRoot();
+  const fakeHome = join(root, 'home');
+  const bundle = writeFixtureBundle(root);
+  const skillsDir = join(root, 'skills'); // outside the fake home
+  const profile = join(fakeHome, '.config', 'paseo', 'config.json');
+  const env = { HOME: fakeHome };
+
+  const installed = runCli(
+    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    { env },
+  );
+  assert.ok(installed.ok);
+  assert.ok(
+    JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
+      (p) => p.id === 'axstack-driver',
+    ),
+  );
+
+  // Without --yes: refuse before any skill/profile/manifest mutation.
+  const refused = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile], {
+    expectFail: true,
+    env,
+  });
+  assert.match(refused.out.toLowerCase(), /confirm|--yes|explicit|home/);
+  assert.ok(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  assert.ok(
+    JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
+      (p) => p.id === 'axstack-driver',
+    ),
+    'home profile must be untouched by a refused uninstall',
+  );
+  assert.ok(existsSync(join(skillsDir, '.axstack-manifest.json')));
+
+  // With --yes: the intended uninstall succeeds.
+  const removed = runCli(
+    ['uninstall', '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    { env },
+  );
+  assert.ok(removed.ok);
+  assert.ok(!existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md')));
+  assert.ok(
+    !JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
+      (p) => p.id === 'axstack-driver',
+    ),
+  );
+});
