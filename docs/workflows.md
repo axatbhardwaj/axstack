@@ -42,3 +42,10 @@ capability (including Linear MCP access) per session.
 A compatibility claim requires evidence for the actual adapter, model
 configuration, skill loading, and tools. An installable skill alone is not
 proof of end-to-end support.
+
+## Runtime
+
+Bun >= 1.3.14 only; no Node.js runtime. Workflow checks run with
+`bun test tests/workflows/`. The only approved Node-builtin exception is
+filesystem access via node:fs and node:fs/promises (Bun-implemented); no
+total namespace-purity claim is made beyond that exception.

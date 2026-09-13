@@ -5,7 +5,11 @@ agent profiles, and checks host capabilities. Chat drives execution; the CLI
 performs installation bookkeeping only. There is no Axstack daemon, run
 scheduler, or workflow state machine in this package.
 
-Requirements: Node.js >= 22. No runtime dependencies.
+Requirements: Bun >= 1.3.14. No runtime dependencies. Filesystem access
+uses the approved narrow exception: node:fs and node:fs/promises are
+Bun-implemented built-ins; no Node.js runtime is used and no other node:
+imports are allowed. The CLI's host-tool probe list migrates with the
+installer-owned sources.
 
 ## Commands
 

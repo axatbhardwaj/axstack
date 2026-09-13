@@ -34,22 +34,24 @@ The checker's inexpensive model stays unset until setup.
 ## Install from source
 
 Not released to any npm registry; install from a source checkout.
-Requires Node.js >= 22, no runtime dependencies. `bin/axstack.js` is the
+Requires Bun >= 1.3.14, no runtime dependencies. Filesystem access uses the
+approved narrow exception: node:fs and node:fs/promises are Bun-implemented
+built-ins; no Node.js runtime is used. `bin/axstack.js` is the
 `axstack` binary.
 
 ```sh
-# From the source checkout root. Check host tools (node, git, gh + gh stack extension, paseo)
-node bin/axstack.js check --bundle .
+# From the source checkout root. Check host tools (bun, git, gh + gh stack extension, paseo)
+bun bin/axstack.js check --bundle .
 
 # Install skills into an explicit target and merge profiles
 # (--yes is required when the target or profile lives under your home directory)
-node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> [--yes]
+bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> [--yes]
 
 # Re-run: expect "no changes (idempotent, everything unchanged)"
-node bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
+bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
 
 # Remove only unchanged owned assets (user edits survive)
-node bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
+bun bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
 ```
 
 Full command reference: [docs/installation.md](docs/installation.md).
@@ -61,11 +63,13 @@ decision — never automatic substitution. Phase skills live in [skills/](skills
 ## Verification status
 
 - 14 structural packaging checks plus 12 simulated Muse scenario evaluations
-  pass locally on this host; these are not live harness support claims.
-- CI runs `npm test` and `npm pack --dry-run` on Ubuntu and macOS with
-  Node 22 and 24 for pushes and pull requests — see
+  pass under Bun (`bun test tests/workflows/`); these are not live harness
+  support claims.
+- CI runs `bun test tests/workflows/` and `bun pm pack --dry-run` on Ubuntu
+  and macOS with Bun 1.3.14 and 1.4.2 for pushes and pull requests — see
   [GitHub Actions](https://github.com/axatbhardwaj/axstack/actions).
-- macOS, WSL, and Claude/Codex/OpenCode/Grok runtime behavior remain
+- Tested platforms are Linux and macOS via CI; Windows is intended through
+  WSL (unverified). Live harness, Linear, and model compatibility remain
   unverified until observed.
 
 ## License
