@@ -1,16 +1,24 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
+import { test, expect } from 'bun:test';
+// Filesystem access uses the approved narrow exception: node:fs and
+// node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
+// required. Path handling below is local (import.meta.dir), not node:.
 import { readFileSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, '..', '..');
+function dirname(p) {
+  const clean = p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p;
+  const i = clean.lastIndexOf('/');
+  if (i < 0) return '.';
+  if (i === 0) return '/';
+  return clean.slice(0, i);
+}
+
+const here = import.meta.dir;
+const root = dirname(dirname(here));
 
 // Structural validation of the evaluation contract itself (not behavior proof).
 test('scenarios: twelve required cases with inputs and expected decisions', () => {
-  const data = JSON.parse(readFileSync(join(root, 'tests', 'workflows', 'scenarios.json'), 'utf8'));
-  assert.equal(data.version, 1);
+  const data = JSON.parse(readFileSync(root + '/tests/workflows/scenarios.json', 'utf8'));
+  expect(data.version).toBe(1);
   const ids = data.cases.map((c) => c.id);
   for (const required of [
     'model-outage',
@@ -26,9 +34,9 @@ test('scenarios: twelve required cases with inputs and expected decisions', () =
     'model-materialization',
     'rollout-publish',
   ]) {
-    assert.ok(ids.includes(required), `missing scenario: ${required}`);
+    expect(ids.includes(required), `missing scenario: ${required}`).toBeTruthy();
   }
   for (const c of data.cases) {
-    assert.ok(c.title && c.spec_ref && c.input && c.expected, `${c.id}: needs title/spec_ref/input/expected`);
+    expect(c.title && c.spec_ref && c.input && c.expected, `${c.id}: needs title/spec_ref/input/expected`).toBeTruthy();
   }
 });
