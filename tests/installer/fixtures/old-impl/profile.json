@@ -1,0 +1,15 @@
+{
+  "daemon": {
+    "agentProfiles": [
+      {
+        "id": "axstack-driver",
+        "provider": "example",
+        "model": "example-model",
+        "modeId": "default",
+        "thinkingOptionId": "medium",
+        "notes": "Fixture profile."
+      }
+    ]
+  },
+  "version": 1
+}
