@@ -22,7 +22,7 @@ do not silently switch stores. Markdown mode works independently when explicitly
 ## Mapping
 
 - Linear issues are user-visible capabilities. One capability may span several implementation tasks and PRs. Detailed breakdowns live in the repository.
-- The driver owns every Linear mutation. A small inexpensive checker only reports discrepancies in run issues, with evidence. It never mutates Linear. A null checker model blocks dispatch until setup selects one — never launch a provider default.
+- The driver owns every Linear mutation. A small inexpensive checker only reports discrepancies in run issues, with evidence. It never mutates Linear. With no configured `axstack-checker` profile, hold checker dispatch; the driver checks directly or reports the gap. Never launch a provider default.
 
 ## Template: capability to task map
 
