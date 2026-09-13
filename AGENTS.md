@@ -18,8 +18,10 @@ The spec issue is https://github.com/axatbhardwaj/axstack/issues/1.
 
 ## Interfaces
 
-Node.js >=22, ESM JavaScript, built-in `node:test`, no runtime dependencies initially.
-The installer owns `src/`, `bin/`, `package.json`, `tests/installer/`, and `docs/installation.md`.
-The workflow author owns `skills/`, `profiles/`, `tests/workflows/`, and `docs/workflows.md`.
+Bun >=1.3.14 JavaScript, `bun:test`, no runtime dependencies initially.
+Narrow approved exception: node:fs and node:fs/promises (Bun-implemented
+built-ins); no Node.js runtime.
+The installer owns `src/`, `bin/`, `package.json`, `tests/installer/`.
+The workflow author owns `skills/`, `profiles/`, `tests/workflows/`, `docs/workflows.md`, `docs/installation.md`, and root `README.md`.
 Package assets are `skills/<axstack-name>/SKILL.md` with self-contained relative references, and `profiles/paseo.json`.
-The driver owns root README, integration planning and coordination records; source fixes return to authors.
+The driver owns integration planning and coordination records; source fixes return to authors.
