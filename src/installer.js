@@ -40,6 +40,7 @@ import {
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
 import {
   applyInstructionPlan,
+  findLegacyRoutingLines,
   planInstruction,
   renderInstructionBlock,
   stripInstructionBlock,
@@ -463,6 +464,7 @@ export async function installBundle({
   const boundInstructions = prevManifest.instructions ?? { path: null, hash: null };
   let existingInstructionsRaw = null;
   let instructionPlan = null;
+  let legacyInstructionNote = null;
   if (instructionsFile) {
     if (boundInstructions.path !== null && boundInstructions.path !== instructionsFile) {
       throw new Error(
@@ -481,6 +483,10 @@ export async function installBundle({
       ownership: boundInstructions.path === instructionsFile ? boundInstructions : null,
       force,
     });
+    if (findLegacyRoutingLines(existingInstructionsRaw ?? '').length > 0) {
+      legacyInstructionNote =
+        'legacy Haoshoku routing text remains outside the Axstack block; preserved for manual migration';
+    }
   }
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
@@ -640,7 +646,12 @@ export async function installBundle({
       },
       instructions: nextInstructions,
     });
-    if (legacyProfileNote) summary.notes = [...(summary.notes ?? []), legacyProfileNote];
+    if (legacyProfileNote || legacyInstructionNote) {
+      summary.notes = [
+        ...(summary.notes ?? []),
+        ...[legacyProfileNote, legacyInstructionNote].filter(Boolean),
+      ];
+    }
     return {
       ...summary,
       preset: selectedPreset,

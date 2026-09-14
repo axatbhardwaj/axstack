@@ -86,3 +86,13 @@ export function stripInstructionBlock(text, ownership, { force = false } = {}) {
     block: located.block,
   };
 }
+
+export function findLegacyRoutingLines(text) {
+  const located = locateInstructionBlock(text);
+  const outside = located
+    ? text.slice(0, located.start) + text.slice(located.end)
+    : text;
+  return outside.split('\n').filter((line) =>
+    /\bhaoshoku\b.*\b(?:rout\w*|skills?)\b|\b(?:planning-advisor|review-code|paseo-pr-review|paseo-pr-babysit)\b/i.test(line),
+  );
+}

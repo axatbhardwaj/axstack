@@ -35,9 +35,9 @@ function packageVersion() {
 const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
-  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>]
-  axstack uninstall --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
+  axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack --help | --version
 
 Commands:
@@ -53,6 +53,10 @@ Flags:
   --preset <name>     Required routing preset: mixed, codex-only, or claude-only.
                       Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target (required). Overrides --harness.
+  --instructions <file>
+                      Instruction file to receive the owned routing block.
+                      Harness defaults: ~/.claude/CLAUDE.md for Claude and
+                      $CODEX_HOME/AGENTS.md for Codex (default ~/.codex).
   --claude-settings <file>
                       Manage the Claude Code user settings file at this path.
                       This forces testable availability without installing Claude.
@@ -88,7 +92,7 @@ function parseArgs(argv) {
   }
   out.command = rest.shift();
   const wantsValue = new Set([
-    '--bundle', '--skills-dir', '--harness', '--preset', '--claude-settings',
+    '--bundle', '--skills-dir', '--instructions', '--harness', '--preset', '--claude-settings',
   ]);
   while (rest.length > 0) {
     const tok = rest.shift();
@@ -199,6 +203,17 @@ function resolveHarnessTarget(harness) {
   return expandHome(entry.skillsDir);
 }
 
+function resolveHarnessInstructions(harness) {
+  if (harness === 'claude') return join(homeDir(), '.claude', 'CLAUDE.md');
+  if (harness === 'codex') {
+    const codexHome = Bun.env.CODEX_HOME
+      ? expandHome(Bun.env.CODEX_HOME)
+      : join(homeDir(), '.codex');
+    return join(codexHome, 'AGENTS.md');
+  }
+  return null;
+}
+
 function printCheckReport(report) {
   console.log('Capability check:');
   for (const c of report.checks) {
@@ -249,17 +264,24 @@ async function main() {
     if (command === 'install') {
       let skillsDir = flags['skills-dir'] ? expandHome(flags['skills-dir']) : null;
       if (!skillsDir && flags.harness) skillsDir = resolveHarnessTarget(flags.harness);
+      const instructionsPath = flags.instructions
+        ? expandHome(flags.instructions)
+        : flags.harness
+          ? resolveHarnessInstructions(flags.harness)
+          : null;
       const summary = await installBundle({
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
         preset: flags.preset,
+        instructionsPath,
         force: !!flags.force,
         yes: !!flags.yes,
         claude: resolveClaudeOption(flags, 'install'),
-        log: (m) => console.log(m),
+        log: (m) => { if (m !== 'plan complete') console.log(m); },
       });
       const changed =
-        summary.added.length + summary.updated.length + summary.removed.length;
+        summary.added.length + summary.updated.length + summary.removed.length +
+        (['created', 'updated'].includes(summary.instructions?.status) ? 1 : 0);
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
       } else {
@@ -272,6 +294,14 @@ async function main() {
         console.log(`preserved user edits (use --force to overwrite): ${summary.preserved.join(', ')}`);
       }
       if (summary.stale.length) console.log(`stale owned files left on disk: ${summary.stale.join(', ')}`);
+      if (summary.instructions) {
+        const i = summary.instructions;
+        if (i.status === 'conflict') {
+          console.log(`instruction conflict: ${i.path} preserved (${i.reason})`);
+        } else {
+          console.log(`instruction ${i.status}: ${i.path}`);
+        }
+      }
       if (summary.notes?.length) {
         for (const note of summary.notes) console.log(`note: ${note}`);
       }
@@ -304,8 +334,16 @@ async function main() {
       return;
     }
     if (command === 'uninstall') {
+      let skillsDir = flags['skills-dir'] ? expandHome(flags['skills-dir']) : null;
+      if (!skillsDir && flags.harness) skillsDir = resolveHarnessTarget(flags.harness);
+      const instructionsPath = flags.instructions
+        ? expandHome(flags.instructions)
+        : flags.harness
+          ? resolveHarnessInstructions(flags.harness)
+          : null;
       const summary = await uninstallBundle({
-        skillsDir: flags['skills-dir'] ? expandHome(flags['skills-dir']) : null,
+        skillsDir,
+        instructionsPath,
         force: !!flags.force,
         yes: !!flags.yes,
         claude: resolveClaudeOption(flags, 'uninstall'),
@@ -315,6 +353,14 @@ async function main() {
       if (summary.removed.length) console.log(`removed: ${summary.removed.join(', ')}`);
       if (summary.preserved.length) {
         console.log(`preserved user edits (use --force to remove): ${summary.preserved.join(', ')}`);
+      }
+      if (summary.instructions) {
+        const i = summary.instructions;
+        if (i.status === 'conflict' || i.status === 'preserved') {
+          console.log(`instruction ${i.status}: ${i.path} preserved (${i.reason})`);
+        } else {
+          console.log(`instruction ${i.status}: ${i.path}`);
+        }
       }
       printClaudeSettings(summary.claudeSettings, { uninstall: true });
       return;
