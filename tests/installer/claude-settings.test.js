@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -39,6 +40,10 @@ function installArgs(f, claude) {
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function canonicalFixturePath(root, path) {
+  return join(realpathSync(root), path.slice(root.length + 1));
 }
 
 test('unavailable Claude is a reported skip and creates no settings', async () => {
@@ -100,7 +105,7 @@ for (const value of ['opus', 'sonnet']) {
     expect(summary.claudeSettings).toEqual({
       status: 'preserved',
       value,
-      path: f.settingsPath,
+      path: canonicalFixturePath(f.root, f.settingsPath),
     });
     expect(readFileSync(f.settingsPath).equals(before)).toBe(true);
     expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
@@ -133,7 +138,9 @@ test('repeat install is idempotent and keeps one canonical owner', async () => {
   expect(summary.claudeSettings.status).toBe('unchanged');
   expect(readFileSync(f.settingsPath, 'utf8')).toBe(settingsBefore);
   expect(readFileSync(sidecarPath, 'utf8')).toBe(sidecarBefore);
-  expect(readJson(sidecarPath).keys[`env.${SETTING}`].owners).toEqual([f.skillsDir]);
+  expect(readJson(sidecarPath).keys[`env.${SETTING}`].owners).toEqual([
+    canonicalFixturePath(f.root, f.skillsDir),
+  ]);
 });
 
 test('a second skills root joins ownership without rewriting settings', async () => {
@@ -148,8 +155,8 @@ test('a second skills root joins ownership without rewriting settings', async ()
   expect(summary.claudeSettings.status).toBe('unchanged');
   expect(readFileSync(f.settingsPath, 'utf8')).toBe(before);
   expect(readJson(join(f.root, 'claude', SIDECAR)).keys[`env.${SETTING}`].owners).toEqual([
-    f.skillsDir,
-    secondRoot,
+    canonicalFixturePath(f.root, f.skillsDir),
+    canonicalFixturePath(f.root, secondRoot),
   ]);
 });
 
@@ -179,7 +186,9 @@ test('skills manifest binds reinstall to the original canonical settings path', 
   await installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath }));
   const manifestPath = join(f.skillsDir, '.axstack-manifest.json');
   const manifestBefore = readFileSync(manifestPath, 'utf8');
-  expect(readJson(manifestPath).claudeSettings).toEqual({ path: f.settingsPath });
+  expect(readJson(manifestPath).claudeSettings).toEqual({
+    path: canonicalFixturePath(f.root, f.settingsPath),
+  });
 
   await expect(installBundle(installArgs(f, {
     available: true,
@@ -201,7 +210,7 @@ test('uninstall keeps the key until the last skills-root owner leaves', async ()
   expect(first.claudeSettings.status).toBe('retained');
   expect(readJson(f.settingsPath).env[SETTING]).toBe('opus');
   expect(readJson(join(f.root, 'claude', SIDECAR)).keys[`env.${SETTING}`].owners).toEqual([
-    secondRoot,
+    canonicalFixturePath(f.root, secondRoot),
   ]);
 
   const last = await uninstallBundle({ skillsDir: secondRoot, claude });
@@ -331,7 +340,9 @@ test('CLI default inside HOME skips without --yes and installs with confirmation
   expect(existsSync(join(home, '.claude', 'settings.json'))).toBe(false);
 
   const installed = runCli([...args, '--yes'], { env });
-  expect(installed.out).toContain(`claude settings: set env.${SETTING}=opus in ${join(home, '.claude', 'settings.json')}`);
+  expect(installed.out).toContain(
+    `claude settings: set env.${SETTING}=opus in ${canonicalFixturePath(f.root, join(home, '.claude', 'settings.json'))}`,
+  );
   expect(readJson(join(home, '.claude', 'settings.json')).env[SETTING]).toBe('opus');
 });
 
@@ -358,7 +369,9 @@ test('CLI honors CLAUDE_CONFIG_DIR for the Codex-only preset', () => {
   ], { env: { HOME: home, PATH: bin, CLAUDE_CONFIG_DIR: configDir } });
 
   const settingsPath = join(configDir, 'settings.json');
-  expect(result.out).toContain(`claude settings: set env.${SETTING}=opus in ${settingsPath}`);
+  expect(result.out).toContain(
+    `claude settings: set env.${SETTING}=opus in ${canonicalFixturePath(root, settingsPath)}`,
+  );
   expect(readJson(settingsPath).env[SETTING]).toBe('opus');
 });
 
@@ -369,7 +382,9 @@ test('CLI explicit settings flag forces injection and no-settings flag skips', (
     'install', '--preset', 'mixed', '--bundle', f.bundleDir,
     '--skills-dir', f.skillsDir, '--claude-settings', explicit,
   ], { env: { PATH: join(f.root, 'empty-bin') } });
-  expect(forced.out).toContain(`claude settings: set env.${SETTING}=opus in ${explicit}`);
+  expect(forced.out).toContain(
+    `claude settings: set env.${SETTING}=opus in ${canonicalFixturePath(f.root, explicit)}`,
+  );
   expect(readJson(explicit).env[SETTING]).toBe('opus');
 
   const other = fixture();
@@ -393,6 +408,8 @@ test('CLI uninstall uses the manifest binding when Claude is absent', () => {
   const removed = runCli(['uninstall', '--skills-dir', f.skillsDir], {
     env: { PATH: join(f.root, 'empty-bin') },
   });
-  expect(removed.out).toContain(`claude settings: removed env.${SETTING} from ${explicit}`);
+  expect(removed.out).toContain(
+    `claude settings: removed env.${SETTING} from ${canonicalFixturePath(f.root, explicit)}`,
+  );
   expect(readJson(explicit).env).not.toHaveProperty(SETTING);
 });
