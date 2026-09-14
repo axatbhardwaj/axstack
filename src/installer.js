@@ -169,7 +169,7 @@ export function assertOutsideHome(target, { yes = false, kind = 'target' } = {})
 
 // Validate the bundle directory and return its payload. Throws before any
 // target mutation on any problem.
-export async function validateBundle(bundleDir) {
+export async function validateBundle(bundleDir, selectedPreset = null) {
   const root = resolve(bundleDir);
   let rootStat;
   try {
@@ -220,35 +220,67 @@ export async function validateBundle(bundleDir) {
   }
   if (files.length === 0) throw new Error('bundle contains no installable skill files');
 
-  let bundleProfiles = null;
-  const profilesPath = join(root, 'profiles', 'paseo.json');
-  const profilesStat = await lstat(profilesPath).catch((err) => {
+  const presets = {};
+  const presetsRoot = join(root, 'profiles', 'presets');
+  const presetsStat = await lstat(presetsRoot).catch((err) => {
     if (err?.code === 'ENOENT') return null;
     throw err;
   });
-  if (profilesStat === null) {
-    bundleProfiles = null;
-  } else if (profilesStat.isSymbolicLink()) {
-    throw new Error('bundle profiles/paseo.json must be a real file, not a symlink');
-  } else {
-    const raw = await readFile(profilesPath, 'utf8');
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      throw new Error('bundle profiles/paseo.json is not valid JSON');
+  if (presetsStat !== null) {
+    if (presetsStat.isSymbolicLink() || !presetsStat.isDirectory()) {
+      throw new Error('bundle profiles/presets must be a real directory, not a symlink');
     }
-    if (!parsed || !Array.isArray(parsed.agentProfiles) || parsed.agentProfiles.length === 0) {
-      throw new Error('bundle profiles/paseo.json must define a non-empty agentProfiles array');
+    const entries = (await readdir(presetsRoot, { withFileTypes: true }))
+      .filter((entry) => entry.name.endsWith('.json'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const presetPath = join(presetsRoot, entry.name);
+      const presetStat = await lstat(presetPath);
+      if (presetStat.isSymbolicLink() || !presetStat.isFile()) {
+        throw new Error(`bundle preset ${entry.name} must be a real file, not a symlink`);
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(await readFile(presetPath, 'utf8'));
+      } catch {
+        throw new Error(`bundle preset ${entry.name} is not valid JSON`);
+      }
+      const stem = entry.name.slice(0, -'.json'.length);
+      if (parsed?.preset !== stem) {
+        throw new Error(`bundle preset ${entry.name} must declare preset matching its filename stem (${stem})`);
+      }
+      if (!Array.isArray(parsed.agentProfiles) || parsed.agentProfiles.length === 0) {
+        throw new Error(`bundle preset ${entry.name} must define a non-empty agentProfiles array`);
+      }
+      assertBundleProfiles(parsed.agentProfiles);
+      presets[stem] = parsed.agentProfiles;
     }
-    assertBundleProfiles(parsed.agentProfiles);
-    bundleProfiles = parsed.agentProfiles;
+
+    const idSets = Object.entries(presets).map(([name, profiles]) => [
+      name,
+      [...new Set(profiles.map((profile) => profile.id))].sort(),
+    ]);
+    const [reference] = idSets;
+    for (const [name, ids] of idSets.slice(1)) {
+      if (JSON.stringify(ids) !== JSON.stringify(reference[1])) {
+        throw new Error(
+          `bundle presets must expose an identical profile ID set; ${reference[0]} and ${name} differ`,
+        );
+      }
+    }
+    if (selectedPreset && !(selectedPreset in presets)) {
+      throw new Error(`selected preset ${selectedPreset} not found in bundle profiles/presets`);
+    }
   }
+
+  const bundleProfiles = selectedPreset ? (presets[selectedPreset] ?? null) : null;
 
   return {
     root,
     skillsRoot,
     files,
+    presets,
+    selectedPreset,
     bundleProfiles,
     configuredProfiles: bundleProfiles?.filter((profile) => profile.model !== null) ?? null,
     deferredProfiles: bundleProfiles?.filter((profile) => profile.model === null) ?? null,
@@ -322,7 +354,7 @@ export async function installBundle({
   if (!skillsDir) throw new Error('install requires --skills-dir <dir> (explicit target directories only)');
 
   // Phase 0: validate everything before mutating anything.
-  const bundle = await validateBundle(bundleDir);
+  const bundle = await validateBundle(bundleDir, selectedPreset);
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
   const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
