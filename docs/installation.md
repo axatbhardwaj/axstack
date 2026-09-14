@@ -43,7 +43,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 17 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 18 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -83,8 +83,9 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker explicitly
-  permits `model: null`;
+- every role has valid preserved fields, while the mixed checker and the
+  unavailable adviser in each single-provider preset explicitly permit
+  `model: null`;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
@@ -103,15 +104,20 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` relative to the actually loaded `axstack` skill.
-A new run records the selected preset plus all 17 role rows. An active run keeps
+A new run records the selected preset plus all 18 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
 The mixed checker has `model: null`; checker dispatch is held and never inherits
-a provider default. The single-provider presets configure the checker. Every
-other missing, invalid, unsupported, or unavailable role value holds only the
-affected work. There is no model substitution, subscription inference, or quota
-routing.
+a provider default. The single-provider presets configure the checker. Their
+unavailable adviser remains an explicit same-provider `model: null` role, which
+does not make installation unready; Align and Spec still hold until both Astra
+and Fable can return independent receipts. The Sol driver defaults to medium in
+every preset, requests high for Align, Spec, and unresolved consequential
+decisions, records requested/effective effort, and returns to medium afterward.
+Every other missing, invalid, unsupported, or unavailable role value holds only
+the affected work. There is no model substitution, subscription inference, or
+quota routing.
 
 `modeId` and similar permission fields remain conservative declared intent.
 They do not prove the effective Orca launcher mode, sandboxing, or permission

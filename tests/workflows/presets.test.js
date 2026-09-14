@@ -7,7 +7,8 @@ const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
   'axstack-driver',
-  'axstack-advisor',
+  'axstack-advisor-astra',
+  'axstack-advisor-fable',
   'axstack-owner',
   'axstack-author',
   'axstack-reviewer-primary',
@@ -29,7 +30,8 @@ const c = (model, effort) => ['codex', model, 'full-access', effort];
 const a = (model, effort) => ['claude', model, 'bypassPermissions', effort];
 const expected = {
   mixed: [
-    c('gpt-6-astra', 'low'), a('claude-fable-5-1', 'medium'),
+    c('gpt-5.6-sol', 'medium'), c('gpt-6-astra', 'high'),
+    a('claude-fable-5-1', 'high'),
     a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
     c(null, 'low'), a('claude-opus-5', 'medium'),
@@ -40,7 +42,8 @@ const expected = {
     c('gpt-5.6-luna', 'max'),
   ],
   'codex-only': [
-    c('gpt-5.6-sol', 'high'), c('gpt-6-astra', 'medium'),
+    c('gpt-5.6-sol', 'medium'), c('gpt-6-astra', 'high'),
+    c(null, 'high'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
     c('gpt-5.6-luna', 'low'), c('gpt-6-astra', 'medium'),
@@ -51,7 +54,8 @@ const expected = {
     c('gpt-5.6-luna', 'max'),
   ],
   'claude-only': [
-    a('claude-opus-5', 'high'), a('claude-fable-5-1', 'medium'),
+    c('gpt-5.6-sol', 'medium'), a(null, 'high'),
+    a('claude-fable-5-1', 'high'),
     a('claude-opus-5', 'high'), a('claude-opus-5', 'medium'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5', 'medium'),
@@ -90,12 +94,17 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
   }
 });
 
-test('presets: provider boundaries and reviewer identities are explicit', () => {
+test('presets: provider boundaries, intentional adviser absence, and reviewer identities are explicit', () => {
   for (const preset of ['codex-only', 'claude-only']) {
     const profiles = readJson(`profiles/presets/${preset}.json`).roles;
-    expect(new Set(profiles.map(({ provider }) => provider))).toEqual(
+    const providerBoundRoles = profiles.filter(({ id }) => id !== 'axstack-driver');
+    expect(new Set(providerBoundRoles.map(({ provider }) => provider))).toEqual(
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
+    const unavailableId = preset === 'codex-only'
+      ? 'axstack-advisor-fable'
+      : 'axstack-advisor-astra';
+    expect(profiles.find(({ id }) => id === unavailableId)?.model).toBeNull();
   }
   for (const preset of presetNames) {
     const profiles = readJson(`profiles/presets/${preset}.json`).roles;

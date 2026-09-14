@@ -39,20 +39,24 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 ## Consult on consequential decisions
 
 The current chat remains the driver; never auto-launch a preferred profile.
-For each new user round, the driver independently drafts the prioritized
-frontier and recommendations, then uses the configured persistent
-`axstack-advisor` under [Standing contracts](../axstack/references/contracts.md).
-The advisor challenges assumptions, edges, omissions, and alternatives; the driver responds
-and accepts or rejects each material point with a reason. Use one focused reply
-when material disagreement remains, then surface the choices to the user. Never
-fabricate consensus or impersonate either role.
+Before Align, request driver effort high and record requested/effective effort
+under [Standing contracts](../axstack/references/contracts.md). For each new
+user round, the driver independently drafts the prioritized frontier and
+recommendations. Then consult `axstack-advisor-astra` and
+`axstack-advisor-fable` independently, without cross-reading, using the same
+bounded evidence and question. Each adviser challenges assumptions, edges,
+omissions, and alternatives; the driver synthesizes disagreements and accepts
+or rejects each material point with a reason. Use one focused reply when
+material disagreement remains, then surface the choices to the user. Never
+fabricate consensus or impersonate a role.
 
-Immediately before the first actual advisor dispatch, load and follow
-[Orca runtime](../axstack/references/orca-runtime.md). Reuse the advisor session
-and settled receipts; consult only the changed frontier. Record compact advisor
-evidence, the driver's assessment, and user-resolved choices for `axstack-spec`.
-If the configured model is unavailable, pause the affected interview and ask
-the user; safe fact work may continue without substitution.
+Immediately before the first actual adviser dispatch, load and follow
+[Orca runtime](../axstack/references/orca-runtime.md). Reuse each adviser
+session and settled receipt; consult only the changed frontier and reuse
+unchanged receipts. Record compact adviser evidence, the driver's assessment,
+and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
+hold Align; safe fact work may continue without substitution. On completion or
+hold, request the driver return to medium and record requested/effective effort.
 
 ## Bound the interview
 
@@ -107,7 +111,7 @@ approval; record chosen document names and paths once per run.
 3. Record substantive or resumable preparation through the
    [shared lifecycle](../axstack/references/lifecycle.md) and
    [run record](../axstack/references/run-record.md). Persist the question count,
-   settled, open, and deferred branches, compact round advisor receipts, and
+   settled, open, and deferred branches, compact round adviser receipts, and
    documentation pointers without adding another runtime. Return the compact
    scope and record pointer in the current chat. Native transfer is separate:
    use it only when the user explicitly requests transfer, loading

@@ -26,7 +26,7 @@ Read `roles.json` relative to the actually loaded `axstack` skill. The installed
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 17 role rows once. An active run keeps the exact snapshot until the user
+all 18 role rows once. An active run keeps the exact snapshot until the user
 explicitly changes it.
 
 Select the requested role by stable ID. A missing or null model holds only that role;
@@ -36,6 +36,10 @@ permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
 settings, and completed work are separate evidence. An unsupported or
 unavailable value holds affected work for the user's decision without fallback.
+The single-provider preset's null adviser is intentional installation data, not
+readiness failure; because Align and Spec require both adviser receipts, either
+null adviser still holds those phases. The universal Sol driver remains the
+declared driver row even in the claude-only preset.
 
 ## Supervise one authoritative attempt
 

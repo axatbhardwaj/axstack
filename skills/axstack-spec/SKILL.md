@@ -24,19 +24,24 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    without writing or changing stores. Linear drafting starts only when all
    three operations are available; a later tickets-phase check cannot replace
    this one. Markdown mode skips this preflight.
-3. **Draft with decision evidence.** Write observable acceptance criteria and
-   explicit exclusions in the selected store. For advisor involvement, first
-   record the driver's independent assessment, then load
+3. **Draft with decision evidence.** Before Spec, request driver effort high
+   and record requested/effective effort. Write observable acceptance criteria
+   and explicit exclusions in the selected store. First record the driver's
+   independent assessment, then load
    [Orca runtime](../axstack/references/orca-runtime.md) before dispatching the
-   configured `axstack-advisor`. Involve the advisor in spec creation and revision, solution design, and
-   consequential decisions under Standing contracts, and cache the receipt
-   with the draft. Reuse it only while its evidence and scope remain unchanged.
-   A reviewable draft covers the agreed outcome, acceptance criteria,
-   exclusions, and every required advisor receipt or reported consultation gap.
+   configured `axstack-advisor-astra` and `axstack-advisor-fable` independently,
+   without cross-reading, with the same bounded evidence and question. The
+   driver synthesizes disagreements. Cache both receipts with the draft and
+   reuse unchanged receipts only while their evidence, scope, and question
+   remain unchanged. If either adviser is unavailable, hold Spec without
+   substitution. A reviewable draft covers the agreed outcome, acceptance
+   criteria, exclusions, and both adviser receipts or the reported hold.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
-   user approves it; advisor input cannot grant approval. Present one
+   user approves it; adviser input cannot grant approval. High-stakes decisions
+   require both advisers' plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
-   creates the execution baseline.
+   creates the execution baseline. Then request the driver return to medium and
+   record requested/effective effort.
 5. **Snapshot the baseline.** Record the approved revision identity and a
    concise repository Markdown counterpart. In Linear mode, the native
    document remains authoritative; in Markdown mode, the agreed repository
@@ -52,7 +57,7 @@ Material change: <none | description + affected PRs/tasks + hold state>
 
    The snapshot is ready for ticketing when its authoritative revision,
    counterpart, and preserved ref resolve to the approved content. Return that
-   exact identity; routine execution of the settled plan needs no repeat advisor
+   exact identity; routine execution of the settled plan needs no repeat adviser
    consultation or spec approval.
 
 ## Material revisions

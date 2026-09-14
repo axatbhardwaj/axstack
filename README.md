@@ -24,7 +24,9 @@ without changing authority.
    reason. Small, bounded one-PR work uses the current request or selected issue
    as a snapshotted small-change intent;
    substantial or stacked work needs an approved spec and matching ticket map.
-2. Bind each ready task to the selected role snapshot and an authoritative Orca
+2. The Sol driver defaults to medium, requests high for Align, Spec, and
+   unresolved consequential decisions, records requested/effective effort, and
+   returns to medium afterward. Bind each ready task to the selected role snapshot and an authoritative Orca
    Run, Task, and Dispatch. Exactly one writer owns a candidate at a time.
 3. Peer PRs receive both configured independent reviewer roles. Authored PRs
    receive one eligible reviewer from the selected preset's explicit mapping
@@ -63,7 +65,7 @@ directory. `--claude-settings` and `--no-claude-settings` manage the existing
 Claude Code subagent default transaction; they do not configure Orca roles.
 See [installation details](docs/installation.md).
 
-The public bundle preserves three canonical 17-role inputs:
+The public bundle preserves three canonical 18-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly
@@ -72,9 +74,13 @@ to `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<name>", "roles": [...] }` under normal ownership
 hashes. An edited installed role file is preserved.
 
-The mixed `axstack-checker` model is intentionally `null`; that role stays held
+Mixed configures independent Astra and Fable advisers at high. Single-provider
+presets preserve both adviser IDs and mark the unavailable one with `model:
+null` inside that preset's provider bounds; installation remains ready, while
+Align and Spec hold because both receipts are required. The mixed
+`axstack-checker` model is also intentionally `null`; that role stays held
 instead of inheriting a provider default. The single-provider presets configure
-it. Preset changes affect new runs only. Stored model, effort, and permission
+the checker. Preset changes affect new runs only. Stored model, effort, and permission
 fields are declared intent until actual Orca launch receipts establish effective
 behavior; installation never proves provider availability or permission parity.
 Subscription availability and quota never select a fallback model.
