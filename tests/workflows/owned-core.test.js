@@ -258,7 +258,10 @@ test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from
 test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
   for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
     const text = skill(name);
-    expect(/daemon/i.test(text), `${name}: must not introduce a daemon`).toBe(false);
+    expect(
+      /(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(text),
+      `${name}: must not introduce a daemon`,
+    ).toBe(false);
     expect(/state machine/i.test(text), `${name}: must not introduce a state machine`).toBe(false);
     expect(
       /programmatic gate|decision engine/i.test(text),

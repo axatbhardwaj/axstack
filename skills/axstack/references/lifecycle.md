@@ -34,29 +34,25 @@ peer code stays read-only. Missing or idle sessions never transfer ownership.
 
 ## Native handoff and resume
 
-Preparation completion and watch expiry write a resumable record. Ordinary
-resume reconciles it, keeps the current owner, and launches no native handoff.
+Preparation completion/watch expiry writes a resumable record. Ordinary resume
+reconciles it, keeps the current owner, and launches no native handoff.
 Only an explicit user request to transfer ownership enters this branch.
 
 1. Reconcile the [Run record](run-record.md) with Paseo sessions, Git revisions,
-   forge state, pending receipts, and timer expiries. Actual live owners and
-   sessions win over stale record state.
+   forge, pending receipts, and timer expiries; live owners/sessions beat stale state.
 2. Confirm both native `paseo-handoff` and its required `paseo` skill are
-   discoverable in the current session; only then load and follow them. Axstack
-   never guesses their calls, paths, profiles, or fallback models. Packaging
-   does not prove discoverability.
+   discoverable in this session; only then load/follow them. Never guess calls,
+   paths, profiles, or fallback models. Packaging does not prove it.
 3. If either skill is missing, report the exact setup gap and keep the current
-   owner. Safe read-only reconciliation, investigation, and run-record updates
-   may continue, but no replacement or ownership transfer launches.
-4. Before launch, record the recipient and pending receipt. If uncertain,
-   reconcile the actual workspace/session before retry and block duplicates.
+   owner. Read-only reconciliation may continue, but no replacement or ownership transfer launches.
+4. Record recipient/pending receipt before launch. If uncertain, reconcile the
+   actual workspace/session before retry and block duplicates.
 5. Launch is not ownership. Record the recipient's explicit acceptance receipt
-   before changing ownership; until then the current owner remains accountable.
-   A prior owner seeing a different valid accepted owner stops.
+   before changing ownership; current owner remains accountable until then. A
+   prior owner seeing a different valid accepted owner stops.
 
 Complete record: goal, authority, intent, IDs, revisions, evidence, pending
-receipts/timers, unresolved decisions, next action; transfers also name accepted
-ownership or the retaining gap.
+receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
 
 ## Receipts (bind each decision to evidence)
 
@@ -86,13 +82,15 @@ events are deduplicated. Healthy unchanged ticks produce no user-facing update.
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
 receipts, and stalls; recover boundedly within existing authority. Never
 duplicate a writer; idle is not complete. On resume, reconcile an existing
-heartbeat before creating one. Verify existence and health through native tool
-receipts and readback: `create_heartbeat` return plus native `scheduleList`
-showing heartbeat ID, `lastRunAt`, and expiry.
-Paseo CLI `schedule inspect/ls` excludes heartbeats; an empty CLI listing is not
-evidence a heartbeat is absent or grounds for a duplicate. Ambiguous
-creation blocks duplicate creation until native state is known. Missing timer
-capability is an explicit tracking gap; never claim tracking is enabled.
+heartbeat before creating one. Verify existence/health through native tool
+receipts and native schedule-list readback: the `create_heartbeat` return;
+daemon `schedule/list` (heartbeat ID, `lastRunAt`, expiry); MCP `list_schedules`
+only if it shows heartbeats. Paseo CLI `schedule inspect/ls` excludes heartbeats,
+so an empty CLI listing is not evidence a heartbeat is absent. If no accessible
+listing shows heartbeats, readback is unavailable: keep the `create_heartbeat`
+receipt plus observed ticks as the only liveness evidence and never conclude
+absence. Ambiguous creation blocks duplicates until native state is known.
+Missing timer capability is a tracking gap; never claim tracking is enabled.
 
 Evidence classes: existence is not a tick, tick is not delivery, and delivery
 is not advancement. `lastRunAt` proves the timer fired, not that the
@@ -125,16 +123,16 @@ and dispatch its auditor. An `axstack-audit` run is excluded: it writes its
 record and launches no children.
 
 The auditor reads the [Run record](run-record.md) for scope, outcomes, and
-metric counts with denominators; reports evidenced PASS/FAIL/UNKNOWN; and never
-invents numbers or cost. Proposals change nothing. Accepted proposals return as
+metric counts/denominators; reports evidenced PASS/FAIL/UNKNOWN; and invents no
+numbers or cost. Proposals change nothing. Accepted proposals return as
 tested, independently reviewed work with a regression scenario and unchanged
 holdout checks. No automatic self-edit, merge, or activation. Records stay
 private; publication needs separate authority.
 
 ## Idle-complete archive and retain
 
-After required PRs are merged or handed off, timers stopped, and receipts
-verified, mark the same [Run record](run-record.md) `Archived` in place. Preserve
+After required PRs merge or hand off, timers stop, and receipts verify, mark
+the same [Run record](run-record.md) `Archived` in place. Preserve
 scope, revisions, evidence, receipts, and expiries. Archive only idle-complete
 records: never active/waiting workers, unrelated host state, or ownership merely
 because it is idle.

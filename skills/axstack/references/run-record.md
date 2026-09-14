@@ -58,6 +58,7 @@ owner stops.
 
 `Archived` is a status in the same record and path. Nothing is moved or
 deleted.
+The driver records `paused` on a user request or a hold; idle alone is neither.
 
 ## Handoff and resumption
 

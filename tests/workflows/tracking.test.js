@@ -41,6 +41,9 @@ test('tracking structure: implementation creates one native execution heartbeat'
   expect(implement).toMatch(/execution start[^.]*create_heartbeat|create_heartbeat[^.]*execution start/i);
   expect(implement).toContain('*/10 * * * *');
   expect(implement).toMatch(/10 minutes|ten minutes/i);
+  expect(implement).toMatch(/handshake\s*=[^.]*first observed tick receipt[^.]*timestamp[^.]*lastRunAt/i);
+  expect(implement).toMatch(/handshake:\s*pending[^.]*creation[^.]*fill[^.]*first tick[^.]*reconcil/i);
+  expect(implement).toMatch(/compute[^.]*expiresIn[^.]*resume[^.]*recorded absolute deadline/i);
 });
 
 test('tracking structure: lifecycle reconciles events and heartbeat uncertainty', () => {
@@ -58,7 +61,10 @@ test('tracking structure: lifecycle reconciles events and heartbeat uncertainty'
 test('tracking structure: native readback separates timer evidence classes', () => {
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   expect(lifecycle).toMatch(/native tool receipts?[^.]*readback|readback[^.]*native tool receipts?/i);
-  expect(lifecycle).toMatch(/scheduleList[^.]*heartbeat ID[^.]*lastRunAt[^.]*expir/i);
+  expect(lifecycle).toMatch(/native schedule-list readback[^.]*daemon[^.]*schedule\/list[^.]*MCP[^.]*list_schedules[^.]*only if[^.]*heartbeats/i);
+  expect(lifecycle).toMatch(/no accessible listing[^.]*shows? heartbeats[^.]*readback[^.]*unavailable/i);
+  expect(lifecycle).toMatch(/keep[^.]*create_heartbeat[^.]*receipt[^.]*observed ticks[^.]*only liveness evidence/i);
+  expect(lifecycle).toMatch(/never[^.]*conclude[^.]*absence/i);
   expect(lifecycle).toMatch(/schedule inspect\/ls[^.]*excludes? heartbeats/i);
   expect(lifecycle).toMatch(/empty CLI listing[^.]*not[^.]*evidence[^.]*heartbeat[^.]*absent/i);
   expect(lifecycle).toMatch(/existence[^.]*tick[^.]*delivery[^.]*advancement/i);
@@ -75,4 +81,5 @@ test('tracking structure: timer receipt and stop boundaries are durable', () => 
   expect(lifecycle).toMatch(/missing[^.]*timer capability[^.]*tracking gap/i);
   expect(lifecycle).toMatch(/PR watch[^.]*separate[^.]*responsibilit/i);
   expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*scope/i);
+  expect(record).toMatch(/driver[^.]*records?[^.]*paused[^.]*user request[^.]*hold/i);
 });
