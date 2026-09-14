@@ -39,6 +39,11 @@ import {
 } from './manifest.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
 import {
+  applyInstructionPlan,
+  planInstruction,
+  renderInstructionBlock,
+} from './instructions.js';
+import {
   assertBundleRoles,
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
@@ -146,6 +151,24 @@ async function readOwnedTarget(skillsRoot, rel) {
     }
   }
   return { dest, current, mode };
+}
+
+async function canonicalInstructionFile(instructionsPath) {
+  const abs = resolve(instructionsPath);
+  const lexicalParent = dirname(abs);
+  const parent = await canonicalTargetDir(lexicalParent);
+  if (parent !== lexicalParent) {
+    throw new Error(`unsafe target: symlinked instruction parent at ${lexicalParent}; refusing`);
+  }
+  const file = join(parent, basename(abs));
+  const st = await lstat(file).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (st?.isSymbolicLink()) {
+    throw new Error(`unsafe target: instruction path is a symlink at ${file}; refusing`);
+  }
+  return file;
 }
 
 function homeDir() {
@@ -378,6 +401,7 @@ export async function installBundle({
   bundleDir,
   skillsDir,
   preset,
+  instructionsPath = null,
   force = false,
   yes = false,
   claude = null,
@@ -390,7 +414,11 @@ export async function installBundle({
   // Phase 0: validate everything before mutating anything.
   const bundle = await validateBundle(bundleDir, selectedPreset);
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
+  const instructionsFile = instructionsPath
+    ? await canonicalInstructionFile(instructionsPath)
+    : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
+  if (instructionsFile) assertOutsideHome(instructionsFile, { yes, kind: 'instruction file' });
   const claudePlan = await planInstallClaudeSettings({ claude, skillsRoot });
   if (claudePlan.report.path) {
     assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
@@ -401,6 +429,7 @@ export async function installBundle({
     files: {},
     profiles: { path: null, preset: null, entries: {} },
     claudeSettings: { path: null },
+    instructions: { path: null, hash: null },
   };
   const boundClaudeSettingsPath = prevManifest.claudeSettings?.path ?? null;
   if (
@@ -417,6 +446,29 @@ export async function installBundle({
   const legacyProfileNote = Object.keys(legacyProfiles?.entries ?? {}).length > 0
     ? 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md'
     : null;
+
+  const boundInstructions = prevManifest.instructions ?? { path: null, hash: null };
+  let existingInstructionsRaw = null;
+  let instructionPlan = null;
+  if (instructionsFile) {
+    if (boundInstructions.path !== null && boundInstructions.path !== instructionsFile) {
+      throw new Error(
+        `refusing: owned instruction block is bound to a different file (${boundInstructions.path}); ` +
+          `uninstall with --instructions ${boundInstructions.path} first`,
+      );
+    }
+    try {
+      existingInstructionsRaw = await readFile(instructionsFile, 'utf8');
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+    instructionPlan = planInstruction({
+      text: existingInstructionsRaw,
+      block: renderInstructionBlock(skillsRoot),
+      ownership: boundInstructions.path === instructionsFile ? boundInstructions : null,
+      force,
+    });
+  }
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
   // Destination ancestry is checked for symlink escapes here, before mutation.
@@ -469,6 +521,7 @@ export async function installBundle({
   const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [], removed: [] };
   const installedHashes = {};
   const claudeWritten = [];
+  let instructionWritten = false;
   try {
     await mkdir(skillsRoot, { recursive: true });
     for (const { rel, dest, content, current, mode } of desired) {
@@ -522,6 +575,32 @@ export async function installBundle({
       summary.removed.push(rel);
     }
 
+    let instructionReport = null;
+    let nextInstructions = boundInstructions;
+    if (instructionPlan) {
+      instructionReport = {
+        status: instructionPlan.action,
+        path: instructionsFile,
+        ...(instructionPlan.reason ? { reason: instructionPlan.reason } : {}),
+      };
+      if (instructionPlan.action === 'created' || instructionPlan.action === 'updated') {
+        const nextRaw = applyInstructionPlan(existingInstructionsRaw, instructionPlan);
+        await writeAtomic(instructionsFile, nextRaw);
+        instructionWritten = true;
+        nextInstructions = {
+          path: instructionsFile,
+          hash: hashContent(instructionPlan.block),
+          separation: instructionPlan.separation,
+        };
+      } else if (instructionPlan.action === 'unchanged') {
+        nextInstructions = {
+          path: instructionsFile,
+          hash: hashContent(instructionPlan.block),
+          separation: instructionPlan.separation,
+        };
+      }
+    }
+
     for (const write of claudePlan.writes) {
       await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
       claudeWritten.push(write);
@@ -542,6 +621,7 @@ export async function installBundle({
       claudeSettings: {
         path: claudePlan.settingsPath ?? boundClaudeSettingsPath,
       },
+      instructions: nextInstructions,
     });
     if (legacyProfileNote) summary.notes = [...(summary.notes ?? []), legacyProfileNote];
     return {
@@ -549,6 +629,7 @@ export async function installBundle({
       preset: selectedPreset,
       roles: roleReadiness,
       claudeSettings: claudePlan.report,
+      instructions: instructionReport,
     };
   } catch (err) {
     // Restore updated files, remove creations, and restore Claude settings so
@@ -562,6 +643,14 @@ export async function installBundle({
         else await writeAtomic(write.path, write.before);
       } catch (restoreErr) {
         rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    if (instructionWritten) {
+      try {
+        if (existingInstructionsRaw === null) await rm(instructionsFile);
+        else await writeAtomic(instructionsFile, existingInstructionsRaw);
+      } catch (restoreErr) {
+        rollbackErrors.push(`${instructionsFile}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
     for (const [dest, { bytes, mode }] of backups) {
