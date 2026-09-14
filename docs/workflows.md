@@ -75,6 +75,12 @@ Paseo launch materialization before dispatch.
   under angle 6. Weak rationale returns to the author through the normal fix
   loop. Existing material-scope, serious-risk, unavailable-model, and
   human-merge holds remain unchanged.
+- `axstack-relay` — optional inline procedure for explicit messages and transport
+  tests, urgent issues and blockers under a standing user instruction, and
+  other automated messages allowed by a `Notification policy`. It checks
+  host-enabled discovery and readiness before use, preserves the caller's
+  authority and persistent ownership, and falls back to the current Paseo
+  conversation without clearing the hold. It creates no runtime or child role.
 - `axstack-align` — interview and resolve factual questions.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map with a theme and coarse size estimate per task, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
@@ -102,8 +108,9 @@ Paseo launch materialization before dispatch.
   GitHub but records an internal verdict; authorized submission binds
   the actual commit parameter with lookup before retry on ambiguity.
   Peer code stays readonly. Prompt-only urgent escalation holds approval
-  and dangerous actions but never blocks reporting validated risk;
-  Hermes relay is optional with Paseo chat fallback.
+  and dangerous actions but never blocks reporting validated risk; when a
+  `Notification policy` is present, `axstack-relay` is optional with Paseo
+  chat fallback.
   Under angle 6, reviewers verify recorded PR shape against the pinned head and
   base, then apply the matching rationale or exception level. They judge whether
   a stated split failure is real, not the number itself; missing or weak evidence

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "note": "Raw relay discovery policy scenario. Assertions validate the declared contract and shipped prompt coverage; they are not model-behavior evidence.",
+  "cases": [
+    {
+      "id": "relay-discovery-fallbacks",
+      "title": "Optional relay discovery fails closed to the current Paseo conversation",
+      "skill_ref": "axstack-relay",
+      "input": {
+        "policy_absent": "An automated routine update has no Notification policy or explicit send authorization.",
+        "cli_missing": "The shell command lookup cannot locate the relay CLI.",
+        "guard_fails": "The host enable guard exits non-zero.",
+        "database_not_ok": "Doctor reports a database state other than ok.",
+        "readme_missing": "The installed authoritative manual cannot be read. Help and doctor expose commands but no request schema."
+      },
+      "expected": {
+        "policy_absent": "Do not use relay.",
+        "cli_missing": "Report relay unavailable in the current Paseo conversation.",
+        "guard_fails": "Report relay disabled on this host and use the Paseo fallback.",
+        "database_not_ok": "Hold relay use because payload readiness failed.",
+        "readme_missing": "Treat help and doctor as capability evidence only and hold every send until the request schema is available."
+      }
+    }
+  ]
+}

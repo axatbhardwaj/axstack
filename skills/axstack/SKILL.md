@@ -8,6 +8,11 @@ description: When routing an engineering run through Axstack, use axstack to sel
 Route the current request to one Axstack phase with the right scope identity.
 The current chat remains the driver; Paseo owns runtime orchestration.
 
+For an explicit relay message or transport test, use
+[axstack-relay](../axstack-relay/SKILL.md) directly. No engineering scope
+identity or decision workflow is needed for that send. The same skill handles
+urgent or blocking notifications under an explicit standing instruction.
+
 ## Route the request
 
 1. Classify the request with [Shared routing](references/routing.md). Direct
@@ -45,6 +50,10 @@ held.
   local checks do not require launch discovery.
 - Substantive delegated or resumable work uses the
   [Local run record](references/run-record.md).
+- When review escalation or watch notification is eligible and the brief has a
+  `Notification policy`, use the optional
+  [axstack-relay](../axstack-relay/SKILL.md); otherwise keep notification in
+  the current Paseo conversation.
 
 ## Lifecycle
 
