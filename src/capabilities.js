@@ -1,11 +1,12 @@
-// Host capability checks. `exec` is injected (name -> { ok, stdout }) so
-// tests never spawn real tools. A binary probe reports availability gaps; it
-// cannot prove per-agent Linear MCP access, model quotas, or session MCP.
+// Host capability checks. `exec` is injected so tests never touch a live
+// runtime. Resolve Orca exactly once and reuse it: a failed choice never
+// triggers a fallback to another binary.
 export const BUN_FLOOR = '1.3.14';
 
 export const PROBE_LIMITATIONS = [
   'A host binary probe cannot prove each agent session\'s Linear MCP access; skill prompts perform a session preflight instead.',
   'A host binary probe cannot prove model availability or quotas; an unavailable or exhausted model pauses affected work until the user decides.',
+  'Stored role model, effort, and permission intent does not prove Orca launch parity or a successful agent execution.',
 ];
 
 const CHECK_LABELS = {
@@ -13,7 +14,10 @@ const CHECK_LABELS = {
   git: 'git CLI',
   gh: 'gh CLI',
   'gh-stack': 'gh stack extension',
-  paseo: 'paseo CLI',
+  'orca-binary': 'resolved Orca CLI',
+  'orca-runtime': 'Orca runtime connection',
+  'orca-orchestration-guide': 'Orca orchestration guide capability',
+  'orca-cli-guide': 'Orca CLI guide capability',
 };
 
 // The real commands behind each probe. gh-stack runs the actual
@@ -23,8 +27,48 @@ export const PROBE_COMMANDS = {
   git: ['git', ['--version']],
   gh: ['gh', ['--version']],
   'gh-stack': ['gh', ['stack', '--help']],
-  paseo: ['paseo', ['--version']],
 };
+
+export function resolveOrcaExecutable({ env = Bun.env, platform = process.platform } = {}) {
+  if (typeof env.ORCA_CLI_COMMAND === 'string' && env.ORCA_CLI_COMMAND.trim() !== '') {
+    return env.ORCA_CLI_COMMAND.trim();
+  }
+  if (typeof env.ORCA_DEV_REPO_ROOT === 'string' && env.ORCA_DEV_REPO_ROOT.trim() !== '') {
+    return 'orca-dev';
+  }
+  const managed = Boolean(env.ORCA_TERMINAL_HANDLE || env.ORCA_WORKTREE_ID);
+  if (platform === 'linux' && !managed) return 'orca-ide';
+  return 'orca';
+}
+
+function orcaCommand(name, executable) {
+  if (name === 'orca-binary') return [executable, ['--version']];
+  if (name === 'orca-runtime') return [executable, ['status', '--json']];
+  if (name === 'orca-orchestration-guide') {
+    return [executable, ['skills', 'get', 'orchestration', '--json']];
+  }
+  if (name === 'orca-cli-guide') return [executable, ['skills', 'get', 'orca-cli', '--json']];
+  return null;
+}
+
+function validateOrcaOutput(name, stdout) {
+  if (name === 'orca-binary') return { ok: true, stdout };
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    return { ok: false, stdout: 'invalid JSON response' };
+  }
+  if (name === 'orca-runtime') {
+    const runtime = parsed?.result?.runtime;
+    const ready = parsed?.ok === true && runtime?.state === 'ready' &&
+      runtime?.reachable === true && runtime?.connectionState === 'connected';
+    return { ok: ready, stdout: ready ? 'ready and connected' : 'runtime is not ready and connected' };
+  }
+  const expected = name === 'orca-cli-guide' ? 'orca-cli' : 'orchestration';
+  const ready = parsed?.name === expected && typeof parsed?.markdown === 'string' && parsed.markdown.length > 0;
+  return { ok: ready, stdout: ready ? `${expected} guide available` : `${expected} guide unavailable` };
+}
 
 // Pure semver-floor comparison over numeric prefix segments ("1.3.14" style;
 // trailing build metadata is ignored).
@@ -39,12 +83,12 @@ export function meetsFloor(version, floor = BUN_FLOOR) {
   return true;
 }
 
-export async function runRealCheck(name) {
+export async function runRealCheck(name, { orcaExecutable = resolveOrcaExecutable() } = {}) {
   if (name === 'bun') {
     const version = Bun.version;
     return { ok: meetsFloor(version), stdout: `v${version}` };
   }
-  const [cmd, args] = PROBE_COMMANDS[name];
+  const [cmd, args] = orcaCommand(name, orcaExecutable) ?? PROBE_COMMANDS[name];
   try {
     const result = Bun.spawnSync([cmd, ...args], {
       stdout: 'pipe',
@@ -52,7 +96,8 @@ export async function runRealCheck(name) {
       timeout: 10000,
     });
     if (result.exitCode === 0) {
-      return { ok: true, stdout: result.stdout.toString().trim() };
+      const stdout = result.stdout.toString().trim();
+      return name.startsWith('orca-') ? validateOrcaOutput(name, stdout) : { ok: true, stdout };
     }
     const detail = (result.stderr.toString().trim() || result.stdout.toString().trim()).slice(0, 120);
     return { ok: false, stdout: detail || `exit ${result.exitCode}` };
@@ -61,13 +106,17 @@ export async function runRealCheck(name) {
   }
 }
 
-export async function checkCapabilities(exec) {
-  const names = ['bun', 'git', 'gh', 'gh-stack', 'paseo'];
+export async function checkCapabilities(exec, resolution = {}) {
+  const orcaExecutable = resolveOrcaExecutable(resolution);
+  const names = [
+    'bun', 'git', 'gh', 'gh-stack', 'orca-binary', 'orca-runtime',
+    'orca-orchestration-guide', 'orca-cli-guide',
+  ];
   const checks = [];
   for (const name of names) {
     let result;
     try {
-      result = await exec(name);
+      result = await exec(name, { orcaExecutable });
     } catch (err) {
       result = { ok: false, stdout: err?.message ?? 'error' };
     }
