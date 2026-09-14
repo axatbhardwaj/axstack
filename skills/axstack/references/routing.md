@@ -118,6 +118,6 @@ not alone require a formal spec. Hold affected unsafe work while reassessing.
   accepted scope, exact head/base, verified writable ownership, and actual
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
-  orchestrator or assume an imported own PR was Sol-authored.
+  orchestrator or assume an imported own PR's author.
 - Direct later phase: start there and pass that phase's identity check. Entry
   never admits work a deeper phase would reject.

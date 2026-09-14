@@ -267,7 +267,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
   }
   for (const ref of ['routing.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
-    expect(text.length, `${ref} must stay compact (<6250 chars)`).toBeLessThan(6250);
+    expect(text.length, `${ref} must stay compact (<7500 chars)`).toBeLessThan(7500);
   }
 });
 

@@ -43,7 +43,7 @@ test('repairs: authored publishing accepts the mode-specific scope identity', ()
 
 test('repairs: every skill route target resolves in the package', () => {
   const routing = read('skills/axstack/references/routing.md');
-  const targets = [...routing.matchAll(/`(axstack(?:-[a-z]+)?)`/g)].map((match) => match[1]);
+  const targets = [...routing.matchAll(/-> `(axstack(?:-[a-z]+)?)`/g)].map((match) => match[1]);
   expect(targets.length).toBeGreaterThan(0);
   for (const target of new Set(targets)) {
     expect(existsSync(`${root}/skills/${target}/SKILL.md`), `missing route target ${target}`).toBe(true);

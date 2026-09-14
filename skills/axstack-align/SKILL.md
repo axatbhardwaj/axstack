@@ -38,11 +38,11 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 
 ## Consult on consequential decisions
 
-The current chat remains the driver; Astra is preferred, never auto-launched.
+The current chat remains the driver; never auto-launch a preferred profile.
 For each new user round, the driver independently drafts the prioritized
-frontier and recommendations, then uses the actual configured persistent Fable
-advisor under [Standing contracts](../axstack/references/contracts.md). Fable
-challenges assumptions, edges, omissions, and alternatives; the driver responds
+frontier and recommendations, then uses the configured persistent
+`axstack-advisor` under [Standing contracts](../axstack/references/contracts.md).
+The advisor challenges assumptions, edges, omissions, and alternatives; the driver responds
 and accepts or rejects each material point with a reason. Use one focused reply
 when material disagreement remains, then surface the choices to the user. Never
 fabricate consensus or impersonate either role.

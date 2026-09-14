@@ -25,14 +25,14 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    three operations are available; a later tickets-phase check cannot replace
    this one. Markdown mode skips this preflight.
 3. **Draft with decision evidence.** Write observable acceptance criteria and
-   explicit exclusions in the selected store. For Fable involvement, first
+   explicit exclusions in the selected store. For advisor involvement, first
    record the driver's independent assessment, then load
    [Paseo launch](../axstack/references/paseo-launch.md) before dispatching the
-   advisor. Involve Fable in spec creation and revision, solution design, and
+   configured `axstack-advisor`. Involve the advisor in spec creation and revision, solution design, and
    consequential decisions under Standing contracts, and cache the receipt
    with the draft. Reuse it only while its evidence and scope remain unchanged.
    A reviewable draft covers the agreed outcome, acceptance criteria,
-   exclusions, and every required Fable receipt or reported consultation gap.
+   exclusions, and every required advisor receipt or reported consultation gap.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; advisor input cannot grant approval. Present one
    reviewable, identified revision for this checkpoint. Its user approval
@@ -52,7 +52,7 @@ Material change: <none | description + affected PRs/tasks + hold state>
 
    The snapshot is ready for ticketing when its authoritative revision,
    counterpart, and preserved ref resolve to the approved content. Return that
-   exact identity; routine execution of the settled plan needs no repeat Fable
+   exact identity; routine execution of the settled plan needs no repeat advisor
    consultation or spec approval.
 
 ## Material revisions
