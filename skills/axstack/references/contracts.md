@@ -38,12 +38,13 @@ the revised scope and plan.
 
 Validate the configured provider and model at actual launch. If it is
 unavailable or exhausted, pause affected work, record the gap, and ask the
-user. Every substitution requires the user's decision: configured alternatives
-and native fallback prose are not defaults.
+user. Never infer a route from quota state or subscription entitlement. Every
+substitution requires the user's decision: configured alternatives and native
+fallback prose are not defaults.
 
 ## Advisor split
 
-The current driver consults the Fable advisor profile for spec creation and
+The current driver consults the configured `axstack-advisor` for spec creation and
 revision, solution design, and consequential decisions. The driver forms an
 independent assessment first, owns the decision, and the user still approves
 the spec. Cache and reuse a valid unchanged decision receipt; profile notes
@@ -51,12 +52,14 @@ alone do not trigger consultation.
 
 High-stakes decisions require the advisor's plain AGREE and the driver's
 accepted assessment. Resolve disagreement with bounded checks; silence and an
-unavailable model do not authorize fallback. Ordinary work uses the Sol/Opus
-author/reviewer pairing selected by review mode. High-stakes work keeps its
-Opus high author and Sol high checkpoint reviewer. An eligible current
-non-author, non-owner Sol high checkpoint can satisfy the authored final review after
-revalidation; preserve its effort and do not add a redundant reviewer. There
-is no silent fallback.
+unavailable model do not authorize fallback. Ordinary work uses the configured
+author and reviewer roles selected by review mode and the routing snapshot. The
+existing mixed high-stakes route keeps its Opus high author and Sol high
+checkpoint reviewer. An eligible current non-author, non-owner Sol high
+checkpoint can satisfy the authored final review after revalidation; preserve
+its effort and do not add a redundant reviewer. No single-provider high-stakes
+mapping is defined: pause for an explicit user decision rather than borrowing
+another preset or inventing a route. There is no silent fallback.
 
 ## Serious risk
 

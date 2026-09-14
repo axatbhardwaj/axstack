@@ -13,12 +13,13 @@ Substantive delegated or resumable work uses a driver-owned
   publication within user authority. The human merges by default.
 - Author: exactly one writer per candidate at a time. Accepted fixes return to
   the original author. Workers launch no recursive teams.
-- Reviewers: peer = two independent Sol + Opus, identical brief, no first-pass
-  cross-read; authored = one independent different-model-family reviewer from the
-  actual author. Owner and author sessions never review.
-- Monitor/watchdog: independent read-only Opus medium sessions on native Paseo
-  timers.
-- Auditor (`axstack-auditor`): report-only evidence collector. Never edits,
+- Reviewers: peer = exactly two independent `axstack-reviewer-primary` and
+  `axstack-reviewer-secondary` sessions, identical brief, no first-pass
+  cross-read; authored = one eligible configured reviewer selected from actual
+  author provenance. Owner and author sessions never review.
+- Monitor/watchdog: independent read-only `axstack-monitor` and
+  `axstack-watchdog` sessions on native Paseo timers.
+- Auditor (`axstack-auditor`): configured report-only evidence collector. Never edits,
   merges, activates, or audits itself.
 
 Prefer parallel independent bounded work; no redundant workers.
@@ -89,8 +90,8 @@ merged; the human merges by default.
 
 ## Watch health
 
-Monitor and watchdog are independent read-only Opus medium sessions on native
-Paseo timers. Require verified handshakes. Healthy ticks are snapshots that do
+`axstack-monitor` and `axstack-watchdog` are independent read-only sessions on
+native Paseo timers. Require verified handshakes. Healthy ticks are snapshots that do
 not wake the driver. Deduplicate events, reconcile uncertain sends before
 retry, and reuse watch state after restart.
 

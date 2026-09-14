@@ -13,15 +13,16 @@ monitoring continues.
 
 Record the exact defect, allowed files and actions, current revision, feedback
 IDs, and actual author without expanding scope. If actual author information is
-unknown or mixed and cannot establish a cross-family reviewer, report that exact
-gap and ask the user; do not assume Sol from the importing owner or orchestrator.
+unknown, mixed, or unsupported and cannot establish an eligible configured
+reviewer, report that exact gap and ask the user; do not assume an author from
+the importing owner or orchestrator.
 
 ## 2. Produce a reviewable candidate
 
 The author prepares the smallest in-scope repair and the exact public reply
 bodies, each keyed to its feedback ID and bound to the candidate revision. Both
-code and reply bodies receive the one complete cross-family non-author review
-required by the authored review rule in `axstack-review`.
+code and reply bodies receive the one complete eligible non-author/non-owner
+review required by the authored review rule in `axstack-review`.
 
 Publication stays held until the current authored review receipt covers the
 exact new revision and base, all six angles, applicable acceptance, the reply

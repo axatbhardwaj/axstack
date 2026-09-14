@@ -3,6 +3,41 @@
 Choose one route first. Load only that phase and the shared references needed
 for its next action.
 
+## Configured role routing
+
+Installation selects one canonical preset: `mixed`, `codex-only`, or
+`claude-only`. Never infer it from the chat harness, installed tools,
+credentials, quota, or presumed subscription. At run start, record the preset
+and the resolved provider, model, mode, and effort for every used role as the
+run's **routing snapshot**. Live installed profiles are authoritative; bundled
+preset assets are setup inputs, not runtime proof.
+
+Explicit preset changes apply to new runs only. An active run keeps its
+recorded snapshot. Changing an active run or replacing one of its sessions
+requires the user's explicit decision and revalidation of affected evidence.
+Unavailable models, unsupported efforts, missing roles, and incompatible
+overrides hold affected work. There is no automatic fallback, quota routing,
+subscription inference, or silent provider/model/effort substitution.
+
+Responsibilities are stable role IDs:
+
+- `axstack-driver` coordinates; `axstack-owner` owns one PR;
+  `axstack-author` is its exclusive writer.
+- `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
+  peer pair. Peer review uses both; authored review uses the eligible opposite
+  slot based on actual author provenance in the routing snapshot.
+- `axstack-advisor` advises configured decisions and `axstack-auditor` performs
+  report-only audits. `axstack-checker` reports tracking discrepancies.
+- `axstack-explainer` authors explanations and `axstack-explainer-review`
+  reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
+
+For authored review, provenance matching the configured primary reviewer's
+model routes to `axstack-reviewer-secondary`; provenance matching the configured
+secondary reviewer's model routes to `axstack-reviewer-primary`. The author and
+owner remain ineligible to review their own work. Unknown, mixed, or unsupported
+provenance is `INCOMPLETE` pending explicit user routing; never invent a reverse
+pairing from the driver, owner, or provider.
+
 ## Direct routes (no spec ceremony)
 
 - One bounded research question -> `axstack-research`. Verify primary sources
