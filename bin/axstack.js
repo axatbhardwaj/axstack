@@ -35,7 +35,7 @@ function packageVersion() {
 const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
-  axstack install --bundle <dir> --skills-dir <dir> [--profile <file>] [--harness <name>] [--force] [--yes]
+  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--profile <file>] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>]
   axstack uninstall --skills-dir <dir> [--profile <file>] [--force] [--yes]
   axstack --help | --version
@@ -50,7 +50,9 @@ Commands:
 
 Flags:
   --bundle <dir>      Bundle root holding skills/axstack-*/SKILL.md and
-                      profiles/paseo.json. Defaults to the package root.
+                      profiles/presets/*.json. Defaults to the package root.
+  --preset <name>     Required routing preset: mixed, codex-only, or claude-only.
+                      Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target (required). Overrides --harness.
   --profile <file>    Paseo host config file to merge profiles into.
   --harness <name>    Known harness (${harnessLocations().map((h) => h.harness).join(', ')}).
@@ -78,7 +80,7 @@ function parseArgs(argv) {
     return out;
   }
   out.command = rest.shift();
-  const wantsValue = new Set(['--bundle', '--skills-dir', '--profile', '--harness']);
+  const wantsValue = new Set(['--bundle', '--skills-dir', '--profile', '--harness', '--preset']);
   while (rest.length > 0) {
     const tok = rest.shift();
     if (wantsValue.has(tok)) {
@@ -171,6 +173,7 @@ async function main() {
       const summary = await installBundle({
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
+        preset: flags.preset,
         profilePath: flags.profile ? expandHome(flags.profile) : null,
         force: !!flags.force,
         yes: !!flags.yes,

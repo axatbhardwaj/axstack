@@ -45,6 +45,26 @@ import {
   reconcileDeferredProfiles,
 } from './profiles.js';
 
+export const PRESET_ALIASES = Object.freeze({
+  mixed: 'mixed',
+  codex: 'codex-only',
+  'codex-only': 'codex-only',
+  claude: 'claude-only',
+  'claude-only': 'claude-only',
+});
+export const PRESET_CHOICES = Object.freeze(['mixed', 'codex-only', 'claude-only']);
+
+export function normalizePreset(preset) {
+  const normalized = PRESET_ALIASES[preset];
+  if (!normalized) {
+    throw new Error(
+      `install requires --preset <${PRESET_CHOICES.join('|')}> ` +
+        `(aliases: codex, claude); got ${preset ?? 'nothing'}`,
+    );
+  }
+  return normalized;
+}
+
 function withinRoot(target, root) {
   const rel = relative(root, target);
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
@@ -291,11 +311,13 @@ export async function writeAtomic(dest, bytes, { mode } = {}) {
 export async function installBundle({
   bundleDir,
   skillsDir,
+  preset,
   profilePath = null,
   force = false,
   yes = false,
   log = () => {},
 } = {}) {
+  const selectedPreset = normalizePreset(preset);
   if (!bundleDir) throw new Error('install requires --bundle <dir>');
   if (!skillsDir) throw new Error('install requires --skills-dir <dir> (explicit target directories only)');
 

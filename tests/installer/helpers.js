@@ -1,7 +1,8 @@
 // Shared fixture helpers for installer behavioral tests.
 // Builds temporary bundles matching the frozen contract:
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files)
-//   <bundle>/profiles/paseo.json ({ version: 1, agentProfiles: [...] axstack-* ids })
+//   <bundle>/profiles/presets/<preset>.json
+//     ({ version: 1, preset, agentProfiles: [...] axstack-* ids })
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 
@@ -82,6 +83,7 @@ export function writeFixtureBundle(
         notes: 'Fixture profile.',
       },
     ],
+    presets,
   } = {},
 ) {
   const bundle = join(root, name);
@@ -91,11 +93,16 @@ export function writeFixtureBundle(
   for (const [fileName, body] of Object.entries(supportFiles)) {
     writeFileSync(join(skillDir, fileName), body);
   }
-  const profilesDir = join(bundle, 'profiles');
-  mkdirSync(profilesDir, { recursive: true });
-  writeFileSync(
-    join(profilesDir, 'paseo.json'),
-    JSON.stringify({ version: 1, agentProfiles: profiles }, null, 2) + '\n',
-  );
+  const selectedPresets = presets === undefined ? { mixed: profiles } : presets;
+  if (selectedPresets !== null) {
+    const profilesDir = join(bundle, 'profiles', 'presets');
+    mkdirSync(profilesDir, { recursive: true });
+    for (const [preset, agentProfiles] of Object.entries(selectedPresets)) {
+      writeFileSync(
+        join(profilesDir, `${preset}.json`),
+        JSON.stringify({ version: 1, preset, agentProfiles }, null, 2) + '\n',
+      );
+    }
+  }
   return bundle;
 }
