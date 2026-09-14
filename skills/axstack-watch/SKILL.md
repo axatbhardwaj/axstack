@@ -13,6 +13,14 @@ Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
 including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
+Preserve any explicitly named PR, repository, or peer scope. For broad
+discovery of the user's own PRs (such as “my” or “our” PRs), run
+`gh api user --jq .login` on the execution host, then select open PRs authored
+by that login in the named or current repository. Never hardcode or guess the
+username; a missing or failed authenticated-login lookup is a concrete blocker.
+The authenticated human login selects PRs. Runtime session IDs coordinate work
+only and establish neither human identity nor write, reply, or merge authority.
+
 ## 1. Adopt and reconcile
 
 Start from actual state. Reconcile the PR's remote head and base, ownership,
