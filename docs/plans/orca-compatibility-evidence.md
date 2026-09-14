@@ -13,7 +13,7 @@ Scope: implementation preparation and bounded runtime exercises, 2026-09-14. No 
 ## Failures and recovery
 
 - A workspace trust prompt caused Claude to return to its shell while the launch receipt reported input accepted. Read-only advice was retried from the already trusted workspace against absolute source paths, without editing trust configuration.
-- A Luna attempt failed at `codex-hooks-review-prompt` before executing its audit. Later Sol launches succeeded; that does not establish Luna availability or a completed audit.
+- An early Luna attempt failed at `codex-hooks-review-prompt` before executing its audit. A later native dispatch ran `gpt-5.6-luna` at max effort and returned a completed recovery/admission checkpoint audit; this is not a final candidate audit. Requested launch settings, observed provider/model, task execution and audit coverage are separate receipts.
 - The old checkout contained a pre-existing zero-byte Git object. Authors paused before production edits and returned failed receipts. The driver cloned remotely, imported only healthy planning patches and verified connectivity plus the approved specification digest. The old checkout remains preserved.
 - The fresh clone exposed newer upstream presets and Claude-settings ownership. Migration preparation was rebased onto `51b4765`; the preserved current-base tests passed 285, skipped 1, failed 0 before production edits.
 
