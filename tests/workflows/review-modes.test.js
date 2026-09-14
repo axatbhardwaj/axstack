@@ -48,13 +48,22 @@ test('review modes: authored routing follows actual author provenance', () => {
 
 test('review modes: authored routing enumerates only the accepted preset mappings', () => {
   const review = compact('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/mixed[^.]*Sol[^.]*reviewer-secondary/i);
-  expect(review).toMatch(/mixed[^.]*Opus[^.]*reviewer-primary/i);
-  expect(review).toMatch(/codex-only[^.]*Sol[^.]*reviewer-secondary/i);
-  expect(review).toMatch(/claude-only[^.]*Opus[^.]*reviewer-secondary/i);
+  const routing = compact('skills/axstack/references/routing.md');
   expect(review).toMatch(/any other author provenance[^.]*INCOMPLETE/i);
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
+  const rows = [
+    ['mixed', 'Codex / Sol (`codex/gpt-5.6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5` medium'],
+    ['mixed', 'Claude / Opus (`claude/claude-opus-5`)', 'axstack-reviewer-primary', '`codex/gpt-5.6-sol` medium'],
+    ['codex-only', 'Codex / Sol (`codex/gpt-5.6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-5.6-terra` xhigh'],
+    ['claude-only', 'Claude / Opus (`claude/claude-opus-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5` xhigh'],
+  ];
+  for (const text of [review, routing]) {
+    for (const row of rows) {
+      for (const cell of row) expect(text).toContain(cell);
+    }
+    expect(text).toMatch(/provenance is matched on provider\/model ID/i);
+  }
 });
 
 test('review modes: authored review is one complete exact-revision review', () => {

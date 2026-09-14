@@ -28,16 +28,16 @@ Responsibilities are stable role IDs:
 
   | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
   | --- | --- | --- |
-  | `mixed` | Codex / Sol | `axstack-reviewer-secondary` (Opus medium) |
-  | `mixed` | Claude / Opus | `axstack-reviewer-primary` (Sol medium) |
-  | `codex-only` | Codex / Sol | `axstack-reviewer-secondary` (Terra xhigh) |
-  | `claude-only` | Claude / Opus | `axstack-reviewer-secondary` (Sonnet xhigh) |
+  | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5` medium) |
+  | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
+  | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
+  | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
 - `axstack-advisor` advises configured decisions and `axstack-auditor` performs
   report-only audits. `axstack-checker` reports tracking discrepancies.
 - `axstack-explainer` authors explanations and `axstack-explainer-review`
   reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
 
-Match authored provenance on provider/model; record effort, but never use it to
+Provenance is matched on provider/model ID; record effort, but never use it to
 create a mapping. Any provenance absent from the selected preset's table row is
 unsupported and `INCOMPLETE`, including its secondary reviewer model, Astra,
 Luna, or Fable. Report the exact gap and ask the user. Never derive a reverse

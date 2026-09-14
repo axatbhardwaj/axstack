@@ -84,13 +84,13 @@ or recursive teams.
 
      | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
      | --- | --- | --- |
-     | `mixed` | Codex / Sol | `axstack-reviewer-secondary` (Opus medium) |
-     | `mixed` | Claude / Opus | `axstack-reviewer-primary` (Sol medium) |
-     | `codex-only` | Codex / Sol | `axstack-reviewer-secondary` (Terra xhigh) |
-     | `claude-only` | Claude / Opus | `axstack-reviewer-secondary` (Sonnet xhigh) |
+     | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5` medium) |
+     | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
+     | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
+     | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
 
-     Match actual author provenance on provider/model; record effort, but never
-     use effort to create a mapping. Any other author provenance for the
+     Provenance is matched on provider/model ID; record effort, but never use
+     effort to create a mapping. Any other author provenance for the
      selected preset is unsupported and `INCOMPLETE`, including its secondary
      reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
      ask the user. Never derive a reverse pairing from slot position. The
