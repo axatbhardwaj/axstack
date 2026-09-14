@@ -76,11 +76,11 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
   for (const preset of presetNames) {
     const data = readJson(`profiles/presets/${preset}.json`);
     expect(data.version).toBe(1);
-    expect(data.preset).toBe(preset);
-    expect(data.agentProfiles.map(({ id }) => id)).toEqual(roleIds);
-    expect(data.agentProfiles.map(({ provider, model, modeId, thinkingOptionId }) =>
+    expect(Object.keys(data)).toEqual(['version', 'roles']);
+    expect(data.roles.map(({ id }) => id)).toEqual(roleIds);
+    expect(data.roles.map(({ provider, model, modeId, thinkingOptionId }) =>
       [provider, model, modeId, thinkingOptionId])).toEqual(expected[preset]);
-    for (const profile of data.agentProfiles) {
+    for (const profile of data.roles) {
       expect(Object.keys(profile)).toEqual([
         'id', 'name', 'provider', 'model', 'modeId', 'thinkingOptionId', 'notes',
       ]);
@@ -92,16 +92,16 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
 
 test('presets: provider boundaries and reviewer identities are explicit', () => {
   for (const preset of ['codex-only', 'claude-only']) {
-    const profiles = readJson(`profiles/presets/${preset}.json`).agentProfiles;
+    const profiles = readJson(`profiles/presets/${preset}.json`).roles;
     expect(new Set(profiles.map(({ provider }) => provider))).toEqual(
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
   }
   for (const preset of presetNames) {
-    const profiles = readJson(`profiles/presets/${preset}.json`).agentProfiles;
+    const profiles = readJson(`profiles/presets/${preset}.json`).roles;
     expect(profiles.some(({ id }) => ['axstack-reviewer-opus', 'axstack-reviewer-sol'].includes(id))).toBe(false);
   }
-  const checker = readJson('profiles/presets/mixed.json').agentProfiles
+  const checker = readJson('profiles/presets/mixed.json').roles
     .find(({ id }) => id === 'axstack-checker');
   expect(checker.model).toBeNull();
 });
