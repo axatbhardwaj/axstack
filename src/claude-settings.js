@@ -146,13 +146,21 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
 }
 
 export async function planUninstallClaudeSettings({ claude, skillsRoot, boundPath = null }) {
+  if (claude?.skip) {
+    return {
+      report: { status: 'skipped', reason: claude.reason ?? 'disabled by --no-claude-settings' },
+      writes: [],
+    };
+  }
   if (!boundPath && !claude?.available) {
     return {
       report: { status: 'skipped', reason: claude?.reason ?? 'Claude Code is not available' },
       writes: [],
     };
   }
-  const requestedPath = claude?.settingsPath ?? boundPath;
+  const requestedPath = boundPath && !claude?.explicit
+    ? boundPath
+    : (claude?.settingsPath ?? boundPath);
   if (!requestedPath) {
     return { report: { status: 'skipped', reason: 'Claude settings path is unavailable' }, writes: [] };
   }

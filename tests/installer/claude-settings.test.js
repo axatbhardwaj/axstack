@@ -11,10 +11,12 @@ import {
 } from 'node:fs';
 import { installBundle, uninstallBundle } from '../../src/installer.js';
 import { join } from '../../src/posixpath.js';
-import { makeTempRoot, writeFixtureBundle } from './helpers.js';
+import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
 const SETTING = 'CLAUDE_CODE_SUBAGENT_MODEL';
 const SIDECAR = '.axstack-settings.json';
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
+const runCli = (args, options) => runBunCli(CLI, args, options);
 
 function fixture() {
   const root = makeTempRoot('axstack-claude-settings-');
@@ -298,4 +300,99 @@ test('a later manifest failure restores settings bytes and existing mode', async
   expect(statSync(f.settingsPath).mode & 0o777).toBe(0o640);
   expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
   expect(existsSync(join(f.skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
+});
+
+test('CLI reports missing Claude and does not create default settings', () => {
+  const f = fixture();
+  const home = join(f.root, 'home');
+  mkdirSync(home, { recursive: true });
+  const result = runCli(
+    ['install', '--preset', 'mixed', '--bundle', f.bundleDir, '--skills-dir', f.skillsDir],
+    { env: { HOME: home, PATH: join(f.root, 'empty-bin') } },
+  );
+
+  expect(result.out).toContain('claude settings: skipped — Claude Code is not available');
+  expect(existsSync(join(home, '.claude', 'settings.json'))).toBe(false);
+});
+
+test('CLI default inside HOME skips without --yes and installs with confirmation', () => {
+  const f = fixture();
+  const home = join(f.root, 'home');
+  mkdirSync(home, { recursive: true });
+  const bin = join(f.root, 'bin');
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+  chmodSync(join(bin, 'claude'), 0o755);
+  const args = ['install', '--preset', 'mixed', '--bundle', f.bundleDir, '--skills-dir', f.skillsDir];
+  const env = { HOME: home, PATH: bin };
+
+  const skipped = runCli(args, { env });
+  expect(skipped.out).toMatch(/claude settings: skipped.*--yes/i);
+  expect(existsSync(join(home, '.claude', 'settings.json'))).toBe(false);
+
+  const installed = runCli([...args, '--yes'], { env });
+  expect(installed.out).toContain(`claude settings: set env.${SETTING}=opus in ${join(home, '.claude', 'settings.json')}`);
+  expect(readJson(join(home, '.claude', 'settings.json')).env[SETTING]).toBe('opus');
+});
+
+test('CLI honors CLAUDE_CONFIG_DIR for the Codex-only preset', () => {
+  const root = makeTempRoot('axstack-claude-config-dir-');
+  const profile = {
+    id: 'axstack-driver',
+    name: 'Driver',
+    provider: 'codex',
+    model: 'example-model',
+  };
+  const bundle = writeFixtureBundle(root, { presets: { 'codex-only': [profile] } });
+  const skillsDir = join(root, 'skills');
+  const home = join(root, 'home');
+  const configDir = join(root, 'claude-config');
+  const bin = join(root, 'bin');
+  mkdirSync(home, { recursive: true });
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, 'claude'), '#!/bin/sh\nexit 0\n');
+  chmodSync(join(bin, 'claude'), 0o755);
+
+  const result = runCli([
+    'install', '--preset', 'codex-only', '--bundle', bundle, '--skills-dir', skillsDir,
+  ], { env: { HOME: home, PATH: bin, CLAUDE_CONFIG_DIR: configDir } });
+
+  const settingsPath = join(configDir, 'settings.json');
+  expect(result.out).toContain(`claude settings: set env.${SETTING}=opus in ${settingsPath}`);
+  expect(readJson(settingsPath).env[SETTING]).toBe('opus');
+});
+
+test('CLI explicit settings flag forces injection and no-settings flag skips', () => {
+  const f = fixture();
+  const explicit = join(f.root, 'explicit', 'settings.json');
+  const forced = runCli([
+    'install', '--preset', 'mixed', '--bundle', f.bundleDir,
+    '--skills-dir', f.skillsDir, '--claude-settings', explicit,
+  ], { env: { PATH: join(f.root, 'empty-bin') } });
+  expect(forced.out).toContain(`claude settings: set env.${SETTING}=opus in ${explicit}`);
+  expect(readJson(explicit).env[SETTING]).toBe('opus');
+
+  const other = fixture();
+  const disabledPath = join(other.root, 'explicit', 'settings.json');
+  const skipped = runCli([
+    'install', '--preset', 'mixed', '--bundle', other.bundleDir,
+    '--skills-dir', other.skillsDir, '--no-claude-settings',
+  ], { env: { CLAUDE_CONFIG_DIR: join(other.root, 'explicit') } });
+  expect(skipped.out).toMatch(/claude settings: skipped.*disabled/i);
+  expect(existsSync(disabledPath)).toBe(false);
+});
+
+test('CLI uninstall uses the manifest binding when Claude is absent', () => {
+  const f = fixture();
+  const explicit = join(f.root, 'explicit', 'settings.json');
+  runCli([
+    'install', '--preset', 'mixed', '--bundle', f.bundleDir,
+    '--skills-dir', f.skillsDir, '--claude-settings', explicit,
+  ], { env: { PATH: join(f.root, 'empty-bin') } });
+
+  const removed = runCli(['uninstall', '--skills-dir', f.skillsDir], {
+    env: { PATH: join(f.root, 'empty-bin') },
+  });
+  expect(removed.out).toContain(`claude settings: removed env.${SETTING} from ${explicit}`);
+  expect(readJson(explicit).env).not.toHaveProperty(SETTING);
 });
