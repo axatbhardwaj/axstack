@@ -407,7 +407,18 @@ export async function installBundle({
     version: MANIFEST_VERSION,
     files: {},
     profiles: { path: null, preset: null, entries: {} },
+    claudeSettings: { path: null },
   };
+  const boundClaudeSettingsPath = prevManifest.claudeSettings?.path ?? null;
+  if (
+    claudePlan.settingsPath && boundClaudeSettingsPath &&
+    claudePlan.settingsPath !== boundClaudeSettingsPath
+  ) {
+    throw new Error(
+      `Claude settings ownership is bound to ${boundClaudeSettingsPath}; ` +
+        `refusing target ${claudePlan.settingsPath}`,
+    );
+  }
   const ownedFiles = prevManifest.files ?? {};
   // Owned profile hashes are bound to the canonical config file they were
   // installed into. A different --profile is refused before any mutation so
@@ -589,6 +600,9 @@ export async function installBundle({
         preset: selectedPreset,
         entries: nextProfileHashes,
       },
+      claudeSettings: {
+        path: claudePlan.settingsPath ?? boundClaudeSettingsPath,
+      },
     });
     if (profileNote) summary.notes = [...(summary.notes ?? []), profileNote];
     return {
@@ -662,7 +676,18 @@ export async function uninstallBundle({
     version: MANIFEST_VERSION,
     files: {},
     profiles: { path: null, preset: null, entries: {} },
+    claudeSettings: { path: null },
   };
+  const boundClaudeSettingsPath = manifest.claudeSettings?.path ?? null;
+  if (
+    claudePlan.settingsPath && boundClaudeSettingsPath &&
+    claudePlan.settingsPath !== boundClaudeSettingsPath
+  ) {
+    throw new Error(
+      `Claude settings ownership is bound to ${boundClaudeSettingsPath}; ` +
+        `refusing target ${claudePlan.settingsPath}`,
+    );
+  }
   const summary = { removed: [], preserved: [], missing: [], profiles: null };
   if (Object.keys(manifest.files).length === 0 && Object.keys(manifest.profiles.entries).length === 0) {
     summary.note = 'no Axstack ownership manifest; nothing to remove';
@@ -788,6 +813,7 @@ export async function uninstallBundle({
       version: MANIFEST_VERSION,
       files: remainingFiles,
       profiles: { path: remainingBoundPath, preset: installedPreset, entries: remainingProfiles },
+      claudeSettings: { path: boundClaudeSettingsPath },
     });
   }
   return summary;

@@ -52,10 +52,18 @@ async function readJson(path, label) {
   }
 }
 
-function validateSidecar(sidecar, path) {
-  if (sidecar === null) return { version: 1, keys: {} };
-  if (sidecar.version !== 1 || typeof sidecar.keys !== 'object' || sidecar.keys === null || Array.isArray(sidecar.keys)) {
+function validateSidecar(sidecar, path, settingsPath) {
+  if (sidecar === null) return { version: 1, settingsPath, keys: {} };
+  if (
+    sidecar.version !== 1 || typeof sidecar.settingsPath !== 'string' ||
+    typeof sidecar.keys !== 'object' || sidecar.keys === null || Array.isArray(sidecar.keys)
+  ) {
     throw new Error(`malformed Claude settings ownership sidecar at ${path}; refusing to mutate it`);
+  }
+  if (sidecar.settingsPath !== settingsPath) {
+    throw new Error(
+      `Claude settings ownership is bound to ${sidecar.settingsPath}; refusing target ${settingsPath}`,
+    );
   }
   for (const entry of Object.values(sidecar.keys)) {
     if (
@@ -86,7 +94,7 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
   const sidecarPath = await safeFile(join(dirname(settingsPath), CLAUDE_SIDECAR_NAME), 'settings ownership sidecar');
   const settingsFile = await readJson(settingsPath, 'settings JSON');
   const sidecarFile = await readJson(sidecarPath, 'settings ownership sidecar');
-  const sidecar = validateSidecar(sidecarFile.value, sidecarPath);
+  const sidecar = validateSidecar(sidecarFile.value, sidecarPath, settingsPath);
   const settings = settingsFile.value ?? {};
   if (
     settings.env !== undefined &&
@@ -104,6 +112,7 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
     return {
       report: { status: 'preserved', value: currentValue, path: settingsPath },
       writes: [],
+      settingsPath,
     };
   }
 
@@ -132,6 +141,7 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
       ? { status: 'unchanged', path: settingsPath }
       : { status: 'set', path: settingsPath },
     writes,
+    settingsPath,
   };
 }
 
@@ -150,7 +160,7 @@ export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
   const sidecarPath = await safeFile(join(dirname(settingsPath), CLAUDE_SIDECAR_NAME), 'settings ownership sidecar');
   const settingsFile = await readJson(settingsPath, 'settings JSON');
   const sidecarFile = await readJson(sidecarPath, 'settings ownership sidecar');
-  const sidecar = validateSidecar(sidecarFile.value, sidecarPath);
+  const sidecar = validateSidecar(sidecarFile.value, sidecarPath, settingsPath);
   const settings = settingsFile.value ?? {};
   if (
     settings.env !== undefined &&
@@ -200,5 +210,5 @@ export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
     before: sidecarFile.raw,
     after: Object.keys(nextKeys).length === 0 ? null : jsonBytes(nextSidecar),
   });
-  return { report, writes };
+  return { report, writes, settingsPath };
 }

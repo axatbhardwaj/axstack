@@ -150,6 +150,43 @@ test('a second skills root joins ownership without rewriting settings', async ()
   ]);
 });
 
+test('sidecar binds ownership to one canonical settings file in its directory', async () => {
+  const f = fixture();
+  const settingsTwo = join(f.root, 'claude', 'other-settings.json');
+  const secondRoot = join(f.root, 'skills-two');
+  await installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath }));
+  writeFileSync(settingsTwo, JSON.stringify({ env: { [SETTING]: 'opus' } }, null, 2) + '\n');
+  const beforeSettings = readFileSync(settingsTwo, 'utf8');
+  const sidecarPath = join(f.root, 'claude', SIDECAR);
+  const beforeSidecar = readFileSync(sidecarPath, 'utf8');
+
+  await expect(installBundle({
+    ...installArgs(f, { available: true, settingsPath: settingsTwo }),
+    skillsDir: secondRoot,
+  })).rejects.toThrow(/bound.*settings|settings.*bound/i);
+
+  expect(readFileSync(settingsTwo, 'utf8')).toBe(beforeSettings);
+  expect(readFileSync(sidecarPath, 'utf8')).toBe(beforeSidecar);
+  expect(existsSync(join(secondRoot, 'axstack-demo', 'SKILL.md'))).toBe(false);
+});
+
+test('skills manifest binds reinstall to the original canonical settings path', async () => {
+  const f = fixture();
+  const settingsTwo = join(f.root, 'other-claude', 'settings.json');
+  await installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath }));
+  const manifestPath = join(f.skillsDir, '.axstack-manifest.json');
+  const manifestBefore = readFileSync(manifestPath, 'utf8');
+  expect(readJson(manifestPath).claudeSettings).toEqual({ path: f.settingsPath });
+
+  await expect(installBundle(installArgs(f, {
+    available: true,
+    settingsPath: settingsTwo,
+  }))).rejects.toThrow(/bound.*settings|settings.*bound/i);
+
+  expect(existsSync(settingsTwo)).toBe(false);
+  expect(readFileSync(manifestPath, 'utf8')).toBe(manifestBefore);
+});
+
 test('uninstall keeps the key until the last skills-root owner leaves', async () => {
   const f = fixture();
   const secondRoot = join(f.root, 'skills-two');

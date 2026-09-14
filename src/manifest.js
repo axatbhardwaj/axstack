@@ -62,7 +62,8 @@ function isHashMap(value) {
 }
 
 // Normalized shape:
-// { version, files: {rel: hash}, profiles: { path, preset, entries } }.
+// { version, files, profiles: { path, preset, entries },
+//   claudeSettings: { path } }.
 // `profiles.path` binds owned profile hashes to the canonical config file
 // they were installed into; `path: null` marks legacy unbound entries, which
 // callers must reset rather than honor for removal.
@@ -78,6 +79,14 @@ function normalizeManifest(parsed) {
   if (!isHashMap(parsed.files)) {
     throw new Error('invalid ownership manifest: files must be an object of path hashes');
   }
+  const rawClaudeSettings = parsed.claudeSettings ?? { path: null };
+  if (
+    typeof rawClaudeSettings !== 'object' || rawClaudeSettings === null ||
+    Array.isArray(rawClaudeSettings) ||
+    (rawClaudeSettings.path !== null && typeof rawClaudeSettings.path !== 'string')
+  ) {
+    throw new Error('invalid ownership manifest: claudeSettings must bind a config path');
+  }
   for (const rel of Object.keys(parsed.files)) assertSafeRel(rel);
   const rawProfiles = parsed.profiles ?? { path: null, preset: null, entries: {} };
   if (isHashMap(rawProfiles)) {
@@ -85,6 +94,7 @@ function normalizeManifest(parsed) {
       version: MANIFEST_VERSION,
       files: { ...parsed.files },
       profiles: { path: null, preset: null, entries: { ...rawProfiles } },
+      claudeSettings: { path: rawClaudeSettings.path },
     };
   }
   if (
@@ -102,6 +112,7 @@ function normalizeManifest(parsed) {
         preset: rawProfiles.preset ?? null,
         entries: { ...(rawProfiles.entries ?? {}) },
       },
+      claudeSettings: { path: rawClaudeSettings.path },
     };
   }
   throw new Error('invalid ownership manifest: profiles must bind a config path to id hashes');
