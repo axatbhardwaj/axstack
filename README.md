@@ -1,7 +1,7 @@
 # Axstack
 
 Axstack is a standalone toolkit for finishing agreed engineering work with
-less supervision while retaining independent cross-model review. Chat drives
+less supervision while retaining independent review. Chat drives
 execution; a setup CLI installs skills and checks configuration. There is no
 Axstack daemon, scheduler, or workflow state machine.
 
@@ -34,8 +34,9 @@ Updated 2026-09-13 by user-requested change: scope readiness is proportional.
    return a snapshotted small-change intent.
 3. Invoke `axstack` to execute prepared work. Capabilities become internal
    tasks and reviewed PRs with one persistent owner per PR. Peer PRs receive
-   independent Sol and Opus review; authored PRs receive one independent
-   reviewer from a different model family than the actual author.
+   independent `reviewer-primary` and `reviewer-secondary` passes; authored PRs
+   receive one eligible reviewer from the selected preset's explicit mapping
+   and actual author provenance.
 4. You merge by default, bottom-up for a stack. Review approval never
     grants merge authority. Colleague PRs review in peer mode against
     their linked intent with no Axstack spec required; adopted PRs keep a
@@ -74,7 +75,7 @@ Paseo remains the runtime.
 bun add --global https://github.com/axatbhardwaj/axstack/releases/download/v0.2.0/axstack-0.2.0.tgz
 axstack --version
 axstack check
-axstack install --harness codex --yes
+axstack install --harness codex --preset mixed --yes
 # Or select --harness claude; add --profile <paseo-config> to bootstrap profiles.
 ```
 
@@ -97,7 +98,7 @@ bun bin/axstack.js check --bundle .
 
 # Install skills into an explicit target and merge profiles
 # (--yes is required when the target or profile lives under your home directory)
-bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> [--yes]
+bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> --preset mixed [--yes]
 
 # Re-run: expect "no changes (idempotent, everything unchanged)"
 bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
@@ -108,12 +109,14 @@ bun bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
 
 Full command reference: [docs/installation.md](docs/installation.md).
 
-The public bundle contains 17 presets in
-[profiles/paseo.json](profiles/paseo.json): 16 configured defaults that the
-installer can merge, plus the `axstack-checker` setup placeholder whose model
-is intentionally unset. The placeholder stays bundled but is deferred from
-the Paseo config and ownership manifest until you select its model; an
-existing configured checker is preserved. No model is substituted.
+The public bundle contains three canonical 17-role assets:
+[mixed](profiles/presets/mixed.json),
+[codex-only](profiles/presets/codex-only.json), and
+[claude-only](profiles/presets/claude-only.json). Each uses neutral
+`axstack-reviewer-primary` and `axstack-reviewer-secondary` IDs. The mixed
+`axstack-checker` model is intentionally unset pending explicit setup; the
+single-provider presets configure it. Existing configured roles are preserved
+under the installer's ownership rules, and no model is substituted.
 
 `install --profile` writes the selected JSON config file only. It does not
 apply a native config patch, hot-reload a daemon, or prove runtime readback;
