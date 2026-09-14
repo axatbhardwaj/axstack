@@ -5,7 +5,7 @@
       "id": "axstack-driver",
       "provider": "codex",
       "model": "gpt-6-astra",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Preferred driver profile only. The current chat remains the driver; NEVER auto-launch this profile instead of the current chat and never switch models implicitly. Owns scope, Linear mutations, stack coordination, capability completion. Validate availability at launch; an unavailable model pauses affected work pending user decision, never auto-fallback.",
       "name": "Axstack driver (preferred)"
@@ -14,7 +14,7 @@
       "id": "axstack-advisor",
       "provider": "claude",
       "model": "claude-fable-5-1",
-      "modeId": "plan",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Planning advisor involved in spec creation and revision, solution design, and consequential decisions, including initial choices that are not disputed. The driver assesses first and owns the decision; cached receipts apply only while evidence and scope stay unchanged. High-stakes decisions need advisor plain AGREE plus driver accepted assessment. Validate availability at launch.",
       "name": "Axstack planning advisor (Fable)"
@@ -23,7 +23,7 @@
       "id": "axstack-owner",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches its own independent reviewers.",
       "name": "Axstack PR owner (Opus)"
@@ -32,7 +32,7 @@
       "id": "axstack-author",
       "provider": "codex",
       "model": "gpt-5.6-sol",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Ordinary implementation and repairs. Strict red-green-refactor. Exclusive writer per candidate. Validate availability at launch; never substitute another model without user approval.",
       "name": "Axstack implementer (Sol)"
@@ -41,7 +41,7 @@
       "id": "axstack-reviewer-opus",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Independent Opus medium final reviewer: used with Sol medium for peer review, or as a separate session for a Sol-authored PR. Never the owner or an author session. Reviews the exact SHA/current base and all six angles plus acceptance; peer first pass is isolated. Validate actual author provenance and availability; no invented family or model fallback.",
       "name": "Axstack independent reviewer (Opus)"
@@ -50,7 +50,7 @@
       "id": "axstack-reviewer-sol",
       "provider": "codex",
       "model": "gpt-5.6-sol",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Independent Sol medium final reviewer: used with Opus medium for peer review, or as a separate session for an Opus-authored PR. Never the owner or an author session. Reviews the exact SHA/current base and all six angles plus acceptance; peer first pass is isolated. Preserve Sol high for an eligible high-stakes checkpoint; no automatic fallback.",
       "name": "Axstack independent reviewer (Sol)"
@@ -59,7 +59,7 @@
       "id": "axstack-checker",
       "provider": "codex",
       "model": null,
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Report-only Linear discrepancy checker. Inexpensive model chosen at user setup; model is null here by design. Require setup selection before dispatch: a null model must never result in launching a provider default. Never mutates Linear; driver independently verifies checker evidence before applying updates.",
       "name": "Axstack Linear checker (setup-selected)"
@@ -68,7 +68,7 @@
       "id": "axstack-research-requirements",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack research requirements (Opus)"
@@ -77,7 +77,7 @@
       "id": "axstack-research-code",
       "provider": "codex",
       "model": "gpt-5.6-sol",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack research code (Sol)"
@@ -86,7 +86,7 @@
       "id": "axstack-research-web",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Research web reader: gathers primary-source facts cheaply. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack research web (Opus)"
@@ -95,7 +95,7 @@
       "id": "axstack-explainer",
       "provider": "claude",
       "model": "claude-sonnet-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested visual artifacts and verifies actual rendered behavior where applicable. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer (Sonnet)"
@@ -104,7 +104,7 @@
       "id": "axstack-explainer-review",
       "provider": "codex",
       "model": "gpt-5.6-luna",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "max",
       "notes": "Visual explanation reviewer: independently checks the exact explainer artifact for fidelity to sources and rendered behavior where warranted. Any artifact change invalidates its review. Maximum reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack explainer reviewer (Luna)"
@@ -113,7 +113,7 @@
       "id": "axstack-explore-codebase",
       "provider": "claude",
       "model": "claude-sonnet-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Deep reasoning effort by design. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack codebase explorer (Sonnet)"
@@ -122,7 +122,7 @@
       "id": "axstack-explore-execution",
       "provider": "codex",
       "model": "gpt-5.6-terra",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Execution explorer: runs bounded cheap checks of runtime behavior where authorized. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack execution explorer (Terra)"
@@ -131,7 +131,7 @@
       "id": "axstack-monitor",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Independent read-only PR monitor on native Paseo timers. Snapshot-only healthy ticks; never authors, reviews, or replies. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack monitor (Opus)"
@@ -140,7 +140,7 @@
       "id": "axstack-watchdog",
       "provider": "claude",
       "model": "claude-opus-5",
-      "modeId": "default",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Independent read-only watch health-checker on native Paseo timers. Verifies handshakes, dedups events, reconciles uncertain sends. Snapshot-only healthy ticks; never authors, reviews, or replies. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack watchdog (Opus)"
@@ -149,7 +149,7 @@
       "id": "axstack-auditor",
       "provider": "codex",
       "model": "gpt-5.6-luna",
-      "modeId": "auto",
+      "modeId": "full-access",
       "thinkingOptionId": "max",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators (PASS/FAIL/UNKNOWN); never invents numbers. Launches no child team and never edits, merges, or activates anything: improvement proposals return to the driver as ordinary tested, reviewed PRs for human merge. Raw run records stay local; sanitized publication needs its own authority. Validate availability at launch; an unavailable model pauses affected work pending user decision. Never auto-substitute another model (no fallback).",
       "name": "Axstack auditor (Luna)"

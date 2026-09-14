@@ -92,10 +92,10 @@ test('review modes: reviewer profile identities stay stable and notes describe m
   const data = JSON.parse(read('profiles/paseo.json'));
   const byId = Object.fromEntries(data.agentProfiles.map((profile) => [profile.id, profile]));
   expect(byId['axstack-reviewer-opus']).toMatchObject({
-    provider: 'claude', model: 'claude-opus-5', modeId: 'default', thinkingOptionId: 'medium',
+    provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions', thinkingOptionId: 'medium',
   });
   expect(byId['axstack-reviewer-sol']).toMatchObject({
-    provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto', thinkingOptionId: 'medium',
+    provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access', thinkingOptionId: 'medium',
   });
   expect(byId['axstack-reviewer-opus'].notes).toMatch(/peer|Sol-authored/i);
   expect(byId['axstack-reviewer-sol'].notes).toMatch(/peer|Opus-authored/i);
