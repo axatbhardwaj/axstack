@@ -345,23 +345,25 @@ test('structural: runtime reference treats installed role snapshot as authoritat
   expect(text).toMatch(/reconcile existing attempts first/i);
 });
 
-test('structural: contracts carry configured advisor triggers and the mixed high-stakes gate', () => {
+test('structural: contracts carry dual-adviser consultation and driver effort transitions', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
-  expect(text.includes('axstack-advisor'), 'contracts must name the configured advisor role').toBeTruthy();
-  // Structural policy check: the configured advisor is involved in spec
-  // creation/revision, solution design, and consequential decisions —
-  // broader than only unresolved-after-factual-checks. Flagged to root:
-  // this replaces the prior narrow trigger expectation.
-  expect(/spec[\s\S]*creation|spec[\s\S]*revision/i.test(text), 'contracts must involve Fable in spec creation/revision').toBeTruthy();
-  expect(/solution design/i.test(text), 'contracts must involve Fable in solution design').toBeTruthy();
-  expect(/consequential/i.test(text), 'contracts must involve Fable in consequential decisions').toBeTruthy();
+  for (const adviser of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
+    expect(text.includes(adviser), `contracts must name ${adviser}`).toBeTruthy();
+  }
+  expect(/Align[\s\S]*Spec|Spec[\s\S]*Align/i.test(text), 'contracts must cover Align and Spec').toBeTruthy();
+  expect(/same bounded (?:evidence and question|question and evidence)/i.test(text)).toBeTruthy();
+  expect(/independent/i.test(text), 'adviser consultations must be independent').toBeTruthy();
+  expect(/synthesi[sz].*disagree|disagree.*synthesi[sz]/i.test(text)).toBeTruthy();
   expect(/driver.*owns|owns.*decision/i.test(text), 'contracts must keep decision ownership with the driver').toBeTruthy();
-  expect(/cach/i.test(text), 'contracts must cache decision receipts against repeat consultation').toBeTruthy();
-  expect(/AGREE/i.test(text), 'contracts must require plain AGREE for high-stakes decisions').toBeTruthy();
+  expect(/unchanged[^.]*receipt|receipt[^.]*unchanged/i.test(text), 'contracts must reuse unchanged receipts').toBeTruthy();
+  expect(/both[^.]*plain AGREE|plain AGREE[^.]*both/i.test(text), 'contracts must require both plain AGREE receipts').toBeTruthy();
   expect(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE').toBeTruthy();
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
-  expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
+  expect(/requested[^.]*effective[^.]*effort/i.test(text)).toBeTruthy();
+  expect(/Align[^.]*Spec[^.]*unresolved consequential decisions[^.]*high/i.test(text)).toBeTruthy();
+  expect(/return[^.]*medium/i.test(text)).toBeTruthy();
+  expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
 });
 
 test('structural: align reads back understanding without a pre-spec agreement gate', () => {

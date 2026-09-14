@@ -13,17 +13,18 @@ test('repairs: substantive runs require the explicitly loaded audit skill and ho
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });
 
-test('repairs: configured advisor covers spec, design, and consequential decisions', () => {
+test('repairs: both advisers cover Align, Spec, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`));
-    const notes = profiles.roles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
-    expect(notes).toMatch(/specification creation[^.]*revision/i);
-    expect(notes).toMatch(/solution design/i);
-    expect(notes).toMatch(/consequential decisions/i);
+    for (const id of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
+      const notes = profiles.roles.find((role) => role.id === id)?.notes ?? '';
+      expect(notes).toMatch(/Align/i);
+      expect(notes).toMatch(/Spec/i);
+      expect(notes).toMatch(/consequential decisions/i);
+    }
   }
   const spec = read('skills/axstack-spec/SKILL.md');
-  expect(spec).toMatch(/spec creation and revision/i);
-  expect(spec).not.toMatch(/re-involve Fable only for new consequential design ground/i);
+  expect(spec).toMatch(/same bounded (?:evidence and question|question and evidence)/i);
 });
 
 test('repairs: mutation authority distinguishes driver scope from PR owner scope', () => {

@@ -275,7 +275,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
     .roles.map(({ id }) => id);
-  expect(expectedIds).toHaveLength(17);
+  expect(expectedIds).toHaveLength(18);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
@@ -384,9 +384,16 @@ test('owned-core: lifecycle carries roster, idle-complete protocol, and audit ho
   expect(/audit/i.test(text), 'lifecycle must define the end-of-run audit hook').toBeTruthy();
 });
 
-test('owned-core: align and spec use the configured advisor; auditor role exists', () => {
+test('owned-core: align and spec use both configured advisers; auditor role exists', () => {
   for (const name of ['axstack-align', 'axstack-spec']) {
-    expect(skill(name).includes('axstack-advisor'), `${name}: must involve the configured advisor`).toBeTruthy();
+    const text = skill(name);
+    for (const adviser of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
+      expect(text.includes(adviser), `${name}: must involve ${adviser}`).toBeTruthy();
+    }
+    expect(text).toMatch(/same bounded (?:evidence and question|question and evidence)/i);
+    expect(text).toMatch(/independent/i);
+    expect(text).toMatch(/disagree/i);
+    expect(text).toMatch(/unchanged[^.]*receipt|receipt[^.]*unchanged/i);
   }
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
