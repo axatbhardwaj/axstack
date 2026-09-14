@@ -35,9 +35,9 @@ function packageVersion() {
 const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
-  axstack install --bundle <dir> --skills-dir <dir> [--profile <file>] [--harness <name>] [--force] [--yes]
+  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>]
-  axstack uninstall --skills-dir <dir> [--profile <file>] [--force] [--yes]
+  axstack uninstall --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
   axstack --help | --version
 
 Commands:
@@ -50,9 +50,16 @@ Commands:
 
 Flags:
   --bundle <dir>      Bundle root holding skills/axstack-*/SKILL.md and
-                      profiles/paseo.json. Defaults to the package root.
+                      profiles/presets/*.json. Defaults to the package root.
+  --preset <name>     Required routing preset: mixed, codex-only, or claude-only.
+                      Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target (required). Overrides --harness.
   --profile <file>    Paseo host config file to merge profiles into.
+  --claude-settings <file>
+                      Manage the Claude Code user settings file at this path.
+                      This forces testable availability without installing Claude.
+  --no-claude-settings
+                      Skip Claude Code user-settings management.
   --harness <name>    Known harness (${harnessLocations().map((h) => h.harness).join(', ')}).
                       Grok has no verified auto-discovery: --skills-dir is required.
   --force             Overwrite/remove user-edited owned assets and take
@@ -78,7 +85,9 @@ function parseArgs(argv) {
     return out;
   }
   out.command = rest.shift();
-  const wantsValue = new Set(['--bundle', '--skills-dir', '--profile', '--harness']);
+  const wantsValue = new Set([
+    '--bundle', '--skills-dir', '--profile', '--harness', '--preset', '--claude-settings',
+  ]);
   while (rest.length > 0) {
     const tok = rest.shift();
     if (wantsValue.has(tok)) {
@@ -89,10 +98,75 @@ function parseArgs(argv) {
       out.flags[tok.slice(2)] = val;
     } else if (tok === '--force') out.flags.force = true;
     else if (tok === '--yes') out.flags.yes = true;
+    else if (tok === '--no-claude-settings') out.flags['no-claude-settings'] = true;
     else if (tok === '--help' || tok === '-h') out.command = 'help';
     else throw new Error(`unknown argument: ${tok}`);
   }
   return out;
+}
+
+function defaultClaudeSettingsPath() {
+  if (Bun.env.CLAUDE_CONFIG_DIR) {
+    return join(resolve(Bun.env.CLAUDE_CONFIG_DIR), 'settings.json');
+  }
+  const home = Bun.env.HOME;
+  return home?.startsWith('/') ? join(home, '.claude', 'settings.json') : null;
+}
+
+function isInsideRawHome(path) {
+  const home = Bun.env.HOME;
+  if (!home?.startsWith('/') || !path) return false;
+  const absoluteHome = resolve(home);
+  const absolutePath = resolve(path);
+  return absolutePath === absoluteHome || absolutePath.startsWith(`${absoluteHome}/`);
+}
+
+function resolveClaudeOption(flags, command) {
+  if (flags['claude-settings'] && flags['no-claude-settings']) {
+    throw new Error('--claude-settings and --no-claude-settings cannot be used together');
+  }
+  if (flags['no-claude-settings']) {
+    return { available: false, settingsPath: null, skip: true, reason: 'disabled by --no-claude-settings' };
+  }
+  if (flags['claude-settings']) {
+    return { available: true, settingsPath: expandHome(flags['claude-settings']), explicit: true };
+  }
+
+  const settingsPath = defaultClaudeSettingsPath();
+  const available = Bun.which('claude') !== null;
+  if (command === 'install' && available && !flags.yes && isInsideRawHome(settingsPath)) {
+    return {
+      available: false,
+      settingsPath: null,
+      reason: 'default settings path is inside HOME; re-run with --yes',
+    };
+  }
+  return {
+    available,
+    settingsPath: available ? settingsPath : null,
+    reason: available ? undefined : 'Claude Code is not available',
+  };
+}
+
+function printClaudeSettings(report, { uninstall = false } = {}) {
+  if (!report) return;
+  if (report.status === 'skipped') {
+    console.log(`claude settings: skipped — ${report.reason}`);
+  } else if (!uninstall && report.status === 'set') {
+    console.log(`claude settings: set env.CLAUDE_CODE_SUBAGENT_MODEL=opus in ${report.path}`);
+  } else if (!uninstall && report.status === 'unchanged') {
+    console.log('claude settings: unchanged (owned)');
+  } else if (!uninstall && report.status === 'preserved') {
+    console.log(`claude settings: preserved existing value ${JSON.stringify(report.value)} (not owned)`);
+  } else if (uninstall && report.status === 'removed') {
+    console.log(`claude settings: removed env.CLAUDE_CODE_SUBAGENT_MODEL from ${report.path}`);
+  } else if (uninstall && report.status === 'retained') {
+    console.log('claude settings: unchanged (owned by another skills install)');
+  } else if (uninstall && report.status === 'preserved') {
+    console.log(`claude settings: preserved edited value ${JSON.stringify(report.value)} (ownership released)`);
+  } else if (uninstall && report.status === 'released') {
+    console.log('claude settings: ownership released (bound settings file missing)');
+  }
 }
 
 function expandHome(p) {
@@ -171,15 +245,17 @@ async function main() {
       const summary = await installBundle({
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
+        preset: flags.preset,
         profilePath: flags.profile ? expandHome(flags.profile) : null,
         force: !!flags.force,
         yes: !!flags.yes,
+        claude: resolveClaudeOption(flags, 'install'),
         log: (m) => console.log(m),
       });
       const changed =
         summary.added.length + summary.updated.length + (summary.profiles?.added?.length ?? 0) +
         (summary.profiles?.updated?.length ?? 0) + (summary.profiles?.removed?.length ?? 0) +
-        (summary.profiles?.released?.length ?? 0);
+        (summary.profiles?.released?.length ?? 0) + (summary.profiles?.migrated?.length ?? 0);
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
       } else {
@@ -202,6 +278,9 @@ async function main() {
         if (p.preserved?.length) {
           console.log(`profiles preserved (user edits kept): ${p.preserved.join(', ')}`);
         }
+        if (p.unchanged?.length) {
+          console.log(`profiles unchanged (pre-existing, not adopted): ${p.unchanged.join(', ')}`);
+        }
         if (p.deferred?.length) {
           console.log(
             `profiles deferred until setup selects a model: ${p.deferred.join(', ')}`,
@@ -213,7 +292,25 @@ async function main() {
         if (p.released?.length) {
           console.log(`missing deferred profile ownership released: ${p.released.join(', ')}`);
         }
+        if (p.migrated?.length) {
+          console.log(`legacy reviewer profiles migrated: ${p.migrated.join(', ')}`);
+        }
+        if (p.legacyGaps?.length) {
+          console.log(`legacy gap (preserved): ${p.legacyGaps.join(', ')}`);
+        }
+        console.log(
+          p.ready
+            ? `preset ${summary.preset}: ready`
+            : `preset ${summary.preset}: NOT ready — ${p.gaps.join('; ')}`,
+        );
+        if (p.deviations?.length) {
+          console.log(`profile deviations: ${p.deviations.join('; ')}`);
+        }
+        if (!p.ready) process.exitCode = 1;
+      } else {
+        console.log('profiles were not installed; readiness is unverified.');
       }
+      printClaudeSettings(summary.claudeSettings);
       return;
     }
     if (command === 'check') {
@@ -221,9 +318,10 @@ async function main() {
       printCheckReport(report);
       if (flags.bundle) {
         const bundle = await validateBundle(resolve(flags.bundle));
+        const presetNames = Object.keys(bundle.presets);
         console.log(
           `bundle ok: ${bundle.files.length} skill files, ` +
-            (bundle.bundleProfiles ? `${bundle.bundleProfiles.length} profiles` : 'no profiles'),
+            (presetNames.length > 0 ? `presets ${presetNames.join(', ')}` : 'no presets'),
         );
       }
       if (report.gaps.length > 0) process.exitCode = 1;
@@ -235,6 +333,7 @@ async function main() {
         profilePath: flags.profile ? expandHome(flags.profile) : null,
         force: !!flags.force,
         yes: !!flags.yes,
+        claude: resolveClaudeOption(flags, 'uninstall'),
         log: (m) => console.log(m),
       });
       if (summary.note) console.log(summary.note);
@@ -250,6 +349,7 @@ async function main() {
           console.log(`profiles preserved: ${summary.profiles.preserved.join(', ')}`);
         }
       }
+      printClaudeSettings(summary.claudeSettings, { uninstall: true });
       return;
     }
     console.error(`axstack: unknown command: ${command}`);

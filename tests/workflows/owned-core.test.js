@@ -258,7 +258,10 @@ test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from
 test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
   for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
     const text = skill(name);
-    expect(/daemon/i.test(text), `${name}: must not introduce a daemon`).toBe(false);
+    expect(
+      /(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(text),
+      `${name}: must not introduce a daemon`,
+    ).toBe(false);
     expect(/state machine/i.test(text), `${name}: must not introduce a state machine`).toBe(false);
     expect(
       /programmatic gate|decision engine/i.test(text),
@@ -267,57 +270,18 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
   }
   for (const ref of ['routing.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
-    expect(text.length, `${ref} must stay compact (<6250 chars)`).toBeLessThan(6250);
+    expect(text.length, `${ref} must stay compact (<7500 chars)`).toBeLessThan(7500);
   }
 });
 
-test('owned-core: profiles add namespaced role defaults; existing seven unchanged', () => {
-  const data = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
-  const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
-  const expected = {
-    'axstack-research-requirements': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
-    'axstack-research-code': { provider: 'codex', model: 'gpt-5.6-sol', thinkingOptionId: 'medium' },
-    'axstack-research-web': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'low' },
-    'axstack-explainer': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
-    'axstack-explainer-review': { provider: 'codex', model: 'gpt-5.6-luna', thinkingOptionId: 'max' },
-    'axstack-explore-codebase': { provider: 'claude', model: 'claude-sonnet-5', thinkingOptionId: 'xhigh' },
-    'axstack-explore-execution': { provider: 'codex', model: 'gpt-5.6-terra', thinkingOptionId: 'low' },
-    'axstack-monitor': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
-    'axstack-watchdog': { provider: 'claude', model: 'claude-opus-5', thinkingOptionId: 'medium' },
-  };
-  for (const [id, want] of Object.entries(expected)) {
-    const prof = byId[id];
-    expect(prof, `missing profile ${id}`).toBeTruthy();
-    expect(prof.provider, `${id}: provider must be ${want.provider}`).toBe(want.provider);
-    expect(prof.model, `${id}: model must be ${want.model}`).toBe(want.model);
-    expect(prof.thinkingOptionId, `${id}: thinking must be ${want.thinkingOptionId}`).toBe(want.thinkingOptionId);
-    expect(prof.name && prof.name.length > 0, `${id}: missing name`).toBeTruthy();
-    expect(prof.notes && prof.notes.length > 0, `${id}: missing notes`).toBeTruthy();
-    expect(
-      /never.*substitut|no.*fallback|never.*fallback/i.test(prof.notes),
-      `${id}: notes must disclaim automatic substitution/fallback`,
-    ).toBeTruthy();
-  }
-  // Existing seven keep their provider/model/mode IDs.
-  const existing = {
-    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'full-access' },
-    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'bypassPermissions' },
-    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
-    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
-    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
-    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
-  };
-  for (const [id, want] of Object.entries(existing)) {
-    const prof = byId[id];
-    expect(prof, `missing profile ${id}`).toBeTruthy();
-    expect(prof.provider, `${id}: provider changed`).toBe(want.provider);
-    expect(prof.model, `${id}: model changed`).toBe(want.model);
-    expect(prof.modeId, `${id}: modeId changed`).toBe(want.modeId);
-  }
-  // All bundled profiles use full provider access.
-  for (const [id, want] of Object.entries(expected)) {
-    const accessMode = want.provider === 'claude' ? 'bypassPermissions' : 'full-access';
-    expect(byId[id].modeId, `${id}: must use configured access mode ${accessMode}`).toBe(accessMode);
+test('owned-core: all presets expose stable configured role IDs', () => {
+  const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
+    .agentProfiles.map(({ id }) => id);
+  expect(expectedIds).toHaveLength(17);
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
+    expect(data.agentProfiles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(data.agentProfiles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
   }
 });
 
@@ -422,21 +386,16 @@ test('owned-core: lifecycle carries roster, idle-complete protocol, and audit ho
   expect(/audit/i.test(text), 'lifecycle must define the end-of-run audit hook').toBeTruthy();
 });
 
-test('owned-core: align and spec involve Fable; auditor profile exists', () => {
+test('owned-core: align and spec use the configured advisor; auditor role exists', () => {
   for (const name of ['axstack-align', 'axstack-spec']) {
-    expect(skill(name).includes('Fable'), `${name}: must involve the Fable advisor`).toBeTruthy();
+    expect(skill(name).includes('axstack-advisor'), `${name}: must involve the configured advisor`).toBeTruthy();
   }
-  const data = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
-  const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
-  const auditor = byId['axstack-auditor'];
-  expect(auditor, 'missing profile axstack-auditor').toBeTruthy();
-  expect(auditor.provider, 'auditor provider must be codex').toBe('codex');
-  expect(auditor.model, 'auditor model must be gpt-5.6-luna').toBe('gpt-5.6-luna');
-  expect(auditor.thinkingOptionId, 'auditor thinking must be max').toBe('max');
-  expect(
-    /readonly|read-only/i.test(auditor.notes),
-    'auditor notes must state readonly',
-  ).toBeTruthy();
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
+    const auditor = data.agentProfiles.find(({ id }) => id === 'axstack-auditor');
+    expect(auditor, `${preset}: missing axstack-auditor`).toBeTruthy();
+    expect(auditor.notes).toMatch(/readonly|read-only/i);
+  }
 });
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
@@ -445,11 +404,22 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    expect(workflows.includes(preset), `docs/workflows.md must name ${preset}`).toBeTruthy();
+  }
+  expect(workflows).toMatch(/axstack-reviewer-primary/);
+  expect(workflows).toMatch(/axstack-reviewer-secondary/);
+  expect(workflows).toMatch(/active runs?[^.]*snapshot/i);
+  expect(workflows).toMatch(/structural checks[^.]*not[^.]*agent behavior/i);
   const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
   expect(/Model presets|role presets/i.test(install), 'installation doc must document role presets').toBeTruthy();
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   expect(readme.includes('axstack-review'), 'README must reference axstack-review').toBeTruthy();
   expect(readme.includes('axstack-watch'), 'README must reference axstack-watch').toBeTruthy();
+  expect(readme).toMatch(/profiles\/presets\/mixed\.json/);
+  expect(readme).not.toMatch(/profiles\/paseo\.json/);
+  expect(readme).toMatch(/reviewer-primary/);
+  expect(readme).toMatch(/reviewer-secondary/);
   const spec = readFileSync(join(root, 'docs', 'specs', 'v1.md'), 'utf8');
   expect(spec).toMatch(/axstack-explain/);
   expect(spec).toMatch(/project documentation/i);

@@ -33,11 +33,11 @@ is part of research.
    These routes are data presets, not proof of live readiness. Confirm profile
    availability through the shared launch sequence:
 
-   - `axstack-research-requirements` (Opus medium): requirements and intent.
-   - `axstack-research-code` (Sol medium): code behavior.
-   - `axstack-research-web` (Opus low): web and external sources.
-   - `axstack-explore-codebase` (Sonnet xhigh): broad codebase mapping.
-   - `axstack-explore-execution` (Terra low): execution and runtime traces.
+   - `axstack-research-requirements`: requirements and intent.
+   - `axstack-research-code`: code behavior.
+   - `axstack-research-web`: web and external sources.
+   - `axstack-explore-codebase`: broad codebase mapping.
+   - `axstack-explore-execution`: execution and runtime traces.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards

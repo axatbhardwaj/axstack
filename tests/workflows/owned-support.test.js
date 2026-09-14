@@ -181,7 +181,7 @@ test('owned-support: explain scales from direct answers to verified visuals', ()
   expect(/no mandatory agent|without.*agent|needs no.*agent/i.test(text), 'simple explanations must not require an agent').toBeTruthy();
   expect(/compact diagram|diagram.*useful/i.test(text), 'simple output may use a compact diagram when useful').toBeTruthy();
   expect(/self-contained html|requested artifact/i.test(text), 'visual must be self-contained HTML or the requested artifact').toBeTruthy();
-  expect(/explicit.*theme|theme.*explicit/i.test(text), 'explicit user theme must win').toBeTruthy();
+  expect(/explicit[\s\S]*theme|theme[\s\S]*explicit/i.test(text), 'explicit user theme must win').toBeTruthy();
   expect(/dark/i.test(text), 'dark default theme must be stated').toBeTruthy();
   expect(/desktop/i.test(text) && /mobile/i.test(text), 'visual QA must cover desktop and mobile rendering').toBeTruthy();
   expect(/accessibility|reduced-motion|reduced motion/i.test(text), 'visual QA must cover interaction/accessibility/reduced-motion').toBeTruthy();
@@ -224,7 +224,7 @@ test('owned-support: every HTML explanation triggers full exact-artifact QA', ()
 });
 
 test('owned-support: profile retirement and stale-upgrade migration are explicit', () => {
-  const profiles = JSON.parse(readFileSync(join(root, 'profiles', 'paseo.json'), 'utf8'));
+  const profiles = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'));
   expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-docs'), 'retired prose profile must be absent').toBe(false);
   expect(profiles.agentProfiles.length, 'only the prose profile is retired').toBe(17);
   const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "note": "Raw before/event/after tracking-policy cases for independent evaluation. These expected decisions are not observed agent behavior.",
+  "cases": [
+    {
+      "id": "missed-completion-notification",
+      "input": { "before": "Author A is recorded in progress at SHA S1; its completion notification was missed.", "event": "The execution heartbeat ticks and actual session state shows A finished with candidate SHA S2 and a test receipt." },
+      "expected": { "after": "A is verified at S2, the run record is updated, and eligible dependent work advances.", "actions": ["reconcile session status, Git SHA, and receipts", "advance only authorized dependency-satisfied work", "record the next action"], "forbidden": ["wait forever for the missed notification", "treat session status alone as completion proof", "advance against unverified S2"] }
+    },
+    {
+      "id": "reviewed-task-awaiting-advancement",
+      "input": { "before": "Task A has a current APPROVE receipt for SHA S3; dependent task B remains pending.", "event": "A heartbeat tick or completion notification wakes the driver." },
+      "expected": { "after": "The exact review receipt, authority, and dependencies are verified; ready task B advances and the next action is recorded.", "actions": ["verify SHA, review receipt, authority, and dependency readiness", "advance B only if every gate is satisfied", "persist the transition"], "forbidden": ["leave verified ready work unadvanced", "advance B from a stale review", "bypass authority or dependencies"] }
+    },
+    {
+      "id": "duplicate-event",
+      "input": { "before": "One completion event already advanced task B and its receipt is recorded.", "event": "The same completion notification arrives again and overlaps a heartbeat tick." },
+      "expected": { "after": "The duplicate events are deduplicated and recorded state remains single and consistent.", "actions": ["reconcile both events against the run record", "reuse the recorded transition"], "forbidden": ["launch B again", "create a duplicate writer", "publish duplicate user-facing updates"] }
+    },
+    {
+      "id": "uncertain-heartbeat-create",
+      "input": { "before": "Execution starts with no confirmed heartbeat receipt.", "event": "create_heartbeat returns ambiguously before an actual heartbeat ID is confirmed." },
+      "expected": { "after": "Heartbeat creation remains pending and duplicate creation is blocked until actual runtime state is reconciled.", "actions": ["record the unresolved creation receipt", "reconcile native heartbeat state before retrying"], "forbidden": ["call create_heartbeat again while state is ambiguous", "claim tracking is enabled", "invent a heartbeat ID"] }
+    },
+    {
+      "id": "cli-listing-not-proof-of-absence",
+      "input": { "before": "Heartbeat creation returned H4, but Paseo CLI schedule inspect/ls is empty because CLI listings exclude heartbeats.", "event": "A restart reconciles execution tracking before any create_heartbeat retry." },
+      "expected": { "after": "Native tool receipts and daemon schedule readback such as scheduleList determine whether H4 exists and its health.", "actions": ["read back heartbeat ID, lastRunAt, and expiry through native state", "distinguish timer existence, tick, prompt delivery, and advancement evidence", "verify advancement from run-record transitions with SHAs and receipts"], "forbidden": ["treat an empty CLI listing as proof the heartbeat is absent", "create a duplicate heartbeat because schedule inspect/ls is empty", "treat lastRunAt as proof of prompt delivery or work advancement"] }
+    },
+    {
+      "id": "restart-reconcile-existing-heartbeat",
+      "input": { "before": "A resumed active run records heartbeat H1, its first-tick handshake, and a remaining deadline.", "event": "The driver restarts and resumes execution." },
+      "expected": { "after": "H1 is reconciled and retained when actual timer state agrees; no second heartbeat is created.", "actions": ["reconcile the recorded heartbeat before creation", "reuse H1 and its remaining deadline", "repair only stale receipt details from verified state"], "forbidden": ["create a replacement before reconciliation", "silently extend the deadline", "run two execution heartbeats"] }
+    },
+    {
+      "id": "stall-detection",
+      "input": { "before": "Author A has no verified progress across expected checkpoints and remains recorded active.", "event": "A heartbeat tick observes unchanged Git and ambiguous or failed session state." },
+      "expected": { "after": "The stall or failure is recorded and bounded recovery occurs only within existing authority.", "actions": ["verify session status, Git SHA, receipts, and ownership", "record the stall and next recovery action", "hold unsafe advancement while uncertainty remains"], "forbidden": ["assume idle means complete", "launch a duplicate author", "expand scope or authority"] }
+    },
+    {
+      "id": "pause-stops-heartbeat",
+      "input": { "before": "Active run R has driver-owned heartbeat H2 and an unexpired deadline.", "event": "R is paused." },
+      "expected": { "after": "H2 is stopped and its stopped state is recorded; work may resume only within authority and the remaining deadline.", "actions": ["delete heartbeat H2", "record the pause and timer stop", "preserve the original deadline"], "forbidden": ["leave H2 ticking", "silently restart H2", "extend the deadline"] }
+    },
+    {
+      "id": "completion-stops-heartbeat",
+      "input": { "before": "All required execution work and receipts are verified complete while heartbeat H3 is active.", "event": "The driver records run completion." },
+      "expected": { "after": "H3 is stopped and the verified completion plus timer stop are recorded.", "actions": ["delete heartbeat H3", "verify completion before the transition", "record final timer state"], "forbidden": ["leave H3 active", "treat idle as completion", "grant merge or release authority"] }
+    },
+    {
+      "id": "deadline-expiry-no-extension",
+      "input": { "before": "Run R still has pending work when its existing 24-hour deadline expires.", "event": "The deadline is reached while its execution heartbeat is active." },
+      "expected": { "after": "The heartbeat is stopped and remaining work is held with a resumable record.", "actions": ["delete the heartbeat", "record expiry and unresolved work", "require applicable authority and a valid remaining deadline before resume"], "forbidden": ["silently extend or renew the deadline", "recreate the heartbeat", "claim pending work completed"] }
+    },
+    {
+      "id": "missing-timer-capability-gap",
+      "input": { "before": "Execution is ready to start but native heartbeat capability is unavailable.", "event": "The driver cannot call create_heartbeat." },
+      "expected": { "after": "The run record names an explicit active-tracking gap and tracking is not reported enabled.", "actions": ["record and report the missing capability", "hold the unsupported tracking transition for resolution"], "forbidden": ["claim active tracking is enabled", "build a scheduler or polling loop", "substitute an unapproved timer"] }
+    },
+    {
+      "id": "idle-is-not-complete",
+      "input": { "before": "Author A is idle with no completion receipt and the candidate revision is unchanged.", "event": "A heartbeat tick or completion reconciliation inspects the run." },
+      "expected": { "after": "A remains incomplete until actual state and required evidence verify completion.", "actions": ["reconcile session, SHA, and receipts", "record the unresolved state and next action"], "forbidden": ["mark A complete because it is idle", "advance dependent work", "transfer ownership because of idleness"] }
+    },
+    {
+      "id": "no-duplicate-writer",
+      "input": { "before": "Run R records author session A as the exclusive writer; A is slow or its status is uncertain.", "event": "A tick detects no confirmed completion." },
+      "expected": { "after": "A remains the writer while state is reconciled; only bounded recovery within existing authority is considered.", "actions": ["verify A and its worktree before any writer transition", "hold a replacement while ownership is uncertain"], "forbidden": ["launch a second author", "infer that A disappeared", "let tracking expand writer authority"] }
+    }
+  ]
+}

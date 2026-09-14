@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "preset": "codex-only",
+  "agentProfiles": [
+    {
+      "id": "axstack-driver",
+      "name": "Axstack driver (preferred)",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Preferred driver profile only. The current chat remains the driver; never auto-launch or switch it implicitly. Owns scope, external tracking mutations, stack coordination, and capability completion. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-advisor",
+      "name": "Axstack planning advisor",
+      "provider": "codex",
+      "model": "gpt-6-astra",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Configured planning advisor for specification creation and revision, solution design, and consequential decisions. The driver assesses first and owns the decision; reuse receipts only while evidence and scope remain unchanged. High-stakes decisions require the advisor's plain AGREE and the driver's accepted assessment."
+    },
+    {
+      "id": "axstack-owner",
+      "name": "Axstack PR owner",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers."
+    },
+    {
+      "id": "axstack-author",
+      "name": "Axstack author",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-reviewer-primary",
+      "name": "Axstack reviewer (primary)",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Primary reviewer in the ordered codex-only peer pair: Sol medium followed by Terra xhigh. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+    },
+    {
+      "id": "axstack-reviewer-secondary",
+      "name": "Axstack reviewer (secondary)",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "xhigh",
+      "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol medium followed by Terra xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+    },
+    {
+      "id": "axstack-checker",
+      "name": "Axstack Linear checker",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Report-only Linear discrepancy checker. Never mutates Linear; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default."
+    },
+    {
+      "id": "axstack-research-requirements",
+      "name": "Axstack research requirements",
+      "provider": "codex",
+      "model": "gpt-6-astra",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-research-code",
+      "name": "Axstack research code",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-research-web",
+      "name": "Axstack research web",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-explainer",
+      "name": "Axstack explainer",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-explainer-review",
+      "name": "Axstack explainer reviewer",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
+      "modeId": "full-access",
+      "thinkingOptionId": "max",
+      "notes": "Independent visual explanation reviewer: checks the exact artifact for source fidelity and rendered behavior where warranted. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-explore-codebase",
+      "name": "Axstack codebase explorer",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "xhigh",
+      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-explore-execution",
+      "name": "Axstack execution explorer",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-monitor",
+      "name": "Axstack monitor",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Independent read-only PR monitor on native Paseo timers. Snapshot-only healthy ticks; never authors, reviews, or replies. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-watchdog",
+      "name": "Axstack watchdog",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Independent read-only watch health checker on native Paseo timers. Verifies handshakes, deduplicates events, and reconciles uncertain sends. Never authors, reviews, or replies. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-auditor",
+      "name": "Axstack auditor",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
+      "modeId": "full-access",
+      "thinkingOptionId": "max",
+      "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
+    }
+  ]
+}

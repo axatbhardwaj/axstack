@@ -55,6 +55,56 @@ Entry records the size and a brief reason, reports an exact missing-identity
 gap, and launches nothing until the applicable identity is present. Each later
 phase checks that identity again.
 
+### Routing presets
+
+Installation requires an explicit canonical preset. Assets live under
+`profiles/presets/`; `codex` and `claude` are CLI aliases only.
+
+| Preset | Author | Ordered peer reviewers | Advisor / auditor |
+| --- | --- | --- | --- |
+| `mixed` | Sol medium | `axstack-reviewer-primary` Sol medium; `axstack-reviewer-secondary` Opus medium | Fable medium / Luna max |
+| `codex-only` | Sol medium | `axstack-reviewer-primary` Sol medium; `axstack-reviewer-secondary` Terra xhigh | Astra medium / Luna max |
+| `claude-only` | Opus medium | `axstack-reviewer-primary` Opus medium; `axstack-reviewer-secondary` Sonnet xhigh | Fable medium / Sonnet xhigh |
+
+The shared role IDs are `axstack-driver`, `axstack-advisor`, `axstack-owner`,
+`axstack-author`, `axstack-reviewer-primary`, `axstack-reviewer-secondary`,
+`axstack-checker`, the five research/explanation/exploration roles, and
+`axstack-monitor`, `axstack-watchdog`, and `axstack-auditor`. Skills define
+responsibilities; installed profiles define provider, model, mode, and effort.
+Peer review always uses both reviewer roles with identical briefs and isolated
+first passes. Authored review follows only the preset's explicit mapping from
+actual author provenance; unknown or unsupported provenance is `INCOMPLETE`.
+
+Preset changes apply to new runs only. Active runs retain their recorded
+role/model/effort snapshot unless the user explicitly changes that run and its
+evidence is revalidated. Missing or unavailable configured routes hold without
+fallback, quota routing, or subscription inference. Structural checks validate
+assets and prompt text; structural checks are not evidence of agent behavior,
+provider compatibility, or live execution.
+
+### Active tracking
+
+Each active execution run has one driver-owned native Paseo heartbeat, created
+at execution start with the default `*/10 * * * *` cadence. Its actual ID,
+first-tick handshake, and fixed deadline stay in the run record. Heartbeat ticks
+and completion notifications both trigger reconciliation; ready work advances
+only after actual session state, Git SHAs, receipts, authority, and dependencies
+agree. Pause, completion, or the existing 24-hour deadline stops the heartbeat.
+
+Resume reconciles native tool receipts and schedule readback before creating a
+timer. Paseo CLI `schedule inspect/ls` excludes heartbeats, so an empty CLI
+listing does not prove absence. Native readback such as `scheduleList` can prove
+timer identity and show `lastRunAt` and expiry, but those facts have distinct
+limits: timer existence is not a tick, a tick is not prompt delivery, and
+delivery is not work advancement. Advancement requires a verified run-record
+transition with SHAs and receipts.
+
+The scenario fixture and structural tests exercise declared policy only; an
+independent scenario evaluation is evidence about evaluated prompt behavior,
+not live timers. Live heartbeat creation, prompt delivery, and advancement each
+require their own native receipts. Tracking adds no scheduler, merge, release,
+or scope authority, and PR monitor/watchdog roles remain separate.
+
 ## Phase skills
 
 Progressive loading: invoke only the phase needed. Each phase loads standing contracts and their lifecycle/audit path.
@@ -84,7 +134,7 @@ Paseo launch materialization before dispatch.
 - `axstack-align` — research facts, map dependent decisions, and ask prioritized
   rounds of one to three cumulatively numbered questions with a recommendation
   and trade-off for each. The current chat drafts each new frontier, the actual
-  configured persistent Fable advisor challenges it, and the driver reconciles
+  configured persistent `axstack-advisor` challenges it, and the driver reconciles
   the advice before asking the user. Twenty presented questions is the normal
   ceiling, not a quota; Align stops earlier when no material choice remains.
   Named material gaps may extend the initial pass to 35, never beyond. An empty
@@ -109,12 +159,12 @@ Paseo launch materialization before dispatch.
   spec; authored mode retains the approved baseline for substantial work or
   the snapshotted small-change intent for small work, and accepts an adopted
   maintenance scope snapshot without repeated approval. Peer review uses
-  exactly two independent Sol and Opus reviewers with an identical six-angle
-  brief and first-pass isolation. Authored review uses one independent
-  different-family reviewer based on actual author provenance: Sol author ->
-  Opus medium; Opus author -> Sol medium. No owner or author session reviews;
-  unknown/mixed provenance or unavailable required models are reported to the
-  user without invented fallback. An eligible current Sol high checkpoint for
+  exactly two independent configured reviewer roles with an identical
+  six-angle brief and first-pass isolation. Authored review uses one eligible
+  configured reviewer from the explicit preset mapping and actual author
+  provenance. No owner or author session reviews; unknown, mixed, or unsupported
+  provenance and unavailable required models are reported to the user without
+  invented fallback. An eligible current Sol high checkpoint for
   an Opus high author satisfies authored final review after revalidation,
   without lower effort or a redundant reviewer. Completeness is mode-specific
   and separate from the
@@ -177,25 +227,14 @@ Paseo owns transfer mechanics; Axstack owns the workflow state being transferred
 
 ## Role profiles
 
-`profiles/paseo.json` (`version: 1`, `agentProfiles` array, `axstack-*`
-IDs with `name` fields matching the live list_profiles schema) covers the preferred driver (current chat stays
-driver; never auto-launch), Fable advisor (claude `plan`, involved in
-spec creation/revision, solution design, and consequential decisions;
-driver owns the decision, user approves the spec, cached receipts avoid
-repeat consultation), Opus owner
-(claude `default`), Sol author (codex `auto`), independent Opus
-(claude) and Sol (codex) reviewers, and the report-only checker. The
-checker model stays null until user setup and must never dispatch a
-provider default. Namespaced role defaults extend the same file for
-research requirements/code/web, visual explanation and
-its review, codebase and execution exploration, the monitor and
-watchdog roles, and the read-only Luna auditor (evidence with counts
-and denominators; proposals return as tested, reviewed PRs for human
-merge; raw run records stay local). Conservative presets are claude `default` and codex
-`auto`; validate model availability at launch. An
-unavailable model pauses affected work pending user decision — never
-automatic substitution. Selected live profiles are authoritative; the
-bundled file ships setup defaults only. Launch order per the bundled reference:
+The three `profiles/presets/*.json` assets each contain the same 17 `axstack-*`
+role IDs and the canonical preset name. Reviewer IDs are neutral; their
+provider/model/effort comes from the selected preset. The mixed checker remains
+unset until explicit setup and must never dispatch a provider default; both
+single-provider presets configure it. Validate availability at launch. An
+unavailable model pauses affected work pending user decision—never automatic
+substitution. Selected live profiles are authoritative; bundled files are setup
+defaults only. Launch order per the bundled reference:
 list_profiles, list_providers, list_models (selected provider only),
 inspect_provider, create_workspace, create_agent as
 `${provider}/${model}`; verify session model/ownership receipts and

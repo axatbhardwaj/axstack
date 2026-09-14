@@ -12,7 +12,7 @@
         "scope": "accepted small-change intent"
       },
       "expected": {
-        "reviewers": ["one independent Opus medium non-author session"],
+        "reviewers": ["one eligible axstack-reviewer-secondary session from the recorded mixed routing snapshot"],
         "coverage": "all six angles plus acceptance against intent, exact SHA A, and current base B"
       }
     },
@@ -26,7 +26,7 @@
         "scope": "approved spec and matching ticket"
       },
       "expected": {
-        "reviewers": ["one independent Sol medium non-author session"],
+        "reviewers": ["one eligible axstack-reviewer-primary session from the recorded mixed routing snapshot"],
         "coverage": "all six angles plus acceptance against spec and ticket, exact SHA C, and current base D"
       }
     },
@@ -40,7 +40,7 @@
         "scope": "linked issue, PR description, and repository requirements"
       },
       "expected": {
-        "reviewers": ["independent Sol medium", "independent Opus medium"],
+        "reviewers": ["axstack-reviewer-primary", "axstack-reviewer-secondary"],
         "coverage": "each gets the identical six-angle brief and performs its first pass in isolation"
       }
     },
@@ -56,7 +56,7 @@
       "expected": {
         "status": "INCOMPLETE",
         "action": "report the exact author-provenance gap and ask the user",
-        "forbidden": ["assume Sol", "infer author from orchestrator provider", "invent a reviewer family"]
+        "forbidden": ["assume an author", "infer author from orchestrator provider", "invent a reviewer pairing"]
       }
     },
     {
@@ -70,8 +70,8 @@
       },
       "expected": {
         "status": "INCOMPLETE",
-        "action": "report the unavailable required Opus medium reviewer and ask the user",
-        "forbidden": ["same-family reviewer", "automatic model fallback", "second redundant final reviewer"]
+        "action": "report the unavailable required configured reviewer and ask the user",
+        "forbidden": ["unmapped reviewer", "automatic model fallback", "second redundant final reviewer"]
       }
     },
     {

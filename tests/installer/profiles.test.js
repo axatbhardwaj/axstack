@@ -21,7 +21,7 @@ const BUNDLE_PROFILES = [
   {
     id: 'axstack-driver',
     name: 'Axstack driver',
-    provider: 'example',
+    provider: 'codex',
     model: 'example-model',
     modeId: 'default',
     thinkingOptionId: 'medium',
@@ -76,6 +76,9 @@ test('merge retains user edits to an owned profile instead of replacing', () => 
     config.daemon.agentProfiles.find((p) => p.id === 'axstack-driver').model,
   ).toBe('user-choice');
   expect(report.preserved.includes('axstack-driver')).toBe(true);
+  const unchanged = mergeProfiles(hostWith([{ ...BUNDLE_PROFILES[0] }]), BUNDLE_PROFILES, {});
+  expect(unchanged.config.daemon.agentProfiles).toEqual([{ ...BUNDLE_PROFILES[0] }]);
+  expect(unchanged.report.unchanged).toEqual(['axstack-driver']);
 });
 
 test('pristine owned profile upgrades to newer bundle version without force', () => {
@@ -137,10 +140,27 @@ test('CLI profile install preserves custom profiles and daemon fields end to end
   const skillsDir = join(root, 'skills');
   const profile = join(root, 'paseo.json');
   writeFileSync(profile, JSON.stringify(representativeHostConfig()));
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   const after = JSON.parse(readFileSync(profile, 'utf8'));
   const ids = after.daemon.agentProfiles.map((p) => p.id).sort();
   expect(ids).toEqual(['axstack-driver', 'custom-mine']);
   expect(after.daemon.schedules).toEqual([{ id: 'daily-check', cron: '0 9 * * *' }]);
   expect(after.cliClientId).toBe('fixture-client-id');
+
+  const unownedRoot = makeTempRoot('axstack-unowned-profile-');
+  const unownedBundle = writeFixtureBundle(unownedRoot);
+  const unownedSkills = join(unownedRoot, 'skills');
+  const unownedProfile = join(unownedRoot, 'paseo.json');
+  writeFileSync(unownedProfile, JSON.stringify(hostWith([{ ...BUNDLE_PROFILES[0] }]), null, 2));
+
+  const result = runCli([
+    'install', '--preset', 'mixed', '--bundle', unownedBundle,
+    '--skills-dir', unownedSkills, '--profile', unownedProfile,
+  ]);
+  const manifest = JSON.parse(
+    readFileSync(join(unownedSkills, '.axstack-manifest.json'), 'utf8'),
+  );
+
+  expect(result.out).toMatch(/profiles unchanged \(pre-existing, not adopted\): axstack-driver/i);
+  expect(manifest.profiles.entries['axstack-driver']).toBeUndefined();
 });

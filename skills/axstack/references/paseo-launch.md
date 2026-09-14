@@ -9,10 +9,20 @@ not reproduce its launch procedure here.
 Runtime capabilities determine the tools and signatures. Use returned schemas
 or tool help; a missing step is a setup gap, never a reason to guess a call.
 
-1. `list_profiles` — read the installed, user-configured live profiles; they are authoritative.
-   Bundled `profiles/paseo.json` contains setup defaults only and has no
-   guaranteed installed path; its runtime presence is not guaranteed. Select
-   the matching `axstack-*` profile. Never override its configured model. If
+Before launch, read the run's routing snapshot. Active runs keep that recorded
+snapshot after a preset switch; only new runs use the newly selected preset.
+Never silently replace or migrate an active session.
+
+1. `list_profiles` — installed, user-configured live profiles are authoritative
+   for role values when a new run captures its snapshot and
+   for availability checks; role selection comes from the run's recorded
+   routing snapshot, never from a post-start live-profile change. Bundled
+   `profiles/presets/*.json` files contain setup defaults only and have no
+   guaranteed installed path; their runtime presence is not guaranteed.
+   Select the matching `axstack-*` role from the snapshot. A role installed or
+   changed after snapshot capture requires the user's explicit decision before
+   it can be added to that run; never adopt it silently or override the
+   snapshot's configured model. If
    `axstack-checker` is absent or unconfigured, hold
    checker dispatch while the driver checks directly or reports the gap.
 2. `list_providers` — confirm the selected profile's provider is configured.
@@ -36,12 +46,14 @@ or tool help; a missing step is a setup gap, never a reason to guess a call.
    linked intent for peer review — plus exact candidate revision and profile
    notes. When present, propagate the caller's `Notification policy`, including
    its required `axstack-relay` instructions path, without adding private
-   transport values. An Opus role is a Claude session running Opus.
+   transport values. A role name never proves its provider or model; verify the
+   materialized values against the routing snapshot.
 7. Verify the returned agent/workspace IDs, role, provider, and model. Persist
    that session receipt in the run record. If creation is ambiguous, mark the
    receipt pending and reconcile actual runtime state before any retry.
-8. Use notifications to wake the driver; waiting never keeps a model reasoning
-   continuously.
+8. Use completion notifications to wake the driver; reconcile them through
+   [lifecycle execution tracking](lifecycle.md#execution-tracking). Waiting
+   never keeps a model reasoning continuously.
 
 Dispatch is complete only when the requested live profile has produced one
 verified, persisted ownership receipt or an exact setup/availability gap has

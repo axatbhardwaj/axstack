@@ -21,7 +21,7 @@ const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const OWNER_PROFILE = {
   id: 'axstack-owner',
   name: 'Owner',
-  provider: 'example',
+  provider: 'codex',
   model: 'original',
 };
 
@@ -38,7 +38,7 @@ test('uninstall with a different profile path is refused before any mutation', (
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
   const profileA = join(root, 'A.json');
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
 
   // Unrelated config B with byte-identical profile content.
   const profileB = join(root, 'B.json');
@@ -64,11 +64,11 @@ test('install with a different profile path than the bound manifest is refused',
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
   const profileA = join(root, 'A.json');
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
 
   const profileB = join(root, 'B.json');
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileB],
     { expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/different|bound|ownership|refus|uninstall/);
@@ -80,7 +80,7 @@ test('uninstall with a missing profile file clears ownership and removes skills'
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
   const profileA = join(root, 'A.json');
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profileA]);
   rmSync(profileA, { force: true });
 
   const r = runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profileA]);
@@ -90,8 +90,7 @@ test('uninstall with a missing profile file clears ownership and removes skills'
   // Ownership released: a later install may bind a new config path.
   const profileB = join(root, 'B.json');
   const again = runCli([
-    'install',
-    '--bundle',
+    'install', '--preset', 'mixed', '--bundle',
     bundle,
     '--skills-dir',
     skillsDir,
@@ -108,7 +107,7 @@ test('manifest symlink is rejected before mutations', async () => {
   const root = makeTempRoot();
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir]);
   const manifest = join(skillsDir, '.axstack-manifest.json');
   const before = readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8');
   const elsewhere = join(root, 'elsewhere.json');
@@ -116,7 +115,7 @@ test('manifest symlink is rejected before mutations', async () => {
   rmSync(manifest, { force: true });
   symlinkSync(elsewhere, manifest);
 
-  const installR = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
+  const installR = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
   expect(installR.out.toLowerCase()).toMatch(/symlink|unsafe|refus/);
@@ -149,14 +148,14 @@ test('manifest-write failure keeps pre-run state and reports the failure', () =>
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
   const profile = join(root, 'paseo.json');
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   const beforeSkill = readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8');
   const beforeManifest = readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8');
 
   // Block the manifest write without permission assumptions.
   mkdirSync(join(skillsDir, '.axstack-manifest.json.tmp'));
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
     { expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/manifest/);
@@ -168,7 +167,7 @@ test('failed restores are reported instead of swallowed', () => {
   const root = makeTempRoot();
   const v1 = ownerBundle(root, 'bundle-v1');
   const skillsDir = join(root, 'skills');
-  runCli(['install', '--bundle', v1, '--skills-dir', skillsDir]);
+  runCli(['install', '--preset', 'mixed', '--bundle', v1, '--skills-dir', skillsDir]);
   const v2 = writeFixtureBundle(root, { name: 'bundle-v2', skillBody: '# v2\n' });
 
   // Make the update write (and its restore) fail: read-only skill dir.
@@ -176,7 +175,7 @@ test('failed restores are reported instead of swallowed', () => {
   chmodSync(skillDir, 0o555);
   let r;
   try {
-    r = runCli(['install', '--bundle', v2, '--skills-dir', skillsDir], {
+    r = runCli(['install', '--preset', 'mixed', '--bundle', v2, '--skills-dir', skillsDir], {
       expectFail: true,
     });
   } finally {
@@ -211,7 +210,7 @@ test('option values beginning with -- fail as missing values before mutation', (
   const root = makeTempRoot();
   const bundle = ownerBundle(root);
   const skillsDir = join(root, 'skills');
-  const r = runCli(['install', '--bundle', '--skills-dir', skillsDir], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', '--skills-dir', skillsDir], {
     expectFail: true,
     cwd: root,
   });

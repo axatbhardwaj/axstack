@@ -1,27 +1,73 @@
 # Shared routing (every owned phase loads this)
 
-Choose one route first. Load only that phase and the shared references needed
-for its next action.
+Choose one route; load only its phase and shared references needed next.
+
+## Configured role routing
+
+Canonical presets are `mixed`, `codex-only`, and `claude-only`. For a new run,
+read `profiles.preset` from `.axstack-manifest.json` at the actually loaded
+skills root (installer-recorded on every install, including skills-only), or an
+explicit user selection recorded in the run record. Proceed only if those
+sources give exactly one unambiguous preset.
+Missing or contradictory sources are a setup gap: hold, report, and ask. Never
+infer from live profiles or `list_profiles`, harness, tools, credentials,
+quota, subscription, or default to `mixed`.
+
+At run start, capture one **routing snapshot**: the complete map of all 17 role
+IDs and their provider/model/mode/effort, with absent or unconfigured roles
+recorded explicitly and no invented provider default. An absent or unconfigured
+role holds only that role's work, not the run. A role installed or changed later
+must not silently enter the snapshot; ask for an explicit user decision to add
+it. Live profiles
+are authoritative only for values at snapshot time and availability checks;
+bundled presets are setup inputs, not runtime proof.
+
+Preset changes apply to new runs only; an active run keeps its snapshot.
+Changing it or replacing a session requires the user's explicit decision and
+revalidation. Unavailable models, unsupported efforts, missing roles, and
+incompatible overrides hold only affected work. No automatic fallback, quota
+routing, subscription inference, or silent provider/model/effort substitution.
+
+Stable role IDs:
+
+- `axstack-driver` coordinates; `axstack-owner` owns one PR;
+  `axstack-author` is its exclusive writer.
+- `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
+  peer pair. Peer review uses both; authored review uses only this table:
+
+  | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
+  | --- | --- | --- |
+  | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5` medium) |
+  | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
+  | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
+  | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
+- `axstack-advisor` advises configured decisions and `axstack-auditor` performs
+  report-only audits. `axstack-checker` reports tracking discrepancies.
+- `axstack-explainer` authors explanations and `axstack-explainer-review`
+  reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
+
+Provenance is matched on provider/model ID; record effort, but never use it to
+create a mapping. Any provenance absent from the selected preset's table row is
+unsupported and `INCOMPLETE`, including its secondary reviewer model, Astra,
+Luna, or Fable. Report the exact gap and ask the user. Never derive a reverse
+pairing from slot position, driver, owner, or provider. Author and owner remain
+ineligible to review their own work.
 
 ## Direct routes (no spec ceremony)
 
-- One bounded research question -> `axstack-research`. Verify primary sources
-  and code, then return a cited note with limitations. Fan out distinct
-  questions only when useful.
+- One bounded research question -> `axstack-research`: verify primary sources
+  and code; return a cited note with limitations. Fan out only distinct
+  questions.
 - Understanding a system, change, or implementation gap -> `axstack-explain`.
-  Show current and intended behavior, evidence dimensions, and bounded gaps;
-  use project documentation as evidence where relevant and verify rendered behavior when applicable.
-  A stale axstack-docs install is superseded and must not also route the
-  request. Publication needs separate authority.
-- Codebase-quality or refactor discovery -> `axstack-improve`. Inspect a
-  bounded scope, rank evidenced maintainability, architecture, or testability
-  candidates, and write the requested report only. Discovery needs no spec or
-  tickets and authorizes no source edit. A selected change returns through the
-  proportional preparation or execution boundary.
-- Preparation completion, watch expiry, ordinary resume, or reconciliation ->
-  the [handoff and resume lifecycle](lifecycle.md#native-handoff-and-resume).
-  Update or reconcile the run record; keep the current owner and launch no
-  native handoff.
+  Show current/intended behavior, evidence dimensions, and bounded gaps; use
+  project docs and verify rendered behavior when applicable. Stale axstack-docs
+  is superseded. Publication needs separate authority.
+- Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
+  scope, rank evidenced candidates, and report only. No spec, tickets, or source
+  edits; selected changes return through preparation or execution.
+- Preparation completion, watch expiry, resume, or reconciliation -> the
+  [handoff/resume lifecycle](lifecycle.md#native-handoff-and-resume): reconcile
+  the run record, keep its owner, and launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Preflight discoverability before loading native `paseo-handoff`; a missing
   capability is a setup gap, not permission to invent a replacement.
@@ -29,15 +75,15 @@ for its next action.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.
 
-Research, explanation, improvement discovery, handoff, peer review, and adopted maintenance do not require
-alignment, an Axstack-approved spec, or ticket mapping. Their own authority and
-intent boundaries still apply.
+Research, explanation, improvement discovery, handoff, peer review, and adopted
+maintenance need no alignment, Axstack-approved spec, or ticket map; their
+authority and intent boundaries still apply.
 
 ## Proportional scope identity
 
-Classify new engineering work as substantial, small, or unclear and record the
-classification with a brief reason in the run record. For tiny direct work
-that needs no run record, put the size and reason in the normal brief.
+Classify new work as substantial, small, or unclear; record the classification
+with brief reason in the run record. Tiny direct work without one puts
+size/reason in its brief.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work. A
   bounded small feature is not substantial merely because it is labelled a
@@ -77,6 +123,6 @@ not alone require a formal spec. Hold affected unsafe work while reassessing.
   accepted scope, exact head/base, verified writable ownership, and actual
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
-  orchestrator or assume an imported own PR was Sol-authored.
+  orchestrator or assume an imported own PR's author.
 - Direct later phase: start there and pass that phase's identity check. Entry
   never admits work a deeper phase would reject.

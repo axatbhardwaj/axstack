@@ -5,9 +5,10 @@ Read this before registering, resuming, or stopping watch roles or timers.
 ## Roles
 
 The PR owner remains accountable throughout the configured monitoring window.
-The monitor and watchdog are independent, read-only Opus medium sessions, not
-authors, reviewers, or repliers. Materialize each through the shared Paseo
-launch sequence. Each owns its timer and snapshot.
+`axstack-monitor` and `axstack-watchdog` are independent, read-only configured
+sessions, not authors, reviewers, or repliers. Materialize each through the
+shared Paseo launch sequence and routing snapshot. Each owns its timer and
+snapshot.
 
 - **Monitor:** read GitHub, all PR feedback, and the latest check runs. Default
   cadence is 5min. Surface actionable events with persisted, acknowledged event

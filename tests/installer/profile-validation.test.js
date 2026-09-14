@@ -8,7 +8,7 @@ const runCli = (args, opts) => runBunCli(CLI, args, opts);
 const VALID = {
   id: 'axstack-driver',
   name: 'Axstack driver',
-  provider: 'example',
+  provider: 'codex',
   model: 'example-model',
   icon: 'sparkles',
   color: 'blue',
@@ -43,7 +43,7 @@ test('CLI rejects malformed outgoing native profiles before target writes', () =
     const skillsDir = join(root, 'skills-target');
     const profilePath = join(root, 'paseo.json');
     const result = runCli(
-      ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath],
+      ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath],
       { expectFail: true },
     );
 

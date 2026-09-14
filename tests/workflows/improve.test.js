@@ -76,7 +76,7 @@ test('improve: normal TDD and bounded ownership remain intact', () => {
   expect(implement).toMatch(/outside[^.]*listed[^.]*files|exceed[^.]*files/i);
   expect(implement).toMatch(/reassess/i);
   expect(implement).toMatch(/exactly one author|one writer/i);
-  const profiles = JSON.parse(read('profiles/paseo.json'));
+  const profiles = JSON.parse(read('profiles/presets/mixed.json'));
   expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-improve')).toBe(false);
   expect(profiles.agentProfiles.length).toBe(17);
 });

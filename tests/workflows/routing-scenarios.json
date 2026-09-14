@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "note": "Raw inputs and expected routing-policy decisions. These cases are evaluation inputs, not observed agent behavior.",
+  "cases": [
+    {
+      "id": "mixed-sol-authored",
+      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "codex/gpt-5.6-sol medium", "candidate": "SHA A", "base": "SHA B" },
+      "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-opus-5 medium"], "coverage": "all six angles and acceptance against exact SHA A and base SHA B" }
+    },
+    {
+      "id": "mixed-opus-authored",
+      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "claude/claude-opus-5 medium", "candidate": "SHA C", "base": "SHA D" },
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium"], "coverage": "all six angles and acceptance against exact SHA C and base SHA D" }
+    },
+    {
+      "id": "codex-sol-authored",
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-5.6-sol medium", "candidate": "SHA E", "base": "SHA F" },
+      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-5.6-terra xhigh"], "independence": "different model, not cross-provider" }
+    },
+    {
+      "id": "claude-opus-authored",
+      "input": { "preset": "claude-only", "mode": "authored", "actualAuthor": "claude/claude-opus-5 medium", "candidate": "SHA G", "base": "SHA H" },
+      "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-sonnet-5 xhigh"], "independence": "different model, not cross-provider" }
+    },
+    {
+      "id": "codex-terra-authored-unsupported",
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-5.6-terra", "candidate": "SHA G1", "base": "SHA H1" },
+      "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["reverse route to axstack-reviewer-primary", "infer pairing from slot position"] }
+    },
+    {
+      "id": "claude-sonnet-authored-unsupported",
+      "input": { "preset": "claude-only", "mode": "authored", "actualAuthor": "claude/claude-sonnet-5", "candidate": "SHA G2", "base": "SHA H2" },
+      "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["reverse route to axstack-reviewer-primary", "infer pairing from slot position"] }
+    },
+    {
+      "id": "mixed-peer",
+      "input": { "preset": "mixed", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA I", "base": "SHA J" },
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium", "axstack-reviewer-secondary: claude/claude-opus-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }
+    },
+    {
+      "id": "codex-peer",
+      "input": { "preset": "codex-only", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA K", "base": "SHA L" },
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium", "axstack-reviewer-secondary: codex/gpt-5.6-terra xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
+    },
+    {
+      "id": "claude-peer",
+      "input": { "preset": "claude-only", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA M", "base": "SHA N" },
+      "expected": { "reviewers": ["axstack-reviewer-primary: claude/claude-opus-5 medium", "axstack-reviewer-secondary: claude/claude-sonnet-5 xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
+    },
+    {
+      "id": "unknown-author-provenance",
+      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "unknown or unsupported", "candidate": "SHA O", "base": "SHA P" },
+      "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["infer provenance from owner or driver", "invent reverse pairing"] }
+    },
+    {
+      "id": "owner-authored-candidate",
+      "input": { "preset": "mixed", "mode": "authored", "owner": "claude/claude-opus-5 medium", "actualWriter": "same owner session", "candidate": "SHA Q", "base": "SHA R" },
+      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium"], "forbidden": ["treat owner as non-author", "owner self-review"] }
+    },
+    {
+      "id": "required-model-unavailable",
+      "input": { "preset": "codex-only", "role": "axstack-reviewer-secondary", "availability": "gpt-5.6-terra unavailable" },
+      "expected": { "status": "HOLD", "action": "report gap and ask user", "forbidden": ["fallback", "quota routing", "subscription inference"] }
+    },
+    {
+      "id": "active-run-preset-switch",
+      "input": { "recordedPreset": "mixed", "recordedSnapshot": "role/model/effort snapshot S", "newSelectedPreset": "codex-only", "runState": "active" },
+      "expected": { "activeRun": "keep snapshot S", "newRuns": "use codex-only", "forbidden": ["replace active sessions", "silently migrate active run"] }
+    },
+    {
+      "id": "preset-discovery-new-run",
+      "input": { "event": "new chat starts an Axstack run", "loadedSkillsRoot": "the skills root actually loaded for this run", "manifest": "<actually loaded skills root>/.axstack-manifest.json", "runRecord": "no explicit preset selection recorded" },
+      "expected": { "source": "read profiles.preset from .axstack-manifest.json at the actually loaded skills root, or use an explicit user selection recorded in the run record", "status": "READY only when one unambiguous source resolves the canonical preset", "onMissingOrContradictorySource": "setup gap; hold the run", "forbidden": ["infer preset from harness", "infer preset from tools or credentials", "infer preset from quota or subscription", "default to mixed"] }
+    },
+    {
+      "id": "late-role-after-preset-switch",
+      "input": { "runStartPreset": "codex-only", "runStartSnapshot": "all 17 role IDs, including absent or unconfigured roles", "newSelectedPreset": "claude-only", "runState": "active", "lateFirstUse": "axstack-explainer" },
+      "expected": { "route": "resolve axstack-explainer from the run-start codex-only snapshot", "snapshotCoverage": "all 17 role IDs captured at run start; absent or unconfigured roles are recorded explicitly without a provider default", "absenceScope": "an absent role holds only that role's work, not the whole run", "forbidden": ["resolve the late role from the newly selected claude-only preset", "snapshot only previously used roles", "invent a provider default for an absent or unconfigured role"] }
+    },
+    {
+      "id": "late-installed-role-not-adopted",
+      "input": { "runStartPreset": "mixed", "runStartSnapshot": "axstack-checker explicitly unconfigured with no model", "laterChange": "user configures axstack-checker after the run starts", "work": "checker work in the existing run" },
+      "expected": { "status": "HOLD checker work only", "action": "ask the user for an explicit decision to add the configured checker to this run", "activeRun": "keep axstack-checker unconfigured in the recorded snapshot unless the user explicitly adds it", "forbidden": ["silently adopt the later-installed checker", "resolve checker from the changed installed preset", "hold the whole run", "invent a provider default"] }
+    },
+    {
+      "id": "claude-sonnet-explanation-exception",
+      "input": { "preset": "claude-only", "artifact": "explanation", "author": "axstack-explainer Sonnet xhigh", "reviewer": "axstack-explainer-review Sonnet high" },
+      "expected": { "allowed": "separate-session explanation review", "independence": "session independence only", "forbidden": ["cross-provider claim", "same-model code review"] }
+    },
+    {
+      "id": "single-provider-high-stakes-unmapped",
+      "input": { "preset": "claude-only", "work": "high-stakes code change", "availableMapping": "none" },
+      "expected": { "status": "HOLD", "action": "pause for explicit user decision", "forbidden": ["borrow mixed routing", "invent same-provider mapping", "change effort silently"] }
+    }
+  ]
+}

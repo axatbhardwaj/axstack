@@ -30,7 +30,7 @@ const MANIFEST_TMP = '.axstack-manifest.json.tmp';
 const OWNER_PROFILE = {
   id: 'axstack-owner',
   name: 'Owner',
-  provider: 'example',
+  provider: 'codex',
   model: 'original',
 };
 
@@ -43,7 +43,7 @@ test('manifest temp symlink to outside is not followed or renamed', () => {
   writeFileSync(outside, 'outside data\n');
   symlinkSync(outside, join(skillsDir, MANIFEST_TMP));
 
-  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
   expect(r.out.toLowerCase()).toMatch(/temporary|tmp|refus|exists|symlink|unsafe/);
@@ -80,7 +80,7 @@ test('existing config mode 0600 survives the atomic profile merge', () => {
   writeFileSync(profile, '{"version":1,"daemon":{"agentProfiles":[]}}\n');
   chmodSync(profile, 0o600);
 
-  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   expect(r.ok).toBeTruthy();
   expect(JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
       (p) => p.id === 'axstack-owner',
@@ -94,7 +94,7 @@ test('new config files are created restrictive (0600)', () => {
   const skillsDir = join(root, 'skills');
   const profile = join(root, 'fresh.json');
 
-  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   expect(r.ok).toBeTruthy();
   expect(statSync(profile).mode & 0o777).toBe(0o600);
 });
@@ -103,12 +103,12 @@ test('updated skill files keep their existing permissions', () => {
   const root = makeTempRoot();
   const v1 = writeFixtureBundle(root, { name: 'bundle-v1' });
   const skillsDir = join(root, 'skills');
-  runCli(['install', '--bundle', v1, '--skills-dir', skillsDir]);
+  runCli(['install', '--preset', 'mixed', '--bundle', v1, '--skills-dir', skillsDir]);
   const skill = join(skillsDir, 'axstack-demo', 'SKILL.md');
   chmodSync(skill, 0o600);
 
   const v2 = writeFixtureBundle(root, { name: 'bundle-v2', skillBody: '# v2\n' });
-  const r = runCli(['install', '--bundle', v2, '--skills-dir', skillsDir]);
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', v2, '--skills-dir', skillsDir]);
   expect(r.ok).toBeTruthy();
   expect(readFileSync(skill, 'utf8')).toBe('# v2\n');
   expect(statSync(skill).mode & 0o777).toBe(0o600);
