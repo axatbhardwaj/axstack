@@ -121,9 +121,12 @@ export async function checkCapabilities(exec, resolution = {}) {
       result = { ok: false, stdout: err?.message ?? 'error' };
     }
     const ok = !!result?.ok;
+    const baseLabel = CHECK_LABELS[name] ?? name;
     checks.push({
       name,
-      label: CHECK_LABELS[name] ?? name,
+      label: !ok && name.startsWith('orca-')
+        ? `${baseLabel} via ${orcaExecutable}`
+        : baseLabel,
       ok,
       detail: ok
         ? String(result?.stdout ?? '').trim().slice(0, 120) || 'found'
