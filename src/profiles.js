@@ -246,8 +246,9 @@ export function mergeProfiles(
 }
 
 // Reconcile explicit-null setup templates before merge. Deferred IDs never
-// remain owned. Only the exact hash-owned null placeholder written by an older
-// Axstack installer may be removed; every other live entry is preserved.
+// remain owned. An exact hash-owned entry may be removed (including a pristine
+// configured entry from another preset); every unowned or edited entry is
+// preserved.
 export function reconcileDeferredProfiles(
   existing,
   deferredProfiles,
@@ -267,7 +268,6 @@ export function reconcileDeferredProfiles(
     const idx = next.findIndex((profile) => profile?.id === id);
     if (
       idx !== -1 &&
-      next[idx]?.model === null &&
       id in owned &&
       hash(next[idx]) === owned[id]
     ) {
