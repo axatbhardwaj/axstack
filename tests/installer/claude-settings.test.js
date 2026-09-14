@@ -6,7 +6,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { installBundle } from '../../src/installer.js';
+import { installBundle, uninstallBundle } from '../../src/installer.js';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, writeFixtureBundle } from './helpers.js';
 
@@ -113,4 +113,72 @@ test('malformed settings fail before any skill or manifest write', async () => {
   expect(readFileSync(f.settingsPath, 'utf8')).toBe('{not json\n');
   expect(existsSync(join(f.skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
   expect(existsSync(join(f.skillsDir, '.axstack-manifest.json'))).toBe(false);
+});
+
+test('repeat install is idempotent and keeps one canonical owner', async () => {
+  const f = fixture();
+  const claude = { available: true, settingsPath: f.settingsPath };
+  await installBundle(installArgs(f, claude));
+  const settingsBefore = readFileSync(f.settingsPath, 'utf8');
+  const sidecarPath = join(f.root, 'claude', SIDECAR);
+  const sidecarBefore = readFileSync(sidecarPath, 'utf8');
+
+  const summary = await installBundle(installArgs(f, claude));
+
+  expect(summary.claudeSettings.status).toBe('unchanged');
+  expect(readFileSync(f.settingsPath, 'utf8')).toBe(settingsBefore);
+  expect(readFileSync(sidecarPath, 'utf8')).toBe(sidecarBefore);
+  expect(readJson(sidecarPath).keys[`env.${SETTING}`].owners).toEqual([f.skillsDir]);
+});
+
+test('a second skills root joins ownership without rewriting settings', async () => {
+  const f = fixture();
+  const secondRoot = join(f.root, 'skills-two');
+  const claude = { available: true, settingsPath: f.settingsPath };
+  await installBundle(installArgs(f, claude));
+  const before = readFileSync(f.settingsPath, 'utf8');
+
+  const summary = await installBundle({ ...installArgs(f, claude), skillsDir: secondRoot });
+
+  expect(summary.claudeSettings.status).toBe('unchanged');
+  expect(readFileSync(f.settingsPath, 'utf8')).toBe(before);
+  expect(readJson(join(f.root, 'claude', SIDECAR)).keys[`env.${SETTING}`].owners).toEqual([
+    f.skillsDir,
+    secondRoot,
+  ]);
+});
+
+test('uninstall keeps the key until the last skills-root owner leaves', async () => {
+  const f = fixture();
+  const secondRoot = join(f.root, 'skills-two');
+  const claude = { available: true, settingsPath: f.settingsPath };
+  await installBundle(installArgs(f, claude));
+  await installBundle({ ...installArgs(f, claude), skillsDir: secondRoot });
+
+  const first = await uninstallBundle({ skillsDir: f.skillsDir, claude });
+  expect(first.claudeSettings.status).toBe('retained');
+  expect(readJson(f.settingsPath).env[SETTING]).toBe('opus');
+  expect(readJson(join(f.root, 'claude', SIDECAR)).keys[`env.${SETTING}`].owners).toEqual([
+    secondRoot,
+  ]);
+
+  const last = await uninstallBundle({ skillsDir: secondRoot, claude });
+  expect(last.claudeSettings.status).toBe('removed');
+  expect(readJson(f.settingsPath).env).not.toHaveProperty(SETTING);
+  expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
+});
+
+test('a user-edited value survives last-owner uninstall and ownership is dropped', async () => {
+  const f = fixture();
+  const claude = { available: true, settingsPath: f.settingsPath };
+  await installBundle(installArgs(f, claude));
+  const edited = readJson(f.settingsPath);
+  edited.env[SETTING] = 'sonnet';
+  writeFileSync(f.settingsPath, JSON.stringify(edited, null, 2) + '\n');
+
+  const summary = await uninstallBundle({ skillsDir: f.skillsDir, claude });
+
+  expect(summary.claudeSettings).toMatchObject({ status: 'preserved', value: 'sonnet' });
+  expect(readJson(f.settingsPath).env[SETTING]).toBe('sonnet');
+  expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
 });

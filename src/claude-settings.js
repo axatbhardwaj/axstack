@@ -134,3 +134,71 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
     writes,
   };
 }
+
+export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
+  if (!claude?.available) {
+    return {
+      report: { status: 'skipped', reason: claude?.reason ?? 'Claude Code is not available' },
+      writes: [],
+    };
+  }
+  if (!claude.settingsPath) {
+    return { report: { status: 'skipped', reason: 'Claude settings path is unavailable' }, writes: [] };
+  }
+
+  const settingsPath = await safeFile(claude.settingsPath, 'settings');
+  const sidecarPath = await safeFile(join(dirname(settingsPath), CLAUDE_SIDECAR_NAME), 'settings ownership sidecar');
+  const settingsFile = await readJson(settingsPath, 'settings JSON');
+  const sidecarFile = await readJson(sidecarPath, 'settings ownership sidecar');
+  const sidecar = validateSidecar(sidecarFile.value, sidecarPath);
+  const settings = settingsFile.value ?? {};
+  if (
+    settings.env !== undefined &&
+    (typeof settings.env !== 'object' || settings.env === null || Array.isArray(settings.env))
+  ) {
+    throw new Error(`malformed Claude settings JSON at ${settingsPath}; env must be an object`);
+  }
+
+  const owned = sidecar.keys[CLAUDE_SETTING_PATH];
+  if (!owned || !owned.owners.includes(skillsRoot)) {
+    return {
+      report: { status: 'skipped', reason: 'this skills directory does not own the Claude setting' },
+      writes: [],
+    };
+  }
+
+  const remainingOwners = owned.owners.filter((owner) => owner !== skillsRoot);
+  const nextKeys = { ...sidecar.keys };
+  let report;
+  const writes = [];
+  if (remainingOwners.length > 0) {
+    nextKeys[CLAUDE_SETTING_PATH] = { ...owned, owners: remainingOwners };
+    report = { status: 'retained', path: settingsPath, owners: remainingOwners };
+  } else {
+    delete nextKeys[CLAUDE_SETTING_PATH];
+    const hasValue = Object.hasOwn(settings.env ?? {}, CLAUDE_SETTING_KEY);
+    const currentValue = settings.env?.[CLAUDE_SETTING_KEY];
+    if (hasValue && hashContent(currentValue) === owned.hash) {
+      const nextEnv = { ...settings.env };
+      delete nextEnv[CLAUDE_SETTING_KEY];
+      writes.push({
+        path: settingsPath,
+        before: settingsFile.raw,
+        after: jsonBytes({ ...settings, env: nextEnv }),
+      });
+      report = { status: 'removed', path: settingsPath };
+    } else if (hasValue) {
+      report = { status: 'preserved', value: currentValue, path: settingsPath };
+    } else {
+      report = { status: 'released', path: settingsPath };
+    }
+  }
+
+  const nextSidecar = { ...sidecar, keys: nextKeys };
+  writes.push({
+    path: sidecarPath,
+    before: sidecarFile.raw,
+    after: Object.keys(nextKeys).length === 0 ? null : jsonBytes(nextSidecar),
+  });
+  return { report, writes };
+}

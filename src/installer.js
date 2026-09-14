@@ -47,7 +47,7 @@ import {
   reconcileDeferredProfiles,
   reconcileLegacyProfiles,
 } from './profiles.js';
-import { planInstallClaudeSettings } from './claude-settings.js';
+import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
 
 export const PRESET_ALIASES = Object.freeze({
   mixed: 'mixed',
@@ -645,6 +645,7 @@ export async function uninstallBundle({
   profilePath = null,
   force = false,
   yes = false,
+  claude = null,
   log = () => {},
 } = {}) {
   if (!skillsDir) throw new Error('uninstall requires --skills-dir <dir>');
@@ -652,12 +653,19 @@ export async function uninstallBundle({
   const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
   if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
+  const claudePlan = await planUninstallClaudeSettings({ claude, skillsRoot });
+  if (claudePlan.report.path) {
+    assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
+  }
 
-  const manifest = await readManifest(skillsRoot);
+  const manifest = (await readManifest(skillsRoot)) ?? {
+    version: MANIFEST_VERSION,
+    files: {},
+    profiles: { path: null, preset: null, entries: {} },
+  };
   const summary = { removed: [], preserved: [], missing: [], profiles: null };
-  if (!manifest) {
+  if (Object.keys(manifest.files).length === 0 && Object.keys(manifest.profiles.entries).length === 0) {
     summary.note = 'no Axstack ownership manifest; nothing to remove';
-    return summary;
   }
   const ownedFiles = manifest.files ?? {};
   const boundProfilePath = manifest.profiles?.path ?? null;
@@ -756,6 +764,17 @@ export async function uninstallBundle({
   } else if (summary.profiles?.note) {
     remainingProfiles = {};
   }
+
+  for (const write of claudePlan.writes) {
+    if (write.after === null) {
+      await rm(write.path).catch((err) => {
+        if (err?.code !== 'ENOENT') throw err;
+      });
+    } else {
+      await writeAtomic(write.path, write.after, { mode: 0o600 });
+    }
+  }
+  summary.claudeSettings = claudePlan.report;
 
   if (Object.keys(remainingFiles).length === 0 && Object.keys(remainingProfiles).length === 0) {
     try {
