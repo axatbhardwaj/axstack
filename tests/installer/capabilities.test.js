@@ -8,6 +8,7 @@ import { join } from '../../src/posixpath.js';
 import {
   checkCapabilities,
   meetsFloor,
+  resolveOrcaExecutable,
   runRealCheck,
 } from '../../src/capabilities.js';
 import { BUN_BIN, makeTempRoot, runCli as runBunCli } from './helpers.js';
@@ -52,6 +53,19 @@ test('missing Orca runtime or guide capability is reported separately', async ()
   expect(report.gaps.some((g) => /orca cli guide/i.test(g))).toBe(true);
 });
 
+test('an Orca capability failure identifies the resolved executable', async () => {
+  const report = await checkCapabilities(fakeExec({
+    'orca-runtime': { ok: false, stdout: 'not connected' },
+  }), {
+    env: { ORCA_CLI_COMMAND: '/opt/orca-custom' },
+    platform: 'linux',
+  });
+  const runtime = report.checks.find((check) => check.name === 'orca-runtime');
+  expect(runtime.ok).toBe(false);
+  expect(runtime.label).toContain('/opt/orca-custom');
+  expect(report.gaps.join('\n')).toContain('/opt/orca-custom');
+});
+
 test('Orca executable resolution is deterministic and shared by every Orca probe', async () => {
   const observed = [];
   const exec = async (name, context) => {
@@ -64,6 +78,23 @@ test('Orca executable resolution is deterministic and shared by every Orca probe
   });
   expect(observed.length).toBe(4);
   expect([...new Set(observed)]).toEqual(['/opt/orca-custom']);
+});
+
+test('Orca executable resolver follows native precedence and platform branches', () => {
+  expect(resolveOrcaExecutable({
+    env: { ORCA_CLI_COMMAND: ' /custom/orca ', ORCA_DEV_REPO_ROOT: '/dev/orca' },
+    platform: 'linux',
+  })).toBe('/custom/orca');
+  expect(resolveOrcaExecutable({
+    env: { ORCA_DEV_REPO_ROOT: '/dev/orca' },
+    platform: 'linux',
+  })).toBe('orca-dev');
+  expect(resolveOrcaExecutable({ env: {}, platform: 'linux' })).toBe('orca-ide');
+  expect(resolveOrcaExecutable({
+    env: { ORCA_TERMINAL_HANDLE: 'term-fixture' },
+    platform: 'linux',
+  })).toBe('orca');
+  expect(resolveOrcaExecutable({ env: {}, platform: 'darwin' })).toBe('orca');
 });
 
 test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => {
@@ -109,7 +140,9 @@ test('CLI check succeeds with a controlled fake toolchain', () => {
       'echo "unexpected gh args: $*" >&2; exit 1\n',
   );
   chmodSync(join(fakeBin, 'gh'), 0o755);
-  const r = runCli(['check'], { env: { PATH: fakeBin } });
+  const r = runCli(['check'], {
+    env: { PATH: fakeBin, ORCA_CLI_COMMAND: join(fakeBin, 'orca') },
+  });
   expect(r.ok).toBe(true);
   expect(r.out).toContain('git version 9.9.9-fake');
   expect(r.out).toContain('1.4.199-fake');
@@ -131,6 +164,42 @@ describe('Bun runtime floor', () => {
     const result = await runRealCheck('bun');
     expect(result.ok).toBe(true);
     expect(result.stdout).toBe(`v${Bun.version}`);
+  });
+});
+
+describe('Orca response fixture coverage', () => {
+  function fixtureCli(body) {
+    const dir = makeTempRoot('axstack-orca-response-');
+    const executable = join(dir, 'orca-fixture');
+    writeFileSync(executable, `#!/bin/sh\n${body}\n`);
+    chmodSync(executable, 0o755);
+    return executable;
+  }
+
+  test('malformed and not-ready runtime JSON are rejected', async () => {
+    const malformed = await runRealCheck('orca-runtime', {
+      orcaExecutable: fixtureCli("echo 'not-json'"),
+    });
+    expect(malformed).toEqual({ ok: false, stdout: 'invalid JSON response' });
+
+    const notReady = await runRealCheck('orca-runtime', {
+      orcaExecutable: fixtureCli(
+        `echo '{"ok":true,"result":{"runtime":{"state":"starting","reachable":true,"connectionState":"connected"}}}'`,
+      ),
+    });
+    expect(notReady).toEqual({ ok: false, stdout: 'runtime is not ready and connected' });
+  });
+
+  test('wrong and empty native guide responses are rejected', async () => {
+    const wrong = await runRealCheck('orca-cli-guide', {
+      orcaExecutable: fixtureCli(`echo '{"name":"orchestration","markdown":"guide"}'`),
+    });
+    expect(wrong).toEqual({ ok: false, stdout: 'orca-cli guide unavailable' });
+
+    const empty = await runRealCheck('orca-orchestration-guide', {
+      orcaExecutable: fixtureCli(`echo '{"name":"orchestration","markdown":""}'`),
+    });
+    expect(empty).toEqual({ ok: false, stdout: 'orchestration guide unavailable' });
   });
 });
 
