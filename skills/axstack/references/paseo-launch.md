@@ -13,11 +13,16 @@ Before launch, read the run's routing snapshot. Active runs keep that recorded
 snapshot after a preset switch; only new runs use the newly selected preset.
 Never silently replace or migrate an active session.
 
-1. `list_profiles` — read the installed, user-configured live profiles; they are authoritative.
-   Bundled `profiles/presets/*.json` files contain setup defaults only and have
-   no guaranteed installed path; their runtime presence is not guaranteed.
-   Select the matching `axstack-*` role from the run's recorded routing
-   snapshot. Never override its configured model. If
+1. `list_profiles` — installed, user-configured live profiles are authoritative
+   for role values when a new run captures its snapshot and
+   for availability checks; role selection comes from the run's recorded
+   routing snapshot, never from a post-start live-profile change. Bundled
+   `profiles/presets/*.json` files contain setup defaults only and have no
+   guaranteed installed path; their runtime presence is not guaranteed.
+   Select the matching `axstack-*` role from the snapshot. A role installed or
+   changed after snapshot capture requires the user's explicit decision before
+   it can be added to that run; never adopt it silently or override the
+   snapshot's configured model. If
    `axstack-checker` is absent or unconfigured, hold
    checker dispatch while the driver checks directly or reports the gap.
 2. `list_providers` — confirm the selected profile's provider is configured.
