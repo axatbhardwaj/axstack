@@ -13,7 +13,9 @@ Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
 audit edge remains active. Load [Shared routing](../axstack/references/routing.md)
 to select the mode and scope identity, and apply the shared
-[PR-shape policy](../axstack/references/pr-shape.md).
+[PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
+load and verify the
+[candidate-publication boundary](../axstack/references/candidate-publication.md).
 
 ## Peer mode (colleague PR)
 
@@ -68,9 +70,11 @@ or recursive teams.
 
 ## Review the candidate
 
-1. **Pin the brief.** Record the PR URL, exact candidate SHA and current base,
-   applicable intent or spec/ticket identity and acceptance, exclusions,
-   authority, actual author provenance for authored mode, and all six angles.
+1. **Pin the brief.** For an owned candidate, verify remote confirmation of the
+   candidate SHA before reviewer dispatch. Record the PR URL, exact candidate
+   SHA and current base, applicable intent or spec/ticket identity and
+   acceptance, exclusions, authority, actual author provenance for authored
+   mode, and all six angles.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
    branch:

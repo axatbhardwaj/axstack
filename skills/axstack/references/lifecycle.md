@@ -32,6 +32,8 @@ covers theme/size; queue via `gh stack`.
 
 The PR owner remains accountable for candidate, fixes, evidence, and monitoring;
 peer code stays read-only. Missing or idle sessions never transfer ownership.
+Owned implementation enters review through the revision-bound
+[candidate-publication boundary](candidate-publication.md).
 
 ## Native handoff and resume
 

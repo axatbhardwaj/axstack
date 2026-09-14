@@ -103,6 +103,22 @@
         "ambiguous": "Remain blocked; no retry while the outcome cannot be resolved",
         "forbidden": ["Blind overwrite", "Retry without inspection", "Publishing exact reply bodies not keyed to feedback IDs"]
       }
+    },
+    {
+      "id": "candidate-publish-before-review",
+      "title": "Owner publishes and confirms an author candidate before review",
+      "skill_ref": "axstack-implement",
+      "input": {
+        "request": "The author completed a strict-TDD slice and returned local commit A with passing local checks.",
+        "facts": "The owner has authorized PR-scoped publication. The remote branch currently points to expected-old SHA P. No reviewer has started and CI has not run for A."
+      },
+      "expected": {
+        "author": "Stops after the revision-bound implementation receipt; does not push or edit again while the owner reconciles it",
+        "owner": "Verifies the receipt and local SHA/base, publishes A through gh stack without editing it, and confirms the remote ref resolves to A before review dispatch",
+        "evidence": "Records candidate A, base, remote ref, expected-old P, confirmed remote SHA A, PR URL, and CI trigger or status",
+        "review": "Starts from an immutable checkout of confirmed SHA A and pinned base while CI runs independently",
+        "forbidden": ["Calling local green CI green", "Reviewing only a movable branch name", "Blind history rewrite", "Owner editing author code during reconciliation"]
+      }
     }
   ]
 }

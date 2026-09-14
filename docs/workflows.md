@@ -104,7 +104,10 @@ session and evidence remain valid.
   Markdown is explicit fallback. Only the driver mutates lifecycle state.
 - `axstack-implement` uses strict behavioral RED, GREEN, then refactor. The
   narrow accepted structure-preserving route uses old-green and the same check
-  new-green. One author writes; receipts bind exact base and revision.
+  new-green. One author writes and returns a local receipt without pushing. The
+  owner reconciles it, publishes the unchanged commits through `gh stack`, and
+  confirms the remote SHA before review. Local green and CI green remain
+  separate evidence.
 - `axstack-review` gives peer PRs two isolated same-brief reviewers and authored
   PRs one eligible cross-family/preset-mapped reviewer. All cover security,
   correctness, integration, requirements, design, and simplicity. Report-only

@@ -20,6 +20,7 @@ edge into the lifecycle (including its audit hook), then apply shared routing:
 - [Lifecycle and receipts](../axstack/references/lifecycle.md)
 - [Shared routing](../axstack/references/routing.md)
 - [PR-shape policy](../axstack/references/pr-shape.md)
+- [Candidate publication](../axstack/references/candidate-publication.md)
 
 Independently confirm the applicable
 [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):
@@ -149,8 +150,11 @@ TDD: <normal red/green | structure-preserving old-green/same-check-new-green evi
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
 Unverified: <boundaries + reasons>
-Next: <owner routes exact revision to axstack-review>
+Next: <owner reconciles receipt, uses gh stack to push exact revision, confirms
+remote readback, then routes it to axstack-review>
 ```
 
-The implementation phase ends with that revision-bound receipt. It grants no
-merge authority; the human merges by default.
+The author stops at that receipt and does not push. The owner follows the
+candidate-publication boundary without editing the candidate, and review starts
+only after remote readback confirms the exact revision. This grants no merge
+authority; the human merges by default.
