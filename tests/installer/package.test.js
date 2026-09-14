@@ -5,14 +5,10 @@
 // with node/npm absent from PATH.
 //
 // Source inventory is discovered dynamically: expectations derive from the
-// extracted package (every skill asset byte-checked, every profile id
-// checked), never from hardcoded fixture names. On the installer branch the
-// source skills/profiles trees are absent, so the extracted bundle is
-// augmented with a temporary fixture bundle (labeled as such) to exercise
-// the full cycle — but only when BOTH trees are absent; a partially missing
-// tree fails loudly instead of silently falling back. A combined-like
-// fixture package (multiple named skills, multiple profiles, README,
-// LICENSE) proves the dynamic discovery end to end on this branch.
+// extracted package (every skill asset byte-checked, every role id checked),
+// never from hardcoded fixture names. The real packed-package cycle consumes
+// its shipped assets without mutation. A separately labeled combined-like
+// fixture package proves dynamic discovery independent of production assets.
 import { expect, test } from 'bun:test';
 import {
   existsSync,
@@ -141,29 +137,6 @@ function ensureBundleAssets(pkgDir, label) {
   return { augmented: true };
 }
 
-// The workflow author owns production role assets. On this isolated installer
-// branch, exercise the packed CLI with temporary final-schema presets without
-// rewriting those shipped files.
-function installFixturePresets(pkgDir) {
-  const fixtureRoot = makeTempRoot('axstack-packed-role-fixture-');
-  const role = (provider) => [{
-    id: 'axstack-driver', name: 'Driver', provider, model: `${provider}-model`,
-  }];
-  const fixture = writeFixtureBundle(fixtureRoot, {
-    presets: {
-      mixed: role('codex'),
-      'codex-only': role('codex'),
-      'claude-only': role('claude'),
-    },
-  });
-  for (const file of walkFiles(join(fixture, 'profiles'))) {
-    const rel = file.slice(fixture.length + 1);
-    const dest = join(pkgDir, rel);
-    mkdirSync(dest.split('/').slice(0, -1).join('/'), { recursive: true });
-    writeFileSync(dest, readFileSync(file));
-  }
-}
-
 function fullCycle(pkgDir, neutral, label, preset) {
   const env = bunOnlyEnv(neutral);
   const cli = join(pkgDir, 'bin', 'axstack.js');
@@ -175,11 +148,11 @@ function fullCycle(pkgDir, neutral, label, preset) {
   const rels = skillAssets(pkgDir);
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
-  const bundledRoles = roleRecords(pkgDir, preset);
-  expect(bundledRoles.length).toBeGreaterThan(0);
 
   const installed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(installed.ok).toBe(true);
+  const bundledRoles = roleRecords(pkgDir, preset);
+  expect(bundledRoles.length).toBeGreaterThan(0);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(readFileSync(join(pkgDir, 'skills', rel), 'utf8'));
   }
@@ -250,7 +223,6 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
 
   expect(statSync(join(pkgDir, 'bin', 'axstack.js')).mode & 0o111).not.toBe(0);
   ensureBundleAssets(pkgDir, 'root-package');
-  installFixturePresets(pkgDir);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     fullCycle(pkgDir, neutral, `root-${preset}`, preset);
   }
