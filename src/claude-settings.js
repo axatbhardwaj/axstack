@@ -145,18 +145,24 @@ export async function planInstallClaudeSettings({ claude, skillsRoot }) {
   };
 }
 
-export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
-  if (!claude?.available) {
+export async function planUninstallClaudeSettings({ claude, skillsRoot, boundPath = null }) {
+  if (!boundPath && !claude?.available) {
     return {
       report: { status: 'skipped', reason: claude?.reason ?? 'Claude Code is not available' },
       writes: [],
     };
   }
-  if (!claude.settingsPath) {
+  const requestedPath = claude?.settingsPath ?? boundPath;
+  if (!requestedPath) {
     return { report: { status: 'skipped', reason: 'Claude settings path is unavailable' }, writes: [] };
   }
 
-  const settingsPath = await safeFile(claude.settingsPath, 'settings');
+  const settingsPath = await safeFile(requestedPath, 'settings');
+  if (boundPath && settingsPath !== boundPath) {
+    throw new Error(
+      `Claude settings ownership is bound to ${boundPath}; refusing target ${settingsPath}`,
+    );
+  }
   const sidecarPath = await safeFile(join(dirname(settingsPath), CLAUDE_SIDECAR_NAME), 'settings ownership sidecar');
   const settingsFile = await readJson(settingsPath, 'settings JSON');
   const sidecarFile = await readJson(sidecarPath, 'settings ownership sidecar');
@@ -174,6 +180,8 @@ export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
     return {
       report: { status: 'skipped', reason: 'this skills directory does not own the Claude setting' },
       writes: [],
+      settingsPath,
+      unbind: Boolean(boundPath),
     };
   }
 
@@ -210,5 +218,5 @@ export async function planUninstallClaudeSettings({ claude, skillsRoot }) {
     before: sidecarFile.raw,
     after: Object.keys(nextKeys).length === 0 ? null : jsonBytes(nextSidecar),
   });
-  return { report, writes, settingsPath };
+  return { report, writes, settingsPath, unbind: Boolean(boundPath) };
 }

@@ -667,10 +667,6 @@ export async function uninstallBundle({
   const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
   if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
-  const claudePlan = await planUninstallClaudeSettings({ claude, skillsRoot });
-  if (claudePlan.report.path) {
-    assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
-  }
 
   const manifest = (await readManifest(skillsRoot)) ?? {
     version: MANIFEST_VERSION,
@@ -679,15 +675,15 @@ export async function uninstallBundle({
     claudeSettings: { path: null },
   };
   const boundClaudeSettingsPath = manifest.claudeSettings?.path ?? null;
-  if (
-    claudePlan.settingsPath && boundClaudeSettingsPath &&
-    claudePlan.settingsPath !== boundClaudeSettingsPath
-  ) {
-    throw new Error(
-      `Claude settings ownership is bound to ${boundClaudeSettingsPath}; ` +
-        `refusing target ${claudePlan.settingsPath}`,
-    );
+  const claudePlan = await planUninstallClaudeSettings({
+    claude,
+    skillsRoot,
+    boundPath: boundClaudeSettingsPath,
+  });
+  if (claudePlan.report.path) {
+    assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
   }
+  const remainingClaudeSettingsPath = claudePlan.unbind ? null : boundClaudeSettingsPath;
   const summary = { removed: [], preserved: [], missing: [], profiles: null };
   if (Object.keys(manifest.files).length === 0 && Object.keys(manifest.profiles.entries).length === 0) {
     summary.note = 'no Axstack ownership manifest; nothing to remove';
@@ -801,7 +797,11 @@ export async function uninstallBundle({
   }
   summary.claudeSettings = claudePlan.report;
 
-  if (Object.keys(remainingFiles).length === 0 && Object.keys(remainingProfiles).length === 0) {
+  if (
+    Object.keys(remainingFiles).length === 0 &&
+    Object.keys(remainingProfiles).length === 0 &&
+    remainingClaudeSettingsPath === null
+  ) {
     try {
       await rm(join(skillsRoot, '.axstack-manifest.json'));
     } catch {
@@ -813,7 +813,7 @@ export async function uninstallBundle({
       version: MANIFEST_VERSION,
       files: remainingFiles,
       profiles: { path: remainingBoundPath, preset: installedPreset, entries: remainingProfiles },
-      claudeSettings: { path: boundClaudeSettingsPath },
+      claudeSettings: { path: remainingClaudeSettingsPath },
     });
   }
   return summary;

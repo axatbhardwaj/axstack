@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   statSync,
   symlinkSync,
   writeFileSync,
@@ -204,6 +205,34 @@ test('uninstall keeps the key until the last skills-root owner leaves', async ()
   const last = await uninstallBundle({ skillsDir: secondRoot, claude });
   expect(last.claudeSettings.status).toBe('removed');
   expect(readJson(f.settingsPath).env).not.toHaveProperty(SETTING);
+  expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
+});
+
+test('uninstall uses saved ownership after the Claude CLI becomes unavailable', async () => {
+  const f = fixture();
+  await installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath }));
+
+  const summary = await uninstallBundle({
+    skillsDir: f.skillsDir,
+    claude: { available: false, settingsPath: null },
+  });
+
+  expect(summary.claudeSettings.status).toBe('removed');
+  expect(readJson(f.settingsPath).env).not.toHaveProperty(SETTING);
+  expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
+});
+
+test('missing bound settings release saved ownership without requiring Claude', async () => {
+  const f = fixture();
+  await installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath }));
+  rmSync(f.settingsPath);
+
+  const summary = await uninstallBundle({
+    skillsDir: f.skillsDir,
+    claude: { available: false, settingsPath: null },
+  });
+
+  expect(summary.claudeSettings.status).toBe('released');
   expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
 });
 
