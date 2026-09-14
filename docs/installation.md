@@ -24,7 +24,7 @@ default plus `--yes`, see below).
 ### `axstack install`
 
 ```
-axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--profile <file>] [--harness <name>] [--force] [--yes]
+axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
 ```
 
 - `--bundle <dir>`: bundle root holding `skills/axstack-*/SKILL.md`
@@ -43,6 +43,12 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
   and top-level keys keep their values. (The file is reserialized as JSON,
   so formatting may change but no values are altered.) Newly created config
   files are mode `0600`; existing files keep their permissions.
+- `--claude-settings <file>`: use this Claude Code user-settings file and
+  treat Claude as available. This is primarily a deterministic setup/test
+  override. Without it, availability is detected with `Bun.which("claude")`
+  and the path is `$CLAUDE_CONFIG_DIR/settings.json` when set, otherwise
+  `~/.claude/settings.json`.
+- `--no-claude-settings`: skip Claude Code user-settings management.
 - `--harness <name>`: `claude`, `codex`, `opencode`, or `grok`. Grok has no
   verified auto-discovery, so `--harness grok` is rejected: pass an explicit
   `--skills-dir` override instead.
@@ -105,7 +111,8 @@ Behavior:
 - Uninstall reads, parses, and plans the profile change before deleting any
   skill file, so a malformed profile fails with skills still on disk.
 - Partial failures restore overwritten files (skills and profile) from
-  backups, remove files created in that run, and leave the manifest
+  backups, restore or remove Claude settings and sidecar writes, remove files
+  created in that run, and leave the manifest
   untouched, so the pre-run state holds again and a retry converges
   (deleted-then-retried entries reconcile as `missing`). If a restore step
   itself fails, the error says rollback is incomplete and names what needs
@@ -131,7 +138,7 @@ preflight for Linear access.
 ### `axstack uninstall`
 
 ```
-axstack uninstall --skills-dir <dir> [--profile <file>] [--force] [--yes]
+axstack uninstall --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
 ```
 
 Removes only unchanged Axstack-owned assets (hash match against the
@@ -140,6 +147,51 @@ may remove an edited owned skill file, but later profile edits remain
 preserved. Directories are pruned only when left empty, and the target root
 itself is never removed. With no manifest, uninstall reports that there is
 nothing to remove instead of guessing.
+
+## Claude Code subagent default
+
+When the `claude` binary is available, every routing preset—including
+`codex-only`—may install the Claude Code user setting
+`env.CLAUDE_CODE_SUBAGENT_MODEL = "opus"`. This is a default for native Claude
+Code subagents when another source does not choose their model. It does not
+change the main conversation model, replace Paseo's explicit role models, or
+cause a Codex-only preset to launch Claude roles. Axstack deliberately never
+sets `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`: built-in agents and explicitly chosen
+models can still behave differently. See Claude's documentation for
+[subagent model selection](https://code.claude.com/docs/en/sub-agents#choose-a-model)
+and [settings scopes](https://code.claude.com/docs/en/settings).
+
+Axstack merges only that one `env` key and preserves every unrelated settings
+and environment value. A pre-existing value is preserved and never adopted,
+even when it already equals `"opus"`. Missing Claude, `--no-claude-settings`,
+and a default settings path inside `HOME` without `--yes` are reported skips;
+Axstack never installs Claude. New settings and ownership files use mode
+`0600`; existing modes are preserved. Malformed JSON, symlinked targets, and a
+settings path that conflicts with saved ownership fail before mutation.
+
+Ownership is per key and shared across skill installations. The sidecar
+`<settings-dir>/.axstack-settings.json` records the canonical settings path,
+the hash Axstack wrote, and canonical skill-root owners. Each skill root's
+`.axstack-manifest.json` binds the same settings path. A later install from a
+different root joins ownership without rewriting the setting. Uninstall drops
+that root and removes the key only when the last owner leaves and the value is
+unchanged; a user edit survives. Uninstall uses the saved path even if the
+Claude binary has since disappeared. An explicit uninstall
+`--claude-settings` must resolve to that same bound path.
+
+For the four common skill targets, run the same explicit preset install for
+each root (and confirm home writes):
+
+```sh
+for skills in ~/.agents/skills ~/.codex/skills ~/.claude/skills ~/.config/opencode/skills; do
+  axstack install --preset mixed --skills-dir "$skills" --profile ~/.paseo/config.json --yes
+done
+```
+
+Reports distinguish `set`, `unchanged (owned)`, preserved existing overrides,
+and skips. Static installation is not proof that a running Claude process
+reloaded settings, that a particular subagent accepts the model, or that the
+model is available. It also provides no usage or savings evidence.
 
 ## Harness skill locations
 
