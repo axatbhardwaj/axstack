@@ -75,3 +75,24 @@ test('a user-edited role snapshot survives switching, fails readiness, and survi
   expect(snapshot(f).roles.find((role) => role.id === 'axstack-reviewer-secondary').model)
     .toBe('USER_EDIT');
 });
+
+test('an edited role snapshot missing selected bundle roles is preserved and reports every gap', () => {
+  const f = fixture();
+  install(f, 'mixed');
+  const installed = snapshot(f);
+  installed.roles = [installed.roles.find((role) => role.id === 'axstack-checker')];
+  const editedBytes = JSON.stringify(installed, null, 2) + '\n';
+  writeFileSync(rolePath(f), editedBytes);
+
+  const repeated = install(f, 'mixed', { expectFail: true });
+
+  expect(readFileSync(rolePath(f), 'utf8')).toBe(editedBytes);
+  expect(repeated.out).toMatch(/preset mixed: NOT ready/i);
+  for (const missingId of [
+    'axstack-author',
+    'axstack-reviewer-primary',
+    'axstack-reviewer-secondary',
+  ]) {
+    expect(repeated.out).toContain(missingId);
+  }
+});
