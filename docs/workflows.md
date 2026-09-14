@@ -82,6 +82,29 @@ fallback, quota routing, or subscription inference. Structural checks validate
 assets and prompt text; structural checks are not evidence of agent behavior,
 provider compatibility, or live execution.
 
+### Active tracking
+
+Each active execution run has one driver-owned native Paseo heartbeat, created
+at execution start with the default `*/10 * * * *` cadence. Its actual ID,
+first-tick handshake, and fixed deadline stay in the run record. Heartbeat ticks
+and completion notifications both trigger reconciliation; ready work advances
+only after actual session state, Git SHAs, receipts, authority, and dependencies
+agree. Pause, completion, or the existing 24-hour deadline stops the heartbeat.
+
+Resume reconciles native tool receipts and schedule readback before creating a
+timer. Paseo CLI `schedule inspect/ls` excludes heartbeats, so an empty CLI
+listing does not prove absence. Native readback such as `scheduleList` can prove
+timer identity and show `lastRunAt` and expiry, but those facts have distinct
+limits: timer existence is not a tick, a tick is not prompt delivery, and
+delivery is not work advancement. Advancement requires a verified run-record
+transition with SHAs and receipts.
+
+The scenario fixture and structural tests exercise declared policy only; an
+independent scenario evaluation is evidence about evaluated prompt behavior,
+not live timers. Live heartbeat creation, prompt delivery, and advancement each
+require their own native receipts. Tracking adds no scheduler, merge, release,
+or scope authority, and PR monitor/watchdog roles remain separate.
+
 ## Phase skills
 
 Progressive loading: invoke only the phase needed. Each phase loads standing contracts and their lifecycle/audit path.
