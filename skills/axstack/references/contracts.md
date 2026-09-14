@@ -65,7 +65,9 @@ author and reviewer roles selected by review mode and the routing snapshot. The
 existing mixed high-stakes route keeps its Opus high author and Sol high
 checkpoint reviewer. An eligible current non-author, non-owner Sol high
 checkpoint can satisfy the authored final review after revalidation; preserve
-its effort and do not add a redundant reviewer. There is no silent fallback.
+its effort and do not add a redundant reviewer. No single-provider high-stakes
+mapping is defined: pause for an explicit user decision rather than borrowing
+another preset or inventing a route. There is no silent fallback.
 
 ## Serious risk
 

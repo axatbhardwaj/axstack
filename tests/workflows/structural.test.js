@@ -360,6 +360,7 @@ test('structural: contracts carry dual-adviser consultation and driver effort tr
   expect(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE').toBeTruthy();
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
+  expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
   expect(/requested[^.]*effective[^.]*effort/i.test(text)).toBeTruthy();
   expect(/Align[^.]*Spec[^.]*unresolved consequential decisions[^.]*high/i.test(text)).toBeTruthy();
   expect(/return[^.]*medium/i.test(text)).toBeTruthy();
