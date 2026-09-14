@@ -51,8 +51,9 @@ Never silently replace or migrate an active session.
 7. Verify the returned agent/workspace IDs, role, provider, and model. Persist
    that session receipt in the run record. If creation is ambiguous, mark the
    receipt pending and reconcile actual runtime state before any retry.
-8. Use notifications to wake the driver; waiting never keeps a model reasoning
-   continuously.
+8. Use completion notifications to wake the driver; reconcile them through
+   [lifecycle execution tracking](lifecycle.md#execution-tracking). Waiting
+   never keeps a model reasoning continuously.
 
 Dispatch is complete only when the requested live profile has produced one
 verified, persisted ownership receipt or an exact setup/availability gap has

@@ -6,7 +6,7 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // Fixture-shape checks validate evaluation inputs, not agent behavior.
-test('tracking scenarios: twelve before and after decisions have explicit boundaries', () => {
+test('tracking scenarios: thirteen before and after decisions have explicit boundaries', () => {
   const data = JSON.parse(read('tests/workflows/tracking-scenarios.json'));
   expect(data.version).toBe(1);
   expect(data.cases.map(({ id }) => id)).toEqual([
@@ -14,6 +14,7 @@ test('tracking scenarios: twelve before and after decisions have explicit bounda
     'reviewed-task-awaiting-advancement',
     'duplicate-event',
     'uncertain-heartbeat-create',
+    'cli-listing-not-proof-of-absence',
     'restart-reconcile-existing-heartbeat',
     'stall-detection',
     'pause-stops-heartbeat',
@@ -52,6 +53,17 @@ test('tracking structure: lifecycle reconciles events and heartbeat uncertainty'
   expect(lifecycle).toMatch(/ambiguous[^.]*creat[^.]*block[^.]*duplicate/i);
   expect(lifecycle).toMatch(/healthy unchanged ticks?[^.]*no user-facing update/i);
   expect(lifecycle).toMatch(/duplicate events?[^.]*deduplicat|deduplicat[^.]*duplicate events?/i);
+});
+
+test('tracking structure: native readback separates timer evidence classes', () => {
+  const lifecycle = compact('skills/axstack/references/lifecycle.md');
+  expect(lifecycle).toMatch(/native tool receipts?[^.]*readback|readback[^.]*native tool receipts?/i);
+  expect(lifecycle).toMatch(/scheduleList[^.]*heartbeat ID[^.]*lastRunAt[^.]*expir/i);
+  expect(lifecycle).toMatch(/schedule inspect\/ls[^.]*excludes? heartbeats/i);
+  expect(lifecycle).toMatch(/empty CLI listing[^.]*not[^.]*evidence[^.]*heartbeat[^.]*absent/i);
+  expect(lifecycle).toMatch(/existence[^.]*tick[^.]*delivery[^.]*advancement/i);
+  expect(lifecycle).toMatch(/lastRunAt[^.]*timer fired[^.]*not[^.]*prompt[^.]*delivered[^.]*work[^.]*advanced/i);
+  expect(lifecycle).toMatch(/advancement evidence[^.]*run-record transition[^.]*SHAs[^.]*receipts/i);
 });
 
 test('tracking structure: timer receipt and stop boundaries are durable', () => {

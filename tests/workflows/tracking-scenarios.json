@@ -23,6 +23,11 @@
       "expected": { "after": "Heartbeat creation remains pending and duplicate creation is blocked until actual runtime state is reconciled.", "actions": ["record the unresolved creation receipt", "reconcile native heartbeat state before retrying"], "forbidden": ["call create_heartbeat again while state is ambiguous", "claim tracking is enabled", "invent a heartbeat ID"] }
     },
     {
+      "id": "cli-listing-not-proof-of-absence",
+      "input": { "before": "Heartbeat creation returned H4, but Paseo CLI schedule inspect/ls is empty because CLI listings exclude heartbeats.", "event": "A restart reconciles execution tracking before any create_heartbeat retry." },
+      "expected": { "after": "Native tool receipts and daemon schedule readback such as scheduleList determine whether H4 exists and its health.", "actions": ["read back heartbeat ID, lastRunAt, and expiry through native state", "distinguish timer existence, tick, prompt delivery, and advancement evidence", "verify advancement from run-record transitions with SHAs and receipts"], "forbidden": ["treat an empty CLI listing as proof the heartbeat is absent", "create a duplicate heartbeat because schedule inspect/ls is empty", "treat lastRunAt as proof of prompt delivery or work advancement"] }
+    },
+    {
       "id": "restart-reconcile-existing-heartbeat",
       "input": { "before": "A resumed active run records heartbeat H1, its first-tick handshake, and a remaining deadline.", "event": "The driver restarts and resumes execution." },
       "expected": { "after": "H1 is reconciled and retained when actual timer state agrees; no second heartbeat is created.", "actions": ["reconcile the recorded heartbeat before creation", "reuse H1 and its remaining deadline", "repair only stale receipt details from verified state"], "forbidden": ["create a replacement before reconciliation", "silently extend the deadline", "run two execution heartbeats"] }

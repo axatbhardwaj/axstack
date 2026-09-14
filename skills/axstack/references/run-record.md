@@ -95,7 +95,7 @@ Notification policy: <none | transport/mode/host/instructions path>
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>
 Evidence: <check/review/submission/audit receipt pointers>
-Pending: <launch/acceptance/external receipt pointers + timer expiries>
+Pending: <launch/acceptance/external receipts + timer execution heartbeat actual ID + handshake + deadline>
 Unresolved: <decision -> next owner + next action>
 Resume: <commands or evidence refs bound to exact revisions>
 
@@ -103,6 +103,6 @@ Resume: <commands or evidence refs bound to exact revisions>
 | --- | --- | --- | --- | --- | --- |
 | <task> | <task IDs or none> | <role + session ID + worktree, or receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
 
-Status: <active/held/complete/Archived>
+Status: <active/paused/held/complete/Archived>
 Updated: <UTC timestamp>
 ```

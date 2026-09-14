@@ -43,6 +43,15 @@ Linear issue state, and watch registrations. Reuse the existing owner and
 author when valid. Ambiguous launch state is a hold on creating another writer,
 not evidence that the old writer disappeared.
 
+At execution start, the driver creates one driver-owned native Paseo heartbeat
+per active execution run with `create_heartbeat`, default cron
+`*/10 * * * *` (every 10 minutes), and expiry at the run's remaining deadline.
+Persist its actual ID, first-tick handshake, and deadline in the run record's
+`Pending:` timer entry. On resume, follow lifecycle execution tracking: reconcile
+an existing heartbeat before creating one. An ambiguous creation stays pending
+and blocks duplicate creation until actual timer state is known. A missing
+timer capability is an explicit tracking gap, never evidence tracking is enabled.
+
 Immediately before an actual role dispatch, read and follow the
 [Paseo launch sequence](../axstack/references/paseo-launch.md). Ordinary local
 reading and writing does not require that launch reference.
