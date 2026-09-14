@@ -226,6 +226,7 @@ export function mergeProfiles(
     added: [],
     updated: [],
     preserved: [],
+    unchanged: [],
   };
   const current = report.created
     ? []
@@ -238,7 +239,9 @@ export function mergeProfiles(
       next.push(clone(wanted));
       report.added.push(wanted.id);
     } else if (profileEqual(next[idx], wanted)) {
-      // already installed and untouched: nothing to do
+      // Byte equality never grants ownership. Surface unowned matches so an
+      // operator can distinguish them from profiles this installer owns.
+      if (!(wanted.id in owned)) report.unchanged.push(wanted.id);
     } else if (force || (wanted.id in owned && hash(next[idx]) === owned[wanted.id])) {
       // Pristine owned profiles follow bundle upgrades without --force;
       // --force additionally overwrites genuine user edits.

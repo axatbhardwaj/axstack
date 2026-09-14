@@ -88,7 +88,8 @@ Behavior:
   report. Preserved entries keep their prior install hashes; only actually
   created or updated entries gain manifest records. Pre-existing unrelated
   files — even byte-identical ones — are never adopted as owned, so a later
-  uninstall cannot remove them.
+  uninstall cannot remove them. Byte-identical profile matches are reported as
+  `profiles unchanged (pre-existing, not adopted)`.
 - Owned profile hashes are bound to the canonical config file they were
   installed into. Running install or uninstall with a different `--profile`
   is refused before any file mutation: identical bytes in an unrelated file

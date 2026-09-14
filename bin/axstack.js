@@ -205,6 +205,9 @@ async function main() {
         if (p.preserved?.length) {
           console.log(`profiles preserved (user edits kept): ${p.preserved.join(', ')}`);
         }
+        if (p.unchanged?.length) {
+          console.log(`profiles unchanged (pre-existing, not adopted): ${p.unchanged.join(', ')}`);
+        }
         if (p.deferred?.length) {
           console.log(
             `profiles deferred until setup selects a model: ${p.deferred.join(', ')}`,
