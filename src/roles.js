@@ -107,7 +107,7 @@ export function installedRoleBytes(preset, roles) {
   return Buffer.from(JSON.stringify({ version: 1, preset, roles }, null, 2) + '\n');
 }
 
-export function assessInstalledRoleSnapshot(bytes, expectedPreset) {
+export function assessInstalledRoleSnapshot(bytes, expectedPreset, expectedRoles) {
   let snapshot;
   try {
     snapshot = JSON.parse(bytes.toString());
@@ -121,7 +121,19 @@ export function assessInstalledRoleSnapshot(bytes, expectedPreset) {
     };
   }
   try {
-    return assessRoleReadiness(snapshot.roles, expectedPreset);
+    assertBundleRoles(expectedRoles);
+    const readiness = assessRoleReadiness(snapshot.roles, expectedPreset);
+    const installedIds = new Set(snapshot.roles.map((role) => role.id));
+    const expectedIds = new Set(expectedRoles.map((role) => role.id));
+    const gaps = [];
+    for (const role of expectedRoles) {
+      if (!installedIds.has(role.id)) gaps.push(`missing selected bundle role: ${role.id}`);
+    }
+    for (const role of snapshot.roles) {
+      if (!expectedIds.has(role.id)) gaps.push(`unexpected installed role: ${role.id}`);
+    }
+    gaps.push(...readiness.gaps);
+    return { ready: gaps.length === 0, gaps };
   } catch (error) {
     return { ready: false, gaps: [error.message] };
   }

@@ -482,6 +482,7 @@ export async function installBundle({
       ? assessInstalledRoleSnapshot(
         await readFile(join(skillsRoot, 'axstack', 'roles.json')),
         selectedPreset,
+        bundle.bundleRoles,
       )
       : null;
 
