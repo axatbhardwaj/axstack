@@ -38,9 +38,9 @@ immediately before an actual profile dispatch.
 
 1. For a simple request, answer concisely in the current chat. Use a compact
    diagram when useful. This needs no mandatory agent or intermediate artifact.
-2. For a complex visual, use the existing live `axstack-explainer` profile
-   (Sonnet xhigh) to create self-contained HTML, or use the requested artifact
-   format. An explicit user theme wins; otherwise use the dark default.
+2. For a complex visual, use the configured `axstack-explainer` role to create
+   self-contained HTML, or use the requested artifact format. An explicit user
+   theme wins; otherwise use the dark default.
 3. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
@@ -50,9 +50,12 @@ immediately before an actual profile dispatch.
 1. Any HTML explanation requires the full [visual QA
    checklist](references/visual-qa.md): actual desktop and mobile rendering,
    interaction, accessibility, and reduced-motion checks where relevant.
-2. Use independent `axstack-explainer-review` (Luna max) when warranted, bound
-   to the exact artifact identity. Any byte change invalidates that review and
-   requires a fresh check.
+2. Use the configured independent `axstack-explainer-review` role when
+   warranted, bound to the exact artifact identity. Any byte change invalidates
+   that review and requires a fresh check. In `claude-only`, separate Sonnet
+   author xhigh and reviewer high sessions are allowed for explanations as
+   session independence only. This exception never permits same-model code
+   review or a cross-provider-independence claim.
 3. Report source, tests, rendered observations, independent review, and
    publication as separate evidence. Name every missing or unavailable check.
 4. For a public artifact, remove private paths, identifiers, prompts,

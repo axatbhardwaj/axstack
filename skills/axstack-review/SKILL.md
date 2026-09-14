@@ -1,6 +1,6 @@
 ---
 name: axstack-review
-description: When a candidate PR needs final review, use axstack-review for peer Sol plus Opus or one authored cross-family reviewer.
+description: When a candidate PR needs final review, use axstack-review for configured peer or authored review.
 ---
 
 # Review
@@ -40,7 +40,7 @@ before an approval or merge-ready declaration:
 - Small new work: confirm the snapshotted **small-change intent**.
 - Adopted existing PR: record its accepted maintenance scope once — linked
   issue, acceptance criteria, actual head/base, current ownership, and actual
-  author provenance. Never assume an imported own PR was Sol-authored. That
+  author provenance. Never assume an imported own PR's author. That
   snapshot is accepted without repeated approval.
 
 The mode is ready when the applicable identity matches the candidate and no
@@ -50,11 +50,12 @@ while an identity gap holds declarations.
 Resolve actual author provenance from authoring session receipts and candidate
 history. The orchestrator model, provider, profile, or owner name is not author
 evidence. The PR owner session may not independently review in either mode, and
-no author session may review its own candidate. The default Opus owner therefore
-needs a separate Opus reviewer for a Sol-authored PR. When unknown or mixed
-provenance cannot establish the required cross-model family, report the exact
-author-provenance gap, mark review `INCOMPLETE`, and ask the user. Never assume
-Sol or invent a family or model fallback.
+no author session may review its own candidate. Use the run's recorded routing
+snapshot to select an eligible reviewer from actual author provenance. When
+unknown, mixed, or unsupported provenance cannot establish an approved pairing,
+report the exact author-provenance gap, mark review `INCOMPLETE`, and ask the
+user. Never assume an author or invent a reverse pairing, provider, model, or
+fallback.
 
 ## Standalone owner
 
@@ -73,13 +74,23 @@ or recursive teams.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Paseo launch](../axstack/references/paseo-launch.md), then apply exactly one
    branch:
-   - **Peer:** exactly two independent final reviewers, Sol medium and Opus
-     medium. Send both the identical six-angle brief with no first-pass
-     cross-read: neither reads the other's initial findings or creates children.
-   - **Authored:** exactly one independent reviewer from a different model
-     family than the actual author. Sol author -> Opus medium; Opus author ->
-     Sol medium. The reviewer covers the complete brief alone. No author
-     session may review, even if its role or provider label changes.
+   - **Peer:** exactly two independent final reviewers,
+     `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
+     from the routing snapshot. Send both the identical six-angle brief with no
+     first-pass cross-read: neither reads the other's initial findings or
+     creates children.
+   - **Authored:** exactly one eligible independent reviewer. If actual author
+     provenance matches the configured primary reviewer's model, use
+     `axstack-reviewer-secondary`; if it matches the secondary reviewer's model,
+     use `axstack-reviewer-primary`. The reviewer covers the complete brief
+     alone. No author or owner session may review, even if its role or provider
+     label changes.
+
+   Mixed preset review is cross-provider. Single-provider review uses the
+   configured different models and is not cross-provider independence. The
+   claude-only Sonnet explanation author/reviewer exception is session
+   independence only: separate `axstack-explainer` at xhigh and
+   `axstack-explainer-review` at high. It never permits same-model code review.
 
    For the existing high-stakes Opus high author / Sol high checkpoint route,
    an eligible current non-author, non-owner checkpoint can satisfy the authored
@@ -151,9 +162,10 @@ or recursive teams.
 
 ## Mode-specific completeness before verdict
 
-- **Peer complete:** both Sol and Opus have current, verified receipts for the
-  exact candidate SHA and current base, each covering the identical brief.
-- **Authored complete:** the one required cross-family non-author reviewer has
+- **Peer complete:** both configured reviewer roles have current, verified
+  receipts for the exact candidate SHA and current base, each covering the
+  identical brief.
+- **Authored complete:** the one required eligible non-author/non-owner reviewer has
   a current verified receipt for the exact candidate SHA and current base,
   covering the whole brief, all six angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
@@ -179,7 +191,7 @@ Angles: <all six; identical brief for peer reviewers>
 
 ```text
 Mode: <peer | authored>
-Reviewer: <Sol | Opus> session <id> rev <candidate sha> base <current base>
+Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <candidate sha> base <current base>
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
@@ -212,7 +224,7 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
 - Peer mode requires both current reviews and no unresolved material finding
   beyond the validated defects reported by `REQUEST_CHANGES`.
-- Authored mode requires its one current cross-family review and applicable
+- Authored mode requires its one current eligible configured review and applicable
   scope identity to remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.
