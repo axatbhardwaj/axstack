@@ -241,9 +241,10 @@ async function main() {
       printCheckReport(report);
       if (flags.bundle) {
         const bundle = await validateBundle(resolve(flags.bundle));
+        const presetNames = Object.keys(bundle.presets);
         console.log(
           `bundle ok: ${bundle.files.length} skill files, ` +
-            (bundle.bundleProfiles ? `${bundle.bundleProfiles.length} profiles` : 'no profiles'),
+            (presetNames.length > 0 ? `presets ${presetNames.join(', ')}` : 'no presets'),
         );
       }
       if (report.gaps.length > 0) process.exitCode = 1;

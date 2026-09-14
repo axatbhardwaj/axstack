@@ -2,7 +2,8 @@
 //
 // Schema distinction (per driver guidance from the host's
 // configure_paseo_profiles.js):
-// - Bundle file `profiles/paseo.json`: `{ version: 1, agentProfiles: [...] }`
+// - Bundle preset file `profiles/presets/<preset>.json`:
+//   `{ version: 1, preset, agentProfiles: [...] }`
 //   with namespaced `axstack-*` profile IDs.
 // - Host config file: profiles live at `config.daemon.agentProfiles`.
 //   Every other field (top-level keys, other `daemon` keys, custom profiles)
@@ -145,6 +146,7 @@ export function assertBundleProfiles(bundleProfiles) {
   if (!Array.isArray(bundleProfiles) || bundleProfiles.length === 0) {
     throw new Error('invalid bundle profiles: expected a non-empty agentProfiles array');
   }
+  const ids = new Set();
   for (const p of bundleProfiles) {
     if (!p || typeof p !== 'object' || Array.isArray(p)) {
       throw new Error('invalid bundle profiles: every profile must be an object');
@@ -157,6 +159,10 @@ export function assertBundleProfiles(bundleProfiles) {
     if (!p.id.startsWith('axstack-')) {
       throw new Error('invalid bundle profiles: every profile needs a namespaced axstack-* id');
     }
+    if (ids.has(p.id)) {
+      throw new Error(`invalid bundle profiles: duplicate profile ID ${p.id}`);
+    }
+    ids.add(p.id);
     if (!Object.hasOwn(p, 'model')) {
       throw new Error('invalid bundle profiles: model must be a non-empty string or explicit null');
     }

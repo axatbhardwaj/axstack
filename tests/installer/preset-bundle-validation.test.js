@@ -49,6 +49,16 @@ describe('preset bundle validation', () => {
         /non-empty|bundle profiles/i,
       ],
       [
+        'unsupported version',
+        (path) => writeFileSync(path, JSON.stringify({ version: 2, preset: 'mixed', agentProfiles: [profile('axstack-driver')] })),
+        /version.*1/i,
+      ],
+      [
+        'duplicate role IDs',
+        (path) => writeFileSync(path, JSON.stringify({ version: 1, preset: 'mixed', agentProfiles: [profile('axstack-driver'), profile('axstack-driver')] })),
+        /duplicate.*axstack-driver/i,
+      ],
+      [
         'directory named json',
         (path) => { rmSync(path); mkdirSync(path); },
         /real file/i,
@@ -67,6 +77,20 @@ describe('preset bundle validation', () => {
       mutate(path, root);
       await expect(validateBundle(bundle), label).rejects.toThrow(message);
     }
+  });
+
+  test('rejects a symlinked profiles parent before reading presets', async () => {
+    const root = makeTempRoot('axstack-symlinked-profiles-');
+    const bundle = writeFixtureBundle(root, { presets: null });
+    const outside = join(root, 'outside-profiles');
+    mkdirSync(join(outside, 'presets'), { recursive: true });
+    writeFileSync(
+      join(outside, 'presets', 'mixed.json'),
+      JSON.stringify({ version: 1, preset: 'mixed', agentProfiles: [profile('axstack-driver')] }),
+    );
+    symlinkSync(outside, join(bundle, 'profiles'));
+
+    await expect(validateBundle(bundle, 'mixed')).rejects.toThrow(/profiles.*real directory|symlink/i);
   });
 
   test('selected preset must exist when the bundle ships presets, before mutation', () => {

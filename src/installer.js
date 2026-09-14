@@ -2,7 +2,8 @@
 //
 // Frozen bundle contract (from the workflow author):
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files, no symlinks)
-//   <bundle>/profiles/paseo.json ({ version: 1, agentProfiles: [...] })
+//   <bundle>/profiles/presets/<preset>.json
+//     ({ version: 1, preset, agentProfiles: [...] })
 //
 // Safety rules:
 // - Validate the whole bundle BEFORE any target mutation.
@@ -223,8 +224,16 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
   if (files.length === 0) throw new Error('bundle contains no installable skill files');
 
   const presets = {};
-  const presetsRoot = join(root, 'profiles', 'presets');
-  const presetsStat = await lstat(presetsRoot).catch((err) => {
+  const profilesRoot = join(root, 'profiles');
+  const profilesStat = await lstat(profilesRoot).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (profilesStat !== null && (profilesStat.isSymbolicLink() || !profilesStat.isDirectory())) {
+    throw new Error('bundle profiles must be a real directory, not a symlink');
+  }
+  const presetsRoot = join(profilesRoot, 'presets');
+  const presetsStat = profilesStat === null ? null : await lstat(presetsRoot).catch((err) => {
     if (err?.code === 'ENOENT') return null;
     throw err;
   });
@@ -248,6 +257,9 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
         throw new Error(`bundle preset ${entry.name} is not valid JSON`);
       }
       const stem = entry.name.slice(0, -'.json'.length);
+      if (parsed?.version !== 1) {
+        throw new Error(`bundle preset ${entry.name} must declare version 1`);
+      }
       if (parsed?.preset !== stem) {
         throw new Error(`bundle preset ${entry.name} must declare preset matching its filename stem (${stem})`);
       }
