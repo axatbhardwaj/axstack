@@ -111,7 +111,7 @@ test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => 
 
 test('CLI check succeeds with a controlled fake toolchain', () => {
   // Hermetic success case: every external binary is a fixture script, so the
-  // test never depends on the host's live paseo/gh-stack setup. The Bun
+  // test never depends on the host's live Orca/gh-stack setup. The Bun
   // runtime/version assertion stays real; missing-tool checks are untouched.
   const fakeBin = join(makeTempRoot(), 'fake-bin');
   mkdirSync(fakeBin, { recursive: true });

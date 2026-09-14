@@ -72,33 +72,6 @@ test('writeAtomic never writes through a temp symlink nor truncates temp entries
   expect(!existsSync(dest)).toBeTruthy();
 });
 
-test('existing config mode 0600 survives the atomic profile merge', () => {
-  const root = makeTempRoot();
-  const bundle = writeFixtureBundle(root, { profiles: [{ ...OWNER_PROFILE }] });
-  const skillsDir = join(root, 'skills');
-  const profile = join(root, 'paseo.json');
-  writeFileSync(profile, '{"version":1,"daemon":{"agentProfiles":[]}}\n');
-  chmodSync(profile, 0o600);
-
-  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  expect(r.ok).toBeTruthy();
-  expect(JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.some(
-      (p) => p.id === 'axstack-owner',
-    )).toBeTruthy();
-  expect(statSync(profile).mode & 0o777).toBe(0o600);
-});
-
-test('new config files are created restrictive (0600)', () => {
-  const root = makeTempRoot();
-  const bundle = writeFixtureBundle(root, { profiles: [{ ...OWNER_PROFILE }] });
-  const skillsDir = join(root, 'skills');
-  const profile = join(root, 'fresh.json');
-
-  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
-  expect(r.ok).toBeTruthy();
-  expect(statSync(profile).mode & 0o777).toBe(0o600);
-});
-
 test('updated skill files keep their existing permissions', () => {
   const root = makeTempRoot();
   const v1 = writeFixtureBundle(root, { name: 'bundle-v1' });

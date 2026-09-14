@@ -104,11 +104,11 @@ function skillAssets(pkgDir) {
   return rels;
 }
 
-function profileRecords(pkgDir, preset) {
-  const profiles = JSON.parse(
+function roleRecords(pkgDir, preset) {
+  const payload = JSON.parse(
     readFileSync(join(pkgDir, 'profiles', 'presets', `${preset}.json`), 'utf8'),
   );
-  return profiles.agentProfiles;
+  return payload.roles;
 }
 
 // Augment an installer-branch extract with a labeled fixture bundle. Both
@@ -141,76 +141,85 @@ function ensureBundleAssets(pkgDir, label) {
   return { augmented: true };
 }
 
+// The workflow author owns production role assets. On this isolated installer
+// branch, exercise the packed CLI with temporary final-schema presets without
+// rewriting those shipped files.
+function installFixturePresets(pkgDir) {
+  const fixtureRoot = makeTempRoot('axstack-packed-role-fixture-');
+  const role = (provider) => [{
+    id: 'axstack-driver', name: 'Driver', provider, model: `${provider}-model`,
+  }];
+  const fixture = writeFixtureBundle(fixtureRoot, {
+    presets: {
+      mixed: role('codex'),
+      'codex-only': role('codex'),
+      'claude-only': role('claude'),
+    },
+  });
+  for (const file of walkFiles(join(fixture, 'profiles'))) {
+    const rel = file.slice(fixture.length + 1);
+    const dest = join(pkgDir, rel);
+    mkdirSync(dest.split('/').slice(0, -1).join('/'), { recursive: true });
+    writeFileSync(dest, readFileSync(file));
+  }
+}
+
 function fullCycle(pkgDir, neutral, label, preset) {
   const env = bunOnlyEnv(neutral);
   const cli = join(pkgDir, 'bin', 'axstack.js');
   const runPacked = (args, opts) => runBunCli(cli, args, { ...opts, env, cwd: neutral });
   const skillsDir = join(neutral, `${label}-skills`);
-  const profile = join(neutral, `${label}-paseo.json`);
   const sentinel = join(neutral, `${label}-sentinel.txt`);
   writeFileSync(sentinel, 'unrelated\n');
 
   const rels = skillAssets(pkgDir);
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
-  const bundledProfiles = profileRecords(pkgDir, preset);
-  const configuredIds = bundledProfiles
-    .filter((profile) => typeof profile.model === 'string' && profile.model.length > 0)
-    .map((profile) => profile.id);
-  const deferredIds = bundledProfiles
-    .filter((profile) => profile.model === null)
-    .map((profile) => profile.id);
-  expect(bundledProfiles.length).toBeGreaterThan(0);
-  expect(configuredIds.length).toBeGreaterThan(0);
+  const bundledRoles = roleRecords(pkgDir, preset);
+  expect(bundledRoles.length).toBeGreaterThan(0);
 
-  const installed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const installed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(installed.ok).toBe(true);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(readFileSync(join(pkgDir, 'skills', rel), 'utf8'));
   }
-  const merged = JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.map((p) => p.id);
-  for (const id of configuredIds) expect(merged.includes(id)).toBe(true);
-  for (const id of deferredIds) {
-    expect(merged.includes(id)).toBe(false);
-    expect(installed.out).toContain(id);
-  }
-  const ownedProfiles = JSON.parse(
+  expect(JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'))).toEqual({
+    version: 1, preset, roles: bundledRoles,
+  });
+  const ownedFiles = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
-  ).profiles.entries;
-  for (const id of configuredIds) expect(id in ownedProfiles).toBe(true);
-  for (const id of deferredIds) expect(id in ownedProfiles).toBe(false);
+  ).files;
+  expect(ownedFiles['axstack/roles.json']).toBeString();
 
-  const again = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const again = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(again.ok).toBe(true);
   expect(again.out.toLowerCase()).toMatch(/no changes|idempotent|unchanged/);
   expect(readFileSync(sentinel, 'utf8')).toBe('unrelated\n');
 
   // User edits to every skill file survive reinstall and uninstall.
   for (const rel of rels) writeFileSync(join(skillsDir, rel), `# User edited ${rel}\n`);
-  const reinstalled = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const reinstalled = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(reinstalled.ok).toBe(true);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(`# User edited ${rel}\n`);
   }
-  const uninstalled = runPacked(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
+  const uninstalled = runPacked(['uninstall', '--skills-dir', skillsDir]);
   expect(uninstalled.ok).toBe(true);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(`# User edited ${rel}\n`);
   }
   expect(readFileSync(sentinel, 'utf8')).toBe('unrelated\n');
 
-  // Pristine reinstall then full removal of every owned asset and profile.
+  // Pristine reinstall then full removal of every owned asset and role snapshot.
   for (const rel of rels) {
     writeFileSync(join(skillsDir, rel), readFileSync(join(pkgDir, 'skills', rel)));
   }
-  const refreshed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const refreshed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(refreshed.ok).toBe(true);
-  const removed = runPacked(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
+  const removed = runPacked(['uninstall', '--skills-dir', skillsDir]);
   expect(removed.ok).toBe(true);
   for (const rel of rels) expect(existsSync(join(skillsDir, rel))).toBe(false);
-  const remaining = JSON.parse(readFileSync(profile, 'utf8')).daemon.agentProfiles.map((p) => p.id);
-  for (const id of configuredIds) expect(remaining.includes(id)).toBe(false);
-  for (const id of deferredIds) expect(remaining.includes(id)).toBe(false);
+  expect(existsSync(join(skillsDir, 'axstack', 'roles.json'))).toBe(false);
 }
 
 test('tarball members match the full source tree with no silent omissions', () => {
@@ -241,6 +250,7 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
 
   expect(statSync(join(pkgDir, 'bin', 'axstack.js')).mode & 0o111).not.toBe(0);
   ensureBundleAssets(pkgDir, 'root-package');
+  installFixturePresets(pkgDir);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     fullCycle(pkgDir, neutral, `root-${preset}`, preset);
   }
@@ -292,8 +302,7 @@ test('combined-like fixture package packs and cycles end to end', () => {
       join(pkgDir, 'profiles', 'presets', `${preset}.json`),
       JSON.stringify({
         version: 1,
-        preset,
-        agentProfiles: profileIds.map((id) => ({ id, name: id, provider, model: 'm' })),
+        roles: profileIds.map((id) => ({ id, name: id, provider, model: 'm' })),
       }),
     );
   }
