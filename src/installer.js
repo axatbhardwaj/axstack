@@ -47,6 +47,7 @@ import {
   reconcileDeferredProfiles,
   reconcileLegacyProfiles,
 } from './profiles.js';
+import { planInstallClaudeSettings } from './claude-settings.js';
 
 export const PRESET_ALIASES = Object.freeze({
   mixed: 'mixed',
@@ -361,6 +362,7 @@ export async function installBundle({
   profilePath = null,
   force = false,
   yes = false,
+  claude = null,
   log = () => {},
 } = {}) {
   const selectedPreset = normalizePreset(preset);
@@ -373,6 +375,10 @@ export async function installBundle({
   const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
   if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
+  const claudePlan = await planInstallClaudeSettings({ claude, skillsRoot });
+  if (claudePlan.report.path) {
+    assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
+  }
 
   let existingProfileRaw = null;
   if (profileFile && bundle.bundleProfiles) {
@@ -471,6 +477,7 @@ export async function installBundle({
   const installedHashes = {};
   let profileWritten = false;
   let profileExisted = existingProfileRaw !== null;
+  const claudeWritten = [];
   try {
     await mkdir(skillsRoot, { recursive: true });
     for (const { rel, dest, content, current } of desired) {
@@ -569,6 +576,11 @@ export async function installBundle({
       }
     }
 
+    for (const write of claudePlan.writes) {
+      await writeAtomic(write.path, write.after, { mode: 0o600 });
+      claudeWritten.push(write);
+    }
+
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
@@ -579,13 +591,26 @@ export async function installBundle({
       },
     });
     if (profileNote) summary.notes = [...(summary.notes ?? []), profileNote];
-    return { ...summary, preset: selectedPreset, profiles: profileReport };
+    return {
+      ...summary,
+      preset: selectedPreset,
+      profiles: profileReport,
+      claudeSettings: claudePlan.report,
+    };
   } catch (err) {
     // Restore updated files, remove creations, restore/remove the profile so
     // pre-run state (which the untouched manifest describes) holds again.
     // Restore failures are collected and reported: a swallowed restore would
     // leave ownership claims describing bytes that are not on disk.
     const rollbackErrors = [];
+    for (const write of claudeWritten.reverse()) {
+      try {
+        if (write.before === null) await rm(write.path);
+        else await writeAtomic(write.path, write.before);
+      } catch (restoreErr) {
+        rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
     for (const [dest, bytes] of backups) {
       try {
         await writeAtomic(dest, bytes);
