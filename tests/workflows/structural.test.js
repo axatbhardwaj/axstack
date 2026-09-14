@@ -327,12 +327,12 @@ test('structural: profiles use verified provider/model/mode IDs with names', () 
   const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
 
   const expected = {
-    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'auto' },
-    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'plan' },
-    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
-    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
-    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
-    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
+    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'full-access' },
+    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'bypassPermissions' },
+    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
+    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
+    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
+    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
   };
   for (const [id, want] of Object.entries(expected)) {
     const prof = byId[id];

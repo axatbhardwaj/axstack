@@ -89,6 +89,11 @@ permission to invent a model fallback.
 A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
 
+When a new actionable event is eligible under a recorded `Notification policy`,
+the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
+The monitor and watchdog never send; absent policy or failed relay uses the
+current Paseo conversation and leaves every existing hold open.
+
 ## 5. State readiness precisely
 
 The owner checks current required checks, all feedback, approvals, mergeability,

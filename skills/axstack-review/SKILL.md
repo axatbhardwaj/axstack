@@ -197,11 +197,12 @@ work, or reporting validated risk as `REQUEST_CHANGES`. Disagreement and
 silence leave the hold open.
 
 This escalation exists only in prompts and briefs; no runtime component
-enforces it. A configured Hermes bot relay is optional and retains its existing
+enforces it. When the brief carries a `Notification policy`, the optional
+[axstack-relay](../axstack-relay/SKILL.md) retains the caller's existing
 authorization; Paseo chat is the concrete fallback. If relay delivery fails,
 send the same escalation through Paseo chat. Failed delivery never resolves the
 concern. Use no private escalation script. Public installations inherit no
-private host paths, recipients, credentials, or relay configuration.
+private transport values or configuration.
 
 ## Publishing rule
 

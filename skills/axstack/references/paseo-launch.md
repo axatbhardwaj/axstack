@@ -22,8 +22,8 @@ or tool help; a missing step is a setup gap, never a reason to guess a call.
    a provider default. An unavailable or exhausted model pauses affected work
    for the user's decision; never substitute or fall back.
 4. `inspect_provider` — preserve the profile's mode and thinking settings.
-   Conservative configurable presets are claude `default` and codex `auto`;
-   only explicit user configuration changes them.
+   Bundled presets are claude `bypassPermissions` and codex `full-access`.
+   Preserve explicit live overrides; access mode never expands task authority.
 5. `create_workspace` — reconcile first. On resume, reuse the existing
    workspace and session for the PR/role. Otherwise resolve the canonical
    project and pass its `projectId`, plus `workspaceId` when reusing, then
@@ -34,7 +34,9 @@ or tool help; a missing step is a setup gap, never a reason to guess a call.
    applicable identity — approved spec revision for substantial work,
    small-change intent for small work, maintenance snapshot for adoption, or
    linked intent for peer review — plus exact candidate revision and profile
-   notes. An Opus role is a Claude session running Opus.
+   notes. When present, propagate the caller's `Notification policy`, including
+   its required `axstack-relay` instructions path, without adding private
+   transport values. An Opus role is a Claude session running Opus.
 7. Verify the returned agent/workspace IDs, role, provider, and model. Persist
    that session receipt in the run record. If creation is ambiguous, mark the
    receipt pending and reconcile actual runtime state before any retry.

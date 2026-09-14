@@ -10,6 +10,11 @@ uses the approved narrow exception: node:fs and node:fs/promises are
 Bun-implemented built-ins; no Node.js runtime is used and no other node:
 imports are allowed.
 
+Bundled Codex profiles use `full-access`; Claude profiles use
+`bypassPermissions`. These modes remove tool permission prompts; role scope and
+explicit action-authority requirements still apply. Upgrades preserve edited
+profiles, so verify modes on existing installations separately.
+
 ## Commands
 
 All commands take explicit target directories. The installer never guesses

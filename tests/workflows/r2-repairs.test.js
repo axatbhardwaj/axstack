@@ -109,8 +109,8 @@ test('persistent owner consolidates report-only review and driver presents it', 
 
 test('README separates checks, declarations, private simulation, and live proof', () => {
   const readme = read('README.md');
-  expect(readme).toMatch(/113 workflow[^.]*structural[^.]*contract checks/i);
-  expect(readme).toMatch(/contains 36 declared scenarios/i);
+  expect(readme).toMatch(/119 workflow[^.]*structural[^.]*contract checks/i);
+  expect(readme).toMatch(/contains 37 declared scenarios/i);
   expect(readme).toMatch(/33-case[^.]*a97c1a7[^.]*25[^.]*8 baseline/i);
   expect(readme).toMatch(/private[^.]*not shipped/i);
   expect(readme).toMatch(/not[^.]*live\s+runtime/i);

@@ -300,12 +300,12 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
   }
   // Existing seven keep their provider/model/mode IDs.
   const existing = {
-    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'auto' },
-    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'plan' },
-    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
-    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
-    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'default' },
-    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'auto' },
+    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'full-access' },
+    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'bypassPermissions' },
+    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
+    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
+    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
+    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
   };
   for (const [id, want] of Object.entries(existing)) {
     const prof = byId[id];
@@ -314,10 +314,10 @@ test('owned-core: profiles add namespaced role defaults; existing seven unchange
     expect(prof.model, `${id}: model changed`).toBe(want.model);
     expect(prof.modeId, `${id}: modeId changed`).toBe(want.modeId);
   }
-  // New profiles keep public conservative modes.
+  // All bundled profiles use full provider access.
   for (const [id, want] of Object.entries(expected)) {
-    const conservative = want.provider === 'claude' ? 'default' : 'auto';
-    expect(byId[id].modeId, `${id}: must keep conservative mode ${conservative}`).toBe(conservative);
+    const accessMode = want.provider === 'claude' ? 'bypassPermissions' : 'full-access';
+    expect(byId[id].modeId, `${id}: must use configured access mode ${accessMode}`).toBe(accessMode);
   }
 });
 

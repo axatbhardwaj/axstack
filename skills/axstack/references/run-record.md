@@ -90,6 +90,7 @@ Goal: <bounded task goal>
 Scope: <repo + accepted bounds>
 Authority: <who authorized which mutation>
 Intent: <approved spec rev | small-change intent | adopted snapshot | peer/read-only mode>
+Notification policy: <none | transport/mode/host/instructions path>
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>
 Evidence: <check/review/submission/audit receipt pointers>
