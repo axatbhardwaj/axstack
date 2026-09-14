@@ -216,6 +216,12 @@ async function main() {
         if (p.released?.length) {
           console.log(`missing deferred profile ownership released: ${p.released.join(', ')}`);
         }
+        if (p.migrated?.length) {
+          console.log(`legacy reviewer profiles migrated: ${p.migrated.join(', ')}`);
+        }
+        if (p.legacyGaps?.length) {
+          console.log(`legacy gap (preserved): ${p.legacyGaps.join(', ')}`);
+        }
       }
       return;
     }

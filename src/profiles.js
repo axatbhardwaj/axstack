@@ -14,6 +14,11 @@
 // explicit --force). `force` is never the ordinary upgrade path.
 import { hashObject } from './manifest.js';
 
+export const LEGACY_REVIEWER_IDS = Object.freeze([
+  'axstack-reviewer-opus',
+  'axstack-reviewer-sol',
+]);
+
 function clone(value) {
   return value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
@@ -157,6 +162,31 @@ export function reconcileDeferredProfiles(
   }
 
   return { config: withDaemonProfiles(existing, next), report, created };
+}
+
+// Retire only legacy reviewer entries whose exact current bytes are owned by
+// this installation. Unknown and edited entries are preserved as visible
+// setup gaps; byte equality with any shipped profile never grants ownership.
+export function reconcileLegacyProfiles(
+  existing,
+  { owned = {}, hash = hashObject } = {},
+) {
+  const created = existing === null || existing === undefined;
+  const next = clone(created ? [] : daemonProfiles(existing));
+  const report = { migrated: [], legacyGaps: [] };
+
+  for (const id of LEGACY_REVIEWER_IDS) {
+    const idx = next.findIndex((profile) => profile?.id === id);
+    if (idx === -1) continue;
+    if (id in owned && hash(next[idx]) === owned[id]) {
+      next.splice(idx, 1);
+      report.migrated.push(id);
+    } else {
+      report.legacyGaps.push(id);
+    }
+  }
+
+  return { config: withDaemonProfiles(existing, next), report };
 }
 
 // Decide which Axstack-owned profiles an uninstall may remove. Only profiles

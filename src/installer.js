@@ -43,6 +43,7 @@ import {
   mergeProfiles,
   planUninstallProfiles,
   reconcileDeferredProfiles,
+  reconcileLegacyProfiles,
 } from './profiles.js';
 
 export const PRESET_ALIASES = Object.freeze({
@@ -498,13 +499,17 @@ export async function installBundle({
     if (profileFile && bundle.bundleProfiles) {
       const existingProfile =
         existingProfileRaw === null ? null : JSON.parse(existingProfileRaw);
+      const legacy = reconcileLegacyProfiles(existingProfile, {
+        owned: ownedProfiles,
+        hash: hashObject,
+      });
       const deferred = bundle.deferredProfiles.length > 0
-        ? reconcileDeferredProfiles(existingProfile, bundle.deferredProfiles, {
+        ? reconcileDeferredProfiles(legacy.config, bundle.deferredProfiles, {
           owned: ownedProfiles,
           hash: hashObject,
         })
         : {
-          config: existingProfile,
+          config: legacy.config,
           report: { deferred: [], removed: [], released: [], preserved: [] },
         };
       const merged = bundle.configuredProfiles.length > 0
@@ -521,12 +526,14 @@ export async function installBundle({
       profileReport = {
         ...merged.report,
         ...deferred.report,
+        ...legacy.report,
         created: existingProfile === null,
         preserved: [...deferred.report.preserved, ...merged.report.preserved],
       };
       for (const id of bundle.deferredProfiles.map((profile) => profile.id)) {
         delete nextProfileHashes[id];
       }
+      for (const id of legacy.report.migrated) delete nextProfileHashes[id];
       const nextRaw = JSON.stringify(config, null, 2) + '\n';
       if (existingProfileRaw === null || nextRaw !== existingProfileRaw) {
         // New configs are restrictive; existing configs keep their mode.
