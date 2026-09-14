@@ -19,6 +19,124 @@ export const LEGACY_REVIEWER_IDS = Object.freeze([
   'axstack-reviewer-sol',
 ]);
 
+const PROVIDER_BOUNDS = Object.freeze({
+  mixed: new Set(['codex', 'claude']),
+  'codex-only': new Set(['codex']),
+  'claude-only': new Set(['claude']),
+});
+
+const AUTHORED_ROUTES = Object.freeze({
+  mixed: {
+    'gpt-5.6-sol': ['axstack-reviewer-secondary', 'claude', 'claude-opus-5', 'medium'],
+    'claude-opus-5': ['axstack-reviewer-primary', 'codex', 'gpt-5.6-sol', 'medium'],
+  },
+  'codex-only': {
+    'gpt-5.6-sol': ['axstack-reviewer-secondary', 'codex', 'gpt-5.6-terra', 'xhigh'],
+  },
+  'claude-only': {
+    'claude-opus-5': ['axstack-reviewer-secondary', 'claude', 'claude-sonnet-5', 'xhigh'],
+  },
+});
+
+export function assessProfileReadiness(existing, presetProfiles, preset) {
+  assertBundleProfiles(presetProfiles);
+  const bounds = PROVIDER_BOUNDS[preset];
+  if (!bounds) throw new Error(`cannot assess readiness for unknown preset: ${preset}`);
+  const current = daemonProfiles(existing);
+  const byId = new Map(current.filter((profile) => profile?.id).map((profile) => [profile.id, profile]));
+  const expectedById = new Map(presetProfiles.map((profile) => [profile.id, profile]));
+  const gaps = [];
+  const gapIds = new Set();
+  const addGap = (message, ...ids) => {
+    gaps.push(message);
+    for (const id of ids) gapIds.add(id);
+  };
+  const isDeferred = (profile) =>
+    preset === 'mixed' && profile.id === 'axstack-checker' && profile.model === null;
+
+  for (const wanted of presetProfiles) {
+    if (isDeferred(wanted)) continue;
+    const live = byId.get(wanted.id);
+    if (!live) {
+      addGap(`${wanted.id} is missing`, wanted.id);
+      continue;
+    }
+    if (!bounds.has(live.provider)) {
+      addGap(
+        `${wanted.id} provider ${JSON.stringify(live.provider)} is outside ${preset} bounds (${[...bounds].join('|')})`,
+        wanted.id,
+      );
+    }
+    if (typeof live.model !== 'string' || live.model.trim() === '') {
+      addGap(`${wanted.id} requires a configured model`, wanted.id);
+    }
+  }
+
+  for (const id of LEGACY_REVIEWER_IDS) {
+    if (byId.has(id)) addGap(`legacy reviewer remains: ${id}`, id);
+  }
+
+  const primary = byId.get('axstack-reviewer-primary');
+  const secondary = byId.get('axstack-reviewer-secondary');
+  if (primary && secondary) {
+    if (
+      typeof primary.model === 'string' &&
+      typeof secondary.model === 'string' &&
+      primary.model === secondary.model
+    ) {
+      addGap(
+        'reviewer pair must use two distinct models',
+        'axstack-reviewer-primary',
+        'axstack-reviewer-secondary',
+      );
+    }
+    if (preset === 'mixed' && primary.provider === secondary.provider) {
+      addGap(
+        'mixed reviewer pair must use different providers',
+        'axstack-reviewer-primary',
+        'axstack-reviewer-secondary',
+      );
+    }
+  }
+
+  const author = byId.get('axstack-author');
+  if (author && expectedById.has('axstack-author')) {
+    const route = AUTHORED_ROUTES[preset]?.[author.model];
+    if (!route) {
+      addGap(`authored routing gap: unsupported axstack-author model ${JSON.stringify(author.model)}`, 'axstack-author');
+    } else {
+      const [reviewerId, provider, model, effort] = route;
+      const reviewer = byId.get(reviewerId);
+      if (
+        !reviewer ||
+        reviewer.provider !== provider ||
+        reviewer.model !== model ||
+        reviewer.thinkingOptionId !== effort
+      ) {
+        addGap(
+          `authored routing gap: ${reviewerId} must be ${provider}/${model}/${effort} for author ${author.model}`,
+          'axstack-author',
+          reviewerId,
+        );
+      }
+    }
+  }
+
+  const deviations = [];
+  const comparableFields = [
+    'name', 'notes', 'icon', 'color', 'provider', 'model', 'thinkingOptionId', 'modeId',
+  ];
+  for (const wanted of presetProfiles) {
+    if (isDeferred(wanted) || gapIds.has(wanted.id)) continue;
+    const live = byId.get(wanted.id);
+    if (!live) continue;
+    const fields = comparableFields.filter((field) => live[field] !== wanted[field]);
+    if (fields.length > 0) deviations.push(`${wanted.id} differs in ${fields.join(', ')}`);
+  }
+
+  return { ready: gaps.length === 0, gaps, deviations };
+}
+
 function clone(value) {
   return value === undefined ? value : JSON.parse(JSON.stringify(value));
 }

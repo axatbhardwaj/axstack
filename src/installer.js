@@ -40,6 +40,7 @@ import {
 } from './manifest.js';
 import {
   assertBundleProfiles,
+  assessProfileReadiness,
   mergeProfiles,
   planUninstallProfiles,
   reconcileDeferredProfiles,
@@ -529,6 +530,7 @@ export async function installBundle({
         ...legacy.report,
         created: existingProfile === null,
         preserved: [...deferred.report.preserved, ...merged.report.preserved],
+        ...assessProfileReadiness(merged.config, bundle.bundleProfiles, selectedPreset),
       };
       for (const id of bundle.deferredProfiles.map((profile) => profile.id)) {
         delete nextProfileHashes[id];
@@ -565,7 +567,7 @@ export async function installBundle({
       },
     });
     if (profileNote) summary.notes = [...(summary.notes ?? []), profileNote];
-    return { ...summary, profiles: profileReport };
+    return { ...summary, preset: selectedPreset, profiles: profileReport };
   } catch (err) {
     // Restore updated files, remove creations, restore/remove the profile so
     // pre-run state (which the untouched manifest describes) holds again.

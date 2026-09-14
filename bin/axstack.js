@@ -182,7 +182,7 @@ async function main() {
       const changed =
         summary.added.length + summary.updated.length + (summary.profiles?.added?.length ?? 0) +
         (summary.profiles?.updated?.length ?? 0) + (summary.profiles?.removed?.length ?? 0) +
-        (summary.profiles?.released?.length ?? 0);
+        (summary.profiles?.released?.length ?? 0) + (summary.profiles?.migrated?.length ?? 0);
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
       } else {
@@ -222,6 +222,17 @@ async function main() {
         if (p.legacyGaps?.length) {
           console.log(`legacy gap (preserved): ${p.legacyGaps.join(', ')}`);
         }
+        console.log(
+          p.ready
+            ? `preset ${summary.preset}: ready`
+            : `preset ${summary.preset}: NOT ready — ${p.gaps.join('; ')}`,
+        );
+        if (p.deviations?.length) {
+          console.log(`profile deviations: ${p.deviations.join('; ')}`);
+        }
+        if (!p.ready) process.exitCode = 1;
+      } else {
+        console.log('profiles were not installed; readiness is unverified.');
       }
       return;
     }
