@@ -16,7 +16,7 @@ test('repairs: substantive runs require the explicitly loaded audit skill and ho
 test('repairs: configured advisor covers spec, design, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`));
-    const notes = profiles.agentProfiles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
+    const notes = profiles.roles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
     expect(notes).toMatch(/specification creation[^.]*revision/i);
     expect(notes).toMatch(/solution design/i);
     expect(notes).toMatch(/consequential decisions/i);

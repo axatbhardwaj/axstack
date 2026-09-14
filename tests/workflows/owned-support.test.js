@@ -225,8 +225,8 @@ test('owned-support: every HTML explanation triggers full exact-artifact QA', ()
 
 test('owned-support: profile retirement and stale-upgrade migration are explicit', () => {
   const profiles = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'));
-  expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-docs'), 'retired prose profile must be absent').toBe(false);
-  expect(profiles.agentProfiles.length, 'only the prose profile is retired').toBe(17);
+  expect(profiles.roles.some(({ id }) => id === 'axstack-docs'), 'retired prose profile must be absent').toBe(false);
+  expect(profiles.roles.length, 'only the prose profile is retired').toBe(17);
   const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +
     readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
   expect(docs).toMatch(/ordinary[^.]*upgrade[^.]*retain[^.]*axstack-docs/i);

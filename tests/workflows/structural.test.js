@@ -320,12 +320,12 @@ test('structural: launch reference gives ordered Paseo materialization steps', (
 
 test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
   const ids = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .agentProfiles.map(({ id }) => id);
+    .roles.map(({ id }) => id);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    expect(data.preset).toBe(preset);
-    expect(data.agentProfiles.map(({ id }) => id)).toEqual(ids);
-    for (const prof of data.agentProfiles) {
+    expect(Object.keys(data)).toEqual(['version', 'roles']);
+    expect(data.roles.map(({ id }) => id)).toEqual(ids);
+    for (const prof of data.roles) {
       expect(prof.modeId).toBe(prof.provider === 'claude' ? 'bypassPermissions' : 'full-access');
       expect(prof.name).toBeTruthy();
       expect(prof.notes).toBeTruthy();

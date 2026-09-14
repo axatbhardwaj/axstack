@@ -276,12 +276,12 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .agentProfiles.map(({ id }) => id);
+    .roles.map(({ id }) => id);
   expect(expectedIds).toHaveLength(17);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    expect(data.agentProfiles.map(({ id }) => id)).toEqual(expectedIds);
-    expect(data.agentProfiles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(data.roles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
   }
 });
 
@@ -392,7 +392,7 @@ test('owned-core: align and spec use the configured advisor; auditor role exists
   }
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    const auditor = data.agentProfiles.find(({ id }) => id === 'axstack-auditor');
+    const auditor = data.roles.find(({ id }) => id === 'axstack-auditor');
     expect(auditor, `${preset}: missing axstack-auditor`).toBeTruthy();
     expect(auditor.notes).toMatch(/readonly|read-only/i);
   }
