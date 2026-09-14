@@ -107,6 +107,20 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
 });
 
+test('review modes: new runs discover one preset and snapshot all role states', () => {
+  const routing = compact('skills/axstack/references/routing.md');
+  expect(routing).toMatch(/\.axstack-manifest\.json/i);
+  expect(routing).toMatch(/profiles\.preset/i);
+  expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
+  expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
+  expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
+  expect(routing).toMatch(/all 17 role IDs|complete 17-role map/i);
+  expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
+  expect(routing).toMatch(/absent[^.]*hold[^.]*only that role|only that role[^.]*hold/i);
+  expect(routing).toMatch(/later[^.]*must not[^.]*silently[^.]*snapshot|snapshot[^.]*must not[^.]*silently[^.]*later/i);
+  expect(routing).toMatch(/explicit user decision[^.]*add|add[^.]*explicit user decision/i);
+});
+
 test('review modes: watch repairs and completeness use the selected mode', () => {
   const watch = compact('skills/axstack-watch/SKILL.md');
   const repair = compact('skills/axstack-watch/references/repair-publication.md');
