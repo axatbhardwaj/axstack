@@ -79,12 +79,23 @@ or recursive teams.
      from the routing snapshot. Send both the identical six-angle brief with no
      first-pass cross-read: neither reads the other's initial findings or
      creates children.
-   - **Authored:** exactly one eligible independent reviewer. If actual author
-     provenance matches the configured primary reviewer's model, use
-     `axstack-reviewer-secondary`; if it matches the secondary reviewer's model,
-     use `axstack-reviewer-primary`. The reviewer covers the complete brief
-     alone. No author or owner session may review, even if its role or provider
-     label changes.
+   - **Authored:** exactly one eligible independent reviewer from this complete
+     mapping:
+
+     | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
+     | --- | --- | --- |
+     | `mixed` | Codex / Sol | `axstack-reviewer-secondary` (Opus medium) |
+     | `mixed` | Claude / Opus | `axstack-reviewer-primary` (Sol medium) |
+     | `codex-only` | Codex / Sol | `axstack-reviewer-secondary` (Terra xhigh) |
+     | `claude-only` | Claude / Opus | `axstack-reviewer-secondary` (Sonnet xhigh) |
+
+     Match actual author provenance on provider/model; record effort, but never
+     use effort to create a mapping. Any other author provenance for the
+     selected preset is unsupported and `INCOMPLETE`, including its secondary
+     reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
+     ask the user. Never derive a reverse pairing from slot position. The
+     reviewer covers the complete brief alone. No author or owner session may
+     review, even if its role or provider label changes.
 
    Mixed preset review is cross-provider. Single-provider review uses the
    configured different models and is not cross-provider independence. The

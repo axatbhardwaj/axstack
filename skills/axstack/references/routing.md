@@ -24,19 +24,25 @@ Responsibilities are stable role IDs:
 - `axstack-driver` coordinates; `axstack-owner` owns one PR;
   `axstack-author` is its exclusive writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
-  peer pair. Peer review uses both; authored review uses the eligible opposite
-  slot based on actual author provenance in the routing snapshot.
+  peer pair. Peer review uses both; authored review uses only this table:
+
+  | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
+  | --- | --- | --- |
+  | `mixed` | Codex / Sol | `axstack-reviewer-secondary` (Opus medium) |
+  | `mixed` | Claude / Opus | `axstack-reviewer-primary` (Sol medium) |
+  | `codex-only` | Codex / Sol | `axstack-reviewer-secondary` (Terra xhigh) |
+  | `claude-only` | Claude / Opus | `axstack-reviewer-secondary` (Sonnet xhigh) |
 - `axstack-advisor` advises configured decisions and `axstack-auditor` performs
   report-only audits. `axstack-checker` reports tracking discrepancies.
 - `axstack-explainer` authors explanations and `axstack-explainer-review`
   reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
 
-For authored review, provenance matching the configured primary reviewer's
-model routes to `axstack-reviewer-secondary`; provenance matching the configured
-secondary reviewer's model routes to `axstack-reviewer-primary`. The author and
-owner remain ineligible to review their own work. Unknown, mixed, or unsupported
-provenance is `INCOMPLETE` pending explicit user routing; never invent a reverse
-pairing from the driver, owner, or provider.
+Match authored provenance on provider/model; record effort, but never use it to
+create a mapping. Any provenance absent from the selected preset's table row is
+unsupported and `INCOMPLETE`, including its secondary reviewer model, Astra,
+Luna, or Fable. Report the exact gap and ask the user. Never derive a reverse
+pairing from slot position, driver, owner, or provider. Author and owner remain
+ineligible to review their own work.
 
 ## Direct routes (no spec ceremony)
 
