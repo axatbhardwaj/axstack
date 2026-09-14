@@ -16,29 +16,80 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 
 ## Settle the frontier
 
-1. **Research the facts.** Inspect the available code, docs, and tools before
-   asking the user. End with verified facts, named evidence gaps, and only the
-   decisions or constraints the user must resolve.
-2. **Close the decision frontier.** A frontier contains only questions whose
-   prerequisite decisions are settled; hold dependent questions for a later
-   round. Ask the smallest current frontier that resolves material scope edges,
-   trade-offs, or priorities. State what is already settled and recommend a
-   choice for every question. Stop asking when no unanswered choice can
-   materially change scope, acceptance, design, or dependencies.
-3. **Preserve settled decisions.** Carry them across phases and resumes.
+1. **Research and map dependencies.** Inspect the available code, docs, and
+   tools before asking the user. Separate facts from preferences, name evidence
+   gaps, and map which decisions unlock others. Unresolved research blocks only
+   its dependent branch while safe fact work and independent branches continue.
+2. **Prioritize the ready frontier.** Rank questions whose prerequisites are
+   settled by consequence, uncertainty, and the branches they unlock. Probe
+   vague terms, assumptions, success criteria, exclusions, failures, and edge
+   scenarios without using a fixed questionnaire or padding the interview. An
+   empty ready frontier means completion only when no material choice remains;
+   otherwise report the blocking research and continue safe fact work.
+3. **Ask a focused round.** Present one to three independent questions; present
+   one alone when it is complex or governs dependent branches. Number questions
+   cumulatively as `Q1`, `Q2`, and so on. Recommend a choice for each with a
+   short reason and trade-off, then wait for the user's answers and recompute
+   the frontier. The user owns preferences and decisions unless they explicitly
+   delegate them; agents research facts.
+4. **Preserve settled decisions.** Carry them across phases and resumes.
    Reopen one only when material new evidence changes it; otherwise restate it
    and proceed. Every reopened decision names the evidence that invalidated it.
 
 ## Consult on consequential decisions
 
-For spec creation or revision, solution design, and consequential decisions,
-the driver forms an independent assessment and then involves the Fable advisor
-under [Standing contracts](../axstack/references/contracts.md). Immediately
-before actual advisor dispatch, load and follow
-[Paseo launch](../axstack/references/paseo-launch.md). Cache the decision receipt
-and carry it into `axstack-spec`; unchanged covered ground needs no repeat
-consultation. Record the advisor evidence, driver assessment, and any
-user-resolved choice. The driver owns the outcome.
+The current chat remains the driver; Astra is preferred, never auto-launched.
+For each new user round, the driver independently drafts the prioritized
+frontier and recommendations, then uses the actual configured persistent Fable
+advisor under [Standing contracts](../axstack/references/contracts.md). Fable
+challenges assumptions, edges, omissions, and alternatives; the driver responds
+and accepts or rejects each material point with a reason. Use one focused reply
+when material disagreement remains, then surface the choices to the user. Never
+fabricate consensus or impersonate either role.
+
+Immediately before the first actual advisor dispatch, load and follow
+[Paseo launch](../axstack/references/paseo-launch.md). Reuse the advisor session
+and settled receipts; consult only the changed frontier. Record compact advisor
+evidence, the driver's assessment, and user-resolved choices for `axstack-spec`.
+If the configured model is unavailable, pause the affected interview and ask
+the user; safe fact work may continue without substitution.
+
+## Bound the interview
+
+Twenty cumulative presented questions is the normal ceiling, not a target.
+Follow-ups, reopened questions, and separate decisions bundled into one prompt
+each count; never discount a presented question later. Before extending beyond
+20, name the material gaps and why they require more questions. Reserve the
+remaining budget for the highest-value branches and never exceed 35 questions
+in the initial pass. Stop earlier as soon as no unresolved material choice
+remains; 20 is not a quota.
+
+At completion or the 35-question cap, read back the result and ask whether the
+user wants deeper refinement. Ask no further interview or refinement questions
+without opt-in; this does not replace required spec approval or a clarification
+prompt when a configured model is unavailable. An opted-in refinement names
+one area and a separate finite budget of at most five questions; it preserves
+the initial count and settled answers and cannot roll into another automatic
+extension. Declining or silence does not settle an open blocker. If the user
+stops early, return a partial handoff naming unresolved items and do not claim
+readiness or begin execution.
+
+## Document settled understanding
+
+Discover existing `CONTEXT-MAP.md`, `CONTEXT.md`, and ADR conventions once per
+run and use the relevant context. If none exist, default to a glossary in
+`CONTEXT.md` and ADRs under `docs/adr/`; create either only when useful. Within
+authorized local planning docs, record canonical domain terms as answers settle
+without putting implementation detail in the glossary, and keep observed facts
+distinct from desired behavior. A still-open related architecture choice
+remains explicitly unresolved.
+
+Use an ADR only for a meaningful, hard-to-reverse, non-obvious trade-off. Keep
+it Proposed until the applicable approval, and preserve accepted history by
+superseding rather than rewriting it. Routine decisions belong in the run
+record or spec. Read-only scope keeps proposed documentation in the permitted
+private record or response. Documentation is neither implementation nor spec
+approval; record chosen document names and paths once per run.
 
 ## Read back, classify, and stop
 
@@ -55,9 +106,11 @@ user-resolved choice. The driver owns the outcome.
      ticket map handoff. Never repeat a still-valid approval.
 3. Record substantive or resumable preparation through the
    [shared lifecycle](../axstack/references/lifecycle.md) and
-   [run record](../axstack/references/run-record.md). Return the compact scope
-   and record pointer in the current chat. Native transfer is separate: use it
-   only when the user explicitly requests transfer, loading
+   [run record](../axstack/references/run-record.md). Persist the question count,
+   settled, open, and deferred branches, compact round advisor receipts, and
+   documentation pointers without adding another runtime. Return the compact
+   scope and record pointer in the current chat. Native transfer is separate:
+   use it only when the user explicitly requests transfer, loading
    [Paseo launch](../axstack/references/paseo-launch.md) immediately before
    actual dispatch. Alignment completion never dispatches a recipient.
 
