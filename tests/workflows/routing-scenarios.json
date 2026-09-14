@@ -74,8 +74,8 @@
     },
     {
       "id": "late-role-after-preset-switch",
-      "input": { "runStartPreset": "codex-only", "runStartSnapshot": "all 17 role IDs, including absent or unconfigured roles", "newSelectedPreset": "claude-only", "runState": "active", "lateFirstUse": "axstack-explainer" },
-      "expected": { "route": "resolve axstack-explainer from the run-start codex-only snapshot", "snapshotCoverage": "all 17 role IDs captured at run start; absent or unconfigured roles are recorded explicitly without a provider default", "absenceScope": "an absent role holds only that role's work, not the whole run", "forbidden": ["resolve the late role from the newly selected claude-only preset", "snapshot only previously used roles", "invent a provider default for an absent or unconfigured role"] }
+      "input": { "runStartPreset": "codex-only", "runStartSnapshot": "all 18 role IDs, including absent or unconfigured roles", "newSelectedPreset": "claude-only", "runState": "active", "lateFirstUse": "axstack-explainer" },
+      "expected": { "route": "resolve axstack-explainer from the run-start codex-only snapshot", "snapshotCoverage": "all 18 role IDs captured at run start; absent or unconfigured roles are recorded explicitly without a provider default", "absenceScope": "an absent role holds only that role's work, not the whole run", "forbidden": ["resolve the late role from the newly selected claude-only preset", "snapshot only previously used roles", "invent a provider default for an absent or unconfigured role"] }
     },
     {
       "id": "late-installed-role-not-adopted",

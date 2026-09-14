@@ -42,24 +42,30 @@ user. Never infer a route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives and native
 fallback prose are not defaults.
 
-## Advisor split
+## Driver effort and adviser split
 
-The current driver consults the configured `axstack-advisor` for spec creation and
-revision, solution design, and consequential decisions. The driver forms an
-independent assessment first, owns the decision, and the user still approves
-the spec. Cache and reuse a valid unchanged decision receipt; profile notes
-alone do not trigger consultation.
+`axstack-driver` is Sol medium by default in every preset. Align, Spec, and
+unresolved consequential decisions require driver effort `high`; record
+requested and effective effort. If high effort cannot be established,
+hold that work. After the phase or decision, request the return to `medium` and
+record its effective effort; never infer either transition from intent alone.
 
-High-stakes decisions require the advisor's plain AGREE and the driver's
+For Align and Spec, the driver forms an independent assessment first, then
+consults `axstack-advisor-astra` and `axstack-advisor-fable` independently with
+the same bounded evidence and question. The driver synthesizes disagreements,
+owns the decision, and the user still approves the spec. Reuse each valid
+unchanged receipt; changed evidence, scope, or question requires a fresh
+receipt. If either adviser is unavailable, Align and Spec hold without model or
+provider substitution while unrelated safe work may continue.
+
+High-stakes decisions require both advisers' plain AGREE and the driver's
 accepted assessment. Resolve disagreement with bounded checks; silence and an
 unavailable model do not authorize fallback. Ordinary work uses the configured
 author and reviewer roles selected by review mode and the routing snapshot. The
 existing mixed high-stakes route keeps its Opus high author and Sol high
 checkpoint reviewer. An eligible current non-author, non-owner Sol high
 checkpoint can satisfy the authored final review after revalidation; preserve
-its effort and do not add a redundant reviewer. No single-provider high-stakes
-mapping is defined: pause for an explicit user decision rather than borrowing
-another preset or inventing a route. There is no silent fallback.
+its effort and do not add a redundant reviewer. There is no silent fallback.
 
 ## Serious risk
 

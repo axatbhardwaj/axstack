@@ -37,13 +37,13 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 17 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 18 stable IDs.
 
-| Preset | Author | Ordered peer reviewers | Advisor / auditor |
-| --- | --- | --- | --- |
-| `mixed` | Sol medium | Sol medium; Opus medium | Fable medium / Luna max |
-| `codex-only` | Sol medium | Sol medium; Terra xhigh | Astra medium / Luna max |
-| `claude-only` | Opus medium | Opus medium; Sonnet xhigh | Fable medium / Sonnet xhigh |
+| Preset | Driver | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
+| --- | --- | --- | --- | --- | --- |
+| `mixed` | Sol medium | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna max |
+| `codex-only` | Sol medium | Sol medium | Sol medium; Terra xhigh | Astra high / unavailable | Luna max |
+| `claude-only` | Sol medium | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
@@ -54,7 +54,10 @@ Peer roles keep the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-secondary`; their provider/model mappings come only from the
 selected preset.
 
-The mixed checker stays explicitly `model: null`; checker work holds instead of
+The unavailable adviser in each single-provider preset stays explicitly
+`model: null` within that provider's bounds. Installer readiness accepts that
+intentional absence, but Align and Spec hold because both independent receipts
+are required. The mixed checker also stays explicitly `model: null`; checker work holds instead of
 launching a provider default. Missing or unavailable roles hold only affected
 work. Model, effort, and permission values express requested intent until real
 Orca receipts establish the effective session. Stored `modeId` is not permission
@@ -92,7 +95,8 @@ session and evidence remain valid.
 ## Phases
 
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
-  consults the configured advisor for spec, design, and consequential choices.
+  consults Astra and Fable independently with the same bounded evidence and
+  question. It synthesizes disagreements and reuses unchanged receipts.
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline.
 - `axstack-tickets` maps user-visible capabilities to dependency-aware internal

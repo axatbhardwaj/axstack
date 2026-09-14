@@ -43,7 +43,8 @@ expanding authority to fill it.
 Use actual records, never memory:
 
 - the approved spec, or the accepted peer, research, or maintenance scope;
-- the decision log and configured `axstack-advisor` receipts;
+- the decision log and configured `axstack-advisor-astra` and
+  `axstack-advisor-fable` receipts;
 - exact git revisions;
 - test and review evidence; and
 - the run execution record at its recorded `progress.md` path.
@@ -65,7 +66,10 @@ counts with denominators plus the evidence behind the count:
 
 - Acceptance criteria passed, failed, and unverified, each traced to its tests plus SHA.
 - Planned steps completed and deviated, each deviation with why and approval.
-- Configured advisor coverage across spec creation, spec revision, design, and consequential decisions, under the broader rule rather than an unresolved-only trigger.
+- Configured adviser coverage across Align, Spec creation, Spec revision,
+  solution design, and unresolved consequential decisions, including
+  independent same-question receipts, driver effort transitions, disagreement
+  synthesis, and both plain AGREE receipts where high-stakes.
 - Applicable test-first evidence: normal behavior changes have real red-green
   proof; explicitly accepted structure-preserving work has the old revision
   green before edits and the same checks green on the new revision, plus

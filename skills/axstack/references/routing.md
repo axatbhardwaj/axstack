@@ -13,7 +13,7 @@ Missing or contradictory sources are a setup gap: hold. Never
 infer from live profiles or `list_profiles`, harness, tools, credentials,
 quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 17 role
+At run start, capture one **routing snapshot**: the complete map of all 18 role
 IDs and their provider/model/mode/effort, with absent or unconfigured roles
 recorded explicitly and no invented provider default. An absent or unconfigured
 role holds only that role's work, not the run. A role installed or changed later
@@ -40,8 +40,8 @@ Stable role IDs:
   | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
   | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
   | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
-- `axstack-advisor` advises configured decisions and `axstack-auditor` performs
-  report-only audits. `axstack-checker` reports tracking discrepancies.
+- `axstack-advisor-astra` and `axstack-advisor-fable` advise independently;
+  `axstack-auditor` audits and `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors explanations and `axstack-explainer-review`
   reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
 
