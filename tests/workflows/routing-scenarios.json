@@ -23,6 +23,16 @@
       "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-sonnet-5 xhigh"], "independence": "different model, not cross-provider" }
     },
     {
+      "id": "codex-terra-authored-unsupported",
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-5.6-terra", "candidate": "SHA G1", "base": "SHA H1" },
+      "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["reverse route to axstack-reviewer-primary", "infer pairing from slot position"] }
+    },
+    {
+      "id": "claude-sonnet-authored-unsupported",
+      "input": { "preset": "claude-only", "mode": "authored", "actualAuthor": "claude/claude-sonnet-5", "candidate": "SHA G2", "base": "SHA H2" },
+      "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["reverse route to axstack-reviewer-primary", "infer pairing from slot position"] }
+    },
+    {
       "id": "mixed-peer",
       "input": { "preset": "mixed", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA I", "base": "SHA J" },
       "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium", "axstack-reviewer-secondary: claude/claude-opus-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }

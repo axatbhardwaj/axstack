@@ -46,6 +46,17 @@ test('review modes: authored routing follows actual author provenance', () => {
   expect(review).toMatch(/owner session[^.]*may not[^.]*review|no owner session[^.]*review/i);
 });
 
+test('review modes: authored routing enumerates only the accepted preset mappings', () => {
+  const review = compact('skills/axstack-review/SKILL.md');
+  expect(review).toMatch(/mixed[^.]*Sol[^.]*reviewer-secondary/i);
+  expect(review).toMatch(/mixed[^.]*Opus[^.]*reviewer-primary/i);
+  expect(review).toMatch(/codex-only[^.]*Sol[^.]*reviewer-secondary/i);
+  expect(review).toMatch(/claude-only[^.]*Opus[^.]*reviewer-secondary/i);
+  expect(review).toMatch(/any other author provenance[^.]*INCOMPLETE/i);
+  expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
+  expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
+});
+
 test('review modes: authored review is one complete exact-revision review', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/authored[\s\S]*exactly one|authored[\s\S]*one independent/i);
