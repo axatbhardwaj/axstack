@@ -2,8 +2,7 @@
 //
 // Frozen bundle contract (from the workflow author):
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files, no symlinks)
-//   <bundle>/profiles/presets/<preset>.json
-//     ({ version: 1, preset, agentProfiles: [...] })
+//   <bundle>/profiles/presets/<preset>.json ({ version: 1, roles: [...] })
 //
 // Safety rules:
 // - Validate the whole bundle BEFORE any target mutation.
@@ -34,20 +33,12 @@ import {
   MANIFEST_VERSION,
   assertSafeRel,
   hashContent,
-  hashObject,
   readManifest,
   writeFileExclusive,
   writeManifest,
 } from './manifest.js';
-import {
-  assertBundleProfiles,
-  assessProfileReadiness,
-  mergeProfiles,
-  planUninstallProfiles,
-  reconcileDeferredProfiles,
-  reconcileLegacyProfiles,
-} from './profiles.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
+import { assertBundleRoles, assessRoleReadiness, installedRoleBytes } from './roles.js';
 
 export const PRESET_ALIASES = Object.freeze({
   mixed: 'mixed',
@@ -116,24 +107,6 @@ async function assertNoSymlinksBelow(root, destDir) {
       throw new Error(`unsafe target: symlink in install path at ${cur}; refusing`);
     }
   }
-}
-
-// Canonicalize a profile file's parent and refuse a symlinked profile file
-// itself, so merges never write through a link to elsewhere.
-async function canonicalProfileFile(profilePath) {
-  const abs = resolve(profilePath);
-  const parent = await canonicalTargetDir(dirname(abs));
-  const file = join(parent, basename(abs));
-  let st = null;
-  try {
-    st = await lstat(file);
-  } catch (err) {
-    if (err?.code !== 'ENOENT') throw err;
-  }
-  if (st?.isSymbolicLink()) {
-    throw new Error(`unsafe target: profile path is a symlink at ${file}; refusing`);
-  }
-  return file;
 }
 
 function homeDir() {
@@ -261,25 +234,26 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
       if (parsed?.version !== 1) {
         throw new Error(`bundle preset ${entry.name} must declare version 1`);
       }
-      if (parsed?.preset !== stem) {
-        throw new Error(`bundle preset ${entry.name} must declare preset matching its filename stem (${stem})`);
+      if (!Array.isArray(parsed.roles) || parsed.roles.length === 0) {
+        throw new Error(`bundle preset ${entry.name} must define a non-empty roles array`);
       }
-      if (!Array.isArray(parsed.agentProfiles) || parsed.agentProfiles.length === 0) {
-        throw new Error(`bundle preset ${entry.name} must define a non-empty agentProfiles array`);
+      const keys = Object.keys(parsed).sort();
+      if (JSON.stringify(keys) !== JSON.stringify(['roles', 'version'])) {
+        throw new Error(`bundle preset ${entry.name} must contain exactly version and roles`);
       }
-      assertBundleProfiles(parsed.agentProfiles);
-      presets[stem] = parsed.agentProfiles;
+      assertBundleRoles(parsed.roles);
+      presets[stem] = parsed.roles;
     }
 
-    const idSets = Object.entries(presets).map(([name, profiles]) => [
+    const idSets = Object.entries(presets).map(([name, roles]) => [
       name,
-      [...new Set(profiles.map((profile) => profile.id))].sort(),
+      roles.map((role) => role.id).sort(),
     ]);
     const [reference] = idSets;
     for (const [name, ids] of idSets.slice(1)) {
       if (JSON.stringify(ids) !== JSON.stringify(reference[1])) {
         throw new Error(
-          `bundle presets must expose an identical profile ID set; ${reference[0]} and ${name} differ`,
+          `bundle presets must expose an identical role ID set; ${reference[0]} and ${name} differ`,
         );
       }
     }
@@ -288,7 +262,17 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
     }
   }
 
-  const bundleProfiles = selectedPreset ? (presets[selectedPreset] ?? null) : null;
+  const bundleRoles = selectedPreset ? (presets[selectedPreset] ?? null) : null;
+  if (bundleRoles) {
+    if (!files.some((file) => file.rel === 'axstack/SKILL.md')) {
+      throw new Error('bundle roles require the axstack entry skill');
+    }
+    if (files.some((file) => file.rel === 'axstack/roles.json')) {
+      throw new Error('bundle skills must not provide axstack/roles.json; it is generated from the selected preset');
+    }
+    files.push({ rel: 'axstack/roles.json', content: installedRoleBytes(selectedPreset, bundleRoles) });
+    files.sort((a, b) => a.rel.localeCompare(b.rel));
+  }
 
   return {
     root,
@@ -296,9 +280,8 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
     files,
     presets,
     selectedPreset,
-    bundleProfiles,
-    configuredProfiles: bundleProfiles?.filter((profile) => profile.model !== null) ?? null,
-    deferredProfiles: bundleProfiles?.filter((profile) => profile.model === null) ?? null,
+    bundleRoles,
+    readiness: bundleRoles ? assessRoleReadiness(bundleRoles, selectedPreset) : null,
   };
 }
 
@@ -359,7 +342,6 @@ export async function installBundle({
   bundleDir,
   skillsDir,
   preset,
-  profilePath = null,
   force = false,
   yes = false,
   claude = null,
@@ -372,35 +354,10 @@ export async function installBundle({
   // Phase 0: validate everything before mutating anything.
   const bundle = await validateBundle(bundleDir, selectedPreset);
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
-  const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
-  if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
   const claudePlan = await planInstallClaudeSettings({ claude, skillsRoot });
   if (claudePlan.report.path) {
     assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
-  }
-
-  let existingProfileRaw = null;
-  if (profileFile && bundle.bundleProfiles) {
-    try {
-      existingProfileRaw = await readFile(profileFile, 'utf8');
-    } catch (err) {
-      if (err?.code !== 'ENOENT') throw err;
-    }
-    let existingProfile = null;
-    if (existingProfileRaw !== null) {
-      try {
-        existingProfile = JSON.parse(existingProfileRaw);
-      } catch {
-        throw new Error(`malformed Paseo config at ${profileFile}; refusing to mutate it`);
-      }
-    }
-    // Dry run: catches malformed host shape before any skill file is written.
-    if (bundle.configuredProfiles.length > 0) {
-      mergeProfiles(existingProfile, bundle.configuredProfiles, {});
-    } else {
-      reconcileDeferredProfiles(existingProfile, bundle.deferredProfiles, {});
-    }
   }
 
   const prevManifest = (await readManifest(skillsRoot)) ?? {
@@ -420,29 +377,15 @@ export async function installBundle({
     );
   }
   const ownedFiles = prevManifest.files ?? {};
-  // Owned profile hashes are bound to the canonical config file they were
-  // installed into. A different --profile is refused before any mutation so
-  // identical bytes in an unrelated file can never authorize removal.
-  const boundProfilePath = prevManifest.profiles?.path ?? null;
-  let ownedProfiles = prevManifest.profiles?.entries ?? {};
-  let profileNote = null;
-  if (profileFile && bundle.bundleProfiles && Object.keys(ownedProfiles).length > 0) {
-    if (boundProfilePath === null) {
-      // Legacy unbound ownership: reset rather than honor for removal.
-      ownedProfiles = {};
-      profileNote = 'legacy unbound profile ownership reset; recording only profiles this run writes';
-    } else if (boundProfilePath !== profileFile) {
-      throw new Error(
-        `refusing: owned profiles are bound to a different config (${boundProfilePath}); ` +
-          `uninstall with --profile ${boundProfilePath} first, or install without --profile`,
-      );
-    }
-  }
+  const legacyProfiles = prevManifest.profiles;
+  const legacyProfileNote = Object.keys(legacyProfiles?.entries ?? {}).length > 0
+    ? 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md'
+    : null;
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
   // Destination ancestry is checked for symlink escapes here, before mutation.
   const desired = [];
-  for (const { rel, abs } of bundle.files) {
+  for (const { rel, abs, content: inlineContent } of bundle.files) {
     const dest = join(skillsRoot, rel);
     if (!withinRoot(dest, skillsRoot)) throw new Error(`unsafe install target rejected: ${rel}`);
     await assertNoSymlinksBelow(skillsRoot, dirname(dest));
@@ -455,7 +398,7 @@ export async function installBundle({
     if (destStat?.isSymbolicLink()) {
       throw new Error(`unsafe target: destination is a symlink at ${dest}; refusing`);
     }
-    const content = await readFile(abs);
+    const content = inlineContent ?? await readFile(abs);
     let current = null;
     try {
       current = await readFile(dest);
@@ -486,8 +429,6 @@ export async function installBundle({
   };
   const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [] };
   const installedHashes = {};
-  let profileWritten = false;
-  let profileExisted = existingProfileRaw !== null;
   const claudeWritten = [];
   try {
     await mkdir(skillsRoot, { recursive: true });
@@ -521,63 +462,6 @@ export async function installBundle({
       }
     }
 
-    // Profiles: pristine owned entries upgrade without --force; user edits
-    // are preserved unless --force. Only actually created/updated entries
-    // gain manifest records; preserved entries retain prior hashes and
-    // pre-existing unrelated entries are never adopted.
-    let profileReport = null;
-    let nextProfileHashes = { ...ownedProfiles };
-    if (profileFile && bundle.bundleProfiles) {
-      const existingProfile =
-        existingProfileRaw === null ? null : JSON.parse(existingProfileRaw);
-      const legacy = reconcileLegacyProfiles(existingProfile, {
-        owned: ownedProfiles,
-        hash: hashObject,
-      });
-      const deferred = bundle.deferredProfiles.length > 0
-        ? reconcileDeferredProfiles(legacy.config, bundle.deferredProfiles, {
-          owned: ownedProfiles,
-          hash: hashObject,
-        })
-        : {
-          config: legacy.config,
-          report: { deferred: [], removed: [], released: [], preserved: [] },
-        };
-      const merged = bundle.configuredProfiles.length > 0
-        ? mergeProfiles(deferred.config, bundle.configuredProfiles, {
-          force,
-          owned: ownedProfiles,
-          hash: hashObject,
-        })
-        : {
-          config: deferred.config,
-          report: { created: existingProfile === null, added: [], updated: [], preserved: [] },
-        };
-      const { config } = merged;
-      profileReport = {
-        ...merged.report,
-        ...deferred.report,
-        ...legacy.report,
-        created: existingProfile === null,
-        preserved: [...deferred.report.preserved, ...merged.report.preserved],
-        ...assessProfileReadiness(merged.config, bundle.bundleProfiles, selectedPreset),
-      };
-      for (const id of bundle.deferredProfiles.map((profile) => profile.id)) {
-        delete nextProfileHashes[id];
-      }
-      for (const id of legacy.report.migrated) delete nextProfileHashes[id];
-      const nextRaw = JSON.stringify(config, null, 2) + '\n';
-      if (existingProfileRaw === null || nextRaw !== existingProfileRaw) {
-        // New configs are restrictive; existing configs keep their mode.
-        await writeAtomic(profileFile, nextRaw, existingProfileRaw === null ? { mode: 0o600 } : {});
-        profileWritten = true;
-      }
-      for (const id of [...merged.report.added, ...merged.report.updated]) {
-        const p = config.daemon.agentProfiles.find((entry) => entry?.id === id);
-        if (p) nextProfileHashes[id] = hashObject(p);
-      }
-    }
-
     // Stale manifest entries (owned files the bundle no longer ships) are
     // left on disk and reported, never silently deleted.
     for (const rel of Object.keys(ownedFiles)) {
@@ -595,20 +479,16 @@ export async function installBundle({
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
-      profiles: {
-        path: profileFile && bundle.bundleProfiles ? profileFile : boundProfilePath,
-        preset: selectedPreset,
-        entries: nextProfileHashes,
-      },
+      profiles: legacyProfiles,
       claudeSettings: {
         path: claudePlan.settingsPath ?? boundClaudeSettingsPath,
       },
     });
-    if (profileNote) summary.notes = [...(summary.notes ?? []), profileNote];
+    if (legacyProfileNote) summary.notes = [...(summary.notes ?? []), legacyProfileNote];
     return {
       ...summary,
       preset: selectedPreset,
-      profiles: profileReport,
+      roles: bundle.readiness,
       claudeSettings: claudePlan.report,
     };
   } catch (err) {
@@ -639,14 +519,6 @@ export async function installBundle({
         rollbackErrors.push(`${createdFile}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
-    if (profileWritten) {
-      try {
-        if (profileExisted) await writeAtomic(profileFile, existingProfileRaw);
-        else await rm(profileFile);
-      } catch (restoreErr) {
-        rollbackErrors.push(`${profileFile}: ${restoreErr?.message ?? restoreErr}`);
-      }
-    }
     if (rollbackErrors.length > 0) {
       err.message += ` (incomplete rollback; manual repair needed: ${rollbackErrors.join('; ')})`;
     }
@@ -656,7 +528,6 @@ export async function installBundle({
 
 export async function uninstallBundle({
   skillsDir,
-  profilePath = null,
   force = false,
   yes = false,
   claude = null,
@@ -664,9 +535,7 @@ export async function uninstallBundle({
 } = {}) {
   if (!skillsDir) throw new Error('uninstall requires --skills-dir <dir>');
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
-  const profileFile = profilePath ? await canonicalProfileFile(profilePath) : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
-  if (profileFile) assertOutsideHome(profileFile, { yes, kind: 'profile file' });
 
   const manifest = (await readManifest(skillsRoot)) ?? {
     version: MANIFEST_VERSION,
@@ -684,56 +553,17 @@ export async function uninstallBundle({
     assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
   }
   const remainingClaudeSettingsPath = claudePlan.unbind ? null : boundClaudeSettingsPath;
-  const summary = { removed: [], preserved: [], missing: [], profiles: null };
+  const summary = { removed: [], preserved: [], missing: [] };
   if (Object.keys(manifest.files).length === 0 && Object.keys(manifest.profiles.entries).length === 0) {
     summary.note = 'no Axstack ownership manifest; nothing to remove';
   }
   const ownedFiles = manifest.files ?? {};
-  const boundProfilePath = manifest.profiles?.path ?? null;
-  const installedPreset = manifest.profiles?.preset ?? null;
-  const ownedProfiles = manifest.profiles?.entries ?? {};
+  const legacyProfiles = manifest.profiles;
+  const hasLegacyProfiles = Object.keys(legacyProfiles?.entries ?? {}).length > 0;
+  if (hasLegacyProfiles) {
+    summary.note = 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md';
+  }
   const remainingFiles = { ...ownedFiles };
-
-  // No --profile with bound ownership: leave profile bytes and ownership
-  // untouched, but say so loudly with the bound path and the remedy.
-  if (!profileFile && Object.keys(ownedProfiles).length > 0) {
-    summary.note = boundProfilePath
-      ? `Axstack profiles remain in ${boundProfilePath}; re-run uninstall with --profile ${boundProfilePath} to remove them`
-      : 'Axstack-owned profiles remain in their bound config; re-run uninstall with --profile <config> to remove them';
-  }
-
-  // Validate the profile input (identity, read, parse, plan) BEFORE deleting
-  // anything: a wrong-path or malformed profile must fail with skills intact.
-  let profilePlan = null;
-  let existingProfileRaw = null;
-  let remainingBoundPath = boundProfilePath;
-  if (profileFile && Object.keys(ownedProfiles).length > 0) {
-    if (boundProfilePath !== null && boundProfilePath !== profileFile) {
-      throw new Error(
-        `refusing: owned profiles are bound to a different config (${boundProfilePath}); ` +
-          `re-run uninstall with --profile ${boundProfilePath}`,
-      );
-    }
-    try {
-      existingProfileRaw = await readFile(profileFile, 'utf8');
-    } catch (err) {
-      if (err?.code !== 'ENOENT') throw err;
-    }
-    if (existingProfileRaw === null) {
-      // Bound config file is gone: nothing to protect, release ownership so
-      // a later install can bind a new path.
-      remainingBoundPath = null;
-      summary.profiles = { removed: [], preserved: [], note: 'bound profile file missing; ownership released' };
-    } else {
-      let existing;
-      try {
-        existing = JSON.parse(existingProfileRaw);
-      } catch {
-        throw new Error(`malformed Paseo config at ${profileFile}; refusing to mutate it`);
-      }
-      profilePlan = planUninstallProfiles(existing, { profiles: ownedProfiles }, { hash: hashObject });
-    }
-  }
 
   // Check every destination for symlink escapes BEFORE deleting anything:
   // one unsafe entry refuses the whole uninstall with skills still on disk.
@@ -775,17 +605,6 @@ export async function uninstallBundle({
     }
   }
 
-  let remainingProfiles = { ...ownedProfiles };
-  if (profilePlan) {
-    summary.profiles = profilePlan.report;
-    if (profilePlan.report.removed.length > 0) {
-      await writeAtomic(profileFile, JSON.stringify(profilePlan.config, null, 2) + '\n');
-    }
-    for (const id of profilePlan.report.removed) delete remainingProfiles[id];
-  } else if (summary.profiles?.note) {
-    remainingProfiles = {};
-  }
-
   for (const write of claudePlan.writes) {
     if (write.after === null) {
       await rm(write.path).catch((err) => {
@@ -799,7 +618,7 @@ export async function uninstallBundle({
 
   if (
     Object.keys(remainingFiles).length === 0 &&
-    Object.keys(remainingProfiles).length === 0 &&
+    !hasLegacyProfiles &&
     remainingClaudeSettingsPath === null
   ) {
     try {
@@ -812,7 +631,7 @@ export async function uninstallBundle({
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: remainingFiles,
-      profiles: { path: remainingBoundPath, preset: installedPreset, entries: remainingProfiles },
+      profiles: legacyProfiles,
       claudeSettings: { path: remainingClaudeSettingsPath },
     });
   }

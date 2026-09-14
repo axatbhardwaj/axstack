@@ -21,19 +21,8 @@ function writeOrcaBundle(root, { skillBody = '# Axstack\n', roles } = {}) {
     notes: 'Fixture role.',
   }];
   writeFileSync(
-    join(bundle, 'profiles', 'roles.json'),
-    JSON.stringify({
-      version: 1,
-      roles: selectedRoles,
-    }, null, 2) + '\n',
-  );
-  writeFileSync(
     join(bundle, 'profiles', 'presets', 'mixed.json'),
-    JSON.stringify({
-      version: 1,
-      preset: 'mixed',
-      agentProfiles: [{ id: 'axstack-driver', name: 'Driver', provider: 'codex', model: 'm' }],
-    }, null, 2) + '\n',
+    JSON.stringify({ version: 1, roles: selectedRoles }, null, 2) + '\n',
   );
   return bundle;
 }
@@ -116,8 +105,8 @@ test('legacy profile provenance remains inert across install and uninstall', () 
   ]);
   expect(installed.out).toMatch(/legacy.*profile.*provenance/i);
   let manifest = JSON.parse(readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'));
-  expect(manifest.profiles).toEqual(legacy.profiles);
+  expect(manifest.profiles).toEqual({ ...legacy.profiles, preset: null });
   runCli(['uninstall', '--skills-dir', skillsDir]);
   manifest = JSON.parse(readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'));
-  expect(manifest.profiles).toEqual(legacy.profiles);
+  expect(manifest.profiles).toEqual({ ...legacy.profiles, preset: null });
 });
