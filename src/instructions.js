@@ -70,9 +70,9 @@ export function applyInstructionPlan(text, plan) {
   return `${text.slice(0, plan.start)}${plan.block}${text.slice(plan.end)}`;
 }
 
-export function stripInstructionBlock(text, ownership) {
+export function stripInstructionBlock(text, ownership, { force = false } = {}) {
   const located = locateInstructionBlock(text);
-  if (!located || hashContent(located.block) !== ownership.hash) {
+  if (!located || (!force && hashContent(located.block) !== ownership.hash)) {
     return { text, removed: false, conflict: true };
   }
   const separation = ownership.separation ?? '';
