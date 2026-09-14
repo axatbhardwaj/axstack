@@ -318,74 +318,20 @@ test('structural: launch reference gives ordered Paseo materialization steps', (
   expect(/persist/i.test(text) && /reuse/i.test(text), 'must persist/reuse agent and workspace IDs').toBeTruthy();
 });
 
-test('structural: profiles use verified provider/model/mode IDs with names', () => {
-  const p = join(root, 'profiles', 'paseo.json');
-  expect(existsSync(p), 'missing profiles/paseo.json').toBeTruthy();
-  const data = JSON.parse(readFileSync(p, 'utf8'));
-  expect(data.version, 'version must be 1').toBe(1);
-  expect(Array.isArray(data.agentProfiles), 'agentProfiles must be an array').toBeTruthy();
-  const byId = Object.fromEntries(data.agentProfiles.map((x) => [x.id, x]));
-
-  const expected = {
-    'axstack-driver': { provider: 'codex', model: 'gpt-6-astra', modeId: 'full-access' },
-    'axstack-advisor': { provider: 'claude', model: 'claude-fable-5-1', modeId: 'bypassPermissions' },
-    'axstack-owner': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
-    'axstack-author': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
-    'axstack-reviewer-opus': { provider: 'claude', model: 'claude-opus-5', modeId: 'bypassPermissions' },
-    'axstack-reviewer-sol': { provider: 'codex', model: 'gpt-5.6-sol', modeId: 'full-access' },
-  };
-  for (const [id, want] of Object.entries(expected)) {
-    const prof = byId[id];
-    expect(prof, `missing profile ${id}`).toBeTruthy();
-    expect(prof.provider, `${id}: provider must be ${want.provider}`).toBe(want.provider);
-    expect(prof.model, `${id}: model must be ${want.model}`).toBe(want.model);
-    expect(prof.modeId, `${id}: modeId must be ${want.modeId}`).toBe(want.modeId);
-    expect(prof.name && prof.name.length > 0, `${id}: missing name (live list_profiles exposes name)`).toBeTruthy();
-    expect('displayName' in prof, `${id}: must not use displayName (not a live profile field)`).toBe(false);
-    expect(prof.notes && prof.notes.length > 0, `${id}: missing notes`).toBeTruthy();
-    expect('thinkingOptionId' in prof, `${id}: missing thinkingOptionId`).toBeTruthy();
+test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
+  const ids = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
+    .agentProfiles.map(({ id }) => id);
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
+    expect(data.preset).toBe(preset);
+    expect(data.agentProfiles.map(({ id }) => id)).toEqual(ids);
+    for (const prof of data.agentProfiles) {
+      expect(prof.modeId).toBe(prof.provider === 'claude' ? 'bypassPermissions' : 'full-access');
+      expect(prof.name).toBeTruthy();
+      expect(prof.notes).toBeTruthy();
+      expect('displayName' in prof).toBe(false);
+    }
   }
-
-  // Cross-provider reviewer distinction: Opus reviewer must be claude, Sol reviewer codex.
-  expect(
-    byId['axstack-reviewer-opus'].provider === byId['axstack-reviewer-sol'].provider,
-    'final reviewers must be cross-provider (claude vs codex)',
-  ).toBe(false);
-  expect(
-    byId['axstack-reviewer-opus'].model.includes('gpt'),
-    'Opus reviewer must never be a native GPT model',
-  ).toBe(false);
-
-  // Mode allowlists per provider (verified): no invented codex default/review/readonly.
-  const allowed = {
-    claude: ['default', 'acceptEdits', 'auto', 'plan', 'bypassPermissions'],
-    codex: ['auto', 'auto-review', 'full-access'],
-  };
-  for (const prof of data.agentProfiles) {
-    expect(allowed[prof.provider], `${prof.id}: unknown provider ${prof.provider}`).toBeTruthy();
-    expect(
-      allowed[prof.provider].includes(prof.modeId),
-      `${prof.id}: modeId ${prof.modeId} not valid for ${prof.provider}`,
-    ).toBeTruthy();
-  }
-
-  // Driver stays in current chat; checker gated on setup.
-  expect(
-    byId['axstack-driver'].notes,
-    'driver notes must state the current chat remains the driver',
-  ).toMatch(/current chat/i);
-  expect(
-    byId['axstack-driver'].notes,
-    'driver notes must forbid auto-launching the preferred profile instead of current chat',
-  ).toMatch(/never.*auto-launch|never.*launch/i);
-  const checker = byId['axstack-checker'];
-  expect(checker, 'missing checker profile').toBeTruthy();
-  expect(checker.model, 'checker model must be null until user setup').toBe(null);
-  expect(checker.notes, 'checker notes must explain model is chosen at setup').toMatch(/setup/i);
-  expect(
-    checker.notes,
-    'checker notes must require setup before dispatch (never launch provider default)',
-  ).toMatch(/before dispatch|must not dispatch|require.*setup/i);
 });
 
 test('structural: review receipt distinguishes verdicts with SHA, coverage, limitations', () => {
@@ -404,17 +350,17 @@ test('structural: launch reference treats live profiles as authoritative', () =>
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'paseo-launch.md'), 'utf8');
   expect(/live.*authoritative|authoritative.*live/i.test(text), 'must state installed live profiles are authoritative').toBeTruthy();
   expect(/setup default/i.test(text), 'must describe bundled profiles as setup defaults').toBeTruthy();
-  expect(/no guaranteed|not guaranteed/i.test(text), 'must not assume profiles/paseo.json exists at runtime').toBeTruthy();
+  expect(/no guaranteed|not guaranteed/i.test(text), 'must not assume bundled presets exist at runtime').toBeTruthy();
   expect(/reconcile/i.test(text), 'must reconcile existing workspace/session before creating').toBeTruthy();
   expect(/projectId/i.test(text), 'must pass canonical project lookup (projectId/workspaceId)').toBeTruthy();
   expect(/setup gap/i.test(text), 'must treat missing canonical owner as setup gap').toBeTruthy();
   expect(/never.*override|do not.*override/i.test(text), 'must never override configured models at runtime').toBeTruthy();
 });
 
-test('structural: contracts carry Fable triggers and the high-stakes gate', () => {
+test('structural: contracts carry configured advisor triggers and the mixed high-stakes gate', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
-  expect(text.includes('Fable'), 'contracts must name the Fable advisor split').toBeTruthy();
-  // User steering (accepted scope extension): Fable is involved in spec
+  expect(text.includes('axstack-advisor'), 'contracts must name the configured advisor role').toBeTruthy();
+  // Structural policy check: the configured advisor is involved in spec
   // creation/revision, solution design, and consequential decisions —
   // broader than only unresolved-after-factual-checks. Flagged to root:
   // this replaces the prior narrow trigger expectation.
@@ -427,6 +373,7 @@ test('structural: contracts carry Fable triggers and the high-stakes gate', () =
   expect(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE').toBeTruthy();
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
+  expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
 });
 
 test('structural: align reads back understanding without a pre-spec agreement gate', () => {

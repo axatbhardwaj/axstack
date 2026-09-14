@@ -13,13 +13,14 @@ test('repairs: substantive runs require the explicitly loaded audit skill and ho
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });
 
-test('repairs: Fable profile covers spec, design, and consequential decisions', () => {
-  const profiles = JSON.parse(read('profiles/paseo.json'));
-  const notes = profiles.agentProfiles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
-  expect(notes).toMatch(/spec creation[^.]*revision/i);
-  expect(notes).toMatch(/solution design/i);
-  expect(notes).toMatch(/consequential decisions/i);
-  expect(notes).not.toMatch(/unresolved consequential decisions/i);
+test('repairs: configured advisor covers spec, design, and consequential decisions', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const profiles = JSON.parse(read(`profiles/presets/${preset}.json`));
+    const notes = profiles.agentProfiles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
+    expect(notes).toMatch(/specification creation[^.]*revision/i);
+    expect(notes).toMatch(/solution design/i);
+    expect(notes).toMatch(/consequential decisions/i);
+  }
   const spec = read('skills/axstack-spec/SKILL.md');
   expect(spec).toMatch(/spec creation and revision/i);
   expect(spec).not.toMatch(/re-involve Fable only for new consequential design ground/i);

@@ -56,7 +56,7 @@
       "title": "Reviewer disagreement means incomplete review, resolved by evidence",
       "spec_ref": "Peer review contract: exactly two reviewers, same brief/scope/revision, all six angles, isolated first passes, no vote-based resolution. Unresolved material disagreement means incomplete review.",
       "input": {
-        "run_state": "Peer PR candidate rev X ready for final review. Owner launched independent Sol and Opus reviewers with identical brief.",
+        "run_state": "Peer PR candidate rev X ready for final review. Owner launched the configured reviewer-primary and reviewer-secondary with identical briefs.",
         "event": "Sol reports no material findings. Opus reports material correctness failure with failing-input evidence. Findings were produced independently."
       },
       "expected": {
@@ -163,12 +163,12 @@
       "title": "Launched sessions match profile provider/model; unset checker blocks dispatch",
       "spec_ref": "Peer review model roles: configured profiles materialize as actual sessions; unavailable model pauses affected work pending user decision, never auto-fallback. Checker model chosen at setup.",
       "input": {
-        "run_state": "Peer PR ready for final review. Profiles: reviewer-opus=claude/claude-opus-5, reviewer-sol=codex/gpt-5.6-sol, checker model null (setup not done).",
+        "run_state": "Mixed-preset peer PR ready for final review. Profiles: reviewer-primary=codex/gpt-5.6-sol, reviewer-secondary=claude/claude-opus-5, checker model null (setup not done).",
         "event": "Owner launches both final reviewers and considers dispatching the checker."
       },
       "expected": {
-        "required": ["Opus review session runs claude/claude-opus-5; Sol review session runs codex/gpt-5.6-sol", "Verify session model/ownership receipt for each launch", "Checker dispatch blocked until setup selects its model"],
-        "forbidden": ["Launching a native GPT session and calling it the Opus review", "Substituting another model for an unavailable role without user decision", "Dispatching checker with a provider default when its model is null"],
+        "required": ["Reviewer-primary runs codex/gpt-5.6-sol; reviewer-secondary runs claude/claude-opus-5", "Verify session model/ownership receipt for each launch", "Checker dispatch blocked until setup selects its model"],
+        "forbidden": ["Inferring a role model from its name instead of its routing snapshot", "Substituting another model for an unavailable role without user decision", "Dispatching checker with a provider default when its model is null"],
         "evidence": "Session receipts showing provider/model per role; blocked-checker record with setup requirement"
       }
     },

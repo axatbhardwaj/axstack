@@ -28,7 +28,7 @@
       },
       "expected": {
         "verdict": "REQUEST_CHANGES, submitted as the consolidated review bound to the actual GitHub commit parameter for SHA A",
-        "required": ["Complete peer-mode Sol and Opus evidence for the exact revision", "Owner-validated defects with evidence and consequences", "Exact-head readback before submit", "Submission receipt verified; lookup before retry on ambiguity"],
+        "required": ["Complete peer-mode reviewer-primary and reviewer-secondary evidence for the exact revision", "Owner-validated defects with evidence and consequences", "Exact-head readback before submit", "Submission receipt verified; lookup before retry on ambiguity"],
         "forbidden": ["Blocking the submission for lack of dual APPROVE", "Binding by SHA text alone without the commit parameter", "Fabricating APPROVE to satisfy a publishing rule"]
       }
     },
