@@ -140,7 +140,7 @@ test('review modes: neutral reviewer IDs carry each ordered preset pair', () => 
     'claude-only': [['claude', 'claude-opus-5', 'medium'], ['claude', 'claude-sonnet-5', 'xhigh']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
-    const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).agentProfiles;
+    const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
     const byId = Object.fromEntries(profiles.map((profile) => [profile.id, profile]));
     for (const [index, id] of ['axstack-reviewer-primary', 'axstack-reviewer-secondary'].entries()) {
       expect([byId[id].provider, byId[id].model, byId[id].thinkingOptionId]).toEqual(pair[index]);

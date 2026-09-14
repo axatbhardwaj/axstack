@@ -6,7 +6,7 @@ description: When routing an engineering run through Axstack, use axstack to sel
 # Axstack entry
 
 Route the current request to one Axstack phase with the right scope identity.
-The current chat remains the driver; Paseo owns runtime orchestration.
+The current chat remains the driver; Orca owns runtime orchestration.
 
 For an explicit relay message or transport test, use
 [axstack-relay](../axstack-relay/SKILL.md) directly. No engineering scope
@@ -45,15 +45,15 @@ held.
 
 - Every independently called phase loads [Standing contracts](references/contracts.md),
   which requires lifecycle and audit loading before action.
-- Before an actual Axstack role dispatch, load
-  [Paseo launch](references/paseo-launch.md). Ordinary reading, writing, and
+- Before an actual Axstack role dispatch, delivery, settlement, or handoff, load
+  [Orca runtime](references/orca-runtime.md). Ordinary reading, writing, and
   local checks do not require launch discovery.
 - Substantive delegated or resumable work uses the
   [Local run record](references/run-record.md).
 - When review escalation or watch notification is eligible and the brief has a
   `Notification policy`, use the optional
   [axstack-relay](../axstack-relay/SKILL.md); otherwise keep notification in
-  the current Paseo conversation.
+  the current Orca conversation.
 
 ## Lifecycle
 

@@ -27,11 +27,11 @@ describe('preset bundle validation', () => {
 
     writeFileSync(
       join(bundle, 'profiles', 'presets', 'codex-only.json'),
-      JSON.stringify({ version: 1, preset: 'codex-only', agentProfiles: mixed }),
+      JSON.stringify({ version: 1, roles: mixed }),
     );
     const validated = await validateBundle(bundle, 'codex-only');
     expect(validated.selectedPreset).toBe('codex-only');
-    expect(validated.bundleProfiles).toEqual(mixed);
+    expect(validated.bundleRoles).toEqual(mixed);
     expect(Object.keys(validated.presets).sort()).toEqual(['codex-only', 'mixed']);
   });
 
@@ -39,23 +39,23 @@ describe('preset bundle validation', () => {
     const cases = [
       ['malformed JSON', (path) => writeFileSync(path, '{ nope'), /valid JSON/i],
       [
-        'preset/name mismatch',
-        (path) => writeFileSync(path, JSON.stringify({ version: 1, preset: 'claude-only', agentProfiles: [profile('axstack-driver')] })),
-        /filename|stem|preset/i,
+        'unexpected legacy key',
+        (path) => writeFileSync(path, JSON.stringify({ version: 1, preset: 'mixed', roles: [profile('axstack-driver')] })),
+        /exactly.*version.*roles/i,
       ],
       [
         'empty profiles',
-        (path) => writeFileSync(path, JSON.stringify({ version: 1, preset: 'mixed', agentProfiles: [] })),
-        /non-empty|bundle profiles/i,
+        (path) => writeFileSync(path, JSON.stringify({ version: 1, roles: [] })),
+        /non-empty|bundle roles/i,
       ],
       [
         'unsupported version',
-        (path) => writeFileSync(path, JSON.stringify({ version: 2, preset: 'mixed', agentProfiles: [profile('axstack-driver')] })),
+        (path) => writeFileSync(path, JSON.stringify({ version: 2, roles: [profile('axstack-driver')] })),
         /version.*1/i,
       ],
       [
         'duplicate role IDs',
-        (path) => writeFileSync(path, JSON.stringify({ version: 1, preset: 'mixed', agentProfiles: [profile('axstack-driver'), profile('axstack-driver')] })),
+        (path) => writeFileSync(path, JSON.stringify({ version: 1, roles: [profile('axstack-driver'), profile('axstack-driver')] })),
         /duplicate.*axstack-driver/i,
       ],
       [
@@ -86,7 +86,7 @@ describe('preset bundle validation', () => {
     mkdirSync(join(outside, 'presets'), { recursive: true });
     writeFileSync(
       join(outside, 'presets', 'mixed.json'),
-      JSON.stringify({ version: 1, preset: 'mixed', agentProfiles: [profile('axstack-driver')] }),
+      JSON.stringify({ version: 1, roles: [profile('axstack-driver')] }),
     );
     symlinkSync(outside, join(bundle, 'profiles'));
 
@@ -111,25 +111,25 @@ describe('preset bundle validation', () => {
     const root = makeTempRoot('axstack-no-presets-');
     const bundle = writeFixtureBundle(root, { presets: null });
     const validated = await validateBundle(bundle, 'mixed');
-    expect(validated.bundleProfiles).toBeNull();
+    expect(validated.bundleRoles).toBeNull();
     expect(validated.presets).toEqual({});
   });
 
-  test('install merges only the selected preset', () => {
+  test('install materializes only the selected preset', () => {
     const root = makeTempRoot('axstack-select-preset-');
     const mixed = [profile('axstack-driver', 'codex')];
     const claude = [profile('axstack-driver', 'claude')];
     const bundle = writeFixtureBundle(root, {
       presets: { mixed, 'claude-only': claude },
     });
-    const profilePath = join(root, 'paseo.json');
+    const skillsDir = join(root, 'skills');
 
     runCli([
       'install', '--preset', 'claude', '--bundle', bundle,
-      '--skills-dir', join(root, 'skills'), '--profile', profilePath,
+      '--skills-dir', skillsDir,
     ]);
 
-    const installed = JSON.parse(readFileSync(profilePath, 'utf8'));
-    expect(installed.daemon.agentProfiles).toEqual(claude);
+    const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+    expect(installed).toEqual({ version: 1, preset: 'claude-only', roles: claude });
   });
 });

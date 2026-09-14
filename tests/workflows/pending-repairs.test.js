@@ -16,7 +16,7 @@ test('repairs: substantive runs require the explicitly loaded audit skill and ho
 test('repairs: configured advisor covers spec, design, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`));
-    const notes = profiles.agentProfiles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
+    const notes = profiles.roles.find(({ id }) => id === 'axstack-advisor')?.notes ?? '';
     expect(notes).toMatch(/specification creation[^.]*revision/i);
     expect(notes).toMatch(/solution design/i);
     expect(notes).toMatch(/consequential decisions/i);
@@ -54,8 +54,8 @@ test('repairs: ordinary handoff and resume explicitly load shared lifecycle', ()
   const handoff = read('skills/axstack/SKILL.md');
   expect(handoff).toContain('references/lifecycle.md');
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toContain('paseo-handoff');
-  expect(lifecycle).toMatch(/both native[\s\S]*paseo-handoff[\s\S]*required[\s\S]*`paseo`[\s\S]*discoverable/i);
+  expect(lifecycle).toContain('[Orca runtime boundary](orca-runtime.md)');
+  expect(lifecycle).toMatch(/explicit acceptance receipt[^.]*before changing ownership/i);
   expect(lifecycle).toMatch(/only an explicit user request to transfer\s+ownership/i);
   expect(lifecycle).toMatch(/keep the current\s+owner[\s\S]*no replacement or ownership transfer launches/i);
 });

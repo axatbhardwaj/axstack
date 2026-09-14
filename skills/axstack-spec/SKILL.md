@@ -27,7 +27,7 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
 3. **Draft with decision evidence.** Write observable acceptance criteria and
    explicit exclusions in the selected store. For advisor involvement, first
    record the driver's independent assessment, then load
-   [Paseo launch](../axstack/references/paseo-launch.md) before dispatching the
+   [Orca runtime](../axstack/references/orca-runtime.md) before dispatching the
    configured `axstack-advisor`. Involve the advisor in spec creation and revision, solution design, and
    consequential decisions under Standing contracts, and cache the receipt
    with the draft. Reuse it only while its evidence and scope remain unchanged.

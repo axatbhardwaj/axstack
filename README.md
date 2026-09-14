@@ -1,145 +1,117 @@
 # Axstack
 
-Axstack is a standalone toolkit for finishing agreed engineering work with
-less supervision while retaining independent review. Chat drives
-execution; a setup CLI installs skills and checks configuration. There is no
-Axstack daemon, scheduler, or workflow state machine.
+Axstack is a standalone toolkit for finishing agreed engineering work with less
+supervision while retaining independent review. Chat drives execution; a Bun
+CLI installs owned skills and role data and checks capabilities. Axstack has no
+daemon, scheduler, runtime database, or workflow state machine.
 
-Design inspiration comes from disciplined user alignment and accountable PR
-ownership workflows; Axstack ships its own self-contained skills and has no
-dependency on Matt Pocock or Poteto skills. Native session handoff is
-provided by Paseo; see [workflow prerequisites](docs/workflows.md#native-handoff).
+Orca is the only supported active runtime. Its installed, version-matched
+`orchestration` and `orca-cli` guides own worktrees, sessions, supervised
+dispatch, messages, settlement, and handoff mechanics. Axstack owns scope,
+role choices, evidence, review policy, and one private derived run record.
 
 ## How a run works
 
-Invoke a phase from chat (`axstack`, `axstack-align`, `axstack-spec`,
-`axstack-tickets`, `axstack-implement`, `axstack-review`, `axstack-watch`,
-plus direct `axstack-research`, `axstack-explain`, and `axstack-improve` routes
-that need no spec ceremony). Explicit messages and transport tests may use `axstack-relay` directly.
-Urgent issues and blockers may notify the user under their standing instruction;
-other automated notifications follow the recorded `Notification policy`. Handoffs use
-Paseo’s native `paseo-handoff` when available;
-Axstack retains the run-record and ownership context:
+Invoke `axstack` or the needed phase directly: `axstack-align`,
+`axstack-spec`, `axstack-tickets`, `axstack-implement`, `axstack-review`, and
+`axstack-watch`. Direct `axstack-research`, `axstack-explain`, and
+`axstack-improve` routes need no spec ceremony. `axstack-relay` remains an
+optional inline route for explicit messages and authorized notifications; an
+unavailable or legacy-runtime-only relay falls back to the current conversation
+without changing authority.
 
-Updated 2026-09-13 by user-requested change: scope readiness is proportional.
-
-1. Classify new engineering work as substantial, small, or unclear and record
-   a brief reason. Clarify unclear scope first, then classify it as small or
-   substantial. Small, clear, bounded one-PR work may use its request or
-   existing issue plus explicit acceptance checks and exclusions.
-2. Substantial features and multi-PR or stacked work need an approved spec and
-   matching ticket map; a bounded small feature is not substantial merely
-   because it is labelled a feature. Alignment prepares that identity through
-   one spec approval and stops with a handoff; small ambiguity can instead
-   return a snapshotted small-change intent.
-3. Invoke `axstack` to execute prepared work. Capabilities become internal
-   tasks and reviewed PRs with one persistent owner per PR. Peer PRs receive
-   independent `reviewer-primary` and `reviewer-secondary` passes; authored PRs
+1. Classify new engineering work as substantial, small, or unclear with a brief
+   reason. Small, bounded one-PR work uses the current request or selected issue
+   as a snapshotted small-change intent;
+   substantial or stacked work needs an approved spec and matching ticket map.
+2. Bind each ready task to the selected role snapshot and an authoritative Orca
+   Run, Task, and Dispatch. Exactly one writer owns a candidate at a time.
+3. Peer PRs receive both configured independent reviewer roles. Authored PRs
    receive one eligible reviewer from the selected preset's explicit mapping
-   and actual author provenance.
-4. You merge by default, bottom-up for a stack. Review approval never
-    grants merge authority. Colleague PRs review in peer mode against
-    their linked intent with no Axstack spec required; adopted PRs keep a
-    maintenance scope snapshot; monitoring stays bounded with one owner,
-    an independent read-only monitor and watchdog, and no silent renewal.
+   and actual author provenance. Every review binds the exact head and base.
+   Stable IDs are `axstack-reviewer-primary` and `axstack-reviewer-secondary`.
+4. Accepted repairs return to the same author where its session and evidence
+   remain valid. The human merges by default, bottom-up for a stack.
+5. Full handoff requires explicit recipient acceptance of the exact scope and
+   authority before ownership changes. Ordinary resume reconciles the current
+   owner instead of replacing it.
 
-Active PRs have no fixed count. Fanout is dependency- and capacity-driven
-within configured host resource and spending limits, with one execution host
-per run, one persistent owner per PR, and exactly one writer per candidate.
+Active PR fanout is dependency- and capacity-driven; there is no fixed count.
 Each PR has one theme and a measured size under the shared
-[PR-shape policy](skills/axstack/references/pr-shape.md). Routine shape, split,
-fanout, and exception decisions are autonomous driver decisions within the
-approved spec; size alone never requires user approval. The rationale band
-requires only a recorded cohesion rationale, with no split-attempt record. The
-exception band gets a reasonable split attempt and a full exception record when
-splitting would compromise atomicity, greenness, or independent reviewability,
-or reproducible bulk dominates. The independent reviewer applies the level
-matching the measured total under the existing simplicity angle; weak rationale
-returns to the author for normal rework. Existing material-scope, serious-risk,
-unavailable-model, and human-merge holds remain unchanged. Monitoring remains
-bounded to 24 hours by default with a resumable handoff. Details:
-[docs/workflows.md](docs/workflows.md), spec:
-[issue #1](https://github.com/axatbhardwaj/axstack/issues/1).
-
-Linear is the default integration (native document, report-only checker,
-driver-owned updates); repository Markdown is an explicit alternative.
-The checker's inexpensive model stays unset until setup.
-
-## Install a release
-
-Download the complete Bun package from [GitHub Releases](https://github.com/axatbhardwaj/axstack/releases).
-It is not published to the npm registry. The CLI installs and checks skills;
-Paseo remains the runtime.
-
-```sh
-bun add --global https://github.com/axatbhardwaj/axstack/releases/download/v0.2.0/axstack-0.2.0.tgz
-axstack --version
-axstack check
-axstack install --harness codex --preset mixed --yes
-# Or select --harness claude; add --profile <paseo-config> to bootstrap profiles.
-```
-
-Ordinary upgrades preserve retired owned assets. Existing installations must
-remove the former handoff and docs assets through the documented no-force
-uninstall/install cycle. Follow the [retired asset migration
-instructions](docs/installation.md#retiring-former-skills-and-profiles).
+[PR-shape policy](skills/axstack/references/pr-shape.md). Routine shape and
+fanout choices remain autonomous inside approved scope. Material scope,
+serious-risk, unavailable-model, and human-merge holds remain explicit.
+The autonomous driver records the rationale band's cohesion rationale; the exception band needs a
+reasonable split attempt and full exception record. Size alone never requires
+user approval.
 
 ## Install from source
 
-Alternatively, install from a source checkout.
-Requires Bun >= 1.3.14, no runtime dependencies. Filesystem access uses the
-approved narrow exception: node:fs and node:fs/promises are Bun-implemented
-built-ins; no Node.js runtime is used. `bin/axstack.js` is the
-`axstack` binary.
+Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
+Orca with its runtime-owned guides. Filesystem access uses Bun's implementation
+of `node:fs` and `node:fs/promises`; there are no runtime dependencies.
 
 ```sh
-# From the source checkout root. Check host tools (bun, git, gh + gh stack extension, paseo)
 bun bin/axstack.js check --bundle .
-
-# Install skills into an explicit target and merge profiles
-# (--yes is required when the target or profile lives under your home directory)
-bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config> --preset mixed [--yes]
-
-# Re-run: expect "no changes (idempotent, everything unchanged)"
-bun bin/axstack.js install --bundle . --skills-dir <dir> --profile <paseo-config>
-
-# Remove only unchanged owned assets (user edits survive)
-bun bin/axstack.js uninstall --skills-dir <dir> --profile <paseo-config>
+bun bin/axstack.js install --bundle . --skills-dir <dir> --preset mixed [--yes]
+bun bin/axstack.js install --bundle . --skills-dir <dir> --preset mixed
+bun bin/axstack.js uninstall --skills-dir <dir>
 ```
 
-Full command reference: [docs/installation.md](docs/installation.md).
+Use `--harness codex` or `--harness claude` only for a verified default skill
+directory. `--claude-settings` and `--no-claude-settings` manage the existing
+Claude Code subagent default transaction; they do not configure Orca roles.
+See [installation details](docs/installation.md).
 
-The public bundle contains three canonical 17-role assets:
+The public bundle preserves three canonical 17-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
-[claude-only](profiles/presets/claude-only.json). Each uses neutral
-`axstack-reviewer-primary` and `axstack-reviewer-secondary` IDs. The mixed
-`axstack-checker` model is intentionally unset pending explicit setup; the
-single-provider presets configure it. Existing configured roles are preserved
-under the installer's ownership rules, and no model is substituted.
+[claude-only](profiles/presets/claude-only.json). Each is exactly
+`{ "version": 1, "roles": [...] }`. Installation writes the selected snapshot
+to `<skills-dir>/axstack/roles.json` as
+`{ "version": 1, "preset": "<name>", "roles": [...] }` under normal ownership
+hashes. An edited installed role file is preserved.
 
-`install --profile` writes the selected JSON config file only. It does not
-apply a native config patch, hot-reload a daemon, or prove runtime readback;
-perform and verify any host application step separately. Axstack has no
-runtime profile registry or profile editor: manage live models, effort, and
-permissions in Paseo, and existing live user configuration stays authoritative.
-Phase skills live in [skills/](skills/).
+The mixed `axstack-checker` model is intentionally `null`; that role stays held
+instead of inheriting a provider default. The single-provider presets configure
+it. Preset changes affect new runs only. Stored model, effort, and permission
+fields are declared intent until actual Orca launch receipts establish effective
+behavior; installation never proves provider availability or permission parity.
+Subscription availability and quota never select a fallback model.
+End-to-end compatibility remains unverified without matching runtime receipts.
 
-## Verification status
+## Runtime evidence and holds
 
-- 125 workflow structural and contract checks pass under Bun. The 15 routing
-  scenarios and other declared cases are evaluation inputs; their structural
-  checks are not model behavior.
-- A root-owned, session-fresh Sol 33-case simulation at `a97c1a7` observed
-  intended decisions for the 25 declared scenarios plus 8 baseline cases.
-  Its private artifact is not shipped. This is model simulation, not live
-  runtime or harness-support proof.
-- CI targets Ubuntu and macOS with Bun 1.3.14 and 1.4.2 (`bun test` and
-  `bun pm pack --dry-run` on pushes and pull requests) — see
-  [GitHub Actions](https://github.com/axatbhardwaj/axstack/actions).
-  Bun results are pending until observed.
-- Windows is intended through WSL (unverified). Live harness, Linear, and
-  model compatibility remain unverified until observed.
+Native Orca exercises have returned Codex and Claude worker completions,
+same-terminal follow-up, separate worktree placement, settlement cleanup,
+`user_takeover` retention, and recovery from `consumer_fenced`. These are
+bounded runtime facts, not proof that every role or harness is compatible.
+
+Input acceptance is not agent readiness. A trust prompt was observed after an
+accepted launch, so startup recovery must inspect the existing attempt, never
+answer trust or permission prompts on the worker's behalf, and never create a
+duplicate writer. A `worker_done` advances work only when its Task and Dispatch
+match the active attempt and its revision evidence verifies.
+
+Automated watch activation is held. Orca's native automation schema exposes a
+provider but cannot pin model, effort, or permission, and its current schedule
+parser does not preserve the accepted bounded expiry. Axstack creates no timer,
+uses no historical fallback, and introduces no custom scheduler. The intended
+five-minute monitor, hourly watchdog, quiet healthy ticks, and shared 24-hour
+deadline remain the acceptance contract for a future approved implementation.
+
+Mobile completion/reply behavior remains unverified. Structural checks and
+qualitative scenario evaluation are not live runtime proof.
+
+## Historical migration boundary
+
+Older releases used Paseo for orchestration and could leave profile ownership
+provenance or retired skills behind. That state is historical and inert in the
+Orca runtime. Migration preserves user-edited and unknown assets and records
+legacy ownership without reading, writing, or deleting live host configuration.
+Use the explicit migration guidance in [installation](docs/installation.md);
+release installation, host cutover, and old-timer cleanup need separate
+authorization.
 
 ## License
 

@@ -24,7 +24,7 @@ only and establish neither human identity nor write, reply, or merge authority.
 ## 1. Adopt and reconcile
 
 Start from actual state. Reconcile the PR's remote head and base, ownership,
-existing Paseo sessions, private run record, and watch registrations. Reuse the
+existing Orca Tasks, Dispatches, sessions, private run record, and watch registrations. Reuse the
 live owner and watch; uncertain state holds new registrations until resolved.
 
 For an existing own PR, read the
@@ -56,11 +56,12 @@ new authority.
 
 ## 3. Start the bounded watch
 
-Read-only checks and updates to the already-owned local record need no launch
-load. When the watch needs a new owner, monitor, watchdog, or timer, first read
+Read-only checks and updates to the already-owned local record need no runtime
+load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
-[Paseo launch](../axstack/references/paseo-launch.md). Reconcile before creating
-anything.
+[Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
+anything. The current native capability hold prevents the 5 min monitor,
+hourly watchdog, and timer activation; it does not block one read-only PR observation.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -100,7 +101,7 @@ the current revision, and a recorded hold or next owner where work remains.
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
 The monitor and watchdog never send; absent policy or failed relay uses the
-current Paseo conversation and leaves every existing hold open.
+current Orca conversation and leaves every existing hold open.
 
 ## 5. State readiness precisely
 
@@ -119,11 +120,11 @@ At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither
 silent renewal nor ownership-transfer authority.
 
-Transfer ownership through native Paseo handoff only when the user explicitly
-requests it. Before transfer, follow the lifecycle-owned preflight for native
-capability availability, the configured model, and recipient acceptance. A
-failed or incomplete preflight preserves the current owner and reports the gap;
-never invent a native command or assume an installed handoff skill.
+Transfer ownership through the runtime-owned Orca handoff route only when the
+user explicitly requests it. Before transfer, follow the lifecycle-owned
+preflight for native capability availability, the configured role, and explicit
+recipient acceptance. A failed or incomplete preflight preserves the current
+owner and reports the gap; never invent a native command or infer acceptance.
 
 ```text
 Record: <progress.md path>
@@ -132,7 +133,7 @@ Owner: <profile + session> Worktree: <path>
 Scope: <approved rev, small-change intent, or maintenance snapshot>
 Capability: <issue + lifecycle state>
 CI/review: <current states + evidence refs>
-Watch: <stopped timer receipts + expiry>
+Watch: <capability hold or stopped registration receipts + expiry>
 Remaining: <next actions + owner>
 Resume: <known commands or verified refs needed to reconcile from this revision>
 ```

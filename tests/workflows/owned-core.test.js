@@ -50,7 +50,7 @@ function skill(name) {
 // structural checks; behavioral evidence comes from scenario evaluation).
 
 test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
-  for (const ref of ['paseo-launch.md', 'contracts.md', 'routing.md', 'lifecycle.md']) {
+  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'lifecycle.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -71,7 +71,7 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
 
 test('owned-core: entry routes research/explain/improve/handoff directly without spec ceremony', () => {
   const text = skill('axstack');
-  for (const name of ['axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
+  for (const name of ['axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
     expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
   }
   expect(
@@ -209,7 +209,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
   ).toBeTruthy();
 });
 
-test('owned-core: one persistent owner; independent read-only monitor/watchdog on native timers', () => {
+test('owned-core: one persistent owner; native watch roles stay held without capability', () => {
   const text = skill('axstack-watch');
   expect(
     /one (persistent )?owner/i.test(text),
@@ -220,10 +220,8 @@ test('owned-core: one persistent owner; independent read-only monitor/watchdog o
     /independent/i.test(text) && /read-only/i.test(text),
     'monitor/watchdog must be independent and read-only',
   ).toBeTruthy();
-  expect(
-    /native Paseo|Paseo.*timer|timer.*Paseo/i.test(text),
-    'monitor/watchdog must use native Paseo timers',
-  ).toBeTruthy();
+  expect(/native Orca/i.test(text), 'watch must name the native Orca boundary').toBeTruthy();
+  expect(/capability hold|activation[^.]*hold/i.test(text), 'watch activation must remain held').toBeTruthy();
   expect(/handshake/i.test(text), 'must require initial verified handshakes').toBeTruthy();
   expect(
     /snapshot-only|healthy ticks/i.test(text),
@@ -276,12 +274,12 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .agentProfiles.map(({ id }) => id);
+    .roles.map(({ id }) => id);
   expect(expectedIds).toHaveLength(17);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    expect(data.agentProfiles.map(({ id }) => id)).toEqual(expectedIds);
-    expect(data.agentProfiles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(data.roles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
   }
 });
 
@@ -352,13 +350,13 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
   ).toBeTruthy();
 });
 
-test('owned-core: monitor reads product state, watchdog reads health, same expiry', () => {
+test('owned-core: monitor/watchdog policy survives the native capability hold', () => {
   const text = skill('axstack-watch');
   expect(/5\s?min/i.test(text), 'monitor cadence default 5min must be stated').toBeTruthy();
   expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
   expect(/same[\s\S]*24h/i.test(text), 'both must share the same 24h expiry').toBeTruthy();
-  expect(/own timer|each owns its timer and snapshot/i.test(text), 'each must own its timer and snapshot').toBeTruthy();
-  expect(/acknowledged/i.test(text), 'actionable events must be acknowledged').toBeTruthy();
+  expect(/Create no schedule|no production timer/i.test(text), 'held watch must create no schedule').toBeTruthy();
+  expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();
   expect(
     /approval alone/i.test(text),
     'a review approval alone must not count as merge-ready',
@@ -392,7 +390,7 @@ test('owned-core: align and spec use the configured advisor; auditor role exists
   }
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    const auditor = data.agentProfiles.find(({ id }) => id === 'axstack-auditor');
+    const auditor = data.roles.find(({ id }) => id === 'axstack-auditor');
     expect(auditor, `${preset}: missing axstack-auditor`).toBeTruthy();
     expect(auditor.notes).toMatch(/readonly|read-only/i);
   }
@@ -400,7 +398,7 @@ test('owned-core: align and spec use the configured advisor; auditor role exists
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'paseo-handoff']) {
+  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();

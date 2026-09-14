@@ -1,7 +1,7 @@
 {
   "name": "axstack",
   "version": "0.6.0",
-  "description": "Axstack installer and setup CLI: bundles and installs owned chat skills, merges Paseo profiles, and checks host capabilities. Chat drives execution; this CLI performs installation bookkeeping only.",
+  "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks Orca capabilities.",
   "type": "module",
   "engines": {
     "bun": ">=1.3.14"

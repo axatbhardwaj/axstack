@@ -2,7 +2,7 @@
 // Builds temporary bundles matching the frozen contract:
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files)
 //   <bundle>/profiles/presets/<preset>.json
-//     ({ version: 1, preset, agentProfiles: [...] axstack-* ids })
+//     ({ version: 1, roles: [...] axstack-* ids })
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 
@@ -49,22 +49,6 @@ export function runCli(
   return { ok: true, out };
 }
 
-// Representative Paseo HOST config shape (profiles at daemon.agentProfiles).
-// Test-only fixture; never read from or written to a live home.
-export function representativeHostConfig() {
-  return {
-    version: 1,
-    cliClientId: 'fixture-client-id',
-    daemon: {
-      schedules: [{ id: 'daily-check', cron: '0 9 * * *' }],
-      notifications: { level: 'all' },
-      agentProfiles: [
-        { id: 'custom-mine', name: 'Custom mine', provider: 'custom', model: 'mine', notes: 'user profile' },
-      ],
-    },
-  };
-}
-
 export function writeFixtureBundle(
   root,
   {
@@ -97,10 +81,10 @@ export function writeFixtureBundle(
   if (selectedPresets !== null) {
     const profilesDir = join(bundle, 'profiles', 'presets');
     mkdirSync(profilesDir, { recursive: true });
-    for (const [preset, agentProfiles] of Object.entries(selectedPresets)) {
+    for (const [preset, roles] of Object.entries(selectedPresets)) {
       writeFileSync(
         join(profilesDir, `${preset}.json`),
-        JSON.stringify({ version: 1, preset, agentProfiles }, null, 2) + '\n',
+        JSON.stringify({ version: 1, roles }, null, 2) + '\n',
       );
     }
   }

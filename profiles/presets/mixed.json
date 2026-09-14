@@ -1,7 +1,6 @@
 {
   "version": 1,
-  "preset": "mixed",
-  "agentProfiles": [
+  "roles": [
     {
       "id": "axstack-driver",
       "name": "Axstack driver (preferred)",
@@ -135,7 +134,7 @@
       "model": "claude-opus-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Independent read-only PR monitor on native Paseo timers. Snapshot-only healthy ticks; never authors, reviews, or replies. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Independent read-only PR monitor. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Healthy snapshots stay quiet; never authors, reviews, or replies."
     },
     {
       "id": "axstack-watchdog",
@@ -144,7 +143,7 @@
       "model": "claude-opus-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Independent read-only watch health checker on native Paseo timers. Verifies handshakes, deduplicates events, and reconciles uncertain sends. Never authors, reviews, or replies. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Independent read-only watch health checker. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Verifies handshakes and deduplicates events; never authors, reviews, or replies."
     },
     {
       "id": "axstack-auditor",

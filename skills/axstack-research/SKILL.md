@@ -27,7 +27,7 @@ is part of research.
 2. **Choose the smallest route.** Handle a single factual lookup directly in
    the current chat. Use a profile only when its specialization or independent
    work is useful. Before an actual dispatch, read and follow the
-   [Paseo launch sequence](../axstack/references/paseo-launch.md). Give each
+   [Orca runtime boundary](../axstack/references/orca-runtime.md). Give each
    research branch one owner; keep implementation out of every branch.
 
    These routes are data presets, not proof of live readiness. Confirm profile

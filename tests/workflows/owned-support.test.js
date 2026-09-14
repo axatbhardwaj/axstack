@@ -95,7 +95,7 @@ test('owned-support: explain advertises the approved intent exactly', () => {
 test('owned-support: independently callable via shared references', () => {
   for (const name of OWNED) {
     const text = readSkill(name);
-    for (const ref of ['../axstack/references/paseo-launch.md', '../axstack/references/contracts.md']) {
+    for (const ref of ['../axstack/references/orca-runtime.md', '../axstack/references/contracts.md']) {
       expect(text.includes(ref), `${name}: must load shared reference ${ref}`).toBeTruthy();
     }
   }
@@ -223,10 +223,10 @@ test('owned-support: every HTML explanation triggers full exact-artifact QA', ()
   expect(/public[\s\S]{0,240}(private|privacy|credential|identifier)/i.test(text), 'public artifacts must protect private data').toBeTruthy();
 });
 
-test('owned-support: profile retirement and stale-upgrade migration are explicit', () => {
+test('owned-support: role retirement and stale-upgrade migration are explicit', () => {
   const profiles = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'));
-  expect(profiles.agentProfiles.some(({ id }) => id === 'axstack-docs'), 'retired prose profile must be absent').toBe(false);
-  expect(profiles.agentProfiles.length, 'only the prose profile is retired').toBe(17);
+  expect(profiles.roles.some(({ id }) => id === 'axstack-docs'), 'retired prose role must be absent').toBe(false);
+  expect(profiles.roles.length, 'all current roles remain').toBe(17);
   const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +
     readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
   expect(docs).toMatch(/ordinary[^.]*upgrade[^.]*retain[^.]*axstack-docs/i);

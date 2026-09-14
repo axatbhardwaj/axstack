@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-// axstack — installation/setup CLI. Installs owned skill bundles, merges
-// Paseo profiles, and checks host capabilities. Chat drives execution; this
+// axstack — installation/setup CLI. Installs owned skill bundles and selected
+// role data, configures Claude settings, and checks host capabilities. Chat
 // CLI performs installation bookkeeping only (no runtime, scheduler, or
 // model calls).
 import { readFileSync } from 'node:fs';
@@ -35,26 +35,24 @@ function packageVersion() {
 const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
-  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>]
-  axstack uninstall --skills-dir <dir> [--profile <file>] [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
+  axstack uninstall --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
   axstack --help | --version
 
 Commands:
-  install    Validate a skill bundle, then copy owned skills, merge Paseo
-             profiles (config.daemon.agentProfiles) and record ownership hashes.
-  check      Probe host tools (bun, git, gh, gh stack extension, paseo) and
-             report gaps. A binary probe cannot prove Linear MCP access or
-             model quotas; skill prompts perform a session preflight.
+  install    Validate a skill bundle, then copy owned skills and selected role
+             data and record ownership hashes.
+  check      Probe Bun, Git, gh stack, and resolved Orca runtime/guide
+             capabilities. Probes do not prove model or execution compatibility.
   uninstall  Remove only unchanged Axstack-owned assets. User edits survive.
 
 Flags:
   --bundle <dir>      Bundle root holding skills/axstack-*/SKILL.md and
-                      profiles/presets/*.json. Defaults to the package root.
+                      profiles/presets/*.json role data. Defaults to the package root.
   --preset <name>     Required routing preset: mixed, codex-only, or claude-only.
                       Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target (required). Overrides --harness.
-  --profile <file>    Paseo host config file to merge profiles into.
   --claude-settings <file>
                       Manage the Claude Code user settings file at this path.
                       This forces testable availability without installing Claude.
@@ -66,6 +64,10 @@ Flags:
                       ownership of unknown files. Off by default.
   --yes               Confirm writes inside your home directory. Temp dirs
                       outside home never need this.
+
+Migration:
+  --profile is obsolete. Axstack installs the selected preset as
+  <skills-dir>/axstack/roles.json and never reads or writes Paseo config.
 
 Safety:
   Bundles with symlinks, absolute paths or '..' escapes are rejected before
@@ -86,10 +88,15 @@ function parseArgs(argv) {
   }
   out.command = rest.shift();
   const wantsValue = new Set([
-    '--bundle', '--skills-dir', '--profile', '--harness', '--preset', '--claude-settings',
+    '--bundle', '--skills-dir', '--harness', '--preset', '--claude-settings',
   ]);
   while (rest.length > 0) {
     const tok = rest.shift();
+    if (tok === '--profile') {
+      throw new Error(
+        '--profile is obsolete in the Orca-only installer; role data is installed as axstack/roles.json and legacy Paseo cleanup is separate',
+      );
+    }
     if (wantsValue.has(tok)) {
       const val = rest.shift();
       if (val === undefined || val.startsWith('--')) {
@@ -246,16 +253,13 @@ async function main() {
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
         preset: flags.preset,
-        profilePath: flags.profile ? expandHome(flags.profile) : null,
         force: !!flags.force,
         yes: !!flags.yes,
         claude: resolveClaudeOption(flags, 'install'),
         log: (m) => console.log(m),
       });
       const changed =
-        summary.added.length + summary.updated.length + (summary.profiles?.added?.length ?? 0) +
-        (summary.profiles?.updated?.length ?? 0) + (summary.profiles?.removed?.length ?? 0) +
-        (summary.profiles?.released?.length ?? 0) + (summary.profiles?.migrated?.length ?? 0);
+        summary.added.length + summary.updated.length;
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
       } else {
@@ -270,45 +274,16 @@ async function main() {
       if (summary.notes?.length) {
         for (const note of summary.notes) console.log(`note: ${note}`);
       }
-      if (summary.profiles) {
-        const p = summary.profiles;
-        if (p.created) console.log('profile config created.');
-        if (p.added?.length) console.log(`profiles added: ${p.added.join(', ')}`);
-        if (p.updated?.length) console.log(`profiles updated: ${p.updated.join(', ')}`);
-        if (p.preserved?.length) {
-          console.log(`profiles preserved (user edits kept): ${p.preserved.join(', ')}`);
-        }
-        if (p.unchanged?.length) {
-          console.log(`profiles unchanged (pre-existing, not adopted): ${p.unchanged.join(', ')}`);
-        }
-        if (p.deferred?.length) {
-          console.log(
-            `profiles deferred until setup selects a model: ${p.deferred.join(', ')}`,
-          );
-        }
-        if (p.removed?.length) {
-          console.log(`obsolete owned profile placeholders removed: ${p.removed.join(', ')}`);
-        }
-        if (p.released?.length) {
-          console.log(`missing deferred profile ownership released: ${p.released.join(', ')}`);
-        }
-        if (p.migrated?.length) {
-          console.log(`legacy reviewer profiles migrated: ${p.migrated.join(', ')}`);
-        }
-        if (p.legacyGaps?.length) {
-          console.log(`legacy gap (preserved): ${p.legacyGaps.join(', ')}`);
-        }
+      if (summary.roles) {
+        const p = summary.roles;
         console.log(
           p.ready
             ? `preset ${summary.preset}: ready`
             : `preset ${summary.preset}: NOT ready — ${p.gaps.join('; ')}`,
         );
-        if (p.deviations?.length) {
-          console.log(`profile deviations: ${p.deviations.join('; ')}`);
-        }
         if (!p.ready) process.exitCode = 1;
       } else {
-        console.log('profiles were not installed; readiness is unverified.');
+        console.log('role data was not installed; readiness is unverified.');
       }
       printClaudeSettings(summary.claudeSettings);
       return;
@@ -321,7 +296,7 @@ async function main() {
         const presetNames = Object.keys(bundle.presets);
         console.log(
           `bundle ok: ${bundle.files.length} skill files, ` +
-            (presetNames.length > 0 ? `presets ${presetNames.join(', ')}` : 'no presets'),
+            (presetNames.length > 0 ? `role presets ${presetNames.join(', ')}` : 'no role presets'),
         );
       }
       if (report.gaps.length > 0) process.exitCode = 1;
@@ -330,7 +305,6 @@ async function main() {
     if (command === 'uninstall') {
       const summary = await uninstallBundle({
         skillsDir: flags['skills-dir'] ? expandHome(flags['skills-dir']) : null,
-        profilePath: flags.profile ? expandHome(flags.profile) : null,
         force: !!flags.force,
         yes: !!flags.yes,
         claude: resolveClaudeOption(flags, 'uninstall'),
@@ -340,14 +314,6 @@ async function main() {
       if (summary.removed.length) console.log(`removed: ${summary.removed.join(', ')}`);
       if (summary.preserved.length) {
         console.log(`preserved user edits (use --force to remove): ${summary.preserved.join(', ')}`);
-      }
-      if (summary.profiles) {
-        if (summary.profiles.removed.length) {
-          console.log(`profiles removed: ${summary.profiles.removed.join(', ')}`);
-        }
-        if (summary.profiles.preserved.length) {
-          console.log(`profiles preserved: ${summary.profiles.preserved.join(', ')}`);
-        }
       }
       printClaudeSettings(summary.claudeSettings, { uninstall: true });
       return;

@@ -48,7 +48,7 @@ when material disagreement remains, then surface the choices to the user. Never
 fabricate consensus or impersonate either role.
 
 Immediately before the first actual advisor dispatch, load and follow
-[Paseo launch](../axstack/references/paseo-launch.md). Reuse the advisor session
+[Orca runtime](../axstack/references/orca-runtime.md). Reuse the advisor session
 and settled receipts; consult only the changed frontier. Record compact advisor
 evidence, the driver's assessment, and user-resolved choices for `axstack-spec`.
 If the configured model is unavailable, pause the affected interview and ask
@@ -111,7 +111,7 @@ approval; record chosen document names and paths once per run.
    documentation pointers without adding another runtime. Return the compact
    scope and record pointer in the current chat. Native transfer is separate:
    use it only when the user explicitly requests transfer, loading
-   [Paseo launch](../axstack/references/paseo-launch.md) immediately before
+   [Orca runtime](../axstack/references/orca-runtime.md) immediately before
    actual dispatch. Alignment completion never dispatches a recipient.
 
 Alignment stops for both sizes only when the handoff is usable, its next scope

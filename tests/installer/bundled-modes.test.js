@@ -1,30 +1,27 @@
 import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { makeTempRoot, representativeHostConfig, runCli } from './helpers.js';
+import { readFileSync } from 'node:fs';
+import { join } from '../../src/posixpath.js';
+import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
-const bundle = `${import.meta.dir}/../..`;
-for (const [preset, configuredCount] of [
-  ['mixed', 16],
-  ['codex-only', 17],
-  ['claude-only', 17],
+const CLI = join(import.meta.dir, '../../bin/axstack.js');
+
+for (const [preset, provider] of [
+  ['mixed', 'codex'],
+  ['codex-only', 'codex'],
+  ['claude-only', 'claude'],
 ]) {
-  test(`bundled ${preset} install configures ${configuredCount} roles with provider access`, () => {
+  test(`fixture ${preset} installs a selected role snapshot`, () => {
     const root = makeTempRoot();
-    const profile = `${root}/paseo.json`;
-    const before = representativeHostConfig();
-    writeFileSync(profile, JSON.stringify(before));
-    const result = runCli(`${bundle}/bin/axstack.js`, [
-      'install', '--preset', preset, '--bundle', bundle,
-      '--skills-dir', `${root}/skills`, '--profile', profile,
+    const role = { id: 'axstack-driver', name: 'Driver', provider, model: `${provider}-model` };
+    const bundle = writeFixtureBundle(root, { presets: { [preset]: [role] } });
+    const skillsDir = join(root, 'skills');
+    runCli(CLI, [
+      'install', '--preset', preset, '--bundle', bundle, '--skills-dir', skillsDir,
     ]);
-    expect(result.ok).toBe(true);
-    const after = JSON.parse(readFileSync(profile, 'utf8'));
-    const owned = after.daemon.agentProfiles.filter(p => p.id.startsWith('axstack-'));
-    expect(owned.length).toBe(configuredCount);
-    for (const role of owned) {
-      expect(role.modeId, role.id).toBe(role.provider === 'claude' ? 'bypassPermissions' : 'full-access');
-    }
-    after.daemon.agentProfiles = after.daemon.agentProfiles.filter(p => !p.id.startsWith('axstack-'));
-    expect(after).toEqual(before);
+    expect(JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'))).toEqual({
+      version: 1,
+      preset,
+      roles: [role],
+    });
   });
 }

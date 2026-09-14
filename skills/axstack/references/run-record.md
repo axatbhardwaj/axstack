@@ -39,18 +39,18 @@ coordination mechanism. Each task names the actual owner session and worktree,
 or a receipt pointer containing both; a role label alone is insufficient.
 
 Update before dispatch and after each verified transition. On resume,
-reconcile the record with actual Paseo sessions, exact revisions, forge/PR
+reconcile the record with actual Orca sessions and Dispatches, exact revisions, forge/PR
 state, and the approved intent. Prevent a duplicate writer, mark approval or
 evidence for an older revision stale, and distinguish task completion from a
 capability being merged.
 
-The record is derived progress, not authority. Paseo sessions, Git revisions,
+The record is derived progress, not authority. Orca sessions and Dispatches, Git revisions,
 forge/PR state, and the approved spec remain sources of truth. The driver
 verifies exact SHAs and receipts before recording a transition; a worker claim
 alone is not verification.
 
 Before changing `Driver` or a task `Owner`, verify that the prior driver is
-inactive against actual Paseo session state, or that an explicit accepted transfer
+inactive against actual Orca session and Dispatch state, or that an explicit accepted transfer
 permits reassignment. Idle alone never reassigns ownership.
 Uncertain state or a live conflict holds the transfer; never overwrite the
 field to seize control. A prior driver that sees a different valid accepted

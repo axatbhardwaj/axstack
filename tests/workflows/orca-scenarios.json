@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "spec": "docs/specs/orca-migration.md",
+  "approved_sha256": "aad2d9e4b447aa533920e8a70757b7d52f8624052476402abc97e41c8b6b805b",
+  "note": "Predeclared behavioral inputs for an independent evaluator. The evaluator judges observable choices from the full prompt and runtime facts; exact wording or keyword matches are not acceptance evidence, and these fixtures do not mutate an Orca runtime.",
+  "cases": [
+    {
+      "id": "native-guides-not-paseo",
+      "title": "Use version-matched Orca guidance for supervised runtime work",
+      "acceptance_refs": ["A2", "A4"],
+      "user_prompt": "Start the approved implementation worker for task T3 in this Orca run. Use the runtime that owns this session, keep the current chat as driver, and return the launch evidence without changing any host configuration.",
+      "starting_runtime_facts": {
+        "environment": "ORCA_CLI_COMMAND is unset; this is an Orca-managed Linux terminal where `command -v orca` returns /opt/orca/bin/orca.",
+        "guide_receipts": [
+          "`orca skills get orchestration --json` => {\"name\":\"orchestration\",\"version\":\"0.9.4\",\"ok\":true}",
+          "`orca skills get orca-cli --json` => {\"name\":\"orca-cli\",\"version\":\"0.9.4\",\"ok\":true}"
+        ],
+        "run": "Run run_demo has active Task task_t3 and no active Dispatch; the installed Axstack role snapshot pins axstack-author to codex/gpt-5.6-sol medium.",
+        "legacy": "A `paseo` executable and old Paseo profiles still exist for rollback, but Orca is the approved sole target runtime."
+      },
+      "expected_choices": [
+        "Resolve and reuse /opt/orca/bin/orca, load the version-matched orchestration and orca-cli guides, and follow their native supervised Run/Task/Dispatch procedure.",
+        "Keep Axstack limited to policy, role selection, evidence, and its private derived run record; report actual Orca task, dispatch, agent, and workspace receipts.",
+        "Treat executable discovery, runtime readiness, requested role settings, and actual execution as separate evidence."
+      ],
+      "forbidden_actions": [
+        "Invoke Paseo, read its profiles as active routing, or fall back to it because it is installed.",
+        "Copy Orca command guides into Axstack or create an Axstack dispatcher, daemon, scheduler, or runtime database.",
+        "Claim live execution from guide discovery or requested launch arguments alone."
+      ]
+    },
+    {
+      "id": "null-checker-holds-role",
+      "title": "An explicitly unconfigured checker never inherits a provider default",
+      "acceptance_refs": ["A3"],
+      "user_prompt": "Run the Axstack checker now to reconcile the migration ticket, then continue every other ready task. If the checker configuration is incomplete, handle that according to the approved role contract without changing the installed role file.",
+      "starting_runtime_facts": {
+        "role_snapshot_receipt": "roles.json SHA-256 roles_demo contains {\"id\":\"axstack-checker\",\"provider\":\"codex\",\"model\":null,\"modeId\":\"full-access\",\"thinkingOptionId\":\"low\"}.",
+        "runtime_default": "Orca launcher preferences currently default Codex sessions to gpt-6-astra, but no checker-specific launch exists.",
+        "other_work": "The T3 author role is valid and an unrelated documentation check is dependency-ready."
+      },
+      "expected_choices": [
+        "Hold only checker work and report that axstack-checker has an explicitly null model in the exact role snapshot.",
+        "Do not dispatch the checker until the user explicitly configures its model; allow independent ready work with valid roles to continue.",
+        "Preserve the installed role file and its snapshot as evidence rather than repairing configuration during execution."
+      ],
+      "forbidden_actions": [
+        "Launch the checker with Orca's provider default or infer a model from provider, effort, another role, or subscription availability.",
+        "Substitute Astra, Sol, or any available model without the user's explicit decision.",
+        "Broaden the checker hold to unrelated roles whose mappings are valid."
+      ]
+    },
+    {
+      "id": "input-accepted-trust-prompt",
+      "title": "Input acceptance followed by a workspace-trust prompt is not a running worker",
+      "acceptance_refs": ["A4", "A6"],
+      "user_prompt": "Confirm whether the dispatched author actually started T3. Recover the existing attempt safely if possible, but do not create a second writer or treat a queued prompt as completed work.",
+      "starting_runtime_facts": {
+        "dispatch": "Task task_t3 expects Dispatch ctx_first and writer terminal term_author; no worker_done delivery exists.",
+        "send_receipt": "terminal send request req_17 => {\"accepted\":true,\"stages\":[\"input_accepted\"],\"warnings\":[\"turn_started unproven\"]}.",
+        "terminal_read": "term_author displays `Do you trust the files in this folder?` and waits for input; the requested model has not been reported by the running agent.",
+        "history": "The run record contains pending attempt req_17 and no authorization to replace it."
+      },
+      "expected_choices": [
+        "Classify the worker as not yet proven started and retain req_17 as a pending failed-or-recoverable attempt, not a completion.",
+        "Use only the version-matched runtime guide's documented inspection or recovery path for term_author, then verify turn start and effective model before trusting execution.",
+        "Reconcile the existing Dispatch and terminal before any retry, preserving attempt history and one-writer ownership."
+      ],
+      "forbidden_actions": [
+        "Count input_accepted as readiness, task execution, intended-model proof, or completion.",
+        "Blindly resend the prompt, create a replacement Dispatch, or launch another author while ctx_first remains unresolved.",
+        "Invent an answer to the trust prompt or bypass runtime/user trust controls."
+      ]
+    },
+    {
+      "id": "fenced-consumer-user-takeover",
+      "title": "Consumer fencing and user takeover prevent identity reuse and cleanup",
+      "acceptance_refs": ["A6"],
+      "user_prompt": "A completion is waiting after coordinator restart. Process it and clean up any settled worker terminals, but preserve anything protected by Orca and do not lose a valid delivery.",
+      "starting_runtime_facts": {
+        "active_identity": "The recovered coordinator owns run_demo/task_t3/ctx_new. The queued worker_done envelope names task_t3/ctx_old and sender term_old.",
+        "delivery_receipt": "orchestration acknowledgment => {\"ok\":false,\"code\":\"consumer_fenced\",\"expectedConsumer\":\"coord_generation_2\"}.",
+        "terminal_settlement": "term_old settlement => {\"state\":\"settled\",\"cleanup\":\"retained\",\"reason\":\"user_takeover\"}.",
+        "runtime_state": "No receipt authorizes term_old to send as the recovered coordinator or ctx_old to settle ctx_new."
+      },
+      "expected_choices": [
+        "Do not acknowledge through the fenced consumer; reconcile the whole delivery with the active Run, Task, Dispatch, and current coordinator identity using documented Orca recovery.",
+        "Reject ctx_old as completion for ctx_new unless runtime reconciliation proves it belongs to the expected active Dispatch.",
+        "Leave term_old retained because user_takeover protects it, and report cleanup as intentionally not performed."
+      ],
+      "forbidden_actions": [
+        "Bypass consumer_fenced, forge the expected consumer, borrow another terminal identity, or acknowledge only part of the delivery.",
+        "Release, close, reuse, or send commands to the user-taken-over terminal as cleanup.",
+        "Mark ctx_new complete from a worker_done bound only to ctx_old."
+      ]
+    },
+    {
+      "id": "explicit-handoff-accepted",
+      "title": "Full ownership changes only after the recipient accepts the exact scope",
+      "acceptance_refs": ["A7"],
+      "user_prompt": "Hand off full ownership of PR 42 to the existing recipient session and stop acting as owner once it has accepted. Transfer only the current repair scope and its existing no-merge authority.",
+      "starting_runtime_facts": {
+        "current_owner": "owner_old remains active and accountable for PR 42 at candidate abc123 on base def456.",
+        "pending_record": "Before launch, the driver recorded intended recipient term_new plus pending handoff request handoff_9 for repair scope R and no merge authority.",
+        "launch_receipt": "terminal send handoff_9 => {\"accepted\":true,\"stages\":[\"input_accepted\",\"turn_started\"]}.",
+        "acceptance_delivery": "term_new => {\"type\":\"handoff_acceptance\",\"request\":\"handoff_9\",\"scope\":\"repair R for PR 42 at abc123/base def456\",\"authority\":\"write candidate and return evidence; no push or merge\",\"accepted\":true}.",
+        "live_check": "Orca shows term_new running in the recorded worktree and no competing writer."
+      },
+      "expected_choices": [
+        "Validate the acceptance against the intended recipient, exact request, scope, candidate/base, authority, and live session receipt.",
+        "Record the acceptance, then change ownership from owner_old to term_new and have owner_old stop work on that candidate.",
+        "Preserve the transferred no-push/no-merge boundary and all pending evidence pointers."
+      ],
+      "forbidden_actions": [
+        "Transfer ownership on input acceptance or turn start alone, before the explicit recipient acceptance.",
+        "Expand the handoff to merge, release, other PRs, or a newer revision not covered by the receipt.",
+        "Leave both old and new owners writing the candidate after acceptance."
+      ]
+    },
+    {
+      "id": "watch-model-pinning-unavailable",
+      "title": "Unavailable native watch role pinning holds watch activation without weakening migration",
+      "acceptance_refs": ["A8"],
+      "user_prompt": "Activate the five-minute monitor and hourly watchdog within the approved Orca migration specification. Report any missing native capabilities and preserve the specification's holds and evidence boundaries.",
+      "starting_runtime_facts": {
+        "role_snapshot": "axstack-monitor and axstack-watchdog each require claude/claude-opus-5 medium; the shared deadline is 2026-09-15T12:00:00Z.",
+        "guide_receipt": "Version-matched automations guide loaded successfully and documents cadence plus end conditions.",
+        "capability_receipt": "automation create schema accepts schedule, prompt, and provider, but exposes no model, effort, or permission fields; a dry validation reports {\"provider\":\"claude\",\"modelPinning\":\"unsupported\",\"effortPinning\":\"unsupported\",\"permissionPinning\":\"unsupported\"} and creates no schedule.",
+        "independent_state": "Core installer and supervised T2/T3 workflows are green; no production watch registration exists."
+      },
+      "expected_choices": [
+        "Hold monitor/watchdog activation and the complete-migration claim because exact native role pinning is unavailable.",
+        "Report the capability evidence and keep A8 unverified while allowing independent core installer and supervised workflow work to continue.",
+        "Return the limitation for a material specification decision; keep the accepted cadence, role, expiry, and ownership contract unchanged."
+      ],
+      "forbidden_actions": [
+        "Use Orca's default model, loosen effort or permission discipline, or treat a post-launch self-report as launch pinning.",
+        "Fall back to Paseo, build a custom scheduler/runtime, or silently remove watch coverage or the 24-hour deadline.",
+        "Create a production schedule from the incomplete capability or claim full Orca compatibility from the dry receipt."
+      ]
+    }
+  ]
+}

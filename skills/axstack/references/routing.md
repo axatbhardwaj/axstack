@@ -6,10 +6,10 @@ Choose one route; load only its phase and shared references needed next.
 
 Canonical presets are `mixed`, `codex-only`, and `claude-only`. For a new run,
 read `profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root (installer-recorded on every install, including skills-only), or an
+skills root, or an
 explicit user selection recorded in the run record. Proceed only if those
 sources give exactly one unambiguous preset.
-Missing or contradictory sources are a setup gap: hold, report, and ask. Never
+Missing or contradictory sources are a setup gap: hold. Never
 infer from live profiles or `list_profiles`, harness, tools, credentials,
 quota, subscription, or default to `mixed`.
 
@@ -18,8 +18,7 @@ IDs and their provider/model/mode/effort, with absent or unconfigured roles
 recorded explicitly and no invented provider default. An absent or unconfigured
 role holds only that role's work, not the run. A role installed or changed later
 must not silently enter the snapshot; ask for an explicit user decision to add
-it. Live profiles
-are authoritative only for values at snapshot time and availability checks;
+it. Live profiles are authoritative at snapshot time and for availability;
 bundled presets are setup inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
@@ -69,8 +68,9 @@ ineligible to review their own work.
   [handoff/resume lifecycle](lifecycle.md#native-handoff-and-resume): reconcile
   the run record, keep its owner, and launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
-  Preflight discoverability before loading native `paseo-handoff`; a missing
-  capability is a setup gap, not permission to invent a replacement.
+  Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
+  handoff guide, and require explicit recipient acceptance before ownership
+  changes. Missing capability is a setup gap, not permission to invent a replacement.
 - Colleague PR review -> `axstack-review` in peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.

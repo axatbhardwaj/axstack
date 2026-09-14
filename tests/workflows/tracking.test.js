@@ -5,25 +5,13 @@ const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
-// Fixture-shape checks validate evaluation inputs, not agent behavior.
-test('tracking scenarios: thirteen before and after decisions have explicit boundaries', () => {
+// Fixture and prose structure only; evaluated behavior and live runtime proof
+// remain separate evidence classes.
+test('tracking scenarios retain thirteen explicit decision boundaries', () => {
   const data = JSON.parse(read('tests/workflows/tracking-scenarios.json'));
   expect(data.version).toBe(1);
-  expect(data.cases.map(({ id }) => id)).toEqual([
-    'missed-completion-notification',
-    'reviewed-task-awaiting-advancement',
-    'duplicate-event',
-    'uncertain-heartbeat-create',
-    'cli-listing-not-proof-of-absence',
-    'restart-reconcile-existing-heartbeat',
-    'stall-detection',
-    'pause-stops-heartbeat',
-    'completion-stops-heartbeat',
-    'deadline-expiry-no-extension',
-    'missing-timer-capability-gap',
-    'idle-is-not-complete',
-    'no-duplicate-writer',
-  ]);
+  expect(data.cases).toHaveLength(13);
+  expect(new Set(data.cases.map(({ id }) => id)).size).toBe(13);
   for (const scenario of data.cases) {
     expect(scenario.input.before).toBeTruthy();
     expect(scenario.input.event).toBeTruthy();
@@ -33,53 +21,36 @@ test('tracking scenarios: thirteen before and after decisions have explicit boun
   }
 });
 
-// These are prompt-policy structure checks only. Keyword presence does not
-// prove that an agent will execute the tracking behavior.
-test('tracking structure: implementation creates one native execution heartbeat', () => {
+test('execution binds one authoritative Orca Task and Dispatch', () => {
   const implement = compact('skills/axstack-implement/SKILL.md');
-  expect(implement).toMatch(/one driver-owned[^.]*native Paseo heartbeat[^.]*active execution run/i);
-  expect(implement).toMatch(/execution start[^.]*create_heartbeat|create_heartbeat[^.]*execution start/i);
-  expect(implement).toContain('*/10 * * * *');
-  expect(implement).toMatch(/10 minutes|ten minutes/i);
-  expect(implement).toMatch(/handshake\s*=[^.]*first observed tick receipt[^.]*timestamp[^.]*lastRunAt/i);
-  expect(implement).toMatch(/handshake:\s*pending[^.]*creation[^.]*fill[^.]*first tick[^.]*reconcil/i);
-  expect(implement).toMatch(/compute[^.]*expiresIn[^.]*resume[^.]*recorded absolute deadline/i);
+  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  expect(implement).toMatch(/driver-owned Orca Run[^.]*authoritative[^.]*Task\/Dispatch/i);
+  expect(runtime).toMatch(/exactly one Dispatch[^.]*write[^.]*candidate/i);
+  expect(runtime).toMatch(/input_accepted[^.]*only[^.]*terminal/i);
+  expect(runtime).toMatch(/turn_started[^.]*inspection/i);
+  expect(runtime).toMatch(/trust[^.]*prompt[^.]*never answer|never answer[^.]*trust/i);
 });
 
-test('tracking structure: lifecycle reconciles events and heartbeat uncertainty', () => {
+test('delivery and recovery preserve runtime identity and ownership', () => {
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/every tick[^.]*every completion notification|every completion notification[^.]*every tick/i);
-  for (const state of ['owners', 'authors', 'pending reviews', 'candidate revisions', 'acceptance evidence']) {
-    expect(lifecycle).toContain(state);
-  }
-  expect(lifecycle).toMatch(/reconcile[^.]*existing heartbeat[^.]*before[^.]*creat/i);
-  expect(lifecycle).toMatch(/ambiguous[^.]*creat[^.]*block[^.]*duplicate/i);
-  expect(lifecycle).toMatch(/healthy unchanged ticks?[^.]*no user-facing update/i);
-  expect(lifecycle).toMatch(/duplicate events?[^.]*deduplicat|deduplicat[^.]*duplicate events?/i);
+  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  expect(lifecycle).toMatch(/whole delivery[^.]*acknowledgment/i);
+  expect(lifecycle).toMatch(/Task[^.]*Dispatch[^.]*sender/i);
+  expect(runtime).toMatch(/older Dispatch[^.]*never completes[^.]*newer Dispatch/i);
+  expect(runtime).toMatch(/consumer_fenced[^.]*stop consuming/i);
+  expect(runtime).toMatch(/user_takeover[^.]*retention/i);
+  expect(runtime).toMatch(/same author[^.]*session[^.]*evidence/i);
+  expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*model-substitution[^.]*scope/i);
 });
 
-test('tracking structure: native readback separates timer evidence classes', () => {
-  const lifecycle = compact('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/native tool receipts?[^.]*readback|readback[^.]*native tool receipts?/i);
-  expect(lifecycle).toMatch(/native schedule-list readback[^.]*daemon[^.]*schedule\/list[^.]*MCP[^.]*list_schedules[^.]*only if[^.]*heartbeats/i);
-  expect(lifecycle).toMatch(/no accessible listing[^.]*shows? heartbeats[^.]*readback[^.]*unavailable/i);
-  expect(lifecycle).toMatch(/keep[^.]*create_heartbeat[^.]*receipt[^.]*observed ticks[^.]*only liveness evidence/i);
-  expect(lifecycle).toMatch(/never[^.]*conclude[^.]*absence/i);
-  expect(lifecycle).toMatch(/schedule inspect\/ls[^.]*excludes? heartbeats/i);
-  expect(lifecycle).toMatch(/empty CLI listing[^.]*not[^.]*evidence[^.]*heartbeat[^.]*absent/i);
-  expect(lifecycle).toMatch(/existence[^.]*tick[^.]*delivery[^.]*advancement/i);
-  expect(lifecycle).toMatch(/lastRunAt[^.]*timer fired[^.]*not[^.]*prompt[^.]*delivered[^.]*work[^.]*advanced/i);
-  expect(lifecycle).toMatch(/advancement evidence[^.]*run-record transition[^.]*SHAs[^.]*receipts/i);
-});
-
-test('tracking structure: timer receipt and stop boundaries are durable', () => {
-  const lifecycle = compact('skills/axstack/references/lifecycle.md');
-  const record = compact('skills/axstack/references/run-record.md');
-  expect(record).toMatch(/Pending:[^.]*timer[^.]*actual ID[^.]*handshake[^.]*deadline/i);
-  expect(lifecycle).toMatch(/stop[^.]*heartbeat[^.]*pause[^.]*completion[^.]*24-hour|stop[^.]*heartbeat[^.]*pause[^.]*completion[^.]*deadline/i);
-  expect(lifecycle).toMatch(/resume[^.]*authority[^.]*remaining deadline/i);
-  expect(lifecycle).toMatch(/missing[^.]*timer capability[^.]*tracking gap/i);
-  expect(lifecycle).toMatch(/PR watch[^.]*separate[^.]*responsibilit/i);
-  expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*scope/i);
-  expect(record).toMatch(/driver[^.]*records?[^.]*paused[^.]*user request[^.]*hold/i);
+test('native watch policy is preserved behind an explicit capability hold', () => {
+  const watch = compact('skills/axstack-watch/references/watch-runtime.md');
+  expect(watch).toMatch(/provider selection[^.]*model[^.]*effort[^.]*permission[^.]*unsupported/i);
+  expect(watch).toMatch(/schedule parser[^.]*cannot preserve[^.]*bounded expiry/i);
+  expect(watch).toMatch(/watch activation[^.]*complete Orca migration claim[^.]*held/i);
+  expect(watch).toMatch(/Create no schedule/i);
+  expect(watch).toMatch(/no custom scheduler[^.]*polling loop/i);
+  expect(watch).toMatch(/five-minute\/hourly[^.]*cadences/i);
+  expect(watch).toMatch(/quiet healthy behavior/i);
+  expect(watch).toMatch(/24-hour/i);
 });

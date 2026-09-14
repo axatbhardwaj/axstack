@@ -1,43 +1,51 @@
 # Watch runtime
 
-Read this before registering, resuming, or stopping watch roles or timers.
+Read this before starting, resuming, or stopping automated PR observation.
 
-## Roles
+## Accepted policy
 
-The PR owner remains accountable throughout the configured monitoring window.
-`axstack-monitor` and `axstack-watchdog` are independent, read-only configured
-sessions, not authors, reviewers, or repliers. Materialize each through the
-shared Paseo launch sequence and routing snapshot. Each owns its timer and
-snapshot.
+The PR owner remains accountable throughout one shared default 24-hour window.
+`axstack-monitor` and `axstack-watchdog` are independent, read-only roles, not
+authors, reviewers, repliers, or owners.
 
-- **Monitor:** read GitHub, all PR feedback, and the latest check runs. Default
-  cadence is 5min. Surface actionable events with persisted, acknowledged event
-  IDs so a retried wake cannot start a duplicate repair.
-- **Watchdog:** read only watch health: timer liveness, handshake state, and
-  snapshot freshness. Default cadence is hourly. Report the verified handshake
-  to the owner.
+- **Monitor:** reads GitHub, all PR feedback, and latest checks every five
+  minutes. It persists event IDs and wakes the owner only for a new actionable
+  event.
+- **Watchdog:** reads only automation health, handshake state, and snapshot
+  freshness hourly. It reports a verified health failure to the owner.
 
-Record the verified session, handshake, timer, snapshot, watched scope, wake
-owner, and expiry for each role before treating the watch as live.
+Healthy observations are snapshot-only and update quietly; they wake neither owner nor
+driver. Both roles deduplicate event IDs. Uncertain delivery is reconciled
+before retry. Restart reuses prior watch identity rather than registering a
+duplicate. The shared deadline ends earlier on completion or cancellation and
+is never silently renewed.
 
-## Wake and retry discipline
+## Native Orca capability hold
 
-Healthy ticks update snapshots only; they wake neither owner nor driver. Both
-roles dedup event IDs. Before retrying an uncertain send, reconcile its actual
-delivery state. On restart, reconcile and reuse prior watch state instead of
-registering duplicates.
+Load the version-matched Orca automation guidance through the shared
+[runtime boundary](../../axstack/references/orca-runtime.md). The verified
+native automation schema supports provider selection, but model, effort, and
+permission pinning are unsupported. Its schedule parser also cannot preserve
+the accepted bounded expiry. Requested role values or a post-launch self-report
+are not effective launch evidence.
 
-A wake records whether it was healthy, actionable, or uncertain. Wake the owner
-only for a new actionable event.
+Therefore watch activation and the complete Orca migration claim are held.
+Create no schedule while this hold remains, activate no production timer, use
+no legacy runtime fallback, and introduce no custom scheduler or polling loop.
+Core installer and supervised workflow work may continue independently; A8
+remains unverified.
 
-## Shared expiry and cleanup
+## Resume when capability exists
 
-The configured default 24h deadline is one deadline for monitor and watchdog,
-including timers attached to still-open PRs. Stop both earlier when all required
-PRs merge or when the watch is cancelled. Clean up an individual PR's owned
-timers when that PR closes. At every end condition, cancel all owned
-registrations and verify their timer receipts. A new user-authorized window is
-a new decision, never a silent renewal.
+A future approved implementation must preserve the roles, five-minute/hourly
+cadences, quiet healthy behavior, deduplication,
+handshake, watched scope, wake
+owner, and shared expiry. Test active expiry, missed final ticks, restart,
+duplicate ticks, cancellation, session-reuse fallback, and final cleanup.
+A firing timestamp proves neither delivery nor work advancement. A fallback
+session reconciles ownership and never becomes owner silently.
 
-Runtime cleanup ends with every owned registration confirmed stopped and any
-remaining work captured as resumable state in the private run record.
+At every end condition, stop all task-owned registrations, verify runtime
+cleanup receipts, and capture remaining work as resumable state. Removing watch
+coverage, weakening role discipline, or changing the deadline requires a
+material specification revision; it is not an implementation workaround.

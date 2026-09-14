@@ -12,13 +12,11 @@ describe('explicit preset selection', () => {
       const root = makeTempRoot('axstack-preset-required-');
       const bundle = writeFixtureBundle(root);
       const skillsDir = join(root, 'installed');
-      const profilePath = join(root, 'paseo.json');
       const presetArgs = preset === null ? [] : ['--preset', preset];
 
       const result = runCli(
         [
-          'install', '--bundle', bundle, '--skills-dir', skillsDir,
-          '--profile', profilePath, ...presetArgs,
+          'install', '--bundle', bundle, '--skills-dir', skillsDir, ...presetArgs,
         ],
         { expectFail: true },
       );
@@ -28,7 +26,6 @@ describe('explicit preset selection', () => {
       expect(result.out).toContain('codex-only');
       expect(result.out).toContain('claude-only');
       expect(existsSync(skillsDir)).toBe(false);
-      expect(existsSync(profilePath)).toBe(false);
     });
   }
 
@@ -46,7 +43,7 @@ describe('explicit preset selection', () => {
     expect(existsSync(skillsDir)).toBe(false);
   });
 
-  test('manifest records the canonical selected preset', () => {
+  test('installed role snapshot records the canonical selected preset', () => {
     const root = makeTempRoot('axstack-manifest-preset-');
     const bundle = writeFixtureBundle(root);
     const skillsDir = join(root, 'installed');
@@ -55,10 +52,8 @@ describe('explicit preset selection', () => {
       'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir,
     ]);
 
-    const manifest = JSON.parse(
-      readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
-    );
-    expect(manifest.profiles).toEqual({ path: null, preset: 'mixed', entries: {} });
+    const snapshot = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+    expect(snapshot.preset).toBe('mixed');
   });
 
   for (const [alias, canonical] of [['codex', 'codex-only'], ['claude', 'claude-only']]) {
@@ -75,10 +70,8 @@ describe('explicit preset selection', () => {
         'install', '--preset', alias, '--bundle', bundle, '--skills-dir', skillsDir,
       ]);
 
-      const manifest = JSON.parse(
-        readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
-      );
-      expect(manifest.profiles.preset).toBe(canonical);
+      const snapshot = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+      expect(snapshot.preset).toBe(canonical);
     });
   }
 });

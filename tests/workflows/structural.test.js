@@ -148,7 +148,7 @@ test('structural: standalone phases explicitly load shared references', () => {
       `${name}: must explicitly load shared axstack reference(s)`,
     ).toBeTruthy();
   }
-  for (const ref of ['paseo-launch.md', 'contracts.md']) {
+  for (const ref of ['orca-runtime.md', 'contracts.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -169,7 +169,7 @@ test('structural: active PR parallelism has no fixed count', () => {
 
   const contracts = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
   expect(contracts).toMatch(/no fixed active-PR count/i);
-  expect(contracts).toMatch(/one Paseo execution host owns a run/i);
+  expect(contracts).toMatch(/one Orca execution host owns a run/i);
   expect(contracts).toMatch(/exactly one writer per candidate/i);
 });
 
@@ -297,35 +297,24 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
   expect(plan).toMatch(/\*\*Historical:\*\*/);
 });
 
-test('structural: launch reference gives ordered Paseo materialization steps', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'paseo-launch.md'), 'utf8');
-  const steps = [
-    'list_profiles',
-    'list_providers',
-    'list_models',
-    'inspect_provider',
-    'create_workspace',
-    'create_agent',
-  ];
-  let last = -1;
-  for (const s of steps) {
-    const i = text.indexOf(s);
-    expect(i > last, `paseo-launch.md: step ${s} missing or out of order`).toBeTruthy();
-    last = i;
-  }
-  expect(text.includes('${provider}/${model}'), 'must show provider/${provider}/${model} agent creation').toBeTruthy();
-  expect(/receipt/i.test(text), 'must require session model/ownership receipt verification').toBeTruthy();
-  expect(/persist/i.test(text) && /reuse/i.test(text), 'must persist/reuse agent and workspace IDs').toBeTruthy();
+test('structural: runtime reference delegates to version-matched Orca guides', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
+  expect(text).toMatch(/resolve one Orca executable/i);
+  expect(text).toContain('skills get orchestration --json');
+  expect(text).toContain('skills get orca-cli --json');
+  expect(text).toMatch(/returned schemas[^.]*rather than[^.]*copying/i);
+  expect(text).toMatch(/Run[^.]*Task[^.]*Dispatch/i);
+  expect(text).toMatch(/preserve[^.]*Task[^.]*Dispatch[^.]*terminal[^.]*agent[^.]*worktree/i);
 });
 
 test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
   const ids = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .agentProfiles.map(({ id }) => id);
+    .roles.map(({ id }) => id);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    expect(data.preset).toBe(preset);
-    expect(data.agentProfiles.map(({ id }) => id)).toEqual(ids);
-    for (const prof of data.agentProfiles) {
+    expect(Object.keys(data)).toEqual(['version', 'roles']);
+    expect(data.roles.map(({ id }) => id)).toEqual(ids);
+    for (const prof of data.roles) {
       expect(prof.modeId).toBe(prof.provider === 'claude' ? 'bypassPermissions' : 'full-access');
       expect(prof.name).toBeTruthy();
       expect(prof.notes).toBeTruthy();
@@ -346,15 +335,14 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
   }
 });
 
-test('structural: launch reference treats live profiles as authoritative', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'paseo-launch.md'), 'utf8');
-  expect(/live.*authoritative|authoritative.*live/i.test(text), 'must state installed live profiles are authoritative').toBeTruthy();
-  expect(/setup default/i.test(text), 'must describe bundled profiles as setup defaults').toBeTruthy();
-  expect(/no guaranteed|not guaranteed/i.test(text), 'must not assume bundled presets exist at runtime').toBeTruthy();
-  expect(/reconcile/i.test(text), 'must reconcile existing workspace/session before creating').toBeTruthy();
-  expect(/projectId/i.test(text), 'must pass canonical project lookup (projectId/workspaceId)').toBeTruthy();
-  expect(/setup gap/i.test(text), 'must treat missing canonical owner as setup gap').toBeTruthy();
-  expect(/never.*override|do not.*override/i.test(text), 'must never override configured models at runtime').toBeTruthy();
+test('structural: runtime reference treats installed role snapshot as authoritative', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
+  expect(text).toMatch(/roles\.json[^.]*actually loaded `axstack` skill/i);
+  expect(text).toMatch(/bundled[^.]*setup inputs/i);
+  expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
+  expect(text).toMatch(/missing or null model[^.]*holds only that role/i);
+  expect(text).toMatch(/never launch a provider default/i);
+  expect(text).toMatch(/reconcile existing attempts first/i);
 });
 
 test('structural: contracts carry configured advisor triggers and the mixed high-stakes gate', () => {

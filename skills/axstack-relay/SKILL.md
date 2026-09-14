@@ -24,7 +24,7 @@ Choose the applicable message type:
   subsequent runs. State the issue, impact, and the answer or action needed.
 - **Other automated notifications:** follow the caller's recorded
   `Notification policy`, including eligible-message rules. Without applicable
-  authorization, keep the message in the current Paseo conversation.
+  authorization, keep the message in the current Orca conversation.
 
 Verify the transport, execution host, and intended recipient from the user's
 request, trusted caller context, or an existing private notification policy.
@@ -47,10 +47,10 @@ running any relay command.
 
 1. Locate the CLI with `command -v hermes-relay` and capture the returned path
    as `relay_cli`. If it is missing, report "relay unavailable" in the current
-   Paseo conversation and use the recorded fallback. Never use a remote shell,
+   Orca conversation and use the recorded fallback. Never use a remote shell,
    search user directories, or hardcode a location.
 2. Run `hermes-relay-host-enabled`. A non-zero result means "relay disabled on
-   this host"; use the Paseo fallback. The guard is availability policy, not a
+   this host"; use the current-conversation fallback. The guard is availability policy, not a
    serious-risk gate, and changes no authority.
 3. Resolve the discovered CLI symlink to its real file. Use `readlink -f` when
    available; otherwise use
@@ -61,12 +61,13 @@ running any relay command.
    `hermes-relay doctor` prove capabilities only. A missing request schema
    holds every send; never infer the schema from help or doctor output.
 5. Run `hermes-relay doctor` and inspect its JSON payload. Exit 0 alone is not
-   readiness. The `commands` entries for `hermes` and `paseo` must resolve;
-   `gh` must also resolve in `pr` mode. The `database` value must equal
-   `"ok"`. Any unmet requirement holds relay use and routes the message to the
-   recorded Paseo fallback. Record only which readiness requirements passed or
-   failed; never paste the raw doctor payload or other relay command output into
-   public surfaces such as PR comments or reviews.
+   readiness. The installed manual and payload must prove an Orca-capable
+   conversation route; a legacy-runtime-only route is unavailable for active
+   Axstack. `hermes` must resolve, `gh` must also resolve in `pr` mode, and the
+   `database` value must equal `"ok"`. Any unmet requirement holds relay use and
+   routes the message to the current conversation. Record only which readiness
+   requirements passed or failed; never paste raw doctor output into public
+   surfaces such as PR comments or reviews.
 
 Discovery is complete only when authorization, routing, lookup, guard, installed manual,
 request schema, mode-specific commands, and database payload all pass.
@@ -113,5 +114,5 @@ tests open only for their agreed lifetime.
 
 Healthy unchanged watch ticks stay quiet. Avoid repeating unchanged blocker alerts; notify again when the situation
 materially changes or the user requests a reminder. An absent CLI, disabled guard, readiness
-failure, or failed delivery uses the current Paseo conversation fallback. It
+failure, or failed delivery uses the current Orca conversation fallback. It
 never clears an existing serious-risk or decision hold.
