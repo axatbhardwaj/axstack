@@ -157,7 +157,7 @@ end-to-end run and is reported only at the level actually verified.
 
 ## Routing presets and readiness
 
-Axstack ships three explicit files under `profiles/presets/`, each with the
+Axstack ships three explicit role presets under `profiles/presets/`, each with the
 same 17 role IDs:
 
 - `mixed`: Codex and Claude roles. Its `axstack-checker` has `model: null`, so
