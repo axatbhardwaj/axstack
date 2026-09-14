@@ -13,7 +13,7 @@ Before mapping, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required edge to [Shared lifecycle](../axstack/references/lifecycle.md),
 including the lifecycle audit hook. Read the
 [PR-shape policy](../axstack/references/pr-shape.md) before sizing tasks. Read the
-[Paseo launch sequence](../axstack/references/paseo-launch.md) immediately before
+[Orca runtime boundary](../axstack/references/orca-runtime.md) immediately before
 an actual checker dispatch, not for ordinary mapping or state reconciliation.
 
 ## Procedure

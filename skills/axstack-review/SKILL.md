@@ -59,7 +59,7 @@ fallback.
 
 ## Standalone owner
 
-Before dispatch, read [Paseo launch](../axstack/references/paseo-launch.md).
+Before dispatch, read [Orca runtime](../axstack/references/orca-runtime.md).
 Standalone peer review or watch adoption then materializes `axstack-owner`,
 reusing a live owner when one exists. Once materialized, that owner is the sole
 coordinator: only the owner launches the writer, reviewers, monitor, and
@@ -72,7 +72,7 @@ or recursive teams.
    applicable intent or spec/ticket identity and acceptance, exclusions,
    authority, actual author provenance for authored mode, and all six angles.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
-   [Paseo launch](../axstack/references/paseo-launch.md), then apply exactly one
+   [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
    branch:
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
@@ -222,8 +222,8 @@ silence leave the hold open.
 This escalation exists only in prompts and briefs; no runtime component
 enforces it. When the brief carries a `Notification policy`, the optional
 [axstack-relay](../axstack-relay/SKILL.md) retains the caller's existing
-authorization; Paseo chat is the concrete fallback. If relay delivery fails,
-send the same escalation through Paseo chat. Failed delivery never resolves the
+authorization; the current Orca conversation is the concrete fallback. If
+relay delivery fails, send the same escalation there. Failed delivery never resolves the
 concern. Use no private escalation script. Public installations inherit no
 private transport values or configuration.
 

@@ -18,7 +18,8 @@ binding state and receipts to exact revisions.
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
 - Monitor/watchdog: independent read-only `axstack-monitor` and
-  `axstack-watchdog` sessions on native Paseo timers.
+  `axstack-watchdog` roles, activated through native Orca automations only when
+  the accepted role-pinning and bounded-expiry contract is supported.
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -38,13 +39,15 @@ Preparation completion/watch expiry writes a resumable record. Ordinary resume
 reconciles it, keeps the current owner, and launches no native handoff.
 Only an explicit user request to transfer ownership enters this branch.
 
-1. Reconcile the [Run record](run-record.md) with Paseo sessions, Git revisions,
-   forge, pending receipts, and timer expiries; live owners/sessions beat stale state.
-2. Confirm both native `paseo-handoff` and its required `paseo` skill are
-   discoverable in this session; only then load/follow them. Never guess calls,
-   paths, profiles, or fallback models. Packaging does not prove it.
-3. If either skill is missing, report the exact setup gap and keep the current
-   owner. Read-only reconciliation may continue, but no replacement or ownership transfer launches.
+1. Reconcile the [Run record](run-record.md) with Orca Tasks, Dispatches,
+   sessions, Git revisions, forge, pending receipts, and timer expiries; live
+   owners and authoritative Dispatches beat stale state.
+2. Load the [Orca runtime boundary](orca-runtime.md), then follow its
+   version-matched runtime-owned handoff guidance. Never guess calls, paths,
+   roles, or fallback models. Guide discovery does not prove capability.
+3. If the required native capability is missing, report the exact setup gap and
+   keep the current owner; no replacement or ownership transfer launches.
+   Read-only reconciliation may continue.
 4. Record recipient/pending receipt before launch. If uncertain, reconcile the
    actual workspace/session before retry and block duplicates.
 5. Launch is not ownership. Record the recipient's explicit acceptance receipt
@@ -72,35 +75,22 @@ Store concise receipt references, not raw worker output, in the [Run record](run
 
 ## Execution tracking
 
-One driver-owned native Paseo execution heartbeat tracks each active run. On
-every tick and every completion notification, reconcile owners, authors,
-pending reviews, candidate revisions, and acceptance evidence with the run
-record. Verify actual session state, Git SHAs, and receipts; advance only ready,
-authorized, dependency-satisfied work and record its next action. Duplicate
-events are deduplicated. Healthy unchanged ticks produce no user-facing update.
+The driver consumes native Orca completion and escalation deliveries for the
+active Run. Process each whole delivery before acknowledgment and validate its
+Task, Dispatch, sender, authority, revisions, and receipts before advancing the
+run record. Duplicate deliveries are deduplicated by runtime identity. Healthy
+unchanged observations produce no user-facing update.
 
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
-receipts, and stalls; recover boundedly within existing authority. Never
-duplicate a writer; idle is not complete. On resume, reconcile an existing
-heartbeat before creating one. Verify existence/health through native tool
-receipts and native schedule-list readback: the `create_heartbeat` return;
-daemon `schedule/list` (heartbeat ID, `lastRunAt`, expiry); MCP `list_schedules`
-only if it shows heartbeats. Paseo CLI `schedule inspect/ls` excludes heartbeats,
-so an empty CLI listing is not evidence a heartbeat is absent. If no accessible
-listing shows heartbeats, readback is unavailable: keep the `create_heartbeat`
-receipt plus observed ticks as the only liveness evidence and never conclude
-absence. Ambiguous creation blocks duplicates until native state is known.
-Missing timer capability is a tracking gap; never claim tracking is enabled.
+receipts, and stalls through the version-matched orchestration guide. Never
+duplicate a writer; idle is not complete. `input_accepted`, `turn_started`,
+session liveness, delivery, and verified advancement are distinct evidence.
+On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
+identity. Respect settlement protection including `user_takeover`.
 
-Evidence classes: existence is not a tick, tick is not delivery, and delivery
-is not advancement. `lastRunAt` proves the timer fired, not that the
-prompt was delivered or work was advanced. Advancement evidence is a run-record
-transition with verified SHAs and receipts.
-
-Stop the execution heartbeat with `delete_heartbeat` on pause, completion, or
-the existing 24-hour deadline. Resume only within authority and the remaining
-deadline; no silent extension. PR watch roles keep separate responsibilities
-and shared deadline rules. Tracking grants no merge, release, or scope authority.
+No execution heartbeat or substitute scheduler is created by Axstack. Native
+watch automation is separately held under [Watch health](#watch-health).
+Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
 
@@ -110,10 +100,14 @@ handoff, never silent renewal. Merge-ready differs from merged; human merges.
 
 ## Watch health
 
-`axstack-monitor` and `axstack-watchdog` are independent read-only sessions on
-native Paseo timers. Require handshakes. Healthy ticks are snapshots that do
-not wake the driver. Deduplicate events, reconcile uncertain sends before retry,
-and reuse watch state after restart.
+The accepted policy keeps `axstack-monitor` and `axstack-watchdog` independent
+and read-only, with quiet healthy snapshots, deduplicated actionable events,
+restart reconciliation, and one shared deadline. Current native Orca
+automations expose a provider but cannot pin model, effort, or permission, and
+cannot prove the accepted bounded expiry. Hold activation and the complete
+migration claim; create no schedule, use no legacy fallback, and build no custom
+scheduler. Core supervised work may continue. Details live in
+[Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (end of run and meaningful checkpoints)
 

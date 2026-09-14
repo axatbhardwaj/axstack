@@ -12,8 +12,8 @@ improvement is a valid result.
 
 Before acting, load [Standing contracts](../axstack/references/contracts.md),
 then follow its lifecycle and audit pointers. Immediately before any useful
-role dispatch, load the [Paseo launch
-sequence](../axstack/references/paseo-launch.md). Use existing
+role dispatch, load the [Orca runtime
+sequence](../axstack/references/orca-runtime.md). Use existing
 `axstack-explore-codebase` or `axstack-research-code` roles only when their
 specialization materially helps; create no new profile.
 
