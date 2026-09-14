@@ -31,8 +31,7 @@ test('install copies fixture bundle, keeps unrelated sentinel byte-identical', (
   writeFileSync(sentinel, 'do not touch\n');
 
   const r = runCli([
-    'install',
-    '--bundle',
+    'install', '--preset', 'mixed', '--bundle',
     bundle,
     '--skills-dir',
     skillsDir,
@@ -54,11 +53,10 @@ test('second install is idempotent (no content changes)', () => {
   const bundle = writeFixtureBundle(root);
   const { skillsDir, profile } = installTargets(root);
 
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   const before = readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8');
   const second = runCli([
-    'install',
-    '--bundle',
+    'install', '--preset', 'mixed', '--bundle',
     bundle,
     '--skills-dir',
     skillsDir,
@@ -74,13 +72,12 @@ test('user-edited owned asset survives reinstall and uninstall', () => {
   const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
   const { skillsDir, profile } = installTargets(root);
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
 
   const owned = join(skillsDir, 'axstack-demo', 'SKILL.md');
   writeFileSync(owned, '# User edited\n\nHands off.\n');
   const reinstall = runCli([
-    'install',
-    '--bundle',
+    'install', '--preset', 'mixed', '--bundle',
     bundle,
     '--skills-dir',
     skillsDir,
@@ -103,7 +100,7 @@ test('uninstall removes unchanged owned assets but preserves sentinel', () => {
   const sentinel = join(skillsDir, 'keep-me.txt');
   writeFileSync(sentinel, 'sentinel\n');
 
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
   runCli(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
   expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
@@ -120,7 +117,7 @@ test('bundle with escaping symlink is rejected before any target write', () => {
 
   const { skillsDir } = installTargets(root);
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir],
     { expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/symlink|escape|reject|unsafe/);
@@ -135,7 +132,7 @@ test('unknown pre-existing file at bundle path is not silently overwritten', () 
   writeFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), '# Someone else\n');
 
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir],
     { expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/already exists|unknown|refus|overwrite|force/);
@@ -150,7 +147,7 @@ test('install into real home requires explicit confirmation', () => {
   const home = Bun.env.HOME ?? '/root';
   const guarded = join(home, '.axstack-installer-probe-nope');
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', guarded],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', guarded],
     { expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/confirm|--yes|explicit|home/);
@@ -160,7 +157,7 @@ test('install into real home requires explicit confirmation', () => {
 test('--harness grok is rejected without an explicit --skills-dir override', () => {
   const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
-  const r = runCli(['install', '--bundle', bundle, '--harness', 'grok'], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'grok'], {
     expectFail: true,
   });
   expect(r.out.toLowerCase()).toMatch(/--skills-dir|explicit|unverified/);
@@ -176,7 +173,7 @@ test('partial failure rolls back created files and writes no manifest', () => {
   mkdirSync(join(skillsDir, 'axstack-zzz'), { recursive: true });
   mkdirSync(join(skillsDir, 'axstack-zzz', 'SKILL.md'));
 
-  const r = runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
   });
   expect(r.out.toLowerCase()).toMatch(/axstack/);
@@ -190,7 +187,7 @@ test('--harness codex honors CODEX_HOME outside the home guard', () => {
   const bundle = writeFixtureBundle(root);
   const codexHome = join(root, 'codex-home');
   mkdirSync(codexHome, { recursive: true });
-  const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'codex'], {
     env: { CODEX_HOME: codexHome },
   });
   expect(r.ok).toBe(true);
@@ -200,7 +197,7 @@ test('--harness codex honors CODEX_HOME outside the home guard', () => {
 test('--harness codex without CODEX_HOME needs explicit home confirmation', () => {
   const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
-  const r = runCli(['install', '--bundle', bundle, '--harness', 'codex'], {
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'codex'], {
     expectFail: true,
   });
   expect(r.out.toLowerCase()).toMatch(/confirm|--yes|explicit|home/);
@@ -215,7 +212,7 @@ test('uninstall with a home profile requires --yes even when skills are external
   const env = { HOME: fakeHome };
 
   const installed = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { env },
   );
   expect(installed.ok).toBe(true);

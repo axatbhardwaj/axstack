@@ -12,7 +12,7 @@ const runCli = (args) => runBunCli(CLI, args);
 const EXECUTABLE = {
   id: 'axstack-driver',
   name: 'Axstack driver',
-  provider: 'example',
+  provider: 'codex',
   model: 'example-model',
   notes: 'Executable fixture.',
 };
@@ -53,7 +53,7 @@ test('CLI defers a null-model preset, owns only configured profiles, and stays i
   const profilePath = join(root, 'paseo.json');
 
   const first = runCli([
-    'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
+    'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   expect(config.daemon.agentProfiles).toEqual([EXECUTABLE]);
@@ -65,14 +65,14 @@ test('CLI defers a null-model preset, owns only configured profiles, and stays i
   expect(manifest.profiles.path).toBe(realpathSync(profilePath));
   expect(Object.keys(manifest.profiles.entries)).toEqual(['axstack-driver']);
   expect(
-    JSON.parse(readFileSync(join(bundle, 'profiles', 'paseo.json'), 'utf8'))
+    JSON.parse(readFileSync(join(bundle, 'profiles', 'presets', 'mixed.json'), 'utf8'))
       .agentProfiles.find((profile) => profile.id === 'axstack-checker').model,
   ).toBeNull();
 
   const beforeConfig = readFileSync(profilePath, 'utf8');
   const beforeManifest = readFileSync(manifestPath, 'utf8');
   const second = runCli([
-    'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
+    'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
   ]);
   expect(readFileSync(profilePath, 'utf8')).toBe(beforeConfig);
   expect(readFileSync(manifestPath, 'utf8')).toBe(beforeManifest);
@@ -95,7 +95,7 @@ test('CLI preserves a setup-selected checker without acquiring ownership even wi
   writeFileSync(profilePath, JSON.stringify(host, null, 2) + '\n');
 
   runCli([
-    'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath, '--force',
+    'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath, '--force',
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   expect(config.daemon.agentProfiles.find((profile) => profile.id === selected.id)).toEqual(selected);
@@ -113,7 +113,7 @@ test('CLI removes only an exact previously-owned null placeholder during upgrade
   writePreviouslyOwnedPlaceholder(skillsDir, profilePath, [DEFERRED]);
 
   const result = runCli([
-    'install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
+    'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath,
   ]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   expect(config.daemon.agentProfiles.some((profile) => profile.id === DEFERRED.id)).toBe(false);
@@ -132,7 +132,7 @@ test('CLI releases stale placeholder ownership when the live entry is already mi
   const profilePath = join(root, 'paseo.json');
   writePreviouslyOwnedPlaceholder(skillsDir, profilePath, []);
 
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   expect(config.daemon.agentProfiles.some((profile) => profile.id === DEFERRED.id)).toBe(false);
   const manifest = JSON.parse(
@@ -149,7 +149,7 @@ test('CLI releases old deferred ownership while preserving a configured checker'
   const selected = { ...DEFERRED, model: 'user-selected-model' };
   writePreviouslyOwnedPlaceholder(skillsDir, profilePath, [selected]);
 
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profilePath]);
   const config = JSON.parse(readFileSync(profilePath, 'utf8'));
   expect(config.daemon.agentProfiles.find((profile) => profile.id === DEFERRED.id)).toEqual(selected);
   const manifest = JSON.parse(

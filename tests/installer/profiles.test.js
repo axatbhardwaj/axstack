@@ -21,7 +21,7 @@ const BUNDLE_PROFILES = [
   {
     id: 'axstack-driver',
     name: 'Axstack driver',
-    provider: 'example',
+    provider: 'codex',
     model: 'example-model',
     modeId: 'default',
     thinkingOptionId: 'medium',
@@ -137,7 +137,7 @@ test('CLI profile install preserves custom profiles and daemon fields end to end
   const skillsDir = join(root, 'skills');
   const profile = join(root, 'paseo.json');
   writeFileSync(profile, JSON.stringify(representativeHostConfig()));
-  runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
+  runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile]);
   const after = JSON.parse(readFileSync(profile, 'utf8'));
   const ids = after.daemon.agentProfiles.map((p) => p.id).sort();
   expect(ids).toEqual(['axstack-driver', 'custom-mine']);

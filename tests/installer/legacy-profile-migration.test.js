@@ -45,11 +45,11 @@ function setup({ owned, live = legacy }) {
   return { bundle, skillsDir, profilePath };
 }
 
-function install(fixture) {
+function install(fixture, options) {
   return runCli([
     'install', '--preset', 'mixed', '--bundle', fixture.bundle,
     '--skills-dir', fixture.skillsDir, '--profile', fixture.profilePath,
-  ]);
+  ], options);
 }
 
 describe('legacy reviewer migration', () => {
@@ -70,7 +70,7 @@ describe('legacy reviewer migration', () => {
 
   test('preserves an unowned legacy entry even when it is byte-identical', () => {
     const fixture = setup({ owned: false });
-    const result = install(fixture);
+    const result = install(fixture, { expectFail: true });
     const config = JSON.parse(readFileSync(fixture.profilePath, 'utf8'));
 
     expect(config.daemon.agentProfiles).toContainEqual(legacy);
@@ -80,7 +80,7 @@ describe('legacy reviewer migration', () => {
   test('preserves an edited owned legacy entry and retains its old hash', () => {
     const edited = { ...legacy, model: 'USER_EDIT' };
     const fixture = setup({ owned: true, live: edited });
-    const result = install(fixture);
+    const result = install(fixture, { expectFail: true });
     const config = JSON.parse(readFileSync(fixture.profilePath, 'utf8'));
     const manifest = JSON.parse(
       readFileSync(join(fixture.skillsDir, '.axstack-manifest.json'), 'utf8'),

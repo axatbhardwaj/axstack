@@ -46,6 +46,17 @@ describe('profile readiness', () => {
     });
   }
 
+  test('mixed supports the accepted Opus-author to primary-Sol route', () => {
+    const installed = PRESETS.mixed.filter((profile) => profile.model !== null).map((profile) => ({ ...profile }));
+    const author = installed.find((profile) => profile.id === 'axstack-author');
+    author.provider = 'claude';
+    author.model = 'claude-opus-5';
+    const report = assessProfileReadiness(host(installed), PRESETS.mixed, 'mixed');
+    expect(report.ready).toBe(true);
+    expect(report.gaps).toEqual([]);
+    expect(report.deviations.join('\n')).toMatch(/axstack-author.*provider.*model/i);
+  });
+
   test('reports every readiness gap class and exempts the deferred mixed checker', () => {
     const live = PRESETS.mixed
       .filter((profile) => !['axstack-worker', 'axstack-checker'].includes(profile.id))

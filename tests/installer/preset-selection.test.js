@@ -60,4 +60,25 @@ describe('explicit preset selection', () => {
     );
     expect(manifest.profiles).toEqual({ path: null, preset: 'mixed', entries: {} });
   });
+
+  for (const [alias, canonical] of [['codex', 'codex-only'], ['claude', 'claude-only']]) {
+    test(`${alias} alias records ${canonical}`, () => {
+      const root = makeTempRoot(`axstack-${alias}-alias-`);
+      const profiles = [{
+        id: 'axstack-driver', name: 'Driver', provider: alias,
+        model: `${alias}-model`,
+      }];
+      const bundle = writeFixtureBundle(root, { presets: { [canonical]: profiles } });
+      const skillsDir = join(root, 'installed');
+
+      runCli([
+        'install', '--preset', alias, '--bundle', bundle, '--skills-dir', skillsDir,
+      ]);
+
+      const manifest = JSON.parse(
+        readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
+      );
+      expect(manifest.profiles.preset).toBe(canonical);
+    });
+  }
 });

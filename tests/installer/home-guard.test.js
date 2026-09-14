@@ -32,7 +32,7 @@ test('install without HOME refuses pre-mutation and preserves all bytes', () => 
     const root = makeTempRoot();
     const { bundle, skillsDir, profile } = seed(root);
     // Successful baseline with a known HOME first.
-    runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'], {
+    runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'], {
       env: { HOME: join(root, 'home') },
     });
     const before = snapshot([
@@ -42,7 +42,7 @@ test('install without HOME refuses pre-mutation and preserves all bytes', () => 
       profile,
     ]);
     const r = runCli(
-      ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
+      ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
       { ...home, expectFail: true },
     );
     expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
@@ -54,7 +54,7 @@ test('uninstall without HOME refuses pre-mutation and preserves all bytes', () =
   for (const home of [{ unset: ['HOME'] }, { env: { HOME: '' } }, { env: { HOME: 'relative/path' } }]) {
     const root = makeTempRoot();
     const { bundle, skillsDir, profile } = seed(root);
-    runCli(['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'], {
+    runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'], {
       env: { HOME: join(root, 'home') },
     });
     const before = snapshot([
@@ -75,7 +75,7 @@ test('--yes with missing HOME still completes install and uninstall', () => {
   const root = makeTempRoot();
   const { bundle, skillsDir, profile } = seed(root);
   const installed = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { unset: ['HOME'] },
   );
   expect(installed.ok).toBe(true);
@@ -91,7 +91,7 @@ test('tilde expansion without HOME errors even with --yes', () => {
   const root = makeTempRoot();
   const { bundle } = seed(root);
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', join('~', 'skills'), '--yes'],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', join('~', 'skills'), '--yes'],
     { unset: ['HOME'], expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/home|unknown|destination|refus/);
@@ -108,7 +108,7 @@ test('symlink-aliased HOME still guards install without --yes', () => {
   const env = { HOME: aliasHome };
 
   const installed = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { env },
   );
   expect(installed.ok).toBe(true);
@@ -120,7 +120,7 @@ test('symlink-aliased HOME still guards install without --yes', () => {
   // The profile canonicalizes through the alias while raw HOME does not:
   // the guard must still refuse before any mutation.
   const r = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile],
     { env, expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
@@ -138,7 +138,7 @@ test('symlink-aliased HOME still guards uninstall without --yes', () => {
   const env = { HOME: aliasHome };
 
   const installed = runCli(
-    ['install', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--profile', profile, '--yes'],
     { env },
   );
   expect(installed.ok).toBe(true);

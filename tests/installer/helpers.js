@@ -76,7 +76,7 @@ export function writeFixtureBundle(
       {
         id: 'axstack-driver',
         name: 'Axstack driver',
-        provider: 'example',
+        provider: 'codex',
         model: 'example-model',
         modeId: 'default',
         thinkingOptionId: 'medium',

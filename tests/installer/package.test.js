@@ -93,7 +93,7 @@ function tarMembers(tgz) {
 function bunOnlyEnv(neutral) {
   const binDir = join(neutral, 'bin');
   mkdirSync(binDir, { recursive: true });
-  symlinkSync(BUN_BIN, join(binDir, 'bun'));
+  if (!existsSync(join(binDir, 'bun'))) symlinkSync(BUN_BIN, join(binDir, 'bun'));
   return { ...Bun.env, PATH: binDir };
 }
 
@@ -104,8 +104,10 @@ function skillAssets(pkgDir) {
   return rels;
 }
 
-function profileRecords(pkgDir) {
-  const profiles = JSON.parse(readFileSync(join(pkgDir, 'profiles', 'paseo.json'), 'utf8'));
+function profileRecords(pkgDir, preset) {
+  const profiles = JSON.parse(
+    readFileSync(join(pkgDir, 'profiles', 'presets', `${preset}.json`), 'utf8'),
+  );
   return profiles.agentProfiles;
 }
 
@@ -130,15 +132,16 @@ function ensureBundleAssets(pkgDir, label) {
     mkdirSync(join(dest.split('/').slice(0, -1).join('/')), { recursive: true });
     writeFileSync(dest, readFileSync(f));
   }
-  mkdirSync(join(pkgDir, 'profiles'), { recursive: true });
-  writeFileSync(
-    join(pkgDir, 'profiles', 'paseo.json'),
-    readFileSync(join(fixture, 'profiles', 'paseo.json')),
-  );
+  for (const f of walkFiles(join(fixture, 'profiles'))) {
+    const rel = f.slice(fixture.length + 1);
+    const dest = join(pkgDir, rel);
+    mkdirSync(join(dest.split('/').slice(0, -1).join('/')), { recursive: true });
+    writeFileSync(dest, readFileSync(f));
+  }
   return { augmented: true };
 }
 
-function fullCycle(pkgDir, neutral, label) {
+function fullCycle(pkgDir, neutral, label, preset) {
   const env = bunOnlyEnv(neutral);
   const cli = join(pkgDir, 'bin', 'axstack.js');
   const runPacked = (args, opts) => runBunCli(cli, args, { ...opts, env, cwd: neutral });
@@ -150,7 +153,7 @@ function fullCycle(pkgDir, neutral, label) {
   const rels = skillAssets(pkgDir);
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
-  const bundledProfiles = profileRecords(pkgDir);
+  const bundledProfiles = profileRecords(pkgDir, preset);
   const configuredIds = bundledProfiles
     .filter((profile) => typeof profile.model === 'string' && profile.model.length > 0)
     .map((profile) => profile.id);
@@ -160,7 +163,7 @@ function fullCycle(pkgDir, neutral, label) {
   expect(bundledProfiles.length).toBeGreaterThan(0);
   expect(configuredIds.length).toBeGreaterThan(0);
 
-  const installed = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const installed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(installed.ok).toBe(true);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(readFileSync(join(pkgDir, 'skills', rel), 'utf8'));
@@ -177,14 +180,14 @@ function fullCycle(pkgDir, neutral, label) {
   for (const id of configuredIds) expect(id in ownedProfiles).toBe(true);
   for (const id of deferredIds) expect(id in ownedProfiles).toBe(false);
 
-  const again = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const again = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(again.ok).toBe(true);
   expect(again.out.toLowerCase()).toMatch(/no changes|idempotent|unchanged/);
   expect(readFileSync(sentinel, 'utf8')).toBe('unrelated\n');
 
   // User edits to every skill file survive reinstall and uninstall.
   for (const rel of rels) writeFileSync(join(skillsDir, rel), `# User edited ${rel}\n`);
-  const reinstalled = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const reinstalled = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(reinstalled.ok).toBe(true);
   for (const rel of rels) {
     expect(readFileSync(join(skillsDir, rel), 'utf8')).toBe(`# User edited ${rel}\n`);
@@ -200,7 +203,7 @@ function fullCycle(pkgDir, neutral, label) {
   for (const rel of rels) {
     writeFileSync(join(skillsDir, rel), readFileSync(join(pkgDir, 'skills', rel)));
   }
-  const refreshed = runPacked(['install', '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
+  const refreshed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir, '--profile', profile]);
   expect(refreshed.ok).toBe(true);
   const removed = runPacked(['uninstall', '--skills-dir', skillsDir, '--profile', profile]);
   expect(removed.ok).toBe(true);
@@ -221,6 +224,11 @@ test('tarball members match the full source tree with no silent omissions', () =
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
 });
 
+test('CLI reports the subscription-routing setup version', () => {
+  const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
+  expect(result.out.trim()).toBe('axstack 0.6.0');
+});
+
 test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
   const outDir = join(makeTempRoot('axstack-pack-'), 'out');
   mkdirSync(outDir, { recursive: true });
@@ -233,7 +241,9 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
 
   expect(statSync(join(pkgDir, 'bin', 'axstack.js')).mode & 0o111).not.toBe(0);
   ensureBundleAssets(pkgDir, 'root-package');
-  fullCycle(pkgDir, neutral, 'root');
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    fullCycle(pkgDir, neutral, `root-${preset}`, preset);
+  }
 });
 
 test('partial asset tree fails loudly instead of augmenting', () => {
@@ -275,14 +285,18 @@ test('combined-like fixture package packs and cycles end to end', () => {
     writeFileSync(join(pkgDir, 'skills', name, 'references', 'notes.md'), `# ${name} refs\n`);
   }
   const profileIds = ['axstack-driver', 'axstack-reviewer'];
-  mkdirSync(join(pkgDir, 'profiles'), { recursive: true });
-  writeFileSync(
-    join(pkgDir, 'profiles', 'paseo.json'),
-    JSON.stringify({
-      version: 1,
-      agentProfiles: profileIds.map((id) => ({ id, name: id, provider: 'example', model: 'm' })),
-    }),
-  );
+  mkdirSync(join(pkgDir, 'profiles', 'presets'), { recursive: true });
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const provider = preset === 'claude-only' ? 'claude' : 'codex';
+    writeFileSync(
+      join(pkgDir, 'profiles', 'presets', `${preset}.json`),
+      JSON.stringify({
+        version: 1,
+        preset,
+        agentProfiles: profileIds.map((id) => ({ id, name: id, provider, model: 'm' })),
+      }),
+    );
+  }
   writeFileSync(join(pkgDir, 'README.md'), '# Combined fixture\n');
   writeFileSync(join(pkgDir, 'LICENSE'), 'MIT fixture\n');
 
@@ -301,7 +315,10 @@ test('combined-like fixture package packs and cycles end to end', () => {
     expect(listing.includes(`package/skills/${name}/SKILL.md`)).toBe(true);
     expect(listing.includes(`package/skills/${name}/references/notes.md`)).toBe(true);
   }
-  expect(listing.includes('package/profiles/paseo.json')).toBe(true);
+  expect(listing.includes('package/profiles/paseo.json')).toBe(false);
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    expect(listing.includes(`package/profiles/presets/${preset}.json`)).toBe(true);
+  }
 
   const neutral = makeTempRoot('axstack-combined-smoke-');
   const extractDir = join(neutral, 'extract');
@@ -309,5 +326,7 @@ test('combined-like fixture package packs and cycles end to end', () => {
   expect(run('tar', ['-xzf', tgz, '-C', extractDir]).exitCode).toBe(0);
   const extracted = join(extractDir, 'package');
   expect(statSync(join(extracted, 'bin', 'axstack.js')).mode & 0o111).not.toBe(0);
-  fullCycle(extracted, neutral, 'combined');
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    fullCycle(extracted, neutral, `combined-${preset}`, preset);
+  }
 });
