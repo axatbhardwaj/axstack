@@ -7,17 +7,26 @@
       "provider": "codex",
       "model": "gpt-5.6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Preferred driver profile only. The current chat remains the driver; never auto-launch or switch it implicitly. Owns scope, external tracking mutations, stack coordination, and capability completion. Validate configured availability at launch; hold affected work without fallback."
+      "thinkingOptionId": "medium",
+      "notes": "Preferred driver profile only. The current chat remains the driver; never auto-launch or switch it implicitly. Owns scope, external tracking mutations, stack coordination, and capability completion. Align, Spec, and unresolved consequential decisions request high effort and record requested/effective effort before returning to medium."
     },
     {
-      "id": "axstack-advisor",
-      "name": "Axstack planning advisor",
+      "id": "axstack-advisor-astra",
+      "name": "Axstack Astra adviser",
       "provider": "codex",
       "model": "gpt-6-astra",
       "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Configured planning advisor for specification creation and revision, solution design, and consequential decisions. The driver assesses first and owns the decision; reuse receipts only while evidence and scope remain unchanged. High-stakes decisions require the advisor's plain AGREE and the driver's accepted assessment."
+      "thinkingOptionId": "high",
+      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Fable; reuse only unchanged receipts."
+    },
+    {
+      "id": "axstack-advisor-fable",
+      "name": "Axstack Fable adviser (unavailable)",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Required independent Fable adviser for Align, Spec, and unresolved consequential decisions; unavailable in codex-only. The explicit null holds Align and Spec without provider substitution."
     },
     {
       "id": "axstack-owner",

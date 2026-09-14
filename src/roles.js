@@ -62,14 +62,21 @@ export function assessRoleReadiness(roles, preset) {
   if (!bounds) throw new Error(`cannot assess readiness for unknown preset: ${preset}`);
   const byId = new Map(roles.map((role) => [role.id, role]));
   const gaps = [];
-  const isDeferred = (role) =>
-    preset === 'mixed' && role.id === 'axstack-checker' && role.model === null;
+  const isIntentionalAbsence = (role) => role.model === null && (
+    (preset === 'mixed' && role.id === 'axstack-checker') ||
+    (preset === 'codex-only' && role.id === 'axstack-advisor-fable') ||
+    (preset === 'claude-only' && role.id === 'axstack-advisor-astra')
+  );
+  const isUniversalDriver = (role) =>
+    role.id === 'axstack-driver' &&
+    role.provider === 'codex' &&
+    role.model === 'gpt-5.6-sol';
 
   for (const role of roles) {
-    if (!bounds.has(role.provider)) {
+    if (!bounds.has(role.provider) && !isUniversalDriver(role)) {
       gaps.push(`${role.id} provider ${JSON.stringify(role.provider)} is outside ${preset} bounds (${[...bounds].join('|')})`);
     }
-    if (!isDeferred(role) && (typeof role.model !== 'string' || role.model.trim() === '')) {
+    if (!isIntentionalAbsence(role) && (typeof role.model !== 'string' || role.model.trim() === '')) {
       gaps.push(`${role.id} requires a configured model`);
     }
   }
