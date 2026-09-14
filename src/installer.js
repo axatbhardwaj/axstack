@@ -386,7 +386,7 @@ export async function installBundle({
   const prevManifest = (await readManifest(skillsRoot)) ?? {
     version: MANIFEST_VERSION,
     files: {},
-    profiles: { path: null, entries: {} },
+    profiles: { path: null, preset: null, entries: {} },
   };
   const ownedFiles = prevManifest.files ?? {};
   // Owned profile hashes are bound to the canonical config file they were
@@ -553,6 +553,7 @@ export async function installBundle({
       files: installedHashes,
       profiles: {
         path: profileFile && bundle.bundleProfiles ? profileFile : boundProfilePath,
+        preset: selectedPreset,
         entries: nextProfileHashes,
       },
     });
@@ -614,6 +615,7 @@ export async function uninstallBundle({
   }
   const ownedFiles = manifest.files ?? {};
   const boundProfilePath = manifest.profiles?.path ?? null;
+  const installedPreset = manifest.profiles?.preset ?? null;
   const ownedProfiles = manifest.profiles?.entries ?? {};
   const remainingFiles = { ...ownedFiles };
 
@@ -720,7 +722,7 @@ export async function uninstallBundle({
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: remainingFiles,
-      profiles: { path: remainingBoundPath, entries: remainingProfiles },
+      profiles: { path: remainingBoundPath, preset: installedPreset, entries: remainingProfiles },
     });
   }
   return summary;

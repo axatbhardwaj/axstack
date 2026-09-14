@@ -32,5 +32,6 @@ describe('old-implementation hash compatibility', () => {
     expect(parsed.version).toBe(1);
     expect(Object.keys(parsed.files).length).toBeGreaterThan(0);
     expect(parsed.profiles.path).toContain('paseo.json');
+    expect(parsed.profiles.preset).toBeNull();
   });
 });

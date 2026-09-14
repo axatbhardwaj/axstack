@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
@@ -44,5 +44,20 @@ describe('explicit preset selection', () => {
 
     expect(result.out).toContain('--preset');
     expect(existsSync(skillsDir)).toBe(false);
+  });
+
+  test('manifest records the canonical selected preset', () => {
+    const root = makeTempRoot('axstack-manifest-preset-');
+    const bundle = writeFixtureBundle(root);
+    const skillsDir = join(root, 'installed');
+
+    runCli([
+      'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir,
+    ]);
+
+    const manifest = JSON.parse(
+      readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
+    );
+    expect(manifest.profiles).toEqual({ path: null, preset: 'mixed', entries: {} });
   });
 });
