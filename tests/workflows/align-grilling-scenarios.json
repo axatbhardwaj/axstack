@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "note": "Behavioral scenarios for independent model evaluation. Schema validation and paper simulation do not prove provider behavior.",
+  "cases": [
+    {
+      "id": "normal-question-ceiling",
+      "input": {
+        "presented_questions": 20,
+        "settled": 18,
+        "deferred": 2,
+        "newly_ready_independent_material_decisions": 18
+      },
+      "expected": [
+        "Preserve settled and deferred answers without reopening them",
+        "Name the material gaps that justify extending beyond the normal ceiling",
+        "Ask no more than three prioritized independent questions with cumulative numbers and recommendations",
+        "Do not dump all eighteen questions or treat twenty as a target",
+        "Stop before twenty if no unresolved material choice remains"
+      ]
+    },
+    {
+      "id": "research-blocked-frontier",
+      "input": {
+        "ready_questions": 0,
+        "material_decisions_blocked_by_research": 2
+      },
+      "expected": [
+        "Do not call the interview complete",
+        "Name the blocking research and continue safe fact work",
+        "Do not ask dependent questions until their evidence prerequisite is resolved"
+      ]
+    },
+    {
+      "id": "initial-pass-hard-cap",
+      "input": {
+        "presented_questions": 35,
+        "material_decisions_unresolved": 4,
+        "deeper_refinement_opt_in": false
+      },
+      "expected": [
+        "Ask no more questions in the initial pass",
+        "Read back the four unresolved blockers without presenting the work as ready",
+        "Offer deeper refinement for a named area with a finite budget of at most five",
+        "Do not ask further interview or refinement questions unless the user opts in",
+        "Do not suppress required spec approval or model-availability clarification"
+      ]
+    },
+    {
+      "id": "settled-term-open-architecture",
+      "input": {
+        "accepted_canonical_term": "workspace",
+        "architecture_tradeoff": "unresolved",
+        "planning_docs_writable": true
+      },
+      "expected": [
+        "Discover and follow existing context and ADR conventions once",
+        "Record workspace in the glossary while distinguishing fact from desired behavior",
+        "Keep implementation detail out of the glossary",
+        "Keep the architecture tradeoff explicitly unresolved",
+        "Create a proposed ADR only when the tradeoff is hard to reverse and non-obvious",
+        "Do not imply implementation or spec approval"
+      ]
+    }
+  ]
+}

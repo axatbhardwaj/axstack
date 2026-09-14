@@ -81,7 +81,23 @@ Paseo launch materialization before dispatch.
   host-enabled discovery and readiness before use, preserves the caller's
   authority and persistent ownership, and falls back to the current Paseo
   conversation without clearing the hold. It creates no runtime or child role.
-- `axstack-align` — interview and resolve factual questions.
+- `axstack-align` — research facts, map dependent decisions, and ask prioritized
+  rounds of one to three cumulatively numbered questions with a recommendation
+  and trade-off for each. The current chat drafts each new frontier, the actual
+  configured persistent Fable advisor challenges it, and the driver reconciles
+  the advice before asking the user. Twenty presented questions is the normal
+  ceiling, not a quota; Align stops earlier when no material choice remains.
+  Named material gaps may extend the initial pass to 35, never beyond. An empty
+  ready frontier caused by blocked research is not completion. Further
+  interview refinement is opt-in, names one area, and gets at most five
+  questions without replacing required spec approval or model-availability
+  clarification.
+  As answers settle, Align follows existing context/glossary/ADR conventions or
+  lazily defaults to `CONTEXT.md` and `docs/adr/`. Glossaries contain domain
+  terms, not implementation detail; facts, desired behavior, and unresolved
+  trade-offs remain distinct. Documentation does not grant implementation or
+  spec approval. Partial or capped interviews retain open blockers and never
+  claim readiness.
 - `axstack-spec` — observable acceptance criteria, exclusions, approved revision baseline.
 - `axstack-tickets` — Linear native document preflight per session (missing access is a setup gap), explicit Markdown fallback, capability to task map with a theme and coarse size estimate per task, report-only checker, driver-owned updates. Reviewed-but-unmerged stays **In Review**; Done needs all required PRs merged plus acceptance checks passing.
 - `axstack-implement` — strict red-green-refactor with revision-tied evidence; exclusive writers; measured shape receipts; `gh stack` coordination and remeasurement after parent changes; restart reconciliation (ambiguity never authorizes a duplicate writer).
