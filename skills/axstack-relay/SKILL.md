@@ -41,7 +41,6 @@ execution-host binding. A policy naming a different transport does not authorize
 public artifacts contain neither these values nor personal notification policy.
 
 ## Discover availability in order
-in order
 
 Complete the first two steps before opening relay data, reading its manual, or
 running any relay command.
@@ -74,12 +73,18 @@ request schema, mode-specific commands, and database payload all pass.
 
 ## Preserve identity and authority
 
+For explicit user requests, use the requesting session as owner after verifying
+its identity and persistence; no separate PR owner or user nomination is needed.
+If it cannot accept replies persistently, use only a documented one-way/demo
+route that needs no persistent owner, or report that specific capability gap.
+For policy-driven messages, preserve the recorded owner.
+
 For conversations that accept replies, verify a persistent owner and bind the
 request to that owner and execution host. This includes reply-routing tests.
 For one-way messages, require only the identity fields the installed schema
 actually needs; do not invent a PR, revision, or decision to satisfy a workflow.
 If the transport requires a persistent owner even for a one-way message,
-verify it before sending. There is no default owner or ownership transfer.
+verify it before sending. Never invent an owner or transfer ownership.
 Bind actual PR decisions to the recorded repository, exact head and base.
 
 Send authority comes from the explicit request or applicable standing policy.
