@@ -104,5 +104,25 @@ export function assessRoleReadiness(roles, preset) {
 }
 
 export function installedRoleBytes(preset, roles) {
-  return JSON.stringify({ version: 1, preset, roles }, null, 2) + '\n';
+  return Buffer.from(JSON.stringify({ version: 1, preset, roles }, null, 2) + '\n');
+}
+
+export function assessInstalledRoleSnapshot(bytes, expectedPreset) {
+  let snapshot;
+  try {
+    snapshot = JSON.parse(bytes.toString());
+  } catch {
+    return { ready: false, gaps: ['installed axstack/roles.json is not valid JSON'] };
+  }
+  if (snapshot?.version !== 1 || snapshot?.preset !== expectedPreset || !Array.isArray(snapshot?.roles)) {
+    return {
+      ready: false,
+      gaps: [`installed role snapshot must be version 1 for preset ${expectedPreset}`],
+    };
+  }
+  try {
+    return assessRoleReadiness(snapshot.roles, expectedPreset);
+  } catch (error) {
+    return { ready: false, gaps: [error.message] };
+  }
 }

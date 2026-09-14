@@ -40,7 +40,10 @@ test('installs roles as an ordinary owned axstack file and preserves edits', () 
 
   const edited = '{"version":1,"roles":[],"userEdit":true}\n';
   writeFileSync(roleFile, edited);
-  const again = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir]);
+  const again = runCli(
+    ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir],
+    { expectFail: true },
+  );
   expect(again.out).toMatch(/preserved user edits/i);
   expect(readFileSync(roleFile, 'utf8')).toBe(edited);
   runCli(['uninstall', '--skills-dir', skillsDir]);

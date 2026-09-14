@@ -38,7 +38,12 @@ import {
   writeManifest,
 } from './manifest.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
-import { assertBundleRoles, assessRoleReadiness, installedRoleBytes } from './roles.js';
+import {
+  assertBundleRoles,
+  assessInstalledRoleSnapshot,
+  assessRoleReadiness,
+  installedRoleBytes,
+} from './roles.js';
 
 export const PRESET_ALIASES = Object.freeze({
   mixed: 'mixed',
@@ -264,9 +269,6 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
 
   const bundleRoles = selectedPreset ? (presets[selectedPreset] ?? null) : null;
   if (bundleRoles) {
-    if (!files.some((file) => file.rel === 'axstack/SKILL.md')) {
-      throw new Error('bundle roles require the axstack entry skill');
-    }
     if (files.some((file) => file.rel === 'axstack/roles.json')) {
       throw new Error('bundle skills must not provide axstack/roles.json; it is generated from the selected preset');
     }
@@ -419,7 +421,7 @@ export async function installBundle({
   }
 
   // Phase 2: write files. Existing overwritten bytes are backed up in memory
-  // and restored on any later failure (skill write, profile write, manifest
+  // and restored on any later failure (skill write, settings write, manifest
   // write), so a failed run leaves pre-run state behind and the untouched
   // manifest still describes it: a retry converges.
   const created = [];
@@ -476,6 +478,13 @@ export async function installBundle({
       claudeWritten.push(write);
     }
 
+    const roleReadiness = bundle.bundleRoles
+      ? assessInstalledRoleSnapshot(
+        await readFile(join(skillsRoot, 'axstack', 'roles.json')),
+        selectedPreset,
+      )
+      : null;
+
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
@@ -488,11 +497,11 @@ export async function installBundle({
     return {
       ...summary,
       preset: selectedPreset,
-      roles: bundle.readiness,
+      roles: roleReadiness,
       claudeSettings: claudePlan.report,
     };
   } catch (err) {
-    // Restore updated files, remove creations, restore/remove the profile so
+    // Restore updated files, remove creations, and restore Claude settings so
     // pre-run state (which the untouched manifest describes) holds again.
     // Restore failures are collected and reported: a swallowed restore would
     // leave ownership claims describing bytes that are not on disk.
