@@ -77,7 +77,7 @@ test('preset bundles retain three role tables in the frozen container', () => {
 
 test('public guidance distinguishes active Orca from historical Paseo state', () => {
   const docs = [read('README.md'), read('docs/installation.md'), read('docs/workflows.md')].join('\n');
-  expect(docs).toMatch(/Orca[^.]*only supported runtime|only supported runtime[^.]*Orca/i);
+  expect(docs).toMatch(/Orca[^.]*only supported(?: active)? runtime|only supported(?: active)? runtime[^.]*Orca/i);
   expect(docs).toMatch(/historical[^.]*Paseo|Paseo[^.]*historical/i);
   expect(docs).toMatch(/compatib[^.]*unverified|unverified[^.]*compatib/i);
   expect(docs).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);

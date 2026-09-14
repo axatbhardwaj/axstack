@@ -65,15 +65,14 @@ test('scope identity: execution boundaries accept the same two identities', () =
   const implement = read('skills/axstack-implement/SKILL.md');
   const review = read('skills/axstack-review/SKILL.md');
   const authored = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Standalone owner'));
-  const launch = read('skills/axstack/references/paseo-launch.md');
-  const launchStep = launch.slice(launch.indexOf('6. `create_agent`'), launch.indexOf('7. Verify'));
+  const launch = read('skills/axstack/references/orca-runtime.md');
   const watch = read('skills/axstack-watch/SKILL.md');
   const feedback = watch.slice(watch.indexOf('### Feedback routing'), watch.indexOf('## 5. State readiness')).replace(/\s+/g, ' ');
   for (const [name, text] of [
     ['contracts', contracts],
     ['implement', implement],
     ['authored review', authored],
-    ['Paseo launch brief', launchStep],
+    ['Orca runtime brief', launch],
     ['watch feedback routing', feedback],
   ]) {
     expect(text, `${name}: missing named small identity`).toMatch(/small-change intent/i);
@@ -114,10 +113,10 @@ test('scope identity: public docs and local-record exemption describe the propor
     expect(text, `${name}: missing substantial path`).toMatch(/substantial[^.]*approved\s+spec[^.]*ticket/i);
     expect(text, `${name}: missing small-change path`).toMatch(/small[^.]*request|small[^.]*issue/i);
   }
-  expect(workflows).toMatch(/2026-09-13[^.]*user-requested/i);
   const reviewDocs = workflows.slice(workflows.indexOf('- `axstack-review`'), workflows.indexOf('- `axstack-watch`'));
-  expect(reviewDocs).toMatch(/approved baseline[^.]*substantial/i);
-  expect(reviewDocs).toMatch(/small-change intent[^.]*small/i);
+  expect(reviewDocs).toMatch(/authored[^.]*eligible/i);
+  expect(workflows).toMatch(/substantial[^.]*approved spec[^.]*matching ticket map/i);
+  expect(workflows).toMatch(/Small[^.]*small-change intent/i);
   expect(spec).toMatch(/2026-09-13[^.]*user-requested/i);
   expect(record).toMatch(/tiny-task exemption[^.]*not[^.]*scope-identity exemption/i);
 });

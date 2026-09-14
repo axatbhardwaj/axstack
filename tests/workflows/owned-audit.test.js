@@ -82,7 +82,7 @@ test('owned-audit: frontmatter name matches directory with description', () => {
 
 test('owned-audit: loads shared references like other owned skills', () => {
   const text = readAudit();
-  for (const ref of ['../axstack/references/paseo-launch.md', '../axstack/references/contracts.md']) {
+  for (const ref of ['../axstack/references/orca-runtime.md', '../axstack/references/contracts.md']) {
     expect(text.includes(ref), `must load shared reference ${ref}`).toBeTruthy();
   }
 });

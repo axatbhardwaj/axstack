@@ -39,7 +39,7 @@ test('relay discovery: guard-first order precedes manual and relay commands', ()
 test('relay discovery: readiness inspects doctor payload and mode requirements', () => {
   const relay = read(relayPath);
   expect(relay).toMatch(/exit 0[^.]*not[^.]*readiness/i);
-  expect(relay).toMatch(/commands[^.]*hermes[^.]*paseo/i);
+  expect(relay).toMatch(/Orca-capable[^.]*conversation route/i);
   expect(relay).toMatch(/gh[^.]*`?pr`? mode/i);
   expect(relay).toMatch(/database[^.]*["`]ok["`]/i);
 });
@@ -54,7 +54,7 @@ test('relay discovery: policy reachability is conditional from entry, review, an
     expect(text, `${path}: relay edge`).toContain('axstack-relay');
     expect(text, `${path}: generic policy field`).toContain('Notification policy');
   }
-  expect(read('skills/axstack/references/paseo-launch.md')).toContain('Notification policy');
+  expect(read('skills/axstack/SKILL.md')).toContain('Notification policy');
   expect(read('skills/axstack/references/run-record.md')).toContain('Notification policy:');
 });
 

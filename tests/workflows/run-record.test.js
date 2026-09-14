@@ -68,14 +68,14 @@ test('run-record: reconciliation protects ownership and revision evidence', () =
   expect(text).toMatch(/approval[^.]*evidence[^.]*older\s+revision|stale[^.]*evidence[^.]*revision/i);
   expect(text).toMatch(/task completion[^.]*capability[^.]*merged/i);
   expect(text).toMatch(/prior driver[^.]*inactive|inactive[^.]*prior driver/i);
-  expect(text).toMatch(/inactive[^.]*actual Paseo session state/i);
+  expect(text).toMatch(/inactive[^.]*actual Orca session[^.]*Dispatch state/i);
   expect(text).toMatch(/idle alone[^.]*never[^.]*reassign/i);
   expect(text).toMatch(/explicit[^.]*accepted transfer/i);
   expect(text).toMatch(/uncertain[^.]*live conflict[^.]*hold|live conflict[^.]*uncertain[^.]*hold/i);
   expect(text).toMatch(/never[^.]*overwrite/i);
   expect(text).toMatch(/prior driver[^.]*different valid accepted\s+owner[^.]*stop/i);
   expect(text).toMatch(/derived progress[^.]*not authority/i);
-  for (const source of ['Paseo sessions', 'Git revisions', 'forge/PR state', 'approved spec']) {
+  for (const source of ['Orca sessions and Dispatches', 'Git revisions', 'forge/PR state', 'approved spec']) {
     expect(text).toContain(source);
   }
   expect(text).toMatch(/driver[^.]*verifies[^.]*exact SHAs[^.]*receipts[^.]*before recording a transition/i);
