@@ -577,7 +577,7 @@ export async function installBundle({
     }
 
     for (const write of claudePlan.writes) {
-      await writeAtomic(write.path, write.after, { mode: 0o600 });
+      await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
       claudeWritten.push(write);
     }
 
@@ -771,7 +771,7 @@ export async function uninstallBundle({
         if (err?.code !== 'ENOENT') throw err;
       });
     } else {
-      await writeAtomic(write.path, write.after, { mode: 0o600 });
+      await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
     }
   }
   summary.claudeSettings = claudePlan.report;

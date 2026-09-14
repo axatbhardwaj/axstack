@@ -1,9 +1,11 @@
 import { expect, test } from 'bun:test';
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { installBundle, uninstallBundle } from '../../src/installer.js';
@@ -181,4 +183,53 @@ test('a user-edited value survives last-owner uninstall and ownership is dropped
   expect(summary.claudeSettings).toMatchObject({ status: 'preserved', value: 'sonnet' });
   expect(readJson(f.settingsPath).env[SETTING]).toBe('sonnet');
   expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
+});
+
+test('malformed ownership sidecar fails before skill mutation', async () => {
+  const f = fixture();
+  mkdirSync(join(f.root, 'claude'), { recursive: true });
+  writeFileSync(join(f.root, 'claude', SIDECAR), '{broken\n');
+
+  await expect(
+    installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath })),
+  ).rejects.toThrow(/malformed Claude settings ownership sidecar/);
+  expect(existsSync(join(f.skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
+  expect(readFileSync(join(f.root, 'claude', SIDECAR), 'utf8')).toBe('{broken\n');
+});
+
+test('symlinked settings file and sidecar are refused before skill mutation', async () => {
+  for (const target of ['settings', 'sidecar']) {
+    const f = fixture();
+    mkdirSync(join(f.root, 'claude'), { recursive: true });
+    const outside = join(f.root, `${target}-outside.json`);
+    writeFileSync(outside, '{}\n');
+    const unsafe = target === 'settings'
+      ? f.settingsPath
+      : join(f.root, 'claude', SIDECAR);
+    symlinkSync(outside, unsafe);
+
+    await expect(
+      installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath })),
+    ).rejects.toThrow(/symlink|unsafe|refusing/);
+    expect(readFileSync(outside, 'utf8')).toBe('{}\n');
+    expect(existsSync(join(f.skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
+  }
+});
+
+test('a later manifest failure restores settings bytes and existing mode', async () => {
+  const f = fixture();
+  mkdirSync(join(f.root, 'claude'), { recursive: true });
+  const before = '{\n  "env": {\n    "KEEP": "yes"\n  },\n  "theme": "dark"\n}\n';
+  writeFileSync(f.settingsPath, before);
+  chmodSync(f.settingsPath, 0o640);
+  mkdirSync(f.skillsDir, { recursive: true });
+  mkdirSync(join(f.skillsDir, '.axstack-manifest.json.tmp'));
+
+  await expect(
+    installBundle(installArgs(f, { available: true, settingsPath: f.settingsPath })),
+  ).rejects.toThrow(/temporary|manifest|exists/);
+  expect(readFileSync(f.settingsPath, 'utf8')).toBe(before);
+  expect(statSync(f.settingsPath).mode & 0o777).toBe(0o640);
+  expect(existsSync(join(f.root, 'claude', SIDECAR))).toBe(false);
+  expect(existsSync(join(f.skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
 });
