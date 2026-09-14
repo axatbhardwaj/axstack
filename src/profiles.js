@@ -28,14 +28,14 @@ const PROVIDER_BOUNDS = Object.freeze({
 
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
-    'gpt-5.6-sol': ['axstack-reviewer-secondary', 'claude', 'claude-opus-5', 'medium'],
-    'claude-opus-5': ['axstack-reviewer-primary', 'codex', 'gpt-5.6-sol', 'medium'],
+    'codex/gpt-5.6-sol': ['axstack-reviewer-secondary', 'claude/claude-opus-5', 'medium'],
+    'claude/claude-opus-5': ['axstack-reviewer-primary', 'codex/gpt-5.6-sol', 'medium'],
   },
   'codex-only': {
-    'gpt-5.6-sol': ['axstack-reviewer-secondary', 'codex', 'gpt-5.6-terra', 'xhigh'],
+    'codex/gpt-5.6-sol': ['axstack-reviewer-secondary', 'codex/gpt-5.6-terra', 'xhigh'],
   },
   'claude-only': {
-    'claude-opus-5': ['axstack-reviewer-secondary', 'claude', 'claude-sonnet-5', 'xhigh'],
+    'claude/claude-opus-5': ['axstack-reviewer-secondary', 'claude/claude-sonnet-5', 'xhigh'],
   },
 });
 
@@ -102,20 +102,20 @@ export function assessProfileReadiness(existing, presetProfiles, preset) {
 
   const author = byId.get('axstack-author');
   if (author && expectedById.has('axstack-author')) {
-    const route = AUTHORED_ROUTES[preset]?.[author.model];
+    const authorRoute = `${author.provider}/${author.model}`;
+    const route = AUTHORED_ROUTES[preset]?.[authorRoute];
     if (!route) {
-      addGap(`authored routing gap: unsupported axstack-author model ${JSON.stringify(author.model)}`, 'axstack-author');
+      addGap(`authored routing gap: unsupported axstack-author route ${authorRoute}`, 'axstack-author');
     } else {
-      const [reviewerId, provider, model, effort] = route;
+      const [reviewerId, reviewerRoute, effort] = route;
       const reviewer = byId.get(reviewerId);
       if (
         !reviewer ||
-        reviewer.provider !== provider ||
-        reviewer.model !== model ||
+        `${reviewer.provider}/${reviewer.model}` !== reviewerRoute ||
         reviewer.thinkingOptionId !== effort
       ) {
         addGap(
-          `authored routing gap: ${reviewerId} must be ${provider}/${model}/${effort} for author ${author.model}`,
+          `authored routing gap: ${reviewerId} must be ${reviewerRoute}/${effort} for author ${authorRoute}`,
           'axstack-author',
           reviewerId,
         );

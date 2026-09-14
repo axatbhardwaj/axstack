@@ -84,6 +84,7 @@ describe('profile readiness', () => {
     expect(report.ready).toBe(false);
     expect(report.gaps.join('\n')).toMatch(/axstack-author.*provider/i);
     expect(report.gaps.join('\n')).toMatch(/axstack-reviewer-primary.*model/i);
+    expect(report.gaps.join('\n')).toMatch(/authored routing gap/i);
   });
 
   test('harmless metadata and in-bounds non-routing changes are deviations only', () => {
