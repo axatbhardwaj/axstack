@@ -14,12 +14,15 @@ Source baseline: `fd74a79a922471285da56e6523350fce2c3868a0`.
 
 | Capability | Tasks | Acceptance source | Status | Dependencies |
 | --- | --- | --- | --- | --- |
-| C1 Explicit subscription routing | T01, T02, T05 | Spec routing, setup, review and acceptance 1–4, 6–7 | Planned | None |
-| C2 Claude native subagent default | T03, T05 | Spec Claude Code native subagent default | Planned | C1 setup interface |
-| C3 Active execution tracking | T04, T05 | Spec active tracking and acceptance 5–7 | Planned | C1 role contract |
+| C1 Explicit subscription routing | T01, T02, T05 | Spec routing, setup, review and acceptance 1–4, 6–7 | In Review — PR #20 | None |
+| C2 Claude native subagent default | T03, T05 | Spec Claude Code native subagent default | In Review — PR #22 | C1 setup interface |
+| C3 Active execution tracking | T04, T05 | Spec active tracking and acceptance 5–7 | In Review — PR #21 | C1 role contract |
 
-Nothing is implemented, reviewed, merged, or live. Reviewed candidates become
-In Review; Done requires all relevant PR merges and capability acceptance.
+Implementation is complete and independently reviewed in PRs [#20](https://github.com/axatbhardwaj/axstack/pull/20),
+[#21](https://github.com/axatbhardwaj/axstack/pull/21), and
+[#22](https://github.com/axatbhardwaj/axstack/pull/22). Delivery is pending CI,
+merge, release, and host verification. Done requires the relevant merges and
+capability acceptance; source checks do not establish live harness behavior.
 
 ## Owned tasks
 
@@ -96,19 +99,30 @@ actual model and effort, all-angle coverage and evidence gaps. Refresh affected
 children after parent changes. Live compatibility requires authorized actual
 harness runs; fixture tests alone do not establish it.
 
-## Execution boundary and resume
+## Execution authority and evidence
 
-Subagents were explicitly stopped by the user and remain stopped. No new
-advisor, auditor, implementer or reviewer has been launched for this map.
-The later role table, expanded scope, spec and map are driver-authored;
-Fable only reviewed the initial independence question. Do not invent current
-advisor/audit receipts or interpret preparation as authority to resume agents.
+After preparation, the user explicitly authorized resuming the required Axstack
+implementers, independent reviewers and auditor, followed by merge, release,
+mixed-preset installation on both devices and Paseo restarts. The current chat
+remains the driver and owns those delivery actions. Authors own source changes;
+review and audit stay independent. The approved spec bytes remain unchanged.
 
-Before implementation, reconcile this approval hash, current Git state, source
-ownership, and the user's continued subagent-stop instruction. Required
-independent behavioral evaluation/review must be arranged within the authority
-then available; do not silently replace it with driver self-review.
+T01/T02 are implemented in PR #20, T04 in PR #21 and T03 in PR #22, using
+`gh stack`. Independent authored reviews approved all three candidates. The
+complete Linux suite has 285 passing tests and one skip; macOS CI exposed
+canonical-path assumptions in the new Claude fixtures, addressed by a test repair
+with CI and review refresh required before merge. Routing and tracking static evaluations cover
+18 and 13 scenarios respectively. These are not live dispatch or timer-delivery
+proof. Host configuration and daemon readback are separate delivery evidence.
 
-Excluded authority remains unchanged: no live home install, production timer,
-merge, release or publication. This task map ends preparation; the user invokes
-Axstack to begin execution.
+One workflow reference-edit ordering deviation is recorded: three reference
+files were edited before the baseline evaluation returned. Later commits do not
+retroactively establish test-first ordering. Installer red/green ordering relies
+partly on author session receipts rather than independently captured raw output.
+The Luna max audit assesses execution outcome, adherence and coverage separately.
+
+The initial Fable advice remains scoped to the independence question; no later
+Fable approval is claimed. Subsequent authority comes from the user's explicit
+conversation instructions. Private run evidence records actual session IDs,
+reviewed revisions, timer receipts and deployment checks without publishing
+host-sensitive configuration.
