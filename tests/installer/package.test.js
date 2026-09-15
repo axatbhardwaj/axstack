@@ -208,7 +208,7 @@ test('tarball members match the full source tree with no silent omissions', () =
 
 test('CLI reports the subscription-routing setup version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
-  expect(result.out.trim()).toBe('axstack 0.6.1');
+  expect(result.out.trim()).toBe('axstack 0.6.2');
 });
 
 test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
