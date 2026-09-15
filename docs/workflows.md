@@ -37,13 +37,16 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 18 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 17 stable IDs.
 
-| Preset | Driver | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
-| --- | --- | --- | --- | --- | --- |
-| `mixed` | Sol medium | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna max |
-| `codex-only` | Sol medium | Sol medium | Sol medium; Terra xhigh | Astra high / unavailable | Luna max |
-| `claude-only` | Sol medium | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
+The current chat drives on whatever model runs it; no preset carries a driver
+role.
+
+| Preset | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
+| --- | --- | --- | --- | --- |
+| `mixed` | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna max |
+| `codex-only` | Sol medium | Sol medium; Terra xhigh | Astra high / unavailable | Luna max |
+| `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it

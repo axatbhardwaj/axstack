@@ -24,9 +24,8 @@ without changing authority.
    reason. Small, bounded one-PR work uses the current request or selected issue
    as a snapshotted small-change intent;
    substantial or stacked work needs an approved spec and matching ticket map.
-2. The Sol driver defaults to medium, requests high for Align, Spec, and
-   unresolved consequential decisions, records requested/effective effort, and
-   returns to medium afterward. Bind each ready task to the selected role snapshot and an authoritative Orca
+2. The current chat drives on whatever model runs it; there is no driver
+   profile. Bind each ready task to the selected role snapshot and an authoritative Orca
    Run, Task, and Dispatch. Exactly one writer owns a candidate at a time.
 3. Peer PRs receive both configured independent reviewer roles. Authored PRs
    receive one eligible reviewer from the selected preset's explicit mapping
@@ -65,7 +64,7 @@ directory. `--claude-settings` and `--no-claude-settings` manage the existing
 Claude Code subagent default transaction; they do not configure Orca roles.
 See [installation details](docs/installation.md).
 
-The public bundle preserves three canonical 18-role inputs:
+The public bundle preserves three canonical 17-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly

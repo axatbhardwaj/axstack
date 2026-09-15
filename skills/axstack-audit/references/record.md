@@ -9,7 +9,7 @@ Run: <run identity + scope/authority + audit mode (end-of-run | checkpoint)>
 Baseline: <approved spec rev | peer mode | research mode | maintenance scope>
 Acceptance: <passed / failed / unverified + test + SHA traces>
 Steps: <completed / deviated + why + approval per deviation>
-Advisers: <Astra/Fable coverage + same-question receipts + driver effort transitions + high-stakes AGREE status>
+Advisers: <Astra/Fable coverage + same-question receipts + high-stakes AGREE status>
 TDD: <applicable evidence path: normal real red-green | accepted structure-preserving old revision green before edits + same checks new revision green; absent proof: noncompliance | unavailable records: UNKNOWN with reason>
 Review: <exact-rev independent review status + unresolved findings>
 Rework: <cycles + causes>

@@ -38,9 +38,8 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 
 ## Consult on consequential decisions
 
-The current chat remains the driver; never auto-launch a preferred profile.
-Before Align, request driver effort high and record requested/effective effort
-under [Standing contracts](../axstack/references/contracts.md). For each new
+The current chat remains the driver under
+[Standing contracts](../axstack/references/contracts.md). For each new
 user round, the driver independently drafts the prioritized frontier and
 recommendations. Then consult `axstack-advisor-astra` and
 `axstack-advisor-fable` independently, without cross-reading, using the same
@@ -55,8 +54,7 @@ Immediately before the first actual adviser dispatch, load and follow
 session and settled receipt; consult only the changed frontier and reuse
 unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
-hold Align; safe fact work may continue without substitution. On completion or
-hold, request the driver return to medium and record requested/effective effort.
+hold Align; safe fact work may continue without substitution.
 
 ## Bound the interview
 

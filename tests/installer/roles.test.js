@@ -33,7 +33,6 @@ test('installed readiness compares role IDs with the selected bundle', () => {
 
 test('single-provider readiness accepts only the intentionally unavailable adviser', () => {
   const roles = [
-    { ...role('axstack-driver', 'gpt-5.6-sol'), thinkingOptionId: 'medium' },
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
     role('axstack-author', 'gpt-5.6-sol'),
@@ -48,9 +47,8 @@ test('single-provider readiness accepts only the intentionally unavailable advis
   );
 });
 
-test('claude-only readiness permits the universal Sol driver and unavailable Astra slot', () => {
+test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
-    { ...role('axstack-driver', 'gpt-5.6-sol'), thinkingOptionId: 'medium' },
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
     { ...role('axstack-author', 'claude-opus-5'), provider: 'claude' },

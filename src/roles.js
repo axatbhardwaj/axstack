@@ -67,13 +67,8 @@ export function assessRoleReadiness(roles, preset) {
     (preset === 'codex-only' && role.id === 'axstack-advisor-fable') ||
     (preset === 'claude-only' && role.id === 'axstack-advisor-astra')
   );
-  const isUniversalDriver = (role) =>
-    role.id === 'axstack-driver' &&
-    role.provider === 'codex' &&
-    role.model === 'gpt-5.6-sol';
-
   for (const role of roles) {
-    if (!bounds.has(role.provider) && !isUniversalDriver(role)) {
+    if (!bounds.has(role.provider)) {
       gaps.push(`${role.id} provider ${JSON.stringify(role.provider)} is outside ${preset} bounds (${[...bounds].join('|')})`);
     }
     if (!isIntentionalAbsence(role) && (typeof role.model !== 'string' || role.model.trim() === '')) {

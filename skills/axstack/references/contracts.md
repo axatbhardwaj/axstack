@@ -42,13 +42,10 @@ user. Never infer a route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives and native
 fallback prose are not defaults.
 
-## Driver effort and adviser split
+## Driver and adviser split
 
-`axstack-driver` is Sol medium by default in every preset. Align, Spec, and
-unresolved consequential decisions require driver effort `high`; record
-requested and effective effort. If high effort cannot be established,
-hold that work. After the phase or decision, request the return to `medium` and
-record its effective effort; never infer either transition from intent alone.
+The current chat is the driver, whatever model runs it; there is no driver
+profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
 consults `axstack-advisor-astra` and `axstack-advisor-fable` independently with

@@ -2,15 +2,6 @@
   "version": 1,
   "roles": [
     {
-      "id": "axstack-driver",
-      "name": "Axstack driver (preferred)",
-      "provider": "codex",
-      "model": "gpt-5.6-sol",
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Preferred driver profile only. The current chat remains the driver; never auto-launch or switch it implicitly. Owns scope, external tracking mutations, stack coordination, and capability completion. Align, Spec, and unresolved consequential decisions request high effort and record requested/effective effort before returning to medium."
-    },
-    {
       "id": "axstack-advisor-astra",
       "name": "Axstack Astra adviser (unavailable)",
       "provider": "claude",
