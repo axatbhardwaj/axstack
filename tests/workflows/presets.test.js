@@ -6,7 +6,6 @@ const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
 const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
-  'axstack-driver',
   'axstack-advisor-astra',
   'axstack-advisor-fable',
   'axstack-owner',
@@ -30,7 +29,7 @@ const c = (model, effort) => ['codex', model, 'full-access', effort];
 const a = (model, effort) => ['claude', model, 'bypassPermissions', effort];
 const expected = {
   mixed: [
-    c('gpt-5.6-sol', 'medium'), c('gpt-6-astra', 'high'),
+    c('gpt-6-astra', 'high'),
     a('claude-fable-5-1', 'high'),
     a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
@@ -42,7 +41,7 @@ const expected = {
     c('gpt-5.6-luna', 'max'),
   ],
   'codex-only': [
-    c('gpt-5.6-sol', 'medium'), c('gpt-6-astra', 'high'),
+    c('gpt-6-astra', 'high'),
     c(null, 'high'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
@@ -54,7 +53,7 @@ const expected = {
     c('gpt-5.6-luna', 'max'),
   ],
   'claude-only': [
-    c('gpt-5.6-sol', 'medium'), a(null, 'high'),
+    a(null, 'high'),
     a('claude-fable-5-1', 'high'),
     a('claude-opus-5', 'high'), a('claude-opus-5', 'medium'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
@@ -97,7 +96,7 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
 test('presets: provider boundaries, intentional adviser absence, and reviewer identities are explicit', () => {
   for (const preset of ['codex-only', 'claude-only']) {
     const profiles = readJson(`profiles/presets/${preset}.json`).roles;
-    const providerBoundRoles = profiles.filter(({ id }) => id !== 'axstack-driver');
+    const providerBoundRoles = profiles;
     expect(new Set(providerBoundRoles.map(({ provider }) => provider))).toEqual(
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
