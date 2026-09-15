@@ -43,7 +43,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 18 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 17 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -104,7 +104,7 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` relative to the actually loaded `axstack` skill.
-A new run records the selected preset plus all 18 role rows. An active run keeps
+A new run records the selected preset plus all 17 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
@@ -112,10 +112,8 @@ The mixed checker has `model: null`; checker dispatch is held and never inherits
 a provider default. The single-provider presets configure the checker. Their
 unavailable adviser remains an explicit same-provider `model: null` role, which
 does not make installation unready; Align and Spec still hold until both Astra
-and Fable can return independent receipts. The Sol driver defaults to medium in
-every preset, requests high for Align, Spec, and unresolved consequential
-decisions, records requested/effective effort, and returns to medium afterward.
-Every other missing, invalid, unsupported, or unavailable role value holds only
+and Fable can return independent receipts. The current chat drives on whatever
+model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
 the affected work. There is no model substitution, subscription inference, or
 quota routing.
 
@@ -177,7 +175,8 @@ checks, uninstall mutation, runtime fallback, or timer cleanup. Preserve them
 for audit and report the explicit migration path.
 
 An ordinary upgrade can retain the retired `axstack-handoff` and
-`axstack-docs` assets. A no-force uninstall/install cycle removes only pristine
+`axstack-docs` assets. The retired `axstack-driver` row leaves `roles.json` on
+the next install because that file is rewritten as one owned snapshot. A no-force uninstall/install cycle removes only pristine
 owned copies; edited, custom, and unknown assets survive. `axstack-explain`
 supersedes the old docs route. Full ownership transfer uses Orca's runtime-owned
 handoff guidance and still requires explicit recipient acceptance.
