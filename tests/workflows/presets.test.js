@@ -130,3 +130,14 @@ test('presets: all packaged Markdown pointers resolve', () => {
     }
   }
 });
+
+test('presets: scenario corpora never reference a stale role count', () => {
+  const roleCount = readJson('profiles/presets/mixed.json').roles.length;
+  const corpora = readdirSync(`${root}/tests/workflows`).filter((f) => f.endsWith('-scenarios.json'));
+  expect(corpora.length).toBeGreaterThan(0);
+  for (const file of corpora) {
+    const text = readFileSync(`${root}/tests/workflows/${file}`, 'utf8');
+    const stale = text.match(/\b(\d+)(?=[ -]role\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
+    expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
+  }
+});
