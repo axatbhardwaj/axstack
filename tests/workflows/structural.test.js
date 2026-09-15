@@ -345,7 +345,7 @@ test('structural: runtime reference treats installed role snapshot as authoritat
   expect(text).toMatch(/reconcile existing attempts first/i);
 });
 
-test('structural: contracts carry dual-adviser consultation and driver effort transitions', () => {
+test('structural: contracts carry dual-adviser consultation without a driver profile', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
   for (const adviser of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
     expect(text.includes(adviser), `contracts must name ${adviser}`).toBeTruthy();
@@ -361,9 +361,8 @@ test('structural: contracts carry dual-adviser consultation and driver effort tr
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
   expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
-  expect(/requested[^.]*effective[^.]*effort/i.test(text)).toBeTruthy();
-  expect(/Align[^.]*Spec[^.]*unresolved consequential decisions[^.]*high/i.test(text)).toBeTruthy();
-  expect(/return[^.]*medium/i.test(text)).toBeTruthy();
+  expect(/axstack-driver|effective effort|return[^.]*medium/i.test(text), 'contracts must not carry a driver profile or effort rule').toBe(false);
+  expect(/current chat[^.]*driver|driver[^.]*current chat/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
   expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
 });
 

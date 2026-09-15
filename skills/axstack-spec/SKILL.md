@@ -24,8 +24,7 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    without writing or changing stores. Linear drafting starts only when all
    three operations are available; a later tickets-phase check cannot replace
    this one. Markdown mode skips this preflight.
-3. **Draft with decision evidence.** Before Spec, request driver effort high
-   and record requested/effective effort. Write observable acceptance criteria
+3. **Draft with decision evidence.** Write observable acceptance criteria
    and explicit exclusions in the selected store. First record the driver's
    independent assessment, then load
    [Orca runtime](../axstack/references/orca-runtime.md) before dispatching the
@@ -40,8 +39,7 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    user approves it; adviser input cannot grant approval. High-stakes decisions
    require both advisers' plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
-   creates the execution baseline. Then request the driver return to medium and
-   record requested/effective effort.
+   creates the execution baseline.
 5. **Snapshot the baseline.** Record the approved revision identity and a
    concise repository Markdown counterpart. In Linear mode, the native
    document remains authoritative; in Markdown mode, the agreed repository

@@ -68,8 +68,7 @@ counts with denominators plus the evidence behind the count:
 - Planned steps completed and deviated, each deviation with why and approval.
 - Configured adviser coverage across Align, Spec creation, Spec revision,
   solution design, and unresolved consequential decisions, including
-  independent same-question receipts, driver effort transitions, disagreement
-  synthesis, and both plain AGREE receipts where high-stakes.
+  independent same-question receipts, disagreement synthesis, and both plain AGREE receipts where high-stakes.
 - Applicable test-first evidence: normal behavior changes have real red-green
   proof; explicitly accepted structure-preserving work has the old revision
   green before edits and the same checks green on the new revision, plus
