@@ -123,6 +123,21 @@ test('owned-core: mode-specific independent review keeps exact rev, isolation, a
   expect(/without vot/i.test(text), 'owner must validate findings without voting').toBeTruthy();
 });
 
+test('owned-core: owner publishes and confirms the candidate before review', () => {
+  const implement = skill('axstack-implement');
+  const publication = readFileSync(join(skillsDir, 'axstack', 'references', 'candidate-publication.md'), 'utf8');
+  const review = skill('axstack-review');
+
+  expect(implement).toMatch(/owner[^.]*reconcil[^.]*receipt/i);
+  expect(implement).toMatch(/gh stack[^.]*push|push[^.]*gh stack/i);
+  expect(implement).toMatch(/remote[^.]*readback[^.]*review/i);
+  expect(publication).toMatch(/local[^.]*green[^.]*CI[^.]*pending/i);
+  expect(publication).toMatch(/owner[^.]*does not edit[^.]*candidate/i);
+  expect(publication).toMatch(/expected-old[^.]*remote[^.]*SHA/i);
+  expect(publication).toMatch(/candidate[^.]*base[^.]*remote ref[^.]*confirmed remote SHA[^.]*CI/is);
+  expect(review).toMatch(/remote[^.]*confirm[^.]*candidate SHA[^.]*before[^.]*dispatch/i);
+});
+
 test('owned-core: report-only writes nothing; authorized submit binds commit and verifies receipt', () => {
   const text = skill('axstack-review');
   expect(

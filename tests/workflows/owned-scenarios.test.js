@@ -19,7 +19,7 @@ const root = dirname(dirname(here));
 // proof). Behavior is verified by a fresh evaluator executing each case
 // against skill prompts; keyword matching is not behavior. The existing
 // 12 scenarios in scenarios.json are left untouched.
-test('owned-scenarios: seven repair cases with inputs and expected decisions', () => {
+test('owned-scenarios: eight bounded cases have inputs and expected decisions', () => {
   const data = JSON.parse(readFileSync(root + '/tests/workflows/owned-scenarios.json', 'utf8'));
   expect(data.version).toBe(1);
   const ids = data.cases.map((c) => c.id);
@@ -32,6 +32,7 @@ test('owned-scenarios: seven repair cases with inputs and expected decisions', (
     'adoption-authority',
     'monitor-watchdog-split',
     'ambiguous-publish',
+    'candidate-publish-before-review',
   ]) {
     expect(ids.includes(required), `missing scenario: ${required}`).toBeTruthy();
   }
