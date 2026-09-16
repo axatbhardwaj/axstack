@@ -20,6 +20,9 @@ by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
 The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
+When the session is the Orca driver automation, also load
+[Automation sessions](../axstack/references/automations.md): it is the owner
+for every PR it handles, and its gate and allowlist bound every mutation.
 
 ## 1. Adopt and reconcile
 

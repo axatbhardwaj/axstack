@@ -37,7 +37,8 @@ identity on every tick and the watchdog compares it with the expected model; a
 mismatch is a safety hold, never a silent substitution. The bounded expiry is
 enforced by the run record's watch deadline, not by the schedule parser. Still
 introduce no custom scheduler or polling loop and use no legacy runtime
-fallback.
+fallback. The session-level contract lives in
+[Automation sessions](../../axstack/references/automations.md).
 
 ## Preserve the contract under automation
 
