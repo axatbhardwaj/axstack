@@ -66,9 +66,9 @@ Escalate to user: yes | no — <criterion> — <reason>
 
 Criteria, exactly four: a security concern; a permanent on-chain state change;
 an architectural change in approach; and automation health (a
-model-substitution, session, precheck, or relay-delivery hold). The automation
-health criterion is usable only by the watchdog and the safety-hold path, never
-by a reviewer.
+model-substitution, session, precheck, discovery, or relay-delivery hold). The
+automation health criterion is usable only by the watchdog and the safety-hold
+path, never by a reviewer.
 
 ## Escalation gate
 
@@ -95,8 +95,13 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
   [contracts](contracts.md#serious-risk). The internal prompt lands in the run
   record and the automation's Orca conversation; no `hermes send` occurs
   without `escalate`.
+- The health gate takes a watchdog finding and its evidence, not reviewer
+  verdicts or a candidate; the same two tokens apply.
 - An unavailable gate or required reviewer records a hold, pauses mutation for
-  that PR, and is treated as a watchdog health finding.
+  that PR, and is treated as a watchdog health finding. An unavailable gate
+  cannot be escalated through itself: the hold stays, the gap is visible in
+  Orca run history and the sidecar, and no substitute or unauthorized send
+  occurs.
 
 ## Precheck (bounded shell, no model)
 
@@ -118,6 +123,11 @@ recomputed one, so an event landing during a run is processed on the following
 tick.
 
 ## Driver tick
+
+Before any repair or publication the driver validates its effective session
+identity through Orca runtime inspection and records it; a self-written label
+is not evidence. Expected model: Opus. A mismatch or unknown identity holds
+repair and publication for that run and is a health finding.
 
 For each changed PR:
 
@@ -147,14 +157,25 @@ comment at an unchanged head is new work.
 
 ## Watchdog tick
 
-Read Orca run history for the driver and the run record: last successful tick,
-stuck or repeatedly failed runs, consecutive precheck errors, duplicated event
-handling, reused-session fallback, a recorded model different from the expected
-one, and unresolved `failed` or `uncertain` relay receipts. Pass a finding to
-the gate under the automation-health criterion. On `escalate` the watchdog
-itself performs that one gate-authorized `hermes send` and records the receipt
-in `watchdog.json`; it never mutates GitHub and never writes `progress.md` or
-`cursor.json`.
+Before its gate dispatch the watchdog validates its own effective session
+identity through Orca runtime inspection; unknown identity holds the dispatch
+and is itself recorded in `watchdog.json`.
+
+Read Orca run history for the driver, `precheck.log`, and the run record.
+Thresholds: three consecutive `error` lines in `precheck.log`; three
+consecutive failed driver runs; no successful driver run within two hours while
+the precheck logged `changed` or `due`; any unrequested fresh-session fallback
+or non-Opus effective identity recorded by the driver; any `failed` relay
+receipt older than one tick or any `uncertain` receipt; a hold with no owner.
+A quiet precheck history with no due work is healthy.
+
+Each health finding gets an occurrence id `(type, first-observed UTC
+timestamp)`; it stays deduplicated while unresolved, and a later recurrence is
+a new occurrence. Pass a finding to the gate under the automation-health
+criterion. On `escalate` the watchdog itself performs that one gate-authorized
+`hermes send` and records the receipt in `watchdog.json`; it never mutates
+GitHub and never writes `progress.md` or `cursor.json`. Failed or uncertain
+delivery stays visibly held in `watchdog.json` and Orca run history.
 
 ## Run record and sidecar
 
@@ -185,10 +206,11 @@ work; an `uncertain` one is never auto-resent.
 
 ## Safety holds
 
-- The driver records its own model identity on every tick. An unrequested
-  fresh-session fallback, or a recorded model different from the expected one,
-  pauses mutation for that run, is recorded, and goes to the watchdog path. A
-  user-run `--fresh-session` reconciles from the run record and is not a hold.
+- The driver records its effective identity on every tick. An unrequested
+  fresh-session fallback, or a recorded identity different from the expected
+  one, pauses mutation for that run, is recorded, and goes to the watchdog
+  path. A user-run `--fresh-session` reconciles from the run record and is not
+  a hold.
 - GitHub API errors leave the PR state unknown; nothing is pushed or published
   on unknown state.
 - A hold is cleared only by a later run observing the condition resolved, or by

@@ -181,3 +181,48 @@ test('rev-2 precheck and tick: due control work wakes the driver, the observed f
   // Sidecar contents.
   expect(clause(ref, /`cursor\.json` \(/)).toMatch(/expired PR list[^.]*watch deadlines[^.]*failed-relay retries/i);
 });
+
+test('rev-2 identity and watchdog: effective identity by Orca runtime inspection holds on unknown; thresholds, occurrence id, and the unavailable-gate hold match the spec', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Driver: inspect before repair or publication; mismatch or unknown -> hold + health finding.
+  const driver = clause(ref, /Before any repair or publication/i);
+  expect(driver).toMatch(/effective session identity through Orca runtime inspection/i);
+  expect(clause(ref, /self-written label/i)).toMatch(/not evidence/i);
+  expect(clause(ref, /mismatch or unknown identity/i)).toMatch(/holds repair and publication[^.]*health finding/i);
+  // Watchdog: inspect before gate dispatch; unknown -> hold recorded in watchdog.json.
+  const watchdog = clause(ref, /Before its gate dispatch/i);
+  expect(watchdog).toMatch(/own effective session identity through Orca runtime inspection/i);
+  expect(clause(ref, /unknown identity holds the dispatch/i)).toMatch(/`watchdog\.json`/);
+  // Thresholds, exactly as the spec lists them.
+  const thresholds = clause(ref, /Thresholds:/);
+  expect(thresholds).toMatch(/three consecutive `error` lines in `precheck\.log`/);
+  expect(thresholds).toMatch(/three consecutive failed (?:driver|A) runs/i);
+  expect(thresholds).toMatch(/no successful (?:driver|A) run within two hours while the precheck logged `changed` or `due`/i);
+  expect(thresholds).toMatch(/unrequested fresh-session fallback or non-Opus effective identity/i);
+  expect(thresholds).toMatch(/`failed` relay receipt older than one tick or any `uncertain` receipt/i);
+  expect(thresholds).toMatch(/hold with no owner/i);
+  expect(clause(ref, /quiet precheck history/i)).toMatch(/healthy/i);
+  // Occurrence id -> dedup while unresolved; recurrence is a new occurrence.
+  const occurrence = clause(ref, /occurrence id/i);
+  expect(occurrence).toMatch(/\(type, first-observed UTC timestamp\)/);
+  expect(clause(ref, /later recurrence/i)).toMatch(/new occurrence/i);
+  // Health gate input and the unavailable-gate hold.
+  expect(clause(ref, /health gate takes/i)).toMatch(/watchdog finding and its evidence, not reviewer verdicts or a candidate/i);
+  expect(clause(ref, /cannot be escalated through itself/i)).toMatch(/hold stays[^.]*no substitute or unauthorized send/i);
+  // Failed/uncertain watchdog delivery stays held and visible.
+  expect(clause(ref, /Failed or uncertain delivery/i)).toMatch(/visibly held in `watchdog\.json`/i);
+  // Four criteria now include the discovery hold.
+  expect(clause(ref, /automation health \(/i)).toMatch(/model-substitution, session, precheck, discovery, or relay-delivery hold/i);
+});
+
+test('rev-2 review exception: Standalone-owner and Authorized-submission carry the spec wording exactly', () => {
+  const review = compact('skills/axstack-review/SKILL.md');
+  const owner = section(review, '## Standalone owner', '## Review the candidate');
+  expect(owner).toContain('Standalone owner: no separate `axstack-owner` is materialized');
+  expect(clause(owner, /no separate `axstack-owner` is materialized/)).toMatch(/Orca driver automation/i);
+  const submission = section(review, '## Authorized submission (peer review)', '## Automation publication');
+  expect(submission).toContain('Authorized submission: the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling');
+  expect(clause(submission, /Authorized submission:/)).toMatch(/Orca driver automation/i);
+  // The APPROVE/REQUEST_CHANGES ban is on GitHub actions; the internal verdict vocabulary stays.
+  expect(clause(review, /ban on those GitHub actions|prohibition on `APPROVE` and `REQUEST_CHANGES`/i)).toMatch(/internal verdict vocabulary is unchanged/i);
+});

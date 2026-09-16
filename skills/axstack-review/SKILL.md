@@ -72,6 +72,10 @@ coordinator: only the owner launches the writer, reviewers, monitor, and
 watchdog. The current chat does not compete with it. Workers create no children
 or recursive teams.
 
+Automation exception — Standalone owner: no separate `axstack-owner` is
+materialized when the caller is the Orca driver automation; the automation
+session is the owner for every PR it handles.
+
 ## Review the candidate
 
 1. **Pin the brief.** For an owned candidate, verify remote confirmation of the
@@ -301,6 +305,12 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 
 Submission is complete only when the remote receipt confirms the review bound
 to the intended commit.
+
+Automation exception — Authorized submission: the `COMMENT` branch below, with
+the existing remote head/base readback and ambiguity handling, is the only
+submission the Orca driver automation makes. The prohibition on `APPROVE` and
+`REQUEST_CHANGES` is a ban on those GitHub actions; the review skill's internal
+verdict vocabulary is unchanged.
 
 ## Automation publication (`COMMENT`)
 
