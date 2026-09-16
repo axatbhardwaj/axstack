@@ -55,6 +55,13 @@ unchanged receipt; changed evidence, scope, or question requires a fresh
 receipt. If either adviser is unavailable, Align and Spec hold without model or
 provider substitution while unrelated safe work may continue.
 
+For `axstack-debug`, ordinary diagnosis consults the preset's configured
+adviser roles (both in `mixed`; the one configured adviser in a single-provider
+preset, recording the other as an intentional absence). The high-stakes and
+serious-risk contracts override that rule whenever their conditions arise. A
+configured but unavailable adviser holds debug L1 and L2 without substitution.
+Reuse a debug receipt while its evidence packet is unchanged.
+
 High-stakes decisions require both advisers' plain AGREE and the driver's
 accepted assessment. Resolve disagreement with bounded checks; silence and an
 unavailable model do not authorize fallback. Ordinary work uses the configured

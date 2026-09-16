@@ -27,7 +27,11 @@ Independently confirm the applicable
 
 - Substantial new work has an approved spec identity and matching ticket map.
 - Small new work has one snapshotted **small-change intent**: the current
-  request or chosen issue, explicit acceptance checks, and exclusions.
+  request or chosen issue, explicit acceptance checks, and exclusions. An
+  `axstack-debug` diagnosis record with repair class `bounded` is an accepted
+  small-change intent source; verify the repair against both its original loop
+  and its minimised repro. An implementation slip (wrong file, bad test, setup
+  failure) returns to the author and does not increment the bug's fix ledger.
 - An adopted own-PR repair has its accepted maintenance snapshot.
 
 Pin the exact base and current candidate revision. A missing, mismatched, or
