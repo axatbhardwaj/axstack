@@ -146,7 +146,9 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
 ## Automation A — driver (`*/30`; see the revision-4 named amendment above)
 
 - Created against the VPS runtime with `--environment vps`, trigger
-  `*/5 * * * *`, `--workspace <dedicated existing worktree>`, provider
+  `*/30 * * * *` (corrected by the revision-4 named amendment; it was recorded
+  as `*/5 * * * *` while the live automation has always run `*/30`),
+  `--workspace <dedicated existing worktree>`, provider
   `claude`, `--disabled` until acceptance. `--reuse-session` is set but,
   verified on 2026-09-16 (scheduled runs 7 and 8), Orca launches a fresh
   session for every dispatched tick on this host. The normal mode is therefore
@@ -570,9 +572,13 @@ For C and D, all of the following, on the VPS runtime:
 
 1. C and D exist disabled with the settings above, four distinct dispatch
    minutes across all four automations (`orca automations show`).
-2. All three repositories are registered in Orca with driver worktrees, `bun`
-   1.2.2 resolves on the host, both monorepo submodules check out in a child
-   worktree, and the monorepo test command runs to completion there.
+2. All three repositories are registered in Orca as repos, and C/D have one
+   driver worktree of `axatbhardwaj/axstack` as their shared home — the
+   defi-com repos are parents for per-PR child worktrees only, never driver
+   homes. `bun` resolves on `PATH` in the driver worktree and in a child
+   worktree, both monorepo submodules check out in a child worktree, and the
+   monorepo test command runs to completion there under the host toolchain (or
+   the pinned versions installed alongside, per "Prerequisites").
 3. C's stored precheck exits non-zero on an unchanged fingerprint, zero after a
    synthetic allowlisted own-PR push, non-zero when only a non-allowlisted PR
    changed, and non-zero with an `error` line when a search returns exactly the

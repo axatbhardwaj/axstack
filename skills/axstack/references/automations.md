@@ -91,7 +91,11 @@ model-substitution, session, precheck, discovery, or relay-delivery hold). The
 automation health criterion is usable only by the watchdog and the safety-hold
 path, never by a reviewer.
 
-## Stack-aware repair sequencing (both pairs)
+## Stack-aware repair sequencing (pair C/D)
+
+These three sections govern pair C/D only. Pair A/B's behaviour is unchanged by
+revision 4 except for the named cadence correction, so A does not apply stack
+sequencing, bot-triggered repair, the caps, or the deployment push hold.
 
 Own-PR repair covers every own PR in the allowlisted repositories; stacking
 changes the order of repair, never the scope. Within one stack the driver
@@ -120,7 +124,7 @@ honestly instead of implying the descendant was repaired.
 every automation, and force-push and rebase stay prohibited everywhere. A
 descendant is held, never rewritten.
 
-## Bot review feedback (both pairs)
+## Bot review feedback (pair C/D)
 
 A review authored by a bot account may be actionable and may trigger a repair,
 bounded as follows.
@@ -157,12 +161,23 @@ a C/D PR can reach.
 
 The difference is deliberate, not drift. A serves one low-volume repository
 where expiry is cheap, while C would otherwise start twenty or more simultaneous
-clocks on first observation and go dark a day later. Because the rolling window
+clocks on first observation and go dark a day later. Because that window
 removes expiry as a cost brake, the per-PR and per-tick budgets and the watchdog
 are the only brakes left on C, and D's thresholds are retuned for a fingerprint
 that legitimately changes on nearly every tick.
 
-## Deployment safety (both pairs)
+## PR eligibility for repair (pair C/D)
+
+A draft PR is discovered and recorded but never repaired; it becomes eligible
+when it is marked ready for review, which the ordinary event state observes as
+new work. A PR that already has a human reviewer requested is eligible for
+repair and is not excluded, deliberately: most own PRs in these repositories
+carry a requested human reviewer, and excluding them would empty the coverage.
+`defi-com/mobile` has no workflows and therefore no check signal, so a repair
+there is triggered only by actionable review feedback; if CI is later added the
+ordinary check-rollup trigger applies with no contract change.
+
+## Deployment safety (pair C/D)
 
 A repair never pushes to a PR whose head branch is in that repository's
 deploy-on-push set, and an attempt to do so is a recorded hold. The rule is
@@ -255,14 +270,16 @@ For each changed PR:
   COMMENT branch. `INCOMPLETE` or an unavailable required reviewer records a
   hold and publishes nothing.
 
-Watch window: 24 hours per own PR from first observation, ending early on merge
-or close. The deadline is stored in `cursor.json`; a due deadline wakes the
-driver through the precheck even when GitHub is unchanged, and the driver
-rechecks the deadline immediately before any publication. Expiry marks the PR
-`expired` in the record and sidecar, records a resumable handoff, and stops
-silently. The driver skips an expired PR until the user re-arms it in the
-automation session, and the precheck ignores it; an expired PR is never
-silently re-adopted.
+Watch window, pair A/B only: 24 hours per own PR from first observation, ending
+early on merge or close. The deadline is stored in `cursor.json`; a due deadline
+wakes the driver through the precheck even when GitHub is unchanged, and the
+driver rechecks the deadline immediately before any publication. Expiry marks
+the PR `expired` in the record and sidecar, records a resumable handoff, and
+stops silently. The driver skips an expired PR until the user re-arms it in the
+automation session, and the precheck ignores it; an expired PR is never silently
+re-adopted. Pair C/D does not use this window at all; see "Watch window" above
+for its rolling replacement, and it stores no deadline and reaches no `expired`
+state.
 
 Per-PR event state: head SHA, base SHA, check rollup, and processed request and
 comment IDs. A review receipt is reused only when head, base, and scope are
@@ -283,6 +300,13 @@ or non-Opus effective identity recorded by the driver; any `failed` relay
 receipt older than one tick or any `uncertain` receipt; a hold with no owner.
 A quiet precheck history with no due work is healthy.
 
+The two-hour stall threshold above is pair A/B's. Pair D uses a stall window
+re-derived before enabling as `max(2h, 3 x the 95th-percentile observed C tick
+duration over at least 10 ticks)`, recorded with its sample, because C's
+fingerprint legitimately changes on nearly every tick and a literal two hours
+would fire on the first slow tick. Every other threshold is identical for both
+pairs.
+
 Each health finding gets an occurrence id `(type, first-observed UTC
 timestamp)`; it stays deduplicated while unresolved, and a later recurrence is
 a new occurrence. Pass a finding to the gate under the automation-health
@@ -293,9 +317,12 @@ delivery stays visibly held in `watchdog.json` and Orca run history.
 
 ## Run record and sidecar
 
-One run id for the lifetime of the automations, `20260916-pr-automations`, in
-the [run record](run-record.md) shape with the driver as sole writer of
-`progress.md`. Per PR it stores processed event IDs, exact head and base SHAs,
+One run id per pair for the lifetime of that pair — `20260916-pr-automations`
+for A/B and `20260916-defi-automations` for C/D — each in the
+[run record](run-record.md) shape with that pair's driver as sole writer of its
+own `progress.md`. C/D's run directory lives under the same axstack
+`git-common-dir` as A/B's, in its own `axstack/runs/<run id>/` folder; no
+sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs,
 review receipts per SHA, gate decisions, `hermes send` receipts with
 `message_id` and state, watch deadline, `expired`, and holds. Its
 `Notification policy:` line reads, verbatim:
@@ -307,8 +334,8 @@ hermes send, target telegram (home), host VPS, gate-authorized escalations only
 Machine-readable sidecars in the same directory: `pending.json` (observed
 fingerprint plus full discovery list, written by the precheck), `cursor.json`
 (last processed fingerprint promoted verbatim from `pending.json`, expired PR
-list, per-PR watch deadlines, pending failed-relay retries; written by the
-driver after each processed tick), `precheck.log` (precheck only), and
+list and per-PR watch deadlines for pair A/B only, pending failed-relay
+retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
 `watchdog.json` (watchdog only). Orca run history remains the authoritative
 log; the record is derived progress, never authority.
 

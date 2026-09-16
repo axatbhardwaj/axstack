@@ -306,3 +306,61 @@ test('rev-4 watch window: C/D roll, A/B expire, and the difference is stated as 
   // Budgets and the watchdog are named as the replacement cost brakes.
   expect(clause(ref, /cost brake|only brakes/i)).toMatch(/budget/i);
 });
+
+test('rev-4 eligibility: drafts wait, requested-reviewer PRs are kept, and mobile has no check signal', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // A draft is recorded but not repaired, and becomes eligible on ready-for-review.
+  expect(clause(ref, /draft PR is discovered/i)).toMatch(/never repaired/i);
+  expect(clause(ref, /ready for review/i)).toMatch(/new work/i);
+  // Human-reviewer-requested PRs are explicitly NOT excluded, with the reason.
+  const kept = clause(ref, /human reviewer requested/i);
+  expect(kept).toMatch(/not excluded|is eligible/i);
+  expect(clause(ref, /would empty the coverage/i)).toBeTruthy();
+  // mobile: review feedback only, and the reason is the absent check signal.
+  expect(clause(ref, /no workflows and therefore no check signal/i)).toMatch(/actionable review feedback/i);
+});
+
+test('rev-4 pair isolation: run ids, run directories and stall windows are per pair', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Both run ids named, one per pair, with no shared sidecar.
+  const runIds = clause(ref, /One run id per pair/i);
+  expect(runIds).toMatch(/20260916-pr-automations/);
+  expect(runIds).toMatch(/20260916-defi-automations/);
+  expect(clause(ref, /no\s+sidecar, record, or cursor is shared/i)).toBeTruthy();
+  // D's stall window is re-derived, not the literal two hours.
+  const stall = clause(ref, /stall window/i);
+  expect(stall).toMatch(/95th-percentile/i);
+  expect(clause(ref, /would fire on the first slow tick/i)).toBeTruthy();
+  // A/B keeps its literal two-hour threshold.
+  expect(ref).toMatch(/no successful driver run within two hours while the precheck logged `changed` or `due`/);
+});
+
+// The `clause` helper returns the FIRST sentence matching a trigger, so a
+// trigger that also appears in a heading, a summary line or a list item can
+// silently assert against the wrong sentence and pass for the wrong reason.
+// Every revision-4 trigger must therefore be unique in the reference.
+test('rev-4 triggers are unambiguous: each one matches exactly one sentence', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const sentences = ref.split(/(?<=[.!?])\s+(?=[A-Z`*(])/);
+  const triggers = [
+    /lowest open failing PR/i,
+    /different finding/i,
+    /cleared by the user's own restack/i,
+    /per-tick budget counts/i,
+    /body digest|content digest/i,
+    /one repair per PR per 24 hours/i,
+    /per-tick push budget/i,
+    /Reaching either cap/i,
+    /deploy-on-push/i,
+    /rolling window/i,
+    /draft PR is discovered/i,
+    /human reviewer requested/i,
+    /no workflows and therefore no check signal/i,
+    /One run id per pair/i,
+    /stall window/i,
+  ];
+  for (const trigger of triggers) {
+    const hits = sentences.filter((s) => trigger.test(s));
+    expect(hits.length, `${trigger} matches ${hits.length} sentences, expected 1`).toBe(1);
+  }
+});
