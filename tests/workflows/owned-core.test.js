@@ -371,9 +371,10 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
 
 test('owned-core: monitor/watchdog policy survives the lifted native hold', () => {
   const text = skill('axstack-watch');
-  expect(/5\s?min/i.test(text), 'monitor cadence default 5min must be stated').toBeTruthy();
+  expect(/every 15 minutes[^.]*dispatches and exits/i.test(text), 'automation driver must dispatch and exit every 15 minutes').toBeTruthy();
   expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
-  expect(/same[\s\S]*24h/i.test(text), 'both must share the same 24h expiry').toBeTruthy();
+  expect(/model-free[^.]*no gate[^.]*watchdog\.log/i.test(text), 'watchdog must be model-free with no gate and use watchdog.log').toBeTruthy();
+  expect(/no watch deadline[^.]*automations/i.test(text), 'automations must not inherit the standalone watch deadline').toBeTruthy();
   expect(/Create no schedule|no production timer/i.test(text), 'lifted hold must not forbid schedules').toBeFalsy();
   expect(/custom scheduler|polling loop/i.test(text), 'no custom scheduler or polling loop').toBeTruthy();
   expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();
