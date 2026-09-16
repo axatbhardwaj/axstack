@@ -33,9 +33,9 @@ recorded reason.
    environment, and the comparison criterion; a bare "high reproduction rate"
    cannot support a later green claim. Narrow code reading needed to find the
    entry point is allowed; forming a theory before the loop exists is not. If a
-   loop cannot be built, stop and ask the user for an environment, a redacted
-   artifact, or instrumentation permission. Done when the command has run once
-   and its red output is recorded.
+   loop cannot be built, stop, list what was tried, and ask the user for an
+   environment, a redacted artifact, or instrumentation permission. Done when
+   the command has run once and its red output is recorded.
 2. **Reproduce and minimise.** Confirm the loop reproduces the user's failure
    and not a neighbour. Remove inputs, callers, config, data, and steps one at
    a time within a stated budget until the repro is the smallest practical;
@@ -76,7 +76,10 @@ slip (wrong file, bad test, setup failure) returns to the author under the
 existing repair contract and does not count. A diagnostic probe never counts.
 The per-bug ledger (revision, hypothesis, loop result, regression result, new
 failures introduced) carries across this skill, `axstack-implement`, and
-resume; a new invocation imports known attempts instead of resetting.
+resume; a new invocation imports known attempts instead of resetting. On
+resume, the driver re-verifies the packet hash against the current revision and
+dirty patch; if either differs, refresh the packet and re-run the loop red
+before any further probe or attempt.
 
 ## Ladder
 
@@ -99,9 +102,9 @@ Reuse an adviser receipt while the packet is unchanged; a changed packet needs
 a fresh receipt.
 
 **Plan merge.** The driver de-duplicates the advisers' hypotheses, ranks the
-union with reasons, drops hypotheses both advisers refute, assigns the top N to
-the N live investigators (briefs ≤ seats per wave), and records the remainder
-as untested (queued). A second wave on the same roles is allowed on changed
+union with reasons recorded in the run record, drops hypotheses both advisers
+refute, assigns the top N to the N live investigators (briefs ≤ seats per
+wave), and records the remainder as untested (queued). A second wave on the same roles is allowed on changed
 evidence. If every probe is refuted or inconclusive, one bounded adviser replan
 on the new evidence, then hold for the user; never unbounded.
 
