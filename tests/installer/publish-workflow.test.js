@@ -38,8 +38,28 @@ fi
 // A stage-only token cannot create a package that does not exist. Say so
 // here, actionably, instead of letting npm return a bare 403 at the end.
 const EXISTS_CHECK = `set -eu
-if ! curl -sfI https://registry.npmjs.org/axstack > /dev/null; then
-  echo "axstack does not exist on the registry yet." >&2
+# Distinguish the three outcomes: unreachable registry, no such package, and a
+# tombstone — an unpublished name whose packument still resolves but carries no
+# versions. A status-only probe cannot tell them apart.
+status=0
+response="$(curl -sS -w '\\n%{http_code}' https://registry.npmjs.org/axstack)" || status=$?
+if [ "$status" -ne 0 ]; then
+  echo "could not reach the registry (curl exit $status); not treating this as a missing package" >&2
+  exit 1
+fi
+code="$(printf '%s' "$response" | tail -n 1)"
+body="$(printf '%s' "$response" | sed '$d')"
+case "$code" in
+  200) ;;
+  404) code=missing ;;
+  *) echo "registry returned HTTP $code for axstack" >&2; exit 1 ;;
+esac
+if [ "$code" = 200 ]; then
+  published="$(printf '%s' "$body" | jq -r '(.versions // {}) | length')"
+  [ "$published" -gt 0 ] || code=missing
+fi
+if [ "$code" = missing ]; then
+  echo "axstack has no published versions on the registry." >&2
   echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
   echo "credential, then staged releases work from here." >&2
   exit 1
@@ -131,7 +151,7 @@ test('publish workflow runs the whole suite before it publishes, and refuses a m
   expect(stage, 'the staging invocation must be cache-only').toContain('--no-install');
   expect(PREFETCH, 'the prefetch is what fills that cache').not.toContain('--no-install');
   // The bootstrap prerequisite must fail loudly and before staging.
-  const exists = runs.findIndex((run) => /does not exist on the registry/.test(run));
+  const exists = runs.findIndex((run) => /has no published versions/.test(run));
   expect(exists, 'no step checks the package exists').toBeGreaterThanOrEqual(0);
   expect(exists).toBeLessThan(runs.findIndex((run) => /stage publish/.test(run)));
   expect(TAG_GUARD, 'a mismatched tag must fail the job').toMatch(/exit 1/);
