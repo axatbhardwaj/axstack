@@ -1,11 +1,11 @@
 # Shared routing (every owned phase loads this)
 
-Choose one route; load only its phase and shared references needed next.
+Choose one route; load only the phase and references needed next.
 
 ## Role routing
 
-Presets: `mixed`, `codex-only`, `claude-only`. For a new run,
-read `profiles.preset` from `.axstack-manifest.json` at the actually loaded
+Presets: `mixed`, `codex-only`, `claude-only`. For a new run, read
+`profiles.preset` from `.axstack-manifest.json` at the actually loaded
 skills root, or an explicit user selection recorded in the run record. Proceed
 only with exactly one unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
@@ -20,7 +20,7 @@ decision. Live profiles are authoritative at snapshot time and for availability;
 bundled presets are setup inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
-Changing it or replacing a session needs the user's explicit decision and
+Changing it or replacing a session needs an explicit user decision and
 revalidation. Unavailable models, unsupported efforts, missing roles, and
 incompatible overrides hold only affected work; no automatic fallback, quota
 routing, subscription inference, or silent provider/model/effort substitution.
@@ -28,7 +28,7 @@ routing, subscription inference, or silent provider/model/effort substitution.
 Role IDs:
 
 - The current chat drives (no role ID); `axstack-owner` owns one PR and
-  `axstack-author` is its sole writer.
+  `axstack-author` its sole writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
 
@@ -41,13 +41,14 @@ Role IDs:
 - `axstack-advisor-astra` and `axstack-advisor-fable` advise independently;
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors explanations; `axstack-explainer-review`
-  reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
+  reviews them. `axstack-monitor` observes only; `axstack-watchdog` sends
+  only gate-authorized health escalations.
 - `axstack-debug-investigator-1..4` each probe one L1 brief.
 
 Provenance is matched on provider/model ID; record effort but never use it to
 create a mapping. Provenance absent from the preset's table row is
-unsupported and `INCOMPLETE`, including its secondary reviewer model, Astra,
-Luna, or Fable; report the exact gap and ask the user. Never derive a reverse
+unsupported and `INCOMPLETE` (including its secondary reviewer model, Astra,
+Luna, or Fable); report the exact gap and ask the user. Never derive a reverse
 pairing from slot position, driver, owner, or provider. Author and owner never
 review their own work.
 
@@ -62,23 +63,23 @@ review their own work.
   is superseded. Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
-  off a classified repair (explain: how; debug: what is wrong).
+  off a classified repair (explain: how; debug: what's wrong).
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits. Selected changes return via preparation or execution.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
-  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile
-  the run record, keep its owner, launch no native handoff.
+  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
+  record, keep its owner, launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
   handoff guide, and require explicit recipient acceptance before ownership
-  changes; missing capability is a setup gap, not an invented replacement.
-- Colleague PR review -> `axstack-review` in peer mode.
+  changes. Missing capability is a setup gap, never license to invent one.
+- Colleague PR review -> `axstack-review`, peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode,
   `axstack-watch` for adoption.
 
 Research, explanation, improvement discovery, debugging, handoff, peer review,
-and adopted maintenance need no alignment, Axstack-approved spec, or ticket map;
+and adopted maintenance need no alignment, approved spec, or ticket map;
 authority and intent boundaries still apply.
 
 ## Proportional scope identity
@@ -87,8 +88,8 @@ Classify new work as substantial, small, or unclear; record it with brief
 reason in the run record, or in the brief for tiny direct work.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work. A
-  bounded small feature is not substantial merely because it is labelled a
-  feature. Require an approved spec plus a ticket map tied to that exact spec
+  bounded small feature is not substantial merely because it is labelled one.
+  Require an approved spec plus a ticket map tied to that exact spec
   revision, with acceptance checks and dependencies in the explicitly selected
   Markdown or Linear store. Prepare via `axstack-align` -> `axstack-spec`
   (one approval) -> `axstack-tickets` -> handoff, then stop.
@@ -103,9 +104,9 @@ reason in the run record, or in the brief for tiny direct work.
   question, then classify it as small or substantial; a small ambiguity does
   not force substantial-work paperwork.
 
-Reassess size when growth adds an additional PR, adds a new execution
-dependency that materially expands scope, introduces an unsettled material
-design question, or crosses a security/infrastructure boundary. An ordinary
+Reassess size when growth adds an additional PR, a new execution dependency
+that materially expands scope, an unsettled material design question, or a
+security/infrastructure boundary crossing. An ordinary
 test-then-code sequence is not multi-task growth; a minor file dependency does
 not alone need a formal spec. Hold affected unsafe work while reassessing.
 
