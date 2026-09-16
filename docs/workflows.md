@@ -153,44 +153,43 @@ keeps the current owner and a resumable record.
 Serious security, downtime, data-loss, and major-design risks are raised in a
 prompt immediately and hold dependent dangerous work. This is not a runtime
 gate. An applicable `Notification policy` may use `axstack-relay`; otherwise the
-current Orca conversation is the fallback. The relay delivers one-way through
-native `hermes send`: it checks CLI lookup and the configured target, binds the
-recipient, deduplicates on the run record, records the returned `message_id`,
-and treats Telegram replies as neither receipts nor authority. Delivery failure
-never clears the underlying hold.
+current Orca conversation is the fallback. The relay normally delivers one-way
+through native `hermes send`: it checks CLI lookup and the configured target,
+binds the recipient, deduplicates on the run record, and records the returned
+`message_id`. The PR automation's decision tokens are the narrow exception: a
+fixed Hermes script writes the user's bound decision to a file for the driver
+to consume; no session polls Telegram. Delivery failure never clears the
+underlying hold.
 
 Healthy watch observations remain quiet. The optional `axstack-monitor` is
-read-only and never sends; `axstack-watchdog` never mutates GitHub and performs
-exactly one kind of send, a gate-authorized automation-health escalation
-recorded in `watchdog.json`.
+read-only and never sends; `axstack-watchdog` never mutates GitHub. Under the
+rev-3 PR automation it performs four model-free health checks and sends new
+occurrences directly, with no health gate.
 
 ## Native watch automations
 
-The accepted monitoring contract is a five-minute driver automation, an hourly
-watchdog, quiet healthy snapshots, deduplicated actionable events, verified
-handshakes, one owner, and one shared default 24-hour deadline.
+The accepted PR-automation contract is a 15-minute driver automation and an
+hourly watchdog, with quiet healthy checks, deduplicated occurrences, one live
+dispatch marker per PR, and decision tokens for user-authorized actions.
 
-The user lifted the native-watch hold by user decision on 2026-09-16. The driver
-automation is a mutating owner for the PRs it handles; the watchdog keeps the
-independent read-only contract. The driver is the automation session itself,
-with no `axstack-monitor` or `axstack-owner` role row. Native Orca automations still select only a
-provider, so the driver records its model identity every tick and the watchdog
-treats a mismatch as a safety hold. Axstack adds no custom scheduler, polling
-loop, or historical runtime fallback.
+The driver is the automation session itself, with no `axstack-monitor` or
+`axstack-owner` role row. It validates its Opus identity every tick and holds
+instead of dispatching on mismatch. Orca owns scheduling and run history;
+Axstack adds no custom scheduler, polling loop, or historical runtime fallback.
 
 ## Automations
 
-Two native Orca automations run the installed skills without a human in the
-loop: a driver every five minutes that discovers own and peer PRs, repairs own
-PRs in the mutation allowlist, and reviews peer PRs; and a read-only
-watchdog every hour that reports automation health. After every
-mode-required reviewer settles, the `axstack-auditor` gate returns
-exactly one token, `escalate` or `proceed`.
-`escalate` records and notifies a hold and publishes nothing.
-Only `proceed` plus no unresolved validated blocking finding permits publication
-(a fast-forward push or one `COMMENT` review). The approved contract is
-`docs/specs/orca-automations.md`; the skill-facing restatement an automation
-session loads is `skills/axstack/references/automations.md`.
+Two native Orca automations run the installed skills: a driver every 15 minutes
+that discovers work through four GitHub searches, dispatches exact-head peer
+reviews and own-PR repairs, consumes decision tokens, and exits; and an hourly
+model-free watchdog that evaluates four liveness checks and exits without
+launching a session. PR reviewers use exactly three escalation criteria. A gate
+`escalate` opens a bound decision token and exits, while `proceed` permits only
+the verdict or fast-forward push supported by the reviewed evidence. There are
+no `COMMENT` reviews, obligations, watch deadline, terminal cleanup sweep, or
+health gate. The approved contract is `docs/specs/pr-automations.md` revision 3;
+the installed restatement is
+`skills/axstack/references/automations.md`.
 
 ## Run record and evidence
 

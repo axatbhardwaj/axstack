@@ -18,10 +18,8 @@ load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
 When the caller is an Orca driver automation, load
 [Automation sessions](../axstack/references/automations.md): its reviewer briefs
-carry the required escalation field, and its publication is `COMMENT` only for
-the pair A/B driver. Every peer PR the pair C driver publishes on takes the
-actual verdict instead, under "Binding review verdicts (pair C)" in that
-reference and the authorized-submission branch below.
+carry the required escalation field and every eligible peer PR takes a binding
+`APPROVE` or `REQUEST_CHANGES` verdict under the automation exception below.
 
 ## Peer mode (colleague PR)
 
@@ -221,11 +219,10 @@ Escalate to user: yes | no — <criterion> — <reason>
 
 Every brief ends with the `Escalate to user` field and the reviewer answers it
 in the receipt. A reviewer may cite only a security concern, a permanent
-on-chain state change, or an architectural change in approach; the automation
-health criterion belongs to the watchdog and safety-hold path and is never a
-reviewer criterion. The answer is input to the escalation gate, not a veto and
-not a verdict; see [Automation sessions](../axstack/references/automations.md)
-for the gate.
+on-chain state change, or an architectural change in approach. Health is not a
+reviewer criterion. The answer is input to the PR escalation gate, not a veto
+and not a verdict; see
+[Automation sessions](../axstack/references/automations.md) for the gate.
 
 ## Template: review receipt (one block per revision)
 
@@ -260,9 +257,9 @@ private transport values or configuration.
 Under an automation session, credible serious risk found by a reviewer still
 raises the standing internal prompt and dependent-action hold immediately, and
 the gate governs only external notification: the internal prompt lands in the
-run record and the automation session's own Orca conversation, and no
-`hermes send` occurs without the gate's `escalate` token. `proceed` never
-overrides a validated blocking finding.
+run record and the automation session's own Orca conversation. `escalate`
+opens the bound decision token, sends through `axstack-relay`, and exits
+without waiting; `proceed` never overrides a validated blocking finding.
 
 ## Publishing rule
 
@@ -308,44 +305,26 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 Submission is complete only when the remote receipt confirms the review bound
 to the intended commit.
 
-Automation exception — Authorized submission, pair-scoped: for the pair A/B
-driver automation the `COMMENT` branch below, with the existing remote head/base
-readback and ambiguity handling, is the only submission it makes, and for it the
-prohibition on `APPROVE` and `REQUEST_CHANGES` remains a ban on those GitHub
-actions while the review skill's internal verdict vocabulary is unchanged. The
-pair C driver automation instead uses this authorized-submission
-branch and submits the actual verdict on an officially-requested peer PR, under
-"Binding review verdicts (pair C)" in
-[Automation sessions](../axstack/references/automations.md); a peer PR it
-reached through the qualifying mention trigger still takes the `COMMENT` branch.
+## Automation exception
 
-## Automation publication (`COMMENT`)
+For a peer PR selected under
+[Automation sessions](../axstack/references/automations.md), apply the same
+complete-review and exact-commit requirements, then run the Luna gate.
+`escalate` opens a bound decision token, sends its message, and exits without
+submitting. `proceed` permits `APPROVE` only with no validated blocker and
+permits `REQUEST_CHANGES` only with at least one evidenced validated blocker.
+`INCOMPLETE`, unavailable inputs, unresolved disagreement, or unknown GitHub
+state submits nothing.
 
-The pair A/B driver automation, as owner for a peer PR under
-[Automation sessions](../axstack/references/automations.md), uses this branch:
-one `COMMENT` review, owner-synthesized and bound to the reviewed commit. On
-this branch the automation never submits `APPROVE` or `REQUEST_CHANGES`; a need
-for either is a recorded hold. The pair C driver does not use this branch at
-all; its peer PRs take the authorized-submission branch above. The peer-review submission rule above is unchanged for every other
-caller.
+Immediately before `gh pr review`, re-read self's reviews at the head. If one
+already exists, skip submission and record its id. Otherwise re-check head,
+base, draft status, authorship, and allowlist, bind the verdict to the exact
+commit parameter, and end the body with this marker line:
 
-1. Complete the mode-required review: every mode-required receipt is current
-   for the head SHA and current base, and each carries its escalation field.
-   `INCOMPLETE`, unresolved material disagreement, or an unavailable required
-   reviewer publishes nothing and records a hold that pauses mutation for the
-   PR.
-2. The gate returns exactly one token, `escalate` or `proceed`. `escalate`
-   records the hold and the relay receipt and publishes nothing. Only
-   `proceed` plus no unresolved validated blocking finding permits
-   publication.
-3. Read back the remote head and base immediately before submit; stop if
-   either differs from the reviewed candidate.
-4. Submit one owner-synthesized `COMMENT` review bound to the reviewed commit
-   through the actual GitHub commit parameter, carrying every receipt's
-   findings and limitations, then verify the submission receipt.
-5. A receipt for an unchanged head SHA is never published twice; on ambiguity,
-   look up remote state and submit only when absent.
+```text
+<!-- axstack-automation verdict head=<sha> -->
+```
 
-Publication is complete when the remote receipt confirms one `COMMENT` review
-bound to the intended commit, or when the recorded hold names the missing
-input and the next owner.
+After submission, read back and record the review id at the bound head. An
+ambiguous result is looked up before any retry. The automation never submits a
+`COMMENT` review.

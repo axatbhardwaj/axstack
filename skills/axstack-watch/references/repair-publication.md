@@ -36,9 +36,11 @@ exact new revision and base, all six angles, applicable acceptance, the reply
 body identities, and every affected boundary, with no unresolved material
 finding or urgent hold. Under an automation the escalation gate of
 [Automation sessions](../../axstack/references/automations.md) also runs on
-the local SHA: publication additionally requires the gate to return `proceed`
-with no unresolved validated blocking finding, and a push before the gate
-settles is forbidden.
+the local SHA. `escalate` creates a token, pins the candidate at
+`refs/axstack/decisions/<token>`, opens the decision token, sends its message,
+and exits instead of pushing. `proceed` permits publication only with no
+unresolved validated blocking finding, and a push before the gate settles is
+forbidden.
 
 ## 3. Revalidate immediately before publication
 
