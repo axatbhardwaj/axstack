@@ -20,6 +20,9 @@ by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
 The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
+When the session is the Orca driver automation, also load
+[Automation sessions](../axstack/references/automations.md): it is the owner
+for every PR it handles, and its gate and allowlist bound every mutation.
 
 ## 1. Adopt and reconcile
 
@@ -60,8 +63,12 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. The current native capability hold prevents the 5 min monitor,
-hourly watchdog, and timer activation; it does not block one read-only PR observation.
+anything. The user lifted the native-watch hold by user decision: the 5 min driver
+automation is a mutating owner for the PRs it handles and the hourly watchdog
+stays independent and read-only. The driver is the automation session itself,
+with no `axstack-monitor` or `axstack-owner` role row; `axstack-monitor` stays
+an optional read-only observer that never sends. One read-only PR observation
+needs neither.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -81,7 +88,9 @@ event, not repair authority. Stale or ambiguous observations authorize nothing.
 
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
-follow [Repair and publication](references/repair-publication.md).
+follow [Repair and publication](references/repair-publication.md). An
+automation session repairs in a per-PR child worktree created through
+`orca-cli`; its driver worktree never checks out a PR branch.
 
 ### Feedback routing
 
@@ -90,8 +99,13 @@ matching ticket map for substantial work, or a snapshotted **small-change
 intent** for small work. An adopted own PR instead uses its accepted maintenance
 snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
-session where evidence allows, then receive refreshed review under the authored
-mode rule before publication. Unknown, mixed, or unsupported author provenance
+session only when the run itself launched that session and evidence allows,
+then receive refreshed review under the authored mode rule before publication.
+For an adopted own PR under the automation, the original authoring session is
+not a run-launched session: the repair author is the automation session
+(Claude/Opus) or a dispatched `axstack-author` (Sol), and the authored-review
+pairing follows the recorded actual provenance of that repair, not the PR's
+historical author. Unknown, mixed, or unsupported author provenance
 that cannot establish the eligible configured reviewer is an exact gap to
 report to the user, not permission to invent a pairing or model fallback.
 
@@ -100,7 +114,9 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor and watchdog never send; absent policy or failed relay uses the
+The monitor never sends, and `axstack-watchdog` never mutates GitHub and
+performs exactly one kind of send, a gate-authorized automation-health
+escalation recorded in `watchdog.json`; absent policy or failed relay uses the
 current Orca conversation and leaves every existing hold open.
 
 ## 5. State readiness precisely
@@ -118,7 +134,9 @@ also stops timers for open PRs; never silently renew them.
 
 At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither
-silent renewal nor ownership-transfer authority.
+silent renewal nor ownership-transfer authority. Under an automation, expiry
+marks the PR `expired` in the record and sidecar; an `expired` PR is never
+silently re-adopted and is skipped until the user re-arms it.
 
 Transfer ownership through the runtime-owned Orca handoff route only when the
 user explicitly requests it. Before transfer, follow the lifecycle-owned
@@ -133,7 +151,7 @@ Owner: <profile + session> Worktree: <path>
 Scope: <approved rev, small-change intent, or maintenance snapshot>
 Capability: <issue + lifecycle state>
 CI/review: <current states + evidence refs>
-Watch: <capability hold or stopped registration receipts + expiry>
+Watch: <automation ids or stopped registration receipts + expiry>
 Remaining: <next actions + owner>
 Resume: <known commands or verified refs needed to reconcile from this revision>
 ```

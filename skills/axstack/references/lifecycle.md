@@ -17,9 +17,12 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Monitor/watchdog: independent read-only `axstack-monitor` and
-  `axstack-watchdog` roles, activated through native Orca automations only when
-  the accepted role-pinning and bounded-expiry contract is supported.
+- Driver/monitor/watchdog: the five-minute driver is the automation session
+  itself, a mutating owner for the PRs it handles with no `axstack-monitor` or
+  `axstack-owner` role row. `axstack-monitor` is an optional read-only observer
+  that never sends. `axstack-watchdog` is the hourly health checker that never
+  mutates GitHub and performs exactly one kind of send, a gate-authorized
+  automation-health escalation recorded in `watchdog.json`.
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -91,7 +94,7 @@ On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
 identity. Respect settlement protection including `user_takeover`.
 
 No execution heartbeat or substitute scheduler is created by Axstack. Native
-watch automation is separately held under [Watch health](#watch-health).
+watch automation follows [Watch health](#watch-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
@@ -102,13 +105,13 @@ handoff, never silent renewal. Merge-ready differs from merged; human merges.
 
 ## Watch health
 
-The accepted policy keeps `axstack-monitor` and `axstack-watchdog` independent
-and read-only, with quiet healthy snapshots, deduplicated actionable events,
-restart reconciliation, and one shared deadline. Current native Orca
-automations expose a provider but cannot pin model, effort, or permission, and
-cannot prove the accepted bounded expiry. Hold activation and the complete
-migration claim; create no schedule, use no legacy fallback, and build no custom
-scheduler. Core supervised work may continue. Details live in
+The user lifted the native-watch hold by user decision on 2026-09-16. The driver
+automation is a mutating owner for its PRs; `axstack-watchdog` stays
+independent and read-only, with quiet healthy snapshots, deduplicated events,
+restart reconciliation, and one shared deadline. Native Orca automations expose
+a provider but cannot pin model, effort, or permission, so the driver records
+its model identity every tick and the watchdog treats a mismatch as a safety
+hold. Build no custom scheduler and use no legacy fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (end of run and meaningful checkpoints)

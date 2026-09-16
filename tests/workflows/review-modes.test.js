@@ -7,7 +7,7 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // Scenario assertions validate raw inputs and expected policy decisions. They
 // do not execute a model and are not model-behavior evidence.
-test('review modes: six raw scenario contracts cover the amendment', () => {
+test('review modes: eight raw scenario contracts cover the amendments', () => {
   const data = JSON.parse(read('tests/workflows/review-modes-scenarios.json'));
   expect(data.version).toBe(1);
   expect(data.cases.map(({ id }) => id)).toEqual([
@@ -17,6 +17,8 @@ test('review modes: six raw scenario contracts cover the amendment', () => {
     'unknown-author',
     'unavailable-cross-model-reviewer',
     'stale-authoring-change',
+    'automation-comment-publication',
+    'automation-incomplete-publishes-nothing',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.skill_ref).toBe('axstack-review');
@@ -147,4 +149,31 @@ test('review modes: neutral reviewer IDs carry each ordered preset pair', () => 
       expect(byId[id].notes).toMatch(/peer|authored/i);
     }
   }
+});
+
+test('review modes: COMMENT branch is automation-only and binds the reviewed commit', () => {
+  const review = compact('skills/axstack-review/SKILL.md');
+  const raw = read('skills/axstack-review/SKILL.md');
+  expect(raw).toMatch(/^## Authorized submission \(peer review\)/m);
+  expect(review).toMatch(/Submit a consolidated peer review only within explicit user authority and only for a complete `APPROVE` or `REQUEST_CHANGES` verdict/);
+  expect(raw).toMatch(/^## Automation publication \(`COMMENT`\)/m);
+  expect(review).toMatch(/`COMMENT`[^.]*owner-synthesized/i);
+  expect(review).toMatch(/every mode-required receipt[^.]*current for the head SHA|current for the head SHA[^.]*every mode-required receipt/i);
+  expect(review).toMatch(/read back the remote head and base[^.]*before submit|head\/base readback[^.]*before submit/i);
+  expect(review).toMatch(/bound to the reviewed commit|bind[^.]*reviewed commit/i);
+  expect(review).toMatch(/`INCOMPLETE`[^.]*unavailable required reviewer[^.]*publishes nothing[^.]*hold/i);
+  expect(review).toMatch(/`COMMENT`[^.]*never[^.]*`APPROVE`[^.]*`REQUEST_CHANGES`|never submits `APPROVE` or `REQUEST_CHANGES`/i);
+  expect(review).toMatch(/`escalate` records the hold[^.]*publishes nothing/i);
+  expect(review).toMatch(/Only `proceed` plus no unresolved validated blocking finding permits publication/i);
+});
+
+test('review modes: reviewer brief ends with the required escalation field', () => {
+  const raw = read('skills/axstack-review/SKILL.md');
+  expect(raw).toContain('Escalate to user: yes | no — <criterion> — <reason>');
+  const brief = raw.slice(raw.indexOf('## Template: candidate review brief'), raw.indexOf('## Template: review receipt'));
+  expect(brief).toContain('Escalate to user: yes | no — <criterion> — <reason>');
+  const receipt = raw.slice(raw.indexOf('## Template: review receipt'), raw.indexOf('## Prompt-only urgent escalation'));
+  expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
+  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/security concern[^.]*permanent on-chain state change[^.]*architectural change in approach/i);
+  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/automation health[^.]*never[^.]*reviewer|reviewer[^.]*never[^.]*automation health/i);
 });

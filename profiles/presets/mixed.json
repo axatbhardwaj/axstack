@@ -134,7 +134,7 @@
       "model": "claude-opus-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Independent read-only PR monitor. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Healthy snapshots stay quiet; never authors, reviews, or replies."
+      "notes": "Optional independent read-only PR observer, not the driver: the five-minute driver is the automation session itself. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, never authors, reviews, or replies. Healthy snapshots stay quiet. Hold was lifted by user decision on 2026-09-16."
     },
     {
       "id": "axstack-watchdog",
@@ -143,7 +143,7 @@
       "model": "claude-opus-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Independent read-only watch health checker. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Verifies handshakes and deduplicates events; never authors, reviews, or replies."
+      "notes": "Hourly independent read-only automation health checker: compares the recorded driver model with the expected one, checks run history, precheck errors, duplicate handling, and relay receipts, and passes findings to the gate under the automation-health criterion. Never mutates GitHub and never authors, reviews, or replies; its only gate-authorized automation-health send is recorded in watchdog.json."
     },
     {
       "id": "axstack-auditor",

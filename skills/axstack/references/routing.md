@@ -1,16 +1,14 @@
 # Shared routing (every owned phase loads this)
 
-Choose one route; load only its phase and shared references needed next.
+Choose one route; load only the phase and references needed next.
 
 ## Configured role routing
 
 Canonical presets are `mixed`, `codex-only`, and `claude-only`. For a new run,
 read `profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an
-explicit user selection recorded in the run record. Proceed only if those
-sources give exactly one unambiguous preset.
-Missing or contradictory sources are a setup gap: hold. Never
-infer from live profiles or `list_profiles`, harness, tools, credentials,
+skills root, or an explicit user selection recorded in the run record. Proceed
+only if those sources give exactly one unambiguous preset. Missing or
+contradictory sources are a setup gap: hold. Never infer from live profiles or `list_profiles`, harness, tools, credentials,
 quota, subscription, or default to `mixed`.
 
 At run start, capture one **routing snapshot**: the complete map of all 17 role
@@ -22,7 +20,7 @@ it. Live profiles are authoritative at snapshot time and for availability;
 bundled presets are setup inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
-Changing it or replacing a session requires the user's explicit decision and
+Changing it or replacing a session requires an explicit user decision and
 revalidation. Unavailable models, unsupported efforts, missing roles, and
 incompatible overrides hold only affected work. No automatic fallback, quota
 routing, subscription inference, or silent provider/model/effort substitution.
@@ -43,7 +41,8 @@ Stable role IDs:
 - `axstack-advisor-astra` and `axstack-advisor-fable` advise independently;
   `axstack-auditor` audits and `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors explanations and `axstack-explainer-review`
-  reviews them. `axstack-monitor` and `axstack-watchdog` observe only.
+  reviews them. `axstack-monitor` observes only; `axstack-watchdog` sends
+  only gate-authorized health escalations.
 
 Provenance is matched on provider/model ID; record effort, but never use it to
 create a mapping. Any provenance absent from the selected preset's table row is
@@ -70,14 +69,14 @@ ineligible to review their own work.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
   handoff guide, and require explicit recipient acceptance before ownership
-  changes. Missing capability is a setup gap, not permission to invent a replacement.
+  changes. Missing capability is a setup gap, never license to invent one.
 - Colleague PR review -> `axstack-review` in peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode and
   `axstack-watch` for adoption.
 
 Research, explanation, improvement discovery, handoff, peer review, and adopted
-maintenance need no alignment, Axstack-approved spec, or ticket map; their
-authority and intent boundaries still apply.
+maintenance need no alignment, approved spec, or ticket map; authority and
+intent boundaries still apply.
 
 ## Proportional scope identity
 
@@ -86,8 +85,7 @@ with brief reason in the run record. Tiny direct work without one puts
 size/reason in its brief.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work. A
-  bounded small feature is not substantial merely because it is labelled a
-  feature. Require an approved spec plus a ticket map tied to that exact
+  bounded small feature is not substantial merely because it is labelled one. Require an approved spec plus a ticket map tied to that exact
   spec revision, carrying acceptance checks and dependencies in the explicitly
   selected Markdown or Linear store. Prepare through `axstack-align` ->
   `axstack-spec` (one approval) -> `axstack-tickets` -> handoff, then stop.

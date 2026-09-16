@@ -117,8 +117,12 @@ session and evidence remain valid.
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
-  repair authority. Repairs return to the original author and receive refreshed
-  authored review before scoped `gh stack` publication.
+  repair authority. Repairs return to the original author only for a
+  run-launched session and receive refreshed authored review before scoped
+  `gh stack` publication. `gh stack` publication does not apply to automation
+  repairs: the automation session (or a dispatched `axstack-author`) repairs in
+  a per-PR child worktree, the local SHA is reviewed and gated, and the repair
+  lands by fast-forward `git push` after `proceed`.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
 
@@ -152,20 +156,38 @@ recipient, deduplicates on the run record, records the returned `message_id`,
 and treats Telegram replies as neither receipts nor authority. Delivery failure
 never clears the underlying hold.
 
-Healthy watch observations remain quiet and monitor/watchdog roles never send.
+Healthy watch observations remain quiet. The optional `axstack-monitor` is
+read-only and never sends; `axstack-watchdog` never mutates GitHub and performs
+exactly one kind of send, a gate-authorized automation-health escalation
+recorded in `watchdog.json`.
 
-## Native watch capability hold
+## Native watch automations
 
-The accepted monitoring contract is an independent read-only monitor every five
-minutes, an hourly watchdog, quiet healthy snapshots, deduplicated actionable
-events, verified handshakes, one owner, and one shared default 24-hour deadline.
+The accepted monitoring contract is a five-minute driver automation, an hourly
+watchdog, quiet healthy snapshots, deduplicated actionable events, verified
+handshakes, one owner, and one shared default 24-hour deadline.
 
-Current native Orca automations can select a provider but cannot pin model,
-effort, or permission, and current schedule parsing cannot preserve the bounded
-expiry. Watch activation and the complete migration claim therefore remain
-held. Create no production schedule, use no historical runtime fallback, and
-add no custom scheduler or polling loop. Core supervised workflows may proceed;
-A8, missing-tick recovery, active expiry, and final cleanup remain unverified.
+The user lifted the native-watch hold by user decision on 2026-09-16. The driver
+automation is a mutating owner for the PRs it handles; the watchdog keeps the
+independent read-only contract. The driver is the automation session itself,
+with no `axstack-monitor` or `axstack-owner` role row. Native Orca automations still select only a
+provider, so the driver records its model identity every tick and the watchdog
+treats a mismatch as a safety hold. Axstack adds no custom scheduler, polling
+loop, or historical runtime fallback.
+
+## Automations
+
+Two native Orca automations run the installed skills without a human in the
+loop: a driver every five minutes that discovers own and peer PRs, repairs own
+PRs in the mutation allowlist, and reviews peer PRs; and a read-only
+watchdog every hour that reports automation health. After every
+mode-required reviewer settles, the `axstack-auditor` gate returns
+exactly one token, `escalate` or `proceed`.
+`escalate` records and notifies a hold and publishes nothing.
+Only `proceed` plus no unresolved validated blocking finding permits publication
+(a fast-forward push or one `COMMENT` review). The approved contract is
+`docs/specs/orca-automations.md`; the skill-facing restatement an automation
+session loads is `skills/axstack/references/automations.md`.
 
 ## Run record and evidence
 

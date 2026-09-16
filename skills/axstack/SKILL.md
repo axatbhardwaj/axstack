@@ -50,6 +50,9 @@ held.
   local checks do not require launch discovery.
 - Substantive delegated or resumable work uses the
   [Local run record](references/run-record.md).
+- When the current session is an Orca PR automation (driver or watchdog), load
+  [Automation sessions](references/automations.md) before any discovery,
+  review, gate, or mutation.
 - When review escalation or watch notification is eligible and the brief has a
   `Notification policy`, use the optional
   [axstack-relay](../axstack-relay/SKILL.md); otherwise keep notification in

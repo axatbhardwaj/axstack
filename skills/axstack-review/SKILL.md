@@ -16,6 +16,10 @@ to select the mode and scope identity, and apply the shared
 [PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
+When the caller is the Orca driver automation, load
+[Automation sessions](../axstack/references/automations.md): its reviewer
+briefs carry the required escalation field and its publication is `COMMENT`
+only.
 
 ## Peer mode (colleague PR)
 
@@ -68,10 +72,20 @@ coordinator: only the owner launches the writer, reviewers, monitor, and
 watchdog. The current chat does not compete with it. Workers create no children
 or recursive teams.
 
+Automation exception — Standalone owner: no separate `axstack-owner` is
+materialized when the caller is the Orca driver automation; the automation
+session is the owner for every PR it handles.
+
 ## Review the candidate
 
 1. **Pin the brief.** For an owned candidate, verify remote confirmation of the
-   candidate SHA before reviewer dispatch. Record the PR URL, exact candidate
+   candidate SHA before reviewer dispatch. For an automation repair, confirm
+   instead the local immutable candidate SHA with `git rev-parse` in the
+   per-PR child worktree and pin the remote pre-repair head as the
+   expected-old remote SHA; remote equality is re-checked at the publication
+   readback, per the automation repair exception of the
+   [candidate-publication boundary](../axstack/references/candidate-publication.md).
+   Record the PR URL, exact candidate
    SHA and current base, applicable intent or spec/ticket identity and
    acceptance, exclusions, authority, actual author provenance for authored
    mode, and all six angles.
@@ -200,7 +214,16 @@ Candidate: <PR URL> rev <sha> (immutable checkout)
 Mode: <peer | authored> Actual author: <session/model evidence | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
+Escalate to user: yes | no — <criterion> — <reason>
 ```
+
+Every brief ends with the `Escalate to user` field and the reviewer answers it
+in the receipt. A reviewer may cite only a security concern, a permanent
+on-chain state change, or an architectural change in approach; the automation
+health criterion belongs to the watchdog and safety-hold path and is never a
+reviewer criterion. The answer is input to the escalation gate, not a veto and
+not a verdict; see [Automation sessions](../axstack/references/automations.md)
+for the gate.
 
 ## Template: review receipt (one block per revision)
 
@@ -211,6 +234,7 @@ Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
+Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 
 ## Prompt-only urgent escalation
@@ -230,6 +254,13 @@ authorization; the current Orca conversation is the concrete fallback. If
 relay delivery fails, send the same escalation there. Failed delivery never resolves the
 concern. Use no private escalation script. Public installations inherit no
 private transport values or configuration.
+
+Under an automation session, credible serious risk found by a reviewer still
+raises the standing internal prompt and dependent-action hold immediately, and
+the gate governs only external notification: the internal prompt lands in the
+run record and the automation session's own Orca conversation, and no
+`hermes send` occurs without the gate's `escalate` token. `proceed` never
+overrides a validated blocking finding.
 
 ## Publishing rule
 
@@ -274,3 +305,39 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 
 Submission is complete only when the remote receipt confirms the review bound
 to the intended commit.
+
+Automation exception — Authorized submission: the `COMMENT` branch below, with
+the existing remote head/base readback and ambiguity handling, is the only
+submission the Orca driver automation makes. The prohibition on `APPROVE` and
+`REQUEST_CHANGES` is a ban on those GitHub actions; the review skill's internal
+verdict vocabulary is unchanged.
+
+## Automation publication (`COMMENT`)
+
+Only the Orca driver automation, as owner for a peer PR under
+[Automation sessions](../axstack/references/automations.md), uses this branch:
+one `COMMENT` review, owner-synthesized and bound to the reviewed commit. It
+never submits `APPROVE` or `REQUEST_CHANGES`; a need for either is a
+recorded hold. The peer-review submission rule above is unchanged for every
+other caller.
+
+1. Complete the mode-required review: every mode-required receipt is current
+   for the head SHA and current base, and each carries its escalation field.
+   `INCOMPLETE`, unresolved material disagreement, or an unavailable required
+   reviewer publishes nothing and records a hold that pauses mutation for the
+   PR.
+2. The gate returns exactly one token, `escalate` or `proceed`. `escalate`
+   records the hold and the relay receipt and publishes nothing. Only
+   `proceed` plus no unresolved validated blocking finding permits
+   publication.
+3. Read back the remote head and base immediately before submit; stop if
+   either differs from the reviewed candidate.
+4. Submit one owner-synthesized `COMMENT` review bound to the reviewed commit
+   through the actual GitHub commit parameter, carrying every receipt's
+   findings and limitations, then verify the submission receipt.
+5. A receipt for an unchanged head SHA is never published twice; on ambiguity,
+   look up remote state and submit only when absent.
+
+Publication is complete when the remote receipt confirms one `COMMENT` review
+bound to the intended commit, or when the recorded hold names the missing
+input and the next owner.

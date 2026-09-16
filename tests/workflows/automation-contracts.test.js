@@ -1,0 +1,238 @@
+import { test, expect } from 'bun:test';
+import { readFileSync } from 'node:fs';
+
+const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
+const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
+const compact = (path) => read(path).replace(/\s+/g, ' ');
+
+// Cross-file consistency checks for the automation contract. Each assertion
+// binds a trigger to its required outcome (a transition), not a bare keyword.
+// A sentence is the unit: `clause` returns the sentence that carries the
+// trigger so the outcome must appear in the same rule.
+function clause(text, trigger) {
+  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z`*(])/);
+  const hit = sentences.find((s) => trigger.test(s));
+  expect(hit, `no sentence matches ${trigger}`).toBeTruthy();
+  return hit;
+}
+
+function section(text, start, end) {
+  const from = text.indexOf(start);
+  expect(from, `missing section start ${start}`).toBeGreaterThan(-1);
+  const to = text.indexOf(end, from + start.length);
+  expect(to, `missing section end ${end}`).toBeGreaterThan(from);
+  return text.slice(from, to);
+}
+
+test('sol-1: an automation repair is reviewed at its local immutable SHA; ordinary candidates keep remote confirmation', () => {
+  const pub = compact('skills/axstack/references/candidate-publication.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+
+  // Ordinary boundary: remote equality before reviewer dispatch is unchanged.
+  expect(pub).toMatch(/Before reviewer dispatch, read the remote ref back and confirm that it resolves to the candidate SHA/);
+  expect(pub).toMatch(/Ordinary[^.]*(?:keep|retain)[^.]*remote confirmation|Every other caller[^.]*remote confirmation/i);
+
+  // Automation exception: local commit SHA in the per-PR child worktree is the
+  // candidate, confirmed by git rev-parse, not by remote equality.
+  const exception = clause(pub, /automation repair/i);
+  expect(exception).toMatch(/local immutable commit SHA[^.]*per-PR child worktree/i);
+  expect(clause(pub, /git rev-parse/)).toMatch(/instead of remote equality/i);
+  expect(clause(pub, /re-checked/i)).toMatch(/remote equality[^.]*publication readback[^.]*immediately before the fast-forward push/i);
+  // The remote is expected to still be the pre-repair head, so equality is not required for admission.
+  expect(clause(pub, /pre-repair/i)).toMatch(/expected-old remote SHA|not[^.]*equal[^.]*candidate/i);
+
+  // Review skill: pin-the-brief step carries the same exception and keeps the ordinary rule.
+  const pin = section(review, '1. **Pin the brief.**', '2. **Materialize');
+  expect(pin).toMatch(/For an owned candidate, verify remote confirmation of the candidate SHA before reviewer dispatch/);
+  expect(clause(pin, /automation repair/i)).toMatch(/local immutable candidate SHA[^.]*git rev-parse[^.]*child worktree/i);
+  expect(clause(pin, /automation repair/i)).toMatch(/remote[^.]*pre-repair|expected-old remote/i);
+});
+
+test('sol-2: original-author continuity is scoped to run-launched sessions; an automation repair is authored by the automation session or a dispatched axstack-author', () => {
+  const watch = compact('skills/axstack-watch/SKILL.md');
+  const repair = compact('skills/axstack-watch/references/repair-publication.md');
+  const ref = compact('skills/axstack/references/automations.md');
+
+  for (const [name, text] of [['watch', watch], ['repair-publication', repair]]) {
+    // Continuity rule is conditioned on a session the run itself launched.
+    const continuity = clause(text, /original author session|same original author session/i);
+    expect(continuity, `${name}: continuity must be scoped`).toMatch(/run itself launched|launched by (?:this|the) run|this run launched/i);
+    // Automation branch: adopted own PR -> automation session or dispatched axstack-author.
+    const automation = clause(text, /adopted own PR under (?:the|an) automation|under (?:the|an) automation[^.]*adopted own PR/i);
+    expect(automation, `${name}: automation author`).toMatch(/automation session[^.]*(?:Claude\/Opus|provider `claude`)/i);
+    expect(automation, `${name}: delegated author`).toMatch(/dispatched `axstack-author`/);
+    // Reviewer pairing follows the recorded actual provenance of that repair.
+    expect(clause(text, /authored-review pairing|authored review pairing/i)).toMatch(/actual provenance|recorded provenance/i);
+  }
+  // The shared reference names the two provenance -> reviewer transitions.
+  expect(clause(ref, /repair author is the automation session/i)).toMatch(/`axstack-reviewer-primary`/);
+  expect(clause(ref, /delegated to `axstack-author`/i)).toMatch(/`axstack-reviewer-secondary`/);
+});
+
+test('sol-3: the driver is the automation session; axstack-monitor stays optional read-only and never sends; the watchdog never mutates GitHub and may perform only the gate-authorized health send', () => {
+  const texts = {
+    'watch-runtime': compact('skills/axstack-watch/references/watch-runtime.md'),
+    watch: compact('skills/axstack-watch/SKILL.md'),
+    workflows: compact('docs/workflows.md'),
+    lifecycle: compact('skills/axstack/references/lifecycle.md'),
+    automations: compact('skills/axstack/references/automations.md'),
+  };
+  for (const [name, text] of Object.entries(texts)) {
+    // Driver identity: the automation session itself, not a monitor/owner role row.
+    const driver = clause(text, /driver (?:automation )?is the automation session itself/i);
+    expect(driver, `${name}: driver is not a role row`).toMatch(/no `axstack-monitor` or `axstack-owner` role(?: row)?|neither `axstack-monitor` nor `axstack-owner`/i);
+    // Monitor: optional, read-only, never sends.
+    const monitor = clause(text, /`axstack-monitor`[^.]*optional|optional[^.]*`axstack-monitor`/i);
+    expect(monitor, `${name}: monitor read-only`).toMatch(/read-only/i);
+    expect(monitor, `${name}: monitor never sends`).toMatch(/never sends/i);
+    // Watchdog: never mutates GitHub; exactly one kind of send, gate-authorized, recorded in watchdog.json.
+    const watchdog = clause(text, /`axstack-watchdog`[^.]*never mutates GitHub/i);
+    expect(watchdog, `${name}: watchdog one send`).toMatch(/exactly one kind of send|only send/i);
+    expect(watchdog, `${name}: watchdog send is gated`).toMatch(/gate-authorized[^.]*automation-health/i);
+    expect(watchdog, `${name}: watchdog send recorded`).toMatch(/`watchdog\.json`/);
+    // The stale blanket rule must be gone.
+    expect(text, `${name}: stale no-send rule`).not.toMatch(/monitor and watchdog never send|monitor\/watchdog roles never send|watchdog never sends and never mutates/i);
+    expect(text, `${name}: monitor is not the driver`).not.toMatch(/`axstack-monitor` names the five-minute driver/i);
+  }
+});
+
+test('sol-4: credible serious risk raises the internal prompt and hold immediately; the gate governs only external notification', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+  const contracts = compact('skills/axstack/references/contracts.md');
+  // The standing contract is unchanged and is what the precedence rule points at.
+  expect(contracts).toMatch(/Raise credible serious security, downtime, data-loss, or major-design risk immediately through a prompt/);
+
+  for (const [name, text] of [['automations', ref], ['review', review]]) {
+    // Trigger: credible serious risk found by a reviewer.
+    const rule = clause(text, /credible serious risk/i);
+    // Outcome 1: the standing internal prompt and dependent-action hold, immediately.
+    expect(rule, `${name}: immediate internal hold`).toMatch(/standing internal prompt[^.]*dependent-action hold[^.]*immediately|immediately[^.]*standing internal prompt[^.]*dependent-action hold/i);
+    // Outcome 2: the gate decides only external notification.
+    expect(rule, `${name}: gate scope`).toMatch(/gate governs only external notification/i);
+    // Precedence: proceed never overrides a validated blocking finding.
+    expect(clause(text, /`proceed`[^.]*never overrides/i)).toMatch(/validated blocking finding/i);
+  }
+  // The review skill says where the automation's internal prompt lands and that no ungated send occurs.
+  const urgent = section(review, '## Prompt-only urgent escalation', '## Publishing rule');
+  expect(clause(urgent, /automation session/i)).toMatch(/run record|Orca conversation/i);
+  expect(clause(urgent, /automation session/i)).toMatch(/no `hermes send`[^.]*without[^.]*`escalate`|only[^.]*`escalate`[^.]*send/i);
+});
+
+test('sol-5: escalate records and notifies a hold and publishes nothing; only proceed with no unresolved validated blocking finding permits publication', () => {
+  const docs = read('docs/workflows.md');
+  const section = docs.slice(docs.indexOf('## Automations'), docs.indexOf('## Run record and evidence')).replace(/\s+/g, ' ');
+  const ref = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+
+  for (const [name, text] of [['workflows', section], ['automations', ref], ['review', review]]) {
+    // The gate returns exactly one token.
+    expect(text, `${name}: one token`).toMatch(/exactly one (?:literal )?token[^.]*`escalate` or `proceed`/i);
+    // escalate -> hold recorded/notified, nothing published.
+    const escalate = clause(text, /`escalate`\s*(?:→|->|records|:)/i);
+    expect(escalate, `${name}: escalate records a hold`).toMatch(/hold/i);
+    expect(escalate, `${name}: escalate publishes nothing`).toMatch(/publishes nothing|nothing is pushed or published|no push or publication/i);
+    // proceed -> publication only with no unresolved validated blocking finding.
+    const proceed = clause(text, /only `proceed`|`proceed`\s*(?:→|->)/i);
+    expect(proceed, `${name}: proceed requires no unresolved validated blocking finding`).toMatch(/no unresolved validated blocking finding/i);
+    // The unsafe wording is gone: publication is never conditioned on either token.
+    expect(text, `${name}: no either-token publication`).not.toMatch(/publishes only after[^.]*`escalate` or `proceed`|after the gate returns `escalate` or `proceed`/i);
+  }
+});
+
+test('rev-2 discovery: record-only outside the allowlist, --limit 100 with count==limit as error, mention is a request only after reading the comment', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Outside the allowlist -> record only: no model work, no escalation, no wake.
+  const outside = clause(ref, /Outside the allowlist/i);
+  expect(outside).toMatch(/discovers and records only|record(?:s|ed) only/i);
+  expect(ref).toMatch(/no review, watch, gate, or other model work[^.]*external PR/i);
+  expect(clause(ref, /external changes|external churn/i)).toMatch(/do(?:es)? not enter the wake fingerprint|never wakes? the session/i);
+  expect(clause(ref, /external PR contents/i)).toMatch(/never produce an escalation/i);
+  expect(ref).not.toMatch(/still receives report-only review/i);
+  // Discovery limit -> truncation is an error line.
+  expect(ref).toMatch(/--limit 100/);
+  expect(clause(ref, /equal to the limit/i)).toMatch(/`error`/);
+  // Mention -> request only after reading the comment; incidental mention is not authority.
+  const mention = clause(ref, /mention counts as a peer request/i);
+  expect(mention).toMatch(/only when the driver reads the comment/i);
+  expect(clause(ref, /incidental mention/i)).toMatch(/never review authority/i);
+});
+
+test('rev-2 precheck and tick: due control work wakes the driver, the observed fingerprint is promoted verbatim, per-PR event state bounds receipt reuse', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Due control work (deadline at/before now, pending failed-relay retry) -> exit 0 even when GitHub is unchanged.
+  const due = clause(ref, /due control work/i);
+  expect(due).toMatch(/deadline at or before now|watch deadline/i);
+  expect(due).toMatch(/failed-relay retry/i);
+  expect(clause(ref, /Exit 0/)).toMatch(/hash differs or control work is due/i);
+  expect(clause(ref, /due deadline/i)).toMatch(/wakes the driver[^.]*even when GitHub is unchanged/i);
+  expect(ref).toMatch(/`<ts> <changed\|due\|unchanged\|error\|busy>`/);
+  // Observed fingerprint -> promoted verbatim from pending.json, never recomputed.
+  const promote = clause(ref, /promotes exactly that value/i);
+  expect(promote).toMatch(/never a recomputed one/i);
+  expect(clause(ref, /observed fingerprint is written/i)).toMatch(/`pending\.json`/);
+  expect(clause(ref, /landing during a run|lands during a run/i)).toMatch(/following tick/i);
+  // Per-PR event state -> receipt reuse only on unchanged head+base+scope; new event at unchanged head is new work.
+  expect(clause(ref, /Per-PR event state/i)).toMatch(/head SHA, base SHA, check rollup, and processed request and comment IDs/i);
+  expect(clause(ref, /receipt is reused only/i)).toMatch(/head, base, and scope are unchanged/i);
+  expect(clause(ref, /at an unchanged head/i)).toMatch(/new failing check, base change, review request, or qualifying comment[^.]*new work/i);
+  // Deadline is rechecked immediately before any publication.
+  expect(clause(ref, /rechecks the deadline/i)).toMatch(/immediately before any publication/i);
+  // Sidecar contents.
+  expect(clause(ref, /`cursor\.json` \(/)).toMatch(/expired PR list[^.]*watch deadlines[^.]*failed-relay retries/i);
+});
+
+test('rev-2 identity and watchdog: effective identity by Orca runtime inspection holds on unknown; thresholds, occurrence id, and the unavailable-gate hold match the spec', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Driver: inspect before repair or publication; mismatch or unknown -> hold + health finding.
+  const driver = clause(ref, /Before any repair or publication/i);
+  expect(driver).toMatch(/effective session identity through Orca runtime inspection/i);
+  expect(clause(ref, /self-written label/i)).toMatch(/not evidence/i);
+  expect(clause(ref, /mismatch or unknown identity/i)).toMatch(/holds repair and publication[^.]*health finding/i);
+  // Watchdog: inspect before gate dispatch; unknown -> hold recorded in watchdog.json.
+  const watchdog = clause(ref, /Before its gate dispatch/i);
+  expect(watchdog).toMatch(/own effective session identity through Orca runtime inspection/i);
+  expect(clause(ref, /unknown identity holds the dispatch/i)).toMatch(/`watchdog\.json`/);
+  // Thresholds, exactly as the spec lists them.
+  const thresholds = clause(ref, /Thresholds:/);
+  expect(thresholds).toMatch(/three consecutive `error` lines in `precheck\.log`/);
+  expect(thresholds).toMatch(/three consecutive failed (?:driver|A) runs/i);
+  expect(thresholds).toMatch(/no successful (?:driver|A) run within two hours while the precheck logged `changed` or `due`/i);
+  expect(thresholds).toMatch(/unrequested fresh-session fallback or non-Opus effective identity/i);
+  expect(thresholds).toMatch(/`failed` relay receipt older than one tick or any `uncertain` receipt/i);
+  expect(thresholds).toMatch(/hold with no owner/i);
+  expect(clause(ref, /quiet precheck history/i)).toMatch(/healthy/i);
+  // Occurrence id -> dedup while unresolved; recurrence is a new occurrence.
+  const occurrence = clause(ref, /occurrence id/i);
+  expect(occurrence).toMatch(/\(type, first-observed UTC timestamp\)/);
+  expect(clause(ref, /later recurrence/i)).toMatch(/new occurrence/i);
+  // Health gate input and the unavailable-gate hold.
+  expect(clause(ref, /health gate takes/i)).toMatch(/watchdog finding and its evidence, not reviewer verdicts or a candidate/i);
+  expect(clause(ref, /cannot be escalated through itself/i)).toMatch(/hold stays[^.]*no substitute or unauthorized send/i);
+  // Failed/uncertain watchdog delivery stays held and visible.
+  expect(clause(ref, /Failed or uncertain delivery/i)).toMatch(/visibly held in `watchdog\.json`/i);
+  // Four criteria now include the discovery hold.
+  expect(clause(ref, /automation health \(/i)).toMatch(/model-substitution, session, precheck, discovery, or relay-delivery hold/i);
+});
+
+test('rev-2 review exception: Standalone-owner and Authorized-submission carry the spec wording exactly', () => {
+  const review = compact('skills/axstack-review/SKILL.md');
+  const owner = section(review, '## Standalone owner', '## Review the candidate');
+  expect(owner).toContain('Standalone owner: no separate `axstack-owner` is materialized');
+  expect(clause(owner, /no separate `axstack-owner` is materialized/)).toMatch(/Orca driver automation/i);
+  const submission = section(review, '## Authorized submission (peer review)', '## Automation publication');
+  expect(submission).toContain('Authorized submission: the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling');
+  expect(clause(submission, /Authorized submission:/)).toMatch(/Orca driver automation/i);
+  // The APPROVE/REQUEST_CHANGES ban is on GitHub actions; the internal verdict vocabulary stays.
+  expect(clause(review, /ban on those GitHub actions|prohibition on `APPROVE` and `REQUEST_CHANGES`/i)).toMatch(/internal verdict vocabulary is unchanged/i);
+});
+
+test('rev-2 docs: gh stack publication does not apply to automation repairs; they push fast-forward after the gate', () => {
+  const docs = compact('docs/workflows.md');
+  const rule = clause(docs, /`gh stack` publication does not apply to automation repairs/i);
+  expect(rule).toMatch(/fast-forward `git push`/);
+  expect(rule).toMatch(/after the gate|after `proceed`/i);
+  // The watch bullet no longer routes automation repairs to the original author unconditionally.
+  const watch = clause(docs, /`axstack-watch` adopts an existing PR/i);
+  expect(docs.slice(docs.indexOf(watch))).toMatch(/original author[^.]*run itself launched|run-launched/i);
+});

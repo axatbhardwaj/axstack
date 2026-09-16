@@ -48,15 +48,17 @@ test('all active skill runtime instructions are Orca-only', () => {
   }
 });
 
-test('native watches stay held until Orca can preserve the accepted contract', () => {
+test('native watch hold is lifted: driver mutates, watchdog stays read-only', () => {
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
   expect(watch).toMatch(/provider[^.]*supported/i);
   for (const missing of ['model', 'effort', 'permission']) {
     expect(watch).toMatch(new RegExp(`${missing}[^.]*unsupported|cannot[^.]*${missing}`, 'i'));
   }
-  expect(watch).toMatch(/hold[^.]*activat|activation[^.]*hold/i);
+  expect(watch).not.toMatch(/activation[^.]*(?:is|are|remains?) held|capability hold/i);
+  expect(watch).toMatch(/lifted[^.]*user decision|user decision[^.]*lifted/i);
+  expect(watch).toMatch(/driver automation[^.]*mutating owner/i);
+  expect(watch).toMatch(/watchdog[^.]*read-only/i);
   expect(watch).toMatch(/no[^.]*custom[^.]*scheduler/i);
-  expect(watch).toMatch(/no[^.]*schedule[^.]*created|create[^.]*no[^.]*schedule/i);
   expect(watch).toMatch(/five.minute|5.minute/i);
   expect(watch).toMatch(/hourly/i);
   expect(watch).toMatch(/24.hour/i);
