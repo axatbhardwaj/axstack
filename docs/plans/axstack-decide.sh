@@ -110,8 +110,31 @@ if [[ ! -f $decision_file ]]; then
   exit 3
 fi
 
-{ exec {lock_fd}>"$decision_file.lock"; } 2>/dev/null || exit 3
-flock -x "$lock_fd" 2>/dev/null || exit 3
+lock_dir=$decision_file.lock.d
+lock_acquired=false
+tmp_file=
+
+cleanup() {
+  if [[ -n $tmp_file ]]; then
+    rm -f "$tmp_file"
+  fi
+  if [[ $lock_acquired == true ]]; then
+    rmdir "$lock_dir" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 3' HUP INT TERM
+
+for ((attempt = 0; attempt < 100; attempt += 1)); do
+  if mkdir "$lock_dir" 2>/dev/null; then
+    lock_acquired=true
+    break
+  fi
+  sleep 0.05
+done
+if [[ $lock_acquired != true ]]; then
+  exit 3
+fi
 
 state=$(jq -er '.state | select(type == "string")' "$decision_file" 2>/dev/null) || exit 3
 if [[ $state != open ]]; then
@@ -123,7 +146,6 @@ decided_state=${decided_state/reject/rejected}
 decided_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 # SIGKILL between mktemp and mv can leave <token>.json.tmp.*; the driver and watchdog glob only *.json.
 tmp_file=$(mktemp "$decision_file.tmp.XXXXXX" 2>/dev/null) || exit 3
-trap 'rm -f -- "$tmp_file"' EXIT
 
 if [[ -n ${HERMES_SESSION_MESSAGE_ID:-} ]]; then
   jq --arg state "$decided_state" \
@@ -139,5 +161,5 @@ else
 fi
 
 mv -f -- "$tmp_file" "$decision_file" 2>/dev/null || exit 3
-trap - EXIT
+tmp_file=
 printf 'decided %s %s\n' "$token" "$decided_state"
