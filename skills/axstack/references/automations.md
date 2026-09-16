@@ -223,9 +223,10 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
 
 Resolve self; run the three searches with `--json url,number,repository,updatedAt`;
 write the full discovery list to `pending.json`. For each allowlisted,
-non-expired own PR add head SHA, base SHA, and the check rollup of that head via
-`gh pr view --json headRefOid,baseRefOid,statusCheckRollup`; check state is
-data, and only authentication, command, and network errors are `error`. Hash
+non-expired own PR add head SHA, base SHA, draft status, and the check rollup of
+that head via `gh pr view --json headRefOid,baseRefOid,isDraft,statusCheckRollup`;
+check state and draft status are both data, and only authentication, command,
+and network errors are `error`. Hash
 only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
 for due control work: a watch deadline at or before now (pair A/B only, since
 pair C/D stores no deadlines), a pending failed-relay retry, or a per-PR repair
@@ -281,10 +282,13 @@ re-adopted. Pair C/D does not use this window at all; see "Watch window" above
 for its rolling replacement, and it stores no deadline and reaches no `expired`
 state.
 
-Per-PR event state: head SHA, base SHA, check rollup, and processed request and
-comment IDs. A review receipt is reused only when head, base, and scope are
-unchanged. A new failing check, base change, review request, or qualifying
-comment at an unchanged head is new work.
+Per-PR event state: head SHA, base SHA, draft status, check rollup, and
+processed request and comment IDs. A review receipt is reused only when head,
+base, and scope are unchanged. A new failing check, base change, review request,
+or qualifying comment at an unchanged head is new work, and so is a draft status
+that has changed from true to false, which is how a draft becoming ready for
+review reaches the driver. Draft status is part of the hashed fingerprint, so
+that transition wakes the driver on its own.
 
 ## Watchdog tick
 
@@ -322,9 +326,10 @@ for A/B and `20260916-defi-automations` for C/D — each in the
 [run record](run-record.md) shape with that pair's driver as sole writer of its
 own `progress.md`. C/D's run directory lives under the same axstack
 `git-common-dir` as A/B's, in its own `axstack/runs/<run id>/` folder; no
-sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs,
+sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs, draft status,
 review receipts per SHA, gate decisions, `hermes send` receipts with
-`message_id` and state, watch deadline, `expired`, and holds. Its
+`message_id` and state, and holds; the watch deadline and `expired` fields are
+pair A/B only, since pair C/D stores no deadline and cannot reach `expired`. Its
 `Notification policy:` line reads, verbatim:
 
 ```text

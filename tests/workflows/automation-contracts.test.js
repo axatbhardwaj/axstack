@@ -173,7 +173,8 @@ test('rev-2 precheck and tick: due control work wakes the driver, the observed f
   expect(clause(ref, /observed fingerprint is written/i)).toMatch(/`pending\.json`/);
   expect(clause(ref, /landing during a run|lands during a run/i)).toMatch(/following tick/i);
   // Per-PR event state -> receipt reuse only on unchanged head+base+scope; new event at unchanged head is new work.
-  expect(clause(ref, /Per-PR event state/i)).toMatch(/head SHA, base SHA, check rollup, and processed request and comment IDs/i);
+  // Revision 4 extends this list with draft status so a draft becoming ready is observable.
+  expect(clause(ref, /Per-PR event state/i)).toMatch(/head SHA, base SHA, draft status, check rollup, and\s+processed request and comment IDs/i);
   expect(clause(ref, /receipt is reused only/i)).toMatch(/head, base, and scope are unchanged/i);
   expect(clause(ref, /at an unchanged head/i)).toMatch(/new failing check, base change, review request, or qualifying comment[^.]*new work/i);
   // Deadline is rechecked immediately before any publication.
@@ -363,4 +364,22 @@ test('rev-4 triggers are unambiguous: each one matches exactly one sentence', ()
     const hits = sentences.filter((s) => trigger.test(s));
     expect(hits.length, `${trigger} matches ${hits.length} sentences, expected 1`).toBe(1);
   }
+});
+
+test('rev-4 draft transition is observable: queried, hashed, and carried in per-PR state', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // The precheck must actually ask GitHub for draft status.
+  expect(ref).toMatch(/gh pr view --json headRefOid,baseRefOid,isDraft,statusCheckRollup/);
+  // Per-PR event state carries it, and the true->false transition is new work.
+  expect(clause(ref, /Per-PR event state:/)).toMatch(/draft status/i);
+  expect(clause(ref, /draft status that has changed/i)).toMatch(/new work|ready for review/i);
+  // It is in the fingerprint, so the transition wakes the driver by itself.
+  expect(clause(ref, /part of the hashed fingerprint/i)).toMatch(/wakes the driver/i);
+});
+
+test('rev-4 run record: deadline and expired fields are pair A/B only', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const stored = clause(ref, /Per PR it stores processed event IDs/);
+  expect(stored).toMatch(/pair A\/B only/i);
+  expect(stored).toMatch(/cannot reach `expired`/i);
 });
