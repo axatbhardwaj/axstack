@@ -76,3 +76,30 @@ test('automations: watch repairs are gated locally and pushed fast-forward only'
   expect(repair).toMatch(/no `gh stack` sync or restack from an automation|`gh stack`[^.]*never[^.]*automation/i);
   expect(repair).toMatch(/push[^.]*before the gate[^.]*forbidden|never push[^.]*before[^.]*gate/i);
 });
+
+// Scenario corpus contract only: a fresh evaluator executes these cases against
+// the skill prompts; keyword matching is not behavior evidence.
+test('automation scenarios: five bounded cases pin the gate, criteria, expiry, and holds', () => {
+  const data = JSON.parse(read('tests/workflows/automation-scenarios.json'));
+  expect(data.version).toBe(1);
+  expect(data.cases.map(({ id }) => id)).toEqual([
+    'push-before-gate',
+    'proceed-with-blocking-finding',
+    'watchdog-health-finding',
+    'expired-pr-skipped',
+    'unavailable-gate-hold',
+  ]);
+  const skills = ['axstack', 'axstack-review', 'axstack-watch'];
+  for (const c of data.cases) {
+    expect(c.title && c.skill_ref && c.input && c.expected, `${c.id}: needs title/skill_ref/input/expected`).toBeTruthy();
+    expect(skills.includes(c.skill_ref), `${c.id}: skill_ref must be an automation-facing skill`).toBeTruthy();
+    expect(c.input.request && c.input.facts, `${c.id}: needs request and facts`).toBeTruthy();
+    expect(c.expected.forbidden.length, `${c.id}: needs forbidden actions`).toBeGreaterThan(0);
+  }
+  const byId = Object.fromEntries(data.cases.map((c) => [c.id, c]));
+  expect(byId['push-before-gate'].expected.forbidden.join(' ')).toMatch(/push[^,]*before[^,]*gate/i);
+  expect(byId['proceed-with-blocking-finding'].expected.forbidden.join(' ')).toMatch(/proceed[^,]*override|push[^,]*blocking finding/i);
+  expect(byId['watchdog-health-finding'].expected.criterion).toBe('automation health');
+  expect(byId['expired-pr-skipped'].expected.forbidden.join(' ')).toMatch(/re-adopt/i);
+  expect(byId['unavailable-gate-hold'].expected.hold).toBeTruthy();
+});
