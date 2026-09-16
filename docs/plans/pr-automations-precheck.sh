@@ -162,9 +162,10 @@ if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
 
 if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
   def entries: if type == "array" then .[] elif type == "object" then .[] else empty end;
+  def epoch: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601;
   ($now | fromdateiso8601) as $now_epoch
   | any(((.dispatches // .dispatch_markers // {}) | entries);
-      (try (.started_at | fromdateiso8601) catch $now_epoch) < ($now_epoch - 10800))
+      (try (.started_at | epoch) catch $now_epoch) < ($now_epoch - 10800))
 ' >/dev/null; then due=1; fi
 
 if printf '%s' "$cursor" | jq -e '(.pending_settlement // []) | length > 0' >/dev/null; then due=1; fi

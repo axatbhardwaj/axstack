@@ -230,7 +230,7 @@ test('an expired repair cap is due', () => {
 test('a dispatch marker older than three hours is due', () => {
   const env = setup();
   settleFingerprint(env, {
-    dispatches: { [allowlisted]: { started_at: '2000-01-01T00:00:00Z' } },
+    dispatches: { [allowlisted]: { started_at: '2000-01-01T00:00:00.000Z' } },
   });
   expect(run(env).exitCode).toBe(0);
   expect(lastLog(env)).toMatch(/ due$/);
