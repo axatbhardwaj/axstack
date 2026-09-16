@@ -413,10 +413,18 @@ That choice is scoped narrowly. It overrides the never-auto-post policy **for
 pair C/D's automated reviews only**. Interactive sessions working under
 `~/defi/` keep that policy unchanged, as do human-authored reviews and the
 `~/defi/misc/reviews/` HTML naming conventions, which this specification does
-not touch. Whether Automation C should also write a local
-`review-PR-<num>.html` alongside its submitted verdict is a separate open
-question for the user; today it would not, and that gap is recorded rather than
-silently resolved.
+not touch. The user settled the remaining question on 2026-09-16: Automation C **does**
+also write the local review file alongside its submitted verdict, so the
+workspace convention is preserved rather than bypassed. C writes
+`~/defi/misc/reviews/review-PR-<num>.html` for `defi-com/monorepo` with no
+prefix — the unprefixed name means monorepo by definition — and the prefixed
+form for every other repository, `review-azure-next-hybrid-PR-<num>.html` and
+`review-mobile-PR-<num>.html`. The file is written for every review C publishes,
+verdict or `COMMENT`, and it carries the same findings and evidence as the
+submitted review plus the reviewed SHA. A failure to write the file is a
+recorded hold and does not by itself retract a submitted review; a review is
+never withheld because the file could not be written, and the mismatch is
+visible rather than silent.
 
 ### What counts as green for a repair
 
@@ -958,16 +966,18 @@ For C and D, all of the following, on the VPS runtime:
     after a teammate push, and a clearing `APPROVE` at head 3 submitted under
     the inherited authority with no fresh review request.
 
-    **15B — one live submission, on a PR the user designates.** The user names
-    one real peer PR on which self is officially review-requested and accepts
-    that a genuine review verdict will land on it. C reviews it honestly and
+    **15B — one live submission, on a PR the user designates.** The user
+    designated `defi-com/monorepo#1108` (authored by `yep365`, self officially
+    review-requested) on 2026-09-16 and accepted that a genuine review verdict
+    will land on it. C reviews it honestly and
     submits whichever verdict that review truthfully yields — the check does not
     require a particular verdict, and an `APPROVE` satisfies it as fully as a
     `REQUEST_CHANGES`. The remote receipt must confirm exactly one review bound
     to the reviewed commit. If the honest verdict is `REQUEST_CHANGES`, the user
     is told at once that a real block now stands under their login and that only
     they can clear it, and the resulting obligation is followed through the
-    tracking rules above.
+    tracking rules above. The local review file required above is written for
+    this review too, and its presence and naming are part of the check.
 
     **15C — precondition.** The skill, reference and test amendments named in
     "A skill amendment is required before C is enabled" are complete, and pair
