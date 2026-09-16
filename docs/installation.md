@@ -97,8 +97,9 @@ hash) is deleted, dropped from the written manifest, and reported as
 `removed`; an edited or already-missing stale copy is left alone, keeps its
 manifest hash, and stays reported as `stale`. Only manifest-owned paths are
 ever deleted, through the same ownership-hash guard uninstall uses. The stale
-plan is computed read-only before any write, and only the validated plan
-executes. Partial failures restore overwritten files, restore removed stale
+plan is validated read-only before any write, and each deletion re-checks
+its target through that guard immediately before removal, so a copy edited
+during the run is preserved rather than deleted. Partial failures restore overwritten files, restore removed stale
 files with their prior bytes and mode,
 remove files created by that run, restore Claude settings/sidecar state, and
 leave the prior manifest intact. An incomplete rollback reports exact manual
@@ -182,10 +183,15 @@ do not trigger configuration reads, writes, path-binding refusal, readiness
 checks, uninstall mutation, runtime fallback, or timer cleanup. Preserve them
 for audit and report the explicit migration path.
 
-An ordinary upgrade can retain the retired `axstack-handoff` and
-`axstack-docs` assets. The retired `axstack-driver` row leaves `roles.json` on
-the next install because that file is rewritten as one owned snapshot. A no-force uninstall/install cycle removes only pristine
-owned copies; edited, custom, and unknown assets survive. `axstack-explain`
+The next ordinary upgrade without `--force` removes pristine retired
+`axstack-handoff` and `axstack-docs` copies directly: they are deleted,
+dropped from the manifest, and reported as removed, while retaining edited
+or already-missing retired copies of axstack-handoff and axstack-docs as
+recorded, preserved stale entries. The
+retired `axstack-driver` row leaves `roles.json` on the next install because
+that file is rewritten as one owned snapshot. A --force uninstall/install
+cycle remains only for discarding edited copies you have decided to abandon;
+edited, custom, and unknown assets otherwise survive. `axstack-explain`
 supersedes the old docs route. Full ownership transfer uses Orca's runtime-owned
 handoff guidance and still requires explicit recipient acceptance.
 
