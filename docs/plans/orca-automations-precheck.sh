@@ -4,6 +4,7 @@
 #   1 unchanged   2 gh/tooling error   3 previous driver run still active
 set -u
 RUN_DIR="/root/dev/axstack/.git/axstack/runs/20260916-pr-automations"
+AUTOMATION_ID="a19b68d1-2973-4aca-8d56-b732df93144d"   # this driver automation; terminal ownership comes from its run history
 ALLOWLIST='["axatbhardwaj/axstack"]'   # mutation allowlist, mirrored verbatim in the automation prompt
 LIMIT=100
 LOG="$RUN_DIR/precheck.log"; CUR="$RUN_DIR/cursor.json"; PENDING="$RUN_DIR/pending.json"
@@ -16,14 +17,19 @@ log() { printf '%s %s\n' "$ts" "$1" >> "$LOG"; }
 # session that reconciles from the run record. Before dispatching, close the previous ticks' idle driver
 # terminals; a driver terminal that is still working means the tick is busy.
 #
-# Only driver terminals are in scope. The watchdog is a separate automation dispatched on the same minute,
-# and a session that is still booting reports tui-idle, so sweeping its terminals closed it seconds after
-# launch (verified 2026-09-16: watchdog runs 8-10 dispatched and wrote nothing). The watchdog owns its own
-# terminals; a busy watchdog is also not this tick being busy.
-# Closing needs --tab: without it the pane is closed but the session stays listed and is never reclaimed.
+# Ownership is this automation's own recorded terminalPtyId, never the terminal title. Orca rewrites a
+# Claude terminal's title to the agent's current task summary, so a real driver's title drifts away from
+# any fixed phrase while an unrelated session can acquire one that reads exactly like it. Matching on
+# identity keeps a drifted driver inside the busy guard, leaves the watchdog (a different automation, on
+# the same dispatch minute, reporting tui-idle while it boots) untouched, and cannot reach a bystander.
+# Closing needs --tab: without it the pane closes but the session stays listed and is never reclaimed,
+# which also makes an over-match destructive rather than merely useless.
 if command -v orca >/dev/null 2>&1; then
+  own_ptys="$(orca automations runs --id "$AUTOMATION_ID" --json 2>/dev/null \
+    | jq -c '[.result.runs[]? | .terminalPtyId // empty]')" || { log error; exit 2; }
+  [ -n "$own_ptys" ] || { log error; exit 2; }
   handles="$(orca terminal list --json 2>/dev/null \
-    | jq -r '.result.terminals[]? | select(.agentIdentity == "claude") | select((.title // "") | test("Axstack PR (automation )?driver")) | .handle')"
+    | jq -r --argjson ptys "$own_ptys" '.result.terminals[]? | select((.ptyId // "") as $p | $ptys | index($p)) | .handle')"
   for h in $handles; do
     if orca terminal wait --terminal "$h" --for tui-idle --timeout-ms 3000 --json 2>/dev/null | jq -e '.result.wait.satisfied == true' >/dev/null 2>&1; then
       orca terminal close --terminal "$h" --tab --json >/dev/null 2>&1 || true

@@ -128,15 +128,21 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   verified on 2026-09-16 (scheduled runs 7 and 8), Orca launches a fresh
   session for every dispatched tick on this host. The normal mode is therefore
   one fresh session per changed tick, reconciled from the run record and
-  sidecars; the precheck closes the previous tick's idle driver terminals with
+  sidecars; the precheck closes the previous ticks' idle driver terminals with
   `--tab` before dispatching and treats a still-working driver terminal as
-  `busy`. Hygiene covers driver terminals only: the watchdog is a separate
-  automation that owns its own terminals, and a session that is still booting
-  reports `tui-idle`, so sweeping watchdog terminals closed the watchdog
-  seconds after launch (observed 2026-09-16, runs 8-10 dispatched and wrote
-  nothing). `--tab` is required; without it the pane closes but the session
-  stays listed and is never reclaimed. A scheduler-launched session whose
-  terminal matches its own Orca handle is expected, not a fallback.
+  `busy`. Ownership is A's own recorded `terminalPtyId` from its run history,
+  never a terminal title: Orca rewrites a Claude terminal's title to the
+  agent's current task summary, so a real driver's title drifts while an
+  unrelated session can acquire one that reads like a driver. Identity
+  matching keeps a drifted driver inside the busy guard, leaves B's terminals
+  untouched — B is a separate automation on the same dispatch minute and
+  reports `tui-idle` while it boots, so a title sweep closed it seconds after
+  launch (observed 2026-09-16, runs 8-10 dispatched and wrote nothing) — and
+  cannot reach a bystander. `--tab` is required; without it the pane closes but
+  the session stays listed and is never reclaimed, which also makes an
+  over-match destructive rather than merely useless. An unreadable ownership
+  source is `error`, never a silent empty sweep. A scheduler-launched session
+  whose terminal matches its own Orca handle is expected, not a fallback.
 - Model and effort cannot be set on an automation; the provider default is
   used. Before any repair or publication the driver validates its effective
   session identity through Orca runtime inspection (the exact fields are

@@ -9,6 +9,7 @@ const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const SCRIPT = `${root}/docs/plans/orca-automations-precheck.sh`;
 const DRIVER = 'term_driver';
 const WATCHDOG = 'term_watchdog';
+const BYSTANDER = 'term_bystander';
 
 let sandbox;
 
@@ -17,18 +18,38 @@ const write = (path, body, mode) => {
   if (mode) chmodSync(path, mode);
 };
 
-// Terminals as the precheck sees them: one idle driver pane left over from the
-// previous tick and one watchdog pane that has just been dispatched.
+// Terminals as the precheck sees them. Ownership is the automation's own
+// recorded ptyId, never the title: Orca rewrites a Claude terminal's title to
+// the agent's current task summary, so the title of a real driver drifts and an
+// unrelated session can acquire one that reads like a driver.
+const WORKTREE = 'repo::/root/orca/workspaces/axstack/pr-automations';
+const DRIVER_PTY = `${WORKTREE}@@driver`;
+const WATCHDOG_PTY = `${WORKTREE}@@watchdog`;
+
 const terminals = (driverIdle) => JSON.stringify({
   result: {
     terminals: [
-      { handle: DRIVER, title: '✳ Axstack PR automation driver', agentIdentity: 'claude', idle: driverIdle },
-      { handle: WATCHDOG, title: '◑ Axstack automation watchdog', agentIdentity: 'claude', idle: true },
+      // A real previous-tick driver whose title has drifted to a task summary.
+      { handle: DRIVER, title: '✳ Adopt PR 49 and promote', agentIdentity: 'claude', ptyId: DRIVER_PTY, idle: driverIdle },
+      // The watchdog, mid-boot on the same minute. Its pty belongs to the other automation.
+      { handle: WATCHDOG, title: '◑ Axstack automation watchdog', agentIdentity: 'claude', ptyId: WATCHDOG_PTY, idle: true },
+      // An unrelated session whose task summary happens to read like a driver.
+      { handle: BYSTANDER, title: '◑ Axstack PR automation driver is closing my terminal', agentIdentity: 'claude', ptyId: `${WORKTREE}@@bystander`, idle: true },
     ],
   },
 });
 
-const setup = ({ driverIdle = true } = {}) => {
+// Run history for the driver automation only; this is the ownership source.
+const runs = JSON.stringify({
+  result: {
+    runs: [
+      { runNumber: 30, status: 'skipped_precheck', terminalPtyId: null },
+      { runNumber: 27, status: 'completed', terminalPtyId: DRIVER_PTY },
+    ],
+  },
+});
+
+const setup = ({ driverIdle = true, runsFail = false } = {}) => {
   sandbox = mkdtempSync(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-precheck-`);
   const runDir = `${sandbox}/run`;
   const bin = `${sandbox}/bin`;
@@ -46,6 +67,9 @@ const setup = ({ driverIdle = true } = {}) => {
     'case "$1 $2" in',
     `  "terminal list") cat <<'JSON'\n${terminals(driverIdle)}\nJSON`,
     '    ;;',
+    ...(runsFail
+      ? ['  "automations runs") exit 1', '    ;;']
+      : [`  "automations runs") cat <<'JSON'\n${runs}\nJSON`, '    ;;']),
     '  "terminal wait")',
     '    handle=""; for a in "$@"; do [ "$prev" = "--terminal" ] && handle="$a"; prev="$a"; done',
     `    idle=true; [ "$handle" = "${DRIVER}" ] && idle=${driverIdle}`,
@@ -106,6 +130,16 @@ test('precheck: never closes a watchdog terminal', () => {
   }
 });
 
+test('precheck: never touches a terminal outside this automation, whatever its title reads', () => {
+  const env = setup();
+  const { calls } = run(env);
+  for (const line of calls.split('\n')) {
+    if (line.startsWith('terminal close') || line.startsWith('terminal wait')) {
+      expect(line).not.toContain(BYSTANDER);
+    }
+  }
+});
+
 test('precheck: closes an idle driver terminal with --tab so the pane is reclaimed', () => {
   const env = setup();
   const { calls } = run(env);
@@ -115,10 +149,18 @@ test('precheck: closes an idle driver terminal with --tab so the pane is reclaim
   expect(closes[0]).toContain('--tab');
 });
 
-test('precheck: a still-working driver terminal is busy (exit 3) and nothing is closed', () => {
+test('precheck: a still-working driver is busy (exit 3) even when its title has drifted', () => {
   const env = setup({ driverIdle: false });
   const { exitCode, calls } = run(env);
   expect(exitCode).toBe(3);
   expect(closesOf(calls)).toEqual([]);
   expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8')).toContain('busy');
+});
+
+test('precheck: an unreadable ownership source is an error, never a silent empty sweep', () => {
+  const env = setup({ runsFail: true });
+  const { exitCode, calls } = run(env);
+  expect(exitCode).toBe(2);
+  expect(closesOf(calls)).toEqual([]);
+  expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8')).toContain('error');
 });
