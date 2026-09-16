@@ -139,8 +139,9 @@ worktree discarded. The loop must be hermetic (worktree-local). A worktree
 isolates files, not shared or live systems: if the loop touches shared state
 (database, port, cache, lock), parameterise it per investigator, or serialise
 the wave against an explicitly authorised resource with recorded reset and
-restore steps between probes; if neither is possible, hold that probe. The
-bundle's mode convention stays; record requested and effective settings
+restore steps between probes; if neither is possible, hold that probe. Record
+the outcome on the diagnosis record's `Hermetic:` line (`yes`, or `shared:`
+plus the resource and the chosen handling). The bundle's mode convention stays; record requested and effective settings
 separately, and hold on an unsupported requested mode.
 
 ## Hand-off

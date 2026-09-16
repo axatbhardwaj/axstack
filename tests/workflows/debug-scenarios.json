@@ -92,7 +92,7 @@
       "skill_ref": "axstack-debug",
       "input": {
         "request": "The predicted fix went in and the loop is still red; escalate.",
-        "facts": "Preset mixed. One fix attempt evaluated against the original loop and minimised repro: red. Packet snapshot written and hashed. Both advisers and all four investigators are available."
+        "facts": "Preset mixed. One fix attempt evaluated against the original loop and minimised repro: red. Packet snapshot written and hashed. Both advisers and all four investigators are available. The merged adviser plans yield six distinct hypotheses."
       },
       "expected": {
         "decision": "Enter L1: consult Astra and Fable independently with the identical packet; merge their plans by de-duplicating, ranking the union, dropping hypotheses both refute; assign the top four to investigator-1..4 with distinct briefs; record surplus as untested (queued).",
