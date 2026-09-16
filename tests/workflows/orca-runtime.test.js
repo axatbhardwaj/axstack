@@ -28,11 +28,23 @@ test('orca runtime reference replaces the active Paseo launch guide', () => {
 
 test('runtime boundary requires worker worktrees to carry their parent lineage', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
-  // One assertion per acceptance clause; each fails when its clause is removed.
-  expect(runtime).toMatch(/Create it with\s+`--parent-worktree`[^.]*candidate's worktree/);
-  expect(runtime).toMatch(/--no-parent[^.]*unrelated/i);
-  expect(runtime).toMatch(/worktree set[^.]*--parent-worktree|--parent-worktree[^.]*worktree set/);
-  expect(runtime).toMatch(/Lineage is[^.]*never\s+authority/);
+  // Scope to the lineage paragraph so each clause is checked against its own
+  // prose, then assert the two tokens that carry the clause in either order.
+  // Deleting a clause fails its assertion; rewording one does not.
+  const lineage = runtime
+    .split('\n\n')
+    .find((paragraph) => paragraph.includes('--parent-worktree')) ?? '';
+  const carries = (a, b) => a.test(lineage) && b.test(lineage);
+
+  expect(lineage).not.toBe('');
+  // a: create the worker worktree parented to the candidate.
+  expect(carries(/--parent-worktree/, /candidate'?s? worktree/i)).toBe(true);
+  // b: --no-parent is reserved for unrelated work.
+  expect(carries(/--no-parent/, /unrelated/i)).toBe(true);
+  // c: a wrong lineage is correctable in place.
+  expect(carries(/worktree set/, /--parent-worktree/)).toBe(true);
+  // d: lineage is never authority.
+  expect(carries(/lineage/i, /never\s+authority/i)).toBe(true);
 });
 
 test('runtime decisions cover startup, fencing, settlement, and accepted handoff', () => {
