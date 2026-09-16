@@ -1,7 +1,13 @@
 # Orca PR automations — specification
 
-Status: revision 4 (amendment to revision 3, extending coverage to the
-defi-com repositories as a second, independent automation pair). Revision 3
+Status: revision 5 (amendment to revision 4, splitting C/D's review and repair
+scope per repository, authorizing real review submission for C/D, and recording
+the workspace paths and green-gate corrections found during the first host
+setup). Revision 4's text is preserved below and remains the baseline wherever
+revision 5 does not contradict it; see "Revision 5" immediately before the
+Automations C and D section. Revision 4 was (amendment to revision 3, extending
+coverage to the defi-com repositories as a second, independent automation
+pair). Revision 3
 remains the approved baseline for the axstack pair (Automations A and B) and is
 unchanged by this amendment except where a clause below names it. Revision 4 rests on
 decisions D1-D14 recorded in the align run record
@@ -248,6 +254,96 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   this is the only send the watchdog may perform, because a broken driver
   cannot be relied on to deliver its own failure. Failed or uncertain delivery
   stays visibly held in `watchdog.json` and Orca run history.
+
+## Revision 5 — per-repo scope, authorized review submission, workspace paths
+
+Revision 5 amends revision 4 after the user reviewed the first host setup on
+2026-09-16. Revision 4 stays the baseline for everything it is not contradicted
+on here, and pair A/B is still unchanged throughout.
+
+### Two lists, not one
+
+Revision 4 gave pair C/D a single mutation allowlist gating review and repair
+together. The user has since scoped them separately, so C/D carries two lists,
+each stated verbatim in C's prompt and auditable through `orca automations show`:
+
+- **Review allowlist:** `defi-com/monorepo`, `defi-com/mobile`,
+  `defi-com/azure-next-hybrid`.
+- **Repair allowlist:** `defi-com/monorepo`, `defi-com/mobile`.
+
+`defi-com/azure-next-hybrid` is therefore review-only: its own PRs are
+discovered, reviewed when self is review-requested, and never repaired or
+pushed to. A repository absent from both lists is record-only exactly as before.
+Every clause revision 4 wrote about own-PR repair now reads against the repair
+allowlist, and every clause about peer review reads against the review
+allowlist.
+
+### Authorized review submission replaces COMMENT-only
+
+Revision 3 prohibited `APPROVE` and `REQUEST_CHANGES` as GitHub actions for
+every automation, and revision 4 kept the automation publication branch at one
+`COMMENT` review. The user has explicitly authorized pair C/D to submit a real
+review verdict instead: after the mode-required reviewers settle and the gate
+returns `proceed`, C submits one owner-synthesized review carrying the actual
+verdict — `APPROVE` or `REQUEST_CHANGES` — bound to the reviewed commit,
+through the `axstack-review` authorized-submission branch rather than its
+automation `COMMENT` exception.
+
+This is an authority expansion with outward effect on other people's pull
+requests, so it is bounded:
+
+- It applies to pair C/D only. Pair A/B keeps the `COMMENT`-only exception.
+- Every other prohibition is untouched: no force-push, no rebase, no merge, no
+  close, by any automation, anywhere.
+- A verdict is submitted only on a complete mode-required review at the exact
+  head SHA with a current base, the gate's `proceed`, and no unresolved
+  validated blocking finding. `INCOMPLETE`, unresolved material disagreement,
+  or an unavailable required reviewer submits nothing and records a hold.
+- The remote head and base readback immediately before submit is unchanged, as
+  is the never-submit-twice rule for an unchanged head SHA.
+- The review is submitted under the user's own GitHub identity, and the
+  automation adds no disclosure that it is automated; the user accepted that
+  when authorizing submission.
+
+### Workspace paths
+
+defi-com repositories live under `~/defi/`, personal projects under `~/dev/`.
+C/D's per-PR child worktrees are created from the `~/defi/` clones. The
+`~/defi/` workspace carries its own `CLAUDE.md`; a C/D session inherits it like
+any other session working there, and where it and this specification disagree
+about review publication, this specification governs pair C/D because the user
+authorized submission explicitly and later.
+
+### What counts as green for a repair
+
+`bun run test` is not a usable gate for `defi-com/monorepo` on this host:
+`apps/defi-app`'s `e2e/backup-gating.spec.ts` fails because
+`startHermeticAppServer` times out, an environment gap on a host that runs no
+app services, not a repository defect. Verified 2026-09-16 against `dev` at
+`611abaa65`; the unit level is green at 315 files and 4662 tests.
+
+A repair therefore gates on the repository's unit-level test command plus the
+PR's CI check rollup, and local end-to-end suites that require unavailable
+services are a recorded unverified boundary rather than a failure to repair. A
+check the automation cannot run locally is never reported as passing.
+
+### Inherited failures
+
+A repair addresses only a check that the PR itself broke, established by
+comparing the PR head's rollup against its base. A failure already present on
+the base is recorded as an inherited-failure hold naming the base SHA and is
+never repaired on the user's branch, so the automation cannot spend a PR's
+repair cap on a defect the PR did not introduce.
+
+### Corrections to revision 4
+
+- `defi-com/monorepo` has **one** submodule, `packages/contracts`. Revision 4
+  said two. `.gitmodules` also declares
+  `packages/database/domains-json`, but the committed tree holds a 31-byte
+  regular file at that path rather than a gitlink, so `git submodule update`
+  correctly skips it. Verified upstream on `dev`.
+- Acceptance check 2's submodule clause reads "its one real submodule" instead
+  of "both monorepo submodules".
 
 ## Automations C and D — defi-com pair
 
@@ -576,9 +672,9 @@ For C and D, all of the following, on the VPS runtime:
    driver worktree of `axatbhardwaj/axstack` as their shared home — the
    defi-com repos are parents for per-PR child worktrees only, never driver
    homes. `bun` resolves on `PATH` in the driver worktree and in a child
-   worktree, both monorepo submodules check out in a child worktree, and the
-   monorepo test command runs to completion there under the host toolchain (or
-   the pinned versions installed alongside, per "Prerequisites").
+   worktree, monorepo's one real submodule (`packages/contracts`) checks out in a
+   child worktree, and the monorepo unit-level test command runs to completion
+   there.
 3. C's stored precheck exits non-zero on an unchanged fingerprint, zero after a
    synthetic allowlisted own-PR push, non-zero when only a non-allowlisted PR
    changed, and non-zero with an `error` line when a search returns exactly the
@@ -637,5 +733,22 @@ For C and D, all of the following, on the VPS runtime:
     tick duration over at least 10 ticks)`, and the computed value and its
     sample are recorded. Neither a `pending restack` hold nor a budget hold
     trips D's hold-with-no-owner threshold.
+
+14. Revision 5 scope split: a PR in `defi-com/azure-next-hybrid` authored by
+    self produces zero repairs and zero pushes, while a review-requested PR in
+    the same repository produces a review; a repository in neither list stays
+    record-only.
+15. Revision 5 submission: on a complete review with the gate's `proceed` and
+    no unresolved validated blocking finding, C submits exactly one review
+    carrying the actual verdict bound to the reviewed commit, and the remote
+    receipt confirms it; `INCOMPLETE`, an unavailable required reviewer, or a
+    gate `escalate` submits nothing and records a hold; a second tick at the
+    same head SHA submits nothing further. Pair A/B, run on the same states,
+    still submits `COMMENT` only.
+16. Revision 5 green gate and inherited failures: a check failing on the PR's
+    base is recorded as an inherited-failure hold naming the base SHA and
+    consumes no repair cap, while a check the PR itself broke is repaired; a
+    local suite that cannot run for want of host services is recorded as an
+    unverified boundary and never reported as passing.
 
 Only then are C and D enabled.
