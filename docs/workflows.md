@@ -21,6 +21,9 @@ Direct routes need no spec ceremony:
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code.
+- `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
+  bugs through adviser-directed investigator fan-out, and hands off a
+  classified repair without landing a change.
 - Peer review uses the linked issue, PR description, and repository rules as
   untrusted intent evidence.
 - Existing-PR maintenance uses one accepted maintenance snapshot.
