@@ -19,10 +19,9 @@ load and verify the
 When the caller is an Orca driver automation, load
 [Automation sessions](../axstack/references/automations.md): its reviewer briefs
 carry the required escalation field, and its publication is `COMMENT` only for
-the pair A/B driver and for a pair C peer PR reached through the qualifying
-mention trigger. A pair C peer PR where self is officially review-requested
-publishes the actual verdict instead, under "Binding review verdicts (pair C)"
-in that reference and the authorized-submission branch below.
+the pair A/B driver. Every peer PR the pair C driver publishes on takes the
+actual verdict instead, under "Binding review verdicts (pair C)" in that
+reference and the authorized-submission branch below.
 
 ## Peer mode (colleague PR)
 
@@ -323,13 +322,11 @@ reached through the qualifying mention trigger still takes the `COMMENT` branch.
 ## Automation publication (`COMMENT`)
 
 The pair A/B driver automation, as owner for a peer PR under
-[Automation sessions](../axstack/references/automations.md), uses this branch,
-as does the pair C driver automation for a peer PR reached through the
-qualifying mention trigger: one `COMMENT` review, owner-synthesized and bound to
-the reviewed commit. On this branch the automation never submits `APPROVE` or
-`REQUEST_CHANGES`; a need for either is a recorded hold. Pair C's
-officially-requested peer PRs take the authorized-submission branch above
-instead. The peer-review submission rule above is unchanged for every other
+[Automation sessions](../axstack/references/automations.md), uses this branch:
+one `COMMENT` review, owner-synthesized and bound to the reviewed commit. On
+this branch the automation never submits `APPROVE` or `REQUEST_CHANGES`; a need
+for either is a recorded hold. The pair C driver does not use this branch at
+all; its peer PRs take the authorized-submission branch above. The peer-review submission rule above is unchanged for every other
 caller.
 
 1. Complete the mode-required review: every mode-required receipt is current

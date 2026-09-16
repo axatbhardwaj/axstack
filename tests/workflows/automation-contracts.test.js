@@ -280,11 +280,14 @@ test('rev-4 bot feedback: dedup is by review ID and body digest, under explicit 
   expect(dedup).toMatch(/review ID/i);
   // ID alone is called out as insufficient, with the reason.
   expect(clause(ref, /insufficient/i)).toMatch(/new review ID|re-post/i);
-  // Caps: one repair per PR per 24h, and a per-tick push budget with a value.
+  // Caps: one repair per PR per 24h, a per-tick push budget with a value, and
+  // for pair C a per-tick review budget of one binding verdict.
   expect(clause(ref, /one repair per PR per 24 hours/i)).toBeTruthy();
   expect(clause(ref, /per-tick push budget/i)).toMatch(/six|configured/i);
+  expect(clause(ref, /per-tick \*\*review\*\* budget/i)).toMatch(/\*\*one\*\* for pair C/);
+  expect(clause(ref, /beyond the budget/i)).toMatch(/oldest `updatedAt` first/);
   // Reaching a cap records a hold naming it; expiry is due control work.
-  expect(clause(ref, /Reaching either cap/i)).toMatch(/hold naming the cap/i);
+  expect(clause(ref, /Reaching any of the three caps/i)).toMatch(/hold naming the cap/i);
   expect(clause(ref, /cap expires|cap has expired/i)).toMatch(/due control work|wakes the driver/i);
   // A bot review never grants peer-review authority.
   expect(clause(ref, /never satisfies the peer-PR trigger|bot review never/i)).toMatch(/review-requested|explicitly asks/i);
@@ -354,7 +357,7 @@ test('rev-4 triggers are unambiguous: each one matches exactly one sentence', ()
     /body digest|content digest/i,
     /one repair per PR per 24 hours/i,
     /per-tick push budget/i,
-    /Reaching either cap/i,
+    /Reaching any of the three caps/i,
     /deploy-on-push/i,
     /rolling window/i,
     /draft PR is discovered/i,
@@ -411,12 +414,13 @@ test('rev-5 verdict authority is pair-scoped: C submits verdicts, A/B and D do n
   // The verdict prohibition is pair-scoped and names exactly who it still binds.
   expect(ref).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
   expect(ref).toMatch(/Automation C may submit them under "Binding review verdicts \(pair C\)" below\s*and nowhere else/);
-  // C's authority exists, is peer-only, and needs an official request.
-  const authority = clause(ref, /A binding verdict is submitted only/i);
-  expect(authority).toMatch(/officially review-requested/i);
-  expect(authority).toMatch(/authored by someone else/i);
-  // A mention-triggered peer review stays COMMENT.
-  expect(clause(ref, /mention trigger/i)).toMatch(/`COMMENT`/);
+  // Every review C publishes is a binding verdict: there is no COMMENT path,
+  // a mention-triggered peer PR takes a verdict too, and the only restriction
+  // is GitHub's own author rule.
+  const authority = clause(ref, /Every review Automation C publishes/i);
+  expect(authority).toMatch(/binding verdict/i);
+  expect(clause(ref, /qualifying mention trigger gets a verdict/i)).toMatch(/exactly as an officially-requested one/i);
+  expect(clause(ref, /GitHub rejects a verdict from a PR's own\s*author/i)).toBeTruthy();
   // D still writes nothing to GitHub.
   expect(ref).toMatch(/Automation D never (?:mutates|writes)/i);
 });
@@ -488,7 +492,7 @@ test('rev-5 rules live in the operational sections, not only in prose', () => {
   const skill = compact('skills/axstack-review/SKILL.md');
   const boundary = skill.slice(0, skill.indexOf('## Peer mode'));
   expect(boundary).toMatch(/`COMMENT` only for\s*the pair A\/B driver/i);
-  expect(boundary).toMatch(/officially review-requested\s*publishes the actual verdict/i);
+  expect(boundary).toMatch(/Every peer PR the pair C driver publishes on takes the\s*actual verdict/i);
 
   // Pair identity must carry both C/D lists.
   const identity = between('## Pair identity', '## Identity and scope');

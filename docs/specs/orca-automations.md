@@ -3,7 +3,8 @@
 Status: revision 5 (amendment to revision 4, splitting C/D's review and repair
 scope per repository, authorizing real review submission for C/D, and recording
 the workspace paths and green-gate corrections found during the first host
-setup). Revision 4's text is preserved below and remains the baseline wherever
+setup), with the revision 5.1 clarifications of 2026-09-16 inline under
+"Binding review verdicts": every C review is a verdict, and one verdict per tick. Revision 4's text is preserved below and remains the baseline wherever
 revision 5 does not contradict it; see "Revision 5" immediately before the
 Automations C and D section. Revision 4 was (amendment to revision 3, extending
 coverage to the defi-com repositories as a second, independent automation
@@ -302,13 +303,24 @@ requests, so it is bounded:
 - It applies to pair C/D only. Pair A/B keeps the `COMMENT`-only exception.
 - Every other prohibition is untouched: no force-push, no rebase, no merge, no
   close, by any automation, anywhere.
-- **Peer PRs only, only Automation C, and only on an official request.** A
-  binding verdict is submitted only where self is *officially review-requested*
-  on a PR authored by someone else. A peer PR reached through the qualifying
-  mention trigger — a comment asking self to take a look — still gets a review,
-  but it is published as a `COMMENT`, never as a binding verdict: a casual ask
-  is not a request for a merge-blocking review, and the mention trigger cannot
-  be used to place a block.
+- **Peer PRs only, only Automation C.** Every review C publishes is a binding
+  verdict; C has no `COMMENT` path. A peer PR reached through the qualifying
+  mention trigger — a comment that explicitly asks self to review or respond —
+  takes a verdict exactly as an officially-requested one does. An incidental
+  mention remains discovery data and never review authority, so the mention
+  trigger still cannot be used to place a block by name-dropping. The only
+  authorship restriction is GitHub's own: a PR authored by self never receives a
+  verdict from self. (Revision 5.1, 2026-09-16: replaces the earlier
+  `COMMENT`-for-mentions rule after the first attended run, where the two paths
+  proved indistinguishable in practice and the budget below is the real brake.)
+- **One binding review verdict per tick.** Because C has no `COMMENT` path, an
+  unbudgeted first tick over a backlog would place binding verdicts on every
+  discovered peer PR at once, unattended and on other people's work. C therefore
+  submits at most **one** verdict per tick; the rest wait for the next tick,
+  oldest `updatedAt` first, so the backlog drains in a stable order. Reaching the
+  budget records a hold naming it and the value reached, owned by the budget.
+  The user may lift the budget for an attended session in the Orca conversation;
+  that override is recorded in the run record and applies to that session only.
 - **An open obligation carries its own authority to resolve itself.** Submitting
   a review removes self from the review request, so requiring a current official
   request for every submission would deadlock: C could place a block and then be
@@ -658,8 +670,10 @@ feedback is actionable and may trigger a repair, bounded as follows:
   check contexts per monorepo PR push, and may be changed by the user without a
   new revision; the acceptance checks read the configured value rather than the
   literal six.
-- Reaching either cap records a hold naming the cap and the value reached,
-  rather than silently dropping the work. Capped work is due control work: the
+- For Automation C only, a per-tick **review** budget of **one** binding
+  verdict, as stated under "Binding review verdicts" above.
+- Reaching any of the three caps records a hold naming the cap and the value
+  reached, rather than silently dropping the work. Capped work is due control work: the
   precheck wakes the driver when a per-PR 24-hour cap expires even if GitHub is
   unchanged, so capped work is never stranded.
 
