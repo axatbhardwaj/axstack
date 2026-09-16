@@ -6,7 +6,7 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 const refPath = 'skills/axstack/references/automations.md';
 
-test('automations: rev-3 driver and watchdog contract replaces the retired pairs', () => {
+test('automations: rev-4 driver and watchdog contract replaces the retired pairs', () => {
   expect(existsSync(`${root}/${refPath}`), `missing ${refPath}`).toBe(true);
   const text = compact(refPath);
   expect(text).toMatch(/\*\*driver\*\*[^.]*every 15 minutes/i);
@@ -28,6 +28,8 @@ test('automations: discovery uses four searches, debounce, and the exact due-wor
   ]) expect(text).toContain(query);
   expect(text).toMatch(/peer and fourth-search heads[^.]*second consecutive precheck/i);
   expect(text).toMatch(/own heads[^.]*immediately/i);
+  expect(text).toMatch(/own PRs contribute[^.]*checks[^.]*reduced to[^.]*name[^.]*conclusion\|state/i);
+  expect(text).toMatch(/latestReviews[^.]*id[^.]*state[^.]*commit[^.]*head/i);
   const due = text.slice(text.indexOf('Due control work'), text.indexOf('## Driver tick'));
   expect(due).toMatch(/`approved` or `rejected`[^.]*without `consumed_at`/i);
   expect(due).toMatch(/`spent`[^.]*without a receipt/i);
@@ -43,13 +45,26 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   expect(text).toMatch(/marker older than 3 h/i);
   expect(text).toMatch(/live worker[^.]*`worker-stop`/i);
   expect(text).toMatch(/exited worker[^.]*`worker-abandon`/i);
+  expect(text).toMatch(/review-triggered[^.]*remove[^.]*review id[^.]*digest[^.]*`processed_reviews\[\]`/i);
   expect(text).toMatch(/one `verdict` dispatch per tick/i);
   expect(text).toMatch(/six `repair` markers live/i);
   expect(text).toMatch(/one repair per PR per 24 h/i);
-  expect(text).toMatch(/failing check[^.]*base check[^.]*passing/i);
+  expect(text).toMatch(/failing check[^.]*same-named check[^.]*base commit[^.]*passing/i);
+  expect(text).toContain('gh api repos/<repo>/commits/<base>/check-runs');
+  expect(text).toMatch(/missing[^.]*pending[^.]*differently-named base check[^.]*holds/i);
   expect(text).toMatch(/`CHANGES_REQUESTED` review[^.]*review id/i);
   expect(text).toMatch(/SHA-256 body digest[^.]*PR and head/i);
   expect(text).toMatch(/same finding[^.]*new review id[^.]*must not re-trigger/i);
+  expect(text).toMatch(/superseded head[^.]*new review[^.]*triggers again[^.]*24 h cap/i);
+});
+
+test('automations: peer follow-up protects every human block and permits only marked or legacy reviews', () => {
+  const text = compact(refPath);
+  expect(text).toMatch(/whenever any self review with state `CHANGES_REQUESTED` exists[^.]*whichever search/i);
+  expect(text).toMatch(/latest effective, non-dismissed self review[^.]*line prefix `<!-- axstack-automation verdict`/i);
+  expect(text).toMatch(/id[^.]*`legacy_automation_reviews\[\]`/i);
+  expect(text).toMatch(/otherwise record and skip/i);
+  expect(text).toMatch(/dismissed block[^.]*skipped/i);
 });
 
 test('automations: reviewer rules use three criteria, binding verdict marker, and decision tokens', () => {
@@ -65,9 +80,13 @@ test('automations: reviewer rules use three criteria, binding verdict marker, an
   expect(text).toContain('<!-- axstack-automation verdict head=<sha> -->');
   expect(text).toMatch(/immediately before `gh pr review`[^.]*re-reads self[^.]*reviews/i);
   expect(text).toMatch(/`escalate`[^.]*opens a decision token[^.]*exits/i);
+  expect(text).toContain('`~/defi/misc/reviews/`');
+  expect(text).toContain('`review-PR-<num>.html` with no prefix means `defi-com/monorepo`');
+  expect(text).toContain('`review-mobile-PR-<num>.html`');
+  expect(text).toContain('`review-azure-next-hybrid-PR-<num>.html`');
 });
 
-test('automations: run directory, watchdog checks, and exclusions match rev 3', () => {
+test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {
     expect(text).toContain(file);
@@ -80,9 +99,23 @@ test('automations: run directory, watchdog checks, and exclusions match rev 3', 
   expect(text).toMatch(/no `COMMENT` reviews/i);
   expect(text).toMatch(/no watch deadline/i);
   expect(text).toMatch(/no terminal hygiene/i);
+  expect(text).toContain('(Orca run status alone is not evidence of completion)');
+  expect(text).toMatch(/`dispatch_markers\[\]`[^;]*`pr`[^;]*`task_id`[^;]*`dispatch_id`[^;]*`worktree`[^;]*`head`[^;]*`started_at`[^;]*`reservation`/i);
+  expect(text).toMatch(/`repair_caps\{url: \{expires_at\}\}`/i);
+  expect(text).toMatch(/`processed_reviews\[\]`[^;]*`review_id`[^;]*`pr`[^;]*`head`[^;]*`digest`/i);
+  expect(text).toMatch(/UTC[^.]*YYYY-MM-DDTHH:MM:SSZ/i);
+  expect(text).toMatch(/unparsable timestamp[^.]*`error`[^.]*precheck[^.]*`unknown`[^.]*watchdog/i);
 });
 
-test('automations: skills keep links and carry their rev-3 exceptions', () => {
+test('automations: driver and decision transitions retain literal rev-4 conditions', () => {
+  const text = compact(refPath);
+  expect(text).toMatch(/if `tick_started_at` is newer than `tick_done_at`[^.]*previous tick did not finish/i);
+  expect(text).toMatch(/immediately before acting[^.]*re-read[^.]*`state == approved`/i);
+  expect(text).toMatch(/candidate[^.]*survives worktree removal/i);
+  expect(text).toMatch(/after `spent` or `stale`[^.]*delete[^.]*candidate ref/i);
+});
+
+test('automations: skills keep links and carry their rev-4 exceptions', () => {
   for (const [path, link] of [
     ['skills/axstack/SKILL.md', 'references/automations.md'],
     ['skills/axstack-watch/SKILL.md', '../axstack/references/automations.md'],
@@ -107,7 +140,7 @@ test('automations: skills keep links and carry their rev-3 exceptions', () => {
   expect(repair).toMatch(/`escalate`[^.]*opens[^.]*decision token[^.]*instead of pushing/i);
 });
 
-test('automations: workflow documentation points to the rev-3 contract', () => {
+test('automations: workflow documentation points to the rev-4 contract', () => {
   const docs = read('docs/workflows.md');
   const block = docs.slice(docs.indexOf('## Automations'), docs.indexOf('## Run record and evidence'));
   expect(block).toContain('docs/specs/pr-automations.md');
