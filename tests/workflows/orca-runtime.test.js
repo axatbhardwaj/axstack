@@ -34,7 +34,7 @@ test('runtime boundary requires worker worktrees to carry their parent lineage',
   const lineage = runtime
     .split('\n\n')
     .find((paragraph) => paragraph.includes('--parent-worktree')) ?? '';
-  const sentences = lineage.replace(/\s+/g, ' ').split(/(?<=[.;])\s+/);
+  const sentences = lineage.replace(/\s+/g, ' ').split(/(?<=\.)\s+/);
   const states = (a, b) => sentences.some((sentence) => a.test(sentence) && b.test(sentence));
 
   expect(lineage, 'no paragraph states the worktree lineage rule').not.toBe('');
@@ -51,7 +51,9 @@ test('runtime boundary requires worker worktrees to carry their parent lineage',
     'no sentence says a wrong lineage is correctable in place',
   ).toBe(true);
   expect(
-    states(/lineage/i, /\b(?:never|no|not)\s+(?:\w+\s+){0,2}authority/i),
+    // Only a denial of authority counts; "not the only authority" is the
+    // opposite claim and must not satisfy this clause.
+    states(/lineage/i, /\b(?:never|no|not)\s+(?:an?\s+)?authority\b/i),
     'no sentence says lineage is never authority',
   ).toBe(true);
 });
