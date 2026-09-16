@@ -236,3 +236,73 @@ test('rev-2 docs: gh stack publication does not apply to automation repairs; the
   const watch = clause(docs, /`axstack-watch` adopts an existing PR/i);
   expect(docs.slice(docs.indexOf(watch))).toMatch(/original author[^.]*run itself launched|run-launched/i);
 });
+
+// --- revision 4: the contract serves two independent pairs -----------------
+
+test('rev-4 pairs: the allowlist is per automation, and the two pairs share no state', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // An automation session must learn which pair it is before it acts.
+  expect(clause(ref, /which pair/i)).toMatch(/run id|allowlist/i);
+  // The allowlist is per automation, not one global list.
+  const allow = clause(ref, /Mutation allowlist/i);
+  expect(allow).toMatch(/per automation/i);
+  expect(allow).not.toMatch(/initially/i);
+  // Each pair's verbatim membership is stated.
+  expect(ref).toMatch(/axatbhardwaj\/axstack/);
+  expect(ref).toMatch(/defi-com\/monorepo, defi-com\/mobile, defi-com\/azure-next-hybrid/);
+  // No shared sidecars between pairs.
+  expect(clause(ref, /shares? no state|no sidecar is shared/i)).toMatch(/run id|sidecar|run directory/i);
+});
+
+test('rev-4 stacks: repair takes the lowest failing PR and holds descendants instead of duplicating the fix', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const lowest = clause(ref, /lowest open failing PR/i);
+  expect(lowest).toMatch(/stack/i);
+  // A descendant gets a hold, not a second copy of the same fix.
+  const hold = clause(ref, /pending restack/i);
+  expect(hold).toMatch(/descendant|child/i);
+  // A different finding on a descendant is still repaired.
+  expect(clause(ref, /different finding/i)).toMatch(/repaired on its own merits|own merits/i);
+  // One clearing rule, and it is exempt from the hold-with-no-owner threshold.
+  expect(clause(ref, /cleared by the user's own restack/i)).toMatch(/observed|no longer failing/i);
+  expect(clause(ref, /hold with no owner|hold-with-no-owner/i)).toMatch(/exempt/i);
+  // Budget counts per stack.
+  expect(clause(ref, /per-tick budget counts/i)).toMatch(/one unit per stack/i);
+});
+
+test('rev-4 bot feedback: dedup is by review ID and body digest, under explicit caps', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const dedup = clause(ref, /body digest|content digest/i);
+  expect(dedup).toMatch(/review ID/i);
+  // ID alone is called out as insufficient, with the reason.
+  expect(clause(ref, /insufficient/i)).toMatch(/new review ID|re-post/i);
+  // Caps: one repair per PR per 24h, and a per-tick push budget with a value.
+  expect(clause(ref, /one repair per PR per 24 hours/i)).toBeTruthy();
+  expect(clause(ref, /per-tick push budget/i)).toMatch(/six|configured/i);
+  // Reaching a cap records a hold naming it; expiry is due control work.
+  expect(clause(ref, /Reaching either cap/i)).toMatch(/hold naming the cap/i);
+  expect(clause(ref, /cap expires|cap has expired/i)).toMatch(/due control work|wakes the driver/i);
+  // A bot review never grants peer-review authority.
+  expect(clause(ref, /never satisfies the peer-PR trigger|bot review never/i)).toMatch(/review-requested|explicitly asks/i);
+});
+
+test('rev-4 deployment: the repair push hold is branch-name-agnostic and enumerated per repository', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const rule = clause(ref, /deploy-on-push/i);
+  expect(rule).toMatch(/never pushes/i);
+  expect(rule).toMatch(/recorded hold|is a hold/i);
+  // Enumerated from the workflow files, not hardcoded to one branch.
+  expect(clause(ref, /enumerated/i)).toMatch(/workflow files|per repository/i);
+  expect(clause(ref, /re-verified/i)).toMatch(/before enabling|allowlist change/i);
+});
+
+test('rev-4 watch window: C/D roll, A/B expire, and the difference is stated as deliberate', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const rolling = clause(ref, /rolling window/i);
+  expect(rolling).toMatch(/open and eligible/i);
+  expect(clause(ref, /no expiry/i)).toMatch(/re-arm|merge or close/i);
+  // A/B keep the 24h window explicitly, so neither pair inherits the other's rule.
+  expect(clause(ref, /24 hours per own PR from first observation/i)).toMatch(/Automation A|axstack pair|A\/B/i);
+  // Budgets and the watchdog are named as the replacement cost brakes.
+  expect(clause(ref, /cost brake|only brakes/i)).toMatch(/budget/i);
+});
