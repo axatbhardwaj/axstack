@@ -127,10 +127,12 @@ automations worktree) does the following in order and exits.
    oldest first. A PR with a decision file in state `open` or `approved` at its
    current head, or a live dispatch marker, is skipped.
    - **Own PR needing repair** — two triggers, either suffices:
-     (a) a failing check whose same-named check on the base commit is
-     observed passing (`gh api repos/<repo>/commits/<base>/check-runs`
-     filtered to the failing check's `name`; a missing, pending, or
-     differently-named base check holds the repair); (b) a `CHANGES_REQUESTED`
+     (a) a failing check whose counterpart on the base commit is observed
+     passing, where the counterpart is the base check-run with the same
+     `name` **and** the same producing `app.id` (from
+     `gh api repos/<repo>/commits/<base>/check-runs`; for a legacy commit
+     status, the same `context`); a missing, pending, or same-name
+     different-app base check holds the repair; (b) a `CHANGES_REQUESTED`
      review at the current head, by any account, whose review id is not in
      `cursor.json.processed_reviews[]` and whose body digest (sha256 of the
      body) is not already recorded against that PR at that head — both keys
@@ -158,7 +160,9 @@ automations worktree) does the following in order and exits.
      a human-placed block is never overwritten. The brief links the prior
      review.
    - Record a **dispatch marker** per PR: task id, dispatch id, worktree,
-     head, started_at, reservation (`verdict` or `repair`). At most one live
+     head, started_at, reservation (`verdict` or `repair`), and `trigger`
+     (`{kind: check, name, app_id}` or `{kind: review, review_id, digest}`),
+     so abandon recovery can un-process exactly the triggering review. At most one live
      marker per PR; the marker is the per-PR claim shared by scheduled and
      attended sessions, and revalidation immediately before the external call
      is the second half of it. No exactly-once claim is made against
@@ -314,7 +318,7 @@ One run directory under the axstack git-common-dir,
   and the watchdog read them: `fingerprint`, `tick_started_at`,
   `tick_done_at`, `tick_outcome`, `prs{url: {head, base, draft, checks,
   reviews, last_self_review}}`, `dispatch_markers[]` (`pr`, `task_id`,
-  `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`),
+  `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`, `trigger`),
   `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
@@ -394,8 +398,9 @@ against live PRs; no production PR is mutated to manufacture a test case.
     again subject to the 24 h cap. A new `CHANGES_REQUESTED` on an own PR with
     an unchanged head changes the precheck fingerprint (`changed`); an
     abandoned review-triggered dispatch is retried once and its second abandon
-    is a hold. A failing check whose base check-run of the same name is absent
-    or pending holds the repair.
+    is a hold. A failing check whose base counterpart (same `name` and
+    `app.id`) is absent or pending holds the repair, and a same-name base
+    check-run from a different app does not authorize it.
 13. Cutover, in this order: the new pair exists disabled; the amended skills
     and references are installed so no agent loads the superseded rules;
     automations C and D are disabled; every old driver and worker attempt is

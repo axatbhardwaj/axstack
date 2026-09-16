@@ -14,7 +14,7 @@ Tests follow the repository's `bun test` conventions
 ## C1 — The approved contract is in the tree
 
 Capability: the spec and the installed Axstack references and skills describe
-the driver/watchdog contract, so an agent that loads them follows rev 3 and not
+the driver/watchdog contract, so an agent that loads them follows rev 4 and not
 the superseded pair C/D rules.
 
 - Internal task T1: spec PR -> driver (this chat) -> worktree
@@ -22,7 +22,7 @@ the superseded pair C/D rules.
   Theme: specification baseline. Size est: target band (docs only).
   Acceptance: `docs/specs/pr-automations.md` at the approved content;
   `docs/specs/orca-automations.md` gains a one-line "superseded for the
-  defi-com pair by pr-automations.md rev 3" status note and nothing else; this
+  defi-com pair by pr-automations.md" status note and nothing else; this
   task map present. Depends: none.
 - Internal task T2: references and skills -> `axstack-author` (Sol) via
   `axstack-implement` -> child worktree `pr-automations-refs` off T1. Also
@@ -32,7 +32,7 @@ the superseded pair C/D rules.
   watch deadline, health gate, `watchdog.json`) so no agent loads them.
   Theme: contract text. Size est: target band (~600–900 lines of Markdown +
   test updates). Acceptance: `skills/axstack/references/automations.md`
-  rewritten to rev 3 (driver/watchdog roles, four searches + debounce, due
+  rewritten to rev 4 (driver/watchdog roles, review-state wake, abandon un-processing via the marker `trigger`, base check identity by name + app, four searches + debounce, due
   work list, dispatch markers + TTL, budgets, token lifecycle table, marker
   line, watchdog table, run directory, cutover); `skills/axstack-relay/SKILL.md`
   gains a "Decision tokens" section (agent opens token + sends; Hermes script
