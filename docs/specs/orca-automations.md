@@ -10,9 +10,10 @@ D8-D14 are driver decisions. **D14 requires the user's explicit attention at
 this checkpoint**: it adjusts the mechanics of user-owned D5 ("repair all own
 PRs, no stack rule") by sequencing repair within a stack, and approving this
 revision approves that adjustment. D14 reduces no scope; every own PR remains
-eligible. adviser receipts for that
-alignment are three rounds of `axstack-advisor-astra` and
-`axstack-advisor-fable`, cached in the same run record. Nothing in the new pair
+eligible. Adviser receipts are three alignment rounds plus one draft review
+from `axstack-advisor-astra` and `axstack-advisor-fable`, cached in the same
+run record; both returned AGREE WITH AMENDMENTS on the draft and neither
+escalated. Nothing in the new pair
 is enabled until the acceptance checks in "Acceptance before enabling the
 defi-com pair" pass.
 
@@ -441,9 +442,9 @@ carried over as a literal.
 These are host setup gaps verified open on 2026-09-16, and each blocks enabling:
 
 - Toolchain version skew, corrected 2026-09-16: `bun` **is** installed on the
-  host at `/root/.bun/bin/bun`, version 1.4.2. An earlier draft of this
+  host, under the user's `~/.bun/bin`, version 1.4.2. An earlier draft of this
   revision recorded it as absent; that reading came from a non-login shell
-  whose `PATH` omits `/root/.bun/bin`, and it was wrong. Two real skews remain
+  whose `PATH` omits that directory, and it was wrong. Two real skews remain
   and are resolved by acceptance check 2 rather than assumed: `defi-com/monorepo`
   pins `packageManager: bun@1.2.2` while the host has 1.4.2, and carries both
   `bun.lock` and `bun.lockb`; and its `engines.node` names 24 while the host runs
@@ -451,9 +452,10 @@ These are host setup gaps verified open on 2026-09-16, and each blocks enabling:
   toolchain in a child worktree, the pinned versions are installed alongside
   rather than replacing the host's. Either way the automation prompt names no
   version; it runs the repository's own command. The driver worktree and every
-  child worktree must have `/root/.bun/bin` on `PATH`, since a non-login shell
-  does not.
-- `defi-com/monorepo` carries two submodules: `defi-com/contracts` over SSH and
+  child worktree must have `~/.bun/bin` on `PATH`, since a non-login shell does
+  not.
+- `defi-com/monorepo` carries two submodules, `defi-com/contracts` (checked out
+  over the Git remote protocol already configured on the host) and
   `stealth-project-22/domains-json`. Access to both was verified; provisioning
   them in the driver and child worktrees is a setup task.
 - Per-repository setup hooks and their environment are **unverified** for
