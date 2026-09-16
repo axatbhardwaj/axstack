@@ -41,19 +41,58 @@ jobs:
             exit 1
           fi
 
-      # Fail here, cheaply, rather than at the irreversible step.
-      - name: Registry credential must work
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+      # Fetch npm before the credential exists on disk, so the download has
+      # nothing to read. The version is pinned and bunx caches the resolution.
+      - name: Fetch npm before the credential exists
+        run: bunx npm@12.0.2 --version
+
+      # A stage-only token cannot create a package that does not exist. Say so
+      # actionably here instead of letting npm return a bare 403 at the end.
+      - name: Package must already exist
         run: |
           set -eu
-          : "${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-          curl -sfS -H "Authorization: Bearer ${NPM_CONFIG_TOKEN}" \
-            https://registry.npmjs.org/-/whoami > /dev/null
+          # Distinguish the three outcomes: unreachable registry, no such package, and a
+          # tombstone — an unpublished name whose packument still resolves but carries no
+          # versions. A status-only probe cannot tell them apart.
+          status=0
+          response="$(curl -sS -w '\n%{http_code}' https://registry.npmjs.org/axstack)" || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "could not reach the registry (curl exit $status); not treating this as a missing package" >&2
+            exit 1
+          fi
+          code="$(printf '%s' "$response" | tail -n 1)"
+          body="$(printf '%s' "$response" | sed '$d')"
+          case "$code" in
+            200) ;;
+            404) code=missing ;;
+            *) echo "registry returned HTTP $code for axstack" >&2; exit 1 ;;
+          esac
+          if [ "$code" = 200 ]; then
+            published="$(printf '%s' "$body" | jq -r '(.versions // {}) | length')"
+            [ "$published" -gt 0 ] || code=missing
+          fi
+          if [ "$code" = missing ]; then
+            echo "axstack has no published versions on the registry." >&2
+            echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
+            echo "credential, then staged releases work from here." >&2
+            exit 1
+          fi
 
-      # bun publish reads NPM_CONFIG_TOKEN; it does not read ~/.npmrc here.
-      # bun has no --provenance, so this produces no npm attestation.
-      - name: Publish
+      # Fail here, cheaply, rather than at the irreversible step. This also
+      # writes the credential npm reads: npm uses .npmrc, not NPM_CONFIG_TOKEN.
+      - name: Registry credential must work
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        run: bun publish --access public
+          REGISTRY_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: |
+          set -eu
+          : "${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+          curl -sfS -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
+            https://registry.npmjs.org/-/whoami > /dev/null
+          umask 077
+          printf '//registry.npmjs.org/:_authToken=%s\n' "${REGISTRY_TOKEN}" > "${HOME}/.npmrc"
+
+      # The token is stage-only: it defers proof-of-presence, so this stages
+      # the version and a maintainer approves it with `npm stage approve`.
+      # bun has no staging command, so npm is pinned and run through bunx.
+      - name: Stage for approval
+        run: bunx --no-install npm@12.0.2 stage publish . --access public
