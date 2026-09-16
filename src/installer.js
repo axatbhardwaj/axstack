@@ -39,6 +39,14 @@ import {
 } from './manifest.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
 import {
+  applyInstructionPlan,
+  findLegacyRoutingLines,
+  locateInstructionBlock,
+  planInstruction,
+  renderInstructionBlock,
+  stripInstructionBlock,
+} from './instructions.js';
+import {
   assertBundleRoles,
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
@@ -146,6 +154,20 @@ async function readOwnedTarget(skillsRoot, rel) {
     }
   }
   return { dest, current, mode };
+}
+
+async function canonicalInstructionFile(instructionsPath) {
+  const abs = resolve(instructionsPath);
+  const parent = await canonicalTargetDir(dirname(abs));
+  const file = join(parent, basename(abs));
+  const st = await lstat(file).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (st?.isSymbolicLink()) {
+    throw new Error(`unsafe target: instruction path is a symlink at ${file}; refusing`);
+  }
+  return file;
 }
 
 function homeDir() {
@@ -374,10 +396,55 @@ export async function writeAtomic(dest, bytes, { mode } = {}) {
   }
 }
 
+export async function checkInstructionBinding({ skillsDir, instructionsPath } = {}) {
+  if (!skillsDir) throw new Error('instruction check requires --skills-dir <dir> or --harness <name>');
+  if (!instructionsPath) throw new Error('instruction check requires --instructions <file> or a supported harness');
+  const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
+  const instructionsFile = await canonicalInstructionFile(instructionsPath);
+  const manifest = await readManifest(skillsRoot);
+  const binding = manifest?.instructions ?? { path: null, hash: null };
+  if (binding.path !== null && binding.path !== instructionsFile) {
+    return {
+      status: 'conflict',
+      path: instructionsFile,
+      reason: `manifest is bound to ${binding.path}`,
+    };
+  }
+  const text = await readFile(instructionsFile, 'utf8').catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (text === null) return { status: 'missing', path: instructionsFile };
+  const located = locateInstructionBlock(text);
+  if (!located) {
+    return { status: 'missing', path: instructionsFile, reason: 'Axstack marker block is absent' };
+  }
+  if (binding.path === null) {
+    return { status: 'unowned', path: instructionsFile, reason: 'marker block is not manifest-owned' };
+  }
+  if (hashContent(located.block) !== binding.hash) {
+    return { status: 'conflict', path: instructionsFile, reason: 'owned marker block was edited' };
+  }
+  return { status: 'owned', path: instructionsFile };
+}
+
+async function assertFileSnapshot(dest, expected) {
+  let current = null;
+  try {
+    current = await readFile(dest, 'utf8');
+  } catch (err) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
+  if (current !== expected) {
+    throw new Error(`refusing: ${dest} changed since planning`);
+  }
+}
+
 export async function installBundle({
   bundleDir,
   skillsDir,
   preset,
+  instructionsPath = null,
   force = false,
   yes = false,
   claude = null,
@@ -390,7 +457,11 @@ export async function installBundle({
   // Phase 0: validate everything before mutating anything.
   const bundle = await validateBundle(bundleDir, selectedPreset);
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
+  const instructionsFile = instructionsPath
+    ? await canonicalInstructionFile(instructionsPath)
+    : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
+  if (instructionsFile) assertOutsideHome(instructionsFile, { yes, kind: 'instruction file' });
   const claudePlan = await planInstallClaudeSettings({ claude, skillsRoot });
   if (claudePlan.report.path) {
     assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
@@ -401,6 +472,7 @@ export async function installBundle({
     files: {},
     profiles: { path: null, preset: null, entries: {} },
     claudeSettings: { path: null },
+    instructions: { path: null, hash: null },
   };
   const boundClaudeSettingsPath = prevManifest.claudeSettings?.path ?? null;
   if (
@@ -417,6 +489,34 @@ export async function installBundle({
   const legacyProfileNote = Object.keys(legacyProfiles?.entries ?? {}).length > 0
     ? 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md'
     : null;
+
+  const boundInstructions = prevManifest.instructions ?? { path: null, hash: null };
+  let existingInstructionsRaw = null;
+  let instructionPlan = null;
+  let legacyInstructionNote = null;
+  if (instructionsFile) {
+    if (boundInstructions.path !== null && boundInstructions.path !== instructionsFile) {
+      throw new Error(
+        `refusing: owned instruction block is bound to a different file (${boundInstructions.path}); ` +
+          `uninstall with --instructions ${boundInstructions.path} first`,
+      );
+    }
+    try {
+      existingInstructionsRaw = await readFile(instructionsFile, 'utf8');
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+    instructionPlan = planInstruction({
+      text: existingInstructionsRaw,
+      block: renderInstructionBlock(skillsRoot),
+      ownership: boundInstructions.path === instructionsFile ? boundInstructions : null,
+      force,
+    });
+    if (findLegacyRoutingLines(existingInstructionsRaw ?? '').length > 0) {
+      legacyInstructionNote =
+        'legacy Haoshoku routing text remains outside the Axstack block; preserved for manual migration';
+    }
+  }
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
   // Destination ancestry is checked for symlink escapes here, before mutation.
@@ -469,7 +569,12 @@ export async function installBundle({
   const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [], removed: [] };
   const installedHashes = {};
   const claudeWritten = [];
+  let instructionWritten = false;
+  log('plan complete');
   try {
+    if (instructionsFile) {
+      await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
+    }
     await mkdir(skillsRoot, { recursive: true });
     for (const { rel, dest, content, current, mode } of desired) {
       const wanted = hashContent(content);
@@ -522,6 +627,32 @@ export async function installBundle({
       summary.removed.push(rel);
     }
 
+    let instructionReport = null;
+    let nextInstructions = boundInstructions;
+    if (instructionPlan) {
+      instructionReport = {
+        status: instructionPlan.action,
+        path: instructionsFile,
+        ...(instructionPlan.reason ? { reason: instructionPlan.reason } : {}),
+      };
+      if (instructionPlan.action === 'created' || instructionPlan.action === 'updated') {
+        const nextRaw = applyInstructionPlan(existingInstructionsRaw, instructionPlan);
+        await writeAtomic(instructionsFile, nextRaw);
+        instructionWritten = true;
+        nextInstructions = {
+          path: instructionsFile,
+          hash: hashContent(instructionPlan.block),
+          separation: instructionPlan.separation,
+        };
+      } else if (instructionPlan.action === 'unchanged') {
+        nextInstructions = {
+          path: instructionsFile,
+          hash: hashContent(instructionPlan.block),
+          separation: instructionPlan.separation,
+        };
+      }
+    }
+
     for (const write of claudePlan.writes) {
       await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
       claudeWritten.push(write);
@@ -542,13 +673,20 @@ export async function installBundle({
       claudeSettings: {
         path: claudePlan.settingsPath ?? boundClaudeSettingsPath,
       },
+      instructions: nextInstructions,
     });
-    if (legacyProfileNote) summary.notes = [...(summary.notes ?? []), legacyProfileNote];
+    if (legacyProfileNote || legacyInstructionNote) {
+      summary.notes = [
+        ...(summary.notes ?? []),
+        ...[legacyProfileNote, legacyInstructionNote].filter(Boolean),
+      ];
+    }
     return {
       ...summary,
       preset: selectedPreset,
       roles: roleReadiness,
       claudeSettings: claudePlan.report,
+      instructions: instructionReport,
     };
   } catch (err) {
     // Restore updated files, remove creations, and restore Claude settings so
@@ -562,6 +700,14 @@ export async function installBundle({
         else await writeAtomic(write.path, write.before);
       } catch (restoreErr) {
         rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    if (instructionWritten) {
+      try {
+        if (existingInstructionsRaw === null) await rm(instructionsFile);
+        else await writeAtomic(instructionsFile, existingInstructionsRaw);
+      } catch (restoreErr) {
+        rollbackErrors.push(`${instructionsFile}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
     for (const [dest, { bytes, mode }] of backups) {
@@ -587,6 +733,7 @@ export async function installBundle({
 
 export async function uninstallBundle({
   skillsDir,
+  instructionsPath = null,
   force = false,
   yes = false,
   claude = null,
@@ -594,13 +741,18 @@ export async function uninstallBundle({
 } = {}) {
   if (!skillsDir) throw new Error('uninstall requires --skills-dir <dir>');
   const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
+  const instructionsFile = instructionsPath
+    ? await canonicalInstructionFile(instructionsPath)
+    : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
+  if (instructionsFile) assertOutsideHome(instructionsFile, { yes, kind: 'instruction file' });
 
   const manifest = (await readManifest(skillsRoot)) ?? {
     version: MANIFEST_VERSION,
     files: {},
     profiles: { path: null, preset: null, entries: {} },
     claudeSettings: { path: null },
+    instructions: { path: null, hash: null },
   };
   const boundClaudeSettingsPath = manifest.claudeSettings?.path ?? null;
   const claudePlan = await planUninstallClaudeSettings({
@@ -612,7 +764,7 @@ export async function uninstallBundle({
     assertOutsideHome(claudePlan.report.path, { yes, kind: 'Claude settings file' });
   }
   const remainingClaudeSettingsPath = claudePlan.unbind ? null : boundClaudeSettingsPath;
-  const summary = { removed: [], preserved: [], missing: [] };
+  const summary = { removed: [], preserved: [], missing: [], instructions: null };
   if (Object.keys(manifest.files).length === 0 && Object.keys(manifest.profiles.entries).length === 0) {
     summary.note = 'no Axstack ownership manifest; nothing to remove';
   }
@@ -623,6 +775,60 @@ export async function uninstallBundle({
     summary.note = 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md';
   }
   const remainingFiles = { ...ownedFiles };
+  const boundInstructions = manifest.instructions ?? { path: null, hash: null };
+  let remainingInstructions = boundInstructions;
+
+  if (!instructionsFile && boundInstructions.path !== null) {
+    summary.instructions = {
+      status: 'preserved',
+      path: boundInstructions.path,
+      reason: `re-run uninstall with --instructions ${boundInstructions.path}`,
+    };
+  }
+
+  let existingInstructionsRaw = null;
+  let strippedInstructionsRaw = null;
+  if (instructionsFile) {
+    if (boundInstructions.path === null) {
+      summary.instructions = {
+        status: 'preserved',
+        path: instructionsFile,
+        reason: 'instruction file is not owned by this manifest',
+      };
+    } else if (boundInstructions.path !== instructionsFile) {
+      throw new Error(
+        `refusing: owned instruction block is bound to a different file (${boundInstructions.path}); ` +
+          `re-run uninstall with --instructions ${boundInstructions.path}`,
+      );
+    } else {
+      try {
+        existingInstructionsRaw = await readFile(instructionsFile, 'utf8');
+      } catch (err) {
+        if (err?.code !== 'ENOENT') throw err;
+      }
+      if (existingInstructionsRaw === null) {
+        summary.instructions = { status: 'missing', path: instructionsFile };
+        remainingInstructions = { path: null, hash: null };
+      } else {
+        const stripped = stripInstructionBlock(existingInstructionsRaw, boundInstructions, { force });
+        if (stripped.removed) {
+          strippedInstructionsRaw = stripped.text;
+          summary.instructions = {
+            status: 'removed',
+            path: instructionsFile,
+            ...(force && hashContent(stripped.block) !== boundInstructions.hash ? { forced: true } : {}),
+          };
+          remainingInstructions = { path: null, hash: null };
+        } else {
+          summary.instructions = {
+            status: 'conflict',
+            path: instructionsFile,
+            reason: 'owned instruction block was edited or is missing',
+          };
+        }
+      }
+    }
+  }
 
   // Check every destination for symlink escapes BEFORE deleting anything:
   // one unsafe entry refuses the whole uninstall with skills still on disk.
@@ -635,55 +841,130 @@ export async function uninstallBundle({
     uninstallPlan.push(rel);
   }
 
-  for (const rel of uninstallPlan) {
-    const { dest, current } = await readOwnedTarget(skillsRoot, rel);
-    const ownedHash = ownedFiles[rel];
-    if (current === null) {
-      summary.missing.push(rel);
-      delete remainingFiles[rel];
-      continue;
-    }
-    if (hashContent(current) === ownedHash || force) {
-      await rm(dest);
-      delete remainingFiles[rel];
-      summary.removed.push(force && hashContent(current) !== ownedHash ? `${rel} (removed user edit with --force)` : rel);
-      await pruneEmptyParents(dest, skillsRoot);
-    } else {
-      summary.preserved.push(rel); // user-edited owned asset survives
-    }
+  log('plan complete');
+  const manifestFile = join(skillsRoot, '.axstack-manifest.json');
+  const manifestBefore = await readFile(manifestFile).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  const manifestMode = manifestBefore === null ? null : (await stat(manifestFile)).mode & 0o777;
+  const instructionMode = existingInstructionsRaw === null
+    ? null
+    : (await stat(instructionsFile)).mode & 0o777;
+  const claudeModes = new Map();
+  for (const write of claudePlan.writes) {
+    const mode = await stat(write.path).then((value) => value.mode & 0o777).catch((err) => {
+      if (err?.code === 'ENOENT') return null;
+      throw err;
+    });
+    claudeModes.set(write.path, mode);
   }
 
-  for (const write of claudePlan.writes) {
-    if (write.after === null) {
-      await rm(write.path).catch((err) => {
+  const deletedFiles = [];
+  const claudeWritten = [];
+  let instructionWritten = false;
+  try {
+    for (const rel of uninstallPlan) {
+      const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
+      const ownedHash = ownedFiles[rel];
+      if (current === null) {
+        summary.missing.push(rel);
+        delete remainingFiles[rel];
+        continue;
+      }
+      if (hashContent(current) === ownedHash || force) {
+        deletedFiles.push({ dest, bytes: current, mode });
+        await rm(dest);
+        delete remainingFiles[rel];
+        summary.removed.push(force && hashContent(current) !== ownedHash ? `${rel} (removed user edit with --force)` : rel);
+        await pruneEmptyParents(dest, skillsRoot);
+      } else {
+        summary.preserved.push(rel); // user-edited owned asset survives
+      }
+    }
+
+    if (strippedInstructionsRaw !== null) {
+      await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
+      await writeAtomic(instructionsFile, strippedInstructionsRaw);
+      instructionWritten = true;
+    }
+
+    for (const write of claudePlan.writes) {
+      if (write.after === null) {
+        await rm(write.path).catch((err) => {
+          if (err?.code !== 'ENOENT') throw err;
+        });
+      } else {
+        await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
+      }
+      claudeWritten.push(write);
+    }
+    summary.claudeSettings = claudePlan.report;
+
+    if (
+      Object.keys(remainingFiles).length === 0 &&
+      !hasLegacyProfiles &&
+      remainingClaudeSettingsPath === null &&
+      remainingInstructions.path === null
+    ) {
+      await rm(manifestFile).catch((err) => {
         if (err?.code !== 'ENOENT') throw err;
       });
+      summary.manifestRemoved = true;
     } else {
-      await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
+      await writeManifest(skillsRoot, {
+        version: MANIFEST_VERSION,
+        files: remainingFiles,
+        profiles: legacyProfiles,
+        claudeSettings: { path: remainingClaudeSettingsPath },
+        instructions: remainingInstructions,
+      });
     }
-  }
-  summary.claudeSettings = claudePlan.report;
-
-  if (
-    Object.keys(remainingFiles).length === 0 &&
-    !hasLegacyProfiles &&
-    remainingClaudeSettingsPath === null
-  ) {
+    return summary;
+  } catch (err) {
+    const rollbackErrors = [];
+    for (const write of claudeWritten.reverse()) {
+      try {
+        if (write.before === null) await rm(write.path);
+        else await writeAtomic(write.path, write.before, claudeModes.get(write.path) === null
+          ? {}
+          : { mode: claudeModes.get(write.path) });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    if (instructionWritten) {
+      try {
+        await writeAtomic(instructionsFile, existingInstructionsRaw, instructionMode === null
+          ? {}
+          : { mode: instructionMode });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${instructionsFile}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    for (const { dest, bytes, mode } of deletedFiles.reverse()) {
+      try {
+        await writeAtomic(dest, bytes, mode === null ? {} : { mode });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${dest}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
     try {
-      await rm(join(skillsRoot, '.axstack-manifest.json'));
-    } catch {
-      // manifest already gone; nothing to do
+      const currentManifest = await readFile(manifestFile).catch((readErr) => {
+        if (readErr?.code === 'ENOENT') return null;
+        throw readErr;
+      });
+      if (manifestBefore !== null && currentManifest?.equals(manifestBefore) !== true) {
+        await writeAtomic(manifestFile, manifestBefore, manifestMode === null ? {} : { mode: manifestMode });
+      }
+    } catch (restoreErr) {
+      rollbackErrors.push(`${manifestFile}: ${restoreErr?.message ?? restoreErr}`);
     }
-    summary.manifestRemoved = true;
-  } else {
-    await writeManifest(skillsRoot, {
-      version: MANIFEST_VERSION,
-      files: remainingFiles,
-      profiles: legacyProfiles,
-      claudeSettings: { path: remainingClaudeSettingsPath },
-    });
+    if (rollbackErrors.length > 0) {
+      err.message += ` (incomplete rollback; manual repair needed: ${rollbackErrors.join('; ')})`;
+    }
+    throw err;
   }
-  return summary;
 }
 
 async function pruneEmptyParents(file, stopDir) {

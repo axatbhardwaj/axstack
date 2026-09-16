@@ -15,7 +15,7 @@ and `node:fs/promises`; no other Node runtime contract is introduced.
 ### Install
 
 ```text
-axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
 ```
 
 - `--preset` is required. `codex` and `claude` are aliases for the canonical
@@ -24,6 +24,9 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
 - `--bundle` defaults to the package root and contains `skills/` plus
   `profiles/presets/*.json`.
 - `--skills-dir` is required unless a verified harness default resolves it.
+- `--instructions` selects the instruction file that receives Axstack's owned
+  marker block. `--harness claude` defaults to `~/.claude/CLAUDE.md`;
+  `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`.
 - `--harness` may resolve the documented `claude`, `codex`, or `opencode`
   skill directory. Grok remains explicit-path only.
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
@@ -52,11 +55,13 @@ role store and no Orca configuration merge.
 ### Check
 
 ```text
-axstack check [--bundle <dir>]
+axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
 ```
 
 The check separates Bun/Git/`gh stack` availability, resolved Orca executable,
 runtime readiness, required runtime-owned guide discovery, and bundle validity.
+With an instruction target, it separately reports whether the marker block is
+owned, missing, unowned, edited, or bound to a different path.
 It must honor Orca's executable-resolution rules, including the Linux screen
 reader name collision, and must not switch binaries after a failed resolution.
 
@@ -67,12 +72,34 @@ proof. Those require their own runtime receipts.
 ### Uninstall
 
 ```text
-axstack uninstall --skills-dir <dir> [--claude-settings <file>|--no-claude-settings] [--force] [--yes]
+axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
 ```
 
 Uninstall removes only unchanged Axstack-owned files whose current bytes match
 the manifest. Edited, custom, unknown, and unrelated files survive. Directories
 are pruned only when empty, and the target root is never removed.
+
+## Owned instruction block
+
+The deterministic `<!-- axstack:begin v1 -->` / `<!-- axstack:end -->` block
+contains the target-derived Axstack entry path and model-free routing prose. It
+also routes subagents, delegated workers, reviewers, and cross-harness work
+through Orca's `orca` CLI and forbids harness-native subagent delegation.
+
+Create, update, repeated install, check, and uninstall preserve every byte and
+the file mode outside the markers. The manifest binds the canonical instruction
+path and exact block hash while retaining older file/profile hash semantics.
+Uninstall removes only an unchanged owned block plus the recorded separator;
+the instruction file itself remains. Edited or unowned blocks, malformed or
+duplicate markers, symlinks, concurrent edits, and legacy Haoshoku routing text
+are preserved or refused with an explicit report. Combined failures roll back
+skills, instruction bytes and modes, Claude settings, and manifest state; any
+failed recovery is reported as incomplete.
+
+`axstack install` exits with status 1 when the selected instruction block is in
+conflict and was preserved, so scripts can detect that routing was not
+installed. A clean or idempotent install exits 0; preserved edits to ordinary
+owned skill files keep their existing non-failing install semantics.
 
 ## Safety and ownership behavior
 
@@ -202,10 +229,10 @@ need separate authority and verified backups.
 ## Examples
 
 ```sh
-axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills
-axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills
-axstack check --bundle ./bundle
-axstack uninstall --skills-dir /tmp/ax-skills
+axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
+axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
+axstack check --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
+axstack uninstall --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
 ```
 
 The second install should report no changes. These scratch examples do not

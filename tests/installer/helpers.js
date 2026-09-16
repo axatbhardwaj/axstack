@@ -3,7 +3,7 @@
 //   <bundle>/skills/axstack-*/SKILL.md (+ supporting files)
 //   <bundle>/profiles/presets/<preset>.json
 //     ({ version: 1, roles: [...] axstack-* ids })
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 
 // Absolute path of the CURRENT executing Bun binary. Never PATH-resolved:
@@ -17,7 +17,7 @@ export function tempDir() {
 }
 
 export function makeTempRoot(prefix = 'axstack-test-') {
-  return mkdtempSync(join(tempDir(), prefix));
+  return realpathSync(mkdtempSync(join(tempDir(), prefix)));
 }
 
 // Run the real CLI under Bun and assert on exit codes (Bun.spawnSync

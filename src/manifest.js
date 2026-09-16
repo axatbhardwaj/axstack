@@ -63,7 +63,7 @@ function isHashMap(value) {
 
 // Normalized shape:
 // { version, files, profiles: { path, preset, entries },
-//   claudeSettings: { path } }.
+//   claudeSettings: { path }, instructions: { path, hash, separation? } }.
 // `profiles.path` binds owned profile hashes to the canonical config file
 // they were installed into; `path: null` marks legacy unbound entries, which
 // callers must reset rather than honor for removal.
@@ -87,6 +87,28 @@ function normalizeManifest(parsed) {
   ) {
     throw new Error('invalid ownership manifest: claudeSettings must bind a config path');
   }
+  const rawInstructions = parsed.instructions ?? { path: null, hash: null };
+  if (
+    typeof rawInstructions !== 'object' || rawInstructions === null ||
+    Array.isArray(rawInstructions) ||
+    !(
+      (rawInstructions.path === null && rawInstructions.hash === null) ||
+      (typeof rawInstructions.path === 'string' &&
+        isAbsolute(rawInstructions.path) &&
+        typeof rawInstructions.hash === 'string')
+    ) ||
+    (rawInstructions.separation !== undefined &&
+      !['', '\n', '\n\n'].includes(rawInstructions.separation))
+  ) {
+    throw new Error('invalid ownership manifest: instructions must bind an absolute path and hash');
+  }
+  const instructions = rawInstructions.separation === undefined
+    ? { path: rawInstructions.path, hash: rawInstructions.hash }
+    : {
+      path: rawInstructions.path,
+      hash: rawInstructions.hash,
+      separation: rawInstructions.separation,
+    };
   for (const rel of Object.keys(parsed.files)) assertSafeRel(rel);
   const rawProfiles = parsed.profiles ?? { path: null, preset: null, entries: {} };
   if (isHashMap(rawProfiles)) {
@@ -95,6 +117,7 @@ function normalizeManifest(parsed) {
       files: { ...parsed.files },
       profiles: { path: null, preset: null, entries: { ...rawProfiles } },
       claudeSettings: { path: rawClaudeSettings.path },
+      instructions,
     };
   }
   if (
@@ -113,6 +136,7 @@ function normalizeManifest(parsed) {
         entries: { ...(rawProfiles.entries ?? {}) },
       },
       claudeSettings: { path: rawClaudeSettings.path },
+      instructions,
     };
   }
   throw new Error('invalid ownership manifest: profiles must bind a config path to id hashes');
