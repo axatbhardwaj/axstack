@@ -47,3 +47,24 @@ test('sol-1: an automation repair is reviewed at its local immutable SHA; ordina
   expect(clause(pin, /automation repair/i)).toMatch(/local immutable candidate SHA[^.]*git rev-parse[^.]*child worktree/i);
   expect(clause(pin, /automation repair/i)).toMatch(/remote[^.]*pre-repair|expected-old remote/i);
 });
+
+test('sol-2: original-author continuity is scoped to run-launched sessions; an automation repair is authored by the automation session or a dispatched axstack-author', () => {
+  const watch = compact('skills/axstack-watch/SKILL.md');
+  const repair = compact('skills/axstack-watch/references/repair-publication.md');
+  const ref = compact('skills/axstack/references/automations.md');
+
+  for (const [name, text] of [['watch', watch], ['repair-publication', repair]]) {
+    // Continuity rule is conditioned on a session the run itself launched.
+    const continuity = clause(text, /original author session|same original author session/i);
+    expect(continuity, `${name}: continuity must be scoped`).toMatch(/run itself launched|launched by (?:this|the) run|this run launched/i);
+    // Automation branch: adopted own PR -> automation session or dispatched axstack-author.
+    const automation = clause(text, /adopted own PR under (?:the|an) automation|under (?:the|an) automation[^.]*adopted own PR/i);
+    expect(automation, `${name}: automation author`).toMatch(/automation session[^.]*(?:Claude\/Opus|provider `claude`)/i);
+    expect(automation, `${name}: delegated author`).toMatch(/dispatched `axstack-author`/);
+    // Reviewer pairing follows the recorded actual provenance of that repair.
+    expect(clause(text, /authored-review pairing|authored review pairing/i)).toMatch(/actual provenance|recorded provenance/i);
+  }
+  // The shared reference names the two provenance -> reviewer transitions.
+  expect(clause(ref, /repair author is the automation session/i)).toMatch(/`axstack-reviewer-primary`/);
+  expect(clause(ref, /delegated to `axstack-author`/i)).toMatch(/`axstack-reviewer-secondary`/);
+});

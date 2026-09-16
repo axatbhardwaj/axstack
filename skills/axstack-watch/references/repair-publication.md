@@ -7,7 +7,12 @@ and peer modes stop with a report before this branch.
 
 Re-read the accepted maintenance snapshot, writable ownership, publication
 authority, remote head and base, and current feedback. Route an accepted fix to
-the original author session—the same author where evidence permits. A missing,
+the original author session only when the run itself launched that session and
+evidence permits. For an adopted own PR under the automation, the repair
+author is the automation session (Claude/Opus) or a dispatched
+`axstack-author` (Sol); record that repair's actual provenance before
+selecting the reviewer, because the authored-review pairing follows the actual
+provenance of the repair, never the PR's historical author. A missing,
 stale, or materially changed boundary holds the repair while read-only
 monitoring continues.
 

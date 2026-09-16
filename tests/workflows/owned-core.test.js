@@ -199,8 +199,12 @@ test('owned-core: watch adopts existing PR; observation-only dispatches nothing 
 test('owned-core: authorized repairs use original author with reviewed code and exact text', () => {
   const text = skill('axstack-watch');
   expect(
-    /original author|same author/i.test(text),
-    'authorized repairs must reuse the original author',
+    /original author session[^.]*run itself launched|run itself launched[^.]*original author/i.test(text),
+    'authorized repairs reuse the original author only for a session the run itself launched',
+  ).toBeTruthy();
+  expect(
+    /adopted own PR under (?:the|an) automation[^.]*automation session|automation session[^.]*repair author/i.test(text),
+    'an adopted own PR under the automation is repaired by the automation session or a dispatched axstack-author',
   ).toBeTruthy();
   expect(
     /exact[\s\S]*(reply|response|public)[\s\S]*(text|bodies)|exact text/i.test(text),

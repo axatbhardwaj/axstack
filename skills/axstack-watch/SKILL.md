@@ -96,8 +96,13 @@ matching ticket map for substantial work, or a snapshotted **small-change
 intent** for small work. An adopted own PR instead uses its accepted maintenance
 snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
-session where evidence allows, then receive refreshed review under the authored
-mode rule before publication. Unknown, mixed, or unsupported author provenance
+session only when the run itself launched that session and evidence allows,
+then receive refreshed review under the authored mode rule before publication.
+For an adopted own PR under the automation, the original authoring session is
+not a run-launched session: the repair author is the automation session
+(Claude/Opus) or a dispatched `axstack-author` (Sol), and the authored-review
+pairing follows the recorded actual provenance of that repair, not the PR's
+historical author. Unknown, mixed, or unsupported author provenance
 that cannot establish the eligible configured reviewer is an exact gap to
 report to the user, not permission to invent a pairing or model fallback.
 
