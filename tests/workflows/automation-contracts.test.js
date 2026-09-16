@@ -482,6 +482,14 @@ test('rev-5 rules live in the operational sections, not only in prose', () => {
     return ref.slice(from, to);
   };
 
+  // The review skill's own action boundary, read before any branch, must not
+  // assert COMMENT-only for every automation; that prose is loaded first and a
+  // conforming agent would stop there.
+  const skill = compact('skills/axstack-review/SKILL.md');
+  const boundary = skill.slice(0, skill.indexOf('## Peer mode'));
+  expect(boundary).toMatch(/`COMMENT` only for\s*the pair A\/B driver/i);
+  expect(boundary).toMatch(/officially review-requested\s*publishes the actual verdict/i);
+
   // Pair identity must carry both C/D lists.
   const identity = between('## Pair identity', '## Identity and scope');
   expect(identity).toMatch(/review allowlist/i);

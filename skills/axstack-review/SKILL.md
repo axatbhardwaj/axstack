@@ -16,10 +16,13 @@ to select the mode and scope identity, and apply the shared
 [PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
-When the caller is the Orca driver automation, load
-[Automation sessions](../axstack/references/automations.md): its reviewer
-briefs carry the required escalation field and its publication is `COMMENT`
-only.
+When the caller is an Orca driver automation, load
+[Automation sessions](../axstack/references/automations.md): its reviewer briefs
+carry the required escalation field, and its publication is `COMMENT` only for
+the pair A/B driver and for a pair C peer PR reached through the qualifying
+mention trigger. A pair C peer PR where self is officially review-requested
+publishes the actual verdict instead, under "Binding review verdicts (pair C)"
+in that reference and the authorized-submission branch below.
 
 ## Peer mode (colleague PR)
 
