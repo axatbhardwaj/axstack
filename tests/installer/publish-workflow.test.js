@@ -36,14 +36,22 @@ fi
 // to interactive web auth when the token is missing or invalid, which in CI
 // prints a login URL and hangs until the job times out.
 const AUTH_CHECK = `set -eu
-: "\${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-curl -sfS -H "Authorization: Bearer \${NPM_CONFIG_TOKEN}" \\
+: "\${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+curl -sfS -H "Authorization: Bearer \${REGISTRY_TOKEN}" \\
   https://registry.npmjs.org/-/whoami > /dev/null
+umask 077
+printf '//registry.npmjs.org/:_authToken=%s\\n' "\${REGISTRY_TOKEN}" > "\${HOME}/.npmrc"
 `;
+
+// The token is stage-only: it defers proof-of-presence, so CI stages a version
+// and a maintainer approves it. npm is the tool for that — bun has no staging
+// command — and npm reads the credential from .npmrc, not NPM_CONFIG_TOKEN.
+const NPM = 'npm@12.0.2';
+const STAGE = `bunx ${NPM} stage publish . --access public`;
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
 // an artifact upload, a `with:` input, another env var — is a difference.
-const TOKEN_ENV = { NPM_CONFIG_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' };
+const TOKEN_ENV = { REGISTRY_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' };
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
 // an artifact upload, a `with:` input, another env var — is a difference.
@@ -53,7 +61,7 @@ const EXPECTED_STEPS = [
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
   { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
-  { name: 'Publish', env: TOKEN_ENV, run: 'bun publish --access public' },
+  { name: 'Stage for approval', run: STAGE },
 ];
 
 test('publish workflow fires only on a version tag', () => {
@@ -85,16 +93,19 @@ test('publish workflow job is pinned in full', () => {
 test('publish workflow runs the whole suite before it publishes, and refuses a mismatched tag', () => {
   const runs = EXPECTED_STEPS.map((step) => step.run ?? '');
   const test_ = runs.findIndex((run) => /\bbun test\b/.test(run));
-  const publish = runs.findIndex((run) => /\bbun publish\b/.test(run));
+  const publish = runs.findIndex((run) => /stage publish/.test(run));
   expect(publish, 'publish must not precede the tests').toBeGreaterThan(test_);
-  expect(runs.some((run) => /npm publish/.test(run)), 'must publish with bun').toBe(false);
+  // Staging only: a direct publish would bypass the approval this token exists
+  // to require.
+  expect(runs.some((run) => /\bnpm publish\b|\bbun publish\b/.test(run)), 'must stage, never publish directly').toBe(false);
+  expect(runs.some((run) => /stage publish/.test(run))).toBe(true);
   expect(TAG_GUARD, 'a mismatched tag must fail the job').toMatch(/exit 1/);
 });
 
 test('the registry secret appears exactly once in the whole document', () => {
   const occurrences = source().match(/secrets\.NPM_ACCESS_TOKEN/g) ?? [];
-  // Twice: the credential check and the publish, both pinned above.
-  expect(occurrences.length, 'the secret must appear only in the two pinned env blocks').toBe(2);
+  // Once: the credential step holds it and writes .npmrc for the stage step.
+  expect(occurrences.length, 'the secret must appear only in the pinned env block').toBe(1);
   // And that one reference is the pinned env entry above, not a workflow- or
   // job-level env that every step would inherit.
   const doc = parsed();
