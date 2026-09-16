@@ -179,6 +179,7 @@ test('approve atomically changes only decision fields and prints one line', () =
     `${TOKEN}.json`,
     `${TOKEN}.json.lock`,
   ]);
+  expect(run(script, [TOKEN, 'approve'])).toMatchObject({ exitCode: 3, stdout: '' });
 });
 
 test('reject writes rejected without inventing a message id', () => {
