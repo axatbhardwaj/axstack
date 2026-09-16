@@ -61,3 +61,18 @@ test('automations: entry, watch, and review skills link the reference', () => {
     expect(read(path), `${path}: automations link`).toContain(`](${link})`);
   }
 });
+
+test('automations: watch repairs are gated locally and pushed fast-forward only', () => {
+  const watch = compact('skills/axstack-watch/SKILL.md');
+  const repair = compact('skills/axstack-watch/references/repair-publication.md');
+  expect(watch).toMatch(/per-PR child worktree/i);
+  expect(watch).toMatch(/expiry[^.]*`expired`[^.]*never silently re-adopted|`expired`[^.]*never silently re-adopted/i);
+  expect(repair).toMatch(/committed locally[^.]*child worktree/i);
+  expect(repair).toMatch(/authored mode at its local SHA|reviewed in authored mode at (?:its|the) local SHA/i);
+  expect(repair).toMatch(/gate[^.]*`proceed`[^.]*no unresolved (?:validated )?blocking finding/i);
+  expect(repair).toMatch(/publication readback[^.]*immediately before the push|immediately before the push/i);
+  expect(repair).toMatch(/fast-forward only/i);
+  expect(repair).toMatch(/`git push`[^.]*never[^.]*lease[^.]*force|no lease or force/i);
+  expect(repair).toMatch(/no `gh stack` sync or restack from an automation|`gh stack`[^.]*never[^.]*automation/i);
+  expect(repair).toMatch(/push[^.]*before the gate[^.]*forbidden|never push[^.]*before[^.]*gate/i);
+});

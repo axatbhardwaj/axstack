@@ -20,14 +20,20 @@ the importing owner or orchestrator.
 ## 2. Produce a reviewable candidate
 
 The author prepares the smallest in-scope repair and the exact public reply
-bodies, each keyed to its feedback ID and bound to the candidate revision. Both
-code and reply bodies receive the one complete eligible non-author/non-owner
-review required by the authored review rule in `axstack-review`.
+bodies, each keyed to its feedback ID and bound to the candidate revision. The
+candidate is committed locally in the per-PR child worktree and reviewed in
+authored mode at its local SHA; nothing is pushed for review. Both code and
+reply bodies receive the one complete eligible non-author/non-owner review
+required by the authored review rule in `axstack-review`.
 
 Publication stays held until the current authored review receipt covers the
 exact new revision and base, all six angles, applicable acceptance, the reply
 body identities, and every affected boundary, with no unresolved material
-finding or urgent hold.
+finding or urgent hold. Under an automation the escalation gate of
+[Automation sessions](../../axstack/references/automations.md) also runs on
+the local SHA: publication additionally requires the gate to return `proceed`
+with no unresolved validated blocking finding, and a push before the gate
+settles is forbidden.
 
 ## 3. Revalidate immediately before publication
 
@@ -43,6 +49,11 @@ readback.
 Use `gh stack` for the adopted PR only, preserving unrelated stack entries.
 Bind the operation to the exact reviewed revision, then verify the submission
 receipt and remote state.
+
+An automation session pushes fast-forward only: run the section 3 publication
+readback immediately before the push, then `git push` to the PR branch with no
+lease or force, and no `gh stack` sync or restack from an automation. A
+non-fast-forward remote is a recorded hold, never a rewrite.
 
 If the send outcome is unknown, inspect remote IDs, bodies, and actor before any
 retry. Remain blocked while the outcome is ambiguous; retry only after

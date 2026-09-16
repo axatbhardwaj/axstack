@@ -85,7 +85,9 @@ event, not repair authority. Stale or ambiguous observations authorize nothing.
 
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
-follow [Repair and publication](references/repair-publication.md).
+follow [Repair and publication](references/repair-publication.md). An
+automation session repairs in a per-PR child worktree created through
+`orca-cli`; its driver worktree never checks out a PR branch.
 
 ### Feedback routing
 
@@ -122,7 +124,9 @@ also stops timers for open PRs; never silently renew them.
 
 At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither
-silent renewal nor ownership-transfer authority.
+silent renewal nor ownership-transfer authority. Under an automation, expiry
+marks the PR `expired` in the record and sidecar; an `expired` PR is never
+silently re-adopted and is skipped until the user re-arms it.
 
 Transfer ownership through the runtime-owned Orca handoff route only when the
 user explicitly requests it. Before transfer, follow the lifecycle-owned
