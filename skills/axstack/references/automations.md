@@ -1,7 +1,25 @@
 # Automation sessions
 
-Read this when the current session is an Orca automation running the PR
-driver or the watchdog. It restates the operational contract of the approved
+Read this when the current session is an Orca automation running a PR driver or
+a watchdog.
+
+## Pair identity
+
+There are two independent automation pairs. Before acting, resolve which pair
+this session belongs to from its own run id and the verbatim allowlist in its
+own prompt; never assume.
+
+- **Pair A/B** — driver Automation A (`*/30`) and watchdog Automation B, run id
+  `20260916-pr-automations`, allowlist `axatbhardwaj/axstack`.
+- **Pair C/D** — driver Automation C (hourly) and watchdog Automation D, run id
+  `20260916-defi-automations`, allowlist
+  `defi-com/monorepo, defi-com/mobile, defi-com/azure-next-hybrid`.
+
+The two pairs share no state: each has its own run id, run directory,
+`progress.md` and sidecars, and no sidecar is shared between them. A clause
+below that names a pair applies only to that pair; every other clause applies to
+both. Where this reference says "the driver" it means the driver of the current
+pair. It restates the operational contract of the approved
 `docs/specs/orca-automations.md`; that spec is authoritative, and nothing here
 widens it. Orca owns scheduling, sessions, retries, and run history. Axstack
 owns policy, the run record, and evidence.
@@ -24,7 +42,10 @@ owns policy, the run record, and evidence.
   limit is a detectable truncation and is logged as `error`. Results are
   deduplicated canonically by PR URL across the three searches with own-PR
   precedence.
-- **Mutation allowlist:** stated verbatim in the automation prompt. Outside the
+- **Mutation allowlist:** stated verbatim in the automation prompt, per
+  automation rather than as one global list. One allowlist gates both own-PR
+  repair and peer review for its own automation; there is no separate
+  review-only list. Outside the
   allowlist the automation discovers and records only. The precheck writes the
   full discovery list to `pending.json`; no review, watch, gate, or other model
   work is launched for an external PR. External changes do not enter the wake
@@ -70,6 +91,101 @@ model-substitution, session, precheck, discovery, or relay-delivery hold). The
 automation health criterion is usable only by the watchdog and the safety-hold
 path, never by a reviewer.
 
+## Stack-aware repair sequencing (pair C/D)
+
+These three sections govern pair C/D only. Pair A/B's behaviour is unchanged by
+revision 4 except for the named cadence correction, so A does not apply stack
+sequencing, bot-triggered repair, the caps, or the deployment push hold.
+
+Own-PR repair covers every own PR in the allowlisted repositories; stacking
+changes the order of repair, never the scope. Within one stack the driver
+repairs only the lowest open failing PR of that stack. Every open descendant of
+a repaired PR records exactly one `pending restack` hold naming the repaired
+parent and its new head SHA, and receives no independent repair of the same
+finding while that hold stands. A descendant carrying a different finding from
+the repaired parent's is repaired on its own merits, subject to the budgets
+below; the hold suppresses duplicate application of the same finding, not all
+work on the descendant.
+
+The hold names the user as owner. It is cleared by the user's own restack, or by
+a later tick observing the descendant no longer failing; that is the single
+clearing rule. It is exempt from the watchdog's hold with no owner threshold,
+because its owner is the user by construction. The per-tick budget counts one
+unit per stack, not one per PR.
+
+The reason is duplication, not politeness: the same finding recurs across a
+stack, so independent per-PR repair would apply the identical fix at several
+levels and the user's next cascade rebase would then conflict on the duplicate.
+A parent fast-forward also does not change a descendant's PR diff, so a
+descendant's CI and reviewers never see the parent fix; the hold states that
+honestly instead of implying the descendant was repaired.
+
+`gh stack` sync, restack, rebase, merge, link and submit remain out of scope for
+every automation, and force-push and rebase stay prohibited everywhere. A
+descendant is held, never rewritten.
+
+## Bot review feedback (pair C/D)
+
+A review authored by a bot account may be actionable and may trigger a repair,
+bounded as follows.
+
+Dedup is by processed review ID and by a digest of the review body. A repair
+fires only on a review whose review ID was never processed and whose body
+digest is not already recorded against that PR at that head SHA. Review-ID dedup alone is
+insufficient: a bot that re-posts the identical finding under a new review ID
+would otherwise re-trigger a repair on every tick.
+
+Caps: at most one repair per PR per 24 hours, counted regardless of trigger; and
+a per-tick push budget across all allowlisted repositories combined, configured
+per pair and six for pair C/D. Reaching either cap records a hold naming the cap
+and the value reached, rather than silently dropping the work. A budget hold
+names the budget as its owner and is exempt from the hold with no owner
+threshold. When a per-PR cap has expired the precheck wakes the driver even
+if the forge is unchanged, so capped work is never stranded; the precheck
+section below carries that trigger in its due-work list.
+
+A bot review never satisfies the peer-PR trigger, which still requires self to
+be officially review-requested or a comment that explicitly asks self to review
+or respond.
+
+## Watch window
+
+Pair A/B keeps its 24 hours per own PR from first observation, ending early on
+merge or close, with the deadline in `cursor.json`, the `expired` marking, and
+the user re-arming an expired PR in the automation session.
+
+Pair C/D uses a rolling window instead: a PR is in scope while it is open and
+eligible, and leaves scope on merge or close. There is no expiry and no
+re-arming, C/D's `cursor.json` stores no deadlines, and `expired` is not a state
+a C/D PR can reach.
+
+The difference is deliberate, not drift. A serves one low-volume repository
+where expiry is cheap, while C would otherwise start twenty or more simultaneous
+clocks on first observation and go dark a day later. Because that window
+removes expiry as a cost brake, the per-PR and per-tick budgets and the watchdog
+are the only brakes left on C, and D's thresholds are retuned for a fingerprint
+that legitimately changes on nearly every tick.
+
+## PR eligibility for repair (pair C/D)
+
+A draft PR is discovered and recorded but never repaired; it becomes eligible
+when it is marked ready for review, which the ordinary event state observes as
+new work. A PR that already has a human reviewer requested is eligible for
+repair and is not excluded, deliberately: most own PRs in these repositories
+carry a requested human reviewer, and excluding them would empty the coverage.
+`defi-com/mobile` has no workflows and therefore no check signal, so a repair
+there is triggered only by actionable review feedback; if CI is later added the
+ordinary check-rollup trigger applies with no contract change.
+
+## Deployment safety (pair C/D)
+
+A repair never pushes to a PR whose head branch is in that repository's
+deploy-on-push set, and an attempt to do so is a recorded hold. The rule is
+branch-name-agnostic: the set is enumerated per repository from that
+repository's workflow files, recorded, and re-verified before enabling and on
+any later allowlist change. It is never hardcoded to one branch name, because a
+repository may deploy from more than one branch and may add another at any time.
+
 ## Escalation gate
 
 After every mode-required reviewer settles, the driver spawns `axstack-auditor`
@@ -109,10 +225,14 @@ Resolve self; run the three searches with `--json url,number,repository,updatedA
 write the full discovery list to `pending.json`. For each allowlisted,
 non-expired own PR add head SHA, base SHA, and the check rollup of that head via
 `gh pr view --json headRefOid,baseRefOid,statusCheckRollup`; check state is
-data, and only authentication, command, and network errors are `error`. Hash
+data, and only authentication, command, and network errors are `error`. For pair
+C/D only, that call also requests `isDraft` and the precheck adds draft status
+to the hashed fingerprint, so a draft becoming ready wakes the driver on its
+own; pair A/B's queried fields and fingerprint are unchanged. Hash
 only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
-for due control work: a watch deadline at or before now, or a pending
-failed-relay retry. Exit 0 when the hash differs or control work is due;
+for due control work: a watch deadline at or before now (pair A/B only, since
+pair C/D stores no deadlines), a pending failed-relay retry, or a per-PR repair
+cap that has expired (pair C/D only, since pair A/B has no caps). Exit 0 when the hash differs or control work is due;
 otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
@@ -127,7 +247,9 @@ but the session stays listed and is never reclaimed, which also makes an
 over-match destructive — and a driver terminal that is still working makes the
 tick `busy`. It never closes a watchdog terminal or any terminal outside this
 automation; an unreadable ownership source is `error`, never a silent empty
-sweep. The two automations must not share a dispatch minute.
+sweep. No two of the four automations may share a dispatch minute: A, B, C and D each
+take a distinct minute, so a driver and its watchdog never collide and neither
+pair can disturb the other's terminal hygiene.
 
 The observed fingerprint is written to `pending.json`. After the processed
 tick the driver promotes exactly that value to `cursor.json`, never a
@@ -153,19 +275,24 @@ For each changed PR:
   COMMENT branch. `INCOMPLETE` or an unavailable required reviewer records a
   hold and publishes nothing.
 
-Watch window: 24 hours per own PR from first observation, ending early on merge
-or close. The deadline is stored in `cursor.json`; a due deadline wakes the
-driver through the precheck even when GitHub is unchanged, and the driver
-rechecks the deadline immediately before any publication. Expiry marks the PR
-`expired` in the record and sidecar, records a resumable handoff, and stops
-silently. The driver skips an expired PR until the user re-arms it in the
-automation session, and the precheck ignores it; an expired PR is never
-silently re-adopted.
+Watch window, pair A/B only: 24 hours per own PR from first observation, ending
+early on merge or close. The deadline is stored in `cursor.json`; a due deadline
+wakes the driver through the precheck even when GitHub is unchanged, and the
+driver rechecks the deadline immediately before any publication. Expiry marks
+the PR `expired` in the record and sidecar, records a resumable handoff, and
+stops silently. The driver skips an expired PR until the user re-arms it in the
+automation session, and the precheck ignores it; an expired PR is never silently
+re-adopted. Pair C/D does not use this window at all; see "Watch window" above
+for its rolling replacement, and it stores no deadline and reaches no `expired`
+state.
 
 Per-PR event state: head SHA, base SHA, check rollup, and processed request and
 comment IDs. A review receipt is reused only when head, base, and scope are
 unchanged. A new failing check, base change, review request, or qualifying
-comment at an unchanged head is new work.
+comment at an unchanged head is new work. Pair C/D additionally carries draft
+status in that state, and a draft status that has changed from true to false is
+new work for C/D, which is how a draft becoming ready for review reaches its
+driver.
 
 ## Watchdog tick
 
@@ -181,6 +308,13 @@ or non-Opus effective identity recorded by the driver; any `failed` relay
 receipt older than one tick or any `uncertain` receipt; a hold with no owner.
 A quiet precheck history with no due work is healthy.
 
+The two-hour stall threshold above is pair A/B's. Pair D uses a stall window
+re-derived before enabling as `max(2h, 3 x the 95th-percentile observed C tick
+duration over at least 10 ticks)`, recorded with its sample, because C's
+fingerprint legitimately changes on nearly every tick and a literal two hours
+would fire on the first slow tick. Every other threshold is identical for both
+pairs.
+
 Each health finding gets an occurrence id `(type, first-observed UTC
 timestamp)`; it stays deduplicated while unresolved, and a later recurrence is
 a new occurrence. Pass a finding to the gate under the automation-health
@@ -191,11 +325,16 @@ delivery stays visibly held in `watchdog.json` and Orca run history.
 
 ## Run record and sidecar
 
-One run id for the lifetime of the automations, `20260916-pr-automations`, in
-the [run record](run-record.md) shape with the driver as sole writer of
-`progress.md`. Per PR it stores processed event IDs, exact head and base SHAs,
-review receipts per SHA, gate decisions, `hermes send` receipts with
-`message_id` and state, watch deadline, `expired`, and holds. Its
+One run id per pair for the lifetime of that pair — `20260916-pr-automations`
+for A/B and `20260916-defi-automations` for C/D — each in the
+[run record](run-record.md) shape with that pair's driver as sole writer of its
+own `progress.md`. C/D's run directory lives under the same axstack
+`git-common-dir` as A/B's, in its own `axstack/runs/<run id>/` folder; no
+sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs, review receipts
+per SHA, gate decisions, `hermes send` receipts with `message_id` and state, and
+holds. The watch deadline and `expired` fields are pair A/B only, since pair C/D
+stores no deadline and cannot reach `expired`; draft status is pair C/D only,
+since only C/D treats a draft transition as new work. Its
 `Notification policy:` line reads, verbatim:
 
 ```text
@@ -205,8 +344,8 @@ hermes send, target telegram (home), host VPS, gate-authorized escalations only
 Machine-readable sidecars in the same directory: `pending.json` (observed
 fingerprint plus full discovery list, written by the precheck), `cursor.json`
 (last processed fingerprint promoted verbatim from `pending.json`, expired PR
-list, per-PR watch deadlines, pending failed-relay retries; written by the
-driver after each processed tick), `precheck.log` (precheck only), and
+list and per-PR watch deadlines for pair A/B only, pending failed-relay
+retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
 `watchdog.json` (watchdog only). Orca run history remains the authoritative
 log; the record is derived progress, never authority.
 

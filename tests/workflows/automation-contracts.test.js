@@ -236,3 +236,163 @@ test('rev-2 docs: gh stack publication does not apply to automation repairs; the
   const watch = clause(docs, /`axstack-watch` adopts an existing PR/i);
   expect(docs.slice(docs.indexOf(watch))).toMatch(/original author[^.]*run itself launched|run-launched/i);
 });
+
+// --- revision 4: the contract serves two independent pairs -----------------
+
+test('rev-4 pairs: the allowlist is per automation, and the two pairs share no state', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // An automation session must learn which pair it is before it acts.
+  expect(clause(ref, /which pair/i)).toMatch(/run id|allowlist/i);
+  // The allowlist is per automation, not one global list.
+  const allow = clause(ref, /Mutation allowlist/i);
+  expect(allow).toMatch(/per automation/i);
+  expect(allow).not.toMatch(/initially/i);
+  // Each pair's verbatim membership is stated.
+  expect(ref).toMatch(/axatbhardwaj\/axstack/);
+  expect(ref).toMatch(/defi-com\/monorepo, defi-com\/mobile, defi-com\/azure-next-hybrid/);
+  // No shared sidecars between pairs.
+  expect(clause(ref, /shares? no state|no sidecar is shared/i)).toMatch(/run id|sidecar|run directory/i);
+});
+
+test('rev-4 stacks: repair takes the lowest failing PR and holds descendants instead of duplicating the fix', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const lowest = clause(ref, /lowest open failing PR/i);
+  expect(lowest).toMatch(/stack/i);
+  // A descendant gets a hold, not a second copy of the same fix.
+  const hold = clause(ref, /pending restack/i);
+  expect(hold).toMatch(/descendant|child/i);
+  // A different finding on a descendant is still repaired.
+  expect(clause(ref, /different finding/i)).toMatch(/repaired on its own merits|own merits/i);
+  // One clearing rule, and it is exempt from the hold-with-no-owner threshold.
+  expect(clause(ref, /cleared by the user's own restack/i)).toMatch(/observed|no longer failing/i);
+  expect(clause(ref, /hold with no owner|hold-with-no-owner/i)).toMatch(/exempt/i);
+  // Budget counts per stack.
+  expect(clause(ref, /per-tick budget counts/i)).toMatch(/one unit per stack/i);
+});
+
+test('rev-4 bot feedback: dedup is by review ID and body digest, under explicit caps', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const dedup = clause(ref, /body digest|content digest/i);
+  expect(dedup).toMatch(/review ID/i);
+  // ID alone is called out as insufficient, with the reason.
+  expect(clause(ref, /insufficient/i)).toMatch(/new review ID|re-post/i);
+  // Caps: one repair per PR per 24h, and a per-tick push budget with a value.
+  expect(clause(ref, /one repair per PR per 24 hours/i)).toBeTruthy();
+  expect(clause(ref, /per-tick push budget/i)).toMatch(/six|configured/i);
+  // Reaching a cap records a hold naming it; expiry is due control work.
+  expect(clause(ref, /Reaching either cap/i)).toMatch(/hold naming the cap/i);
+  expect(clause(ref, /cap expires|cap has expired/i)).toMatch(/due control work|wakes the driver/i);
+  // A bot review never grants peer-review authority.
+  expect(clause(ref, /never satisfies the peer-PR trigger|bot review never/i)).toMatch(/review-requested|explicitly asks/i);
+});
+
+test('rev-4 deployment: the repair push hold is branch-name-agnostic and enumerated per repository', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const rule = clause(ref, /deploy-on-push/i);
+  expect(rule).toMatch(/never pushes/i);
+  expect(rule).toMatch(/recorded hold|is a hold/i);
+  // Enumerated from the workflow files, not hardcoded to one branch.
+  expect(clause(ref, /enumerated/i)).toMatch(/workflow files|per repository/i);
+  expect(clause(ref, /re-verified/i)).toMatch(/before enabling|allowlist change/i);
+});
+
+test('rev-4 watch window: C/D roll, A/B expire, and the difference is stated as deliberate', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const rolling = clause(ref, /rolling window/i);
+  expect(rolling).toMatch(/open and eligible/i);
+  expect(clause(ref, /no expiry/i)).toMatch(/re-arm|merge or close/i);
+  // A/B keep the 24h window explicitly, so neither pair inherits the other's rule.
+  expect(clause(ref, /24 hours per own PR from first observation/i)).toMatch(/Automation A|axstack pair|A\/B/i);
+  // Budgets and the watchdog are named as the replacement cost brakes.
+  expect(clause(ref, /cost brake|only brakes/i)).toMatch(/budget/i);
+});
+
+test('rev-4 eligibility: drafts wait, requested-reviewer PRs are kept, and mobile has no check signal', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // A draft is recorded but not repaired, and becomes eligible on ready-for-review.
+  expect(clause(ref, /draft PR is discovered/i)).toMatch(/never repaired/i);
+  expect(clause(ref, /ready for review/i)).toMatch(/new work/i);
+  // Human-reviewer-requested PRs are explicitly NOT excluded, with the reason.
+  const kept = clause(ref, /human reviewer requested/i);
+  expect(kept).toMatch(/not excluded|is eligible/i);
+  expect(clause(ref, /would empty the coverage/i)).toBeTruthy();
+  // mobile: review feedback only, and the reason is the absent check signal.
+  expect(clause(ref, /no workflows and therefore no check signal/i)).toMatch(/actionable review feedback/i);
+});
+
+test('rev-4 pair isolation: run ids, run directories and stall windows are per pair', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Both run ids named, one per pair, with no shared sidecar.
+  const runIds = clause(ref, /One run id per pair/i);
+  expect(runIds).toMatch(/20260916-pr-automations/);
+  expect(runIds).toMatch(/20260916-defi-automations/);
+  expect(clause(ref, /no\s+sidecar, record, or cursor is shared/i)).toBeTruthy();
+  // D's stall window is re-derived, not the literal two hours.
+  const stall = clause(ref, /stall window/i);
+  expect(stall).toMatch(/95th-percentile/i);
+  expect(clause(ref, /would fire on the first slow tick/i)).toBeTruthy();
+  // A/B keeps its literal two-hour threshold.
+  expect(ref).toMatch(/no successful driver run within two hours while the precheck logged `changed` or `due`/);
+});
+
+// The `clause` helper returns the FIRST sentence matching a trigger, so a
+// trigger that also appears in a heading, a summary line or a list item can
+// silently assert against the wrong sentence and pass for the wrong reason.
+// Every revision-4 trigger must therefore be unique in the reference.
+test('rev-4 triggers are unambiguous: each one matches exactly one sentence', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const sentences = ref.split(/(?<=[.!?])\s+(?=[A-Z`*(])/);
+  const triggers = [
+    /lowest open failing PR/i,
+    /different finding/i,
+    /cleared by the user's own restack/i,
+    /per-tick budget counts/i,
+    /body digest|content digest/i,
+    /one repair per PR per 24 hours/i,
+    /per-tick push budget/i,
+    /Reaching either cap/i,
+    /deploy-on-push/i,
+    /rolling window/i,
+    /draft PR is discovered/i,
+    /human reviewer requested/i,
+    /no workflows and therefore no check signal/i,
+    /One run id per pair/i,
+    /stall window/i,
+  ];
+  for (const trigger of triggers) {
+    const hits = sentences.filter((s) => trigger.test(s));
+    expect(hits.length, `${trigger} matches ${hits.length} sentences, expected 1`).toBe(1);
+  }
+});
+
+test('rev-4 draft transition is observable for C/D only, leaving A/B unchanged', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Draft status is queried, hashed and scoped to C/D in one sentence.
+  const query = clause(ref, /`isDraft`/);
+  expect(query).toMatch(/pair\s+C\/D only/i);
+  expect(query).toMatch(/hashed fingerprint/i);
+  expect(query).toMatch(/wakes the driver/i);
+  // A/B's queried fields and fingerprint are explicitly unchanged.
+  expect(query).toMatch(/pair A\/B's queried fields and fingerprint are unchanged/i);
+  expect(ref).toMatch(/`gh pr view --json headRefOid,baseRefOid,statusCheckRollup`/);
+  // The true->false transition is new work for C/D, named as such.
+  expect(clause(ref, /draft status that has changed from true to false/i)).toMatch(/new work for C\/D/i);
+});
+
+test('rev-4 run record: deadline and expired fields are pair A/B only', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const stored = clause(ref, /watch deadline and `expired` fields are/i);
+  expect(stored).toMatch(/pair A\/B only/i);
+  expect(stored).toMatch(/cannot reach `expired`/i);
+  expect(stored).toMatch(/draft status is pair C\/D only/i);
+});
+
+test('rev-4 scheduling and caps are qualified: four distinct minutes, caps are C/D only', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // All four automations, not just the two of one pair.
+  const minutes = clause(ref, /dispatch minute/i);
+  expect(minutes).toMatch(/four automations/i);
+  expect(minutes).toMatch(/A, B, C and D/);
+  // The repair-cap due-work trigger belongs to C/D, which is the only pair with caps.
+  expect(clause(ref, /cap that has expired/i)).toMatch(/pair C\/D only/i);
+});
