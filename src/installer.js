@@ -158,11 +158,7 @@ async function readOwnedTarget(skillsRoot, rel) {
 
 async function canonicalInstructionFile(instructionsPath) {
   const abs = resolve(instructionsPath);
-  const lexicalParent = dirname(abs);
-  const parent = await canonicalTargetDir(lexicalParent);
-  if (parent !== lexicalParent) {
-    throw new Error(`unsafe target: symlinked instruction parent at ${lexicalParent}; refusing`);
-  }
+  const parent = await canonicalTargetDir(dirname(abs));
   const file = join(parent, basename(abs));
   const st = await lstat(file).catch((err) => {
     if (err?.code === 'ENOENT') return null;

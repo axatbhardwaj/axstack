@@ -4,11 +4,12 @@ import {
   lstatSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { installBundle } from '../../src/installer.js';
+import { installBundle, uninstallBundle } from '../../src/installer.js';
 import { renderInstructionBlock } from '../../src/instructions.js';
 import { hashContent, readManifest } from '../../src/manifest.js';
 import { join } from '../../src/posixpath.js';
@@ -91,8 +92,36 @@ describe('installer-owned instruction file', () => {
     expect((await readManifest(skills)).instructions).toEqual({ path: null, hash: null });
   });
 
-  test('refuses malformed markers and symlinked instruction paths before any write', async () => {
-    for (const unsafe of ['duplicate', 'nested', 'incomplete', 'symlink']) {
+  test('canonicalizes symlinked instruction ancestors and still refuses a symlinked leaf', async () => {
+    const { root, bundle, skills } = fixture();
+    const real = join(root, 'real');
+    const link = join(root, 'link');
+    const instructions = join(link, 'cfg', 'CLAUDE.md');
+    mkdirSync(real);
+    symlinkSync(real, link);
+    mkdirSync(join(real, 'cfg'));
+    writeFileSync(instructions, 'personal bytes');
+
+    const first = await installBundle(installOptions(bundle, skills, instructions));
+    const canonical = join(realpathSync(real), 'cfg', 'CLAUDE.md');
+    expect(first.instructions).toMatchObject({ status: 'updated', path: canonical });
+    expect((await readManifest(skills)).instructions.path).toBe(canonical);
+    const second = await installBundle(installOptions(bundle, skills, instructions));
+    expect(second.instructions).toMatchObject({ status: 'unchanged', path: canonical });
+    const removed = await uninstallBundle({ skillsDir: skills, instructionsPath: instructions });
+    expect(removed.instructions).toMatchObject({ status: 'removed', path: canonical });
+    expect(readFileSync(instructions, 'utf8')).toBe('personal bytes');
+
+    const leafTarget = join(real, 'leaf-target.md');
+    const leaf = join(real, 'cfg', 'LEAF.md');
+    writeFileSync(leafTarget, 'outside');
+    symlinkSync(leafTarget, leaf);
+    await expect(installBundle(installOptions(bundle, skills, leaf))).rejects.toThrow(/symlink/i);
+    expect(readFileSync(leafTarget, 'utf8')).toBe('outside');
+  });
+
+  test('refuses malformed markers before any write', async () => {
+    for (const unsafe of ['duplicate', 'nested', 'incomplete']) {
       const { root, bundle, skills } = fixture();
       const instructions = join(root, 'config', 'AGENTS.md');
       mkdirSync(join(root, 'config'), { recursive: true });
@@ -100,13 +129,7 @@ describe('installer-owned instruction file', () => {
       if (unsafe === 'duplicate') writeFileSync(instructions, `${block}\n${block}`);
       if (unsafe === 'nested') writeFileSync(instructions, `<!-- axstack:begin v1 -->\n${block}\n<!-- axstack:end -->`);
       if (unsafe === 'incomplete') writeFileSync(instructions, '<!-- axstack:begin v1 -->\nno end');
-      if (unsafe === 'symlink') {
-        const real = join(root, 'real');
-        mkdirSync(real);
-        rmSync(join(root, 'config'), { recursive: true });
-        symlinkSync(real, join(root, 'config'));
-      }
-      await expect(installBundle(installOptions(bundle, skills, instructions))).rejects.toThrow(/marker|symlink/i);
+      await expect(installBundle(installOptions(bundle, skills, instructions))).rejects.toThrow(/marker/i);
       expect(lstatSync(skills, { throwIfNoEntry: false })).toBeUndefined();
     }
   });
