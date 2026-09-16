@@ -1,6 +1,10 @@
 // A manually runnable credential check. Its whole purpose is to prove the
-// registry token works WITHOUT performing the irreversible publish, so the
-// contract worth enforcing is that it can never publish.
+// registry token authenticates WITHOUT performing the irreversible publish,
+// so the contract worth enforcing is that it can never publish or mutate.
+//
+// Pinned in full rather than blocklisted: a blocklist on step bodies accepted
+// an added publishing action or a second job, which is the same mistake the
+// publish workflow's guards went through.
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
@@ -13,32 +17,49 @@ const parsed = () => {
   return { ...doc, on: doc.on ?? doc[true] };
 };
 
+const WHOAMI = `set -eu
+: "\${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+who="$(curl -sfS -H "Authorization: Bearer \${NPM_CONFIG_TOKEN}" \\
+  https://registry.npmjs.org/-/whoami | sed 's/.*"username":"\\([^"]*\\)".*/\\1/')"
+echo "token authenticates as: \${who}"
+`;
+
+const EXPECTED_STEPS = [
+  {
+    name: 'Who does the token authenticate as',
+    env: { NPM_CONFIG_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' },
+    run: WHOAMI,
+  },
+];
+
 test('credential check is manual only', () => {
   expect(existsSync(join(ROOT, PATH_)), `missing ${PATH_}`).toBe(true);
   expect(Object.keys(parsed().on)).toEqual(['workflow_dispatch']);
 });
 
-test('credential check cannot publish or mutate anything', () => {
+test('credential check is pinned in full, so it can never publish', () => {
   const doc = parsed();
+  expect(Object.keys(doc).filter((key) => key !== 'on').sort()).toEqual(['jobs', 'name', 'permissions']);
   expect(doc.permissions).toEqual({ contents: 'read' });
-  for (const step of doc.jobs['registry-auth-check'].steps) {
-    const body = step.run ?? '';
-    expect(body, 'this workflow must never publish').not.toMatch(/\bpublish\b/);
-    expect(body).not.toMatch(/\bnpm\s+(?:publish|deprecate|unpublish|owner|access)\b/);
-  }
+  expect(doc.env, 'no workflow-level env').toBeUndefined();
+  // One job only: a second job could publish while this one only reads.
+  expect(Object.keys(doc.jobs)).toEqual(['registry-auth-check']);
+
+  const job = doc.jobs['registry-auth-check'];
+  expect(Object.keys(job).sort()).toEqual(['runs-on', 'steps', 'timeout-minutes']);
+  expect(job['runs-on']).toBe('ubuntu-latest');
+  expect(job['timeout-minutes']).toBe(5);
+  // Deep equality closes the class: no added step, action, or publish command.
+  expect(job.steps, 'this workflow is pinned; update this test deliberately').toEqual(EXPECTED_STEPS);
 });
 
-test('credential check never prints the token', () => {
-  const doc = parsed();
-  const steps = doc.jobs['registry-auth-check'].steps;
-  for (const step of steps) {
-    expect(step.run ?? '').not.toMatch(/secrets\.NPM_ACCESS_TOKEN/);
-    expect(step.run ?? '', 'shell tracing would print the token').not.toMatch(/set\s+-[a-z]*x|xtrace/);
-  }
-  // The response is reduced to a yes/no; whoami echoes the account name, which
-  // is fine, but nothing may echo the credential itself.
-  const holder = steps.find((step) =>
-    Object.values(step.env ?? {}).some((value) => String(value).includes('secrets.NPM_ACCESS_TOKEN')));
-  expect(holder, 'no step holds the token').toBeDefined();
-  expect(Object.keys(holder.env)).toEqual(['NPM_CONFIG_TOKEN']);
+test('credential check never publishes and never prints the token', () => {
+  expect(WHOAMI, 'this workflow must never publish').not.toMatch(/\bpublish\b/);
+  // The secret expression appears once, in the pinned env above.
+  expect((source().match(/secrets\.NPM_ACCESS_TOKEN/g) ?? []).length).toBe(1);
+  expect(WHOAMI, 'shell tracing would print the token').not.toMatch(/set\s+-[a-z]*x|xtrace/);
+  // The token is only ever an Authorization header; what is echoed is the
+  // username the registry reports back.
+  expect(WHOAMI).toMatch(/Authorization: Bearer/);
+  expect(WHOAMI).toMatch(/echo "token authenticates as/);
 });
