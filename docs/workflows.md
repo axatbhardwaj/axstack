@@ -146,11 +146,11 @@ keeps the current owner and a resumable record.
 Serious security, downtime, data-loss, and major-design risks are raised in a
 prompt immediately and hold dependent dangerous work. This is not a runtime
 gate. An applicable `Notification policy` may use `axstack-relay`; otherwise the
-current Orca conversation is the fallback. The relay preserves the newer
-host-enabled discovery, installed-manual schema, recipient binding,
-deduplication, uncertain-send reconciliation, and reply authority rules. A
-legacy-runtime-only relay path is unavailable for active Axstack; delivery
-failure never clears the underlying hold.
+current Orca conversation is the fallback. The relay delivers one-way through
+native `hermes send`: it checks CLI lookup and the configured target, binds the
+recipient, deduplicates on the run record, records the returned `message_id`,
+and treats Telegram replies as neither receipts nor authority. Delivery failure
+never clears the underlying hold.
 
 Healthy watch observations remain quiet and monitor/watchdog roles never send.
 

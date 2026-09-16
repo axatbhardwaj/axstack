@@ -92,7 +92,7 @@ Scope: <repo + accepted bounds>
 Authority: <who authorized which mutation>
 Intent: <approved spec rev | small-change intent | adopted snapshot | peer/read-only mode>
 Routing: <preset + source + snapshot ref>
-Notification policy: <none | transport/mode/host/instructions path>
+Notification policy: <none | transport/target label/host/instructions path>
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>
 Evidence: <check/review/submission/audit receipt pointers>

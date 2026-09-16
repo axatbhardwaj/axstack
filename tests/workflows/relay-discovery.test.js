@@ -21,27 +21,26 @@ test('relay discovery: bundled skill has an intent-first entrypoint', () => {
   expect(relay.match(/^description:/gm)).toHaveLength(1);
 });
 
-test('relay discovery: guard-first order precedes manual and relay commands', () => {
+test('relay discovery: lookup precedes target listing and delivery', () => {
   const relay = read(relayPath);
-  const lookup = relay.indexOf('command -v hermes-relay');
-  const guard = relay.indexOf('hermes-relay-host-enabled');
-  const manual = relay.indexOf('README.md');
-  const doctor = relay.indexOf('hermes-relay doctor');
+  const lookup = relay.indexOf('command -v hermes');
+  const listing = relay.indexOf('hermes send --list telegram');
+  const delivery = relay.indexOf('hermes send --to');
   expect(lookup).toBeGreaterThan(-1);
-  expect(guard).toBeGreaterThan(lookup);
-  expect(manual).toBeGreaterThan(guard);
-  expect(doctor).toBeGreaterThan(manual);
-  expect(relay).toMatch(/readlink -f[\s\S]*python3[\s\S]*realpath/i);
-  expect(relay).toMatch(/README[^.]*unavailable[\s\S]*capabilit[^.]*only/i);
-  expect(relay).toMatch(/missing request schema[^.]*hold/i);
+  expect(listing).toBeGreaterThan(lookup);
+  expect(delivery).toBeGreaterThan(listing);
+  expect(relay).not.toMatch(/hermes-relay/);
+  expect(relay).not.toMatch(/\bpaseo (?:inspect|send)\b/);
 });
 
-test('relay discovery: readiness inspects doctor payload and mode requirements', () => {
+test('relay discovery: readiness inspects the listed target and the JSON receipt', () => {
   const relay = read(relayPath);
   expect(relay).toMatch(/exit 0[^.]*not[^.]*readiness/i);
-  expect(relay).toMatch(/Orca-capable[^.]*conversation route/i);
-  expect(relay).toMatch(/gh[^.]*`?pr`? mode/i);
-  expect(relay).toMatch(/database[^.]*["`]ok["`]/i);
+  expect(relay).toMatch(/--list telegram[^.]*intended (?:target|recipient)/i);
+  expect(relay).toMatch(/--json[\s\S]*message_id/);
+  expect(relay).toMatch(/--file/);
+  expect(relay).toMatch(/one-way/i);
+  expect(relay).toMatch(/repl(?:y|ies)[^.]*(?:never|not)[^.]*(?:receipt|authority|routed)/i);
 });
 
 test('relay discovery: policy reachability is conditional from entry, review, and watch', () => {
@@ -80,8 +79,9 @@ test('relay scenarios: one case covers every discovery fallback', () => {
   expect(scenario.skill_ref).toBe('axstack-relay');
   expect(scenario.input.policy_absent).toBeTruthy();
   expect(scenario.input.cli_missing).toBeTruthy();
-  expect(scenario.input.guard_fails).toBeTruthy();
-  expect(scenario.input.database_not_ok).toBeTruthy();
-  expect(scenario.input.readme_missing).toBeTruthy();
+  expect(scenario.input.target_missing).toBeTruthy();
+  expect(scenario.input.delivery_failed).toBeTruthy();
+  expect(scenario.input.delivery_uncertain).toBeTruthy();
+  expect(scenario.input.reply_received).toBeTruthy();
   expect(scenario.expected).toBeTruthy();
 });
