@@ -1,6 +1,9 @@
 # Orca PR automations — specification
 
-Status: revision 5 (amendment to revision 4, splitting C/D's review and repair
+Status: superseded for the defi-com pair by `docs/specs/pr-automations.md`
+revision 3 (approved 2026-09-16); kept as history and not amended further.
+
+Previous status: revision 5 (amendment to revision 4, splitting C/D's review and repair
 scope per repository, authorizing real review submission for C/D, and recording
 the workspace paths and green-gate corrections found during the first host
 setup), with the revision 5.1 clarifications of 2026-09-16 inline under

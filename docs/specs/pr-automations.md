@@ -165,7 +165,7 @@ automations worktree) does the following in order and exits.
 ## Agents in worktrees
 
 Each dispatched agent runs in its own Orca child worktree under
-`/root/orca/workspaces/<repo>/`, pinned to the exact head, with the driver
+the Orca workspaces directory for `<repo>`, pinned to the exact head, with the driver
 worktree as parent, and reports through the Orca worker protocol only.
 
 - `axstack-review`, peer mode: two isolated reviewers
