@@ -16,10 +16,13 @@ to select the mode and scope identity, and apply the shared
 [PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
-When the caller is the Orca driver automation, load
-[Automation sessions](../axstack/references/automations.md): its reviewer
-briefs carry the required escalation field and its publication is `COMMENT`
-only.
+When the caller is an Orca driver automation, load
+[Automation sessions](../axstack/references/automations.md): its reviewer briefs
+carry the required escalation field, and its publication is `COMMENT` only for
+the pair A/B driver and for a pair C peer PR reached through the qualifying
+mention trigger. A pair C peer PR where self is officially review-requested
+publishes the actual verdict instead, under "Binding review verdicts (pair C)"
+in that reference and the authorized-submission branch below.
 
 ## Peer mode (colleague PR)
 
@@ -306,20 +309,28 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 Submission is complete only when the remote receipt confirms the review bound
 to the intended commit.
 
-Automation exception — Authorized submission: the `COMMENT` branch below, with
-the existing remote head/base readback and ambiguity handling, is the only
-submission the Orca driver automation makes. The prohibition on `APPROVE` and
-`REQUEST_CHANGES` is a ban on those GitHub actions; the review skill's internal
-verdict vocabulary is unchanged.
+Automation exception — Authorized submission, pair-scoped: for the pair A/B
+driver automation the `COMMENT` branch below, with the existing remote head/base
+readback and ambiguity handling, is the only submission it makes, and for it the
+prohibition on `APPROVE` and `REQUEST_CHANGES` remains a ban on those GitHub
+actions while the review skill's internal verdict vocabulary is unchanged. The
+pair C driver automation instead uses this authorized-submission
+branch and submits the actual verdict on an officially-requested peer PR, under
+"Binding review verdicts (pair C)" in
+[Automation sessions](../axstack/references/automations.md); a peer PR it
+reached through the qualifying mention trigger still takes the `COMMENT` branch.
 
 ## Automation publication (`COMMENT`)
 
-Only the Orca driver automation, as owner for a peer PR under
-[Automation sessions](../axstack/references/automations.md), uses this branch:
-one `COMMENT` review, owner-synthesized and bound to the reviewed commit. It
-never submits `APPROVE` or `REQUEST_CHANGES`; a need for either is a
-recorded hold. The peer-review submission rule above is unchanged for every
-other caller.
+The pair A/B driver automation, as owner for a peer PR under
+[Automation sessions](../axstack/references/automations.md), uses this branch,
+as does the pair C driver automation for a peer PR reached through the
+qualifying mention trigger: one `COMMENT` review, owner-synthesized and bound to
+the reviewed commit. On this branch the automation never submits `APPROVE` or
+`REQUEST_CHANGES`; a need for either is a recorded hold. Pair C's
+officially-requested peer PRs take the authorized-submission branch above
+instead. The peer-review submission rule above is unchanged for every other
+caller.
 
 1. Complete the mode-required review: every mode-required receipt is current
    for the head SHA and current base, and each carries its escalation field.

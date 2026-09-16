@@ -1,7 +1,13 @@
 # Orca PR automations — specification
 
-Status: revision 4 (amendment to revision 3, extending coverage to the
-defi-com repositories as a second, independent automation pair). Revision 3
+Status: revision 5 (amendment to revision 4, splitting C/D's review and repair
+scope per repository, authorizing real review submission for C/D, and recording
+the workspace paths and green-gate corrections found during the first host
+setup). Revision 4's text is preserved below and remains the baseline wherever
+revision 5 does not contradict it; see "Revision 5" immediately before the
+Automations C and D section. Revision 4 was (amendment to revision 3, extending
+coverage to the defi-com repositories as a second, independent automation
+pair). Revision 3
 remains the approved baseline for the axstack pair (Automations A and B) and is
 unchanged by this amendment except where a clause below names it. Revision 4 rests on
 decisions D1-D14 recorded in the align run record
@@ -249,6 +255,289 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   cannot be relied on to deliver its own failure. Failed or uncertain delivery
   stays visibly held in `watchdog.json` and Orca run history.
 
+## Revision 5 — per-repo scope, authorized review submission, workspace paths
+
+Revision 5 amends revision 4 after the user reviewed the first host setup on
+2026-09-16. Revision 4 stays the baseline for everything it is not contradicted
+on here, and pair A/B is still unchanged throughout.
+
+### Two lists, not one
+
+Revision 4 gave pair C/D a single mutation allowlist gating review and repair
+together. The user has since scoped them separately, so C/D carries two lists,
+each stated verbatim in C's prompt and auditable through `orca automations show`:
+
+- **Review allowlist:** `defi-com/monorepo`, `defi-com/mobile`,
+  `defi-com/azure-next-hybrid`.
+- **Repair allowlist:** `defi-com/monorepo`, `defi-com/mobile`.
+
+`defi-com/azure-next-hybrid` is therefore review-only. Its PRs authored by self
+are discovered and recorded but never repaired and never pushed to, and they are
+not review candidates either, since a PR authored by self is not a peer PR. Its
+peer PRs are reviewed on the ordinary triggers: self officially
+review-requested, or a comment that explicitly asks self to review or respond. A repository absent from both lists is record-only exactly as before.
+Every clause revision 4 wrote about own-PR repair now reads against the repair
+allowlist, and every clause about peer review reads against the review
+allowlist. Where revision 3 or 4 says "allowlisted" without naming an action —
+including the precheck's "hash only allowlisted PRs" — it means the union of the
+two lists for discovery and for the wake fingerprint, and the action-specific
+list for the action itself. So a change on an azure-next-hybrid peer PR wakes C,
+while a change on an azure-next-hybrid own PR does not, because no action is
+available for it.
+
+### Authorized review submission replaces COMMENT-only
+
+Revision 3 prohibited `APPROVE` and `REQUEST_CHANGES` as GitHub actions for
+every automation, and revision 4 kept the automation publication branch at one
+`COMMENT` review. The user has explicitly authorized pair C/D to submit a real
+review verdict instead: after the mode-required reviewers settle and the gate
+returns `proceed`, C submits one owner-synthesized review carrying the actual
+verdict — `APPROVE` or `REQUEST_CHANGES` — bound to the reviewed commit,
+through the `axstack-review` authorized-submission branch rather than its
+automation `COMMENT` exception.
+
+This is an authority expansion with outward effect on other people's pull
+requests, so it is bounded:
+
+- It applies to pair C/D only. Pair A/B keeps the `COMMENT`-only exception.
+- Every other prohibition is untouched: no force-push, no rebase, no merge, no
+  close, by any automation, anywhere.
+- **Peer PRs only, only Automation C, and only on an official request.** A
+  binding verdict is submitted only where self is *officially review-requested*
+  on a PR authored by someone else. A peer PR reached through the qualifying
+  mention trigger — a comment asking self to take a look — still gets a review,
+  but it is published as a `COMMENT`, never as a binding verdict: a casual ask
+  is not a request for a merge-blocking review, and the mention trigger cannot
+  be used to place a block.
+- **An open obligation carries its own authority to resolve itself.** Submitting
+  a review removes self from the review request, so requiring a current official
+  request for every submission would deadlock: C could place a block and then be
+  permanently unable to submit the follow-up `APPROVE` that clears it. Therefore
+  an obligation created by an official request keeps a narrow, named authority
+  for as long as it stays open: C may submit exactly one superseding verdict on
+  that PR, including a clearing `APPROVE`, without a fresh review request. That
+  authority extends to nothing else — not to a different PR, not to a PR whose
+  obligation is already discharged, and not past the one-supersede-per-head cap.
+  It does, however, **follow the obligation chain**: an obligation opened by a
+  verdict that was itself submitted under this authority inherits it, so the
+  authority persists on that one PR until the PR merges, closes, or its block is
+  resolved. Without that inheritance the deadlock returns one head later in the
+  ordinary multi-push case — C blocks at head 1 on request, the teammate pushes
+  head 2 without fixing, the honest re-review blocks again at head 2 under
+  obligation authority, and C could then never clear the block it placed there.
+  GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
+  author, so an authored-mode review of the automation's own repair stays
+  internal and gates only the push, exactly as before. Automation D never
+  writes to GitHub at all; its no-mutation rule is untouched.
+- **The two verdicts have different preconditions**, and the earlier drafting
+  of this clause made `REQUEST_CHANGES` impossible by requiring the absence of
+  blockers for any submission:
+  - `APPROVE` requires a complete mode-required review at the exact head SHA
+    with a current base, the gate's `proceed`, and **zero** unresolved
+    validated blocking findings.
+  - `REQUEST_CHANGES` requires the same completeness and gate token, and **at
+    least one** validated blocking finding carrying its evidence and
+    consequence. It is the verdict that reports blockers; it is not gated on
+    their absence.
+  - `INCOMPLETE`, unresolved material disagreement, an unavailable required
+    reviewer, or a gate `escalate` submits nothing and records a hold.
+- The remote head and base readback immediately before submit is unchanged, as
+  is the never-submit-twice rule for an unchanged head SHA.
+- **A submitted `REQUEST_CHANGES` blocks the PR.** `defi-com/monorepo`'s `dev`
+  protection carries required pull-request reviews with
+  `dismiss_stale_reviews: false`, so a `REQUEST_CHANGES` under the user's login
+  keeps blocking until that same login approves or dismisses it, and a
+  teammate's later push does not clear it. `APPROVE` has no comparable tail.
+  Therefore: when a PR carrying the automation's own unresolved
+  `REQUEST_CHANGES` is observed at a superseded head, re-review is **due control
+  work, exempt from the per-tick push budget**, so the automation cannot leave
+  its own block standing merely because a tick was busy. If the re-review
+  cannot complete within that tick, the automation records a hold owned by the
+  user naming the blocked PR and the blocking review. Dismissal stays
+  prohibited: only the human clears a stale block.
+- **An outstanding obligation is due control work at the precheck.** Obligation
+  polling runs inside C, but the precheck decides whether C runs at all, so an
+  unchanged discovery fingerprint would otherwise leave a blocked and
+  now-undiscoverable PR unvisited and the three-failed-poll health path would
+  never fire. C's precheck therefore reads outstanding obligations from
+  `cursor.json` and exits 0 — waking C with the forge otherwise unchanged — when
+  any obligation is outstanding. Stated plainly rather than as three conditions
+  that collapse into one: while C holds any unresolved blocking review, every
+  scheduled tick wakes it, whether or not the forge changed. That is deliberate —
+  an unresolved block under the user's login is exactly the state that must not
+  go unvisited. Obligations join watch deadlines, failed-relay retries and
+  expired repair caps in the due-work list.
+- **A blocked PR is tracked durably, outside discovery.** Submitting a review
+  removes self from GitHub's `review-requested` results, so a PR that C has just
+  blocked can vanish from the three discovery searches on the very next tick —
+  and C would then never see the PR again to clear its own block. Discovery
+  alone therefore cannot carry this. C records every unresolved blocking review
+  it submits in `cursor.json` as an open obligation holding the PR URL, the
+  review id, the head SHA it was bound to, and the submission timestamp, and on
+  every tick it polls those PRs directly by URL regardless of whether they still
+  satisfy any discovery trigger. An obligation is discharged only by observing
+  the PR merged, closed, or its blocking review resolved or superseded. A poll
+  that fails leaves the obligation open and retries on the next tick; an
+  obligation that cannot be polled or re-reviewed for three consecutive ticks is
+  a health finding routed to the gate like any other, because a block the
+  automation can no longer reach is exactly the failure the user would want to
+  hear about.
+- The never-submit-twice rule is scoped to an unchanged head **and** an
+  unchanged verdict basis. A corrected finding or a base change at an unchanged
+  head is new work and may produce a superseding verdict; without this the
+  automation could never retract its own blocking review.
+- **Supersession is capped**, because two non-deterministic reviewers re-run
+  hourly could otherwise flip `APPROVE` and `REQUEST_CHANGES` at one head
+  forever, every flip binding under the user's login. At most **one** superseding
+  verdict per head SHA. A supersede at an unchanged head and unchanged base
+  additionally requires a recorded finding-level reason naming what changed
+  about the finding, not merely a differing reviewer opinion; without that
+  reason the automation records a hold and submits nothing.
+- The review is submitted under the user's own GitHub identity. This
+  specification does not require the review body to disclose that it was
+  produced by an automation; the user has not been asked that question
+  separately and it remains open for a later revision. Nothing here claims the
+  user waived disclosure.
+
+### Workspace paths
+
+defi-com repositories live under `~/defi/`, personal projects under `~/dev/`.
+C/D's per-PR child worktrees are created from the `~/defi/` clones. The `~/defi/` workspace carries its own `CLAUDE.md`, which states a
+never-auto-post review policy, delegates that policy to `~/.claude/CLAUDE.md`
+— where the text no longer appears — and points at a convention memory file
+whose path names a different home and does not exist on this host. The user was
+shown all of this on 2026-09-16 and chose automatic submission for the
+automation anyway.
+
+That choice is scoped narrowly. It overrides the never-auto-post policy **for
+pair C/D's automated reviews only**. Interactive sessions working under
+`~/defi/` keep that policy unchanged, as do human-authored reviews and the
+`~/defi/misc/reviews/` HTML naming conventions, which this specification does
+not touch. The user settled the remaining question on 2026-09-16: Automation C **does**
+also write the local review file alongside its submitted verdict, so the
+workspace convention is preserved rather than bypassed. C writes
+`~/defi/misc/reviews/review-PR-<num>.html` for `defi-com/monorepo` with no
+prefix — the unprefixed name means monorepo by definition — and the prefixed
+form for every other repository, `review-azure-next-hybrid-PR-<num>.html` and
+`review-mobile-PR-<num>.html`. The file is written for every review C publishes,
+verdict or `COMMENT`, and it carries the same findings and evidence as the
+submitted review plus the reviewed SHA. A failure to write the file is a
+recorded hold and does not by itself retract a submitted review; a review is
+never withheld because the file could not be written, and the mismatch is
+visible rather than silent.
+
+### What counts as green for a repair
+
+`bun run test` is not a usable gate for `defi-com/monorepo` on this host:
+`apps/defi-app`'s `e2e/backup-gating.spec.ts` fails because
+`startHermeticAppServer` times out, an environment gap on a host that runs no
+app services, not a repository defect. Verified 2026-09-16 against `dev` at
+`611abaa65`; the unit level is green at 315 files and 4662 tests.
+
+A repair therefore gates on the repository's unit-level test command plus the
+PR's CI check rollup. For `defi-com/monorepo` that command is run from the
+package that owns the failing test, using the pinned interpreter at
+`~/.bun-1.2.2/bin/bun` rather than the host default: the repository pins
+`packageManager: bun@1.2.2`, and `bun install --frozen-lockfile` fails under the
+host's 1.4.2 with "overrides in package.json changed since bun.lock was saved".
+The pinned installation is deliberately kept off the default `PATH` so it never
+becomes the host default for other repositories, `axatbhardwaj/axstack` among
+them, whose `engines` require bun >= 1.3.14.
+
+Local end-to-end suites that require services this host does not run are a
+recorded unverified boundary rather than a failure to repair. A check the
+automation cannot run locally is never reported as passing, and the repair's
+evidence names every suite it could not execute and why.
+
+### Inherited failures
+
+A repair addresses only a failure the PR itself introduced. The PR head's check
+rollup is compared against the same checks on its base, but a rollup comparison
+alone does not establish causation: the same named check can fail at head and at
+base for different reasons. So the rule is conservative in both directions.
+
+- A check failing at head and passing on the base is treated as introduced by
+  the PR and is eligible for repair.
+- A check failing at head whose same-named check also fails on the base is an
+  inherited-failure hold naming the base SHA and its conclusion. It consumes no
+  repair cap and is never repaired on the user's branch. If the automation can
+  show from the failure output that the head failure has a different cause than
+  the base failure, it records that evidence and the check becomes eligible;
+  absent that evidence the hold stands.
+- A base whose checks are missing, still running, or otherwise not comparable
+  yields unknown causation, which is a hold, never an assumed repair.
+
+This rule governs check-triggered repair. It does not constrain the
+review-feedback trigger, which is the only repair trigger available in
+`defi-com/mobile` because that repository has no workflows at all; actionable
+review feedback is repaired there on its own terms with no rollup comparison.
+
+### Clauses of revisions 3 and 4 that revision 5 supersedes
+
+These are named explicitly, because "baseline unless contradicted" is not good
+enough when the older text is still readable and would otherwise win at runtime:
+
+- **Identity and scope, mutation allowlist:** "there is no separate review-only
+  list" is superseded for pair C/D by "Two lists, not one". It still holds for
+  pair A/B, which keeps one list.
+- **Automations C and D, scope and topology:** revision 4's single
+  "Mutation allowlist, verbatim: `defi-com/monorepo`, `defi-com/mobile`,
+  `defi-com/azure-next-hybrid`" is superseded by the two verbatim lists above.
+  Only one verbatim text may appear in C's prompt, and it is the pair of lists.
+- **Prohibited everywhere:** `APPROVE` and `REQUEST_CHANGES` remain prohibited
+  for Automations A, B and D. For Automation C they are permitted exactly under
+  "Authorized review submission" and nowhere else. Force-push, rebase, merge and
+  close stay prohibited for all four, with no exception.
+- **Automations C and D, scope and topology, credential bullet:** its sentence
+  that the prohibitions on `APPROVE` and `REQUEST_CHANGES` "remain prompt-level
+  only" for C is superseded to the extent that those two actions are no longer
+  prohibited for C at all; every other prohibition it names is unchanged and
+  still prompt-level.
+- **Acceptance check 10** required C's peer path to publish "exactly one
+  `COMMENT` review". It is superseded by check 15: C submits the actual verdict.
+  Pair A/B's `COMMENT`-only path is unchanged and check 10 still describes it.
+- **Prerequisites** still said monorepo carries two submodules; corrected below.
+
+### A skill amendment is required before C is enabled
+
+C loads `skills/axstack-review/SKILL.md`, which in turn loads
+`skills/axstack/references/automations.md`. Three places still assert the
+opposite of "Authorized review submission", so the contradiction would be live
+at runtime rather than theoretical, and naming only the first would leave it
+standing:
+
+- `skills/axstack-review/SKILL.md`: the `COMMENT` branch "is the only submission
+  the Orca driver automation makes". Its automation publication branch must be
+  scoped to pair A/B, with pair C routed to the authorized-submission branch.
+- `skills/axstack/references/automations.md`: "Prohibited everywhere:
+  force-push, rebase, merge, close, `APPROVE`, `REQUEST_CHANGES`" must become
+  pair-scoped; the driver tick's "one owner-synthesized `COMMENT` review" must
+  route pair C's officially-requested peer PRs to a binding verdict while pair
+  A/B and C's mention-triggered reviews keep `COMMENT`; and the precheck's
+  due-work list must gain the outstanding blocking-review obligation described
+  above, since that reference is where the due-work list an automation session
+  actually reads is written.
+- The contract tests that currently assert COMMENT-only for automations —
+  `tests/workflows/review-modes.test.js` and
+  `tests/workflows/automation-contracts.test.js` — must be updated to assert the
+  pair-scoped rule. They are the guard that would otherwise fail an unscoped
+  edit, and they must keep asserting A/B's COMMENT-only behaviour.
+
+Revision 3 listed its skill amendments in "Purpose and boundary"; revision 5
+adds these. They are tracked as their own task and are a precondition of
+acceptance check 15.
+
+### Corrections to revision 4
+
+- `defi-com/monorepo` has **one** submodule, `packages/contracts`. Revision 4's
+  Prerequisites said two, and that sentence is corrected rather than merely
+  contradicted. `.gitmodules` also declares
+  `packages/database/domains-json`, but the committed tree holds a 31-byte
+  regular file at that path rather than a gitlink, so `git submodule update`
+  correctly skips it. Verified upstream on `dev`.
+- Acceptance check 2's submodule clause reads "its one real submodule" instead
+  of "both monorepo submodules".
+
 ## Automations C and D — defi-com pair
 
 Automation C is the defi-com driver; Automation D is its own watchdog. They are
@@ -456,9 +745,10 @@ These are host setup gaps verified open on 2026-09-16, and each blocks enabling:
   version; it runs the repository's own command. The driver worktree and every
   child worktree must have `~/.bun/bin` on `PATH`, since a non-login shell does
   not.
-- `defi-com/monorepo` carries two submodules, `defi-com/contracts` (checked out
-  over the Git remote protocol already configured on the host) and
-  `stealth-project-22/domains-json`. Access to both was verified; provisioning
+- `defi-com/monorepo` carries one real submodule, `defi-com/contracts` (checked
+  out over the Git remote protocol already configured on the host). `.gitmodules`
+  also declares `stealth-project-22/domains-json`, but the committed tree holds a
+  regular file at that path, so it is not a submodule and is not provisioned. Access to both was verified; provisioning
   them in the driver and child worktrees is a setup task.
 - Per-repository setup hooks and their environment are **unverified** for
   `defi-com/mobile` and `defi-com/azure-next-hybrid` as of 2026-09-16. Before
@@ -576,9 +866,11 @@ For C and D, all of the following, on the VPS runtime:
    driver worktree of `axatbhardwaj/axstack` as their shared home — the
    defi-com repos are parents for per-PR child worktrees only, never driver
    homes. `bun` resolves on `PATH` in the driver worktree and in a child
-   worktree, both monorepo submodules check out in a child worktree, and the
-   monorepo test command runs to completion there under the host toolchain (or
-   the pinned versions installed alongside, per "Prerequisites").
+   worktree, monorepo's one real submodule (`packages/contracts`) checks out in
+   a child worktree, and the monorepo unit-level test command runs to completion
+   there under the pinned `~/.bun-1.2.2/bin/bun`, which is off the default
+   `PATH`; the host's 1.4.2 fails `bun install --frozen-lockfile` there, and
+   that failure is itself part of this check.
 3. C's stored precheck exits non-zero on an unchanged fingerprint, zero after a
    synthetic allowlisted own-PR push, non-zero when only a non-allowlisted PR
    changed, and non-zero with an `error` line when a search returns exactly the
@@ -637,5 +929,69 @@ For C and D, all of the following, on the VPS runtime:
     tick duration over at least 10 ticks)`, and the computed value and its
     sample are recorded. Neither a `pending restack` hold nor a budget hold
     trips D's hold-with-no-owner threshold.
+
+14. Revision 5 scope split: a PR in `defi-com/azure-next-hybrid` authored by
+    self produces zero repairs and zero pushes, while a review-requested PR in
+    the same repository produces a review; a repository in neither list stays
+    record-only.
+15. Revision 5 submission. These repositories are private and the peer PRs are
+    real teammates' work, so a "synthetic" peer PR does not exist and the check
+    is split by whether it writes to GitHub. Fabricating a finding, editing peer
+    code, or manufacturing a state on someone else's PR is forbidden here as
+    everywhere.
+
+    **15A — no-write coverage, run first, deterministic.** Against recorded
+    fixtures and the submission boundary with the GitHub call captured rather
+    than sent, assert the payload and that nothing is transmitted for each of:
+    an `APPROVE` payload from a complete review with zero validated blockers; a
+    `REQUEST_CHANGES` payload from a complete review with at least one validated
+    blocking finding carrying evidence; no call at all for `INCOMPLETE`, an
+    unavailable required reviewer, or a gate `escalate`; no call for a PR
+    authored by self; a `COMMENT` payload, never a verdict, for a
+    mention-triggered peer PR; no second call at an unchanged head and unchanged
+    verdict basis; exactly one superseding call at a changed basis and none for
+    a second supersede at the same head; the superseded-head re-review path
+    running as due control work exempt from the per-tick budget; the durable
+    blocking-obligation record being written, polled by URL when discovery no
+    longer returns the PR, discharged on merge/close/resolution, and becoming a
+    gate-routed health finding after three unpollable ticks; and zero GitHub
+    writes by Automation D throughout. It additionally covers the three cases
+    that only appear once a block exists: an unchanged discovery fingerprint
+    with an outstanding obligation still exits the precheck 0 and wakes C; a PR
+    whose review request has been removed — as submitting a review does — still
+    accepts exactly one honest clearing `APPROVE` under the obligation's own
+    authority and no second one; three failed polls across scheduled ticks
+    produce exactly one gate-routed health finding; and the obligation chain —
+    a block at head 1 from an official request, an honest re-block at head 2
+    after a teammate push, and a clearing `APPROVE` at head 3 submitted under
+    the inherited authority with no fresh review request.
+
+    **15B — one live submission, on a PR the user designates.** The user
+    designated `defi-com/monorepo#1108` (authored by `yep365`, self officially
+    review-requested) on 2026-09-16 and accepted that a genuine review verdict
+    will land on it. C reviews it honestly and
+    submits whichever verdict that review truthfully yields — the check does not
+    require a particular verdict, and an `APPROVE` satisfies it as fully as a
+    `REQUEST_CHANGES`. The remote receipt must confirm exactly one review bound
+    to the reviewed commit. If the honest verdict is `REQUEST_CHANGES`, the user
+    is told at once that a real block now stands under their login and that only
+    they can clear it, and the resulting obligation is followed through the
+    tracking rules above. The local review file required above is written for
+    this review too, and its presence and naming are part of the check.
+
+    **15C — precondition.** The skill, reference and test amendments named in
+    "A skill amendment is required before C is enabled" are complete, and pair
+    A/B, run on equivalent states, still submits `COMMENT` only. Without 15C,
+    C is not enabled and 15B is not attempted.
+
+16. Revision 5 green gate and inherited failures: a check failing at head and
+    passing on the base is repaired; a same-named check failing on both is an
+    inherited-failure hold naming the base SHA that consumes no repair cap; a
+    base whose checks are missing or still running yields a hold, not an
+    assumed repair; two failures sharing a check name but differing in cause
+    are distinguished only on recorded output evidence; `defi-com/mobile`
+    repairs from review feedback with no rollup comparison; and a local suite
+    that cannot run for want of host services is recorded as an unverified
+    boundary and never reported as passing.
 
 Only then are C and D enabled.

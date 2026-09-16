@@ -221,8 +221,12 @@ test('rev-2 review exception: Standalone-owner and Authorized-submission carry t
   expect(owner).toContain('Standalone owner: no separate `axstack-owner` is materialized');
   expect(clause(owner, /no separate `axstack-owner` is materialized/)).toMatch(/Orca driver automation/i);
   const submission = section(review, '## Authorized submission (peer review)', '## Automation publication');
-  expect(submission).toContain('Authorized submission: the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling');
-  expect(clause(submission, /Authorized submission:/)).toMatch(/Orca driver automation/i);
+  // Revision 5 pair-scopes this exception. A/B's COMMENT-only guarantee must survive verbatim,
+  // and pair C must be routed to the authorized-submission branch.
+  expect(submission).toContain('for the pair A/B driver automation the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling, is the only submission it makes');
+  expect(submission).toMatch(/pair C driver automation instead uses this authorized-submission branch and submits the actual verdict on an officially-requested peer PR/);
+  expect(submission).toMatch(/mention trigger still takes the `COMMENT` branch/);
+  expect(clause(submission, /Authorized submission, pair-scoped:/)).toMatch(/Orca driver automation|pair A\/B driver automation/i);
   // The APPROVE/REQUEST_CHANGES ban is on GitHub actions; the internal verdict vocabulary stays.
   expect(clause(review, /ban on those GitHub actions|prohibition on `APPROVE` and `REQUEST_CHANGES`/i)).toMatch(/internal verdict vocabulary is unchanged/i);
 });
@@ -395,4 +399,126 @@ test('rev-4 scheduling and caps are qualified: four distinct minutes, caps are C
   expect(minutes).toMatch(/A, B, C and D/);
   // The repair-cap due-work trigger belongs to C/D, which is the only pair with caps.
   expect(clause(ref, /cap that has expired/i)).toMatch(/pair C\/D only/i);
+});
+
+// --- revision 5: pair C submits binding verdicts, pair A/B stays COMMENT-only ---
+
+test('rev-5 verdict authority is pair-scoped: C submits verdicts, A/B and D do not', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // The prohibition is no longer blanket: it names the pairs it still binds.
+  // The blanket prohibition keeps the always-forbidden mutations for all four.
+  expect(ref).toMatch(/\*\*Prohibited everywhere:\*\* force-push, rebase, merge, close\./);
+  // The verdict prohibition is pair-scoped and names exactly who it still binds.
+  expect(ref).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
+  expect(ref).toMatch(/Automation C may submit them under "Binding review verdicts \(pair C\)" below\s*and nowhere else/);
+  // C's authority exists, is peer-only, and needs an official request.
+  const authority = clause(ref, /A binding verdict is submitted only/i);
+  expect(authority).toMatch(/officially review-requested/i);
+  expect(authority).toMatch(/authored by someone else/i);
+  // A mention-triggered peer review stays COMMENT.
+  expect(clause(ref, /mention trigger/i)).toMatch(/`COMMENT`/);
+  // D still writes nothing to GitHub.
+  expect(ref).toMatch(/Automation D never (?:mutates|writes)/i);
+});
+
+test('rev-5 blocking obligations are tracked, wake C, and can clear themselves', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Durable obligation record, polled by URL outside discovery.
+  const obligation = clause(ref, /obligation/i);
+  expect(obligation).toBeTruthy();
+  expect(ref).toMatch(/removes self from[^.]*review-requested|no longer returns the PR/i);
+  expect(clause(ref, /polls those PRs directly by URL|polled directly by URL/i)).toBeTruthy();
+  // Outstanding obligations are due control work in the precheck list.
+  expect(clause(ref, /due control work/i)).toMatch(/obligation/i);
+  // The self-resolve authority exists and follows the chain.
+  expect(clause(ref, /obligation chain/i)).toMatch(/inherits/i);
+  // Supersession is capped per head.
+  expect(clause(ref, /one superseding verdict per head|one supersede per head/i)).toBeTruthy();
+});
+
+test('rev-5 local review file follows the workspace naming convention', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const file = clause(ref, /review-PR-<num>\.html/);
+  expect(file).toMatch(/monorepo/i);
+  expect(ref).toMatch(/review-azure-next-hybrid-PR-<num>\.html/);
+  expect(clause(ref, /failure to write the file|could not be written/i)).toMatch(/hold/i);
+});
+
+test('rev-5 repair scope: a review-only repository never reaches repair', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // C/D carries two lists, and the review-only repo is named as such.
+  expect(ref).toMatch(/review allowlist `defi-com\/monorepo, defi-com\/mobile,\s*defi-com\/azure-next-hybrid`/);
+  expect(ref).toMatch(/repair allowlist `defi-com\/monorepo, defi-com\/mobile`/);
+  expect(clause(ref, /review-only: its own PRs/i)).toMatch(/never repaired and never pushed to/i);
+  // Each action reads its own list, and the driver tick gates repair on the repair list.
+  expect(clause(ref, /each action reads its own\s*list/i)).toMatch(/reviewed and never repaired/i);
+  // The driver tick gates repair on the repair list, in the same sentence as the route.
+  const tick = clause(ref, /only when its repository is on the acting automation's repair/i);
+  expect(tick).toMatch(/axstack-watch/);
+  expect(tick).toMatch(/no repair, no worktree and no push/i);
+});
+
+test('rev-5 obligations appear in the precheck due-work list and the cursor schema', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // The due-work list the precheck actually reads must name obligations.
+  expect(clause(ref, /for due control work:/i)).toMatch(/outstanding blocking-review obligation/i);
+  // The cursor sidecar schema must carry them with enough state to resolve one.
+  const cursor = clause(ref, /last processed fingerprint promoted verbatim/i);
+  expect(cursor).toMatch(/outstanding blocking-review\s*obligations for pair C only/i);
+  expect(cursor).toMatch(/review id/i);
+  expect(cursor).toMatch(/one supersede is still available/i);
+});
+
+// A whole-document regex proves only that the sentence exists SOMEWHERE. These
+// assertions pin each rule inside the operational section that actually governs
+// it, so prose added in a new section cannot satisfy them.
+test('rev-5 rules live in the operational sections, not only in prose', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const between = (start, end) => {
+    const from = ref.indexOf(start);
+    expect(from, `missing section ${start}`).toBeGreaterThan(-1);
+    const to = ref.indexOf(end, from + start.length);
+    expect(to, `missing section end ${end}`).toBeGreaterThan(from);
+    return ref.slice(from, to);
+  };
+
+  // The review skill's own action boundary, read before any branch, must not
+  // assert COMMENT-only for every automation; that prose is loaded first and a
+  // conforming agent would stop there.
+  const skill = compact('skills/axstack-review/SKILL.md');
+  const boundary = skill.slice(0, skill.indexOf('## Peer mode'));
+  expect(boundary).toMatch(/`COMMENT` only for\s*the pair A\/B driver/i);
+  expect(boundary).toMatch(/officially review-requested\s*publishes the actual verdict/i);
+
+  // Pair identity must carry both C/D lists.
+  const identity = between('## Pair identity', '## Identity and scope');
+  expect(identity).toMatch(/review allowlist/i);
+  expect(identity).toMatch(/repair allowlist/i);
+  expect(identity).toMatch(/review-only/i);
+
+  // The allowlist bullet itself must say each action reads its own list.
+  const scope = between('## Identity and scope', '## Roles per mode');
+  expect(scope).toMatch(/each action reads its own\s*list/i);
+  expect(scope).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
+
+  // The driver tick must gate repair on the repair allowlist.
+  const tick = between('## Driver tick', '## Watchdog tick');
+  expect(tick).toMatch(/repair\s*allowlist/i);
+  expect(tick).toMatch(/no repair, no worktree and no push/i);
+  // and route pair C's officially-requested peer PRs to a binding verdict.
+  expect(tick).toMatch(/binding verdict/i);
+
+  // The escalation gate must not make REQUEST_CHANGES impossible.
+  const gate = between('## Escalation gate', '## Precheck');
+  expect(gate).toMatch(/`REQUEST_CHANGES`[^.]*at least one/i);
+  expect(gate).toMatch(/never gated on their absence|needs `proceed`\s*plus at least one/i);
+
+  // The precheck's own due-work list must name obligations.
+  const precheck = between('## Precheck', '## Driver tick');
+  expect(precheck).toMatch(/outstanding blocking-review obligation/i);
+
+  // The cursor schema must carry them.
+  const record = between('## Run record and sidecar', '## Safety holds');
+  expect(record).toMatch(/outstanding blocking-review\s*obligations for pair C only/i);
+  expect(record).toMatch(/review id/i);
 });

@@ -12,8 +12,14 @@ own prompt; never assume.
 - **Pair A/B** — driver Automation A (`*/30`) and watchdog Automation B, run id
   `20260916-pr-automations`, allowlist `axatbhardwaj/axstack`.
 - **Pair C/D** — driver Automation C (hourly) and watchdog Automation D, run id
-  `20260916-defi-automations`, allowlist
-  `defi-com/monorepo, defi-com/mobile, defi-com/azure-next-hybrid`.
+  `20260916-defi-automations`, carrying **two** lists rather than one:
+  - review allowlist `defi-com/monorepo, defi-com/mobile,
+    defi-com/azure-next-hybrid`;
+  - repair allowlist `defi-com/monorepo, defi-com/mobile`.
+
+  `defi-com/azure-next-hybrid` is therefore review-only: its own PRs are
+  discovered and recorded but never repaired and never pushed to, and they are
+  not review candidates either, since a PR authored by self is not a peer PR.
 
 The two pairs share no state: each has its own run id, run directory,
 `progress.md` and sidecars, and no sidecar is shared between them. A clause
@@ -43,9 +49,13 @@ owns policy, the run record, and evidence.
   deduplicated canonically by PR URL across the three searches with own-PR
   precedence.
 - **Mutation allowlist:** stated verbatim in the automation prompt, per
-  automation rather than as one global list. One allowlist gates both own-PR
-  repair and peer review for its own automation; there is no separate
-  review-only list. Outside the
+  automation. Pair A/B carries one list gating both own-PR repair and peer
+  review. Pair C/D carries two, a review allowlist and a repair allowlist, and
+  each action reads its own list: a repository on the review list but not the
+  repair list is reviewed and never repaired. Where a clause says "allowlisted"
+  without naming an action — including the precheck's "hash only allowlisted
+  PRs" — it means the union of the applicable lists for discovery and the wake
+  fingerprint, and the action-specific list for the action itself. Outside the
   allowlist the automation discovers and records only. The precheck writes the
   full discovery list to `pending.json`; no review, watch, gate, or other model
   work is launched for an external PR. External changes do not enter the wake
@@ -53,8 +63,11 @@ owns policy, the run record, and evidence.
   never produce an escalation. This is a deliberate coverage reduction, not an
   implied clean review; discovery errors themselves remain automation-health
   findings.
-- **Prohibited everywhere:** force-push, rebase, merge, close, `APPROVE`,
-  `REQUEST_CHANGES`. A need for any of these becomes a recorded hold.
+- **Prohibited everywhere:** force-push, rebase, merge, close. A need for any of
+  these becomes a recorded hold, for all four automations, with no exception.
+- **`APPROVE` and `REQUEST_CHANGES`** are prohibited for Automations A, B and D.
+  Automation C may submit them under "Binding review verdicts (pair C)" below
+  and nowhere else; a need for either outside that section is a recorded hold.
 
 ## Roles per mode
 
@@ -186,6 +199,71 @@ repository's workflow files, recorded, and re-verified before enabling and on
 any later allowlist change. It is never hardcoded to one branch name, because a
 repository may deploy from more than one branch and may add another at any time.
 
+## Binding review verdicts (pair C)
+
+Automation C submits a real review verdict where pair A/B publishes a `COMMENT`.
+The authority is narrow and every bound below is load-bearing.
+
+A binding verdict is submitted only where self is **officially review-requested**
+on a peer PR authored by someone else. GitHub rejects a verdict from a PR's own
+author, so an authored-mode review of C's own repair stays internal and gates
+only the push. A peer PR reached through the qualifying mention trigger still
+gets a review, published as a `COMMENT`, never as a binding verdict: a casual
+ask is not a request for a merge-blocking review. Automation D never writes to
+GitHub at all.
+
+`APPROVE` requires a complete mode-required review at the exact head SHA with a
+current base, the gate's `proceed`, and zero unresolved validated blocking
+findings. `REQUEST_CHANGES` requires the same completeness and gate token and at
+least one validated blocking finding carrying its evidence and consequence; it
+is the verdict that reports blockers and is not gated on their absence.
+`INCOMPLETE`, unresolved material disagreement, an unavailable required
+reviewer, or a gate `escalate` submits nothing and records a hold.
+
+### Blocking obligations
+
+A submitted `REQUEST_CHANGES` blocks the PR and a teammate's later push does not
+clear it. Submitting a review also removes self from GitHub's `review-requested`
+results, so a PR C has just blocked can leave discovery on the next tick and C
+would never see it again to clear its own block.
+
+C therefore records every unresolved blocking review in `cursor.json` as an open
+obligation holding the PR URL, the review id, the head SHA it was bound to, and
+the submission timestamp, and polls those PRs directly by URL every tick
+regardless of discovery eligibility. An obligation is discharged only by
+observing the PR merged, closed, or its blocking review resolved or superseded.
+A failed poll retries next tick; three consecutive unpollable ticks is a health
+finding routed to the gate.
+
+While C holds any unresolved blocking review, every scheduled tick wakes it: an
+outstanding obligation is due control work in the precheck's list, alongside a
+watch deadline, a pending failed-relay retry, and an expired repair cap.
+
+An obligation created by an official request carries a narrow authority to
+resolve itself: C may submit exactly one superseding verdict on that PR,
+including a clearing `APPROVE`, without a fresh review request. It follows the
+obligation chain — an obligation opened by a verdict submitted under this
+authority inherits it — so the authority persists on that one PR until it
+merges, closes, or its block is resolved, and the deadlock does not reappear one
+head later when a teammate pushes without fixing. It extends to nothing else: not
+another PR, not a discharged obligation, and never more than one superseding
+verdict per head SHA. A supersede whose head and base are both unchanged
+additionally requires a recorded finding-level reason naming what changed about
+the finding; without it C holds and submits nothing.
+
+### Local review file
+
+Every review C publishes, verdict or `COMMENT`, is also written to the
+workspace review directory `~/defi/misc/reviews/`, carrying the same findings
+and evidence as the submitted review plus the reviewed SHA. The naming is the
+workspace convention and the prefix rules are load-bearing, because PR numbers
+collide across repositories: `review-PR-<num>.html` with no prefix means
+`defi-com/monorepo` by definition, and every other repository takes its prefix,
+`review-azure-next-hybrid-PR-<num>.html` and `review-mobile-PR-<num>.html`. A
+failure to write the file is a recorded hold; a review is never withheld or
+retracted because the file could not be written, so the mismatch stays visible
+rather than silent.
+
 ## Escalation gate
 
 After every mode-required reviewer settles, the driver spawns `axstack-auditor`
@@ -198,13 +276,18 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
   [axstack-relay](../../axstack-relay/SKILL.md) naming the PR, the criterion,
   every reviewer's reason, where the user acts (Orca conversation, worktree, or
   PR), and the hold; it publishes nothing.
-- `proceed` → no notification; a push or `COMMENT` publication then
-  additionally requires no unresolved validated blocking finding, because
-  `proceed` never overrides a validated blocking finding. A reviewer security
+- `proceed` → no notification; a push, a `COMMENT` publication, or an
+  `APPROVE` then additionally requires no unresolved validated blocking finding,
+  because `proceed` never overrides a validated blocking finding. A
+  `REQUEST_CHANGES` is the exception and the only one: it is the publication
+  that reports validated blocking findings, so it requires at least one and is
+  never gated on their absence. A reviewer security
   "yes" that the gate does not escalate is recorded as rejected-with-evidence
   or returned to the author before any mutation.
-- Only `proceed` plus no unresolved validated blocking finding permits a push
-  or publication; a push before the gate settles is forbidden.
+- Only `proceed` plus no unresolved validated blocking finding permits a push,
+  a `COMMENT` publication or an `APPROVE`; a `REQUEST_CHANGES` needs `proceed`
+  plus at least one such finding. A push or publication before the gate settles
+  is forbidden either way.
 - Precedence: credible serious risk found by a reviewer still produces the
   standing internal prompt and dependent-action hold immediately, and the gate
   governs only external notification. That hold is the serious-risk rule of
@@ -231,8 +314,9 @@ to the hashed fingerprint, so a draft becoming ready wakes the driver on its
 own; pair A/B's queried fields and fingerprint are unchanged. Hash
 only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
 for due control work: a watch deadline at or before now (pair A/B only, since
-pair C/D stores no deadlines), a pending failed-relay retry, or a per-PR repair
-cap that has expired (pair C/D only, since pair A/B has no caps). Exit 0 when the hash differs or control work is due;
+pair C/D stores no deadlines), a pending failed-relay retry, a per-PR repair cap
+that has expired, or an outstanding blocking-review obligation (both pair C/D
+only, since pair A/B has neither caps nor binding verdicts). Exit 0 when the hash differs or control work is due;
 otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
@@ -265,15 +349,20 @@ repair and publication for that run and is a health finding.
 
 For each changed PR:
 
-- Own PR → [axstack-watch](../../axstack-watch/SKILL.md) on the exact head
+- Own PR, and only when its repository is on the acting automation's repair
+  allowlist → [axstack-watch](../../axstack-watch/SKILL.md) on the exact head
   SHA in a per-PR child worktree; the driver worktree never checks out a PR
-  branch. Follow its repair-publication reference: candidate committed locally,
+  branch, and an own PR in a review-only repository is recorded and nothing
+  else, with no repair, no worktree and no push. Follow its repair-publication reference: candidate committed locally,
   authored review at the local SHA, gate, then fast-forward push with the
   publication readback immediately before it.
 - Peer PR → two isolated `axstack-review` passes on the exact head SHA, then
-  the gate, then one owner-synthesized `COMMENT` review under the review skill's
-  COMMENT branch. `INCOMPLETE` or an unavailable required reviewer records a
-  hold and publishes nothing.
+  the gate, then one owner-synthesized review bound to the reviewed commit. For
+  pair A/B, and for a pair C peer PR reached through the qualifying mention
+  trigger, that is a `COMMENT` under the review skill's COMMENT branch. For a
+  pair C peer PR where self is officially review-requested, it is a binding
+  verdict under "Binding review verdicts (pair C)" above. `INCOMPLETE` or an
+  unavailable required reviewer records a hold and publishes nothing.
 
 Watch window, pair A/B only: 24 hours per own PR from first observation, ending
 early on merge or close. The deadline is stored in `cursor.json`; a due deadline
@@ -344,8 +433,10 @@ hermes send, target telegram (home), host VPS, gate-authorized escalations only
 Machine-readable sidecars in the same directory: `pending.json` (observed
 fingerprint plus full discovery list, written by the precheck), `cursor.json`
 (last processed fingerprint promoted verbatim from `pending.json`, expired PR
-list and per-PR watch deadlines for pair A/B only, pending failed-relay
-retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
+list and per-PR watch deadlines for pair A/B only, outstanding blocking-review
+obligations for pair C only — each holding PR URL, review id, bound head SHA,
+submission timestamp and whether its one supersede is still available — pending
+failed-relay retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
 `watchdog.json` (watchdog only). Orca run history remains the authoritative
 log; the record is derived progress, never authority.
 
