@@ -46,7 +46,7 @@ test('rev-3 run directory assigns files to their sole writers', () => {
   expect(state).toMatch(/`cursor\.json`[^.]*driver only/i);
   expect(state).toMatch(/`pending\.json`, `precheck\.log`[^.]*driver precheck only/i);
   expect(state).toMatch(/`decisions\/<token>\.json`[^.]*lifecycle table/i);
-  expect(state).toMatch(/`watchdog\.log`[^.]*watchdog only/i);
+  expect(state).toMatch(/`watchdog\.log` and `watchdog-state\.json`[\s\S]*?watchdog only/i);
   expect(state).toMatch(/`progress\.md`[^.]*driver only/i);
   expect(state).toMatch(/Orca run history[^.]*authoritative log/i);
 });

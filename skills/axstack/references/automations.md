@@ -299,7 +299,8 @@ contains:
   `legacy_automation_reviews[]`, `health[]`;
 - `pending.json`, `precheck.log` — driver precheck only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
-- `watchdog.log` — watchdog only;
+- `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
+  and send receipts) — watchdog only;
 - `progress.md` — driver only, one line per tick plus holds and mention
   readings, with no per-PR prose.
 
