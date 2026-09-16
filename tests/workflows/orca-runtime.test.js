@@ -28,23 +28,32 @@ test('orca runtime reference replaces the active Paseo launch guide', () => {
 
 test('runtime boundary requires worker worktrees to carry their parent lineage', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
-  // Scope to the lineage paragraph so each clause is checked against its own
-  // prose, then assert the two tokens that carry the clause in either order.
-  // Deleting a clause fails its assertion; rewording one does not.
+  // Each clause is two tokens that must land in the SAME sentence, in either
+  // order. Paragraph scope alone let a clause pass by borrowing a token from a
+  // neighbour, so the pair is bound to the unit that actually states it.
   const lineage = runtime
     .split('\n\n')
     .find((paragraph) => paragraph.includes('--parent-worktree')) ?? '';
-  const carries = (a, b) => a.test(lineage) && b.test(lineage);
+  const sentences = lineage.replace(/\s+/g, ' ').split(/(?<=[.;])\s+/);
+  const states = (a, b) => sentences.some((sentence) => a.test(sentence) && b.test(sentence));
 
-  expect(lineage).not.toBe('');
-  // a: create the worker worktree parented to the candidate.
-  expect(carries(/--parent-worktree/, /candidate'?s? worktree/i)).toBe(true);
-  // b: --no-parent is reserved for unrelated work.
-  expect(carries(/--no-parent/, /unrelated/i)).toBe(true);
-  // c: a wrong lineage is correctable in place.
-  expect(carries(/worktree set/, /--parent-worktree/)).toBe(true);
-  // d: lineage is never authority.
-  expect(carries(/lineage/i, /never\s+authority/i)).toBe(true);
+  expect(lineage, 'no paragraph states the worktree lineage rule').not.toBe('');
+  expect(
+    states(/--parent-worktree/, /candidate'?s? worktree/i),
+    'no sentence requires creating a worker worktree parented to the candidate',
+  ).toBe(true);
+  expect(
+    states(/--no-parent/, /unrelated/i),
+    'no sentence reserves --no-parent for unrelated work',
+  ).toBe(true);
+  expect(
+    states(/worktree set/, /--parent-worktree/),
+    'no sentence says a wrong lineage is correctable in place',
+  ).toBe(true);
+  expect(
+    states(/lineage/i, /\b(?:never|no|not)\s+(?:\w+\s+){0,2}authority/i),
+    'no sentence says lineage is never authority',
+  ).toBe(true);
 });
 
 test('runtime decisions cover startup, fencing, settlement, and accepted handoff', () => {
