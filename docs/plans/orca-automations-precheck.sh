@@ -4,7 +4,6 @@
 #   1 unchanged   2 gh/tooling error   3 previous driver run still active
 set -u
 RUN_DIR="/root/dev/axstack/.git/axstack/runs/20260916-pr-automations"
-AUTOMATION_ID="a19b68d1-2973-4aca-8d56-b732df93144d"
 ALLOWLIST='["axatbhardwaj/axstack"]'   # mutation allowlist, mirrored verbatim in the automation prompt
 LIMIT=100
 LOG="$RUN_DIR/precheck.log"; CUR="$RUN_DIR/cursor.json"; PENDING="$RUN_DIR/pending.json"
@@ -12,14 +11,20 @@ mkdir -p "$RUN_DIR"
 ts="$(date -u +%FT%TZ)"
 log() { printf '%s %s\n' "$ts" "$1" >> "$LOG"; }
 
+# Terminal hygiene and the real busy guard. Orca does not reuse the driver session on this host (verified
+# 2026-09-16: scheduled runs 7 and 8 each opened a new terminal), so every changed tick starts a fresh
+# session that reconciles from the run record. Before dispatching, close the previous ticks' idle driver and watchdog
+# terminals when they are idle; a driver terminal that is still working means the tick is busy.
 if command -v orca >/dev/null 2>&1; then
-  if orca automations runs --id "$AUTOMATION_ID" --json 2>/dev/null \
-     | jq -e '[.result.runs[]? | select(.terminalSessionId != null) | select((.status // "") | test("^(dispatched|running|active|in_progress)$"; "i"))] | length > 0' >/dev/null 2>&1; then
-    # Only a run that already launched a terminal session counts as active: the scheduler creates this tick's own
-    # run row (no terminal session yet) before executing the precheck. Overlap safety otherwise comes from
-    # session reuse, where a later prompt queues behind the current turn in the same driver session.
-    log busy; exit 3
-  fi
+  handles="$(orca terminal list --json 2>/dev/null \
+    | jq -r '.result.terminals[]? | select(.agentIdentity == "claude") | select((.title // "") | test("Axstack PR (automation )?driver|Axstack automation watchdog")) | .handle')"
+  for h in $handles; do
+    if orca terminal wait --terminal "$h" --for tui-idle --timeout-ms 3000 --json 2>/dev/null | jq -e '.result.wait.satisfied == true' >/dev/null 2>&1; then
+      orca terminal close --terminal "$h" --json >/dev/null 2>&1 || true
+    else
+      log busy; exit 3
+    fi
+  done
 fi
 
 me="$(gh api user --jq .login 2>/dev/null)" || { log error; exit 2; }
