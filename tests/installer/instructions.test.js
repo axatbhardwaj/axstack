@@ -15,6 +15,8 @@ describe('owned instruction block primitives', () => {
     expect(block).toBe(
       '<!-- axstack:begin v1 -->\n' +
         'Use Axstack for engineering work. Load `/tmp/ax skills/axstack/SKILL.md` to route the request.\n' +
+        'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through Orca orchestration via the `orca` CLI and its `orca-cli` / `orchestration` skills so the work stays visible.\n' +
+        'Do not use a harness native subagent tool for delegated work.\n' +
         '<!-- axstack:end -->',
     );
     expect(block).not.toMatch(/model|opus|claude|codex/i);

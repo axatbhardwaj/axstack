@@ -9,6 +9,8 @@ export function renderInstructionBlock(skillsDir) {
   return [
     BEGIN,
     `Use Axstack for engineering work. Load \`${join(skillsDir, 'axstack', 'SKILL.md')}\` to route the request.`,
+    'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through Orca orchestration via the `orca` CLI and its `orca-cli` / `orchestration` skills so the work stays visible.',
+    'Do not use a harness native subagent tool for delegated work.',
     END,
   ].join('\n');
 }
