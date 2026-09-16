@@ -226,3 +226,13 @@ test('rev-2 review exception: Standalone-owner and Authorized-submission carry t
   // The APPROVE/REQUEST_CHANGES ban is on GitHub actions; the internal verdict vocabulary stays.
   expect(clause(review, /ban on those GitHub actions|prohibition on `APPROVE` and `REQUEST_CHANGES`/i)).toMatch(/internal verdict vocabulary is unchanged/i);
 });
+
+test('rev-2 docs: gh stack publication does not apply to automation repairs; they push fast-forward after the gate', () => {
+  const docs = compact('docs/workflows.md');
+  const rule = clause(docs, /`gh stack` publication does not apply to automation repairs/i);
+  expect(rule).toMatch(/fast-forward `git push`/);
+  expect(rule).toMatch(/after the gate|after `proceed`/i);
+  // The watch bullet no longer routes automation repairs to the original author unconditionally.
+  const watch = clause(docs, /`axstack-watch` adopts an existing PR/i);
+  expect(docs.slice(docs.indexOf(watch))).toMatch(/original author[^.]*run itself launched|run-launched/i);
+});
