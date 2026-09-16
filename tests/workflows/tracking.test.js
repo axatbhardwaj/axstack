@@ -43,7 +43,7 @@ test('delivery and recovery preserve runtime identity and ownership', () => {
   expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*model-substitution[^.]*scope/i);
 });
 
-test('native watch policy is preserved after the user lifted the hold', () => {
+test('native watch and rev-3 automation policies remain explicit', () => {
   const watch = compact('skills/axstack-watch/references/watch-runtime.md');
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
@@ -55,10 +55,14 @@ test('native watch policy is preserved after the user lifted the hold', () => {
   expect(watch).toMatch(/five-minute\/hourly[^.]*cadences/i);
   expect(watch).toMatch(/quiet healthy behavior/i);
   expect(watch).toMatch(/24-hour/i);
-  for (const text of [lifecycle, workflows]) {
+  for (const text of [lifecycle]) {
     expect(text).not.toMatch(/Native watch capability hold|Hold activation|create no schedule/i);
     expect(text).toMatch(/lifted[^.]*user decision|user decision[^.]*lifted/i);
     expect(text).toMatch(/driver automation[^.]*mutating owner/i);
     expect(text).toMatch(/watchdog[^.]*read-only/i);
   }
+  expect(workflows).toMatch(/15-minute driver automation[^.]*hourly watchdog/i);
+  expect(workflows).toMatch(/driver is the automation session itself[^.]*no `axstack-monitor` or `axstack-owner`/i);
+  expect(workflows).toMatch(/four model-free health checks/i);
+  expect(workflows).toMatch(/no health gate/i);
 });

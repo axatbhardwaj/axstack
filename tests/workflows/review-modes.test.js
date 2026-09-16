@@ -151,20 +151,21 @@ test('review modes: neutral reviewer IDs carry each ordered preset pair', () => 
   }
 });
 
-test('review modes: COMMENT branch is automation-only and binds the reviewed commit', () => {
+test('review modes: automation verdicts bind the reviewed commit and carry the marker', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   const raw = read('skills/axstack-review/SKILL.md');
   expect(raw).toMatch(/^## Authorized submission \(peer review\)/m);
   expect(review).toMatch(/Submit a consolidated peer review only within explicit user authority and only for a complete `APPROVE` or `REQUEST_CHANGES` verdict/);
-  expect(raw).toMatch(/^## Automation publication \(`COMMENT`\)/m);
-  expect(review).toMatch(/`COMMENT`[^.]*owner-synthesized/i);
-  expect(review).toMatch(/every mode-required receipt[^.]*current for the head SHA|current for the head SHA[^.]*every mode-required receipt/i);
-  expect(review).toMatch(/read back the remote head and base[^.]*before submit|head\/base readback[^.]*before submit/i);
-  expect(review).toMatch(/bound to the reviewed commit|bind[^.]*reviewed commit/i);
-  expect(review).toMatch(/`INCOMPLETE`[^.]*unavailable required reviewer[^.]*publishes nothing[^.]*hold/i);
-  expect(review).toMatch(/`COMMENT`[^.]*never[^.]*`APPROVE`[^.]*`REQUEST_CHANGES`|never submits `APPROVE` or `REQUEST_CHANGES`/i);
-  expect(review).toMatch(/`escalate` records the hold[^.]*publishes nothing/i);
-  expect(review).toMatch(/Only `proceed` plus no unresolved validated blocking finding permits publication/i);
+  expect(raw).toMatch(/^## Automation exception$/m);
+  expect(review).toMatch(/same complete-review and exact-commit requirements/i);
+  expect(review).toMatch(/immediately before `gh pr review`[^.]*re-read self's reviews/i);
+  expect(review).toMatch(/re-check head, base, draft status, authorship, and allowlist/i);
+  expect(review).toContain('<!-- axstack-automation verdict head=<sha> -->');
+  expect(review).toMatch(/`INCOMPLETE`[^.]*unknown GitHub state submits nothing/i);
+  expect(review).toMatch(/`escalate` opens a bound decision token[^.]*exits/i);
+  expect(review).toMatch(/`proceed` permits `APPROVE`[^.]*no validated blocker/i);
+  expect(review).toMatch(/permits `REQUEST_CHANGES`[^.]*at least one evidenced validated blocker/i);
+  expect(review).toMatch(/never submits a `COMMENT` review/i);
 });
 
 test('review modes: reviewer brief ends with the required escalation field', () => {
@@ -175,5 +176,5 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   const receipt = raw.slice(raw.indexOf('## Template: review receipt'), raw.indexOf('## Prompt-only urgent escalation'));
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/security concern[^.]*permanent on-chain state change[^.]*architectural change in approach/i);
-  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/automation health[^.]*never[^.]*reviewer|reviewer[^.]*never[^.]*automation health/i);
+  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/Health is not a reviewer criterion/i);
 });
