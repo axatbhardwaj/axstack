@@ -80,17 +80,26 @@ test('automations: watch repairs are gated locally and pushed fast-forward only'
   expect(repair).toMatch(/push[^.]*before the gate[^.]*forbidden|never push[^.]*before[^.]*gate/i);
 });
 
-// Scenario corpus contract only: a fresh evaluator executes these cases against
-// the skill prompts; keyword matching is not behavior evidence.
-test('automation scenarios: five bounded cases pin the gate, criteria, expiry, and holds', () => {
+// Scenario corpus: each case pins one transition (input facts -> required
+// outcome and forbidden actions). A fresh evaluator executes these against the
+// skill prompts; the deterministic checks below bind each case to the rule it
+// exercises. See docs/plans/orca-automations-evidence.md for the RED/GREEN
+// receipts per case.
+test('automation scenarios: bounded cases pin the gate, criteria, expiry, holds, admission, provenance, precedence, and record-only', () => {
   const data = JSON.parse(read('tests/workflows/automation-scenarios.json'));
-  expect(data.version).toBe(1);
+  expect(data.version).toBe(2);
   expect(data.cases.map(({ id }) => id)).toEqual([
     'push-before-gate',
     'proceed-with-blocking-finding',
     'watchdog-health-finding',
     'expired-pr-skipped',
     'unavailable-gate-hold',
+    'repair-review-admission',
+    'adopted-own-pr-author',
+    'serious-risk-precedence',
+    'escalate-holds-publication',
+    'external-pr-record-only',
+    'due-deadline-wake',
   ]);
   const skills = ['axstack', 'axstack-review', 'axstack-watch'];
   for (const c of data.cases) {
@@ -98,13 +107,64 @@ test('automation scenarios: five bounded cases pin the gate, criteria, expiry, a
     expect(skills.includes(c.skill_ref), `${c.id}: skill_ref must be an automation-facing skill`).toBeTruthy();
     expect(c.input.request && c.input.facts, `${c.id}: needs request and facts`).toBeTruthy();
     expect(c.expected.forbidden.length, `${c.id}: needs forbidden actions`).toBeGreaterThan(0);
+    expect(c.expected.actions.length, `${c.id}: needs required actions`).toBeGreaterThan(0);
   }
   const byId = Object.fromEntries(data.cases.map((c) => [c.id, c]));
-  expect(byId['push-before-gate'].expected.forbidden.join(' ')).toMatch(/push[^,]*before[^,]*gate/i);
-  expect(byId['proceed-with-blocking-finding'].expected.forbidden.join(' ')).toMatch(/proceed[^,]*override|push[^,]*blocking finding/i);
+  const forbidden = (id) => byId[id].expected.forbidden.join(' | ');
+  const actions = (id) => byId[id].expected.actions.join(' | ');
+
+  // Facts: gate not spawned, remote at pre-repair SHA -> push only after proceed; never before the gate.
+  expect(byId['push-before-gate'].input.facts).toMatch(/gate has not yet been spawned/i);
+  expect(byId['push-before-gate'].expected.push).toMatch(/Only after proceed with no unresolved validated blocking finding/i);
+  expect(forbidden('push-before-gate')).toMatch(/Pushing SHA A before the gate returns/i);
+  // Facts: proceed + one validated blocking finding -> no notification and no push.
+  expect(byId['proceed-with-blocking-finding'].input.facts).toMatch(/validated blocking finding[^.]*gate token is proceed|gate token is proceed/i);
+  expect(byId['proceed-with-blocking-finding'].expected.decision).toMatch(/No user notification[^.]*cannot proceed/i);
+  expect(forbidden('proceed-with-blocking-finding')).toMatch(/proceed override the blocking finding/i);
+  // Facts: three error lines + identity mismatch, gate escalates -> watchdog sends once and records in watchdog.json.
+  expect(byId['watchdog-health-finding'].input.facts).toMatch(/three consecutive error lines/i);
   expect(byId['watchdog-health-finding'].expected.criterion).toBe('automation health');
-  expect(byId['expired-pr-skipped'].expected.forbidden.join(' ')).toMatch(/re-adopt/i);
-  expect(byId['unavailable-gate-hold'].expected.hold).toBeTruthy();
+  expect(actions('watchdog-health-finding')).toMatch(/occurrence id \(type, first-observed UTC timestamp\)/i);
+  expect(actions('watchdog-health-finding')).toMatch(/On escalate, perform exactly one hermes send and record the receipt in watchdog\.json/i);
+  expect(forbidden('watchdog-health-finding')).toMatch(/Mutating GitHub/i);
+  // Facts: expired in record and cursor.json -> skipped; never re-adopted.
+  expect(byId['expired-pr-skipped'].input.facts).toMatch(/cursor\.json list the PR as expired/i);
+  expect(actions('expired-pr-skipped')).toMatch(/Skip the expired PR/i);
+  expect(forbidden('expired-pr-skipped')).toMatch(/re-adopt/i);
+  // Facts: gate model unavailable -> hold, publish nothing, no escalation through the gate itself.
+  expect(byId['unavailable-gate-hold'].input.facts).toMatch(/cannot be launched/i);
+  expect(byId['unavailable-gate-hold'].expected.hold).toMatch(/mutation for this PR pauses/i);
+  expect(forbidden('unavailable-gate-hold')).toMatch(/Escalating the hold through the unavailable gate itself/i);
+  // Facts: remote != local candidate -> reviewer admits the local SHA via git rev-parse; remote equality at readback.
+  expect(byId['repair-review-admission'].input.facts).toMatch(/remote head is still the pre-repair SHA/i);
+  expect(actions('repair-review-admission')).toMatch(/git rev-parse[^|]*child worktree/i);
+  expect(actions('repair-review-admission')).toMatch(/Re-check remote equality at the publication readback/i);
+  expect(forbidden('repair-review-admission')).toMatch(/Stopping the review because the remote ref does not equal the candidate/i);
+  // Facts: adopted own PR with a historical author -> automation session or dispatched axstack-author authors; reviewer from that provenance.
+  expect(byId['adopted-own-pr-author'].input.facts).toMatch(/authored[^.]*by a session this run did not launch|not launched by this run/i);
+  expect(actions('adopted-own-pr-author')).toMatch(/automation session[^|]*or[^|]*axstack-author/i);
+  expect(actions('adopted-own-pr-author')).toMatch(/reviewer from the recorded provenance of the repair/i);
+  expect(forbidden('adopted-own-pr-author')).toMatch(/Routing the fix to the PR's historical author session/i);
+  // Facts: reviewer finds credible serious risk before the gate -> immediate internal hold; external notification only via escalate.
+  expect(byId['serious-risk-precedence'].input.facts).toMatch(/gate has not been spawned/i);
+  expect(actions('serious-risk-precedence')).toMatch(/Raise the internal prompt and record the dependent-action hold immediately/i);
+  expect(forbidden('serious-risk-precedence')).toMatch(/hermes send before the gate returns escalate/i);
+  expect(forbidden('serious-risk-precedence')).toMatch(/Deferring the internal hold until the gate settles/i);
+  // Facts: gate returns escalate -> hold recorded and notified; nothing published.
+  expect(byId['escalate-holds-publication'].input.facts).toMatch(/gate returns escalate/i);
+  expect(actions('escalate-holds-publication')).toMatch(/Record the hold[^|]*exactly one hermes send/i);
+  expect(byId['escalate-holds-publication'].expected.publication).toMatch(/Nothing is pushed or published/i);
+  expect(forbidden('escalate-holds-publication')).toMatch(/Pushing or publishing on escalate/i);
+  // Facts: only an external PR changed -> recorded in pending.json; no model work, no wake, no escalation.
+  expect(byId['external-pr-record-only'].input.facts).toMatch(/outside the mutation allowlist/i);
+  expect(actions('external-pr-record-only')).toMatch(/Record the PR in pending\.json/i);
+  expect(forbidden('external-pr-record-only')).toMatch(/Launching review, watch, or gate work for the external PR/i);
+  expect(forbidden('external-pr-record-only')).toMatch(/Escalating on external PR contents/i);
+  // Facts: GitHub unchanged, stored deadline due -> precheck exits 0 with `due`; driver expires and stops.
+  expect(byId['due-deadline-wake'].input.facts).toMatch(/GitHub is unchanged[^.]*deadline[^.]*(?:past|before now)/i);
+  expect(actions('due-deadline-wake')).toMatch(/exit 0[^|]*`?due`?/i);
+  expect(actions('due-deadline-wake')).toMatch(/mark the PR expired[^|]*record the handoff/i);
+  expect(forbidden('due-deadline-wake')).toMatch(/Skipping the tick because the fingerprint is unchanged/i);
 });
 
 test('automations: docs/workflows.md has an Automations section pointing at spec and reference', () => {
