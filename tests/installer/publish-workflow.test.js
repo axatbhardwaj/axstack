@@ -47,6 +47,15 @@ test('publish workflow runs the whole suite before it publishes', () => {
   expect(order.some((run) => /--access public/.test(run))).toBe(true);
 });
 
+// The token-bearing step is pinned verbatim. A blocklist cannot model shell
+// semantics — `env`, `printenv | tee`, a here-doc, indirect expansion, or a
+// later `cat ~/.npmrc` all read the credential without naming the variable —
+// so the allowed body is whitelisted and any change must be deliberate.
+const TOKEN_STEP_RUN = `set -eu
+: "\${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+umask 077
+printf '//registry.npmjs.org/:_authToken=%s\\n' "\${REGISTRY_TOKEN}" > "\${HOME}/.npmrc"`;
+
 test('publish workflow never exposes the registry token', () => {
   // The secret expression belongs in env:, never inside a shell command.
   for (const step of steps()) {
@@ -56,26 +65,24 @@ test('publish workflow never exposes the registry token', () => {
   const holders = steps().filter((step) =>
     Object.values(step.env ?? {}).some((value) => String(value).includes('secrets.NPM_ACCESS_TOKEN')));
   expect(holders.length, 'exactly one step may hold the token').toBe(1);
+  expect(Object.keys(holders[0].env), 'the token step may hold only the token').toEqual(['REGISTRY_TOKEN']);
+  expect(holders[0].run.trim(), 'the token step body is pinned; update this test deliberately')
+    .toBe(TOKEN_STEP_RUN);
+});
 
-  const [name] = Object.entries(holders[0].env)
-    .find(([, value]) => String(value).includes('secrets.NPM_ACCESS_TOKEN'));
-  const body = holders[0].run ?? '';
-  const uses = body.split('\n').filter((line) => new RegExp(`\\$\\{?${name}\\b`).test(line));
-  expect(uses.length, 'token is never used').toBeGreaterThan(0);
-
-  // Exactly one line may write the token, and it must go into .npmrc.
-  const npmrc = /(?:^|\s)>\s*"?(?:\$\{?HOME\}?|~)\/?\.npmrc/;
-  const writes = uses.filter((line) => npmrc.test(line));
-  expect(writes.length, 'exactly one line may write the token, into .npmrc').toBe(1);
-
-  // Any other use must not be able to emit the value: a bare `${VAR:?msg}`
-  // existence check prints the name, never the contents.
-  for (const line of uses) {
-    if (npmrc.test(line)) continue;
-    expect(line, `token use may leak: ${line.trim()}`).toMatch(/^\s*:\s*"\$\{\w+:[?+-]/);
+test('no other step can read the credential the token step wrote', () => {
+  for (const step of steps()) {
+    const body = step.run ?? '';
+    if (body.trim() === TOKEN_STEP_RUN) continue;
+    // `cat ~/.npmrc` in any later step leaks it just as well.
+    expect(body, `step must not touch .npmrc: ${body.trim()}`).not.toMatch(/npmrc/);
+    // Whole-environment dumps take the token without ever naming it.
+    expect(body, `step must not dump the environment: ${body.trim()}`)
+      .not.toMatch(/(?:^|[;&|(\s])(?:env|printenv|export\s*$|set)\b(?![^\n]*-[eu]+\b)/m);
+    expect(body, 'shell tracing would print the token').not.toMatch(/set\s+-[a-z]*x|xtrace/);
+    // No step may carry the token under another name.
+    expect(Object.values(step.env ?? {}).join(' ')).not.toMatch(/NPM_ACCESS_TOKEN/);
   }
-  expect(body, 'shell tracing would print the token').not.toMatch(/set\s+-[a-z]*x/);
-  expect(source()).not.toMatch(/npm_[A-Za-z0-9]{20,}/);
 });
 
 test('every action in the publishing job is pinned to a full commit SHA', () => {
