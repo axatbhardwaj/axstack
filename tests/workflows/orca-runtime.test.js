@@ -26,6 +26,13 @@ test('orca runtime reference replaces the active Paseo launch guide', () => {
   expect(runtime).toMatch(/permission[^.]*intent[^.]*not[^.]*parity/i);
 });
 
+test('runtime boundary requires worker worktrees to carry their parent lineage', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md');
+  expect(runtime).toMatch(/--parent-worktree/);
+  expect(runtime).toMatch(/--no-parent[^.]*unrelated/i);
+  expect(runtime).toMatch(/worktree set[^.]*--parent-worktree|--parent-worktree[^.]*worktree set/);
+});
+
 test('runtime decisions cover startup, fencing, settlement, and accepted handoff', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
   for (const receipt of ['input_accepted', 'turn_started', 'worker_done', 'consumer_fenced', 'user_takeover']) {
