@@ -141,3 +141,19 @@ test('presets: scenario corpora never reference a stale role count', () => {
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
   }
 });
+
+test('presets: monitor/watchdog notes carry the lifted hold, not the held wording', () => {
+  for (const preset of presetNames) {
+    const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));
+    const monitor = byId['axstack-monitor'].notes;
+    const watchdog = byId['axstack-watchdog'].notes;
+    for (const notes of [monitor, watchdog]) {
+      expect(notes, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
+    }
+    expect(monitor).toMatch(/driver automation[^.]*mutating owner/i);
+    expect(monitor).toMatch(/never merges|no force-push|never force-push/i);
+    expect(watchdog).toMatch(/independent read-only/i);
+    expect(watchdog).toMatch(/automation health/i);
+    expect(watchdog).toMatch(/never sends|never mutates/i);
+  }
+});

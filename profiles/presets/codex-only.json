@@ -134,7 +134,7 @@
       "model": "gpt-5.6-terra",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Independent read-only PR monitor. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Healthy snapshots stay quiet; never authors, reviews, or replies."
+      "notes": "Five-minute driver automation and mutating owner for the PRs it handles: repairs, tests, commits, and fast-forward pushes own PRs within the mutation allowlist after gated authored review; never merges, never force-pushes, never approves or requests changes. Healthy ticks stay quiet. Hold was lifted by user decision on 2026-09-16."
     },
     {
       "id": "axstack-watchdog",
@@ -143,7 +143,7 @@
       "model": "gpt-5.6-terra",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Independent read-only watch health checker. Native Orca activation is held until model, effort, permission, and bounded-expiry capabilities preserve this role. Verifies handshakes and deduplicates events; never authors, reviews, or replies."
+      "notes": "Hourly independent read-only automation health checker: compares the recorded driver model with the expected one, checks run history, precheck errors, duplicate handling, and relay receipts, and passes findings to the gate under the automation-health criterion. Never sends, never mutates GitHub, never authors, reviews, or replies."
     },
     {
       "id": "axstack-auditor",
