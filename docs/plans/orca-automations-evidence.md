@@ -49,7 +49,7 @@ Scenario ids are those of `tests/workflows/automation-scenarios.json` (version
 | `due-deadline-wake`, `expired-pr-skipped` | rev-2 (T2) | `rev-2 precheck and tick` | `no sentence matches /due control work/`; no `pending.json`, no `due` log value, no deadline recheck before publication. | 14 pass, 0 fail | `1008667` |
 | `unavailable-gate-hold`, `watchdog-health-finding` | rev-2 (T2) | `rev-2 identity and watchdog` | `no sentence matches /Before any repair or publication/`; no thresholds, no occurrence id, no "cannot be escalated through itself". 7 pass, 2 fail. | 9 pass, 0 fail | `54d6cf5` |
 | (review skill) | rev-2 (T2) | `rev-2 review exception` | `toContain` failed: Standalone-owner / Authorized-submission exception wording absent. | 9 pass, 0 fail | `54d6cf5` |
-| `push-before-gate` (docs) | rev-2 (T2) | `rev-2 docs` | `no sentence matches /gh stack publication does not apply to automation repairs/`. 9 pass, 1 fail. | 10 pass, 0 fail | `docs(workflows)` commit below |
+| `push-before-gate` (docs) | rev-2 (T2) | `rev-2 docs` | `no sentence matches /gh stack publication does not apply to automation repairs/`. 9 pass, 1 fail. | 10 pass, 0 fail | `22b84c1` |
 | all eleven cases | Sol 6 | `automation scenarios: bounded cases…` (`automations.test.js`) | `expect(received).toBe(expected)` — corpus version 1 with five cases; the per-case transition assertions had no cases to bind. 6 pass, 1 fail. | 7 pass, 0 fail | `41532b2` |
 
 Trimmed outputs are quoted from the `bun test` runs at each step; the full
