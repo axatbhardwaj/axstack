@@ -1,19 +1,15 @@
 # PR automations — specification
 
-Status: revision 2, draft for user approval. Supersedes
+Status: revision 3, draft for user approval. Supersedes
 `docs/specs/orca-automations.md` (revisions 1–5) for the defi-com pair once
 approved; that document stays in the tree as history and is not amended
 further. Decisions S1–S4 and Q1–Q5 were settled by the user on 2026-09-16 in
 the align run record `20260917-automations-simplify`. Revision 1 (`cbd811b`)
 received Astra AGREE-WITH-AMENDMENTS (15) and Fable AGREE-WITH-AMENDMENTS (16);
-every accepted amendment is absorbed below and the two rejected ones are named
-in "Adviser synthesis". Nothing is enabled until the acceptance checks pass and
-the old pair is settled and disabled.
-
-**Needs the user's explicit attention at this checkpoint:** E1 in
-"Exclusions" drops review-feedback-triggered repair (the old pair's
-bot-review path); with it `defi-com/mobile`, which has no CI, has no repair
-trigger. Approving this revision approves that reduction.
+every accepted amendment is absorbed below and the rejected one is named in
+"Adviser synthesis". Revision 3 restores review-feedback-triggered repair by
+the user's decision of 2026-09-16 (Astra A15). Nothing is enabled until the
+acceptance checks pass and the old pair is settled and disabled.
 
 ## Purpose
 
@@ -122,17 +118,26 @@ automations worktree) does the following in order and exits.
    from `cursor.json`, plus every `deferred[]` entry, in `updatedAt` order,
    oldest first. A PR with a decision file in state `open` or `approved` at its
    current head, or a live dispatch marker, is skipped.
-   - **Own PR with a failing check** — eligible only when: the corresponding
-     base check is observed passing (`gh run list --branch <base> --limit 1`;
-     missing, pending or incomparable base evidence holds the repair); the
-     head branch is not in the repository's recorded deploy-on-push set; no
-     live repair cap; and it is the lowest failing PR of its stack (an own PR
-     whose base branch equals another own PR's head branch is a descendant).
-     Create an Orca child worktree of the project clone at the head, parented
-     to the driver worktree, and dispatch **one** `axstack-watch` agent in
-     authored repair mode. Each open descendant records one `pending restack`
-     hold, owner user, cleared when the descendant stops failing. The 24 h
-     repair cap starts at dispatch and is not refunded by an abandon.
+   - **Own PR needing repair** — two triggers, either suffices:
+     (a) a failing check whose corresponding base check is observed passing
+     (`gh run list --branch <base> --limit 1`; missing, pending or
+     incomparable base evidence holds the repair); (b) a `CHANGES_REQUESTED`
+     review at the current head, by any account, whose review id is not in
+     `cursor.json.processed_reviews[]` and whose body digest (sha256 of the
+     body) is not already recorded against that PR at that head — both keys
+     are required, because a bot that re-posts the same finding under a new
+     review id must not re-trigger. Eligible only when additionally: the head
+     branch is not in the repository's recorded deploy-on-push set; no live
+     repair cap; and it is the lowest PR of its stack that needs repair (an
+     own PR whose base branch equals another own PR's head branch is a
+     descendant). Create an Orca child worktree of the project clone at the
+     head, parented to the driver worktree, and dispatch **one**
+     `axstack-watch` agent in authored repair mode with the triggering check
+     or review findings in its brief; the agent addresses only those findings.
+     Record the review id and body digest as processed at dispatch. Each open
+     descendant records one `pending restack` hold, owner user, cleared when
+     the descendant stops needing repair. The 24 h repair cap starts at
+     dispatch and is not refunded by an abandon.
    - **Peer PR** whose debounced head self has not reviewed (read
      `gh pr view --json reviews` first) — create an Orca child worktree at the
      head and dispatch **one** `axstack-review` agent in peer mode. Whenever
@@ -296,7 +301,8 @@ One run directory under the axstack git-common-dir,
 - `cursor.json` — driver only: fingerprint, `tick_started_at`, `tick_done_at`,
   `tick_outcome`, per-PR state (head, base, draft, checks, last self review
   id and head), dispatch markers, `deferred[]`, `pending_settlement[]`,
-  repair caps, `abandon_count`, deploy-on-push sets per repository,
+  repair caps, `abandon_count`, `processed_reviews[]` (review id, PR, head,
+  body digest), deploy-on-push sets per repository,
   `legacy_automation_reviews[]`, `health[]`.
 - `pending.json`, `precheck.log` — driver precheck only.
 - `decisions/<token>.json` — per the lifecycle table.
@@ -365,7 +371,11 @@ against live PRs; no production PR is mutated to manufacture a test case.
     disable the automation.
 11. Deploy-on-push sets are present in `cursor.json` for both repair
     repositories before enabling.
-12. Cutover, in this order: the new pair exists disabled; the amended skills
+12. Feedback repair dedup: a `CHANGES_REQUESTED` review at a head triggers one
+    dispatch; the same review id, or a new id with an identical body digest at
+    that head, triggers nothing; a superseded head with a new review triggers
+    again subject to the 24 h cap.
+13. Cutover, in this order: the new pair exists disabled; the amended skills
     and references are installed so no agent loads the superseded rules;
     automations C and D are disabled; every old driver and worker attempt is
     reconciled to confirmed settlement and any unfinished candidate preserved;
@@ -393,14 +403,11 @@ Rejected: A4's "driver assigns one agent to execute the approved action" —
 the bound action is one mechanical GitHub call; a second dispatch per decision
 adds a worker, a worktree and a settlement for no safety gain, so the driver
 executes it itself and the Purpose section says so. A15's request to retain
-review-feedback-triggered repair is surfaced to the user as E1 instead of being
-decided by the driver.
+review-feedback-triggered repair was surfaced to the user at revision 2 and
+accepted: revision 3 restores it with id + body-digest dedup.
 
 ## Exclusions
 
-E1. Review-feedback-triggered repair (bot or human review comments) is not a
-repair trigger in this revision; only a failing check is. `defi-com/mobile`
-therefore has no repair trigger until it has CI.
 No COMMENT reviews. No obligations table, supersede counter or review-budget
 hold. No watch deadline or `expired` state. No terminal hygiene or global busy
 guard. No terminal nudge from Hermes. No Hermes access to `gh`, `git` or
