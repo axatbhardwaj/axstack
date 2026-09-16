@@ -178,9 +178,10 @@ no new mutation authority.
 Four slot IDs in every preset, ordered; provider/model/effort explicit per
 preset and captured in the run's routing snapshot. Names denote the explicit
 model IDs the bundle already uses. No adviser model fills an investigator
-seat. Where a preset has fewer model families, a model repeats at a distinct
-effort — independence comes from brief isolation and no cross-reading, not
-from model diversity — and the role notes say so. No null rows, so
+seat. Where a preset has fewer model families, a model repeats — independence
+comes from brief isolation and no cross-reading, not from model diversity or
+effort — and the role notes say so. Sonnet seats run at xhigh (user
+direction 2026-09-16). No null rows, so
 `isIntentionalAbsence` in `src/roles.js` is unchanged.
 
 | Role | Mixed | Codex-only | Claude-only |
@@ -188,7 +189,7 @@ from model diversity — and the role notes say so. No null rows, so
 | `axstack-debug-investigator-1` | Opus medium | Sol medium | Opus medium |
 | `axstack-debug-investigator-2` | Sol medium | Terra low | Sonnet xhigh |
 | `axstack-debug-investigator-3` | Sonnet xhigh | Sol high | Opus high |
-| `axstack-debug-investigator-4` | Terra low | Terra xhigh | Sonnet low |
+| `axstack-debug-investigator-4` | Terra low | Terra xhigh | Sonnet xhigh |
 
 ## Contracts and files touched
 

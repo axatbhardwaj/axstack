@@ -72,7 +72,7 @@ const expected = {
     a('claude-sonnet-5', 'low'), a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5', 'high'), a('claude-sonnet-5', 'low'),
+    a('claude-opus-5', 'high'), a('claude-sonnet-5', 'xhigh'),
   ],
 };
 

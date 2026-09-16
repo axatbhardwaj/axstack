@@ -170,7 +170,7 @@
       "model": "claude-sonnet-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families."
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
     },
     {
       "id": "axstack-debug-investigator-3",
@@ -187,8 +187,8 @@
       "provider": "claude",
       "model": "claude-sonnet-5",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "low",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at low effort because it has fewer model families."
+      "thinkingOptionId": "xhigh",
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
     }
   ]
 }
