@@ -317,7 +317,15 @@ requests, so it is bounded:
   for as long as it stays open: C may submit exactly one superseding verdict on
   that PR, including a clearing `APPROVE`, without a fresh review request. That
   authority extends to nothing else — not to a different PR, not to a PR whose
-  obligation is already discharged, and not past the one-supersede-per-head cap. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
+  obligation is already discharged, and not past the one-supersede-per-head cap.
+  It does, however, **follow the obligation chain**: an obligation opened by a
+  verdict that was itself submitted under this authority inherits it, so the
+  authority persists on that one PR until the PR merges, closes, or its block is
+  resolved. Without that inheritance the deadlock returns one head later in the
+  ordinary multi-push case — C blocks at head 1 on request, the teammate pushes
+  head 2 without fixing, the honest re-review blocks again at head 2 under
+  obligation authority, and C could then never clear the block it placed there.
+  GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
   author, so an authored-mode review of the automation's own repair stays
   internal and gates only the push, exactly as before. Automation D never
   writes to GitHub at all; its no-mutation rule is untouched.
@@ -353,10 +361,12 @@ requests, so it is bounded:
   now-undiscoverable PR unvisited and the three-failed-poll health path would
   never fire. C's precheck therefore reads outstanding obligations from
   `cursor.json` and exits 0 — waking C with the forge otherwise unchanged — when
-  any obligation's PR has changed since it was recorded, when a poll of it
-  failed on the previous tick, or when it has not been polled this tick at all.
-  Obligations join watch deadlines, failed-relay retries and expired repair caps
-  in the due-work list.
+  any obligation is outstanding. Stated plainly rather than as three conditions
+  that collapse into one: while C holds any unresolved blocking review, every
+  scheduled tick wakes it, whether or not the forge changed. That is deliberate —
+  an unresolved block under the user's login is exactly the state that must not
+  go unvisited. Obligations join watch deadlines, failed-relay retries and
+  expired repair caps in the due-work list.
 - **A blocked PR is tracked durably, outside discovery.** Submitting a review
   removes self from GitHub's `review-requested` results, so a PR that C has just
   blocked can vanish from the three discovery searches on the very next tick —
@@ -942,8 +952,11 @@ For C and D, all of the following, on the VPS runtime:
     with an outstanding obligation still exits the precheck 0 and wakes C; a PR
     whose review request has been removed — as submitting a review does — still
     accepts exactly one honest clearing `APPROVE` under the obligation's own
-    authority and no second one; and three failed polls across scheduled ticks
-    produce exactly one gate-routed health finding.
+    authority and no second one; three failed polls across scheduled ticks
+    produce exactly one gate-routed health finding; and the obligation chain —
+    a block at head 1 from an official request, an honest re-block at head 2
+    after a teammate push, and a clearing `APPROVE` at head 3 submitted under
+    the inherited authority with no fresh review request.
 
     **15B — one live submission, on a PR the user designates.** The user names
     one real peer PR on which self is officially review-requested and accepts
