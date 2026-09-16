@@ -50,6 +50,17 @@ candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
 
+A worker worktree carries the lineage of the work it serves. Create it with
+`--parent-worktree` naming the candidate's worktree, so a reviewer, repair, or
+child-task checkout appears under the candidate it belongs to instead of as an
+unrelated top-level row. `--no-parent` is only for unrelated, independent work
+with no parent context, never a review or repair of an existing candidate. When
+a worktree was created with the wrong lineage, correct it in place with
+`worktree set --parent-worktree`; that is metadata and does not disturb a
+running worker. Lineage is presentation and reconciliation state, never
+authority: it grants nothing, and a correct parent never substitutes for the
+Task, Dispatch, and receipt evidence above.
+
 An `input_accepted` stage proves only that input reached the terminal. Require
 `turn_started` plus runtime/session inspection before treating the agent as
 started, and verify the requested role independently before trusting its work.

@@ -26,6 +26,38 @@ test('orca runtime reference replaces the active Paseo launch guide', () => {
   expect(runtime).toMatch(/permission[^.]*intent[^.]*not[^.]*parity/i);
 });
 
+test('runtime boundary requires worker worktrees to carry their parent lineage', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md');
+  // Each clause is two tokens that must land in the SAME sentence, in either
+  // order. Paragraph scope alone let a clause pass by borrowing a token from a
+  // neighbour, so the pair is bound to the unit that actually states it.
+  const lineage = runtime
+    .split('\n\n')
+    .find((paragraph) => paragraph.includes('--parent-worktree')) ?? '';
+  const sentences = lineage.replace(/\s+/g, ' ').split(/(?<=\.)\s+/);
+  const states = (a, b) => sentences.some((sentence) => a.test(sentence) && b.test(sentence));
+
+  expect(lineage, 'no paragraph states the worktree lineage rule').not.toBe('');
+  expect(
+    states(/--parent-worktree/, /candidate'?s? worktree/i),
+    'no sentence requires creating a worker worktree parented to the candidate',
+  ).toBe(true);
+  expect(
+    states(/--no-parent/, /unrelated/i),
+    'no sentence reserves --no-parent for unrelated work',
+  ).toBe(true);
+  expect(
+    states(/worktree set/, /--parent-worktree/),
+    'no sentence says a wrong lineage is correctable in place',
+  ).toBe(true);
+  expect(
+    // Only a denial of authority counts; "not the only authority" is the
+    // opposite claim and must not satisfy this clause.
+    states(/lineage/i, /\b(?:never|no|not)\s+(?:an?\s+)?authority\b/i),
+    'no sentence says lineage is never authority',
+  ).toBe(true);
+});
+
 test('runtime decisions cover startup, fencing, settlement, and accepted handoff', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
   for (const receipt of ['input_accepted', 'turn_started', 'worker_done', 'consumer_fenced', 'user_takeover']) {
