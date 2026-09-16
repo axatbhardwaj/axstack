@@ -91,7 +91,12 @@ The complete bundle is validated before writes:
 
 Reinstalls are idempotent. Unknown files are never silently overwritten or
 adopted. Edited owned files keep their previous ownership baseline unless
-`--force` explicitly replaces them. Partial failures restore overwritten files,
+`--force` explicitly replaces them. Owned files the bundle no longer ships
+are stale: a pristine stale copy (on-disk bytes still match the manifest
+hash) is deleted, dropped from the written manifest, and reported as
+`removed`; an edited or already-missing stale copy is left alone, keeps its
+manifest hash, and stays reported as `stale`. Only manifest-owned paths are
+ever deleted. Partial failures restore overwritten files,
 remove files created by that run, restore Claude settings/sidecar state, and
 leave the prior manifest intact. An incomplete rollback reports exact manual
 recovery needs.

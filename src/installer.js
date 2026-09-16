@@ -429,7 +429,7 @@ export async function installBundle({
   const backupExisting = (dest, current) => {
     if (current !== null && !backups.has(dest)) backups.set(dest, current);
   };
-  const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [] };
+  const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [], removed: [] };
   const installedHashes = {};
   const claudeWritten = [];
   try {
@@ -464,13 +464,46 @@ export async function installBundle({
       }
     }
 
-    // Stale manifest entries (owned files the bundle no longer ships) are
-    // left on disk and reported, never silently deleted.
+    // Stale manifest entries (owned files the bundle no longer ships):
+    // pristine owned copies are removed and dropped from the manifest;
+    // edited or already-missing copies stay on disk (or absent), keep
+    // their prior ownership hash, and stay reported as stale. Only
+    // manifest-owned paths are ever deleted, guarded by the same
+    // ownership/hash check uninstall uses.
     for (const rel of Object.keys(ownedFiles)) {
-      if (!(rel in installedHashes)) {
+      if (rel in installedHashes) continue;
+      const dest = join(skillsRoot, rel);
+      if (!withinRoot(dest, skillsRoot)) {
+        throw new Error(`unsafe target: ${rel} escapes ${skillsRoot}; refusing`);
+      }
+      await assertNoSymlinksBelow(skillsRoot, dirname(dest));
+      const destStat = await lstat(dest).catch((err) => {
+        if (err?.code === 'ENOENT') return null;
+        throw err;
+      });
+      if (destStat?.isSymbolicLink()) {
+        throw new Error(`unsafe target: destination is a symlink at ${dest}; refusing`);
+      }
+      let current = null;
+      try {
+        current = await readFile(dest);
+      } catch (err) {
+        if (err?.code !== 'ENOENT') throw err;
+      }
+      if (current === null) {
         summary.stale.push(rel);
         installedHashes[rel] = ownedFiles[rel];
+        continue;
       }
+      if (hashContent(current) === ownedFiles[rel]) {
+        backupExisting(dest, current);
+        await rm(dest);
+        await pruneEmptyParents(dest, skillsRoot);
+        summary.removed.push(rel);
+        continue;
+      }
+      summary.stale.push(rel);
+      installedHashes[rel] = ownedFiles[rel];
     }
 
     for (const write of claudePlan.writes) {
