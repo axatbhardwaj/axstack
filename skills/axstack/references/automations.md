@@ -15,13 +15,23 @@ owns policy, the run record, and evidence.
   (`git push`, no lease or force). `gh stack` sync or restack is out of scope.
 - **Peer PR:** an open PR where self is officially review-requested, or where a
   PR comment @-mentions self asking for a response. Unsolicited reviews never
-  happen. Peer code is read-only.
+  happen. Peer code is read-only. A mention counts as a peer request only when
+  the driver reads the comment and it explicitly asks self to review or
+  respond. An incidental mention is discovery data and never review authority.
 - **Discovery** covers every repository the account can see:
-  `gh search prs --state open` with `--author @me`, `--review-requested @me`,
-  and `--mentions @me`.
-- **Mutation allowlist:** stated verbatim in the automation prompt. Outside it
-  a PR still receives report-only review (needed to judge a criterion) but no
-  push and no publication.
+  `gh search prs --state open --limit 100` with `--author @me`,
+  `--review-requested @me`, and `--mentions @me`. A result count equal to the
+  limit is a detectable truncation and is logged as `error`. Results are
+  deduplicated canonically by PR URL across the three searches with own-PR
+  precedence.
+- **Mutation allowlist:** stated verbatim in the automation prompt. Outside the
+  allowlist the automation discovers and records only. The precheck writes the
+  full discovery list to `pending.json`; no review, watch, gate, or other model
+  work is launched for an external PR. External changes do not enter the wake
+  fingerprint, so external churn never wakes the session. External PR contents
+  never produce an escalation. This is a deliberate coverage reduction, not an
+  implied clean review; discovery errors themselves remain automation-health
+  findings.
 - **Prohibited everywhere:** force-push, rebase, merge, close, `APPROVE`,
   `REQUEST_CHANGES`. A need for any of these becomes a recorded hold.
 
@@ -88,6 +98,25 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
 - An unavailable gate or required reviewer records a hold, pauses mutation for
   that PR, and is treated as a watchdog health finding.
 
+## Precheck (bounded shell, no model)
+
+Resolve self; run the three searches with `--json url,number,repository,updatedAt`;
+write the full discovery list to `pending.json`. For each allowlisted,
+non-expired own PR add head SHA, base SHA, and the check rollup of that head via
+`gh pr view --json headRefOid,baseRefOid,statusCheckRollup`; check state is
+data, and only authentication, command, and network errors are `error`. Hash
+only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
+for due control work: a watch deadline at or before now, or a pending
+failed-relay retry. Exit 0 when the hash differs or control work is due;
+otherwise exit non-zero. Exit non-zero without running when the previous driver
+run is still active, or on `error`. Append one line
+`<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
+
+The observed fingerprint is written to `pending.json`. After the processed
+tick the driver promotes exactly that value to `cursor.json`, never a
+recomputed one, so an event landing during a run is processed on the following
+tick.
+
 ## Driver tick
 
 For each changed PR:
@@ -103,10 +132,18 @@ For each changed PR:
   hold and publishes nothing.
 
 Watch window: 24 hours per own PR from first observation, ending early on merge
-or close. Expiry marks the PR `expired` in the record and sidecar, records a
-resumable handoff, and stops silently. The driver skips an expired PR until the
-user re-arms it in the automation session, and the precheck ignores it; an
-expired PR is never silently re-adopted.
+or close. The deadline is stored in `cursor.json`; a due deadline wakes the
+driver through the precheck even when GitHub is unchanged, and the driver
+rechecks the deadline immediately before any publication. Expiry marks the PR
+`expired` in the record and sidecar, records a resumable handoff, and stops
+silently. The driver skips an expired PR until the user re-arms it in the
+automation session, and the precheck ignores it; an expired PR is never
+silently re-adopted.
+
+Per-PR event state: head SHA, base SHA, check rollup, and processed request and
+comment IDs. A review receipt is reused only when head, base, and scope are
+unchanged. A new failing check, base change, review request, or qualifying
+comment at an unchanged head is new work.
 
 ## Watchdog tick
 
@@ -132,17 +169,19 @@ review receipts per SHA, gate decisions, `hermes send` receipts with
 hermes send, target telegram (home), host VPS, gate-authorized escalations only
 ```
 
-A machine-readable sidecar in the same directory — `cursor.json` (last
-fingerprint, expired PR list) and `precheck.log` (one `<ts> <changed|unchanged|error|busy>`
-line per precheck) — is written by the driver after each processed tick and
-read by the precheck. Orca run history remains the authoritative log; the record
-is derived progress, never authority.
+Machine-readable sidecars in the same directory: `pending.json` (observed
+fingerprint plus full discovery list, written by the precheck), `cursor.json`
+(last processed fingerprint promoted verbatim from `pending.json`, expired PR
+list, per-PR watch deadlines, pending failed-relay retries; written by the
+driver after each processed tick), `precheck.log` (precheck only), and
+`watchdog.json` (watchdog only). Orca run history remains the authoritative
+log; the record is derived progress, never authority.
 
-Dedup: an event ID or a review receipt for an unchanged head SHA is never
-processed twice. PR notifications dedup on (PR, criterion, head SHA); non-PR
-findings dedup on (finding type, first-observed run id). A `failed` relay
-receipt may be retried once on the next tick; an `uncertain` one is never
-auto-resent.
+Dedup: a processed event ID is never processed twice; a review receipt is
+reused only for an unchanged head, base, and scope. PR notifications dedup on
+(PR, criterion, head SHA); health notifications dedup on the occurrence id. A
+`failed` relay receipt may be retried once, on the next tick, as due control
+work; an `uncertain` one is never auto-resent.
 
 ## Safety holds
 

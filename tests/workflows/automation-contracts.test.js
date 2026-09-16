@@ -139,3 +139,45 @@ test('sol-5: escalate records and notifies a hold and publishes nothing; only pr
     expect(text, `${name}: no either-token publication`).not.toMatch(/publishes only after[^.]*`escalate` or `proceed`|after the gate returns `escalate` or `proceed`/i);
   }
 });
+
+test('rev-2 discovery: record-only outside the allowlist, --limit 100 with count==limit as error, mention is a request only after reading the comment', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Outside the allowlist -> record only: no model work, no escalation, no wake.
+  const outside = clause(ref, /Outside the allowlist/i);
+  expect(outside).toMatch(/discovers and records only|record(?:s|ed) only/i);
+  expect(ref).toMatch(/no review, watch, gate, or other model work[^.]*external PR/i);
+  expect(clause(ref, /external changes|external churn/i)).toMatch(/do(?:es)? not enter the wake fingerprint|never wakes? the session/i);
+  expect(clause(ref, /external PR contents/i)).toMatch(/never produce an escalation/i);
+  expect(ref).not.toMatch(/still receives report-only review/i);
+  // Discovery limit -> truncation is an error line.
+  expect(ref).toMatch(/--limit 100/);
+  expect(clause(ref, /equal to the limit/i)).toMatch(/`error`/);
+  // Mention -> request only after reading the comment; incidental mention is not authority.
+  const mention = clause(ref, /mention counts as a peer request/i);
+  expect(mention).toMatch(/only when the driver reads the comment/i);
+  expect(clause(ref, /incidental mention/i)).toMatch(/never review authority/i);
+});
+
+test('rev-2 precheck and tick: due control work wakes the driver, the observed fingerprint is promoted verbatim, per-PR event state bounds receipt reuse', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Due control work (deadline at/before now, pending failed-relay retry) -> exit 0 even when GitHub is unchanged.
+  const due = clause(ref, /due control work/i);
+  expect(due).toMatch(/deadline at or before now|watch deadline/i);
+  expect(due).toMatch(/failed-relay retry/i);
+  expect(clause(ref, /Exit 0/)).toMatch(/hash differs or control work is due/i);
+  expect(clause(ref, /due deadline/i)).toMatch(/wakes the driver[^.]*even when GitHub is unchanged/i);
+  expect(ref).toMatch(/`<ts> <changed\|due\|unchanged\|error\|busy>`/);
+  // Observed fingerprint -> promoted verbatim from pending.json, never recomputed.
+  const promote = clause(ref, /promotes exactly that value/i);
+  expect(promote).toMatch(/never a recomputed one/i);
+  expect(clause(ref, /observed fingerprint is written/i)).toMatch(/`pending\.json`/);
+  expect(clause(ref, /landing during a run|lands during a run/i)).toMatch(/following tick/i);
+  // Per-PR event state -> receipt reuse only on unchanged head+base+scope; new event at unchanged head is new work.
+  expect(clause(ref, /Per-PR event state/i)).toMatch(/head SHA, base SHA, check rollup, and processed request and comment IDs/i);
+  expect(clause(ref, /receipt is reused only/i)).toMatch(/head, base, and scope are unchanged/i);
+  expect(clause(ref, /at an unchanged head/i)).toMatch(/new failing check, base change, review request, or qualifying comment[^.]*new work/i);
+  // Deadline is rechecked immediately before any publication.
+  expect(clause(ref, /rechecks the deadline/i)).toMatch(/immediately before any publication/i);
+  // Sidecar contents.
+  expect(clause(ref, /`cursor\.json` \(/)).toMatch(/expired PR list[^.]*watch deadlines[^.]*failed-relay retries/i);
+});

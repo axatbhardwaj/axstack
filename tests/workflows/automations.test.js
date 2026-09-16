@@ -17,7 +17,8 @@ test('automations: shared reference exists and restates the operational contract
   expect(text).toMatch(/unsolicited reviews never happen/i);
   expect(text).toMatch(/mutation allowlist/i);
   expect(text).toMatch(/force-push[^.]*rebase[^.]*merge[^.]*close[^.]*APPROVE[^.]*REQUEST_CHANGES/);
-  expect(text).toMatch(/report-only review[^.]*no push[^.]*no publication|no push and no publication/i);
+  expect(text).toMatch(/Outside the allowlist[^.]*records only|discovers and records only/i);
+  expect(text).not.toMatch(/report-only review/i);
 });
 
 test('automations: reviewer brief field, four criteria, and gate tokens are exact', () => {
@@ -37,11 +38,13 @@ test('automations: reviewer brief field, four criteria, and gate tokens are exac
 test('automations: run record, sidecar, notification policy, dedup, expiry, and holds', () => {
   const text = compact(refPath);
   expect(text).toContain('`cursor.json`');
+  expect(text).toContain('`pending.json`');
   expect(text).toContain('`precheck.log`');
+  expect(text).toContain('`watchdog.json`');
   expect(text).toContain('`20260916-pr-automations`');
   expect(text).toContain('hermes send, target telegram (home), host VPS, gate-authorized escalations only');
   expect(text).toMatch(/\(PR, criterion, head SHA\)/);
-  expect(text).toMatch(/\(finding type, first-observed run id\)/);
+  expect(text).toMatch(/health notifications dedup on the occurrence id/);
   expect(text).toMatch(/`expired`/);
   expect(text).toMatch(/never silently re-adopted|skips an expired PR/i);
   expect(text).toMatch(/silence never clears a hold/i);
