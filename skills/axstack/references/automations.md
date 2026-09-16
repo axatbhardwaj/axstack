@@ -28,8 +28,10 @@ owns policy, the run record, and evidence.
 ## Roles per mode
 
 The automation session is the driver and the owner for every PR it handles;
-no separate `axstack-owner` is materialized and the standalone-owner branches
-of `axstack-watch` and `axstack-review` do not fire.
+the driver is the automation session itself, with no `axstack-monitor` or
+`axstack-owner` role row materialized, and the standalone-owner branches
+of `axstack-watch` and `axstack-review` do not fire. `axstack-monitor` stays
+an optional read-only observer that never sends.
 
 - Peer PR → peer mode of [axstack-review](../../axstack-review/SKILL.md):
   `axstack-reviewer-primary` and `axstack-reviewer-secondary`, isolated.
@@ -40,7 +42,9 @@ of `axstack-watch` and `axstack-review` do not fire.
 - "Every mode-required reviewer" means both reviewers in peer mode and the one
   selected reviewer in authored mode.
 - Gate → `axstack-auditor`.
-- Watchdog → `axstack-watchdog`, read-only.
+- Watchdog → `axstack-watchdog`, which never mutates GitHub and performs
+  exactly one kind of send, a gate-authorized automation-health escalation
+  recorded in `watchdog.json`.
 
 ## Reviewer brief and criteria
 
@@ -103,8 +107,10 @@ Read Orca run history for the driver and the run record: last successful tick,
 stuck or repeatedly failed runs, consecutive precheck errors, duplicated event
 handling, reused-session fallback, a recorded model different from the expected
 one, and unresolved `failed` or `uncertain` relay receipts. Pass a finding to
-the gate under the automation-health criterion. The watchdog never sends and
-never mutates GitHub.
+the gate under the automation-health criterion. On `escalate` the watchdog
+itself performs that one gate-authorized `hermes send` and records the receipt
+in `watchdog.json`; it never mutates GitHub and never writes `progress.md` or
+`cursor.json`.
 
 ## Run record and sidecar
 

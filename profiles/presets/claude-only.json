@@ -134,7 +134,7 @@
       "model": "claude-sonnet-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
-      "notes": "Five-minute driver automation and mutating owner for the PRs it handles: repairs, tests, commits, and fast-forward pushes own PRs within the mutation allowlist after gated authored review; never merges, never force-pushes, never approves or requests changes. Healthy ticks stay quiet. Hold was lifted by user decision on 2026-09-16."
+      "notes": "Optional independent read-only PR observer, not the driver: the five-minute driver is the automation session itself. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, never authors, reviews, or replies. Healthy snapshots stay quiet. Hold was lifted by user decision on 2026-09-16."
     },
     {
       "id": "axstack-watchdog",
@@ -143,7 +143,7 @@
       "model": "claude-sonnet-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
-      "notes": "Hourly independent read-only automation health checker: compares the recorded driver model with the expected one, checks run history, precheck errors, duplicate handling, and relay receipts, and passes findings to the gate under the automation-health criterion. Never sends, never mutates GitHub, never authors, reviews, or replies."
+      "notes": "Hourly independent read-only automation health checker: compares the recorded driver model with the expected one, checks run history, precheck errors, duplicate handling, and relay receipts, and passes findings to the gate under the automation-health criterion. Never mutates GitHub and never authors, reviews, or replies; its only gate-authorized automation-health send is recorded in watchdog.json."
     },
     {
       "id": "axstack-auditor",

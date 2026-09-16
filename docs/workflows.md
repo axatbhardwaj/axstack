@@ -152,7 +152,10 @@ recipient, deduplicates on the run record, records the returned `message_id`,
 and treats Telegram replies as neither receipts nor authority. Delivery failure
 never clears the underlying hold.
 
-Healthy watch observations remain quiet and monitor/watchdog roles never send.
+Healthy watch observations remain quiet. The optional `axstack-monitor` is
+read-only and never sends; `axstack-watchdog` never mutates GitHub and performs
+exactly one kind of send, a gate-authorized automation-health escalation
+recorded in `watchdog.json`.
 
 ## Native watch automations
 
@@ -162,7 +165,8 @@ handshakes, one owner, and one shared default 24-hour deadline.
 
 The user lifted the native-watch hold by user decision on 2026-09-16. The driver
 automation is a mutating owner for the PRs it handles; the watchdog keeps the
-independent read-only contract. Native Orca automations still select only a
+independent read-only contract. The driver is the automation session itself,
+with no `axstack-monitor` or `axstack-owner` role row. Native Orca automations still select only a
 provider, so the driver records its model identity every tick and the watchdog
 treats a mismatch as a safety hold. Axstack adds no custom scheduler, polling
 loop, or historical runtime fallback.

@@ -65,7 +65,10 @@ load. When the watch needs a new owner or automated observation, first read
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
 anything. The user lifted the native-watch hold by user decision: the 5 min driver
 automation is a mutating owner for the PRs it handles and the hourly watchdog
-stays independent and read-only. One read-only PR observation needs neither.
+stays independent and read-only. The driver is the automation session itself,
+with no `axstack-monitor` or `axstack-owner` role row; `axstack-monitor` stays
+an optional read-only observer that never sends. One read-only PR observation
+needs neither.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -111,7 +114,9 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor and watchdog never send; absent policy or failed relay uses the
+The monitor never sends, and `axstack-watchdog` never mutates GitHub and
+performs exactly one kind of send, a gate-authorized automation-health
+escalation recorded in `watchdog.json`; absent policy or failed relay uses the
 current Orca conversation and leaves every existing hold open.
 
 ## 5. State readiness precisely

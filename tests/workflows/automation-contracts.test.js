@@ -68,3 +68,30 @@ test('sol-2: original-author continuity is scoped to run-launched sessions; an a
   expect(clause(ref, /repair author is the automation session/i)).toMatch(/`axstack-reviewer-primary`/);
   expect(clause(ref, /delegated to `axstack-author`/i)).toMatch(/`axstack-reviewer-secondary`/);
 });
+
+test('sol-3: the driver is the automation session; axstack-monitor stays optional read-only and never sends; the watchdog never mutates GitHub and may perform only the gate-authorized health send', () => {
+  const texts = {
+    'watch-runtime': compact('skills/axstack-watch/references/watch-runtime.md'),
+    watch: compact('skills/axstack-watch/SKILL.md'),
+    workflows: compact('docs/workflows.md'),
+    lifecycle: compact('skills/axstack/references/lifecycle.md'),
+    automations: compact('skills/axstack/references/automations.md'),
+  };
+  for (const [name, text] of Object.entries(texts)) {
+    // Driver identity: the automation session itself, not a monitor/owner role row.
+    const driver = clause(text, /driver (?:automation )?is the automation session itself/i);
+    expect(driver, `${name}: driver is not a role row`).toMatch(/no `axstack-monitor` or `axstack-owner` role(?: row)?|neither `axstack-monitor` nor `axstack-owner`/i);
+    // Monitor: optional, read-only, never sends.
+    const monitor = clause(text, /`axstack-monitor`[^.]*optional|optional[^.]*`axstack-monitor`/i);
+    expect(monitor, `${name}: monitor read-only`).toMatch(/read-only/i);
+    expect(monitor, `${name}: monitor never sends`).toMatch(/never sends/i);
+    // Watchdog: never mutates GitHub; exactly one kind of send, gate-authorized, recorded in watchdog.json.
+    const watchdog = clause(text, /`axstack-watchdog`[^.]*never mutates GitHub/i);
+    expect(watchdog, `${name}: watchdog one send`).toMatch(/exactly one kind of send|only send/i);
+    expect(watchdog, `${name}: watchdog send is gated`).toMatch(/gate-authorized[^.]*automation-health/i);
+    expect(watchdog, `${name}: watchdog send recorded`).toMatch(/`watchdog\.json`/);
+    // The stale blanket rule must be gone.
+    expect(text, `${name}: stale no-send rule`).not.toMatch(/monitor and watchdog never send|monitor\/watchdog roles never send|watchdog never sends and never mutates/i);
+    expect(text, `${name}: monitor is not the driver`).not.toMatch(/`axstack-monitor` names the five-minute driver/i);
+  }
+});

@@ -8,11 +8,14 @@ The PR owner remains accountable throughout one shared default 24-hour window.
 `axstack-monitor` and `axstack-watchdog` are independent, read-only roles, not
 authors, reviewers, repliers, or owners.
 
-- **Monitor:** reads GitHub, all PR feedback, and latest checks every five
-  minutes. It persists event IDs and wakes the owner only for a new actionable
-  event.
-- **Watchdog:** reads only automation health, handshake state, and snapshot
-  freshness hourly. It reports a verified health failure to the owner.
+- **Monitor:** `axstack-monitor` is an optional read-only observer that reads
+  GitHub, all PR feedback, and latest checks every five minutes, persists event
+  IDs, wakes the owner only for a new actionable event, and never sends.
+- **Watchdog:** `axstack-watchdog` reads only automation health, handshake
+  state, and snapshot freshness hourly and never mutates GitHub; it may perform
+  exactly one kind of send, a gate-authorized automation-health escalation
+  recorded in `watchdog.json`, and otherwise reports a verified health failure
+  to the owner.
 
 Healthy observations are snapshot-only and update quietly; they wake neither owner nor
 driver. Both roles deduplicate event IDs. Uncertain delivery is reconciled
@@ -32,7 +35,9 @@ self-report are not effective launch evidence.
 The user lifted the native-watch hold by user decision on 2026-09-16. The accepted
 contract now has a new shape: the driver automation is a mutating owner for the
 PRs it handles, not an independent read-only monitor, and the watchdog keeps
-the independent read-only health contract. The driver records its own model
+the independent read-only health contract. The driver is the automation
+session itself, with no `axstack-monitor` or `axstack-owner` role row
+materialized for it. The driver records its own model
 identity on every tick and the watchdog compares it with the expected model; a
 mismatch is a safety hold, never a silent substitution. The bounded expiry is
 enforced by the run record's watch deadline, not by the schedule parser. Still

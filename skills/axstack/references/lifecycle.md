@@ -17,9 +17,12 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Monitor/watchdog: `axstack-monitor` names the five-minute driver automation,
-  a mutating owner for the PRs it handles; `axstack-watchdog` stays an
-  independent read-only health checker. Both run as native Orca automations.
+- Driver/monitor/watchdog: the five-minute driver is the automation session
+  itself, a mutating owner for the PRs it handles with no `axstack-monitor` or
+  `axstack-owner` role row. `axstack-monitor` is an optional read-only observer
+  that never sends. `axstack-watchdog` is the hourly health checker that never
+  mutates GitHub and performs exactly one kind of send, a gate-authorized
+  automation-health escalation recorded in `watchdog.json`.
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -104,12 +107,12 @@ handoff, never silent renewal. Merge-ready differs from merged; human merges.
 
 The user lifted the native-watch hold by user decision on 2026-09-16. The driver
 automation is a mutating owner for its PRs; `axstack-watchdog` stays
-independent and read-only, with quiet healthy snapshots, deduplicated
-actionable events, restart reconciliation, and one shared deadline. Native Orca
-automations expose a provider but cannot pin model, effort, or permission, so
-the driver records its model identity every tick and the watchdog treats a
-mismatch as a safety hold. Build no custom scheduler and use no legacy fallback.
-Details live in [Watch runtime](../../axstack-watch/references/watch-runtime.md).
+independent and read-only, with quiet healthy snapshots, deduplicated events,
+restart reconciliation, and one shared deadline. Native Orca automations expose
+a provider but cannot pin model, effort, or permission, so the driver records
+its model identity every tick and the watchdog treats a mismatch as a safety
+hold. Build no custom scheduler and use no legacy fallback. Details live in
+[Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (end of run and meaningful checkpoints)
 
