@@ -167,6 +167,16 @@ provider, so the driver records its model identity every tick and the watchdog
 treats a mismatch as a safety hold. Axstack adds no custom scheduler, polling
 loop, or historical runtime fallback.
 
+## Automations
+
+Two native Orca automations run the installed skills without a human in the
+loop: a driver every five minutes that discovers own and peer PRs, repairs own
+PRs in the mutation allowlist, reviews peer PRs, and publishes only after the
+`axstack-auditor` gate returns `escalate` or `proceed`; and a read-only
+watchdog every hour that reports automation health. The approved contract is
+`docs/specs/orca-automations.md`; the skill-facing restatement an automation
+session loads is `skills/axstack/references/automations.md`.
+
 ## Run record and evidence
 
 Substantive delegated or resumable work uses one compact `progress.md` rooted at

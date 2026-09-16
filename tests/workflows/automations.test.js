@@ -103,3 +103,14 @@ test('automation scenarios: five bounded cases pin the gate, criteria, expiry, a
   expect(byId['expired-pr-skipped'].expected.forbidden.join(' ')).toMatch(/re-adopt/i);
   expect(byId['unavailable-gate-hold'].expected.hold).toBeTruthy();
 });
+
+test('automations: docs/workflows.md has an Automations section pointing at spec and reference', () => {
+  const docs = read('docs/workflows.md');
+  expect(docs).toMatch(/^## Automations$/m);
+  const section = docs.slice(docs.indexOf('## Automations'), docs.indexOf('## Run record and evidence'));
+  expect(section).toContain('docs/specs/orca-automations.md');
+  expect(section).toContain('skills/axstack/references/automations.md');
+  expect(section).toMatch(/driver[^.]*five minutes|every five minutes/i);
+  expect(section).toMatch(/watchdog every hour|hourly[^.]*watchdog/i);
+  expect(section).toMatch(/`escalate` or `proceed`/);
+});
