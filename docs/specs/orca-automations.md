@@ -440,10 +440,19 @@ carried over as a literal.
 
 These are host setup gaps verified open on 2026-09-16, and each blocks enabling:
 
-- `bun` 1.2.2 is not installed; `defi-com/monorepo` requires it. Without it the
-  JS test loop cannot run, so strict-TDD repair on monorepo is impossible. Node
-  on the host is v26 while the repository's `engines` field names 24; the
-  resolution belongs to the setup task, not to the automation prompt.
+- Toolchain version skew, corrected 2026-09-16: `bun` **is** installed on the
+  host at `/root/.bun/bin/bun`, version 1.4.2. An earlier draft of this
+  revision recorded it as absent; that reading came from a non-login shell
+  whose `PATH` omits `/root/.bun/bin`, and it was wrong. Two real skews remain
+  and are resolved by acceptance check 2 rather than assumed: `defi-com/monorepo`
+  pins `packageManager: bun@1.2.2` while the host has 1.4.2, and carries both
+  `bun.lock` and `bun.lockb`; and its `engines.node` names 24 while the host runs
+  v26. If the repository's test command does not run clean under the host
+  toolchain in a child worktree, the pinned versions are installed alongside
+  rather than replacing the host's. Either way the automation prompt names no
+  version; it runs the repository's own command. The driver worktree and every
+  child worktree must have `/root/.bun/bin` on `PATH`, since a non-login shell
+  does not.
 - `defi-com/monorepo` carries two submodules: `defi-com/contracts` over SSH and
   `stealth-project-22/domains-json`. Access to both was verified; provisioning
   them in the driver and child worktrees is a setup task.
