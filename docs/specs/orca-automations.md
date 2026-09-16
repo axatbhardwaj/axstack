@@ -1,8 +1,8 @@
 # Orca PR automations — specification
 
-Status: draft revised after the Fable adviser review (AGREE-WITH-AMENDMENTS,
-2026-09-16); decisions Q1–Q4 settled by the user on 2026-09-16. Open items
-are marked **[decision]**. Nothing is enabled until the acceptance checks pass.
+Status: revised after the Fable adviser review (AGREE-WITH-AMENDMENTS,
+2026-09-16); decisions Q1–Q4 and the fourth criterion settled by the user on
+2026-09-16. Nothing is enabled until the acceptance checks pass.
 
 ## Purpose and boundary
 
@@ -82,11 +82,10 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   blocking finding. A reviewer security "yes" that the gate does not escalate
   is recorded as rejected-with-evidence or returned to the author before any
   mutation.
-- Criteria: a security concern; a permanent on-chain state change; an
-  architectural change in approach; **[decision]** and a fourth, non-review
-  criterion, "automation health or model-substitution hold", usable only by the
-  watchdog and the safety-hold path (recommended; the alternative is that such
-  holds are record-only and surface when the user opens Orca).
+- Criteria, exactly four: a security concern; a permanent on-chain state
+  change; an architectural change in approach; and automation health (a
+  model-substitution, session, precheck, or relay-delivery hold), usable only
+  by the watchdog and the safety-hold path, never by a reviewer.
 - An unavailable gate or required reviewer records a hold, pauses mutation for
   that PR, and is treated as a watchdog health finding.
 
@@ -139,8 +138,8 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   stuck or repeatedly failed runs, N consecutive precheck errors, duplicated
   event handling, reused-session fallback, recorded model different from the
   expected one, and unresolved `failed` or `uncertain` relay receipts.
-- A finding is passed to the gate under the fourth criterion **[decision]**;
-  the watchdog never sends and never mutates GitHub.
+- A finding is passed to the gate under the automation-health criterion; the
+  watchdog never sends and never mutates GitHub.
 
 ## Run record
 
