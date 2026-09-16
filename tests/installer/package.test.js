@@ -208,19 +208,46 @@ test('tarball members match the full source tree with no silent omissions', () =
 
 test('published manifest carries the metadata an npm page needs', () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-  const repo = manifest.repository?.url ?? '';
+  // Publishing is permanent, so pin the exact public identity rather than its
+  // shape: a plausible-looking but wrong URL is the failure worth catching.
+  const SLUG = 'axatbhardwaj/axstack';
 
-  // A published package that cannot be traced back to its source is the gap
-  // this guards; each field is what npm renders or resolves.
-  expect(repo, 'repository.url must be a git+https URL npm can resolve').toMatch(/^git\+https:\/\/.+\.git$/);
-  expect(repo).toContain('axstack');
-  expect(manifest.homepage ?? '', 'homepage').toMatch(/^https:\/\//);
-  const bugs = typeof manifest.bugs === 'string' ? manifest.bugs : manifest.bugs?.url ?? '';
-  expect(bugs, 'bugs').toMatch(/^https:\/\//);
-  expect(manifest.author ?? '', 'author').not.toBe('');
-  expect(Array.isArray(manifest.keywords) && manifest.keywords.length > 0, 'keywords').toBe(true);
-  expect(manifest.license, 'license').toBe('MIT');
-  expect(manifest.private, 'private must stay unset so publish is possible').toBeUndefined();
+  expect(manifest.repository).toEqual({
+    type: 'git',
+    url: `git+https://github.com/${SLUG}.git`,
+  });
+  expect(manifest.homepage).toBe(`https://github.com/${SLUG}#readme`);
+  expect(manifest.bugs).toBe(`https://github.com/${SLUG}/issues`);
+  expect(manifest.author).toBe('Axat Bhardwaj');
+  expect(manifest.license).toBe('MIT');
+  // Only `private: true` blocks publication; absent and false are publishable.
+  expect(manifest.private, 'private must not be true').not.toBe(true);
+
+  // Keywords carry discovery, so require the ones this package is actually
+  // for rather than merely a non-empty list.
+  expect(manifest.keywords).toContain('claude-code');
+  expect(manifest.keywords).toContain('codex');
+  expect(manifest.keywords).toContain('orca');
+});
+
+test('published manifest identity matches the repository it is published from', () => {
+  const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  const remote = Bun.spawnSync([ 'git', 'remote', 'get-url', 'origin' ], {
+    cwd: ROOT,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  });
+  if (remote.exitCode !== 0) return; // no origin (archive export); the pinned check above still applies
+
+  const slug = remote.stdout.toString().trim()
+    .replace(/^git\+/, '')
+    .replace(/^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)/, '')
+    .replace(/\.git$/, '');
+
+  // Catches a repository rename or transfer that leaves the manifest stale.
+  expect(manifest.repository.url, `origin is ${slug}`).toBe(`git+https://github.com/${slug}.git`);
+  expect(manifest.homepage).toContain(slug);
+  expect(manifest.bugs).toContain(slug);
 });
 
 test('CLI reports the subscription-routing setup version', () => {
