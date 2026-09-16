@@ -443,3 +443,28 @@ test('rev-5 local review file follows the workspace naming convention', () => {
   expect(ref).toMatch(/review-azure-next-hybrid-PR-<num>\.html/);
   expect(clause(ref, /failure to write the file|could not be written/i)).toMatch(/hold/i);
 });
+
+test('rev-5 repair scope: a review-only repository never reaches repair', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // C/D carries two lists, and the review-only repo is named as such.
+  expect(ref).toMatch(/review allowlist `defi-com\/monorepo, defi-com\/mobile,\s*defi-com\/azure-next-hybrid`/);
+  expect(ref).toMatch(/repair allowlist `defi-com\/monorepo, defi-com\/mobile`/);
+  expect(clause(ref, /review-only: its own PRs/i)).toMatch(/never repaired and never pushed to/i);
+  // Each action reads its own list, and the driver tick gates repair on the repair list.
+  expect(clause(ref, /each action reads its own\s*list/i)).toMatch(/reviewed and never repaired/i);
+  // The driver tick gates repair on the repair list, in the same sentence as the route.
+  const tick = clause(ref, /only when its repository is on the acting automation's repair/i);
+  expect(tick).toMatch(/axstack-watch/);
+  expect(tick).toMatch(/no repair, no worktree and no push/i);
+});
+
+test('rev-5 obligations appear in the precheck due-work list and the cursor schema', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // The due-work list the precheck actually reads must name obligations.
+  expect(clause(ref, /for due control work:/i)).toMatch(/outstanding blocking-review obligation/i);
+  // The cursor sidecar schema must carry them with enough state to resolve one.
+  const cursor = clause(ref, /last processed fingerprint promoted verbatim/i);
+  expect(cursor).toMatch(/outstanding blocking-review\s*obligations for pair C only/i);
+  expect(cursor).toMatch(/review id/i);
+  expect(cursor).toMatch(/one supersede is still available/i);
+});

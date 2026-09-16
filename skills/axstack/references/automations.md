@@ -12,8 +12,14 @@ own prompt; never assume.
 - **Pair A/B** — driver Automation A (`*/30`) and watchdog Automation B, run id
   `20260916-pr-automations`, allowlist `axatbhardwaj/axstack`.
 - **Pair C/D** — driver Automation C (hourly) and watchdog Automation D, run id
-  `20260916-defi-automations`, allowlist
-  `defi-com/monorepo, defi-com/mobile, defi-com/azure-next-hybrid`.
+  `20260916-defi-automations`, carrying **two** lists rather than one:
+  - review allowlist `defi-com/monorepo, defi-com/mobile,
+    defi-com/azure-next-hybrid`;
+  - repair allowlist `defi-com/monorepo, defi-com/mobile`.
+
+  `defi-com/azure-next-hybrid` is therefore review-only: its own PRs are
+  discovered and recorded but never repaired and never pushed to, and they are
+  not review candidates either, since a PR authored by self is not a peer PR.
 
 The two pairs share no state: each has its own run id, run directory,
 `progress.md` and sidecars, and no sidecar is shared between them. A clause
@@ -43,9 +49,13 @@ owns policy, the run record, and evidence.
   deduplicated canonically by PR URL across the three searches with own-PR
   precedence.
 - **Mutation allowlist:** stated verbatim in the automation prompt, per
-  automation rather than as one global list. One allowlist gates both own-PR
-  repair and peer review for its own automation; there is no separate
-  review-only list. Outside the
+  automation. Pair A/B carries one list gating both own-PR repair and peer
+  review. Pair C/D carries two, a review allowlist and a repair allowlist, and
+  each action reads its own list: a repository on the review list but not the
+  repair list is reviewed and never repaired. Where a clause says "allowlisted"
+  without naming an action — including the precheck's "hash only allowlisted
+  PRs" — it means the union of the applicable lists for discovery and the wake
+  fingerprint, and the action-specific list for the action itself. Outside the
   allowlist the automation discovers and records only. The precheck writes the
   full discovery list to `pending.json`; no review, watch, gate, or other model
   work is launched for an external PR. External changes do not enter the wake
@@ -299,8 +309,9 @@ to the hashed fingerprint, so a draft becoming ready wakes the driver on its
 own; pair A/B's queried fields and fingerprint are unchanged. Hash
 only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
 for due control work: a watch deadline at or before now (pair A/B only, since
-pair C/D stores no deadlines), a pending failed-relay retry, or a per-PR repair
-cap that has expired (pair C/D only, since pair A/B has no caps). Exit 0 when the hash differs or control work is due;
+pair C/D stores no deadlines), a pending failed-relay retry, a per-PR repair cap
+that has expired, or an outstanding blocking-review obligation (both pair C/D
+only, since pair A/B has neither caps nor binding verdicts). Exit 0 when the hash differs or control work is due;
 otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
@@ -333,9 +344,11 @@ repair and publication for that run and is a health finding.
 
 For each changed PR:
 
-- Own PR → [axstack-watch](../../axstack-watch/SKILL.md) on the exact head
+- Own PR, and only when its repository is on the acting automation's repair
+  allowlist → [axstack-watch](../../axstack-watch/SKILL.md) on the exact head
   SHA in a per-PR child worktree; the driver worktree never checks out a PR
-  branch. Follow its repair-publication reference: candidate committed locally,
+  branch, and an own PR in a review-only repository is recorded and nothing
+  else, with no repair, no worktree and no push. Follow its repair-publication reference: candidate committed locally,
   authored review at the local SHA, gate, then fast-forward push with the
   publication readback immediately before it.
 - Peer PR → two isolated `axstack-review` passes on the exact head SHA, then
@@ -412,8 +425,10 @@ hermes send, target telegram (home), host VPS, gate-authorized escalations only
 Machine-readable sidecars in the same directory: `pending.json` (observed
 fingerprint plus full discovery list, written by the precheck), `cursor.json`
 (last processed fingerprint promoted verbatim from `pending.json`, expired PR
-list and per-PR watch deadlines for pair A/B only, pending failed-relay
-retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
+list and per-PR watch deadlines for pair A/B only, outstanding blocking-review
+obligations for pair C only — each holding PR URL, review id, bound head SHA,
+submission timestamp and whether its one supersede is still available — pending
+failed-relay retries; written by the driver after each processed tick), `precheck.log` (precheck only), and
 `watchdog.json` (watchdog only). Orca run history remains the authoritative
 log; the record is derived progress, never authority.
 
