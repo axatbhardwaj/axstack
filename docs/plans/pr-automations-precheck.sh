@@ -26,6 +26,21 @@ if [ -f "$CURSOR_FILE" ]; then
   printf '%s' "$cursor" | jq -e . >/dev/null 2>&1 || fail
 fi
 
+# These are the only timestamp-bearing cursor fields read by the precheck.
+# Reject malformed state rather than silently treating it as not due.
+printf '%s' "$cursor" | jq -e '
+  def timestamp:
+    type == "string"
+    and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$")
+    and (try (sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 | true) catch false);
+  ((.tick_started_at // null) == null or (.tick_started_at | timestamp))
+  and ((.tick_done_at // null) == null or (.tick_done_at | timestamp))
+  and ((.dispatch_markers // []) | type == "array"
+    and all(.[]; .started_at | timestamp))
+  and ((.repair_caps // {}) | type == "object"
+    and all(.[]; .expires_at | timestamp))
+' >/dev/null 2>&1 || fail
+
 # A recent unfinished tick is the only overlap signal. This precheck never
 # calls Orca and never inspects terminal state.
 if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
@@ -46,7 +61,8 @@ me="$(gh api user --jq .login 2>/dev/null)" || fail
 search() {
   local output
   output="$(gh search prs --state open --limit "$LIMIT" --json "$FIELDS" "$@" 2>/dev/null)" || return 1
-  printf '%s' "$output" | jq -e 'type == "array" and length < 100' >/dev/null 2>&1 || return 1
+  printf '%s' "$output" | jq -e --argjson limit "$LIMIT" \
+    'type == "array" and length < $limit' >/dev/null 2>&1 || return 1
   printf '%s' "$output"
 }
 
@@ -88,10 +104,11 @@ enriched='[]'
 while IFS=$'\t' read -r repo number; do
   [ -n "$repo" ] || continue
   detail="$(gh pr view "$number" --repo "$repo" \
-    --json headRefOid,baseRefName,isDraft,statusCheckRollup,author 2>/dev/null)" || fail
+    --json headRefOid,baseRefName,isDraft,statusCheckRollup,author,latestReviews 2>/dev/null)" || fail
   printf '%s' "$detail" | jq -e '
     .headRefOid and .baseRefName and (.isDraft | type == "boolean")
-    and (.statusCheckRollup | type == "array") and .author.login
+    and (.statusCheckRollup | type == "array")
+    and (.latestReviews | type == "array") and .author.login
   ' >/dev/null 2>&1 || fail
   base_ref="$(printf '%s' "$detail" | jq -r '.baseRefName')" || fail
   base_sha="$(gh api "repos/$repo/commits/$base_ref" --jq .sha 2>/dev/null)" || fail
@@ -104,7 +121,13 @@ while IFS=$'\t' read -r repo number; do
         base: $base,
         baseRefName: $detail.baseRefName,
         draft: $detail.isDraft,
-        checks: ($detail.statusCheckRollup | sort_by(.name // .context // "", .conclusion // .state // "")),
+        checks: ($detail.statusCheckRollup
+          | map({name: (.name // .context)}
+            + if .conclusion != null then {conclusion} else {state} end)
+          | sort_by(.name, .conclusion // .state)),
+        reviews: ($detail.latestReviews
+          | map(select(.commit.oid == $detail.headRefOid) | {id, state})
+          | sort_by(.id, .state)),
         author: $detail.author.login
       }]
   ')" || fail
@@ -126,7 +149,7 @@ hashed="$(jq -cn --argjson discovery "$discovery" --argjson previous "$previous_
    | ((.kinds | index("own")) != null) as $own
    | select($own or ((.url + "\u0000" + .head) as $key
        | [$previous[] | .url + "\u0000" + .head] | index($key) != null))
-   | if $own then {url, head, base, draft, checks}
+   | if $own then {url, head, base, draft, checks, reviews}
      else {url, head, base}
      end]
   | sort_by(.url)
@@ -156,16 +179,16 @@ if jq -en --argjson cursor "$cursor" --argjson discovery "$discovery" '
 ' >/dev/null; then due=1; fi
 
 if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
-  def entries: if type == "array" then .[] elif type == "object" then .[] else empty end;
-  any((.repair_caps // {} | entries); (.expires_at // "9999") <= $now)
+  def epoch: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601;
+  ($now | epoch) as $now_epoch
+  | any((.repair_caps // {} | .[]); (.expires_at | epoch) <= $now_epoch)
 ' >/dev/null; then due=1; fi
 
 if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
-  def entries: if type == "array" then .[] elif type == "object" then .[] else empty end;
   def epoch: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601;
   ($now | fromdateiso8601) as $now_epoch
-  | any(((.dispatches // .dispatch_markers // {}) | entries);
-      (try (.started_at | epoch) catch $now_epoch) < ($now_epoch - 10800))
+  | any((.dispatch_markers // [] | .[]);
+      (.started_at | epoch) < ($now_epoch - 10800))
 ' >/dev/null; then due=1; fi
 
 if printf '%s' "$cursor" | jq -e '(.pending_settlement // []) | length > 0' >/dev/null; then due=1; fi
