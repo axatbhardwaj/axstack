@@ -19,8 +19,13 @@ const parsed = () => {
 
 const WHOAMI = `set -eu
 : "\${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-who="$(curl -sfS -H "Authorization: Bearer \${NPM_CONFIG_TOKEN}" \\
-  https://registry.npmjs.org/-/whoami | sed 's/.*"username":"\\([^"]*\\)".*/\\1/')"
+body="$(curl -sfS -H "Authorization: Bearer \${NPM_CONFIG_TOKEN}" \\
+  https://registry.npmjs.org/-/whoami)"
+who="$(printf '%s' "$body" | sed -n 's/.*"username"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p')"
+if [ -z "$who" ]; then
+  echo "authenticated, but no username in the response (\${#body} bytes)" >&2
+  exit 1
+fi
 echo "token authenticates as: \${who}"
 `;
 
@@ -62,4 +67,9 @@ test('credential check never publishes and never prints the token', () => {
   // username the registry reports back.
   expect(WHOAMI).toMatch(/Authorization: Bearer/);
   expect(WHOAMI).toMatch(/echo "token authenticates as/);
+  // A 2xx with an unparsed body must fail, not report a blank success.
+  expect(WHOAMI, 'an empty username must fail the job').toMatch(/if \[ -z "\$who" \]/);
+  expect(WHOAMI).toMatch(/exit 1/);
+  // The diagnostic reports the body's size, never its contents.
+  expect(WHOAMI, 'the response body must not be echoed').not.toMatch(/echo[^\n]*\$body|printf[^\n]*"\$body"[^|]*$/m);
 });

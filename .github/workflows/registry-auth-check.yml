@@ -21,6 +21,11 @@ jobs:
         run: |
           set -eu
           : "${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-          who="$(curl -sfS -H "Authorization: Bearer ${NPM_CONFIG_TOKEN}" \
-            https://registry.npmjs.org/-/whoami | sed 's/.*"username":"\([^"]*\)".*/\1/')"
+          body="$(curl -sfS -H "Authorization: Bearer ${NPM_CONFIG_TOKEN}" \
+            https://registry.npmjs.org/-/whoami)"
+          who="$(printf '%s' "$body" | sed -n 's/.*"username"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+          if [ -z "$who" ]; then
+            echo "authenticated, but no username in the response (${#body} bytes)" >&2
+            exit 1
+          fi
           echo "token authenticates as: ${who}"
