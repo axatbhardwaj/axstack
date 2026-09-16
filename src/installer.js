@@ -845,6 +845,11 @@ export async function uninstallBundle({
     uninstallPlan.push(rel);
   }
 
+  log('plan complete');
+  if (strippedInstructionsRaw !== null) {
+    await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
+  }
+
   const manifestFile = join(skillsRoot, '.axstack-manifest.json');
   const manifestBefore = await readFile(manifestFile).catch((err) => {
     if (err?.code === 'ENOENT') return null;

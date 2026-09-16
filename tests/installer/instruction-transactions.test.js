@@ -109,4 +109,20 @@ describe('instruction transactions', () => {
     expect(readFileSync(manifest)).toEqual(before.manifest);
     expect(lstatSync(skill).mode & 0o777).toBe(before.skillMode);
   });
+
+  test('uninstall detects a concurrent instruction edit before any removal', async () => {
+    const { bundle, skills, instructions } = fixture();
+    await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+    const skill = join(skills, 'axstack-demo', 'SKILL.md');
+    await expect(uninstallBundle({
+      skillsDir: skills,
+      instructionsPath: instructions,
+      log(message) {
+        if (message === 'plan complete') writeFileSync(instructions, 'concurrent bytes');
+      },
+    })).rejects.toThrow(/changed since planning/i);
+    expect(readFileSync(instructions, 'utf8')).toBe('concurrent bytes');
+    expect(existsSync(skill)).toBe(true);
+    expect((await readManifest(skills)).instructions.path).toBe(instructions);
+  });
 });
