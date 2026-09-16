@@ -46,6 +46,18 @@ jobs:
       - name: Fetch npm before the credential exists
         run: bunx npm@12.0.2 --version
 
+      # A stage-only token cannot create a package that does not exist. Say so
+      # actionably here instead of letting npm return a bare 403 at the end.
+      - name: Package must already exist
+        run: |
+          set -eu
+          if ! curl -sfI https://registry.npmjs.org/axstack > /dev/null; then
+            echo "axstack does not exist on the registry yet." >&2
+            echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
+            echo "credential, then staged releases work from here." >&2
+            exit 1
+          fi
+
       # Fail here, cheaply, rather than at the irreversible step. This also
       # writes the credential npm reads: npm uses .npmrc, not NPM_CONFIG_TOKEN.
       - name: Registry credential must work
@@ -63,4 +75,4 @@ jobs:
       # the version and a maintainer approves it with `npm stage approve`.
       # bun has no staging command, so npm is pinned and run through bunx.
       - name: Stage for approval
-        run: bunx npm@12.0.2 stage publish . --access public
+        run: bunx --no-install npm@12.0.2 stage publish . --access public

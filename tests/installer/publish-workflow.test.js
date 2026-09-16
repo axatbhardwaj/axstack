@@ -35,6 +35,17 @@ fi
 // Proves the credential before the irreversible step. bun publish falls back
 // to interactive web auth when the token is missing or invalid, which in CI
 // prints a login URL and hangs until the job times out.
+// A stage-only token cannot create a package that does not exist. Say so
+// here, actionably, instead of letting npm return a bare 403 at the end.
+const EXISTS_CHECK = `set -eu
+if ! curl -sfI https://registry.npmjs.org/axstack > /dev/null; then
+  echo "axstack does not exist on the registry yet." >&2
+  echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
+  echo "credential, then staged releases work from here." >&2
+  exit 1
+fi
+`;
+
 const AUTH_CHECK = `set -eu
 : "\${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
 curl -sfS -H "Authorization: Bearer \${REGISTRY_TOKEN}" \\
@@ -50,7 +61,9 @@ const NPM = 'npm@12.0.2';
 // Fetched before the credential exists on disk, so the download cannot read
 // it. The exact version is pinned; bunx resolves it once and caches it.
 const PREFETCH = `bunx ${NPM} --version`;
-const STAGE = `bunx ${NPM} stage publish . --access public`;
+// --no-install: serve from the cache the prefetch filled. Without it bunx can
+// reinstall at this point, which is after the credential is on disk.
+const STAGE = `bunx --no-install ${NPM} stage publish . --access public`;
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
 // an artifact upload, a `with:` input, another env var — is a difference.
@@ -64,6 +77,7 @@ const EXPECTED_STEPS = [
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
   { name: 'Fetch npm before the credential exists', run: PREFETCH },
+  { name: 'Package must already exist', run: EXISTS_CHECK },
   { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
   { name: 'Stage for approval', run: STAGE },
 ];
@@ -109,9 +123,17 @@ test('publish workflow runs the whole suite before it publishes, and refuses a m
   const credential = runs.findIndex((run) => /_authToken/.test(run));
   expect(prefetch, 'npm must be fetched before the credential is written').toBeLessThan(credential);
   // Both npm invocations must name the same pinned version.
-  const pinned = runs.filter((run) => /bunx npm@/.test(run));
+  const pinned = runs.filter((run) => /bunx (?:--no-install )?npm@/.test(run));
   expect(pinned.length).toBe(2);
   for (const run of pinned) expect(run).toContain(NPM);
+  // The invocation that runs after the credential exists must not reinstall.
+  const stage = runs.find((run) => /stage publish/.test(run));
+  expect(stage, 'the staging invocation must be cache-only').toContain('--no-install');
+  expect(PREFETCH, 'the prefetch is what fills that cache').not.toContain('--no-install');
+  // The bootstrap prerequisite must fail loudly and before staging.
+  const exists = runs.findIndex((run) => /does not exist on the registry/.test(run));
+  expect(exists, 'no step checks the package exists').toBeGreaterThanOrEqual(0);
+  expect(exists).toBeLessThan(runs.findIndex((run) => /stage publish/.test(run)));
   expect(TAG_GUARD, 'a mismatched tag must fail the job').toMatch(/exit 1/);
 });
 
