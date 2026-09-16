@@ -308,7 +308,16 @@ requests, so it is bounded:
   mention trigger — a comment asking self to take a look — still gets a review,
   but it is published as a `COMMENT`, never as a binding verdict: a casual ask
   is not a request for a merge-blocking review, and the mention trigger cannot
-  be used to place a block. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
+  be used to place a block.
+- **An open obligation carries its own authority to resolve itself.** Submitting
+  a review removes self from the review request, so requiring a current official
+  request for every submission would deadlock: C could place a block and then be
+  permanently unable to submit the follow-up `APPROVE` that clears it. Therefore
+  an obligation created by an official request keeps a narrow, named authority
+  for as long as it stays open: C may submit exactly one superseding verdict on
+  that PR, including a clearing `APPROVE`, without a fresh review request. That
+  authority extends to nothing else — not to a different PR, not to a PR whose
+  obligation is already discharged, and not past the one-supersede-per-head cap. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
   author, so an authored-mode review of the automation's own repair stays
   internal and gates only the push, exactly as before. Automation D never
   writes to GitHub at all; its no-mutation rule is untouched.
@@ -338,6 +347,16 @@ requests, so it is bounded:
   cannot complete within that tick, the automation records a hold owned by the
   user naming the blocked PR and the blocking review. Dismissal stays
   prohibited: only the human clears a stale block.
+- **An outstanding obligation is due control work at the precheck.** Obligation
+  polling runs inside C, but the precheck decides whether C runs at all, so an
+  unchanged discovery fingerprint would otherwise leave a blocked and
+  now-undiscoverable PR unvisited and the three-failed-poll health path would
+  never fire. C's precheck therefore reads outstanding obligations from
+  `cursor.json` and exits 0 — waking C with the forge otherwise unchanged — when
+  any obligation's PR has changed since it was recorded, when a poll of it
+  failed on the previous tick, or when it has not been polled this tick at all.
+  Obligations join watch deadlines, failed-relay retries and expired repair caps
+  in the due-work list.
 - **A blocked PR is tracked durably, outside discovery.** Submitting a review
   removes self from GitHub's `review-requested` results, so a PR that C has just
   blocked can vanish from the three discovery searches on the very next tick —
@@ -915,7 +934,13 @@ For C and D, all of the following, on the VPS runtime:
     blocking-obligation record being written, polled by URL when discovery no
     longer returns the PR, discharged on merge/close/resolution, and becoming a
     gate-routed health finding after three unpollable ticks; and zero GitHub
-    writes by Automation D throughout.
+    writes by Automation D throughout. It additionally covers the three cases
+    that only appear once a block exists: an unchanged discovery fingerprint
+    with an outstanding obligation still exits the precheck 0 and wakes C; a PR
+    whose review request has been removed — as submitting a review does — still
+    accepts exactly one honest clearing `APPROVE` under the obligation's own
+    authority and no second one; and three failed polls across scheduled ticks
+    produce exactly one gate-routed health finding.
 
     **15B — one live submission, on a PR the user designates.** The user names
     one real peer PR on which self is officially review-requested and accepts
