@@ -1,6 +1,8 @@
 # Debug skill with adviser-directed investigator fan-out
 
-Status: Approved revision 3 (2026-09-16); both advisers AGREE.
+Status: Approved revision 3 (2026-09-16); both advisers AGREE. Amended
+2026-09-16 by user direction (revision 3.1): Sonnet investigator seats run at
+xhigh; independence comes from brief isolation, not effort difference.
 Authoritative store: repository Markdown, following this project's existing
 specification convention. This supplements docs/specs/v1.md and
 docs/specs/subscription-routing.md; it does not rewrite their approvals.
