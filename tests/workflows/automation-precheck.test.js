@@ -6,7 +6,12 @@ import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync, chmodSync 
 // actually does to live terminals rather than restating its source text.
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
-const SCRIPT = `${root}/docs/plans/orca-automations-precheck.sh`;
+// Both shipped drivers: pair A (axstack) and pair C (defi-com). Terminal hygiene
+// and due-work detection must behave identically; only discovery differs.
+const SCRIPTS = {
+  A: `${root}/docs/plans/orca-automations-precheck.sh`,
+  C: `${root}/docs/plans/orca-automations-precheck-c.sh`,
+};
 const DRIVER = 'term_driver';
 const WATCHDOG = 'term_watchdog';
 const BYSTANDER = 'term_bystander';
@@ -49,7 +54,7 @@ const runs = JSON.stringify({
   },
 });
 
-const setup = ({ driverIdle = true, runsFail = false } = {}) => {
+const setup = ({ script: which = 'A', driverIdle = true, runsFail = false, cursor = null } = {}) => {
   sandbox = mkdtempSync(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-precheck-`);
   const runDir = `${sandbox}/run`;
   const bin = `${sandbox}/bin`;
@@ -59,7 +64,8 @@ const setup = ({ driverIdle = true, runsFail = false } = {}) => {
   // The production script pins an absolute run directory; retarget the copy
   // instead of adding a test-only knob to the shipped script.
   const script = `${sandbox}/precheck.sh`;
-  write(script, readFileSync(SCRIPT, 'utf8').replace(/^RUN_DIR=.*$/m, `RUN_DIR="${runDir}"`), 0o755);
+  write(script, readFileSync(SCRIPTS[which], 'utf8').replace(/^RUN_DIR=.*$/m, `RUN_DIR="${runDir}"`), 0o755);
+  if (cursor) write(`${runDir}/cursor.json`, JSON.stringify(cursor));
 
   write(`${bin}/orca`, [
     '#!/usr/bin/env bash',
@@ -121,8 +127,10 @@ afterEach(() => {
   if (sandbox) rmSync(sandbox, { recursive: true, force: true });
 });
 
-test('precheck: never closes a watchdog terminal', () => {
-  const env = setup();
+for (const which of Object.keys(SCRIPTS)) {
+
+test(`precheck ${which}: never closes a watchdog terminal`, () => {
+  const env = setup({ script: which });
   const { calls } = run(env);
   expect(calls).toContain('terminal list');
   for (const close of closesOf(calls)) {
@@ -130,8 +138,8 @@ test('precheck: never closes a watchdog terminal', () => {
   }
 });
 
-test('precheck: never touches a terminal outside this automation, whatever its title reads', () => {
-  const env = setup();
+test(`precheck ${which}: never touches a terminal outside this automation, whatever its title reads`, () => {
+  const env = setup({ script: which });
   const { calls } = run(env);
   for (const line of calls.split('\n')) {
     if (line.startsWith('terminal close') || line.startsWith('terminal wait')) {
@@ -140,8 +148,8 @@ test('precheck: never touches a terminal outside this automation, whatever its t
   }
 });
 
-test('precheck: closes an idle driver terminal with --tab so the pane is reclaimed', () => {
-  const env = setup();
+test(`precheck ${which}: closes an idle driver terminal with --tab so the pane is reclaimed`, () => {
+  const env = setup({ script: which });
   const { calls } = run(env);
   const closes = closesOf(calls);
   expect(closes.length).toBe(1);
@@ -149,18 +157,58 @@ test('precheck: closes an idle driver terminal with --tab so the pane is reclaim
   expect(closes[0]).toContain('--tab');
 });
 
-test('precheck: a still-working driver is busy (exit 3) even when its title has drifted', () => {
-  const env = setup({ driverIdle: false });
+test(`precheck ${which}: a still-working driver is busy (exit 3) even when its title has drifted`, () => {
+  const env = setup({ script: which, driverIdle: false });
   const { exitCode, calls } = run(env);
   expect(exitCode).toBe(3);
   expect(closesOf(calls)).toEqual([]);
   expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8')).toContain('busy');
 });
 
-test('precheck: an unreadable ownership source is an error, never a silent empty sweep', () => {
-  const env = setup({ runsFail: true });
+test(`precheck ${which}: an unreadable ownership source is an error, never a silent empty sweep`, () => {
+  const env = setup({ script: which, runsFail: true });
   const { exitCode, calls } = run(env);
   expect(exitCode).toBe(2);
   expect(closesOf(calls)).toEqual([]);
   expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8')).toContain('error');
+});
+
+}
+
+// Due control work for pair C: an open blocking-review obligation must wake the
+// driver even when GitHub is unchanged. The driver writes `obligations[].pr`,
+// `repair_caps{url:{expires_at}}` and `pending_relay_retries`; the precheck has
+// to read that shape, not a different one, or a block is never revisited.
+test('precheck C: an open obligation in the driver-written cursor shape is due work (exit 0, `due`)', () => {
+  const env = setup({ script: 'C', cursor: {
+    fingerprint: 'stale-but-irrelevant',
+    obligations: [{ pr: 'https://github.com/defi-com/monorepo/pull/1092', review_id: 1, head: 'eebb78e5', submitted_at: '2026-09-16T20:14:09Z', supersede_available: true }],
+    repair_caps: {},
+    pending_relay_retries: [],
+  } });
+  // Make the fingerprint match what the stubbed discovery produces so only due-work can wake the driver.
+  const first = run(env);
+  const pending = JSON.parse(readFileSync(`${env.runDir}/pending.json`, 'utf8'));
+  const cursor = JSON.parse(readFileSync(`${env.runDir}/cursor.json`, 'utf8'));
+  writeFileSync(`${env.runDir}/cursor.json`, JSON.stringify({ ...cursor, fingerprint: pending.fingerprint }));
+  rmSync(`${sandbox}/orca.log`, { force: true });
+  const second = run(env);
+  expect(first.exitCode).toBe(0);
+  expect(second.exitCode).toBe(0);
+  expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8').trim().split('\n').pop()).toContain('due');
+});
+
+test('precheck C: an expired per-PR repair cap in the driver-written cursor shape is due work', () => {
+  const env = setup({ script: 'C', cursor: {
+    obligations: [],
+    repair_caps: { 'https://github.com/defi-com/monorepo/pull/1007': { last_repair_at: '2000-01-01T00:00:00Z', expires_at: '2000-01-02T00:00:00Z' } },
+    pending_relay_retries: [],
+  } });
+  run(env);
+  const pending = JSON.parse(readFileSync(`${env.runDir}/pending.json`, 'utf8'));
+  const cursor = JSON.parse(readFileSync(`${env.runDir}/cursor.json`, 'utf8'));
+  writeFileSync(`${env.runDir}/cursor.json`, JSON.stringify({ ...cursor, fingerprint: pending.fingerprint }));
+  const { exitCode } = run(env);
+  expect(exitCode).toBe(0);
+  expect(readFileSync(`${env.runDir}/precheck.log`, 'utf8').trim().split('\n').pop()).toContain('due');
 });
