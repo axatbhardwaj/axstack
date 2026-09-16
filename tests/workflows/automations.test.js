@@ -31,7 +31,7 @@ test('automations: reviewer brief field, four criteria, and gate tokens are exac
   expect(text).toContain('`axstack-auditor`');
   expect(text).toMatch(/exactly one literal token[^.]*`escalate` or `proceed`/i);
   expect(text).toMatch(/`proceed`[^.]*never overrides[^.]*validated blocking finding/i);
-  expect(text).toMatch(/push[^.]*only after[^.]*`proceed`|after `proceed`[^.]*push/i);
+  expect(text).toMatch(/Only `proceed` plus no unresolved validated blocking finding permits a push/);
 });
 
 test('automations: run record, sidecar, notification policy, dedup, expiry, and holds', () => {
@@ -112,5 +112,9 @@ test('automations: docs/workflows.md has an Automations section pointing at spec
   expect(section).toContain('skills/axstack/references/automations.md');
   expect(section).toMatch(/driver[^.]*five minutes|every five minutes/i);
   expect(section).toMatch(/watchdog every hour|hourly[^.]*watchdog/i);
-  expect(section).toMatch(/`escalate` or `proceed`/);
+  expect(section).toMatch(/exactly one (?:literal )?token[^.]*`escalate` or `proceed`/i);
+  // Outcomes are asserted separately: escalate never publishes; proceed alone is insufficient.
+  expect(section).toMatch(/`escalate`[^.]*hold[^.]*publishes nothing/i);
+  expect(section).toMatch(/only `proceed`[^.]*no unresolved validated blocking finding[^.]*(?:permits|allows) (?:publication|a push)/i);
+  expect(section).not.toMatch(/publishes only after[^.]*`escalate` or `proceed`/i);
 });

@@ -163,7 +163,8 @@ test('review modes: COMMENT branch is automation-only and binds the reviewed com
   expect(review).toMatch(/bound to the reviewed commit|bind[^.]*reviewed commit/i);
   expect(review).toMatch(/`INCOMPLETE`[^.]*unavailable required reviewer[^.]*publishes nothing[^.]*hold/i);
   expect(review).toMatch(/`COMMENT`[^.]*never[^.]*`APPROVE`[^.]*`REQUEST_CHANGES`|never submits `APPROVE` or `REQUEST_CHANGES`/i);
-  expect(review).toMatch(/after the gate returns `proceed`[^.]*no unresolved validated blocking finding/i);
+  expect(review).toMatch(/`escalate` records the hold[^.]*publishes nothing/i);
+  expect(review).toMatch(/Only `proceed` plus no unresolved validated blocking finding permits publication/i);
 });
 
 test('review modes: reviewer brief ends with the required escalation field', () => {

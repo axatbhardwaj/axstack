@@ -175,9 +175,13 @@ loop, or historical runtime fallback.
 
 Two native Orca automations run the installed skills without a human in the
 loop: a driver every five minutes that discovers own and peer PRs, repairs own
-PRs in the mutation allowlist, reviews peer PRs, and publishes only after the
-`axstack-auditor` gate returns `escalate` or `proceed`; and a read-only
-watchdog every hour that reports automation health. The approved contract is
+PRs in the mutation allowlist, and reviews peer PRs; and a read-only
+watchdog every hour that reports automation health. After every
+mode-required reviewer settles, the `axstack-auditor` gate returns
+exactly one token, `escalate` or `proceed`.
+`escalate` records and notifies a hold and publishes nothing.
+Only `proceed` plus no unresolved validated blocking finding permits publication
+(a fast-forward push or one `COMMENT` review). The approved contract is
 `docs/specs/orca-automations.md`; the skill-facing restatement an automation
 session loads is `skills/axstack/references/automations.md`.
 

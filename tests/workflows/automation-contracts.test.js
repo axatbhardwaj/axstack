@@ -95,3 +95,47 @@ test('sol-3: the driver is the automation session; axstack-monitor stays optiona
     expect(text, `${name}: monitor is not the driver`).not.toMatch(/`axstack-monitor` names the five-minute driver/i);
   }
 });
+
+test('sol-4: credible serious risk raises the internal prompt and hold immediately; the gate governs only external notification', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+  const contracts = compact('skills/axstack/references/contracts.md');
+  // The standing contract is unchanged and is what the precedence rule points at.
+  expect(contracts).toMatch(/Raise credible serious security, downtime, data-loss, or major-design risk immediately through a prompt/);
+
+  for (const [name, text] of [['automations', ref], ['review', review]]) {
+    // Trigger: credible serious risk found by a reviewer.
+    const rule = clause(text, /credible serious risk/i);
+    // Outcome 1: the standing internal prompt and dependent-action hold, immediately.
+    expect(rule, `${name}: immediate internal hold`).toMatch(/standing internal prompt[^.]*dependent-action hold[^.]*immediately|immediately[^.]*standing internal prompt[^.]*dependent-action hold/i);
+    // Outcome 2: the gate decides only external notification.
+    expect(rule, `${name}: gate scope`).toMatch(/gate governs only external notification/i);
+    // Precedence: proceed never overrides a validated blocking finding.
+    expect(clause(text, /`proceed`[^.]*never overrides/i)).toMatch(/validated blocking finding/i);
+  }
+  // The review skill says where the automation's internal prompt lands and that no ungated send occurs.
+  const urgent = section(review, '## Prompt-only urgent escalation', '## Publishing rule');
+  expect(clause(urgent, /automation session/i)).toMatch(/run record|Orca conversation/i);
+  expect(clause(urgent, /automation session/i)).toMatch(/no `hermes send`[^.]*without[^.]*`escalate`|only[^.]*`escalate`[^.]*send/i);
+});
+
+test('sol-5: escalate records and notifies a hold and publishes nothing; only proceed with no unresolved validated blocking finding permits publication', () => {
+  const docs = read('docs/workflows.md');
+  const section = docs.slice(docs.indexOf('## Automations'), docs.indexOf('## Run record and evidence')).replace(/\s+/g, ' ');
+  const ref = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+
+  for (const [name, text] of [['workflows', section], ['automations', ref], ['review', review]]) {
+    // The gate returns exactly one token.
+    expect(text, `${name}: one token`).toMatch(/exactly one (?:literal )?token[^.]*`escalate` or `proceed`/i);
+    // escalate -> hold recorded/notified, nothing published.
+    const escalate = clause(text, /`escalate`\s*(?:→|->|records|:)/i);
+    expect(escalate, `${name}: escalate records a hold`).toMatch(/hold/i);
+    expect(escalate, `${name}: escalate publishes nothing`).toMatch(/publishes nothing|nothing is pushed or published|no push or publication/i);
+    // proceed -> publication only with no unresolved validated blocking finding.
+    const proceed = clause(text, /only `proceed`|`proceed`\s*(?:→|->)/i);
+    expect(proceed, `${name}: proceed requires no unresolved validated blocking finding`).toMatch(/no unresolved validated blocking finding/i);
+    // The unsafe wording is gone: publication is never conditioned on either token.
+    expect(text, `${name}: no either-token publication`).not.toMatch(/publishes only after[^.]*`escalate` or `proceed`|after the gate returns `escalate` or `proceed`/i);
+  }
+});

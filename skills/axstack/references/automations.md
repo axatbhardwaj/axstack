@@ -68,16 +68,23 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
 
 - The gate decides only whether the user is notified. Reviewer "yes" is input,
   not a veto.
-- `escalate` → one `hermes send` through [axstack-relay](../../axstack-relay/SKILL.md)
-  naming the PR, the criterion, every reviewer's reason, where the user acts
-  (Orca conversation, worktree, or PR), and the hold. Record the hold.
-- `proceed` → no notification. `proceed` never overrides a validated blocking
-  finding: a push or `COMMENT` publication additionally requires no unresolved
-  validated blocking finding. A reviewer security "yes" that the gate does not
-  escalate is recorded as rejected-with-evidence or returned to the author
-  before any mutation.
-- Push or publish only after `proceed`; a push before the gate settles is
-  forbidden.
+- `escalate` → records the hold, then one `hermes send` through
+  [axstack-relay](../../axstack-relay/SKILL.md) naming the PR, the criterion,
+  every reviewer's reason, where the user acts (Orca conversation, worktree, or
+  PR), and the hold; it publishes nothing.
+- `proceed` → no notification; a push or `COMMENT` publication then
+  additionally requires no unresolved validated blocking finding, because
+  `proceed` never overrides a validated blocking finding. A reviewer security
+  "yes" that the gate does not escalate is recorded as rejected-with-evidence
+  or returned to the author before any mutation.
+- Only `proceed` plus no unresolved validated blocking finding permits a push
+  or publication; a push before the gate settles is forbidden.
+- Precedence: credible serious risk found by a reviewer still produces the
+  standing internal prompt and dependent-action hold immediately, and the gate
+  governs only external notification. That hold is the serious-risk rule of
+  [contracts](contracts.md#serious-risk). The internal prompt lands in the run
+  record and the automation's Orca conversation; no `hermes send` occurs
+  without `escalate`.
 - An unavailable gate or required reviewer records a hold, pauses mutation for
   that PR, and is treated as a watchdog health finding.
 

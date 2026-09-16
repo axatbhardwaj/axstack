@@ -251,6 +251,13 @@ relay delivery fails, send the same escalation there. Failed delivery never reso
 concern. Use no private escalation script. Public installations inherit no
 private transport values or configuration.
 
+Under an automation session, credible serious risk found by a reviewer still
+raises the standing internal prompt and dependent-action hold immediately, and
+the gate governs only external notification: the internal prompt lands in the
+run record and the automation session's own Orca conversation, and no
+`hermes send` occurs without the gate's `escalate` token. `proceed` never
+overrides a validated blocking finding.
+
 ## Publishing rule
 
 Mode-required exact-revision completeness gates external approval,
@@ -309,9 +316,10 @@ other caller.
    `INCOMPLETE`, unresolved material disagreement, or an unavailable required
    reviewer publishes nothing and records a hold that pauses mutation for the
    PR.
-2. Publish only after the gate returns `proceed` and no unresolved validated
-   blocking finding remains; `escalate` records the hold and the relay receipt
-   before any publication decision.
+2. The gate returns exactly one token, `escalate` or `proceed`. `escalate`
+   records the hold and the relay receipt and publishes nothing. Only
+   `proceed` plus no unresolved validated blocking finding permits
+   publication.
 3. Read back the remote head and base immediately before submit; stop if
    either differs from the reviewed candidate.
 4. Submit one owner-synthesized `COMMENT` review bound to the reviewed commit
