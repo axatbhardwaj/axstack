@@ -1,9 +1,8 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
-const skillsDir = join(import.meta.dir, '..', '..', 'skills');
-const read = (rel) => readFileSync(join(skillsDir, rel), 'utf8').replace(/\s+/g, ' ');
+const skillsDir = `${import.meta.dir}/../../skills`;
+const read = (rel) => readFileSync(`${skillsDir}/${rel}`, 'utf8').replace(/\s+/g, ' ');
 
 // Regression: review drivers satisfied "detached immutable checkout" with a
 // `git clone` into a temp dir plus `orca repo add`, which registers a new
