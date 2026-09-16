@@ -1,6 +1,7 @@
 # axstack-debug: capability to task map
 
-Spec: docs/specs/debug.md rev 3, approved 2026-09-16, tag `spec/debug-r3`.
+Spec: docs/specs/debug.md rev 3.1 (rev 3 approved 2026-09-16, amended the
+same day by user direction: Sonnet seats at xhigh), tag `spec/debug-r3.1`.
 Store: repository Markdown (this file). Two stacked PRs via `gh stack`.
 Author: driver session (Opus) for both PRs; authored review by
 `axstack-reviewer-primary` (Sol medium) per the mixed routing table.
@@ -14,7 +15,8 @@ Size est: target band (~200 lines)
 Acceptance:
 - all three presets carry the four slot IDs in the same order, exact
   provider/model/effort per the spec table, notes stating no commit/push/publish,
-  disposable worktree, and (where applicable) that a model repeats at distinct effort
+  disposable worktree, and (where applicable) that a model repeats in a
+  second seat
 - `assessRoleReadiness` passes for every preset; new negative test: a null on a
   non-intentional row still fails
 - role count 17 -> 21 in `orca-runtime.md`, `routing.md:16`, `README.md`,
