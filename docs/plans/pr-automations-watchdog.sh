@@ -38,6 +38,10 @@ put_check() {
     '.[$name] = {status: $status, reason: $reason}' <<<"$checks")"
 }
 
+parse_epoch() {
+  jq -nr --arg timestamp "$1" '$timestamp | fromdateiso8601' 2>/dev/null
+}
+
 cursor_ok=false
 cursor=''
 if [[ -r "$RUN_DIR/cursor.json" ]]; then
@@ -69,8 +73,8 @@ else
   done_ts="$(jq -r '.tick_done_at // empty' <<<"$cursor")"
   due_epoch=''
   done_epoch=''
-  [[ -z "$due_ts" ]] || due_epoch="$(date -u -d "$due_ts" +%s 2>/dev/null)"
-  [[ -z "$done_ts" ]] || done_epoch="$(date -u -d "$done_ts" +%s 2>/dev/null)"
+  [[ -z "$due_ts" ]] || due_epoch="$(parse_epoch "$due_ts")"
+  [[ -z "$done_ts" ]] || done_epoch="$(parse_epoch "$done_ts")"
   if [[ -n "$due_ts" && -z "$due_epoch" ]] || [[ -n "$done_ts" && -z "$done_epoch" ]]; then
     put_check driver_stuck unknown 'driver timestamp unreadable'
   elif [[ -n "$due_epoch" && $((now_epoch - due_epoch)) -gt 3600 \
@@ -104,7 +108,7 @@ else
   else
     stuck=false
     while IFS= read -r started_at; do
-      started_epoch="$(date -u -d "$started_at" +%s 2>/dev/null)"
+      started_epoch="$(parse_epoch "$started_at")"
       if [[ -z "$started_epoch" ]]; then
         put_check worker_stuck unknown 'dispatch marker timestamp unreadable'
         stuck=unknown
@@ -137,7 +141,7 @@ else
     fi
     if [[ "$(jq -r '.state' <<<"$decision")" == open ]]; then
       created_at="$(jq -r '.created_at // empty' <<<"$decision")"
-      created_epoch="$(date -u -d "$created_at" +%s 2>/dev/null)"
+      created_epoch="$(parse_epoch "$created_at")"
       if [[ -z "$created_epoch" ]]; then
         decision_status=unknown
         decision_reason='open decision timestamp unreadable'

@@ -10,6 +10,7 @@ import {
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const watchdog = `${root}/docs/plans/pr-automations-watchdog.sh`;
+const realDate = Bun.which('date');
 let sandbox;
 
 const write = (path, body, mode) => {
@@ -48,6 +49,7 @@ const setup = () => {
     'esac',
     'printf \'{"ok":true,"message_id":"msg-%s"}\\n\' "$count"',
   ].join('\n'), 0o755);
+  rejectGnuDate(bin);
   return { runDir, bin };
 };
 
@@ -78,6 +80,12 @@ const sendCount = () => {
   catch { return 0; }
 };
 
+const rejectGnuDate = (bin) => write(`${bin}/date`, [
+  '#!/usr/bin/env bash',
+  'for arg in "$@"; do [ "$arg" != -d ] || exit 1; done',
+  `exec "${realDate}" "$@"`,
+].join('\n'), 0o755);
+
 afterEach(() => {
   if (sandbox) rmSync(sandbox, { recursive: true, force: true });
   sandbox = null;
@@ -92,6 +100,15 @@ test('watchdog: an old changed line trips driver stuck even when the driver neve
   expectOnlyTrip(env.runDir, 'driver_stuck');
   expect(sendCount()).toBe(1);
   expect(readFileSync(`${sandbox}/orca.calls`, 'utf8')).toContain('automations runs --id driver-1 --json');
+});
+
+test('watchdog: ISO timestamps do not require GNU date parsing', () => {
+  const env = setup();
+  write(`${env.runDir}/cursor.json`, JSON.stringify({ dispatch_markers: {} }));
+  write(`${env.runDir}/precheck.log`, '2000-01-01T00:00:00Z changed\n');
+  tick(env);
+  expectOnlyTrip(env.runDir, 'driver_stuck');
+  expect(sendCount()).toBe(1);
 });
 
 test('watchdog: the last three error lines trip precheck failing', () => {
