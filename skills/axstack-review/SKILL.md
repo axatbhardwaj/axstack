@@ -75,7 +75,13 @@ or recursive teams.
 ## Review the candidate
 
 1. **Pin the brief.** For an owned candidate, verify remote confirmation of the
-   candidate SHA before reviewer dispatch. Record the PR URL, exact candidate
+   candidate SHA before reviewer dispatch. For an automation repair, confirm
+   instead the local immutable candidate SHA with `git rev-parse` in the
+   per-PR child worktree and pin the remote pre-repair head as the
+   expected-old remote SHA; remote equality is re-checked at the publication
+   readback, per the automation repair exception of the
+   [candidate-publication boundary](../axstack/references/candidate-publication.md).
+   Record the PR URL, exact candidate
    SHA and current base, applicable intent or spec/ticket identity and
    acceptance, exclusions, authority, actual author provenance for authored
    mode, and all six angles.
