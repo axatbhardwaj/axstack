@@ -43,14 +43,22 @@ test('delivery and recovery preserve runtime identity and ownership', () => {
   expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*model-substitution[^.]*scope/i);
 });
 
-test('native watch policy is preserved behind an explicit capability hold', () => {
+test('native watch policy is preserved after the user lifted the hold', () => {
   const watch = compact('skills/axstack-watch/references/watch-runtime.md');
+  const lifecycle = compact('skills/axstack/references/lifecycle.md');
+  const workflows = compact('docs/workflows.md');
   expect(watch).toMatch(/provider selection[^.]*model[^.]*effort[^.]*permission[^.]*unsupported/i);
-  expect(watch).toMatch(/schedule parser[^.]*cannot preserve[^.]*bounded expiry/i);
-  expect(watch).toMatch(/watch activation[^.]*complete Orca migration claim[^.]*held/i);
-  expect(watch).toMatch(/Create no schedule/i);
+  expect(watch).toMatch(/records its own model identity[^.]*watchdog compares/i);
+  expect(watch).not.toMatch(/watch activation[^.]*complete Orca migration claim[^.]*held/i);
+  expect(watch).not.toMatch(/Create no schedule/i);
   expect(watch).toMatch(/no custom scheduler[^.]*polling loop/i);
   expect(watch).toMatch(/five-minute\/hourly[^.]*cadences/i);
   expect(watch).toMatch(/quiet healthy behavior/i);
   expect(watch).toMatch(/24-hour/i);
+  for (const text of [lifecycle, workflows]) {
+    expect(text).not.toMatch(/Native watch capability hold|Hold activation|create no schedule/i);
+    expect(text).toMatch(/lifted[^.]*user decision|user decision[^.]*lifted/i);
+    expect(text).toMatch(/driver automation[^.]*mutating owner/i);
+    expect(text).toMatch(/watchdog[^.]*read-only/i);
+  }
 });

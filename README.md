@@ -98,12 +98,12 @@ answer trust or permission prompts on the worker's behalf, and never create a
 duplicate writer. A `worker_done` advances work only when its Task and Dispatch
 match the active attempt and its revision evidence verifies.
 
-Automated watch activation is held. Orca's native automation schema exposes a
-provider but cannot pin model, effort, or permission, and its current schedule
-parser does not preserve the accepted bounded expiry. Axstack creates no timer,
-uses no historical fallback, and introduces no custom scheduler. The intended
-five-minute monitor, hourly watchdog, quiet healthy ticks, and shared 24-hour
-deadline remain the acceptance contract for a future approved implementation.
+The user lifted the native-watch hold by decision on 2026-09-16. Orca's native automation
+schema exposes a provider but cannot pin model, effort, or permission, so the
+driver automation records its model identity every tick and the watchdog treats
+a mismatch as a safety hold. Axstack uses no historical fallback and introduces
+no custom scheduler. The five-minute driver, hourly read-only watchdog, quiet
+healthy ticks, and shared 24-hour deadline remain the acceptance contract.
 
 Mobile completion/reply behavior remains unverified. Structural checks and
 qualitative scenario evaluation are not live runtime proof.

@@ -154,18 +154,18 @@ never clears the underlying hold.
 
 Healthy watch observations remain quiet and monitor/watchdog roles never send.
 
-## Native watch capability hold
+## Native watch automations
 
-The accepted monitoring contract is an independent read-only monitor every five
-minutes, an hourly watchdog, quiet healthy snapshots, deduplicated actionable
-events, verified handshakes, one owner, and one shared default 24-hour deadline.
+The accepted monitoring contract is a five-minute driver automation, an hourly
+watchdog, quiet healthy snapshots, deduplicated actionable events, verified
+handshakes, one owner, and one shared default 24-hour deadline.
 
-Current native Orca automations can select a provider but cannot pin model,
-effort, or permission, and current schedule parsing cannot preserve the bounded
-expiry. Watch activation and the complete migration claim therefore remain
-held. Create no production schedule, use no historical runtime fallback, and
-add no custom scheduler or polling loop. Core supervised workflows may proceed;
-A8, missing-tick recovery, active expiry, and final cleanup remain unverified.
+The user lifted the native-watch hold by user decision on 2026-09-16. The driver
+automation is a mutating owner for the PRs it handles; the watchdog keeps the
+independent read-only contract. Native Orca automations still select only a
+provider, so the driver records its model identity every tick and the watchdog
+treats a mismatch as a safety hold. Axstack adds no custom scheduler, polling
+loop, or historical runtime fallback.
 
 ## Run record and evidence
 

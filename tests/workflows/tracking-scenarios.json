@@ -54,8 +54,8 @@
     },
     {
       "id": "native-watch-capability-gap",
-      "input": { "before": "The approved watch contract requires provider, model, effort, permission, and bounded expiry.", "event": "Native Orca automation supports provider but cannot preserve the other required fields and expiry." },
-      "expected": { "after": "Watch activation remains held and the exact capability gaps are reported.", "actions": ["preserve the desired policy as inactive", "report unsupported model, effort, permission, and expiry"], "forbidden": ["create a production schedule", "build a scheduler or polling loop", "claim the migration is complete"] }
+      "input": { "before": "The user lifted the native-watch hold; the automations contract expects the driver on Opus with the watchdog checking model identity.", "event": "Native Orca automation supports provider but cannot pin model, effort, or permission, and the driver records a model other than the expected one." },
+      "expected": { "after": "Mutation pauses for that run, the mismatch is recorded, and the finding goes to the watchdog path under the automation-health criterion.", "actions": ["record the driver's actual model identity on every tick", "pause mutation for the mismatched run", "route the finding to the watchdog and the gate"], "forbidden": ["substitute a model silently", "build a scheduler or polling loop", "clear the hold by silence"] }
     },
     {
       "id": "idle-is-not-complete",

@@ -224,7 +224,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
   ).toBeTruthy();
 });
 
-test('owned-core: one persistent owner; native watch roles stay held without capability', () => {
+test('owned-core: one persistent owner; native watch roles run under the automations contract', () => {
   const text = skill('axstack-watch');
   expect(
     /one (persistent )?owner/i.test(text),
@@ -236,7 +236,7 @@ test('owned-core: one persistent owner; native watch roles stay held without cap
     'monitor/watchdog must be independent and read-only',
   ).toBeTruthy();
   expect(/native Orca/i.test(text), 'watch must name the native Orca boundary').toBeTruthy();
-  expect(/capability hold|activation[^.]*hold/i.test(text), 'watch activation must remain held').toBeTruthy();
+  expect(/capability hold|activation[^.]*(?:is|are|remains?) held/i.test(text), 'watch must not carry the lifted hold').toBeFalsy();
   expect(/handshake/i.test(text), 'must require initial verified handshakes').toBeTruthy();
   expect(
     /snapshot-only|healthy ticks/i.test(text),
@@ -365,12 +365,13 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
   ).toBeTruthy();
 });
 
-test('owned-core: monitor/watchdog policy survives the native capability hold', () => {
+test('owned-core: monitor/watchdog policy survives the lifted native hold', () => {
   const text = skill('axstack-watch');
   expect(/5\s?min/i.test(text), 'monitor cadence default 5min must be stated').toBeTruthy();
   expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
   expect(/same[\s\S]*24h/i.test(text), 'both must share the same 24h expiry').toBeTruthy();
-  expect(/Create no schedule|no production timer/i.test(text), 'held watch must create no schedule').toBeTruthy();
+  expect(/Create no schedule|no production timer/i.test(text), 'lifted hold must not forbid schedules').toBeFalsy();
+  expect(/custom scheduler|polling loop/i.test(text), 'no custom scheduler or polling loop').toBeTruthy();
   expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();
   expect(
     /approval alone/i.test(text),

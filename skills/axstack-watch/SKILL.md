@@ -60,8 +60,9 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. The current native capability hold prevents the 5 min monitor,
-hourly watchdog, and timer activation; it does not block one read-only PR observation.
+anything. The user lifted the native-watch hold by user decision: the 5 min driver
+automation is a mutating owner for the PRs it handles and the hourly watchdog
+stays independent and read-only. One read-only PR observation needs neither.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -133,7 +134,7 @@ Owner: <profile + session> Worktree: <path>
 Scope: <approved rev, small-change intent, or maintenance snapshot>
 Capability: <issue + lifecycle state>
 CI/review: <current states + evidence refs>
-Watch: <capability hold or stopped registration receipts + expiry>
+Watch: <automation ids or stopped registration receipts + expiry>
 Remaining: <next actions + owner>
 Resume: <known commands or verified refs needed to reconcile from this revision>
 ```

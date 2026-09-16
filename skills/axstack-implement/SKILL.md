@@ -46,8 +46,8 @@ not evidence that the old writer disappeared.
 
 At execution start, bind work to the driver-owned Orca Run and one authoritative
 Task/Dispatch attempt. Preserve the actual IDs and process completion deliveries
-through the shared lifecycle. Do not activate a task-owned automation while the
-native watch capability hold remains open.
+through the shared lifecycle. Do not activate a task-owned automation outside
+the accepted automations contract.
 
 Immediately before an actual role dispatch, read and follow the
 [Orca runtime boundary](../axstack/references/orca-runtime.md). Ordinary local
