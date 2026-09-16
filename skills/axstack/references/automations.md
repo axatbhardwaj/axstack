@@ -276,13 +276,18 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
   [axstack-relay](../../axstack-relay/SKILL.md) naming the PR, the criterion,
   every reviewer's reason, where the user acts (Orca conversation, worktree, or
   PR), and the hold; it publishes nothing.
-- `proceed` → no notification; a push or `COMMENT` publication then
-  additionally requires no unresolved validated blocking finding, because
-  `proceed` never overrides a validated blocking finding. A reviewer security
+- `proceed` → no notification; a push, a `COMMENT` publication, or an
+  `APPROVE` then additionally requires no unresolved validated blocking finding,
+  because `proceed` never overrides a validated blocking finding. A
+  `REQUEST_CHANGES` is the exception and the only one: it is the publication
+  that reports validated blocking findings, so it requires at least one and is
+  never gated on their absence. A reviewer security
   "yes" that the gate does not escalate is recorded as rejected-with-evidence
   or returned to the author before any mutation.
-- Only `proceed` plus no unresolved validated blocking finding permits a push
-  or publication; a push before the gate settles is forbidden.
+- Only `proceed` plus no unresolved validated blocking finding permits a push,
+  a `COMMENT` publication or an `APPROVE`; a `REQUEST_CHANGES` needs `proceed`
+  plus at least one such finding. A push or publication before the gate settles
+  is forbidden either way.
 - Precedence: credible serious risk found by a reviewer still produces the
   standing internal prompt and dependent-action hold immediately, and the gate
   governs only external notification. That hold is the serious-risk rule of
@@ -352,9 +357,12 @@ For each changed PR:
   authored review at the local SHA, gate, then fast-forward push with the
   publication readback immediately before it.
 - Peer PR → two isolated `axstack-review` passes on the exact head SHA, then
-  the gate, then one owner-synthesized `COMMENT` review under the review skill's
-  COMMENT branch. `INCOMPLETE` or an unavailable required reviewer records a
-  hold and publishes nothing.
+  the gate, then one owner-synthesized review bound to the reviewed commit. For
+  pair A/B, and for a pair C peer PR reached through the qualifying mention
+  trigger, that is a `COMMENT` under the review skill's COMMENT branch. For a
+  pair C peer PR where self is officially review-requested, it is a binding
+  verdict under "Binding review verdicts (pair C)" above. `INCOMPLETE` or an
+  unavailable required reviewer records a hold and publishes nothing.
 
 Watch window, pair A/B only: 24 hours per own PR from first observation, ending
 early on merge or close. The deadline is stored in `cursor.json`; a due deadline

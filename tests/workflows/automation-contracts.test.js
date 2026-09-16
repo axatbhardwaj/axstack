@@ -468,3 +468,49 @@ test('rev-5 obligations appear in the precheck due-work list and the cursor sche
   expect(cursor).toMatch(/review id/i);
   expect(cursor).toMatch(/one supersede is still available/i);
 });
+
+// A whole-document regex proves only that the sentence exists SOMEWHERE. These
+// assertions pin each rule inside the operational section that actually governs
+// it, so prose added in a new section cannot satisfy them.
+test('rev-5 rules live in the operational sections, not only in prose', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const between = (start, end) => {
+    const from = ref.indexOf(start);
+    expect(from, `missing section ${start}`).toBeGreaterThan(-1);
+    const to = ref.indexOf(end, from + start.length);
+    expect(to, `missing section end ${end}`).toBeGreaterThan(from);
+    return ref.slice(from, to);
+  };
+
+  // Pair identity must carry both C/D lists.
+  const identity = between('## Pair identity', '## Identity and scope');
+  expect(identity).toMatch(/review allowlist/i);
+  expect(identity).toMatch(/repair allowlist/i);
+  expect(identity).toMatch(/review-only/i);
+
+  // The allowlist bullet itself must say each action reads its own list.
+  const scope = between('## Identity and scope', '## Roles per mode');
+  expect(scope).toMatch(/each action reads its own\s*list/i);
+  expect(scope).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
+
+  // The driver tick must gate repair on the repair allowlist.
+  const tick = between('## Driver tick', '## Watchdog tick');
+  expect(tick).toMatch(/repair\s*allowlist/i);
+  expect(tick).toMatch(/no repair, no worktree and no push/i);
+  // and route pair C's officially-requested peer PRs to a binding verdict.
+  expect(tick).toMatch(/binding verdict/i);
+
+  // The escalation gate must not make REQUEST_CHANGES impossible.
+  const gate = between('## Escalation gate', '## Precheck');
+  expect(gate).toMatch(/`REQUEST_CHANGES`[^.]*at least one/i);
+  expect(gate).toMatch(/never gated on their absence|needs `proceed`\s*plus at least one/i);
+
+  // The precheck's own due-work list must name obligations.
+  const precheck = between('## Precheck', '## Driver tick');
+  expect(precheck).toMatch(/outstanding blocking-review obligation/i);
+
+  // The cursor schema must carry them.
+  const record = between('## Run record and sidecar', '## Safety holds');
+  expect(record).toMatch(/outstanding blocking-review\s*obligations for pair C only/i);
+  expect(record).toMatch(/review id/i);
+});
