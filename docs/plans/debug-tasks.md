@@ -49,7 +49,7 @@ Depends: B1
 Internal task: B3 tests -> PR-B -> same worktree
 Theme: structural assertions and scenario corpus
 Size est: small
-Acceptance: `tests/workflows/debug.test.js` asserts every B1/B2 item; `tests/workflows/debug-scenarios.json` carries the 18 named cases with input, expected decision, forbidden actions; failing-first: the test file fails on the pre-B1 tree
+Acceptance: `tests/workflows/debug.test.js` asserts every B1/B2 item; `tests/workflows/debug-scenarios.json` carries the 20 named cases with input, expected decision, forbidden actions; failing-first: the test file fails on the pre-B1 tree
 Depends: B1, B2
 
 Internal task: B4 behavioral evaluation receipts -> driver -> run record

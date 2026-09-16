@@ -2,7 +2,7 @@
 
 ## Configured role routing
 
-Canonical presets are `mixed`, `codex-only`, and `claude-only`. For a new run,
+Presets: `mixed`, `codex-only`, `claude-only`. For a new run,
 read `profiles.preset` from `.axstack-manifest.json` at the actually loaded
 skills root, or an explicit user selection recorded in the run record. Proceed
 only with exactly one unambiguous preset; missing or contradictory sources are
@@ -26,11 +26,11 @@ routing, subscription inference, or silent provider/model/effort substitution.
 Stable role IDs:
 
 - The current chat drives (no role ID); `axstack-owner` owns one PR and
-  `axstack-author` is its exclusive writer.
+  `axstack-author` is its sole writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses only this table:
 
-  | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
+  | Preset | Actual author | Reviewer role (model/effort) |
   | --- | --- | --- |
   | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5` medium) |
   | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
@@ -52,11 +52,12 @@ review their own work.
 ## Direct routes (no spec ceremony)
 
 - One bounded research question -> `axstack-research`: verify primary sources
-  and code, return a cited note with limitations.
+  and code, return a cited note with limitations. Fan out only distinct
+  questions.
 - Understanding a system, change, or implementation gap -> `axstack-explain`:
   show current/intended behavior, evidence dimensions, and bounded gaps; use
-  project docs and verify rendered behavior when applicable. Publication needs
-  separate authority.
+  project docs and verify rendered behavior when applicable. Stale axstack-docs
+  is superseded. Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how it works; debug: what is wrong).
@@ -81,8 +82,7 @@ authority and intent boundaries still apply.
 ## Proportional scope identity
 
 Classify new work as substantial, small, or unclear; record the classification
-with brief reason in the run record. Tiny direct work without one puts
-size/reason in its brief.
+with brief reason in the run record, or in the brief for tiny direct work.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work. A
   bounded small feature is not substantial merely because it is labelled a

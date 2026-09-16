@@ -118,10 +118,10 @@
         "facts": "Astra ranks H1 > H2 > H3; Fable ranks H2 > H4 > H1 and refutes H3 with evidence; Astra does not mention H4. Four investigators available."
       },
       "expected": {
-        "decision": "Driver de-duplicates to H1, H2, H4 (H3 refuted only by one adviser stays eligible unless both refute), ranks the union with recorded reasons, briefs the top four, and records the disagreement in the run record; no vote.",
+        "decision": "Driver de-duplicates to H1, H2, H3, H4 (H3 stays eligible because only one adviser refuted it; only hypotheses both advisers refute are dropped), ranks the union with recorded reasons in the run record, briefs all four to the four live seats, and records the disagreement; no vote.",
         "required": [
-          "Recorded reasons for the merged ranking",
-          "H3 remains eligible or is briefed last"
+          "Recorded reasons for the merged ranking in the run record",
+          "H3 remains eligible and is briefed"
         ],
         "forbidden": [
           "Resolving by majority vote",

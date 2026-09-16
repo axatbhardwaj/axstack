@@ -31,7 +31,7 @@ test('debug: seven gated phases with the loop completion criterion and redaction
   expect(text).toMatch(/fast[^.]*deterministic|deterministic[^.]*fast/i);
   expect(text).toMatch(/flaky[^.]*sample count[^.]*observed failures[^.]*duration[^.]*seed/i);
   expect(text).toMatch(/theory before the loop|before the loop exists/i);
-  expect(text).toMatch(/cannot be built[^.]*stop[^.]*ask|no loop[^.]*stop[^.]*ask/i);
+  expect(text).toMatch(/cannot be built[^.]*stop, list what was tried, and ask/i);
   expect(text).toMatch(/redact[^.]*secrets?[^.]*before/i);
   expect(text).toMatch(/one[^.]*strongly supported hypothesis[^.]*enough/i);
   expect(text).toMatch(/never invent[^.]*quota/i);
@@ -48,6 +48,7 @@ test('debug: fix attempts are defined and the ladder has three rungs with exact 
   expect(text).toMatch(/implementation slip[^.]*(?:does not|never) count/i);
   expect(text).toMatch(/probe never counts|probe[^.]*never counts/i);
   expect(text).toMatch(/ledger[^.]*carries across|imports known attempts/i);
+  expect(text).toMatch(/on resume[^.]*re-verifies the packet hash[^.]*re-run the loop red/i);
   for (const rung of ['L0', 'L1', 'L2']) expect(text).toContain(rung);
   expect(text).toMatch(/\| L0 \|.{0,80}at most one fix attempt/i);
   expect(text).toMatch(/\| L1 \| the L0 fix attempt failed/i);
@@ -64,7 +65,7 @@ test('debug: adviser rule, plan merge, fan-out floor and completion are explicit
   expect(text).toMatch(/single-provider[^.]*one configured adviser/i);
   expect(text).toMatch(/high-stakes[^.]*serious-risk[^.]*override/i);
   expect(text).toMatch(/configured but unavailable[^.]*holds? L1 and L2/i);
-  expect(text).toMatch(/de-duplicates?[^.]*ranks? the union/i);
+  expect(text).toMatch(/de-duplicates?[^.]*ranks? the union with reasons recorded in the run record/i);
   expect(text).toMatch(/briefs? [<≤]=? seats|briefs? (?:never exceed|at most)[^.]*seats/i);
   expect(text).toMatch(/untested \(queued\)|recorded as untested/i);
   expect(text).toMatch(/one bounded adviser replan/i);
@@ -133,7 +134,7 @@ test('debug: shared references route to the skill and carry its contracts', () =
   expect(compact('docs/workflows.md')).toMatch(/axstack-debug/);
 });
 
-test('debug: scenario corpus carries the eighteen spec cases', () => {
+test('debug: scenario corpus carries the twenty spec cases', () => {
   const data = JSON.parse(read('tests/workflows/debug-scenarios.json'));
   expect(data.version).toBe(1);
   const ids = data.cases.map((c) => c.id);
@@ -146,8 +147,31 @@ test('debug: scenario corpus carries the eighteen spec cases', () => {
     'instrumentation-denied', 'dirty-revision-resume', 'second-failure-l2',
     'unknown-root-cause', 'none-seam', 'flaky-false-green',
   ]) expect(ids, `missing case ${required}`).toContain(required);
+  const decisionLocks = {
+    'easy-bug-l0': /no adviser or investigator dispatch/i,
+    'loop-unbuildable': /list what was tried[\s\S]*no advisers/i,
+    'probe-failure-vs-fix-failure': /fix attempts remain 0[\s\S]*L1 is not triggered/i,
+    'implementation-slip': /ledger stays at 0/i,
+    'first-fix-failed-fanout': /Astra and Fable independently[\s\S]*untested \(queued\)/i,
+    'advisers-disagree-ranking': /only hypotheses both advisers refute are dropped[\s\S]*no vote/i,
+    'five-hypotheses-four-seats': /fifth as untested \(queued\)/i,
+    'zero-investigators': /hold[\s\S]*no substitution[\s\S]*L1 is not satisfied/i,
+    'one-investigator': /below the two-seat floor/i,
+    'two-investigators': /two usable independent receipts/i,
+    'decisive-probe-blocked': /record blocked[\s\S]*hold dependent conclusions/i,
+    'contradictory-receipts': /one discriminating rerun[\s\S]*never[\s\S]*vote/i,
+    'shared-state-loop': /parameterise[\s\S]*serialise[\s\S]*hold the probe/i,
+    'single-provider-l1': /Astra alone[\s\S]*intentional absence[\s\S]*override/i,
+    'instrumentation-denied': /do not add instrumentation/i,
+    'dirty-revision-resume': /import the known attempt[\s\S]*re-verify the packet hash[\s\S]*re-run the loop red/i,
+    'second-failure-l2': /no third attempt until the user decides/i,
+    'unknown-root-cause': /UNKNOWN[\s\S]*unresolved/i,
+    'none-seam': /Seam: NONE[\s\S]*scoped decision/i,
+    'flaky-false-green': /200 runs, 0 failures/i,
+  };
   for (const c of data.cases) {
     expect(c.skill_ref, `${c.id} skill_ref`).toBe('axstack-debug');
+    expect(c.expected.decision, `${c.id} decision body`).toMatch(decisionLocks[c.id]);
     expect(typeof c.input.request).toBe('string');
     expect(typeof c.input.facts).toBe('string');
     expect(typeof c.expected.decision).toBe('string');
