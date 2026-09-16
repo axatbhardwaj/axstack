@@ -1,6 +1,7 @@
 # Orca PR automations — specification
 
-Status: revision 2, presented for user approval. Adviser receipts on rev
+Status: revision 3 (amendment to the approved revision 2, 32304f4, after the
+enabling verification of 2026-09-16; presented for user acceptance). Adviser receipts on rev
 656890e: Astra AGREE-WITH-AMENDMENTS (six), Fable AGREE-WITH-AMENDMENTS
 (four), both AGREE on record-only discovery outside the allowlist; all ten are
 absorbed below (`docs/plans/orca-automations-astra-review.md`,
@@ -122,8 +123,15 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
 ## Automation A — driver (every five minutes)
 
 - Created against the VPS runtime with `--environment vps`, trigger
-  `*/5 * * * *`, `--workspace <dedicated existing worktree>` with
-  `--reuse-session`, provider `claude`, `--disabled` until acceptance.
+  `*/5 * * * *`, `--workspace <dedicated existing worktree>`, provider
+  `claude`, `--disabled` until acceptance. `--reuse-session` is set but,
+  verified on 2026-09-16 (scheduled runs 7 and 8), Orca launches a fresh
+  session for every dispatched tick on this host. The normal mode is therefore
+  one fresh session per changed tick, reconciled from the run record and
+  sidecars; the precheck closes the previous tick's idle driver and watchdog
+  terminals before dispatching and treats a still-working driver terminal as
+  `busy`. A scheduler-launched session whose terminal matches its own Orca
+  handle is expected, not a fallback.
 - Model and effort cannot be set on an automation; the provider default is
   used. Before any repair or publication the driver validates its effective
   session identity through Orca runtime inspection (the exact fields are
@@ -171,9 +179,11 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   and comment IDs. A review receipt is reused only when head, base, and scope
   are unchanged; a new failing check, base change, review request, or
   qualifying comment at an unchanged head is new work.
-- Session growth: the user may run `--fresh-session` at will; a fresh session
-  reconciles from the run record and is not itself a fallback hold. An
-  unrequested fallback to a fresh session is a safety hold.
+- Session identity: every session reconciles from the run record and
+  validates its effective identity by runtime inspection before acting. A
+  session that is neither scheduler-launched (run history `trigger` and pty
+  match) nor operator-launched in the automation conversation is a safety
+  hold.
 
 ## Automation B — watchdog (hourly)
 
@@ -185,7 +195,7 @@ gate. It returns exactly one literal token, `escalate` or `proceed`.
   itself recorded in `watchdog.json`.
 - Thresholds: three consecutive `error` lines in `precheck.log`; three
   consecutive failed A runs; no successful A run within two hours while the
-  precheck logged `changed` or `due`; any unrequested fresh-session fallback or
+  precheck logged `changed` or `due`; any unknown-provenance session or
   non-Opus effective identity recorded by A; any `failed` relay receipt older
   than one tick or any `uncertain` receipt; a hold with no owner. A quiet
   precheck history with no due work is healthy.
@@ -225,7 +235,7 @@ work; an `uncertain` one is never auto-resent.
 
 ## Safety holds
 
-- Unrequested fresh-session fallback, or a recorded model different from the
+- A session of unknown provenance, or a recorded model different from the
   expected one: mutation pauses for that run, the fact is recorded, and the
   finding goes to the watchdog path.
 - GitHub API errors leave the PR state unknown; nothing is pushed or published
@@ -265,10 +275,14 @@ work; an `uncertain` one is never auto-resent.
    returns exactly one of the two literal tokens; (b) a record carrying a
    recorded `escalate` decision produces exactly one relay receipt with state
    `sent`; (c) a recorded `proceed` produces zero.
-8. Verified on the VPS before enabling: run-history JSON fields, the runtime
-   inspection fields that prove effective session identity (correct, wrong,
-   and unknown identities each tested, with affected actions held), whether
-   `orca automations run` honors the precheck, and overlap behaviour with
-   `--reuse-session`.
+8. Verified on the VPS before enabling (2026-09-16): run history exposes
+   `precheckResult` only for scheduled runs (`orca automations run` skips the
+   precheck and never reuses a session); run `status: completed` means
+   dispatched, not finished; usage tracking is off, so effective identity is
+   proven by `orca terminal show` (agent identity plus the rendered model
+   line) and the absence of a `--model` override; `--reuse-session` does not
+   reuse, hence the precheck's terminal hygiene; the sole-writer guard caught
+   an out-of-band sidecar edit (INTEGRITY-1); the worktree needs a one-time
+   Claude Code trust grant by the user.
 
 Only then are both automations enabled.
