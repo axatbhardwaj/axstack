@@ -303,6 +303,7 @@ async function main() {
         const i = summary.instructions;
         if (i.status === 'conflict') {
           console.log(`instruction conflict: ${i.path} preserved (${i.reason})`);
+          process.exitCode = 1;
         } else {
           console.log(`instruction ${i.status}: ${i.path}`);
         }

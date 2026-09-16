@@ -65,6 +65,25 @@ describe('instruction CLI routing', () => {
     expect(readFileSync(instructions, 'utf8')).toStartWith('Use Haoshoku routing for legacy skills.');
   });
 
+  test('install exits nonzero when an edited owned instruction block is preserved', () => {
+    const { root, bundle } = fixture();
+    const skills = join(root, 'skills');
+    const instructions = join(root, 'AGENTS.md');
+    const args = [
+      'install', '--preset', 'mixed', '--bundle', bundle,
+      '--skills-dir', skills, '--instructions', instructions,
+    ];
+    const installed = runCli(CLI, args);
+    expect(installed.ok).toBe(true);
+    const edited = readFileSync(instructions, 'utf8').replace('engineering work', 'all work');
+    writeFileSync(instructions, edited);
+
+    const conflict = runCli(CLI, args, { expectFail: true });
+    expect(conflict.out).toContain(`instruction conflict: ${instructions} preserved`);
+    expect(conflict.out).toContain('owned instruction block was edited');
+    expect(readFileSync(instructions, 'utf8')).toBe(edited);
+  });
+
   test('help documents instruction selection and harness defaults', () => {
     const result = runCli(CLI, ['--help']);
     expect(result.out).toContain('--instructions <file>');

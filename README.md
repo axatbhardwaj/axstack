@@ -69,7 +69,9 @@ See [installation details](docs/installation.md).
 points at the installed entry skill and requires delegated work to use visible
 Orca orchestration rather than a harness-native subagent tool. Text and file
 mode outside the markers are preserved; edited, malformed, unowned, or unsafe
-targets are reported without normal-path adoption.
+targets are reported without normal-path adoption. Install exits nonzero when
+an instruction conflict is preserved, while clean and idempotent installs exit
+successfully.
 
 The public bundle preserves three canonical 21-role inputs:
 [mixed](profiles/presets/mixed.json),

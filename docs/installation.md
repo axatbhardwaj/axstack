@@ -96,6 +96,11 @@ are preserved or refused with an explicit report. Combined failures roll back
 skills, instruction bytes and modes, Claude settings, and manifest state; any
 failed recovery is reported as incomplete.
 
+`axstack install` exits with status 1 when the selected instruction block is in
+conflict and was preserved, so scripts can detect that routing was not
+installed. A clean or idempotent install exits 0; preserved edits to ordinary
+owned skill files keep their existing non-failing install semantics.
+
 ## Safety and ownership behavior
 
 The complete bundle is validated before writes:
