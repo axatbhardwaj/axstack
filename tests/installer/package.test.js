@@ -206,6 +206,23 @@ test('tarball members match the full source tree with no silent omissions', () =
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
 });
 
+test('published manifest carries the metadata an npm page needs', () => {
+  const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  const repo = manifest.repository?.url ?? '';
+
+  // A published package that cannot be traced back to its source is the gap
+  // this guards; each field is what npm renders or resolves.
+  expect(repo, 'repository.url must be a git+https URL npm can resolve').toMatch(/^git\+https:\/\/.+\.git$/);
+  expect(repo).toContain('axstack');
+  expect(manifest.homepage ?? '', 'homepage').toMatch(/^https:\/\//);
+  const bugs = typeof manifest.bugs === 'string' ? manifest.bugs : manifest.bugs?.url ?? '';
+  expect(bugs, 'bugs').toMatch(/^https:\/\//);
+  expect(manifest.author ?? '', 'author').not.toBe('');
+  expect(Array.isArray(manifest.keywords) && manifest.keywords.length > 0, 'keywords').toBe(true);
+  expect(manifest.license, 'license').toBe('MIT');
+  expect(manifest.private, 'private must stay unset so publish is possible').toBeUndefined();
+});
+
 test('CLI reports the subscription-routing setup version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
   expect(result.out.trim()).toBe('axstack 0.8.1');

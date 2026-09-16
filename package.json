@@ -2,6 +2,21 @@
   "name": "axstack",
   "version": "0.8.1",
   "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks Orca capabilities.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "orca",
+    "agents",
+    "skills",
+    "orchestration"
+  ],
+  "homepage": "https://github.com/axatbhardwaj/axstack#readme",
+  "bugs": "https://github.com/axatbhardwaj/axstack/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axatbhardwaj/axstack.git"
+  },
+  "author": "Axat Bhardwaj",
   "type": "module",
   "engines": {
     "bun": ">=1.3.14"
