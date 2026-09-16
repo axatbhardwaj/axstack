@@ -1,0 +1,47 @@
+name: publish
+
+# A publish is irreversible: npm keeps a published version forever. This runs
+# only for a pushed version tag, and only after the tag is proven to match the
+# manifest and the suite passes.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # oven-sh/setup-bun v2, pinned to the verified commit below
+      # (refs/tags/v2). No invented SHAs.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.4.2'
+
+      - run: bun test
+
+      - name: Tag must match the manifest version
+        run: |
+          set -eu
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(bun --print 'require("./package.json").version')"
+          if [ "$tag" != "$version" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match package.json version ${version}" >&2
+            exit 1
+          fi
+
+      - name: Authenticate to the registry
+        env:
+          REGISTRY_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: |
+          set -eu
+          : "${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+          umask 077
+          printf '//registry.npmjs.org/:_authToken=%s\n' "${REGISTRY_TOKEN}" > "${HOME}/.npmrc"
+
+      # bun has no --provenance; attestation would require the npm CLI.
+      - run: bun publish --access public
