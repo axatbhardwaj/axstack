@@ -13,14 +13,20 @@ log() { printf '%s %s\n' "$ts" "$1" >> "$LOG"; }
 
 # Terminal hygiene and the real busy guard. Orca does not reuse the driver session on this host (verified
 # 2026-09-16: scheduled runs 7 and 8 each opened a new terminal), so every changed tick starts a fresh
-# session that reconciles from the run record. Before dispatching, close the previous ticks' idle driver and watchdog
-# terminals when they are idle; a driver terminal that is still working means the tick is busy.
+# session that reconciles from the run record. Before dispatching, close the previous ticks' idle driver
+# terminals; a driver terminal that is still working means the tick is busy.
+#
+# Only driver terminals are in scope. The watchdog is a separate automation dispatched on the same minute,
+# and a session that is still booting reports tui-idle, so sweeping its terminals closed it seconds after
+# launch (verified 2026-09-16: watchdog runs 8-10 dispatched and wrote nothing). The watchdog owns its own
+# terminals; a busy watchdog is also not this tick being busy.
+# Closing needs --tab: without it the pane is closed but the session stays listed and is never reclaimed.
 if command -v orca >/dev/null 2>&1; then
   handles="$(orca terminal list --json 2>/dev/null \
-    | jq -r '.result.terminals[]? | select(.agentIdentity == "claude") | select((.title // "") | test("Axstack PR (automation )?driver|Axstack automation watchdog")) | .handle')"
+    | jq -r '.result.terminals[]? | select(.agentIdentity == "claude") | select((.title // "") | test("Axstack PR (automation )?driver")) | .handle')"
   for h in $handles; do
     if orca terminal wait --terminal "$h" --for tui-idle --timeout-ms 3000 --json 2>/dev/null | jq -e '.result.wait.satisfied == true' >/dev/null 2>&1; then
-      orca terminal close --terminal "$h" --json >/dev/null 2>&1 || true
+      orca terminal close --terminal "$h" --tab --json >/dev/null 2>&1 || true
     else
       log busy; exit 3
     fi
