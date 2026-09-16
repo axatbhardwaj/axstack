@@ -193,6 +193,17 @@ test('reject writes rejected without inventing a message id', () => {
   expect(updated).not.toHaveProperty('decided_message_id');
 });
 
+test('an exported empty message id is treated as absent', () => {
+  const { script } = setup();
+  const { path } = writeDecision();
+  const result = run(script, [TOKEN, 'approve'], { HERMES_SESSION_MESSAGE_ID: '' });
+
+  expect(result.exitCode).toBe(0);
+  const updated = JSON.parse(readFileSync(path, 'utf8'));
+  expect(updated.state).toBe('approved');
+  expect(updated).not.toHaveProperty('decided_message_id');
+});
+
 test('the decision is re-read after acquiring its per-token lock', async () => {
   const { script } = setup();
   const { path } = writeDecision();
@@ -242,7 +253,7 @@ test('the Hermes skill contains only the fixed decision relay instruction', () =
     'description: Relay exact Telegram decision replies through the fixed decision script.',
     '---',
     '',
-    'On a message exactly `approve <token>` or `reject <token>`, run `axstack-decide <token> <verb>` and relay its single output line; otherwise do nothing; never run `gh`, `git`, or `orca`.',
+    'when a message is exactly `approve <token>` or `reject <token>`, run `~/.hermes/scripts/axstack-decide <token> <verb>` and relay its one-line result; do nothing else and never run `gh`, `git` or `orca`.',
     '',
   ].join('\n'));
 });

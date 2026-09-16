@@ -121,10 +121,11 @@ fi
 decided_state=${verb/approve/approved}
 decided_state=${decided_state/reject/rejected}
 decided_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+# SIGKILL between mktemp and mv can leave <token>.json.tmp.*; the driver and watchdog glob only *.json.
 tmp_file=$(mktemp "$decision_file.tmp.XXXXXX" 2>/dev/null) || exit 3
 trap 'rm -f -- "$tmp_file"' EXIT
 
-if [[ -n ${HERMES_SESSION_MESSAGE_ID+x} ]]; then
+if [[ -n ${HERMES_SESSION_MESSAGE_ID:-} ]]; then
   jq --arg state "$decided_state" \
      --arg at "$decided_at" \
      --arg message_id "$HERMES_SESSION_MESSAGE_ID" \
