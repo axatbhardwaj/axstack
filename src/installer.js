@@ -114,6 +114,40 @@ async function assertNoSymlinksBelow(root, destDir) {
   }
 }
 
+// Shared ownership guard: resolve a manifest-owned rel to its destination,
+// refuse escapes and symlinks, and read current bytes (null when missing)
+// plus the existing mode. Read-only, so callers run it for every entry
+// before mutating anything.
+async function readOwnedTarget(skillsRoot, rel) {
+  const dest = join(skillsRoot, rel);
+  if (!withinRoot(dest, skillsRoot)) {
+    throw new Error(`unsafe target: ${rel} escapes ${skillsRoot}; refusing`);
+  }
+  await assertNoSymlinksBelow(skillsRoot, dirname(dest));
+  const destStat = await lstat(dest).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (destStat?.isSymbolicLink()) {
+    throw new Error(`unsafe target: destination is a symlink at ${dest}; refusing`);
+  }
+  let current = null;
+  try {
+    current = await readFile(dest);
+  } catch (err) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
+  let mode = null;
+  if (current !== null) {
+    try {
+      mode = (await stat(dest)).mode & 0o777;
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
+  }
+  return { dest, current, mode };
+}
+
 function homeDir() {
   // Bun has no homedir() API; $HOME is the POSIX source of truth. A missing,
   // empty, or non-absolute HOME yields null so callers fail closed instead
@@ -386,28 +420,14 @@ export async function installBundle({
 
   // Phase 1: pre-scan unknown pre-existing files so conflicts fail pre-write.
   // Destination ancestry is checked for symlink escapes here, before mutation.
+  // The stale plan below is computed in the same read-only pass: every stale
+  // manifest entry resolves its destination, current bytes, and pristine
+  // flag through the same guard before Phase 2 mutates anything.
   const desired = [];
   for (const { rel, abs, content: inlineContent } of bundle.files) {
-    const dest = join(skillsRoot, rel);
-    if (!withinRoot(dest, skillsRoot)) throw new Error(`unsafe install target rejected: ${rel}`);
-    await assertNoSymlinksBelow(skillsRoot, dirname(dest));
-    let destStat = null;
-    try {
-      destStat = await lstat(dest);
-    } catch (err) {
-      if (err?.code !== 'ENOENT') throw err;
-    }
-    if (destStat?.isSymbolicLink()) {
-      throw new Error(`unsafe target: destination is a symlink at ${dest}; refusing`);
-    }
+    const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
     const content = inlineContent ?? await readFile(abs);
-    let current = null;
-    try {
-      current = await readFile(dest);
-    } catch (err) {
-      if (err?.code !== 'ENOENT') throw err;
-    }
-    desired.push({ rel, dest, content, current });
+    desired.push({ rel, dest, content, current, mode });
     if (
       current !== null &&
       hashContent(current) !== hashContent(content) &&
@@ -420,21 +440,38 @@ export async function installBundle({
     }
   }
 
+  const bundleRels = new Set(bundle.files.map((file) => file.rel));
+  const stalePlan = [];
+  for (const rel of Object.keys(ownedFiles)) {
+    if (bundleRels.has(rel)) continue;
+    const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
+    stalePlan.push({
+      rel,
+      dest,
+      current,
+      mode,
+      pristine: current !== null && hashContent(current) === ownedFiles[rel],
+    });
+  }
+
   // Phase 2: write files. Existing overwritten bytes are backed up in memory
   // and restored on any later failure (skill write, settings write, manifest
   // write), so a failed run leaves pre-run state behind and the untouched
   // manifest still describes it: a retry converges.
   const created = [];
   const backups = new Map();
-  const backupExisting = (dest, current) => {
-    if (current !== null && !backups.has(dest)) backups.set(dest, current);
+  const backupExisting = (dest, current, mode) => {
+    // Capture bytes and mode together: rollback restores through writeAtomic,
+    // which falls back to the umask default when the destination no longer
+    // exists (as after a stale deletion), so the mode must be explicit.
+    if (current !== null && !backups.has(dest)) backups.set(dest, { bytes: current, mode });
   };
-  const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [] };
+  const summary = { added: [], updated: [], unchanged: [], preserved: [], stale: [], removed: [] };
   const installedHashes = {};
   const claudeWritten = [];
   try {
     await mkdir(skillsRoot, { recursive: true });
-    for (const { rel, dest, content, current } of desired) {
+    for (const { rel, dest, content, current, mode } of desired) {
       const wanted = hashContent(content);
       if (current === null) {
         await writeAtomic(dest, content);
@@ -447,12 +484,12 @@ export async function installBundle({
         // entries keep a manifest record.
         if (rel in ownedFiles) installedHashes[rel] = wanted;
       } else if (rel in ownedFiles && hashContent(current) === ownedFiles[rel]) {
-        backupExisting(dest, current);
+        backupExisting(dest, current, mode);
         await writeAtomic(dest, content); // pristine owned follows bundle upgrades
         summary.updated.push(rel);
         installedHashes[rel] = wanted;
       } else if (force) {
-        backupExisting(dest, current);
+        backupExisting(dest, current, mode);
         await writeAtomic(dest, content);
         summary.updated.push(`${rel} (overwrote user edit with --force)`);
         installedHashes[rel] = wanted;
@@ -464,13 +501,25 @@ export async function installBundle({
       }
     }
 
-    // Stale manifest entries (owned files the bundle no longer ships) are
-    // left on disk and reported, never silently deleted.
-    for (const rel of Object.keys(ownedFiles)) {
-      if (!(rel in installedHashes)) {
+    // Stale manifest entries (owned files the bundle no longer ships):
+    // the phase-1 plan validated every stale destination read-only
+    // (escapes and symlinks fail closed before any write), but each delete
+    // decision below re-reads its target through the same ownership guard
+    // immediately before its rm: a copy edited or removed after planning is
+    // preserved/reported, never deleted from a stale snapshot. Only
+    // manifest-owned pristine paths are ever deleted, guarded by the same
+    // ownership/hash check uninstall uses.
+    for (const { rel } of stalePlan) {
+      const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
+      if (current === null || hashContent(current) !== ownedFiles[rel]) {
         summary.stale.push(rel);
         installedHashes[rel] = ownedFiles[rel];
+        continue;
       }
+      backupExisting(dest, current, mode);
+      await rm(dest);
+      await pruneEmptyParents(dest, skillsRoot);
+      summary.removed.push(rel);
     }
 
     for (const write of claudePlan.writes) {
@@ -515,9 +564,9 @@ export async function installBundle({
         rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
       }
     }
-    for (const [dest, bytes] of backups) {
+    for (const [dest, { bytes, mode }] of backups) {
       try {
-        await writeAtomic(dest, bytes);
+        await writeAtomic(dest, bytes, mode === null ? {} : { mode });
       } catch (restoreErr) {
         rollbackErrors.push(`${dest}: ${restoreErr?.message ?? restoreErr}`);
       }
@@ -577,33 +626,22 @@ export async function uninstallBundle({
 
   // Check every destination for symlink escapes BEFORE deleting anything:
   // one unsafe entry refuses the whole uninstall with skills still on disk.
+  // Each delete decision below then re-reads its target through the same
+  // guard immediately before its own rm, so a file edited after validation
+  // is preserved rather than deleted from a stale snapshot.
+  const uninstallPlan = [];
   for (const rel of Object.keys(ownedFiles)) {
-    const dest = join(skillsRoot, rel);
-    if (!withinRoot(dest, skillsRoot)) {
-      throw new Error(`unsafe target: ${rel} escapes ${skillsRoot}; refusing`);
-    }
-    await assertNoSymlinksBelow(skillsRoot, dirname(dest));
-    const destStat = await lstat(dest).catch((err) => {
-      if (err?.code === 'ENOENT') return null;
-      throw err;
-    });
-    if (destStat?.isSymbolicLink()) {
-      throw new Error(`unsafe target: destination is a symlink at ${dest}; refusing`);
-    }
+    await readOwnedTarget(skillsRoot, rel);
+    uninstallPlan.push(rel);
   }
 
-  for (const [rel, ownedHash] of Object.entries(ownedFiles)) {
-    const dest = join(skillsRoot, rel);
-    let current = null;
-    try {
-      current = await readFile(dest);
-    } catch (err) {
-      if (err?.code === 'ENOENT') {
-        summary.missing.push(rel);
-        delete remainingFiles[rel];
-        continue;
-      }
-      throw err;
+  for (const rel of uninstallPlan) {
+    const { dest, current } = await readOwnedTarget(skillsRoot, rel);
+    const ownedHash = ownedFiles[rel];
+    if (current === null) {
+      summary.missing.push(rel);
+      delete remainingFiles[rel];
+      continue;
     }
     if (hashContent(current) === ownedHash || force) {
       await rm(dest);
