@@ -148,9 +148,15 @@ digest is not already recorded against that PR at that head SHA. Review-ID dedup
 insufficient: a bot that re-posts the identical finding under a new review ID
 would otherwise re-trigger a repair on every tick.
 
-Caps: at most one repair per PR per 24 hours, counted regardless of trigger; and
-a per-tick push budget across all allowlisted repositories combined, configured
-per pair and six for pair C/D. Reaching either cap records a hold naming the cap
+Caps: at most one repair per PR per 24 hours, counted regardless of trigger; a
+per-tick push budget across all allowlisted repositories combined, configured
+per pair and six for pair C/D; and, for pair C, a per-tick **review** budget
+limiting how many binding verdicts may be submitted in one tick, configured per
+pair and **one** for pair C. The review budget exists because C has no `COMMENT`
+path, so an unbudgeted first tick over a backlog would place binding verdicts on
+every discovered peer PR at once, unattended and on other people's work. Reviews
+beyond the budget are left for the next tick, oldest `updatedAt` first so the
+backlog drains in a stable order rather than by chance. Reaching any of the three caps records a hold naming the cap
 and the value reached, rather than silently dropping the work. A budget hold
 names the budget as its owner and is exempt from the hold with no owner
 threshold. When a per-PR cap has expired the precheck wakes the driver even
@@ -204,13 +210,12 @@ repository may deploy from more than one branch and may add another at any time.
 Automation C submits a real review verdict where pair A/B publishes a `COMMENT`.
 The authority is narrow and every bound below is load-bearing.
 
-A binding verdict is submitted only where self is **officially review-requested**
-on a peer PR authored by someone else. GitHub rejects a verdict from a PR's own
-author, so an authored-mode review of C's own repair stays internal and gates
-only the push. A peer PR reached through the qualifying mention trigger still
-gets a review, published as a `COMMENT`, never as a binding verdict: a casual
-ask is not a request for a merge-blocking review. Automation D never writes to
-GitHub at all.
+Every review Automation C publishes is a binding verdict. C has no `COMMENT`
+path: a peer PR reached through the qualifying mention trigger gets a verdict
+exactly as an officially-requested one does. The only restriction is authorship
+— GitHub rejects a verdict from a PR's own author, so an authored-mode review of
+C's own repair stays internal and gates only the push. Automation D never writes
+to GitHub at all.
 
 `APPROVE` requires a complete mode-required review at the exact head SHA with a
 current base, the gate's `proceed`, and zero unresolved validated blocking
@@ -239,8 +244,7 @@ While C holds any unresolved blocking review, every scheduled tick wakes it: an
 outstanding obligation is due control work in the precheck's list, alongside a
 watch deadline, a pending failed-relay retry, and an expired repair cap.
 
-An obligation created by an official request carries a narrow authority to
-resolve itself: C may submit exactly one superseding verdict on that PR,
+An obligation carries a narrow authority to resolve itself: C may submit exactly one superseding verdict on that PR,
 including a clearing `APPROVE`, without a fresh review request. It follows the
 obligation chain — an obligation opened by a verdict submitted under this
 authority inherits it — so the authority persists on that one PR until it
@@ -358,10 +362,10 @@ For each changed PR:
   publication readback immediately before it.
 - Peer PR → two isolated `axstack-review` passes on the exact head SHA, then
   the gate, then one owner-synthesized review bound to the reviewed commit. For
-  pair A/B, and for a pair C peer PR reached through the qualifying mention
-  trigger, that is a `COMMENT` under the review skill's COMMENT branch. For a
-  pair C peer PR where self is officially review-requested, it is a binding
-  verdict under "Binding review verdicts (pair C)" above. `INCOMPLETE` or an
+  pair A/B that is a `COMMENT` under the review skill's COMMENT branch; for
+  every pair C peer PR it is a binding verdict under "Binding review verdicts
+  (pair C)" above, whether the PR was reached by an official review request or
+  by the qualifying mention trigger. `INCOMPLETE` or an
   unavailable required reviewer records a hold and publishes nothing.
 
 Watch window, pair A/B only: 24 hours per own PR from first observation, ending
