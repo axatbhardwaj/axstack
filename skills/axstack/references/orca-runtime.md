@@ -43,6 +43,15 @@ readiness failure; because Align and Spec require both adviser receipts, either
 null adviser still holds those phases. The current chat is the driver and has
 no role row in any preset.
 
+## Materialize checkouts as worktrees of the registered repo
+
+Every reviewer, release, or worker checkout is `ORCA worktree create --repo
+id:<repoId> ...` under the repo Orca already registers. `ORCA repo add` is a
+one-time import of a new repository; running it on a clone of a registered
+repo creates a second top-level repo record, so it never materializes a
+checkout. See [Candidate publication](candidate-publication.md) for the
+detached immutable review checkout.
+
 ## Supervise one authoritative attempt
 
 For supervised work, use the orchestration guide's native Run, Task, and

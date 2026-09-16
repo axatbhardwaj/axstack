@@ -29,3 +29,14 @@ its required checks complete. Review may run in parallel with CI only after the
 remote confirmation. Reviewers inspect a detached immutable checkout of the
 confirmed candidate SHA and pinned base, never only the movable branch name.
 Any author repair creates a new revision and repeats this boundary.
+
+## Immutable checkout shape
+
+The immutable checkout is an Orca worktree of the already-registered repo:
+`ORCA worktree create --repo id:<repoId> --name review-<pr>-<sha7> --json`,
+then `git checkout --detach <candidate SHA>` inside it. Never materialize it
+as a `git clone` into a temp directory followed by `orca repo add`; each
+`repo add` registers a duplicate top-level repo and leaves a stale record once
+the directory is gone. Release preparation uses a `release/<version>` worktree
+of the same registered repo the same way. Release the checkout with
+`ORCA worktree rm` after its receipt is recorded.
