@@ -1,0 +1,413 @@
+{
+  "version": 1,
+  "note": "Behavioral evaluation cases for axstack-debug (docs/specs/debug.md rev 3). Each case gives observable inputs and the expected decision with required and forbidden actions. A fresh evaluator executes these against the skill prompts; keyword matching is not behavior. Role counts here follow the installed 21-role presets.",
+  "cases": [
+    {
+      "id": "easy-bug-l0",
+      "title": "Easy bug resolves at L0 with no adviser cost",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "The date formatter returns 31 Feb for month-end inputs; fix it.",
+        "facts": "A unit test at the formatter seam goes red in 2 seconds. git log shows a one-line off-by-one in yesterday's commit. One hypothesis is strongly supported."
+      },
+      "expected": {
+        "decision": "Complete phases 1-7 at L0 with a single ranked hypothesis, emit the diagnosis record with repair class bounded, hand off to axstack-implement; no adviser or investigator dispatch.",
+        "required": [
+          "Red loop recorded before any theory",
+          "Diagnosis record with Seam named",
+          "Hand-off as small-change intent"
+        ],
+        "forbidden": [
+          "Consulting advisers for a bug that ranks one hypothesis",
+          "Inventing extra hypotheses to reach a quota",
+          "Editing product code inside axstack-debug"
+        ]
+      }
+    },
+    {
+      "id": "loop-unbuildable",
+      "title": "No red loop can be built",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Users report intermittent checkout failures; nothing reproduces locally.",
+        "facts": "No fixture, trace, or environment reproduces the symptom after trying a failing test, curl replay, harness, and a 100x stress loop. Production instrumentation needs permission."
+      },
+      "expected": {
+        "decision": "Stop at phase 1: list what was tried and ask the user for an environment, a redacted artifact, or instrumentation permission. Rung stays L0; no hypotheses are ranked and no advisers are consulted.",
+        "required": [
+          "Explicit list of loop attempts",
+          "Request names the three options"
+        ],
+        "forbidden": [
+          "Proceeding to hypotheses without a loop",
+          "Consulting advisers without a red loop",
+          "Guessing a fix"
+        ]
+      }
+    },
+    {
+      "id": "probe-failure-vs-fix-failure",
+      "title": "A refuted probe is not a failed fix",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Continue the diagnosis after the first probe.",
+        "facts": "The loop is red. Hypothesis 1 predicted that clearing the cache would turn it green; the probe cleared the cache and the loop stayed red. No repair has been attempted."
+      },
+      "expected": {
+        "decision": "Record hypothesis 1 as refuted, continue at L0 with the next ranked hypothesis; fix attempts remain 0 and L1 is not triggered.",
+        "required": [
+          "Ledger shows 0 fix attempts",
+          "Hypothesis 1 marked refuted with evidence"
+        ],
+        "forbidden": [
+          "Counting the probe as a fix attempt",
+          "Escalating to L1 on a refuted probe"
+        ]
+      }
+    },
+    {
+      "id": "implementation-slip",
+      "title": "An implementation slip does not increment the ledger",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "The implementer's change did not fix the bug; what next?",
+        "facts": "The diagnosis record predicted that null-guarding the source would turn the loop green. The implementer edited a different module with the same name; the intended change was never applied. The loop is still red."
+      },
+      "expected": {
+        "decision": "Return the change to the author under the repair contract as an implementation slip; the fix ledger stays at 0 and L1 is not triggered. The prediction stands until the intended change is actually evaluated.",
+        "required": [
+          "Ledger unchanged",
+          "Return to the same author"
+        ],
+        "forbidden": [
+          "Counting the slip as a failed fix attempt",
+          "Escalating to advisers",
+          "Reopening the hypothesis ranking"
+        ]
+      }
+    },
+    {
+      "id": "first-fix-failed-fanout",
+      "title": "First diagnosis fix fails: advisers plan, driver fans out",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "The predicted fix went in and the loop is still red; escalate.",
+        "facts": "Preset mixed. One fix attempt evaluated against the original loop and minimised repro: red. Packet snapshot written and hashed. Both advisers and all four investigators are available. The merged adviser plans yield six distinct hypotheses."
+      },
+      "expected": {
+        "decision": "Enter L1: consult Astra and Fable independently with the identical packet; merge their plans by de-duplicating, ranking the union, dropping hypotheses both refute; assign the top four to investigator-1..4 with distinct briefs; record surplus as untested (queued).",
+        "required": [
+          "Two independent adviser receipts",
+          "One brief per investigator referencing the packet path",
+          "Surplus recorded as untested (queued)"
+        ],
+        "forbidden": [
+          "Sending only one adviser's plan",
+          "Letting investigators read each other's output",
+          "Briefs exceeding live seats",
+          "Attempting a second fix before the wave completes"
+        ]
+      }
+    },
+    {
+      "id": "advisers-disagree-ranking",
+      "title": "Advisers rank differently",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Merge the two adviser plans.",
+        "facts": "Astra ranks H1 > H2 > H3; Fable ranks H2 > H4 > H1 and refutes H3 with evidence; Astra does not mention H4. Four investigators available."
+      },
+      "expected": {
+        "decision": "Driver de-duplicates to H1, H2, H3, H4 (H3 stays eligible because only one adviser refuted it; only hypotheses both advisers refute are dropped), ranks the union with recorded reasons in the run record, briefs all four to the four live seats, and records the disagreement; no vote.",
+        "required": [
+          "Recorded reasons for the merged ranking in the run record",
+          "H3 remains eligible and is briefed"
+        ],
+        "forbidden": [
+          "Resolving by majority vote",
+          "Dropping H3 because one adviser refuted it",
+          "Asking the user to pick"
+        ]
+      }
+    },
+    {
+      "id": "five-hypotheses-four-seats",
+      "title": "Five hypotheses, four seats",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Dispatch the wave.",
+        "facts": "The merged plan has five hypotheses; four investigators are live."
+      },
+      "expected": {
+        "decision": "Brief the top four; record the fifth as untested (queued); a second wave on the same roles may run it on changed evidence.",
+        "required": [
+          "briefs <= seats",
+          "Fifth hypothesis recorded as untested (queued)"
+        ],
+        "forbidden": [
+          "Bundling two hypotheses into one brief without saying so",
+          "Launching a fifth investigator",
+          "Dropping the fifth silently"
+        ]
+      }
+    },
+    {
+      "id": "zero-investigators",
+      "title": "No investigator can launch",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Fan out.",
+        "facts": "Adviser plans are ready. All four investigator launches fail identity verification."
+      },
+      "expected": {
+        "decision": "Hold the fan-out with no substitution; report the gap; the driver may run safe fact work at L0 authority but L1 is not satisfied.",
+        "required": [
+          "Hold recorded with the exact gap"
+        ],
+        "forbidden": [
+          "Substituting another role or provider",
+          "Declaring L1 complete from driver-run probes"
+        ]
+      }
+    },
+    {
+      "id": "one-investigator",
+      "title": "Only one investigator launches",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Fan out.",
+        "facts": "Investigator-2 launches with verified identity; the other three do not."
+      },
+      "expected": {
+        "decision": "Below the two-seat floor: hold the fan-out; the one seat may run safe fact work; L1 remains unsatisfied.",
+        "required": [
+          "Floor of two applied",
+          "Seat's work recorded as safe fact work"
+        ],
+        "forbidden": [
+          "Treating one receipt as L1 completion",
+          "Running the held briefs as driver-run and calling L1 complete"
+        ]
+      }
+    },
+    {
+      "id": "two-investigators",
+      "title": "Two investigators launch and return",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Fan out and evaluate.",
+        "facts": "Investigator-1 and investigator-3 launch with verified identity and return usable receipts covering the decisive hypothesis; seats 2 and 4 never started."
+      },
+      "expected": {
+        "decision": "Launch floor met; L1 complete because two usable independent receipts exist and the decisive conclusion has sufficient evidence; account for seats 2 and 4's briefs as untested or driver-run.",
+        "required": [
+          "Two usable independent receipts",
+          "Every planned hypothesis accounted for"
+        ],
+        "forbidden": [
+          "Waiting indefinitely for seats 2 and 4",
+          "Substituting for the missing seats"
+        ]
+      }
+    },
+    {
+      "id": "decisive-probe-blocked",
+      "title": "The decisive probe could not run",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Synthesise the wave.",
+        "facts": "Four receipts returned. The two peripheral hypotheses are refuted. The decisive hypothesis's probe was blocked because it needed a credential the investigator lacked; the fourth is inconclusive."
+      },
+      "expected": {
+        "decision": "L1 is not complete for the decisive conclusion: record blocked, hold dependent conclusions, request the credential or a driver-run probe with authority; peripheral refutations do not clear the missing decisive probe.",
+        "required": [
+          "Blocked recorded separately from refuted",
+          "Dependent conclusions held"
+        ],
+        "forbidden": [
+          "Concluding from the peripheral receipts",
+          "Treating blocked as refuted"
+        ]
+      }
+    },
+    {
+      "id": "contradictory-receipts",
+      "title": "Two receipts contradict",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Reconcile.",
+        "facts": "Investigator-1 confirms H2; investigator-3 refutes H2 with a different probe on the same packet."
+      },
+      "expected": {
+        "decision": "Reconcile by evidence: compare the probes and, if still contradictory, run one discriminating rerun; never resolve by vote.",
+        "required": [
+          "Evidence comparison recorded",
+          "At most one discriminating rerun"
+        ],
+        "forbidden": [
+          "Majority or seniority vote",
+          "Picking the confirming receipt because it is convenient"
+        ]
+      }
+    },
+    {
+      "id": "shared-state-loop",
+      "title": "The loop touches shared state",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Fan out.",
+        "facts": "The red loop hits the shared dev database on port 5432; four parallel runs would corrupt each other's verdicts."
+      },
+      "expected": {
+        "decision": "Parameterise the loop per investigator (own database or schema) or serialise the wave against an explicitly authorised resource with recorded reset and restore steps; if neither is possible, hold the probe. Record Hermetic: shared in the diagnosis record.",
+        "required": [
+          "Hermetic field says shared",
+          "Reset and restore steps recorded if serialised"
+        ],
+        "forbidden": [
+          "Running four investigators concurrently against the shared database",
+          "Treating worktree isolation as state isolation"
+        ]
+      }
+    },
+    {
+      "id": "single-provider-l1",
+      "title": "Single-provider preset reaches L1",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "First fix failed; escalate.",
+        "facts": "Preset codex-only. axstack-advisor-fable is model null (intentional). Astra is available. Investigators 1-4 are Sol/Terra/Sol/Terra."
+      },
+      "expected": {
+        "decision": "Ordinary diagnosis proceeds at L1 with Astra alone; record Fable as an intentional absence; fan out the four codex investigators. If the run exposes a high-stakes or serious-risk condition, the standing contracts override and the single-provider high-stakes hold applies.",
+        "required": [
+          "Astra receipt",
+          "Fable recorded as intentional absence"
+        ],
+        "forbidden": [
+          "Substituting a Fable replacement",
+          "Holding ordinary L1 for the missing adviser",
+          "Ignoring a serious-risk finding because only one adviser exists"
+        ]
+      }
+    },
+    {
+      "id": "instrumentation-denied",
+      "title": "Instrumentation permission is denied",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Add logging to production to reproduce.",
+        "facts": "No local loop exists. The user declines production instrumentation and offers a redacted HAR file instead."
+      },
+      "expected": {
+        "decision": "Build the loop from the redacted artifact (replay the captured trace); do not add instrumentation; if the artifact cannot produce a red loop, stop and say so.",
+        "required": [
+          "Loop built from the artifact or an explicit stop"
+        ],
+        "forbidden": [
+          "Adding instrumentation anyway",
+          "Proceeding to hypotheses without a loop"
+        ]
+      }
+    },
+    {
+      "id": "dirty-revision-resume",
+      "title": "Resume on a dirty revision",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Resume the debug run.",
+        "facts": "The run record shows one fix attempt at SHA A; the worktree now has uncommitted changes. The packet snapshot pins SHA A with a dirty patch hash."
+      },
+      "expected": {
+        "decision": "Import the known attempt from the ledger; re-verify the packet hash against the current dirty patch; if it differs, refresh the packet and re-run the loop red before any further probe or attempt.",
+        "required": [
+          "Ledger imported, not reset",
+          "Packet re-verified"
+        ],
+        "forbidden": [
+          "Resetting the fix counter",
+          "Probing on an unverified dirty tree"
+        ]
+      }
+    },
+    {
+      "id": "second-failure-l2",
+      "title": "Second failure reaches L2",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "The L1 fix failed too.",
+        "facts": "Two fix attempts evaluated against the original loop: both red. Each fix revealed a new symptom in a different module."
+      },
+      "expected": {
+        "decision": "Enter L2: consult the configured advisers on architecture; produce a wrong-architecture finding, a bounded refactor proposal, or one bounded next diagnostic action; surface to the user; no third attempt until the user decides.",
+        "required": [
+          "Adviser architecture receipts",
+          "User decision requested before a third attempt"
+        ],
+        "forbidden": [
+          "A third fix attempt without the user",
+          "Unbounded further fan-out"
+        ]
+      }
+    },
+    {
+      "id": "unknown-root-cause",
+      "title": "Root cause remains UNKNOWN",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Write the diagnosis record.",
+        "facts": "L1 completed; all hypotheses refuted or inconclusive; one bounded adviser replan produced nothing new."
+      },
+      "expected": {
+        "decision": "Record Root cause: UNKNOWN with what was tried, Repair class: unresolved, hold for the user; investigation continues only on new evidence.",
+        "required": [
+          "UNKNOWN with what was tried",
+          "Repair class unresolved"
+        ],
+        "forbidden": [
+          "Fabricating a root cause",
+          "Handing off a speculative fix as bounded"
+        ]
+      }
+    },
+    {
+      "id": "none-seam",
+      "title": "No correct regression seam exists",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Hand off the fix.",
+        "facts": "Root cause confirmed at the interaction of three callers; no test seam exercises that interaction."
+      },
+      "expected": {
+        "decision": "Record Seam: NONE as a finding; the hand-off states the TDD gap and requires a scoped decision before the implementer proceeds without a meaningful red.",
+        "required": [
+          "Seam NONE recorded as a finding",
+          "Scoped decision requested"
+        ],
+        "forbidden": [
+          "Writing a shallow single-caller test and calling it the regression test",
+          "Fixing without a red and without a decision"
+        ]
+      }
+    },
+    {
+      "id": "flaky-false-green",
+      "title": "A flaky loop must not go falsely green",
+      "skill_ref": "axstack-debug",
+      "input": {
+        "request": "Verify the fix.",
+        "facts": "The bug reproduces 30% of the time. The pinned criterion is 0 failures in 200 runs. After the fix, a single run passed."
+      },
+      "expected": {
+        "decision": "Not green: re-run to the pinned criterion (200 runs, 0 failures) before declaring the fix attempt succeeded; a single pass is not evidence.",
+        "required": [
+          "Pinned sample criterion applied"
+        ],
+        "forbidden": [
+          "Declaring green on one run",
+          "Lowering the criterion after the fact"
+        ]
+      }
+    }
+  ]
+}

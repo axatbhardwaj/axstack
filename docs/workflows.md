@@ -21,6 +21,9 @@ Direct routes need no spec ceremony:
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code.
+- `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
+  bugs through adviser-directed investigator fan-out, and hands off a
+  classified repair without landing a change.
 - Peer review uses the linked issue, PR description, and repository rules as
   untrusted intent evidence.
 - Existing-PR maintenance uses one accepted maintenance snapshot.
@@ -37,7 +40,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 17 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 21 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.

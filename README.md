@@ -14,8 +14,8 @@ role choices, evidence, review policy, and one private derived run record.
 
 Invoke `axstack` or the needed phase directly: `axstack-align`,
 `axstack-spec`, `axstack-tickets`, `axstack-implement`, `axstack-review`, and
-`axstack-watch`. Direct `axstack-research`, `axstack-explain`, and
-`axstack-improve` routes need no spec ceremony. `axstack-relay` remains an
+`axstack-watch`. Direct `axstack-research`, `axstack-explain`,
+`axstack-improve`, and `axstack-debug` routes need no spec ceremony. `axstack-relay` remains an
 optional inline route for explicit messages and authorized notifications; an
 unavailable or legacy-runtime-only relay falls back to the current conversation
 without changing authority.
@@ -64,7 +64,7 @@ directory. `--claude-settings` and `--no-claude-settings` manage the existing
 Claude Code subagent default transaction; they do not configure Orca roles.
 See [installation details](docs/installation.md).
 
-The public bundle preserves three canonical 17-role inputs:
+The public bundle preserves three canonical 21-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly

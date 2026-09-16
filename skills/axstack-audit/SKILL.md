@@ -69,6 +69,9 @@ counts with denominators plus the evidence behind the count:
 - Configured adviser coverage across Align, Spec creation, Spec revision,
   solution design, and unresolved consequential decisions, including
   independent same-question receipts, disagreement synthesis, and both plain AGREE receipts where high-stakes.
+- Debug evidence where `axstack-debug` ran: rung reached, loop command, fix
+  attempts with why each failed, adviser and investigator receipts, and
+  isolation evidence (pinned worktree, preserved probe artifacts).
 - Applicable test-first evidence: normal behavior changes have real red-green
   proof; explicitly accepted structure-preserving work has the old revision
   green before edits and the same checks green on the new revision, plus

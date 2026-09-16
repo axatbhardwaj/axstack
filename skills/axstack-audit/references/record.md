@@ -10,6 +10,7 @@ Baseline: <approved spec rev | peer mode | research mode | maintenance scope>
 Acceptance: <passed / failed / unverified + test + SHA traces>
 Steps: <completed / deviated + why + approval per deviation>
 Advisers: <Astra/Fable coverage + same-question receipts + high-stakes AGREE status>
+Debug: <rung reached + loop command + fix attempts + adviser and investigator receipts + isolation evidence | n/a>
 TDD: <applicable evidence path: normal real red-green | accepted structure-preserving old revision green before edits + same checks new revision green; absent proof: noncompliance | unavailable records: UNKNOWN with reason>
 Review: <exact-rev independent review status + unresolved findings>
 Rework: <cycles + causes>
