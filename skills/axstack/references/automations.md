@@ -2,7 +2,7 @@
 
 Read this when the current session is the native Orca PR **driver** or its
 **watchdog**. The approved contract is
-`docs/specs/pr-automations.md` revision 3; this reference restates the parts an
+`docs/specs/pr-automations.md` revision 4; this reference restates the parts an
 automation session must execute and does not widen them.
 
 Pair A/B is retired for this contract; its artefacts remain untouched.
@@ -55,10 +55,12 @@ due work.
    is truncation: append `error`, exit 2, and do not write a fingerprint.
    Deduplicate by URL with own-PR precedence and drop repositories outside the
    allowlist union.
-3. For each retained PR, read
-   `gh pr view --json headRefOid,baseRefName,isDraft,statusCheckRollup,author`
-   and resolve the base SHA with `gh api repos/<repo>/commits/<base>`. Own PRs
-   contribute head, base, draft, and checks; others contribute head and base.
+3. For each retained PR, read `gh pr view --json headRefOid,baseRefName,isDraft,
+   statusCheckRollup,author,latestReviews` and resolve the base SHA with
+   `gh api repos/<repo>/commits/<base>`. Own PRs contribute head, base, draft,
+   checks reduced to `{name, conclusion|state}` pairs, and the set of
+   `latestReviews` `{id, state}` whose `commit` is the head; others contribute
+   head and base.
 4. Debounce peer and fourth-search heads: they enter the hashed subset only on
    the second consecutive precheck that observes them. The first observation
    goes in `pending.json.seen[]`. Own heads enter immediately. Hash this subset
@@ -84,7 +86,7 @@ An `open` decision is not due. Write `pending.json` with the fingerprint,
 
 The driver performs this order and exits:
 
-1. If the previous tick lacks a matching completion, add `previous tick did
+1. If `tick_started_at` is newer than `tick_done_at`, add `previous tick did
    not finish` to `cursor.json.health[]`. Write `tick_started_at`. Match this
    session's `ORCA_TERMINAL_HANDLE` to the driver's `terminalPtyId` from
    `orca automations runs --id <driver>`, then verify the transcript model.
@@ -101,8 +103,10 @@ The driver performs this order and exits:
    exited worker gets `worker-abandon`. Unknown liveness or user takeover
    retains worktree and marker and blocks only that PR. After confirmed
    abandon, remove the worktree, append one health line, increment the head's
-   `abandon_count`, and drop that head so normal selection retries once. A
-   second abandon at that head is a user-owned hold.
+   `abandon_count`, and drop that head so normal selection retries once. For a
+   review-triggered dispatch, also remove the triggering review id and digest
+   from `processed_reviews[]`. A second abandon at that head is a user-owned
+   hold.
 5. Select changed PRs and matching `deferred[]` entries oldest `updatedAt`
    first. Skip a current-head decision in `open` or `approved`, and skip a live
    marker. Dispatch within the repair and review rules below.
@@ -121,14 +125,16 @@ GitHub activity.
 
 An own PR needs repair when either trigger applies:
 
-1. a failing check has a corresponding base check observed passing through
-   `gh run list --branch <base> --limit 1`; missing, pending, or incomparable
-   base evidence holds repair;
+1. a failing check has a same-named check on the base commit observed passing
+   through `gh api repos/<repo>/commits/<base>/check-runs`, filtered to that
+   failing check's `name`; a missing, pending, or differently-named base check
+   holds repair;
 2. a `CHANGES_REQUESTED` review at the current head, by any account, has both
    a review id absent from `cursor.json.processed_reviews[]` and a SHA-256 body
    digest not recorded for that PR and head. Both keys are required: the same
    finding under a new review id must not re-trigger repair. Record review id
-   and body digest when dispatching.
+   and body digest when dispatching. A superseded head with a new review
+   triggers again subject to the 24 h cap.
 
 Repair also requires no deploy-on-push head branch, no live repair cap, and
 selection of the lowest own PR in its stack that needs repair. Create a child
@@ -139,12 +145,14 @@ descendant records one user-owned `pending restack` hold until it stops needing
 repair. The 24 h cap starts at dispatch and an abandon does not refund it.
 
 A debounced peer PR is eligible when self has not reviewed its head. Read
-`gh pr view --json reviews` before dispatch. If any effective, non-dismissed
-self `CHANGES_REQUESTED` review exists, continue only when its body contains
-the line prefix `<!-- axstack-automation verdict` or its id appears in
-`cursor.json.legacy_automation_reviews[]`; otherwise record and skip the
-human-placed block. Dispatch one `axstack-review` agent in peer mode and link
-the prior review in its brief.
+`gh pr view --json reviews` before dispatch. Whenever any self review with
+state `CHANGES_REQUESTED` exists on the PR, from whichever search it came,
+dispatch only if the latest effective, non-dismissed self review body contains
+the line prefix `<!-- axstack-automation verdict` or its id is listed in
+`cursor.json.legacy_automation_reviews[]`; otherwise record and skip, so a
+human-placed block is never overwritten. A dismissed block and a self-approved
+PR are skipped. Dispatch one `axstack-review` agent in peer mode and link the
+prior review in its brief.
 
 Budgets are one `verdict` dispatch per tick, oldest first; at most six `repair`
 markers live across all repositories; and one repair per PR per 24 h. Put every
@@ -170,7 +178,11 @@ The verdict body ends with this exact marker line:
 <!-- axstack-automation verdict head=<sha> -->
 ```
 
-Write the local HTML review file using the workspace convention; a write
+Write the local review file to the workspace review directory
+`~/defi/misc/reviews/` under the existing convention:
+`review-PR-<num>.html` with no prefix means `defi-com/monorepo`;
+`review-mobile-PR-<num>.html` and
+`review-azure-next-hybrid-PR-<num>.html` name the other repositories. A write
 failure is recorded but does not withhold the verdict.
 
 Authored repair commits a local candidate, obtains one Sol review at that
@@ -218,7 +230,8 @@ Lifecycle has one named writer per transition, each by temp file + rename:
 ### Opening
 
 Before opening a `push` token, the repair agent pins its candidate with local
-ref `refs/axstack/decisions/<token>` in the project clone. It then sends one
+ref `refs/axstack/decisions/<token>` in the project clone, so the candidate
+survives worktree removal. It then sends one
 `hermes send --to telegram` message naming the PR, criterion, every reviewer's
 reason, and the exact replies `approve <token>` and `reject <token>`. Store the
 send receipt. The driver retries a `failed` send once next tick and reconciles
@@ -232,11 +245,12 @@ Hermes never runs `gh`, `git`, or `orca`.
 
 ### Consuming
 
-The driver is the only consumer. Immediately before an approved action it
-revalidates open/unmerged state, bound head/base, absence of a self review for
-a verdict, or expected remote head plus reachable candidate for a push. It
-writes `spent` before the GitHub call, executes exactly the bound action with
-no second gate, then stores the receipt. A spent token without a receipt is
+The driver is the only consumer. Immediately before acting it re-reads that
+`state == approved`, then revalidates open/unmerged state, bound head/base,
+absence of a self review for a verdict, or expected remote head plus reachable
+candidate for a push. It writes `spent` before the GitHub call, executes
+exactly the bound action with no second gate, then stores the receipt. A spent
+token without a receipt is
 reconciliation: match the exact review commit/body or destination
 ref/candidate on GitHub; record a match, or the driver retries once under the
 same approval after proving non-execution, or hold ambiguity. A revalidation
@@ -254,7 +268,7 @@ these four checks and always exits non-zero, so no model session launches:
 
 | check | trips when |
 | --- | --- |
-| driver stuck | a `changed` or `due` precheck is older than 1 h with no later `tick_done_at`, including a driver that never wrote `tick_started_at` |
+| driver stuck | a `changed` or `due` precheck is older than 1 h with no later `tick_done_at`, including a driver that never wrote `tick_started_at` (Orca run status alone is not evidence of completion) |
 | precheck failing | the last three `precheck.log` entries are `error` |
 | worker stuck | a dispatch marker is older than 3 h 30 min and remains uncleared |
 | decision waiting | an `open` decision is older than 24 h |
@@ -272,15 +286,23 @@ is no gate for health findings.
 One `.git/axstack/runs/<run id>/` directory under the Axstack git-common-dir
 contains:
 
-- `cursor.json` — driver only: fingerprint, tick timestamps/outcome, per-PR
-  state, dispatch markers, `deferred[]`, `pending_settlement[]`, repair caps,
-  abandons, processed review ids/digests, deploy sets,
-  `legacy_automation_reviews[]`, and health lines;
+- `cursor.json` — driver only, with these exact keys: `fingerprint`,
+  `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
+  draft, checks, reviews, last_self_review}}`, `dispatch_markers[]` (`pr`,
+  `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`),
+  `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
+  `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
+  `digest`), `deploy_on_push{repo: [branches]}`,
+  `legacy_automation_reviews[]`, `health[]`;
 - `pending.json`, `precheck.log` — driver precheck only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` — watchdog only;
 - `progress.md` — driver only, one line per tick plus holds and mention
   readings, with no per-PR prose.
+
+Timestamps are UTC `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an
+`error` for the precheck and `unknown` for the watchdog, never silently
+ignored.
 
 Orca run history is the authoritative log. The launch worktree is a dedicated
 Axstack worktree where nobody develops. The current `defi-automations`
