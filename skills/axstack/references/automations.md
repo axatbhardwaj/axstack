@@ -53,8 +53,11 @@ owns policy, the run record, and evidence.
   never produce an escalation. This is a deliberate coverage reduction, not an
   implied clean review; discovery errors themselves remain automation-health
   findings.
-- **Prohibited everywhere:** force-push, rebase, merge, close, `APPROVE`,
-  `REQUEST_CHANGES`. A need for any of these becomes a recorded hold.
+- **Prohibited everywhere:** force-push, rebase, merge, close. A need for any of
+  these becomes a recorded hold, for all four automations, with no exception.
+- **`APPROVE` and `REQUEST_CHANGES`** are prohibited for Automations A, B and D.
+  Automation C may submit them under "Binding review verdicts (pair C)" below
+  and nowhere else; a need for either outside that section is a recorded hold.
 
 ## Roles per mode
 
@@ -185,6 +188,71 @@ branch-name-agnostic: the set is enumerated per repository from that
 repository's workflow files, recorded, and re-verified before enabling and on
 any later allowlist change. It is never hardcoded to one branch name, because a
 repository may deploy from more than one branch and may add another at any time.
+
+## Binding review verdicts (pair C)
+
+Automation C submits a real review verdict where pair A/B publishes a `COMMENT`.
+The authority is narrow and every bound below is load-bearing.
+
+A binding verdict is submitted only where self is **officially review-requested**
+on a peer PR authored by someone else. GitHub rejects a verdict from a PR's own
+author, so an authored-mode review of C's own repair stays internal and gates
+only the push. A peer PR reached through the qualifying mention trigger still
+gets a review, published as a `COMMENT`, never as a binding verdict: a casual
+ask is not a request for a merge-blocking review. Automation D never writes to
+GitHub at all.
+
+`APPROVE` requires a complete mode-required review at the exact head SHA with a
+current base, the gate's `proceed`, and zero unresolved validated blocking
+findings. `REQUEST_CHANGES` requires the same completeness and gate token and at
+least one validated blocking finding carrying its evidence and consequence; it
+is the verdict that reports blockers and is not gated on their absence.
+`INCOMPLETE`, unresolved material disagreement, an unavailable required
+reviewer, or a gate `escalate` submits nothing and records a hold.
+
+### Blocking obligations
+
+A submitted `REQUEST_CHANGES` blocks the PR and a teammate's later push does not
+clear it. Submitting a review also removes self from GitHub's `review-requested`
+results, so a PR C has just blocked can leave discovery on the next tick and C
+would never see it again to clear its own block.
+
+C therefore records every unresolved blocking review in `cursor.json` as an open
+obligation holding the PR URL, the review id, the head SHA it was bound to, and
+the submission timestamp, and polls those PRs directly by URL every tick
+regardless of discovery eligibility. An obligation is discharged only by
+observing the PR merged, closed, or its blocking review resolved or superseded.
+A failed poll retries next tick; three consecutive unpollable ticks is a health
+finding routed to the gate.
+
+While C holds any unresolved blocking review, every scheduled tick wakes it: an
+outstanding obligation is due control work in the precheck's list, alongside a
+watch deadline, a pending failed-relay retry, and an expired repair cap.
+
+An obligation created by an official request carries a narrow authority to
+resolve itself: C may submit exactly one superseding verdict on that PR,
+including a clearing `APPROVE`, without a fresh review request. It follows the
+obligation chain — an obligation opened by a verdict submitted under this
+authority inherits it — so the authority persists on that one PR until it
+merges, closes, or its block is resolved, and the deadlock does not reappear one
+head later when a teammate pushes without fixing. It extends to nothing else: not
+another PR, not a discharged obligation, and never more than one superseding
+verdict per head SHA. A supersede whose head and base are both unchanged
+additionally requires a recorded finding-level reason naming what changed about
+the finding; without it C holds and submits nothing.
+
+### Local review file
+
+Every review C publishes, verdict or `COMMENT`, is also written to the
+workspace review directory `~/defi/misc/reviews/`, carrying the same findings
+and evidence as the submitted review plus the reviewed SHA. The naming is the
+workspace convention and the prefix rules are load-bearing, because PR numbers
+collide across repositories: `review-PR-<num>.html` with no prefix means
+`defi-com/monorepo` by definition, and every other repository takes its prefix,
+`review-azure-next-hybrid-PR-<num>.html` and `review-mobile-PR-<num>.html`. A
+failure to write the file is a recorded hold; a review is never withheld or
+retracted because the file could not be written, so the mismatch stays visible
+rather than silent.
 
 ## Escalation gate
 

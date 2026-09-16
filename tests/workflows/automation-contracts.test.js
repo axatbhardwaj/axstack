@@ -221,8 +221,12 @@ test('rev-2 review exception: Standalone-owner and Authorized-submission carry t
   expect(owner).toContain('Standalone owner: no separate `axstack-owner` is materialized');
   expect(clause(owner, /no separate `axstack-owner` is materialized/)).toMatch(/Orca driver automation/i);
   const submission = section(review, '## Authorized submission (peer review)', '## Automation publication');
-  expect(submission).toContain('Authorized submission: the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling');
-  expect(clause(submission, /Authorized submission:/)).toMatch(/Orca driver automation/i);
+  // Revision 5 pair-scopes this exception. A/B's COMMENT-only guarantee must survive verbatim,
+  // and pair C must be routed to the authorized-submission branch.
+  expect(submission).toContain('for the pair A/B driver automation the `COMMENT` branch below, with the existing remote head/base readback and ambiguity handling, is the only submission it makes');
+  expect(submission).toMatch(/pair C driver automation instead uses this authorized-submission branch and submits the actual verdict on an officially-requested peer PR/);
+  expect(submission).toMatch(/mention trigger still takes the `COMMENT` branch/);
+  expect(clause(submission, /Authorized submission, pair-scoped:/)).toMatch(/Orca driver automation|pair A\/B driver automation/i);
   // The APPROVE/REQUEST_CHANGES ban is on GitHub actions; the internal verdict vocabulary stays.
   expect(clause(review, /ban on those GitHub actions|prohibition on `APPROVE` and `REQUEST_CHANGES`/i)).toMatch(/internal verdict vocabulary is unchanged/i);
 });
@@ -395,4 +399,47 @@ test('rev-4 scheduling and caps are qualified: four distinct minutes, caps are C
   expect(minutes).toMatch(/A, B, C and D/);
   // The repair-cap due-work trigger belongs to C/D, which is the only pair with caps.
   expect(clause(ref, /cap that has expired/i)).toMatch(/pair C\/D only/i);
+});
+
+// --- revision 5: pair C submits binding verdicts, pair A/B stays COMMENT-only ---
+
+test('rev-5 verdict authority is pair-scoped: C submits verdicts, A/B and D do not', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // The prohibition is no longer blanket: it names the pairs it still binds.
+  // The blanket prohibition keeps the always-forbidden mutations for all four.
+  expect(ref).toMatch(/\*\*Prohibited everywhere:\*\* force-push, rebase, merge, close\./);
+  // The verdict prohibition is pair-scoped and names exactly who it still binds.
+  expect(ref).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
+  expect(ref).toMatch(/Automation C may submit them under "Binding review verdicts \(pair C\)" below\s*and nowhere else/);
+  // C's authority exists, is peer-only, and needs an official request.
+  const authority = clause(ref, /A binding verdict is submitted only/i);
+  expect(authority).toMatch(/officially review-requested/i);
+  expect(authority).toMatch(/authored by someone else/i);
+  // A mention-triggered peer review stays COMMENT.
+  expect(clause(ref, /mention trigger/i)).toMatch(/`COMMENT`/);
+  // D still writes nothing to GitHub.
+  expect(ref).toMatch(/Automation D never (?:mutates|writes)/i);
+});
+
+test('rev-5 blocking obligations are tracked, wake C, and can clear themselves', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  // Durable obligation record, polled by URL outside discovery.
+  const obligation = clause(ref, /obligation/i);
+  expect(obligation).toBeTruthy();
+  expect(ref).toMatch(/removes self from[^.]*review-requested|no longer returns the PR/i);
+  expect(clause(ref, /polls those PRs directly by URL|polled directly by URL/i)).toBeTruthy();
+  // Outstanding obligations are due control work in the precheck list.
+  expect(clause(ref, /due control work/i)).toMatch(/obligation/i);
+  // The self-resolve authority exists and follows the chain.
+  expect(clause(ref, /obligation chain/i)).toMatch(/inherits/i);
+  // Supersession is capped per head.
+  expect(clause(ref, /one superseding verdict per head|one supersede per head/i)).toBeTruthy();
+});
+
+test('rev-5 local review file follows the workspace naming convention', () => {
+  const ref = compact('skills/axstack/references/automations.md');
+  const file = clause(ref, /review-PR-<num>\.html/);
+  expect(file).toMatch(/monorepo/i);
+  expect(ref).toMatch(/review-azure-next-hybrid-PR-<num>\.html/);
+  expect(clause(ref, /failure to write the file|could not be written/i)).toMatch(/hold/i);
 });

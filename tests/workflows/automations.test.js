@@ -16,7 +16,9 @@ test('automations: shared reference exists and restates the operational contract
   expect(text).toMatch(/peer PR[^.]*review-requested|peer PR[^.]*@-mentions/i);
   expect(text).toMatch(/unsolicited reviews never happen/i);
   expect(text).toMatch(/mutation allowlist/i);
-  expect(text).toMatch(/force-push[^.]*rebase[^.]*merge[^.]*close[^.]*APPROVE[^.]*REQUEST_CHANGES/);
+  // Revision 5 splits this: four mutations stay blanket, the two verdicts are pair-scoped.
+  expect(text).toMatch(/force-push[^.]*rebase[^.]*merge[^.]*close/);
+  expect(text).toMatch(/`APPROVE` and `REQUEST_CHANGES`\*\* are prohibited for Automations A, B and D/);
   expect(text).toMatch(/Outside the allowlist[^.]*records only|discovers and records only/i);
   expect(text).not.toMatch(/report-only review/i);
 });
