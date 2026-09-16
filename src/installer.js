@@ -502,27 +502,24 @@ export async function installBundle({
     }
 
     // Stale manifest entries (owned files the bundle no longer ships):
-    // the deletion plan was validated read-only in Phase 1, so this loop
-    // only executes already-checked removals. Pristine owned copies are
-    // removed and dropped from the manifest; edited or already-missing
-    // copies stay on disk (or absent), keep their prior ownership hash,
-    // and stay reported as stale. Only manifest-owned paths are ever
-    // deleted, guarded by the same ownership/hash check uninstall uses.
-    for (const { rel, dest, current, mode, pristine } of stalePlan) {
-      if (current === null) {
+    // the phase-1 plan validated every stale destination read-only
+    // (escapes and symlinks fail closed before any write), but each delete
+    // decision below re-reads its target through the same ownership guard
+    // immediately before its rm: a copy edited or removed after planning is
+    // preserved/reported, never deleted from a stale snapshot. Only
+    // manifest-owned pristine paths are ever deleted, guarded by the same
+    // ownership/hash check uninstall uses.
+    for (const { rel } of stalePlan) {
+      const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
+      if (current === null || hashContent(current) !== ownedFiles[rel]) {
         summary.stale.push(rel);
         installedHashes[rel] = ownedFiles[rel];
         continue;
       }
-      if (pristine) {
-        backupExisting(dest, current, mode);
-        await rm(dest);
-        await pruneEmptyParents(dest, skillsRoot);
-        summary.removed.push(rel);
-        continue;
-      }
-      summary.stale.push(rel);
-      installedHashes[rel] = ownedFiles[rel];
+      backupExisting(dest, current, mode);
+      await rm(dest);
+      await pruneEmptyParents(dest, skillsRoot);
+      summary.removed.push(rel);
     }
 
     for (const write of claudePlan.writes) {
@@ -629,15 +626,17 @@ export async function uninstallBundle({
 
   // Check every destination for symlink escapes BEFORE deleting anything:
   // one unsafe entry refuses the whole uninstall with skills still on disk.
-  // The guard reads current bytes read-only, so the deletion loop below
-  // reuses the already-validated plan without touching the filesystem first.
+  // Each delete decision below then re-reads its target through the same
+  // guard immediately before its own rm, so a file edited after validation
+  // is preserved rather than deleted from a stale snapshot.
   const uninstallPlan = [];
   for (const rel of Object.keys(ownedFiles)) {
-    const { dest, current } = await readOwnedTarget(skillsRoot, rel);
-    uninstallPlan.push({ rel, dest, current });
+    await readOwnedTarget(skillsRoot, rel);
+    uninstallPlan.push(rel);
   }
 
-  for (const { rel, dest, current } of uninstallPlan) {
+  for (const rel of uninstallPlan) {
+    const { dest, current } = await readOwnedTarget(skillsRoot, rel);
     const ownedHash = ownedFiles[rel];
     if (current === null) {
       summary.missing.push(rel);
