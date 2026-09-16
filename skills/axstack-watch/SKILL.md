@@ -22,7 +22,7 @@ The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
 When the session is the Orca driver automation, also load
 [Automation sessions](../axstack/references/automations.md): it is the owner
-for every PR it handles, and its gate and allowlist bound every mutation.
+for every PR it handles, and its allowlist bounds every mutation.
 
 ## 1. Adopt and reconcile
 
@@ -63,9 +63,10 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. The user lifted the native-watch hold by user decision: the 5 min driver
-automation is a mutating owner for the PRs it handles and the hourly watchdog
-stays independent and read-only. The driver is the automation session itself,
+anything. The user lifted the native-watch hold by user decision: the driver
+every 15 minutes dispatches and exits as a mutating owner; the watchdog is
+model-free and read-only, has no gate, and records `watchdog.log`; there is no
+watch deadline for automations. The driver is the automation session itself,
 with no `axstack-monitor` or `axstack-owner` role row; `axstack-monitor` stays
 an optional read-only observer that never sends. One read-only PR observation
 needs neither.
@@ -114,10 +115,10 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor never sends, and `axstack-watchdog` never mutates GitHub and
-performs exactly one kind of send, a gate-authorized automation-health
-escalation recorded in `watchdog.json`; absent policy or failed relay uses the
-current Orca conversation and leaves every existing hold open.
+The monitor never sends. The automation watchdog never mutates GitHub, has no
+gate, and records occurrences and send receipts in `watchdog.log`; absent
+policy or failed relay uses the current Orca conversation and leaves every
+existing hold open.
 
 ## 5. State readiness precisely
 
@@ -128,15 +129,13 @@ observed state distinct from merged, and the human merges by default.
 
 ## 6. End and preserve continuity
 
-End early when all required PRs merge, or at cancel or the shared default 24h
-deadline. In every case, stop and verify all owned registrations. The deadline
-also stops timers for open PRs; never silently renew them.
+End a standalone watch early when all required PRs merge, at cancellation, or
+at its shared default 24 h deadline. There is no watch deadline for
+automations. In every case, stop and verify all owned registrations.
 
 At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither
-silent renewal nor ownership-transfer authority. Under an automation, expiry
-marks the PR `expired` in the record and sidecar; an `expired` PR is never
-silently re-adopted and is skipped until the user re-arms it.
+silent renewal nor ownership-transfer authority.
 
 Transfer ownership through the runtime-owned Orca handoff route only when the
 user explicitly requests it. Before transfer, follow the lifecycle-owned

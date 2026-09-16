@@ -88,12 +88,11 @@ test('native watch hold is lifted: driver mutates, watchdog stays read-only', ()
   }
   expect(watch).not.toMatch(/activation[^.]*(?:is|are|remains?) held|capability hold/i);
   expect(watch).toMatch(/lifted[^.]*user decision|user decision[^.]*lifted/i);
-  expect(watch).toMatch(/driver automation[^.]*mutating owner/i);
-  expect(watch).toMatch(/watchdog[^.]*read-only/i);
+  expect(watch).toMatch(/driver every 15 minutes[^.]*dispatches and exits[^.]*mutating owner/i);
+  expect(watch).toMatch(/watchdog[^.]*model-free[^.]*read-only[^.]*no gate[^.]*`watchdog\.log`/i);
   expect(watch).toMatch(/no[^.]*custom[^.]*scheduler/i);
-  expect(watch).toMatch(/five.minute|5.minute/i);
   expect(watch).toMatch(/hourly/i);
-  expect(watch).toMatch(/24.hour/i);
+  expect(watch).toMatch(/no watch deadline[^.]*automations/i);
 });
 
 test('preset bundles retain three role tables in the frozen container', () => {

@@ -17,12 +17,9 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Driver/monitor/watchdog: the five-minute driver is the automation session
-  itself, a mutating owner for the PRs it handles with no `axstack-monitor` or
-  `axstack-owner` role row. `axstack-monitor` is an optional read-only observer
-  that never sends. `axstack-watchdog` is the hourly health checker that never
-  mutates GitHub and performs exactly one kind of send, a gate-authorized
-  automation-health escalation recorded in `watchdog.json`.
+- Driver/monitor/watchdog: the driver every 15 minutes dispatches and exits as
+  a mutating owner; the watchdog is model-free and read-only, has no gate, and
+  records `watchdog.log`; there is no watch deadline for automations.
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -99,19 +96,18 @@ Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
 
-The default 24-hour deadline covers every task-owned timer, including open-PR
-monitors and watchdogs. Stop at deadline; remaining work gets a resumable
-handoff, never silent renewal. Merge-ready differs from merged; human merges.
+The default 24-hour deadline covers standalone task-owned timers. Stop them at
+deadline and preserve remaining work; there is no watch deadline for
+automations. Merge-ready differs from merged; human merges.
 
 ## Watch health
 
-The user lifted the native-watch hold by user decision on 2026-09-16. The driver
-automation is a mutating owner for its PRs; `axstack-watchdog` stays
-independent and read-only, with quiet healthy snapshots, deduplicated events,
-restart reconciliation, and one shared deadline. Native Orca automations expose
-a provider but cannot pin model, effort, or permission, so the driver records
-its model identity every tick and the watchdog treats a mismatch as a safety
-hold. Build no custom scheduler and use no legacy fallback. Details live in
+The user lifted the native-watch hold by user decision on 2026-09-16. The
+driver automation is a mutating owner for its PRs; `axstack-watchdog` stays
+independent and read-only. The driver every 15 minutes dispatches and exits;
+the watchdog is model-free, has no gate, and records `watchdog.log`; there is
+no watch deadline for automations. Build no custom scheduler and use no legacy
+fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (end of run and meaningful checkpoints)
