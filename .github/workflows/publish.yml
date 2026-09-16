@@ -41,6 +41,11 @@ jobs:
             exit 1
           fi
 
+      # Fetch npm before the credential exists on disk, so the download has
+      # nothing to read. The version is pinned and bunx caches the resolution.
+      - name: Fetch npm before the credential exists
+        run: bunx npm@12.0.2 --version
+
       # Fail here, cheaply, rather than at the irreversible step. This also
       # writes the credential npm reads: npm uses .npmrc, not NPM_CONFIG_TOKEN.
       - name: Registry credential must work

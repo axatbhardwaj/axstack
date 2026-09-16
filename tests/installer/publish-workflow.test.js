@@ -47,6 +47,9 @@ printf '//registry.npmjs.org/:_authToken=%s\\n' "\${REGISTRY_TOKEN}" > "\${HOME}
 // and a maintainer approves it. npm is the tool for that — bun has no staging
 // command — and npm reads the credential from .npmrc, not NPM_CONFIG_TOKEN.
 const NPM = 'npm@12.0.2';
+// Fetched before the credential exists on disk, so the download cannot read
+// it. The exact version is pinned; bunx resolves it once and caches it.
+const PREFETCH = `bunx ${NPM} --version`;
 const STAGE = `bunx ${NPM} stage publish . --access public`;
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
@@ -60,6 +63,7 @@ const EXPECTED_STEPS = [
   { uses: SETUP_BUN, with: { 'bun-version': '1.4.2' } },
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
+  { name: 'Fetch npm before the credential exists', run: PREFETCH },
   { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
   { name: 'Stage for approval', run: STAGE },
 ];
@@ -99,6 +103,15 @@ test('publish workflow runs the whole suite before it publishes, and refuses a m
   // to require.
   expect(runs.some((run) => /\bnpm publish\b|\bbun publish\b/.test(run)), 'must stage, never publish directly').toBe(false);
   expect(runs.some((run) => /stage publish/.test(run))).toBe(true);
+  // npm must be on disk before the token is, so a compromised or substituted
+  // download has nothing to read.
+  const prefetch = runs.findIndex((run) => /--version/.test(run));
+  const credential = runs.findIndex((run) => /_authToken/.test(run));
+  expect(prefetch, 'npm must be fetched before the credential is written').toBeLessThan(credential);
+  // Both npm invocations must name the same pinned version.
+  const pinned = runs.filter((run) => /bunx npm@/.test(run));
+  expect(pinned.length).toBe(2);
+  for (const run of pinned) expect(run).toContain(NPM);
   expect(TAG_GUARD, 'a mismatched tag must fail the job').toMatch(/exit 1/);
 });
 
