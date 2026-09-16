@@ -117,6 +117,15 @@ otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
 
+Terminal hygiene runs before the searches and covers driver terminals only.
+The precheck closes the previous ticks' idle driver terminals with
+`--tab` — without it the pane closes but the session stays listed and is never
+reclaimed — and a driver terminal that is still working makes the tick `busy`.
+It never closes a watchdog terminal: the watchdog is a separate automation that
+owns its own terminals, and a session that is still booting reports `tui-idle`,
+so sweeping them closed the watchdog seconds after launch. The two automations
+must not share a dispatch minute.
+
 The observed fingerprint is written to `pending.json`. After the processed
 tick the driver promotes exactly that value to `cursor.json`, never a
 recomputed one, so an event landing during a run is processed on the following
