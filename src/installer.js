@@ -812,62 +812,129 @@ export async function uninstallBundle({
     uninstallPlan.push(rel);
   }
 
-  for (const rel of uninstallPlan) {
-    const { dest, current } = await readOwnedTarget(skillsRoot, rel);
-    const ownedHash = ownedFiles[rel];
-    if (current === null) {
-      summary.missing.push(rel);
-      delete remainingFiles[rel];
-      continue;
-    }
-    if (hashContent(current) === ownedHash || force) {
-      await rm(dest);
-      delete remainingFiles[rel];
-      summary.removed.push(force && hashContent(current) !== ownedHash ? `${rel} (removed user edit with --force)` : rel);
-      await pruneEmptyParents(dest, skillsRoot);
-    } else {
-      summary.preserved.push(rel); // user-edited owned asset survives
-    }
-  }
-
-  if (strippedInstructionsRaw !== null) {
-    await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
-    await writeAtomic(instructionsFile, strippedInstructionsRaw);
-  }
-
+  const manifestFile = join(skillsRoot, '.axstack-manifest.json');
+  const manifestBefore = await readFile(manifestFile).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  const manifestMode = manifestBefore === null ? null : (await stat(manifestFile)).mode & 0o777;
+  const instructionMode = existingInstructionsRaw === null
+    ? null
+    : (await stat(instructionsFile)).mode & 0o777;
+  const claudeModes = new Map();
   for (const write of claudePlan.writes) {
-    if (write.after === null) {
-      await rm(write.path).catch((err) => {
+    const mode = await stat(write.path).then((value) => value.mode & 0o777).catch((err) => {
+      if (err?.code === 'ENOENT') return null;
+      throw err;
+    });
+    claudeModes.set(write.path, mode);
+  }
+
+  const deletedFiles = [];
+  const claudeWritten = [];
+  let instructionWritten = false;
+  try {
+    for (const rel of uninstallPlan) {
+      const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
+      const ownedHash = ownedFiles[rel];
+      if (current === null) {
+        summary.missing.push(rel);
+        delete remainingFiles[rel];
+        continue;
+      }
+      if (hashContent(current) === ownedHash || force) {
+        deletedFiles.push({ dest, bytes: current, mode });
+        await rm(dest);
+        delete remainingFiles[rel];
+        summary.removed.push(force && hashContent(current) !== ownedHash ? `${rel} (removed user edit with --force)` : rel);
+        await pruneEmptyParents(dest, skillsRoot);
+      } else {
+        summary.preserved.push(rel); // user-edited owned asset survives
+      }
+    }
+
+    if (strippedInstructionsRaw !== null) {
+      await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
+      await writeAtomic(instructionsFile, strippedInstructionsRaw);
+      instructionWritten = true;
+    }
+
+    for (const write of claudePlan.writes) {
+      if (write.after === null) {
+        await rm(write.path).catch((err) => {
+          if (err?.code !== 'ENOENT') throw err;
+        });
+      } else {
+        await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
+      }
+      claudeWritten.push(write);
+    }
+    summary.claudeSettings = claudePlan.report;
+
+    if (
+      Object.keys(remainingFiles).length === 0 &&
+      !hasLegacyProfiles &&
+      remainingClaudeSettingsPath === null &&
+      remainingInstructions.path === null
+    ) {
+      await rm(manifestFile).catch((err) => {
         if (err?.code !== 'ENOENT') throw err;
       });
+      summary.manifestRemoved = true;
     } else {
-      await writeAtomic(write.path, write.after, write.before === null ? { mode: 0o600 } : {});
+      await writeManifest(skillsRoot, {
+        version: MANIFEST_VERSION,
+        files: remainingFiles,
+        profiles: legacyProfiles,
+        claudeSettings: { path: remainingClaudeSettingsPath },
+        instructions: remainingInstructions,
+      });
     }
-  }
-  summary.claudeSettings = claudePlan.report;
-
-  if (
-    Object.keys(remainingFiles).length === 0 &&
-    !hasLegacyProfiles &&
-    remainingClaudeSettingsPath === null &&
-    remainingInstructions.path === null
-  ) {
+    return summary;
+  } catch (err) {
+    const rollbackErrors = [];
+    for (const write of claudeWritten.reverse()) {
+      try {
+        if (write.before === null) await rm(write.path);
+        else await writeAtomic(write.path, write.before, claudeModes.get(write.path) === null
+          ? {}
+          : { mode: claudeModes.get(write.path) });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${write.path}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    if (instructionWritten) {
+      try {
+        await writeAtomic(instructionsFile, existingInstructionsRaw, instructionMode === null
+          ? {}
+          : { mode: instructionMode });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${instructionsFile}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    for (const { dest, bytes, mode } of deletedFiles.reverse()) {
+      try {
+        await writeAtomic(dest, bytes, mode === null ? {} : { mode });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${dest}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
     try {
-      await rm(join(skillsRoot, '.axstack-manifest.json'));
-    } catch {
-      // manifest already gone; nothing to do
+      const currentManifest = await readFile(manifestFile).catch((readErr) => {
+        if (readErr?.code === 'ENOENT') return null;
+        throw readErr;
+      });
+      if (manifestBefore !== null && currentManifest?.equals(manifestBefore) !== true) {
+        await writeAtomic(manifestFile, manifestBefore, manifestMode === null ? {} : { mode: manifestMode });
+      }
+    } catch (restoreErr) {
+      rollbackErrors.push(`${manifestFile}: ${restoreErr?.message ?? restoreErr}`);
     }
-    summary.manifestRemoved = true;
-  } else {
-    await writeManifest(skillsRoot, {
-      version: MANIFEST_VERSION,
-      files: remainingFiles,
-      profiles: legacyProfiles,
-      claudeSettings: { path: remainingClaudeSettingsPath },
-      instructions: remainingInstructions,
-    });
+    if (rollbackErrors.length > 0) {
+      err.message += ` (incomplete rollback; manual repair needed: ${rollbackErrors.join('; ')})`;
+    }
+    throw err;
   }
-  return summary;
 }
 
 async function pruneEmptyParents(file, stopDir) {

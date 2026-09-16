@@ -81,4 +81,32 @@ describe('instruction transactions', () => {
     expect(readFileSync(instructions, 'utf8')).toBe(edited);
     expect((await readManifest(skills)).instructions.path).toBe(instructions);
   });
+
+  test('uninstall manifest failure restores every prior byte and file mode', async () => {
+    const { bundle, skills, instructions } = fixture();
+    writeFileSync(instructions, 'personal bytes');
+    await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+
+    const skill = join(skills, 'axstack-demo', 'SKILL.md');
+    const roles = join(skills, 'axstack', 'roles.json');
+    const manifest = join(skills, '.axstack-manifest.json');
+    chmodSync(skill, 0o700);
+    writeFileSync(roles, `${readFileSync(roles, 'utf8')}\nuser edit`);
+    const before = {
+      instruction: readFileSync(instructions),
+      skill: readFileSync(skill),
+      roles: readFileSync(roles),
+      manifest: readFileSync(manifest),
+      skillMode: lstatSync(skill).mode & 0o777,
+    };
+    writeFileSync(join(skills, '.axstack-manifest.json.tmp'), 'planted');
+
+    await expect(uninstallBundle({ skillsDir: skills, instructionsPath: instructions }))
+      .rejects.toThrow(/temporary file already exists/i);
+    expect(readFileSync(instructions)).toEqual(before.instruction);
+    expect(readFileSync(skill)).toEqual(before.skill);
+    expect(readFileSync(roles)).toEqual(before.roles);
+    expect(readFileSync(manifest)).toEqual(before.manifest);
+    expect(lstatSync(skill).mode & 0o777).toBe(before.skillMode);
+  });
 });
