@@ -104,9 +104,9 @@ The driver performs this order and exits:
    retains worktree and marker and blocks only that PR. After confirmed
    abandon, remove the worktree, append one health line, increment the head's
    `abandon_count`, and drop that head so normal selection retries once. For a
-   review-triggered dispatch, also remove the triggering review id and digest
-   from `processed_reviews[]`. A second abandon at that head is a user-owned
-   hold.
+   review-triggered dispatch, use the marker's `trigger` to remove exactly its
+   review id and digest from `processed_reviews[]`. A second abandon at that
+   head is a user-owned hold.
 5. Select changed PRs and matching `deferred[]` entries oldest `updatedAt`
    first. Skip a current-head decision in `open` or `approved`, and skip a live
    marker. Dispatch within the repair and review rules below.
@@ -117,18 +117,20 @@ The driver performs this order and exits:
 ## Dispatch and repair selection
 
 Every selected PR receives one dispatch marker with task id, dispatch id,
-worktree, head, `started_at`, and reservation (`verdict` or `repair`). There is
-at most one live marker per PR. The marker is the claim shared by scheduled
-and attended sessions; revalidation immediately before an external call is
-its second half. It makes no exactly-once claim against concurrent human
-GitHub activity.
+worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
+`{kind: check, name, app_id}` or `{kind: review, review_id, digest}`. There is at
+most one live marker per PR. The marker is the claim shared by scheduled and
+attended sessions; revalidation immediately before an external call is its
+second half. It makes no exactly-once claim against concurrent human GitHub
+activity.
 
 An own PR needs repair when either trigger applies:
 
-1. a failing check has a same-named check on the base commit observed passing
-   through `gh api repos/<repo>/commits/<base>/check-runs`, filtered to that
-   failing check's `name`; a missing, pending, or differently-named base check
-   holds repair;
+1. a failing check has a base check-run with the same `name` and the same
+   producing `app.id` observed passing through
+   `gh api repos/<repo>/commits/<base>/check-runs`; for a legacy commit status,
+   its counterpart has the same `context`. A missing, pending, or same-name
+   different-app base check holds repair;
 2. a `CHANGES_REQUESTED` review at the current head, by any account, has both
    a review id absent from `cursor.json.processed_reviews[]` and a SHA-256 body
    digest not recorded for that PR and head. Both keys are required: the same
@@ -289,10 +291,11 @@ contains:
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
   draft, checks, reviews, last_self_review}}`, `dispatch_markers[]` (`pr`,
-  `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`),
-  `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
-  `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
-  `digest`), `deploy_on_push{repo: [branches]}`,
+  `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`,
+  `trigger`), `deferred[]`, `pending_settlement[]`,
+  `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
+  `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
+  `deploy_on_push{repo: [branches]}`,
   `legacy_automation_reviews[]`, `health[]`;
 - `pending.json`, `precheck.log` — driver precheck only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;

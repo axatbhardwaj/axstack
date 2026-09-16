@@ -41,17 +41,19 @@ test('automations: discovery uses four searches, debounce, and the exact due-wor
 
 test('automations: dispatch claims, TTL, budgets, and both repair triggers are pinned', () => {
   const text = compact(refPath);
-  expect(text).toMatch(/dispatch marker[^.]*task id[^.]*dispatch id[^.]*worktree[^.]*head[^.]*started_at[^.]*reservation/i);
+  expect(text).toMatch(/dispatch marker[^.]*task id[^.]*dispatch id[^.]*worktree[^.]*head[^.]*started_at[^.]*reservation[^.]*trigger/i);
+  expect(text).toMatch(/trigger[^.]*`\{kind: check, name, app_id\}`[^.]*`\{kind: review, review_id, digest\}`/i);
   expect(text).toMatch(/marker older than 3 h/i);
   expect(text).toMatch(/live worker[^.]*`worker-stop`/i);
   expect(text).toMatch(/exited worker[^.]*`worker-abandon`/i);
-  expect(text).toMatch(/review-triggered[^.]*remove[^.]*review id[^.]*digest[^.]*`processed_reviews\[\]`/i);
+  expect(text).toMatch(/review-triggered[^.]*marker's `trigger`[^.]*remove exactly[^.]*review id[^.]*digest[^.]*`processed_reviews\[\]`/i);
   expect(text).toMatch(/one `verdict` dispatch per tick/i);
   expect(text).toMatch(/six `repair` markers live/i);
   expect(text).toMatch(/one repair per PR per 24 h/i);
-  expect(text).toMatch(/failing check[^.]*same-named check[^.]*base commit[^.]*passing/i);
+  expect(text).toMatch(/failing check[^.]*base check-run[^.]*same `name`[^.]*same producing `app\.id`[^.]*passing/i);
   expect(text).toContain('gh api repos/<repo>/commits/<base>/check-runs');
-  expect(text).toMatch(/missing[^.]*pending[^.]*differently-named base check[^.]*holds/i);
+  expect(text).toMatch(/legacy commit status[^.]*same `context`/i);
+  expect(text).toMatch(/missing[^.]*pending[^.]*same-name different-app base check[^.]*holds/i);
   expect(text).toMatch(/`CHANGES_REQUESTED` review[^.]*review id/i);
   expect(text).toMatch(/SHA-256 body digest[^.]*PR and head/i);
   expect(text).toMatch(/same finding[^.]*new review id[^.]*must not re-trigger/i);
@@ -100,7 +102,7 @@ test('automations: run directory, watchdog checks, and exclusions match rev 4', 
   expect(text).toMatch(/no watch deadline/i);
   expect(text).toMatch(/no terminal hygiene/i);
   expect(text).toContain('(Orca run status alone is not evidence of completion)');
-  expect(text).toMatch(/`dispatch_markers\[\]`[^;]*`pr`[^;]*`task_id`[^;]*`dispatch_id`[^;]*`worktree`[^;]*`head`[^;]*`started_at`[^;]*`reservation`/i);
+  expect(text).toMatch(/`dispatch_markers\[\]`[^;]*`pr`[^;]*`task_id`[^;]*`dispatch_id`[^;]*`worktree`[^;]*`head`[^;]*`started_at`[^;]*`reservation`[^;]*`trigger`/i);
   expect(text).toMatch(/`repair_caps\{url: \{expires_at\}\}`/i);
   expect(text).toMatch(/`processed_reviews\[\]`[^;]*`review_id`[^;]*`pr`[^;]*`head`[^;]*`digest`/i);
   expect(text).toMatch(/UTC[^.]*YYYY-MM-DDTHH:MM:SSZ/i);
