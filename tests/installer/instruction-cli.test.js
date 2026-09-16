@@ -71,4 +71,26 @@ describe('instruction CLI routing', () => {
     expect(result.out).toContain('$CODEX_HOME/AGENTS.md');
     expect(result.out).toContain('~/.claude/CLAUDE.md');
   });
+
+  test('check reports owned instruction state for Claude and Codex harness targets', () => {
+    for (const harness of ['claude', 'codex']) {
+      const { root, bundle } = fixture();
+      const env = {
+        HOME: root,
+        CODEX_HOME: join(root, 'codex-home'),
+      };
+      runCli(CLI, [
+        'install', '--preset', 'mixed', '--bundle', bundle, '--harness', harness,
+        '--no-claude-settings', '--yes',
+      ], { env });
+      const checked = runCli(CLI, ['check', '--harness', harness], {
+        env: { ...env, PATH: '' },
+        expectFail: true,
+      });
+      const expected = harness === 'claude'
+        ? join(root, '.claude', 'CLAUDE.md')
+        : join(root, 'codex-home', 'AGENTS.md');
+      expect(checked.out).toContain(`instruction owned: ${expected}`);
+    }
+  });
 });

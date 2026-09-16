@@ -41,6 +41,7 @@ import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude
 import {
   applyInstructionPlan,
   findLegacyRoutingLines,
+  locateInstructionBlock,
   planInstruction,
   renderInstructionBlock,
   stripInstructionBlock,
@@ -397,6 +398,38 @@ export async function writeAtomic(dest, bytes, { mode } = {}) {
   } catch (err) {
     throw new Error(`wrote ${dest} but could not set permissions: ${err.message}`);
   }
+}
+
+export async function checkInstructionBinding({ skillsDir, instructionsPath } = {}) {
+  if (!skillsDir) throw new Error('instruction check requires --skills-dir <dir> or --harness <name>');
+  if (!instructionsPath) throw new Error('instruction check requires --instructions <file> or a supported harness');
+  const skillsRoot = await canonicalTargetDir(resolve(skillsDir));
+  const instructionsFile = await canonicalInstructionFile(instructionsPath);
+  const manifest = await readManifest(skillsRoot);
+  const binding = manifest?.instructions ?? { path: null, hash: null };
+  if (binding.path !== null && binding.path !== instructionsFile) {
+    return {
+      status: 'conflict',
+      path: instructionsFile,
+      reason: `manifest is bound to ${binding.path}`,
+    };
+  }
+  const text = await readFile(instructionsFile, 'utf8').catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (text === null) return { status: 'missing', path: instructionsFile };
+  const located = locateInstructionBlock(text);
+  if (!located) {
+    return { status: 'missing', path: instructionsFile, reason: 'Axstack marker block is absent' };
+  }
+  if (binding.path === null) {
+    return { status: 'unowned', path: instructionsFile, reason: 'marker block is not manifest-owned' };
+  }
+  if (hashContent(located.block) !== binding.hash) {
+    return { status: 'conflict', path: instructionsFile, reason: 'owned marker block was edited' };
+  }
+  return { status: 'owned', path: instructionsFile };
 }
 
 async function assertFileSnapshot(dest, expected) {

@@ -5,7 +5,12 @@
 // model calls).
 import { readFileSync } from 'node:fs';
 import { join, resolve } from '../src/posixpath.js';
-import { installBundle, uninstallBundle, validateBundle } from '../src/installer.js';
+import {
+  checkInstructionBinding,
+  installBundle,
+  uninstallBundle,
+  validateBundle,
+} from '../src/installer.js';
 import { BUN_FLOOR, checkCapabilities, meetsFloor, runRealCheck } from '../src/capabilities.js';
 import { harnessLocations } from '../src/locations.js';
 
@@ -36,7 +41,7 @@ const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
   axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
-  axstack check [--bundle <dir>]
+  axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
   axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack --help | --version
 
@@ -329,6 +334,19 @@ async function main() {
           `bundle ok: ${bundle.files.length} skill files, ` +
             (presetNames.length > 0 ? `role presets ${presetNames.join(', ')}` : 'no role presets'),
         );
+      }
+      if (flags.instructions || flags.harness) {
+        let skillsDir = flags['skills-dir'] ? expandHome(flags['skills-dir']) : null;
+        if (!skillsDir && flags.harness) skillsDir = resolveHarnessTarget(flags.harness);
+        const instructionsPath = flags.instructions
+          ? expandHome(flags.instructions)
+          : resolveHarnessInstructions(flags.harness);
+        const instruction = await checkInstructionBinding({ skillsDir, instructionsPath });
+        console.log(
+          `instruction ${instruction.status}: ${instruction.path}` +
+            (instruction.reason ? ` (${instruction.reason})` : ''),
+        );
+        if (instruction.status !== 'owned') process.exitCode = 1;
       }
       if (report.gaps.length > 0) process.exitCode = 1;
       return;
