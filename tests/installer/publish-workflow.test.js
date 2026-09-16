@@ -32,11 +32,18 @@ if [ "$tag" != "$version" ]; then
 fi
 `;
 
-const AUTHENTICATE = `set -eu
-: "\${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-umask 077
-printf '//registry.npmjs.org/:_authToken=%s\\n' "\${REGISTRY_TOKEN}" > "\${HOME}/.npmrc"
+// Proves the credential before the irreversible step. bun publish falls back
+// to interactive web auth when the token is missing or invalid, which in CI
+// prints a login URL and hangs until the job times out.
+const AUTH_CHECK = `set -eu
+: "\${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+curl -sfS -H "Authorization: Bearer \${NPM_CONFIG_TOKEN}" \\
+  https://registry.npmjs.org/-/whoami > /dev/null
 `;
+
+// The complete job. Anything absent here — continue-on-error, an extra step,
+// an artifact upload, a `with:` input, another env var — is a difference.
+const TOKEN_ENV = { NPM_CONFIG_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' };
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
 // an artifact upload, a `with:` input, another env var — is a difference.
@@ -45,12 +52,8 @@ const EXPECTED_STEPS = [
   { uses: SETUP_BUN, with: { 'bun-version': '1.4.2' } },
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
-  {
-    name: 'Authenticate to the registry',
-    env: { REGISTRY_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' },
-    run: AUTHENTICATE,
-  },
-  { run: 'bun publish --access public' },
+  { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
+  { name: 'Publish', env: TOKEN_ENV, run: 'bun publish --access public' },
 ];
 
 test('publish workflow fires only on a version tag', () => {
@@ -69,8 +72,11 @@ test('publish workflow job is pinned in full', () => {
   expect(Object.keys(doc.jobs)).toEqual(['publish']);
 
   const job = doc.jobs.publish;
-  expect(Object.keys(job).sort(), 'the job may declare only runs-on and steps').toEqual(['runs-on', 'steps']);
+  expect(Object.keys(job).sort(), 'the job may declare only runs-on, timeout-minutes and steps')
+    .toEqual(['runs-on', 'steps', 'timeout-minutes']);
   expect(job['runs-on']).toBe('ubuntu-latest');
+  // An interactive auth fallback hangs; bound it rather than idling.
+  expect(job['timeout-minutes']).toBe(10);
   // Deep equality closes the whole class: no added step, no continue-on-error,
   // no artifact upload of the credential, no extra `with:` input.
   expect(job.steps, 'the publish job is pinned; update this test deliberately').toEqual(EXPECTED_STEPS);
@@ -87,7 +93,8 @@ test('publish workflow runs the whole suite before it publishes, and refuses a m
 
 test('the registry secret appears exactly once in the whole document', () => {
   const occurrences = source().match(/secrets\.NPM_ACCESS_TOKEN/g) ?? [];
-  expect(occurrences.length, 'the secret must be referenced once, in the token step env').toBe(1);
+  // Twice: the credential check and the publish, both pinned above.
+  expect(occurrences.length, 'the secret must appear only in the two pinned env blocks').toBe(2);
   // And that one reference is the pinned env entry above, not a workflow- or
   // job-level env that every step would inherit.
   const doc = parsed();

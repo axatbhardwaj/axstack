@@ -1,0 +1,26 @@
+name: registry-auth-check
+
+# Proves the NPM_ACCESS_TOKEN secret actually authenticates, without touching
+# the registry's contents. Run this before tagging a release: bun publish
+# falls back to interactive web auth on a bad token, which in CI prints a
+# login URL and hangs until the job times out.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry-auth-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Who does the token authenticate as
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: |
+          set -eu
+          : "${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+          who="$(curl -sfS -H "Authorization: Bearer ${NPM_CONFIG_TOKEN}" \
+            https://registry.npmjs.org/-/whoami | sed 's/.*"username":"\([^"]*\)".*/\1/')"
+          echo "token authenticates as: ${who}"

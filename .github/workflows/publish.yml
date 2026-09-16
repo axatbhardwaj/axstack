@@ -2,7 +2,7 @@ name: publish
 
 # A publish is irreversible: npm keeps a published version forever. This runs
 # only for a pushed version tag, and only after the tag is proven to match the
-# manifest and the suite passes.
+# manifest, the suite passes, and the registry credential is proven to work.
 on:
   push:
     tags:
@@ -14,10 +14,13 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # bun publish falls back to interactive web auth when the token is missing
+    # or invalid: in CI that prints a login URL and hangs. Bound the job.
+    timeout-minutes: 10
     steps:
       # actions/checkout v4, pinned to the commit the API returns for
       # refs/tags/v4 (currently v4.4.0). This job holds a registry token, so a
-      # moving tag here could be repointed at code that reads ~/.npmrc.
+      # moving tag here could be repointed at code that reads it.
       # No invented SHAs.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       # oven-sh/setup-bun v2, pinned to the verified commit below
@@ -38,14 +41,19 @@ jobs:
             exit 1
           fi
 
-      - name: Authenticate to the registry
+      # Fail here, cheaply, rather than at the irreversible step.
+      - name: Registry credential must work
         env:
-          REGISTRY_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
         run: |
           set -eu
-          : "${REGISTRY_TOKEN:?NPM_ACCESS_TOKEN is not set}"
-          umask 077
-          printf '//registry.npmjs.org/:_authToken=%s\n' "${REGISTRY_TOKEN}" > "${HOME}/.npmrc"
+          : "${NPM_CONFIG_TOKEN:?NPM_ACCESS_TOKEN is not set}"
+          curl -sfS -H "Authorization: Bearer ${NPM_CONFIG_TOKEN}" \
+            https://registry.npmjs.org/-/whoami > /dev/null
 
-      # bun has no --provenance; attestation would require the npm CLI.
-      - run: bun publish --access public
+      # bun publish reads NPM_CONFIG_TOKEN; it does not read ~/.npmrc here.
+      # bun has no --provenance, so this produces no npm attestation.
+      - name: Publish
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+        run: bun publish --access public
