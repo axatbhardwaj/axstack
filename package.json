@@ -1,6 +1,6 @@
 {
   "name": "axstack",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks Orca capabilities.",
   "keywords": [
     "claude-code",
