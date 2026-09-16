@@ -54,6 +54,15 @@ test('automations: run record, sidecar, notification policy, dedup, expiry, and 
   expect(text).toMatch(/docs\/specs\/orca-automations\.md/);
 });
 
+test('automations: terminal hygiene stays inside the driver and reclaims the tab', () => {
+  const text = compact(refPath);
+  expect(text).toMatch(/hygiene[^.]*driver terminals only|only[^.]*driver terminals/i);
+  expect(text).toMatch(/`terminalPtyId`[^.]*never a terminal title/i);
+  expect(text).toMatch(/never closes a watchdog terminal or any terminal outside this automation/i);
+  expect(text).toContain('--tab');
+  expect(text).toMatch(/must not share a dispatch minute|never share a dispatch minute/i);
+});
+
 test('automations: entry, watch, and review skills link the reference', () => {
   for (const [path, link] of [
     ['skills/axstack/SKILL.md', 'references/automations.md'],

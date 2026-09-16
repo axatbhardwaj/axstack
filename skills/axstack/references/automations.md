@@ -117,6 +117,18 @@ otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
 
+Terminal hygiene runs before the searches and covers driver terminals only.
+Ownership is the driver automation's own recorded `terminalPtyId` from its Orca
+run history, never a terminal title: Orca rewrites a Claude terminal's title to
+the agent's current task summary, so a driver's title drifts and an unrelated
+session can acquire one that reads like a driver. The precheck closes the
+previous ticks' idle driver terminals with `--tab` — without it the pane closes
+but the session stays listed and is never reclaimed, which also makes an
+over-match destructive — and a driver terminal that is still working makes the
+tick `busy`. It never closes a watchdog terminal or any terminal outside this
+automation; an unreadable ownership source is `error`, never a silent empty
+sweep. The two automations must not share a dispatch minute.
+
 The observed fingerprint is written to `pending.json`. After the processed
 tick the driver promotes exactly that value to `cursor.json`, never a
 recomputed one, so an event landing during a run is processed on the following
