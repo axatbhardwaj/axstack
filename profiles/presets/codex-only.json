@@ -153,6 +153,42 @@
       "modeId": "full-access",
       "thinkingOptionId": "max",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
+    },
+    {
+      "id": "axstack-debug-investigator-1",
+      "name": "Axstack debug investigator 1",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-5.6-sol at medium effort because it has fewer model families."
+    },
+    {
+      "id": "axstack-debug-investigator-2",
+      "name": "Axstack debug investigator 2",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "low",
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-5.6-terra at low effort because it has fewer model families."
+    },
+    {
+      "id": "axstack-debug-investigator-3",
+      "name": "Axstack debug investigator 3",
+      "provider": "codex",
+      "model": "gpt-5.6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-5.6-sol at high effort because it has fewer model families."
+    },
+    {
+      "id": "axstack-debug-investigator-4",
+      "name": "Axstack debug investigator 4",
+      "provider": "codex",
+      "model": "gpt-5.6-terra",
+      "modeId": "full-access",
+      "thinkingOptionId": "xhigh",
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-5.6-terra at xhigh effort because it has fewer model families."
     }
   ]
 }

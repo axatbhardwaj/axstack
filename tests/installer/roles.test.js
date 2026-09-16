@@ -61,3 +61,17 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
 
   expect(assessRoleReadiness(roles, 'claude-only')).toEqual({ ready: true, gaps: [] });
 });
+
+test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {
+  const roles = [
+    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
+    role('axstack-author', 'gpt-5.6-sol'),
+    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
+    { ...role('axstack-reviewer-secondary', 'gpt-5.6-terra'), thinkingOptionId: 'xhigh' },
+    role('axstack-debug-investigator-1', null),
+  ];
+  expect(assessRoleReadiness(roles, 'codex-only').gaps).toEqual([
+    'axstack-debug-investigator-1 requires a configured model',
+  ]);
+});
