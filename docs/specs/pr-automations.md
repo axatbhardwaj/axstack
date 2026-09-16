@@ -327,7 +327,8 @@ One run directory under the axstack git-common-dir,
   precheck and `unknown` for the watchdog, never silently ignored.
 - `pending.json`, `precheck.log` — driver precheck only.
 - `decisions/<token>.json` — per the lifecycle table.
-- `watchdog.log` — watchdog only.
+- `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
+  and send receipts) — watchdog only.
 - `progress.md` — driver only, one line per tick plus holds and mention
   readings; no per-PR prose.
 
