@@ -1,0 +1,4 @@
+
+# Test-run artifacts: bun's install cache and the relative-path fixture tree
+.bun/
+relative/
