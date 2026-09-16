@@ -1,7 +1,8 @@
 # PR automations — capability and task map
 
-Spec: `docs/specs/pr-automations.md` rev 3 (`9dc01bf`, tag
-`spec/pr-automations-rev3`, approved 2026-09-16). Store: repository Markdown
+Spec: `docs/specs/pr-automations.md` rev 4 (tag `spec/pr-automations-rev4`;
+rev 3 `9dc01bf` approved 2026-09-16, rev 4 = review corrections, no decision
+changed). Store: repository Markdown
 (this file). Run record: `20260917-automations-simplify`. All PRs target
 `main`; T1 is the root and the human merges it first; T2–T5 fan out from T1's
 branch and retarget to `main` on its merge. Every PR: one theme, target band,
@@ -24,7 +25,11 @@ the superseded pair C/D rules.
   defi-com pair by pr-automations.md rev 3" status note and nothing else; this
   task map present. Depends: none.
 - Internal task T2: references and skills -> `axstack-author` (Sol) via
-  `axstack-implement` -> child worktree `pr-automations-refs` off T1.
+  `axstack-implement` -> child worktree `pr-automations-refs` off T1. Also
+  retires superseded clauses in `skills/axstack/references/lifecycle.md`,
+  `skills/axstack-watch/references/watch-runtime.md`,
+  `skills/axstack-watch/SKILL.md` and `README.md` (five-minute driver, 24-hour
+  watch deadline, health gate, `watchdog.json`) so no agent loads them.
   Theme: contract text. Size est: target band (~600–900 lines of Markdown +
   test updates). Acceptance: `skills/axstack/references/automations.md`
   rewritten to rev 3 (driver/watchdog roles, four searches + debounce, due
@@ -56,7 +61,8 @@ work, guards the driver against itself, and exits 0 only when there is work.
   `--json url,number,repository,updatedAt`; truncation logs `error` exit 2
   and writes no fingerprint; allowlist union filter; `gh pr view` per PR;
   `seen[]` debounce (peer/fourth-search heads hashed on second observation,
-  own heads immediately); due list exactly as §Discovery step 5 (`approved`/
+  own heads immediately, own hash includes reduced checks and `latestReviews`
+  at head so a new review wakes the driver); due list exactly as §Discovery step 5 (`approved`/
   `rejected` without `consumed_at`, `spent` without receipt, `deferred[]`
   with matching head, expired cap, marker > 3 h, `pending_settlement[]`);
   `pending.json` shape; log vocabulary `changed|due|unchanged|running|error`;

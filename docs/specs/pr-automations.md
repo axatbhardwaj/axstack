@@ -1,6 +1,8 @@
 # PR automations — specification
 
-Status: revision 3, draft for user approval. Supersedes
+Status: revision 4, approved baseline (revision 3 approved by the user on
+2026-09-16; revision 4 carries the authored-review corrections of PR #70's
+Sol receipt and changes no decision). Supersedes
 `docs/specs/orca-automations.md` (revisions 1–5) for the defi-com pair once
 approved; that document stays in the tree as history and is not amended
 further. Decisions S1–S4 and Q1–Q5 were settled by the user on 2026-09-16 in
@@ -71,9 +73,13 @@ The precheck runs every 15 minutes and exits 0 only when there is work.
    is a truncation, logged `error`, exit 2, fingerprint not written.
    Deduplicate by URL, own-PR first, and drop every PR outside the union of the
    two allowlists.
-3. For each allowlisted PR run `gh pr view --json headRefOid,baseRefName,isDraft,statusCheckRollup,author`;
+3. For each allowlisted PR run
+   `gh pr view --json headRefOid,baseRefName,isDraft,statusCheckRollup,author,latestReviews`;
    base SHA via `gh api repos/<repo>/commits/<base>`. Own PRs contribute head,
-   base, draft and check rollup; every other PR contributes head and base.
+   base, draft, the check rollup reduced to `{name, conclusion|state}` pairs,
+   and the set of `latestReviews` `{id, state}` whose `commit` is the head, so
+   a new `CHANGES_REQUESTED` on an unchanged head changes the fingerprint;
+   every other PR contributes head and base.
 4. **Debounce.** A peer or fourth-search head enters the hashed subset only on
    the second consecutive precheck that observes it; the first observation is
    recorded in `pending.json.seen[]` and not hashed. Own heads are hashed
@@ -112,16 +118,19 @@ automations worktree) does the following in order and exits.
    unknown or the terminal reports user takeover, retain both worktree and
    marker and block only that PR. After a confirmed abandon, remove the
    worktree, write one `health[]` line, increment `abandon_count` for that
-   head and drop the head from `cursor.json` so the PR is retried once through
-   the normal path; a second abandon at the same head is a hold, owner user.
+   head, drop the head from `cursor.json`, and remove the triggering review id
+   and digest from `processed_reviews[]` when the dispatch was review-triggered,
+   so the PR is retried once through the normal path; a second abandon at the
+   same head is a hold, owner user.
 5. For each PR whose head, base, draft flag, checks or review state differ
    from `cursor.json`, plus every `deferred[]` entry, in `updatedAt` order,
    oldest first. A PR with a decision file in state `open` or `approved` at its
    current head, or a live dispatch marker, is skipped.
    - **Own PR needing repair** — two triggers, either suffices:
-     (a) a failing check whose corresponding base check is observed passing
-     (`gh run list --branch <base> --limit 1`; missing, pending or
-     incomparable base evidence holds the repair); (b) a `CHANGES_REQUESTED`
+     (a) a failing check whose same-named check on the base commit is
+     observed passing (`gh api repos/<repo>/commits/<base>/check-runs`
+     filtered to the failing check's `name`; a missing, pending, or
+     differently-named base check holds the repair); (b) a `CHANGES_REQUESTED`
      review at the current head, by any account, whose review id is not in
      `cursor.json.processed_reviews[]` and whose body digest (sha256 of the
      body) is not already recorded against that PR at that head — both keys
@@ -180,8 +189,11 @@ worktree as parent, and reports through the Orca worker protocol only.
   head and skips with the existing id if one exists, and re-checks head, base,
   draft status, authorship and allowlist. The verdict body ends with the marker
   line `<!-- axstack-automation verdict head=<sha> -->`. The local review file
-  `~/defi/misc/reviews/review[-<repo>]-PR-<num>.html` is written; a write
-  failure is recorded, never withholds the verdict.
+  is written to the workspace review directory `~/defi/misc/reviews/` under the
+  existing convention: `review-PR-<num>.html` with no prefix means
+  `defi-com/monorepo`; `review-mobile-PR-<num>.html` and
+  `review-azure-next-hybrid-PR-<num>.html` for the others. A write failure is
+  recorded, never withholds the verdict.
 - `axstack-watch`, authored repair mode: candidate committed locally, one Sol
   reviewer at the local SHA, Luna gate, zero unresolved validated blockers,
   recorded test evidence (`~/.bun-1.2.2/bin/bun` unit gate for monorepo; a
@@ -298,12 +310,17 @@ for health findings.
 One run directory under the axstack git-common-dir,
 `.git/axstack/runs/<run id>/`, holds:
 
-- `cursor.json` — driver only: fingerprint, `tick_started_at`, `tick_done_at`,
-  `tick_outcome`, per-PR state (head, base, draft, checks, last self review
-  id and head), dispatch markers, `deferred[]`, `pending_settlement[]`,
-  repair caps, `abandon_count`, `processed_reviews[]` (review id, PR, head,
-  body digest), deploy-on-push sets per repository,
-  `legacy_automation_reviews[]`, `health[]`.
+- `cursor.json` — driver only, with these exact keys because the precheck
+  and the watchdog read them: `fingerprint`, `tick_started_at`,
+  `tick_done_at`, `tick_outcome`, `prs{url: {head, base, draft, checks,
+  reviews, last_self_review}}`, `dispatch_markers[]` (`pr`, `task_id`,
+  `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`),
+  `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
+  `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
+  `digest`), `deploy_on_push{repo: [branches]}`,
+  `legacy_automation_reviews[]`, `health[]`. Timestamps are UTC
+  `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an `error` for the
+  precheck and `unknown` for the watchdog, never silently ignored.
 - `pending.json`, `precheck.log` — driver precheck only.
 - `decisions/<token>.json` — per the lifecycle table.
 - `watchdog.log` — watchdog only.
@@ -363,7 +380,7 @@ against live PRs; no production PR is mutated to manufacture a test case.
    variables visible to the script is recorded. The `spent` path is proven by
    the first real escalation and recorded in `progress.md`.
 9. Push token: a candidate ref created by an agent survives worktree removal
-   and is deleted after `stale`.
+   and is deleted after `stale` and after `spent`.
 10. Watchdog: each check tripped artificially sends exactly one message and
     writes one occurrence; a repeated tick sends nothing; a healthy tick sends
     nothing and exits non-zero; a never-started driver after a `changed` line
@@ -374,7 +391,11 @@ against live PRs; no production PR is mutated to manufacture a test case.
 12. Feedback repair dedup: a `CHANGES_REQUESTED` review at a head triggers one
     dispatch; the same review id, or a new id with an identical body digest at
     that head, triggers nothing; a superseded head with a new review triggers
-    again subject to the 24 h cap.
+    again subject to the 24 h cap. A new `CHANGES_REQUESTED` on an own PR with
+    an unchanged head changes the precheck fingerprint (`changed`); an
+    abandoned review-triggered dispatch is retried once and its second abandon
+    is a hold. A failing check whose base check-run of the same name is absent
+    or pending holds the repair.
 13. Cutover, in this order: the new pair exists disabled; the amended skills
     and references are installed so no agent loads the superseded rules;
     automations C and D are disabled; every old driver and worker attempt is
