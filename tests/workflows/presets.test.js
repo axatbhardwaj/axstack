@@ -23,6 +23,10 @@ const roleIds = [
   'axstack-monitor',
   'axstack-watchdog',
   'axstack-auditor',
+  'axstack-debug-investigator-1',
+  'axstack-debug-investigator-2',
+  'axstack-debug-investigator-3',
+  'axstack-debug-investigator-4',
 ];
 
 const c = (model, effort) => ['codex', model, 'full-access', effort];
@@ -39,6 +43,8 @@ const expected = {
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
     a('claude-opus-5', 'medium'), a('claude-opus-5', 'medium'),
     c('gpt-5.6-luna', 'max'),
+    a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
@@ -51,6 +57,8 @@ const expected = {
     c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
     c('gpt-5.6-terra', 'low'), c('gpt-5.6-terra', 'low'),
     c('gpt-5.6-luna', 'max'),
+    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
+    c('gpt-5.6-sol', 'high'), c('gpt-5.6-terra', 'xhigh'),
   ],
   'claude-only': [
     a(null, 'high'),
@@ -63,6 +71,8 @@ const expected = {
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'low'), a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5', 'high'), a('claude-sonnet-5', 'low'),
   ],
 };
 

@@ -290,7 +290,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
     .roles.map(({ id }) => id);
-  expect(expectedIds).toHaveLength(17);
+  expect(expectedIds).toHaveLength(21);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);

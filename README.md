@@ -64,7 +64,7 @@ directory. `--claude-settings` and `--no-claude-settings` manage the existing
 Claude Code subagent default transaction; they do not configure Orca roles.
 See [installation details](docs/installation.md).
 
-The public bundle preserves three canonical 17-role inputs:
+The public bundle preserves three canonical 21-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly
