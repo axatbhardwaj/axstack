@@ -88,6 +88,37 @@
         "action": "revalidate the eligible Sol high checkpoint against SHA M, base N, scope, evidence, all six angles, and acceptance",
         "forbidden": ["lower Sol effort", "reuse stale receipt", "spawn a redundant final reviewer", "allow author session to review"]
       }
+    },
+    {
+      "id": "automation-comment-publication",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "peer",
+        "caller": "Orca driver automation, owner for the PR",
+        "actual_author": "colleague who review-requested self",
+        "candidate": "SHA O on current base P",
+        "receipts": "both reviewer receipts current for SHA O; each brief ends with the escalation field; gate returned proceed; no unresolved validated blocking finding"
+      },
+      "expected": {
+        "publication": "one owner-synthesized COMMENT review bound to the GitHub commit parameter for SHA O after a head/base readback",
+        "forbidden": ["APPROVE", "REQUEST_CHANGES", "publishing before the gate token", "publishing with a stale receipt", "a second review for unchanged SHA O"]
+      }
+    },
+    {
+      "id": "automation-incomplete-publishes-nothing",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "peer",
+        "caller": "Orca driver automation, owner for the PR",
+        "actual_author": "colleague who review-requested self",
+        "candidate": "SHA Q on current base R",
+        "receipts": "reviewer-primary receipt current for SHA Q; reviewer-secondary unavailable, or the two receipts disagree materially"
+      },
+      "expected": {
+        "status": "INCOMPLETE",
+        "publication": "nothing; record a hold naming the missing receipt or disagreement and pause mutation for this PR",
+        "forbidden": ["COMMENT from one receipt", "automatic reviewer fallback", "clearing the hold by silence"]
+      }
     }
   ]
 }

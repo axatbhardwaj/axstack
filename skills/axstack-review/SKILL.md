@@ -204,7 +204,16 @@ Candidate: <PR URL> rev <sha> (immutable checkout)
 Mode: <peer | authored> Actual author: <session/model evidence | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
+Escalate to user: yes | no — <criterion> — <reason>
 ```
+
+Every brief ends with the `Escalate to user` field and the reviewer answers it
+in the receipt. A reviewer may cite only a security concern, a permanent
+on-chain state change, or an architectural change in approach; the automation
+health criterion belongs to the watchdog and safety-hold path and is never a
+reviewer criterion. The answer is input to the escalation gate, not a veto and
+not a verdict; see [Automation sessions](../axstack/references/automations.md)
+for the gate.
 
 ## Template: review receipt (one block per revision)
 
@@ -215,6 +224,7 @@ Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
+Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 
 ## Prompt-only urgent escalation
@@ -278,3 +288,32 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 
 Submission is complete only when the remote receipt confirms the review bound
 to the intended commit.
+
+## Automation publication (`COMMENT`)
+
+Only the Orca driver automation, as owner for a peer PR under
+[Automation sessions](../axstack/references/automations.md), uses this branch:
+one `COMMENT` review, owner-synthesized and bound to the reviewed commit. It
+never submits `APPROVE` or `REQUEST_CHANGES`; a need for either is a
+recorded hold. The peer-review submission rule above is unchanged for every
+other caller.
+
+1. Complete the mode-required review: every mode-required receipt is current
+   for the head SHA and current base, and each carries its escalation field.
+   `INCOMPLETE`, unresolved material disagreement, or an unavailable required
+   reviewer publishes nothing and records a hold that pauses mutation for the
+   PR.
+2. Publish only after the gate returns `proceed` and no unresolved validated
+   blocking finding remains; `escalate` records the hold and the relay receipt
+   before any publication decision.
+3. Read back the remote head and base immediately before submit; stop if
+   either differs from the reviewed candidate.
+4. Submit one owner-synthesized `COMMENT` review bound to the reviewed commit
+   through the actual GitHub commit parameter, carrying every receipt's
+   findings and limitations, then verify the submission receipt.
+5. A receipt for an unchanged head SHA is never published twice; on ambiguity,
+   look up remote state and submit only when absent.
+
+Publication is complete when the remote receipt confirms one `COMMENT` review
+bound to the intended commit, or when the recorded hold names the missing
+input and the next owner.
