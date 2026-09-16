@@ -14,7 +14,10 @@ log() { printf '%s %s\n' "$ts" "$1" >> "$LOG"; }
 
 if command -v orca >/dev/null 2>&1; then
   if orca automations runs --id "$AUTOMATION_ID" --json 2>/dev/null \
-     | jq -e '[.result.runs[]? | select((.status // .state // "") | test("running|active|in_progress|pending"; "i"))] | length > 0' >/dev/null 2>&1; then
+     | jq -e '[.result.runs[]? | select(.terminalSessionId != null) | select((.status // "") | test("^(dispatched|running|active|in_progress)$"; "i"))] | length > 0' >/dev/null 2>&1; then
+    # Only a run that already launched a terminal session counts as active: the scheduler creates this tick's own
+    # run row (no terminal session yet) before executing the precheck. Overlap safety otherwise comes from
+    # session reuse, where a later prompt queues behind the current turn in the same driver session.
     log busy; exit 3
   fi
 fi
