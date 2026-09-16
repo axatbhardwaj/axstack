@@ -1,6 +1,6 @@
 # Debug skill with adviser-directed investigator fan-out
 
-Status: Draft revision 3 — both advisers AGREE; awaiting specification approval.
+Status: Approved revision 3 (2026-09-16); both advisers AGREE.
 Authoritative store: repository Markdown, following this project's existing
 specification convention. This supplements docs/specs/v1.md and
 docs/specs/subscription-routing.md; it does not rewrite their approvals.
