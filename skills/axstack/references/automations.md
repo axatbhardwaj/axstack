@@ -223,14 +223,16 @@ escalation gate. It returns exactly one literal token, `escalate` or `proceed`.
 
 Resolve self; run the three searches with `--json url,number,repository,updatedAt`;
 write the full discovery list to `pending.json`. For each allowlisted,
-non-expired own PR add head SHA, base SHA, draft status, and the check rollup of
-that head via `gh pr view --json headRefOid,baseRefOid,isDraft,statusCheckRollup`;
-check state and draft status are both data, and only authentication, command,
-and network errors are `error`. Hash
+non-expired own PR add head SHA, base SHA, and the check rollup of that head via
+`gh pr view --json headRefOid,baseRefOid,statusCheckRollup`; check state is
+data, and only authentication, command, and network errors are `error`. For pair
+C/D only, that call also requests `isDraft` and the precheck adds draft status
+to the hashed fingerprint, so a draft becoming ready wakes the driver on its
+own; pair A/B's queried fields and fingerprint are unchanged. Hash
 only allowlisted PRs. Read `cursor.json` for the last processed fingerprint and
 for due control work: a watch deadline at or before now (pair A/B only, since
 pair C/D stores no deadlines), a pending failed-relay retry, or a per-PR repair
-cap that has expired. Exit 0 when the hash differs or control work is due;
+cap that has expired (pair C/D only, since pair A/B has no caps). Exit 0 when the hash differs or control work is due;
 otherwise exit non-zero. Exit non-zero without running when the previous driver
 run is still active, or on `error`. Append one line
 `<ts> <changed|due|unchanged|error|busy>` to `precheck.log`.
@@ -245,7 +247,9 @@ but the session stays listed and is never reclaimed, which also makes an
 over-match destructive — and a driver terminal that is still working makes the
 tick `busy`. It never closes a watchdog terminal or any terminal outside this
 automation; an unreadable ownership source is `error`, never a silent empty
-sweep. The two automations must not share a dispatch minute.
+sweep. No two of the four automations may share a dispatch minute: A, B, C and D each
+take a distinct minute, so a driver and its watchdog never collide and neither
+pair can disturb the other's terminal hygiene.
 
 The observed fingerprint is written to `pending.json`. After the processed
 tick the driver promotes exactly that value to `cursor.json`, never a
@@ -282,13 +286,13 @@ re-adopted. Pair C/D does not use this window at all; see "Watch window" above
 for its rolling replacement, and it stores no deadline and reaches no `expired`
 state.
 
-Per-PR event state: head SHA, base SHA, draft status, check rollup, and
-processed request and comment IDs. A review receipt is reused only when head,
-base, and scope are unchanged. A new failing check, base change, review request,
-or qualifying comment at an unchanged head is new work, and so is a draft status
-that has changed from true to false, which is how a draft becoming ready for
-review reaches the driver. Draft status is part of the hashed fingerprint, so
-that transition wakes the driver on its own.
+Per-PR event state: head SHA, base SHA, check rollup, and processed request and
+comment IDs. A review receipt is reused only when head, base, and scope are
+unchanged. A new failing check, base change, review request, or qualifying
+comment at an unchanged head is new work. Pair C/D additionally carries draft
+status in that state, and a draft status that has changed from true to false is
+new work for C/D, which is how a draft becoming ready for review reaches its
+driver.
 
 ## Watchdog tick
 
@@ -326,10 +330,11 @@ for A/B and `20260916-defi-automations` for C/D — each in the
 [run record](run-record.md) shape with that pair's driver as sole writer of its
 own `progress.md`. C/D's run directory lives under the same axstack
 `git-common-dir` as A/B's, in its own `axstack/runs/<run id>/` folder; no
-sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs, draft status,
-review receipts per SHA, gate decisions, `hermes send` receipts with
-`message_id` and state, and holds; the watch deadline and `expired` fields are
-pair A/B only, since pair C/D stores no deadline and cannot reach `expired`. Its
+sidecar, record, or cursor is shared between the pairs. Per PR it stores processed event IDs, exact head and base SHAs, review receipts
+per SHA, gate decisions, `hermes send` receipts with `message_id` and state, and
+holds. The watch deadline and `expired` fields are pair A/B only, since pair C/D
+stores no deadline and cannot reach `expired`; draft status is pair C/D only,
+since only C/D treats a draft transition as new work. Its
 `Notification policy:` line reads, verbatim:
 
 ```text

@@ -60,7 +60,9 @@ test('automations: terminal hygiene stays inside the driver and reclaims the tab
   expect(text).toMatch(/`terminalPtyId`[^.]*never a terminal title/i);
   expect(text).toMatch(/never closes a watchdog terminal or any terminal outside this automation/i);
   expect(text).toContain('--tab');
-  expect(text).toMatch(/must not share a dispatch minute|never share a dispatch minute/i);
+  // Revision 4 strengthens this from two automations to all four.
+  expect(text).toMatch(/must not share a dispatch minute|never share a dispatch minute|may share a dispatch minute/i);
+  expect(text).toMatch(/A, B, C and D each\s+take a distinct minute/);
 });
 
 test('automations: entry, watch, and review skills link the reference', () => {
