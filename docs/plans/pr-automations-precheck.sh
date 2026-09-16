@@ -33,8 +33,8 @@ printf '%s' "$cursor" | jq -e '
     type == "string"
     and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$")
     and (try (sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 | true) catch false);
-  ((.tick_started_at // null) == null or (.tick_started_at | timestamp))
-  and ((.tick_done_at // null) == null or (.tick_done_at | timestamp))
+  ((has("tick_started_at") | not) or (.tick_started_at | timestamp))
+  and ((has("tick_done_at") | not) or (.tick_done_at | timestamp))
   and ((.dispatch_markers // []) | type == "array"
     and all(.[]; .started_at | timestamp))
   and ((.repair_caps // {}) | type == "object"

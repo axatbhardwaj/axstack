@@ -340,6 +340,14 @@ test('an unparsable pinned cursor timestamp logs error and exits 2', () => {
   expect(lastLog(env)).toMatch(/ error$/);
 });
 
+test('a present non-string tick timestamp is an error, not an absent value', () => {
+  const env = setup();
+  cursor(env, { tick_started_at: false });
+  expect(run(env).exitCode).toBe(2);
+  expect(lastLog(env)).toMatch(/ error$/);
+  expect(existsSync(env.calls)).toBe(false);
+});
+
 test('a pending settlement is due', () => {
   const env = setup();
   settleFingerprint(env, { pending_settlement: [{ delivery_id: 'delivery-1' }] });
