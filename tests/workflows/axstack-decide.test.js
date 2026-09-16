@@ -8,6 +8,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 
@@ -88,6 +89,17 @@ const run = (script, args, overrides = {}) => {
     stdout: result.stdout.toString(),
     stderr: result.stderr.toString(),
   };
+};
+
+const portablePathWithoutFlock = () => {
+  const bin = `${sandbox}/bin`;
+  mkdirSync(bin);
+  for (const command of ['awk', 'bash', 'date', 'jq', 'mkdir', 'mktemp', 'mv', 'rm', 'rmdir', 'sleep']) {
+    const executable = Bun.which(command);
+    if (!executable) throw new Error(`missing test prerequisite: ${command}`);
+    symlinkSync(executable, `${bin}/${command}`);
+  }
+  return bin;
 };
 
 beforeEach(() => {
@@ -175,11 +187,21 @@ test('approve atomically changes only decision fields and prints one line', () =
     expect(updated[field]).toEqual(decision[field]);
   }
   expect(statSync(path).ino).not.toBe(originalInode);
-  expect(readdirSync(`${sandbox}/run/decisions`).sort()).toEqual([
-    `${TOKEN}.json`,
-    `${TOKEN}.json.lock`,
-  ]);
+  expect(readdirSync(`${sandbox}/run/decisions`)).toEqual([`${TOKEN}.json`]);
   expect(run(script, [TOKEN, 'approve'])).toMatchObject({ exitCode: 3, stdout: '' });
+});
+
+test('decision handling does not require flock on PATH', () => {
+  const { script } = setup();
+  const { path } = writeDecision();
+  const pathWithoutFlock = portablePathWithoutFlock();
+
+  expect(existsSync(`${pathWithoutFlock}/flock`)).toBe(false);
+  expect(run(script, [TOKEN, 'approve'], { PATH: pathWithoutFlock })).toMatchObject({
+    exitCode: 0,
+    stdout: `decided ${TOKEN} approved\n`,
+  });
+  expect(JSON.parse(readFileSync(path, 'utf8')).state).toBe('approved');
 });
 
 test('reject writes rejected without inventing a message id', () => {
@@ -207,22 +229,8 @@ test('an exported empty message id is treated as absent', () => {
 test('the decision is re-read after acquiring its per-token lock', async () => {
   const { script } = setup();
   const { path } = writeDecision();
-  const ready = `${sandbox}/lock-ready`;
-  const release = `${sandbox}/lock-release`;
-  const holder = Bun.spawn([
-    'bash',
-    '-c',
-    'exec 9>"$1"; flock -x 9; : >"$2"; while [[ ! -e "$3" ]]; do sleep 0.01; done',
-    '_',
-    `${path}.lock`,
-    ready,
-    release,
-  ], { stdout: 'ignore', stderr: 'pipe' });
-
-  for (let attempt = 0; attempt < 100 && !existsSync(ready); attempt += 1) {
-    await Bun.sleep(10);
-  }
-  expect(existsSync(ready)).toBe(true);
+  const lockDir = `${path}.lock.d`;
+  mkdirSync(lockDir);
 
   const deciding = Bun.spawn([script, TOKEN, 'approve'], {
     env: environment(),
@@ -236,8 +244,7 @@ test('the decision is re-read after acquiring its per-token lock', async () => {
   expect(early).toBe(false);
 
   writeDecision(TOKEN, { state: 'rejected' });
-  writeFileSync(release, 'release');
-  await holder.exited;
+  rmSync(lockDir, { recursive: true });
   const exitCode = await deciding.exited;
   const stdout = await new Response(deciding.stdout).text();
 
