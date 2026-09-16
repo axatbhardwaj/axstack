@@ -493,9 +493,12 @@ standing:
   scoped to pair A/B, with pair C routed to the authorized-submission branch.
 - `skills/axstack/references/automations.md`: "Prohibited everywhere:
   force-push, rebase, merge, close, `APPROVE`, `REQUEST_CHANGES`" must become
-  pair-scoped, and the driver tick's "one owner-synthesized `COMMENT` review"
-  must route pair C's officially-requested peer PRs to a binding verdict while
-  pair A/B and C's mention-triggered reviews keep `COMMENT`.
+  pair-scoped; the driver tick's "one owner-synthesized `COMMENT` review" must
+  route pair C's officially-requested peer PRs to a binding verdict while pair
+  A/B and C's mention-triggered reviews keep `COMMENT`; and the precheck's
+  due-work list must gain the outstanding blocking-review obligation described
+  above, since that reference is where the due-work list an automation session
+  actually reads is written.
 - The contract tests that currently assert COMMENT-only for automations —
   `tests/workflows/review-modes.test.js` and
   `tests/workflows/automation-contracts.test.js` — must be updated to assert the
