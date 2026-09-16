@@ -302,10 +302,13 @@ requests, so it is bounded:
 - It applies to pair C/D only. Pair A/B keeps the `COMMENT`-only exception.
 - Every other prohibition is untouched: no force-push, no rebase, no merge, no
   close, by any automation, anywhere.
-- **Peer PRs only, and only Automation C.** A verdict is submitted only on a
-  peer PR — one authored by someone else where self is officially
-  review-requested, or where a comment explicitly asks self to review or
-  respond. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
+- **Peer PRs only, only Automation C, and only on an official request.** A
+  binding verdict is submitted only where self is *officially review-requested*
+  on a PR authored by someone else. A peer PR reached through the qualifying
+  mention trigger — a comment asking self to take a look — still gets a review,
+  but it is published as a `COMMENT`, never as a binding verdict: a casual ask
+  is not a request for a merge-blocking review, and the mention trigger cannot
+  be used to place a block. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from a PR's own
   author, so an authored-mode review of the automation's own repair stays
   internal and gates only the push, exactly as before. Automation D never
   writes to GitHub at all; its no-mutation rule is untouched.
@@ -335,10 +338,32 @@ requests, so it is bounded:
   cannot complete within that tick, the automation records a hold owned by the
   user naming the blocked PR and the blocking review. Dismissal stays
   prohibited: only the human clears a stale block.
+- **A blocked PR is tracked durably, outside discovery.** Submitting a review
+  removes self from GitHub's `review-requested` results, so a PR that C has just
+  blocked can vanish from the three discovery searches on the very next tick —
+  and C would then never see the PR again to clear its own block. Discovery
+  alone therefore cannot carry this. C records every unresolved blocking review
+  it submits in `cursor.json` as an open obligation holding the PR URL, the
+  review id, the head SHA it was bound to, and the submission timestamp, and on
+  every tick it polls those PRs directly by URL regardless of whether they still
+  satisfy any discovery trigger. An obligation is discharged only by observing
+  the PR merged, closed, or its blocking review resolved or superseded. A poll
+  that fails leaves the obligation open and retries on the next tick; an
+  obligation that cannot be polled or re-reviewed for three consecutive ticks is
+  a health finding routed to the gate like any other, because a block the
+  automation can no longer reach is exactly the failure the user would want to
+  hear about.
 - The never-submit-twice rule is scoped to an unchanged head **and** an
   unchanged verdict basis. A corrected finding or a base change at an unchanged
   head is new work and may produce a superseding verdict; without this the
   automation could never retract its own blocking review.
+- **Supersession is capped**, because two non-deterministic reviewers re-run
+  hourly could otherwise flip `APPROVE` and `REQUEST_CHANGES` at one head
+  forever, every flip binding under the user's login. At most **one** superseding
+  verdict per head SHA. A supersede at an unchanged head and unchanged base
+  additionally requires a recorded finding-level reason naming what changed
+  about the finding, not merely a differing reviewer opinion; without that
+  reason the automation records a hold and submits nothing.
 - The review is submitted under the user's own GitHub identity. This
   specification does not require the review body to disclose that it was
   produced by an automation; the user has not been asked that question
@@ -426,6 +451,11 @@ enough when the older text is still readable and would otherwise win at runtime:
   for Automations A, B and D. For Automation C they are permitted exactly under
   "Authorized review submission" and nowhere else. Force-push, rebase, merge and
   close stay prohibited for all four, with no exception.
+- **Automations C and D, scope and topology, credential bullet:** its sentence
+  that the prohibitions on `APPROVE` and `REQUEST_CHANGES` "remain prompt-level
+  only" for C is superseded to the extent that those two actions are no longer
+  prohibited for C at all; every other prohibition it names is unchanged and
+  still prompt-level.
 - **Acceptance check 10** required C's peer path to publish "exactly one
   `COMMENT` review". It is superseded by check 15: C submits the actual verdict.
   Pair A/B's `COMMENT`-only path is unchanged and check 10 still describes it.
@@ -433,14 +463,29 @@ enough when the older text is still readable and would otherwise win at runtime:
 
 ### A skill amendment is required before C is enabled
 
-`skills/axstack-review/SKILL.md` states that the `COMMENT` branch "is the only
-submission the Orca driver automation makes". That sentence contradicts
-"Authorized review submission" and, since C loads that skill at runtime, the
-contradiction would be live rather than theoretical. Revision 3 listed its skill
-amendments in "Purpose and boundary"; revision 5 adds this one:
-`skills/axstack-review/SKILL.md`'s automation publication branch must be scoped
-to pair A/B, with pair C routed to the authorized-submission branch. This is
-tracked as its own task and is a precondition of acceptance check 15.
+C loads `skills/axstack-review/SKILL.md`, which in turn loads
+`skills/axstack/references/automations.md`. Three places still assert the
+opposite of "Authorized review submission", so the contradiction would be live
+at runtime rather than theoretical, and naming only the first would leave it
+standing:
+
+- `skills/axstack-review/SKILL.md`: the `COMMENT` branch "is the only submission
+  the Orca driver automation makes". Its automation publication branch must be
+  scoped to pair A/B, with pair C routed to the authorized-submission branch.
+- `skills/axstack/references/automations.md`: "Prohibited everywhere:
+  force-push, rebase, merge, close, `APPROVE`, `REQUEST_CHANGES`" must become
+  pair-scoped, and the driver tick's "one owner-synthesized `COMMENT` review"
+  must route pair C's officially-requested peer PRs to a binding verdict while
+  pair A/B and C's mention-triggered reviews keep `COMMENT`.
+- The contract tests that currently assert COMMENT-only for automations —
+  `tests/workflows/review-modes.test.js` and
+  `tests/workflows/automation-contracts.test.js` — must be updated to assert the
+  pair-scoped rule. They are the guard that would otherwise fail an unscoped
+  edit, and they must keep asserting A/B's COMMENT-only behaviour.
+
+Revision 3 listed its skill amendments in "Purpose and boundary"; revision 5
+adds these. They are tracked as their own task and are a precondition of
+acceptance check 15.
 
 ### Corrections to revision 4
 
@@ -849,29 +894,45 @@ For C and D, all of the following, on the VPS runtime:
     self produces zero repairs and zero pushes, while a review-requested PR in
     the same repository produces a review; a repository in neither list stays
     record-only.
-15. Revision 5 submission, on a peer PR the user designates for acceptance
-    (a real teammate PR, since these are private repositories and a synthetic
-    one cannot exist):
-    (a) `skills/axstack-review/SKILL.md`'s automation publication branch is
-    scoped to pair A/B and C is routed to authorized submission; without this
-    amendment C must not be enabled;
-    (b) with a complete review, the gate's `proceed` and zero validated
-    blocking findings, C submits exactly one `APPROVE` bound to the reviewed
-    commit and the remote receipt confirms it;
-    (c) with at least one validated blocking finding carrying evidence, C
-    submits exactly one `REQUEST_CHANGES`; a draft that made this impossible is
-    a failure of this check;
-    (d) `INCOMPLETE`, an unavailable required reviewer, or a gate `escalate`
-    submits nothing and records a hold;
-    (e) a second tick at the same head SHA with the same verdict basis submits
-    nothing further, while a corrected finding or base change at an unchanged
-    head may supersede the earlier verdict;
-    (f) a PR carrying C's own unresolved `REQUEST_CHANGES` observed at a
-    superseded head re-reviews as due control work exempt from the per-tick
-    budget, and records a user-owned hold if it cannot finish in that tick;
-    (g) C never submits a verdict on a PR authored by self, and Automation D
-    performs zero GitHub writes throughout;
-    (h) pair A/B, run on equivalent states, still submits `COMMENT` only.
+15. Revision 5 submission. These repositories are private and the peer PRs are
+    real teammates' work, so a "synthetic" peer PR does not exist and the check
+    is split by whether it writes to GitHub. Fabricating a finding, editing peer
+    code, or manufacturing a state on someone else's PR is forbidden here as
+    everywhere.
+
+    **15A — no-write coverage, run first, deterministic.** Against recorded
+    fixtures and the submission boundary with the GitHub call captured rather
+    than sent, assert the payload and that nothing is transmitted for each of:
+    an `APPROVE` payload from a complete review with zero validated blockers; a
+    `REQUEST_CHANGES` payload from a complete review with at least one validated
+    blocking finding carrying evidence; no call at all for `INCOMPLETE`, an
+    unavailable required reviewer, or a gate `escalate`; no call for a PR
+    authored by self; a `COMMENT` payload, never a verdict, for a
+    mention-triggered peer PR; no second call at an unchanged head and unchanged
+    verdict basis; exactly one superseding call at a changed basis and none for
+    a second supersede at the same head; the superseded-head re-review path
+    running as due control work exempt from the per-tick budget; the durable
+    blocking-obligation record being written, polled by URL when discovery no
+    longer returns the PR, discharged on merge/close/resolution, and becoming a
+    gate-routed health finding after three unpollable ticks; and zero GitHub
+    writes by Automation D throughout.
+
+    **15B — one live submission, on a PR the user designates.** The user names
+    one real peer PR on which self is officially review-requested and accepts
+    that a genuine review verdict will land on it. C reviews it honestly and
+    submits whichever verdict that review truthfully yields — the check does not
+    require a particular verdict, and an `APPROVE` satisfies it as fully as a
+    `REQUEST_CHANGES`. The remote receipt must confirm exactly one review bound
+    to the reviewed commit. If the honest verdict is `REQUEST_CHANGES`, the user
+    is told at once that a real block now stands under their login and that only
+    they can clear it, and the resulting obligation is followed through the
+    tracking rules above.
+
+    **15C — precondition.** The skill, reference and test amendments named in
+    "A skill amendment is required before C is enabled" are complete, and pair
+    A/B, run on equivalent states, still submits `COMMENT` only. Without 15C,
+    C is not enabled and 15B is not attempted.
+
 16. Revision 5 green gate and inherited failures: a check failing at head and
     passing on the base is repaired; a same-named check failing on both is an
     inherited-failure hold naming the base SHA that consumes no repair cap; a
