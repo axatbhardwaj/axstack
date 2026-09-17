@@ -6,7 +6,7 @@ import { harnessLocations } from '../../src/locations.js';
 test('location table covers primary harnesses with discovery status', () => {
   const table = harnessLocations();
   const names = table.map((h) => h.harness).sort();
-  for (const expected of ['claude', 'codex', 'grok', 'opencode']) {
+  for (const expected of ['antigravity', 'claude', 'codex', 'grok', 'opencode']) {
     expect(names.includes(expected)).toBe(true);
   }
   for (const entry of table) {

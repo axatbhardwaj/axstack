@@ -53,19 +53,19 @@ Orca with its runtime-owned guides. Filesystem access uses Bun's implementation
 of `node:fs` and `node:fs/promises`; there are no runtime dependencies.
 
 ```sh
-bun bin/axstack.js check --bundle . [--harness claude|codex]
+bun bin/axstack.js check --bundle . [--harness claude|codex|opencode|antigravity]
 bun bin/axstack.js install --bundle . --skills-dir <dir> --instructions <file> --preset mixed [--yes]
 bun bin/axstack.js install --bundle . --skills-dir <dir> --preset mixed
 bun bin/axstack.js uninstall --skills-dir <dir> --instructions <file>
 ```
 
-Use `--harness codex` or `--harness claude` only for a verified default skill
-directory. `--claude-settings` and `--no-claude-settings` manage the existing
+Use `--harness claude|codex|opencode|antigravity` only for a verified default
+skill directory and rules file. `--claude-settings` and `--no-claude-settings` manage the existing
 Claude Code subagent default transaction; they do not configure Orca roles.
 See [installation details](docs/installation.md).
 
-`--instructions` manages one versioned Axstack block in `AGENTS.md` or
-`CLAUDE.md`. Harness defaults resolve those files automatically. The block
+`--instructions` manages one versioned Axstack block in `AGENTS.md`,
+`CLAUDE.md`, or `GEMINI.md`. Harness defaults resolve those files automatically. The block
 points at the installed entry skill and requires delegated work to use visible
 Orca orchestration rather than a harness-native subagent tool. Text and file
 mode outside the markers are preserved; edited, malformed, unowned, or unsafe

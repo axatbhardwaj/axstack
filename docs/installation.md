@@ -26,9 +26,14 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
 - `--skills-dir` is required unless a verified harness default resolves it.
 - `--instructions` selects the instruction file that receives Axstack's owned
   marker block. `--harness claude` defaults to `~/.claude/CLAUDE.md`;
-  `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`.
-- `--harness` may resolve the documented `claude`, `codex`, or `opencode`
-  skill directory. Grok remains explicit-path only.
+  `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`;
+  `--harness opencode` defaults to `~/.config/opencode/AGENTS.md`;
+  `--harness antigravity` defaults to `~/.gemini/GEMINI.md`.
+- `--harness` may resolve the documented `claude`, `codex`, `opencode`, or
+  `antigravity` skill directory. Grok remains explicit-path only. OpenCode also
+  reads `~/.claude/skills`, so its own directory is only needed for the owned
+  routing block; Antigravity (IDE and `agy` CLI) reads `~/.gemini/config/skills`
+  only.
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
   Code subagent-default transaction. They do not configure Orca roles.
 - `--force` may replace an edited owned asset; it never adopts or removes
