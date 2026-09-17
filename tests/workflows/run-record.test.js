@@ -57,6 +57,24 @@ test('run-record: compact template carries required run and task fields', () => 
   expect(example).toContain('<role + session ID + worktree, or receipt ref>');
 });
 
+test('run-record: decision trail and learnings are reviewable and resumable', () => {
+  const text = read('skills/axstack/references/run-record.md');
+  const templates = [...text.matchAll(/```text\n([\s\S]*?)```/g)].map((match) => match[1]);
+  const template = templates.find((block) => block.includes('Run:') && block.includes('| Task |'));
+  expect(template).toContain('Learnings:');
+  const header = template.split('\n').find((line) => line.startsWith('| When |'));
+  const example = template.split('\n').find((line) => line.startsWith('| <UTC timestamp> |'));
+  expect(header, 'decision table header').toBeTruthy();
+  for (const column of ['Decision', 'Why', 'Evidence', 'Result']) expect(header).toContain(column);
+  const cellCount = (line) => line.split('|').length - 2;
+  expect(cellCount(example), 'decision example must match header cell count').toBe(cellCount(header));
+  expect(text).toMatch(/evidence pointer[^.]*never a paragraph/i);
+  expect(text).toMatch(/arena synthesis note[^.]*recorded as `Decisions` rows/i);
+  expect(text).toMatch(/Learnings[^.]*next owner[^.]*code and history do not\s+show/i);
+  expect(text).toMatch(/Read it on resume/i);
+  expect(text).toMatch(/append, never rewrite/i);
+});
+
 test('run-record: reconciliation protects ownership and revision evidence', () => {
   const text = read('skills/axstack/references/run-record.md');
   expect(text).toMatch(/driver[^.]*sole writer/i);
