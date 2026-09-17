@@ -192,13 +192,21 @@ Claude Code trusts a folder per git toplevel and otherwise stops at its
 and the driver never answers that dialog for a worker. Settled by the user
 on 2026-09-17: a worktree the driver itself creates from an allowlisted clone
 at the pinned head is trusted by policy — the driver writes the path's
-`hasTrustDialogAccepted` entry into `~/.claude.json` atomically after
-`worktree create` and before `worker-start`, and the worktree cleanup removes
-the entry. Scoped exactly there and never any other path: the dialog is the
-last guard between PR content and a worker with permissions bypassed, since
-a hostile branch's hooks or `CLAUDE.md` run when the folder opens; the
-allowlist and the pinned head are the only things that make pre-trust
-acceptable.
+`hasTrustDialogAccepted` entry into `~/.claude.json` after `worktree create`
+and before `worker-start`, under Claude Code's own `mkdir`-based
+`~/.claude.json.lock` with a bounded retry, a re-read, a unique temp file
+and rename, and release in every case; a lock it cannot take retains the
+worktree and dispatches nothing. The worktree cleanup removes the entry the
+same way. Scoped exactly there and never any other path: the dialog is the
+last guard between PR content and a worker with permissions bypassed, and
+trust activates the full project surface — `.claude/settings.json` and its
+hooks, `.mcp.json` servers, marketplace plugin auto-install, `CLAUDE.md` —
+so a hostile branch's hooks or MCP servers would run when the folder opens.
+Therefore the worker launches with that surface disabled,
+`--setting-sources user --strict-mcp-config`, via `terminal create` and
+`worker-start --terminal`, and the driver confirms the prompt rather than
+the dialog before dispatching. The allowlist, the pinned head, and that
+reduced surface are the only things that make pre-trust acceptable.
 
 Each dispatched agent runs in its own Orca child worktree under
 the Orca workspaces directory for `<repo>`, pinned to the exact head, with that

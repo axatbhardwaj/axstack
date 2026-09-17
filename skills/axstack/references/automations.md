@@ -130,13 +130,27 @@ the driver must never answer that dialog for a worker. The user decided on
 2026-09-17 that a worktree the driver itself creates from an allowlisted
 clone at the pinned head is trusted by policy: immediately after creating
 it and before `worker-start`, the driver writes that path's
-`hasTrustDialogAccepted` entry into `~/.claude.json` atomically, and the
-worktree cleanup removes the entry with the worktree. This is scoped
+`hasTrustDialogAccepted` entry into `~/.claude.json` under Claude Code's own
+config lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions
+take, acquired with a bounded retry, released in every case, the file
+re-read and rewritten through a unique temp file and rename — so the write
+coordinates with Claude's own writes exactly as they coordinate with each
+other; a lock that cannot be taken retains the worktree and dispatches
+nothing. The worktree cleanup removes the entry the same way. This is scoped
 exactly there — never for any other path, never for a worktree it did not
 create — because that dialog is the last guard between PR content and a
-worker running with permissions bypassed: a hostile branch's hooks or
-`CLAUDE.md` would run the moment the folder opens. The allowlist and the
-pinned head are what make that acceptable, and nothing else does.
+worker running with permissions bypassed. Trusting a folder activates the
+full project surface: its `.claude/settings.json` and the hooks it defines,
+its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
+a hostile branch's hooks or MCP servers would run the moment the folder
+opens. So the worker is launched with that surface disabled —
+`--setting-sources user --strict-mcp-config`, through `terminal create` and
+`worker-start --terminal`, since `worker-start` cannot pass argv — and the
+driver confirms the terminal reached its prompt rather than the dialog
+before dispatching. What remains is `CLAUDE.md` text and the commands the
+worker itself chooses to run, which it already runs today. The allowlist,
+the pinned head, and that reduced surface are what make pre-trust
+acceptable, and nothing else does.
 
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:

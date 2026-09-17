@@ -335,8 +335,6 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
 
-  // Scope each document's check to its pre-trust paragraph so a second,
-  // unrelated mention elsewhere cannot keep an assertion green.
   const refTrust = ref.match(/Claude Code trusts a folder per git toplevel[\s\S]*?nothing else does\./)?.[0] ?? '';
   const specTrust = spec.match(/Claude Code trusts a folder per git toplevel[\s\S]*?make pre-trust acceptable\./)?.[0] ?? '';
   expect(refTrust, 'reference pre-trust paragraph missing').not.toBe('');
@@ -350,31 +348,60 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: never any other path`).toMatch(/never (?:for )?any other path/i);
     expect(text, `${name}: removed on cleanup`).toMatch(/cleanup removes the entry/i);
     expect(text, `${name}: user decision, dated`).toMatch(/2026-09-17/);
-    // Both halves of the risk statement: what the dialog guards, and how.
     expect(text, `${name}: names it as the last guard`).toMatch(/last guard/i);
-    expect(text, `${name}: names the hostile-branch mechanism`).toMatch(/hostile branch[^.]*(?:hooks|CLAUDE\.md)/i);
+    // The full activation surface is stated, not a subset of it.
+    expect(text, `${name}: settings and hooks`).toMatch(/\.claude\/settings\.json[^.]*hooks/i);
+    expect(text, `${name}: mcp`).toMatch(/\.mcp\.json/);
+    expect(text, `${name}: plugins`).toMatch(/plugin auto-install/i);
+    // The write coordinates with Claude's own lock; a lock it cannot take
+    // dispatches nothing.
+    expect(text, `${name}: Claude's own lock`).toMatch(/`?~\/\.claude\.json\.lock`?/);
+    expect(text, `${name}: mkdir-based`).toMatch(/mkdir/);
+    expect(text, `${name}: bounded retry`).toMatch(/bounded retry/i);
+    expect(text, `${name}: unique temp + rename`).toMatch(/unique temp file[^.]*rename/i);
+    expect(text, `${name}: lock failure dispatches nothing`).toMatch(/lock[^.]*cannot (?:be taken|take)[^.]*dispatches nothing/i);
+    // The worker launches with the project surface disabled.
+    expect(text, `${name}: surface-reducing flags`).toMatch(/--setting-sources user --strict-mcp-config/);
+    expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
+    expect(text, `${name}: readiness check`).toMatch(/prompt rather than the dialog/i);
   }
-  // The cleanup step list itself must untrust, not only the scope paragraph.
   const refCleanup = ref.match(/Only then it closes any terminal tab[\s\S]*?verifies the directory is gone\./)?.[0] ?? '';
   expect(refCleanup, 'cleanup step list missing').not.toBe('');
   expect(refCleanup).toMatch(/removes the Claude Code trust entry it seeded/);
 
-  // The prompt: every seed is the atomic write, seeded before worker-start on
-  // both dispatch paths, and untrusted on every cleanup path.
-  const SEED = /jq --arg p <worktree path> '\.projects\[\$p\] = \(\(\.projects\[\$p\] \/\/ \{\}\) \+ \{hasTrustDialogAccepted: true\}\)' ~\/\.claude\.json > ~\/\.claude\.json\.tmp && mv ~\/\.claude\.json\.tmp ~\/\.claude\.json/g;
+  // Prompt: exact commands. Every trust write takes the lock with a bounded
+  // retry, gives up rather than forcing, uses a unique temp file, and
+  // releases the lock; seeds precede the launch; launches carry the flags and
+  // are followed by a readiness check; every cleanup untrusts.
+  const LOCK = /for i in \$\(seq 1 25\); do mkdir ~\/\.claude\.json\.lock 2>\/dev\/null && break; sleep 0\.2; done; \[ -d ~\/\.claude\.json\.lock \] \|\| give up/g;
+  const SEED = /t=~\/\.claude\.json\.tmp\.\$\$\.\$RANDOM; jq --arg p <worktree path> '\.projects\[\$p\] = \(\(\.projects\[\$p\] \/\/ \{\}\) \+ \{hasTrustDialogAccepted: true\}\)' ~\/\.claude\.json > "\$t" && mv "\$t" ~\/\.claude\.json; rmdir ~\/\.claude\.json\.lock/g;
+  const UNSEED = /t=~\/\.claude\.json\.tmp\.\$\$\.\$RANDOM; jq --arg p <worktree path> 'del\(\.projects\[\$p\]\)' ~\/\.claude\.json > "\$t" && mv "\$t" ~\/\.claude\.json; rmdir ~\/\.claude\.json\.lock/g;
   const seeds = prompts.match(SEED) ?? [];
-  const mentions = prompts.match(/hasTrustDialogAccepted: true/g) ?? [];
+  const unseeds = prompts.match(UNSEED) ?? [];
+  const locks = prompts.match(LOCK) ?? [];
   expect(seeds.length, 'repair and review dispatch both seed').toBe(2);
-  expect(mentions.length, 'every seed is the atomic form').toBe(seeds.length);
-  const repairStart = prompts.indexOf('orca orchestration worker-start --run');
-  const reviewStart = prompts.indexOf('worker-start with --agent claude');
-  const firstSeed = prompts.indexOf('hasTrustDialogAccepted: true');
-  const secondSeed = prompts.indexOf('hasTrustDialogAccepted: true', firstSeed + 1);
-  expect(firstSeed, 'repair path seeds before its worker-start').toBeLessThan(repairStart);
-  expect(secondSeed, 'review path seeds before its worker-start').toBeLessThan(reviewStart);
-  expect(secondSeed).toBeGreaterThan(repairStart);
-  const unseeds = prompts.match(/jq --arg p <worktree path> 'del\(\.projects\[\$p\]\)' ~\/\.claude\.json > ~\/\.claude\.json\.tmp && mv ~\/\.claude\.json\.tmp ~\/\.claude\.json/g) ?? [];
-  expect(unseeds.length, 'settlement cleanup and no-worker cleanup both untrust').toBe(2);
+  expect(unseeds.length, 'settlement and no-worker cleanup both untrust').toBe(2);
+  expect(locks.length, 'every trust write takes the lock').toBe(seeds.length + unseeds.length);
+  expect((prompts.match(/hasTrustDialogAccepted: true/g) ?? []).length, 'every seed is the locked, unique-temp form').toBe(seeds.length);
+  expect(prompts).not.toMatch(/~\/\.claude\.json\.tmp && mv/);
+
+  const CMD = 'claude --dangerously-skip-permissions --setting-sources user --strict-mcp-config --model claude-opus-5 --effort medium';
+  const launches = prompts.split(`--command "${CMD}"`).length - 1;
+  expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
+  expect(prompts).not.toMatch(/worker-start[^;]*--agent claude/);
+  expect((prompts.match(/confirm it shows the prompt and NOT "Quick safety check"/g) ?? []).length, 'both launches check readiness').toBe(2);
+  expect((prompts.match(/worker-start --run <orchestration run id> --worktree id:<clone id>::<worktree path> --terminal <handle>/g) ?? []).length, 'both take lifecycle ownership of the terminal').toBe(2);
+  // Order on each path: seed, then launch, then readiness, then worker-start.
+  for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {
+    const startAt = prompts.indexOf(marker);
+    const before = prompts.slice(0, startAt);
+    const seedAt = before.lastIndexOf('hasTrustDialogAccepted: true');
+    const launchAt = before.lastIndexOf(`--command "${CMD}"`);
+    const readyAt = before.lastIndexOf('Quick safety check');
+    expect(seedAt, `${marker}: seed present before start`).toBeGreaterThan(-1);
+    expect(launchAt, `${marker}: launch after seed`).toBeGreaterThan(seedAt);
+    expect(readyAt, `${marker}: readiness after launch`).toBeGreaterThan(launchAt);
+  }
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
