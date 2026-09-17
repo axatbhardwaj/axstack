@@ -78,6 +78,12 @@ one Orca executable, loads that binary's version-matched `orchestration` and
 `orca-cli` guides, and follows their advertised schemas. Axstack does not vendor
 the guides or restate a competing command protocol.
 
+All subagent, delegated-worker, reviewer, and cross-harness work goes through Orca
+orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides). Do not use a
+harness-native subagent tool (e.g. Claude/Codex native subagents) for delegated work;
+use Orca runs, tasks, and dispatches instead so the work stays visible. OpenCode
+Muse Spark and Antigravity Flash subagents run as Orca-supervised workers.
+
 Supervised work uses native Run, Task, and Dispatch identity. Preserve actual
 terminal, agent, worktree, requested/effective role, and revision receipts.
 `input_accepted` proves only terminal input; `turn_started` and session
