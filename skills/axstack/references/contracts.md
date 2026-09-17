@@ -49,7 +49,10 @@ profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
 consults `axstack-advisor-astra` and `axstack-advisor-fable` independently with
-the same bounded evidence and question. The driver synthesizes disagreements,
+the same bounded evidence and question. The one exception is an arena-grade
+Align question: there the driver frames the brief and rubric, the advisers
+author candidates, and the driver assesses only after the candidates and judge
+verdicts return. The driver synthesizes disagreements,
 owns the decision, and the user still approves the spec. Reuse each valid
 unchanged receipt; changed evidence, scope, or question requires a fresh
 receipt. If either adviser is unavailable, Align and Spec hold without model or

@@ -15,6 +15,11 @@ test('align arena: gated to hard-to-reverse choices and replaces critique for th
   expect(text).toMatch(/same test as for an ADR/i);
   expect(text).toMatch(/small or routine questions never enter the arena/i);
   expect(text).toMatch(/replace the critique round for that question with one arena round/i);
+  // The pre-consultation draft rule is explicitly overridden for arena-grade questions,
+  // in align and in the standing contracts, so the two never conflict.
+  expect(text).toMatch(/drafts the prioritized frontier and recommendations, except for an arena-grade question[^.]*drafts no recommendation until the candidates and judge verdicts return/);
+  const contracts = compact('skills/axstack/references/contracts.md');
+  expect(contracts).toMatch(/forms an independent assessment first[^.]*\. The one exception is an arena-grade Align question[^.]*driver assesses only after the candidates and judge verdicts return/);
 });
 
 test('align arena: advisers author, judges judge, driver picks and grafts', () => {

@@ -41,7 +41,9 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 The current chat remains the driver under
 [Standing contracts](../axstack/references/contracts.md). For each new
 user round, the driver independently drafts the prioritized frontier and
-recommendations. Then consult `axstack-advisor-astra` and
+recommendations, except for an arena-grade question (below), where the driver
+writes the brief and rubric but drafts no recommendation until the candidates
+and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
 `axstack-advisor-fable` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
