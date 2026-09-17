@@ -191,13 +191,21 @@ Claude Code trusts a folder per git toplevel and otherwise stops at its
 "Quick safety check" dialog; each per-PR child worktree is a new toplevel,
 and the driver never answers that dialog for a worker. Settled by the user
 on 2026-09-17: a worktree the driver itself creates from an allowlisted clone
-at the pinned head is trusted by policy — the driver writes the path's
-`hasTrustDialogAccepted` entry into `~/.claude.json` after `worktree create`
-and before `worker-start`, under Claude Code's own `mkdir`-based
-`~/.claude.json.lock` with a bounded retry, a re-read, a unique temp file
-and rename, and release in every case; a lock it cannot take retains the
-worktree and dispatches nothing. The worktree cleanup removes the entry the
-same way. Scoped exactly there and never any other path: the dialog is the
+at the pinned head is trusted by policy — the driver runs a trust helper after
+`worktree create` and before `worker-start` — the only write the automation
+makes to `~/.claude.json`, the path's `hasTrustDialogAccepted` entry. The
+helper enforces the scope before writing: a
+git worktree whose common dir is the named allowlisted clone's, not the clone
+itself, at exactly the pinned head; anything else is refused and never
+seeded. It writes under Claude Code's own `mkdir`-based `~/.claude.json.lock`
+with a bounded retry in which only a successful `mkdir` counts, never
+breaking a foreign lock, re-reads under it, refuses an unparsable store,
+uses a unique temp file, preserves mode, renames, and always releases; a
+busy or unreadable store retains the worktree and dispatches nothing. The
+worktree cleanup removes the entry through the same helper; a removal that
+fails after the worktree is gone keeps the marker in `pending_settlement[]`
+as `untrust-pending` so the path cannot be reused while trusted, and is
+retried next tick. A retained worktree keeps its entry while retained. Scoped exactly there and never any other path: the dialog is the
 last guard between PR content and a worker with permissions bypassed, and
 trust activates the full project surface — `.claude/settings.json` and its
 hooks, `.mcp.json` servers, marketplace plugin auto-install, `CLAUDE.md` —

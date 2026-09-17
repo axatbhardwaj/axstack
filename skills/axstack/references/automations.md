@@ -129,14 +129,26 @@ check" dialog otherwise; every per-PR child worktree is a new toplevel, and
 the driver must never answer that dialog for a worker. The user decided on
 2026-09-17 that a worktree the driver itself creates from an allowlisted
 clone at the pinned head is trusted by policy: immediately after creating
-it and before `worker-start`, the driver writes that path's
-`hasTrustDialogAccepted` entry into `~/.claude.json` under Claude Code's own
-config lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions
-take, acquired with a bounded retry, released in every case, the file
-re-read and rewritten through a unique temp file and rename — so the write
-coordinates with Claude's own writes exactly as they coordinate with each
-other; a lock that cannot be taken retains the worktree and dispatches
-nothing. The worktree cleanup removes the entry the same way. This is scoped
+it and before `worker-start`, the driver runs the trust helper
+(`docs/plans/pr-automations-trust.sh`, deployed beside the precheck), which
+owns the only write the automation makes to `~/.claude.json`. It writes the path's `hasTrustDialogAccepted` entry — what a
+manual acceptance writes. The helper
+enforces the scope mechanically before it writes anything: the path must be
+a git worktree whose common dir is the named allowlisted clone's, must not
+be the clone itself, and must sit at exactly the pinned head — anything
+else exits 3 and is never seeded. It writes under Claude Code's own config
+lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
+with a bounded retry in which only a successful `mkdir` counts as holding
+it, never breaking a lock it did not create; it re-reads under the lock,
+refuses a store that does not parse, writes a unique temp file, preserves
+the store's mode, renames, and releases in every case. A busy or unreadable
+store exits 2: the worktree is retained and nothing is dispatched. The
+worktree cleanup removes the entry through the same helper; if that
+removal fails after the worktree is gone, the marker stays in
+`pending_settlement[]` as `untrust-pending` — which keeps the PR
+undispatchable, so the reused path can never inherit a dead trust entry —
+and the removal is retried next tick. A retained worktree keeps its entry
+while retained; it is the same driver-created path. This is scoped
 exactly there — never for any other path, never for a worktree it did not
 create — because that dialog is the last guard between PR content and a
 worker running with permissions bypassed. Trusting a folder activates the
@@ -378,6 +390,7 @@ its dispatch without such a retention record is a health finding. The run direct
   `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
   hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
+- `trust.sh` — the trust transaction helper, run by the driver only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
   and send receipts) — watchdog only;

@@ -358,8 +358,19 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: Claude's own lock`).toMatch(/`?~\/\.claude\.json\.lock`?/);
     expect(text, `${name}: mkdir-based`).toMatch(/mkdir/);
     expect(text, `${name}: bounded retry`).toMatch(/bounded retry/i);
+    expect(text, `${name}: only mkdir success counts`).toMatch(/only a successful `?mkdir`? counts/i);
+    expect(text, `${name}: never breaks a foreign lock`).toMatch(/never breaking a (?:foreign )?lock/i);
     expect(text, `${name}: unique temp + rename`).toMatch(/unique temp file[^.]*rename/i);
-    expect(text, `${name}: lock failure dispatches nothing`).toMatch(/lock[^.]*cannot (?:be taken|take)[^.]*dispatches nothing/i);
+    expect(text, `${name}: busy store dispatches nothing`).toMatch(/busy or unreadable\s+store[^.]*(?:dispatches nothing|nothing is dispatched)/i);
+    // Scope is enforced by the helper, not by prose.
+    expect(text, `${name}: helper enforces scope`).toMatch(/helper enforces the scope/i);
+    expect(text, `${name}: common dir check`).toMatch(/common dir is the[^.]*clone/i);
+    expect(text, `${name}: not the clone itself`).toMatch(/(?:must )?not (?:be )?the clone\s+itself/i);
+    expect(text, `${name}: refuses unparsable store`).toMatch(/(?:refuses|refuse) (?:a |an )?(?:store that does not parse|unparsable store)/i);
+    // A failed untrust cannot let the path be reused while trusted.
+    expect(text, `${name}: untrust-pending`).toMatch(/pending_settlement\[\][^.]*untrust-pending/);
+    expect(text, `${name}: reuse blocked`).toMatch(/cannot (?:be reused|inherit)|can never inherit/i);
+    expect(text, `${name}: retained keeps trust`).toMatch(/retained worktree keeps its (?:trust )?entry/i);
     // The worker launches with the project surface disabled.
     expect(text, `${name}: surface-reducing flags`).toMatch(/--setting-sources user --strict-mcp-config/);
     expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
@@ -369,22 +380,20 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   expect(refCleanup, 'cleanup step list missing').not.toBe('');
   expect(refCleanup).toMatch(/removes the Claude Code trust entry it seeded/);
 
-  // Prompt: exact commands. Every trust write takes the lock with a bounded
-  // retry, gives up rather than forcing, uses a unique temp file, and
-  // releases the lock; seeds precede the launch; launches carry the flags and
-  // are followed by a readiness check; every cleanup untrusts.
-  const LOCK = /for i in \$\(seq 1 25\); do mkdir ~\/\.claude\.json\.lock 2>\/dev\/null && break; sleep 0\.2; done; \[ -d ~\/\.claude\.json\.lock \] \|\| give up/g;
-  const SEED = /t=~\/\.claude\.json\.tmp\.\$\$\.\$RANDOM; jq --arg p <worktree path> '\.projects\[\$p\] = \(\(\.projects\[\$p\] \/\/ \{\}\) \+ \{hasTrustDialogAccepted: true\}\)' ~\/\.claude\.json > "\$t" && mv "\$t" ~\/\.claude\.json; rmdir ~\/\.claude\.json\.lock/g;
-  const UNSEED = /t=~\/\.claude\.json\.tmp\.\$\$\.\$RANDOM; jq --arg p <worktree path> 'del\(\.projects\[\$p\]\)' ~\/\.claude\.json > "\$t" && mv "\$t" ~\/\.claude\.json; rmdir ~\/\.claude\.json\.lock/g;
-  const seeds = prompts.match(SEED) ?? [];
-  const unseeds = prompts.match(UNSEED) ?? [];
-  const locks = prompts.match(LOCK) ?? [];
-  expect(seeds.length, 'repair and review dispatch both seed').toBe(2);
-  expect(unseeds.length, 'settlement and no-worker cleanup both untrust').toBe(2);
-  expect(locks.length, 'every trust write takes the lock').toBe(seeds.length + unseeds.length);
-  expect((prompts.match(/hasTrustDialogAccepted: true/g) ?? []).length, 'every seed is the locked, unique-temp form').toBe(seeds.length);
-  expect(prompts).not.toMatch(/~\/\.claude\.json\.tmp && mv/);
-
+  // Prompt: every trust write goes through the helper, which owns the lock,
+  // the scope check and the store write; seeds precede the launch; a failed
+  // untrust keeps the marker in pending_settlement so the path cannot be
+  // reused while trusted.
+  const seeds = prompts.match(/bash <run dir>\/trust\.sh seed <worktree path> <clone path> <head sha>/g) ?? [];
+  const unseeds = prompts.match(/bash <run dir>\/trust\.sh unseed <worktree path>/g) ?? [];
+  expect(seeds.length, 'repair and review dispatch both seed through the helper').toBe(2);
+  expect(unseeds.length, 'settlement and no-worker cleanup both untrust through the helper').toBe(2);
+  expect(prompts, 'no inline store write remains').not.toMatch(/hasTrustDialogAccepted: true/);
+  expect(prompts, 'no inline lock remains').not.toMatch(/mkdir ~\/\.claude\.json\.lock/);
+  expect(prompts).toMatch(/exit 3 means the path is not this tick's worktree[^;]*never seed/);
+  expect(prompts).toMatch(/exit 2 means the store was busy or unreadable[^;]*retain the worktree, dispatch nothing/);
+  expect((prompts.match(/pending_settlement\[\] (?:with )?reason untrust-pending/g) ?? []).length, 'both untrust paths retry through pending_settlement').toBe(2);
+  expect(prompts).toMatch(/keeps its trust entry while retained/);
   const CMD = 'claude --dangerously-skip-permissions --setting-sources user --strict-mcp-config --model claude-opus-5 --effort medium';
   const launches = prompts.split(`--command "${CMD}"`).length - 1;
   expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
@@ -395,7 +404,7 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {
     const startAt = prompts.indexOf(marker);
     const before = prompts.slice(0, startAt);
-    const seedAt = before.lastIndexOf('hasTrustDialogAccepted: true');
+    const seedAt = before.lastIndexOf('bash <run dir>/trust.sh seed');
     const launchAt = before.lastIndexOf(`--command "${CMD}"`);
     const readyAt = before.lastIndexOf('Quick safety check');
     expect(seedAt, `${marker}: seed present before start`).toBeGreaterThan(-1);

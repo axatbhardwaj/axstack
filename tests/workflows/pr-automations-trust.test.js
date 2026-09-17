@@ -1,0 +1,122 @@
+// Behavioral checks on the trust transaction helper the driver runs to
+// pre-trust a worktree it just created, and to untrust it on cleanup. The
+// helper owns the only write the automation makes to Claude Code's config
+// store, so this is where the safety properties are exercised for real:
+// scope enforcement, Claude's own lock, no lost updates, mode preservation.
+import { test, expect, afterEach } from 'bun:test';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, chmodSync } from 'node:fs';
+
+const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
+const HELPER = `${root}/docs/plans/pr-automations-trust.sh`;
+const HEAD_RE = /^[0-9a-f]{40}$/;
+let sandbox;
+
+const sh = (cmd, env = {}) => {
+  const r = Bun.spawnSync(['bash', '-c', cmd], { env: { ...process.env, ...env }, stdout: 'pipe', stderr: 'pipe' });
+  return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
+};
+
+// A real clone with one commit, and a real worktree of it at that commit —
+// the shape the driver creates.
+const setup = () => {
+  sandbox = mkdtempSync(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-trust-`);
+  const clone = `${sandbox}/clones/repo`;
+  mkdirSync(clone, { recursive: true });
+  sh(`cd ${clone} && git init -q && git config user.email t@t && git config user.name t && echo x > f && git add f && git commit -qm init`);
+  const head = sh(`git -C ${clone} rev-parse HEAD`).out.trim();
+  expect(head).toMatch(HEAD_RE);
+  const wt = `${sandbox}/workspaces/repo/pr-repo-1-review`;
+  mkdirSync(`${sandbox}/workspaces/repo`, { recursive: true });
+  sh(`git -C ${clone} worktree add -q --detach ${wt} ${head}`);
+  const store = `${sandbox}/claude.json`;
+  writeFileSync(store, JSON.stringify({ projects: { '/elsewhere': { hasTrustDialogAccepted: true } }, sessionState: 'kept' }));
+  chmodSync(store, 0o600);
+  return { clone, head, wt, store, env: { CLAUDE_TRUST_STORE: store } };
+};
+const run = (env, args) => sh(`bash ${HELPER} ${args}`, env.env);
+const read = (env) => JSON.parse(readFileSync(env.store, 'utf8'));
+
+afterEach(() => { if (sandbox) rmSync(sandbox, { recursive: true, force: true }); sandbox = null; });
+
+test('seed trusts exactly the worktree created from the clone at the pinned head', () => {
+  const env = setup();
+  const r = run(env, `seed ${env.wt} ${env.clone} ${env.head}`);
+  expect(r.code, r.err).toBe(0);
+  const store = read(env);
+  expect(store.projects[env.wt].hasTrustDialogAccepted).toBe(true);
+  // Unrelated state is untouched, and the file mode is preserved.
+  expect(store.sessionState).toBe('kept');
+  expect(store.projects['/elsewhere'].hasTrustDialogAccepted).toBe(true);
+  expect(statSync(env.store).mode & 0o777).toBe(0o600);
+});
+
+test('seed refuses the clone itself, a wrong clone, a wrong head, and a path that is not a worktree', () => {
+  const env = setup();
+  const other = `${sandbox}/clones/other`;
+  mkdirSync(other, { recursive: true });
+  sh(`cd ${other} && git init -q && git config user.email t@t && git config user.name t && git commit -q --allow-empty -m x`);
+  for (const [label, args] of [
+    ['the clone itself', `seed ${env.clone} ${env.clone} ${env.head}`],
+    ['a worktree of a different clone', `seed ${env.wt} ${other} ${env.head}`],
+    ['a wrong head', `seed ${env.wt} ${env.clone} ${'0'.repeat(40)}`],
+    ['a plain directory', `seed ${sandbox}/workspaces ${env.clone} ${env.head}`],
+    ['a missing path', `seed ${sandbox}/nope ${env.clone} ${env.head}`],
+  ]) {
+    const r = run(env, args);
+    expect(r.code, `${label}: must be refused (scope), got ${r.code} ${r.err}`).toBe(3);
+  }
+  expect(read(env).projects[env.wt], 'nothing was written').toBeUndefined();
+});
+
+test('seed and unseed take the lock Claude Code uses and never force a held one', () => {
+  const env = setup();
+  mkdirSync(`${env.store}.lock`);
+  const r = run(env, `seed ${env.wt} ${env.clone} ${env.head}`);
+  expect(r.code, 'busy lock must be reported, not broken').toBe(2);
+  expect(existsSync(`${env.store}.lock`), 'the foreign lock is left in place').toBe(true);
+  expect(read(env).projects[env.wt]).toBeUndefined();
+  const u = run(env, `unseed ${env.wt}`);
+  expect(u.code).toBe(2);
+  rmSync(`${env.store}.lock`, { recursive: true });
+  expect(run(env, `seed ${env.wt} ${env.clone} ${env.head}`).code).toBe(0);
+  expect(existsSync(`${env.store}.lock`), 'the lock is released after the write').toBe(false);
+}, 30000);
+
+test('concurrent seeds and a concurrent lock-taking writer lose nothing', () => {
+  const env = setup();
+  const paths = [];
+  for (let i = 0; i < 8; i += 1) {
+    const wt = `${sandbox}/workspaces/repo/pr-repo-${i + 10}-review`;
+    sh(`git -C ${env.clone} worktree add -q --detach ${wt} ${env.head}`);
+    paths.push(wt);
+  }
+  // A writer that behaves like Claude Code: takes the same mkdir lock, then
+  // read-modify-writes its own key.
+  const claudeLike = `for n in $(seq 1 20); do
+      for i in $(seq 1 50); do mkdir "${env.store}.lock" 2>/dev/null && break; sleep 0.05; done
+      t="${env.store}.tmp.$$.$RANDOM"; jq --arg n "$n" '.claudeWrites = ((.claudeWrites // 0) + 1)' "${env.store}" > "$t" && mv "$t" "${env.store}"
+      rmdir "${env.store}.lock"; done`;
+  const seeds = paths.map((p) => `bash ${HELPER} seed ${p} ${env.clone} ${env.head} &`).join('\n');
+  const r = sh(`${seeds}\n(${claudeLike}) &\nwait`, env.env);
+  expect(r.code, r.err).toBe(0);
+  const store = read(env);
+  for (const p of paths) expect(store.projects[p]?.hasTrustDialogAccepted, `lost seed for ${p}`).toBe(true);
+  expect(store.claudeWrites, 'lost a concurrent Claude-like write').toBe(20);
+  expect(store.sessionState).toBe('kept');
+  expect(existsSync(`${env.store}.lock`)).toBe(false);
+  expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), 'no temp files left').toBe('0');
+}, 60000);
+
+test('unseed removes only that path, and a malformed store is an error with no write', () => {
+  const env = setup();
+  run(env, `seed ${env.wt} ${env.clone} ${env.head}`);
+  const u = run(env, `unseed ${env.wt}`);
+  expect(u.code, u.err).toBe(0);
+  const store = read(env);
+  expect(store.projects[env.wt]).toBeUndefined();
+  expect(store.projects['/elsewhere'].hasTrustDialogAccepted).toBe(true);
+  writeFileSync(env.store, '{not json');
+  const before = readFileSync(env.store, 'utf8');
+  expect(run(env, `seed ${env.wt} ${env.clone} ${env.head}`).code).toBe(2);
+  expect(readFileSync(env.store, 'utf8'), 'a malformed store is never rewritten').toBe(before);
+});
