@@ -90,6 +90,21 @@ test('automations: reviewer rules use three criteria, binding verdict marker, an
   expect(text).toContain('`defi-com/ci-workflows`');
 });
 
+test('automations: a published verdict body is written for the PR reader, not the pipeline', () => {
+  // Feedback from a colleague on two live reviews: the body narrated the
+  // pipeline ("two independent reviews, identical brief, all six angles",
+  // "from secondary") and referred to findings that were never posted
+  // ("two minor maintainability notes"), which lived only in the local review
+  // file on the VPS.
+  const text = compact(refPath);
+  expect(text).toMatch(/verdict body[^.]*(?:one reviewer|single reviewer)/i);
+  expect(text).toMatch(/never (?:names|mentions|narrates)[^.]*(?:reviewer count|number of reviewers|how many reviewers)/i);
+  expect(text).toMatch(/self-contained/i);
+  expect(text).toMatch(/every finding[^.]*(?:stated in full|in full)/i);
+  expect(text).toMatch(/(?:never|does not) (?:point|refer)[^.]*(?:local review file|cannot open)/i);
+  expect(text).toMatch(/what was checked and observed/i);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

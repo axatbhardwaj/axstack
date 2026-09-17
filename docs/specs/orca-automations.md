@@ -424,6 +424,19 @@ whose path names a different home and does not exist on this host. The user was
 shown all of this on 2026-09-16 and chose automatic submission for the
 automation anyway.
 
+The submitted body is written for the person reading the PR and reads as one
+reviewer's findings. It never names the reviewer count, the brief, the six
+angles, the gate, receipts, or which reviewer found what — those are pipeline
+facts, not review content. It is self-contained: every finding it refers to
+is stated in full in the body, with file and line where they exist, and it
+never points at the local review file or anything the reader cannot open.
+Evidence appears as what was checked and observed, not as who ran it. This
+was settled on 2026-09-17 after a colleague pointed at two live reviews: one
+narrated "two independent reviews, identical brief, all six angles", and the
+other referred to "two minor maintainability notes" that appeared only in the
+local review file and nowhere the reader could see. The marker line is the
+only pipeline artefact the body carries.
+
 That choice is scoped narrowly. It overrides the never-auto-post policy **for
 pair C/D's automated reviews only**. Interactive sessions working under
 `~/defi/` keep that policy unchanged, as do human-authored reviews and the
