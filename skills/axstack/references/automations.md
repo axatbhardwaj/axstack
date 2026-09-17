@@ -184,13 +184,15 @@ The verdict body is written for the person reading the PR and reads as one
 reviewer's findings. It never names the reviewer count, the brief, the
 angles, the gate, receipts, or which reviewer found what: "two independent
 reviews", "from secondary", and "the reviewers ran" are pipeline facts, not
-review content. It is self-contained: every finding it refers to is stated in
-full in the body, with file and line where they exist, so a reader is never
-told that notes exist without seeing them. It never points at the local
-review file or at anything the reader cannot open. Evidence appears as what
-was checked and observed — "21/21 focused unit tests pass at this head" — not
-as who ran it. The marker line above is the only pipeline artefact the body
-carries.
+review content. It is self-contained: every validated finding, blocking or
+not, appears in full in the body — evidence and consequence, file and line
+where they exist — so a reader is never told that notes exist without seeing
+them, and a finding is never dropped to keep the body short. It never points
+at the local review file or at anything the reader cannot open. Evidence
+appears as what was checked and observed, not as who ran it: the reviewed
+head and base SHAs, CI status, test counts, and diff size are reader-useful
+facts and belong; "shape verified" and "pinned CI" are pipeline phrasing and
+do not. The marker line is the only pipeline artefact the body carries.
 
 Write the local review file to the workspace review directory
 `~/defi/misc/reviews/` under the existing convention:
