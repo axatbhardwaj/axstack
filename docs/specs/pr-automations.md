@@ -240,13 +240,16 @@ sent/failed/uncertain), `reason`. Files are never deleted.
 candidate survives worktree removal; the driver deletes the ref after `spent`
 or `stale`. The agent then sends one `hermes send --to telegram` message
 naming the PR, the criterion, every reviewer's reason, and the two replies:
-`approve <token>` and `reject <token>`. The send receipt is stored in the file;
+`/axstack-decide approve <token>` and `/axstack-decide reject <token>` (the
+slash form loads the skill deterministically; the bare `approve <token>` form
+is accepted but depends on the gateway agent choosing the skill). The send receipt is stored in the file;
 a `failed` send is retried once by the driver next tick, an `uncertain` one is
 reconciled against `hermes` output before any retry.
 
 **Receiving.** The Hermes gateway carries an `axstack-decide` skill whose
-entire instruction is: when a message is exactly `approve <token>` or
-`reject <token>`, run `~/.hermes/scripts/axstack-decide <token> <verb>` and
+entire instruction is: when invoked as `/axstack-decide approve|reject <token>`,
+or when a message's own text is exactly `approve <token>` or `reject <token>`,
+run `~/.hermes/scripts/axstack-decide <token> <verb>` and
 relay its one-line result; do nothing else and never run `gh`, `git` or
 `orca`. The script, on every call:
 
@@ -263,8 +266,10 @@ relay its one-line result; do nothing else and never run `gh`, `git` or
   line, exit 0.
 
 Authentication is the Hermes gateway's allowlist, enforced before any agent
-turn. Hermes does not export sender identity to shell subprocesses today, so
-the token is the capability and the allowlist is the identity boundary. A
+turn, plus the script's own equality check of `HERMES_SESSION_USER_ID` and
+`HERMES_SESSION_CHAT_ID` against the configured user id; the gateway exports
+these (and `HERMES_SESSION_CHAT_TYPE`, observed but not checked) to the script,
+verified at cutover under acceptance 8. The token is the capability. A
 group source is never valid; the runtime config check above fails closed if
 the home channel stops being private.
 
