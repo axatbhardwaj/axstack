@@ -23,9 +23,9 @@ Pair A/B is retired for this contract; its artefacts remain untouched.
 - `axstack-monitor` remains an optional read-only observer that never sends.
 
 Self is resolved on every run with `gh api user --jq .login`; never hardcode
-it. The review allowlist is `defi-com/monorepo`, `defi-com/mobile`, and
-`defi-com/azure-next-hybrid`. The repair allowlist is `defi-com/monorepo` and
-`defi-com/mobile`. State both lists verbatim in the driver prompt. An own PR is
+it. The review allowlist is `defi-com/monorepo`, `defi-com/mobile`,
+`defi-com/azure-next-hybrid`, and `defi-com/ci-workflows`. The repair allowlist
+is `defi-com/monorepo` and `defi-com/mobile`. State both lists verbatim in the driver prompt. An own PR is
 open, authored by self, on the repair allowlist, and not a draft. A peer PR is
 open, on the review allowlist, authored by someone else, and either officially
 review-requested from self or has a non-self comment that both mentions self
@@ -183,8 +183,9 @@ The verdict body ends with this exact marker line:
 Write the local review file to the workspace review directory
 `~/defi/misc/reviews/` under the existing convention:
 `review-PR-<num>.html` with no prefix means `defi-com/monorepo`;
-`review-mobile-PR-<num>.html` and
-`review-azure-next-hybrid-PR-<num>.html` name the other repositories. A write
+`review-mobile-PR-<num>.html`,
+`review-azure-next-hybrid-PR-<num>.html` and `review-ci-workflows-PR-<num>.html`
+name the other repositories. A write
 failure is recorded but does not withhold the verdict.
 
 Authored repair commits a local candidate, obtains one Sol review at that

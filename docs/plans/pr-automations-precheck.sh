@@ -4,7 +4,7 @@ set -u
 # Model-free discovery precheck for the rev-3 defi-com PR driver.
 # Exit 0 = changed or due, 1 = unchanged, 2 = error, 3 = tick still running.
 RUN_DIR="${1:-${RUN_DIR:-}}"
-REVIEW_ALLOW='["defi-com/monorepo","defi-com/mobile","defi-com/azure-next-hybrid"]'
+REVIEW_ALLOW='["defi-com/monorepo","defi-com/mobile","defi-com/azure-next-hybrid","defi-com/ci-workflows"]'
 REPAIR_ALLOW='["defi-com/monorepo","defi-com/mobile"]'
 LIMIT=100
 FIELDS='url,number,repository,updatedAt'

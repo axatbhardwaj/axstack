@@ -86,6 +86,8 @@ test('automations: reviewer rules use three criteria, binding verdict marker, an
   expect(text).toContain('`review-PR-<num>.html` with no prefix means `defi-com/monorepo`');
   expect(text).toContain('`review-mobile-PR-<num>.html`');
   expect(text).toContain('`review-azure-next-hybrid-PR-<num>.html`');
+  expect(text).toContain('`review-ci-workflows-PR-<num>.html`');
+  expect(text).toContain('`defi-com/ci-workflows`');
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
