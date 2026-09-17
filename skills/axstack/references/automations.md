@@ -138,16 +138,21 @@ a git worktree whose common dir is the named allowlisted clone's, must not
 be the clone itself, and must sit at exactly the pinned head — anything
 else exits 3 and is never seeded. It writes under Claude Code's own config
 lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
-with a bounded retry in which only a successful `mkdir` counts as holding
-it, never breaking a lock it did not create; it keeps the lease alive the way
-Claude does — a refresher touches the lock's mtime every second for as long
-as it is held, so the lock cannot age into Claude's 10 s stale threshold
-under it even if a rename stalls — re-reads under the lock, refuses a store
-that does not parse, writes a unique temp file, preserves the store's mode,
-re-verifies at commit that the lock is still its own (unchanged inode, hold
-well inside the window) and otherwise discards the temp and commits
-nothing, treats a failed chmod or rename as failure with the temp removed,
-and releases only a lock it still owns, stopping the refresher first. A busy or unreadable
+following Claude's own lease rules, with a bounded retry. Only a successful
+`mkdir` counts as holding it; a fresh foreign lock is never broken, and the only lock it will
+reclaim is one whose mtime is past Claude's 10 s stale threshold, which is
+exactly what Claude itself treats as abandoned. It keeps the lease alive the
+way Claude does: a refresher touches the lock's mtime every second for as
+long as it is held, so the lock cannot age into staleness under it even if a
+rename stalls. The refresher runs with the owner and dies with it, exits the
+moment the lock is no longer ours, and treats a failed refresh as a
+compromised lease by terminating the owner before it can commit. The helper
+re-reads under the lock, refuses a store that does not parse, writes a
+unique temp file, preserves the store's mode, re-verifies at commit that the
+lease is healthy — unchanged inode, refresher alive, refreshed within the
+last few seconds — and otherwise discards the temp and commits nothing,
+treats a failed chmod or rename as failure with the temp removed, and
+releases only a lock it still owns, stopping the refresher first. A busy or unreadable
 store exits 2: the worktree is retained and nothing is dispatched. The
 worktree cleanup removes the entry through the same helper; if that
 removal fails after the worktree is gone, the marker stays in

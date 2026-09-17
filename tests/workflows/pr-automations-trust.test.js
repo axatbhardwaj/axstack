@@ -75,8 +75,11 @@ test('seed and unseed take the lock Claude Code uses and never force a held one'
   expect(r.code, 'busy lock must be reported, not broken').toBe(2);
   expect(existsSync(`${env.store}.lock`), 'the foreign lock is left in place').toBe(true);
   expect(read(env).projects[env.wt]).toBeUndefined();
+  // A live holder keeps its lease fresh; only an abandoned lock goes stale.
+  sh(`touch "${env.store}.lock"`);
   const u = run(env, `unseed ${env.wt}`);
   expect(u.code).toBe(2);
+  expect(existsSync(`${env.store}.lock`), 'a fresh foreign lock is still not broken').toBe(true);
   rmSync(`${env.store}.lock`, { recursive: true });
   expect(run(env, `seed ${env.wt} ${env.clone} ${env.head}`).code).toBe(0);
   expect(existsSync(`${env.store}.lock`), 'the lock is released after the write').toBe(false);
@@ -138,6 +141,88 @@ test('a rename delayed past the stale threshold cannot be stolen from, because t
   expect(read(env).projects[env.wt].hasTrustDialogAccepted).toBe(true);
   expect(existsSync(`${env.store}.lock`), 'lock released').toBe(false);
 }, 30000);
+
+test('a refresher that cannot refresh compromises the lease and the commit is aborted', () => {
+  // proper-lockfile treats a failed refresh as a compromised lease and the
+  // owner must not proceed. Make every refresh touch fail after acquisition,
+  // stall the rename past the stale threshold, and run a faithful thief.
+  const env = setup();
+  const shim = `${sandbox}/shim`;
+  mkdirSync(shim);
+  // touch succeeds once (acquisition), then always fails.
+  writeFileSync(`${shim}/touch`, `#!/bin/sh\nif [ -e "${sandbox}/touched-once" ]; then exit 1; fi; : > "${sandbox}/touched-once"; exec /usr/bin/touch "$@"\n`); chmodSync(`${shim}/touch`, 0o755);
+  writeFileSync(`${shim}/mv`, '#!/bin/sh\nsleep 4\nexec /bin/mv "$@"\n'); chmodSync(`${shim}/mv`, 0o755);
+  const thief = `for i in $(seq 1 80); do
+      if [ -d "${env.store}.lock" ]; then
+        age=$(( $(date +%s) - $(stat -c %Y "${env.store}.lock") ))
+        if [ "$age" -ge 3 ]; then
+          rmdir "${env.store}.lock" && mkdir "${env.store}.lock" && stole=1
+          t="${env.store}.tmp.thief"; jq '.concurrentClaudeWrite = "must-survive"' "${env.store}" > "$t" && /bin/mv "$t" "${env.store}"
+          rmdir "${env.store}.lock"; break
+        fi
+      fi; sleep 0.1; done; echo "stole=\${stole:-0}"`;
+  const r = sh(`bash ${HELPER} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.5; (${thief})
+    wait $pid; echo "helper=$?"`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+  // Whether or not the thief got there first, the owner must not have
+  // committed over a lease it could not keep alive.
+  expect(r.out, 'a compromised lease must abort').toMatch(/helper=2/);
+  const store = read(env);
+  expect(store.projects[env.wt], 'no seed committed on a compromised lease').toBeUndefined();
+  if (/stole=1/.test(r.out)) expect(store.concurrentClaudeWrite).toBe('must-survive');
+  expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | grep -v thief | wc -l`).out.trim(), 'helper temp removed').toBe('0');
+}, 40000);
+
+test('a refresher that dies silently is detected at commit and the commit is aborted', () => {
+  // A refresher can be SIGKILLed (OOM, operator) and get no chance to signal
+  // compromise. The lease silently stops being refreshed. Before committing
+  // the owner must notice on its own — refresher dead, lease not recently
+  // refreshed — and abort, even though nobody has stolen the lock yet. The
+  // stall is placed before the commit check (in chmod), which is the part of
+  // the transaction the check can protect; a stall inside rename itself is
+  // atomic and uncoverable by any lease design, proper-lockfile included.
+  const env = setup();
+  const shim = `${sandbox}/shim`;
+  mkdirSync(shim);
+  writeFileSync(`${shim}/chmod`, '#!/bin/sh\nsleep 4\nexec /bin/chmod "$@"\n'); chmodSync(`${shim}/chmod`, 0o755);
+  const before = readFileSync(env.store, 'utf8');
+  const r = sh(`bash ${HELPER} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.6
+    for c in $(pgrep -P $pid); do tr '\\0' ' ' < /proc/$c/cmdline | grep -q pr-automations-trust && kill -KILL $c; done
+    wait $pid; echo "helper=$?"`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+  expect(r.out, 'a dead refresher must be detected at commit').toMatch(/helper=2/);
+  expect(readFileSync(env.store, 'utf8'), 'nothing committed').toBe(before);
+  expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), 'temp removed').toBe('0');
+  expect(existsSync(`${env.store}.lock`), 'our own lock is still released').toBe(false);
+}, 40000);
+
+test('when the owner is killed the refresher dies with it and the abandoned lock becomes stale and reclaimable', () => {
+  // proper-lockfile refresh runs with the owner and cannot outlive it. An
+  // orphaned refresher would keep an abandoned lock fresh forever and block
+  // every later seed and unseed.
+  const env = setup();
+  const shim = `${sandbox}/shim`;
+  mkdirSync(shim);
+  // The stalled mv records its own pid so the test can end it precisely.
+  writeFileSync(`${shim}/mv`, `#!/bin/sh\necho $$ > "${sandbox}/mvpid"\nsleep 30\nexec /bin/mv "$@"\n`); chmodSync(`${shim}/mv`, 0o755);
+  const r = sh(`bash ${HELPER} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 1.5; kill -KILL $pid; sleep 2.5
+    m1=$(stat -c %Y "${env.store}.lock" 2>/dev/null || echo gone); sleep 2.5
+    m2=$(stat -c %Y "${env.store}.lock" 2>/dev/null || echo gone)
+    echo "mtime=$m1:$m2"
+    kill "$(cat "${sandbox}/mvpid")" 2>/dev/null; true`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+  const m = r.out.match(/mtime=(\S+):(\S+)/);
+  expect(m, r.out).not.toBeNull();
+  expect(m[1], 'lock left behind by the killed owner').not.toBe('gone');
+  expect(m[1], 'the refresher must have stopped advancing the mtime').toBe(m[2]);
+  // Once stale by Claude's own rule, the next transaction may reclaim it —
+  // exactly what Claude would do — and proceed.
+  sh(`touch -d '@$(( $(date +%s) - 11 ))' "${env.store}.lock"`);
+  const again = run(env, `seed ${env.wt} ${env.clone} ${env.head}`);
+  expect(again.code, `a stale abandoned lock must be reclaimable: ${again.err}`).toBe(0);
+  expect(read(env).projects[env.wt].hasTrustDialogAccepted).toBe(true);
+  expect(existsSync(`${env.store}.lock`)).toBe(false);
+}, 40000);
 
 test('a lock stolen after the temp is rendered aborts the commit instead of overwriting the store', () => {
   // The dangerous window: the helper has rendered its temp file from a store

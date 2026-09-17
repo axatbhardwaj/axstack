@@ -34,28 +34,49 @@ case "$mode" in
   *) printf 'usage: seed <worktree> <clone> <head> | unseed <worktree>\n' >&2; exit 2 ;;
 esac
 
-# Claude's lock: bounded wait, never broken. Only a successful mkdir proves we hold it — a lock that
-# already exists belongs to someone else no matter who owns it or how fresh it is. Claude's
-# proper-lockfile treats a lock whose mtime is older than 10 s as stale and may replace it, and
-# keeps its own leases alive by refreshing the mtime every 5 s. This does the same: a refresher
-# touches the lock every second for as long as it is held, so the lock cannot age into staleness
-# under us even if a rename stalls. Ownership is still re-verified at commit (unchanged inode,
-# hold well inside the window) and the release removes the lock only if the inode is unchanged.
+# Claude's lock, with Claude's own lease rules (proper-lockfile): a lock whose mtime is older than
+# STALE seconds is abandoned and may be reclaimed; a held lock is kept alive by refreshing its
+# mtime; a refresh that fails is a compromised lease and the owner must not commit; the refresher
+# runs with the owner and dies with it. Only a successful mkdir proves we hold the lock — an
+# existing fresh lock belongs to someone else no matter who owns it. Ownership is re-verified at
+# commit (unchanged inode, refresher alive, lease recently refreshed) and the release removes the
+# lock only if the inode is unchanged.
+STALE=10
 got=0
-for _ in $(seq 1 25); do if mkdir "$LOCK" 2>/dev/null; then got=1; break; fi; sleep 0.2; done
+for _ in $(seq 1 25); do
+  if mkdir "$LOCK" 2>/dev/null; then got=1; break; fi
+  # Reclaim only what Claude itself would treat as abandoned.
+  age=$(( $(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || date +%s) ))
+  [ "$age" -ge "$STALE" ] && rmdir "$LOCK" 2>/dev/null
+  sleep 0.2
+done
 [ "$got" -eq 1 ] || exit 2
-touch "$LOCK" 2>/dev/null
+touch "$LOCK" 2>/dev/null || { rmdir "$LOCK" 2>/dev/null; exit 2; }
 ino="$(stat -c %i "$LOCK" 2>/dev/null)"
 t0="$(date +%s)"
 t=""
-( while :; do [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] || exit 0; touch "$LOCK" 2>/dev/null; sleep 1; done ) &
+owner=$$
+# Refresher: keeps the lease alive; exits when the lock is no longer ours or the owner is gone;
+# a failed refresh compromises the lease and terminates the owner before it can commit.
+(
+  while :; do
+    kill -0 "$owner" 2>/dev/null || exit 0
+    [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] || exit 0
+    touch "$LOCK" 2>/dev/null || { kill -TERM "$owner" 2>/dev/null; exit 1; }
+    sleep 1
+  done
+) &
 refresher=$!
 cleanup() { kill "$refresher" 2>/dev/null; wait "$refresher" 2>/dev/null; [ -n "$t" ] && rm -f "$t"; [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null; }
 trap cleanup EXIT
 trap 'exit 2' INT TERM HUP
 
+# The lease is healthy only if the lock is still ours, the refresher is alive, and it has
+# refreshed within the last few seconds (well inside STALE).
 still_owned() {
-  [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && [ $(( $(date +%s) - t0 )) -lt 8 ]
+  [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] \
+    && kill -0 "$refresher" 2>/dev/null \
+    && [ $(( $(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || echo 0) )) -lt 3 ]
 }
 
 # Re-read under the lock; a store that does not parse is never rewritten.
@@ -63,7 +84,7 @@ jq -e . "$STORE" >/dev/null 2>&1 || exit 2
 t="$STORE.tmp.$$.$RANDOM"
 jq --arg p "$wt_c" "$filter" "$STORE" > "$t" 2>/dev/null || exit 2
 chmod --reference="$STORE" "$t" 2>/dev/null || exit 2
-# commit: only while ownership provably still holds
+# commit: only while the lease provably still holds
 still_owned || exit 2
 mv -f "$t" "$STORE" || exit 2
 t=""

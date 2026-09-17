@@ -359,7 +359,11 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: mkdir-based`).toMatch(/mkdir/);
     expect(text, `${name}: bounded retry`).toMatch(/bounded retry/i);
     expect(text, `${name}: only mkdir success counts`).toMatch(/only a successful `?mkdir`? counts/i);
-    expect(text, `${name}: never breaks a foreign lock`).toMatch(/never breaking a (?:foreign )?lock/i);
+    expect(text, `${name}: never breaks a fresh foreign lock`).toMatch(/fresh\s+foreign lock is never broken/i);
+    expect(text, `${name}: reclaims only what Claude treats as abandoned`).toMatch(/10 s stale\s+threshold[^.]*(?:Claude itself treats as abandoned|what Claude itself treats as abandoned)/i);
+    expect(text, `${name}: refresher dies with the owner`).toMatch(/(?:runs with the owner and )?dies with (?:it|the owner)/i);
+    expect(text, `${name}: failed refresh is a compromise`).toMatch(/failed refresh as a\s+compromised lease/i);
+    expect(text, `${name}: health verified at commit`).toMatch(/refresher alive/i);
     expect(text, `${name}: unique temp + rename`).toMatch(/unique temp file[^.]*rename/i);
     expect(text, `${name}: busy store dispatches nothing`).toMatch(/busy or unreadable\s+store[^.]*(?:dispatches nothing|nothing is dispatched)/i);
     // Scope is enforced by the helper, not by prose.
