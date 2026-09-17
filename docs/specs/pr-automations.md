@@ -194,6 +194,8 @@ on 2026-09-17: a worktree the driver itself creates from an allowlisted clone
 at the pinned head is trusted by policy — the driver runs a trust helper after
 `worktree create` and before `worker-start` — the only write the automation
 makes to `~/.claude.json`, the path's `hasTrustDialogAccepted` entry. The
+helper is a single process: lock, refresher, render and rename happen in
+one process, so nothing can outlive the owner and commit after it dies. The
 helper enforces the scope before writing: a
 git worktree whose common dir is the named allowlisted clone's, not the clone
 itself, at exactly the pinned head; anything else is refused and never

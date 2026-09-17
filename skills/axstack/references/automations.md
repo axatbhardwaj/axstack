@@ -130,13 +130,16 @@ the driver must never answer that dialog for a worker. The user decided on
 2026-09-17 that a worktree the driver itself creates from an allowlisted
 clone at the pinned head is trusted by policy: immediately after creating
 it and before `worker-start`, the driver runs the trust helper
-(`docs/plans/pr-automations-trust.sh`, deployed beside the precheck), which
+(`docs/plans/pr-automations-trust.js`, deployed beside the precheck and run
+with Bun), which
 owns the only write the automation makes to `~/.claude.json`. It writes the path's `hasTrustDialogAccepted` entry — what a
 manual acceptance writes. The helper
 enforces the scope mechanically before it writes anything: the path must be
 a git worktree whose common dir is the named allowlisted clone's, must not
 be the clone itself, and must sit at exactly the pinned head — anything
-else exits 3 and is never seeded. It writes under Claude Code's own config
+else exits 3 and is never seeded. It is one process on purpose: lock, refresher,
+render and rename all happen in the same process, so nothing can outlive the
+owner and commit after it dies. It writes under Claude Code's own config
 lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
 following Claude's own lease rules, with a bounded retry. Only a successful
 `mkdir` counts as holding it; a fresh foreign lock is never broken, and the only lock it will
@@ -407,7 +410,7 @@ its dispatch without such a retention record is a health finding. The run direct
   `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
   hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
-- `trust.sh` — the trust transaction helper, run by the driver only;
+- `trust.js` — the trust transaction helper, run by the driver only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
   and send receipts) — watchdog only;

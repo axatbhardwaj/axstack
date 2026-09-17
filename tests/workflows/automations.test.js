@@ -368,6 +368,8 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: busy store dispatches nothing`).toMatch(/busy or unreadable\s+store[^.]*(?:dispatches nothing|nothing is dispatched)/i);
     // Scope is enforced by the helper, not by prose.
     expect(text, `${name}: helper enforces scope`).toMatch(/helper enforces the scope/i);
+    // Single process: no child can outlive the owner and commit later.
+    expect(text, `${name}: single process`).toMatch(/nothing can outlive the\s+owner and commit after it dies/i);
     expect(text, `${name}: common dir check`).toMatch(/common dir is the[^.]*clone/i);
     expect(text, `${name}: not the clone itself`).toMatch(/(?:must )?not (?:be )?the clone\s+itself/i);
     expect(text, `${name}: refuses unparsable store`).toMatch(/(?:refuses|refuse) (?:a |an )?(?:store that does not parse|unparsable store)/i);
@@ -401,8 +403,8 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   // the scope check and the store write; seeds precede the launch; a failed
   // untrust keeps the marker in pending_settlement so the path cannot be
   // reused while trusted.
-  const seeds = prompts.match(/bash <run dir>\/trust\.sh seed <worktree path> <clone path> <head sha>/g) ?? [];
-  const unseeds = prompts.match(/bash <run dir>\/trust\.sh unseed <worktree path>/g) ?? [];
+  const seeds = prompts.match(/<bun> <run dir>\/trust\.js seed <worktree path> <clone path> <head sha>/g) ?? [];
+  const unseeds = prompts.match(/<bun> <run dir>\/trust\.js unseed <worktree path>/g) ?? [];
   expect(seeds.length, 'repair and review dispatch both seed through the helper').toBe(2);
   expect(unseeds.length, 'settlement and no-worker cleanup both untrust through the helper').toBe(2);
   expect(prompts, 'no inline store write remains').not.toMatch(/hasTrustDialogAccepted: true/);
@@ -426,7 +428,7 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {
     const startAt = prompts.indexOf(marker);
     const before = prompts.slice(0, startAt);
-    const seedAt = before.lastIndexOf('bash <run dir>/trust.sh seed');
+    const seedAt = before.lastIndexOf('<bun> <run dir>/trust.js seed');
     const launchAt = before.lastIndexOf(`--command "${CMD}"`);
     const readyAt = before.lastIndexOf('Quick safety check');
     expect(seedAt, `${marker}: seed present before start`).toBeGreaterThan(-1);
