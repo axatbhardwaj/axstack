@@ -156,11 +156,15 @@ full project surface: its `.claude/settings.json` and the hooks it defines,
 its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
 a hostile branch's hooks or MCP servers would run the moment the folder
 opens. So the worker is launched with that surface disabled —
-`--setting-sources user --strict-mcp-config`, through `terminal create` and
-`worker-start --terminal`, since `worker-start` cannot pass argv — and the
-driver confirms the terminal reached its prompt rather than the dialog
-before dispatching. What remains is `CLAUDE.md` text and the commands the
-worker itself chooses to run, which it already runs today. The allowlist,
+`--setting-sources user --strict-mcp-config --disable-slash-commands`,
+through `terminal create` and `worker-start --terminal`, since
+`worker-start` cannot pass argv: no project settings or hooks, no project
+MCP servers, no project skills or commands as an invocation surface — and
+the driver confirms readiness from the rendered frame, `wait.satisfied`
+plus the prompt marker present and the dialog absent, before dispatching.
+What remains live is prompt text the model reads — `CLAUDE.md` and
+project rules — and the commands the worker itself chooses to run, which
+it already runs today; nothing from the branch executes on its own. The allowlist,
 the pinned head, and that reduced surface are what make pre-trust
 acceptable, and nothing else does.
 

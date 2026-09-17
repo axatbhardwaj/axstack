@@ -211,9 +211,13 @@ trust activates the full project surface — `.claude/settings.json` and its
 hooks, `.mcp.json` servers, marketplace plugin auto-install, `CLAUDE.md` —
 so a hostile branch's hooks or MCP servers would run when the folder opens.
 Therefore the worker launches with that surface disabled,
-`--setting-sources user --strict-mcp-config`, via `terminal create` and
-`worker-start --terminal`, and the driver confirms the prompt rather than
-the dialog before dispatching. The allowlist, the pinned head, and that
+`--setting-sources user --strict-mcp-config --disable-slash-commands`, via
+`terminal create` and `worker-start --terminal` — no project settings or
+hooks, no project MCP, no project skills or commands as an invocation
+surface; what remains live is prompt text the model reads (`CLAUDE.md`,
+project rules) and the commands the worker itself runs — and the driver
+confirms readiness from the rendered frame (`wait.satisfied`, the prompt
+marker present, the dialog absent) before dispatching. The allowlist, the pinned head, and that
 reduced surface are the only things that make pre-trust acceptable.
 
 Each dispatched agent runs in its own Orca child worktree under

@@ -107,6 +107,23 @@ test('concurrent seeds and a concurrent lock-taking writer lose nothing', () => 
   expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), 'no temp files left').toBe('0');
 }, 60000);
 
+test('a lock stolen mid-transaction is never released by the helper', () => {
+  // Claude's proper-lockfile may replace a lock it considers stale. Retarget a
+  // copy of the helper to pause inside its critical section, steal the lock
+  // meanwhile, and check the helper leaves the thief's lock in place.
+  const env = setup();
+  const slow = `${sandbox}/slow-trust.sh`;
+  writeFileSync(slow, readFileSync(HELPER, 'utf8').replace('t="$STORE.tmp.$$.$RANDOM"', 'sleep 1.5; t="$STORE.tmp.$$.$RANDOM"'));
+  const r = sh(`bash ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.4; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"; stolen=$(stat -c %i "${env.store}.lock")
+    wait $pid; echo "helper=$?"; [ -d "${env.store}.lock" ] && echo "lock=present:$(stat -c %i "${env.store}.lock"):$stolen" || echo "lock=REMOVED"`, env.env);
+  expect(r.out).toMatch(/helper=0/);
+  const m = r.out.match(/lock=present:(\d+):(\d+)/);
+  expect(m, `the thief's lock must survive: ${r.out}`).not.toBeNull();
+  expect(m[1]).toBe(m[2]);
+  rmSync(`${env.store}.lock`, { recursive: true });
+});
+
 test('unseed removes only that path, and a malformed store is an error with no write', () => {
   const env = setup();
   run(env, `seed ${env.wt} ${env.clone} ${env.head}`);

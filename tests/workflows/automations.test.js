@@ -372,9 +372,11 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: reuse blocked`).toMatch(/cannot (?:be reused|inherit)|can never inherit/i);
     expect(text, `${name}: retained keeps trust`).toMatch(/retained worktree keeps its (?:trust )?entry/i);
     // The worker launches with the project surface disabled.
-    expect(text, `${name}: surface-reducing flags`).toMatch(/--setting-sources user --strict-mcp-config/);
+    expect(text, `${name}: surface-reducing flags`).toMatch(/--setting-sources user --strict-mcp-config --disable-slash-commands/);
+    expect(text, `${name}: what stays live is stated`).toMatch(/what remains live is prompt text/i);
+    expect(text, `${name}: rendered readiness`).toMatch(/rendered frame/i);
     expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
-    expect(text, `${name}: readiness check`).toMatch(/prompt rather than the dialog/i);
+    expect(text, `${name}: readiness check`).toMatch(/prompt marker present(?:,| and) the dialog absent/i);
   }
   const refCleanup = ref.match(/Only then it closes any terminal tab[\s\S]*?verifies the directory is gone\./)?.[0] ?? '';
   expect(refCleanup, 'cleanup step list missing').not.toBe('');
@@ -394,11 +396,15 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   expect(prompts).toMatch(/exit 2 means the store was busy or unreadable[^;]*retain the worktree, dispatch nothing/);
   expect((prompts.match(/pending_settlement\[\] (?:with )?reason untrust-pending/g) ?? []).length, 'both untrust paths retry through pending_settlement').toBe(2);
   expect(prompts).toMatch(/keeps its trust entry while retained/);
-  const CMD = 'claude --dangerously-skip-permissions --setting-sources user --strict-mcp-config --model claude-opus-5 --effort medium';
+  const CMD = 'claude --dangerously-skip-permissions --setting-sources user --strict-mcp-config --disable-slash-commands --model claude-opus-5 --effort medium';
   const launches = prompts.split(`--command "${CMD}"`).length - 1;
   expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
   expect(prompts).not.toMatch(/worker-start[^;]*--agent claude/);
-  expect((prompts.match(/confirm it shows the prompt and NOT "Quick safety check"/g) ?? []).length, 'both launches check readiness').toBe(2);
+  // Readiness is the rendered frame: wait satisfied, prompt marker present,
+  // dialog absent — not merely the absence of the dialog text in scrollback.
+  expect((prompts.match(/require \.result\.wait\.satisfied == true/g) ?? []).length, 'both launches require wait.satisfied').toBe(2);
+  expect((prompts.match(/orca terminal read --terminal <handle> --screen --json/g) ?? []).length, 'both launches read the rendered frame').toBe(2);
+  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launches require marker present and dialog absent').toBe(2);
   expect((prompts.match(/worker-start --run <orchestration run id> --worktree id:<clone id>::<worktree path> --terminal <handle>/g) ?? []).length, 'both take lifecycle ownership of the terminal').toBe(2);
   // Order on each path: seed, then launch, then readiness, then worker-start.
   for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {

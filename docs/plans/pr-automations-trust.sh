@@ -35,11 +35,16 @@ case "$mode" in
 esac
 
 # Claude's lock: bounded wait, never broken. Only a successful mkdir proves we hold it — a lock that
-# already exists belongs to someone else no matter who owns it or how fresh it is.
+# already exists belongs to someone else no matter who owns it or how fresh it is. Claude's
+# proper-lockfile treats a lock older than 10 s as stale and may replace it; our hold is one jq call
+# (milliseconds) and the mtime is refreshed at acquisition, and the release compares the directory's
+# inode so a lock that was stolen and recreated is never removed by us.
 got=0
 for _ in $(seq 1 25); do if mkdir "$LOCK" 2>/dev/null; then got=1; break; fi; sleep 0.2; done
 [ "$got" -eq 1 ] || exit 2
-trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+touch "$LOCK" 2>/dev/null
+ino="$(stat -c %i "$LOCK" 2>/dev/null)"
+trap '[ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null' EXIT
 
 # Re-read under the lock; a store that does not parse is never rewritten.
 jq -e . "$STORE" >/dev/null 2>&1 || exit 2
