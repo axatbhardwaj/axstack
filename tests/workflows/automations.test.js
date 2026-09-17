@@ -372,8 +372,15 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: reuse blocked`).toMatch(/cannot (?:be reused|inherit)|can never inherit/i);
     expect(text, `${name}: retained keeps trust`).toMatch(/retained worktree keeps its (?:trust )?entry/i);
     // The worker launches with the project surface disabled.
-    expect(text, `${name}: surface-reducing flags`).toMatch(/--setting-sources user --strict-mcp-config --disable-slash-commands/);
-    expect(text, `${name}: what stays live is stated`).toMatch(/what remains live is prompt text/i);
+    expect(text, `${name}: sanctioned isolation`).toMatch(/`--safe-mode`/);
+    expect(text, `${name}: agents named in the disabled set`).toMatch(/custom commands (?:or|and) agents/i);
+    expect(text, `${name}: what stays live is stated`).toMatch(/what remains live is the repository's files as data/i);
+    expect(text, `${name}: nothing offered for invocation`).toMatch(/offered for invocation/i);
+    // The helper's commit is ownership-checked and failure-checked.
+    expect(text, `${name}: re-verifies ownership at commit`).toMatch(/re-verifies at commit/i);
+    expect(text, `${name}: stale window`).toMatch(/10 s stale window/);
+    expect(text, `${name}: rename failure is failure`).toMatch(/failed chmod or rename as\s+failure/i);
+    expect(text, `${name}: releases only its own lock`).toMatch(/releases? only a lock it still owns/i);
     expect(text, `${name}: rendered readiness`).toMatch(/rendered frame/i);
     expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
     expect(text, `${name}: readiness check`).toMatch(/prompt marker present(?:,| and) the dialog absent/i);
@@ -396,10 +403,11 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
   expect(prompts).toMatch(/exit 2 means the store was busy or unreadable[^;]*retain the worktree, dispatch nothing/);
   expect((prompts.match(/pending_settlement\[\] (?:with )?reason untrust-pending/g) ?? []).length, 'both untrust paths retry through pending_settlement').toBe(2);
   expect(prompts).toMatch(/keeps its trust entry while retained/);
-  const CMD = 'claude --dangerously-skip-permissions --setting-sources user --strict-mcp-config --disable-slash-commands --model claude-opus-5 --effort medium';
+  const CMD = 'claude --dangerously-skip-permissions --safe-mode --model claude-opus-5 --effort medium';
   const launches = prompts.split(`--command "${CMD}"`).length - 1;
   expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
   expect(prompts).not.toMatch(/worker-start[^;]*--agent claude/);
+  expect((prompts.match(/launch the worker in Claude Code's safe mode/g) ?? []).length, 'both launches explain safe mode').toBe(2);
   // Readiness is the rendered frame: wait satisfied, prompt marker present,
   // dialog absent — not merely the absence of the dialog text in scrollback.
   expect((prompts.match(/require \.result\.wait\.satisfied == true/g) ?? []).length, 'both launches require wait.satisfied').toBe(2);

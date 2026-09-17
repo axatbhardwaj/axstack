@@ -93,7 +93,8 @@ test('concurrent seeds and a concurrent lock-taking writer lose nothing', () => 
   // A writer that behaves like Claude Code: takes the same mkdir lock, then
   // read-modify-writes its own key.
   const claudeLike = `for n in $(seq 1 20); do
-      for i in $(seq 1 50); do mkdir "${env.store}.lock" 2>/dev/null && break; sleep 0.05; done
+      got=0; for i in $(seq 1 100); do if mkdir "${env.store}.lock" 2>/dev/null; then got=1; break; fi; sleep 0.05; done
+      [ "$got" -eq 1 ] || { echo "claude-like writer could not acquire" >&2; exit 9; }
       t="${env.store}.tmp.$$.$RANDOM"; jq --arg n "$n" '.claudeWrites = ((.claudeWrites // 0) + 1)' "${env.store}" > "$t" && mv "$t" "${env.store}"
       rmdir "${env.store}.lock"; done`;
   const seeds = paths.map((p) => `bash ${HELPER} seed ${p} ${env.clone} ${env.head} &`).join('\n');
@@ -107,6 +108,47 @@ test('concurrent seeds and a concurrent lock-taking writer lose nothing', () => 
   expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), 'no temp files left').toBe('0');
 }, 60000);
 
+test('a lock stolen after the temp is rendered aborts the commit instead of overwriting the store', () => {
+  // The dangerous window: the helper has rendered its temp file from a store
+  // it read under the lock; Claude then treats the lock as stale, replaces
+  // it, and writes. Committing now would rename stale JSON over Claude's
+  // write. The helper must re-verify ownership at commit and abort.
+  const env = setup();
+  const slow = `${sandbox}/slow-commit.sh`;
+  writeFileSync(slow, readFileSync(HELPER, 'utf8').replace('# commit', 'sleep 1.5\n# commit'));
+  expect(readFileSync(slow, 'utf8')).toContain('sleep 1.5');
+  const r = sh(`bash ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.6; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    t="${env.store}.tmp.thief"; jq '.claudeField = "written-after-steal"' "${env.store}" > "$t" && mv "$t" "${env.store}"
+    wait $pid; echo "helper=$?"`, env.env);
+  expect(r.out, 'helper must report failure, not success').toMatch(/helper=2/);
+  const store = read(env);
+  expect(store.claudeField, "Claude's write after the steal must survive").toBe('written-after-steal');
+  expect(store.projects[env.wt], 'the stale seed must not have been committed').toBeUndefined();
+  expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | grep -v thief | wc -l`).out.trim(), 'helper temp removed').toBe('0');
+  expect(existsSync(`${env.store}.lock`), "the thief's lock is left in place").toBe(true);
+  rmSync(`${env.store}.lock`, { recursive: true });
+}, 30000);
+
+test('a failed rename or chmod is reported as failure with the temp removed and the store untouched', () => {
+  const env = setup();
+  const shim = `${sandbox}/shim`;
+  mkdirSync(shim);
+  for (const cmd of ['mv', 'chmod']) {
+    writeFileSync(`${shim}/${cmd}`, '#!/bin/sh\nexit 73\n'); chmodSync(`${shim}/${cmd}`, 0o755);
+    const before = readFileSync(env.store, 'utf8');
+    const r = sh(`bash ${HELPER} seed ${env.wt} ${env.clone} ${env.head}`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+    expect(r.code, `${cmd} failure must be exit 2, got ${r.code}`).toBe(2);
+    expect(readFileSync(env.store, 'utf8'), `${cmd} failure must leave the store untouched`).toBe(before);
+    expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), `${cmd} failure must remove the temp`).toBe('0');
+    expect(existsSync(`${env.store}.lock`), `${cmd} failure must release the lock`).toBe(false);
+    // unseed too: a false success here would leave a dead path trusted.
+    const u = sh(`bash ${HELPER} unseed ${env.wt}`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+    expect(u.code, `${cmd} failure on unseed must be exit 2`).toBe(2);
+    rmSync(`${shim}/${cmd}`);
+  }
+});
+
 test('a lock stolen mid-transaction is never released by the helper', () => {
   // Claude's proper-lockfile may replace a lock it considers stale. Retarget a
   // copy of the helper to pause inside its critical section, steal the lock
@@ -117,10 +159,13 @@ test('a lock stolen mid-transaction is never released by the helper', () => {
   const r = sh(`bash ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
     sleep 0.4; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"; stolen=$(stat -c %i "${env.store}.lock")
     wait $pid; echo "helper=$?"; [ -d "${env.store}.lock" ] && echo "lock=present:$(stat -c %i "${env.store}.lock"):$stolen" || echo "lock=REMOVED"`, env.env);
-  expect(r.out).toMatch(/helper=0/);
+  // Ownership was lost before commit, so the helper must abort — and must
+  // still leave the thief's lock exactly as it found it.
+  expect(r.out).toMatch(/helper=2/);
   const m = r.out.match(/lock=present:(\d+):(\d+)/);
   expect(m, `the thief's lock must survive: ${r.out}`).not.toBeNull();
   expect(m[1]).toBe(m[2]);
+  expect(read(env).projects[env.wt], 'nothing committed after the steal').toBeUndefined();
   rmSync(`${env.store}.lock`, { recursive: true });
 });
 

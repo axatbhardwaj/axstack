@@ -36,23 +36,32 @@ esac
 
 # Claude's lock: bounded wait, never broken. Only a successful mkdir proves we hold it — a lock that
 # already exists belongs to someone else no matter who owns it or how fresh it is. Claude's
-# proper-lockfile treats a lock older than 10 s as stale and may replace it; our hold is one jq call
-# (milliseconds) and the mtime is refreshed at acquisition, and the release compares the directory's
-# inode so a lock that was stolen and recreated is never removed by us.
+# proper-lockfile treats a lock older than 10 s as stale and may replace it, so ownership is
+# re-verified at commit: the lock directory's inode must be unchanged and the hold must still be
+# well inside the stale window, otherwise the rendered temp is discarded and nothing is committed.
+# The release likewise removes the lock only if the inode is unchanged.
 got=0
 for _ in $(seq 1 25); do if mkdir "$LOCK" 2>/dev/null; then got=1; break; fi; sleep 0.2; done
 [ "$got" -eq 1 ] || exit 2
 touch "$LOCK" 2>/dev/null
 ino="$(stat -c %i "$LOCK" 2>/dev/null)"
-trap '[ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null' EXIT
+t0="$(date +%s)"
+t=""
+cleanup() { [ -n "$t" ] && rm -f "$t"; [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null; }
+trap cleanup EXIT
+trap 'exit 2' INT TERM HUP
+
+still_owned() {
+  [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && [ $(( $(date +%s) - t0 )) -lt 8 ]
+}
 
 # Re-read under the lock; a store that does not parse is never rewritten.
 jq -e . "$STORE" >/dev/null 2>&1 || exit 2
 t="$STORE.tmp.$$.$RANDOM"
-if jq --arg p "$wt_c" "$filter" "$STORE" > "$t" 2>/dev/null; then
-  chmod --reference="$STORE" "$t" 2>/dev/null
-  mv -f "$t" "$STORE"
-else
-  rm -f "$t"; exit 2
-fi
+jq --arg p "$wt_c" "$filter" "$STORE" > "$t" 2>/dev/null || exit 2
+chmod --reference="$STORE" "$t" 2>/dev/null || exit 2
+# commit: only while ownership provably still holds
+still_owned || exit 2
+mv -f "$t" "$STORE" || exit 2
+t=""
 exit 0

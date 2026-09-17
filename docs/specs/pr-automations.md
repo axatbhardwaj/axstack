@@ -200,7 +200,11 @@ itself, at exactly the pinned head; anything else is refused and never
 seeded. It writes under Claude Code's own `mkdir`-based `~/.claude.json.lock`
 with a bounded retry in which only a successful `mkdir` counts, never
 breaking a foreign lock, re-reads under it, refuses an unparsable store,
-uses a unique temp file, preserves mode, renames, and always releases; a
+uses a unique temp file, preserves mode, re-verifies at commit that the
+lock is still its own (unchanged inode, well inside Claude's 10 s stale
+window) and otherwise discards the temp and commits nothing, treats a
+failed chmod or rename as failure with the temp removed, and always
+releases only a lock it still owns; a
 busy or unreadable store retains the worktree and dispatches nothing. The
 worktree cleanup removes the entry through the same helper; a removal that
 fails after the worktree is gone keeps the marker in `pending_settlement[]`
@@ -210,14 +214,16 @@ last guard between PR content and a worker with permissions bypassed, and
 trust activates the full project surface — `.claude/settings.json` and its
 hooks, `.mcp.json` servers, marketplace plugin auto-install, `CLAUDE.md` —
 so a hostile branch's hooks or MCP servers would run when the folder opens.
-Therefore the worker launches with that surface disabled,
-`--setting-sources user --strict-mcp-config --disable-slash-commands`, via
-`terminal create` and `worker-start --terminal` — no project settings or
-hooks, no project MCP, no project skills or commands as an invocation
-surface; what remains live is prompt text the model reads (`CLAUDE.md`,
-project rules) and the commands the worker itself runs — and the driver
-confirms readiness from the rendered frame (`wait.satisfied`, the prompt
-marker present, the dialog absent) before dispatching. The allowlist, the pinned head, and that
+Therefore the worker launches in Claude Code's sanctioned isolation
+mode, `--safe-mode`, via `terminal create` and `worker-start --terminal`:
+no `CLAUDE.md`, skills, plugins, hooks, MCP servers, custom commands or
+agents load from project or user scope; built-in tools and auth are
+untouched; the brief loads its skill files by path. What remains live is
+the repository's files as data the worker reads and the commands it itself
+runs — nothing from the branch loads, executes, or is offered for
+invocation. The driver confirms readiness from the rendered frame
+(`wait.satisfied`, the prompt marker present, the dialog absent) before
+dispatching. The allowlist, the pinned head, and that
 reduced surface are the only things that make pre-trust acceptable.
 
 Each dispatched agent runs in its own Orca child worktree under

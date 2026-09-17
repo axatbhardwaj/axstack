@@ -141,7 +141,10 @@ lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
 with a bounded retry in which only a successful `mkdir` counts as holding
 it, never breaking a lock it did not create; it re-reads under the lock,
 refuses a store that does not parse, writes a unique temp file, preserves
-the store's mode, renames, and releases in every case. A busy or unreadable
+the store's mode, re-verifies at commit that the lock is still its own —
+unchanged inode, well inside Claude's 10 s stale window — and otherwise
+discards the temp and commits nothing, treats a failed chmod or rename as
+failure with the temp removed, and releases only a lock it still owns. A busy or unreadable
 store exits 2: the worktree is retained and nothing is dispatched. The
 worktree cleanup removes the entry through the same helper; if that
 removal fails after the worktree is gone, the marker stays in
@@ -155,16 +158,18 @@ worker running with permissions bypassed. Trusting a folder activates the
 full project surface: its `.claude/settings.json` and the hooks it defines,
 its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
 a hostile branch's hooks or MCP servers would run the moment the folder
-opens. So the worker is launched with that surface disabled —
-`--setting-sources user --strict-mcp-config --disable-slash-commands`,
-through `terminal create` and `worker-start --terminal`, since
-`worker-start` cannot pass argv: no project settings or hooks, no project
-MCP servers, no project skills or commands as an invocation surface — and
-the driver confirms readiness from the rendered frame, `wait.satisfied`
-plus the prompt marker present and the dialog absent, before dispatching.
-What remains live is prompt text the model reads — `CLAUDE.md` and
-project rules — and the commands the worker itself chooses to run, which
-it already runs today; nothing from the branch executes on its own. The allowlist,
+opens. So the worker is launched in Claude Code's own isolation mode,
+`--safe-mode`, through `terminal create` and `worker-start --terminal`,
+since `worker-start` cannot pass argv. Safe mode is the binary's sanctioned
+"all customizations disabled" path: no `CLAUDE.md`, skills, plugins, hooks,
+MCP servers, custom commands or agents load from anywhere, project or user;
+built-in tools and authentication are untouched, and the brief loads the
+skill files it needs by path. The driver confirms readiness from the
+rendered frame — `wait.satisfied`, the prompt marker present, the dialog
+absent — before dispatching. What remains live is the repository's files as
+data the worker reads and the commands the worker itself chooses to run,
+which it already runs today; nothing from the branch loads, executes, or is
+offered for invocation on its own. The allowlist,
 the pinned head, and that reduced surface are what make pre-trust
 acceptable, and nothing else does.
 
