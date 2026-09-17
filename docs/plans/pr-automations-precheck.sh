@@ -45,6 +45,8 @@ printf '%s' "$cursor" | jq -e '
     and all(.[]; .started_at | timestamp))
   and ((.repair_caps // {}) | type == "object"
     and all(.[]; .expires_at | timestamp))
+  and ((.retained_slots // []) | type == "array"
+    and all(.[]; (.slot | type == "string") and (.pr | type == "string") and (.head | type == "string") and (.reason | type == "string")))
   and (.runtime_refusal == null
     or (.runtime_refusal | type == "object"
       and (.code | type == "string" and length > 0)

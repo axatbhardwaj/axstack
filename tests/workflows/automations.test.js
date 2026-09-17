@@ -152,26 +152,26 @@ test('automations: the pair runs from the root folder workspace and children nes
   expect(prompts).not.toMatch(/pr-automations-prompts\.md in this worktree/);
 });
 
-test('automations: settlement leaves no worktree, directory, branch, or terminal behind', () => {
+test('automations: settlement returns the slot to the pool and leaves no terminal behind', () => {
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
   expect(ref).toMatch(/Settlement leaves nothing behind/i);
   for (const [name, text] of [['reference', ref], ['spec', spec]]) {
     expect(text, `${name}: terminal tab`).toMatch(/closes? (?:any|its) terminal tab/i);
-    expect(text, `${name}: worktree and directory`).toMatch(/removes the child worktree and its directory/i);
+    expect(text, `${name}: slot reset`).toMatch(/resets the slot to the pinned head/i);
     expect(text, `${name}: untracked artefacts`).toMatch(/clears untracked artefacts/i);
-    expect(text, `${name}: branch`).toMatch(/deletes the branch the worktree created/i);
-    expect(text, `${name}: verified gone`).toMatch(/verif(?:ies|y) the directory is gone/i);
+    expect(text, `${name}: verified clean`).toMatch(/verif(?:ies|y) the slot is clean/i);
     expect(text, `${name}: leftovers are findings`).toMatch(/outlives its dispatch[^.]*health finding/i);
+    // Slots are fixed: the driver never creates or removes worktrees.
+    expect(text, `${name}: never creates`).toMatch(/never creates or removes a worktree/i);
   }
-  // The prompt spells out the same steps as commands, for both settlement
-  // and abandon.
   expect(prompts).toMatch(/orca terminal close --terminal <handle> --tab/);
+  expect(prompts).toMatch(/git -C <worktree path> reset --hard/);
   expect(prompts).toMatch(/git -C <worktree path> clean -fdx/);
-  expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
-  expect(prompts).toMatch(/branch -D <worktree branch>/);
-  expect(prompts).toMatch(/verify the directory is gone/);
+  expect(prompts).not.toMatch(/orca worktree rm/);
+  expect(prompts).not.toMatch(/orca worktree create --repo <clone id> --name pr-/);
+  expect(prompts).not.toMatch(/branch -D/);
   expect(prompts).toMatch(/after a confirmed abandon[^.]*apply the same disposability proof/);
 });
 
@@ -197,17 +197,17 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
     expect(text, `${name}: abandon settlement defined`).toMatch(/accepted abandon receipt/i);
     expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
     expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
-    expect(text, `${name}: unsafe work is retained`).toMatch(/is \*?\*?retained\*?\*?/i);
+    expect(text, `${name}: unsafe work is retained`).toMatch(/(?:is|are both) \*?\*?retained\*?\*?/i);
     expect(text, `${name}: retention is recorded`).toMatch(/health\[\][^.]*(?:path and SHA|path and \$hw)/i);
-    expect(text, `${name}: blocks only that PR`).toMatch(/blocks? only that PR/i);
+    expect(text, `${name}: blocks only that PR`).toMatch(/block(?:s|ing)? only that PR/i);
   }
   expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
   // The tick steps that the driver follows literally must defer to the gate
   // rather than instruct an unconditional removal.
-  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the worktree disposable/);
+  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the slot disposable/);
   expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/After confirmed abandon, run the same cleanup[^.]*retained, not removed/);
   expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
-  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
+  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the slot disposable/);
   expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
   // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
   expect(prompts).toMatch(/pending or unknown release retains the worktree/);
@@ -225,7 +225,7 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);
   expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
   expect(prompts).toMatch(/If disposable, clean up completely/);
-  expect(prompts).toMatch(/If not disposable, retain it[^.]*delete nothing/);
+  expect(prompts).toMatch(/If not disposable[^.]*retain it[^.]*delete nothing/);
   expect(prompts).toMatch(/status --porcelain must be empty/);
   // clean -fdx may appear only inside the disposable branch.
   const disposableStart = prompts.indexOf('If disposable, clean up completely');
@@ -308,7 +308,7 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/structured error code in the JSON response/);
   expect(prompts).toMatch(/nested_worker_depth_exceeded/);
   expect(prompts).toMatch(/never key on the message text/);
-  expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded there is no worker, so do NOT use the step \(2\) settlement proof/);
+  expect(prompts).toMatch(/if worker-start itself is refused after the slot was checked out there is no worker, so do NOT use the step \(2\) settlement proof/);
   expect(prompts).toMatch(/read the receipt's failedStage and residualResources first/);
   expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
   expect(prompts).toMatch(/projection\.nextAction is an object \{kind, argv\}/);
@@ -325,116 +325,66 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
-test('automations: the driver pre-trusts only the worktrees it creates, and untrusts them on cleanup', () => {
-  // Claude Code trusts per git toplevel; every per-PR worktree is a new one and
-  // would stop at the "Quick safety check" dialog, which the driver must never
-  // answer for a worker. The user decided on 2026-09-17 that a worktree the
-  // driver creates from an allowlisted clone at the pinned head is trusted by
-  // policy, recorded before launch and removed with the worktree.
+test('automations: workers run in a fixed pool of two pre-trusted slots per project', () => {
+  // Claude Code trusts per git toplevel, so every fresh worktree path stops
+  // at the "Quick safety check" dialog. Instead of writing ~/.claude.json per
+  // dispatch, each allowlisted project has two fixed slot worktrees, trusted
+  // once by the user; the driver checks the pinned head out into a free one.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
-
-  const refTrust = ref.match(/Claude Code trusts a folder per git toplevel[\s\S]*?nothing else does\./)?.[0] ?? '';
-  const specTrust = spec.match(/Claude Code trusts a folder per git toplevel[\s\S]*?make pre-trust acceptable\./)?.[0] ?? '';
-  expect(refTrust, 'reference pre-trust paragraph missing').not.toBe('');
-  expect(specTrust, 'spec pre-trust paragraph missing').not.toBe('');
-  for (const [name, text] of [['reference', refTrust], ['spec', specTrust]]) {
+  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
     expect(text, `${name}: names the dialog`).toMatch(/Quick safety check/);
-    expect(text, `${name}: the entry it writes`).toMatch(/hasTrustDialogAccepted/);
-    expect(text, `${name}: before launch`).toMatch(/before `?worker-start`?/i);
-    expect(text, `${name}: scope — driver-created`).toMatch(/worktree the driver (?:itself )?creates/i);
-    expect(text, `${name}: scope — allowlisted clone at pinned head`).toMatch(/allowlisted clone[^.]*pinned head/i);
-    expect(text, `${name}: never any other path`).toMatch(/never (?:for )?any other path/i);
-    expect(text, `${name}: removed on cleanup`).toMatch(/cleanup removes the entry/i);
-    expect(text, `${name}: user decision, dated`).toMatch(/2026-09-17/);
-    expect(text, `${name}: names it as the last guard`).toMatch(/last guard/i);
-    // The full activation surface is stated, not a subset of it.
-    expect(text, `${name}: settings and hooks`).toMatch(/\.claude\/settings\.json[^.]*hooks/i);
-    expect(text, `${name}: mcp`).toMatch(/\.mcp\.json/);
-    expect(text, `${name}: plugins`).toMatch(/plugin auto-install/i);
-    // The write coordinates with Claude's own lock; a lock it cannot take
-    // dispatches nothing.
-    expect(text, `${name}: Claude's own lock`).toMatch(/`?~\/\.claude\.json\.lock`?/);
-    expect(text, `${name}: mkdir-based`).toMatch(/mkdir/);
-    expect(text, `${name}: bounded retry`).toMatch(/bounded retry/i);
-    expect(text, `${name}: only mkdir success counts`).toMatch(/only a successful `?mkdir`? counts/i);
-    expect(text, `${name}: never breaks a fresh foreign lock`).toMatch(/fresh\s+foreign lock is never broken/i);
-    expect(text, `${name}: reclaims only what Claude treats as abandoned`).toMatch(/10 s stale\s+threshold[^.]*(?:Claude itself treats as abandoned|what Claude itself treats as abandoned)/i);
-    expect(text, `${name}: refresher dies with the owner`).toMatch(/(?:runs with the owner and )?dies with (?:it|the owner)/i);
-    expect(text, `${name}: failed refresh is a compromise`).toMatch(/failed refresh as a\s+compromised lease/i);
-    expect(text, `${name}: health verified at commit`).toMatch(/refresher alive/i);
-    expect(text, `${name}: unique temp + rename`).toMatch(/unique temp file[^.]*rename/i);
-    expect(text, `${name}: busy store dispatches nothing`).toMatch(/busy or unreadable\s+store[^.]*(?:dispatches nothing|nothing is dispatched)/i);
-    // Scope is enforced by the helper, not by prose.
-    expect(text, `${name}: helper enforces scope`).toMatch(/helper enforces the scope/i);
-    // Single process: no child can outlive the owner and commit later.
-    expect(text, `${name}: single process`).toMatch(/nothing can outlive the\s+owner and commit after it dies/i);
-    expect(text, `${name}: common dir check`).toMatch(/common dir is the[^.]*clone/i);
-    expect(text, `${name}: not the clone itself`).toMatch(/(?:must )?not (?:be )?the clone\s+itself/i);
-    expect(text, `${name}: refuses unparsable store`).toMatch(/(?:refuses|refuse) (?:a |an )?(?:store that does not parse|unparsable store)/i);
-    // A failed untrust cannot let the path be reused while trusted.
-    expect(text, `${name}: untrust-pending`).toMatch(/pending_settlement\[\][^.]*untrust-pending/);
-    expect(text, `${name}: reuse blocked`).toMatch(/cannot (?:be reused|inherit)|can never inherit/i);
-    expect(text, `${name}: retained keeps trust`).toMatch(/retained worktree keeps its (?:trust )?entry/i);
-    // The worker launches with the project surface disabled.
-    expect(text, `${name}: sanctioned isolation`).toMatch(/`--safe-mode`/);
-    expect(text, `${name}: agents named in the disabled set`).toMatch(/custom commands (?:or|and) agents/i);
-    expect(text, `${name}: what stays live is stated`).toMatch(/what remains live is the repository's files as data/i);
-    expect(text, `${name}: nothing offered for invocation`).toMatch(/offered for invocation/i);
-    // The helper's commit is ownership-checked and failure-checked.
-    expect(text, `${name}: re-verifies ownership at commit`).toMatch(/re-verifies at commit/i);
-    expect(text, `${name}: stale window`).toMatch(/10 s stale (?:window|threshold)/);
-    // The lease is kept alive while held, as proper-lockfile does; a
-    // stalled rename cannot let the lock go stale underneath the helper.
-    expect(text, `${name}: lease refreshed while held`).toMatch(/refresh(?:es|ing|er touches) the lock's mtime every second/i);
-    expect(text, `${name}: covers a stalled rename`).toMatch(/even if a rename stalls/i);
-    expect(text, `${name}: rename failure is failure`).toMatch(/failed chmod or rename as\s+failure/i);
-    expect(text, `${name}: releases only its own lock`).toMatch(/releases? only a lock it still owns/i);
-    expect(text, `${name}: rendered readiness`).toMatch(/rendered frame/i);
-    expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
-    expect(text, `${name}: readiness check`).toMatch(/prompt marker present(?:,| and) the dialog absent/i);
+    expect(text, `${name}: two slots per project`).toMatch(/two[^.]*slot[^.]*per (?:allowlisted )?project|slot-1[^.]*slot-2/i);
+    expect(text, `${name}: trusted once by the user`).toMatch(/trusted once by the user/i);
+    expect(text, `${name}: no config writes`).toMatch(/never writes? (?:to )?`?~\/\.claude\.json`?/i);
+    expect(text, `${name}: never answers the dialog`).toMatch(/never answers? (?:that|the) dialog/i);
+    expect(text, `${name}: free slot definition`).toMatch(/no live (?:dispatch )?marker names it/i);
+    expect(text, `${name}: no free slot defers`).toMatch(/no free slot[^.]*deferred/i);
+    expect(text, `${name}: detached checkout at the head`).toMatch(/checkout --detach <head sha>|checked out detached at the (?:pinned|exact) head/i);
+    expect(text, `${name}: sanctioned isolation`).toMatch(/`?--safe-mode`?/);
+    expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
-  const refCleanup = ref.match(/Only then it closes any terminal tab[\s\S]*?verifies the directory is gone\./)?.[0] ?? '';
-  expect(refCleanup, 'cleanup step list missing').not.toBe('');
-  expect(refCleanup).toMatch(/removes the Claude Code trust entry it seeded/);
-
-  // Prompt: every trust write goes through the helper, which owns the lock,
-  // the scope check and the store write; seeds precede the launch; a failed
-  // untrust keeps the marker in pending_settlement so the path cannot be
-  // reused while trusted.
-  const seeds = prompts.match(/<bun> <run dir>\/trust\.js seed <worktree path> <clone path> <head sha>/g) ?? [];
-  const unseeds = prompts.match(/<bun> <run dir>\/trust\.js unseed <worktree path>/g) ?? [];
-  expect(seeds.length, 'repair and review dispatch both seed through the helper').toBe(2);
-  expect(unseeds.length, 'settlement and no-worker cleanup both untrust through the helper').toBe(2);
-  expect(prompts, 'no inline store write remains').not.toMatch(/hasTrustDialogAccepted: true/);
-  expect(prompts, 'no inline lock remains').not.toMatch(/mkdir ~\/\.claude\.json\.lock/);
-  expect(prompts).toMatch(/exit 3 means the path is not this tick's worktree[^;]*never seed/);
-  expect(prompts).toMatch(/exit 2 means the store was busy or unreadable[^;]*retain the worktree, dispatch nothing/);
-  expect((prompts.match(/pending_settlement\[\] (?:with )?reason untrust-pending/g) ?? []).length, 'both untrust paths retry through pending_settlement').toBe(2);
-  expect(prompts).toMatch(/keeps its trust entry while retained/);
+  // The pool is created once, parented under its project, by the setup
+  // section — not by the driver at tick time.
+  expect(prompts).toMatch(/--name slot-1[^\n]*--parent-worktree id:<clone id>::<clone path>/);
+  expect(prompts).toMatch(/git -C <clone path> fetch origin <head sha>/);
+  expect(prompts).toMatch(/git -C <worktree path> checkout --detach <head sha>/);
+  expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);
   const CMD = 'claude --dangerously-skip-permissions --safe-mode --model claude-opus-5 --effort medium';
-  const launches = prompts.split(`--command "${CMD}"`).length - 1;
-  expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
-  expect(prompts).not.toMatch(/worker-start[^;]*--agent claude/);
-  expect((prompts.match(/launch the worker in Claude Code's safe mode/g) ?? []).length, 'both launches explain safe mode').toBe(2);
-  // Readiness is the rendered frame: wait satisfied, prompt marker present,
-  // dialog absent — not merely the absence of the dialog text in scrollback.
-  expect((prompts.match(/require \.result\.wait\.satisfied == true/g) ?? []).length, 'both launches require wait.satisfied').toBe(2);
-  expect((prompts.match(/orca terminal read --terminal <handle> --screen --json/g) ?? []).length, 'both launches read the rendered frame').toBe(2);
-  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launches require marker present and dialog absent').toBe(2);
-  expect((prompts.match(/worker-start --run <orchestration run id> --worktree id:<clone id>::<worktree path> --terminal <handle>/g) ?? []).length, 'both take lifecycle ownership of the terminal').toBe(2);
-  // Order on each path: seed, then launch, then readiness, then worker-start.
-  for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {
-    const startAt = prompts.indexOf(marker);
-    const before = prompts.slice(0, startAt);
-    const seedAt = before.lastIndexOf('<bun> <run dir>/trust.js seed');
-    const launchAt = before.lastIndexOf(`--command "${CMD}"`);
+  expect((prompts.match(new RegExp(`--command "${CMD}"`, 'g')) ?? []).length, 'both launch paths use safe mode').toBe(2);
+  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launch paths read readiness from the frame').toBe(2);
+  // A dialog on a slot means the slot lost its trust: the slot is reported,
+  // the PR is deferred, nothing is dispatched.
+  expect((prompts.match(/if the dialog is showing the slot is not trusted/g) ?? []).length).toBe(2);
+  // Order on each path: take slot, then launch, then readiness, then worker-start.
+  for (const marker of ['--task-title "repair <repo>#<num> @<head>"', '--task-title "review <repo>#<num> @<head>"']) {
+    const before = prompts.slice(0, prompts.indexOf(marker));
+    const slotAt = before.lastIndexOf('take a free slot');
+    const launchAt = before.lastIndexOf('--safe-mode');
     const readyAt = before.lastIndexOf('Quick safety check');
-    expect(seedAt, `${marker}: seed present before start`).toBeGreaterThan(-1);
-    expect(launchAt, `${marker}: launch after seed`).toBeGreaterThan(seedAt);
+    expect(slotAt, `${marker}: slot taken before start`).toBeGreaterThan(-1);
+    expect(launchAt, `${marker}: launch after slot`).toBeGreaterThan(slotAt);
     expect(readyAt, `${marker}: readiness after launch`).toBeGreaterThan(launchAt);
   }
+  // The run directory no longer ships a trust helper.
+  expect(ref).not.toMatch(/`trust\.js`/);
+  // Retention is mechanical: a clean, terminal-less slot holding an unpushed
+  // candidate must not satisfy the free predicate for ANY PR, so retained
+  // slots are recorded in cursor.json and excluded from the pool until the
+  // user reconciles them.
+  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+    expect(text, `${name}: retained slots are part of the free predicate`).toMatch(/free when[^.]*not (?:listed )?in (?:`|cursor\.json )?retained_slots\[\]`?/i);
+    expect(text, `${name}: retention record`).toMatch(/retained_slots\[\][^.]*(?:`slot`|slot)[^.]*(?:`pr`|pr)[^.]*(?:`head`|head|SHA)[^.]*(?:`reason`|reason)/i);
+    expect(text, `${name}: cleared only by the user`).toMatch(/retained_slots\[\][^.]*(?:cleared|removed) only by the user/i);
+    // Both retention paths record the slot: a settled worker whose candidate
+    // cannot be proven durable, and a dirty or unproven abandon.
+    expect(text, `${name}: settled retention records the slot`).toMatch(/(?:settled|release)[^.]*(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]|(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]/i);
+    expect(text, `${name}: abandon retention records the slot`).toMatch(/abandon[\s\S]{0,400}retained_slots\[\]/i);
+    // No active contract may instruct removing a worktree/slot on cleanup.
+    expect(text, `${name}: no removal language`).not.toMatch(/disposable before removing|removes? the (?:child )?worktree|worktree rm/i);
+  }
+  expect(ref).toMatch(/`retained_slots\[\]`[^;]*`slot`[^;]*`pr`[^;]*`head`[^;]*`reason`/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

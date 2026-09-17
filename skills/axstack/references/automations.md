@@ -11,7 +11,7 @@ Pair A/B is retired for this contract; its artefacts remain untouched.
 
 - **driver** — every 15 minutes, fresh Opus session in the host's `root`
   folder workspace, which is not a git repository and belongs to no project. It discovers GitHub work, binds the persistent Orca
-  Run, creates one project-local child worktree per selected PR, dispatches the
+  Run, checks each selected PR's head out into a free project-local slot, dispatches the
   matching Axstack agent, reconciles completions and decisions, then exits. The
   driver is the automation session itself, with no `axstack-monitor` or
   `axstack-owner` role row. It never performs review or repair in its own
@@ -97,8 +97,8 @@ The driver performs this order and exits:
    inbox. For a `worker_done` matching a live marker, verify the review id at
    the bound head, push range, or opened token. Release the worker; once its
    release receipt is settled and the process has exited, run the cleanup
-   under "Run directory" below, which proves the worktree disposable before
-   removing it; then clear the marker. Unverifiable delivery stays in
+   under "Run directory" below, which proves the slot disposable before
+   resetting it; then clear the marker. Unverifiable delivery stays in
    `pending_settlement[]` and blocks only that PR.
 3. Consume decisions as their sole consumer under "Decision tokens" below.
 4. Reconcile every marker older than 3 h. A live worker gets `worker-stop`; an
@@ -125,47 +125,17 @@ The driver performs this order and exits:
 ## Dispatch and repair selection
 
 Claude Code trusts a folder per git toplevel and stops at its "Quick safety
-check" dialog otherwise; every per-PR child worktree is a new toplevel, and
-the driver must never answer that dialog for a worker. The user decided on
-2026-09-17 that a worktree the driver itself creates from an allowlisted
-clone at the pinned head is trusted by policy: immediately after creating
-it and before `worker-start`, the driver runs the trust helper
-(`docs/plans/pr-automations-trust.js`, deployed beside the precheck and run
-with Bun), which
-owns the only write the automation makes to `~/.claude.json`. It writes the path's `hasTrustDialogAccepted` entry — what a
-manual acceptance writes. The helper
-enforces the scope mechanically before it writes anything: the path must be
-a git worktree whose common dir is the named allowlisted clone's, must not
-be the clone itself, and must sit at exactly the pinned head — anything
-else exits 3 and is never seeded. It is one process on purpose: lock, refresher,
-render and rename all happen in the same process, so nothing can outlive the
-owner and commit after it dies. It writes under Claude Code's own config
-lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
-following Claude's own lease rules, with a bounded retry. Only a successful
-`mkdir` counts as holding it; a fresh foreign lock is never broken, and the only lock it will
-reclaim is one whose mtime is past Claude's 10 s stale threshold, which is
-exactly what Claude itself treats as abandoned. It keeps the lease alive the
-way Claude does: a refresher touches the lock's mtime every second for as
-long as it is held, so the lock cannot age into staleness under it even if a
-rename stalls. The refresher runs with the owner and dies with it, exits the
-moment the lock is no longer ours, and treats a failed refresh as a
-compromised lease by terminating the owner before it can commit. The helper
-re-reads under the lock, refuses a store that does not parse, writes a
-unique temp file, preserves the store's mode, re-verifies at commit that the
-lease is healthy — unchanged inode, refresher alive, refreshed within the
-last few seconds — and otherwise discards the temp and commits nothing,
-treats a failed chmod or rename as failure with the temp removed, and
-releases only a lock it still owns, stopping the refresher first. A busy or unreadable
-store exits 2: the worktree is retained and nothing is dispatched. The
-worktree cleanup removes the entry through the same helper; if that
-removal fails after the worktree is gone, the marker stays in
-`pending_settlement[]` as `untrust-pending` — which keeps the PR
-undispatchable, so the reused path can never inherit a dead trust entry —
-and the removal is retried next tick. A retained worktree keeps its entry
-while retained; it is the same driver-created path. This is scoped
-exactly there — never for any other path, never for a worktree it did not
-create — because that dialog is the last guard between PR content and a
-worker running with permissions bypassed. Trusting a folder activates the
+check" dialog otherwise, and the driver never answers that dialog for a
+worker. So workers run in a fixed pool: every allowlisted project has
+exactly two slot worktrees, `slot-1` and `slot-2`, its Orca child worktrees
+created once, parented to the project's primary worktree, and trusted once
+by the user through that dialog. The driver never creates or removes a
+worktree and never writes `~/.claude.json`. A slot is free when no live
+dispatch marker names it, it is not in `retained_slots[]`, no terminal is
+listed in it, and its tree is clean; no free slot in the project defers the
+PR to `deferred[]` like a budget, not a hold. Taking a slot fetches the head into the project clone,
+checks the slot out detached at the pinned head, and verifies HEAD equals
+it; the marker's worktree is the slot path. Trusting a folder activates the
 full project surface: its `.claude/settings.json` and the hooks it defines,
 its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
 a hostile branch's hooks or MCP servers would run the moment the folder
@@ -177,12 +147,12 @@ MCP servers, custom commands or agents load from anywhere, project or user;
 built-in tools and authentication are untouched, and the brief loads the
 skill files it needs by path. The driver confirms readiness from the
 rendered frame — `wait.satisfied`, the prompt marker present, the dialog
-absent — before dispatching. What remains live is the repository's files as
-data the worker reads and the commands the worker itself chooses to run,
-which it already runs today; nothing from the branch loads, executes, or is
-offered for invocation on its own. The allowlist,
-the pinned head, and that reduced surface are what make pre-trust
-acceptable, and nothing else does.
+absent — before dispatching; a dialog on a slot means the slot is not
+trusted: the slot is named in a health line, the PR is deferred, nothing is
+dispatched. What remains live is the repository's files as data the worker
+reads and the commands the worker itself chooses to run, which it already
+runs today; nothing from the branch loads, executes, or is offered for
+invocation on its own.
 
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
@@ -207,10 +177,10 @@ An own PR needs repair when either trigger applies:
    triggers again subject to the 24 h cap.
 
 Repair also requires no deploy-on-push head branch, no live repair cap, and
-selection of the lowest own PR in its stack that needs repair. Create a child
-worktree in that project's clone at the exact head, parented to that
-project's primary worktree so it appears under the project it serves, and
-dispatch one `axstack-watch` agent in authored repair mode. Its
+selection of the lowest own PR in its stack that needs repair. Take a free
+slot of that project (its slots are parented to that project's primary
+worktree, so the work appears under the project it serves) at the exact
+head, and dispatch one `axstack-watch` agent in authored repair mode. Its
 brief contains only the triggering checks or review findings. Each open
 descendant records one user-owned `pending restack` hold until it stops needing
 repair. The 24 h cap starts at dispatch and an abandon does not refund it.
@@ -232,8 +202,8 @@ and head. Budget exhaustion records the count and is not a hold.
 
 ## Agents and verdicts
 
-Every agent works in its own project-local Orca child worktree at the exact
-head and reports only through the Orca worker protocol.
+Every agent works in a project-local slot worktree checked out detached at
+the exact head and reports only through the Orca worker protocol.
 
 Peer review runs the two isolated configured reviewers on the identical brief,
 then the Luna gate. `APPROVE` requires complete exact-head/base reviews, gate
@@ -372,12 +342,12 @@ is no gate for health findings.
 ## Run directory
 
 The driver and watchdog run from the host's `root` folder workspace, not a
-project worktree: no project owns the automation, and every child worktree
+project worktree: no project owns the automation, and every slot worktree
 belongs to the project it serves. That workspace is not a git repository, so
 the run directory is private host state, one
 `~/.local/share/axstack/runs/<run id>/` directory. Settlement leaves nothing
 behind, but never destroys work. Before any destructive step the driver
-proves the child is disposable: the worker is settled — on the release path
+proves the slot is disposable: the worker is settled — on the release path
 a settled release receipt, on the abandon path an accepted abandon receipt,
 either with proven process exit; pending or unknown stops here — the
 worktree's HEAD is either the pinned head or a candidate that is durably
@@ -387,22 +357,27 @@ targeted fetch of that exact remote branch into a per-dispatch ref, never
 shared clone can fake durability, a failed fetch retaining the worktree — or held by a
 `refs/axstack/decisions/<token>` ref in the project clone; and, on the
 abandon path, the worktree has no uncommitted changes.
-Only then it closes any terminal tab still listed, clears untracked
-artefacts, removes the child worktree and its directory, deletes the branch
-the worktree created, removes the Claude Code trust entry it seeded for that
-path, and verifies the directory is gone. On the settled path
+Only then it closes any terminal tab still listed, resets the slot to the
+pinned head, clears untracked artefacts, and verifies the slot is clean, so
+it is back in the pool. On the settled path
 the worker has finished, so untracked files are artefacts by definition and
-are cleared; a candidate there is already pushed or token-held. An abandoned
-worktree that is dirty or holds an unproven candidate is **retained**, named
-in one `health[]` line with its path and SHA, and blocks only that PR with
-the user as owner. A worktree, directory, branch, or terminal that outlives
-its dispatch without such a retention record is a health finding. The run directory contains:
+are cleared; a candidate there is already pushed or token-held. A slot
+whose release is settled but whose HEAD cannot be proven disposable, and an
+abandoned slot that is dirty or holds an unproven candidate, are both
+**retained**: named in one `health[]` line with path and SHA, and blocking
+only that PR with the user as owner. Retention is mechanical on both paths:
+the driver appends `retained_slots[]` `{slot, pr, head, reason}`, which the
+free predicate excludes for every PR — a clean, terminal-less slot holding
+an unpushed candidate would otherwise look free — and an entry is cleared
+only by the user after reconciling the candidate. A dirty slot or a terminal that
+outlives its dispatch without such a retention record is a health finding. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
   draft, checks, reviews, last_self_review}}`, `dispatch_markers[]` (`pr`,
   `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`,
   `trigger`), `deferred[]`, `pending_settlement[]`,
+  `retained_slots[]` (`slot`, `pr`, `head`, `reason`),
   `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
@@ -410,7 +385,6 @@ its dispatch without such a retention record is a health finding. The run direct
   `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
   hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
-- `trust.js` — the trust transaction helper, run by the driver only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
   and send receipts) — watchdog only;
@@ -445,12 +419,12 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
   `runtime_refusal {code, first_seen, last_seen}`; the same code keeps the
   hold and updates `last_seen` without a new health line, a different code is
   a new finding. Prose is never the key. When `worker-start` itself is
-  refused after the child worktree was created, there is no worker, so the
+  refused after the slot was checked out, there is no worker, so the
   settlement proof does not apply; the driver reads the receipt's `failedStage`
   and `residualResources` first. With no Dispatch and no residual resources
   the no-worker branch applies: the worktree's HEAD must equal the pinned
-  head and `git status --porcelain` must be empty, and only then does the
-  driver remove the worktree, its directory and branch in the same tick.
+  head and `git status --porcelain` must be empty, and then the slot is simply
+  free again in the same tick; there is nothing to remove.
   With a Dispatch or any residual resource the failed start owns runtime
   state, and retaining alone is not recovery: the driver follows the
   runtime's recovery guide. With a Dispatch: `worker-list` for that run, and
