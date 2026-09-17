@@ -9,8 +9,8 @@ Pair A/B is retired for this contract; its artefacts remain untouched.
 
 ## Roles and authority
 
-- **driver** — every 15 minutes, fresh Opus session in the dedicated Axstack
-  automations worktree. It discovers GitHub work, binds the persistent Orca
+- **driver** — every 15 minutes, fresh Opus session in the host's `root`
+  folder workspace, which is not a git repository and belongs to no project. It discovers GitHub work, binds the persistent Orca
   Run, creates one project-local child worktree per selected PR, dispatches the
   matching Axstack agent, reconciles completions and decisions, then exits. The
   driver is the automation session itself, with no `axstack-monitor` or
@@ -94,16 +94,21 @@ The driver performs this order and exits:
    dispatches nothing.
 2. Bind the persistent Run with `orca orchestration run-use` and read the
    inbox. For a `worker_done` matching a live marker, verify the review id at
-   the bound head, push range, or opened token. Release the worker; remove its
-   child worktree only after confirmed process exit and accepted settlement;
-   then clear the marker. Unverifiable delivery stays in
+   the bound head, push range, or opened token. Release the worker; once its
+   release receipt is settled and the process has exited, run the cleanup
+   under "Run directory" below, which proves the worktree disposable before
+   removing it; then clear the marker. Unverifiable delivery stays in
    `pending_settlement[]` and blocks only that PR.
 3. Consume decisions as their sole consumer under "Decision tokens" below.
 4. Reconcile every marker older than 3 h. A live worker gets `worker-stop`; an
    exited worker gets `worker-abandon`. Unknown liveness or user takeover
-   retains worktree and marker and blocks only that PR. After confirmed
-   abandon, remove the worktree, append one health line, increment the head's
-   `abandon_count`, and drop that head so normal selection retries once. For a
+   retains worktree and marker and blocks only that PR. An abandon is
+   confirmed by its accepted abandon receipt plus proven process exit; there
+   is no release receipt on this path. After confirmed abandon, run the same
+   cleanup under "Run directory" below with its extra clean-tree condition — a
+   dirty or unproven worktree is retained, not removed — append one health
+   line, increment the head's `abandon_count`, and drop that head so normal
+   selection retries once. For a
    review-triggered dispatch, use the marker's `trigger` to remove exactly its
    review id and digest from `processed_reviews[]`. A second abandon at that
    head is a user-owned hold.
@@ -140,8 +145,9 @@ An own PR needs repair when either trigger applies:
 
 Repair also requires no deploy-on-push head branch, no live repair cap, and
 selection of the lowest own PR in its stack that needs repair. Create a child
-worktree in that project's clone at the exact head, parented to the driver
-worktree, and dispatch one `axstack-watch` agent in authored repair mode. Its
+worktree in that project's clone at the exact head, parented to that
+project's primary worktree so it appears under the project it serves, and
+dispatch one `axstack-watch` agent in authored repair mode. Its
 brief contains only the triggering checks or review findings. Each open
 descendant records one user-owned `pending restack` hold until it stops needing
 repair. The 24 h cap starts at dispatch and an abandon does not refund it.
@@ -302,8 +308,31 @@ is no gate for health findings.
 
 ## Run directory
 
-One `.git/axstack/runs/<run id>/` directory under the Axstack git-common-dir
-contains:
+The driver and watchdog run from the host's `root` folder workspace, not a
+project worktree: no project owns the automation, and every child worktree
+belongs to the project it serves. That workspace is not a git repository, so
+the run directory is private host state, one
+`~/.local/share/axstack/runs/<run id>/` directory. Settlement leaves nothing
+behind, but never destroys work. Before any destructive step the driver
+proves the child is disposable: the worker is settled — on the release path
+a settled release receipt, on the abandon path an accepted abandon receipt,
+either with proven process exit; pending or unknown stops here — the
+worktree's HEAD is either the pinned head or a candidate that is durably
+reachable — pushed to the head branch, tested only after a successful
+targeted fetch of that exact remote branch into a per-dispatch ref, never
+`FETCH_HEAD`, so neither a stale tracking ref nor a concurrent fetch in the
+shared clone can fake durability, a failed fetch retaining the worktree — or held by a
+`refs/axstack/decisions/<token>` ref in the project clone; and, on the
+abandon path, the worktree has no uncommitted changes.
+Only then it closes any terminal tab still listed, clears untracked
+artefacts, removes the child worktree and its directory, deletes the branch
+the worktree created, and verifies the directory is gone. On the settled path
+the worker has finished, so untracked files are artefacts by definition and
+are cleared; a candidate there is already pushed or token-held. An abandoned
+worktree that is dirty or holds an unproven candidate is **retained**, named
+in one `health[]` line with its path and SHA, and blocks only that PR with
+the user as owner. A worktree, directory, branch, or terminal that outlives
+its dispatch without such a retention record is a health finding. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
@@ -325,9 +354,11 @@ Timestamps are UTC `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an
 `error` for the precheck and `unknown` for the watchdog, never silently
 ignored.
 
-Orca run history is the authoritative log. The launch worktree is a dedicated
-Axstack worktree where nobody develops. The current `defi-automations`
-worktree retires with the old pair. Keep this notification-policy edge in the
+Orca run history is the authoritative log. The launch workspace is the host's
+`root` folder workspace, not a project worktree: nobody develops there, it is
+not a git repository, and no project owns the automation. The briefs and the
+escalation template are read from the axstack checkout at an absolute path
+given in the prompt, never relative to the launch workspace. Keep this notification-policy edge in the
 run record: `Notification policy` authorizes the token and watchdog sends;
 delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
 

@@ -122,6 +122,117 @@ test('automations: a published verdict body is written for the PR reader, not th
   expect(clause).toMatch(/marker line is the only pipeline artefact/i);
 });
 
+test('automations: the pair runs from the root folder workspace and children nest under their project', () => {
+  // Settled 2026-09-17: no project owns the automation. The driver and
+  // watchdog run from the host's root folder workspace, the run directory is
+  // private host state because that workspace is not a git repository, and a
+  // per-PR child worktree is parented to its own project's primary worktree so
+  // it appears under that project rather than under axstack. Asserted on the
+  // shipped reference, the active spec, and the operational prompt, since a
+  // stale assumption in any one of them breaks the tick.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+
+  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+    expect(text, `${name}: launch workspace`).toMatch(/(?:host's )?`root` folder workspace/i);
+    expect(text, `${name}: run directory`).toMatch(/~\/\.local\/share\/axstack\/runs\/<run id>\//);
+    expect(text, `${name}: no git-common-dir run directory`).not.toMatch(/git-common-dir[^.]*runs|runs[^.]*git-common-dir/i);
+    expect(text, `${name}: no dedicated axstack worktree`).not.toMatch(/dedicated (?:Axstack |Orca )?(?:automations )?worktree/i);
+  }
+  expect(ref).toMatch(/not a git repository/i);
+  expect(ref).toMatch(/parented to (?:that|the) project's primary worktree/i);
+  expect(spec).toMatch(/project's primary worktree/i);
+
+  // The prompt is what actually runs: parent by full Orca id, briefs by
+  // absolute path, and no reliance on the launch workspace being a checkout.
+  expect(prompts).toMatch(/--parent-worktree id:<clone id>::<clone path>/);
+  expect(prompts).not.toMatch(/--parent-worktree <this worktree>/);
+  expect(prompts).toMatch(/<axstack checkout>\/docs\/plans\/pr-automations-prompts\.md \(absolute path/);
+  expect(prompts).not.toMatch(/pr-automations-prompts\.md in this worktree/);
+});
+
+test('automations: settlement leaves no worktree, directory, branch, or terminal behind', () => {
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  expect(ref).toMatch(/Settlement leaves nothing behind/i);
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+    expect(text, `${name}: terminal tab`).toMatch(/closes? (?:any|its) terminal tab/i);
+    expect(text, `${name}: worktree and directory`).toMatch(/removes the child worktree and its directory/i);
+    expect(text, `${name}: untracked artefacts`).toMatch(/clears untracked artefacts/i);
+    expect(text, `${name}: branch`).toMatch(/deletes the branch the worktree created/i);
+    expect(text, `${name}: verified gone`).toMatch(/verif(?:ies|y) the directory is gone/i);
+    expect(text, `${name}: leftovers are findings`).toMatch(/outlives its dispatch[^.]*health finding/i);
+  }
+  // The prompt spells out the same steps as commands, for both settlement
+  // and abandon.
+  expect(prompts).toMatch(/orca terminal close --terminal <handle> --tab/);
+  expect(prompts).toMatch(/git -C <worktree path> clean -fdx/);
+  expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
+  expect(prompts).toMatch(/branch -D <worktree branch>/);
+  expect(prompts).toMatch(/verify the directory is gone/);
+  expect(prompts).toMatch(/after a confirmed abandon[^.]*apply the same disposability proof/);
+});
+
+test('automations: cleanup never destroys work it cannot prove is safe to lose', () => {
+  // Review finding: unconditional `git clean -fdx` erases untracked files in
+  // an abandoned repair, and unconditional `branch -D` can delete the only
+  // ref to a committed but unpushed candidate. Destruction is gated on proof.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  // Scope the reference to its cleanup paragraph: the decisions ref is named
+  // elsewhere too, and only its use as a durability proof here matters.
+  const refCleanup = ref.match(/Settlement leaves nothing behind[\s\S]*?The run directory contains:/)?.[0] ?? '';
+  expect(refCleanup, 'cleanup paragraph missing').not.toBe('');
+  const specCleanup = spec.match(/After a worker settles the driver releases it[\s\S]*?settled by the user on 2026-09-17\)\./)?.[0] ?? '';
+  expect(specCleanup, 'spec cleanup clause missing').not.toBe('');
+  for (const [name, text] of [['reference', refCleanup], ['spec', specCleanup]]) {
+    expect(text, `${name}: proof precedes destruction`).toMatch(/(?:proves|proven)[^.]{0,40}disposable/i);
+    expect(text, `${name}: pushed candidate is durable`).toMatch(/pushed to the head branch|reachable by push/i);
+    expect(text, `${name}: push proof needs a fresh fetch`).toMatch(/successful targeted fetch[^.]*failed fetch retaining/i);
+    expect(text, `${name}: fetch lands in a per-dispatch ref`).toMatch(/per-dispatch\s+ref/i);
+    expect(text, `${name}: FETCH_HEAD rejected`).toMatch(/never `FETCH_HEAD`/);
+    expect(text, `${name}: abandon settlement defined`).toMatch(/accepted abandon receipt/i);
+    expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
+    expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
+    expect(text, `${name}: unsafe work is retained`).toMatch(/is \*?\*?retained\*?\*?/i);
+    expect(text, `${name}: retention is recorded`).toMatch(/health\[\][^.]*(?:path and SHA|path and \$hw)/i);
+    expect(text, `${name}: blocks only that PR`).toMatch(/blocks? only that PR/i);
+  }
+  expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
+  // The tick steps that the driver follows literally must defer to the gate
+  // rather than instruct an unconditional removal.
+  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the worktree disposable/);
+  expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/After confirmed abandon, run the same cleanup[^.]*retained, not removed/);
+  expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
+  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
+  expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
+  // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
+  expect(prompts).toMatch(/pending or unknown release retains the worktree/);
+  // Durability by push is tested only against a freshly fetched ref; a stale
+  // origin/<branch> could make an unpushed candidate look pushed.
+  expect(prompts).toMatch(/fetch origin \+refs\/heads\/<head branch>:refs\/axstack\/cleanup\/<dispatch id> succeeds AND git -C <clone path> merge-base --is-ancestor \$hw refs\/axstack\/cleanup\/<dispatch id>/);
+  expect(prompts).toMatch(/a failed fetch is not proof: retain/);
+  expect(prompts).toMatch(/update-ref -d refs\/axstack\/cleanup\/<dispatch id>/);
+  expect(prompts).not.toMatch(/--is-ancestor \$hw origin\/<head branch>/);
+  // FETCH_HEAD is shared clone state; a concurrent fetch can replace it
+  // between the fetch and the ancestry test.
+  expect(prompts).not.toMatch(/--is-ancestor \$hw FETCH_HEAD/);
+  // Abandon never yields a release receipt; its settlement is the accepted
+  // abandon receipt plus proven exit.
+  expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);
+  expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
+  expect(prompts).toMatch(/If disposable, clean up completely/);
+  expect(prompts).toMatch(/If not disposable, retain it[^.]*delete nothing/);
+  expect(prompts).toMatch(/status --porcelain must be empty/);
+  // clean -fdx may appear only inside the disposable branch.
+  const disposableStart = prompts.indexOf('If disposable, clean up completely');
+  const cleanAt = prompts.indexOf('git -C <worktree path> clean -fdx');
+  expect(cleanAt, 'clean must come after the disposability gate').toBeGreaterThan(disposableStart);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

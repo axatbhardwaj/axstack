@@ -97,8 +97,8 @@ The precheck runs every 15 minutes and exits 0 only when there is work.
 
 ## Driver tick
 
-The driver session (Opus, fresh session, launched in the dedicated
-automations worktree) does the following in order and exits.
+The driver session (Opus, fresh session, launched in the host's `root`
+folder workspace) does the following in order and exits.
 
 1. If `tick_started_at` is newer than `tick_done_at`, append
    `previous tick did not finish` to `cursor.json.health[]`. Write
@@ -109,16 +109,20 @@ automations worktree) does the following in order and exits.
 2. Bind the persistent orchestration Run with `orca orchestration run-use`.
    Read the inbox. For every `worker_done` whose Task and Dispatch match a
    live dispatch marker: verify its GitHub receipt (review id at the head, or
-   push range) or its opened token; release the worker; remove its child
-   worktree only after the runtime reports the process exited and the
-   settlement is accepted; clear the marker. A delivery that cannot be
+   push range) or its opened token; release the worker; once the release
+   receipt is settled and the runtime reports the process exited, run the
+   cleanup defined under "Run directory and state", which proves the worktree
+   disposable before removing it; clear the marker. A delivery that cannot be
    verified stays in `pending_settlement[]` and blocks only that PR.
 3. **Consume decisions** (the driver is the only consumer; see below).
 4. **Expired markers** (older than 3 h): run the runtime's inspection; if the
    worker is live, `worker-stop`; if exited, `worker-abandon`; if liveness is
    unknown or the terminal reports user takeover, retain both worktree and
-   marker and block only that PR. After a confirmed abandon, remove the
-   worktree, write one `health[]` line, increment `abandon_count` for that
+   marker and block only that PR. An abandon is confirmed by its accepted
+   abandon receipt plus proven process exit — there is no release receipt on
+   this path. After a confirmed abandon, run the same cleanup with its extra
+   clean-tree condition (a dirty or unproven worktree is retained, not
+   removed), write one `health[]` line, increment `abandon_count` for that
    head, drop the head from `cursor.json`, and remove the triggering review id
    and digest from `processed_reviews[]` when the dispatch was review-triggered,
    so the PR is retried once through the normal path; a second abandon at the
@@ -143,7 +147,8 @@ automations worktree) does the following in order and exits.
      repair cap; and it is the lowest PR of its stack that needs repair (an
      own PR whose base branch equals another own PR's head branch is a
      descendant). Create an Orca child worktree of the project clone at the
-     head, parented to the driver worktree, and dispatch **one**
+     head, parented to that project's primary worktree so it appears under
+     the project it serves, and dispatch **one**
      `axstack-watch` agent in authored repair mode with the triggering check
      or review findings in its brief; the agent addresses only those findings.
      Record the review id and body digest as processed at dispatch. Each open
@@ -179,8 +184,9 @@ automations worktree) does the following in order and exits.
 ## Agents in worktrees
 
 Each dispatched agent runs in its own Orca child worktree under
-the Orca workspaces directory for `<repo>`, pinned to the exact head, with the driver
-worktree as parent, and reports through the Orca worker protocol only.
+the Orca workspaces directory for `<repo>`, pinned to the exact head, with that
+project's primary worktree as parent, and reports through the Orca worker
+protocol only.
 
 - `axstack-review`, peer mode: two isolated reviewers
   (`axstack-reviewer-primary` Sol, `axstack-reviewer-secondary` Opus, identical
@@ -330,8 +336,11 @@ for health findings.
 
 ## Run directory and state
 
-One run directory under the axstack git-common-dir,
-`.git/axstack/runs/<run id>/`, holds:
+The driver and watchdog run from the host's `root` folder workspace rather
+than an axstack worktree, so no project owns the automation and each child
+worktree nests under the project it serves (settled by the user on
+2026-09-17). That workspace is not a git repository, so the run directory is
+private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
 
 - `cursor.json` — driver only, with these exact keys because the precheck
   and the watchdog read them: `fingerprint`, `tick_started_at`,
@@ -351,9 +360,24 @@ One run directory under the axstack git-common-dir,
 - `progress.md` — driver only, one line per tick plus holds and mention
   readings; no per-PR prose.
 
-Orca run history is the authoritative log. The launch worktree is a dedicated
-Orca worktree of `axatbhardwaj/axstack` in which nobody develops; the current
-`defi-automations` worktree retires with the old pair.
+Orca run history is the authoritative log. The launch workspace is the host's
+`root` folder workspace: nobody develops there, it is not a git repository,
+and no project owns the automation. Briefs and the escalation template are
+read from the axstack checkout at an absolute path given in the prompt. After
+a worker settles the driver releases it and, once the worker is settled (a settled
+release receipt, or on the abandon path an accepted abandon receipt, either
+with proven process exit) and the worktree is proven disposable — HEAD is the
+pinned head or a candidate durably reachable by push, tested only after a
+successful targeted fetch of that exact remote branch into a per-dispatch
+ref (never `FETCH_HEAD`, which a concurrent fetch in the shared clone can
+replace) with a failed fetch retaining the worktree, or by a `refs/axstack/decisions/<token>` ref, and on
+the abandon path there are no uncommitted changes — closes any
+terminal tab still listed, clears untracked artefacts, removes the child
+worktree and its directory, deletes the branch the worktree created, and
+verifies the directory is gone. An abandoned worktree that is dirty or holds
+an unproven candidate is retained, recorded in `health[]` with path and SHA,
+and blocks only that PR with the user as owner. Anything else that outlives
+its dispatch is a health finding (settled by the user on 2026-09-17).
 
 ## Safety holds
 
