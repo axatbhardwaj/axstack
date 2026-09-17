@@ -288,6 +288,50 @@ test('spent decision without a receipt is due', () => {
   expect(lastLog(env)).toMatch(/ due$/);
 });
 
+test('a runtime-refusal hold is due, because its re-test needs a launched tick', () => {
+  const env = setup();
+  settleFingerprint(env, {
+    runtime_refusal: {
+      code: 'nested_worker_depth_exceeded',
+      first_seen: '2026-09-17T04:21:08Z',
+      last_seen: '2026-09-17T08:51:05Z',
+    },
+  });
+  expect(run(env).exitCode).toBe(0);
+  expect(lastLog(env)).toMatch(/ due$/);
+});
+
+// The record is read by the precheck, so its shape is validated like every
+// other timestamp-bearing cursor field: malformed state is an error, never
+// silently due and never silently not-due.
+for (const [label, value] of [
+  ['a bare scalar', 'nested_worker_depth_exceeded'],
+  ['a missing code', { first_seen: '2026-09-17T04:21:08Z', last_seen: '2026-09-17T08:51:05Z' }],
+  ['an empty code', { code: '', first_seen: '2026-09-17T04:21:08Z', last_seen: '2026-09-17T08:51:05Z' }],
+  ['an unparsable first_seen', { code: 'x', first_seen: 'yesterday', last_seen: '2026-09-17T08:51:05Z' }],
+  ['an unparsable last_seen', { code: 'x', first_seen: '2026-09-17T04:21:08Z', last_seen: '08:51' }],
+  ['an offset timestamp', { code: 'x', first_seen: '2026-09-17T04:21:08+00:00', last_seen: '2026-09-17T08:51:05Z' }],
+  // jq's `//` treats false as absent; the record must be null or an object.
+  ['a literal false', false],
+  // The driver writes this record under the exact schema: no fractions.
+  ['a fractional first_seen', { code: 'x', first_seen: '2026-09-17T04:21:08.123Z', last_seen: '2026-09-17T08:51:05Z' }],
+  ['a fractional last_seen', { code: 'x', first_seen: '2026-09-17T04:21:08Z', last_seen: '2026-09-17T08:51:05.5Z' }],
+]) {
+  test(`a malformed runtime_refusal (${label}) is an error, not due`, () => {
+    const env = setup();
+    settleFingerprint(env, { runtime_refusal: value });
+    expect(run(env).exitCode).toBe(2);
+    expect(lastLog(env)).toMatch(/ error$/);
+  });
+}
+
+test('an explicit null runtime_refusal means no hold and is not due', () => {
+  const env = setup();
+  settleFingerprint(env, { runtime_refusal: null });
+  expect(run(env).exitCode).toBe(1);
+  expect(lastLog(env)).toMatch(/ unchanged$/);
+});
+
 test('deferred work is due only while its head still matches discovery', () => {
   const env = setup({
     own: [pr(allowlisted, 7, 'defi-com/monorepo')],

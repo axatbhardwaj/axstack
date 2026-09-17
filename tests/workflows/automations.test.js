@@ -250,6 +250,81 @@ test('automations: the driver closes its own terminal tab as the last step of a 
   expect(closeAt).toBeGreaterThan(doneAt);
 });
 
+test('automations: a runtime-refusal hold is re-tested by attempting the operation, never by reading config', () => {
+  // The depth hold was kept for hours by re-reading orca-data.json, a
+  // persisted snapshot that lags the live setting. The only observation that
+  // proves an Orca refusal is resolved is the operation no longer refusing.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+    expect(text, `${name}: re-attempt is the observation`).toMatch(/runtime refusal[^.]*re-attempt(?:ing|s)? the refused operation/i);
+    expect(text, `${name}: once per tick`).toMatch(/once per tick/i);
+    // [\s\S]{0,80} rather than [^.]*: the file name in the clause has a dot.
+    expect(text, `${name}: config is not evidence`).toMatch(/persisted configuration[\s\S]{0,80}?is never evidence/i);
+    expect(text, `${name}: names the file`).toMatch(/orca-data\.json/);
+    // Same-refusal identity is Orca's structured code, never prose.
+    expect(text, `${name}: keyed on the structured code`).toMatch(/nested_worker_depth_exceeded/);
+    expect(text, `${name}: persisted in cursor`).toMatch(/runtime_refusal \{code, first_seen, last_seen\}/);
+    expect(text, `${name}: different code is new`).toMatch(/different code is a new finding/i);
+    expect(text, `${name}: prose is never the key`).toMatch(/prose is never the key/i);
+    // A refused start after worktree creation must not leak that worktree —
+    // and there is no worker, so the settlement proof cannot be what gates
+    // it. An explicit no-worker branch does.
+    expect(text, `${name}: refused start has no worker`).toMatch(/worker-start[\s\S]{0,120}refused after[\s\S]{0,120}no worker/i);
+    expect(text, `${name}: no-worker branch checks residualResources`).toMatch(/residualResources/);
+    expect(text, `${name}: no-worker branch requires pinned head`).toMatch(/HEAD (?:must equal|equals) the pinned head/i);
+    expect(text, `${name}: no-worker branch requires a clean tree`).toMatch(/status --porcelain[^.]*empty|tree is clean/i);
+    expect(text, `${name}: otherwise retained`).toMatch(/(?:otherwise|anything else|anything unproven) (?:it is |is )?retain/i);
+    // A failed start that owns runtime state is recovered through the
+    // runtime's own guide, not merely parked.
+    expect(text, `${name}: reads failedStage`).toMatch(/failedStage/);
+    expect(text, `${name}: retaining alone is not recovery`).toMatch(/retaining alone is not recovery/i);
+    // nextAction is a structured {kind, argv}; only a non-empty argv is run,
+    // verbatim, and `none` authorizes nothing. A receipt with resources but
+    // no Dispatch has no row and is recovered through request-show.
+    expect(text, `${name}: nextAction is structured`).toMatch(/nextAction[\s\S]{0,20}\{kind, argv\}/);
+    expect(text, `${name}: argv run verbatim`).toMatch(/non-empty `argv`[\s\S]{0,60}verbatim/);
+    expect(text, `${name}: none means retain`).toMatch(/`?kind: none`?[\s\S]{0,80}(?:inspect|retention|retain)/);
+    expect(text, `${name}: no-dispatch recovery`).toMatch(/no Dispatch[\s\S]{0,120}request-show/);
+    expect(text, `${name}: never retries in the same tick`).toMatch(/never retr(?:y|ies) in the same tick/i);
+    // The retry needs a launched tick, so the record must be due work and a
+    // real cursor key — the precheck and watchdog read an exact schema.
+    expect(text, `${name}: runtime_refusal is a cursor key`).toMatch(/runtime_refusal\{code, first_seen, last_seen\}/);
+    expect(text, `${name}: runtime_refusal is due work`).toMatch(/runtime_refusal[\s\S]{0,160}(?:due control work|due, because|is due|re-test needs a launched tick)/i);
+  }
+  // The precheck itself must implement the due rule, or the retry never runs.
+  const precheck = read('docs/plans/pr-automations-precheck.sh');
+  // Plain `!= null`, not `// null`: jq's alternative operator treats false as
+  // absent, and a literal false must be rejected by validation, not made due.
+  expect(precheck).toMatch(/jq -e '\.runtime_refusal != null' >\/dev\/null; then due=1; fi/);
+  expect(precheck).not.toMatch(/runtime_refusal \/\/ null/);
+  // The record's timestamps are validated against the exact grammar.
+  expect(precheck).toMatch(/def exact_timestamp:/);
+  expect(precheck).toMatch(/\.first_seen \| exact_timestamp/);
+  expect(precheck).toMatch(/\.last_seen \| exact_timestamp/);
+  expect(prompts).toMatch(/re-attempt the refused operation once/);
+  expect(prompts).toMatch(/never read orca-data\.json/);
+  expect(prompts).toMatch(/structured error code in the JSON response/);
+  expect(prompts).toMatch(/nested_worker_depth_exceeded/);
+  expect(prompts).toMatch(/never key on the message text/);
+  expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded there is no worker, so do NOT use the step \(2\) settlement proof/);
+  expect(prompts).toMatch(/read the receipt's failedStage and residualResources first/);
+  expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
+  expect(prompts).toMatch(/projection\.nextAction is an object \{kind, argv\}/);
+  expect(prompts).toMatch(/when argv is non-empty run exactly that argv through the same orca executable, verbatim, and nothing else/);
+  expect(prompts).toMatch(/when kind is none, inspect with worker-show and retain/);
+  expect(prompts).toMatch(/residualResources but no dispatchId[^;]*request-show --request <error\.data\.orchestrationRequestId>/);
+  expect(prompts).not.toMatch(/execute its literal projection\.nextAction/);
+  expect(prompts).toMatch(/never --retry-of in the same tick/);
+  // The spec's own due-work enumeration (the algorithm the precheck mirrors)
+  // must list the record, not only the schema paragraph.
+  const specDue = spec.match(/Due control work\*\*, read from `cursor\.json` and `decisions\/`:[\s\S]*?`open` decisions alone are not due/)?.[0] ?? '';
+  expect(specDue, 'spec due-work enumeration missing').not.toBe('');
+  expect(specDue).toMatch(/runtime_refusal/);
+  expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

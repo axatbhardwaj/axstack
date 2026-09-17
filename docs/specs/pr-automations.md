@@ -89,8 +89,9 @@ The precheck runs every 15 minutes and exits 0 only when there is work.
    file in state `approved` or `rejected` without `consumed_at`; a `spent`
    file without a receipt (reconciliation); an entry in `deferred[]` whose head
    still matches discovery; an expired repair cap; a dispatch marker older
-   than 3 h; an unsettled Orca delivery recorded in `pending_settlement[]`.
-   `open` decisions alone are not due; they wait for the user.
+   than 3 h; an unsettled Orca delivery recorded in `pending_settlement[]`;
+   a present `runtime_refusal` record, because its re-test needs a launched
+   tick. `open` decisions alone are not due; they wait for the user.
 6. Write `pending.json` (fingerprint, observed_at, `seen[]`, full discovery
    list, the hashed subset). Append `<ts> changed|due|unchanged|running|error`
    to `precheck.log`. Exit 0 on `changed` or `due`, 1 on `unchanged`.
@@ -353,7 +354,10 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
   `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
-  `legacy_automation_reviews[]`, `health[]`. Timestamps are UTC
+  `legacy_automation_reviews[]`, `health[]`,
+  `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
+  hold is open; its presence is due control work, because the re-test needs
+  a launched tick). Timestamps are UTC
   `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an `error` for the
   precheck and `unknown` for the watchdog, never silently ignored.
 - `pending.json`, `precheck.log` — driver precheck only.
@@ -390,7 +394,31 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   at enabling, stored in `cursor.json`, and re-verified on any allowlist
   change; a repair never pushes to a head branch in that set.
 - A hold is cleared only by a later tick observing the condition resolved or
-  by the user; silence never clears a hold.
+  by the user; silence never clears a hold. For a hold caused by an Orca
+  runtime refusal (a sub-worker dispatch rejected for depth, a declined launch
+  capability), observing resolution means re-attempting the refused operation
+  once per tick on the next eligible PR — success clears the hold. The hold
+  is keyed on Orca's structured error code (`nested_worker_depth_exceeded`
+  for the depth case), stored in `cursor.json` as `runtime_refusal {code,
+  first_seen, last_seen}`: the same code keeps the hold and updates
+  `last_seen` without a new health line; a different code is a new finding;
+  prose is never the key. A `worker-start` refused after its child worktree
+  was created has no worker, so the settlement proof does not apply; the
+  driver reads the receipt's `failedStage` and `residualResources`. With no
+  Dispatch and no residual resources the no-worker branch applies: HEAD
+  equals the pinned head and the tree is clean, and only then is the
+  worktree, directory and branch removed in the same tick. With a Dispatch or
+  any residual resource the failed start owns runtime state, and retaining
+  alone is not recovery: the driver follows the runtime's recovery guide —
+  with a Dispatch, `worker-list` and the row's `nextAction {kind, argv}`, a
+  non-empty `argv` run verbatim through the same Orca executable and
+  `kind: none` meaning inspect and retain; with residual resources but no
+  Dispatch, `request-show` on the receipt's request id — never retries in
+  the same tick, and applies the no-worker branch only after the resources
+  are proven gone; anything unproven is retained with a health line. Persisted configuration such as `orca-data.json` is never evidence
+  either way; it lags the live setting and the driver never reads it (settled
+  2026-09-17 after the depth hold outlived the fix by reading a stale
+  snapshot).
 
 ## Acceptance before enabling
 

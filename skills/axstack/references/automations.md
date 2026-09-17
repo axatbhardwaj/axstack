@@ -75,7 +75,8 @@ Read `cursor.json` and `decisions/`. Work is due for:
 - a `deferred[]` entry whose head still matches discovery;
 - an expired repair cap;
 - a dispatch marker older than 3 h;
-- an unsettled Orca delivery in `pending_settlement[]`.
+- an unsettled Orca delivery in `pending_settlement[]`;
+- a `runtime_refusal` record, because its re-test needs a launched tick.
 
 An `open` decision is not due. Write `pending.json` with the fingerprint,
 `observed_at`, `seen[]`, full discovery list, and hashed subset. Append
@@ -344,7 +345,9 @@ its dispatch without such a retention record is a health finding. The run direct
   `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
-  `legacy_automation_reviews[]`, `health[]`;
+  `legacy_automation_reviews[]`, `health[]`,
+  `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
+  hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
@@ -371,7 +374,34 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
 - Enumerate deploy-on-push branches from both repair repositories before
   enabling and store them in `cursor.json`; re-check on allowlist changes.
 - A later tick observing resolution or an explicit user decision clears a
-  hold. Silence never clears one.
+  hold. Silence never clears one. For a hold caused by an Orca runtime
+  refusal — a sub-worker dispatch rejected for depth, a launch capability the
+  runtime declines — observing resolution means re-attempting the refused
+  operation, once per tick, on the next eligible PR: success clears the hold.
+  The hold is keyed on Orca's structured error code (for the depth case,
+  `nested_worker_depth_exceeded`), stored in `cursor.json` as
+  `runtime_refusal {code, first_seen, last_seen}`; the same code keeps the
+  hold and updates `last_seen` without a new health line, a different code is
+  a new finding. Prose is never the key. When `worker-start` itself is
+  refused after the child worktree was created, there is no worker, so the
+  settlement proof does not apply; the driver reads the receipt's `failedStage`
+  and `residualResources` first. With no Dispatch and no residual resources
+  the no-worker branch applies: the worktree's HEAD must equal the pinned
+  head and `git status --porcelain` must be empty, and only then does the
+  driver remove the worktree, its directory and branch in the same tick.
+  With a Dispatch or any residual resource the failed start owns runtime
+  state, and retaining alone is not recovery: the driver follows the
+  runtime's recovery guide. With a Dispatch: `worker-list` for that run, and
+  the row's `nextAction` is an object `{kind, argv}` — a non-empty `argv` is
+  run verbatim through the same Orca executable and nothing else, while
+  `kind: none` authorizes no action beyond inspection and retention. With
+  residual resources but no Dispatch there is no row: the mutation itself is
+  recovered through `request-show` on the receipt's request id. The no-worker
+  branch applies only after the resources are proven gone. It never retries
+  in the same tick. Anything unproven retains the worktree with a health line
+  naming the stage and the resources. Persisted configuration such
+  as `orca-data.json` is never evidence either way; it is a snapshot that
+  lags the live setting, and the driver never reads it.
 
 ## Cutover
 
