@@ -112,8 +112,8 @@ folder workspace) does the following in order and exits.
    live dispatch marker: verify its GitHub receipt (review id at the head, or
    push range) or its opened token; release the worker; once the release
    receipt is settled and the runtime reports the process exited, run the
-   cleanup defined under "Run directory and state", which proves the worktree
-   disposable before removing it; clear the marker. A delivery that cannot be
+   cleanup defined under "Run directory and state", which proves the slot
+   disposable before resetting it; clear the marker. A delivery that cannot be
    verified stays in `pending_settlement[]` and blocks only that PR.
 3. **Consume decisions** (the driver is the only consumer; see below).
 4. **Expired markers** (older than 3 h): run the runtime's inspection; if the
@@ -194,8 +194,9 @@ two slot worktrees per allowlisted project, `slot-1` and `slot-2`, Orca
 child worktrees created once, parented to the project's primary worktree,
 and trusted once by the user through that dialog. The driver never creates
 or removes a worktree and never writes `~/.claude.json`. A slot is free when
-no live dispatch marker names it, no terminal is listed in it, and its tree
-is clean; no free slot in the project defers the PR to `deferred[]` like a budget. Taking a
+no live dispatch marker names it, it is not in `retained_slots[]`, no
+terminal is listed in it, and its tree is clean; no free slot in the project
+defers the PR to `deferred[]` like a budget. Taking a
 slot fetches the head into the project clone, checks the slot out detached
 at the pinned head, and verifies HEAD equals it. Trust activates the full
 project surface — `.claude/settings.json` and its hooks, `.mcp.json`
@@ -377,7 +378,8 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
   `tick_done_at`, `tick_outcome`, `prs{url: {head, base, draft, checks,
   reviews, last_self_review}}`, `dispatch_markers[]` (`pr`, `task_id`,
   `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`, `trigger`),
-  `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
+  `deferred[]`, `pending_settlement[]`, `retained_slots[]` (`slot`, `pr`,
+  `head`, `reason`), `repair_caps{url: {expires_at}}`,
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
   `legacy_automation_reviews[]`, `health[]`,
@@ -408,8 +410,11 @@ the abandon path there are no uncommitted changes — closes any
 terminal tab still listed, resets the slot to the pinned head, clears
 untracked artefacts, and verifies the slot is clean, so it is back in the
 pool. An abandoned slot that is dirty or holds an unproven candidate is
-retained, recorded in `health[]` with path and SHA, blocks only that PR with
-the user as owner, and stays out of the pool. Anything else that outlives
+retained, recorded in `health[]` with path and SHA and in
+`retained_slots[]` as `{slot, pr, head, reason}`, blocks only that PR with
+the user as owner, and is excluded from the free predicate for every PR
+until the entry is cleared only by the user after reconciling the
+candidate. Anything else that outlives
 its dispatch is a health finding (settled by the user on 2026-09-17).
 
 ## Safety holds

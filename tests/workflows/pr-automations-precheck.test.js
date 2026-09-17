@@ -325,6 +325,28 @@ for (const [label, value] of [
   });
 }
 
+for (const [label, value] of [
+  // A retained slot is what keeps an unpushed candidate from being overwritten
+  // by slot reuse; a record the driver cannot read is an error, never ignored.
+  ['a non-array', { slot: '/x' }],
+  ['an entry missing its reason', [{ slot: '/x', pr: 'https://github.com/o/r/pull/1', head: 'abc' }]],
+  ['a non-string head', [{ slot: '/x', pr: 'u', head: 1, reason: 'unpushed candidate' }]],
+]) {
+  test(`a malformed retained_slots (${label}) is an error, not due`, () => {
+    const env = setup();
+    settleFingerprint(env, { retained_slots: value });
+    expect(run(env).exitCode).toBe(2);
+    expect(lastLog(env)).toMatch(/ error$/);
+  });
+}
+
+test('well-formed retained_slots are not due work by themselves', () => {
+  const env = setup();
+  settleFingerprint(env, { retained_slots: [{ slot: '/x', pr: 'u', head: 'abc', reason: 'unpushed candidate' }] });
+  expect(run(env).exitCode).toBe(1);
+  expect(lastLog(env)).toMatch(/ unchanged$/);
+});
+
 test('an explicit null runtime_refusal means no hold and is not due', () => {
   const env = setup();
   settleFingerprint(env, { runtime_refusal: null });

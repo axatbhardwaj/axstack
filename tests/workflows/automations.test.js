@@ -204,10 +204,10 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
   // The tick steps that the driver follows literally must defer to the gate
   // rather than instruct an unconditional removal.
-  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the worktree disposable/);
+  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the slot disposable/);
   expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/After confirmed abandon, run the same cleanup[^.]*retained, not removed/);
   expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
-  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
+  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the slot disposable/);
   expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
   // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
   expect(prompts).toMatch(/pending or unknown release retains the worktree/);
@@ -369,6 +369,18 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
   }
   // The run directory no longer ships a trust helper.
   expect(ref).not.toMatch(/`trust\.js`/);
+  // Retention is mechanical: a clean, terminal-less slot holding an unpushed
+  // candidate must not satisfy the free predicate for ANY PR, so retained
+  // slots are recorded in cursor.json and excluded from the pool until the
+  // user reconciles them.
+  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+    expect(text, `${name}: retained slots are part of the free predicate`).toMatch(/free when[^.]*not (?:listed )?in (?:`|cursor\.json )?retained_slots\[\]`?/i);
+    expect(text, `${name}: retention record`).toMatch(/retained_slots\[\][^.]*(?:`slot`|slot)[^.]*(?:`pr`|pr)[^.]*(?:`head`|head|SHA)[^.]*(?:`reason`|reason)/i);
+    expect(text, `${name}: cleared only by the user`).toMatch(/retained_slots\[\][^.]*(?:cleared|removed) only by the user/i);
+    // No active contract may instruct removing a worktree/slot on cleanup.
+    expect(text, `${name}: no removal language`).not.toMatch(/disposable before removing|removes? the (?:child )?worktree|worktree rm/i);
+  }
+  expect(ref).toMatch(/`retained_slots\[\]`[^;]*`slot`[^;]*`pr`[^;]*`head`[^;]*`reason`/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

@@ -97,8 +97,8 @@ The driver performs this order and exits:
    inbox. For a `worker_done` matching a live marker, verify the review id at
    the bound head, push range, or opened token. Release the worker; once its
    release receipt is settled and the process has exited, run the cleanup
-   under "Run directory" below, which proves the worktree disposable before
-   removing it; then clear the marker. Unverifiable delivery stays in
+   under "Run directory" below, which proves the slot disposable before
+   resetting it; then clear the marker. Unverifiable delivery stays in
    `pending_settlement[]` and blocks only that PR.
 3. Consume decisions as their sole consumer under "Decision tokens" below.
 4. Reconcile every marker older than 3 h. A live worker gets `worker-stop`; an
@@ -131,9 +131,9 @@ exactly two slot worktrees, `slot-1` and `slot-2`, its Orca child worktrees
 created once, parented to the project's primary worktree, and trusted once
 by the user through that dialog. The driver never creates or removes a
 worktree and never writes `~/.claude.json`. A slot is free when no live
-dispatch marker names it, no terminal is listed in it, and its tree is
-clean; no free slot in the project defers the PR to `deferred[]` like a
-budget, not a hold. Taking a slot fetches the head into the project clone,
+dispatch marker names it, it is not in `retained_slots[]`, no terminal is
+listed in it, and its tree is clean; no free slot in the project defers the
+PR to `deferred[]` like a budget, not a hold. Taking a slot fetches the head into the project clone,
 checks the slot out detached at the pinned head, and verifies HEAD equals
 it; the marker's worktree is the slot path. Trusting a folder activates the
 full project surface: its `.claude/settings.json` and the hooks it defines,
@@ -364,7 +364,11 @@ the worker has finished, so untracked files are artefacts by definition and
 are cleared; a candidate there is already pushed or token-held. An abandoned
 worktree that is dirty or holds an unproven candidate is **retained**, named
 in one `health[]` line with its path and SHA, and blocks only that PR with
-the user as owner and stays out of the pool. A dirty slot or a terminal that
+the user as owner. Retention is mechanical: the driver appends
+`retained_slots[]` `{slot, pr, head, reason}`, which the free predicate
+excludes for every PR — a clean, terminal-less slot holding an unpushed
+candidate would otherwise look free — and an entry is cleared only by the
+user after reconciling the candidate. A dirty slot or a terminal that
 outlives its dispatch without such a retention record is a health finding. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
@@ -372,6 +376,7 @@ outlives its dispatch without such a retention record is a health finding. The r
   draft, checks, reviews, last_self_review}}`, `dispatch_markers[]` (`pr`,
   `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`,
   `trigger`), `deferred[]`, `pending_settlement[]`,
+  `retained_slots[]` (`slot`, `pr`, `head`, `reason`),
   `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
