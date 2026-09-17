@@ -94,16 +94,21 @@ The driver performs this order and exits:
    dispatches nothing.
 2. Bind the persistent Run with `orca orchestration run-use` and read the
    inbox. For a `worker_done` matching a live marker, verify the review id at
-   the bound head, push range, or opened token. Release the worker; remove its
-   child worktree only after confirmed process exit and accepted settlement;
-   then clear the marker. Unverifiable delivery stays in
+   the bound head, push range, or opened token. Release the worker; once its
+   release receipt is settled and the process has exited, run the cleanup
+   under "Run directory" below, which proves the worktree disposable before
+   removing it; then clear the marker. Unverifiable delivery stays in
    `pending_settlement[]` and blocks only that PR.
 3. Consume decisions as their sole consumer under "Decision tokens" below.
 4. Reconcile every marker older than 3 h. A live worker gets `worker-stop`; an
    exited worker gets `worker-abandon`. Unknown liveness or user takeover
-   retains worktree and marker and blocks only that PR. After confirmed
-   abandon, remove the worktree, append one health line, increment the head's
-   `abandon_count`, and drop that head so normal selection retries once. For a
+   retains worktree and marker and blocks only that PR. An abandon is
+   confirmed by its accepted abandon receipt plus proven process exit; there
+   is no release receipt on this path. After confirmed abandon, run the same
+   cleanup under "Run directory" below with its extra clean-tree condition — a
+   dirty or unproven worktree is retained, not removed — append one health
+   line, increment the head's `abandon_count`, and drop that head so normal
+   selection retries once. For a
    review-triggered dispatch, use the marker's `trigger` to remove exactly its
    review id and digest from `processed_reviews[]`. A second abandon at that
    head is a user-owned hold.
@@ -309,11 +314,15 @@ belongs to the project it serves. That workspace is not a git repository, so
 the run directory is private host state, one
 `~/.local/share/axstack/runs/<run id>/` directory. Settlement leaves nothing
 behind, but never destroys work. Before any destructive step the driver
-proves the child is disposable: the worker release receipt is settled (a
-pending or unknown release stops here); the worktree's HEAD is either the
-pinned head or a candidate that is durably reachable — pushed to the head
-branch, or held by a `refs/axstack/decisions/<token>` ref in the project
-clone; and, on the abandon path, the worktree has no uncommitted changes.
+proves the child is disposable: the worker is settled — on the release path
+a settled release receipt, on the abandon path an accepted abandon receipt,
+either with proven process exit; pending or unknown stops here — the
+worktree's HEAD is either the pinned head or a candidate that is durably
+reachable — pushed to the head branch, tested only after a successful
+targeted fetch of that exact remote branch so a stale tracking ref cannot
+fake durability, a failed fetch retaining the worktree — or held by a
+`refs/axstack/decisions/<token>` ref in the project clone; and, on the
+abandon path, the worktree has no uncommitted changes.
 Only then it closes any terminal tab still listed, clears untracked
 artefacts, removes the child worktree and its directory, deletes the branch
 the worktree created, and verifies the directory is gone. On the settled path

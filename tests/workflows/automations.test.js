@@ -172,7 +172,7 @@ test('automations: settlement leaves no worktree, directory, branch, or terminal
   expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
   expect(prompts).toMatch(/branch -D <worktree branch>/);
   expect(prompts).toMatch(/verify the directory is gone/);
-  expect(prompts).toMatch(/after a confirmed abandon apply the same disposability proof/);
+  expect(prompts).toMatch(/after a confirmed abandon[^.]*apply the same disposability proof/);
 });
 
 test('automations: cleanup never destroys work it cannot prove is safe to lose', () => {
@@ -191,16 +191,32 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   for (const [name, text] of [['reference', refCleanup], ['spec', specCleanup]]) {
     expect(text, `${name}: proof precedes destruction`).toMatch(/(?:proves|proven)[^.]{0,40}disposable/i);
     expect(text, `${name}: pushed candidate is durable`).toMatch(/pushed to the head branch|reachable by push/i);
+    expect(text, `${name}: push proof needs a fresh fetch`).toMatch(/successful targeted fetch[^.]*failed fetch retaining/i);
+    expect(text, `${name}: abandon settlement defined`).toMatch(/accepted abandon receipt/i);
     expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
     expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
     expect(text, `${name}: unsafe work is retained`).toMatch(/is \*?\*?retained\*?\*?/i);
     expect(text, `${name}: retention is recorded`).toMatch(/health\[\][^.]*(?:path and SHA|path and \$hw)/i);
     expect(text, `${name}: blocks only that PR`).toMatch(/blocks? only that PR/i);
   }
-  expect(refCleanup, 'a pending release stops cleanup').toMatch(/pending or unknown release stops/i);
+  expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
+  // The tick steps that the driver follows literally must defer to the gate
+  // rather than instruct an unconditional removal.
+  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the worktree disposable/);
+  expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/After confirmed abandon, run the same cleanup[^.]*retained, not removed/);
+  expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
+  expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
+  expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
   // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
   expect(prompts).toMatch(/pending or unknown release retains the worktree/);
-  expect(prompts).toMatch(/merge-base --is-ancestor \$hw origin\/<head branch>/);
+  // Durability by push is tested only against a freshly fetched ref; a stale
+  // origin/<branch> could make an unpushed candidate look pushed.
+  expect(prompts).toMatch(/fetch origin <head branch> succeeds AND git -C <clone path> merge-base --is-ancestor \$hw FETCH_HEAD/);
+  expect(prompts).toMatch(/a failed fetch is not proof: retain/);
+  expect(prompts).not.toMatch(/--is-ancestor \$hw origin\/<head branch>/);
+  // Abandon never yields a release receipt; its settlement is the accepted
+  // abandon receipt plus proven exit.
+  expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);
   expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
   expect(prompts).toMatch(/If disposable, clean up completely/);
   expect(prompts).toMatch(/If not disposable, retain it[^.]*delete nothing/);

@@ -109,16 +109,20 @@ folder workspace) does the following in order and exits.
 2. Bind the persistent orchestration Run with `orca orchestration run-use`.
    Read the inbox. For every `worker_done` whose Task and Dispatch match a
    live dispatch marker: verify its GitHub receipt (review id at the head, or
-   push range) or its opened token; release the worker; remove its child
-   worktree only after the runtime reports the process exited and the
-   settlement is accepted; clear the marker. A delivery that cannot be
+   push range) or its opened token; release the worker; once the release
+   receipt is settled and the runtime reports the process exited, run the
+   cleanup defined under "Run directory and state", which proves the worktree
+   disposable before removing it; clear the marker. A delivery that cannot be
    verified stays in `pending_settlement[]` and blocks only that PR.
 3. **Consume decisions** (the driver is the only consumer; see below).
 4. **Expired markers** (older than 3 h): run the runtime's inspection; if the
    worker is live, `worker-stop`; if exited, `worker-abandon`; if liveness is
    unknown or the terminal reports user takeover, retain both worktree and
-   marker and block only that PR. After a confirmed abandon, remove the
-   worktree, write one `health[]` line, increment `abandon_count` for that
+   marker and block only that PR. An abandon is confirmed by its accepted
+   abandon receipt plus proven process exit — there is no release receipt on
+   this path. After a confirmed abandon, run the same cleanup with its extra
+   clean-tree condition (a dirty or unproven worktree is retained, not
+   removed), write one `health[]` line, increment `abandon_count` for that
    head, drop the head from `cursor.json`, and remove the triggering review id
    and digest from `processed_reviews[]` when the dispatch was review-triggered,
    so the PR is retried once through the normal path; a second abandon at the
@@ -360,10 +364,13 @@ Orca run history is the authoritative log. The launch workspace is the host's
 `root` folder workspace: nobody develops there, it is not a git repository,
 and no project owns the automation. Briefs and the escalation template are
 read from the axstack checkout at an absolute path given in the prompt. After
-a worker settles the driver releases it and, once the release receipt is
-settled and the worktree is proven disposable — HEAD is the pinned head or a
-candidate durably reachable by push or by a `refs/axstack/decisions/<token>`
-ref, and on the abandon path there are no uncommitted changes — closes any
+a worker settles the driver releases it and, once the worker is settled (a settled
+release receipt, or on the abandon path an accepted abandon receipt, either
+with proven process exit) and the worktree is proven disposable — HEAD is the
+pinned head or a candidate durably reachable by push, tested only after a
+successful targeted fetch of that exact remote branch with a failed fetch
+retaining the worktree, or by a `refs/axstack/decisions/<token>` ref, and on
+the abandon path there are no uncommitted changes — closes any
 terminal tab still listed, clears untracked artefacts, removes the child
 worktree and its directory, deletes the branch the worktree created, and
 verifies the directory is gone. An abandoned worktree that is dirty or holds
