@@ -64,6 +64,7 @@ for (let i = 0; i < ACQUIRE_TRIES; i += 1) {
 }
 if (!got) process.exit(2);
 const ino = lockStat()?.ino;
+// after-acquire
 let lastRefresh = Date.now();
 let compromised = false;
 let refreshes = 0;
@@ -75,8 +76,9 @@ const refresh = () => {
     const now = new Date(); utimesSync(LOCK, now, now); lastRefresh = Date.now(); refreshes += 1;
   } catch { compromised = true; }
 };
+// A lock reclaimed between mkdir and this first refresh belongs to someone else: leave it.
 refresh();
-if (compromised) { try { rmdirSync(LOCK); } catch {} process.exit(2); }
+if (compromised) { if (ownsLock()) { try { rmdirSync(LOCK); } catch {} } process.exit(2); }
 const timer = setInterval(refresh, REFRESH_MS);
 
 let tmp = null;
@@ -96,7 +98,9 @@ try {
   // Re-read under the lock; a store that does not parse is never rewritten.
   let doc;
   try { doc = JSON.parse(readFileSync(STORE, 'utf8')); } catch { fail(2); }
-  if (!doc || typeof doc !== 'object') fail(2);
+  // typeof [] is 'object', and JSON.stringify drops named properties on arrays: a false exit 0.
+  const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (!isPlain(doc) || (doc.projects !== undefined && !isPlain(doc.projects))) fail(2);
   mutate(doc);
   tmp = `${STORE}.tmp.${process.pid}.${Math.random().toString(16).slice(2)}`;
   writeFileSync(tmp, JSON.stringify(doc, null, 2));

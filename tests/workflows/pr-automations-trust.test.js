@@ -171,6 +171,26 @@ test('a refresh that fails compromises the lease and the commit is aborted', () 
   expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | grep -v thief | wc -l`).out.trim(), 'helper temp removed').toBe('0');
 }, 40000);
 
+test('a lock stolen between acquisition and the first refresh is left untouched', () => {
+  // The owner records its inode, is paused, the lock goes stale and Claude
+  // reclaims it. On resumption the first refresh sees a foreign inode and
+  // must abort WITHOUT removing the replacement lock.
+  const env = setup();
+  const slow = patched('// after-acquire', 'await Bun.sleep(1500);');
+  const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.5; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock"); ino=$(stat -c %i "${env.store}.lock")
+    wait $pid; echo "helper=$?"
+    [ -d "${env.store}.lock" ] && echo "lock=present:$(stat -c %i "${env.store}.lock"):$ino:$(stat -c %Y "${env.store}.lock"):$before" || echo "lock=REMOVED"`, env.env);
+  expect(r.out).toMatch(/helper=2/);
+  const m = r.out.match(/lock=present:(\d+):(\d+):(\d+):(\d+)/);
+  expect(m, `the replacement lock must survive: ${r.out}`).not.toBeNull();
+  expect(m[1], 'same inode as the thief created').toBe(m[2]);
+  expect(m[3], 'thief lock mtime untouched').toBe(m[4]);
+  expect(read(env).projects[env.wt]).toBeUndefined();
+  rmSync(`${env.store}.lock`, { recursive: true });
+}, 30000);
+
 test('a lock stolen after the temp is rendered aborts the commit instead of overwriting the store', () => {
   const env = setup();
   const slow = patched('// before-commit', 'await Bun.sleep(1500);');
@@ -223,11 +243,16 @@ test('unseed removes only that path, and a malformed store is an error with no w
   const store = read(env);
   expect(store.projects[env.wt]).toBeUndefined();
   expect(store.projects['/elsewhere'].hasTrustDialogAccepted).toBe(true);
-  for (const bad of ['{not json', '"valid json but not an object"', '42']) {
+  // typeof [] is 'object': an array root, or an array-valued projects, would
+  // take a property assignment that JSON.stringify silently drops — a false
+  // exit 0 with nothing persisted. Both must be refused, byte-for-byte.
+  for (const bad of ['{not json', '"valid json but not an object"', '42', '[]', '{"projects":[]}', '{"projects":"x"}']) {
     writeFileSync(env.store, bad);
     expect(run(env, `seed ${env.wt} ${env.clone} ${env.head}`).code, `store ${bad}`).toBe(2);
     expect(readFileSync(env.store, 'utf8'), `a malformed store is never rewritten: ${bad}`).toBe(bad);
     expect(existsSync(`${env.store}.lock`)).toBe(false);
+    expect(run(env, `unseed ${env.wt}`).code, `unseed on ${bad}`).toBe(2);
+    expect(readFileSync(env.store, 'utf8')).toBe(bad);
   }
 });
 
