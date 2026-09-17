@@ -40,10 +40,11 @@ terminal hygiene and no global busy guard.
 - **Self** is `gh api user --jq .login`, resolved on every run, never
   hardcoded.
 - **Review allowlist:** `defi-com/monorepo`, `defi-com/mobile`,
-  `defi-com/azure-next-hybrid`. **Repair allowlist:** `defi-com/monorepo`,
-  `defi-com/mobile`. Both are stated verbatim in the driver's automation
-  prompt. `defi-com/azure-next-hybrid` own PRs are recorded and never repaired
-  or pushed to. Outside both lists the driver records only, and such PRs never
+  `defi-com/azure-next-hybrid`, `defi-com/ci-workflows`. **Repair allowlist:**
+  `defi-com/monorepo`, `defi-com/mobile`. Both are stated verbatim in the
+  driver's automation prompt. `defi-com/azure-next-hybrid` and
+  `defi-com/ci-workflows` own PRs are recorded and never repaired or pushed
+  to. Outside both lists the driver records only, and such PRs never
   enter the fingerprint.
 - **Own PR:** open, authored by self, on the repair allowlist, not a draft.
   Authority equals the user at the keyboard: repair, test, commit,
@@ -195,8 +196,9 @@ worktree as parent, and reports through the Orca worker protocol only.
   line `<!-- axstack-automation verdict head=<sha> -->`. The local review file
   is written to the workspace review directory `~/defi/misc/reviews/` under the
   existing convention: `review-PR-<num>.html` with no prefix means
-  `defi-com/monorepo`; `review-mobile-PR-<num>.html` and
-  `review-azure-next-hybrid-PR-<num>.html` for the others. A write failure is
+  `defi-com/monorepo`; `review-mobile-PR-<num>.html`,
+  `review-azure-next-hybrid-PR-<num>.html` and `review-ci-workflows-PR-<num>.html`
+  for the others. A write failure is
   recorded, never withholds the verdict.
 - `axstack-watch`, authored repair mode: candidate committed locally, one Sol
   reviewer at the local SHA, Luna gate, zero unresolved validated blockers,

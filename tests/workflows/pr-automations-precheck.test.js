@@ -49,6 +49,7 @@ const setup = ({ own = [], requested = [], mentioned = [], reviewed = [], detail
     'defi-com/monorepo#main': 'base-mono',
     'defi-com/mobile#main': 'base-mobile',
     'defi-com/azure-next-hybrid#main': 'base-azure',
+    'defi-com/ci-workflows#main': 'base-ci',
   }));
   write(`${bin}/gh`, `#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$GH_CALLS"
@@ -153,14 +154,19 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   const own = pr(allowlisted, 7, 'defi-com/monorepo');
   const duplicate = pr(allowlisted, 7, 'defi-com/monorepo', '2026-09-17T00:01:00Z');
   const outside = pr('https://github.com/other/repo/pull/8', 8, 'other/repo');
+  const ciWorkflows = pr('https://github.com/defi-com/ci-workflows/pull/152', 152, 'defi-com/ci-workflows');
   const env = setup({
     own: [own],
-    requested: [duplicate, outside],
+    requested: [duplicate, outside, ciWorkflows],
     details: {
       'defi-com/monorepo#7': {
         headRefOid: 'head-own', baseRefName: 'main', isDraft: false,
         statusCheckRollup: [{ name: 'unit', conclusion: 'SUCCESS' }],
         author: { login: 'axatbhardwaj' },
+      },
+      'defi-com/ci-workflows#152': {
+        headRefOid: 'head-ci', baseRefName: 'main', isDraft: false,
+        statusCheckRollup: [], author: { login: 'shubhamdixit1' },
       },
     },
   });
@@ -169,9 +175,11 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   const state = pending(env);
   expect(state.observed_at).toEqual(expect.any(String));
   expect(state.fingerprint).toMatch(/^[0-9a-f]{64}$/);
-  expect(state.seen).toEqual([]);
-  expect(state.discovery).toHaveLength(1);
-  expect(state.discovery[0]).toMatchObject({ url: allowlisted, repo: 'defi-com/monorepo', head: 'head-own' });
+  expect(state.seen).toEqual([{ head: 'head-ci', url: 'https://github.com/defi-com/ci-workflows/pull/152' }]); // peer head: first observation, debounced
+  expect(state.discovery).toHaveLength(2);
+  expect(state.discovery.find((d) => d.repo === 'defi-com/monorepo')).toMatchObject({ url: allowlisted, repo: 'defi-com/monorepo', head: 'head-own' });
+  expect(state.discovery.map((d) => d.repo)).toContain('defi-com/ci-workflows');
+  expect(state.discovery.map((d) => d.repo)).not.toContain('other/repo');
   expect(state.hashed).toEqual([{
     url: allowlisted,
     head: 'head-own',
@@ -184,7 +192,7 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   expect(calls.match(/^search prs /gm)?.length).toBe(4);
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --author @me');
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --reviewed-by @me --review changes_requested');
-  expect(calls.match(/^pr view /gm)?.length).toBe(1);
+  expect(calls.match(/^pr view /gm)?.length).toBe(2);
   expect(calls).toContain('--json headRefOid,baseRefName,isDraft,statusCheckRollup,author,latestReviews');
 });
 
