@@ -38,7 +38,7 @@ const setup = ({ own = [], requested = [], mentioned = [], reviewed = [], detail
   write(script, readFileSync(source, 'utf8').replace(/^LIMIT=100$/m, `LIMIT=${limit}`), 0o755);
   const normalizedDetails = Object.fromEntries(Object.entries(details).map(([key, value]) => [
     key,
-    { latestReviews: [], ...value },
+    { reviews: [], ...value },
   ]));
   for (const [name, value] of Object.entries({
     own, requested, mentioned, reviewed, details: normalizedDetails,
@@ -193,7 +193,10 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --author @me');
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --reviewed-by @me --review changes_requested');
   expect(calls.match(/^pr view /gm)?.length).toBe(2);
-  expect(calls).toContain('--json headRefOid,baseRefName,isDraft,statusCheckRollup,author,latestReviews');
+  // `latestReviews` returns reviews with empty `id` and `commit.oid` (gh 2.8x), which
+  // made every review invisible at the head; `reviews` carries both.
+  expect(calls).toContain('--json headRefOid,baseRefName,isDraft,statusCheckRollup,author,reviews');
+  expect(calls).not.toContain('latestReviews');
 });
 
 test('own fingerprint ignores check timestamps but changes for a new head-bound review', () => {
@@ -207,9 +210,9 @@ test('own fingerprint ignores check timestamps but changes for a new head-bound 
           startedAt: '2026-09-17T00:00:00Z', completedAt: '2026-09-17T00:01:00Z',
         }],
         author: { login: 'axatbhardwaj' },
-        latestReviews: [
-          { id: 'R2', state: 'APPROVED', commit: { oid: 'head-own' } },
-          { id: 'R0', state: 'CHANGES_REQUESTED', commit: { oid: 'old-head' } },
+        reviews: [
+          { id: 'R2', state: 'APPROVED', commit: { oid: 'head-own' }, author: { login: 'a' } },
+          { id: 'R0', state: 'CHANGES_REQUESTED', commit: { oid: 'old-head' }, author: { login: 'b' } },
         ],
       },
     },
@@ -228,8 +231,8 @@ test('own fingerprint ignores check timestamps but changes for a new head-bound 
     reviews: [{ id: 'R2', state: 'APPROVED' }],
   });
 
-  details['defi-com/monorepo#7'].latestReviews.push(
-    { id: 'R1', state: 'CHANGES_REQUESTED', commit: { oid: 'head-own' } },
+  details['defi-com/monorepo#7'].reviews.push(
+    { id: 'R1', state: 'CHANGES_REQUESTED', commit: { oid: 'head-own' }, author: { login: 'b' } },
   );
   write(detailsPath, JSON.stringify(details));
   expect(run(env).exitCode).toBe(0);
@@ -237,6 +240,20 @@ test('own fingerprint ignores check timestamps but changes for a new head-bound 
   expect(pending(env).hashed[0].reviews).toEqual([
     { id: 'R1', state: 'CHANGES_REQUESTED' },
     { id: 'R2', state: 'APPROVED' },
+  ]);
+
+  // Only each author's latest review at the head counts: a reviewer who
+  // approved after blocking is no longer a block. Reviews of an older head
+  // and pure COMMENTED reviews never appear.
+  details['defi-com/monorepo#7'].reviews.push(
+    { id: 'R3', state: 'APPROVED', commit: { oid: 'head-own' }, author: { login: 'b' } },
+    { id: 'R4', state: 'COMMENTED', commit: { oid: 'head-own' }, author: { login: 'c' } },
+  );
+  write(detailsPath, JSON.stringify(details));
+  expect(run(env).exitCode).toBe(0);
+  expect(pending(env).hashed[0].reviews).toEqual([
+    { id: 'R2', state: 'APPROVED' },
+    { id: 'R3', state: 'APPROVED' },
   ]);
 });
 

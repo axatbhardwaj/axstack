@@ -117,11 +117,11 @@ enriched='[]'
 while IFS=$'\t' read -r repo number; do
   [ -n "$repo" ] || continue
   detail="$(gh pr view "$number" --repo "$repo" \
-    --json headRefOid,baseRefName,isDraft,statusCheckRollup,author,latestReviews 2>/dev/null)" || fail
+    --json headRefOid,baseRefName,isDraft,statusCheckRollup,author,reviews 2>/dev/null)" || fail
   printf '%s' "$detail" | jq -e '
     .headRefOid and .baseRefName and (.isDraft | type == "boolean")
     and (.statusCheckRollup | type == "array")
-    and (.latestReviews | type == "array") and .author.login
+    and (.reviews | type == "array") and .author.login
   ' >/dev/null 2>&1 || fail
   base_ref="$(printf '%s' "$detail" | jq -r '.baseRefName')" || fail
   base_sha="$(gh api "repos/$repo/commits/$base_ref" --jq .sha 2>/dev/null)" || fail
@@ -138,8 +138,9 @@ while IFS=$'\t' read -r repo number; do
           | map({name: (.name // .context)}
             + if .conclusion != null then {conclusion} else {state} end)
           | sort_by(.name, .conclusion // .state)),
-        reviews: ($detail.latestReviews
-          | map(select(.commit.oid == $detail.headRefOid) | {id, state})
+        reviews: ($detail.reviews
+          | map(select(.commit.oid == $detail.headRefOid and .state != "COMMENTED"))
+          | group_by(.author.login) | map(max_by(.submittedAt // .id) | {id, state})
           | sort_by(.id, .state)),
         author: $detail.author.login
       }]
