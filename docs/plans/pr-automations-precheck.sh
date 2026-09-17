@@ -193,6 +193,10 @@ if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
 
 if printf '%s' "$cursor" | jq -e '(.pending_settlement // []) | length > 0' >/dev/null; then due=1; fi
 
+# A runtime-refusal hold is re-tested by re-attempting the refused operation, which needs a launched
+# tick; while the record is present the tick is due even when GitHub is unchanged.
+if printf '%s' "$cursor" | jq -e '(.runtime_refusal // null) != null' >/dev/null; then due=1; fi
+
 pending_tmp="$PENDING_FILE.tmp.$$"
 jq -cn --arg fingerprint "$fingerprint" --arg observed_at "$timestamp" \
   --argjson seen "$seen" --argjson discovery "$discovery" --argjson hashed "$hashed" \

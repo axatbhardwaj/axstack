@@ -268,15 +268,30 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
     expect(text, `${name}: persisted in cursor`).toMatch(/runtime_refusal \{code, first_seen, last_seen\}/);
     expect(text, `${name}: different code is new`).toMatch(/different code is a new finding/i);
     expect(text, `${name}: prose is never the key`).toMatch(/prose is never the key/i);
-    // A refused start after worktree creation must not leak that worktree.
-    expect(text, `${name}: refused start cleans up`).toMatch(/worker-start[\s\S]{0,120}refused after[\s\S]{0,200}immediately[\s\S]{0,40}same tick/i);
+    // A refused start after worktree creation must not leak that worktree —
+    // and there is no worker, so the settlement proof cannot be what gates
+    // it. An explicit no-worker branch does.
+    expect(text, `${name}: refused start has no worker`).toMatch(/worker-start[\s\S]{0,120}refused after[\s\S]{0,120}no worker/i);
+    expect(text, `${name}: no-worker branch checks residualResources`).toMatch(/residualResources/);
+    expect(text, `${name}: no-worker branch requires pinned head`).toMatch(/HEAD (?:must equal|equals) the pinned head/i);
+    expect(text, `${name}: no-worker branch requires a clean tree`).toMatch(/status --porcelain[^.]*empty|tree is clean/i);
+    expect(text, `${name}: otherwise retained`).toMatch(/(?:otherwise|anything else) (?:it is )?retain/i);
+    // The retry needs a launched tick, so the record must be due work and a
+    // real cursor key — the precheck and watchdog read an exact schema.
+    expect(text, `${name}: runtime_refusal is a cursor key`).toMatch(/runtime_refusal\{code, first_seen, last_seen\}/);
+    expect(text, `${name}: runtime_refusal is due work`).toMatch(/runtime_refusal[\s\S]{0,160}(?:due control work|due, because|is due|re-test needs a launched tick)/i);
   }
+  // The precheck itself must implement the due rule, or the retry never runs.
+  const precheck = read('docs/plans/pr-automations-precheck.sh');
+  expect(precheck).toMatch(/\.runtime_refusal \/\/ null\) != null['"]? >\/dev\/null; then due=1; fi/);
   expect(prompts).toMatch(/re-attempt the refused operation once/);
   expect(prompts).toMatch(/never read orca-data\.json/);
   expect(prompts).toMatch(/structured error code in the JSON response/);
   expect(prompts).toMatch(/nested_worker_depth_exceeded/);
   expect(prompts).toMatch(/never key on the message text/);
-  expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded[^;]*run the step \(2\) cleanup on it now in this tick/);
+  expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded there is no worker, so do NOT use the step \(2\) settlement proof/);
+  expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
+  expect(prompts).toMatch(/rev-parse HEAD must equal <head sha>, and git -C <worktree path> status --porcelain must be empty/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

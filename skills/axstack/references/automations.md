@@ -75,7 +75,8 @@ Read `cursor.json` and `decisions/`. Work is due for:
 - a `deferred[]` entry whose head still matches discovery;
 - an expired repair cap;
 - a dispatch marker older than 3 h;
-- an unsettled Orca delivery in `pending_settlement[]`.
+- an unsettled Orca delivery in `pending_settlement[]`;
+- a `runtime_refusal` record, because its re-test needs a launched tick.
 
 An `open` decision is not due. Write `pending.json` with the fingerprint,
 `observed_at`, `seen[]`, full discovery list, and hashed subset. Append
@@ -344,7 +345,9 @@ its dispatch without such a retention record is a health finding. The run direct
   `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
-  `legacy_automation_reviews[]`, `health[]`;
+  `legacy_automation_reviews[]`, `health[]`,
+  `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
+  hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
@@ -380,10 +383,13 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
   `runtime_refusal {code, first_seen, last_seen}`; the same code keeps the
   hold and updates `last_seen` without a new health line, a different code is
   a new finding. Prose is never the key. When `worker-start` itself is
-  refused after the child worktree was created, that worktree has no marker
-  and no candidate — its HEAD is the pinned head by construction — so the
-  driver runs the cleanup below on it immediately, in the same tick, and
-  records a health line if any of it is left. Persisted configuration such
+  refused after the child worktree was created, there is no worker, so the
+  settlement proof does not apply; the no-worker branch applies instead: the
+  refusal's JSON receipt must show no Dispatch was created and no
+  `residualResources`, the worktree's HEAD must equal the pinned head, and
+  `git status --porcelain` must be empty. Only then does the driver remove
+  the worktree, its directory and branch in the same tick; anything else
+  retains it with a health line naming what was found. Persisted configuration such
   as `orca-data.json` is never evidence either way; it is a snapshot that
   lags the live setting, and the driver never reads it.
 

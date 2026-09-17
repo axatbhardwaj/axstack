@@ -353,7 +353,10 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
   `deferred[]`, `pending_settlement[]`, `repair_caps{url: {expires_at}}`,
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
-  `legacy_automation_reviews[]`, `health[]`. Timestamps are UTC
+  `legacy_automation_reviews[]`, `health[]`,
+  `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
+  hold is open; its presence is due control work, because the re-test needs
+  a launched tick). Timestamps are UTC
   `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an `error` for the
   precheck and `unknown` for the watchdog, never silently ignored.
 - `pending.json`, `precheck.log` — driver precheck only.
@@ -399,9 +402,11 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   first_seen, last_seen}`: the same code keeps the hold and updates
   `last_seen` without a new health line; a different code is a new finding;
   prose is never the key. A `worker-start` refused after its child worktree
-  was created leaves a worktree with no marker and no candidate, so the driver
-  cleans it up immediately in the same tick under the settlement cleanup
-  rule. Persisted configuration such as `orca-data.json` is never evidence
+  was created has no worker, so the settlement proof does not apply; the
+  no-worker branch does: the refusal's JSON receipt shows no Dispatch and no
+  `residualResources`, HEAD equals the pinned head, and the tree is clean.
+  Only then is the worktree, directory and branch removed in the same tick;
+  otherwise it is retained with a health line. Persisted configuration such as `orca-data.json` is never evidence
   either way; it lags the live setting and the driver never reads it (settled
   2026-09-17 after the depth hold outlived the fix by reading a stale
   snapshot).
