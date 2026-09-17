@@ -260,11 +260,23 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   for (const [name, text] of [['reference', ref], ['spec', spec]]) {
     expect(text, `${name}: re-attempt is the observation`).toMatch(/runtime refusal[^.]*re-attempt(?:ing|s)? the refused operation/i);
     expect(text, `${name}: once per tick`).toMatch(/once per tick/i);
-    expect(text, `${name}: config is not evidence`).toMatch(/persisted configuration[^.]*(?:is never|never counts as) evidence/i);
+    // [\s\S]{0,80} rather than [^.]*: the file name in the clause has a dot.
+    expect(text, `${name}: config is not evidence`).toMatch(/persisted configuration[\s\S]{0,80}?is never evidence/i);
     expect(text, `${name}: names the file`).toMatch(/orca-data\.json/);
+    // Same-refusal identity is Orca's structured code, never prose.
+    expect(text, `${name}: keyed on the structured code`).toMatch(/nested_worker_depth_exceeded/);
+    expect(text, `${name}: persisted in cursor`).toMatch(/runtime_refusal \{code, first_seen, last_seen\}/);
+    expect(text, `${name}: different code is new`).toMatch(/different code is a new finding/i);
+    expect(text, `${name}: prose is never the key`).toMatch(/prose is never the key/i);
+    // A refused start after worktree creation must not leak that worktree.
+    expect(text, `${name}: refused start cleans up`).toMatch(/worker-start[\s\S]{0,120}refused after[\s\S]{0,200}immediately[\s\S]{0,40}same tick/i);
   }
   expect(prompts).toMatch(/re-attempt the refused operation once/);
   expect(prompts).toMatch(/never read orca-data\.json/);
+  expect(prompts).toMatch(/structured error code in the JSON response/);
+  expect(prompts).toMatch(/nested_worker_depth_exceeded/);
+  expect(prompts).toMatch(/never key on the message text/);
+  expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded[^;]*run the step \(2\) cleanup on it now in this tick/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

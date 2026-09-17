@@ -393,11 +393,18 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   by the user; silence never clears a hold. For a hold caused by an Orca
   runtime refusal (a sub-worker dispatch rejected for depth, a declined launch
   capability), observing resolution means re-attempting the refused operation
-  once per tick on the next eligible PR — success clears the hold, the same
-  refusal keeps it without a new health line. Persisted configuration such as
-  `orca-data.json` is never evidence either way; it lags the live setting and
-  the driver never reads it (settled 2026-09-17 after the depth hold outlived
-  the fix by reading a stale snapshot).
+  once per tick on the next eligible PR — success clears the hold. The hold
+  is keyed on Orca's structured error code (`nested_worker_depth_exceeded`
+  for the depth case), stored in `cursor.json` as `runtime_refusal {code,
+  first_seen, last_seen}`: the same code keeps the hold and updates
+  `last_seen` without a new health line; a different code is a new finding;
+  prose is never the key. A `worker-start` refused after its child worktree
+  was created leaves a worktree with no marker and no candidate, so the driver
+  cleans it up immediately in the same tick under the settlement cleanup
+  rule. Persisted configuration such as `orca-data.json` is never evidence
+  either way; it lags the live setting and the driver never reads it (settled
+  2026-09-17 after the depth hold outlived the fix by reading a stale
+  snapshot).
 
 ## Acceptance before enabling
 
