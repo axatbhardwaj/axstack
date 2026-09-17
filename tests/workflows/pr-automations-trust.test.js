@@ -41,6 +41,10 @@ const setup = () => {
 const run = (env, args, helper = HELPER) => sh(`${BUN} ${helper} ${args}`, env.env);
 const read = (env) => JSON.parse(readFileSync(env.store, 'utf8'));
 // A copy of the helper with a marker replaced by injected code.
+// Fixed sleeps race a cold Bun start on a slow runner: wait for the helper to
+// hold the lock (it pauses at its marker right after) before interfering.
+const untilLocked = (env) => `for i in $(seq 1 200); do [ -d "${env.store}.lock" ] && break; sleep 0.05; done; sleep 0.2`;
+
 const patched = (marker, code) => {
   const src = readFileSync(HELPER, 'utf8');
   expect(src, `marker ${marker} must exist in the helper`).toContain(marker);
@@ -146,7 +150,7 @@ test('a rename stalled past the stale threshold cannot be stolen from, because t
   const env = setup();
   const slow = patched('// before-commit', 'await Bun.sleep(4000);');
   const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
-    sleep 0.5; (${thief(env, 3)})
+    ${untilLocked(env)}; (${thief(env, 3)})
     wait $pid; echo "helper=$?"`, env.env);
   expect(r.out, 'the thief must never have seen a stale lock').toMatch(/stole=0/);
   expect(r.out).toMatch(/helper=0/);
@@ -162,7 +166,7 @@ test('a refresh that fails compromises the lease and the commit is aborted', () 
   const slow = `${sandbox}/slow-bad.js`;
   writeFileSync(slow, readFileSync(bad, 'utf8').replace('// before-commit', '// before-commit\nawait Bun.sleep(4000);'));
   const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
-    sleep 0.5; (${thief(env, 3)})
+    ${untilLocked(env)}; (${thief(env, 3)})
     wait $pid; echo "helper=$?"`, env.env);
   expect(r.out, 'a compromised lease must abort').toMatch(/helper=2/);
   const store = read(env);
@@ -178,7 +182,7 @@ test('a lock stolen between acquisition and the first refresh is left untouched'
   const env = setup();
   const slow = patched('// after-acquire', 'await Bun.sleep(1500);');
   const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
-    sleep 0.5; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    ${untilLocked(env)}; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
     touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock"); ino=$(stat -c %i "${env.store}.lock")
     wait $pid; echo "helper=$?"
     [ -d "${env.store}.lock" ] && echo "lock=present:$(stat -c %i "${env.store}.lock"):$ino:$(stat -c %Y "${env.store}.lock"):$before" || echo "lock=REMOVED"`, env.env);
@@ -195,7 +199,7 @@ test('a lock stolen after the temp is rendered aborts the commit instead of over
   const env = setup();
   const slow = patched('// before-commit', 'await Bun.sleep(1500);');
   const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
-    sleep 0.6; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    ${untilLocked(env)}; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
     touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock")
     t="${env.store}.tmp.thief"; jq '.claudeField = "written-after-steal"' "${env.store}" > "$t" && mv "$t" "${env.store}"
     wait $pid; echo "helper=$?"; echo "thief-mtime=$before:$(stat -c %Y "${env.store}.lock")"`, env.env);
@@ -220,7 +224,7 @@ test('when the owner is killed nothing can commit afterwards, the lease lapses, 
   const env = setup();
   const slow = patched('// before-commit', 'await Bun.sleep(30000);');
   const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
-    sleep 1.5; kill -KILL $pid; sleep 2.5
+    ${untilLocked(env)}; kill -KILL $pid; sleep 2.5
     m1=$(stat -c %Y "${env.store}.lock" 2>/dev/null || echo gone); sleep 2.5
     m2=$(stat -c %Y "${env.store}.lock" 2>/dev/null || echo gone); echo "mtime=$m1:$m2"
     touch -d "@$(( $(date +%s) - 11 ))" "${env.store}.lock"
