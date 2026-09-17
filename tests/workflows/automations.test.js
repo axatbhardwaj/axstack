@@ -122,6 +122,21 @@ test('automations: a published verdict body is written for the PR reader, not th
   expect(clause).toMatch(/marker line is the only pipeline artefact/i);
 });
 
+test('automations: the pair runs from the root folder workspace and children nest under their project', () => {
+  // Settled 2026-09-17: no project owns the automation. The driver and
+  // watchdog run from the host's root folder workspace, the run directory is
+  // private host state because that workspace is not a git repository, and a
+  // per-PR child worktree is parented to its own project's primary worktree so
+  // it appears under that project rather than under axstack.
+  const text = compact(refPath);
+  expect(text).toMatch(/run from the (?:host's )?`root` folder workspace/i);
+  expect(text).toMatch(/not a git repository/i);
+  expect(text).toMatch(/~\/\.local\/share\/axstack\/runs\/<run id>\//);
+  expect(text).not.toMatch(/under the Axstack git-common-dir/i);
+  expect(text).toMatch(/parented to (?:that|the) project's primary worktree/i);
+  expect(text).not.toMatch(/parented to the driver\s+worktree/i);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

@@ -143,7 +143,8 @@ automations worktree) does the following in order and exits.
      repair cap; and it is the lowest PR of its stack that needs repair (an
      own PR whose base branch equals another own PR's head branch is a
      descendant). Create an Orca child worktree of the project clone at the
-     head, parented to the driver worktree, and dispatch **one**
+     head, parented to that project's primary worktree so it appears under
+     the project it serves, and dispatch **one**
      `axstack-watch` agent in authored repair mode with the triggering check
      or review findings in its brief; the agent addresses only those findings.
      Record the review id and body digest as processed at dispatch. Each open
@@ -179,8 +180,9 @@ automations worktree) does the following in order and exits.
 ## Agents in worktrees
 
 Each dispatched agent runs in its own Orca child worktree under
-the Orca workspaces directory for `<repo>`, pinned to the exact head, with the driver
-worktree as parent, and reports through the Orca worker protocol only.
+the Orca workspaces directory for `<repo>`, pinned to the exact head, with that
+project's primary worktree as parent, and reports through the Orca worker
+protocol only.
 
 - `axstack-review`, peer mode: two isolated reviewers
   (`axstack-reviewer-primary` Sol, `axstack-reviewer-secondary` Opus, identical
@@ -330,8 +332,11 @@ for health findings.
 
 ## Run directory and state
 
-One run directory under the axstack git-common-dir,
-`.git/axstack/runs/<run id>/`, holds:
+The driver and watchdog run from the host's `root` folder workspace rather
+than an axstack worktree, so no project owns the automation and each child
+worktree nests under the project it serves (settled by the user on
+2026-09-17). That workspace is not a git repository, so the run directory is
+private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
 
 - `cursor.json` — driver only, with these exact keys because the precheck
   and the watchdog read them: `fingerprint`, `tick_started_at`,

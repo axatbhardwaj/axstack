@@ -140,8 +140,9 @@ An own PR needs repair when either trigger applies:
 
 Repair also requires no deploy-on-push head branch, no live repair cap, and
 selection of the lowest own PR in its stack that needs repair. Create a child
-worktree in that project's clone at the exact head, parented to the driver
-worktree, and dispatch one `axstack-watch` agent in authored repair mode. Its
+worktree in that project's clone at the exact head, parented to that
+project's primary worktree so it appears under the project it serves, and
+dispatch one `axstack-watch` agent in authored repair mode. Its
 brief contains only the triggering checks or review findings. Each open
 descendant records one user-owned `pending restack` hold until it stops needing
 repair. The 24 h cap starts at dispatch and an abandon does not refund it.
@@ -302,8 +303,11 @@ is no gate for health findings.
 
 ## Run directory
 
-One `.git/axstack/runs/<run id>/` directory under the Axstack git-common-dir
-contains:
+The driver and watchdog run from the host's `root` folder workspace, not a
+project worktree: no project owns the automation, and every child worktree
+belongs to the project it serves. That workspace is not a git repository, so
+the run directory is private host state, one
+`~/.local/share/axstack/runs/<run id>/` directory, which contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
