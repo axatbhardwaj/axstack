@@ -361,14 +361,15 @@ Only then it closes any terminal tab still listed, resets the slot to the
 pinned head, clears untracked artefacts, and verifies the slot is clean, so
 it is back in the pool. On the settled path
 the worker has finished, so untracked files are artefacts by definition and
-are cleared; a candidate there is already pushed or token-held. An abandoned
-worktree that is dirty or holds an unproven candidate is **retained**, named
-in one `health[]` line with its path and SHA, and blocks only that PR with
-the user as owner. Retention is mechanical: the driver appends
-`retained_slots[]` `{slot, pr, head, reason}`, which the free predicate
-excludes for every PR — a clean, terminal-less slot holding an unpushed
-candidate would otherwise look free — and an entry is cleared only by the
-user after reconciling the candidate. A dirty slot or a terminal that
+are cleared; a candidate there is already pushed or token-held. A slot
+whose release is settled but whose HEAD cannot be proven disposable, and an
+abandoned slot that is dirty or holds an unproven candidate, are both
+**retained**: named in one `health[]` line with path and SHA, and blocking
+only that PR with the user as owner. Retention is mechanical on both paths:
+the driver appends `retained_slots[]` `{slot, pr, head, reason}`, which the
+free predicate excludes for every PR — a clean, terminal-less slot holding
+an unpushed candidate would otherwise look free — and an entry is cleared
+only by the user after reconciling the candidate. A dirty slot or a terminal that
 outlives its dispatch without such a retention record is a health finding. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,

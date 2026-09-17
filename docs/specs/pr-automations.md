@@ -409,10 +409,11 @@ replace) with a failed fetch retaining the worktree, or by a `refs/axstack/decis
 the abandon path there are no uncommitted changes — closes any
 terminal tab still listed, resets the slot to the pinned head, clears
 untracked artefacts, and verifies the slot is clean, so it is back in the
-pool. An abandoned slot that is dirty or holds an unproven candidate is
-retained, recorded in `health[]` with path and SHA and in
-`retained_slots[]` as `{slot, pr, head, reason}`, blocks only that PR with
-the user as owner, and is excluded from the free predicate for every PR
+pool. A settled slot whose HEAD cannot be proven disposable, and an
+abandoned slot that is dirty or holds an unproven candidate, are both
+retained: recorded in `health[]` with path and SHA and in
+`retained_slots[]` as `{slot, pr, head, reason}`, blocking only that PR
+with the user as owner, and excluded from the free predicate for every PR
 until the entry is cleared only by the user after reconciling the
 candidate. Anything else that outlives
 its dispatch is a health finding (settled by the user on 2026-09-17).

@@ -197,9 +197,9 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
     expect(text, `${name}: abandon settlement defined`).toMatch(/accepted abandon receipt/i);
     expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
     expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
-    expect(text, `${name}: unsafe work is retained`).toMatch(/is \*?\*?retained\*?\*?/i);
+    expect(text, `${name}: unsafe work is retained`).toMatch(/(?:is|are both) \*?\*?retained\*?\*?/i);
     expect(text, `${name}: retention is recorded`).toMatch(/health\[\][^.]*(?:path and SHA|path and \$hw)/i);
-    expect(text, `${name}: blocks only that PR`).toMatch(/blocks? only that PR/i);
+    expect(text, `${name}: blocks only that PR`).toMatch(/block(?:s|ing)? only that PR/i);
   }
   expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
   // The tick steps that the driver follows literally must defer to the gate
@@ -225,7 +225,7 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);
   expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
   expect(prompts).toMatch(/If disposable, clean up completely/);
-  expect(prompts).toMatch(/If not disposable, retain it[^.]*delete nothing/);
+  expect(prompts).toMatch(/If not disposable[^.]*retain it[^.]*delete nothing/);
   expect(prompts).toMatch(/status --porcelain must be empty/);
   // clean -fdx may appear only inside the disposable branch.
   const disposableStart = prompts.indexOf('If disposable, clean up completely');
@@ -377,6 +377,10 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
     expect(text, `${name}: retained slots are part of the free predicate`).toMatch(/free when[^.]*not (?:listed )?in (?:`|cursor\.json )?retained_slots\[\]`?/i);
     expect(text, `${name}: retention record`).toMatch(/retained_slots\[\][^.]*(?:`slot`|slot)[^.]*(?:`pr`|pr)[^.]*(?:`head`|head|SHA)[^.]*(?:`reason`|reason)/i);
     expect(text, `${name}: cleared only by the user`).toMatch(/retained_slots\[\][^.]*(?:cleared|removed) only by the user/i);
+    // Both retention paths record the slot: a settled worker whose candidate
+    // cannot be proven durable, and a dirty or unproven abandon.
+    expect(text, `${name}: settled retention records the slot`).toMatch(/(?:settled|release)[^.]*(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]|(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]/i);
+    expect(text, `${name}: abandon retention records the slot`).toMatch(/abandon[\s\S]{0,400}retained_slots\[\]/i);
     // No active contract may instruct removing a worktree/slot on cleanup.
     expect(text, `${name}: no removal language`).not.toMatch(/disposable before removing|removes? the (?:child )?worktree|worktree rm/i);
   }
