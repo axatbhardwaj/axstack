@@ -108,6 +108,37 @@ test('concurrent seeds and a concurrent lock-taking writer lose nothing', () => 
   expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | wc -l`).out.trim(), 'no temp files left').toBe('0');
 }, 60000);
 
+test('a rename delayed past the stale threshold cannot be stolen from, because the lease is refreshed while held', () => {
+  // The exact check-to-use gap the review reproduced: still_owned passes,
+  // then the rename itself stalls. A faithful proper-lockfile thief steals
+  // only when the lock's mtime is older than its stale threshold. With the
+  // lease refreshed continuously while held, the mtime never ages and the
+  // thief never steals; without it, the thief steals and the seed clobbers
+  // its write. The thief's stale threshold is scaled down to keep the test
+  // short; the helper's refresh interval is fixed and much shorter.
+  const env = setup();
+  const shim = `${sandbox}/shim`;
+  mkdirSync(shim);
+  // mv that stalls 4 s, then performs the real rename.
+  writeFileSync(`${shim}/mv`, '#!/bin/sh\nsleep 4\nexec /bin/mv "$@"\n'); chmodSync(`${shim}/mv`, 0o755);
+  const thief = `for i in $(seq 1 60); do
+      if [ -d "${env.store}.lock" ]; then
+        age=$(( $(date +%s) - $(stat -c %Y "${env.store}.lock") ))
+        if [ "$age" -ge 3 ]; then
+          rmdir "${env.store}.lock" && mkdir "${env.store}.lock" && stole=1
+          t="${env.store}.tmp.thief"; jq '.concurrentClaudeWrite = "must-survive"' "${env.store}" > "$t" && /bin/mv "$t" "${env.store}"
+          rmdir "${env.store}.lock"; break
+        fi
+      fi; sleep 0.1; done; echo "stole=\${stole:-0}"`;
+  const r = sh(`bash ${HELPER} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    sleep 0.5; (${thief})
+    wait $pid; echo "helper=$?"`, { ...env.env, PATH: `${shim}:${process.env.PATH}` });
+  expect(r.out, 'the thief must never have seen a stale lock').toMatch(/stole=0/);
+  expect(r.out).toMatch(/helper=0/);
+  expect(read(env).projects[env.wt].hasTrustDialogAccepted).toBe(true);
+  expect(existsSync(`${env.store}.lock`), 'lock released').toBe(false);
+}, 30000);
+
 test('a lock stolen after the temp is rendered aborts the commit instead of overwriting the store', () => {
   // The dangerous window: the helper has rendered its temp file from a store
   // it read under the lock; Claude then treats the lock as stale, replaces
@@ -119,9 +150,16 @@ test('a lock stolen after the temp is rendered aborts the commit instead of over
   expect(readFileSync(slow, 'utf8')).toContain('sleep 1.5');
   const r = sh(`bash ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
     sleep 0.6; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock")
     t="${env.store}.tmp.thief"; jq '.claudeField = "written-after-steal"' "${env.store}" > "$t" && mv "$t" "${env.store}"
-    wait $pid; echo "helper=$?"`, env.env);
+    wait $pid; echo "helper=$?"; echo "thief-mtime=$before:$(stat -c %Y "${env.store}.lock")"`, env.env);
   expect(r.out, 'helper must report failure, not success').toMatch(/helper=2/);
+  // The lease refresher must stop the instant the lock is no longer ours: a
+  // stolen lock's mtime is never touched by us, or we would keep a stranger's
+  // lease alive.
+  const mt = r.out.match(/thief-mtime=(\d+):(\d+)/);
+  expect(mt, r.out).not.toBeNull();
+  expect(mt[1], "the thief's lock mtime was refreshed by our refresher").toBe(mt[2]);
   const store = read(env);
   expect(store.claudeField, "Claude's write after the steal must survive").toBe('written-after-steal');
   expect(store.projects[env.wt], 'the stale seed must not have been committed').toBeUndefined();

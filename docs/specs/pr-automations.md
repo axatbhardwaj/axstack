@@ -199,10 +199,12 @@ git worktree whose common dir is the named allowlisted clone's, not the clone
 itself, at exactly the pinned head; anything else is refused and never
 seeded. It writes under Claude Code's own `mkdir`-based `~/.claude.json.lock`
 with a bounded retry in which only a successful `mkdir` counts, never
-breaking a foreign lock, re-reads under it, refuses an unparsable store,
-uses a unique temp file, preserves mode, re-verifies at commit that the
-lock is still its own (unchanged inode, well inside Claude's 10 s stale
-window) and otherwise discards the temp and commits nothing, treats a
+breaking a foreign lock, keeps the lease alive as Claude does by
+refreshing the lock's mtime every second while held so it can never age
+into the 10 s stale threshold even if a rename stalls, re-reads under it,
+refuses an unparsable store, uses a unique temp file, preserves mode,
+re-verifies at commit that the lock is still its own (unchanged inode, well
+inside the window) and otherwise discards the temp and commits nothing, treats a
 failed chmod or rename as failure with the temp removed, and always
 releases only a lock it still owns; a
 busy or unreadable store retains the worktree and dispatches nothing. The

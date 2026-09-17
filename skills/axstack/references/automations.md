@@ -139,12 +139,15 @@ be the clone itself, and must sit at exactly the pinned head — anything
 else exits 3 and is never seeded. It writes under Claude Code's own config
 lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
 with a bounded retry in which only a successful `mkdir` counts as holding
-it, never breaking a lock it did not create; it re-reads under the lock,
-refuses a store that does not parse, writes a unique temp file, preserves
-the store's mode, re-verifies at commit that the lock is still its own —
-unchanged inode, well inside Claude's 10 s stale window — and otherwise
-discards the temp and commits nothing, treats a failed chmod or rename as
-failure with the temp removed, and releases only a lock it still owns. A busy or unreadable
+it, never breaking a lock it did not create; it keeps the lease alive the way
+Claude does — a refresher touches the lock's mtime every second for as long
+as it is held, so the lock cannot age into Claude's 10 s stale threshold
+under it even if a rename stalls — re-reads under the lock, refuses a store
+that does not parse, writes a unique temp file, preserves the store's mode,
+re-verifies at commit that the lock is still its own (unchanged inode, hold
+well inside the window) and otherwise discards the temp and commits
+nothing, treats a failed chmod or rename as failure with the temp removed,
+and releases only a lock it still owns, stopping the refresher first. A busy or unreadable
 store exits 2: the worktree is retained and nothing is dispatched. The
 worktree cleanup removes the entry through the same helper; if that
 removal fails after the worktree is gone, the marker stays in

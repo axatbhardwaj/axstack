@@ -36,10 +36,11 @@ esac
 
 # Claude's lock: bounded wait, never broken. Only a successful mkdir proves we hold it — a lock that
 # already exists belongs to someone else no matter who owns it or how fresh it is. Claude's
-# proper-lockfile treats a lock older than 10 s as stale and may replace it, so ownership is
-# re-verified at commit: the lock directory's inode must be unchanged and the hold must still be
-# well inside the stale window, otherwise the rendered temp is discarded and nothing is committed.
-# The release likewise removes the lock only if the inode is unchanged.
+# proper-lockfile treats a lock whose mtime is older than 10 s as stale and may replace it, and
+# keeps its own leases alive by refreshing the mtime every 5 s. This does the same: a refresher
+# touches the lock every second for as long as it is held, so the lock cannot age into staleness
+# under us even if a rename stalls. Ownership is still re-verified at commit (unchanged inode,
+# hold well inside the window) and the release removes the lock only if the inode is unchanged.
 got=0
 for _ in $(seq 1 25); do if mkdir "$LOCK" 2>/dev/null; then got=1; break; fi; sleep 0.2; done
 [ "$got" -eq 1 ] || exit 2
@@ -47,7 +48,9 @@ touch "$LOCK" 2>/dev/null
 ino="$(stat -c %i "$LOCK" 2>/dev/null)"
 t0="$(date +%s)"
 t=""
-cleanup() { [ -n "$t" ] && rm -f "$t"; [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null; }
+( while :; do [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] || exit 0; touch "$LOCK" 2>/dev/null; sleep 1; done ) &
+refresher=$!
+cleanup() { kill "$refresher" 2>/dev/null; wait "$refresher" 2>/dev/null; [ -n "$t" ] && rm -f "$t"; [ "$(stat -c %i "$LOCK" 2>/dev/null)" = "$ino" ] && rmdir "$LOCK" 2>/dev/null; }
 trap cleanup EXIT
 trap 'exit 2' INT TERM HUP
 

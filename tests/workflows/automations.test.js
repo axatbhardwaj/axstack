@@ -378,7 +378,11 @@ test('automations: the driver pre-trusts only the worktrees it creates, and untr
     expect(text, `${name}: nothing offered for invocation`).toMatch(/offered for invocation/i);
     // The helper's commit is ownership-checked and failure-checked.
     expect(text, `${name}: re-verifies ownership at commit`).toMatch(/re-verifies at commit/i);
-    expect(text, `${name}: stale window`).toMatch(/10 s stale window/);
+    expect(text, `${name}: stale window`).toMatch(/10 s stale (?:window|threshold)/);
+    // The lease is kept alive while held, as proper-lockfile does; a
+    // stalled rename cannot let the lock go stale underneath the helper.
+    expect(text, `${name}: lease refreshed while held`).toMatch(/refresh(?:es|ing|er touches) the lock's mtime every second/i);
+    expect(text, `${name}: covers a stalled rename`).toMatch(/even if a rename stalls/i);
     expect(text, `${name}: rename failure is failure`).toMatch(/failed chmod or rename as\s+failure/i);
     expect(text, `${name}: releases only its own lock`).toMatch(/releases? only a lock it still owns/i);
     expect(text, `${name}: rendered readiness`).toMatch(/rendered frame/i);
