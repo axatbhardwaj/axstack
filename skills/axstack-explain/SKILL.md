@@ -33,6 +33,18 @@ immediately before an actual profile dispatch.
 4. For every gap, cite its inspected scope and applicable revision, stable
    source identity, or content hash. “Not found” never means app-wide missing
    without app-wide evidence; anything outside the inspected scope is unknown.
+5. For "what could this break" or "blast radius of X", follow
+   [Blast radius](../axstack/references/blast-radius.md): find the breakage
+   beyond the diff and prove the one safety fact by running real code, or
+   mark it unproven.
+6. For "show me your work" on existing work (a run, PR, branch, or change),
+   reconstruct the decision trail rather than re-describing the diff: read the
+   run record's `Decisions` and `Learnings`
+   ([run record](../axstack/references/run-record.md)), then the commits, PR
+   body, review receipts, and ADRs. Present each consequential choice as what
+   was chosen, why, the evidence pointer, and its result; separate what the
+   record proves from what is inferred, and list choices with no recorded
+   reason as open rather than inventing one.
 
 ## 2. Choose proportional output
 
