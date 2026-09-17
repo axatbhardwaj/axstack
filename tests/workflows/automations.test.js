@@ -233,6 +233,23 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(cleanAt, 'clean must come after the disposability gate').toBeGreaterThan(disposableStart);
 });
 
+test('automations: the driver closes its own terminal tab as the last step of a tick', () => {
+  // Rev 4 has no terminal hygiene sweep and each tick is a fresh session, so
+  // without this every tick leaves one terminal in the root workspace: 24 had
+  // accumulated in the old worktree by the time it was retired.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  expect(ref).toMatch(/tick_done_at[^.]*tick_outcome[^.]*then close(?:s)? (?:its|your) own terminal tab/i);
+  expect(spec).toMatch(/tick_done_at[^.]*tick_outcome[^.]*close(?:s)? its own terminal tab/i);
+  expect(prompts).toMatch(/orca terminal close --terminal \$ORCA_TERMINAL_HANDLE --tab/);
+  // It must be the final action: nothing runs after the tab is gone.
+  const closeAt = prompts.indexOf('orca terminal close --terminal $ORCA_TERMINAL_HANDLE --tab');
+  const doneAt = prompts.indexOf('write tick_done_at and tick_outcome ok');
+  expect(doneAt, 'tick_done_at must be written before the tab closes').toBeGreaterThan(-1);
+  expect(closeAt).toBeGreaterThan(doneAt);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

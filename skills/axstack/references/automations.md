@@ -117,7 +117,9 @@ The driver performs this order and exits:
    marker. Dispatch within the repair and review rules below.
 6. Promote the `pending.json` fingerprint verbatim, because it records
    observation rather than completion. Write `tick_done_at` and
-   `tick_outcome: ok`, then exit.
+   `tick_outcome: ok`, then close your own terminal tab and exit: each tick is
+   a fresh session and there is no hygiene sweep, so a tab left open outlives
+   the tick as a stray terminal in the root workspace.
 
 ## Dispatch and repair selection
 

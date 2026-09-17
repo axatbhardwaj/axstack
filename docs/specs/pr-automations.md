@@ -179,7 +179,10 @@ folder workspace) does the following in order and exits.
    `deferred[]` (repo, pr, head) and stays due. Reaching a budget records the
    count; it is not a hold.
 7. Promote the `pending.json` fingerprint verbatim (it records observation,
-   never completion), write `tick_done_at` and `tick_outcome: ok`, exit.
+   never completion), write `tick_done_at` and `tick_outcome: ok`, then the
+   driver closes its own terminal tab and exits — each tick is a fresh session
+   with no hygiene sweep, so an open tab would outlive the tick (settled by
+   the user on 2026-09-17).
 
 ## Agents in worktrees
 
