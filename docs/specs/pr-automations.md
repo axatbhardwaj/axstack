@@ -266,10 +266,10 @@ relay its one-line result; do nothing else and never run `gh`, `git` or
   line, exit 0.
 
 Authentication is the Hermes gateway's allowlist, enforced before any agent
-turn, plus the script's own check of `HERMES_SESSION_USER_ID`,
-`HERMES_SESSION_CHAT_ID` and `HERMES_SESSION_CHAT_TYPE`, which the gateway
-does export to the script (verified at cutover, acceptance 8); the token is
-the capability. A
+turn, plus the script's own equality check of `HERMES_SESSION_USER_ID` and
+`HERMES_SESSION_CHAT_ID` against the configured user id; the gateway exports
+these (and `HERMES_SESSION_CHAT_TYPE`, observed but not checked) to the script,
+verified at cutover under acceptance 8. The token is the capability. A
 group source is never valid; the runtime config check above fails closed if
 the home channel stops being private.
 
