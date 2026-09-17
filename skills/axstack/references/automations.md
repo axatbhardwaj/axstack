@@ -235,7 +235,9 @@ Before opening a `push` token, the repair agent pins its candidate with local
 ref `refs/axstack/decisions/<token>` in the project clone, so the candidate
 survives worktree removal. It then sends one
 `hermes send --to telegram` message naming the PR, criterion, every reviewer's
-reason, and the exact replies `approve <token>` and `reject <token>`. Store the
+reason, and the exact replies `/axstack-decide approve <token>` and
+`/axstack-decide reject <token>` (the slash form loads the Hermes skill
+deterministically; bare `approve <token>` is best effort). Store the
 send receipt. The driver retries a `failed` send once next tick and reconciles
 an `uncertain` send against Hermes output before any retry.
 

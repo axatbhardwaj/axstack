@@ -81,7 +81,8 @@ existing action boundaries before acting; silence never grants permission.
 An automation escalation is the narrow exception defined by
 [Automation sessions](../axstack/references/automations.md). The PR agent opens
 an immutable-bound decision token, sends one message with the exact
-`approve <token>` and `reject <token>` replies, records the send receipt, and
+`/axstack-decide approve <token>` and `/axstack-decide reject <token>` replies,
+records the send receipt, and
 exits without waiting. The Hermes script decides by validating the private
 channel and updating only an open token file; Hermes never performs the bound
 GitHub or Git action. The driver consumes the file on a later tick, revalidates
