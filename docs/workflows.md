@@ -108,7 +108,13 @@ session and evidence remain valid.
 
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
   consults Astra and Fable independently with the same bounded evidence and
-  question. It synthesizes disagreements and reuses unchanged receipts.
+  question. It synthesizes disagreements and reuses unchanged receipts. For a
+  hard-to-reverse design choice it runs one arena round instead: Astra and
+  Fable each author a candidate, `axstack-arena-judge-astra` and
+  `axstack-arena-judge-fable` score both against the driver's rubric, and the
+  driver picks a base, grafts the losers' strong ideas, and presents the
+  synthesis as the recommendation; the note lands as `Decisions` rows in the
+  run record.
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline.
 - `axstack-tickets` maps user-visible capabilities to dependency-aware internal

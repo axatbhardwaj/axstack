@@ -11,7 +11,7 @@ only with exactly one unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 21 role
+At run start, capture one **routing snapshot**: the complete map of all 23 role
 IDs with provider/model/mode/effort, absent or unconfigured roles recorded
 explicitly, and no invented provider default. An absent or unconfigured role
 holds only that role's work, not the run. A role installed or changed later
@@ -38,8 +38,10 @@ Role IDs:
   | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
   | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
   | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
-- `axstack-advisor-astra` and `axstack-advisor-fable` advise independently;
-  `axstack-auditor` audits; `axstack-checker` reports discrepancies.
+- `axstack-advisor-astra` and `axstack-advisor-fable` advise independently
+  and author align arena candidates; `axstack-arena-judge-astra` and
+  `axstack-arena-judge-fable` judge them. `axstack-auditor` audits;
+  `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors explanations; `axstack-explainer-review`
   reviews them. `axstack-monitor` observes only; `axstack-watchdog` sends
   only gate-authorized health escalations.
@@ -47,10 +49,9 @@ Role IDs:
 
 Provenance is matched on provider/model ID; record effort but never use it to
 create a mapping. Provenance absent from the preset's table row is
-unsupported and `INCOMPLETE` (including its secondary reviewer model, Astra,
-Luna, or Fable); report the exact gap and ask the user. Never derive a reverse
-pairing from slot position, driver, owner, or provider. Author and owner never
-review their own work.
+unsupported and `INCOMPLETE`; report the exact gap and ask the user. Never
+derive a reverse pairing from slot position, driver, owner, or provider.
+Author and owner never review their own work.
 
 ## Direct routes (no spec ceremony)
 
@@ -66,7 +67,7 @@ review their own work.
   off a classified repair (explain: how; debug: what's wrong).
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
-  edits. Selected changes return via preparation or execution.
+  edits.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
   record, keep its owner, launch no native handoff.
@@ -79,16 +80,16 @@ review their own work.
   `axstack-watch` for adoption.
 
 Research, explanation, improvement discovery, debugging, handoff, peer review,
-and adopted maintenance need no alignment, approved spec, or ticket map;
-authority and intent boundaries still apply.
+and adopted maintenance need no alignment, spec, or ticket map; authority and
+intent boundaries still apply.
 
 ## Proportional scope identity
 
 Classify new work as substantial, small, or unclear; record it with brief
 reason in the run record, or in the brief for tiny direct work.
 
-- **Substantial:** substantial features, multi-PR work, or stacked work. A
-  bounded small feature is not substantial merely because it is labelled one.
+- **Substantial:** substantial features, multi-PR work, or stacked work; a
+  bounded small feature is not substantial because it is labelled one.
   Require an approved spec plus a ticket map tied to that exact spec
   revision, with acceptance checks and dependencies in the explicitly selected
   Markdown or Linear store. Prepare via `axstack-align` -> `axstack-spec`
@@ -107,8 +108,8 @@ reason in the run record, or in the brief for tiny direct work.
 Reassess size when growth adds an additional PR, a new execution dependency
 that materially expands scope, an unsettled material design question, or a
 security/infrastructure boundary crossing. An ordinary
-test-then-code sequence is not multi-task growth; a minor file dependency does
-not alone need a formal spec. Hold affected unsafe work while reassessing.
+test-then-code sequence is not multi-task growth; a minor file dependency is
+not alone a formal spec trigger. Hold affected unsafe work while reassessing.
 
 ## Lifecycle routes (mode-specific scope identity required)
 
@@ -125,5 +126,5 @@ not alone need a formal spec. Hold affected unsafe work while reassessing.
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
   orchestrator or assume an imported own PR's author.
-- Direct later phase: start there and pass that phase's identity check. Entry
-  never admits work a deeper phase would reject.
+- Direct later phase: start there and pass that phase's identity check; entry
+  never admits work a deeper phase rejects.

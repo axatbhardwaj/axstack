@@ -51,7 +51,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 21 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 23 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -148,15 +148,16 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` relative to the actually loaded `axstack` skill.
-A new run records the selected preset plus all 21 role rows. An active run keeps
+A new run records the selected preset plus all 23 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
 The mixed checker has `model: null`; checker dispatch is held and never inherits
 a provider default. The single-provider presets configure the checker. Their
-unavailable adviser remains an explicit same-provider `model: null` role, which
-does not make installation unready; Align and Spec still hold until both Astra
-and Fable can return independent receipts. The current chat drives on whatever
+unavailable adviser and its matching arena judge seat remain explicit
+same-provider `model: null` roles, which do not make installation unready;
+Align and Spec still hold until both Astra and Fable can return independent
+receipts, and an arena-grade Align question holds until both judge seats can. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
 the affected work. There is no model substitution, subscription inference, or
 quota routing.

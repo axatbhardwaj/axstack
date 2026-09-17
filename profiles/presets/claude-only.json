@@ -189,6 +189,24 @@
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
+    },
+    {
+      "id": "axstack-arena-judge-astra",
+      "name": "Axstack arena judge Astra",
+      "provider": "claude",
+      "model": null,
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "xhigh",
+      "notes": "Required Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and both candidates by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the claude-only preset; the arena-grade decision holds without substitution."
+    },
+    {
+      "id": "axstack-arena-judge-fable",
+      "name": "Axstack arena judge Fable",
+      "provider": "claude",
+      "model": "claude-fable-5-1",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "xhigh",
+      "notes": "Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and both candidates by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
     }
   ]
 }

@@ -78,7 +78,7 @@ test('improve: normal TDD and bounded ownership remain intact', () => {
   expect(implement).toMatch(/exactly one author|one writer/i);
   const profiles = JSON.parse(read('profiles/presets/mixed.json'));
   expect(profiles.roles.some(({ id }) => id === 'axstack-improve')).toBe(false);
-  expect(profiles.roles.length).toBe(21);
+  expect(profiles.roles.length).toBe(23);
 });
 
 test('improve: implementation receipt and audit accept the applicable evidence path', () => {

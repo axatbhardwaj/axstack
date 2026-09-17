@@ -64,8 +64,8 @@ export function assessRoleReadiness(roles, preset) {
   const gaps = [];
   const isIntentionalAbsence = (role) => role.model === null && (
     (preset === 'mixed' && role.id === 'axstack-checker') ||
-    (preset === 'codex-only' && role.id === 'axstack-advisor-fable') ||
-    (preset === 'claude-only' && role.id === 'axstack-advisor-astra')
+    (preset === 'codex-only' && ['axstack-advisor-fable', 'axstack-arena-judge-fable'].includes(role.id)) ||
+    (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra'].includes(role.id))
   );
   for (const role of roles) {
     if (!bounds.has(role.provider)) {
