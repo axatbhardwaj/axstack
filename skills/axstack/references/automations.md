@@ -384,12 +384,18 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
   hold and updates `last_seen` without a new health line, a different code is
   a new finding. Prose is never the key. When `worker-start` itself is
   refused after the child worktree was created, there is no worker, so the
-  settlement proof does not apply; the no-worker branch applies instead: the
-  refusal's JSON receipt must show no Dispatch was created and no
-  `residualResources`, the worktree's HEAD must equal the pinned head, and
-  `git status --porcelain` must be empty. Only then does the driver remove
-  the worktree, its directory and branch in the same tick; anything else
-  retains it with a health line naming what was found. Persisted configuration such
+  settlement proof does not apply; the driver reads the receipt's `failedStage`
+  and `residualResources` first. With no Dispatch and no residual resources
+  the no-worker branch applies: the worktree's HEAD must equal the pinned
+  head and `git status --porcelain` must be empty, and only then does the
+  driver remove the worktree, its directory and branch in the same tick.
+  With a Dispatch or any residual resource the failed start owns runtime
+  state, and retaining alone is not recovery: the driver follows the
+  runtime's recovery guide — `worker-list` for that run and the row's
+  literal `nextAction`, or `worker-release` once settled — and applies the
+  no-worker branch only after the resources are proven gone. It never retries
+  in the same tick. Anything unproven retains the worktree with a health line
+  naming the stage and the resources. Persisted configuration such
   as `orca-data.json` is never evidence either way; it is a snapshot that
   lags the live setting, and the driver never reads it.
 

@@ -275,7 +275,13 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
     expect(text, `${name}: no-worker branch checks residualResources`).toMatch(/residualResources/);
     expect(text, `${name}: no-worker branch requires pinned head`).toMatch(/HEAD (?:must equal|equals) the pinned head/i);
     expect(text, `${name}: no-worker branch requires a clean tree`).toMatch(/status --porcelain[^.]*empty|tree is clean/i);
-    expect(text, `${name}: otherwise retained`).toMatch(/(?:otherwise|anything else) (?:it is )?retain/i);
+    expect(text, `${name}: otherwise retained`).toMatch(/(?:otherwise|anything else|anything unproven) (?:it is |is )?retain/i);
+    // A failed start that owns runtime state is recovered through the
+    // runtime's own guide, not merely parked.
+    expect(text, `${name}: reads failedStage`).toMatch(/failedStage/);
+    expect(text, `${name}: retaining alone is not recovery`).toMatch(/retaining alone is not recovery/i);
+    expect(text, `${name}: follows nextAction or release`).toMatch(/nextAction[\s\S]{0,80}worker-release|worker-release[\s\S]{0,80}nextAction/);
+    expect(text, `${name}: never retries in the same tick`).toMatch(/never retr(?:y|ies) in the same tick/i);
     // The retry needs a launched tick, so the record must be due work and a
     // real cursor key — the precheck and watchdog read an exact schema.
     expect(text, `${name}: runtime_refusal is a cursor key`).toMatch(/runtime_refusal\{code, first_seen, last_seen\}/);
@@ -290,8 +296,16 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/nested_worker_depth_exceeded/);
   expect(prompts).toMatch(/never key on the message text/);
   expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded there is no worker, so do NOT use the step \(2\) settlement proof/);
+  expect(prompts).toMatch(/read the receipt's failedStage and residualResources first/);
   expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
-  expect(prompts).toMatch(/rev-parse HEAD must equal <head sha>, and git -C <worktree path> status --porcelain must be empty/);
+  expect(prompts).toMatch(/worker-list --run <orchestration run id> --json, locate that dispatch's row, and execute its literal projection\.nextAction/);
+  expect(prompts).toMatch(/never --retry-of in the same tick/);
+  // The spec's own due-work enumeration (the algorithm the precheck mirrors)
+  // must list the record, not only the schema paragraph.
+  const specDue = spec.match(/Due control work\*\*, read from `cursor\.json` and `decisions\/`:[\s\S]*?`open` decisions alone are not due/)?.[0] ?? '';
+  expect(specDue, 'spec due-work enumeration missing').not.toBe('');
+  expect(specDue).toMatch(/runtime_refusal/);
+  expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

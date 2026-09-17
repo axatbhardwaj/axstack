@@ -89,8 +89,9 @@ The precheck runs every 15 minutes and exits 0 only when there is work.
    file in state `approved` or `rejected` without `consumed_at`; a `spent`
    file without a receipt (reconciliation); an entry in `deferred[]` whose head
    still matches discovery; an expired repair cap; a dispatch marker older
-   than 3 h; an unsettled Orca delivery recorded in `pending_settlement[]`.
-   `open` decisions alone are not due; they wait for the user.
+   than 3 h; an unsettled Orca delivery recorded in `pending_settlement[]`;
+   a present `runtime_refusal` record, because its re-test needs a launched
+   tick. `open` decisions alone are not due; they wait for the user.
 6. Write `pending.json` (fingerprint, observed_at, `seen[]`, full discovery
    list, the hashed subset). Append `<ts> changed|due|unchanged|running|error`
    to `precheck.log`. Exit 0 on `changed` or `due`, 1 on `unchanged`.
@@ -403,10 +404,16 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   `last_seen` without a new health line; a different code is a new finding;
   prose is never the key. A `worker-start` refused after its child worktree
   was created has no worker, so the settlement proof does not apply; the
-  no-worker branch does: the refusal's JSON receipt shows no Dispatch and no
-  `residualResources`, HEAD equals the pinned head, and the tree is clean.
-  Only then is the worktree, directory and branch removed in the same tick;
-  otherwise it is retained with a health line. Persisted configuration such as `orca-data.json` is never evidence
+  driver reads the receipt's `failedStage` and `residualResources`. With no
+  Dispatch and no residual resources the no-worker branch applies: HEAD
+  equals the pinned head and the tree is clean, and only then is the
+  worktree, directory and branch removed in the same tick. With a Dispatch or
+  any residual resource the failed start owns runtime state, and retaining
+  alone is not recovery: the driver follows the runtime's recovery guide
+  (`worker-list` and the row's literal `nextAction`, or `worker-release` once
+  settled), never retries in the same tick, and applies the no-worker branch
+  only after the resources are proven gone; anything unproven is retained
+  with a health line. Persisted configuration such as `orca-data.json` is never evidence
   either way; it lags the live setting and the driver never reads it (settled
   2026-09-17 after the depth hold outlived the fix by reading a stale
   snapshot).

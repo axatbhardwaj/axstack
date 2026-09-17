@@ -39,6 +39,11 @@ printf '%s' "$cursor" | jq -e '
     and all(.[]; .started_at | timestamp))
   and ((.repair_caps // {}) | type == "object"
     and all(.[]; .expires_at | timestamp))
+  and ((.runtime_refusal // null) == null
+    or (.runtime_refusal | type == "object"
+      and (.code | type == "string" and length > 0)
+      and (.first_seen | timestamp)
+      and (.last_seen | timestamp)))
 ' >/dev/null 2>&1 || fail
 
 # A recent unfinished tick is the only overlap signal. This precheck never
