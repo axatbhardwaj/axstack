@@ -157,6 +157,21 @@ test('presets: scenario corpora never reference a stale role count', () => {
   }
 });
 
+test('presets: public docs and shared references never state a stale role count', () => {
+  const roleCount = readJson('profiles/presets/mixed.json').roles.length;
+  const files = [
+    'README.md', 'docs/installation.md', 'docs/workflows.md',
+    'skills/axstack/references/routing.md', 'skills/axstack/references/orca-runtime.md',
+  ];
+  for (const file of files) {
+    const text = readFileSync(`${root}/${file}`, 'utf8');
+    const stale = text.match(/\b(\d+)(?=[ -](?:stable )?role\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
+    expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
+  }
+  const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
+  expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
+});
+
 test('presets: monitor/watchdog notes carry the lifted hold, not the held wording', () => {
   for (const preset of presetNames) {
     const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));

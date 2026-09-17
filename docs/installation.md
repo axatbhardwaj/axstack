@@ -118,9 +118,9 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker and the
-  unavailable adviser in each single-provider preset explicitly permit
-  `model: null`;
+- every role has valid preserved fields, while the mixed checker and, in each
+  single-provider preset, the unavailable adviser and its matching arena judge
+  seat explicitly permit `model: null`;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
