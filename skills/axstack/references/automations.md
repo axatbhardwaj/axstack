@@ -308,12 +308,21 @@ project worktree: no project owns the automation, and every child worktree
 belongs to the project it serves. That workspace is not a git repository, so
 the run directory is private host state, one
 `~/.local/share/axstack/runs/<run id>/` directory. Settlement leaves nothing
-behind: after a worker settles, the driver releases the worker, closes its
-terminal tab if one is still listed, removes the child worktree and its
-directory (clearing untracked artefacts first so the removal cannot fail on
-them), deletes the branch the worktree created, and verifies the directory is
-gone. A worktree, directory, branch, or terminal that outlives its dispatch
-is a health finding, not an accepted state. The run directory contains:
+behind, but never destroys work. Before any destructive step the driver
+proves the child is disposable: the worker release receipt is settled (a
+pending or unknown release stops here); the worktree's HEAD is either the
+pinned head or a candidate that is durably reachable — pushed to the head
+branch, or held by a `refs/axstack/decisions/<token>` ref in the project
+clone; and, on the abandon path, the worktree has no uncommitted changes.
+Only then it closes any terminal tab still listed, clears untracked
+artefacts, removes the child worktree and its directory, deletes the branch
+the worktree created, and verifies the directory is gone. On the settled path
+the worker has finished, so untracked files are artefacts by definition and
+are cleared; a candidate there is already pushed or token-held. An abandoned
+worktree that is dirty or holds an unproven candidate is **retained**, named
+in one `health[]` line with its path and SHA, and blocks only that PR with
+the user as owner. A worktree, directory, branch, or terminal that outlives
+its dispatch without such a retention record is a health finding. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,

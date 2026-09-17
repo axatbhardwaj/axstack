@@ -360,11 +360,16 @@ Orca run history is the authoritative log. The launch workspace is the host's
 `root` folder workspace: nobody develops there, it is not a git repository,
 and no project owns the automation. Briefs and the escalation template are
 read from the axstack checkout at an absolute path given in the prompt. After
-a worker settles the driver releases it, closes its terminal tab, removes the
-child worktree and its directory (clearing untracked artefacts first), deletes
-the branch the worktree created, and verifies the directory is gone; anything
-that outlives its dispatch is a health finding (settled by the user on
-2026-09-17).
+a worker settles the driver releases it and, once the release receipt is
+settled and the worktree is proven disposable — HEAD is the pinned head or a
+candidate durably reachable by push or by a `refs/axstack/decisions/<token>`
+ref, and on the abandon path there are no uncommitted changes — closes any
+terminal tab still listed, clears untracked artefacts, removes the child
+worktree and its directory, deletes the branch the worktree created, and
+verifies the directory is gone. An abandoned worktree that is dirty or holds
+an unproven candidate is retained, recorded in `health[]` with path and SHA,
+and blocks only that PR with the user as owner. Anything else that outlives
+its dispatch is a health finding (settled by the user on 2026-09-17).
 
 ## Safety holds
 

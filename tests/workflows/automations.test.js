@@ -158,12 +158,12 @@ test('automations: settlement leaves no worktree, directory, branch, or terminal
   const prompts = compact('docs/plans/pr-automations-prompts.md');
   expect(ref).toMatch(/Settlement leaves nothing behind/i);
   for (const [name, text] of [['reference', ref], ['spec', spec]]) {
-    expect(text, `${name}: terminal tab`).toMatch(/closes its terminal tab/i);
+    expect(text, `${name}: terminal tab`).toMatch(/closes? (?:any|its) terminal tab/i);
     expect(text, `${name}: worktree and directory`).toMatch(/removes the child worktree and its directory/i);
-    expect(text, `${name}: untracked artefacts`).toMatch(/clearing untracked artefacts first/i);
+    expect(text, `${name}: untracked artefacts`).toMatch(/clears untracked artefacts/i);
     expect(text, `${name}: branch`).toMatch(/deletes the branch the worktree created/i);
     expect(text, `${name}: verified gone`).toMatch(/verif(?:ies|y) the directory is gone/i);
-    expect(text, `${name}: leftovers are findings`).toMatch(/outlives its dispatch is a health finding/i);
+    expect(text, `${name}: leftovers are findings`).toMatch(/outlives its dispatch[^.]*health finding/i);
   }
   // The prompt spells out the same steps as commands, for both settlement
   // and abandon.
@@ -172,7 +172,43 @@ test('automations: settlement leaves no worktree, directory, branch, or terminal
   expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
   expect(prompts).toMatch(/branch -D <worktree branch>/);
   expect(prompts).toMatch(/verify the directory is gone/);
-  expect(prompts).toMatch(/after a confirmed abandon run the same complete cleanup/);
+  expect(prompts).toMatch(/after a confirmed abandon apply the same disposability proof/);
+});
+
+test('automations: cleanup never destroys work it cannot prove is safe to lose', () => {
+  // Review finding: unconditional `git clean -fdx` erases untracked files in
+  // an abandoned repair, and unconditional `branch -D` can delete the only
+  // ref to a committed but unpushed candidate. Destruction is gated on proof.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  // Scope the reference to its cleanup paragraph: the decisions ref is named
+  // elsewhere too, and only its use as a durability proof here matters.
+  const refCleanup = ref.match(/Settlement leaves nothing behind[\s\S]*?The run directory contains:/)?.[0] ?? '';
+  expect(refCleanup, 'cleanup paragraph missing').not.toBe('');
+  const specCleanup = spec.match(/After a worker settles the driver releases it[\s\S]*?settled by the user on 2026-09-17\)\./)?.[0] ?? '';
+  expect(specCleanup, 'spec cleanup clause missing').not.toBe('');
+  for (const [name, text] of [['reference', refCleanup], ['spec', specCleanup]]) {
+    expect(text, `${name}: proof precedes destruction`).toMatch(/(?:proves|proven)[^.]{0,40}disposable/i);
+    expect(text, `${name}: pushed candidate is durable`).toMatch(/pushed to the head branch|reachable by push/i);
+    expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
+    expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
+    expect(text, `${name}: unsafe work is retained`).toMatch(/is \*?\*?retained\*?\*?/i);
+    expect(text, `${name}: retention is recorded`).toMatch(/health\[\][^.]*(?:path and SHA|path and \$hw)/i);
+    expect(text, `${name}: blocks only that PR`).toMatch(/blocks? only that PR/i);
+  }
+  expect(refCleanup, 'a pending release stops cleanup').toMatch(/pending or unknown release stops/i);
+  // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
+  expect(prompts).toMatch(/pending or unknown release retains the worktree/);
+  expect(prompts).toMatch(/merge-base --is-ancestor \$hw origin\/<head branch>/);
+  expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
+  expect(prompts).toMatch(/If disposable, clean up completely/);
+  expect(prompts).toMatch(/If not disposable, retain it[^.]*delete nothing/);
+  expect(prompts).toMatch(/status --porcelain must be empty/);
+  // clean -fdx may appear only inside the disposable branch.
+  const disposableStart = prompts.indexOf('If disposable, clean up completely');
+  const cleanAt = prompts.indexOf('git -C <worktree path> clean -fdx');
+  expect(cleanAt, 'clean must come after the disposability gate').toBeGreaterThan(disposableStart);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
