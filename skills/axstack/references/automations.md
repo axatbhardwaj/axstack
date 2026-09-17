@@ -124,6 +124,66 @@ The driver performs this order and exits:
 
 ## Dispatch and repair selection
 
+Claude Code trusts a folder per git toplevel and stops at its "Quick safety
+check" dialog otherwise; every per-PR child worktree is a new toplevel, and
+the driver must never answer that dialog for a worker. The user decided on
+2026-09-17 that a worktree the driver itself creates from an allowlisted
+clone at the pinned head is trusted by policy: immediately after creating
+it and before `worker-start`, the driver runs the trust helper
+(`docs/plans/pr-automations-trust.js`, deployed beside the precheck and run
+with Bun), which
+owns the only write the automation makes to `~/.claude.json`. It writes the path's `hasTrustDialogAccepted` entry — what a
+manual acceptance writes. The helper
+enforces the scope mechanically before it writes anything: the path must be
+a git worktree whose common dir is the named allowlisted clone's, must not
+be the clone itself, and must sit at exactly the pinned head — anything
+else exits 3 and is never seeded. It is one process on purpose: lock, refresher,
+render and rename all happen in the same process, so nothing can outlive the
+owner and commit after it dies. It writes under Claude Code's own config
+lock — the `mkdir`-based `~/.claude.json.lock` directory its sessions take —
+following Claude's own lease rules, with a bounded retry. Only a successful
+`mkdir` counts as holding it; a fresh foreign lock is never broken, and the only lock it will
+reclaim is one whose mtime is past Claude's 10 s stale threshold, which is
+exactly what Claude itself treats as abandoned. It keeps the lease alive the
+way Claude does: a refresher touches the lock's mtime every second for as
+long as it is held, so the lock cannot age into staleness under it even if a
+rename stalls. The refresher runs with the owner and dies with it, exits the
+moment the lock is no longer ours, and treats a failed refresh as a
+compromised lease by terminating the owner before it can commit. The helper
+re-reads under the lock, refuses a store that does not parse, writes a
+unique temp file, preserves the store's mode, re-verifies at commit that the
+lease is healthy — unchanged inode, refresher alive, refreshed within the
+last few seconds — and otherwise discards the temp and commits nothing,
+treats a failed chmod or rename as failure with the temp removed, and
+releases only a lock it still owns, stopping the refresher first. A busy or unreadable
+store exits 2: the worktree is retained and nothing is dispatched. The
+worktree cleanup removes the entry through the same helper; if that
+removal fails after the worktree is gone, the marker stays in
+`pending_settlement[]` as `untrust-pending` — which keeps the PR
+undispatchable, so the reused path can never inherit a dead trust entry —
+and the removal is retried next tick. A retained worktree keeps its entry
+while retained; it is the same driver-created path. This is scoped
+exactly there — never for any other path, never for a worktree it did not
+create — because that dialog is the last guard between PR content and a
+worker running with permissions bypassed. Trusting a folder activates the
+full project surface: its `.claude/settings.json` and the hooks it defines,
+its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
+a hostile branch's hooks or MCP servers would run the moment the folder
+opens. So the worker is launched in Claude Code's own isolation mode,
+`--safe-mode`, through `terminal create` and `worker-start --terminal`,
+since `worker-start` cannot pass argv. Safe mode is the binary's sanctioned
+"all customizations disabled" path: no `CLAUDE.md`, skills, plugins, hooks,
+MCP servers, custom commands or agents load from anywhere, project or user;
+built-in tools and authentication are untouched, and the brief loads the
+skill files it needs by path. The driver confirms readiness from the
+rendered frame — `wait.satisfied`, the prompt marker present, the dialog
+absent — before dispatching. What remains live is the repository's files as
+data the worker reads and the commands the worker itself chooses to run,
+which it already runs today; nothing from the branch loads, executes, or is
+offered for invocation on its own. The allowlist,
+the pinned head, and that reduced surface are what make pre-trust
+acceptable, and nothing else does.
+
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
 `{kind: check, name, app_id}` or `{kind: review, review_id, digest}`. There is at
@@ -329,7 +389,8 @@ shared clone can fake durability, a failed fetch retaining the worktree — or h
 abandon path, the worktree has no uncommitted changes.
 Only then it closes any terminal tab still listed, clears untracked
 artefacts, removes the child worktree and its directory, deletes the branch
-the worktree created, and verifies the directory is gone. On the settled path
+the worktree created, removes the Claude Code trust entry it seeded for that
+path, and verifies the directory is gone. On the settled path
 the worker has finished, so untracked files are artefacts by definition and
 are cleared; a candidate there is already pushed or token-held. An abandoned
 worktree that is dirty or holds an unproven candidate is **retained**, named
@@ -349,6 +410,7 @@ its dispatch without such a retention record is a health finding. The run direct
   `runtime_refusal{code, first_seen, last_seen}` (absent when no runtime
   hold is open);
 - `pending.json`, `precheck.log` — driver precheck only;
+- `trust.js` — the trust transaction helper, run by the driver only;
 - `decisions/<token>.json` — writers assigned by the lifecycle table;
 - `watchdog.log` and `watchdog-state.json` (occurrence `first_observed` values
   and send receipts) — watchdog only;

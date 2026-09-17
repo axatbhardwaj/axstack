@@ -187,6 +187,54 @@ folder workspace) does the following in order and exits.
 
 ## Agents in worktrees
 
+Claude Code trusts a folder per git toplevel and otherwise stops at its
+"Quick safety check" dialog; each per-PR child worktree is a new toplevel,
+and the driver never answers that dialog for a worker. Settled by the user
+on 2026-09-17: a worktree the driver itself creates from an allowlisted clone
+at the pinned head is trusted by policy — the driver runs a trust helper after
+`worktree create` and before `worker-start` — the only write the automation
+makes to `~/.claude.json`, the path's `hasTrustDialogAccepted` entry. The
+helper is a single process: lock, refresher, render and rename happen in
+one process, so nothing can outlive the owner and commit after it dies. The
+helper enforces the scope before writing: a
+git worktree whose common dir is the named allowlisted clone's, not the clone
+itself, at exactly the pinned head; anything else is refused and never
+seeded. It writes under Claude Code's own `mkdir`-based `~/.claude.json.lock`
+under Claude's lease rules with a bounded retry: only a successful `mkdir`
+counts, a fresh
+foreign lock is never broken, and only a lock past Claude's 10 s stale
+threshold — what Claude itself treats as abandoned — may be reclaimed. It
+keeps the lease alive as Claude does by refreshing the lock's mtime every
+second while held so it can never age into the threshold even if a rename
+stalls; the refresher dies with the owner, exits when the lock is no longer
+ours, and treats a failed refresh as a compromised lease by terminating the
+owner before commit. It re-reads under the lock, refuses an unparsable
+store, uses a unique temp file, preserves mode, re-verifies at commit that
+the lease is healthy (unchanged inode, refresher alive, recently refreshed)
+and otherwise discards the temp and commits nothing, treats a
+failed chmod or rename as failure with the temp removed, and always
+releases only a lock it still owns; a
+busy or unreadable store retains the worktree and dispatches nothing. The
+worktree cleanup removes the entry through the same helper; a removal that
+fails after the worktree is gone keeps the marker in `pending_settlement[]`
+as `untrust-pending` so the path cannot be reused while trusted, and is
+retried next tick. A retained worktree keeps its entry while retained. Scoped exactly there and never any other path: the dialog is the
+last guard between PR content and a worker with permissions bypassed, and
+trust activates the full project surface — `.claude/settings.json` and its
+hooks, `.mcp.json` servers, marketplace plugin auto-install, `CLAUDE.md` —
+so a hostile branch's hooks or MCP servers would run when the folder opens.
+Therefore the worker launches in Claude Code's sanctioned isolation
+mode, `--safe-mode`, via `terminal create` and `worker-start --terminal`:
+no `CLAUDE.md`, skills, plugins, hooks, MCP servers, custom commands or
+agents load from project or user scope; built-in tools and auth are
+untouched; the brief loads its skill files by path. What remains live is
+the repository's files as data the worker reads and the commands it itself
+runs — nothing from the branch loads, executes, or is offered for
+invocation. The driver confirms readiness from the rendered frame
+(`wait.satisfied`, the prompt marker present, the dialog absent) before
+dispatching. The allowlist, the pinned head, and that
+reduced surface are the only things that make pre-trust acceptable.
+
 Each dispatched agent runs in its own Orca child worktree under
 the Orca workspaces directory for `<repo>`, pinned to the exact head, with that
 project's primary worktree as parent, and reports through the Orca worker

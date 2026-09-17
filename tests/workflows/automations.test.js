@@ -325,6 +325,118 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
+test('automations: the driver pre-trusts only the worktrees it creates, and untrusts them on cleanup', () => {
+  // Claude Code trusts per git toplevel; every per-PR worktree is a new one and
+  // would stop at the "Quick safety check" dialog, which the driver must never
+  // answer for a worker. The user decided on 2026-09-17 that a worktree the
+  // driver creates from an allowlisted clone at the pinned head is trusted by
+  // policy, recorded before launch and removed with the worktree.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+
+  const refTrust = ref.match(/Claude Code trusts a folder per git toplevel[\s\S]*?nothing else does\./)?.[0] ?? '';
+  const specTrust = spec.match(/Claude Code trusts a folder per git toplevel[\s\S]*?make pre-trust acceptable\./)?.[0] ?? '';
+  expect(refTrust, 'reference pre-trust paragraph missing').not.toBe('');
+  expect(specTrust, 'spec pre-trust paragraph missing').not.toBe('');
+  for (const [name, text] of [['reference', refTrust], ['spec', specTrust]]) {
+    expect(text, `${name}: names the dialog`).toMatch(/Quick safety check/);
+    expect(text, `${name}: the entry it writes`).toMatch(/hasTrustDialogAccepted/);
+    expect(text, `${name}: before launch`).toMatch(/before `?worker-start`?/i);
+    expect(text, `${name}: scope — driver-created`).toMatch(/worktree the driver (?:itself )?creates/i);
+    expect(text, `${name}: scope — allowlisted clone at pinned head`).toMatch(/allowlisted clone[^.]*pinned head/i);
+    expect(text, `${name}: never any other path`).toMatch(/never (?:for )?any other path/i);
+    expect(text, `${name}: removed on cleanup`).toMatch(/cleanup removes the entry/i);
+    expect(text, `${name}: user decision, dated`).toMatch(/2026-09-17/);
+    expect(text, `${name}: names it as the last guard`).toMatch(/last guard/i);
+    // The full activation surface is stated, not a subset of it.
+    expect(text, `${name}: settings and hooks`).toMatch(/\.claude\/settings\.json[^.]*hooks/i);
+    expect(text, `${name}: mcp`).toMatch(/\.mcp\.json/);
+    expect(text, `${name}: plugins`).toMatch(/plugin auto-install/i);
+    // The write coordinates with Claude's own lock; a lock it cannot take
+    // dispatches nothing.
+    expect(text, `${name}: Claude's own lock`).toMatch(/`?~\/\.claude\.json\.lock`?/);
+    expect(text, `${name}: mkdir-based`).toMatch(/mkdir/);
+    expect(text, `${name}: bounded retry`).toMatch(/bounded retry/i);
+    expect(text, `${name}: only mkdir success counts`).toMatch(/only a successful `?mkdir`? counts/i);
+    expect(text, `${name}: never breaks a fresh foreign lock`).toMatch(/fresh\s+foreign lock is never broken/i);
+    expect(text, `${name}: reclaims only what Claude treats as abandoned`).toMatch(/10 s stale\s+threshold[^.]*(?:Claude itself treats as abandoned|what Claude itself treats as abandoned)/i);
+    expect(text, `${name}: refresher dies with the owner`).toMatch(/(?:runs with the owner and )?dies with (?:it|the owner)/i);
+    expect(text, `${name}: failed refresh is a compromise`).toMatch(/failed refresh as a\s+compromised lease/i);
+    expect(text, `${name}: health verified at commit`).toMatch(/refresher alive/i);
+    expect(text, `${name}: unique temp + rename`).toMatch(/unique temp file[^.]*rename/i);
+    expect(text, `${name}: busy store dispatches nothing`).toMatch(/busy or unreadable\s+store[^.]*(?:dispatches nothing|nothing is dispatched)/i);
+    // Scope is enforced by the helper, not by prose.
+    expect(text, `${name}: helper enforces scope`).toMatch(/helper enforces the scope/i);
+    // Single process: no child can outlive the owner and commit later.
+    expect(text, `${name}: single process`).toMatch(/nothing can outlive the\s+owner and commit after it dies/i);
+    expect(text, `${name}: common dir check`).toMatch(/common dir is the[^.]*clone/i);
+    expect(text, `${name}: not the clone itself`).toMatch(/(?:must )?not (?:be )?the clone\s+itself/i);
+    expect(text, `${name}: refuses unparsable store`).toMatch(/(?:refuses|refuse) (?:a |an )?(?:store that does not parse|unparsable store)/i);
+    // A failed untrust cannot let the path be reused while trusted.
+    expect(text, `${name}: untrust-pending`).toMatch(/pending_settlement\[\][^.]*untrust-pending/);
+    expect(text, `${name}: reuse blocked`).toMatch(/cannot (?:be reused|inherit)|can never inherit/i);
+    expect(text, `${name}: retained keeps trust`).toMatch(/retained worktree keeps its (?:trust )?entry/i);
+    // The worker launches with the project surface disabled.
+    expect(text, `${name}: sanctioned isolation`).toMatch(/`--safe-mode`/);
+    expect(text, `${name}: agents named in the disabled set`).toMatch(/custom commands (?:or|and) agents/i);
+    expect(text, `${name}: what stays live is stated`).toMatch(/what remains live is the repository's files as data/i);
+    expect(text, `${name}: nothing offered for invocation`).toMatch(/offered for invocation/i);
+    // The helper's commit is ownership-checked and failure-checked.
+    expect(text, `${name}: re-verifies ownership at commit`).toMatch(/re-verifies at commit/i);
+    expect(text, `${name}: stale window`).toMatch(/10 s stale (?:window|threshold)/);
+    // The lease is kept alive while held, as proper-lockfile does; a
+    // stalled rename cannot let the lock go stale underneath the helper.
+    expect(text, `${name}: lease refreshed while held`).toMatch(/refresh(?:es|ing|er touches) the lock's mtime every second/i);
+    expect(text, `${name}: covers a stalled rename`).toMatch(/even if a rename stalls/i);
+    expect(text, `${name}: rename failure is failure`).toMatch(/failed chmod or rename as\s+failure/i);
+    expect(text, `${name}: releases only its own lock`).toMatch(/releases? only a lock it still owns/i);
+    expect(text, `${name}: rendered readiness`).toMatch(/rendered frame/i);
+    expect(text, `${name}: via terminal create`).toMatch(/terminal create[^.]*worker-start --terminal/);
+    expect(text, `${name}: readiness check`).toMatch(/prompt marker present(?:,| and) the dialog absent/i);
+  }
+  const refCleanup = ref.match(/Only then it closes any terminal tab[\s\S]*?verifies the directory is gone\./)?.[0] ?? '';
+  expect(refCleanup, 'cleanup step list missing').not.toBe('');
+  expect(refCleanup).toMatch(/removes the Claude Code trust entry it seeded/);
+
+  // Prompt: every trust write goes through the helper, which owns the lock,
+  // the scope check and the store write; seeds precede the launch; a failed
+  // untrust keeps the marker in pending_settlement so the path cannot be
+  // reused while trusted.
+  const seeds = prompts.match(/<bun> <run dir>\/trust\.js seed <worktree path> <clone path> <head sha>/g) ?? [];
+  const unseeds = prompts.match(/<bun> <run dir>\/trust\.js unseed <worktree path>/g) ?? [];
+  expect(seeds.length, 'repair and review dispatch both seed through the helper').toBe(2);
+  expect(unseeds.length, 'settlement and no-worker cleanup both untrust through the helper').toBe(2);
+  expect(prompts, 'no inline store write remains').not.toMatch(/hasTrustDialogAccepted: true/);
+  expect(prompts, 'no inline lock remains').not.toMatch(/mkdir ~\/\.claude\.json\.lock/);
+  expect(prompts).toMatch(/exit 3 means the path is not this tick's worktree[^;]*never seed/);
+  expect(prompts).toMatch(/exit 2 means the store was busy or unreadable[^;]*retain the worktree, dispatch nothing/);
+  expect((prompts.match(/pending_settlement\[\] (?:with )?reason untrust-pending/g) ?? []).length, 'both untrust paths retry through pending_settlement').toBe(2);
+  expect(prompts).toMatch(/keeps its trust entry while retained/);
+  const CMD = 'claude --dangerously-skip-permissions --safe-mode --model claude-opus-5 --effort medium';
+  const launches = prompts.split(`--command "${CMD}"`).length - 1;
+  expect(launches, 'both dispatch paths launch with project config disabled').toBe(2);
+  expect(prompts).not.toMatch(/worker-start[^;]*--agent claude/);
+  expect((prompts.match(/launch the worker in Claude Code's safe mode/g) ?? []).length, 'both launches explain safe mode').toBe(2);
+  // Readiness is the rendered frame: wait satisfied, prompt marker present,
+  // dialog absent — not merely the absence of the dialog text in scrollback.
+  expect((prompts.match(/require \.result\.wait\.satisfied == true/g) ?? []).length, 'both launches require wait.satisfied').toBe(2);
+  expect((prompts.match(/orca terminal read --terminal <handle> --screen --json/g) ?? []).length, 'both launches read the rendered frame').toBe(2);
+  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launches require marker present and dialog absent').toBe(2);
+  expect((prompts.match(/worker-start --run <orchestration run id> --worktree id:<clone id>::<worktree path> --terminal <handle>/g) ?? []).length, 'both take lifecycle ownership of the terminal').toBe(2);
+  // Order on each path: seed, then launch, then readiness, then worker-start.
+  for (const marker of ['"repair <repo>#<num> @<head>"', '"review <repo>#<num> @<head>"']) {
+    const startAt = prompts.indexOf(marker);
+    const before = prompts.slice(0, startAt);
+    const seedAt = before.lastIndexOf('<bun> <run dir>/trust.js seed');
+    const launchAt = before.lastIndexOf(`--command "${CMD}"`);
+    const readyAt = before.lastIndexOf('Quick safety check');
+    expect(seedAt, `${marker}: seed present before start`).toBeGreaterThan(-1);
+    expect(launchAt, `${marker}: launch after seed`).toBeGreaterThan(seedAt);
+    expect(readyAt, `${marker}: readiness after launch`).toBeGreaterThan(launchAt);
+  }
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {
