@@ -459,7 +459,7 @@ test('owned-core: docs and readme document harnesses and orca subagent orchestra
 
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
   expect(workflows).toMatch(/orca.*orchestration.*via.*`?orca`?.*cli/is);
-  expect(workflows).toMatch(/forbid|not use.*harness-native subagent/is);
+  expect(workflows).toMatch(/(?:forbid|not use).*harness-native subagent/is);
 
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   expect(readme).toMatch(/visible Orca orchestration via the `orca` CLI/);

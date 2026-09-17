@@ -91,7 +91,7 @@ contains the target-derived Axstack entry path and model-free routing prose. It
 also routes every subagent, delegated worker, reviewer, and cross-harness dispatch
 through Orca orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides)
 so the work stays visible. It forbids harness-native subagent tools (e.g. Claude/Codex
-native subagents); workers such as OpenCode Muse Spark and Antigravity Flash subagents
+native subagents); workers such as OpenCode and Antigravity subagents
 run as Orca-supervised workers, never via harness-native delegation.
 
 Create, update, repeated install, check, and uninstall preserve every byte and

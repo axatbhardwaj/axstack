@@ -71,7 +71,7 @@ See [installation details](docs/installation.md).
 points at the installed entry skill and requires every subagent, delegated worker,
 reviewer, and cross-harness dispatch to use visible Orca orchestration via the `orca` CLI
 rather than a harness-native subagent tool (e.g. Claude/Codex native subagents). OpenCode
-Muse Spark and Antigravity Flash subagents run as Orca-supervised workers. Text and file
+and Antigravity subagents run as Orca-supervised workers. Text and file
 mode outside the markers are preserved; edited, malformed, unowned, or unsafe
 targets are reported without normal-path adoption. Install exits nonzero when
 an instruction conflict is preserved, while clean and idempotent installs exit

@@ -82,7 +82,7 @@ All subagent, delegated-worker, reviewer, and cross-harness work goes through Or
 orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides). Do not use a
 harness-native subagent tool (e.g. Claude/Codex native subagents) for delegated work;
 use Orca runs, tasks, and dispatches instead so the work stays visible. OpenCode
-Muse Spark and Antigravity Flash subagents run as Orca-supervised workers.
+and Antigravity subagents run as Orca-supervised workers.
 
 Supervised work uses native Run, Task, and Dispatch identity. Preserve actual
 terminal, agent, worktree, requested/effective role, and revision receipts.
