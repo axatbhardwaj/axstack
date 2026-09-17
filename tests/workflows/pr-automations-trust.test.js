@@ -55,13 +55,13 @@ const patched = (marker, code) => {
 };
 // A faithful Claude-like writer: steals only when the lock's mtime is at
 // least `stale` seconds old, then writes its own key and releases.
-const thief = (env, stale, key = 'concurrentClaudeWrite', value = 'must-survive') => `for i in $(seq 1 120); do
+const thief = (env, stale, { keep = false } = {}, key = 'concurrentClaudeWrite', value = 'must-survive') => `for i in $(seq 1 120); do
     if [ -d "${env.store}.lock" ]; then
       age=$(( $(date +%s) - $(stat -c %Y "${env.store}.lock") ))
       if [ "$age" -ge ${stale} ]; then
         rmdir "${env.store}.lock" && mkdir "${env.store}.lock" && stole=1
         t="${env.store}.tmp.thief"; jq '.${key} = "${value}"' "${env.store}" > "$t" && mv "$t" "${env.store}"
-        rmdir "${env.store}.lock"; break
+        ${keep ? '' : `rmdir "${env.store}.lock";`} break
       fi
     fi; sleep 0.1; done; echo "stole=\${stole:-0}"`;
 
@@ -215,6 +215,29 @@ test('a lock recreated between the refresh touch and its verification is foreign
   expect(mt[1]).toBe(mt[2]);
   rmSync(`${env.store}.lock`, { recursive: true });
 }, 30000);
+
+test('a suspension between the ownership check and the touch is refused, even though the touch lands on the reclaimed lock', () => {
+  // The worst ext4 interleaving: the helper passes its ownership check, is
+  // suspended past the stale window, Claude faithfully reclaims the lock
+  // (same inode), and the helper's own utimes then stamps the foreign lock
+  // with exactly the value it will look for. Elapsed time is the only tell.
+  const env = setup();
+  // The commit is held open so the interval refresher runs at all; its second
+  // call passes the ownership check and then stalls past the stale window.
+  const bad = patched('// before-touch', 'if (refreshes === 1) Bun.sleepSync(11500);');
+  const slow = `${sandbox}/slow-suspended.js`;
+  writeFileSync(slow, readFileSync(bad, 'utf8').replace('// before-commit', '// before-commit\nawait Bun.sleep(3000);'));
+  const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    ${untilLocked(env)}; sleep 1.2; (${thief(env, 10, { keep: true })})
+    wait $pid; echo "helper=$?"; echo "after=$(jq -c '{seed: (.projects | has("${env.wt}")), w: .concurrentClaudeWrite}' "${env.store}")"
+    [ -d "${env.store}.lock" ] && echo "lock=present" || echo "lock=REMOVED"`, env.env);
+  expect(r.out, r.out).toMatch(/stole=1/);
+  expect(r.out, 'helper must refuse the lease').toMatch(/helper=2/);
+  expect(r.out, 'foreign write preserved, no seed').toMatch(/after=\{"seed":false,"w":"must-survive"\}/);
+  expect(r.out, "the foreign lock is not removed").toMatch(/lock=present/);
+  expect(sh(`ls ${env.store}.tmp.* 2>/dev/null | grep -v thief | wc -l`).out.trim(), 'helper temp removed').toBe('0');
+  rmSync(`${env.store}.lock`, { recursive: true });
+}, 40000);
 
 test('a lock reclaimed after mkdir but before the helper first observes it is never adopted', () => {
   // Suspended between mkdirSync and the first stat for longer than the

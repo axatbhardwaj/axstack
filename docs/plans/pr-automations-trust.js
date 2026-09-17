@@ -86,14 +86,20 @@ const ownsLock = () => { const st = lockStat(); return !!st && st.ino === ino &&
 const refresh = () => {
   // A gap since the last successful refresh long enough for the lock to have gone stale means it
   // may already belong to someone else: do not touch it.
-  if (Date.now() - lastRefresh >= HEALTH_MS || !ownsLock()) { compromised = true; return; }
+  const started = Date.now();
+  if (started - lastRefresh >= HEALTH_MS || !ownsLock()) { compromised = true; return; }
   try {
+    // before-touch
     // refresh-touch
     const chosen = choose(); const d = new Date(chosen); utimesSync(LOCK, d, d);
     // after-touch
     const st = lockStat();
     if (precision === null && st) precision = st.mtimeMs === chosen ? 1 : (st.mtimeMs === chosen - (chosen % 1000) ? 1000 : null);
     const expected = precision === 1000 ? chosen - (chosen % 1000) : chosen;
+    // A suspension between the ownership check and the touch could have stamped a reclaimed lock
+    // with exactly the value we look for; elapsed time is the only tell, so the whole refresh must
+    // fit inside the health window or the result is refused (never adopted, never released).
+    if (Date.now() - started >= HEALTH_MS) { compromised = true; return; }
     if (!st || precision === null || st.ino !== ino || st.mtimeMs !== expected) { compromised = true; return; }
     mtimeSet = expected; lastRefresh = Date.now(); refreshes += 1;
   } catch { compromised = true; }
