@@ -74,6 +74,23 @@ Reconcile named sessions, revisions, PR state, watches, and deliveries before
 creating or redelivering anything. Touch only this run; no global sweep, new
 runtime database, or scheduler follows from the record.
 
+## Decision trail and learnings
+
+Two fields make the record reviewable by a human who stepped away and usable
+by the next owner:
+
+- `Decisions` holds one row per consequential choice: when, what was chosen,
+  why in plain words, the evidence pointer that proves it (SHA, PR, receipt,
+  `file:line`, or artifact path, never a paragraph), and the result
+  (`tests green`, `reverted`, `held`, `open`). A choice that a reviewer could
+  not reconstruct from Git or PR state belongs here; routine mechanics do not.
+  An arena synthesis note (base, grafts and their source candidate,
+  rejections, judge verdicts) is recorded as `Decisions` rows.
+- `Learnings` holds what the next owner needs that the code and history do not
+  show: root causes, gotchas, patterns that held or failed, and where the
+  evidence lives. Read it on resume before reconciling; append, never rewrite,
+  and keep entries as short as the evidence pointer allows.
+
 ## Privacy
 
 Record concise IDs, SHAs, URLs, status, timestamps, next actions, and evidence
@@ -98,7 +115,12 @@ IDs: <repo/project + workspace/agent receipt pointers>
 Evidence: <check/review/submission/audit receipt pointers>
 Pending: <launch/acceptance/external receipts + timer execution heartbeat actual ID + handshake + deadline>
 Unresolved: <decision -> next owner + next action>
+Learnings: <root cause, gotcha, or pattern -> evidence ref>
 Resume: <commands or evidence refs bound to exact revisions>
+
+| When | Decision | Why | Evidence | Result |
+| --- | --- | --- | --- | --- |
+| <UTC timestamp> | <what was chosen> | <plain reason> | <SHA/PR/receipt/file:line> | <tests green/reverted/held/open> |
 
 | Task | Dependencies | Owner | State | Revision evidence | Next action |
 | --- | --- | --- | --- | --- | --- |

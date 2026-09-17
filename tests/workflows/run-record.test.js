@@ -57,6 +57,38 @@ test('run-record: compact template carries required run and task fields', () => 
   expect(example).toContain('<role + session ID + worktree, or receipt ref>');
 });
 
+test('run-record: decision trail and learnings are reviewable and resumable', () => {
+  const text = read('skills/axstack/references/run-record.md');
+  const templates = [...text.matchAll(/```text\n([\s\S]*?)```/g)].map((match) => match[1]);
+  const template = templates.find((block) => block.includes('Run:') && block.includes('| Task |'));
+  expect(template).toContain('Learnings:');
+  const header = template.split('\n').find((line) => line.startsWith('| When |'));
+  const example = template.split('\n').find((line) => line.startsWith('| <UTC timestamp> |'));
+  expect(header, 'decision table header').toBeTruthy();
+  for (const column of ['Decision', 'Why', 'Evidence', 'Result']) expect(header).toContain(column);
+  const cellCount = (line) => line.split('|').length - 2;
+  expect(cellCount(example), 'decision example must match header cell count').toBe(cellCount(header));
+  expect(text).toMatch(/evidence pointer[^.]*never a paragraph/i);
+  expect(text).toMatch(/arena synthesis note[^.]*recorded as `Decisions` rows/i);
+  expect(text).toMatch(/Learnings[^.]*next owner[^.]*code and history do not\s+show/i);
+  expect(text).toMatch(/Read it on resume/i);
+  expect(text).toMatch(/append, never rewrite/i);
+
+  // The inclusion boundary is the rule, not the table: a choice a reviewer
+  // cannot reconstruct from Git or PR state belongs; routine mechanics do not.
+  const section = text.split('## Decision trail and learnings')[1].split('## Privacy')[0];
+  expect(section.replace(/\s+/g, ' ')).toMatch(/could not reconstruct from Git or PR state belongs here; routine mechanics do not/);
+  expect(section).toMatch(/one row per consequential choice/);
+  for (const column of ['when', 'what was chosen', 'why in plain words', 'evidence pointer', 'result']) {
+    expect(section, `Decisions must define ${column}`).toContain(column);
+  }
+  expect(section).toMatch(/\(`tests green`, `reverted`, `held`, `open`\)/);
+  expect(section).toMatch(/SHA, PR, receipt,\s+`file:line`, or artifact path/);
+  // Learnings names its content categories and their evidence pointer.
+  expect(section).toMatch(/root causes, gotchas, patterns that held or failed, and where the\s+evidence lives/);
+  expect(section).toMatch(/keep entries as short as the evidence pointer allows/);
+});
+
 test('run-record: reconciliation protects ownership and revision evidence', () => {
   const text = read('skills/axstack/references/run-record.md');
   expect(text).toMatch(/driver[^.]*sole writer/i);
