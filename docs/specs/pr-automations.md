@@ -97,8 +97,8 @@ The precheck runs every 15 minutes and exits 0 only when there is work.
 
 ## Driver tick
 
-The driver session (Opus, fresh session, launched in the dedicated
-automations worktree) does the following in order and exits.
+The driver session (Opus, fresh session, launched in the host's `root`
+folder workspace) does the following in order and exits.
 
 1. If `tick_started_at` is newer than `tick_done_at`, append
    `previous tick did not finish` to `cursor.json.health[]`. Write
@@ -356,9 +356,15 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
 - `progress.md` — driver only, one line per tick plus holds and mention
   readings; no per-PR prose.
 
-Orca run history is the authoritative log. The launch worktree is a dedicated
-Orca worktree of `axatbhardwaj/axstack` in which nobody develops; the current
-`defi-automations` worktree retires with the old pair.
+Orca run history is the authoritative log. The launch workspace is the host's
+`root` folder workspace: nobody develops there, it is not a git repository,
+and no project owns the automation. Briefs and the escalation template are
+read from the axstack checkout at an absolute path given in the prompt. After
+a worker settles the driver releases it, closes its terminal tab, removes the
+child worktree and its directory (clearing untracked artefacts first), deletes
+the branch the worktree created, and verifies the directory is gone; anything
+that outlives its dispatch is a health finding (settled by the user on
+2026-09-17).
 
 ## Safety holds
 

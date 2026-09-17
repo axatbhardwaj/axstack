@@ -127,14 +127,52 @@ test('automations: the pair runs from the root folder workspace and children nes
   // watchdog run from the host's root folder workspace, the run directory is
   // private host state because that workspace is not a git repository, and a
   // per-PR child worktree is parented to its own project's primary worktree so
-  // it appears under that project rather than under axstack.
-  const text = compact(refPath);
-  expect(text).toMatch(/run from the (?:host's )?`root` folder workspace/i);
-  expect(text).toMatch(/not a git repository/i);
-  expect(text).toMatch(/~\/\.local\/share\/axstack\/runs\/<run id>\//);
-  expect(text).not.toMatch(/under the Axstack git-common-dir/i);
-  expect(text).toMatch(/parented to (?:that|the) project's primary worktree/i);
-  expect(text).not.toMatch(/parented to the driver\s+worktree/i);
+  // it appears under that project rather than under axstack. Asserted on the
+  // shipped reference, the active spec, and the operational prompt, since a
+  // stale assumption in any one of them breaks the tick.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+
+  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+    expect(text, `${name}: launch workspace`).toMatch(/(?:host's )?`root` folder workspace/i);
+    expect(text, `${name}: run directory`).toMatch(/~\/\.local\/share\/axstack\/runs\/<run id>\//);
+    expect(text, `${name}: no git-common-dir run directory`).not.toMatch(/git-common-dir[^.]*runs|runs[^.]*git-common-dir/i);
+    expect(text, `${name}: no dedicated axstack worktree`).not.toMatch(/dedicated (?:Axstack |Orca )?(?:automations )?worktree/i);
+  }
+  expect(ref).toMatch(/not a git repository/i);
+  expect(ref).toMatch(/parented to (?:that|the) project's primary worktree/i);
+  expect(spec).toMatch(/project's primary worktree/i);
+
+  // The prompt is what actually runs: parent by full Orca id, briefs by
+  // absolute path, and no reliance on the launch workspace being a checkout.
+  expect(prompts).toMatch(/--parent-worktree id:<clone id>::<clone path>/);
+  expect(prompts).not.toMatch(/--parent-worktree <this worktree>/);
+  expect(prompts).toMatch(/<axstack checkout>\/docs\/plans\/pr-automations-prompts\.md \(absolute path/);
+  expect(prompts).not.toMatch(/pr-automations-prompts\.md in this worktree/);
+});
+
+test('automations: settlement leaves no worktree, directory, branch, or terminal behind', () => {
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  expect(ref).toMatch(/Settlement leaves nothing behind/i);
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+    expect(text, `${name}: terminal tab`).toMatch(/closes its terminal tab/i);
+    expect(text, `${name}: worktree and directory`).toMatch(/removes the child worktree and its directory/i);
+    expect(text, `${name}: untracked artefacts`).toMatch(/clearing untracked artefacts first/i);
+    expect(text, `${name}: branch`).toMatch(/deletes the branch the worktree created/i);
+    expect(text, `${name}: verified gone`).toMatch(/verif(?:ies|y) the directory is gone/i);
+    expect(text, `${name}: leftovers are findings`).toMatch(/outlives its dispatch is a health finding/i);
+  }
+  // The prompt spells out the same steps as commands, for both settlement
+  // and abandon.
+  expect(prompts).toMatch(/orca terminal close --terminal <handle> --tab/);
+  expect(prompts).toMatch(/git -C <worktree path> clean -fdx/);
+  expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
+  expect(prompts).toMatch(/branch -D <worktree branch>/);
+  expect(prompts).toMatch(/verify the directory is gone/);
+  expect(prompts).toMatch(/after a confirmed abandon run the same complete cleanup/);
 });
 
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {

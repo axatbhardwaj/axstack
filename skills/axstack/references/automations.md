@@ -9,8 +9,8 @@ Pair A/B is retired for this contract; its artefacts remain untouched.
 
 ## Roles and authority
 
-- **driver** — every 15 minutes, fresh Opus session in the dedicated Axstack
-  automations worktree. It discovers GitHub work, binds the persistent Orca
+- **driver** — every 15 minutes, fresh Opus session in the host's `root`
+  folder workspace, which is not a git repository and belongs to no project. It discovers GitHub work, binds the persistent Orca
   Run, creates one project-local child worktree per selected PR, dispatches the
   matching Axstack agent, reconciles completions and decisions, then exits. The
   driver is the automation session itself, with no `axstack-monitor` or
@@ -307,7 +307,13 @@ The driver and watchdog run from the host's `root` folder workspace, not a
 project worktree: no project owns the automation, and every child worktree
 belongs to the project it serves. That workspace is not a git repository, so
 the run directory is private host state, one
-`~/.local/share/axstack/runs/<run id>/` directory, which contains:
+`~/.local/share/axstack/runs/<run id>/` directory. Settlement leaves nothing
+behind: after a worker settles, the driver releases the worker, closes its
+terminal tab if one is still listed, removes the child worktree and its
+directory (clearing untracked artefacts first so the removal cannot fail on
+them), deletes the branch the worktree created, and verifies the directory is
+gone. A worktree, directory, branch, or terminal that outlives its dispatch
+is a health finding, not an accepted state. The run directory contains:
 
 - `cursor.json` — driver only, with these exact keys: `fingerprint`,
   `tick_started_at`, `tick_done_at`, `tick_outcome`, `prs{url: {head, base,
@@ -329,9 +335,11 @@ Timestamps are UTC `YYYY-MM-DDTHH:MM:SSZ`; an unparsable timestamp is an
 `error` for the precheck and `unknown` for the watchdog, never silently
 ignored.
 
-Orca run history is the authoritative log. The launch worktree is a dedicated
-Axstack worktree where nobody develops. The current `defi-automations`
-worktree retires with the old pair. Keep this notification-policy edge in the
+Orca run history is the authoritative log. The launch workspace is the host's
+`root` folder workspace, not a project worktree: nobody develops there, it is
+not a git repository, and no project owns the automation. The briefs and the
+escalation template are read from the axstack checkout at an absolute path
+given in the prompt, never relative to the launch workspace. Keep this notification-policy edge in the
 run record: `Notification policy` authorizes the token and watchdog sends;
 delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
 
