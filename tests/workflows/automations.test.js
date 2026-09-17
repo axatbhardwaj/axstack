@@ -90,6 +90,38 @@ test('automations: reviewer rules use three criteria, binding verdict marker, an
   expect(text).toContain('`defi-com/ci-workflows`');
 });
 
+test('automations: a published verdict body is written for the PR reader, not the pipeline', () => {
+  // Feedback from a colleague on two live reviews: the body narrated the
+  // pipeline ("two independent reviews, identical brief, all six angles",
+  // "from secondary") and referred to findings that were never posted
+  // ("two minor maintainability notes"), which lived only in the local review
+  // file on the VPS. One assertion per prohibition so each can regress alone.
+  const text = compact(refPath);
+  const clause = text.match(/The verdict body is written for the person reading the PR[\s\S]*?only pipeline artefact the body carries\./)?.[0] ?? '';
+  expect(clause, 'the verdict-body paragraph is missing').not.toBe('');
+
+  expect(clause).toMatch(/reads as one reviewer's findings/i);
+  // Each forbidden pipeline fact, individually.
+  expect(clause, 'reviewer count').toMatch(/never names[^.]*reviewer count/i);
+  expect(clause, 'brief').toMatch(/never names[^.]*\bthe brief\b/i);
+  expect(clause, 'angles').toMatch(/never names[^.]*\bangles\b/i);
+  expect(clause, 'gate').toMatch(/never names[^.]*\bthe gate\b/i);
+  expect(clause, 'receipts').toMatch(/never names[^.]*\breceipts\b/i);
+  expect(clause, 'attribution').toMatch(/never names[^.]*which reviewer found what/i);
+  // Self-contained, with no room to omit a finding.
+  expect(clause).toMatch(/self-contained/i);
+  expect(clause, 'every validated finding').toMatch(/every validated finding[^.]*(?:appears|stated) in full/i);
+  expect(clause, 'no dropping for brevity').toMatch(/never dropped|none is dropped/i);
+  // Each inaccessible-reference branch, individually.
+  expect(clause, 'local review file').toMatch(/never points[^.]*local review file/i);
+  expect(clause, 'anything the reader cannot open').toMatch(/never points[^.]*cannot open/i);
+  // Evidence framing, and the explicit allow/deny of borderline facts.
+  expect(clause).toMatch(/what was checked and observed/i);
+  expect(clause, 'head/base, CI, tests, diff size are allowed').toMatch(/head and base SHAs, CI status, test counts, and diff size[^.]*belong/i);
+  expect(clause, 'pipeline phrasing is named').toMatch(/"shape verified" and "pinned CI"[^.]*do not/i);
+  expect(clause).toMatch(/marker line is the only pipeline artefact/i);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

@@ -193,7 +193,19 @@ worktree as parent, and reports through the Orca worker protocol only.
   Immediately before `gh pr review` the agent re-reads self's reviews at the
   head and skips with the existing id if one exists, and re-checks head, base,
   draft status, authorship and allowlist. The verdict body ends with the marker
-  line `<!-- axstack-automation verdict head=<sha> -->`. The local review file
+  line `<!-- axstack-automation verdict head=<sha> -->`. The body is
+  written for the person reading the PR and reads as one reviewer's findings:
+  it never names the reviewer count, the brief, the angles, the gate, receipts,
+  or which reviewer found what; every validated finding, blocking or not,
+  appears in full with evidence and consequence, file and line where they
+  exist, and none is dropped for brevity; it never points at the local review
+  file or anything the reader cannot open; evidence is stated as what was
+  checked and observed — reviewed head and base, CI status, test counts and
+  diff size belong, "shape verified" and "pinned CI" do not — and the marker
+  line is the only pipeline artefact it carries. Settled 2026-09-17 after a
+  colleague pointed at two live reviews: #1092 narrated "two independent
+  reviews, identical brief, all six angles"; #1102 referred to "two minor
+  maintainability notes" that appeared only in the local review file. The local review file
   is written to the workspace review directory `~/defi/misc/reviews/` under the
   existing convention: `review-PR-<num>.html` with no prefix means
   `defi-com/monorepo`; `review-mobile-PR-<num>.html`,
