@@ -26,7 +26,9 @@ without changing authority.
    substantial or stacked work needs an approved spec and matching ticket map.
 2. The current chat drives on whatever model runs it; there is no driver
    profile. Bind each ready task to the selected role snapshot and an authoritative Orca
-   Run, Task, and Dispatch. Exactly one writer owns a candidate at a time.
+   Run, Task, and Dispatch. Exactly one writer owns a candidate at a time. All
+   subagent and delegated worker dispatches go through Orca orchestration rather than
+   harness-native subagent tools.
 3. Peer PRs receive both configured independent reviewer roles. Authored PRs
    receive one eligible reviewer from the selected preset's explicit mapping
    and actual author provenance. Every review binds the exact head and base.
@@ -66,8 +68,10 @@ See [installation details](docs/installation.md).
 
 `--instructions` manages one versioned Axstack block in `AGENTS.md`,
 `CLAUDE.md`, or `GEMINI.md`. Harness defaults resolve those files automatically. The block
-points at the installed entry skill and requires delegated work to use visible
-Orca orchestration rather than a harness-native subagent tool. Text and file
+points at the installed entry skill and requires every subagent, delegated worker,
+reviewer, and cross-harness dispatch to use visible Orca orchestration via the `orca` CLI
+rather than a harness-native subagent tool (e.g. Claude/Codex native subagents). OpenCode
+and Antigravity subagents run as Orca-supervised workers. Text and file
 mode outside the markers are preserved; edited, malformed, unowned, or unsafe
 targets are reported without normal-path adoption. Install exits nonzero when
 an instruction conflict is preserved, while clean and idempotent installs exit
@@ -96,9 +100,9 @@ End-to-end compatibility remains unverified without matching runtime receipts.
 
 ## Runtime evidence and holds
 
-Native Orca exercises have returned Codex and Claude worker completions,
-same-terminal follow-up, separate worktree placement, settlement cleanup,
-`user_takeover` retention, and recovery from `consumer_fenced`. These are
+Native Orca exercises have returned Codex, Claude, and OpenCode Muse Spark
+worker completions, same-terminal follow-up, separate worktree placement, settlement
+cleanup, `user_takeover` retention, and recovery from `consumer_fenced`. These are
 bounded runtime facts, not proof that every role or harness is compatible.
 
 Input acceptance is not agent readiness. A trust prompt was observed after an

@@ -450,3 +450,19 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
   expect(spec).toMatch(/axstack-explain/);
   expect(spec).toMatch(/project documentation/i);
 });
+
+test('owned-core: docs and readme document harnesses and orca subagent orchestration', () => {
+  const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
+  expect(install).toMatch(/\|\s*Antigravity\s*\|\s*`~\/\.gemini\/config\/skills`\s*\|\s*documented upstream\s*\|/);
+  expect(install).toMatch(/\|\s*OpenCode\s*\|\s*`~\/\.config\/opencode\/skills`\s*\|\s*documented upstream\s*\|/);
+  expect(install).toMatch(/forbids harness-native subagent/i);
+
+  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
+  expect(workflows).toMatch(/orca.*orchestration.*via.*`?orca`?.*cli/is);
+  expect(workflows).toMatch(/(?:forbid|not use).*harness-native subagent/is);
+
+  const readme = readFileSync(join(root, 'README.md'), 'utf8');
+  expect(readme).toMatch(/visible Orca orchestration via the `orca` CLI/);
+  expect(readme).toMatch(/harness-native subagent/);
+});
+

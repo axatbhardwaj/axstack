@@ -88,8 +88,11 @@ are pruned only when empty, and the target root is never removed.
 
 The deterministic `<!-- axstack:begin v1 -->` / `<!-- axstack:end -->` block
 contains the target-derived Axstack entry path and model-free routing prose. It
-also routes subagents, delegated workers, reviewers, and cross-harness work
-through Orca's `orca` CLI and forbids harness-native subagent delegation.
+also routes every subagent, delegated worker, reviewer, and cross-harness dispatch
+through Orca orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides)
+so the work stays visible. It forbids harness-native subagent tools (e.g. Claude/Codex
+native subagents); workers such as OpenCode and Antigravity subagents
+run as Orca-supervised workers, never via harness-native delegation.
 
 Create, update, repeated install, check, and uninstall preserve every byte and
 the file mode outside the markers. The manifest binds the canonical instruction
@@ -189,6 +192,7 @@ survives.
 | Claude | `~/.claude/skills` | documented upstream |
 | Codex | `$CODEX_HOME/skills` (default `~/.codex/skills`) | documented upstream |
 | OpenCode | `~/.config/opencode/skills` | documented upstream |
+| Antigravity | `~/.gemini/config/skills` | documented upstream |
 | Grok | explicit `--skills-dir` only | auto-discovery unverified |
 
 Prefer explicit paths and current upstream CLI guidance. Installing files does
