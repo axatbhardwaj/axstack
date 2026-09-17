@@ -187,6 +187,19 @@ folder workspace) does the following in order and exits.
 
 ## Agents in worktrees
 
+Claude Code trusts a folder per git toplevel and otherwise stops at its
+"Quick safety check" dialog; each per-PR child worktree is a new toplevel,
+and the driver never answers that dialog for a worker. Settled by the user
+on 2026-09-17: a worktree the driver itself creates from an allowlisted clone
+at the pinned head is trusted by policy — the driver writes the path's
+`hasTrustDialogAccepted` entry into `~/.claude.json` atomically after
+`worktree create` and before `worker-start`, and the worktree cleanup removes
+the entry. Scoped exactly there and never any other path: the dialog is the
+last guard between PR content and a worker with permissions bypassed, since
+a hostile branch's hooks or `CLAUDE.md` run when the folder opens; the
+allowlist and the pinned head are the only things that make pre-trust
+acceptable.
+
 Each dispatched agent runs in its own Orca child worktree under
 the Orca workspaces directory for `<repo>`, pinned to the exact head, with that
 project's primary worktree as parent, and reports through the Orca worker

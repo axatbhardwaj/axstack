@@ -124,6 +124,20 @@ The driver performs this order and exits:
 
 ## Dispatch and repair selection
 
+Claude Code trusts a folder per git toplevel and stops at its "Quick safety
+check" dialog otherwise; every per-PR child worktree is a new toplevel, and
+the driver must never answer that dialog for a worker. The user decided on
+2026-09-17 that a worktree the driver itself creates from an allowlisted
+clone at the pinned head is trusted by policy: immediately after creating
+it and before `worker-start`, the driver writes that path's
+`hasTrustDialogAccepted` entry into `~/.claude.json` atomically, and the
+worktree cleanup removes the entry with the worktree. This is scoped
+exactly there — never for any other path, never for a worktree it did not
+create — because that dialog is the last guard between PR content and a
+worker running with permissions bypassed: a hostile branch's hooks or
+`CLAUDE.md` would run the moment the folder opens. The allowlist and the
+pinned head are what make that acceptable, and nothing else does.
+
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
 `{kind: check, name, app_id}` or `{kind: review, review_id, digest}`. There is at
@@ -329,7 +343,8 @@ shared clone can fake durability, a failed fetch retaining the worktree — or h
 abandon path, the worktree has no uncommitted changes.
 Only then it closes any terminal tab still listed, clears untracked
 artefacts, removes the child worktree and its directory, deletes the branch
-the worktree created, and verifies the directory is gone. On the settled path
+the worktree created, removes the Claude Code trust entry it seeded for that
+path, and verifies the directory is gone. On the settled path
 the worker has finished, so untracked files are artefacts by definition and
 are cleared; a candidate there is already pushed or token-held. An abandoned
 worktree that is dirty or holds an unproven candidate is **retained**, named

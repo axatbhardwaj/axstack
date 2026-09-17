@@ -325,6 +325,58 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
+test('automations: the driver pre-trusts only the worktrees it creates, and untrusts them on cleanup', () => {
+  // Claude Code trusts per git toplevel; every per-PR worktree is a new one and
+  // would stop at the "Quick safety check" dialog, which the driver must never
+  // answer for a worker. The user decided on 2026-09-17 that a worktree the
+  // driver creates from an allowlisted clone at the pinned head is trusted by
+  // policy, recorded before launch and removed with the worktree.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+
+  // Scope each document's check to its pre-trust paragraph so a second,
+  // unrelated mention elsewhere cannot keep an assertion green.
+  const refTrust = ref.match(/Claude Code trusts a folder per git toplevel[\s\S]*?nothing else does\./)?.[0] ?? '';
+  const specTrust = spec.match(/Claude Code trusts a folder per git toplevel[\s\S]*?make pre-trust acceptable\./)?.[0] ?? '';
+  expect(refTrust, 'reference pre-trust paragraph missing').not.toBe('');
+  expect(specTrust, 'spec pre-trust paragraph missing').not.toBe('');
+  for (const [name, text] of [['reference', refTrust], ['spec', specTrust]]) {
+    expect(text, `${name}: names the dialog`).toMatch(/Quick safety check/);
+    expect(text, `${name}: the entry it writes`).toMatch(/hasTrustDialogAccepted/);
+    expect(text, `${name}: before launch`).toMatch(/before `?worker-start`?/i);
+    expect(text, `${name}: scope — driver-created`).toMatch(/worktree the driver (?:itself )?creates/i);
+    expect(text, `${name}: scope — allowlisted clone at pinned head`).toMatch(/allowlisted clone[^.]*pinned head/i);
+    expect(text, `${name}: never any other path`).toMatch(/never (?:for )?any other path/i);
+    expect(text, `${name}: removed on cleanup`).toMatch(/cleanup removes the entry/i);
+    expect(text, `${name}: user decision, dated`).toMatch(/2026-09-17/);
+    // Both halves of the risk statement: what the dialog guards, and how.
+    expect(text, `${name}: names it as the last guard`).toMatch(/last guard/i);
+    expect(text, `${name}: names the hostile-branch mechanism`).toMatch(/hostile branch[^.]*(?:hooks|CLAUDE\.md)/i);
+  }
+  // The cleanup step list itself must untrust, not only the scope paragraph.
+  const refCleanup = ref.match(/Only then it closes any terminal tab[\s\S]*?verifies the directory is gone\./)?.[0] ?? '';
+  expect(refCleanup, 'cleanup step list missing').not.toBe('');
+  expect(refCleanup).toMatch(/removes the Claude Code trust entry it seeded/);
+
+  // The prompt: every seed is the atomic write, seeded before worker-start on
+  // both dispatch paths, and untrusted on every cleanup path.
+  const SEED = /jq --arg p <worktree path> '\.projects\[\$p\] = \(\(\.projects\[\$p\] \/\/ \{\}\) \+ \{hasTrustDialogAccepted: true\}\)' ~\/\.claude\.json > ~\/\.claude\.json\.tmp && mv ~\/\.claude\.json\.tmp ~\/\.claude\.json/g;
+  const seeds = prompts.match(SEED) ?? [];
+  const mentions = prompts.match(/hasTrustDialogAccepted: true/g) ?? [];
+  expect(seeds.length, 'repair and review dispatch both seed').toBe(2);
+  expect(mentions.length, 'every seed is the atomic form').toBe(seeds.length);
+  const repairStart = prompts.indexOf('orca orchestration worker-start --run');
+  const reviewStart = prompts.indexOf('worker-start with --agent claude');
+  const firstSeed = prompts.indexOf('hasTrustDialogAccepted: true');
+  const secondSeed = prompts.indexOf('hasTrustDialogAccepted: true', firstSeed + 1);
+  expect(firstSeed, 'repair path seeds before its worker-start').toBeLessThan(repairStart);
+  expect(secondSeed, 'review path seeds before its worker-start').toBeLessThan(reviewStart);
+  expect(secondSeed).toBeGreaterThan(repairStart);
+  const unseeds = prompts.match(/jq --arg p <worktree path> 'del\(\.projects\[\$p\]\)' ~\/\.claude\.json > ~\/\.claude\.json\.tmp && mv ~\/\.claude\.json\.tmp ~\/\.claude\.json/g) ?? [];
+  expect(unseeds.length, 'settlement cleanup and no-worker cleanup both untrust').toBe(2);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {
