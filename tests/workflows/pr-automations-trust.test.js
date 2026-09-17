@@ -24,7 +24,8 @@ const sh = (cmd, env = {}) => {
 };
 
 const setup = () => {
-  sandbox = mkdtempSync(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-trust-`);
+  // /var/tmp, not /tmp: a tmpfs never reuses inode numbers and hides the reclaimed-lock case.
+  sandbox = mkdtempSync(`${Bun.env.TMPDIR ?? '/var/tmp'}/axstack-trust-`);
   const clone = `${sandbox}/clones/repo`;
   mkdirSync(clone, { recursive: true });
   sh(`cd ${clone} && git init -q && git config user.email t@t && git config user.name t && echo x > f && git add f && git commit -qm init`);

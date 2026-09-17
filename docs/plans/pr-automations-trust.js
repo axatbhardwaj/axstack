@@ -63,17 +63,23 @@ for (let i = 0; i < ACQUIRE_TRIES; i += 1) {
   Bun.sleepSync(200);
 }
 if (!got) process.exit(2);
-const ino = lockStat()?.ino;
+// Ownership is the inode AND the mtime this process last set: ext4 hands a recreated directory
+// the same inode number, so a reclaimed lock is told apart by its mtime (as proper-lockfile does).
+const acquired = lockStat();
+const ino = acquired?.ino;
+let mtimeSet = acquired?.mtimeMs;
 // after-acquire
 let lastRefresh = Date.now();
 let compromised = false;
 let refreshes = 0;
-const ownsLock = () => lockStat()?.ino === ino;
+const ownsLock = () => { const st = lockStat(); return !!st && st.ino === ino && st.mtimeMs === mtimeSet; };
 const refresh = () => {
   if (!ownsLock()) { compromised = true; return; }
   try {
     // refresh-touch
-    const now = new Date(); utimesSync(LOCK, now, now); lastRefresh = Date.now(); refreshes += 1;
+    const now = new Date(); utimesSync(LOCK, now, now);
+    mtimeSet = statSync(LOCK).mtimeMs;   // as the filesystem stored it, whatever its precision
+    lastRefresh = Date.now(); refreshes += 1;
   } catch { compromised = true; }
 };
 // A lock reclaimed between mkdir and this first refresh belongs to someone else: leave it.
