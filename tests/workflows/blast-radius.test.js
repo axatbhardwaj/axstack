@@ -21,6 +21,16 @@ test('blast-radius: reference declares the five-step evidence ladder', () => {
   expect(text).toMatch(/one fact it is safe because of/i);
   expect(text).toMatch(/never invent a caller or an API/i);
   expect(text).toMatch(/beyond the diff/i);
+  // Step 4 means real code ran, not a convincing explanation; step 1 is worthless.
+  expect(text).toMatch(/4\. \*\*Ran it\.\*\* A script or test that calls the real code and fails loud if the claim is wrong/);
+  expect(text).toMatch(/1\. \*\*Said so\.\*\* Worthless on its own/);
+  expect(text).toMatch(/writeup that sounds right is worthless/i);
+  expect(text).toMatch(/5\. \*\*Prove the one fact\.\*\* Write the script or test, run it against the real code, and paste what happened/);
+  expect(text).toMatch(/If it cannot be proven cheaply, mark it unproven; do not overstate/);
+  // Where grep stops: the sources a symbol search misses are named, not implied.
+  for (const source of ['Library source at the pinned version', 'the JSON an API returns', 'a database column', 'wire or on-chain format', 'a feature flag', 'code three hops downstream']) {
+    expect(text, `must name ${source}`).toContain(source);
+  }
 });
 
 test('blast-radius: hand-back names what, the fact, risks, cleared, and before merge', () => {
@@ -49,8 +59,13 @@ test('blast-radius: explain and routing expose the direct "what could this break
 
 test('explain: "show me your work" reconstructs the decision trail from the record', () => {
   const explain = compact('skills/axstack-explain/SKILL.md');
-  expect(explain).toMatch(/show me your work[^.]*decision trail/i);
-  expect(explain).toMatch(/`Decisions` and `Learnings`/);
-  expect(explain).toMatch(/what was chosen, why, the evidence pointer, and its result/i);
-  expect(explain).toMatch(/no recorded reason as open rather than inventing one/i);
+  const step = explain.match(/6\. For "show me your work"[^]*?rather than inventing one\./)?.[0];
+  expect(step, 'show-me-your-work step must be one bounded instruction').toBeTruthy();
+  expect(step).toMatch(/reconstruct the decision trail rather than re-describing the diff/);
+  // The record is read first, then the named evidence sources, in that order.
+  expect(step).toMatch(/read the run record's `Decisions` and `Learnings` \(\[run record\]\([^)]*\)\), then the commits, PR body, review receipts, and ADRs/);
+  expect(step).toMatch(/what was chosen, why, the evidence pointer, and its result/);
+  // Proof is separated from inference; missing reasons are reported open, never filled in.
+  expect(step).toMatch(/separate what the record proves from what is inferred/);
+  expect(step).toMatch(/list choices with no recorded reason as open rather than inventing one/);
 });
