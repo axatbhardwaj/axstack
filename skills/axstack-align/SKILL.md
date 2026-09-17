@@ -41,7 +41,9 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 The current chat remains the driver under
 [Standing contracts](../axstack/references/contracts.md). For each new
 user round, the driver independently drafts the prioritized frontier and
-recommendations. Then consult `axstack-advisor-astra` and
+recommendations, except for an arena-grade question (below), where the driver
+writes the brief and rubric but drafts no recommendation until the candidates
+and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
 `axstack-advisor-fable` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
@@ -55,6 +57,48 @@ session and settled receipt; consult only the changed frontier and reuse
 unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
 hold Align; safe fact work may continue without substitution.
+
+## Arena for hard-to-reverse design choices
+
+Critique of one draft anchors every reader to that draft's shape. When a
+question is arena-grade, the same test as for an ADR (a meaningful,
+hard-to-reverse, non-obvious trade-off: architecture, module boundaries, data
+model, migration strategy), replace the critique round for that question with
+one arena round. Small or routine questions never enter the arena.
+
+1. **Frame.** The driver writes the brief (the artifact, its constraints, the
+   settled decisions it must respect) and three to six gradeable rubric
+   criteria. Candidates receive only the brief; the rubric is for judging.
+2. **Fan out.** `axstack-advisor-astra` and `axstack-advisor-fable` each
+   independently produce one candidate design plus a short rationale naming
+   the alternatives considered and rejected, from the same bounded evidence and
+   question, without cross-reading. The driver authors no candidate.
+3. **Cross-judge.** After both candidates are complete, `axstack-arena-judge-astra`
+   and `axstack-arena-judge-fable` each independently score every candidate
+   per criterion from the rubric and candidates by label, and recommend a base
+   with a reason. Judges never author, never cross-read each other.
+4. **Pick.** The driver reads every candidate end to end and scores per
+   criterion, not on holistic feel, then compares with both judges. Agreement
+   confirms the base. Disagreement between judges or with the driver means one
+   reading is biased or the rubric was ambiguous: re-read both rationales and
+   decide with a stated reason; never average verdicts or fabricate consensus.
+5. **Graft.** Walk the losing candidate once more for the one or two ideas
+   worth porting and fold them into the base by hand so the result stays
+   coherent under one mental model. Convergence on the same shape is a strong
+   agreement signal: adopt the consensus shape, no graft. Wide divergence
+   means the frame was under-specified: reframe and rerun once, never
+   average.
+6. **Present.** The synthesized design is the recommendation in the next
+   `Qn`, with its trade-off, judge verdicts, and what was grafted or rejected.
+   The user still decides; spec approval remains the one human checkpoint.
+
+Record the synthesis note (base, grafts and their source candidate, rejections,
+dropouts, both judge verdicts) as `Decisions` rows in the
+[run record](../axstack/references/run-record.md). Load
+[Orca runtime](../axstack/references/orca-runtime.md) immediately before the
+first candidate or judge dispatch. If either adviser or judge seat is
+unavailable, hold that question without substitution; unaffected fact work
+and questions continue.
 
 ## Bound the interview
 
