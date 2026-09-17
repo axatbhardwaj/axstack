@@ -73,6 +73,20 @@ test('run-record: decision trail and learnings are reviewable and resumable', ()
   expect(text).toMatch(/Learnings[^.]*next owner[^.]*code and history do not\s+show/i);
   expect(text).toMatch(/Read it on resume/i);
   expect(text).toMatch(/append, never rewrite/i);
+
+  // The inclusion boundary is the rule, not the table: a choice a reviewer
+  // cannot reconstruct from Git or PR state belongs; routine mechanics do not.
+  const section = text.split('## Decision trail and learnings')[1].split('## Privacy')[0];
+  expect(section.replace(/\s+/g, ' ')).toMatch(/could not reconstruct from Git or PR state belongs here; routine mechanics do not/);
+  expect(section).toMatch(/one row per consequential choice/);
+  for (const column of ['when', 'what was chosen', 'why in plain words', 'evidence pointer', 'result']) {
+    expect(section, `Decisions must define ${column}`).toContain(column);
+  }
+  expect(section).toMatch(/\(`tests green`, `reverted`, `held`, `open`\)/);
+  expect(section).toMatch(/SHA, PR, receipt,\s+`file:line`, or artifact path/);
+  // Learnings names its content categories and their evidence pointer.
+  expect(section).toMatch(/root causes, gotchas, patterns that held or failed, and where the\s+evidence lives/);
+  expect(section).toMatch(/keep entries as short as the evidence pointer allows/);
 });
 
 test('run-record: reconciliation protects ownership and revision evidence', () => {
