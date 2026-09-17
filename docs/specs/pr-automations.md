@@ -409,11 +409,13 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   equals the pinned head and the tree is clean, and only then is the
   worktree, directory and branch removed in the same tick. With a Dispatch or
   any residual resource the failed start owns runtime state, and retaining
-  alone is not recovery: the driver follows the runtime's recovery guide
-  (`worker-list` and the row's literal `nextAction`, or `worker-release` once
-  settled), never retries in the same tick, and applies the no-worker branch
-  only after the resources are proven gone; anything unproven is retained
-  with a health line. Persisted configuration such as `orca-data.json` is never evidence
+  alone is not recovery: the driver follows the runtime's recovery guide —
+  with a Dispatch, `worker-list` and the row's `nextAction {kind, argv}`, a
+  non-empty `argv` run verbatim through the same Orca executable and
+  `kind: none` meaning inspect and retain; with residual resources but no
+  Dispatch, `request-show` on the receipt's request id — never retries in
+  the same tick, and applies the no-worker branch only after the resources
+  are proven gone; anything unproven is retained with a health line. Persisted configuration such as `orca-data.json` is never evidence
   either way; it lags the live setting and the driver never reads it (settled
   2026-09-17 after the depth hold outlived the fix by reading a stale
   snapshot).

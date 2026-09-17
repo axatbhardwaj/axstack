@@ -33,17 +33,23 @@ printf '%s' "$cursor" | jq -e '
     type == "string"
     and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$")
     and (try (sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 | true) catch false);
+  # The driver writes the refusal record itself under the exact schema:
+  # UTC, no fractional seconds, no offset.
+  def exact_timestamp:
+    type == "string"
+    and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
+    and (try (fromdateiso8601 | true) catch false);
   ((has("tick_started_at") | not) or (.tick_started_at | timestamp))
   and ((has("tick_done_at") | not) or (.tick_done_at | timestamp))
   and ((.dispatch_markers // []) | type == "array"
     and all(.[]; .started_at | timestamp))
   and ((.repair_caps // {}) | type == "object"
     and all(.[]; .expires_at | timestamp))
-  and ((.runtime_refusal // null) == null
+  and (.runtime_refusal == null
     or (.runtime_refusal | type == "object"
       and (.code | type == "string" and length > 0)
-      and (.first_seen | timestamp)
-      and (.last_seen | timestamp)))
+      and (.first_seen | exact_timestamp)
+      and (.last_seen | exact_timestamp)))
 ' >/dev/null 2>&1 || fail
 
 # A recent unfinished tick is the only overlap signal. This precheck never
@@ -200,7 +206,7 @@ if printf '%s' "$cursor" | jq -e '(.pending_settlement // []) | length > 0' >/de
 
 # A runtime-refusal hold is re-tested by re-attempting the refused operation, which needs a launched
 # tick; while the record is present the tick is due even when GitHub is unchanged.
-if printf '%s' "$cursor" | jq -e '(.runtime_refusal // null) != null' >/dev/null; then due=1; fi
+if printf '%s' "$cursor" | jq -e '.runtime_refusal != null' >/dev/null; then due=1; fi
 
 pending_tmp="$PENDING_FILE.tmp.$$"
 jq -cn --arg fingerprint "$fingerprint" --arg observed_at "$timestamp" \

@@ -311,6 +311,11 @@ for (const [label, value] of [
   ['an unparsable first_seen', { code: 'x', first_seen: 'yesterday', last_seen: '2026-09-17T08:51:05Z' }],
   ['an unparsable last_seen', { code: 'x', first_seen: '2026-09-17T04:21:08Z', last_seen: '08:51' }],
   ['an offset timestamp', { code: 'x', first_seen: '2026-09-17T04:21:08+00:00', last_seen: '2026-09-17T08:51:05Z' }],
+  // jq's `//` treats false as absent; the record must be null or an object.
+  ['a literal false', false],
+  // The driver writes this record under the exact schema: no fractions.
+  ['a fractional first_seen', { code: 'x', first_seen: '2026-09-17T04:21:08.123Z', last_seen: '2026-09-17T08:51:05Z' }],
+  ['a fractional last_seen', { code: 'x', first_seen: '2026-09-17T04:21:08Z', last_seen: '2026-09-17T08:51:05.5Z' }],
 ]) {
   test(`a malformed runtime_refusal (${label}) is an error, not due`, () => {
     const env = setup();

@@ -280,7 +280,13 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
     // runtime's own guide, not merely parked.
     expect(text, `${name}: reads failedStage`).toMatch(/failedStage/);
     expect(text, `${name}: retaining alone is not recovery`).toMatch(/retaining alone is not recovery/i);
-    expect(text, `${name}: follows nextAction or release`).toMatch(/nextAction[\s\S]{0,80}worker-release|worker-release[\s\S]{0,80}nextAction/);
+    // nextAction is a structured {kind, argv}; only a non-empty argv is run,
+    // verbatim, and `none` authorizes nothing. A receipt with resources but
+    // no Dispatch has no row and is recovered through request-show.
+    expect(text, `${name}: nextAction is structured`).toMatch(/nextAction[\s\S]{0,20}\{kind, argv\}/);
+    expect(text, `${name}: argv run verbatim`).toMatch(/non-empty `argv`[\s\S]{0,60}verbatim/);
+    expect(text, `${name}: none means retain`).toMatch(/`?kind: none`?[\s\S]{0,80}(?:inspect|retention|retain)/);
+    expect(text, `${name}: no-dispatch recovery`).toMatch(/no Dispatch[\s\S]{0,120}request-show/);
     expect(text, `${name}: never retries in the same tick`).toMatch(/never retr(?:y|ies) in the same tick/i);
     // The retry needs a launched tick, so the record must be due work and a
     // real cursor key — the precheck and watchdog read an exact schema.
@@ -289,7 +295,14 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   }
   // The precheck itself must implement the due rule, or the retry never runs.
   const precheck = read('docs/plans/pr-automations-precheck.sh');
-  expect(precheck).toMatch(/\.runtime_refusal \/\/ null\) != null['"]? >\/dev\/null; then due=1; fi/);
+  // Plain `!= null`, not `// null`: jq's alternative operator treats false as
+  // absent, and a literal false must be rejected by validation, not made due.
+  expect(precheck).toMatch(/jq -e '\.runtime_refusal != null' >\/dev\/null; then due=1; fi/);
+  expect(precheck).not.toMatch(/runtime_refusal \/\/ null/);
+  // The record's timestamps are validated against the exact grammar.
+  expect(precheck).toMatch(/def exact_timestamp:/);
+  expect(precheck).toMatch(/\.first_seen \| exact_timestamp/);
+  expect(precheck).toMatch(/\.last_seen \| exact_timestamp/);
   expect(prompts).toMatch(/re-attempt the refused operation once/);
   expect(prompts).toMatch(/never read orca-data\.json/);
   expect(prompts).toMatch(/structured error code in the JSON response/);
@@ -298,7 +311,11 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/if worker-start itself is refused after orca worktree create succeeded there is no worker, so do NOT use the step \(2\) settlement proof/);
   expect(prompts).toMatch(/read the receipt's failedStage and residualResources first/);
   expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
-  expect(prompts).toMatch(/worker-list --run <orchestration run id> --json, locate that dispatch's row, and execute its literal projection\.nextAction/);
+  expect(prompts).toMatch(/projection\.nextAction is an object \{kind, argv\}/);
+  expect(prompts).toMatch(/when argv is non-empty run exactly that argv through the same orca executable, verbatim, and nothing else/);
+  expect(prompts).toMatch(/when kind is none, inspect with worker-show and retain/);
+  expect(prompts).toMatch(/residualResources but no dispatchId[^;]*request-show --request <error\.data\.orchestrationRequestId>/);
+  expect(prompts).not.toMatch(/execute its literal projection\.nextAction/);
   expect(prompts).toMatch(/never --retry-of in the same tick/);
   // The spec's own due-work enumeration (the algorithm the precheck mirrors)
   // must list the record, not only the schema paragraph.

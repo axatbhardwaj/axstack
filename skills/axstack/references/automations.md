@@ -391,9 +391,13 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
   driver remove the worktree, its directory and branch in the same tick.
   With a Dispatch or any residual resource the failed start owns runtime
   state, and retaining alone is not recovery: the driver follows the
-  runtime's recovery guide — `worker-list` for that run and the row's
-  literal `nextAction`, or `worker-release` once settled — and applies the
-  no-worker branch only after the resources are proven gone. It never retries
+  runtime's recovery guide. With a Dispatch: `worker-list` for that run, and
+  the row's `nextAction` is an object `{kind, argv}` — a non-empty `argv` is
+  run verbatim through the same Orca executable and nothing else, while
+  `kind: none` authorizes no action beyond inspection and retention. With
+  residual resources but no Dispatch there is no row: the mutation itself is
+  recovered through `request-show` on the receipt's request id. The no-worker
+  branch applies only after the resources are proven gone. It never retries
   in the same tick. Anything unproven retains the worktree with a health line
   naming the stage and the resources. Persisted configuration such
   as `orca-data.json` is never evidence either way; it is a snapshot that
