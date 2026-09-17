@@ -250,6 +250,23 @@ test('automations: the driver closes its own terminal tab as the last step of a 
   expect(closeAt).toBeGreaterThan(doneAt);
 });
 
+test('automations: a runtime-refusal hold is re-tested by attempting the operation, never by reading config', () => {
+  // The depth hold was kept for hours by re-reading orca-data.json, a
+  // persisted snapshot that lags the live setting. The only observation that
+  // proves an Orca refusal is resolved is the operation no longer refusing.
+  const ref = compact(refPath);
+  const spec = compact('docs/specs/pr-automations.md');
+  const prompts = compact('docs/plans/pr-automations-prompts.md');
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+    expect(text, `${name}: re-attempt is the observation`).toMatch(/runtime refusal[^.]*re-attempt(?:ing|s)? the refused operation/i);
+    expect(text, `${name}: once per tick`).toMatch(/once per tick/i);
+    expect(text, `${name}: config is not evidence`).toMatch(/persisted configuration[^.]*(?:is never|never counts as) evidence/i);
+    expect(text, `${name}: names the file`).toMatch(/orca-data\.json/);
+  }
+  expect(prompts).toMatch(/re-attempt the refused operation once/);
+  expect(prompts).toMatch(/never read orca-data\.json/);
+});
+
 test('automations: run directory, watchdog checks, and exclusions match rev 4', () => {
   const text = compact(refPath);
   for (const file of ['`cursor.json`', '`pending.json`', '`precheck.log`', '`decisions/<token>.json`', '`watchdog.log`', '`progress.md`']) {

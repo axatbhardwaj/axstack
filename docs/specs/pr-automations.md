@@ -390,7 +390,14 @@ its dispatch is a health finding (settled by the user on 2026-09-17).
   at enabling, stored in `cursor.json`, and re-verified on any allowlist
   change; a repair never pushes to a head branch in that set.
 - A hold is cleared only by a later tick observing the condition resolved or
-  by the user; silence never clears a hold.
+  by the user; silence never clears a hold. For a hold caused by an Orca
+  runtime refusal (a sub-worker dispatch rejected for depth, a declined launch
+  capability), observing resolution means re-attempting the refused operation
+  once per tick on the next eligible PR — success clears the hold, the same
+  refusal keeps it without a new health line. Persisted configuration such as
+  `orca-data.json` is never evidence either way; it lags the live setting and
+  the driver never reads it (settled 2026-09-17 after the depth hold outlived
+  the fix by reading a stale snapshot).
 
 ## Acceptance before enabling
 

@@ -371,7 +371,13 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
 - Enumerate deploy-on-push branches from both repair repositories before
   enabling and store them in `cursor.json`; re-check on allowlist changes.
 - A later tick observing resolution or an explicit user decision clears a
-  hold. Silence never clears one.
+  hold. Silence never clears one. For a hold caused by an Orca runtime
+  refusal — a sub-worker dispatch rejected for depth, a launch capability the
+  runtime declines — observing resolution means re-attempting the refused
+  operation, once per tick, on the next eligible PR: success clears the hold
+  and the same refusal keeps it without a new health line. Persisted
+  configuration such as `orca-data.json` is never evidence either way; it is
+  a snapshot that lags the live setting, and the driver never reads it.
 
 ## Cutover
 
