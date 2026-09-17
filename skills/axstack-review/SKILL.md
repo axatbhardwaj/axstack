@@ -134,7 +134,9 @@ session is the owner for every PR it handles.
    in authored mode the one reviewer covers all six angles:
    1. Security and trust boundaries.
    2. Correctness, failures, and edge cases.
-   3. Integration and regressions.
+   3. Integration and regressions: load [Blast radius](../axstack/references/blast-radius.md),
+      find what the change breaks beyond the diff, and grade the one fact it
+      is safe because of on the evidence ladder; below "ran it" is unproven.
    4. Requirements, acceptance, and user behavior.
    5. Architecture and solution design, including SOLID and credible simpler
       alternatives.
@@ -233,6 +235,7 @@ Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
 Findings: <evidence + consequence each>
+Safety fact: <the one fact the change is safe because of> — <ladder step + proof | unproven>
 Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 

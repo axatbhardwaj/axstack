@@ -58,9 +58,9 @@ review their own work.
   and code, return a cited note with limitations. Fan out only distinct
   questions.
 - Understanding a system, change, or implementation gap -> `axstack-explain`:
-  show current/intended behavior, evidence dimensions, and bounded gaps; use
-  project docs and verify rendered behavior when applicable. Stale axstack-docs
-  is superseded. Publication needs separate authority.
+  current/intended behavior, evidence dimensions, and bounded gaps from project
+  docs and rendered behavior. "What could this break" follows
+  [Blast radius](blast-radius.md). Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).
@@ -73,7 +73,7 @@ review their own work.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
   handoff guide, and require explicit recipient acceptance before ownership
-  changes. Missing capability is a setup gap, never license to invent one.
+  changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
 - Own PR maintenance or monitoring -> `axstack-review` in authored mode,
   `axstack-watch` for adoption.
