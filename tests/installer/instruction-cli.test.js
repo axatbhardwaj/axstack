@@ -45,6 +45,23 @@ describe('instruction CLI routing', () => {
     expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8')).toBe('');
   });
 
+  test('OpenCode and Antigravity harnesses resolve their global skills and rules files', () => {
+    const cases = [
+      ['opencode', '.config/opencode/skills', '.config/opencode/AGENTS.md'],
+      ['antigravity', '.gemini/config/skills', '.gemini/GEMINI.md'],
+    ];
+    for (const [harness, skills, instructions] of cases) {
+      const { root, bundle } = fixture();
+      const installed = runCli(CLI, [
+        'install', '--preset', 'mixed', '--bundle', bundle, '--harness', harness, '--no-claude-settings', '--yes',
+      ], { env: { HOME: root } });
+      expect(installed.out).toContain(`instruction created: ${join(root, instructions)}`);
+      expect(readFileSync(join(root, instructions), 'utf8')).toContain(`${join(root, skills)}/axstack/SKILL.md`);
+      runCli(CLI, ['uninstall', '--harness', harness, '--no-claude-settings', '--yes'], { env: { HOME: root } });
+      expect(readFileSync(join(root, instructions), 'utf8')).toBe('');
+    }
+  });
+
   test('Claude defaults its instruction file while skills-dir alone writes none', () => {
     const { root, bundle } = fixture();
     runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'claude', '--yes'], { env: { HOME: root } });

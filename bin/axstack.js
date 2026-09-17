@@ -60,8 +60,10 @@ Flags:
   --skills-dir <dir>  Explicit install target (required). Overrides --harness.
   --instructions <file>
                       Instruction file to receive the owned routing block.
-                      Harness defaults: ~/.claude/CLAUDE.md for Claude and
-                      $CODEX_HOME/AGENTS.md for Codex (default ~/.codex).
+                      Harness defaults: ~/.claude/CLAUDE.md for Claude,
+                      $CODEX_HOME/AGENTS.md for Codex (default ~/.codex),
+                      ~/.config/opencode/AGENTS.md for OpenCode, and
+                      ~/.gemini/GEMINI.md for Antigravity.
   --claude-settings <file>
                       Manage the Claude Code user settings file at this path.
                       This forces testable availability without installing Claude.
@@ -216,6 +218,8 @@ function resolveHarnessInstructions(harness) {
       : join(homeDir(), '.codex');
     return join(codexHome, 'AGENTS.md');
   }
+  if (harness === 'opencode') return join(homeDir(), '.config', 'opencode', 'AGENTS.md');
+  if (harness === 'antigravity') return join(homeDir(), '.gemini', 'GEMINI.md');
   return null;
 }
 

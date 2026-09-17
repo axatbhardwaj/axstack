@@ -29,7 +29,15 @@ export function harnessLocations() {
       discovery: 'docs',
       source: 'https://opencode.ai/docs/skills',
       notes:
-        'Global skills directory from OpenCode docs; confirm with local help. Pass --skills-dir to override.',
+        'Global skills directory from OpenCode docs; OpenCode also reads ~/.claude/skills and ~/.agents/skills. Pass --skills-dir to override.',
+    },
+    {
+      harness: 'antigravity',
+      skillsDir: '~/.gemini/config/skills',
+      discovery: 'docs',
+      source: 'https://antigravity.google/docs/skills',
+      notes:
+        'Global skills directory shared by the Antigravity IDE and agy CLI per Google docs (confirmed with agy 2026-09-17; the older ~/.gemini/antigravity/skills path is not read). Pass --skills-dir to override.',
     },
     {
       harness: 'grok',
