@@ -192,6 +192,8 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
     expect(text, `${name}: proof precedes destruction`).toMatch(/(?:proves|proven)[^.]{0,40}disposable/i);
     expect(text, `${name}: pushed candidate is durable`).toMatch(/pushed to the head branch|reachable by push/i);
     expect(text, `${name}: push proof needs a fresh fetch`).toMatch(/successful targeted fetch[^.]*failed fetch retaining/i);
+    expect(text, `${name}: fetch lands in a per-dispatch ref`).toMatch(/per-dispatch\s+ref/i);
+    expect(text, `${name}: FETCH_HEAD rejected`).toMatch(/never `FETCH_HEAD`/);
     expect(text, `${name}: abandon settlement defined`).toMatch(/accepted abandon receipt/i);
     expect(text, `${name}: token-held candidate is durable`).toMatch(/refs\/axstack\/decisions\/<token>/);
     expect(text, `${name}: abandon requires a clean tree`).toMatch(/abandon[^.]*no uncommitted changes/i);
@@ -211,9 +213,13 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(prompts).toMatch(/pending or unknown release retains the worktree/);
   // Durability by push is tested only against a freshly fetched ref; a stale
   // origin/<branch> could make an unpushed candidate look pushed.
-  expect(prompts).toMatch(/fetch origin <head branch> succeeds AND git -C <clone path> merge-base --is-ancestor \$hw FETCH_HEAD/);
+  expect(prompts).toMatch(/fetch origin \+refs\/heads\/<head branch>:refs\/axstack\/cleanup\/<dispatch id> succeeds AND git -C <clone path> merge-base --is-ancestor \$hw refs\/axstack\/cleanup\/<dispatch id>/);
   expect(prompts).toMatch(/a failed fetch is not proof: retain/);
+  expect(prompts).toMatch(/update-ref -d refs\/axstack\/cleanup\/<dispatch id>/);
   expect(prompts).not.toMatch(/--is-ancestor \$hw origin\/<head branch>/);
+  // FETCH_HEAD is shared clone state; a concurrent fetch can replace it
+  // between the fetch and the ancestry test.
+  expect(prompts).not.toMatch(/--is-ancestor \$hw FETCH_HEAD/);
   // Abandon never yields a release receipt; its settlement is the accepted
   // abandon receipt plus proven exit.
   expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);

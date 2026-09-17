@@ -319,8 +319,9 @@ a settled release receipt, on the abandon path an accepted abandon receipt,
 either with proven process exit; pending or unknown stops here — the
 worktree's HEAD is either the pinned head or a candidate that is durably
 reachable — pushed to the head branch, tested only after a successful
-targeted fetch of that exact remote branch so a stale tracking ref cannot
-fake durability, a failed fetch retaining the worktree — or held by a
+targeted fetch of that exact remote branch into a per-dispatch ref, never
+`FETCH_HEAD`, so neither a stale tracking ref nor a concurrent fetch in the
+shared clone can fake durability, a failed fetch retaining the worktree — or held by a
 `refs/axstack/decisions/<token>` ref in the project clone; and, on the
 abandon path, the worktree has no uncommitted changes.
 Only then it closes any terminal tab still listed, clears untracked

@@ -368,8 +368,9 @@ a worker settles the driver releases it and, once the worker is settled (a settl
 release receipt, or on the abandon path an accepted abandon receipt, either
 with proven process exit) and the worktree is proven disposable — HEAD is the
 pinned head or a candidate durably reachable by push, tested only after a
-successful targeted fetch of that exact remote branch with a failed fetch
-retaining the worktree, or by a `refs/axstack/decisions/<token>` ref, and on
+successful targeted fetch of that exact remote branch into a per-dispatch
+ref (never `FETCH_HEAD`, which a concurrent fetch in the shared clone can
+replace) with a failed fetch retaining the worktree, or by a `refs/axstack/decisions/<token>` ref, and on
 the abandon path there are no uncommitted changes — closes any
 terminal tab still listed, clears untracked artefacts, removes the child
 worktree and its directory, deletes the branch the worktree created, and
