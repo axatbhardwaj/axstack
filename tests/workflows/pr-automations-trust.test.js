@@ -196,6 +196,46 @@ test('a lock stolen between acquisition and the first refresh is left untouched'
   rmSync(`${env.store}.lock`, { recursive: true });
 }, 30000);
 
+test('a lock recreated between the refresh touch and its verification is foreign, and its write survives', () => {
+  // Same inode again (ext4). The helper must verify the mtime IT CHOSE, never
+  // adopt whatever a stat after utimes happens to observe.
+  const env = setup();
+  const slow = patched('// after-touch', 'if (refreshes === 0) Bun.sleepSync(1500);');
+  const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    ${untilLocked(env)}; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock")
+    t="${env.store}.tmp.thief"; jq '.claudeField = "written-after-steal"' "${env.store}" > "$t" && mv "$t" "${env.store}"
+    wait $pid; echo "helper=$?"; echo "thief-mtime=$before:$(stat -c %Y "${env.store}.lock" 2>/dev/null)"`, env.env);
+  expect(r.out, 'helper must report failure').toMatch(/helper=2/);
+  const store = read(env);
+  expect(store.claudeField, "the foreign write survives").toBe('written-after-steal');
+  expect(store.projects[env.wt]).toBeUndefined();
+  const mt = r.out.match(/thief-mtime=(\d+):(\d+)/);
+  expect(mt, `the thief's lock is left in place: ${r.out}`).not.toBeNull();
+  expect(mt[1]).toBe(mt[2]);
+  rmSync(`${env.store}.lock`, { recursive: true });
+}, 30000);
+
+test('a lock reclaimed after mkdir but before the helper first observes it is never adopted', () => {
+  // Suspended between mkdirSync and the first stat for longer than the
+  // acquisition bound: the observation can no longer be tied to the mkdir, so
+  // whatever is there now is left alone.
+  const env = setup();
+  const slow = patched('// after-mkdir', 'await Bun.sleep(2600);');
+  const r = sh(`${BUN} ${slow} seed ${env.wt} ${env.clone} ${env.head} & pid=$!
+    ${untilLocked(env)}; rmdir "${env.store}.lock" && mkdir "${env.store}.lock"
+    touch -d '2000-01-01 00:00:00' "${env.store}.lock"; before=$(stat -c %Y "${env.store}.lock"); ino=$(stat -c %i "${env.store}.lock")
+    wait $pid; echo "helper=$?"
+    [ -d "${env.store}.lock" ] && echo "lock=present:$(stat -c %i "${env.store}.lock"):$ino:$(stat -c %Y "${env.store}.lock"):$before" || echo "lock=REMOVED"`, env.env);
+  expect(r.out).toMatch(/helper=2/);
+  const m = r.out.match(/lock=present:(\d+):(\d+):(\d+):(\d+)/);
+  expect(m, `the reclaimed lock must survive untouched: ${r.out}`).not.toBeNull();
+  expect(m[1]).toBe(m[2]);
+  expect(m[3], 'mtime untouched').toBe(m[4]);
+  expect(read(env).projects[env.wt]).toBeUndefined();
+  rmSync(`${env.store}.lock`, { recursive: true });
+}, 30000);
+
 test('a lock stolen after the temp is rendered aborts the commit instead of overwriting the store', () => {
   const env = setup();
   const slow = patched('// before-commit', 'await Bun.sleep(1500);');

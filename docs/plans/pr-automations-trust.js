@@ -22,6 +22,7 @@ const STALE_MS = 10_000;     // Claude's stale threshold
 const REFRESH_MS = 1_000;    // well under Claude's own 5 s refresh
 const HEALTH_MS = 3_000;     // a lease refreshed longer ago than this is not healthy
 const ACQUIRE_TRIES = 25;    // 25 × 200 ms bounded wait; never breaks a fresh lock
+const ACQUIRE_BOUND_MS = 2_000; // mkdir → first stat must complete well inside the stale window
 
 const [mode, wtArg, cloneArg, headArg] = process.argv.slice(2);
 const usage = () => { console.error('usage: seed <worktree> <clone> <head> | unseed <worktree>'); process.exit(2); };
@@ -55,7 +56,9 @@ if (mode === 'seed') {
 // ---- Claude's lock, Claude's lease rules ----
 const lockStat = () => { try { return statSync(LOCK); } catch { return null; } };
 let got = false;
+let t0 = 0;
 for (let i = 0; i < ACQUIRE_TRIES; i += 1) {
+  t0 = Date.now();
   try { mkdirSync(LOCK); got = true; break; } catch (e) { if (e.code !== 'EEXIST') process.exit(2); }
   // Reclaim only what Claude itself would treat as abandoned.
   const st = lockStat();
@@ -63,23 +66,36 @@ for (let i = 0; i < ACQUIRE_TRIES; i += 1) {
   Bun.sleepSync(200);
 }
 if (!got) process.exit(2);
-// Ownership is the inode AND the mtime this process last set: ext4 hands a recreated directory
-// the same inode number, so a reclaimed lock is told apart by its mtime (as proper-lockfile does).
+// after-mkdir
+// Ownership is the inode AND the mtime this process chose and set: ext4 hands a recreated
+// directory the same inode number, so a reclaimed lock is told apart by its mtime, and the value
+// verified is the one we intended, never an observation that a thief may have produced
+// (proper-lockfile's rule). The first observation is tied to the mkdir only if it comes well
+// inside the stale window; a suspended process cannot tell its lock from a reclaimed one.
 const acquired = lockStat();
-const ino = acquired?.ino;
-let mtimeSet = acquired?.mtimeMs;
+if (!acquired || Date.now() - t0 >= ACQUIRE_BOUND_MS) process.exit(2);   // uncertain: leave it
+const ino = acquired.ino;
+let mtimeSet = acquired.mtimeMs;
+let precision = null;   // 1 (ms) or 1000 (s), probed on the first touch
+const choose = () => { const n = Date.now(); return precision === 1000 ? n - (n % 1000) : n; };
 // after-acquire
 let lastRefresh = Date.now();
 let compromised = false;
 let refreshes = 0;
 const ownsLock = () => { const st = lockStat(); return !!st && st.ino === ino && st.mtimeMs === mtimeSet; };
 const refresh = () => {
-  if (!ownsLock()) { compromised = true; return; }
+  // A gap since the last successful refresh long enough for the lock to have gone stale means it
+  // may already belong to someone else: do not touch it.
+  if (Date.now() - lastRefresh >= HEALTH_MS || !ownsLock()) { compromised = true; return; }
   try {
     // refresh-touch
-    const now = new Date(); utimesSync(LOCK, now, now);
-    mtimeSet = statSync(LOCK).mtimeMs;   // as the filesystem stored it, whatever its precision
-    lastRefresh = Date.now(); refreshes += 1;
+    const chosen = choose(); const d = new Date(chosen); utimesSync(LOCK, d, d);
+    // after-touch
+    const st = lockStat();
+    if (precision === null && st) precision = st.mtimeMs === chosen ? 1 : (st.mtimeMs === chosen - (chosen % 1000) ? 1000 : null);
+    const expected = precision === 1000 ? chosen - (chosen % 1000) : chosen;
+    if (!st || precision === null || st.ino !== ino || st.mtimeMs !== expected) { compromised = true; return; }
+    mtimeSet = expected; lastRefresh = Date.now(); refreshes += 1;
   } catch { compromised = true; }
 };
 // A lock reclaimed between mkdir and this first refresh belongs to someone else: leave it.
