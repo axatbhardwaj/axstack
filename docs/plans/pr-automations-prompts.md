@@ -47,8 +47,8 @@ You are a dispatched Orca worker running axstack-watch in authored repair mode f
 Action if approved: <APPROVE | REQUEST_CHANGES | push <candidate sha> to <head branch>>
 Why: <one line per reviewer: role — reason>
 Reply to this bot with exactly one of:
-approve <token>
-reject <token>
+/axstack-decide approve <token>
+/axstack-decide reject <token>
 ```
 
 ## Hermes gateway installation (T7, by the user)
@@ -58,8 +58,10 @@ reject <token>
   `AXSTACK_DECISION_USER_ID=<telegram user id>`.
 - `~/.hermes/skills/axstack-decide/SKILL.md` ←
   `docs/plans/hermes-axstack-decide-SKILL.md`.
-- Acceptance 8 records which `HERMES_SESSION_*` variables the gateway exports
-  to the script.
+- Acceptance 8 (2026-09-17): the gateway exports `HERMES_SESSION_USER_ID`,
+  `HERMES_SESSION_CHAT_ID`, `HERMES_SESSION_CHAT_TYPE`,
+  `HERMES_SESSION_MESSAGE_ID` (among others) to the script, so its sender
+  check is live.
 
 ## Cursor initialisation (T7)
 
