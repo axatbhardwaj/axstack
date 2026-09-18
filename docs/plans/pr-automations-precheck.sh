@@ -3,7 +3,7 @@ set -u
 
 # Model-free discovery precheck for the rev-3 defi-com PR driver.
 # Exit 0 = changed or due, 1 = unchanged, 2 = error, 3 = tick still running.
-# Large JSON (cursor, discovery, hashed) reaches jq through stdin via `input`,
+# Large JSON (cursor, discovery, hashed, a PR's `gh pr view` payload) reaches jq through stdin via `input`,
 # never --argjson: one argv string is capped at MAX_ARG_STRLEN (128 KiB) and
 # the live cursor passed that.
 RUN_DIR="${1:-${RUN_DIR:-}}"
@@ -129,9 +129,9 @@ while IFS=$'\t' read -r repo number; do
   base_ref="$(printf '%s' "$detail" | jq -r '.baseRefName')" || fail
   base_sha="$(gh api "repos/$repo/commits/$base_ref" --jq .sha 2>/dev/null)" || fail
   [ -n "$base_sha" ] || fail
-  enriched="$(printf '%s\n%s' "$enriched" "$discovery" | jq -cn \
-    --arg repo "$repo" --argjson number "$number" --argjson detail "$detail" --arg base "$base_sha" '
-    input as $list | input as $all
+  enriched="$(printf '%s\n%s\n%s' "$enriched" "$discovery" "$detail" | jq -cn \
+    --arg repo "$repo" --argjson number "$number" --arg base "$base_sha" '
+    input as $list | input as $all | input as $detail
     | ($all[] | select(.repo == $repo and .number == $number)) as $item
     | $list + [$item + {
         head: $detail.headRefOid,
