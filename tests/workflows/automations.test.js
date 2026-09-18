@@ -342,7 +342,19 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
     expect(text, `${name}: free slot definition`).toMatch(/no live (?:dispatch )?marker names it/i);
     expect(text, `${name}: no free slot defers`).toMatch(/no free slot[^.]*deferred/i);
     expect(text, `${name}: detached checkout at the head`).toMatch(/checkout --detach <head sha>|checked out detached at the (?:pinned|exact) head/i);
-    expect(text, `${name}: sanctioned isolation`).toMatch(/`?--safe-mode`?/);
+    // Orca must own the worker process so that release proves exit and the
+    // slot returns to the pool: workers launch through `worker-start --agent
+    // claude`, never on a driver-created terminal (which Orca classifies as
+    // `external` and can neither stop nor prove exited).
+    expect(text, `${name}: owned launch`).toMatch(/worker-start[^.]*--agent claude/);
+    expect(text, `${name}: no driver-created terminal`).not.toMatch(/worker-start --terminal|terminal create --worktree/);
+    expect(text, `${name}: no safe mode`).not.toMatch(/--safe-mode|safe mode/i);
+    expect(text, `${name}: ownership asserted via worker-show`).toMatch(/worker-show[\s\S]{0,200}resource\.state[^.]*owned/);
+    // A launch Orca does not own is never left unrecorded: it goes through the
+    // existing runtime-refusal recovery and retains the slot until the user
+    // clears it, instead of a bare worker-stop that proves nothing.
+    expect(text, `${name}: unowned launch retains the slot`).toMatch(/worker not owned[\s\S]{0,400}retained_slots\[\]/);
+    expect(text, `${name}: unowned launch is not a bare stop`).not.toMatch(/worker-stop --dispatch <dispatch id>, one health line/);
     expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
   // The pool is created once, parented under its project, by the setup
@@ -351,21 +363,36 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
   expect(prompts).toMatch(/git -C <clone path> fetch origin <head sha>/);
   expect(prompts).toMatch(/git -C <worktree path> checkout --detach <head sha>/);
   expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);
-  const CMD = 'claude --dangerously-skip-permissions --safe-mode --model claude-opus-5 --effort medium';
-  expect((prompts.match(new RegExp(`--command "${CMD}"`, 'g')) ?? []).length, 'both launch paths use safe mode').toBe(2);
-  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launch paths read readiness from the frame').toBe(2);
-  // A dialog on a slot means the slot lost its trust: the slot is reported,
-  // the PR is deferred, nothing is dispatched.
-  expect((prompts.match(/if the dialog is showing the slot is not trusted/g) ?? []).length).toBe(2);
-  // Order on each path: take slot, then launch, then readiness, then worker-start.
+  const LAUNCH = '--agent claude --model claude-opus-5 --effort medium';
+  expect((prompts.match(new RegExp(`worker-start [^;]*${LAUNCH}`, 'g')) ?? []).length, 'both launch paths use the owned agent launch').toBe(2);
+  // Both paths assert ownership with an executable command: worker-show on
+  // the receipt's dispatch id, then the field read from its JSON. The field
+  // path is never glued onto the argv (an earlier draft did, and the driver
+  // would have exited invalid_argument on every launch).
+  expect((prompts.match(/run orca orchestration worker-show --dispatch <dispatch id> --json and read \.result\.projection\.resource\.state from its output: require resource\.state == owned/g) ?? []).length, 'both launch paths assert ownership').toBe(2);
+  expect(prompts).not.toMatch(/--json \.result\.projection/);
+  expect((prompts.match(/apply the \(5\) recovery rules for a start that owns runtime state/g) ?? []).length, 'both unowned branches use the (5) recovery').toBe(2);
+  // A trust dialog on a slot is a visible hold reported by worker-start (a
+  // failed stage), never answered: the slot is reported, the PR deferred.
+  expect((prompts.match(/if worker-start reports a failed stage or a visible hold[^;]*the slot is not trusted/g) ?? []).length).toBe(2);
+  // Order on each path: take slot, then worker-start, then ownership check.
   for (const marker of ['--task-title "repair <repo>#<num> @<head>"', '--task-title "review <repo>#<num> @<head>"']) {
-    const before = prompts.slice(0, prompts.indexOf(marker));
+    const at = prompts.indexOf(marker);
+    const before = prompts.slice(0, at);
     const slotAt = before.lastIndexOf('take a free slot');
-    const launchAt = before.lastIndexOf('--safe-mode');
-    const readyAt = before.lastIndexOf('Quick safety check');
     expect(slotAt, `${marker}: slot taken before start`).toBeGreaterThan(-1);
-    expect(launchAt, `${marker}: launch after slot`).toBeGreaterThan(slotAt);
-    expect(readyAt, `${marker}: readiness after launch`).toBeGreaterThan(launchAt);
+    const ownedAt = prompts.indexOf('resource.state == owned', at);
+    expect(ownedAt, `${marker}: ownership asserted after start`).toBeGreaterThan(at);
+    // The unowned branch ends with "record no marker"; marker creation must be
+    // explicitly fenced to the owned branch so the driver never records a live
+    // marker for a retained worker.
+    const noMarkerAt = prompts.indexOf('record no marker', ownedAt);
+    const fenceAt = prompts.indexOf('the rest of this step runs only on the owned branch', noMarkerAt);
+    const markerAt = prompts.indexOf('marker', fenceAt);
+    expect(noMarkerAt, `${marker}: unowned branch records no marker`).toBeGreaterThan(ownedAt);
+    expect(fenceAt, `${marker}: owned-branch fence after the unowned branch`).toBeGreaterThan(noMarkerAt);
+    expect(markerAt, `${marker}: marker recorded only after the fence`).toBeGreaterThan(fenceAt);
+    expect(prompts.slice(noMarkerAt + 'record no marker'.length, fenceAt), `${marker}: nothing between the unowned end and the fence`).toMatch(/^\s*[—-]\s*$/);
   }
   // The run directory no longer ships a trust helper.
   expect(ref).not.toMatch(/`trust\.js`/);

@@ -2,7 +2,7 @@
 
 Read this when the current session is the native Orca PR **driver** or its
 **watchdog**. The approved contract is
-`docs/specs/pr-automations.md` revision 4; this reference restates the parts an
+`docs/specs/pr-automations.md` revision 5; this reference restates the parts an
 automation session must execute and does not widen them.
 
 Pair A/B is retired for this contract; its artefacts remain untouched.
@@ -135,24 +135,25 @@ dispatch marker names it, it is not in `retained_slots[]`, no terminal is
 listed in it, and its tree is clean; no free slot in the project defers the
 PR to `deferred[]` like a budget, not a hold. Taking a slot fetches the head into the project clone,
 checks the slot out detached at the pinned head, and verifies HEAD equals
-it; the marker's worktree is the slot path. Trusting a folder activates the
-full project surface: its `.claude/settings.json` and the hooks it defines,
-its `.mcp.json` servers, marketplace plugin auto-install, and `CLAUDE.md`;
-a hostile branch's hooks or MCP servers would run the moment the folder
-opens. So the worker is launched in Claude Code's own isolation mode,
-`--safe-mode`, through `terminal create` and `worker-start --terminal`,
-since `worker-start` cannot pass argv. Safe mode is the binary's sanctioned
-"all customizations disabled" path: no `CLAUDE.md`, skills, plugins, hooks,
-MCP servers, custom commands or agents load from anywhere, project or user;
-built-in tools and authentication are untouched, and the brief loads the
-skill files it needs by path. The driver confirms readiness from the
-rendered frame — `wait.satisfied`, the prompt marker present, the dialog
-absent — before dispatching; a dialog on a slot means the slot is not
-trusted: the slot is named in a health line, the PR is deferred, nothing is
-dispatched. What remains live is the repository's files as data the worker
-reads and the commands the worker itself chooses to run, which it already
-runs today; nothing from the branch loads, executes, or is offered for
-invocation on its own.
+it; the marker's worktree is the slot path. The worker is launched by Orca
+itself — `worker-start --agent claude --model claude-opus-5 --effort medium`
+on that slot — so the runtime owns the process: `worker-release` ends it and
+`worker-show` proves it exited, which is what returns the slot to the pool.
+Never pre-create the worker's terminal or hand a terminal handle to
+`worker-start`: a reused handle is a resource Orca labels `external`, one it
+can neither stop nor prove exited, so every such slot ends retained. After
+`worker-start` run `worker-show` on the receipt's dispatch id and require
+`projection.resource.state == owned`; anything else is a launch Orca does not
+own: apply the runtime-refusal recovery rules under "Safety holds" (the
+`worker-list` row's `nextAction` argv verbatim; `none` means inspect and
+retain), append a `worker not owned` health line and a `retained_slots[]`
+entry for the slot, defer the PR, and record no marker. Orca's per-agent default arguments supply
+`--dangerously-skip-permissions`; the brief loads the skill files it needs by
+path. If `worker-start` reports a failed stage or a visible hold (the "Quick
+safety check" trust dialog) the slot is not trusted: name the slot in a health
+line, defer the PR, dispatch nothing, never answer the dialog. Project
+customizations load as they would for the user; the allowlist is defi-com
+only and the user accepted that surface on 2026-09-18.
 
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
