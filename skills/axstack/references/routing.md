@@ -76,12 +76,11 @@ Author and owner never review their own work.
   handoff guide, and require explicit recipient acceptance before ownership
   changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
-- Own PR maintenance or monitoring -> `axstack-review` in authored mode,
-  `axstack-watch` for adoption.
-
-Research, explanation, improvement discovery, debugging, handoff, peer review,
-and adopted maintenance need no alignment, spec, or ticket map; authority and
-intent boundaries still apply.
+- A status question about an own open PR or stack ("check now", "what's left",
+  "are we done", or "is it approved") -> `axstack-watch` in observation-only
+  mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
+- Other own PR work -> `axstack-review` authored mode or `axstack-watch`
+  adoption.
 
 ## Proportional scope identity
 
