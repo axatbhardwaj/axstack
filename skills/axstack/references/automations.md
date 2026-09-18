@@ -142,9 +142,12 @@ on that slot — so the runtime owns the process: `worker-release` ends it and
 Never pre-create the worker's terminal or hand a terminal handle to
 `worker-start`: a reused handle is a resource Orca labels `external`, one it
 can neither stop nor prove exited, so every such slot ends retained. After
-`worker-start` read the receipt and require `resource.state == owned`;
-anything else is stopped through the runtime, named in a health line, and the
-PR deferred. Orca's per-agent default arguments supply
+`worker-start` run `worker-show` on the receipt's dispatch id and require
+`projection.resource.state == owned`; anything else is a launch Orca does not
+own: apply the runtime-refusal recovery rules under "Safety holds" (the
+`worker-list` row's `nextAction` argv verbatim; `none` means inspect and
+retain), append a `worker not owned` health line and a `retained_slots[]`
+entry for the slot, defer the PR, and record no marker. Orca's per-agent default arguments supply
 `--dangerously-skip-permissions`; the brief loads the skill files it needs by
 path. If `worker-start` reports a failed stage or a visible hold (the "Quick
 safety check" trust dialog) the slot is not trusted: name the slot in a health

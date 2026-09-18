@@ -211,9 +211,12 @@ pool. The driver never pre-creates the worker's terminal and never hands a
 terminal handle to `worker-start`: a reused handle is a resource Orca labels
 `external`, which it can neither stop nor prove exited, so every such slot
 ends retained. After
-`worker-start` the driver reads the receipt and requires `resource.state ==
-owned`; anything else is stopped through the runtime, named in a health line,
-and the PR deferred. Claude Code's per-agent default arguments (Orca
+`worker-start` the driver runs `worker-show` on the receipt's dispatch id and
+requires `projection.resource.state == owned`; anything else is a launch Orca
+does not own: the driver applies the runtime-refusal recovery rules of
+"Safety holds" (the `worker-list` row's `nextAction` argv verbatim; `none`
+means inspect and retain), appends a `worker not owned` health line and a
+`retained_slots[]` entry for the slot, defers the PR, and records no marker. Claude Code's per-agent default arguments (Orca
 `agentDefaultArgs`) supply `--dangerously-skip-permissions`; the brief loads
 its skill files by path. If `worker-start` reports a failed stage or a
 visible hold (the "Quick safety check" trust dialog) the slot is not trusted

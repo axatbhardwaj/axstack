@@ -349,7 +349,12 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
     expect(text, `${name}: owned launch`).toMatch(/worker-start[^.]*--agent claude/);
     expect(text, `${name}: no driver-created terminal`).not.toMatch(/worker-start --terminal|terminal create --worktree/);
     expect(text, `${name}: no safe mode`).not.toMatch(/--safe-mode|safe mode/i);
-    expect(text, `${name}: ownership asserted from the receipt`).toMatch(/resource\.state[^.]*owned/);
+    expect(text, `${name}: ownership asserted via worker-show`).toMatch(/worker-show[\s\S]{0,200}resource\.state[^.]*owned/);
+    // A launch Orca does not own is never left unrecorded: it goes through the
+    // existing runtime-refusal recovery and retains the slot until the user
+    // clears it, instead of a bare worker-stop that proves nothing.
+    expect(text, `${name}: unowned launch retains the slot`).toMatch(/worker not owned[\s\S]{0,400}retained_slots\[\]/);
+    expect(text, `${name}: unowned launch is not a bare stop`).not.toMatch(/worker-stop --dispatch <dispatch id>, one health line/);
     expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
   // The pool is created once, parented under its project, by the setup
@@ -360,9 +365,13 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
   expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);
   const LAUNCH = '--agent claude --model claude-opus-5 --effort medium';
   expect((prompts.match(new RegExp(`worker-start [^;]*${LAUNCH}`, 'g')) ?? []).length, 'both launch paths use the owned agent launch').toBe(2);
-  // Both paths assert ownership from the worker-start receipt; a worker Orca
-  // does not own is stopped, reported, and its PR deferred.
-  expect((prompts.match(/resource\.state == owned/g) ?? []).length, 'both launch paths assert ownership').toBe(2);
+  // Both paths assert ownership with an executable command: worker-show on
+  // the receipt's dispatch id, then the field read from its JSON. The field
+  // path is never glued onto the argv (an earlier draft did, and the driver
+  // would have exited invalid_argument on every launch).
+  expect((prompts.match(/run orca orchestration worker-show --dispatch <dispatch id> --json and read \.result\.projection\.resource\.state from its output: require resource\.state == owned/g) ?? []).length, 'both launch paths assert ownership').toBe(2);
+  expect(prompts).not.toMatch(/--json \.result\.projection/);
+  expect((prompts.match(/apply the \(5\) recovery rules for a start that owns runtime state/g) ?? []).length, 'both unowned branches use the (5) recovery').toBe(2);
   // A trust dialog on a slot is a visible hold reported by worker-start (a
   // failed stage), never answered: the slot is reported, the PR deferred.
   expect((prompts.match(/if worker-start reports a failed stage or a visible hold[^;]*the slot is not trusted/g) ?? []).length).toBe(2);
