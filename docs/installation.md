@@ -147,7 +147,7 @@ to rewrite them.
 
 ## Role behavior after installation
 
-The runtime reads `roles.json` relative to the actually loaded `axstack` skill.
+The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
 A new run records the selected preset plus all 23 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
