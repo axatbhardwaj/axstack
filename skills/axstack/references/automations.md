@@ -176,7 +176,7 @@ An own PR needs repair when either trigger applies:
    digest not recorded for that PR and head. Both keys are required: the same
    finding under a new review id must not re-trigger repair. Record review id
    and body digest when dispatching. A superseded head with a new review
-   triggers again subject to the 24 h cap.
+   triggers again subject to the 2 h cap.
 
 Repair also requires no deploy-on-push head branch, no live repair cap, and
 selection of the lowest own PR in its stack that needs repair. Create the
@@ -185,7 +185,7 @@ appears under the project it serves) at the exact head, and dispatch one
 `axstack-watch` agent in authored repair mode. Its
 brief contains only the triggering checks or review findings. Each open
 descendant records one user-owned `pending restack` hold until it stops needing
-repair. The 24 h cap starts at dispatch and an abandon does not refund it.
+repair. The 2 h cap starts at dispatch and an abandon does not refund it.
 
 A debounced peer PR is eligible when self has not reviewed its head. Read
 `gh pr view --json reviews` before dispatch. Whenever any self review with
@@ -199,7 +199,7 @@ prior review in its brief.
 
 The only concurrency limit is the host-wide cap: at most eight live dispatch
 markers across all repositories and both reservations, oldest eligible
-first; plus one repair per PR per 24 h. Put every eligible PR not dispatched
+first; plus one repair per PR per 2 h. Put every eligible PR not dispatched
 because the cap is reached in `deferred[]` with repo, PR, and head. Reaching
 the cap records the count and is not a hold.
 

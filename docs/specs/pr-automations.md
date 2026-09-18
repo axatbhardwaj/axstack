@@ -162,7 +162,7 @@ folder workspace) does the following in order and exits.
      or review findings in its brief; the agent addresses only those findings.
      Record the review id and body digest as processed at dispatch. Each open
      descendant records one `pending restack` hold, owner user, cleared when
-     the descendant stops needing repair. The 24 h repair cap starts at
+     the descendant stops needing repair. The 2 h repair cap starts at
      dispatch and is not refunded by an abandon.
    - **Peer PR** whose debounced head self has not reviewed (read
      `gh pr view --json reviews` first) — create the dispatch worktree at
@@ -184,7 +184,7 @@ folder workspace) does the following in order and exits.
      concurrent human GitHub actions.
 6. **Cap:** at most eight live dispatch markers host-wide, across all
    repositories and both reservations, oldest eligible first; one repair per
-   PR per 24 h. Every eligible PR not dispatched because the cap is reached
+   PR per 2 h. Every eligible PR not dispatched because the cap is reached
    is written to `deferred[]` (repo, pr, head) and stays due. Reaching the
    cap records the count; it is not a hold. The cap is the host's limit (each
    worker is up to three sessions plus the repository's tests), not a
@@ -519,7 +519,7 @@ against live PRs; no production PR is mutated to manufacture a test case.
 12. Feedback repair dedup: a `CHANGES_REQUESTED` review at a head triggers one
     dispatch; the same review id, or a new id with an identical body digest at
     that head, triggers nothing; a superseded head with a new review triggers
-    again subject to the 24 h cap. A new `CHANGES_REQUESTED` on an own PR with
+    again subject to the 2 h cap. A new `CHANGES_REQUESTED` on an own PR with
     an unchanged head changes the precheck fingerprint (`changed`); an
     abandoned review-triggered dispatch is retried once and its second abandon
     is a hold. A failing check whose base counterpart (same `name` and

@@ -52,7 +52,11 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   // no separate repair pool. The per-PR repair cap and the stack rule stay.
   expect(text).toMatch(/at most (?:eight|8) live dispatch markers[^.]*(?:host-wide|across all repositories)/i);
   expect(text).not.toMatch(/one `verdict` dispatch per tick|six `repair` markers/i);
-  expect(text).toMatch(/one repair per PR per 24 h/i);
+  // User decision 2026-09-18: a PR may be repaired again after two hours,
+  // not a day — a repair whose new head still fails should not park the
+  // whole stack behind it until tomorrow.
+  expect(text).toMatch(/one repair per PR per 2 h/i);
+  expect(text).not.toMatch(/repair per PR per 24 h|24 h (?:repair )?cap/i);
   expect(text).toMatch(/failing check[^.]*base check-run[^.]*same `name`[^.]*same producing `app\.id`[^.]*passing/i);
   expect(text).toContain('gh api repos/<repo>/commits/<base>/check-runs');
   expect(text).toMatch(/legacy commit status[^.]*same `context`/i);
@@ -60,7 +64,7 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   expect(text).toMatch(/`CHANGES_REQUESTED` review[^.]*review id/i);
   expect(text).toMatch(/SHA-256 body digest[^.]*PR and head/i);
   expect(text).toMatch(/same finding[^.]*new review id[^.]*must not re-trigger/i);
-  expect(text).toMatch(/superseded head[^.]*new review[^.]*triggers again[^.]*24 h cap/i);
+  expect(text).toMatch(/superseded head[^.]*new review[^.]*triggers again[^.]*2 h cap/i);
 });
 
 test('automations: peer follow-up protects every human block and permits only marked or legacy reviews', () => {
