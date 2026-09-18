@@ -30,10 +30,15 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
 });
 
 test('implement loop: close-out requires an Archived record with every step receipt', () => {
+  expect(loaded).toMatch(/compact record[^.]*counts and denominators/i);
+  expect(loaded).toMatch(
+    /unavailable auditor leaves close-out pending, never skipped silently/i,
+  );
   expect(loaded).toMatch(
     /settlement receipt[^.]*compact record path[^.]*auditor decision[^.]*settlement receipt[^.]*counts zero[^.]*release[^.]*ticket receipts[^.]*archive timestamp/i,
   );
   expect(loaded).toMatch(
-    /record still `active`[^.]*missing any step receipt[^.]*`close-out pending`[^.]*never done/i,
+    /`active`\/receipt-incomplete record[^.]*close-out pending[^.]*never done/i,
   );
+  expect(loaded).not.toMatch(/`close-out pending`/i);
 });
