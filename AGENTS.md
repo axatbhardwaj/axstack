@@ -1,29 +1,50 @@
 # Axstack
 
-Read `docs/specs/v1.md` and the assigned task in `docs/plans/v1.md`.
-The spec issue is https://github.com/axatbhardwaj/axstack/issues/1.
+## Operating rules
 
-## This build
+- Use Orca as the only active runtime. Route every delegated worker, reviewer,
+  or cross-harness dispatch through Orca orchestration, never native subagents.
+- Keep the current chat as driver. Let it own scope, coordination, integration,
+  and forge mutations; keep each worker within its assigned files.
+- Keep exactly one writer per candidate. Return source fixes to that author.
+- Use the phase skills under `skills/axstack*/SKILL.md`; keep shared references
+  under `skills/axstack/references/`.
+- Select one explicit preset from `profiles/presets/mixed.json`,
+  `profiles/presets/codex-only.json`, or `profiles/presets/claude-only.json`.
+  Let the installer generate the installed `skills/axstack/roles.json` snapshot.
+- Do not add an Axstack daemon, scheduler, runtime database, workflow state
+  machine, or programmatic escalation gate.
+- Use `gh stack` for dependent PRs. Workers do not push, submit, merge, publish,
+  or release; the human merges by default, bottom-up for a stack.
 
-- Implementation started with OpenCode Muse Spark 1.3 Free. After its quota
-  exhausted, the user explicitly authorized Codex Sol medium to finish.
-- Fable 5.1 planning advice and Luna max run audits are user-authorized.
-  Preserve independent review; no unapproved model substitution or paid API.
-- Driver owns orchestration, GitHub mutations and integration; workers stay within their assigned files.
-- Strict TDD: write and run meaningful checks before implementing behavior; record red/green evidence. Missing module failures alone are not sufficient behavioral evidence.
-- KISS, YAGNI and SOLID. No runtime orchestration engine or programmatic escalation gate.
-- Never edit live home configuration during development. Tests use temporary homes and fixtures.
-- Commit coherent changes around 200 lines when practical, using semantic messages.
-- Use `gh stack` for PR stacks; workers do not push, submit, merge, or publish.
-- Treat model availability and simulated tests separately from verified end-to-end compatibility.
-- No dependency on installed Matt/Poteto/Haoshoku skills in the shipped product.
+## Engineering
+
+- Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
+- Use strict TDD for behavior changes: run a meaningful check red before the
+  implementation, then record green evidence. Do not count missing modules or
+  unrelated setup failures as behavioral red.
+- For accepted structure-preserving work, run the same characterization check
+  green before and after; do not manufacture a red.
+- Run tests with `bun:test`. Keep installer tests under `tests/installer/` and
+  workflow tests under `tests/workflows/`; prose-contract tests may read skill
+  Markdown directly.
+- Never edit live home configuration during development. Use temporary homes
+  and fixtures.
+- Keep coherent commits around 200 lines when practical and use semantic
+  commit messages.
+- Treat `docs/specs/` and `docs/plans/` as historical baselines, not standing
+  instructions for the current task.
+- Cut a release with `chore(release): vX.Y.Z`, run the tag-triggered
+  `.github/workflows/publish.yml`, then reinstall and verify it on desktop and
+  VPS under separately applicable release and host-mutation authority.
 
 ## Interfaces
 
-Bun >=1.3.14 JavaScript, `bun:test`, no runtime dependencies initially.
-Narrow approved exception: node:fs and node:fs/promises (Bun-implemented
-built-ins); no Node.js runtime.
-The installer owns `src/`, `bin/`, `package.json`, `tests/installer/`.
-The workflow author owns `skills/`, `profiles/`, `tests/workflows/`, `docs/workflows.md`, `docs/installation.md`, and root `README.md`.
-Package assets are `skills/<axstack-name>/SKILL.md` with self-contained relative references, and `profiles/paseo.json`.
-The driver owns integration planning and coordination records; source fixes return to authors.
+- Target Bun >=1.3.14 JavaScript with no runtime dependencies. Use only the
+  narrow Bun-backed `node:fs` and `node:fs/promises` built-in exception; do not
+  introduce a Node.js runtime contract.
+- Keep installer surfaces in `src/`, `bin/`, `package.json`, and
+  `tests/installer/`.
+- Keep workflow surfaces in `skills/`, `profiles/`, `tests/workflows/`,
+  `docs/workflows.md`, `docs/installation.md`, and `README.md`.
+- Keep packaged skills self-contained with relative references.
