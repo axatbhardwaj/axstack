@@ -132,7 +132,7 @@ folder workspace) does the following in order and exits.
    this path. After a confirmed abandon, run the same cleanup with its extra
    clean-tree condition (a dirty or unproven worktree is retained, not
    removed), write one `health[]` line, increment `abandon_count` for that
-   head, drop the head from `cursor.json`, and remove the triggering review id
+   head, drop the head from `cursor.json` and from `repaired_heads[]`, and remove the triggering review id
    and digest from `processed_reviews[]` when the dispatch was review-triggered,
    so the PR is retried once through the normal path; a second abandon at the
    same head is a hold, owner user.
@@ -152,8 +152,8 @@ folder workspace) does the following in order and exits.
      body) is not already recorded against that PR at that head — both keys
      are required, because a bot that re-posts the same finding under a new
      review id must not re-trigger. Eligible only when additionally: the head
-     branch is not in the repository's recorded deploy-on-push set; no live
-     repair cap; and it is the lowest PR of its stack that needs repair (an
+     branch is not in the repository's recorded deploy-on-push set; the head
+     is not in `repaired_heads[]`; and it is the lowest PR of its stack that needs repair (an
      own PR whose base branch equals another own PR's head branch is a
      descendant). Create the dispatch worktree (parented to that project's
      primary worktree so it appears under the project it serves) at the head,
@@ -162,8 +162,13 @@ folder workspace) does the following in order and exits.
      or review findings in its brief; the agent addresses only those findings.
      Record the review id and body digest as processed at dispatch. Each open
      descendant records one `pending restack` hold, owner user, cleared when
-     the descendant stops needing repair. The 2 h repair cap starts at
-     dispatch and is not refunded by an abandon.
+     the descendant stops needing repair. At dispatch the head is recorded
+     in `repaired_heads[]` (`pr`, `head`, `dispatched_at`): one repair per
+     head, no time cap. A repair pushes a new head; if that head is still
+     not merge-ready, discovery sees a new failing check or a new review
+     there and repairs again. A repair that pushes nothing leaves the head
+     recorded, so it is not retried until a human or a new commit moves it.
+     A confirmed abandon removes the record (the retry-once rule).
    - **Peer PR** whose debounced head self has not reviewed (read
      `gh pr view --json reviews` first) — create the dispatch worktree at
      the head and dispatch **one** `axstack-review` agent in peer mode. Whenever
@@ -184,7 +189,7 @@ folder workspace) does the following in order and exits.
      concurrent human GitHub actions.
 6. **Cap:** at most eight live dispatch markers host-wide, across all
    repositories and both reservations, oldest eligible first; one repair per
-   PR per 2 h. Every eligible PR not dispatched because the cap is reached
+   head. Every eligible PR not dispatched because the cap is reached
    is written to `deferred[]` (repo, pr, head) and stays due. Reaching the
    cap records the count; it is not a hold. The cap is the host's limit (each
    worker is up to three sessions plus the repository's tests), not a
@@ -396,7 +401,9 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
   reviews, last_self_review}}`, `dispatch_markers[]` (`pr`, `task_id`,
   `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`, `trigger`),
   `deferred[]`, `pending_settlement[]`, `retained_slots[]` (`slot`, `pr`,
-  `head`, `reason`), `repair_caps{url: {expires_at}}`,
+  `head`, `reason`), `repaired_heads[]` (`pr`, `head`, `dispatched_at`),
+  `repair_caps{url: {expires_at}}` (legacy: never written since revision 6,
+  the precheck's expired-cap check is inert),
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
   `legacy_automation_reviews[]`, `health[]`,
@@ -519,7 +526,7 @@ against live PRs; no production PR is mutated to manufacture a test case.
 12. Feedback repair dedup: a `CHANGES_REQUESTED` review at a head triggers one
     dispatch; the same review id, or a new id with an identical body digest at
     that head, triggers nothing; a superseded head with a new review triggers
-    again subject to the 2 h cap. A new `CHANGES_REQUESTED` on an own PR with
+    again at the new head. A new `CHANGES_REQUESTED` on an own PR with
     an unchanged head changes the precheck fingerprint (`changed`); an
     abandoned review-triggered dispatch is retried once and its second abandon
     is a hold. A failing check whose base counterpart (same `name` and

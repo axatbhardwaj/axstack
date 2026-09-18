@@ -176,16 +176,22 @@ An own PR needs repair when either trigger applies:
    digest not recorded for that PR and head. Both keys are required: the same
    finding under a new review id must not re-trigger repair. Record review id
    and body digest when dispatching. A superseded head with a new review
-   triggers again subject to the 2 h cap.
+   triggers again at the new head.
 
-Repair also requires no deploy-on-push head branch, no live repair cap, and
-selection of the lowest own PR in its stack that needs repair. Create the
+Repair also requires no deploy-on-push head branch, a head not already in
+`repaired_heads[]`, and selection of the lowest own PR in its stack that
+needs repair. Create the
 dispatch worktree (parented to that project's primary worktree, so the work
 appears under the project it serves) at the exact head, and dispatch one
 `axstack-watch` agent in authored repair mode. Its
 brief contains only the triggering checks or review findings. Each open
 descendant records one user-owned `pending restack` hold until it stops needing
-repair. The 2 h cap starts at dispatch and an abandon does not refund it.
+repair. At dispatch record the head in `repaired_heads[]` (`pr`, `head`,
+`dispatched_at`): one repair per head, no time cap. A repair pushes a new
+head; a still-not-merge-ready new head shows a new failing check or review
+and is repaired again; a repair that pushes nothing is not retried at that
+head until a human or a new commit moves it. A confirmed abandon removes the
+record (retry once).
 
 A debounced peer PR is eligible when self has not reviewed its head. Read
 `gh pr view --json reviews` before dispatch. Whenever any self review with
@@ -199,7 +205,7 @@ prior review in its brief.
 
 The only concurrency limit is the host-wide cap: at most eight live dispatch
 markers across all repositories and both reservations, oldest eligible
-first; plus one repair per PR per 2 h. Put every eligible PR not dispatched
+first; plus one repair per head. Put every eligible PR not dispatched
 because the cap is reached in `deferred[]` with repo, PR, and head. Reaching
 the cap records the count and is not a hold.
 
@@ -381,7 +387,9 @@ record is a health finding. The run directory contains:
   `task_id`, `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`,
   `trigger`), `deferred[]`, `pending_settlement[]`,
   `retained_slots[]` (`slot`, `pr`, `head`, `reason`),
-  `repair_caps{url: {expires_at}}`, `abandon_count{head: n}`,
+  `repaired_heads[]` (`pr`, `head`, `dispatched_at`),
+  `repair_caps{url: {expires_at}}` (legacy, never written since rev 6),
+  `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
   `legacy_automation_reviews[]`, `health[]`,

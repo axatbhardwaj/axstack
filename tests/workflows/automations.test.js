@@ -49,14 +49,17 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   expect(text).toMatch(/review-triggered[^.]*marker's `trigger`[^.]*remove exactly[^.]*review id[^.]*digest[^.]*`processed_reviews\[\]`/i);
   // Parallel workers (user decision 2026-09-18): the only concurrency limit is
   // one host-wide cap on live dispatch markers; no per-tick verdict budget and
-  // no separate repair pool. The per-PR repair cap and the stack rule stay.
+  // no separate repair pool. One repair per head and the stack rule stay.
   expect(text).toMatch(/at most (?:eight|8) live dispatch markers[^.]*(?:host-wide|across all repositories)/i);
   expect(text).not.toMatch(/one `verdict` dispatch per tick|six `repair` markers/i);
-  // User decision 2026-09-18: a PR may be repaired again after two hours,
-  // not a day — a repair whose new head still fails should not park the
-  // whole stack behind it until tomorrow.
-  expect(text).toMatch(/one repair per PR per 2 h/i);
-  expect(text).not.toMatch(/repair per PR per 24 h|24 h (?:repair )?cap/i);
+  // User decision 2026-09-18: no time-based repair cap at all. A repair
+  // pushes a new head; if that head still is not merge-ready, discovery sees
+  // a new failing check or review there and repairs again. The only dedupe
+  // is one repair per head, so a repair that pushes nothing is not retried
+  // at the same head until a human or a new commit moves it.
+  expect(text).toMatch(/one repair per head/i);
+  expect(text).toMatch(/`repaired_heads\[\]`/);
+  expect(text).not.toMatch(/repair per PR per \d+ h|\d+ h (?:repair )?cap|no live repair cap/i);
   expect(text).toMatch(/failing check[^.]*base check-run[^.]*same `name`[^.]*same producing `app\.id`[^.]*passing/i);
   expect(text).toContain('gh api repos/<repo>/commits/<base>/check-runs');
   expect(text).toMatch(/legacy commit status[^.]*same `context`/i);
@@ -64,7 +67,7 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   expect(text).toMatch(/`CHANGES_REQUESTED` review[^.]*review id/i);
   expect(text).toMatch(/SHA-256 body digest[^.]*PR and head/i);
   expect(text).toMatch(/same finding[^.]*new review id[^.]*must not re-trigger/i);
-  expect(text).toMatch(/superseded head[^.]*new review[^.]*triggers again[^.]*2 h cap/i);
+  expect(text).toMatch(/superseded head[^.]*new review[^.]*triggers again[^.]*new head/i);
 });
 
 test('automations: peer follow-up protects every human block and permits only marked or legacy reviews', () => {
@@ -428,7 +431,8 @@ test('automations: run directory, watchdog checks, and exclusions match rev 4', 
   expect(text).toMatch(/no terminal hygiene/i);
   expect(text).toContain('(Orca run status alone is not evidence of completion)');
   expect(text).toMatch(/`dispatch_markers\[\]`[^;]*`pr`[^;]*`task_id`[^;]*`dispatch_id`[^;]*`worktree`[^;]*`head`[^;]*`started_at`[^;]*`reservation`[^;]*`trigger`/i);
-  expect(text).toMatch(/`repair_caps\{url: \{expires_at\}\}`/i);
+  expect(text).toMatch(/`repair_caps\{url: \{expires_at\}\}`[^.]*(?:legacy|never written)/i);
+  expect(text).toMatch(/`repaired_heads\[\]` \(`pr`, `head`, `dispatched_at`\)/);
   expect(text).toMatch(/`processed_reviews\[\]`[^;]*`review_id`[^;]*`pr`[^;]*`head`[^;]*`digest`/i);
   expect(text).toMatch(/UTC[^.]*YYYY-MM-DDTHH:MM:SSZ/i);
   expect(text).toMatch(/unparsable timestamp[^.]*`error`[^.]*precheck[^.]*`unknown`[^.]*watchdog/i);
