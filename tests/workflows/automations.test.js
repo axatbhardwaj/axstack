@@ -325,17 +325,20 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
-test('automations: workers run in a fixed pool of two pre-trusted slots per project', () => {
+test('automations: workers run in a fixed pool of five pre-trusted slots per project', () => {
   // Claude Code trusts per git toplevel, so every fresh worktree path stops
   // at the "Quick safety check" dialog. Instead of writing ~/.claude.json per
-  // dispatch, each allowlisted project has two fixed slot worktrees, trusted
+  // dispatch, each allowlisted project has five fixed slot worktrees, trusted
   // once by the user; the driver checks the pinned head out into a free one.
+  // Five, not two: with one repair per PR and a stack of own PRs, two slots
+  // starved the monorepo pool within a day (user decision 2026-09-18).
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
   for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
     expect(text, `${name}: names the dialog`).toMatch(/Quick safety check/);
-    expect(text, `${name}: two slots per project`).toMatch(/two[^.]*slot[^.]*per (?:allowlisted )?project|slot-1[^.]*slot-2/i);
+    expect(text, `${name}: five slots per project`).toMatch(/five[^.]*slot[^.]*per (?:allowlisted )?project|slot-1[^.]{0,40}slot-5/i);
+    expect(text, `${name}: no two-slot pool`).not.toMatch(/two (?:fixed )?(?:slot|worker) worktrees|exactly two/i);
     expect(text, `${name}: trusted once by the user`).toMatch(/trusted once by the user/i);
     expect(text, `${name}: no config writes`).toMatch(/never writes? (?:to )?`?~\/\.claude\.json`?/i);
     expect(text, `${name}: never answers the dialog`).toMatch(/never answers? (?:that|the) dialog/i);
@@ -359,7 +362,9 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
   }
   // The pool is created once, parented under its project, by the setup
   // section — not by the driver at tick time.
-  expect(prompts).toMatch(/--name slot-1[^\n]*--parent-worktree id:<clone id>::<clone path>/);
+  for (const n of [1, 2, 3, 4, 5]) {
+    expect(prompts, `setup creates slot-${n}`).toMatch(new RegExp(`--name slot-${n}[^\\n]*--parent-worktree id:<clone id>::<clone path>`));
+  }
   expect(prompts).toMatch(/git -C <clone path> fetch origin <head sha>/);
   expect(prompts).toMatch(/git -C <worktree path> checkout --detach <head sha>/);
   expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);

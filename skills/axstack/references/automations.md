@@ -127,8 +127,8 @@ The driver performs this order and exits:
 Claude Code trusts a folder per git toplevel and stops at its "Quick safety
 check" dialog otherwise, and the driver never answers that dialog for a
 worker. So workers run in a fixed pool: every allowlisted project has
-exactly two slot worktrees, `slot-1` and `slot-2`, its Orca child worktrees
-created once, parented to the project's primary worktree, and trusted once
+exactly five slot worktrees, `slot-1` through `slot-5`, its Orca child
+worktrees created once, parented to the project's primary worktree, and trusted once
 by the user through that dialog. The driver never creates or removes a
 worktree and never writes `~/.claude.json`. A slot is free when no live
 dispatch marker names it, it is not in `retained_slots[]`, no terminal is

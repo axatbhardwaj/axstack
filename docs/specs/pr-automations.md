@@ -194,9 +194,9 @@ folder workspace) does the following in order and exits.
 
 Claude Code trusts a folder per git toplevel and otherwise stops at its
 "Quick safety check" dialog, and the driver never answers that dialog for a
-worker. Settled by the user on 2026-09-17: workers run in a fixed pool of
-two slot worktrees per allowlisted project, `slot-1` and `slot-2`, Orca
-child worktrees created once, parented to the project's primary worktree,
+worker. Settled by the user on 2026-09-17 and widened on 2026-09-18: workers
+run in a fixed pool of five slot worktrees per allowlisted project, `slot-1`
+through `slot-5`, Orca child worktrees created once, parented to the project's primary worktree,
 and trusted once by the user through that dialog. The driver never creates
 or removes a worktree and never writes `~/.claude.json`. A slot is free when
 no live dispatch marker names it, it is not in `retained_slots[]`, no
