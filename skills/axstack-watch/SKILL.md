@@ -69,7 +69,8 @@ model-free and read-only, has no gate, and records `watchdog.log`; there is no
 watch deadline for automations. The driver is the automation session itself,
 with no `axstack-monitor` or `axstack-owner` role row; `axstack-monitor` stays
 an optional read-only observer that never sends. One read-only PR observation
-needs neither.
+needs neither. The publishing driver is the live owner for a status check;
+materialize no `axstack-owner` and start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -157,3 +158,6 @@ Resume: <known commands or verified refs needed to reconcile from this revision>
 
 The watch ends only when registrations are stopped, receipts are recorded, and
 the PR is either merged or represented by this resumable state.
+When every required PR is merged, follow the lifecycle
+[Close-out](../axstack/references/lifecycle.md#close-out) before reporting the
+run as done.

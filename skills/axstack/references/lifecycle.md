@@ -1,7 +1,7 @@
 # Shared lifecycle and receipts
 
-Phases load through [Standing contracts](contracts.md)' mandatory edge.
-Substantive delegated or resumable work uses a driver-owned [Run record](run-record.md)
+Phases load through [Standing contracts](contracts.md).
+Delegated or resumable work uses a driver-owned [Run record](run-record.md)
 binding state and receipts to exact revisions.
 
 ## Roster (compact)
@@ -17,9 +17,7 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Driver/monitor/watchdog: the driver every 15 minutes dispatches and exits as
-  a mutating owner; the watchdog is model-free and read-only, has no gate, and
-  records `watchdog.log`; there is no watch deadline for automations.
+- Automation driver/monitor/watchdog: see [Watch health](#watch-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -78,10 +76,17 @@ Store concise receipt references, not raw worker output, in the [Run record](run
 ## Execution tracking
 
 The driver consumes native Orca completion and escalation deliveries for the
-active Run. Process each whole delivery before acknowledgment and validate its
-Task, Dispatch, sender, authority, revisions, and receipts before advancing the
-run record. Duplicate deliveries are deduplicated by runtime identity. Healthy
-unchanged observations produce no user-facing update.
+active Run. A driver turn does not end while a Dispatch is unsettled unless one
+completion wait from the orchestration guide is armed (background where the
+harness supports it, foreground otherwise) and re-armed on timeout; sleep or
+poll loops are forbidden. An explicitly invoked phase dispatches its configured
+roles through Orca and closes with the lifecycle close-out; in-chat execution
+covers only ordinary reading, writing, and local checks. Heartbeat deliveries
+are acknowledged with no user-facing text. Process each whole delivery before
+acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
+and receipts before advancing the run record. Duplicate deliveries are
+deduplicated by runtime identity. Healthy unchanged observations produce no
+user-facing update.
 
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
 receipts, and stalls through the version-matched orchestration guide. Never
@@ -98,7 +103,9 @@ Tracking grants no merge, release, model-substitution, or scope authority.
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; there is no watch deadline for
-automations. Merge-ready differs from merged; human merges.
+automations. A PR is merge-ready only with the applicable review receipt(s) at
+its exact head; green CI or tests alone never make it merge-ready. Merge-ready
+differs from merged; human merges.
 
 ## Watch health
 
@@ -110,24 +117,24 @@ no watch deadline for automations. Build no custom scheduler and use no legacy
 fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
-## Audit hook (end of run and meaningful checkpoints)
+## Audit hook (close-out and meaningful checkpoints)
 
-Auditing defaults on for every substantive run at its end and meaningful
-checkpoints such as material deviation or repeated repair. Load the bundled [audit skill](../../axstack-audit/SKILL.md)
-and dispatch its auditor. An `axstack-audit` run is excluded: it writes its
-record and launches no children.
+Audit measurement is enabled by default for every substantive run; dispatch
+follows [Close-out](#close-out) or a material-deviation/repeated-repair
+checkpoint. An `axstack-audit` run is excluded; it launches no children.
+Load [axstack-audit](../../axstack-audit/SKILL.md). Accepted proposals
+require a regression scenario and unchanged holdout checks; they change
+nothing without tested independent review.
 
-The auditor reads the [Run record](run-record.md) for scope, outcomes, and
-metric counts/denominators; reports evidenced PASS/FAIL/UNKNOWN; and invents no
-numbers or cost. Proposals change nothing. Accepted proposals return as
-tested, independently reviewed work with a regression scenario and unchanged
-holdout checks. No automatic self-edit, merge, or activation. Records stay
-private; publication needs separate authority.
+## Close-out
 
-## Idle-complete archive and retain
-
-After required PRs merge or hand off, timers stop, and receipts verify, mark
-the same [Run record](run-record.md) `Archived` in place. Preserve
-scope, revisions, evidence, receipts, and expiries. Archive only idle-complete
-records: never active/waiting workers, unrelated host state, or ownership merely
-because it is idle.
+After required PRs merge by forge state—not local branch ancestry—close out in
+order: (1) settle every worker terminal through the orchestration guide; (2)
+write a compact record with counts and denominators for
+user interventions, deviations from plan, and repairs; (3) dispatch
+`axstack-auditor` only when any count is non-zero or the user asks—an unavailable
+auditor leaves close-out pending, never skipped silently; (4)
+release merged run worktrees and branches and close Linear tickets
+(driver-owned); (5) mark the [Run record](run-record.md) `Archived`. The driver
+cannot report the run done before steps (1)-(5) have receipts. Small one-step
+lookups keep the run record's exemption.
