@@ -384,6 +384,50 @@ test('deferred work is due only while its head still matches discovery', () => {
   expect(lastLog(env)).toMatch(/ due$/);
 });
 
+test('deferred work is still due when cursor.json exceeds the kernel per-argument limit', () => {
+  // The live cursor carries every own PR's check rollup and grew past
+  // MAX_ARG_STRLEN (128 KiB); passing it to jq through --argjson then fails
+  // with "Argument list too long" and the deferred check was silently
+  // skipped on every tick (observed 2026-09-18, 34 driver runs). Big JSON
+  // must reach jq through stdin, never argv.
+  const env = setup({
+    own: [pr(allowlisted, 7, 'defi-com/monorepo')],
+    details: { 'defi-com/monorepo#7': {
+      headRefOid: 'head-own', baseRefName: 'main', isDraft: false,
+      statusCheckRollup: [], author: { login: 'axatbhardwaj' },
+    } },
+  });
+  const bulk = Array.from({ length: 3000 }, (_, i) => ({ name: `check-${i}`, conclusion: 'SUCCESS', detail: 'x'.repeat(40) }));
+  settleFingerprint(env, {
+    deferred: [{ repo: 'defi-com/monorepo', pr: 7, head: 'head-own' }],
+    prs: { [allowlisted]: { head: 'head-own', base: 'base-mono', draft: false, checks: bulk, reviews: [] } },
+  });
+  expect(readFileSync(`${env.runDir}/cursor.json`).length).toBeGreaterThan(131072);
+  const result = run(env);
+  expect(result.stderr).not.toMatch(/Argument list too long/);
+  expect(result.exitCode).toBe(0);
+  expect(lastLog(env)).toMatch(/ due$/);
+});
+
+test('an oversized pr view payload (long review bodies) still enriches and exits changed', () => {
+  // gh pr view --json reviews returns every review body; nothing bounds it
+  // below MAX_ARG_STRLEN either, so $detail must reach jq via stdin too.
+  const env = setup({
+    own: [pr(allowlisted, 7, 'defi-com/monorepo')],
+    details: { 'defi-com/monorepo#7': {
+      headRefOid: 'head-own', baseRefName: 'main', isDraft: false,
+      statusCheckRollup: [], author: { login: 'axatbhardwaj' },
+      reviews: Array.from({ length: 40 }, (_, i) => ({ id: `r${i}`, state: 'COMMENTED', commit: { oid: 'head-own' }, body: 'y'.repeat(4000) })),
+    } },
+  });
+  expect(JSON.stringify(JSON.parse(readFileSync(`${env.fixture}/details.json`, 'utf8'))['defi-com/monorepo#7']).length).toBeGreaterThan(131072);
+  const result = run(env);
+  expect(result.stderr).not.toMatch(/Argument list too long/);
+  expect(result.exitCode).toBe(0);
+  expect(lastLog(env)).toMatch(/ changed$/);
+  expect(pending(env).discovery[0].head).toBe('head-own');
+});
+
 test('an expired repair cap is due', () => {
   const env = setup();
   settleFingerprint(env, {
