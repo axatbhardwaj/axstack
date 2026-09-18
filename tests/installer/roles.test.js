@@ -62,6 +62,14 @@ test('readiness accepts the intentionally unavailable X research route', () => {
   }
 });
 
+test('mixed X research null model is launchable only through the Grok provider', () => {
+  expect(assessRoleReadiness([
+    { ...role('axstack-research-x', null), provider: 'claude' },
+  ], 'mixed').gaps).toContain(
+    'axstack-research-x requires a configured model',
+  );
+});
+
 test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
