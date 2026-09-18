@@ -47,6 +47,21 @@ test('single-provider readiness accepts only the intentionally unavailable advis
   );
 });
 
+test('readiness accepts the intentionally unavailable X research route', () => {
+  const mixed = [
+    role('axstack-research-x', null),
+  ];
+  mixed[0].provider = 'grok';
+  expect(assessRoleReadiness(mixed, 'mixed')).toEqual({ ready: true, gaps: [] });
+
+  for (const preset of ['codex-only', 'claude-only']) {
+    const provider = preset === 'codex-only' ? 'codex' : 'claude';
+    expect(assessRoleReadiness([
+      { ...role('axstack-research-x', null), provider },
+    ], preset)).toEqual({ ready: true, gaps: [] });
+  }
+});
+
 test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
