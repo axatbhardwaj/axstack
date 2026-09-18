@@ -383,6 +383,16 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
     expect(slotAt, `${marker}: slot taken before start`).toBeGreaterThan(-1);
     const ownedAt = prompts.indexOf('resource.state == owned', at);
     expect(ownedAt, `${marker}: ownership asserted after start`).toBeGreaterThan(at);
+    // The unowned branch ends with "record no marker"; marker creation must be
+    // explicitly fenced to the owned branch so the driver never records a live
+    // marker for a retained worker.
+    const noMarkerAt = prompts.indexOf('record no marker', ownedAt);
+    const fenceAt = prompts.indexOf('the rest of this step runs only on the owned branch', noMarkerAt);
+    const markerAt = prompts.indexOf('marker', fenceAt);
+    expect(noMarkerAt, `${marker}: unowned branch records no marker`).toBeGreaterThan(ownedAt);
+    expect(fenceAt, `${marker}: owned-branch fence after the unowned branch`).toBeGreaterThan(noMarkerAt);
+    expect(markerAt, `${marker}: marker recorded only after the fence`).toBeGreaterThan(fenceAt);
+    expect(prompts.slice(noMarkerAt + 'record no marker'.length, fenceAt), `${marker}: nothing between the unowned end and the fence`).toMatch(/^\s*[—-]\s*$/);
   }
   // The run directory no longer ships a trust helper.
   expect(ref).not.toMatch(/`trust\.js`/);
