@@ -43,9 +43,8 @@ test('relay discovery: readiness inspects the listed target and the JSON receipt
   expect(relay).toMatch(/repl(?:y|ies)[^.]*(?:never|not)[^.]*(?:receipt|authority|routed)/i);
 });
 
-test('relay discovery: policy reachability is conditional from entry, review, and watch', () => {
+test('relay discovery: policy reachability is conditional from review and watch', () => {
   for (const path of [
-    'skills/axstack/SKILL.md',
     'skills/axstack-review/SKILL.md',
     'skills/axstack-watch/SKILL.md',
   ]) {
@@ -53,7 +52,6 @@ test('relay discovery: policy reachability is conditional from entry, review, an
     expect(text, `${path}: relay edge`).toContain('axstack-relay');
     expect(text, `${path}: generic policy field`).toContain('Notification policy');
   }
-  expect(read('skills/axstack/SKILL.md')).toContain('Notification policy');
   expect(read('skills/axstack/references/run-record.md')).toContain('Notification policy:');
 });
 

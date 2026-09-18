@@ -63,7 +63,7 @@ describe('installer-owned instruction file', () => {
     const instructions = join(root, 'AGENTS.md');
     const old = renderInstructionBlock().replace(
       'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
-      'Use Axstack for engineering work. Load `/old/skills/axstack/SKILL.md` to route the request.',
+      'Use Axstack for engineering work. Load the old Axstack entry skill to route the request.',
     );
     writeFileSync(instructions, old);
     mkdirSync(skills, { recursive: true });

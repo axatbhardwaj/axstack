@@ -56,7 +56,7 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
       `missing shared reference skills/axstack/references/${ref}`,
     ).toBeTruthy();
   }
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
+  for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(
       text.includes('references/routing.md'),
@@ -67,17 +67,6 @@ test('owned-core: shared routing and lifecycle/receipt references exist and are 
       `${name}: must explicitly load shared lifecycle/receipt reference`,
     ).toBeTruthy();
   }
-});
-
-test('owned-core: entry routes research/explain/improve/handoff directly without spec ceremony', () => {
-  const text = skill('axstack');
-  for (const name of ['axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
-    expect(text.includes(name), `entry must route directly to ${name}`).toBeTruthy();
-  }
-  expect(
-    /research/i.test(text) && /explain/i.test(text) && /improve/i.test(text) && /handoff/i.test(text) && /no spec ceremony|without[^.]*spec|no[^.]*spec[^.]*ceremony/i.test(text),
-    'entry must state research/explain/improve/handoff need no spec ceremony',
-  ).toBeTruthy();
 });
 
 test('owned-core: review peer mode accepts linked intent without Axstack spec', () => {
@@ -273,7 +262,7 @@ test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from
 });
 
 test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch']) {
+  for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(
       /(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(text),
@@ -406,7 +395,7 @@ test('owned-core: lifecycle carries roster, idle-complete protocol, and audit ho
 });
 
 test('owned-core: driver waits, status routing, and close-out order are explicit', () => {
-  const entry = skill('axstack');
+  const routing = readFileSync(join(skillsDir, 'axstack', 'references', 'routing.md'), 'utf8');
   const lifecycle = readFileSync(join(skillsDir, 'axstack', 'references', 'lifecycle.md'), 'utf8').replace(/\s+/g, ' ');
   const watch = skill('axstack-watch');
 
@@ -415,11 +404,11 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
     'an unsettled Dispatch must keep one completion wait armed and forbid sleep or poll loops',
   ).toBeTruthy();
   expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
-  expect(entry).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
-  expect(entry).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
+  expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
+  expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
   expect(watch).toMatch(/publishing driver[^.]*live owner[^.]*status check/i);
   expect(watch).toMatch(/materialize no `axstack-owner`[^.]*start no automation[^.]*read-only check/i);
-  expect(entry).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
+  expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
   expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
@@ -462,7 +451,7 @@ test('owned-core: align and spec use both configured advisers; auditor role exis
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack', 'axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
+  for (const name of ['axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();

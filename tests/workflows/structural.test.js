@@ -48,7 +48,6 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
   .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
-  'axstack',
   'axstack-align',
   'axstack-spec',
   'axstack-tickets',
@@ -69,7 +68,8 @@ const STANDALONE_PHASES = [
 
 // NOTE: structural checks only. They verify packaging, not instruction-following behavior.
 
-test('structural: all seven phase skills exist with SKILL.md', () => {
+test('structural: shared root has no entry file and all six phase skills exist', () => {
+  expect(existsSync(join(skillsDir, 'axstack', 'SKILL.md'))).toBe(false);
   for (const name of EXPECTED_SKILLS) {
     const p = join(skillsDir, name, 'SKILL.md');
     expect(existsSync(p), `missing ${p}`).toBeTruthy();
@@ -337,7 +337,7 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
 
 test('structural: runtime reference treats installed role snapshot as authoritative', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/roles\.json[^.]*actually loaded `axstack` skill/i);
+  expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
   expect(text).toMatch(/bundled[^.]*setup inputs/i);
   expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
   expect(text).toMatch(/missing or null model[^.]*holds only that role/i);

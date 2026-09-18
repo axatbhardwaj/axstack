@@ -34,6 +34,9 @@ Independently confirm the applicable
   failure) returns to the author and does not increment the bug's fix ledger.
 - An adopted own-PR repair has its accepted maintenance snapshot.
 
+If substantial work lacks an approved spec or matching ticket map, report that
+exact gap, name `axstack-align` as the next route, and stop.
+
 Pin the exact base and current candidate revision. A missing, mismatched, or
 materially changed but unaccepted identity holds affected work; safe
 investigation may continue under the standing contracts. Proceed only with a

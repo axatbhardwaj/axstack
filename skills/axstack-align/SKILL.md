@@ -161,5 +161,5 @@ approval; record chosen document names and paths once per run.
    actual dispatch. Alignment completion never dispatches a recipient.
 
 Alignment stops for both sizes only when the handoff is usable, its next scope
-identity is explicit, and execution has not started. The user invokes `axstack`
-to execute.
+identity is explicit, and execution has not started. The user invokes
+`axstack-implement` to execute.
