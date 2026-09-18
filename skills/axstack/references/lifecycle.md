@@ -128,13 +128,14 @@ nothing without tested independent review.
 
 ## Close-out
 
-After PRs merge by forge state—not branch ancestry—close out: (1) settle every worker
-terminal; (2) compact record with counts and denominators: user interventions,
-deviations from plan, repairs; (3) `axstack-auditor` decision: settle
+PRs merge by forge state—not branch ancestry; close out: (1) settle every worker
+terminal; (2) compact record with counts and denominators—user
+interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-close Linear tickets; (5) mark record `Archived`. `Archived` needs one each:
+close Linear tickets; (5) mark the [Run record](run-record.md) `Archived`.
+`Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt or `counts zero`; release and ticket receipts; archive timestamp. An
-`active`/receipt-incomplete record is close-out pending, never done. Lookups
-exempt.
+receipt or `counts zero`; release and ticket receipts; archive timestamp.
+`active`/receipt-incomplete record: close-out pending, never done. One-step
+lookups exempt.
