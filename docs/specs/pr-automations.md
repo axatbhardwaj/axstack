@@ -207,13 +207,16 @@ Claude Code trusts a folder per git toplevel and otherwise stops at its
 worker. Trust inherits from the project's primary clone, which the user
 trusted once: a fresh child worktree launched with no dialog (canary,
 2026-09-18). Settled by the user on 2026-09-18: there is no fixed pool; the
-driver creates one Orca worktree per dispatch,
-`orca worktree create --repo id:<clone id> --name <repo short>-<num>-<head7>
---base-branch <default branch> --parent-worktree id:<clone id>::<clone path>
---setup skip`, closes the creation terminal Orca opens in it
-(`orca terminal close --worktree <selector> --all`), fetches the head into
-the project clone, checks the worktree out detached at the pinned head, and
-verifies HEAD equals it. The driver never writes `~/.claude.json`. The worker
+driver fetches the head into the project clone first (a failed fetch is a
+health line and no dispatch, with no worktree to remove), then creates one
+Orca worktree per dispatch, `orca worktree create --repo id:<clone id>
+--name <repo short>-<num>-<head7> --base-branch <default branch>
+--parent-worktree id:<clone id>::<clone path> --setup skip` (on a name
+collision with a retained worktree at the same head the name gains the
+tick's `tick_started_at` stamp, unique per tick since a PR has one live
+marker), closes the creation terminal Orca opens in it
+(`orca terminal close --worktree <selector> --all`), checks the worktree out
+detached at the pinned head, and verifies HEAD equals it. The driver never writes `~/.claude.json`. The worker
 is then launched by Orca itself, `worker-start --agent claude --model
 claude-opus-5 --effort medium` in that worktree, so the runtime owns the
 process: `worker-release` ends it and `worker-show` proves it exited, which
@@ -402,8 +405,9 @@ private host state, `~/.local/share/axstack/runs/<run id>/`, and holds:
   `dispatch_id`, `worktree`, `head`, `started_at`, `reservation`, `trigger`),
   `deferred[]`, `pending_settlement[]`, `retained_slots[]` (`slot`, `pr`,
   `head`, `reason`), `repaired_heads[]` (`pr`, `head`, `dispatched_at`),
-  `repair_caps{url: {expires_at}}` (legacy: never written since revision 6,
-  the precheck's expired-cap check is inert),
+  `repair_caps{url: {expires_at}}` (legacy: on its first revision-6 tick the
+  driver clears it to `{}` with one health line and never writes it again,
+  so the precheck's expired-cap check is inert),
   `abandon_count{head: n}`, `processed_reviews[]` (`review_id`, `pr`, `head`,
   `digest`), `deploy_on_push{repo: [branches]}`,
   `legacy_automation_reviews[]`, `health[]`,
@@ -431,8 +435,9 @@ successful targeted fetch of that exact remote branch into a per-dispatch
 ref (never `FETCH_HEAD`, which a concurrent fetch in the shared clone can
 replace) with a failed fetch retaining the worktree, or by a `refs/axstack/decisions/<token>` ref, and on
 the abandon path there are no uncommitted changes — closes any
-terminal tab still listed and removes the worktree with `orca worktree rm`,
-so the dispatch leaves nothing behind. A settled worktree whose HEAD cannot
+terminal tab still listed and removes the worktree with `orca worktree rm
+--force` (the proof is the gate; a finished worker's untracked artefacts are
+not), so the dispatch leaves nothing behind. A settled worktree whose HEAD cannot
 be proven disposable, and an abandoned worktree that is dirty or holds an
 unproven candidate, are both retained in place: recorded in `health[]` with
 path and SHA and in `retained_slots[]` as `{slot, pr, head, reason}` (`slot`

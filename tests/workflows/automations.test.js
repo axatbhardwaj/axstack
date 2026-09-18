@@ -377,10 +377,15 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
   for (const marker of ['--task-title "repair <repo>#<num> @<head>"', '--task-title "review <repo>#<num> @<head>"']) {
     const at = prompts.indexOf(marker);
     const before = prompts.slice(0, at);
+    // Fetch into the clone BEFORE the worktree exists: a failed fetch then
+    // leaves nothing to remove (the no-worker removal gate needs HEAD == head,
+    // which a worktree created before a failed fetch can never satisfy).
+    const fetchAt = before.lastIndexOf('git -C <clone path> fetch origin <head sha>');
     const createAt = before.lastIndexOf('orca worktree create');
     const closeAt = before.lastIndexOf('orca terminal close --worktree');
     const checkoutAt = before.lastIndexOf('checkout --detach <head sha>');
-    expect(createAt, `${marker}: worktree created before start`).toBeGreaterThan(-1);
+    expect(fetchAt, `${marker}: fetch first`).toBeGreaterThan(-1);
+    expect(createAt, `${marker}: worktree created after the fetch`).toBeGreaterThan(fetchAt);
     expect(closeAt, `${marker}: creation terminal closed after create`).toBeGreaterThan(createAt);
     expect(checkoutAt, `${marker}: head pinned after close`).toBeGreaterThan(closeAt);
     const ownedAt = prompts.indexOf('resource.state == owned', at);
@@ -392,6 +397,14 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
     expect(fenceAt, `${marker}: owned-branch fence after the unowned branch`).toBeGreaterThan(noMarkerAt);
     expect(markerAt, `${marker}: marker recorded only after the fence`).toBeGreaterThan(fenceAt);
   }
+  // A name collision (a retained worktree from an earlier attempt at the same
+  // head) falls back to a name unique per tick; no undefined placeholder.
+  expect(prompts).toMatch(/name collision[^;]*append -<tick stamp>[^;]*tick_started_at/);
+  expect(prompts).not.toMatch(/<dispatch minute>/);
+  // Settled-path removal must force: the proof, not git's dirty check, is the
+  // gate, and a worker's untracked artefacts would otherwise make rm fail
+  // after the marker is cleared.
+  expect(prompts).toMatch(/If disposable, remove it completely:[^.]*orca worktree rm --worktree id:<clone id>::<worktree path> --force --json/);
   // Setup: only the four project clones are trusted; no slot pool is created.
   expect(prompts).not.toMatch(/--name slot-/);
   expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
@@ -432,6 +445,8 @@ test('automations: run directory, watchdog checks, and exclusions match rev 4', 
   expect(text).toContain('(Orca run status alone is not evidence of completion)');
   expect(text).toMatch(/`dispatch_markers\[\]`[^;]*`pr`[^;]*`task_id`[^;]*`dispatch_id`[^;]*`worktree`[^;]*`head`[^;]*`started_at`[^;]*`reservation`[^;]*`trigger`/i);
   expect(text).toMatch(/`repair_caps\{url: \{expires_at\}\}`[^.]*(?:legacy|never written)/i);
+  // Legacy caps must be cleared once, or an expired one keeps every tick due.
+  expect(text).toMatch(/repair_caps[^.]*(?:clears?|cleared|reset)[^.]*`\{\}`/i);
   expect(text).toMatch(/`repaired_heads\[\]` \(`pr`, `head`, `dispatched_at`\)/);
   expect(text).toMatch(/`processed_reviews\[\]`[^;]*`review_id`[^;]*`pr`[^;]*`head`[^;]*`digest`/i);
   expect(text).toMatch(/UTC[^.]*YYYY-MM-DDTHH:MM:SSZ/i);

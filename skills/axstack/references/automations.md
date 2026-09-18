@@ -128,13 +128,16 @@ Claude Code trusts a folder per git toplevel and stops at its "Quick safety
 check" dialog otherwise, and the driver never answers that dialog for a
 worker. Trust inherits from the project's primary clone, which the user
 trusted once (a fresh child worktree launched with no dialog — canary
-2026-09-18). There is no fixed pool: create one Orca worktree per dispatch,
-`orca worktree create --repo id:<clone id> --name <repo short>-<num>-<head7>
---base-branch <default branch> --parent-worktree id:<clone id>::<clone path>
---setup skip`; close the creation terminal Orca opens in it with
-`orca terminal close --worktree <selector> --all`; fetch the head into the
-project clone, check the worktree out detached at the pinned head, and
-verify HEAD equals it; the marker's worktree is that path. Never write
+2026-09-18). There is no fixed pool: fetch the head into the project clone first (a
+failed fetch is a health line and no dispatch; no worktree exists yet), then
+create one Orca worktree per dispatch, `orca worktree create --repo id:<clone
+id> --name <repo short>-<num>-<head7> --base-branch <default branch>
+--parent-worktree id:<clone id>::<clone path> --setup skip` (a name collision
+with a retained worktree at the same head appends the tick's
+`tick_started_at` stamp); close the creation terminal Orca opens in it with
+`orca terminal close --worktree <selector> --all`; check the worktree out
+detached at the pinned head and verify HEAD equals it; the marker's worktree
+is that path. Never write
 `~/.claude.json`. The worker is launched by Orca itself — `worker-start
 --agent claude --model claude-opus-5 --effort medium` in that worktree — so
 the runtime owns the process: `worker-release` ends it and `worker-show`
@@ -367,8 +370,9 @@ shared clone can fake durability, a failed fetch retaining the worktree — or h
 `refs/axstack/decisions/<token>` ref in the project clone; and, on the
 abandon path, the worktree has no uncommitted changes.
 Only then it closes any terminal tab still listed and removes the worktree
-with `orca worktree rm --worktree <selector>`, so the dispatch leaves
-nothing behind. On the settled path the worker has finished, so untracked
+with `orca worktree rm --worktree <selector> --force` (the proof is the
+gate; a finished worker's untracked artefacts are not), so the dispatch
+leaves nothing behind. On the settled path the worker has finished, so untracked
 files are artefacts by definition; a candidate there is already pushed or
 token-held. A worktree whose release is settled but whose HEAD cannot be
 proven disposable, and an abandoned worktree that is dirty or holds an
@@ -388,7 +392,8 @@ record is a health finding. The run directory contains:
   `trigger`), `deferred[]`, `pending_settlement[]`,
   `retained_slots[]` (`slot`, `pr`, `head`, `reason`),
   `repaired_heads[]` (`pr`, `head`, `dispatched_at`),
-  `repair_caps{url: {expires_at}}` (legacy, never written since rev 6),
+  `repair_caps{url: {expires_at}}` (legacy: the first rev-6 tick clears it to
+  `{}` with one health line; never written again),
   `abandon_count{head: n}`,
   `processed_reviews[]` (`review_id`, `pr`, `head`, `digest`),
   `deploy_on_push{repo: [branches]}`,
