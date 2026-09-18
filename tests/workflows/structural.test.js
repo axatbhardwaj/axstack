@@ -48,7 +48,6 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
   .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
-  'axstack',
   'axstack-align',
   'axstack-spec',
   'axstack-tickets',
@@ -69,7 +68,8 @@ const STANDALONE_PHASES = [
 
 // NOTE: structural checks only. They verify packaging, not instruction-following behavior.
 
-test('structural: all seven phase skills exist with SKILL.md', () => {
+test('structural: shared root has no entry file and all six phase skills exist', () => {
+  expect(existsSync(join(skillsDir, 'axstack', 'SKILL.md'))).toBe(false);
   for (const name of EXPECTED_SKILLS) {
     const p = join(skillsDir, name, 'SKILL.md');
     expect(existsSync(p), `missing ${p}`).toBeTruthy();
