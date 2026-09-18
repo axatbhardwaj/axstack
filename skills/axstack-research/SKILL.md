@@ -36,6 +36,7 @@ is part of research.
    - `axstack-research-requirements`: requirements and intent.
    - `axstack-research-code`: code behavior.
    - `axstack-research-web`: web and external sources.
+   - `axstack-research-x`: X (Twitter) posts and threads via Grok — only when X evidence is answer-changing; cite post URLs and dates.
    - `axstack-explore-codebase`: broad codebase mapping.
    - `axstack-explore-execution`: execution and runtime traces.
 

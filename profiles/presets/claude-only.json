@@ -92,6 +92,15 @@
       "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
     },
     {
+      "id": "axstack-research-x",
+      "name": "Axstack research X (unavailable)",
+      "provider": "claude",
+      "model": null,
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence: X/Twitter research via Grok is unavailable in claude-only. The explicit null holds this route without provider substitution."
+    },
+    {
       "id": "axstack-explainer",
       "name": "Axstack explainer",
       "provider": "claude",

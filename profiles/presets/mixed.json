@@ -92,6 +92,15 @@
       "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
     },
     {
+      "id": "axstack-research-x",
+      "name": "Axstack research X",
+      "provider": "grok",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "X/Twitter-only research branch: Grok can read X; use for questions where posts, threads, announcements, or sentiment on X are answer-changing evidence. Cites post URLs and dates; never the sole source for a verified claim; report-only, no writes. Launch by agent id grok; model selected by the Grok TUI default."
+    },
+    {
       "id": "axstack-explainer",
       "name": "Axstack explainer",
       "provider": "claude",

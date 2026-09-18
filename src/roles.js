@@ -1,5 +1,5 @@
 const PROVIDER_BOUNDS = Object.freeze({
-  mixed: new Set(['codex', 'claude']),
+  mixed: new Set(['codex', 'claude', 'grok']),
   'codex-only': new Set(['codex']),
   'claude-only': new Set(['claude']),
 });
@@ -64,6 +64,7 @@ export function assessRoleReadiness(roles, preset) {
   const gaps = [];
   const isIntentionalAbsence = (role) => role.model === null && (
     (preset === 'mixed' && role.id === 'axstack-checker') ||
+    role.id === 'axstack-research-x' ||
     (preset === 'codex-only' && ['axstack-advisor-fable', 'axstack-arena-judge-fable'].includes(role.id)) ||
     (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra'].includes(role.id))
   );
