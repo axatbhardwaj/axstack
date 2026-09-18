@@ -9,6 +9,16 @@ const readJson = (path) => JSON.parse(read(path));
 // Structural checks for the arena round inside align: who authors, who judges,
 // how the pick and graft are bounded, and where the synthesis is recorded.
 
+test('align research: dispatches source-specific branches with one owner each', () => {
+  const text = compact('skills/axstack-align/SKILL.md');
+  expect(text).toMatch(/not derivable[^.]*local repo[^.]*ordinary reading[^.]*dispatch[^.]*`axstack-research` branches[^.]*through Orca/i);
+  expect(text).toMatch(/requirements[^.]*code[^.]*web[^.]*once configured[^.]*X/i);
+  expect(text).toMatch(/one owner per branch[^.]*cross-harness[^.]*roles allow/i);
+  expect(text).toMatch(/cited note[^.]*research skill.s source standards/i);
+  expect(text).toMatch(/folds verified claims into the frontier[^.]*records the receipts/i);
+  expect(text).toMatch(/ordinary reading stays in-chat[^.]*single factual lookup never dispatches/i);
+});
+
 test('align arena: gated to hard-to-reverse choices and replaces critique for that question', () => {
   const text = compact('skills/axstack-align/SKILL.md');
   expect(text).toMatch(/## Arena for hard-to-reverse design choices/);
