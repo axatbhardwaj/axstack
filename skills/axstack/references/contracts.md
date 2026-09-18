@@ -4,11 +4,11 @@ Apply these authority, scope, and model rules before consequential action.
 
 ## Required lifecycle load
 
-Except for `axstack-audit` itself, every independently called phase must load
-and follow [Shared lifecycle](lifecycle.md) before acting. When a substantive
-run ends or reaches a meaningful checkpoint, apply the lifecycle audit hook.
-The audit phase loads these contracts, writes its assigned record, and stops;
-it never audits itself.
+Except for `axstack-audit` and `axstack-relay`, every independently called phase
+must load and follow [Shared lifecycle](lifecycle.md) before acting. When a
+substantive run ends or reaches a meaningful checkpoint, apply the lifecycle
+audit hook. The audit phase loads these contracts, writes its assigned record,
+and stops; it never audits itself.
 
 ## Scope identity (conditional — see routing and lifecycle)
 

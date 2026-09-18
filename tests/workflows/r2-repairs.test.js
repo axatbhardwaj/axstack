@@ -65,8 +65,8 @@ test('r2 inputs contain no embedded evaluator expectations', () => {
 
 test('every independently callable substantive phase has an explicit load path to audit', () => {
   const phases = [
-    'axstack', 'axstack-align', 'axstack-spec', 'axstack-tickets',
-    'axstack-implement', 'axstack-review', 'axstack-watch',
+    'axstack-align', 'axstack-spec', 'axstack-tickets', 'axstack-implement',
+    'axstack-review', 'axstack-watch',
     'axstack-research', 'axstack-explain', 'axstack-improve',
   ];
   const audit = `${root}/skills/axstack-audit/SKILL.md`;

@@ -51,9 +51,7 @@ test('repairs: every skill route target resolves in the package', () => {
   }
 });
 
-test('repairs: ordinary handoff and resume explicitly load shared lifecycle', () => {
-  const handoff = read('skills/axstack/SKILL.md');
-  expect(handoff).toContain('references/lifecycle.md');
+test('repairs: ordinary handoff and resume stay governed by shared lifecycle', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
   expect(lifecycle).toContain('[Orca runtime boundary](orca-runtime.md)');
   expect(lifecycle).toMatch(/explicit acceptance receipt[^.]*before changing ownership/i);

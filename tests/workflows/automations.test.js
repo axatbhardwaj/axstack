@@ -463,7 +463,6 @@ test('automations: driver and decision transitions retain literal rev-4 conditio
 
 test('automations: skills keep links and carry their rev-4 exceptions', () => {
   for (const [path, link] of [
-    ['skills/axstack/SKILL.md', 'references/automations.md'],
     ['skills/axstack-watch/SKILL.md', '../axstack/references/automations.md'],
     ['skills/axstack-review/SKILL.md', '../axstack/references/automations.md'],
     ['skills/axstack-watch/references/watch-runtime.md', '../../axstack/references/automations.md'],

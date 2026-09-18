@@ -125,5 +125,4 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
   orchestrator or assume an imported own PR's author.
-- Direct later phase: start there and pass that phase's identity check; entry
-  never admits work a deeper phase rejects.
+- Direct later phase: start there and pass that phase's identity check.

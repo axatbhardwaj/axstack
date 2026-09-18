@@ -22,7 +22,7 @@ daemon, scheduler, database, or escalation engine.
 
 ## Bind the configured role
 
-Read `roles.json` relative to the actually loaded `axstack` skill. The installed
+Read `roles.json` from the installed shared root `skills/axstack/`. The installed
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and

@@ -337,7 +337,7 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
 
 test('structural: runtime reference treats installed role snapshot as authoritative', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/roles\.json[^.]*actually loaded `axstack` skill/i);
+  expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
   expect(text).toMatch(/bundled[^.]*setup inputs/i);
   expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
   expect(text).toMatch(/missing or null model[^.]*holds only that role/i);
