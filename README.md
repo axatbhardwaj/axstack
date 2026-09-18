@@ -12,9 +12,9 @@ role choices, evidence, review policy, and one private derived run record.
 
 ## How a run works
 
-Invoke `axstack` or the needed phase directly: `axstack-align`,
-`axstack-spec`, `axstack-tickets`, `axstack-implement`, `axstack-review`, and
-`axstack-watch`. Direct `axstack-research`, `axstack-explain`,
+Invoke the needed phase directly: `axstack-align`, `axstack-spec`,
+`axstack-tickets`, `axstack-implement`, `axstack-review`, and `axstack-watch`.
+Direct `axstack-research`, `axstack-explain`,
 `axstack-improve`, and `axstack-debug` routes need no spec ceremony. `axstack-relay` remains an
 optional inline route for explicit messages and authorized notifications; an
 unavailable or legacy-runtime-only relay falls back to the current conversation
@@ -68,8 +68,8 @@ See [installation details](docs/installation.md).
 
 `--instructions` manages one versioned Axstack block in `AGENTS.md`,
 `CLAUDE.md`, or `GEMINI.md`. Harness defaults resolve those files automatically. The block
-points at the installed entry skill and requires every subagent, delegated worker,
-reviewer, and cross-harness dispatch to use visible Orca orchestration via the `orca` CLI
+requires direct matching phase-skill invocation and requires every subagent, delegated
+worker, reviewer, and cross-harness dispatch to use visible Orca orchestration via the `orca` CLI
 rather than a harness-native subagent tool (e.g. Claude/Codex native subagents). OpenCode
 and Antigravity subagents run as Orca-supervised workers. Text and file
 mode outside the markers are preserved; edited, malformed, unowned, or unsafe

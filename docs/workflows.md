@@ -10,9 +10,9 @@ Axstack implements that skill's specialist capability.
 
 ## Routing and scope identity
 
-`axstack` classifies the request and loads only the applicable phase plus shared
-references for routing, lifecycle, Orca runtime boundaries, role/model/risk
-contracts, the run record, and PR shape.
+The directly invoked phase loads the applicable shared references for routing,
+lifecycle, Orca runtime boundaries, role/model/risk contracts, the run record,
+and PR shape.
 
 Direct routes need no spec ceremony:
 
@@ -53,7 +53,7 @@ role.
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
-relative to the actually loaded `axstack` skill and records the whole table for
+from the installed shared root `skills/axstack/` and records the whole table for
 a new run. Active runs retain their snapshot after later installation changes.
 
 Peer roles keep the stable IDs `axstack-reviewer-primary` and
