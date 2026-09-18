@@ -325,7 +325,7 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
-test('automations: workers run in a fixed pool of two pre-trusted slots per project', () => {
+test('automations: workers run in a fixed pool of five pre-trusted slots per project', () => {
   // Claude Code trusts per git toplevel, so every fresh worktree path stops
   // at the "Quick safety check" dialog. Instead of writing ~/.claude.json per
   // dispatch, each allowlisted project has five fixed slot worktrees, trusted
