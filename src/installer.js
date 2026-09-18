@@ -247,12 +247,14 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
 
   const files = [];
   for (const dir of skillDirs) {
-    const skillMark = join(skillsRoot, dir.name, 'SKILL.md');
-    try {
-      const s = await stat(skillMark);
-      if (!s.isFile()) throw new Error();
-    } catch {
-      throw new Error(`skill ${dir.name} is missing SKILL.md`);
+    if (dir.name !== 'axstack') {
+      const skillMark = join(skillsRoot, dir.name, 'SKILL.md');
+      try {
+        const s = await stat(skillMark);
+        if (!s.isFile()) throw new Error();
+      } catch {
+        throw new Error(`skill ${dir.name} is missing SKILL.md`);
+      }
     }
     await walkSkills(join(skillsRoot, dir.name), skillsRoot, files);
   }

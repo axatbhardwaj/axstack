@@ -1,6 +1,5 @@
 // Pure planning and byte-preserving edits for the Axstack-owned routing block.
 import { hashContent } from './manifest.js';
-import { join } from './posixpath.js';
 
 const BEGIN = '<!-- axstack:begin v1 -->';
 const END = '<!-- axstack:end -->';
@@ -8,7 +7,7 @@ const END = '<!-- axstack:end -->';
 export function renderInstructionBlock(skillsDir) {
   return [
     BEGIN,
-    `Use Axstack for engineering work. Load \`${join(skillsDir, 'axstack', 'SKILL.md')}\` to route the request.`,
+    'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
     'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through Orca orchestration via the `orca` CLI and its `orca-cli` / `orchestration` skills so the work stays visible.',
     'Do not use a harness native subagent tool for delegated work.',
     END,
