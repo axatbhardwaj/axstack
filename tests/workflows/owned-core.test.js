@@ -405,6 +405,42 @@ test('owned-core: lifecycle carries roster, idle-complete protocol, and audit ho
   expect(/audit/i.test(text), 'lifecycle must define the end-of-run audit hook').toBeTruthy();
 });
 
+test('owned-core: driver waits, status routing, and close-out order are explicit', () => {
+  const entry = skill('axstack');
+  const lifecycle = readFileSync(join(skillsDir, 'axstack', 'references', 'lifecycle.md'), 'utf8').replace(/\s+/g, ' ');
+  const watch = skill('axstack-watch');
+
+  expect(
+    /driver turn does not end[^.]*Dispatch is unsettled[^.]*completion wait[^.]*armed[^.]*re-armed on timeout[^.]*sleep or poll loops are forbidden/i.test(lifecycle),
+    'an unsettled Dispatch must keep one completion wait armed and forbid sleep or poll loops',
+  ).toBeTruthy();
+  expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
+  expect(entry).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
+  expect(entry).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
+  expect(watch).toMatch(/publishing driver[^.]*live owner[^.]*status check/i);
+  expect(watch).toMatch(/materialize no `axstack-owner`[^.]*start no automation[^.]*read-only check/i);
+  expect(entry).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
+  expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
+
+  const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
+  const closeOutOrder = [
+    'forge state',
+    'settle every worker terminal',
+    'user interventions',
+    'deviations from plan',
+    'repairs',
+    'axstack-auditor',
+    'release merged run worktrees and branches',
+    'close Linear tickets',
+    '`Archived`',
+  ].map((phrase) => closeOut.indexOf(phrase));
+  expect(closeOutOrder.every((position) => position >= 0), 'close-out must contain every ordered step').toBeTruthy();
+  expect(
+    closeOutOrder.every((position, index) => index === 0 || closeOutOrder[index - 1] < position),
+    'close-out steps must follow forge state, settlement, counts, conditional audit, cleanup, then archive',
+  ).toBeTruthy();
+});
+
 test('owned-core: align and spec use both configured advisers; auditor role exists', () => {
   for (const name of ['axstack-align', 'axstack-spec']) {
     const text = skill(name);
@@ -465,4 +501,3 @@ test('owned-core: docs and readme document harnesses and orca subagent orchestra
   expect(readme).toMatch(/visible Orca orchestration via the `orca` CLI/);
   expect(readme).toMatch(/harness-native subagent/);
 });
-
