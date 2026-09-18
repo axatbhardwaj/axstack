@@ -118,9 +118,10 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker and, in each
-  single-provider preset, the unavailable adviser and its matching arena judge
-  seat explicitly permit `model: null`;
+- every role has valid preserved fields, while the mixed checker and the mixed
+  `axstack-research-x` launch-by-agent-id route explicitly permit `model: null`;
+  in each single-provider preset, the unavailable adviser and its matching arena
+  judge seat explicitly permit `model: null`, as does `axstack-research-x`;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
@@ -153,7 +154,11 @@ that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
 The mixed checker has `model: null`; checker dispatch is held and never inherits
-a provider default. The single-provider presets configure the checker. Their
+a provider default. Mixed `axstack-research-x` has `model: null` because Orca exposes
+no `--model` override for `grok`; its explicit note authorizes launch by agent ID,
+and the run record snapshots the model reported by the TUI. The single-provider
+presets configure the checker and keep `axstack-research-x` as an intentional
+absence. Their
 unavailable adviser and its matching arena judge seat remain explicit
 same-provider `model: null` roles, which do not make installation unready;
 Align and Spec still hold until both Astra and Fable can return independent

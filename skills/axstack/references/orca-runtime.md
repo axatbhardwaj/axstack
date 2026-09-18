@@ -30,7 +30,9 @@ all 24 role rows once. An active run keeps the exact snapshot until the user
 explicitly changes it.
 
 Select the requested role by stable ID. A missing or null model holds only that role;
-never launch a provider default. Validate provider, model, and effort
+never launch a provider default. Launch-by-agent-id routes for which Orca exposes no
+`--model` override (today: `grok`) record `model: null` with an explicit note and are
+launchable; the run record snapshots the model the TUI reports. Validate provider, model, and effort
 against the guide and actual launch capability. Stored `modeId` and other
 permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
