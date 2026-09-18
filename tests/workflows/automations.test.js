@@ -342,7 +342,14 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
     expect(text, `${name}: free slot definition`).toMatch(/no live (?:dispatch )?marker names it/i);
     expect(text, `${name}: no free slot defers`).toMatch(/no free slot[^.]*deferred/i);
     expect(text, `${name}: detached checkout at the head`).toMatch(/checkout --detach <head sha>|checked out detached at the (?:pinned|exact) head/i);
-    expect(text, `${name}: sanctioned isolation`).toMatch(/`?--safe-mode`?/);
+    // Orca must own the worker process so that release proves exit and the
+    // slot returns to the pool: workers launch through `worker-start --agent
+    // claude`, never on a driver-created terminal (which Orca classifies as
+    // `external` and can neither stop nor prove exited).
+    expect(text, `${name}: owned launch`).toMatch(/worker-start[^.]*--agent claude/);
+    expect(text, `${name}: no driver-created terminal`).not.toMatch(/worker-start --terminal|terminal create --worktree/);
+    expect(text, `${name}: no safe mode`).not.toMatch(/--safe-mode|safe mode/i);
+    expect(text, `${name}: ownership asserted from the receipt`).toMatch(/resource\.state[^.]*owned/);
     expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
   // The pool is created once, parented under its project, by the setup
@@ -351,21 +358,22 @@ test('automations: workers run in a fixed pool of two pre-trusted slots per proj
   expect(prompts).toMatch(/git -C <clone path> fetch origin <head sha>/);
   expect(prompts).toMatch(/git -C <worktree path> checkout --detach <head sha>/);
   expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);
-  const CMD = 'claude --dangerously-skip-permissions --safe-mode --model claude-opus-5 --effort medium';
-  expect((prompts.match(new RegExp(`--command "${CMD}"`, 'g')) ?? []).length, 'both launch paths use safe mode').toBe(2);
-  expect((prompts.match(/contains the prompt marker ❯ AND that it does not contain "Quick safety check"/g) ?? []).length, 'both launch paths read readiness from the frame').toBe(2);
-  // A dialog on a slot means the slot lost its trust: the slot is reported,
-  // the PR is deferred, nothing is dispatched.
-  expect((prompts.match(/if the dialog is showing the slot is not trusted/g) ?? []).length).toBe(2);
-  // Order on each path: take slot, then launch, then readiness, then worker-start.
+  const LAUNCH = '--agent claude --model claude-opus-5 --effort medium';
+  expect((prompts.match(new RegExp(`worker-start [^;]*${LAUNCH}`, 'g')) ?? []).length, 'both launch paths use the owned agent launch').toBe(2);
+  // Both paths assert ownership from the worker-start receipt; a worker Orca
+  // does not own is stopped, reported, and its PR deferred.
+  expect((prompts.match(/resource\.state == owned/g) ?? []).length, 'both launch paths assert ownership').toBe(2);
+  // A trust dialog on a slot is a visible hold reported by worker-start (a
+  // failed stage), never answered: the slot is reported, the PR deferred.
+  expect((prompts.match(/if worker-start reports a failed stage or a visible hold[^;]*the slot is not trusted/g) ?? []).length).toBe(2);
+  // Order on each path: take slot, then worker-start, then ownership check.
   for (const marker of ['--task-title "repair <repo>#<num> @<head>"', '--task-title "review <repo>#<num> @<head>"']) {
-    const before = prompts.slice(0, prompts.indexOf(marker));
+    const at = prompts.indexOf(marker);
+    const before = prompts.slice(0, at);
     const slotAt = before.lastIndexOf('take a free slot');
-    const launchAt = before.lastIndexOf('--safe-mode');
-    const readyAt = before.lastIndexOf('Quick safety check');
     expect(slotAt, `${marker}: slot taken before start`).toBeGreaterThan(-1);
-    expect(launchAt, `${marker}: launch after slot`).toBeGreaterThan(slotAt);
-    expect(readyAt, `${marker}: readiness after launch`).toBeGreaterThan(launchAt);
+    const ownedAt = prompts.indexOf('resource.state == owned', at);
+    expect(ownedAt, `${marker}: ownership asserted after start`).toBeGreaterThan(at);
   }
   // The run directory no longer ships a trust helper.
   expect(ref).not.toMatch(/`trust\.js`/);

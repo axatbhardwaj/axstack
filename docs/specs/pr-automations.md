@@ -1,8 +1,13 @@
 # PR automations — specification
 
-Status: revision 4, approved baseline (revision 3 approved by the user on
+Status: revision 5, approved baseline (revision 3 approved by the user on
 2026-09-16; revision 4 carries the authored-review corrections of PR #70's
-Sol receipt and changes no decision). Supersedes
+Sol receipt and changes no decision; revision 5, user decision of 2026-09-18
+in align run `20260918-worker-supervised-mode`, replaces the safe-mode
+`terminal create` + `--terminal` worker launch with the Orca-owned
+`worker-start --agent claude` launch so settled slots return to the pool —
+the user judged safe-mode isolation unnecessary for the defi-com-only
+allowlist). Supersedes
 `docs/specs/orca-automations.md` (revisions 1–5) for the defi-com pair once
 approved; that document stays in the tree as history and is not amended
 further. Decisions S1–S4 and Q1–Q5 were settled by the user on 2026-09-16 in
@@ -198,21 +203,24 @@ no live dispatch marker names it, it is not in `retained_slots[]`, no
 terminal is listed in it, and its tree is clean; no free slot in the project
 defers the PR to `deferred[]` like a budget. Taking a
 slot fetches the head into the project clone, checks the slot out detached
-at the pinned head, and verifies HEAD equals it. Trust activates the full
-project surface — `.claude/settings.json` and its hooks, `.mcp.json`
-servers, marketplace plugin auto-install, `CLAUDE.md` — so a hostile
-branch's hooks or MCP servers would run when the folder opens. Therefore
-the worker launches in Claude Code's sanctioned isolation mode,
-`--safe-mode`, via `terminal create` and `worker-start --terminal`: no
-`CLAUDE.md`, skills, plugins, hooks, MCP servers, custom commands or agents
-load from project or user scope; built-in tools and auth are untouched; the
-brief loads its skill files by path. What remains live is the repository's
-files as data the worker reads and the commands it itself runs — nothing
-from the branch loads, executes, or is offered for invocation. The driver
-confirms readiness from the rendered frame (`wait.satisfied`, the prompt
-marker present, the dialog absent) before dispatching; a dialog on a slot
-means the slot is not trusted — health line, PR deferred, nothing
-dispatched.
+at the pinned head, and verifies HEAD equals it. The worker is then launched
+by Orca itself, `worker-start --agent claude --model claude-opus-5 --effort
+medium` on that slot, so the runtime owns the process: `worker-release` ends
+it and `worker-show` proves it exited, which is what returns the slot to the
+pool. The driver never pre-creates the worker's terminal and never hands a
+terminal handle to `worker-start`: a reused handle is a resource Orca labels
+`external`, which it can neither stop nor prove exited, so every such slot
+ends retained. After
+`worker-start` the driver reads the receipt and requires `resource.state ==
+owned`; anything else is stopped through the runtime, named in a health line,
+and the PR deferred. Claude Code's per-agent default arguments (Orca
+`agentDefaultArgs`) supply `--dangerously-skip-permissions`; the brief loads
+its skill files by path. If `worker-start` reports a failed stage or a
+visible hold (the "Quick safety check" trust dialog) the slot is not trusted
+— health line, PR deferred, nothing dispatched, the dialog never answered.
+Project customizations (`CLAUDE.md`, hooks, MCP servers) load as they would
+for the user: the allowlist is defi-com only and the user accepted that
+surface on 2026-09-18.
 
 Each dispatched agent runs in a slot worktree under the Orca workspaces
 directory for `<repo>`, checked out detached at the exact head, with that
