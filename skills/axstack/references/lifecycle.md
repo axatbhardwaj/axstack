@@ -8,9 +8,9 @@ binding state and receipts to exact revisions.
 
 - Driver: current chat; owns scope, decisions, cross-PR dependencies, Linear
   mutations, and integration.
-- Owner (`axstack-owner`): one persistent owner per PR; launches its author,
-  reviewers and watches; may perform authorized PR-scoped publication within user authority.
-  Human merge is default.
+- Owner: driver owns loop PRs; `axstack-owner` only for standalone watch/review
+  without live driver. It may perform PR-scoped publication within user authority. Human
+  merge is default.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
 - Reviewers: peer = two independent `axstack-reviewer-primary` and

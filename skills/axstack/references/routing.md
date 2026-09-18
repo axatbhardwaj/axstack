@@ -47,11 +47,12 @@ Role IDs:
   only gate-authorized health escalations.
 - `axstack-debug-investigator-1..4` each probe one L1 brief.
 
-Provenance is matched on provider/model ID; record effort but never use it to
-create a mapping. Provenance absent from the preset's table row is
-unsupported and `INCOMPLETE`; report the exact gap and ask the user. Never
-derive a reverse pairing from slot position, driver, owner, or provider.
-Author and owner never review their own work.
+Provenance is matched on provider/model ID; effort never maps. Missing table-row
+provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
+infer from slot, driver, owner, or provider. Author and owner never review.
+
+The `axstack-implement` loop requires `mixed`; single-provider presets hold at
+step (3) for user routing, with no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
