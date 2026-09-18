@@ -99,6 +99,17 @@ test('owned-core: review authored mode keeps baseline; adopted scope needs no re
   ).toBeTruthy();
 });
 
+test('owned-core: merge-ready requires a current independent approval receipt', () => {
+  const text = skill('axstack-review');
+  expect(text).toMatch(
+    /mode is ready[^.]*independent review receipt[^.]*APPROVE[^.]*non-author[^.]*non-owner[^.]*exact current head/i,
+  );
+  expect(text).toMatch(
+    /green CI[^.]*passing tests[^.]*older-head receipt[^.]*UNKNOWN[^.]*never merge-ready/i,
+  );
+  expect(text.match(/\[merge-ready declarations?\]\(#authored-mode-own-pr\)/gi)).toHaveLength(3);
+});
+
 test('owned-core: mode-specific independent review keeps exact rev, isolation, and owner validation', () => {
   const text = skill('axstack-review');
   expect(/peer[\s\S]*exactly two/i.test(text), 'peer mode must require exactly two final reviewers').toBeTruthy();
