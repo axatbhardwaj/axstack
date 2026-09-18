@@ -3,6 +3,9 @@ set -u
 
 # Model-free discovery precheck for the rev-3 defi-com PR driver.
 # Exit 0 = changed or due, 1 = unchanged, 2 = error, 3 = tick still running.
+# Large JSON (cursor, discovery, hashed) reaches jq through stdin via `input`,
+# never --argjson: one argv string is capped at MAX_ARG_STRLEN (128 KiB) and
+# the live cursor passed that.
 RUN_DIR="${1:-${RUN_DIR:-}}"
 REVIEW_ALLOW='["defi-com/monorepo","defi-com/mobile","defi-com/azure-next-hybrid","defi-com/ci-workflows"]'
 REPAIR_ALLOW='["defi-com/monorepo","defi-com/mobile"]'
@@ -126,9 +129,10 @@ while IFS=$'\t' read -r repo number; do
   base_ref="$(printf '%s' "$detail" | jq -r '.baseRefName')" || fail
   base_sha="$(gh api "repos/$repo/commits/$base_ref" --jq .sha 2>/dev/null)" || fail
   [ -n "$base_sha" ] || fail
-  enriched="$(jq -cn --argjson list "$enriched" --argjson all "$discovery" \
+  enriched="$(printf '%s\n%s' "$enriched" "$discovery" | jq -cn \
     --arg repo "$repo" --argjson number "$number" --argjson detail "$detail" --arg base "$base_sha" '
-    ($all[] | select(.repo == $repo and .number == $number)) as $item
+    input as $list | input as $all
+    | ($all[] | select(.repo == $repo and .number == $number)) as $item
     | $list + [$item + {
         head: $detail.headRefOid,
         base: $base,
@@ -158,8 +162,9 @@ seen="$(printf '%s' "$discovery" | jq -c '[
   .[] | select((.kinds | index("own")) == null) | {url, head}
 ] | sort_by(.url, .head)')" || fail
 
-hashed="$(jq -cn --argjson discovery "$discovery" --argjson previous "$previous_seen" '
-  [$discovery[]
+hashed="$(printf '%s\n%s' "$discovery" "$previous_seen" | jq -cn '
+  input as $discovery | input as $previous
+  | [$discovery[]
    | ((.kinds | index("own")) != null) as $own
    | select($own or ((.url + "\u0000" + .head) as $key
        | [$previous[] | .url + "\u0000" + .head] | index($key) != null))
@@ -187,8 +192,9 @@ if [ -d "$DECISIONS_DIR" ]; then
   done
 fi
 
-if jq -en --argjson cursor "$cursor" --argjson discovery "$discovery" '
-  any($cursor.deferred[]?; . as $item
+if printf '%s\n%s' "$cursor" "$discovery" | jq -en '
+  input as $cursor | input as $discovery
+  | any($cursor.deferred[]?; . as $item
     | any($discovery[]; .repo == $item.repo and .number == $item.pr and .head == $item.head))
 ' >/dev/null; then due=1; fi
 
@@ -212,10 +218,10 @@ if printf '%s' "$cursor" | jq -e '(.pending_settlement // []) | length > 0' >/de
 if printf '%s' "$cursor" | jq -e '.runtime_refusal != null' >/dev/null; then due=1; fi
 
 pending_tmp="$PENDING_FILE.tmp.$$"
-jq -cn --arg fingerprint "$fingerprint" --arg observed_at "$timestamp" \
-  --argjson seen "$seen" --argjson discovery "$discovery" --argjson hashed "$hashed" \
-  '{fingerprint: $fingerprint, observed_at: $observed_at, seen: $seen,
-    discovery: $discovery, hashed: $hashed}' > "$pending_tmp" || { rm -f "$pending_tmp"; fail; }
+printf '%s\n%s\n%s' "$seen" "$discovery" "$hashed" | jq -cn --arg fingerprint "$fingerprint" --arg observed_at "$timestamp" \
+  'input as $seen | input as $discovery | input as $hashed
+   | {fingerprint: $fingerprint, observed_at: $observed_at, seen: $seen,
+      discovery: $discovery, hashed: $hashed}' > "$pending_tmp" || { rm -f "$pending_tmp"; fail; }
 mv "$pending_tmp" "$PENDING_FILE" || { rm -f "$pending_tmp"; fail; }
 
 if [ "$fingerprint" != "$previous_fingerprint" ]; then log changed; exit 0; fi
