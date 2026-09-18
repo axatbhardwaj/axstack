@@ -510,7 +510,7 @@ export async function installBundle({
     }
     instructionPlan = planInstruction({
       text: existingInstructionsRaw,
-      block: renderInstructionBlock(skillsRoot),
+      block: renderInstructionBlock(),
       ownership: boundInstructions.path === instructionsFile ? boundInstructions : null,
       force,
     });
