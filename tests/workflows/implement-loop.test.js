@@ -28,3 +28,12 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
   expect(loaded).toMatch(/resumes[^.]*next message[^.]*`?\/axstack-watch`?/i);
   expect(loaded).toMatch(/done[^.]*every required PR[^.]*forge-merged[^.]*Close-out/i);
 });
+
+test('implement loop: close-out requires an Archived record with every step receipt', () => {
+  expect(loaded).toMatch(
+    /settlement receipt[^.]*compact record path[^.]*auditor decision[^.]*settlement receipt[^.]*counts zero[^.]*release[^.]*ticket receipts[^.]*archive timestamp/i,
+  );
+  expect(loaded).toMatch(
+    /record still `active`[^.]*missing any step receipt[^.]*`close-out pending`[^.]*never done/i,
+  );
+});
