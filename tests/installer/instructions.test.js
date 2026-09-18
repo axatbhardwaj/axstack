@@ -10,11 +10,11 @@ import {
 const skillsDir = '/tmp/ax skills';
 
 describe('owned instruction block primitives', () => {
-  test('renders deterministic v1 routing prose with only the actual entry pointer', () => {
+  test('renders deterministic v1 direct phase routing prose', () => {
     const block = renderInstructionBlock(skillsDir);
     expect(block).toBe(
       '<!-- axstack:begin v1 -->\n' +
-        'Use Axstack for engineering work. Load `/tmp/ax skills/axstack/SKILL.md` to route the request.\n' +
+        'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.\n' +
         'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through Orca orchestration via the `orca` CLI and its `orca-cli` / `orchestration` skills so the work stays visible.\n' +
         'Do not use a harness native subagent tool for delegated work.\n' +
         '<!-- axstack:end -->',
@@ -42,8 +42,11 @@ describe('owned instruction block primitives', () => {
   });
 
   test('upgrades pristine ownership but preserves edited and unowned blocks', () => {
-    const old = renderInstructionBlock('/tmp/old');
-    const current = renderInstructionBlock('/tmp/current');
+    const current = renderInstructionBlock();
+    const old = current.replace(
+      'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
+      'Use Axstack for engineering work. Load `/tmp/old/axstack/SKILL.md` to route the request.',
+    );
     expect(planInstruction({
       text: old,
       block: current,

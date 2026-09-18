@@ -4,6 +4,7 @@ import { join, resolve } from '../../src/posixpath.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
 const CLI = resolve(import.meta.dir, '../../bin/axstack.js');
+const FIRST_LINE = 'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.';
 const roots = [];
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
@@ -23,7 +24,7 @@ describe('instruction CLI routing', () => {
     writeFileSync(instructions, 'personal');
     const installed = runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills, '--instructions', instructions]);
     expect(installed.out).toContain(`instruction updated: ${instructions}`);
-    expect(readFileSync(instructions, 'utf8')).toContain(`${skills}/axstack/SKILL.md`);
+    expect(readFileSync(instructions, 'utf8').split('\n')[3]).toBe(FIRST_LINE);
     const repeated = runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills, '--instructions', instructions]);
     expect(repeated.out).toContain(`instruction unchanged: ${instructions}`);
     const removed = runCli(CLI, ['uninstall', '--skills-dir', skills, '--instructions', instructions]);
@@ -38,7 +39,7 @@ describe('instruction CLI routing', () => {
       env: { HOME: root, CODEX_HOME: codexHome },
     });
     expect(installed.out).toContain(`instruction created: ${codexHome}/AGENTS.md`);
-    expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8')).toContain(`${codexHome}/skills/axstack/SKILL.md`);
+    expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8').split('\n')[1]).toBe(FIRST_LINE);
     runCli(CLI, ['uninstall', '--harness', 'codex', '--yes'], {
       env: { HOME: root, CODEX_HOME: codexHome },
     });
@@ -56,7 +57,7 @@ describe('instruction CLI routing', () => {
         'install', '--preset', 'mixed', '--bundle', bundle, '--harness', harness, '--no-claude-settings', '--yes',
       ], { env: { HOME: root } });
       expect(installed.out).toContain(`instruction created: ${join(root, instructions)}`);
-      expect(readFileSync(join(root, instructions), 'utf8')).toContain(`${join(root, skills)}/axstack/SKILL.md`);
+      expect(readFileSync(join(root, instructions), 'utf8').split('\n')[1]).toBe(FIRST_LINE);
       runCli(CLI, ['uninstall', '--harness', harness, '--no-claude-settings', '--yes'], { env: { HOME: root } });
       expect(readFileSync(join(root, instructions), 'utf8')).toBe('');
     }
@@ -65,7 +66,7 @@ describe('instruction CLI routing', () => {
   test('Claude defaults its instruction file while skills-dir alone writes none', () => {
     const { root, bundle } = fixture();
     runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'claude', '--yes'], { env: { HOME: root } });
-    expect(readFileSync(join(root, '.claude', 'CLAUDE.md'), 'utf8')).toContain(`${root}/.claude/skills/axstack/SKILL.md`);
+    expect(readFileSync(join(root, '.claude', 'CLAUDE.md'), 'utf8').split('\n')[1]).toBe(FIRST_LINE);
 
     const otherSkills = join(root, 'other-skills');
     runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', otherSkills]);
