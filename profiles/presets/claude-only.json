@@ -92,6 +92,15 @@
       "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
     },
     {
+      "id": "axstack-research-web-google",
+      "name": "Axstack research web (Google unavailable)",
+      "provider": "claude",
+      "model": null,
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence: Google-Search-grounded web research via Gemini/Antigravity is unavailable in claude-only. The explicit null holds this route without provider substitution."
+    },
+    {
       "id": "axstack-research-x",
       "name": "Axstack research X (unavailable)",
       "provider": "claude",

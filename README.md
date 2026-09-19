@@ -77,7 +77,7 @@ targets are reported without normal-path adoption. Install exits nonzero when
 an instruction conflict is preserved, while clean and idempotent installs exit
 successfully.
 
-The public bundle preserves three canonical 24-role inputs:
+The public bundle preserves three canonical 25-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly
@@ -90,9 +90,10 @@ Mixed configures independent Astra and Fable advisers at high. Single-provider
 presets preserve both adviser IDs and mark the unavailable one with `model:
 null` inside that preset's provider bounds; installation remains ready, while
 Align and Spec hold because both receipts are required. The mixed
-`axstack-checker` model is also intentionally `null`; that role stays held
-instead of inheriting a provider default. The single-provider presets configure
-the checker. Preset changes affect new runs only. Stored model, effort, and permission
+`axstack-checker` and `axstack-research-web-google` roles launch Antigravity by
+agent ID with explicit `model: null`; the run records the model reported by the
+TUI. The single-provider presets configure the checker and record the Google
+research branch as intentionally absent. Preset changes affect new runs only. Stored model, effort, and permission
 fields are declared intent until actual Orca launch receipts establish effective
 behavior; installation never proves provider availability or permission parity.
 Subscription availability and quota never select a fallback model.

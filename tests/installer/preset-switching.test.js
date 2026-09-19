@@ -7,7 +7,7 @@ const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const runCli = (args, options) => runBunCli(CLI, args, options);
 const p = (id, provider, model, effort = 'medium') => ({
   id, name: id, provider, model,
-  modeId: provider === 'codex' ? 'full-access' : 'bypassPermissions',
+  modeId: provider === 'claude' ? 'bypassPermissions' : 'full-access',
   thinkingOptionId: effort,
 });
 const PRESETS = {
@@ -15,7 +15,7 @@ const PRESETS = {
     p('axstack-author', 'codex', 'gpt-5.6-sol'),
     p('axstack-reviewer-primary', 'codex', 'gpt-5.6-sol'),
     p('axstack-reviewer-secondary', 'claude', 'claude-opus-5'),
-    p('axstack-checker', 'codex', null, 'low'),
+    p('axstack-checker', 'antigravity', null, 'low'),
   ],
   'claude-only': [
     p('axstack-author', 'claude', 'claude-opus-5'),
