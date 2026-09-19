@@ -18,8 +18,15 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 
 1. **Research and map dependencies.** Inspect the available code, docs, and
    tools before asking the user. Separate facts from preferences, name evidence
-   gaps, and map which decisions unlock others. Unresolved research blocks only
-   its dependent branch while safe fact work and independent branches continue.
+   gaps, and map which decisions unlock others. When a fact needed for the
+   frontier is not derivable from the local repo or docs by ordinary reading,
+   dispatch `axstack-research` branches through Orca by source type:
+   requirements, code, web, and, once configured, X. Give one owner per branch,
+   use cross-harness routes where the roles allow, and require a cited note per
+   the research skill's source standards. The driver folds verified claims into
+   the frontier and records the receipts. Ordinary reading stays in-chat; a
+   single factual lookup never dispatches. Unresolved research blocks only its
+   dependent branch while safe fact work and independent branches continue.
 2. **Prioritize the ready frontier.** Rank questions whose prerequisites are
    settled by consequence, uncertainty, and the branches they unlock. Probe
    vague terms, assumptions, success criteria, exclusions, failures, and edge
