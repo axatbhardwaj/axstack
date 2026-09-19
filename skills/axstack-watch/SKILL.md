@@ -6,7 +6,8 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 # Watch
 
 Leave each adopted PR with one accountable owner, current readiness evidence,
-and a bounded watch that ends cleanly or preserves enough state to resume.
+and user-facing updates that name its current milestone and next wake or
+condition.
 
 Before acting, load [Standing contracts](../axstack/references/contracts.md).
 Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
@@ -79,14 +80,17 @@ no children or recursive teams, and the adoption watcher is never the writer.
 
 A live watch has verified role and timer receipts, handshakes, watched scope,
 wake ownership, and a common expiry. A missing runtime capability is a setup gap,
-not a reason to invent a call or create a duplicate registration. Wait through
-native wake-ups; no model remains active between events.
+not a reason to invent a call or create a duplicate registration. Native
+wake-ups drive observation; never poll or keep a model active between events.
 
 ## 4. Route each wake
 
 Re-read the remote head and base, then reconcile the event against acknowledged
 IDs and the recorded mode. A changed head, CI result, or review comment is an
 event, not repair authority. Stale or ambiguous observations authorize nothing.
+Every user-facing update is actionable: name the current milestone, the next
+wake or condition, and an ETA when the forge exposes one, such as CI median.
+A healthy unchanged observation produces no user-facing message.
 
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and

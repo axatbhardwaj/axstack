@@ -261,6 +261,15 @@ test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from
   ).toBeTruthy();
 });
 
+test('owned-core: watch updates report milestones and the next actionable wake', () => {
+  const text = skill('axstack-watch');
+  expect(text).toMatch(/user-facing update[^.]*current milestone/i);
+  expect(text).toMatch(/next wake or condition/i);
+  expect(text).toMatch(/ETA[^.]*forge/i);
+  expect(text).toMatch(/healthy unchanged observation[^.]*no (?:user-facing )?(?:update|message)/i);
+  expect(text).toMatch(/never poll/i);
+});
+
 test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
   for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
