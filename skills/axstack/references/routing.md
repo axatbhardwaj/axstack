@@ -11,7 +11,7 @@ only with exactly one unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 23 role
+At run start, capture one **routing snapshot**: the complete map of all 24 role
 IDs with provider/model/mode/effort, absent or unconfigured roles recorded
 explicitly, and no invented provider default. An absent or unconfigured role
 holds only that role's work, not the run. A role installed or changed later

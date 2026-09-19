@@ -51,7 +51,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 23 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 24 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -118,9 +118,10 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker and, in each
-  single-provider preset, the unavailable adviser and its matching arena judge
-  seat explicitly permit `model: null`;
+- every role has valid preserved fields, while the mixed checker and the mixed
+  `axstack-research-x` launch-by-agent-id route explicitly permit `model: null`;
+  in each single-provider preset, the unavailable adviser and its matching arena
+  judge seat explicitly permit `model: null`, as does `axstack-research-x`;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
@@ -148,12 +149,16 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
-A new run records the selected preset plus all 23 role rows. An active run keeps
+A new run records the selected preset plus all 24 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
 The mixed checker has `model: null`; checker dispatch is held and never inherits
-a provider default. The single-provider presets configure the checker. Their
+a provider default. Mixed `axstack-research-x` has `model: null` because Orca exposes
+no `--model` override for `grok`; its explicit note authorizes launch by agent ID,
+and the run record snapshots the model reported by the TUI. The single-provider
+presets configure the checker and keep `axstack-research-x` as an intentional
+absence. Their
 unavailable adviser and its matching arena judge seat remain explicit
 same-provider `model: null` roles, which do not make installation unready;
 Align and Spec still hold until both Astra and Fable can return independent

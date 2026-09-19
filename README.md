@@ -77,7 +77,7 @@ targets are reported without normal-path adoption. Install exits nonzero when
 an instruction conflict is preserved, while clean and idempotent installs exit
 successfully.
 
-The public bundle preserves three canonical 23-role inputs:
+The public bundle preserves three canonical 24-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly

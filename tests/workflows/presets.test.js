@@ -16,6 +16,7 @@ const roleIds = [
   'axstack-research-requirements',
   'axstack-research-code',
   'axstack-research-web',
+  'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
   'axstack-explore-codebase',
@@ -33,6 +34,7 @@ const roleIds = [
 
 const c = (model, effort) => ['codex', model, 'full-access', effort];
 const a = (model, effort) => ['claude', model, 'bypassPermissions', effort];
+const g = (model, effort) => ['grok', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
@@ -41,6 +43,7 @@ const expected = {
     c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
     c(null, 'low'), a('claude-opus-5', 'medium'),
     c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'low'),
+    g(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-luna', 'max'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
     a('claude-opus-5', 'medium'), a('claude-opus-5', 'medium'),
@@ -56,6 +59,7 @@ const expected = {
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
     c('gpt-5.6-luna', 'low'), c('gpt-6-astra', 'medium'),
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
+    c(null, 'high'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-luna', 'max'),
     c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
     c('gpt-5.6-terra', 'low'), c('gpt-5.6-terra', 'low'),
@@ -71,6 +75,7 @@ const expected = {
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5', 'medium'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'low'),
+    a(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'low'), a('claude-sonnet-5', 'low'),
@@ -129,6 +134,24 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
   expect(checker.model).toBeNull();
 });
 
+test('presets: X research uses the Grok route only in mixed', () => {
+  const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
+  expect(research).toContain(
+    '`axstack-research-x`: X (Twitter) posts and threads via Grok — only when X evidence is answer-changing; cite post URLs and dates.',
+  );
+
+  const mixed = readJson('profiles/presets/mixed.json').roles
+    .find(({ id }) => id === 'axstack-research-x');
+  expect(mixed?.provider).toBe('grok');
+  expect(mixed?.model).toBeNull();
+  for (const preset of ['codex-only', 'claude-only']) {
+    const unavailable = readJson(`profiles/presets/${preset}.json`).roles
+      .find(({ id }) => id === 'axstack-research-x');
+    expect(unavailable?.model).toBeNull();
+    expect(unavailable?.notes).toMatch(/intentional single-provider absence/i);
+  }
+});
+
 test('presets: all packaged Markdown pointers resolve', () => {
   const skills = `${root}/skills`;
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -165,7 +188,7 @@ test('presets: public docs and shared references never state a stale role count'
   ];
   for (const file of files) {
     const text = readFileSync(`${root}/${file}`, 'utf8');
-    // "23 role rows", "23-role inputs", "23 stable role IDs", "23 stable IDs".
+    // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
     const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
     expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));

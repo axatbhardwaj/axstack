@@ -40,7 +40,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 23 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 24 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -64,7 +64,9 @@ The unavailable adviser in each single-provider preset stays explicitly
 `model: null` within that provider's bounds. Installer readiness accepts that
 intentional absence, but Align and Spec hold because both independent receipts
 are required. The mixed checker also stays explicitly `model: null`; checker work holds instead of
-launching a provider default. Missing or unavailable roles hold only affected
+launching a provider default. Launch-by-agent-id routes for which Orca exposes no
+`--model` override (today: `grok`) record `model: null` with an explicit note and are
+launchable; the run record snapshots the model the TUI reports. Missing or unavailable roles hold only affected
 work. Model, effort, and permission values express requested intent until real
 Orca receipts establish the effective session. Stored `modeId` is not permission
 parity or a sandbox. No route is inferred from subscription, quota, harness,

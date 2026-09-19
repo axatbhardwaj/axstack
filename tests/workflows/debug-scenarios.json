@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Behavioral evaluation cases for axstack-debug (docs/specs/debug.md rev 3). Each case gives observable inputs and the expected decision with required and forbidden actions. A fresh evaluator executes these against the skill prompts; keyword matching is not behavior. Role counts here follow the installed 23-role presets.",
+  "note": "Behavioral evaluation cases for axstack-debug (docs/specs/debug.md rev 3). Each case gives observable inputs and the expected decision with required and forbidden actions. A fresh evaluator executes these against the skill prompts; keyword matching is not behavior. Role counts here follow the installed 24-role presets.",
   "cases": [
     {
       "id": "easy-bug-l0",
