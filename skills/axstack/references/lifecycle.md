@@ -128,13 +128,14 @@ nothing without tested independent review.
 
 ## Close-out
 
-After required PRs merge by forge state—not local branch ancestry—close out in
-order: (1) settle every worker terminal through the orchestration guide; (2)
-write a compact record with counts and denominators for
-user interventions, deviations from plan, and repairs; (3) dispatch
-`axstack-auditor` only when any count is non-zero or the user asks—an unavailable
-auditor leaves close-out pending, never skipped silently; (4)
-release merged run worktrees and branches and close Linear tickets
-(driver-owned); (5) mark the [Run record](run-record.md) `Archived`. The driver
-cannot report the run done before steps (1)-(5) have receipts. Small one-step
-lookups keep the run record's exemption.
+PRs merge by forge state—not branch ancestry; close out: (1) settle every worker
+terminal; (2) compact record with counts and denominators—user
+interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
+non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
+pending, never skipped silently; (4) release merged run worktrees and branches;
+close Linear tickets; (5) mark the [Run record](run-record.md) `Archived`.
+`Archived`—one each:
+settlement receipt; compact record path; auditor decision plus settlement
+receipt or `counts zero`; release and ticket receipts; archive timestamp.
+`active`/receipt-incomplete record: close-out pending, never done. One-step
+lookups exempt.
