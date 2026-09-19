@@ -139,7 +139,7 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
 test('presets: X research uses the Grok route only in mixed', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
   expect(research).toContain(
-    '`axstack-research-x`: X (Twitter) posts and threads via Grok — only when X evidence is answer-changing; cite post URLs and dates.',
+    '`axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.',
   );
 
   const mixed = readJson('profiles/presets/mixed.json').roles
@@ -158,8 +158,8 @@ test('presets: research fans out through the Google web route', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
   expect(research).toMatch(/every other research run dispatches every configured research branch/i);
   expect(research).toContain('`axstack-research-web-google`');
-  expect(research).toMatch(/URL \+ access date per claim/i);
-  expect(research).toMatch(/re-open[^.]*never trusted from a search summary/i);
+  expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
+  expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
   expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);
   expect(research).toMatch(/unconfigured or unavailable branch[^.]*absent[^.]*never substituted/i);
 

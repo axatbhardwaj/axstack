@@ -20,9 +20,11 @@ test('installed readiness compares role IDs with the selected bundle', () => {
     role('axstack-author', 'gpt-5.6-sol'),
     role('axstack-reviewer-primary', 'gpt-5.6-sol'),
     role('axstack-reviewer-secondary', 'claude-opus-5'),
-    role('axstack-checker', null),
+    { ...role('axstack-checker', null), provider: 'antigravity' },
   ];
-  const installed = installedRoleBytes('mixed', [role('axstack-checker', null)]);
+  const installed = installedRoleBytes('mixed', [
+    { ...role('axstack-checker', null), provider: 'antigravity' },
+  ]);
 
   const result = assessInstalledRoleSnapshot(installed, 'mixed', expectedRoles);
 
