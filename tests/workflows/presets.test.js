@@ -16,6 +16,7 @@ const roleIds = [
   'axstack-research-requirements',
   'axstack-research-code',
   'axstack-research-web',
+  'axstack-research-web-google',
   'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
@@ -35,14 +36,15 @@ const roleIds = [
 const c = (model, effort) => ['codex', model, 'full-access', effort];
 const a = (model, effort) => ['claude', model, 'bypassPermissions', effort];
 const g = (model, effort) => ['grok', model, 'full-access', effort];
+const ag = (model, effort) => ['antigravity', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
     a('claude-fable-5-1', 'high'),
     a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
-    c(null, 'low'), a('claude-opus-5', 'medium'),
-    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'low'),
+    ag(null, 'low'), a('claude-opus-5', 'medium'),
+    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-luna', 'max'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
@@ -58,7 +60,7 @@ const expected = {
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-sol', 'medium'),
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
     c('gpt-5.6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
+    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-luna', 'max'),
     c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
@@ -74,7 +76,7 @@ const expected = {
     a('claude-opus-5', 'high'), a('claude-opus-5', 'medium'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5', 'medium'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'low'),
+    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
     a(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
@@ -152,6 +154,29 @@ test('presets: X research uses the Grok route only in mixed', () => {
   }
 });
 
+test('presets: research fans out through the Google web route', () => {
+  const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
+  expect(research).toMatch(/every other research run dispatches every configured research branch/i);
+  expect(research).toContain('`axstack-research-web-google`');
+  expect(research).toMatch(/URL \+ access date per claim/i);
+  expect(research).toMatch(/re-open[^.]*never trusted from a search summary/i);
+  expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);
+  expect(research).toMatch(/unconfigured or unavailable branch[^.]*absent[^.]*never substituted/i);
+
+  const mixed = readJson('profiles/presets/mixed.json').roles;
+  const google = mixed.find(({ id }) => id === 'axstack-research-web-google');
+  expect(google).toMatchObject({ provider: 'antigravity', model: null, thinkingOptionId: 'high' });
+  expect(mixed.find(({ id }) => id === 'axstack-checker')).toMatchObject({
+    provider: 'antigravity', model: null, thinkingOptionId: 'low',
+  });
+  for (const preset of ['codex-only', 'claude-only']) {
+    const unavailable = readJson(`profiles/presets/${preset}.json`).roles
+      .find(({ id }) => id === 'axstack-research-web-google');
+    expect(unavailable?.model).toBeNull();
+    expect(unavailable?.notes).toMatch(/intentional single-provider absence/i);
+  }
+});
+
 test('presets: all packaged Markdown pointers resolve', () => {
   const skills = `${root}/skills`;
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -188,7 +213,7 @@ test('presets: public docs and shared references never state a stale role count'
   ];
   for (const file of files) {
     const text = readFileSync(`${root}/${file}`, 'utf8');
-    // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
+    // "25 role rows", "25-role inputs", "25 stable role IDs", "25 stable IDs".
     const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
     expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));

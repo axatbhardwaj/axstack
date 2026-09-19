@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import {
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
@@ -11,6 +12,8 @@ const role = (id, model = 'model') => ({
   provider: 'codex',
   model,
 });
+
+const root = import.meta.dir.slice(0, -'/tests/installer'.length);
 
 test('installed readiness compares role IDs with the selected bundle', () => {
   const expectedRoles = [
@@ -67,6 +70,26 @@ test('mixed X research null model is launchable only through the Grok provider',
     { ...role('axstack-research-x', null), provider: 'claude' },
   ], 'mixed').gaps).toContain(
     'axstack-research-x requires a configured model',
+  );
+});
+
+test('preset readiness accepts the configured research routes', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const { roles } = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8'));
+    expect(assessRoleReadiness(roles, preset), preset).toEqual({ ready: true, gaps: [] });
+  }
+});
+
+test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
+  expect(assessRoleReadiness([
+    { ...role('axstack-research-web-google', null), provider: 'antigravity' },
+    { ...role('axstack-checker', null), provider: 'antigravity' },
+  ], 'mixed')).toEqual({ ready: true, gaps: [] });
+
+  expect(assessRoleReadiness([
+    { ...role('axstack-monitor', null), provider: 'antigravity' },
+  ], 'mixed').gaps).toContain(
+    'axstack-monitor requires a configured model',
   );
 });
 
