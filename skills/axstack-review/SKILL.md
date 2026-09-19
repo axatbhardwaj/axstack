@@ -39,7 +39,7 @@ head and current base, and writing authority are recorded.
 
 Independently check the
 [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity)
-before an approval or merge-ready declaration:
+before an approval or [merge-ready declaration](#authored-mode-own-pr):
 
 - Substantial new work: confirm the approved spec identity and matching ticket
   map.
@@ -49,9 +49,12 @@ before an approval or merge-ready declaration:
   author provenance. Never assume an imported own PR's author. That
   snapshot is accepted without repeated approval.
 
-The mode is ready when the applicable identity matches the candidate and no
-material scope change remains unaccepted. Readonly investigation may continue
-while an identity gap holds declarations.
+The mode is ready when the applicable identity matches the candidate, no
+material scope change remains unaccepted, and an independent review receipt
+records `APPROVE` from the required non-author, non-owner reviewer at the exact
+current head. Green CI, passing tests, or an older-head receipt leave readiness
+`UNKNOWN`, never merge-ready. Readonly investigation may continue while an
+identity gap holds declarations.
 
 Resolve actual author provenance from authoring session receipts and candidate
 history. The orchestrator model, provider, profile, or owner name is not author
@@ -244,7 +247,8 @@ Escalate to user: <yes | no> — <criterion> — <reason>
 At any point, promptly raise credible serious security issues, possible
 downtime or data loss, and major design concerns without waiting for every
 mode-required reviewer. Present evidence, likely impact, options, and the user
-decision needed. An urgent hold blocks approval, merge-ready declarations, and
+decision needed. An urgent hold blocks approval,
+[merge-ready declarations](#authored-mode-own-pr), and
 dependent dangerous actions, but does not block safe investigation, unrelated
 work, or reporting validated risk as `REQUEST_CHANGES`. Disagreement and
 silence leave the hold open.
@@ -267,7 +271,7 @@ without waiting; `proceed` never overrides a validated blocking finding.
 ## Publishing rule
 
 Mode-required exact-revision completeness gates external approval,
-merge-ready declarations, and authorized submission. It never gates returning
+[merge-ready declarations](#authored-mode-own-pr), and authorized submission. It never gates returning
 evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
 - Peer mode requires both current reviews and no unresolved material finding
