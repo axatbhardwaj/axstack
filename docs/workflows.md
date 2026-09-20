@@ -190,8 +190,10 @@ hourly watchdog, with quiet healthy checks, deduplicated occurrences, one live
 dispatch marker per PR, and decision tokens for user-authorized actions.
 
 The driver is the automation session itself, with no `axstack-monitor` or
-`axstack-owner` role row. It validates its Opus identity every tick and holds
-instead of dispatching on mismatch. Orca owns scheduling and run history;
+`axstack-owner` role row. It uses the agent selected in Orca; changing that
+selection does not change the configured reviewers or impose a model hold.
+Requested reviews cover any accessible repository; automatic repairs retain
+their separate explicit repository scope. Orca owns scheduling and run history;
 Axstack adds no custom scheduler, polling loop, or historical runtime fallback.
 
 ## Automations
@@ -204,8 +206,7 @@ launching a session. PR reviewers use exactly three escalation criteria. A gate
 `escalate` opens a bound decision token and exits, while `proceed` permits only
 the verdict or fast-forward push supported by the reviewed evidence. There are
 no `COMMENT` reviews, obligations, watch deadline, terminal cleanup sweep, or
-health gate. The approved contract is `docs/specs/pr-automations.md` revision 3;
-the installed restatement is
+health gate. The current operational contract is
 `skills/axstack/references/automations.md`.
 
 ## Run record and evidence

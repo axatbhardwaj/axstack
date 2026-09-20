@@ -121,7 +121,9 @@ describe('instruction CLI routing', () => {
         '--no-claude-settings', '--yes',
       ], { env });
       const checked = runCli(CLI, ['check', '--harness', harness], {
-        env: { ...env, PATH: '' },
+        // Bun ignores an empty PATH when resolving binaries, so use a
+        // fixture-owned empty directory to keep capability probes hermetic.
+        env: { ...env, PATH: join(root, 'empty-bin') },
         expectFail: true,
       });
       const expected = harness === 'claude'

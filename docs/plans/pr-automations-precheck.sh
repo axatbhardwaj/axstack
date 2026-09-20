@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 set -u
 
-# Model-free discovery precheck for the rev-3 defi-com PR driver.
+# Model-free discovery for requested reviews and separately authorized repairs.
 # Exit 0 = changed or due, 1 = unchanged, 2 = error, 3 = tick still running.
 # Large JSON (cursor, discovery, hashed, a PR's `gh pr view` payload) reaches jq through stdin via `input`,
 # never --argjson: one argv string is capped at MAX_ARG_STRLEN (128 KiB) and
 # the live cursor passed that.
 RUN_DIR="${1:-${RUN_DIR:-}}"
-REVIEW_ALLOW='["defi-com/monorepo","defi-com/mobile","defi-com/azure-next-hybrid","defi-com/ci-workflows"]'
 REPAIR_ALLOW='["defi-com/monorepo","defi-com/mobile"]'
 LIMIT=100
 FIELDS='url,number,repository,updatedAt'
@@ -64,7 +63,7 @@ if printf '%s' "$cursor" | jq -e --arg now "$timestamp" '
   (try (.tick_started_at | epoch) catch null) as $started
   | (try (.tick_done_at | epoch) catch null) as $done
   | (try ($now | fromdateiso8601) catch null) as $now_epoch
-  | $started != null and $now_epoch != null
+  | .tick_outcome != "held" and $started != null and $now_epoch != null
     and $started > ($done // 0) and ($now_epoch - $started) < 3600
 ' >/dev/null 2>&1; then
   log running
@@ -92,7 +91,7 @@ reviewed="$(search --reviewed-by @me --review changes_requested)" || fail
 discovery="$(jq -cn \
   --argjson own "$own" --argjson requested "$requested" \
   --argjson mentioned "$mentioned" --argjson reviewed "$reviewed" \
-  --argjson review_allow "$REVIEW_ALLOW" --argjson repair_allow "$REPAIR_ALLOW" '
+  --argjson repair_allow "$REPAIR_ALLOW" '
   def rows($items; $kind; $rank):
     $items[] | {
       url, number, repo: .repository.nameWithOwner, updatedAt,
@@ -112,7 +111,7 @@ discovery="$(jq -cn \
       kinds: (map(.kind) | unique)
     })
   | map(.repo as $repo
-      | select((($review_allow + $repair_allow) | unique | index($repo)) != null))
+      | select((.kinds | any(. != "own")) or ($repair_allow | index($repo) != null)))
   | sort_by(.url)
 ')" || fail
 
