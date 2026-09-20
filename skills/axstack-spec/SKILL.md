@@ -15,15 +15,19 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
 ## Procedure
 
 1. **Select the authoritative store.** Use a native Linear document by
-   default, or repository Markdown when the user explicitly selects it.
-   Name the store before writing; one recorded choice leaves no implicit
-   fallback.
-2. **Preflight Linear access.** In Linear mode, verify that the current
+   default, or GitHub Issues or repository Markdown when the user explicitly
+   selects either alternative. Name the store before writing; one recorded
+   choice leaves no implicit fallback.
+2. **Preflight external-tracker access.** In Linear mode, verify that the current
    session can read, create, and update documents before any document write.
    Missing access is an actionable setup gap: report it and stop this phase
    without writing or changing stores. Linear drafting starts only when all
    three operations are available; a later tickets-phase check cannot replace
-   this one. Markdown mode skips this preflight.
+   this one. In GitHub mode, use authenticated `gh` to verify the target
+   repository, issues enabled, and the current identity's issue read and write
+   access before any issue write. Record the repository and identity checked.
+   Missing access preserves the GitHub selection and stops the phase without
+   mutation or fallback. Markdown mode skips external access preflight.
 3. **Draft with decision evidence.** Write observable acceptance criteria
    and explicit exclusions in the selected store. First record the driver's
    independent assessment, then load
@@ -42,12 +46,14 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    creates the execution baseline.
 5. **Snapshot the baseline.** Record the approved revision identity and a
    concise repository Markdown counterpart. In Linear mode, the native
-   document remains authoritative; in Markdown mode, the agreed repository
-   path does. Use this shape:
+   document remains authoritative. In GitHub mode, the approved issue body is
+   authoritative and its GitHub issue URL plus SHA-256 body digest identifies
+   the exact approved revision. In Markdown mode, the agreed repository path does.
+   Use this shape:
 
 ```text
 Approved spec: <title> rev <id> (<date>)
-Authoritative store: <Linear document URL | repo Markdown path>
+Authoritative store: <Linear document URL + revision | GitHub issue URL + SHA-256 body digest | repo Markdown path + ref>
 Markdown counterpart: <repo path + ref>
 Baseline preserved at: <ref>
 Material change: <none | description + affected PRs/tasks + hold state>

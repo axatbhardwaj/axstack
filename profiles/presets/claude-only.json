@@ -57,12 +57,12 @@
     },
     {
       "id": "axstack-checker",
-      "name": "Axstack Linear checker",
+      "name": "Axstack tracker checker",
       "provider": "claude",
       "model": "claude-sonnet-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
-      "notes": "Report-only Linear discrepancy checker. Never mutates Linear; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default."
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default."
     },
     {
       "id": "axstack-research-requirements",

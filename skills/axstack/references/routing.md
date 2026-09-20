@@ -1,6 +1,6 @@
 # Shared routing (every owned phase loads this)
 
-Choose one route; load only the phase and references needed next.
+Choose a route; load only the phase and references needed next.
 
 ## Role routing
 
@@ -92,7 +92,7 @@ reason in the run record, or in the brief for tiny direct work.
   bounded small feature is not substantial because it is labelled one.
   Require an approved spec plus a ticket map tied to that exact spec
   revision, with acceptance checks and dependencies in the explicitly selected
-  Markdown or Linear store. Prepare via `axstack-align` -> `axstack-spec`
+  Markdown, GitHub Issues, or Linear store. Prepare via `axstack-align` -> `axstack-spec`
   (one approval) -> `axstack-tickets` -> handoff, then stop.
 - **Small:** clear, bounded one-PR work. The driver captures the named
   **small-change intent** from the current request or user-chosen existing

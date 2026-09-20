@@ -440,7 +440,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
     'repairs',
     'axstack-auditor',
     'release merged run worktrees and branches',
-    'close Linear tickets',
+    'close selected external-tracker tickets',
     '`Archived`',
   ].map((phrase) => closeOut.indexOf(phrase));
   expect(closeOutOrder.every((position) => position >= 0), 'close-out must contain every ordered step').toBeTruthy();

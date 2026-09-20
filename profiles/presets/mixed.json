@@ -57,12 +57,12 @@
     },
     {
       "id": "axstack-checker",
-      "name": "Axstack Linear checker",
+      "name": "Axstack tracker checker",
       "provider": "antigravity",
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Report-only Linear discrepancy checker. Never mutates Linear; the driver independently verifies evidence before applying updates. Cheap report-only seat on Gemini Flash; launch by agent id antigravity."
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. Cheap report-only seat on Gemini Flash; launch by agent id antigravity."
     },
     {
       "id": "axstack-research-requirements",
