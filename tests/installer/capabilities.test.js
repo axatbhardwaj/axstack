@@ -26,6 +26,7 @@ function fakeExec(overrides = {}) {
     'orca-runtime': { ok: true, stdout: 'ready' },
     'orca-orchestration-guide': { ok: true, stdout: 'orchestration guide' },
     'orca-cli-guide': { ok: true, stdout: 'orca-cli guide' },
+    'orca-linear-guide': { ok: true, stdout: 'orca-linear guide' },
   };
   return async (name) => ({ ...base[name], ...overrides[name] } ?? { ok: false, stdout: '' });
 }
@@ -48,9 +49,11 @@ test('missing Orca runtime or guide capability is reported separately', async ()
   const report = await checkCapabilities(fakeExec({
     'orca-runtime': { ok: false, stdout: 'not connected' },
     'orca-cli-guide': { ok: false, stdout: 'guide unavailable' },
+    'orca-linear-guide': { ok: false, stdout: 'guide unavailable' },
   }));
   expect(report.gaps.some((g) => /runtime/i.test(g))).toBe(true);
   expect(report.gaps.some((g) => /orca cli guide/i.test(g))).toBe(true);
+  expect(report.gaps.some((g) => /linear guide/i.test(g))).toBe(true);
 });
 
 test('an Orca capability failure identifies the resolved executable', async () => {
@@ -76,7 +79,7 @@ test('Orca executable resolution is deterministic and shared by every Orca probe
     env: { ORCA_CLI_COMMAND: '/opt/orca-custom' },
     platform: 'linux',
   });
-  expect(observed.length).toBe(4);
+  expect(observed.length).toBe(5);
   expect([...new Set(observed)]).toEqual(['/opt/orca-custom']);
 });
 
@@ -200,6 +203,11 @@ describe('Orca response fixture coverage', () => {
       orcaExecutable: fixtureCli(`echo '{"name":"orchestration","markdown":""}'`),
     });
     expect(empty).toEqual({ ok: false, stdout: 'orchestration guide unavailable' });
+
+    const wrongLinear = await runRealCheck('orca-linear-guide', {
+      orcaExecutable: fixtureCli(`echo '{"name":"orca-cli","markdown":"guide"}'`),
+    });
+    expect(wrongLinear).toEqual({ ok: false, stdout: 'orca-linear guide unavailable' });
   });
 });
 
