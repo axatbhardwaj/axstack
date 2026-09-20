@@ -58,6 +58,23 @@ test('runtime boundary requires worker worktrees to carry their parent lineage',
   ).toBe(true);
 });
 
+test('review placement isolates each reviewer and preserves worktree-local evidence', () => {
+  // Prompt-contract regression: the old lineage rule allowed a shared checkout
+  // and /tmp reports. This checks the shipped policy, not live agent adherence.
+  const runtime = read('skills/axstack/references/orca-runtime.md').replace(/\s+/g, ' ');
+  const review = read('skills/axstack-review/SKILL.md').replace(/\s+/g, ' ');
+  expect(runtime).toMatch(/each reviewer[^.]*separate Orca-managed child worktree/i);
+  expect(runtime).toMatch(/never[^.]*share[^.]*author[^.]*checkout/i);
+  expect(runtime).toMatch(/detached[^.]*exact candidate SHA[^.]*pinned base/i);
+  expect(runtime).toMatch(/reports, probes, and logs[^.]*inside[^.]*reviewer[^.]*worktree/i);
+  expect(runtime).toMatch(/not[^.]*`\/tmp`[^.]*scratch/i);
+  expect(runtime).toMatch(/tracked candidate files[^.]*read-only/i);
+  expect(runtime).toMatch(/before[^.]*remov[^.]*worktree[^.]*preserve[^.]*evidence/i);
+  expect(review).toContain('orca-runtime.md#reviewer-workspaces-and-evidence');
+  expect(review).toContain('Workspace: <Orca worktree ID + absolute path>');
+  expect(review).toContain('Evidence: <worktree-local report and probe paths>');
+});
+
 test('runtime decisions cover startup, fencing, settlement, and accepted handoff', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
   for (const receipt of ['input_accepted', 'turn_started', 'worker_done', 'consumer_fenced', 'user_takeover']) {
