@@ -50,6 +50,8 @@ const setup = ({ own = [], requested = [], mentioned = [], reviewed = [], detail
     'defi-com/mobile#main': 'base-mobile',
     'defi-com/azure-next-hybrid#main': 'base-azure',
     'defi-com/ci-workflows#main': 'base-ci',
+    'defi-com/azure-baseline#main': 'base-baseline',
+    'other/repo#main': 'base-other',
   }));
   write(`${bin}/gh`, `#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$GH_CALLS"
@@ -119,6 +121,44 @@ test('overlap guard logs running and exits 3 without inspecting GitHub', () => {
   expect(existsSync(env.calls)).toBe(false);
 });
 
+test('a completed hold does not suppress the next scheduled driver', () => {
+  const env = setup();
+  cursor(env, {
+    tick_started_at: new Date().toISOString(),
+    tick_done_at: '2000-01-01T00:00:00Z',
+    tick_outcome: 'held',
+  });
+  expect(run(env).exitCode).toBe(0);
+  expect(lastLog(env)).toMatch(/ changed$/);
+});
+
+test('a new running tick after a hold still prevents overlapping drivers', () => {
+  const env = setup();
+  cursor(env, {
+    tick_started_at: new Date().toISOString(),
+    tick_done_at: '2000-01-01T00:00:00Z',
+    tick_outcome: 'running',
+  });
+  expect(run(env).exitCode).toBe(3);
+  expect(existsSync(env.calls)).toBe(false);
+});
+
+test('requested reviews include azure-baseline while unrelated own PRs stay outside repair scope', () => {
+  const url = 'https://github.com/defi-com/azure-baseline/pull/34';
+  const env = setup({
+    requested: [pr(url, 34, 'defi-com/azure-baseline')],
+    own: [pr('https://github.com/other/repo/pull/8', 8, 'other/repo')],
+    details: { 'defi-com/azure-baseline#34': {
+      headRefOid: 'head-baseline', baseRefName: 'main', isDraft: false,
+      statusCheckRollup: [], author: { login: 'shubhamdixit1' },
+    } },
+  });
+  settleFingerprint(env);
+  expect(run(env).exitCode).toBe(0);
+  expect(pending(env).discovery.map(({ url }) => url)).toEqual([url]);
+  expect(pending(env).hashed).toEqual([{ url, head: 'head-baseline', base: 'base-baseline' }]);
+});
+
 test('a truncated search logs error, exits 2, and does not write pending.json', () => {
   const own = Array.from({ length: 100 }, (_, i) =>
     pr(`https://github.com/defi-com/monorepo/pull/${i + 1}`, i + 1, 'defi-com/monorepo'));
@@ -150,7 +190,7 @@ test('truncation detection uses the configured search limit', () => {
   expect(readFileSync(env.calls, 'utf8')).not.toContain('pr view');
 });
 
-test('changed discovery exits 0, filters the allowlist union, and enriches each retained PR', () => {
+test('changed discovery exits 0 and enriches requested PRs across repositories', () => {
   const own = pr(allowlisted, 7, 'defi-com/monorepo');
   const duplicate = pr(allowlisted, 7, 'defi-com/monorepo', '2026-09-17T00:01:00Z');
   const outside = pr('https://github.com/other/repo/pull/8', 8, 'other/repo');
@@ -159,6 +199,10 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
     own: [own],
     requested: [duplicate, outside, ciWorkflows],
     details: {
+      'other/repo#8': {
+        headRefOid: 'head-other', baseRefName: 'main', isDraft: false,
+        statusCheckRollup: [], author: { login: 'peer' },
+      },
       'defi-com/monorepo#7': {
         headRefOid: 'head-own', baseRefName: 'main', isDraft: false,
         statusCheckRollup: [{ name: 'unit', conclusion: 'SUCCESS' }],
@@ -175,11 +219,11 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   const state = pending(env);
   expect(state.observed_at).toEqual(expect.any(String));
   expect(state.fingerprint).toMatch(/^[0-9a-f]{64}$/);
-  expect(state.seen).toEqual([{ head: 'head-ci', url: 'https://github.com/defi-com/ci-workflows/pull/152' }]); // peer head: first observation, debounced
-  expect(state.discovery).toHaveLength(2);
+  expect(state.seen).toHaveLength(2); // peer heads: first observation, debounced
+  expect(state.discovery).toHaveLength(3);
   expect(state.discovery.find((d) => d.repo === 'defi-com/monorepo')).toMatchObject({ url: allowlisted, repo: 'defi-com/monorepo', head: 'head-own' });
   expect(state.discovery.map((d) => d.repo)).toContain('defi-com/ci-workflows');
-  expect(state.discovery.map((d) => d.repo)).not.toContain('other/repo');
+  expect(state.discovery.map((d) => d.repo)).toContain('other/repo');
   expect(state.hashed).toEqual([{
     url: allowlisted,
     head: 'head-own',
@@ -192,7 +236,7 @@ test('changed discovery exits 0, filters the allowlist union, and enriches each 
   expect(calls.match(/^search prs /gm)?.length).toBe(4);
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --author @me');
   expect(calls).toContain('search prs --state open --limit 100 --json url,number,repository,updatedAt --reviewed-by @me --review changes_requested');
-  expect(calls.match(/^pr view /gm)?.length).toBe(2);
+  expect(calls.match(/^pr view /gm)?.length).toBe(3);
   // `latestReviews` returns reviews with empty `id` and `commit.oid` (gh 2.8x), which
   // made every review invisible at the head; `reviews` carries both.
   expect(calls).toContain('--json headRefOid,baseRefName,isDraft,statusCheckRollup,author,reviews');
