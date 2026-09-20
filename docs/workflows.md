@@ -118,10 +118,13 @@ session and evidence remain valid.
   synthesis as the recommendation; the note lands as `Decisions` rows in the
   run record.
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
-  user-approved revision baseline.
+  user-approved revision baseline. Linear is the default authoritative store;
+  GitHub Issues and repository Markdown are explicit alternatives. A GitHub
+  baseline pins the issue URL and approved body digest.
 - `axstack-tickets` maps user-visible capabilities to dependency-aware internal
-  tasks. Linear is the default selected store with access preflight; repository
-  Markdown is explicit fallback. Only the driver mutates lifecycle state.
+  tasks. Linear is the default selected store with access preflight; GitHub
+  Issues is an explicit external-tracker alternative and repository Markdown
+  is an explicit local alternative. Only the driver mutates lifecycle state.
 - `axstack-implement` uses strict behavioral RED, GREEN, then refactor. The
   narrow accepted structure-preserving route uses old-green and the same check
   new-green. One author writes and returns a local receipt without pushing. The

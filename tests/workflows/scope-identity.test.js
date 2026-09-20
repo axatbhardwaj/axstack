@@ -11,7 +11,7 @@ test('scope identity: routing defines proportional substantial, small, and uncle
   expect(routing).toMatch(/bounded\s+small\s+feature[^.]*not[^.]*substantial[^.]*label/i);
   expect(routing).toMatch(/approved spec[^.]*ticket map[^.]*spec revision/i);
   expect(routing).toMatch(/ticket map[^.]*acceptance[^.]*dependencies/i);
-  expect(routing).toMatch(/Markdown[^.]*Linear|Linear[^.]*Markdown/i);
+  expect(routing).toMatch(/Markdown[^.]*GitHub Issues[^.]*Linear/i);
   expect(routing).toMatch(/small-change intent/i);
   expect(routing).toMatch(/current\s+request[^.]*user-chosen\s+existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
   expect(routing).toMatch(/unclear[^.]*clarif[^.]*then[^.]*classif[^.]*small[^.]*substantial/i);

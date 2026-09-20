@@ -24,6 +24,8 @@ without changing authority.
    reason. Small, bounded one-PR work uses the current request or selected issue
    as a snapshotted small-change intent;
    substantial or stacked work needs an approved spec and matching ticket map.
+   Substantial work uses Linear by default, or explicitly selected GitHub Issues
+   or repository Markdown, as its authoritative spec and capability tracker.
 2. The current chat drives on whatever model runs it; there is no driver
    profile. Bind each ready task to the selected role snapshot and an authoritative Orca
    Run, Task, and Dispatch. Exactly one writer owns a candidate at a time. All

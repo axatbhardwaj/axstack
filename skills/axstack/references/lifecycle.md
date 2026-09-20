@@ -6,8 +6,8 @@ binding state and receipts to exact revisions.
 
 ## Roster (compact)
 
-- Driver: current chat; owns scope, decisions, cross-PR dependencies, Linear
-  mutations, and integration.
+- Driver: current chat; owns scope, decisions, cross-PR dependencies,
+  external-tracker mutations, integration.
 - Owner: driver owns loop PRs; `axstack-owner` only for standalone watch/review
   without live driver. It may perform PR-scoped publication within user authority. Human
   merge is default.
@@ -23,19 +23,19 @@ binding state and receipts to exact revisions.
 
 Prefer parallel independent bounded work; no redundant workers.
 Per [standing contracts](contracts.md), fanout is dependency/capacity-driven
-with no fixed count, within host and spending limits. [PR shape](pr-shape.md)
+with no fixed count within host/spending limits. [PR shape](pr-shape.md)
 covers theme/size; queue via `gh stack`.
 
 ## Ownership
 
-The PR owner remains accountable for candidate, fixes, evidence, and monitoring;
+The PR owner remains accountable for candidate, fixes, evidence, monitoring;
 peer code stays read-only. Missing or idle sessions never transfer ownership.
 Owned implementation enters review through the revision-bound
 [candidate-publication boundary](candidate-publication.md).
 
 ## Native handoff and resume
 
-Preparation completion/watch expiry writes a resumable record. Ordinary resume
+Preparation completion/watch expiry writes a record. Ordinary resume
 reconciles it, keeps the current owner, and launches no native handoff.
 Only an explicit user request to transfer ownership enters this branch.
 
@@ -45,7 +45,7 @@ Only an explicit user request to transfer ownership enters this branch.
 2. Load the [Orca runtime boundary](orca-runtime.md), then follow its
    version-matched runtime-owned handoff guidance. Never guess calls, paths,
    roles, or fallback models. Guide discovery does not prove capability.
-3. If the required native capability is missing, report the exact setup gap and
+3. If the native capability is missing, report the exact setup gap and
    keep the current owner; no replacement or ownership transfer launches.
    Read-only reconciliation may continue.
 4. Record recipient/pending receipt before launch. If uncertain, reconcile the
@@ -59,7 +59,7 @@ receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
 
 ## Receipts (bind each decision to evidence)
 
-Store concise receipt references, not raw worker output, in the [Run record](run-record.md).
+Store receipt references, not raw output, in the [Run record](run-record.md).
 
 - Session receipt: actual agent/workspace IDs, requested provider/model and
   role; reuse on resume rather than spawn a replacement.
@@ -133,8 +133,8 @@ terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-close Linear tickets; (5) mark the [Run record](run-record.md) `Archived`.
-`Archived`—one each:
+close selected external-tracker tickets when applicable; (5) mark the
+[Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
 receipt or `counts zero`; release and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step

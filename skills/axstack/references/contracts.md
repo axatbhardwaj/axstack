@@ -88,7 +88,7 @@ gate.
 ## Authority
 
 - The driver owns run scope, cross-PR coordination, integration, and every
-  Linear mutation. The checker reports discrepancies only.
+  selected external-tracker mutation. The checker reports discrepancies only.
 - One Orca execution host owns a run. There is no fixed active-PR count;
   fanout is dependency- and capacity-driven within configured host resource and
   spending limits. The driver reduces fanout when the run record shows rework,

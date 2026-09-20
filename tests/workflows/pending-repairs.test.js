@@ -29,7 +29,7 @@ test('repairs: both advisers cover Align, Spec, and consequential decisions', ()
 
 test('repairs: mutation authority distinguishes driver scope from PR owner scope', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/driver[\s\S]{0,160}Linear\s+mutations/i);
+  expect(lifecycle).toMatch(/driver[\s\S]{0,180}external-tracker\s+mutations/i);
   expect(lifecycle).toMatch(/owner[\s\S]{0,240}PR-scoped[^.]*publication/i);
   expect(lifecycle).toMatch(/within user authority/i);
 });
