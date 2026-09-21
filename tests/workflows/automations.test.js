@@ -96,7 +96,7 @@ test('automations: reviewer rules use three criteria, binding verdict marker, an
   expect(text).toContain('`review-mobile-PR-<num>.html`');
   expect(text).toContain('`review-azure-next-hybrid-PR-<num>.html`');
   expect(text).toContain('`review-ci-workflows-PR-<num>.html`');
-  expect(text).toContain('`defi-com/ci-workflows`');
+  expect(text).toContain('review-<owner>-<repo>-PR-<num>.html');
 });
 
 test('automations: a published verdict body is written for the PR reader, not the pipeline', () => {
@@ -141,9 +141,8 @@ test('automations: the pair runs from the root folder workspace and children nes
   // stale assumption in any one of them breaks the tick.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
 
-  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
     expect(text, `${name}: launch workspace`).toMatch(/(?:host's )?`root` folder workspace/i);
     expect(text, `${name}: run directory`).toMatch(/~\/\.local\/share\/axstack\/runs\/<run id>\//);
     expect(text, `${name}: no git-common-dir run directory`).not.toMatch(/git-common-dir[^.]*runs|runs[^.]*git-common-dir/i);
@@ -152,19 +151,11 @@ test('automations: the pair runs from the root folder workspace and children nes
   expect(ref).toMatch(/not a git repository/i);
   expect(ref).toMatch(/parented to (?:that|the) project's primary worktree/i);
   expect(spec).toMatch(/project's primary worktree/i);
-
-  // The prompt is what actually runs: parent by full Orca id, briefs by
-  // absolute path, and no reliance on the launch workspace being a checkout.
-  expect(prompts).toMatch(/--parent-worktree id:<clone id>::<clone path>/);
-  expect(prompts).not.toMatch(/--parent-worktree <this worktree>/);
-  expect(prompts).toMatch(/<axstack checkout>\/docs\/plans\/pr-automations-prompts\.md \(absolute path/);
-  expect(prompts).not.toMatch(/pr-automations-prompts\.md in this worktree/);
 });
 
 test('automations: settlement removes the per-dispatch worktree and leaves no terminal behind', () => {
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
   expect(ref).toMatch(/Settlement leaves nothing behind/i);
   expect(ref).toMatch(/preserve[^.]*private evidence[^.]*settle\/release through the guide/i);
   expect(ref).toMatch(/orchestration settlement[^.]*`orca-cli` worktree removal guidance/i);
@@ -178,11 +169,6 @@ test('automations: settlement removes the per-dispatch worktree and leaves no te
     expect(text, `${name}: creates per dispatch`).toMatch(/one (?:Orca )?worktree per dispatch/i);
     expect(text, `${name}: no fixed pool`).not.toMatch(/fixed pool of|resets the slot to the pinned head|never creates or removes a worktree/i);
   }
-  expect(prompts).toMatch(/orca terminal close --terminal <handle> --tab/);
-  expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
-  expect(prompts).not.toMatch(/git -C <worktree path> reset --hard|clean -fdx/);
-  expect(prompts).not.toMatch(/branch -D/);
-  expect(prompts).toMatch(/after a confirmed abandon[^.]*apply the same disposability proof/);
 });
 
 test('automations: cleanup never destroys work it cannot prove is safe to lose', () => {
@@ -191,7 +177,6 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   // ref to a committed but unpushed candidate. Destruction is gated on proof.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
   // Scope the reference to its cleanup paragraph: the decisions ref is named
   // elsewhere too, and only its use as a durability proof here matters.
   const refCleanup = ref.match(/Settlement leaves nothing behind[\s\S]*?The run directory contains:/)?.[0] ?? '';
@@ -219,31 +204,6 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
   expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
   expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
-  // The prompt encodes the proof as commands, and gates clean/rm/branch -D on it.
-  expect(prompts).toMatch(/pending or unknown release retains the worktree/);
-  // Durability by push is tested only against a freshly fetched ref; a stale
-  // origin/<branch> could make an unpushed candidate look pushed.
-  expect(prompts).toMatch(/fetch origin \+refs\/heads\/<head branch>:refs\/axstack\/cleanup\/<dispatch id> succeeds AND git -C <clone path> merge-base --is-ancestor \$hw refs\/axstack\/cleanup\/<dispatch id>/);
-  expect(prompts).toMatch(/a failed fetch is not proof: retain/);
-  expect(prompts).toMatch(/update-ref -d refs\/axstack\/cleanup\/<dispatch id>/);
-  expect(prompts).not.toMatch(/--is-ancestor \$hw origin\/<head branch>/);
-  // FETCH_HEAD is shared clone state; a concurrent fetch can replace it
-  // between the fetch and the ancestry test.
-  expect(prompts).not.toMatch(/--is-ancestor \$hw FETCH_HEAD/);
-  // Abandon never yields a release receipt; its settlement is the accepted
-  // abandon receipt plus proven exit.
-  expect(prompts).toMatch(/there is no release receipt on this path, so do not wait for one/);
-  expect(prompts).toMatch(/for-each-ref refs\/axstack\/decisions --points-at \$hw/);
-  expect(prompts).toMatch(/If disposable, remove it completely/);
-  expect(prompts).toMatch(/If not disposable[^.]*retain it in place[^.]*delete nothing/);
-  expect(prompts).toMatch(/status --porcelain must be empty/);
-  // The settlement-path `orca worktree rm` may appear only inside the
-  // disposable branch (the no-worker branch in step 5 has its own, gated on
-  // HEAD == head and a clean tree).
-  const disposableStart = prompts.indexOf('If disposable, remove it completely');
-  const rmAt = prompts.indexOf('orca worktree rm --worktree id:<clone id>::<worktree path>');
-  expect(rmAt, 'rm must come after the disposability gate').toBeGreaterThan(disposableStart);
-  expect(prompts.slice(0, disposableStart)).not.toMatch(/orca worktree rm/);
 });
 
 test('automations: the driver delegates session finish to native automation lifecycle', () => {
@@ -252,16 +212,9 @@ test('automations: the driver delegates session finish to native automation life
   // accumulated in the old worktree by the time it was retired.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
   expect(ref).toMatch(/tick_done_at[^.]*tick_outcome[^.]*native automation\/session lifecycle[^.]*exit/i);
   expect(ref).not.toMatch(/terminal close|close(?:s)? (?:its|your) own terminal tab/i);
   expect(spec).toMatch(/tick_done_at[^.]*tick_outcome[^.]*close(?:s)? its own terminal tab/i);
-  expect(prompts).toMatch(/orca terminal close --terminal \$ORCA_TERMINAL_HANDLE --tab/);
-  // It must be the final action: nothing runs after the tab is gone.
-  const closeAt = prompts.indexOf('orca terminal close --terminal $ORCA_TERMINAL_HANDLE --tab');
-  const doneAt = prompts.indexOf('write tick_done_at and tick_outcome ok');
-  expect(doneAt, 'tick_done_at must be written before the tab closes').toBeGreaterThan(-1);
-  expect(closeAt).toBeGreaterThan(doneAt);
 });
 
 test('automations: a runtime-refusal hold is re-tested by attempting the operation, never by reading config', () => {
@@ -270,7 +223,6 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   // proves an Orca refusal is resolved is the operation no longer refusing.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
   for (const [name, text] of [['spec', spec]]) {
     expect(text, `${name}: re-attempt is the observation`).toMatch(/runtime refusal[^.]*re-attempt(?:ing|s)? the refused operation/i);
     expect(text, `${name}: once per tick`).toMatch(/once per tick/i);
@@ -320,26 +272,11 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   expect(precheck).toMatch(/def exact_timestamp:/);
   expect(precheck).toMatch(/\.first_seen \| exact_timestamp/);
   expect(precheck).toMatch(/\.last_seen \| exact_timestamp/);
-  expect(prompts).toMatch(/re-attempt the refused operation once/);
-  expect(prompts).toMatch(/never read orca-data\.json/);
-  expect(prompts).toMatch(/structured error code in the JSON response/);
-  expect(prompts).toMatch(/nested_worker_depth_exceeded/);
-  expect(prompts).toMatch(/never key on the message text/);
-  expect(prompts).toMatch(/if worker-start itself is refused after the worktree was created there is no worker, so do NOT use the step \(2\) settlement proof/);
-  expect(prompts).toMatch(/read the receipt's failedStage and residualResources first/);
-  expect(prompts).toMatch(/no dispatchId and an empty or absent residualResources/);
-  expect(prompts).toMatch(/projection\.nextAction is an object \{kind, argv\}/);
-  expect(prompts).toMatch(/when argv is non-empty run exactly that argv through the same orca executable, verbatim, and nothing else/);
-  expect(prompts).toMatch(/when kind is none, inspect with worker-show and retain/);
-  expect(prompts).toMatch(/residualResources but no dispatchId[^;]*request-show --request <error\.data\.orchestrationRequestId>/);
-  expect(prompts).not.toMatch(/execute its literal projection\.nextAction/);
-  expect(prompts).toMatch(/never --retry-of in the same tick/);
   // The spec's own due-work enumeration (the algorithm the precheck mirrors)
   // must list the record, not only the schema paragraph.
   const specDue = spec.match(/Due control work\*\*, read from `cursor\.json` and `decisions\/`:[\s\S]*?`open` decisions alone are not due/)?.[0] ?? '';
   expect(specDue, 'spec due-work enumeration missing').not.toBe('');
   expect(specDue).toMatch(/runtime_refusal/);
-  expect(prompts).toMatch(/rev-parse HEAD must equal <head sha> and git -C <worktree path> status --porcelain must be empty/);
 });
 
 test('automations: every dispatch gets its own Orca worktree under one host-wide cap', () => {
@@ -349,8 +286,7 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
   // per dispatch, parented under the project, and removes it after settlement.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
-  const prompts = compact('docs/plans/pr-automations-prompts.md');
-  for (const [name, text] of [['spec', spec], ['prompts', prompts]]) {
+  for (const [name, text] of [['spec', spec]]) {
     expect(text, `${name}: never answers the dialog`).toMatch(/never answers? (?:that|the) dialog/i);
     expect(text, `${name}: trust comes from the clone`).toMatch(/trust[^.]*(?:inherit|primary (?:worktree|clone))/i);
     expect(text, `${name}: one worktree per dispatch`).toMatch(/one (?:Orca )?worktree per dispatch/i);
@@ -365,66 +301,17 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
     expect(text, `${name}: unowned launch retains the worktree`).toMatch(/worker not owned[\s\S]{0,400}retained_slots\[\]/);
     expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
-  expect(ref).toMatch(/agent-first flow[^.]*one Orca child worktree per PR[^.]*parented to the project's primary worktree/i);
+  expect(ref).toMatch(/runtime-owned placement guides[^.]*one Orca child worktree per dispatch[^.]*parented to the project's primary worktree/i);
   expect(ref).toMatch(/checked out detached at the exact head/i);
-  expect(ref).toMatch(/Orca owning the worker resources/i);
+  expect(ref).toMatch(/prove Orca owns the worker resources/i);
   expect(ref).not.toMatch(/worker-start[^.]*--agent|worker-show[^.]*resource\.state|terminal close/);
-  // One shared recipe creates the worktree, closes its creation terminal and
-  // pins the head; both launch paths invoke it, then start the owned worker
-  // and assert ownership; marker text is fenced to the owned branch.
-  const CREATE = 'orca worktree create --repo id:<clone id> --name <repo short>-<num>-<head7> --base-branch <default branch> --parent-worktree id:<clone id>::<clone path> --setup skip --json';
-  expect(prompts).toContain(CREATE);
-  expect(prompts).toMatch(/orca terminal close --worktree id:<clone id>::<worktree path> --all/);
-  expect(prompts).toMatch(/git -C <worktree path> checkout --detach <head sha>/);
-  expect(prompts).toMatch(/rev-parse HEAD == <head sha>/);
-  expect((prompts.match(/create the dispatch worktree as above/g) ?? []).length, 'both paths use the recipe').toBe(2);
-  const LAUNCH = '--agent claude --model claude-opus-5 --effort medium';
-  expect((prompts.match(new RegExp(`worker-start [^;]*${LAUNCH}`, 'g')) ?? []).length, 'both launch paths use the owned agent launch').toBe(2);
-  expect((prompts.match(/run orca orchestration worker-show --dispatch <dispatch id> --json and read \.result\.projection\.resource\.state from its output: require resource\.state == owned/g) ?? []).length, 'both launch paths assert ownership').toBe(2);
-  expect(prompts).not.toMatch(/--json \.result\.projection/);
-  expect((prompts.match(/apply the \(5\) recovery rules for a start that owns runtime state/g) ?? []).length, 'both unowned branches use the (5) recovery').toBe(2);
-  expect((prompts.match(/if worker-start reports a failed stage or a visible hold[^;]*/g) ?? []).length).toBe(2);
-  for (const marker of ['--task-title "repair <repo>#<num> @<head>"', '--task-title "review <repo>#<num> @<head>"']) {
-    const at = prompts.indexOf(marker);
-    const before = prompts.slice(0, at);
-    // Fetch into the clone BEFORE the worktree exists: a failed fetch then
-    // leaves nothing to remove (the no-worker removal gate needs HEAD == head,
-    // which a worktree created before a failed fetch can never satisfy).
-    const fetchAt = before.lastIndexOf('git -C <clone path> fetch origin <head sha>');
-    const createAt = before.lastIndexOf('orca worktree create');
-    const closeAt = before.lastIndexOf('orca terminal close --worktree');
-    const checkoutAt = before.lastIndexOf('checkout --detach <head sha>');
-    expect(fetchAt, `${marker}: fetch first`).toBeGreaterThan(-1);
-    expect(createAt, `${marker}: worktree created after the fetch`).toBeGreaterThan(fetchAt);
-    expect(closeAt, `${marker}: creation terminal closed after create`).toBeGreaterThan(createAt);
-    expect(checkoutAt, `${marker}: head pinned after close`).toBeGreaterThan(closeAt);
-    const ownedAt = prompts.indexOf('resource.state == owned', at);
-    expect(ownedAt, `${marker}: ownership asserted after start`).toBeGreaterThan(at);
-    const noMarkerAt = prompts.indexOf('record no marker', ownedAt);
-    const fenceAt = prompts.indexOf('the rest of this step runs only on the owned branch', noMarkerAt);
-    const markerAt = prompts.indexOf('marker', fenceAt);
-    expect(noMarkerAt, `${marker}: unowned branch records no marker`).toBeGreaterThan(ownedAt);
-    expect(fenceAt, `${marker}: owned-branch fence after the unowned branch`).toBeGreaterThan(noMarkerAt);
-    expect(markerAt, `${marker}: marker recorded only after the fence`).toBeGreaterThan(fenceAt);
-  }
-  // A name collision (a retained worktree from an earlier attempt at the same
-  // head) falls back to a name unique per tick; no undefined placeholder.
-  expect(prompts).toMatch(/name collision[^;]*append -<tick stamp>[^;]*tick_started_at/);
-  expect(prompts).not.toMatch(/<dispatch minute>/);
-  // Settled-path removal must force: the proof, not git's dirty check, is the
-  // gate, and a worker's untracked artefacts would otherwise make rm fail
-  // after the marker is cleared.
-  expect(prompts).toMatch(/If disposable, remove it completely:[^.]*orca worktree rm --worktree id:<clone id>::<worktree path> --force --json/);
-  // Setup: only the four project clones are trusted; no slot pool is created.
-  expect(prompts).not.toMatch(/--name slot-/);
-  expect(prompts).toMatch(/orca worktree rm --worktree id:<clone id>::<worktree path>/);
   // The run directory no longer ships a trust helper.
   expect(ref).not.toMatch(/`trust\.js`/);
   // Retention is mechanical: a clean, terminal-less slot holding an unpushed
   // candidate must not satisfy the free predicate for ANY PR, so retained
   // slots are recorded in cursor.json and excluded from the pool until the
   // user reconciles them.
-  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
     expect(text, `${name}: retained worktrees stay in place`).toMatch(/retained_slots\[\][^.]*(?:stays|remains|kept) in place|retained in place/i);
     expect(text, `${name}: retention record`).toMatch(/retained_slots\[\][^.]*(?:`slot`|slot)[^.]*(?:`pr`|pr)[^.]*(?:`head`|head|SHA)[^.]*(?:`reason`|reason)/i);
     expect(text, `${name}: cleared only by the user`).toMatch(/retained_slots\[\][^.]*(?:cleared|removed) only by the user/i);
@@ -498,10 +385,27 @@ test('automations: skills keep links and carry their rev-4 exceptions', () => {
 test('automations: workflow documentation points to the rev-4 contract', () => {
   const docs = read('docs/workflows.md');
   const block = docs.slice(docs.indexOf('## Automations'), docs.indexOf('## Run record and evidence'));
-  expect(block).toContain('docs/specs/pr-automations.md');
   expect(block).toContain('skills/axstack/references/automations.md');
   expect(block).toMatch(/driver[^.]*every 15 minutes/i);
   expect(block).toMatch(/hourly[^.]*watchdog/i);
   expect(block).toMatch(/decision token/i);
   expect(block).toMatch(/no `COMMENT` reviews/i);
+});
+
+test('automation prompt delegates to one contract and permits either driver agent', () => {
+  const prompts = read('docs/plans/pr-automations-prompts.md');
+  const driver = prompts.split('## Driver prompt (verbatim)')[1].split('## Review brief')[0];
+  expect(driver.length).toBeLessThan(2200);
+  expect(driver).toContain('<skills root>/axstack/references/automations.md');
+  expect(driver).toContain('single operational contract');
+  expect(driver).toContain('Run directory, and Safety holds');
+  expect(driver).toContain('<axstack checkout>/docs/plans/pr-automations-prompts.md (absolute path');
+  expect(driver).toContain('Use the agent selected in Orca');
+  expect(driver).toContain('including a hold');
+  expect(driver).not.toContain('expected Opus');
+  const contract = compact(refPath);
+  expect(contract).toContain('no review repository allowlist');
+  expect(contract).toContain('Reviewer roles remain separately configured');
+  expect(contract).not.toMatch(/Non-Opus or unknown driver identity/);
+  expect(contract).toContain('Closed or merged PRs are skipped');
 });

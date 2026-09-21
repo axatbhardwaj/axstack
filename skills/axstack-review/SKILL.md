@@ -94,10 +94,11 @@ session is the owner for every PR it handles.
    mode, and all six angles.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
-   branch. Give each reviewer a separate Orca child worktree parented to the
-   candidate; its probes and private evidence stay inside that worktree. Settle
-   it only after preserving required evidence in the private run record, before
-   removal. Untracked evidence is never cleanup permission.
+   branch below. For every reviewer, apply
+   [Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)
+   before launch; report-only scope does not waive checkout isolation or
+   worktree-local artifacts. Each reviewer uses a separate Orca child worktree;
+   preserve its private evidence before removal.
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
      from the routing snapshot. Send both the identical six-angle brief with no
@@ -219,6 +220,8 @@ no merge authority.
 
 ```text
 Candidate: <PR URL> rev <sha> (immutable checkout)
+Workspace: <Orca worktree ID + absolute path>
+Evidence: <worktree-local report and probe paths>
 Mode: <peer | authored> Actual author: <session/model evidence | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
@@ -237,6 +240,8 @@ and not a verdict; see
 ```text
 Mode: <peer | authored>
 Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <candidate sha> base <current base>
+Workspace: <Orca worktree ID + absolute path>
+Evidence: <worktree-local report and probe paths>
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>

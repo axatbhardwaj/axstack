@@ -88,6 +88,25 @@ a visible hold. Never answer a trust or permission prompt on the worker's
 behalf. Preserve the attempt and use only the runtime guide's inspection and
 recovery procedure; reconcile before retry so no duplicate writer starts.
 
+## Reviewer workspaces and evidence
+
+Give each reviewer a separate Orca-managed child worktree under the candidate's
+worktree, including report-only reviews and rechecks; never share the author's
+checkout or another reviewer's checkout. Reuse that reviewer's own child only
+after its previous Dispatch has settled. Use the runtime-owned worktree guide,
+not a raw Git worktree or temporary clone. Before dispatch, verify a detached
+checkout of the exact candidate SHA and the pinned base in that child.
+
+Keep reviewer-authored reports, probes, and logs inside the reviewer's worktree
+in an untracked, dispatch-specific artifact directory, not in `/tmp` or a
+provider scratch directory. Name its absolute path in the brief and completion
+receipt; keep tracked candidate files read-only and do not commit artifacts.
+For test tools that need temporary files, use a worktree-local temporary
+directory where supported; incidental tool-managed caches are not review evidence.
+Before removing a reviewer worktree, preserve its report and supporting evidence
+in the driver's Orca workspace and update the run record's paths. Terminal
+release alone is not permission to discard evidence or remove the worktree.
+
 ## Consume, settle, and recover
 
 Process a whole delivery before acknowledgment. Accept `worker_done` only when
