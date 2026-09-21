@@ -114,11 +114,15 @@ answer trust or permission prompts on the worker's behalf, and never create a
 duplicate writer. A `worker_done` advances work only when its Task and Dispatch
 match the active attempt and its revision evidence verifies.
 
-Two reusable native PR-manager chats run on staggered 15-minute schedules in
-dedicated workspaces. Review and watch each admit at most five bounded PR jobs;
+Two logical native PR-manager lanes run on staggered 15-minute schedules. Each
+pass uses a fresh finite session in its persistent dedicated workspace. Review
+and watch each admit at most five bounded PR jobs;
 waiting PRs stay covered without reserving slots. Axstack adds no custom
-scheduler, queue engine, or decision interpreter. Native reuse, busy-tick,
-recovery, and VPS resource behavior require a canary before activation.
+scheduler, queue engine, or decision interpreter. Sessions reconcile before
+admission, save durable continuity and decisions, clean only positively
+identified owned unused setup shells, and self-close as their final action.
+Native fresh-session, overlapping-pass, recovery, and VPS resource behavior
+require a canary before activation.
 
 Mobile completion/reply behavior remains unverified. Structural checks and
 qualitative scenario evaluation are not live runtime proof.

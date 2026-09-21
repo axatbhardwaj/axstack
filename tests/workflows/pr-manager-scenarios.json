@@ -46,7 +46,7 @@
     },
     {
       "id": "recovery-unknown-ownership",
-      "input": "the reusable manager session is lost and one PR has ambiguous live ownership",
+      "input": "a finite manager session is lost and one PR has ambiguous live ownership",
       "expected": ["reconcile actual workers, GitHub, and compact record", "hold only the ambiguous PR", "continue eligible unambiguous work"],
       "forbidden": ["copy old authority", "automatically take over live user work"]
     },
