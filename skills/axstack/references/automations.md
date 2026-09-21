@@ -72,6 +72,9 @@ routine cleanup on every admitted pass; do not wait for the three-workspace
 threshold to start cleanup. Save confirmed exit and ownership-release receipts
 before removing each workspace. Preserve dirty, unpushed, evidence-bearing,
 user-owned, active, or uncertain resources; the threshold never relaxes these guards.
+Explicitly classified evidence may cease to block cleanup only after the
+[private evidence archive](evidence-archive.md) is verified and its receipt is
+read back from durable continuity. This never makes other dirt disposable.
 After cleanup, re-list and count only the earlier pass workspaces still remaining.
 If three or more unreclaimed
 earlier pass workspaces remain, disable only this automation through the native
@@ -153,12 +156,14 @@ publication receipt, hold, and next action. GitHub remains authoritative for
 open state, revisions, reviews, checks, and merge state.
 
 When the current event is handled, settle and release owned native resources.
-Preserve dirty worktrees, unpushed candidates, review evidence, pending
+Preserve dirty worktrees, unpushed candidates, unarchived review evidence, pending
 external results, and user-owned work until durability and ownership are
 proven. Unknown liveness, `user_takeover`, and ambiguous publication likewise
 forbid cleanup. Here a pending external result means an unconfirmed publication
 or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
 record, never in an idle model, per-PR timer, or polling loop.
+Follow the [private evidence archive](evidence-archive.md) when evidence is the
+only local state to preserve; archive success does not relax any other guard.
 
 ## Review and repair authority
 
@@ -223,8 +228,11 @@ self-close. Waiting PRs still occupy zero slots once their owned trees settle.
 
 Cleanup of PR-job setup shells stays scoped to positively identified owned unused
 setup shells: use the native exact-terminal close operation for each only.
-Preserve dirty worktrees, unpushed candidates, review evidence, user-owned
+Preserve dirty worktrees, unpushed candidates, unarchived review evidence, user-owned
 terminals, unknown liveness, `user_takeover`, and ambiguous publication state.
+Never classify all dirt as evidence. If explicitly classified evidence is the
+last retention reason, apply and verify the [private evidence archive](evidence-archive.md),
+update durable continuity, and read it back before native retirement.
 
 For the manager pass only, verify native run/workspace identity, exclusive
 automation ownership, no unsettled descendants, and a fresh terminal inventory
@@ -242,9 +250,12 @@ A failed or uncertain close is not proof of retirement. The next admitted pass
 reconciles prior retirement from native state before trusting saved intent.
 Retire only positively identified completed pass resources; do not kill another
 live or unknown manager. Remove an old pass worktree only with native cleanup
-after terminal retirement is confirmed and its Git state is clean, with no
-unpushed commits, retained evidence, children, or user-owned work. Never use
-recursive shell deletion. Failed cleanup remains recorded, not silently forgotten.
+after terminal retirement is confirmed and it has no unpushed commits,
+unarchived evidence, children, user-owned work, unknown files, or unexplained
+dirty source. A verified evidence archive does not require otherwise clean Git
+state, but every remaining change must still be positively classified and safe;
+unknown dirt blocks removal. Never use recursive shell deletion. Failed cleanup
+remains recorded, not silently forgotten.
 
 The activation canary must additionally prove distinct workspace IDs per pass,
 cross-workspace lane admission, self-retirement and absence after client reconnect,
