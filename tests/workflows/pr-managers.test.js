@@ -67,6 +67,44 @@ test('manager event identity survives same-head changes', () => {
   expect(text).toMatch(/review ID[^.]*body digest/i);
 });
 
+test('manager jobs use private owned scratch without broad cleanup', () => {
+  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  const manager = compact('skills/axstack/references/automations.md');
+  expect(runtime).toMatch(/worktree-local[^.]*task[^.]*dispatch[^.]*0700/i);
+  expect(runtime).toMatch(/real path[^.]*inside[^.]*worktree[^.]*not a symbolic link/i);
+  expect(runtime).toMatch(/exact validated owned path[^.]*no glob/i);
+  expect(runtime).toMatch(/never[^.]*wipe[^.]*cache/i);
+  expect(runtime).toMatch(/uncertain temporary[^.]*preserv/i);
+  expect(manager).toMatch(/private job-local temporary directory/i);
+});
+
+test('held manager jobs settle natively before releasing capacity', () => {
+  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  const manager = compact('skills/axstack/references/automations.md');
+  expect(runtime).toMatch(/permission prompt[^.]*provider safety refusal[^.]*held[^.]*incomplete/i);
+  expect(runtime).toMatch(/never[^.]*bypass[^.]*retry[^.]*another model/i);
+  expect(manager).toMatch(/native runtime inspection[^.]*actual hold/i);
+  expect(manager).toMatch(/do not forge[^.]*worker_done/i);
+  expect(manager).toMatch(/release[^.]*slot[^.]*until[^.]*verif(?:y|ies)[^.]*settlement/i);
+  expect(manager).toMatch(/unresolved execution teardown[^.]*pause[^.]*lane/i);
+  expect(manager).toMatch(/unknown[^.]*user-owned[^.]*never[^.]*kill/i);
+});
+
+test('held-event dedupe avoids retry storms without starving unrelated PRs', () => {
+  const text = compact('skills/axstack/references/automations.md');
+  expect(text).toMatch(/held event identity[^.]*resume condition/i);
+  expect(text).toMatch(/unchanged hold[^.]*no new job[^.]*no retry/i);
+  expect(text).toMatch(/unrelated eligible PRs[^.]*continue[^.]*settled/i);
+});
+
+test('execution settlement frees capacity independently of retained cleanup state', () => {
+  const text = compact('skills/axstack/references/automations.md');
+  expect(text).toMatch(/positive[^.]*full-tree[^.]*process exit[^.]*frees[^.]*slot/i);
+  expect(text).toMatch(/retained metadata[^.]*does not[^.]*occupy[^.]*slot/i);
+  expect(text).toMatch(/archive[^.]*workspace removal[^.]*not[^.]*execution capacity/i);
+  expect(text).toMatch(/cleanup hold[^.]*unrelated eligible PRs[^.]*continue/i);
+});
+
 test('manager teardown preserves continuity and makes self-close the final action', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
@@ -141,9 +179,11 @@ test('bounded watch jobs settle without inheriting standalone lifetime', () => {
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(2);
+  expect(data.version).toBe(4);
+  expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
+  expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
   expect(data.evidence).toMatch(/not a scheduler implementation|not.*runtime receipt/i);
-  expect(data.cases.map(({ id }) => id)).toEqual([
+  const holdoutIds = [
     'thirty-pr-coverage',
     'finite-unchanged-pass',
     'duplicate-manager-self-close',
@@ -153,6 +193,21 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'unsettled-descendant',
     'recovery-unknown-ownership',
     'fair-sixth-job',
+  ];
+  expect(data.cases.slice(0, holdoutIds.length).map(({ id }) => id)).toEqual(holdoutIds);
+  expect(Bun.CryptoHasher.hash(
+    'sha256',
+    JSON.stringify(data.cases.slice(0, holdoutIds.length)),
+    'hex',
+  )).toBe('cf0ebc1697c9f4ee253acc9a3f35cb3def1f51bb9edf3cc6a0a3d58cd046cdf1');
+  expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
+    'private-job-temp-cleanup',
+    'permission-prompt-hold',
+    'provider-safety-refusal',
+    'held-event-dedupe',
+    'unresolved-teardown',
+    'exited-tree-retained-metadata',
+    'settled-tree-archive-hold',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();

@@ -112,6 +112,9 @@ session in an isolated workspace and admits at most five executing PR jobs per
 lane, fewer under resource pressure. Waiting PRs remain tracked without consuming
 execution slots, so a large open-PR backlog does not require an idle agent per PR.
 Completed passes save continuity and retire their own verified resources.
+Held jobs preserve evidence, use private worktree-local temporary paths, and
+release capacity only after native descendant settlement. Uncertain execution
+teardown pauses the lane; settled evidence cleanup does not occupy a slot.
 
 Scheduling is opt-in and requires host-specific runtime validation before
 activation. Installing Axstack does not turn it on. Repairs are limited to
