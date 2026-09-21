@@ -200,6 +200,17 @@ shared manager workspace or a PR-job worktree, or cleans preserved candidates,
 evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
 publication state. Manual review/watch remains outside this scheduled lifecycle.
 
+Each bounded job uses a private `0700` temporary directory inside its own
+worktree. Cleanup targets only the validated owned path: no `TMPDIR` globs,
+shared-root sweeps, or general cache wipes, and uncertain files remain for
+reconciliation. Permission prompts and provider safety refusals are incomplete
+holds, never bypass or cross-model retry signals. The coordinator preserves the
+evidence, settles the exact owned tree through Orca's supported lifecycle, and
+releases capacity only after native settlement is verified. Unresolved execution
+teardown pauses the lane; retained evidence or cleanup metadata does not consume
+a slot after positive full-tree settlement. Once settled, an unchanged held
+event remains deduplicated while unrelated eligible PRs continue.
+
 Requested reviews cover any accessible repository; automatic repairs retain
 their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,
 sessions, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
@@ -215,6 +226,11 @@ decisions remain actionable in GitHub or a durable user-owned conversation
 after manager self-close, with an authorized deduplicated Telegram notification.
 The current operational contract is
 `skills/axstack/references/automations.md`.
+
+These documents and their source-contract tests define expected decisions.
+Scenario fixtures are behavioral-evaluation inputs, not model-evaluation
+results, and neither form is live proof; activation still requires the native
+canary described by the operational contract.
 
 ## Run record and evidence
 

@@ -79,7 +79,9 @@ After cleanup, re-list and count only the earlier pass workspaces still remainin
 If three or more unreclaimed
 earlier pass workspaces remain, disable only this automation through the native
 CLI, verify the disabled setting, save/report the cleanup hold, and admit no new
-PR jobs. Also pause on a confirmed cleanup failure or unresolved lane ownership.
+PR jobs. Also pause on a confirmed earlier-manager retirement failure or
+unresolved lane ownership. A settled PR-job worktree retained for evidence is a
+cleanup hold, not unsettled execution or lane ownership.
 Already-dispatched passes still reconcile and retire only their own safe resources;
 this threshold is a stop condition, not an atomic hard cap on in-flight creations.
 An uncertain disable is a reported failure, not proof scheduling stopped. Resume
@@ -145,6 +147,13 @@ handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`.
 
+Give each job a private job-local temporary directory under its per-PR
+worktree, following the ownership, containment, and cleanup checks in the
+[runtime boundary](orca-runtime.md#reviewer-workspaces-and-evidence). Never
+delete through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a
+general cache. Preserve evidence and any temporary path whose ownership or
+containment is uncertain.
+
 An unchanged exact head and unchanged event identity creates no job; an
 unchanged exact head with a new event identity remains actionable. Event
 identity includes the applicable review ID and body digest, check identity and
@@ -154,6 +163,39 @@ not create machine cursor files or a queue engine. Record enough to resume: PR,
 head, base, event identity, mode, owner and worker receipts, candidate,
 publication receipt, hold, and next action. GitHub remains authoritative for
 open state, revisions, reviews, checks, and merge state.
+
+## Held job settlement
+
+Use native runtime inspection, not saved prose or silence, to identify an
+actual hold and bind it to the exact Task, Dispatch, terminal, event, and
+evidence. Permission prompts and provider safety refusals are incomplete held
+outcomes: do not answer or bypass them, retry their content through another
+model, or claim completion. Do not forge `worker_done`. Record the held event
+identity and its resume condition in durable continuity. An unchanged hold creates no new job, no
+retry, and no repeated notification; a changed event is reconsidered against
+the original authority rather than assumed safe.
+
+Preserve the prompt or refusal evidence, then follow the version-matched
+orchestration recovery and cleanup guidance for every owned descendant. Use
+only supported native lifecycle actions and receipt-supplied next actions;
+saved status, contact loss, and a coordinator narrative do not settle a worker.
+Unknown or user-owned work is never a kill target. Do not release the PR slot
+until native state verifies settlement of the coordinator and every descendant.
+Unrelated eligible PRs continue after the tree is verified settled, while the
+held PR waits durably for its resume condition.
+
+Execution settlement and cleanup retention are separate. Positive full-tree
+process exit plus native Task and Dispatch settlement frees the slot. Retained
+metadata does not occupy an execution slot: preserve it and its evidence for
+reconciliation without reviving the failed job. Likewise, an archive hold
+blocks workspace removal, not settled execution capacity; record the cleanup
+hold, preserve the workspace, and let unrelated eligible PRs continue.
+
+An active, unknown, protected, or unverifiable coordinator or descendant is
+different: preserve its evidence and keep its slot occupied. Unresolved
+execution teardown, or failure to retire the manager pass itself, pauses the
+lane before another pass can admit work rather than accumulating active passes
+or claiming capacity from an uncertain process tree.
 
 When the current event is handled, settle and release owned native resources.
 Preserve dirty worktrees, unpushed candidates, unarchived review evidence, pending
@@ -255,7 +297,9 @@ unarchived evidence, children, user-owned work, unknown files, or unexplained
 dirty source. A verified evidence archive does not require otherwise clean Git
 state, but every remaining change must still be positively classified and safe;
 unknown dirt blocks removal. Never use recursive shell deletion. Failed cleanup
-remains recorded, not silently forgotten.
+remains recorded, not silently forgotten. Failed PR-job workspace cleanup stays
+a cleanup hold after execution settles; failed or unverifiable manager-pass
+retirement pauses the lane instead of allowing active passes to accumulate.
 
 The activation canary must additionally prove distinct workspace IDs per pass,
 cross-workspace lane admission, self-retirement and absence after client reconnect,
