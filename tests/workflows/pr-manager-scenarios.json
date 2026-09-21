@@ -10,13 +10,13 @@
     },
     {
       "id": "finite-unchanged-pass",
-      "input": "a fresh manager session reconciles its dedicated workspace, observes no new exact-head event, and has no descendants",
+      "input": "a fresh manager session reconciles all workspaces for its automation, observes no new exact-head event, and has no descendants",
       "expected": ["create no PR job", "save reconciled continuity", "close the finite manager session as its final action"],
       "forbidden": ["retain an idle manager chat", "repeat an unchanged review"]
     },
     {
       "id": "duplicate-manager-self-close",
-      "input": "a new review-manager session finds another live review manager with three active PR jobs in the same dedicated workspace",
+      "input": "a new review-manager session in an empty isolated workspace finds another live review manager with three active PR jobs in a different workspace of the same automation",
       "expected": ["perform no PR work", "make no shared-record write", "close only the new duplicate session"],
       "forbidden": ["interrupt the established manager", "borrow watch-lane capacity"]
     },

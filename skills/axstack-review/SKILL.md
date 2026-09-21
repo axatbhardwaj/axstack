@@ -5,6 +5,8 @@ description: When a candidate PR needs final review, use axstack-review for conf
 
 # Review
 
+Manual invocation does not enter the scheduled manager lifecycle; never close the user’s chat or workspace.
+
 Produce one evidence-bound verdict for an exact candidate revision using the
 review count and model routing required by its mode. Report within the
 requested authority; the human merges unless separately authorized otherwise.

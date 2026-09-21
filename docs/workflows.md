@@ -184,19 +184,21 @@ read-only observer for standalone watches and never sends.
 
 The accepted contract has exactly two logical native manager lanes: review at
 minutes `0,15,30,45` and watch at `7,22,37,52`. Each scheduled pass uses a
-fresh finite session in a persistent dedicated workspace, scans complete
+fresh finite session in a new isolated workspace, scans complete
 discovery pages, and admits at most five executing
 PR jobs. Waiting PRs stay covered and consume no slot after owned descendants
 settle. Each job uses one repository-parented worktree; managers never check out
 PR branches in their own workspaces.
 
-Every pass reconciles saved, GitHub, and native Orca state before admission. A
+Every pass reconciles saved, GitHub, and native Orca state across all same-lane
+workspaces before admission. A
 confirmed same-lane manager makes the new duplicate do no work or shared-record
 write and close only itself. Normal teardown settles descendants, saves durable
-continuity and decisions, closes only positively identified owned unused setup
-shell terminals, then self-closes as the final action. It never blanket-closes
-the workspace or cleans preserved candidates, evidence, user sessions, unknown
-liveness, `user_takeover`, or ambiguous publication state.
+continuity and decisions outside disposable workspaces, then retires its own
+verified isolated pass workspace as the final action. It never bulk-closes a
+shared manager workspace or a PR-job worktree, or cleans preserved candidates,
+evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
+publication state. Manual review/watch remains outside this scheduled lifecycle.
 
 Requested reviews cover any accessible repository; automatic repairs retain
 their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,

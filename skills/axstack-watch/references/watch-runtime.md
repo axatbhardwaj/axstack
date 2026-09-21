@@ -14,9 +14,10 @@ stop task-owned registrations at completion, cancellation, or expiry.
 ## Native watch manager
 
 The separate native watch manager lane follows the
-[native PR-manager contract](../../axstack/references/automations.md). It reuses
-one persistent dedicated workspace while each scheduled pass uses a fresh
-finite session at minutes `7,22,37,52`. It scans every eligible own PR and
+[native PR-manager contract](../../axstack/references/automations.md). Each pass
+uses a new isolated workspace and fresh finite session at minutes `7,22,37,52`.
+Continuity survives outside disposable workspaces; admission reconciles the
+whole lane across workspaces. It scans every eligible own PR and
 admits at most five bounded actionable-event jobs. Waiting PRs stay covered
 without reserving slots. Each job uses its own repository-parented worktree and
 settles with all descendants; no model, per-PR timer, or polling loop waits for
