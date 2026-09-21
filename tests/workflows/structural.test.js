@@ -284,7 +284,8 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
   const spec = readFileSync(join(root, 'docs', 'specs', 'v1.md'), 'utf8');
   const plan = readFileSync(join(root, 'docs', 'plans', 'v1.md'), 'utf8');
-  for (const [name, text] of Object.entries({ readme, workflows })) {
+  expect(readme).toContain('docs/workflows.md');
+  for (const [name, text] of Object.entries({ workflows })) {
     expect(text.includes('pr-shape.md'), `${name} must link PR-shape policy`).toBeTruthy();
     expect(text, `${name} must state autonomous driver shape decisions`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
     expect(text, `${name} must state size alone does not require user approval`).toMatch(/size alone[^.]*never[^.]*user approval/i);

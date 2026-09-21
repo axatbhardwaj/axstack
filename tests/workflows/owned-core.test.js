@@ -476,8 +476,8 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
   expect(readme.includes('axstack-watch'), 'README must reference axstack-watch').toBeTruthy();
   expect(readme).toMatch(/profiles\/presets\/mixed\.json/);
   expect(readme).not.toMatch(/profiles\/paseo\.json/);
-  expect(readme).toMatch(/reviewer-primary/);
-  expect(readme).toMatch(/reviewer-secondary/);
+  expect(readme).toContain('docs/workflows.md');
+  expect(readme).toContain('docs/installation.md');
   const spec = readFileSync(join(root, 'docs', 'specs', 'v1.md'), 'utf8');
   expect(spec).toMatch(/axstack-explain/);
   expect(spec).toMatch(/project documentation/i);

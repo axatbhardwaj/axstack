@@ -228,6 +228,8 @@ Predeclared scenario evaluation is qualitative behavior evidence, not determinis
 compatibility requires actual guide discovery, role/session evidence, worktree
 and Dispatch receipts, completion delivery, and cleanup as applicable. Mobile
 completion and reply behavior remain unverified.
+End-to-end compatibility remains unverified for any route without matching
+runtime receipts; evidence from one route does not establish support for all roles.
 
 ## Historical migration
 

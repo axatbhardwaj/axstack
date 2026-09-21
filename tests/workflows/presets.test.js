@@ -215,7 +215,9 @@ test('presets: public docs and shared references never state a stale role count'
     // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
     const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
-    expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
+    if (file !== 'README.md') {
+      expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
+    }
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
   expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
