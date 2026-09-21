@@ -44,8 +44,7 @@ test('automations: dispatch claims, TTL, budgets, and both repair triggers are p
   expect(text).toMatch(/dispatch marker[^.]*task id[^.]*dispatch id[^.]*worktree[^.]*head[^.]*started_at[^.]*reservation[^.]*trigger/i);
   expect(text).toMatch(/trigger[^.]*`\{kind: check, name, app_id\}`[^.]*`\{kind: review, review_id, digest\}`/i);
   expect(text).toMatch(/marker older than 3 h/i);
-  expect(text).toMatch(/live worker[^.]*`worker-stop`/i);
-  expect(text).toMatch(/exited worker[^.]*`worker-abandon`/i);
+  expect(text).toMatch(/orchestration recovery guide[^.]*state-specific next action/i);
   expect(text).toMatch(/review-triggered[^.]*marker's `trigger`[^.]*remove exactly[^.]*review id[^.]*digest[^.]*`processed_reviews\[\]`/i);
   // Parallel workers (user decision 2026-09-18): the only concurrency limit is
   // one host-wide cap on live dispatch markers; no per-tick verdict budget and
@@ -167,7 +166,10 @@ test('automations: settlement removes the per-dispatch worktree and leaves no te
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
   expect(ref).toMatch(/Settlement leaves nothing behind/i);
-  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+  expect(ref).toMatch(/preserve[^.]*private evidence[^.]*settle\/release through the guide/i);
+  expect(ref).toMatch(/orchestration settlement[^.]*`orca-cli` worktree removal guidance/i);
+  expect(ref).not.toMatch(/`orca (?:terminal close|worktree rm)/i);
+  for (const [name, text] of [['spec', spec]]) {
     expect(text, `${name}: terminal tab`).toMatch(/closes? (?:any|its) terminal tab/i);
     // One worktree per dispatch: proven disposable -> removed; otherwise
     // retained in place. Never a reset of a shared slot.
@@ -212,8 +214,8 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(refCleanup, 'a pending or unknown settlement stops cleanup').toMatch(/pending or unknown stops here/i);
   // The tick steps that the driver follows literally must defer to the gate
   // rather than instruct an unconditional removal.
-  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/run the cleanup under "Run directory" below, which proves the worktree disposable/);
-  expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/After confirmed abandon, run the same cleanup[^.]*retained, not removed/);
+  expect(ref, 'tick step 2 defers to the gated cleanup').toMatch(/Apply the "Run directory" proof before removing a worktree/i);
+  expect(ref, 'tick step 4 defers to the gated cleanup').toMatch(/confirmed abandon[^.]*run the same cleanup[^.]*retained, not removed/i);
   expect(ref).not.toMatch(/After confirmed abandon, remove the worktree/);
   expect(spec, 'spec step 2 defers to the gated cleanup').toMatch(/run the cleanup defined under "Run directory and state", which proves the worktree disposable/);
   expect(spec).not.toMatch(/After a confirmed abandon, remove the worktree/);
@@ -244,14 +246,15 @@ test('automations: cleanup never destroys work it cannot prove is safe to lose',
   expect(prompts.slice(0, disposableStart)).not.toMatch(/orca worktree rm/);
 });
 
-test('automations: the driver closes its own terminal tab as the last step of a tick', () => {
+test('automations: the driver delegates session finish to native automation lifecycle', () => {
   // Rev 4 has no terminal hygiene sweep and each tick is a fresh session, so
   // without this every tick leaves one terminal in the root workspace: 24 had
   // accumulated in the old worktree by the time it was retired.
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
-  expect(ref).toMatch(/tick_done_at[^.]*tick_outcome[^.]*then close(?:s)? (?:its|your) own terminal tab/i);
+  expect(ref).toMatch(/tick_done_at[^.]*tick_outcome[^.]*native automation\/session lifecycle[^.]*exit/i);
+  expect(ref).not.toMatch(/terminal close|close(?:s)? (?:its|your) own terminal tab/i);
   expect(spec).toMatch(/tick_done_at[^.]*tick_outcome[^.]*close(?:s)? its own terminal tab/i);
   expect(prompts).toMatch(/orca terminal close --terminal \$ORCA_TERMINAL_HANDLE --tab/);
   // It must be the final action: nothing runs after the tab is gone.
@@ -268,7 +271,7 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
-  for (const [name, text] of [['reference', ref], ['spec', spec]]) {
+  for (const [name, text] of [['spec', spec]]) {
     expect(text, `${name}: re-attempt is the observation`).toMatch(/runtime refusal[^.]*re-attempt(?:ing|s)? the refused operation/i);
     expect(text, `${name}: once per tick`).toMatch(/once per tick/i);
     // [\s\S]{0,80} rather than [^.]*: the file name in the clause has a dot.
@@ -304,6 +307,9 @@ test('automations: a runtime-refusal hold is re-tested by attempting the operati
     expect(text, `${name}: runtime_refusal is a cursor key`).toMatch(/runtime_refusal\{code, first_seen, last_seen\}/);
     expect(text, `${name}: runtime_refusal is due work`).toMatch(/runtime_refusal[\s\S]{0,160}(?:due control work|due, because|is due|re-test needs a launched tick)/i);
   }
+  expect(ref).toMatch(/runtime refusal[^.]*re-attempting the refused operation/i);
+  expect(ref).toMatch(/runtime's recovery guide[\s\S]{0,120}structured next action/i);
+  expect(ref).not.toMatch(/nextAction[^.]*\{kind, argv\}|request-show/);
   // The precheck itself must implement the due rule, or the retry never runs.
   const precheck = read('docs/plans/pr-automations-precheck.sh');
   // Plain `!= null`, not `// null`: jq's alternative operator treats false as
@@ -344,7 +350,7 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
   const ref = compact(refPath);
   const spec = compact('docs/specs/pr-automations.md');
   const prompts = compact('docs/plans/pr-automations-prompts.md');
-  for (const [name, text] of [['reference', ref], ['spec', spec], ['prompts', prompts]]) {
+  for (const [name, text] of [['spec', spec], ['prompts', prompts]]) {
     expect(text, `${name}: never answers the dialog`).toMatch(/never answers? (?:that|the) dialog/i);
     expect(text, `${name}: trust comes from the clone`).toMatch(/trust[^.]*(?:inherit|primary (?:worktree|clone))/i);
     expect(text, `${name}: one worktree per dispatch`).toMatch(/one (?:Orca )?worktree per dispatch/i);
@@ -359,6 +365,10 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
     expect(text, `${name}: unowned launch retains the worktree`).toMatch(/worker not owned[\s\S]{0,400}retained_slots\[\]/);
     expect(text, `${name}: no helper`).not.toMatch(/trust\.js|trust helper|hasTrustDialogAccepted/);
   }
+  expect(ref).toMatch(/agent-first flow[^.]*one Orca child worktree per PR[^.]*parented to the project's primary worktree/i);
+  expect(ref).toMatch(/checked out detached at the exact head/i);
+  expect(ref).toMatch(/Orca owning the worker resources/i);
+  expect(ref).not.toMatch(/worker-start[^.]*--agent|worker-show[^.]*resource\.state|terminal close/);
   // One shared recipe creates the worktree, closes its creation terminal and
   // pins the head; both launch paths invoke it, then start the owned worker
   // and assert ownership; marker text is fenced to the owned branch.
@@ -420,7 +430,7 @@ test('automations: every dispatch gets its own Orca worktree under one host-wide
     expect(text, `${name}: cleared only by the user`).toMatch(/retained_slots\[\][^.]*(?:cleared|removed) only by the user/i);
     // Both retention paths record the slot: a settled worker whose candidate
     // cannot be proven durable, and a dirty or unproven abandon.
-    expect(text, `${name}: settled retention records the slot`).toMatch(/(?:settled|release)[^.]*(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]|(?:not|cannot be) proven disposable[\s\S]{0,400}retained_slots\[\]/i);
+    expect(text, `${name}: settled retention records the slot`).toMatch(/(?:settled|release)[^.]*(?:not|cannot be) proven (?:disposable|preserved)[\s\S]{0,400}retained_slots\[\]|(?:not|cannot be) proven (?:disposable|preserved)[\s\S]{0,400}retained_slots\[\]/i);
     expect(text, `${name}: abandon retention records the slot`).toMatch(/abandon[\s\S]{0,400}retained_slots\[\]/i);
     // Removal exists now, but only behind the disposability proof; a retained
     // worktree is never removed by the driver.

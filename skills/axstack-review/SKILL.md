@@ -94,7 +94,10 @@ session is the owner for every PR it handles.
    mode, and all six angles.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
-   branch:
+   branch. Give each reviewer a separate Orca child worktree parented to the
+   candidate; its probes and private evidence stay inside that worktree. Settle
+   it only after preserving required evidence in the private run record, before
+   removal. Untracked evidence is never cleanup permission.
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
      from the routing snapshot. Send both the identical six-angle brief with no

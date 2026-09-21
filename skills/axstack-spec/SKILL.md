@@ -18,12 +18,15 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    default, or GitHub Issues or repository Markdown when the user explicitly
    selects either alternative. Name the store before writing; one recorded
    choice leaves no implicit fallback.
-2. **Preflight external-tracker access.** In Linear mode, verify that the current
-   session can read, create, and update documents before any document write.
-   Missing access is an actionable setup gap: report it and stop this phase
-   without writing or changing stores. Linear drafting starts only when all
-   three operations are available; a later tickets-phase check cannot replace
-   this one. In GitHub mode, use authenticated `gh` to verify the target
+2. **Preflight external-tracker access.** In Linear mode, load the current
+   `orca-linear` guide, then inspect its document guidance and current
+   `orca linear --help` before any document write. Verify native read, create,
+   and update support separately. If any document operation is unadvertised or
+   unavailable, record its guide/help evidence, hold only that operation, and
+   stop this phase without mutation. There is no MCP fallback and no store
+   switch; the selected Linear document remains authoritative. A later
+   tickets-phase check cannot replace this preflight. In GitHub mode, use
+   authenticated `gh` to verify the target
    repository, issues enabled, and the current identity's issue read and write
    access before any issue write. Record the repository and identity checked.
    Missing access preserves the GitHub selection and stops the phase without

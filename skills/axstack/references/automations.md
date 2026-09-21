@@ -5,6 +5,12 @@ Read this when the current session is the native Orca PR **driver** or its
 `docs/specs/pr-automations.md` revision 6; this reference restates the parts an
 automation session must execute and does not widen them.
 
+Before automation, worktree, dispatch, settlement, or recovery operations,
+load [Orca runtime](orca-runtime.md), the version-matched `orca-cli` automation
+reference, and the orchestration guide/reference named by the action gate.
+Those guides own mechanics; this file retains Axstack selection, authority,
+deduplication, evidence, and safety policy.
+
 Pair A/B is retired for this contract; its artefacts remain untouched.
 
 ## Roles and authority
@@ -89,23 +95,21 @@ The driver performs this order and exits:
 
 1. If `tick_started_at` is newer than `tick_done_at`, add `previous tick did
    not finish` to `cursor.json.health[]`. Write `tick_started_at`. Match this
-   session's `ORCA_TERMINAL_HANDLE` to the driver's `terminalPtyId` from
-   `orca automations runs --id <driver>`, then verify the transcript model.
+   session's `ORCA_TERMINAL_HANDLE` to the driver's `terminalPtyId` from the
+   native automation run history, then verify the transcript model.
    Non-Opus or unknown identity records a hold and `tick_outcome: held`, and
    dispatches nothing.
-2. Bind the persistent Run with `orca orchestration run-use` and read the
-   inbox. For a `worker_done` matching a live marker, verify the review id at
-   the bound head, push range, or opened token. Release the worker; once its
-   release receipt is settled and the process has exited, run the cleanup
-   under "Run directory" below, which proves the worktree disposable before
-   resetting it; then clear the marker. Unverifiable delivery stays in
-   `pending_settlement[]` and blocks only that PR.
+2. Reconcile the persistent Run and inbox through the orchestration guide. For
+   a `worker_done` matching a live marker, verify the review id at the bound
+   head, push range, or opened token. Preserve the required private evidence,
+   then settle/release through the guide. Apply the "Run directory" proof
+   before removing a worktree, then clear the marker. Unverifiable delivery
+   stays in `pending_settlement[]` and blocks only that PR.
 3. Consume decisions as their sole consumer under "Decision tokens" below.
-4. Reconcile every marker older than 3 h. A live worker gets `worker-stop`; an
-   exited worker gets `worker-abandon`. Unknown liveness or user takeover
-   retains worktree and marker and blocks only that PR. An abandon is
-   confirmed by its accepted abandon receipt plus proven process exit; there
-   is no release receipt on this path. After confirmed abandon, run the same
+4. Reconcile every marker older than 3 h through the orchestration recovery
+   guide and use only its state-specific next action. Unknown liveness or user
+   takeover retains the worktree and marker and blocks only that PR. After a
+   confirmed abandon and proven process exit, run the same
    cleanup under "Run directory" below with its extra clean-tree condition — a
    dirty or unproven worktree is retained, not removed — append one health
    line, increment the head's `abandon_count`, and drop that head so normal
@@ -118,46 +122,23 @@ The driver performs this order and exits:
    marker. Dispatch within the repair and review rules below.
 6. Promote the `pending.json` fingerprint verbatim, because it records
    observation rather than completion. Write `tick_done_at` and
-   `tick_outcome: ok`, then close your own terminal tab and exit: each tick is
-   a fresh session and there is no hygiene sweep, so a tab left open outlives
-   the tick as a stray terminal in the root workspace.
+   `tick_outcome: ok`, then finish through the native automation/session
+   lifecycle and exit. Each tick is a fresh session; Axstack adds no terminal
+   hygiene sweep.
 
 ## Dispatch and repair selection
 
-Claude Code trusts a folder per git toplevel and stops at its "Quick safety
-check" dialog otherwise, and the driver never answers that dialog for a
-worker. Trust inherits from the project's primary clone, which the user
-trusted once (a fresh child worktree launched with no dialog — canary
-2026-09-18). There is no fixed pool: fetch the head into the project clone first (a
-failed fetch is a health line and no dispatch; no worktree exists yet), then
-create one Orca worktree per dispatch, `orca worktree create --repo id:<clone
-id> --name <repo short>-<num>-<head7> --base-branch <default branch>
---parent-worktree id:<clone id>::<clone path> --setup skip` (a name collision
-with a retained worktree at the same head appends the tick's
-`tick_started_at` stamp); close the creation terminal Orca opens in it with
-`orca terminal close --worktree <selector> --all`; check the worktree out
-detached at the pinned head and verify HEAD equals it; the marker's worktree
-is that path. Never write
-`~/.claude.json`. The worker is launched by Orca itself — `worker-start
---agent claude --model claude-opus-5 --effort medium` in that worktree — so
-the runtime owns the process: `worker-release` ends it and `worker-show`
-proves it exited, which is what allows the worktree to be removed. Never
-pre-create the worker's terminal or hand a terminal handle to
-`worker-start`: a reused handle is a resource Orca labels `external`, one it
-can neither stop nor prove exited, so every such worktree ends retained.
-After `worker-start` run `worker-show` on the receipt's dispatch id and
-require `projection.resource.state == owned`; anything else is a launch Orca
-does not own: apply the runtime-refusal recovery rules under "Safety holds"
-(the `worker-list` row's `nextAction` argv verbatim; `none` means inspect
-and retain), append a `worker not owned` health line and a `retained_slots[]`
-entry for the worktree, defer the PR, and record no marker. Orca's per-agent
-default arguments supply `--dangerously-skip-permissions`; the brief loads
-the skill files it needs by path. If `worker-start` reports a failed stage
-or a visible hold (the "Quick safety check" trust dialog) the worktree is not
-trusted: name it in a health line, defer the PR, dispatch nothing, never
-answer the dialog, and remove the worktree through the no-worker branch.
-Project customizations load as they would for the user; the allowlist is
-defi-com only and the user accepted that surface on 2026-09-18.
+There is no fixed pool. Fetch the pinned head first; a failed fetch records a
+health line and creates no worktree. Follow the orchestration placement guide's
+agent-first flow to create one Orca child worktree per PR, parented to the
+project's primary worktree, with Orca owning the worker resources. Do not
+pre-create or bulk-close terminals, and never answer a trust, permission, or
+hook prompt for a worker. Check out the pinned head detached and verify it
+before the agent reads the candidate. A failed or non-owned launch follows the
+orchestration recovery receipt and "Safety holds" below; never improvise
+cleanup or start a duplicate. Never write `~/.claude.json`. Project
+customizations load as they would for the user; the allowlist is defi-com only
+and the user accepted that surface on 2026-09-18.
 
 Every selected PR receives one dispatch marker with task id, dispatch id,
 worktree, head, `started_at`, reservation (`verdict` or `repair`), and trigger:
@@ -217,8 +198,11 @@ the cap records the count and is not a hold.
 Every agent works in its own project-local worktree checked out detached at
 the exact head and reports only through the Orca worker protocol.
 
-Peer review runs the two isolated configured reviewers on the identical brief,
-then the Luna gate. `APPROVE` requires complete exact-head/base reviews, gate
+Peer review runs each isolated configured reviewer in a separate Orca child
+worktree on the identical brief, then the Luna gate. Each reviewer's probes and
+private evidence remain inside its worktree; preserve required evidence before
+removal.
+`APPROVE` requires complete exact-head/base reviews, gate
 `proceed`, and zero validated blockers. `REQUEST_CHANGES` requires the same
 completeness and `proceed`, plus at least one evidenced blocking finding.
 `INCOMPLETE`, unresolved disagreement, unavailable review or gate, or unknown
@@ -299,13 +283,12 @@ Lifecycle has one named writer per transition, each by temp file + rename:
 
 Before opening a `push` token, the repair agent pins its candidate with local
 ref `refs/axstack/decisions/<token>` in the project clone, so the candidate
-survives worktree removal. It then sends one
-`hermes send --to telegram` message naming the PR, criterion, every reviewer's
-reason, and the exact replies `/axstack-decide approve <token>` and
-`/axstack-decide reject <token>` (the slash form loads the Hermes skill
-deterministically; bare `approve <token>` is best effort). Store the
-send receipt. The driver retries a `failed` send once next tick and reconciles
-an `uncertain` send against Hermes output before any retry.
+survives worktree removal. It then uses `axstack-relay` decision-token mode to
+send one message naming the PR, criterion, every reviewer's reason, and the
+exact replies `/axstack-decide approve <token>` and `/axstack-decide reject
+<token>` (the slash form loads the Hermes skill deterministically; bare
+`approve <token>` is best effort). Store the send receipt and follow the
+relay's failed/uncertain reconciliation rules.
 
 The Hermes gateway's fixed `axstack-decide` script accepts only those two exact
 commands. It validates the private user/channel configuration on every call,
@@ -333,8 +316,8 @@ one open longer than 24 h.
 ## Watchdog
 
 The hourly shell precheck only reads `cursor.json`, `precheck.log`,
-`decisions/`, and `orca automations runs --id <driver>`. It performs exactly
-these four checks and always exits non-zero, so no model session launches:
+`decisions/`, and the driver's native automation run history. It performs
+exactly these four checks and always exits non-zero, so no model session launches:
 
 | check | trips when |
 | --- | --- |
@@ -344,12 +327,13 @@ these four checks and always exits non-zero, so no model session launches:
 | decision waiting | an `open` decision is older than 24 h |
 
 Each trip is `(check, first_observed)`. Write one JSON line per tick to
-`watchdog.log` with `{ts, checks, trips, sent}` and send each occurrence once
-through `hermes send --to telegram`. Persist `sent`, `failed`, or `uncertain`;
-retry `failed` next tick and reconcile `uncertain` before retry. Re-send only
-after the check was observed clear and later recurs. Unreadable evidence is an
-`unknown` occurrence. A healthy tick writes its line and sends nothing. There
-is no gate for health findings.
+`watchdog.log` with `{ts, checks, trips, sent}`. Routine decision waits and
+transient or unknown health stay in Orca. Send only a credible serious risk, or
+a genuine operation blocker that still needs user intervention after bounded
+safe recovery, through `axstack-relay`; deduplicate and reconcile uncertain
+delivery there. Re-send only after the condition cleared and later recurs. A
+healthy tick writes its line and sends nothing. There is no gate for health
+findings.
 
 ## Run directory
 
@@ -369,14 +353,14 @@ targeted fetch of that exact remote branch into a per-dispatch ref, never
 shared clone can fake durability, a failed fetch retaining the worktree — or held by a
 `refs/axstack/decisions/<token>` ref in the project clone; and, on the
 abandon path, the worktree has no uncommitted changes.
-Only then it closes any terminal tab still listed and removes the worktree
-with `orca worktree rm --worktree <selector> --force` (the proof is the
-gate; a finished worker's untracked artefacts are not), so the dispatch
-leaves nothing behind. On the settled path the worker has finished, so untracked
-files are artefacts by definition; a candidate there is already pushed or
-token-held. A worktree whose release is settled but whose HEAD cannot be
-proven disposable, and an abandoned worktree that is dirty or holds an
-unproven candidate, are both **retained** — retained in place: named in one `health[]`
+Before settlement or removal, inspect untracked files as possible private
+review evidence and preserve every required receipt, probe, and report in the
+private run record. A finished worker does not make untracked evidence
+disposable. Then follow the orchestration settlement and `orca-cli` worktree
+removal guidance; do not substitute terminal bulk-close commands. A worktree
+whose release is settled but whose HEAD or evidence cannot be proven preserved,
+and an abandoned worktree that is dirty or holds an unproven candidate, are
+both **retained** — retained in place: named in one `health[]`
 line with path and SHA, and blocking only that PR with the user as owner.
 Retention is mechanical on both paths: the driver appends `retained_slots[]`
 `{slot, pr, head, reason}` (`slot` is the worktree path); a retained worktree
@@ -416,7 +400,8 @@ Orca run history is the authoritative log. The launch workspace is the host's
 not a git repository, and no project owns the automation. The briefs and the
 escalation template are read from the axstack checkout at an absolute path
 given in the prompt, never relative to the launch workspace. Keep this notification-policy edge in the
-run record: `Notification policy` authorizes the token and watchdog sends;
+run record: `Notification policy` authorizes serious-risk tokens and eligible
+recovered-blocker watchdog sends;
 delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
 
 ## Safety holds
@@ -443,12 +428,10 @@ delivery uses [axstack-relay](../../axstack-relay/SKILL.md).
   simply removed in the same tick.
   With a Dispatch or any residual resource the failed start owns runtime
   state, and retaining alone is not recovery: the driver follows the
-  runtime's recovery guide. With a Dispatch: `worker-list` for that run, and
-  the row's `nextAction` is an object `{kind, argv}` — a non-empty `argv` is
-  run verbatim through the same Orca executable and nothing else, while
-  `kind: none` authorizes no action beyond inspection and retention. With
-  residual resources but no Dispatch there is no row: the mutation itself is
-  recovered through `request-show` on the receipt's request id. The no-worker
+  runtime's recovery guide. With a Dispatch, follow the guide's structured
+  next action exactly; a no-action result authorizes inspection and retention
+  only. With residual resources but no Dispatch, follow the receipt's mutation
+  recovery instruction. The no-worker
   branch applies only after the resources are proven gone. It never retries
   in the same tick. Anything unproven retains the worktree with a health line
   naming the stage and the resources. Persisted configuration such

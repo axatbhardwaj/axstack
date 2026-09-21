@@ -13,12 +13,24 @@ Resolve one Orca executable for the session and reuse it. Prefer
 terminals, and otherwise `orca`. If the selected executable fails, report that
 exact gap; never switch binaries silently.
 
-Before supervised work, load the selected executable's version-matched
-`skills get orchestration --json` and `skills get orca-cli --json` guides.
-Follow returned schemas and their named conditional references rather than
-copying their command procedures into Axstack. Missing guide discovery is a
-setup gap. It does not authorize legacy runtime use or an Axstack dispatcher,
-daemon, scheduler, database, or escalation engine.
+Load only the selected executable's version-matched guides needed by the
+operation through `skills get orchestration --json`,
+`skills get orca-cli --json`, and `skills get orca-linear --json`.
+`orchestration` owns Run, Task,
+Dispatch, messaging, supervision,
+settlement, and recovery. `orca-cli` owns worktrees, terminals, automations,
+handoffs, and artifact publication; load its named conditional reference at
+the matching action gate. `orca-linear` owns Linear issue reads and writes.
+Follow returned schemas and current command help rather than copying their
+procedures into Axstack. Guide discovery does not prove runtime support for a
+particular operation: preflight that operation and report an advertised gap.
+Missing discovery never authorizes legacy runtime use, a silent integration or
+store fallback, or an Axstack dispatcher, daemon, scheduler, database, or
+escalation engine.
+
+Orca artifacts publish public-by-link output. They are not private evidence
+storage and must never receive private evidence by default; sharing requires
+explicit publication authority and the `orca-cli` publishing reference.
 
 ## Bind the configured role
 
@@ -62,6 +74,11 @@ a worktree was created with the wrong lineage, correct it in place with
 running worker. Lineage is presentation and reconciliation state, never
 authority: it grants nothing, and a correct parent never substitutes for the
 Task, Dispatch, and receipt evidence above.
+
+Every reviewer gets a separate Orca child worktree parented to the candidate.
+Keep that reviewer's probes and private evidence inside its worktree, with no
+first-pass cross-read. Preserve the required evidence in the private run record
+before removal; untracked files never prove a reviewer worktree disposable.
 
 An `input_accepted` stage proves only that input reached the terminal. Require
 `turn_started` plus runtime/session inspection before treating the agent as
