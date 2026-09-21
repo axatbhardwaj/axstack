@@ -24,6 +24,8 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
 - `--bundle` defaults to the package root and contains `skills/` plus
   `profiles/presets/*.json`.
 - `--skills-dir` is required unless a verified harness default resolves it.
+  Codex defaults to the shared `~/.agents/skills` root; an explicit override
+  remains authoritative and disables automatic legacy Codex-root retirement.
 - `--instructions` selects the instruction file that receives Axstack's owned
   marker block. `--harness claude` defaults to `~/.claude/CLAUDE.md`;
   `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`;
@@ -34,6 +36,16 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
   reads `~/.claude/skills`, so its own directory is only needed for the owned
   routing block; Antigravity (IDE and `agy` CLI) reads `~/.gemini/config/skills`
   only.
+
+For a default Codex install, Axstack first installs and verifies the canonical
+`~/.agents/skills` copy. It then retires only unchanged files owned by the
+legacy `$CODEX_HOME/skills/.axstack-manifest.json`. Modified, missing, unowned,
+or symlinked content is preserved or refused and reported; an instruction
+conflict preserves the complete legacy install. An unchanged owned Codex
+`AGENTS.md` binding is transferred to the canonical manifest without changing
+the instruction bytes. Other harness ownership, settings, and inert profile
+provenance remain untouched. Repeated installs verify the same canonical
+preset and converge without duplicate skill entries.
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
   Code subagent-default transaction. They do not configure Orca roles.
 - `--force` may replace an edited owned asset; it never adopts or removes
@@ -197,7 +209,7 @@ survives.
 | Harness | Default directory | Status |
 | --- | --- | --- |
 | Claude | `~/.claude/skills` | documented upstream |
-| Codex | `$CODEX_HOME/skills` (default `~/.codex/skills`) | documented upstream |
+| Codex | `~/.agents/skills` | documented upstream |
 | OpenCode | `~/.config/opencode/skills` | documented upstream |
 | Antigravity | `~/.gemini/config/skills` | documented upstream |
 | Grok | explicit `--skills-dir` only | auto-discovery unverified |

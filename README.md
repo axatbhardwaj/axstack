@@ -56,6 +56,11 @@ axstack check --harness codex
 axstack install --harness codex --preset mixed --yes
 ```
 
+Codex skills default to the shared `~/.agents/skills` root while its owned
+`AGENTS.md` block stays under `$CODEX_HOME` (default `~/.codex`). A default
+install safely retires only unchanged manifest-owned legacy Axstack skills;
+use `--skills-dir` for an explicit target without automatic migration.
+
 Then open an Orca chat and ask for the relevant skill:
 
 ```text
