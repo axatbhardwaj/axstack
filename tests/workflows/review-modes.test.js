@@ -17,7 +17,7 @@ test('review modes: eight raw scenario contracts cover the amendments', () => {
     'unknown-author',
     'unavailable-cross-model-reviewer',
     'stale-authoring-change',
-    'automation-comment-publication',
+    'automation-verdict-publication',
     'automation-incomplete-publishes-nothing',
   ]);
   for (const scenario of data.cases) {
@@ -26,6 +26,11 @@ test('review modes: eight raw scenario contracts cover the amendments', () => {
     expect(scenario.input.candidate).toBeTruthy();
     expect(scenario.expected).toBeTruthy();
   }
+  const automation = data.cases.find((c) => c.id === 'automation-verdict-publication');
+  expect(automation.input.caller).toMatch(/review manager|bounded PR coordinator/i);
+  expect(automation.expected.publication).toMatch(/APPROVE|REQUEST_CHANGES/);
+  expect(JSON.stringify(automation)).not.toMatch(/gate token/i);
+  expect(automation.expected.publication).not.toMatch(/COMMENT/i);
 });
 
 // The remaining checks are shipped prompt-policy structure, not proof that a
