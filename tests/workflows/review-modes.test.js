@@ -131,8 +131,8 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
   expect(watch).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(repair).toMatch(/authored[^.]*review rule/i);
   expect(repair).toMatch(/current authored[^.]*receipt|authored[^.]*current receipt/i);
-  expect(lifecycle).toMatch(/peer[^.]*two[^.]*reviewer-primary[^.]*reviewer-secondary/i);
-  expect(lifecycle).toMatch(/authored[^.]*one[^.]*eligible[^.]*actual author/i);
+  expect(lifecycle).toMatch(/peer[^.]*two configured roles[^.]*same brief[^.]*isolated/i);
+  expect(lifecycle).toMatch(/authored[^.]*one eligible role[^.]*author provenance/i);
 });
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
