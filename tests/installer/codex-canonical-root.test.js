@@ -8,6 +8,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join, resolve } from '../../src/posixpath.js';
+import { locateInstructionBlock } from '../../src/instructions.js';
+import { hashContent } from '../../src/manifest.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
 const CLI = resolve(import.meta.dir, '../../bin/axstack.js');
@@ -39,11 +41,24 @@ function codexInstall(f, extra = [], options = {}) {
   });
 }
 
-function seedLegacy(f) {
+function seedLegacy(f, extra = []) {
   runCli(CLI, [
     'install', '--preset', 'mixed', '--bundle', f.bundle,
-    '--skills-dir', f.legacy, '--yes',
+    '--skills-dir', f.legacy, '--yes', ...extra,
   ], { env: { HOME: f.root, CODEX_HOME: f.codexHome } });
+}
+
+function seedOlderManagedInstructions(f, instructions) {
+  seedLegacy(f, ['--instructions', instructions, '--no-claude-settings']);
+  const older = readFileSync(instructions, 'utf8').replace(
+    'Do not use a harness native subagent tool for delegated work.',
+    'Do not use a native subagent tool for delegated work.',
+  );
+  writeFileSync(instructions, older);
+  const manifestPath = join(f.legacy, '.axstack-manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.instructions.hash = hashContent(locateInstructionBlock(older).block);
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 }
 
 test('Codex defaults skills to ~/.agents/skills and keeps AGENTS.md in CODEX_HOME', () => {
@@ -93,6 +108,38 @@ test('migration transfers an unchanged legacy AGENTS.md binding into a preinstal
   expect(readFileSync(instructions, 'utf8')).toContain('<!-- axstack:begin v1 -->');
 });
 
+test('migration accepts an older managed instruction block and retires the legacy install', () => {
+  const f = fixture();
+  const instructions = join(f.codexHome, 'AGENTS.md');
+  seedOlderManagedInstructions(f, instructions);
+
+  const result = codexInstall(f, ['--no-claude-settings']);
+  const canonicalManifest = JSON.parse(
+    readFileSync(join(f.canonical, '.axstack-manifest.json'), 'utf8'),
+  );
+  const currentBlock = locateInstructionBlock(readFileSync(instructions, 'utf8')).block;
+
+  expect(result.ok).toBe(true);
+  expect(result.out).toMatch(/instruction updated/);
+  expect(result.out).toMatch(/legacy Codex skills retired/i);
+  expect(canonicalManifest.instructions.hash).toBe(hashContent(currentBlock));
+  expect(existsSync(join(f.legacy, '.axstack-manifest.json'))).toBe(false);
+});
+
+test('a different legacy instruction path holds retirement after reporting canonical install', () => {
+  const f = fixture();
+  const oldInstructions = join(f.root, 'old-AGENTS.md');
+  seedLegacy(f, ['--instructions', oldInstructions, '--no-claude-settings']);
+
+  const result = codexInstall(f, ['--no-claude-settings'], { expectFail: true });
+
+  expect(result.out).toMatch(/added: .*axstack-demo\/SKILL\.md/);
+  expect(result.out).toContain(`instruction created: ${f.codexHome}/AGENTS.md`);
+  expect(result.out).toMatch(/legacy Codex skills preserved.*different instruction file/i);
+  expect(existsSync(join(f.legacy, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(oldInstructions)).toBe(true);
+});
+
 test('an instruction ownership conflict preserves the complete legacy install', () => {
   const f = fixture();
   const instructions = join(f.codexHome, 'AGENTS.md');
@@ -106,6 +153,18 @@ test('an instruction ownership conflict preserves the complete legacy install', 
   const result = codexInstall(f, ['--no-claude-settings'], { expectFail: true });
 
   expect(result.out).toMatch(/instruction conflict/i);
+  expect(existsSync(join(f.legacy, 'axstack-demo', 'SKILL.md'))).toBe(true);
+});
+
+test('--force does not turn an edited legacy instruction block into transfer proof', () => {
+  const f = fixture();
+  const instructions = join(f.codexHome, 'AGENTS.md');
+  seedLegacy(f, ['--instructions', instructions, '--no-claude-settings']);
+  writeFileSync(instructions, readFileSync(instructions, 'utf8').replace('engineering work', 'everything'));
+
+  const result = codexInstall(f, ['--no-claude-settings', '--force'], { expectFail: true });
+
+  expect(result.out).toMatch(/retirement held.*not accepted/i);
   expect(existsSync(join(f.legacy, 'axstack-demo', 'SKILL.md'))).toBe(true);
 });
 
@@ -151,7 +210,28 @@ test('legacy symlinks are never followed and leave the verified canonical instal
 
   expect(readFileSync(outside, 'utf8')).toBe('outside\n');
   expect(existsSync(join(f.canonical, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(result.out).toMatch(/added: .*axstack-demo\/SKILL\.md/);
+  expect(result.out).toMatch(/canonical install completed; legacy retirement failed/i);
   expect(result.out).toMatch(/legacy Codex skills.*symlink|symlink.*legacy Codex skills/i);
+});
+
+test('a repaired retirement failure reuses verified canonical instruction ownership', () => {
+  const f = fixture();
+  const instructions = join(f.codexHome, 'AGENTS.md');
+  seedOlderManagedInstructions(f, instructions);
+  const owned = join(f.legacy, 'axstack-demo', 'SKILL.md');
+  const outside = join(f.root, 'outside.txt');
+  writeFileSync(outside, 'outside\n');
+  rmSync(owned);
+  symlinkSync(outside, owned);
+
+  codexInstall(f, ['--no-claude-settings'], { expectFail: true });
+  rmSync(owned);
+  writeFileSync(owned, readFileSync(join(f.bundle, 'skills', 'axstack-demo', 'SKILL.md')));
+  const retried = codexInstall(f, ['--no-claude-settings']);
+
+  expect(retried.out).toMatch(/legacy Codex skills retired/i);
+  expect(existsSync(join(f.legacy, '.axstack-manifest.json'))).toBe(false);
 });
 
 test('a symlinked legacy skills root is refused without touching its target', () => {

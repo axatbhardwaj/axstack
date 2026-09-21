@@ -46,6 +46,13 @@ conflict preserves the complete legacy install. An unchanged owned Codex
 the instruction bytes. Other harness ownership, settings, and inert profile
 provenance remain untouched. Repeated installs verify the same canonical
 preset and converge without duplicate skill entries.
+
+If retirement leaves only the legacy manifest's Claude-settings ownership,
+first confirm its `files` map is empty and it has no instruction or profile
+conflict. Then finish that owner with
+`axstack uninstall --skills-dir "${CODEX_HOME:-$HOME/.codex}/skills" --yes`;
+the settings sidecar preserves the value while any other install still owns it.
+
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
   Code subagent-default transaction. They do not configure Orca roles.
 - `--force` may replace an edited owned asset; it never adopts or removes

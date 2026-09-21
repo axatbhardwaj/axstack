@@ -313,11 +313,15 @@ async function main() {
           summary.legacyCodex = await retireLegacySkills({
             canonicalSkillsDir: skillsDir,
             legacySkillsDir: legacyCodexDir,
-            transferInstructions: legacyCodexManifest?.instructions?.path !== null,
+            acceptedInstructionTransfer: summary.acceptedInstructionTransfer,
             yes: !!flags.yes,
           });
         } catch (err) {
-          throw new Error(`legacy Codex skills not retired: ${err.message}`);
+          summary.legacyCodex = {
+            removed: [], preserved: [], missing: [], skipped: false,
+            failed: true,
+            reason: `legacy Codex skills not retired: ${err.message}`,
+          };
         }
       } else if (usesCodexDefault) {
         summary.legacyCodex = { removed: [], preserved: [], missing: [], held: true };
@@ -340,7 +344,16 @@ async function main() {
       if (summary.stale.length) console.log(`stale owned files left on disk: ${summary.stale.join(', ')}`);
       if (summary.legacyCodex && !summary.legacyCodex.skipped) {
         if (summary.legacyCodex.held) {
-          console.log('legacy Codex skills preserved: canonical install has an unresolved conflict');
+          console.log(
+            `legacy Codex skills preserved (retirement held): ${summary.legacyCodex.reason ?? 'canonical install has an unresolved conflict'}`,
+          );
+          if (summary.legacyCodex.failure) process.exitCode = 1;
+        }
+        if (summary.legacyCodex.failed) {
+          console.log(
+            `canonical install completed; legacy retirement failed: ${summary.legacyCodex.reason}`,
+          );
+          process.exitCode = 1;
         }
         if (summary.legacyCodex.removed.length) {
           console.log(`legacy Codex skills retired: ${summary.legacyCodex.removed.join(', ')}`);

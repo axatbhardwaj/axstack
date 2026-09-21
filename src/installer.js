@@ -509,9 +509,9 @@ export async function installBundle({
     : null;
 
   const ownInstructions = prevManifest.instructions ?? { path: null, hash: null };
-  const boundInstructions = ownInstructions.path === null && inheritedInstructions?.path === instructionsFile
-    ? inheritedInstructions
-    : ownInstructions;
+  const usesInheritedInstructions = ownInstructions.path === null &&
+    inheritedInstructions?.path === instructionsFile;
+  const boundInstructions = usesInheritedInstructions ? inheritedInstructions : ownInstructions;
   let existingInstructionsRaw = null;
   let instructionPlan = null;
   let legacyInstructionNote = null;
@@ -706,6 +706,18 @@ export async function installBundle({
       ...summary,
       ownershipComplete: desired.every(({ rel, content }) =>
         installedHashes[rel] === hashContent(content)),
+      // Retirement may retry after a prior canonical install succeeded. The
+      // accepted plan proves either fresh inheritance or existing canonical
+      // ownership of the same legacy-bound path; forced edits prove neither.
+      acceptedInstructionTransfer: inheritedInstructions?.path === instructionsFile &&
+        boundInstructions.path === instructionsFile &&
+        instructionPlan?.action !== 'conflict' && !instructionPlan?.forced
+        ? {
+            path: instructionsFile,
+            legacyHash: inheritedInstructions.hash,
+            canonicalHash: nextInstructions.hash,
+          }
+        : null,
       preset: selectedPreset,
       roles: roleReadiness,
       claudeSettings: claudePlan.report,
@@ -997,7 +1009,7 @@ export async function uninstallBundle({
 export async function retireLegacySkills({
   canonicalSkillsDir,
   legacySkillsDir,
-  transferInstructions = false,
+  acceptedInstructionTransfer = null,
   yes = false,
 } = {}) {
   if (!canonicalSkillsDir || !legacySkillsDir) {
@@ -1039,13 +1051,27 @@ export async function retireLegacySkills({
   const summary = { removed: [], preserved: [], missing: [], skipped: false };
   const remainingFiles = { ...legacyManifest.files };
   let remainingInstructions = legacyManifest.instructions;
-  if (transferInstructions && legacyManifest.instructions?.path !== null) {
+  if (legacyManifest.instructions?.path !== null) {
     const canonicalInstructions = canonicalManifest.instructions;
+    const transferAccepted =
+      acceptedInstructionTransfer?.path === legacyManifest.instructions.path &&
+      acceptedInstructionTransfer?.legacyHash === legacyManifest.instructions.hash &&
+      acceptedInstructionTransfer?.canonicalHash === canonicalInstructions?.hash &&
+      canonicalInstructions?.path === legacyManifest.instructions.path;
+    if (!transferAccepted) {
+      return {
+        ...summary,
+        held: true,
+        failure: true,
+        reason: 'legacy instruction ownership is bound to a different instruction file or was not accepted by the canonical install',
+      };
+    }
+    const instructionsRaw = await readFile(await canonicalInstructionFile(canonicalInstructions.path), 'utf8');
+    const installedBlock = locateInstructionBlock(instructionsRaw);
     if (
-      canonicalInstructions?.path !== legacyManifest.instructions.path ||
-      canonicalInstructions?.hash !== legacyManifest.instructions.hash
+      installedBlock === null || hashContent(installedBlock.block) !== canonicalInstructions.hash
     ) {
-      throw new Error('legacy instruction ownership not transferred: canonical binding differs');
+      throw new Error('legacy instruction ownership not transferred: canonical binding is not verified');
     }
     remainingInstructions = { path: null, hash: null };
   }
