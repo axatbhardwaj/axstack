@@ -66,7 +66,14 @@ intent alone is insufficient. Conversely a completed run row does not prove exit
 If these facts remain unknown, report the hold at the durable decision location;
 do not silently stand down forever or replace a potentially live owner.
 
-Before PR admission, reconcile old pass resources. If three or more unreclaimed
+Before PR admission, reconcile old pass resources and reclaim every safely
+removable earlier pass workspace under the retirement guards below. This is
+routine cleanup on every admitted pass; do not wait for the three-workspace
+threshold to start cleanup. Save confirmed exit and ownership-release receipts
+before removing each workspace. Preserve dirty, unpushed, evidence-bearing,
+user-owned, active, or uncertain resources; the threshold never relaxes these guards.
+After cleanup, re-list and count only the earlier pass workspaces still remaining.
+If three or more unreclaimed
 earlier pass workspaces remain, disable only this automation through the native
 CLI, verify the disabled setting, save/report the cleanup hold, and admit no new
 PR jobs. Also pause on a confirmed cleanup failure or unresolved lane ownership.
