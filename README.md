@@ -6,9 +6,10 @@ CLI installs owned skills and role data and checks capabilities. Axstack has no
 daemon, scheduler, runtime database, or workflow state machine.
 
 Orca is the only supported active runtime. Its installed, version-matched
-`orchestration` and `orca-cli` guides own worktrees, sessions, supervised
-dispatch, messages, settlement, and handoff mechanics. Axstack owns scope,
-role choices, evidence, review policy, and one private derived run record.
+`orchestration`, `orca-cli`, and `orca-linear` guides own supervised runtime,
+worktree/automation, and Linear issue mechanics. Axstack owns scope, role
+choices, evidence, review policy, and one private derived run record. Guide
+discovery is not proof that a specific operation works.
 
 ## How a run works
 
@@ -26,12 +27,16 @@ without changing authority.
    substantial or stacked work needs an approved spec and matching ticket map.
    Substantial work uses Linear by default, or explicitly selected GitHub Issues
    or repository Markdown, as its authoritative spec and capability tracker.
+   Linear document operations preflight current native guide/help support and
+   hold without MCP fallback or a silent store switch when support is absent.
 2. The current chat drives on whatever model runs it; there is no driver
    profile. Bind each ready task to the selected role snapshot and an authoritative Orca
    Run, Task, and Dispatch. Exactly one writer owns a candidate at a time. All
    subagent and delegated worker dispatches go through Orca orchestration rather than
    harness-native subagent tools.
-3. Peer PRs receive both configured independent reviewer roles. Authored PRs
+3. Peer PRs receive both configured independent reviewer roles in separate
+   candidate-child worktrees; required private evidence is preserved before
+   either worktree is removed. Authored PRs
    receive one eligible reviewer from the selected preset's explicit mapping
    and actual author provenance. Every review binds the exact head and base.
    Stable IDs are `axstack-reviewer-primary` and `axstack-reviewer-secondary`.

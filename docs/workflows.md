@@ -76,9 +76,12 @@ provider defaults, or installed tools, and no model is substituted silently.
 
 Immediately before dispatch, delivery processing, settlement, recovery, or
 handoff, load the shared `skills/axstack/references/orca-runtime.md`. It resolves
-one Orca executable, loads that binary's version-matched `orchestration` and
-`orca-cli` guides, and follows their advertised schemas. Axstack does not vendor
-the guides or restate a competing command protocol.
+one Orca executable, then loads only the version-matched guide needed by the
+operation: `orchestration` for Run/Task/Dispatch supervision, `orca-cli` for
+worktrees, automations, handoff, and publication, and `orca-linear` for Linear
+issues. Axstack follows current command help and named conditional references;
+guide availability is not exercised runtime support. It does not vendor the
+guides or restate a competing command protocol.
 
 All subagent, delegated-worker, reviewer, and cross-harness work goes through Orca
 orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides). Do not use a
@@ -120,7 +123,10 @@ session and evidence remain valid.
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline. Linear is the default authoritative store;
   GitHub Issues and repository Markdown are explicit alternatives. A GitHub
-  baseline pins the issue URL and approved body digest.
+  baseline pins the issue URL and approved body digest. Linear document
+  operations preflight the current `orca-linear` guide and command help; a
+  missing native operation holds only that operation without MCP fallback or a
+  store switch.
 - `axstack-tickets` maps user-visible capabilities to dependency-aware internal
   tasks. Linear is the default selected store with access preflight; GitHub
   Issues is an explicit external-tracker alternative and repository Markdown
@@ -132,7 +138,9 @@ session and evidence remain valid.
   confirms the remote SHA before review. Local green and CI green remain
   separate evidence.
 - `axstack-review` gives peer PRs two isolated same-brief reviewers and authored
-  PRs one eligible cross-family/preset-mapped reviewer. All cover security,
+  PRs one eligible cross-family/preset-mapped reviewer. Every reviewer runs in
+  a separate candidate-child worktree, with private evidence preserved before
+  removal. All cover security,
   correctness, integration, requirements, design, and simplicity. Report-only
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
@@ -169,8 +177,10 @@ keeps the current owner and a resumable record.
 
 Serious security, downtime, data-loss, and major-design risks are raised in a
 prompt immediately and hold dependent dangerous work. This is not a runtime
-gate. An applicable `Notification policy` may use `axstack-relay`; otherwise the
-current Orca conversation is the fallback. The relay normally delivers one-way
+gate. An applicable `Notification policy` may use `axstack-relay` for serious
+risk immediately or a genuine blocker needing user intervention after bounded
+safe recovery. Questions, spec approvals, progress, CI pending, merge-ready,
+merged, and completion stay in Orca. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
 `message_id`. The PR automation's decision tokens are the narrow exception: a

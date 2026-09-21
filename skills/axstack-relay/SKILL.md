@@ -18,14 +18,15 @@ Choose the applicable message type:
   sending the requested content, including a simple “hi”. No Axstack decision,
   PR, or pre-existing `Notification policy` is required. Clearly label transport
   tests as tests with no action authority; preserve ordinary message content.
-- **Urgent issues and blockers:** an explicit standing instruction to contact
-  the user via Telegram authorizes proactive outreach when a time-sensitive
-  issue or blocker requires their attention, without approval for each send.
-  Record that instruction in the caller's private notification policy for
-  subsequent runs. State the issue, impact, and the answer or action needed.
-- **Other automated notifications:** follow the caller's recorded
-  `Notification policy`, including eligible-message rules. Without applicable
-  authorization, keep the message in the current Orca conversation.
+- **Serious risks and recovered blockers:** an explicit standing instruction to
+  contact the user via Telegram authorizes proactive outreach for a credible
+  serious risk immediately, or for a genuine blocked operation that still
+  needs user intervention after bounded safe recovery. Record that instruction
+  in the caller's private notification policy. State the issue, impact, and the
+  answer or action needed.
+- **Routine run events:** questions, spec approvals, progress, CI pending,
+  merge-ready, merged, and completion stay in Orca. They never become proactive
+  relay messages merely because the run is waiting.
 
 Verify the transport, execution host, and intended recipient from the user's
 request, trusted caller context, or an existing private notification policy.
