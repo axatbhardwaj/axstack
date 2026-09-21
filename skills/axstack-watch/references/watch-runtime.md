@@ -2,53 +2,37 @@
 
 Read this before starting, resuming, or stopping automated PR observation.
 
-## Accepted policy
+## Standalone watch
 
-The PR owner remains accountable throughout a standalone watch's default
-24-hour window. `axstack-monitor` and `axstack-watchdog` are independent,
-read-only roles, not authors, reviewers, repliers, or owners.
+A standalone PR owner remains accountable through the default 24-hour window.
+`axstack-monitor` is an optional independent read-only observer: it reads the
+current GitHub state, persists event IDs, wakes the owner only for a new
+actionable event, and never sends or mutates. Healthy observations update
+quietly. Reuse prior watch identity rather than registering a duplicate, and
+stop task-owned registrations at completion, cancellation, or expiry.
 
-- **Monitor:** `axstack-monitor` is an optional read-only observer that reads
-  GitHub, all PR feedback, and latest checks on its registered cadence, persists event
-  IDs, wakes the owner only for a new actionable event, and never sends.
-- **Watchdog:** for the PR automations, it is a model-free hourly shell precheck
-  that never mutates GitHub, has no gate, and records each tick in
-  `watchdog.log`.
+## Native watch manager
 
-Healthy observations are snapshot-only and update quietly; they wake neither owner nor
-driver. Both roles deduplicate event IDs. Uncertain delivery is reconciled
-before retry. Restart reuses prior watch identity rather than registering a
-duplicate. The shared deadline ends earlier on completion or cancellation and
-is never silently renewed.
+The separate native watch manager follows the
+[native PR-manager contract](../../axstack/references/automations.md). It reuses
+one dedicated workspace at minutes `7,22,37,52`, scans every eligible own PR,
+and admits at most five bounded actionable-event jobs. Waiting PRs stay covered
+without reserving slots. Each job uses its own repository-parented worktree and
+settles with all descendants; no model, per-PR timer, or polling loop waits for
+CI, review, a user decision, or merge.
 
-## Native Orca automations
+Load the version-matched Orca automation and orchestration guidance through the
+shared [runtime boundary](../../axstack/references/orca-runtime.md). Requested
+settings or source configuration are not runtime evidence. Preserve quiet
+unchanged behavior, exact-head event dedupe, ownership, complete discovery,
+and current authority.
 
-Load the version-matched Orca automation guidance through the shared
-[runtime boundary](../../axstack/references/orca-runtime.md). The verified
-native automation schema supports provider selection, but model, effort, and
-permission pinning are unsupported, and its schedule parser cannot preserve
-the accepted bounded expiry by itself. Requested role values or a post-launch
-self-report are not effective launch evidence.
+Before activation, canary same-session reuse, a busy scheduled tick, session
+loss and recovery, and total process and memory behavior. Until observed, those
+remain unverified; do not replace them with a precheck, watchdog, custom
+scheduler, state engine, or legacy fallback.
 
-The user lifted the native-watch hold by user decision on 2026-09-16. The
-driver every 15 minutes dispatches and exits as the mutating owner, and the
-watchdog is model-free and read-only, has no gate, and records `watchdog.log`;
-there is no watch deadline for automations. The driver is the automation
-session itself, with no `axstack-monitor` or `axstack-owner` role row. Still
-introduce no custom scheduler or polling loop and use no legacy runtime
-fallback. The session-level contract lives in
-[Automation sessions](../../axstack/references/automations.md).
-
-## Preserve the contract under automation
-
-An automation session preserves its 15-minute driver and hourly model-free
-watchdog cadences, quiet healthy behavior, deduplication, handshake, watched
-scope, and wake owner. Test restart, duplicate ticks, cancellation,
-session-reuse fallback, and final cleanup before enabling.
-A firing timestamp proves neither delivery nor work advancement. An unrequested
-fallback session reconciles ownership and never becomes owner silently.
-
-At every end condition, stop all task-owned registrations, verify runtime
-cleanup receipts, and capture remaining work as resumable state. Removing watch
-coverage, weakening role discipline, or changing the deadline requires a
-material specification revision; it is not an implementation workaround.
+On recovery reconcile actual native workers, GitHub, and the compact run record
+before admitting work. Unknown state blocks only the affected PR. At every job
+end, settle owned workers, preserve unsafe or user-owned state, release proven
+resources, and leave exact resumable receipts.

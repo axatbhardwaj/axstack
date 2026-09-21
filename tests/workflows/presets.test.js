@@ -23,7 +23,6 @@ const roleIds = [
   'axstack-explore-codebase',
   'axstack-explore-execution',
   'axstack-monitor',
-  'axstack-watchdog',
   'axstack-auditor',
   'axstack-debug-investigator-1',
   'axstack-debug-investigator-2',
@@ -48,7 +47,7 @@ const expected = {
     g(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-luna', 'max'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    a('claude-opus-5', 'medium'), a('claude-opus-5', 'medium'),
+    a('claude-opus-5', 'medium'),
     c('gpt-5.6-luna', 'max'),
     a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
@@ -64,7 +63,7 @@ const expected = {
     c(null, 'high'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-luna', 'max'),
     c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-terra', 'low'), c('gpt-5.6-terra', 'low'),
+    c('gpt-5.6-terra', 'low'),
     c('gpt-5.6-luna', 'max'),
     c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
     c('gpt-5.6-sol', 'high'), c('gpt-5.6-terra', 'xhigh'),
@@ -80,7 +79,7 @@ const expected = {
     a(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
-    a('claude-sonnet-5', 'low'), a('claude-sonnet-5', 'low'),
+    a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5', 'high'), a('claude-sonnet-5', 'xhigh'),
@@ -213,7 +212,7 @@ test('presets: public docs and shared references never state a stale role count'
   ];
   for (const file of files) {
     const text = readFileSync(`${root}/${file}`, 'utf8');
-    // "25 role rows", "25-role inputs", "25 stable role IDs", "25 stable IDs".
+    // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
     const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
     expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
@@ -222,23 +221,15 @@ test('presets: public docs and shared references never state a stale role count'
   expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
 });
 
-test('presets: monitor/watchdog notes carry the lifted hold, not the held wording', () => {
+test('presets: monitor remains a standalone read-only observer', () => {
   for (const preset of presetNames) {
     const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));
     const monitor = byId['axstack-monitor'].notes;
-    const watchdog = byId['axstack-watchdog'].notes;
-    for (const notes of [monitor, watchdog]) {
-      expect(notes, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
-    }
-    // The driver is the automation session itself; the monitor is not redefined as it.
+    expect(monitor, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
     expect(monitor).not.toMatch(/driver automation|mutating owner|pushes/i);
     expect(monitor).toMatch(/optional[^.]*read-only|read-only[^.]*optional/i);
     expect(monitor).toMatch(/never sends/i);
-    expect(monitor).toMatch(/not the driver|driver is the automation session/i);
-    expect(watchdog).toMatch(/independent read-only/i);
-    expect(watchdog).toMatch(/automation health/i);
-    expect(watchdog).toMatch(/never mutates GitHub/i);
-    expect(watchdog).toMatch(/(?:only|one)[^.]*gate-authorized[^.]*send[^.]*watchdog\.json/i);
-    expect(watchdog).not.toMatch(/never sends/i);
+    expect(monitor).toMatch(/standalone PR watch/i);
+    expect(byId['axstack-watchdog']).toBeUndefined();
   }
 });

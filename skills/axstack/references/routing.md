@@ -11,7 +11,7 @@ only with exactly one unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 25 role
+At run start, capture one **routing snapshot**: the complete map of all 24 role
 IDs with provider/model/mode/effort, absent or unconfigured roles recorded
 explicitly, and no invented provider default. An absent or unconfigured role
 holds only that role's work, not the run. A role installed or changed later
@@ -43,8 +43,8 @@ Role IDs:
   `axstack-arena-judge-fable` judge them. `axstack-auditor` audits;
   `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors explanations; `axstack-explainer-review`
-  reviews them. `axstack-monitor` observes only; `axstack-watchdog` sends
-  only gate-authorized health escalations.
+  reviews them. `axstack-monitor` is an optional read-only standalone-watch
+  observer that never sends.
 - `axstack-debug-investigator-1..4` each probe one L1 brief.
 
 Provenance is matched on provider/model ID; effort never maps. Missing table-row

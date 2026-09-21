@@ -21,9 +21,9 @@ by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
 The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
-When the session is the Orca driver automation, also load
-[Automation sessions](../axstack/references/automations.md): it is the owner
-for every PR it handles, and its allowlist bounds every mutation.
+When the session is a watch-manager PR job, also load
+[Native PR managers](../axstack/references/automations.md): the bounded PR
+coordinator owns that event and its allowlist bounds every mutation.
 
 ## 1. Adopt and reconcile
 
@@ -64,19 +64,18 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. The user lifted the native-watch hold by user decision: the driver
-every 15 minutes dispatches and exits as a mutating owner; the watchdog is
-model-free and read-only, has no gate, and records `watchdog.log`; there is no
-watch deadline for automations. The driver is the automation session itself,
-with no `axstack-monitor` or `axstack-owner` role row; `axstack-monitor` stays
-an optional read-only observer that never sends. One read-only PR observation
-needs neither. The publishing driver is the live owner for a status check;
+anything. The native watch manager reuses one dedicated workspace on its
+staggered 15-minute schedule, covers every eligible own PR, and starts only
+bounded actionable-event jobs. Waiting PRs reserve no execution slots and
+there is no watch deadline for manager automation. `axstack-monitor` stays an
+optional read-only observer that never sends. One read-only PR observation
+needs neither. The bounded PR coordinator is the live owner for its event;
 materialize no `axstack-owner` and start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
-the owner launches the writer, reviewers, monitor, and watchdog. Workers create
-no children or recursive teams, and the adoption watcher is never the writer.
+the owner launches the writer, reviewers, and optional monitor. Leaf workers
+create no recursive teams, and the adoption watcher is never the writer.
 
 A live watch has verified role and timer receipts, handshakes, watched scope,
 wake ownership, and a common expiry. A missing runtime capability is a setup gap,
@@ -95,8 +94,8 @@ A healthy unchanged observation produces no user-facing message.
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
 follow [Repair and publication](references/repair-publication.md). An
-automation session repairs in a per-PR child worktree created through
-`orca-cli`; its driver worktree never checks out a PR branch.
+A manager PR job repairs in its per-PR child worktree created through `orca-cli`;
+the manager workspace never checks out a PR branch.
 
 ### Feedback routing
 
@@ -107,9 +106,9 @@ snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
 session only when the run itself launched that session and evidence allows,
 then receive refreshed review under the authored mode rule before publication.
-For an adopted own PR under the automation, the original authoring session is
-not a run-launched session: the repair author is the automation session
-(Claude/Opus) or a dispatched `axstack-author` (Sol), and the authored-review
+For an adopted own PR under the manager, the original authoring session is
+not a run-launched session: the repair author is the manager PR coordinator or
+a dispatched `axstack-author`, and the authored-review
 pairing follows the recorded actual provenance of that repair, not the PR's
 historical author. Unknown, mixed, or unsupported author provenance
 that cannot establish the eligible configured reviewer is an exact gap to
@@ -120,10 +119,9 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor never sends. The automation watchdog never mutates GitHub, has no
-gate, and records occurrences and send receipts in `watchdog.log`; absent
-policy or failed relay uses the current Orca conversation and leaves every
-existing hold open.
+The monitor never sends. The manager deduplicates authorized notifications;
+absent policy or failed relay uses its current Orca conversation and leaves
+every existing hold open.
 
 ## 5. State readiness precisely
 
@@ -135,8 +133,8 @@ observed state distinct from merged, and the human merges by default.
 ## 6. End and preserve continuity
 
 End a standalone watch early when all required PRs merge, at cancellation, or
-at its shared default 24 h deadline. There is no watch deadline for
-automations. In every case, stop and verify all owned registrations.
+at its shared default 24 h deadline. There is no watch deadline for manager
+automation. In every case, stop and verify all owned registrations.
 
 At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither

@@ -79,7 +79,7 @@ targets are reported without normal-path adoption. Install exits nonzero when
 an instruction conflict is preserved, while clean and idempotent installs exit
 successfully.
 
-The public bundle preserves three canonical 25-role inputs:
+The public bundle preserves three canonical 24-role inputs:
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), and
 [claude-only](profiles/presets/claude-only.json). Each is exactly
@@ -114,11 +114,11 @@ answer trust or permission prompts on the worker's behalf, and never create a
 duplicate writer. A `worker_done` advances work only when its Task and Dispatch
 match the active attempt and its revision evidence verifies.
 
-The user lifted the native-watch hold by decision on 2026-09-16. The driver
-every 15 minutes dispatches and exits; the watchdog is model-free and
-read-only, has no gate, and records `watchdog.log`; there is no watch deadline
-for automations. Axstack uses no historical fallback and introduces no custom
-scheduler.
+Two reusable native PR-manager chats run on staggered 15-minute schedules in
+dedicated workspaces. Review and watch each admit at most five bounded PR jobs;
+waiting PRs stay covered without reserving slots. Axstack adds no custom
+scheduler, queue engine, or decision interpreter. Native reuse, busy-tick,
+recovery, and VPS resource behavior require a canary before activation.
 
 Mobile completion/reply behavior remains unverified. Structural checks and
 qualitative scenario evaluation are not live runtime proof.

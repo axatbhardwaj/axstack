@@ -118,25 +118,25 @@
       ]
     },
     {
-      "id": "watch-model-pinning-unavailable",
-      "title": "Unavailable native watch role pinning holds watch activation without weakening migration",
+      "id": "watch-manager-canary-required",
+      "title": "Native manager activation waits for reuse and resource canary evidence",
       "acceptance_refs": ["A8"],
-      "user_prompt": "Activate the five-minute monitor and hourly watchdog within the approved Orca migration specification. Report any missing native capabilities and preserve the specification's holds and evidence boundaries.",
+      "user_prompt": "Prepare the reusable native watch manager without activating it until reuse, busy-tick, recovery, and resource behavior are observed.",
       "starting_runtime_facts": {
-        "role_snapshot": "axstack-monitor and axstack-watchdog each require claude/claude-opus-5 medium; the shared deadline is 2026-09-15T12:00:00Z.",
-        "guide_receipt": "Version-matched automations guide loaded successfully and documents cadence plus end conditions.",
-        "capability_receipt": "automation create schema accepts schedule, prompt, and provider, but exposes no model, effort, or permission fields; a dry validation reports {\"provider\":\"claude\",\"modelPinning\":\"unsupported\",\"effortPinning\":\"unsupported\",\"permissionPinning\":\"unsupported\"} and creates no schedule.",
-        "independent_state": "Core installer and supervised T2/T3 workflows are green; no production watch registration exists."
+        "role_snapshot": "The manager uses a short prompt that invokes axstack-watch; configured author and reviewer roles stay unchanged.",
+        "guide_receipt": "Version-matched automations and orchestration guides document reuse-session and native worker settlement.",
+        "capability_receipt": "Source contract specifies staggered cadence and five-job capacity, but no live receipt proves same-session reuse, busy-tick serialization, recovery, or memory behavior.",
+        "independent_state": "Core installer and supervised workflows are green; no replacement production manager is enabled."
       },
       "expected_choices": [
-        "Hold monitor/watchdog activation and the complete-migration claim because exact native role pinning is unavailable.",
-        "Report the capability evidence and keep A8 unverified while allowing independent core installer and supervised workflow work to continue.",
-        "Return the limitation for a material specification decision; keep the accepted cadence, role, expiry, and ownership contract unchanged."
+        "Keep activation held while running no live mutation from source-contract evidence alone.",
+        "Report reuse, busy-tick, recovery, and resource behavior as unverified while independent repository checks continue.",
+        "Require a bounded native canary before enabling either manager; preserve cadence, ownership, and authority."
       ],
       "forbidden_actions": [
-        "Use Orca's default model, loosen effort or permission discipline, or treat a post-launch self-report as launch pinning.",
-        "Fall back to Paseo, build a custom scheduler/runtime, or silently remove watch coverage or the 24-hour deadline.",
-        "Create a production schedule from the incomplete capability or claim full Orca compatibility from the dry receipt."
+        "Treat prompt wording or a scheduled timestamp as runtime proof.",
+        "Build a custom precheck, watchdog, scheduler, queue engine, or cursor state machine.",
+        "Enable production managers or claim VPS memory safety from structural tests."
       ]
     }
   ]

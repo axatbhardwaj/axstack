@@ -32,8 +32,8 @@ Any author repair creates a new revision and repeats this boundary.
 
 ## Automation repair exception
 
-For an automation repair under
-[Automation sessions](automations.md), the candidate is a local immutable
+For a manager PR repair under
+[Native PR managers](automations.md), the candidate is a local immutable
 commit SHA in the per-PR child worktree, not a published remote ref. The
 reviewer confirms that exact local SHA with `git rev-parse` in the worktree
 instead of remote equality, and inspects a detached checkout of it with the
@@ -42,4 +42,4 @@ it as the expected-old remote SHA rather than requiring it to equal the
 candidate. Remote equality is re-checked at the publication readback of the
 watch skill's repair-publication reference immediately before the fast-forward
 push. Ordinary workflows keep the remote confirmation above; the
-exception never applies outside an automation session.
+exception never applies outside a manager PR job.

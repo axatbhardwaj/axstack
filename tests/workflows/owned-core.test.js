@@ -203,8 +203,8 @@ test('owned-core: authorized repairs use original author with reviewed code and 
     'authorized repairs reuse the original author only for a session the run itself launched',
   ).toBeTruthy();
   expect(
-    /adopted own PR under (?:the|an) automation[^.]*automation session|automation session[^.]*repair author/i.test(text),
-    'an adopted own PR under the automation is repaired by the automation session or a dispatched axstack-author',
+    /adopted own PR under the manager[^.]*manager PR coordinator[^.]*dispatched `axstack-author`/i.test(text),
+    'an adopted own PR under the manager is repaired by its coordinator or a dispatched axstack-author',
   ).toBeTruthy();
   expect(
     /exact[\s\S]*(reply|response|public)[\s\S]*(text|bodies)|exact text/i.test(text),
@@ -228,30 +228,19 @@ test('owned-core: authorized repairs use original author with reviewed code and 
   ).toBeTruthy();
 });
 
-test('owned-core: one persistent owner; native watch roles run under the automations contract', () => {
+test('owned-core: one persistent owner; manager and standalone watch remain separate', () => {
   const text = skill('axstack-watch');
   expect(
     /one (persistent )?owner/i.test(text),
     'must keep one persistent owner per PR',
   ).toBeTruthy();
-  expect(/monitor/i.test(text) && /watchdog/i.test(text), 'must name monitor and watchdog roles').toBeTruthy();
-  expect(
-    /independent/i.test(text) && /read-only/i.test(text),
-    'monitor/watchdog must be independent and read-only',
-  ).toBeTruthy();
-  expect(/native Orca/i.test(text), 'watch must name the native Orca boundary').toBeTruthy();
-  expect(/capability hold|activation[^.]*(?:is|are|remains?) held/i.test(text), 'watch must not carry the lifted hold').toBeFalsy();
-  expect(/handshake/i.test(text), 'must require initial verified handshakes').toBeTruthy();
-  expect(
-    /snapshot-only|healthy ticks/i.test(text),
-    'healthy ticks must be snapshot-only',
-  ).toBeTruthy();
+  expect(/monitor/i.test(text), 'must name the optional standalone monitor').toBeTruthy();
+  expect(/optional read-only observer/i.test(text), 'monitor must remain read-only').toBeTruthy();
+  expect(/Orca runtime/i.test(text), 'watch must name the Orca runtime boundary').toBeTruthy();
+  expect(/dedicated workspace/i.test(text), 'manager must have a dedicated workspace').toBeTruthy();
+  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting membership must not reserve a slot').toBeTruthy();
   expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
-  expect(
-    /uncertain/i.test(text) && /reconcil/i.test(text),
-    'uncertain sends must be reconciled',
-  ).toBeTruthy();
-  expect(/restart/i.test(text) && /reuse/i.test(text), 'restart must reuse prior state').toBeTruthy();
+  expect(/reconcil/i.test(text), 'uncertain state must be reconciled').toBeTruthy();
 });
 
 test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from merged', () => {
@@ -303,7 +292,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
     .roles.map(({ id }) => id);
-  expect(expectedIds).toHaveLength(25);
+  expect(expectedIds).toHaveLength(24);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
@@ -344,7 +333,7 @@ test('owned-core: standalone review/watch materialize axstack-owner; workers nev
     expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();
     expect(
       /only[\s\S]*owner[\s\S]*launch/i.test(text),
-      `${name}: only the owner launches writer/reviewers/monitor/watchdog`,
+      `${name}: only the owner launches writer/reviewers/monitor`,
     ).toBeTruthy();
     expect(
       /no.*recursive|never.*recursive/is.test(text),
@@ -378,14 +367,12 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
   ).toBeTruthy();
 });
 
-test('owned-core: monitor/watchdog policy survives the lifted native hold', () => {
+test('owned-core: reusable watch manager keeps bounded event policy', () => {
   const text = skill('axstack-watch');
-  expect(/every 15 minutes[^.]*dispatches and exits/i.test(text), 'automation driver must dispatch and exit every 15 minutes').toBeTruthy();
-  expect(/hourly/i.test(text), 'watchdog cadence default hourly must be stated').toBeTruthy();
-  expect(/model-free[^.]*no gate[^.]*watchdog\.log/i.test(text), 'watchdog must be model-free with no gate and use watchdog.log').toBeTruthy();
-  expect(/no watch deadline[^.]*automations/i.test(text), 'automations must not inherit the standalone watch deadline').toBeTruthy();
-  expect(/Create no schedule|no production timer/i.test(text), 'lifted hold must not forbid schedules').toBeFalsy();
-  expect(/custom scheduler|polling loop/i.test(text), 'no custom scheduler or polling loop').toBeTruthy();
+  expect(/native watch manager[^.]*dedicated workspace/i.test(text), 'watch manager must reuse a dedicated workspace').toBeTruthy();
+  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting PRs must not reserve slots').toBeTruthy();
+  expect(/no watch deadline[^.]*manager automation/i.test(text), 'manager automation must not inherit the standalone deadline').toBeTruthy();
+  expect(/never poll|polling loop/i.test(text), 'no polling loop').toBeTruthy();
   expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();
   expect(
     /approval alone/i.test(text),
@@ -426,7 +413,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
   expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
-  expect(watch).toMatch(/publishing driver[^.]*live owner[^.]*status check/i);
+  expect(watch).toMatch(/bounded PR coordinator[^.]*live owner[^.]*event/i);
   expect(watch).toMatch(/materialize no `axstack-owner`[^.]*start no automation[^.]*read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
   expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
