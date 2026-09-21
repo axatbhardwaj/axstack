@@ -14,6 +14,13 @@ Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
 including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
+When the current session is the reusable watch manager, load
+[Native PR managers](../axstack/references/automations.md) and follow only its
+discovery, admission, recovery, and settlement branch. Do not adopt or repair a
+PR, materialize `axstack-owner`, or check out a PR branch in the manager
+workspace. Each admitted bounded PR coordinator re-enters this skill in its
+recorded mode.
+
 Preserve any explicitly named PR, repository, or peer scope. For broad
 discovery of the user's own PRs (such as “my” or “our” PRs), run
 `gh api user --jq .login` on the execution host, then select open PRs authored
@@ -21,7 +28,7 @@ by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
 The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
-When the session is a watch-manager PR job, also load
+When the session is a bounded watch-manager PR job, also load
 [Native PR managers](../axstack/references/automations.md): the bounded PR
 coordinator owns that event and its allowlist bounds every mutation.
 
@@ -77,7 +84,7 @@ exists. Once it exists, the current chat is not a competing coordinator. Only
 the owner launches the writer, reviewers, and optional monitor. Leaf workers
 create no recursive teams, and the adoption watcher is never the writer.
 
-A live watch has verified role and timer receipts, handshakes, watched scope,
+A standalone live watch has verified role and timer receipts, handshakes, watched scope,
 wake ownership, and a common expiry. A missing runtime capability is a setup gap,
 not a reason to invent a call or create a duplicate registration. Native
 wake-ups drive observation; never poll or keep a model active between events.
@@ -93,8 +100,8 @@ A healthy unchanged observation produces no user-facing message.
 
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
-follow [Repair and publication](references/repair-publication.md). An
-A manager PR job repairs in its per-PR child worktree created through `orca-cli`;
+follow [Repair and publication](references/repair-publication.md). A manager PR
+job repairs in its per-PR child worktree created through `orca-cli`;
 the manager workspace never checks out a PR branch.
 
 ### Feedback routing
@@ -131,6 +138,11 @@ readiness `UNKNOWN`; review approval alone is not merge-ready. Merge-ready is an
 observed state distinct from merged, and the human merges by default.
 
 ## 6. End and preserve continuity
+
+A bounded manager PR job ends as soon as its current event and every owned
+descendant settle. It returns exact receipts and remaining state to the
+reusable manager, releases proven resources, and never waits for merge or stops
+the manager's recurring schedule.
 
 End a standalone watch early when all required PRs merge, at cancellation, or
 at its shared default 24 h deadline. There is no watch deadline for manager

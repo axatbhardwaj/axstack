@@ -17,6 +17,12 @@ test('thin PR managers expose two short reusable native prompts', () => {
   }
   expect(compact(reviewPath)).toMatch(/axstack-review/i);
   expect(compact(watchPath)).toMatch(/axstack-watch/i);
+  const reviewSkill = compact('skills/axstack-review/SKILL.md');
+  const watchSkill = compact('skills/axstack-watch/SKILL.md');
+  expect(reviewSkill).toMatch(/reusable review manager[\s\S]{0,180}follow only[^.]*discovery[^.]*admission/i);
+  expect(reviewSkill).toMatch(/Do not review a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
+  expect(watchSkill).toMatch(/reusable watch manager[\s\S]{0,180}follow only[^.]*discovery[^.]*admission/i);
+  expect(watchSkill).toMatch(/Do not adopt or repair a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
 });
 
 test('manager contract separates coverage from per-manager execution capacity', () => {
@@ -84,6 +90,15 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
   expect(text).toMatch(/fast-forward repair push[^.]*exact-current candidate[^.]*remote readback/i);
   expect(text).toMatch(/ambiguous review or push result[^.]*before any retry/i);
   expect(text).toMatch(/may merge, close, force-push, rebase, restack[\s\S]{0,160}Human merge/i);
+});
+
+test('bounded watch jobs settle without inheriting standalone lifetime', () => {
+  const watch = compact('skills/axstack-watch/SKILL.md');
+  expect(watch).toMatch(/standalone live watch[^.]*timer receipts[^.]*common expiry/i);
+  expect(watch).toMatch(/bounded manager PR job ends[^.]*current event[^.]*descendant settle/i);
+  expect(watch).toMatch(/returns exact receipts[^.]*reusable manager[^.]*releases proven resources/i);
+  expect(watch).toMatch(/never waits for merge[^.]*or stops[^.]*recurring schedule/i);
+  expect(watch).toMatch(/End a standalone watch[^.]*merge[^.]*cancellation[^.]*24 h deadline/i);
 });
 
 test('evaluation scenarios cover each accepted decision boundary', () => {

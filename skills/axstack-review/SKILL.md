@@ -9,6 +9,12 @@ Produce one evidence-bound verdict for an exact candidate revision using the
 review count and model routing required by its mode. Report within the
 requested authority; the human merges unless separately authorized otherwise.
 
+When the current session is the reusable review manager, load
+[Native PR managers](../axstack/references/automations.md) and follow only its
+discovery, admission, recovery, and settlement branch. Do not review a PR,
+materialize `axstack-owner`, or check out a PR branch in the manager workspace.
+Each admitted bounded PR coordinator re-enters this skill in peer mode.
+
 Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
 audit edge remains active. Load [Shared routing](../axstack/references/routing.md)
@@ -16,7 +22,7 @@ to select the mode and scope identity, and apply the shared
 [PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
-When the caller is an Orca review-manager PR job, load
+When the caller is a bounded review-manager PR job, load
 [Native PR managers](../axstack/references/automations.md): its reviewer briefs
 carry the required escalation field and every eligible peer PR takes a binding
 `APPROVE` or `REQUEST_CHANGES` verdict under the automation exception below.
