@@ -118,7 +118,24 @@ test('modified legacy skills are preserved and reported as migration conflicts',
   const result = codexInstall(f);
 
   expect(readFileSync(edited, 'utf8')).toBe('# locally modified\n');
+  expect(existsSync(join(f.legacy, 'axstack-demo', 'helper.md'))).toBe(true);
   expect(result.out).toMatch(/legacy Codex skills preserved.*axstack-demo\/SKILL\.md/i);
+});
+
+test('partial canonical ownership retains the complete legacy install', () => {
+  const f = fixture();
+  seedLegacy(f);
+  mkdirSync(join(f.canonical, 'axstack-demo'), { recursive: true });
+  writeFileSync(
+    join(f.canonical, 'axstack-demo', 'SKILL.md'),
+    readFileSync(join(f.bundle, 'skills', 'axstack-demo', 'SKILL.md')),
+  );
+
+  const result = codexInstall(f);
+
+  expect(result.out).toMatch(/legacy Codex skills preserved.*canonical install/i);
+  expect(existsSync(join(f.legacy, 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(join(f.legacy, 'axstack-demo', 'helper.md'))).toBe(true);
 });
 
 test('legacy symlinks are never followed and leave the verified canonical install intact', () => {

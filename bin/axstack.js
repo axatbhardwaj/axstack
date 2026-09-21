@@ -306,7 +306,8 @@ async function main() {
         claude: resolveClaudeOption(flags, 'install'),
         log: (m) => { if (m !== 'plan complete') console.log(m); },
       });
-      const migrationReady = summary.instructions?.status !== 'conflict' && summary.roles?.ready !== false;
+      const migrationReady = summary.instructions?.status !== 'conflict' &&
+        summary.roles?.ready !== false && summary.ownershipComplete;
       if (usesCodexDefault && migrationReady) {
         try {
           summary.legacyCodex = await retireLegacySkills({

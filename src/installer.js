@@ -704,6 +704,8 @@ export async function installBundle({
     }
     return {
       ...summary,
+      ownershipComplete: desired.every(({ rel, content }) =>
+        installedHashes[rel] === hashContent(content)),
       preset: selectedPreset,
       roles: roleReadiness,
       claudeSettings: claudePlan.report,
@@ -1026,8 +1028,12 @@ export async function retireLegacySkills({
   // Validate every owned destination before deleting the first one. In
   // particular, one symlink refuses the entire retirement rather than being
   // followed or leaving a partly retired legacy install.
-  for (const rel of Object.keys(legacyManifest.files)) {
-    await readOwnedTarget(legacyRoot, rel);
+  const protectedGroups = new Set();
+  for (const [rel, ownedHash] of Object.entries(legacyManifest.files)) {
+    const target = await readOwnedTarget(legacyRoot, rel);
+    if (target.current !== null && hashContent(target.current) !== ownedHash) {
+      protectedGroups.add(rel.split('/')[0]);
+    }
   }
 
   const summary = { removed: [], preserved: [], missing: [], skipped: false };
@@ -1049,6 +1055,10 @@ export async function retireLegacySkills({
   const deletedFiles = [];
   try {
     for (const [rel, ownedHash] of Object.entries(legacyManifest.files)) {
+      if (protectedGroups.has(rel.split('/')[0])) {
+        summary.preserved.push(rel);
+        continue;
+      }
       const { dest, current, mode } = await readOwnedTarget(legacyRoot, rel);
       if (current === null) {
         summary.missing.push(rel);

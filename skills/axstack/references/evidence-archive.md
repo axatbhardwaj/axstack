@@ -9,9 +9,9 @@ native cleanup.
 
 First prove the exact repository, PR, 40-character head SHA, Task/Dispatch,
 workspace, terminal incarnation, automation ownership, descendant settlement,
-and process exit from current native state. A manual chat, `user_takeover`, an
-active or unknown process, an unsettled descendant, unpushed commits, dirty
-source, ambiguous publication, or an unknown file remains protected.
+and liveness from current native state. A manual chat, `user_takeover`, an
+active or unknown task terminal, an unsettled descendant, unpushed commits,
+dirty source, ambiguous publication, or an unknown file remains protected.
 
 Classify each evidence file explicitly. Do not equate a dirty worktree with
 disposable evidence, archive a whole worktree, or copy source changes as a way
@@ -48,10 +48,21 @@ preserve the worktree.
 
 ## Native retirement
 
-Retire descendants before their parent. Reconcile native state again after the
-archive readback, close only positively identified exited terminals, then use
-the version-matched Orca guide's native worktree cleanup operation with the
-exact workspace identity. Never use shell recursive deletion, never force
-deletion for an unknown file, and never treat archive success as ownership,
-settlement, exit, or cleanup proof. Record and verify native absence before
-advancing continuity; failure or uncertainty preserves the resource.
+Retire descendants before their parent. For each positively identified unused
+setup shell, use the native exact-terminal close operation, then re-list native
+state and require exit proof for that exact terminal incarnation. A task
+terminal, manual chat, unexpected terminal, failed close, or uncertain exit
+remains protected.
+
+After receipt and continuity readback, if the only remaining Git dirt is the
+verified archived untracked evidence, compare its current bytes with the
+manifest again and unlink only those exact regular evidence files individually.
+Never remove tracked or unknown files, directories, or any path whose hash now
+differs. Re-read Git and native state; any remaining or uncertain dirt holds
+retirement.
+
+Only then use the version-matched Orca guide's native worktree cleanup operation
+with the exact workspace identity. Never use shell recursive deletion and never
+treat archive success as ownership, settlement, exit, or cleanup proof. Record
+and verify native absence before advancing continuity; failure or uncertainty
+preserves the resource.

@@ -3,12 +3,58 @@ import {
   chmod,
   lstat,
   mkdir,
+  readdir,
   readFile,
   rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve } from '../../../src/posixpath.js';
+
+function isAbsolute(path) {
+  return path.startsWith('/');
+}
+
+function normalize(path) {
+  const absolute = isAbsolute(path);
+  const parts = [];
+  for (const part of path.split('/')) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (parts.length > 0) parts.pop();
+    } else parts.push(part);
+  }
+  const normalized = `${absolute ? '/' : ''}${parts.join('/')}`;
+  return normalized || (absolute ? '/' : '.');
+}
+
+function join(...parts) {
+  return normalize(parts.filter(Boolean).join('/'));
+}
+
+function resolve(...parts) {
+  let path = '';
+  for (let i = parts.length - 1; i >= 0; i -= 1) {
+    path = `${parts[i]}${path ? `/${path}` : ''}`;
+    if (isAbsolute(parts[i])) return normalize(path);
+  }
+  return normalize(`${process.cwd()}/${path}`);
+}
+
+function dirname(path) {
+  const normalized = normalize(path);
+  if (normalized === '/') return '/';
+  const index = normalized.lastIndexOf('/');
+  if (index < 0) return '.';
+  return index === 0 ? '/' : normalized.slice(0, index);
+}
+
+function relative(from, to) {
+  const fromParts = resolve(from).split('/').filter(Boolean);
+  const toParts = resolve(to).split('/').filter(Boolean);
+  let common = 0;
+  while (fromParts[common] === toParts[common] && common < fromParts.length) common += 1;
+  return [...Array(fromParts.length - common).fill('..'), ...toParts.slice(common)].join('/');
+}
 
 function fail(message) {
   throw new Error(message);
@@ -40,7 +86,8 @@ function parseArgs(argv) {
   if (!/^[A-Za-z0-9_-]+$/.test(values.dispatch)) fail('dispatch contains unsafe characters');
   values.files = [...new Set(values.files)].sort();
   for (const file of values.files) {
-    if (!file || isAbsolute(file) || file.split('/').includes('..') || file.includes('\0')) {
+    const parts = file.split('/');
+    if (!file || isAbsolute(file) || parts.some((part) => !part || part === '.' || part === '..') || file.includes('\0')) {
       fail(`unsafe evidence path: ${file || '(empty)'}`);
     }
   }
@@ -141,12 +188,32 @@ async function verifyArchive(archiveDir, identity, collected) {
     if ((st.mode & 0o077) !== 0) fail(`archived evidence permissions are not private: ${archived}`);
     if (sha256(await readFile(archived)) !== expected.sha256) fail(`archived evidence hash mismatch: ${rel}`);
   }
+  const actualFiles = await listArchiveFiles(archiveDir);
+  const expectedFiles = ['manifest.json', ...Object.keys(collected).map((rel) => `files/${rel}`)].sort();
+  if (JSON.stringify(actualFiles) !== JSON.stringify(expectedFiles)) {
+    fail(`archive contains unexpected or missing files: ${archiveDir}`);
+  }
   return {
     archiveDir,
     manifestPath,
     manifestHash: sha256(actualManifest),
     files: Object.keys(collected).length,
   };
+}
+
+async function listArchiveFiles(root, prefix = '') {
+  const files = [];
+  const entries = await readdir(join(root, prefix), { withFileTypes: true });
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const st = await lstat(join(root, rel));
+    if (st.isSymbolicLink()) fail(`refusing symlink in archive: ${rel}`);
+    if (st.isDirectory()) files.push(...await listArchiveFiles(root, rel));
+    else if (st.isFile()) files.push(rel);
+    else fail(`unexpected archive entry: ${rel}`);
+  }
+  return files.sort();
 }
 
 async function main() {

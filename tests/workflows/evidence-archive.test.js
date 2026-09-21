@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from 'bun:test';
 import {
   existsSync,
+  copyFileSync,
   lstatSync,
   mkdirSync,
   readFileSync,
@@ -12,6 +13,7 @@ import { join, resolve } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot } from '../installer/helpers.js';
 
 const SCRIPT = resolve(import.meta.dir, '../../skills/axstack/scripts/archive-evidence.js');
+const CONTRACT = resolve(import.meta.dir, '../../skills/axstack/references/evidence-archive.md');
 const roots = [];
 
 afterEach(() => {
@@ -30,9 +32,9 @@ function fixture() {
   return { root, source, archive };
 }
 
-function runArchive(f, extra = [], { expectFail = false } = {}) {
+function runArchive(f, extra = [], { expectFail = false, script = SCRIPT } = {}) {
   const result = Bun.spawnSync([
-    BUN_BIN, SCRIPT,
+    BUN_BIN, script,
     '--source-root', f.source,
     '--archive-root', f.archive,
     '--repo', 'defi-com/monorepo',
@@ -82,6 +84,37 @@ test('repeat invocation verifies the same immutable archive and stable receipt',
   expect(second.manifestHash).toBe(first.manifestHash);
 });
 
+test('installed skill layout runs without repository source files', () => {
+  const f = fixture();
+  const installedScript = join(f.root, 'installed', 'axstack', 'scripts', 'archive-evidence.js');
+  mkdirSync(join(f.root, 'installed', 'axstack', 'scripts'), { recursive: true });
+  copyFileSync(SCRIPT, installedScript);
+
+  const receipt = runArchive(f, [], { script: installedScript });
+
+  expect(receipt.status).toBe('archived');
+});
+
+test('repeat verification refuses archive corruption and extra files', () => {
+  const f = fixture();
+  const first = runArchive(f);
+  writeFileSync(join(first.archiveDir, 'files', 'unexpected.txt'), 'corrupt\n');
+
+  const out = runArchive(f, [], { expectFail: true });
+
+  expect(out).toMatch(/mismatch|unexpected|corrupt/i);
+});
+
+test('repeat verification refuses changed source evidence', () => {
+  const f = fixture();
+  runArchive(f);
+  writeFileSync(join(f.source, 'review.md'), 'changed evidence\n');
+
+  const out = runArchive(f, [], { expectFail: true });
+
+  expect(out).toMatch(/manifest mismatch|hash mismatch/i);
+});
+
 test('refuses evidence symlinks without creating an archive', () => {
   const f = fixture();
   const outside = join(f.root, 'outside.txt');
@@ -104,4 +137,12 @@ test('refuses a group-readable archive root', () => {
 
   expect(out).toMatch(/private|permission|0700/i);
   expect(existsSync(join(f.archive, 'defi-com--monorepo'))).toBe(false);
+});
+
+test('native retirement closes setup shells before exit proof and removes only verified evidence', () => {
+  const contract = readFileSync(CONTRACT, 'utf8');
+  expect(contract).toMatch(/unused\s+setup shell[^.]*exact-terminal close[^.]*re-list[^.]*exit/i);
+  expect(contract).toMatch(/archived\s+untracked evidence[^.]*exact[^.]*files[^.]*individually/i);
+  expect(contract).toMatch(/never[^.]*tracked[^.]*unknown/i);
+  expect(contract).toMatch(/native worktree cleanup/i);
 });
