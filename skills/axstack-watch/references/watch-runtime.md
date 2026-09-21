@@ -28,9 +28,10 @@ unchanged behavior, exact-head event dedupe, ownership, complete discovery,
 and current authority.
 
 Before activation, canary same-session reuse, a busy scheduled tick, session
-loss and recovery, and total process and memory behavior. Until observed, those
-remain unverified; do not replace them with a precheck, watchdog, custom
-scheduler, state engine, or legacy fallback.
+loss and recovery, nested dispatch depth for coordinator-launched leaves, and
+total process and memory behavior. Until observed, those remain unverified; do
+not replace them with a precheck, watchdog, custom scheduler, state engine, or
+legacy fallback.
 
 On recovery reconcile actual native workers, GitHub, and the compact run record
 before admitting work. Unknown state blocks only the affected PR. At every job

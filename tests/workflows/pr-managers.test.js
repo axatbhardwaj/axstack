@@ -46,6 +46,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
   expect(text).toMatch(/canary[^.]*same-session reuse[^.]*busy tick[^.]*recovery/i);
+  expect(text).toMatch(/canary[^.]*nested dispatch depth[^.]*coordinator-launched leaves/i);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
@@ -87,6 +88,8 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
   expect(text).toMatch(/Reuse[^.]*worktree[^.]*owner[^.]*unchanged receipts/i);
   expect(text).toMatch(/Settlement returns continuity[^.]*manager[^.]*rather than retaining an idle PR coordinator/i);
   expect(text).toMatch(/dirty worktree[^.]*unpushed candidate[^.]*user-owned work[^.]*proven/i);
+  expect(text).toMatch(/pending external result[^.]*unconfirmed publication or send outcome[^.]*not pending CI/i);
+  expect(text).toMatch(/ascending repository and PR-number tie breaks/i);
   expect(text).toMatch(/fast-forward repair push[^.]*exact-current candidate[^.]*remote readback/i);
   expect(text).toMatch(/ambiguous review or push result[^.]*before any retry/i);
   expect(text).toMatch(/may merge, close, force-push, rebase, restack[\s\S]{0,160}Human merge/i);

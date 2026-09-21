@@ -21,8 +21,9 @@ relative link instead of copying them.
 
 This is prompt policy, not proof that Orca serializes a busy tick or reuses a
 session. Before activation a native canary must prove same-session reuse, busy
-tick behavior, recovery after session loss, and total process and memory
-effects. A firing timestamp proves neither delivery nor useful completion.
+tick behavior, recovery after session loss, nested dispatch depth for
+coordinator-launched leaves, and total process and memory effects. A firing
+timestamp proves neither delivery nor useful completion.
 
 ## Discovery and coverage
 
@@ -68,8 +69,8 @@ frees the slot even while the PR stays open.
 
 Inspect all eligible PRs before admission. Preserve unserved work in the
 compact run record and select the oldest actionable unserved event first, with
-stable repository and PR-number tie breaks. A sixth event is admitted after a
-slot settles; repeatedly changing PRs cannot starve older unserved work.
+ascending repository and PR-number tie breaks. A sixth event is admitted after
+a slot settles; repeatedly changing PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
@@ -93,9 +94,10 @@ open state, revisions, reviews, checks, and merge state.
 
 When the current event is handled, settle and release owned native resources.
 Preserve a dirty worktree, an unpushed candidate, pending external result, or
-user-owned work until its durability and ownership are proven. Waiting state
-belongs in GitHub and the compact record, never in an idle model, per-PR timer,
-or polling loop.
+user-owned work until its durability and ownership are proven. Here a pending
+external result means an unconfirmed publication or send outcome, not pending
+CI. Waiting state belongs in GitHub and the compact record, never in an idle
+model, per-PR timer, or polling loop.
 
 ## Review and repair authority
 
@@ -161,4 +163,5 @@ Use only native schedules and Orca orchestration. Add no daemon, shell precheck,
 watchdog script, custom scheduler, cursor or pending sidecar, runtime database,
 workflow state machine, decision interpreter, or programmatic escalation gate.
 The live VPS activation, native reuse and busy-tick behavior, recovery path,
-and resource ceiling remain unverified until the canary succeeds.
+nested dispatch depth for coordinator-launched leaves, and resource ceiling
+remain unverified until the canary succeeds.
