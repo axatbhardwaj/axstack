@@ -37,3 +37,15 @@ test('manual invocations do not enter scheduled lifecycle', () => {
     expect(text).toContain('never close the user’s chat or workspace');
   }
 });
+
+test('retention counts leftovers only after routine safe reclamation', () => {
+  const text = contract();
+  const reclaim = text.indexOf('reclaim every safely removable earlier pass workspace');
+  const recount = text.indexOf('re-list and count only the earlier pass workspaces still remaining');
+  const pause = text.indexOf('If three or more unreclaimed earlier pass workspaces remain');
+  expect(reclaim).toBeGreaterThan(-1);
+  expect(recount).toBeGreaterThan(reclaim);
+  expect(pause).toBeGreaterThan(recount);
+  expect(text).toContain('do not wait for the three-workspace threshold to start cleanup');
+  expect(text).toContain('Save confirmed exit and ownership-release receipts before removing each workspace');
+});

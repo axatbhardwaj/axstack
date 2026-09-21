@@ -17,11 +17,11 @@ export function harnessLocations() {
     },
     {
       harness: 'codex',
-      skillsDir: '$CODEX_HOME/skills (default ~/.codex/skills)',
+      skillsDir: '~/.agents/skills',
       discovery: 'docs',
-      source: 'https://developers.openai.com/codex/skills',
+      source: 'https://learn.chatgpt.com/docs/build-skills',
       notes:
-        'User skills live under $CODEX_HOME/skills per OpenAI docs (CODEX_HOME defaults to ~/.codex). The CLI honors $CODEX_HOME when set. Pass --skills-dir to override.',
+        'Codex user skills use the shared ~/.agents/skills root. CODEX_HOME still selects AGENTS.md. Pass --skills-dir to override skill placement and skip automatic legacy migration.',
     },
     {
       harness: 'opencode',

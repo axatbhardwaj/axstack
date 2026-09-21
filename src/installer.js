@@ -430,6 +430,21 @@ export async function checkInstructionBinding({ skillsDir, instructionsPath } = 
   return { status: 'owned', path: instructionsFile };
 }
 
+export async function readLegacySkillsManifest(skillsDir) {
+  const root = resolve(skillsDir);
+  const rootStat = await lstat(root).catch((err) => {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (rootStat?.isSymbolicLink()) {
+    throw new Error(`legacy Codex skills root is a symlink at ${root}; refusing`);
+  }
+  if (rootStat && !rootStat.isDirectory()) {
+    throw new Error(`legacy Codex skills root is not a directory at ${root}; refusing`);
+  }
+  return readManifest(root);
+}
+
 async function assertFileSnapshot(dest, expected) {
   let current = null;
   try {
@@ -447,6 +462,7 @@ export async function installBundle({
   skillsDir,
   preset,
   instructionsPath = null,
+  inheritedInstructions = null,
   force = false,
   yes = false,
   claude = null,
@@ -492,7 +508,10 @@ export async function installBundle({
     ? 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md'
     : null;
 
-  const boundInstructions = prevManifest.instructions ?? { path: null, hash: null };
+  const ownInstructions = prevManifest.instructions ?? { path: null, hash: null };
+  const usesInheritedInstructions = ownInstructions.path === null &&
+    inheritedInstructions?.path === instructionsFile;
+  const boundInstructions = usesInheritedInstructions ? inheritedInstructions : ownInstructions;
   let existingInstructionsRaw = null;
   let instructionPlan = null;
   let legacyInstructionNote = null;
@@ -685,6 +704,20 @@ export async function installBundle({
     }
     return {
       ...summary,
+      ownershipComplete: desired.every(({ rel, content }) =>
+        installedHashes[rel] === hashContent(content)),
+      // Retirement may retry after a prior canonical install succeeded. The
+      // accepted plan proves either fresh inheritance or existing canonical
+      // ownership of the same legacy-bound path; forced edits prove neither.
+      acceptedInstructionTransfer: inheritedInstructions?.path === instructionsFile &&
+        boundInstructions.path === instructionsFile &&
+        instructionPlan?.action !== 'conflict' && !instructionPlan?.forced
+        ? {
+            path: instructionsFile,
+            legacyHash: inheritedInstructions.hash,
+            canonicalHash: nextInstructions.hash,
+          }
+        : null,
       preset: selectedPreset,
       roles: roleReadiness,
       claudeSettings: claudePlan.report,
@@ -958,6 +991,144 @@ export async function uninstallBundle({
       });
       if (manifestBefore !== null && currentManifest?.equals(manifestBefore) !== true) {
         await writeAtomic(manifestFile, manifestBefore, manifestMode === null ? {} : { mode: manifestMode });
+      }
+    } catch (restoreErr) {
+      rollbackErrors.push(`${manifestFile}: ${restoreErr?.message ?? restoreErr}`);
+    }
+    if (rollbackErrors.length > 0) {
+      err.message += ` (incomplete rollback; manual repair needed: ${rollbackErrors.join('; ')})`;
+    }
+    throw err;
+  }
+}
+
+// Retire the obsolete Codex-root copy only after a canonical Axstack install
+// is present and byte-for-byte verified. This deliberately handles skill
+// payloads only: instruction files, Claude settings, and historical profile
+// ownership may belong to another harness and remain bound to the old manifest.
+export async function retireLegacySkills({
+  canonicalSkillsDir,
+  legacySkillsDir,
+  acceptedInstructionTransfer = null,
+  yes = false,
+} = {}) {
+  if (!canonicalSkillsDir || !legacySkillsDir) {
+    throw new Error('legacy retirement requires canonical and legacy skills directories');
+  }
+  const canonicalRoot = await canonicalTargetDir(resolve(canonicalSkillsDir));
+  await readLegacySkillsManifest(legacySkillsDir);
+  const legacyRoot = await canonicalTargetDir(resolve(legacySkillsDir));
+  if (canonicalRoot === legacyRoot) return { removed: [], preserved: [], missing: [], skipped: true };
+  assertOutsideHome(legacyRoot, { yes, kind: 'legacy Codex skills directory' });
+
+  const canonicalManifest = await readManifest(canonicalRoot);
+  if (!canonicalManifest || Object.keys(canonicalManifest.files).length === 0) {
+    throw new Error('legacy Codex skills not retired: canonical install has no ownership manifest');
+  }
+  for (const [rel, expectedHash] of Object.entries(canonicalManifest.files)) {
+    const { current } = await readOwnedTarget(canonicalRoot, rel);
+    if (current === null || hashContent(current) !== expectedHash) {
+      throw new Error(`legacy Codex skills not retired: canonical verification failed for ${rel}`);
+    }
+  }
+
+  const legacyManifest = await readManifest(legacyRoot);
+  if (!legacyManifest || Object.keys(legacyManifest.files).length === 0) {
+    return { removed: [], preserved: [], missing: [], skipped: true };
+  }
+
+  // Validate every owned destination before deleting the first one. In
+  // particular, one symlink refuses the entire retirement rather than being
+  // followed or leaving a partly retired legacy install.
+  const protectedGroups = new Set();
+  for (const [rel, ownedHash] of Object.entries(legacyManifest.files)) {
+    const target = await readOwnedTarget(legacyRoot, rel);
+    if (target.current !== null && hashContent(target.current) !== ownedHash) {
+      protectedGroups.add(rel.split('/')[0]);
+    }
+  }
+
+  const summary = { removed: [], preserved: [], missing: [], skipped: false };
+  const remainingFiles = { ...legacyManifest.files };
+  let remainingInstructions = legacyManifest.instructions;
+  if (legacyManifest.instructions?.path !== null) {
+    const canonicalInstructions = canonicalManifest.instructions;
+    const transferAccepted =
+      acceptedInstructionTransfer?.path === legacyManifest.instructions.path &&
+      acceptedInstructionTransfer?.legacyHash === legacyManifest.instructions.hash &&
+      acceptedInstructionTransfer?.canonicalHash === canonicalInstructions?.hash &&
+      canonicalInstructions?.path === legacyManifest.instructions.path;
+    if (!transferAccepted) {
+      return {
+        ...summary,
+        held: true,
+        failure: true,
+        reason: 'legacy instruction ownership is bound to a different instruction file or was not accepted by the canonical install',
+      };
+    }
+    const instructionsRaw = await readFile(await canonicalInstructionFile(canonicalInstructions.path), 'utf8');
+    const installedBlock = locateInstructionBlock(instructionsRaw);
+    if (
+      installedBlock === null || hashContent(installedBlock.block) !== canonicalInstructions.hash
+    ) {
+      throw new Error('legacy instruction ownership not transferred: canonical binding is not verified');
+    }
+    remainingInstructions = { path: null, hash: null };
+  }
+  const manifestFile = join(legacyRoot, '.axstack-manifest.json');
+  const manifestBefore = await readFile(manifestFile);
+  const manifestMode = (await stat(manifestFile)).mode & 0o777;
+  const deletedFiles = [];
+  try {
+    for (const [rel, ownedHash] of Object.entries(legacyManifest.files)) {
+      if (protectedGroups.has(rel.split('/')[0])) {
+        summary.preserved.push(rel);
+        continue;
+      }
+      const { dest, current, mode } = await readOwnedTarget(legacyRoot, rel);
+      if (current === null) {
+        summary.missing.push(rel);
+        delete remainingFiles[rel];
+      } else if (hashContent(current) === ownedHash) {
+        deletedFiles.push({ dest, bytes: current, mode });
+        await rm(dest);
+        await pruneEmptyParents(dest, legacyRoot);
+        delete remainingFiles[rel];
+        summary.removed.push(rel);
+      } else {
+        summary.preserved.push(rel);
+      }
+    }
+
+    const hasProfiles = Object.keys(legacyManifest.profiles?.entries ?? {}).length > 0;
+    const hasOtherOwnership = hasProfiles || legacyManifest.claudeSettings?.path !== null ||
+      remainingInstructions.path !== null;
+    if (Object.keys(remainingFiles).length === 0 && !hasOtherOwnership) {
+      await rm(manifestFile);
+    } else {
+      await writeManifest(legacyRoot, {
+        ...legacyManifest,
+        files: remainingFiles,
+        instructions: remainingInstructions,
+      });
+    }
+    return summary;
+  } catch (err) {
+    const rollbackErrors = [];
+    for (const { dest, bytes, mode } of deletedFiles.reverse()) {
+      try {
+        await writeAtomic(dest, bytes, mode === null ? {} : { mode });
+      } catch (restoreErr) {
+        rollbackErrors.push(`${dest}: ${restoreErr?.message ?? restoreErr}`);
+      }
+    }
+    try {
+      const currentManifest = await readFile(manifestFile).catch((readErr) => {
+        if (readErr?.code === 'ENOENT') return null;
+        throw readErr;
+      });
+      if (currentManifest?.equals(manifestBefore) !== true) {
+        await writeAtomic(manifestFile, manifestBefore, { mode: manifestMode });
       }
     } catch (restoreErr) {
       rollbackErrors.push(`${manifestFile}: ${restoreErr?.message ?? restoreErr}`);

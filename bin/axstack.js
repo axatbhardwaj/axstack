@@ -8,6 +8,8 @@ import { join, resolve } from '../src/posixpath.js';
 import {
   checkInstructionBinding,
   installBundle,
+  readLegacySkillsManifest,
+  retireLegacySkills,
   uninstallBundle,
   validateBundle,
 } from '../src/installer.js';
@@ -57,7 +59,8 @@ Flags:
                       profiles/presets/*.json role data. Defaults to the package root.
   --preset <name>     Required routing preset: mixed, codex-only, or claude-only.
                       Aliases: codex = codex-only; claude = claude-only.
-  --skills-dir <dir>  Explicit install target (required). Overrides --harness.
+  --skills-dir <dir>  Explicit install target. Overrides harness skill defaults
+                      and automatic legacy Codex skill retirement.
   --instructions <file>
                       Instruction file to receive the owned routing block.
                       Harness defaults: ~/.claude/CLAUDE.md for Claude,
@@ -71,6 +74,8 @@ Flags:
                       Skip Claude Code user-settings management.
   --harness <name>    Known harness (${harnessLocations().map((h) => h.harness).join(', ')}).
                       Grok has no verified auto-discovery: --skills-dir is required.
+                      Codex skills default to ~/.agents/skills; CODEX_HOME
+                      continues to select its AGENTS.md configuration home.
   --force             Overwrite/remove user-edited owned assets and take
                       ownership of unknown files. Off by default.
   --yes               Confirm writes inside your home directory. Temp dirs
@@ -203,11 +208,18 @@ function resolveHarnessTarget(harness) {
     );
   }
   if (entry.harness === 'codex') {
-    // User skills live under $CODEX_HOME/skills; CODEX_HOME defaults to ~/.codex.
-    const home = Bun.env.CODEX_HOME ? expandHome(Bun.env.CODEX_HOME) : join(homeDir(), '.codex');
-    return join(home, 'skills');
+    // Axstack uses Codex's shared user-skill root. CODEX_HOME remains the
+    // configuration home for AGENTS.md, not an Axstack skill destination.
+    return join(homeDir(), '.agents', 'skills');
   }
   return expandHome(entry.skillsDir);
+}
+
+function legacyCodexSkillsTarget() {
+  const codexHome = Bun.env.CODEX_HOME
+    ? expandHome(Bun.env.CODEX_HOME)
+    : join(homeDir(), '.codex');
+  return join(codexHome, 'skills');
 }
 
 function resolveHarnessInstructions(harness) {
@@ -278,18 +290,45 @@ async function main() {
         : flags.harness
           ? resolveHarnessInstructions(flags.harness)
           : null;
+      const usesCodexDefault = flags.harness === 'codex' && !flags['skills-dir'];
+      const legacyCodexDir = usesCodexDefault ? legacyCodexSkillsTarget() : null;
+      const legacyCodexManifest = legacyCodexDir
+        ? await readLegacySkillsManifest(legacyCodexDir)
+        : null;
       const summary = await installBundle({
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
         preset: flags.preset,
         instructionsPath,
+        inheritedInstructions: legacyCodexManifest?.instructions,
         force: !!flags.force,
         yes: !!flags.yes,
         claude: resolveClaudeOption(flags, 'install'),
         log: (m) => { if (m !== 'plan complete') console.log(m); },
       });
+      const migrationReady = summary.instructions?.status !== 'conflict' &&
+        summary.roles?.ready !== false && summary.ownershipComplete;
+      if (usesCodexDefault && migrationReady) {
+        try {
+          summary.legacyCodex = await retireLegacySkills({
+            canonicalSkillsDir: skillsDir,
+            legacySkillsDir: legacyCodexDir,
+            acceptedInstructionTransfer: summary.acceptedInstructionTransfer,
+            yes: !!flags.yes,
+          });
+        } catch (err) {
+          summary.legacyCodex = {
+            removed: [], preserved: [], missing: [], skipped: false,
+            failed: true,
+            reason: `legacy Codex skills not retired: ${err.message}`,
+          };
+        }
+      } else if (usesCodexDefault) {
+        summary.legacyCodex = { removed: [], preserved: [], missing: [], held: true };
+      }
       const changed =
         summary.added.length + summary.updated.length + summary.removed.length +
+        (summary.legacyCodex?.removed.length ?? 0) +
         (['created', 'updated'].includes(summary.instructions?.status) ? 1 : 0);
       if (changed === 0) {
         console.log('Install complete: no changes (idempotent, everything unchanged).');
@@ -303,6 +342,31 @@ async function main() {
         console.log(`preserved user edits (use --force to overwrite): ${summary.preserved.join(', ')}`);
       }
       if (summary.stale.length) console.log(`stale owned files left on disk: ${summary.stale.join(', ')}`);
+      if (summary.legacyCodex && !summary.legacyCodex.skipped) {
+        if (summary.legacyCodex.held) {
+          console.log(
+            `legacy Codex skills preserved (retirement held): ${summary.legacyCodex.reason ?? 'canonical install has an unresolved conflict'}`,
+          );
+          if (summary.legacyCodex.failure) process.exitCode = 1;
+        }
+        if (summary.legacyCodex.failed) {
+          console.log(
+            `canonical install completed; legacy retirement failed: ${summary.legacyCodex.reason}`,
+          );
+          process.exitCode = 1;
+        }
+        if (summary.legacyCodex.removed.length) {
+          console.log(`legacy Codex skills retired: ${summary.legacyCodex.removed.join(', ')}`);
+        }
+        if (summary.legacyCodex.preserved.length) {
+          console.log(
+            `legacy Codex skills preserved (modified; resolve manually): ${summary.legacyCodex.preserved.join(', ')}`,
+          );
+        }
+        if (summary.legacyCodex.missing.length) {
+          console.log(`legacy Codex manifest entries already missing: ${summary.legacyCodex.missing.join(', ')}`);
+        }
+      }
       if (summary.instructions) {
         const i = summary.instructions;
         if (i.status === 'conflict') {
