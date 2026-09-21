@@ -13,10 +13,14 @@ There are exactly two logical manager lanes:
   [axstack-watch](../../axstack-watch/SKILL.md) for eligible own-PR watch or
   repair events.
 
-Each scheduled pass starts a fresh finite manager session in its persistent
-dedicated workspace; the workspace and saved continuity persist, but the
-manager chat does not. A manager never checks out a PR branch in that
-workspace. Missed slots do not replay a backlog; the next ordinary pass
+Use a new isolated workspace for every scheduled pass, with one fresh finite
+manager session. Configure native repo-created worktree mode against the
+designated manager repository; never target an existing shared workspace.
+Do not use `--reuse-session`. The scheduler creates the pass workspace before
+launch; the manager must not move itself from a shared launch workspace.
+Keep lane continuity and evidence outside disposable manager workspaces at
+the configured durable absolute paths. A manager never checks out a PR branch
+in its pass workspace. Missed slots do not replay a backlog; the next ordinary pass
 discovers current state. The two short packaged prompts sit beside this file
 and discover these rules by relative link instead of copying them.
 
@@ -29,13 +33,22 @@ effects. A firing timestamp proves neither delivery nor useful completion.
 ## Session admission
 
 Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
-sessions, and liveness in the dedicated workspace before discovery or
-admission. A confirmed live manager for the same lane remains authoritative.
+sessions, and liveness across all workspaces belonging to the same automation
+before discovery or admission; never infer lane ownership from an empty local
+workspace. Bind the lane to the automation ID and pass to its native run ID,
+workspace ID, and terminal identity, not a title or directory-name guess.
+A confirmed live manager for the same lane remains authoritative.
 The new duplicate does no PR work, makes no shared-record write, touches
 nothing owned by the live manager, and closes only itself as its final action.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
+
+When two new passes overlap, reconcile native run ordering before either admits
+work; the earlier unsettled pass retains the lane. Missing ordering or ownership
+evidence holds admission, never guesses a winner. This is not an atomic lock:
+activation requires an overlap canary proving only one pass admits work. Count
+all unsettled PR jobs and descendants across the lane, not just this workspace.
 
 ## Discovery and coverage
 
@@ -176,13 +189,33 @@ and must be reconciled rather than trusted from saved status. Then save durable
 continuity, evidence locations, pending receipts, and user decisions before
 self-close. Waiting PRs still occupy zero slots once their owned trees settle.
 
-Cleanup is scoped to positively identified owned unused setup shells: use the
-version-matched native exact-terminal close operation for each such terminal only.
-Never blanket-close a workspace. Preserve dirty worktrees, unpushed candidates,
-review evidence, user-owned terminals, unknown liveness, `user_takeover`, and
-ambiguous publication state. Close the finite manager's own exact terminal
-through the native guide. Self-close is the final action; perform no record
-write, cleanup, or other work afterward.
+Cleanup of PR-job setup shells stays scoped to positively identified owned unused
+setup shells: use the native exact-terminal close operation for each only.
+Preserve dirty worktrees, unpushed candidates, review evidence, user-owned
+terminals, unknown liveness, `user_takeover`, and ambiguous publication state.
+
+For the manager pass only, verify native run/workspace identity, exclusive
+automation ownership, no unsettled descendants, and a fresh terminal inventory
+containing only this manager and its proven unused setup shells. No other pass
+may target this workspace. If an unexpected terminal or user takeover is present,
+do not bulk-close; preserve the workspace and report the hold at its durable
+decision location. Never bulk-close a shared manager workspace or a PR-job worktree.
+
+After saving continuity, use the version-matched native workspace retirement:
+`terminal close --worktree <exact-pass-workspace> --all --json`.
+Self-close is the final action; perform no record write or cleanup afterward.
+A failed or uncertain close is not proof of retirement. The next admitted pass
+reconciles prior retirement from native state before trusting saved intent.
+Retire only positively identified completed pass resources; do not kill another
+live or unknown manager. Remove an old pass worktree only with native cleanup
+after terminal retirement is confirmed and its Git state is clean, with no
+unpushed commits, retained evidence, children, or user-owned work. Never use
+recursive shell deletion. Failed cleanup remains recorded, not silently forgotten.
+
+The activation canary must additionally prove distinct workspace IDs per pass,
+cross-workspace lane admission, self-retirement and absence after client reconnect,
+and bounded retained worktrees over repeated passes. A shell-only close test does
+not prove agent resume-record retirement. Do not activate on source checks alone.
 
 ## Recovery and limits
 

@@ -5,6 +5,8 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 
 # Watch
 
+Manual invocation does not enter the scheduled manager lifecycle; never close the user’s chat or workspace.
+
 Leave each adopted PR with one accountable owner, current readiness evidence,
 and user-facing updates that name its current milestone and next wake or
 condition.
@@ -71,8 +73,8 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. Each native watch-manager pass starts a fresh finite session in one
-persistent dedicated workspace on its staggered 15-minute schedule, covers
+anything. Each native watch-manager pass starts a fresh finite session in an
+isolated per-pass workspace on its staggered 15-minute schedule, covers
 every eligible own PR, and starts only bounded actionable-event jobs. Waiting PRs reserve no execution slots and
 there is no watch deadline for manager automation. `axstack-monitor` stays an
 optional read-only observer that never sends. One read-only PR observation

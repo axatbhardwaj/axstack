@@ -110,7 +110,7 @@ differs from merged; human merges.
 
 ## Watch health
 
-Native review and watch lanes use fresh finite sessions in persistent dedicated
+Native review and watch lanes use fresh finite sessions in isolated per-pass
 workspaces on staggered 15-minute schedules. Each admits at most five executing PR jobs;
 waiting PRs remain covered without reserving slots. Bounded PR jobs own their
 events, use per-PR worktrees, and settle after descendants settle. Build no

@@ -99,7 +99,7 @@ test('all active skill runtime instructions are Orca-only', () => {
 
 test('native watch manager is bounded and requires canary evidence', () => {
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
-  expect(watch).toMatch(/reuses\s+one persistent dedicated workspace/i);
+  expect(watch).toMatch(/new isolated workspace and fresh finite session/i);
   expect(watch).toMatch(/at most five bounded actionable-event jobs/i);
   expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
   expect(watch).toMatch(/canary[^.]*fresh-session launch/i);

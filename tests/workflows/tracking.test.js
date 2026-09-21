@@ -52,7 +52,7 @@ test('native managers and standalone watch boundaries remain explicit', () => {
   expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
   expect(watch).toMatch(/fresh-session launch[^.]*overlapping scheduled pass[^.]*session loss/i);
   expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom scheduler/i);
-  expect(lifecycle).toMatch(/review and watch lanes[^.]*dedicated workspaces/i);
+  expect(lifecycle).toMatch(/review and watch lanes[^.]*isolated per-pass workspaces/i);
   expect(lifecycle).toMatch(/at most five executing PR jobs/i);
   expect(workflows).toMatch(/exactly two logical native manager lanes/i);
   expect(workflows).toMatch(/waiting PRs[^.]*consume no slot/i);
