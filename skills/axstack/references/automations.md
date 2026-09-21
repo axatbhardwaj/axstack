@@ -24,6 +24,11 @@ in its pass workspace. Missed slots do not replay a backlog; the next ordinary p
 discovers current state. The two short packaged prompts sit beside this file
 and discover these rules by relative link instead of copying them.
 
+Provision one explicit absolute continuity path per automation ID in the
+scheduled prompt. Follow [Run record](run-record.md) for its contents; the
+repository's absolute Git common directory is a valid durable root, but a pass
+worktree is not. Missing or non-durable continuity configuration holds admission.
+
 This is prompt policy, not proof that Orca starts a fresh session or prevents
 overlapping passes. Before activation a native canary must prove fresh-session
 launch, overlapping-pass behavior, recovery after session loss, nested
@@ -39,7 +44,8 @@ workspace. Bind the lane to the automation ID and pass to its native run ID,
 workspace ID, and terminal identity, not a title or directory-name guess.
 A confirmed live manager for the same lane remains authoritative.
 The new duplicate does no PR work, makes no shared-record write, touches
-nothing owned by the live manager, and closes only itself as its final action.
+nothing owned by the live manager, and closes only itself as its final action
+by the same guarded isolated-workspace retirement below, not a tab-only close.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -49,6 +55,25 @@ work; the earlier unsettled pass retains the lane. Missing ordering or ownership
 evidence holds admission, never guesses a winner. This is not an atomic lock:
 activation requires an overlap canary proving only one pass admits work. Count
 all unsettled PR jobs and descendants across the lane, not just this workspace.
+Read every page of native runs, workers, and workspace inventory; truncated or
+failed inventory holds admission and cleanup rather than implying absence.
+
+A prior manager does not retain the lane merely because its automation run
+status says failed or dispatched. Require confirmed native process exit for its
+exact terminal incarnation, saved continuity, and settlement of all owned jobs
+and descendants before releasing its lane ownership. Absence or saved retirement
+intent alone is insufficient. Conversely a completed run row does not prove exit.
+If these facts remain unknown, report the hold at the durable decision location;
+do not silently stand down forever or replace a potentially live owner.
+
+Before PR admission, reconcile old pass resources. If three or more unreclaimed
+earlier pass workspaces remain, disable only this automation through the native
+CLI, verify the disabled setting, save/report the cleanup hold, and admit no new
+PR jobs. Also pause on a confirmed cleanup failure or unresolved lane ownership.
+Already-dispatched passes still reconcile and retire only their own safe resources;
+this threshold is a stop condition, not an atomic hard cap on in-flight creations.
+An uncertain disable is a reported failure, not proof scheduling stopped. Resume
+only after ownership/cleanup is verified and explicit activation authority exists.
 
 ## Discovery and coverage
 
@@ -202,7 +227,9 @@ do not bulk-close; preserve the workspace and report the hold at its durable
 decision location. Never bulk-close a shared manager workspace or a PR-job worktree.
 
 After saving continuity, use the version-matched native workspace retirement:
-`terminal close --worktree <exact-pass-workspace> --all --json`.
+`terminal close --worktree id:<exact-native-workspace-id> --all --json`.
+Copy the complete ID from the run/workspace receipt; never use a name, branch,
+path-only selector, or `active` for this destructive operation.
 Self-close is the final action; perform no record write or cleanup afterward.
 A failed or uncertain close is not proof of retirement. The next admitted pass
 reconciles prior retirement from native state before trusting saved intent.

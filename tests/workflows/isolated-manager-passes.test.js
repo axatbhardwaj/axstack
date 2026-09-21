@@ -16,10 +16,18 @@ test('scheduled passes isolate retirement without narrowing lane-wide admission'
 
 test('bulk retirement is allowed only in the verified disposable pass workspace', () => {
   const text = contract();
-  expect(text).toContain('terminal close --worktree <exact-pass-workspace> --all --json');
+  expect(text).toContain('terminal close --worktree id:<exact-native-workspace-id> --all --json');
   expect(text).toContain('Never bulk-close a shared manager workspace or a PR-job worktree');
   expect(text).toContain('If an unexpected terminal or user takeover is present, do not bulk-close');
   expect(text).toContain('A failed or uncertain close is not proof of retirement');
+});
+
+test('retention failure stops future scheduled growth and exit proof permits recovery', () => {
+  const text = contract();
+  expect(text).toContain('three or more unreclaimed earlier pass workspaces');
+  expect(text).toContain('disable only this automation through the native CLI');
+  expect(text).toContain('confirmed native process exit');
+  expect(text).toContain('Absence or saved retirement intent alone is insufficient');
 });
 
 test('manual invocations do not enter scheduled lifecycle', () => {
