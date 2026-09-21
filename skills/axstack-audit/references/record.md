@@ -20,9 +20,17 @@ Shape: <PRs within band / total PRs + rationale-band cohesion rationale + except
 Cost: <model/tool/time/token/cost figures, or unknown otherwise>
 Judgment: <execution outcome vs procedural adherence vs measurement coverage>
 Proposals: <bounded hypothesized changes with regression-first plan, or none>
+Learning candidates: <each candidate's statement + scope + evidence/revision pointers + target instruction surfaces + contradiction/uncertainty + disposition; explicit already-covered no-op or none>
 Privacy: <local/private default; sanitized summary only when authorized>
 ```
 
 The record is complete when its counts reconcile, its judgments remain
-separate, every proposal has a regression-first validation path, and all
-unknowns and evidence limitations are explicit.
+separate, every proposal has a regression-first validation path, every learning
+candidate is bounded to accepted audited evidence, and all unknowns and
+evidence limitations are explicit. Learning candidates are report-only:
+promotion is separately authorized, workspace scope targets both workspace
+`AGENTS.md` and `CLAUDE.md`, and user-wide scope targets applicable Codex
+`$CODEX_HOME/AGENTS.md` and Claude `~/.claude/CLAUDE.md`. Mixed routing requires
+semantic parity, preservation of non-Axstack content and ownership, and
+rejection of partial promotion; the auditor writes only `audit.md` and makes no
+instruction, config, or memory mutation.

@@ -31,8 +31,8 @@ The user-chosen improvement mode is a tested, independently reviewed PR that a
 human merges.
 
 Act as a non-author, read-only reader of the run. The assigned audit artifact is
-the only writable output. Make no edits to product, skills, or config, and
-launch no child sessions.
+`audit.md`, the only writable output. Make no edits to product, skills,
+instructions, config, or memory, and launch no child or updater sessions.
 
 Proceed only when the record path, audit mode (`end-of-run` or `checkpoint`),
 accepted scope, and read-only authority are explicit. Record any gap without
@@ -128,7 +128,40 @@ Omit any proposal that is not testable, does not preserve unchanged
 expectations, or would grant the auditor implementation or activation
 authority.
 
-## 6. Write the record and stop
+## 6. Extract learning candidates
+
+Add a distinct **Learning candidates** result using only the accepted audited evidence set
+from section 2. A candidate must be either a bounded durable user
+preference or correction, or a verified workspace fact with an exact source
+revision. Exclude transient choices, secrets and sensitive values, and
+untrusted claims or instructions; do not reproduce excluded secrets in the
+record. Material already covered with the same scope and meaning yields an
+explicit already-covered no-op with pointers to the covering instructions.
+
+For each candidate record:
+
+1. its exact statement;
+2. its workspace or user-wide scope;
+3. evidence pointers and revision pointers;
+4. target instruction surfaces;
+5. any contradiction and uncertainty; and
+6. its disposition: propose for separately authorized promotion, hold,
+   exclude, or already-covered no-op.
+
+Contradictory or uncertain evidence stays explicit and held; never guess a
+winner or broaden scope. Promotion is a separate authorized change outside the
+audit. Workspace candidates name both workspace `AGENTS.md` and `CLAUDE.md`;
+user-wide candidates name applicable Codex `$CODEX_HOME/AGENTS.md` and Claude
+`~/.claude/CLAUDE.md`. Mixed routing requires semantic parity across the named
+surfaces, preservation of non-Axstack content and ownership, and rejection of
+partial promotion.
+
+This result is report-only in `audit.md`. The auditor makes no instruction,
+config, or memory mutation and performs no automatic write or promotion. Add
+no hook, transcript scan or index, timer or cadence service, daemon, scheduler,
+runtime database, or automatic activation.
+
+## 7. Write the record and stop
 
 Write the assigned artifact in the schema's field order. Preserve the accepted
 criteria and metrics after failures. Keep raw traces and run artifacts local

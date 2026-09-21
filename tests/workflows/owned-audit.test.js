@@ -213,9 +213,37 @@ test('owned-audit: prohibitions and privacy guard the loop', () => {
   expect(/compatible runs|qualify causal/i.test(text), 'compare compatible runs and qualify causality').toBeTruthy();
 });
 
-test('owned-audit: declared audit scenarios enumerate six expected outcomes', () => {
+test('owned-audit: learning candidates are bounded, report-only, and promotion-safe', () => {
+  const text = readAudit();
+  const record = readFileSync(join(auditDir, 'references', 'record.md'), 'utf8');
+  const combined = `${text}\n${record}`;
+
+  expect(combined).toMatch(/Learning candidates/i);
+  expect(combined).toMatch(/accepted audited evidence set/i);
+  expect(combined).toMatch(/durable user\s+preference|durable[^.]*correction/i);
+  expect(combined).toMatch(/verified workspace fact/i);
+  for (const field of ['statement', 'scope', 'evidence', 'revision', 'target instruction surfaces', 'contradiction', 'uncertainty', 'disposition']) {
+    expect(combined.toLowerCase().includes(field), `learning candidate needs ${field}`).toBeTruthy();
+  }
+  expect(combined).toMatch(/already covered[^.]*no-op/i);
+  expect(combined).toMatch(/transient/i);
+  expect(combined).toMatch(/secret/i);
+  expect(combined).toMatch(/untrusted/i);
+  expect(combined).toMatch(/workspace[^.]*AGENTS\.md[^.]*CLAUDE\.md/is);
+  expect(combined).toMatch(/user-wide[^.]*\$CODEX_HOME\/AGENTS\.md[^.]*~\/\.claude\/CLAUDE\.md/is);
+  expect(combined).toMatch(/semantic parity/i);
+  expect(combined).toMatch(/preserv(?:e|ation)[^.]*non-Axstack[^.]*ownership/i);
+  expect(combined).toMatch(/reject(?:s|ed|ion)?[^.]*partial promotion/i);
+  expect(combined).toMatch(/report-only/i);
+  expect(combined).toMatch(/writes only[^.]*audit\.md/i);
+  expect(combined).toMatch(/no[^.]*instruction[^.]*config[^.]*memory mutation/i);
+  expect(combined).toMatch(/no[^.]*hook[^.]*transcript[^.]*scan[^.]*index[^.]*timer[^.]*cadence[^.]*daemon[^.]*scheduler[^.]*runtime database/is);
+});
+
+test('owned-audit: declared audit scenarios enumerate twelve expected outcomes', () => {
   const data = JSON.parse(readFileSync(join(root, 'tests', 'workflows', 'audit-scenarios.json'), 'utf8'));
   expect(data.version).toBe(1);
+  expect(data.cases.length).toBe(12);
   const ids = data.cases.map((c) => c.id);
   for (const required of [
     'missing-acceptance-evidence',
@@ -224,6 +252,12 @@ test('owned-audit: declared audit scenarios enumerate six expected outcomes', ()
     'automatic-self-edit-request',
     'no-cost-receipts',
     'meaningful-spec-deviations',
+    'durable-learning-candidate',
+    'unsafe-learning-inputs-excluded',
+    'already-covered-learning-no-op',
+    'learning-conflict-uncertainty',
+    'learning-report-only-boundary',
+    'learning-promotion-parity',
   ]) {
     expect(ids.includes(required), `missing audit scenario: ${required}`).toBeTruthy();
   }
