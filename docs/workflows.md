@@ -173,8 +173,8 @@ gate. An applicable `Notification policy` may use `axstack-relay`; otherwise the
 current Orca conversation is the fallback. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
-`message_id`. PR-manager notifications point the user to the reusable manager's
-Orca conversation; Telegram delivery, replies, and silence grant no action
+`message_id`. PR-manager notifications point the user to GitHub or a durable
+user-owned conversation; Telegram delivery, replies, and silence grant no action
 authority. Delivery failure never clears the underlying hold.
 
 Healthy watch observations remain quiet. The optional `axstack-monitor` is a
@@ -182,16 +182,25 @@ read-only observer for standalone watches and never sends.
 
 ## Native watch automations
 
-The accepted contract has exactly two reusable native manager chats: review at
-minutes `0,15,30,45` and watch at `7,22,37,52`. Each has a dedicated manager
-workspace, scans complete discovery pages, and admits at most five executing
+The accepted contract has exactly two logical native manager lanes: review at
+minutes `0,15,30,45` and watch at `7,22,37,52`. Each scheduled pass uses a
+fresh finite session in a persistent dedicated workspace, scans complete
+discovery pages, and admits at most five executing
 PR jobs. Waiting PRs stay covered and consume no slot after owned descendants
 settle. Each job uses one repository-parented worktree; managers never check out
 PR branches in their own workspaces.
 
+Every pass reconciles saved, GitHub, and native Orca state before admission. A
+confirmed same-lane manager makes the new duplicate do no work or shared-record
+write and close only itself. Normal teardown settles descendants, saves durable
+continuity and decisions, closes only positively identified owned unused setup
+shell terminals, then self-closes as the final action. It never blanket-closes
+the workspace or cleans preserved candidates, evidence, user sessions, unknown
+liveness, `user_takeover`, or ambiguous publication state.
+
 Requested reviews cover any accessible repository; automatic repairs retain
 their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,
-reuse, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
+sessions, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
 cursor files, polling loop, or historical runtime fallback.
 
 ## Automations
@@ -200,8 +209,9 @@ The review and watch managers use short packaged prompts that load the current
 relative contract and invoke `axstack-review` or `axstack-watch`. Bounded jobs
 publish ordinary exact-head review verdicts or reviewed fast-forward repairs;
 the human merges. Exceptional security, permanent-on-chain, or architectural
-decisions remain held in the manager conversation with an authorized
-deduplicated Telegram notification. The current operational contract is
+decisions remain actionable in GitHub or a durable user-owned conversation
+after manager self-close, with an authorized deduplicated Telegram notification.
+The current operational contract is
 `skills/axstack/references/automations.md`.
 
 ## Run record and evidence

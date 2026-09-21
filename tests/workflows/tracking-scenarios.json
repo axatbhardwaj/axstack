@@ -54,7 +54,7 @@
     },
     {
       "id": "native-manager-canary-gap",
-      "input": { "before": "Two reusable manager prompts and schedules are configured but remain disabled.", "event": "Source checks pass, while same-session reuse, busy-tick behavior, session-loss recovery, and total process and memory effects have no live receipts." },
+      "input": { "before": "Two finite-session manager prompts and schedules are configured but remain disabled.", "event": "Source checks pass, while fresh-session launch, overlapping-pass behavior, session-loss recovery, and total process and memory effects have no live receipts." },
       "expected": { "after": "Activation remains unverified and disabled while repository delivery may continue.", "actions": ["record the four live evidence gaps", "run only a separately authorized bounded native canary before activation"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"] }
     },
     {

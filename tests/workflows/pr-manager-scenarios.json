@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "evidence": "evaluation input and expected decisions; not a scheduler implementation or live-runtime receipt",
   "cases": [
     {
@@ -9,40 +9,46 @@
       "forbidden": ["monitor only the first 5 or 10 PRs", "keep a job alive until merge"]
     },
     {
-      "id": "unchanged-tick",
-      "input": "a manager tick observes no new exact-head event",
-      "expected": ["reuse the manager chat", "create no PR job", "stay quiet"],
-      "forbidden": ["create a fresh manager session", "repeat an unchanged review"]
+      "id": "finite-unchanged-pass",
+      "input": "a fresh manager session reconciles its dedicated workspace, observes no new exact-head event, and has no descendants",
+      "expected": ["create no PR job", "save reconciled continuity", "close the finite manager session as its final action"],
+      "forbidden": ["retain an idle manager chat", "repeat an unchanged review"]
     },
     {
-      "id": "busy-tick",
-      "input": "a scheduled tick arrives while the same manager chat is still handling its prior tick",
-      "expected": ["do not start overlapping manager work", "record busy behavior as canary-unverified before activation"],
-      "forbidden": ["borrow capacity from the other manager", "claim atomic exclusion from prompt text"]
+      "id": "duplicate-manager-self-close",
+      "input": "a new review-manager session finds another live review manager with three active PR jobs in the same dedicated workspace",
+      "expected": ["perform no PR work", "make no shared-record write", "close only the new duplicate session"],
+      "forbidden": ["interrupt the established manager", "borrow watch-lane capacity"]
     },
     {
-      "id": "parked-resources",
-      "input": "a PR waits for CI, reviewer, user decision, or merge after all owned descendants settle",
-      "expected": ["persist exact PR/head/base/action/candidate context", "release settled native resources", "free the execution slot"],
-      "forbidden": ["hold a slot until merge", "poll or keep a per-PR timer alive"]
+      "id": "owned-shell-cleanup",
+      "input": "all descendants settled; three exact terminals are proven owned unused setup shells, while review reports, a dirty unpushed candidate, and a user-owned terminal remain",
+      "expected": ["close only the three exact owned unused setup-shell terminals", "preserve worktrees, candidate, evidence, and user terminal", "save continuity before self-close"],
+      "forbidden": ["blanket-close the workspace", "delete or clean preserved candidate state"]
     },
     {
-      "id": "scope-authority",
-      "input": "a peer review and an authored repair are both eligible",
-      "expected": ["peer code remains read-only", "repair only defi-com/monorepo or defi-com/mobile", "human retains merge authority"],
-      "forbidden": ["force push", "rebase or restack", "broaden the repair allowlist"]
+      "id": "durable-user-decision",
+      "input": "an architecture decision needs the user after all descendants settle, and candidate bytes plus exact head/base must survive manager closure",
+      "expected": ["persist the candidate and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "close the finite manager only after saving continuity"],
+      "forbidden": ["depend on the closed manager chat for the answer", "treat Telegram or silence as authority"]
+    },
+    {
+      "id": "same-head-new-review-event",
+      "input": "an own PR keeps the same head but receives a previously unseen current-head CHANGES_REQUESTED review ID and body digest",
+      "expected": ["recognize the new event identity", "admit repair when every other repair requirement passes"],
+      "forbidden": ["dedupe solely by head SHA", "ignore the new review body digest"]
+    },
+    {
+      "id": "unsettled-descendant",
+      "input": "current PR work appears finished, but its reviewer is live and a descendant release result is unknown while saved state says completed",
+      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not self-close until descendants settle"],
+      "forbidden": ["trust stale completed state", "release or close unknown-live resources"]
     },
     {
       "id": "recovery-unknown-ownership",
-      "input": "the reusable manager session is lost and one PR has ambiguous live ownership",
+      "input": "a finite manager session is lost and one PR has ambiguous live ownership",
       "expected": ["reconcile actual workers, GitHub, and compact record", "hold only the ambiguous PR", "continue eligible unambiguous work"],
       "forbidden": ["copy old authority", "automatically take over live user work"]
-    },
-    {
-      "id": "approval-head-changed",
-      "input": "the user approved an exceptional action, then the PR head or base changed",
-      "expected": ["revalidate exact candidate, head, base, and event", "hold stale approval in the manager chat"],
-      "forbidden": ["treat Telegram delivery or silence as authority", "apply approval to the changed revision"]
     },
     {
       "id": "fair-sixth-job",

@@ -167,7 +167,7 @@ test('review modes: automation verdicts bind the reviewed commit and carry the m
   expect(review).toMatch(/re-check head, base, draft status, authorship, and allowlist/i);
   expect(review).toContain('<!-- axstack-automation verdict head=<sha> -->');
   expect(review).toMatch(/`INCOMPLETE`[^.]*unknown GitHub state submits nothing/i);
-  expect(review).toMatch(/serious-risk escalation[^.]*holds submission[^.]*manager conversation/i);
+  expect(review).toMatch(/serious-risk escalation[^.]*holds submission[^.]*durable decision location/i);
   expect(review).toMatch(/`APPROVE` requires no validated blocker/i);
   expect(review).toMatch(/`REQUEST_CHANGES` requires at least one evidenced validated blocker/i);
   expect(review).toMatch(/never submits a `COMMENT` review/i);

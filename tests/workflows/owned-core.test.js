@@ -367,9 +367,9 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
   ).toBeTruthy();
 });
 
-test('owned-core: reusable watch manager keeps bounded event policy', () => {
+test('owned-core: finite watch-manager sessions keep bounded event policy', () => {
   const text = skill('axstack-watch');
-  expect(/native watch manager[^.]*dedicated workspace/i.test(text), 'watch manager must reuse a dedicated workspace').toBeTruthy();
+  expect(/watch-manager pass[^.]*fresh finite session[^.]*persistent dedicated workspace/i.test(text), 'watch manager must use fresh sessions in its persistent workspace').toBeTruthy();
   expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting PRs must not reserve slots').toBeTruthy();
   expect(/no watch deadline[^.]*manager automation/i.test(text), 'manager automation must not inherit the standalone deadline').toBeTruthy();
   expect(/never poll|polling loop/i.test(text), 'no polling loop').toBeTruthy();

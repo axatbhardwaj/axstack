@@ -36,9 +36,9 @@ exact new revision and base, all six angles, applicable acceptance, the reply
 body identities, and every affected boundary, with no unresolved material
 finding or urgent hold. Under a manager PR job, a serious-risk escalation
 preserves the local candidate and exact context, records the hold in the
-compact record and reusable manager conversation, and sends only an authorized
-deduplicated notification. Publication remains held until the user decides in
-that conversation and all exact inputs are revalidated.
+compact record and a durable GitHub or user-owned conversation, and sends only
+an authorized deduplicated notification. Publication remains held until the
+user decides at that durable location and all exact inputs are revalidated.
 
 ## 3. Revalidate immediately before publication
 
