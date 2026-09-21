@@ -13,10 +13,11 @@ stop task-owned registrations at completion, cancellation, or expiry.
 
 ## Native watch manager
 
-The separate native watch manager follows the
+The separate native watch-manager lane follows the
 [native PR-manager contract](../../axstack/references/automations.md). It reuses
-one dedicated workspace at minutes `7,22,37,52`, scans every eligible own PR,
-and admits at most five bounded actionable-event jobs. Waiting PRs stay covered
+one persistent dedicated workspace while each scheduled pass uses a fresh
+finite session at minutes `7,22,37,52`. It scans every eligible own PR and
+admits at most five bounded actionable-event jobs. Waiting PRs stay covered
 without reserving slots. Each job uses its own repository-parented worktree and
 settles with all descendants; no model, per-PR timer, or polling loop waits for
 CI, review, a user decision, or merge.
@@ -27,8 +28,8 @@ settings or source configuration are not runtime evidence. Preserve quiet
 unchanged behavior, exact-head event dedupe, ownership, complete discovery,
 and current authority.
 
-Before activation, canary same-session reuse, a busy scheduled tick, session
-loss and recovery, nested dispatch depth for coordinator-launched leaves, and
+Before activation, canary fresh-session launch, an overlapping scheduled pass,
+session loss and recovery, nested dispatch depth for coordinator-launched leaves, and
 total process and memory behavior. Until observed, those remain unverified; do
 not replace them with a precheck, watchdog, custom scheduler, state engine, or
 legacy fallback.

@@ -9,7 +9,7 @@ Produce one evidence-bound verdict for an exact candidate revision using the
 review count and model routing required by its mode. Report within the
 requested authority; the human merges unless separately authorized otherwise.
 
-When the current session is the reusable review manager, load
+When the current session is a fresh review-manager session, load
 [Native PR managers](../axstack/references/automations.md) and follow only its
 discovery, admission, recovery, and settlement branch. Do not review a PR,
 materialize `axstack-owner`, or check out a PR branch in the manager workspace.
@@ -276,7 +276,7 @@ private transport values or configuration.
 
 Under a manager PR job, credible serious risk found by a reviewer raises the
 standing internal prompt and dependent-action hold immediately in the compact
-run record and reusable manager's Orca conversation. The authorized
+run record and a durable GitHub or user-owned conversation. The authorized
 `axstack-relay` notification points the user there; delivery or silence never
 authorizes action.
 
@@ -329,7 +329,7 @@ to the intended commit.
 For a peer PR selected under
 [Native PR managers](../axstack/references/automations.md), apply the same
 complete-review and exact-commit requirements. A serious-risk escalation holds
-submission in the reusable manager conversation. Otherwise `APPROVE` requires
+submission at its durable decision location. Otherwise `APPROVE` requires
 no validated blocker and `REQUEST_CHANGES` requires at least one evidenced
 validated blocker. `INCOMPLETE`, unavailable inputs, unresolved disagreement,
 or unknown GitHub state submits nothing.

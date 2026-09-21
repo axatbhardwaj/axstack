@@ -5,7 +5,7 @@ automation specs and plans describe retired designs and are not instructions.
 
 ## Topology and schedules
 
-There are exactly two reusable manager chats:
+There are exactly two logical manager lanes:
 
 - **Review manager:** runs at minutes `0,15,30,45` and invokes
   [axstack-review](../../axstack-review/SKILL.md) for eligible peer reviews.
@@ -13,17 +13,29 @@ There are exactly two reusable manager chats:
   [axstack-watch](../../axstack-watch/SKILL.md) for eligible own-PR watch or
   repair events.
 
-Each uses native existing-workspace reuse in its own dedicated manager
-workspace. A manager never checks out a PR branch in that workspace. Missed
-slots do not replay a backlog; the next ordinary tick discovers current state.
-The two short packaged prompts sit beside this file and discover these rules by
-relative link instead of copying them.
+Each scheduled pass starts a fresh finite manager session in its persistent
+dedicated workspace; the workspace and saved continuity persist, but the
+manager chat does not. A manager never checks out a PR branch in that
+workspace. Missed slots do not replay a backlog; the next ordinary pass
+discovers current state. The two short packaged prompts sit beside this file
+and discover these rules by relative link instead of copying them.
 
-This is prompt policy, not proof that Orca serializes a busy tick or reuses a
-session. Before activation a native canary must prove same-session reuse, busy
-tick behavior, recovery after session loss, nested dispatch depth for
-coordinator-launched leaves, and total process and memory effects. A firing
-timestamp proves neither delivery nor useful completion.
+This is prompt policy, not proof that Orca starts a fresh session or prevents
+overlapping passes. Before activation a native canary must prove fresh-session
+launch, overlapping-pass behavior, recovery after session loss, nested
+dispatch depth for coordinator-launched leaves, and total process and memory
+effects. A firing timestamp proves neither delivery nor useful completion.
+
+## Session admission
+
+Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
+sessions, and liveness in the dedicated workspace before discovery or
+admission. A confirmed live manager for the same lane remains authoritative.
+The new duplicate does no PR work, makes no shared-record write, touches
+nothing owned by the live manager, and closes only itself as its final action.
+Unknown liveness blocks admission and shared-record writes; it does not
+authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
+and other user-owned sessions.
 
 ## Discovery and coverage
 
@@ -74,8 +86,8 @@ a slot settles; repeatedly changing PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
-The reusable manager owns ongoing discovery and continuity; the bounded PR
-coordinator owns only its admitted event. Do not create a second live owner or
+The logical manager lane owns ongoing discovery and continuity across finite
+sessions; the bounded PR coordinator owns only its admitted event. Do not create a second live owner or
 writer for the same PR. Reuse an existing valid per-PR worktree, owner, and
 unchanged receipts before creating anything. Otherwise create one separate
 Orca worktree per PR job, parented to that repository's primary worktree, and
@@ -85,19 +97,23 @@ handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`.
 
-An unchanged exact head and event creates no job. Dedupe from current GitHub
-state, native Orca Task and Dispatch state, and the existing compact run record;
-do not create machine cursor files or a queue engine. Record enough to resume:
-PR, head, base, event identity, mode, owner and worker receipts, candidate,
+An unchanged exact head and unchanged event identity creates no job; an
+unchanged exact head with a new event identity remains actionable. Event
+identity includes the applicable review ID and body digest, check identity and
+result, or other current GitHub event receipt. Dedupe from current GitHub state,
+native Orca Task and Dispatch state, and the existing compact run record; do
+not create machine cursor files or a queue engine. Record enough to resume: PR,
+head, base, event identity, mode, owner and worker receipts, candidate,
 publication receipt, hold, and next action. GitHub remains authoritative for
 open state, revisions, reviews, checks, and merge state.
 
 When the current event is handled, settle and release owned native resources.
-Preserve a dirty worktree, an unpushed candidate, pending external result, or
-user-owned work until its durability and ownership are proven. Here a pending
-external result means an unconfirmed publication or send outcome, not pending
-CI. Waiting state belongs in GitHub and the compact record, never in an idle
-model, per-PR timer, or polling loop.
+Preserve dirty worktrees, unpushed candidates, review evidence, pending
+external results, and user-owned work until durability and ownership are
+proven. Unknown liveness, `user_takeover`, and ambiguous publication likewise
+forbid cleanup. Here a pending external result means an unconfirmed publication
+or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
+record, never in an idle model, per-PR timer, or polling loop.
 
 ## Review and repair authority
 
@@ -137,18 +153,36 @@ boundary.
 ## Exceptional decisions and notifications
 
 A credible security concern, permanent on-chain state change, or architecture
-decision is held in the reusable manager's Orca conversation. Store the PR,
-head, base, action, candidate, decision context, and preserved candidate bytes
-or refs in the compact record. Send one deduplicated Telegram notification only
-when the recorded `Notification policy` authorizes it, using
-[axstack-relay](../../axstack-relay/SKILL.md) and telling the user to act in
-that manager conversation.
+decision is held in GitHub or a durable user-owned conversation that survives
+the finite manager session. Store the PR, head, base, action, candidate,
+decision context, durable decision location, and preserved candidate bytes or
+refs in the compact record. The decision must never depend on a closed manager
+chat. Send one deduplicated Telegram notification only when the recorded
+`Notification policy` authorizes it, using
+[axstack-relay](../../axstack-relay/SKILL.md) and telling the user where the
+durable decision is actionable.
 
 Telegram delivery, a Telegram reply, or silence never authorizes an action.
-After a decision in the manager conversation, revalidate the exact candidate,
-head, base, event, authority, and remote state before acting. A changed input
-makes the old decision stale and holds that action. There are no token files,
-Telegram decision interpreter, or separate model gate.
+After a decision, revalidate the exact candidate, head, base, event, authority,
+and remote state before acting. A changed input makes the old decision stale
+and holds that action. There are no token files, Telegram decision interpreter,
+or separate model gate.
+
+## Finite-session teardown
+
+After admission closes, settle every owned PR job and all descendants before the
+manager session ends; active or unknown descendants keep their PR slot occupied
+and must be reconciled rather than trusted from saved status. Then save durable
+continuity, evidence locations, pending receipts, and user decisions before
+self-close. Waiting PRs still occupy zero slots once their owned trees settle.
+
+Cleanup is scoped to positively identified owned unused setup shells: use the
+version-matched native exact-terminal close operation for each such terminal only.
+Never blanket-close a workspace. Preserve dirty worktrees, unpushed candidates,
+review evidence, user-owned terminals, unknown liveness, `user_takeover`, and
+ambiguous publication state. Close the finite manager's own exact terminal
+through the native guide. Self-close is the final action; perform no record
+write, cleanup, or other work afterward.
 
 ## Recovery and limits
 
@@ -162,6 +196,6 @@ unambiguous work may proceed.
 Use only native schedules and Orca orchestration. Add no daemon, shell precheck,
 watchdog script, custom scheduler, cursor or pending sidecar, runtime database,
 workflow state machine, decision interpreter, or programmatic escalation gate.
-The live VPS activation, native reuse and busy-tick behavior, recovery path,
+The live VPS activation, native fresh-session and overlapping-pass behavior, recovery path,
 nested dispatch depth for coordinator-launched leaves, and resource ceiling
 remain unverified until the canary succeeds.

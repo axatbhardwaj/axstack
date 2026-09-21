@@ -27,7 +27,7 @@ test('thin PR managers expose two short finite-session native prompts', () => {
 
 test('manager contract separates coverage from per-manager execution capacity', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/exactly two[^.]*reusable[^.]*manager/i);
+  expect(text).toMatch(/exactly two[^.]*logical manager lanes/i);
   expect(text).toMatch(/review manager[^.]*at most (?:five|5)/i);
   expect(text).toMatch(/watch manager[^.]*at most (?:five|5)/i);
   expect(text).toMatch(/no borrowing|never borrow/i);
@@ -45,16 +45,17 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/settlement[^.]*frees[^.]*slot|slot[^.]*freed[^.]*settled/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
-  expect(text).toMatch(/canary[^.]*same-session reuse[^.]*busy tick[^.]*recovery/i);
+  expect(text).toMatch(/canary[^.]*fresh-session launch[^.]*overlapping-pass behavior[^.]*recovery/i);
   expect(text).toMatch(/canary[^.]*nested dispatch depth[^.]*coordinator-launched leaves/i);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
 test('manager sessions reconcile before admission and duplicates close without shared writes', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/fresh finite session[^.]*persistent dedicated workspace/i);
+  expect(text).toMatch(/fresh finite (?:manager )?session[^.]*persistent dedicated workspace/i);
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native Orca[^.]*before[^.]*admission/i);
-  expect(text).toMatch(/another live[^.]*same (?:lane|manager)[^.]*no PR work[^.]*no shared-record write/i);
+  expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
+  expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no shared-record write/i);
   expect(text).toMatch(/duplicate[^.]*close[^.]*only[^.]*itself/i);
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
 });
@@ -91,7 +92,7 @@ test('manager contract preserves authority and exceptional chat holds', () => {
   expect(text).toMatch(/human merge|human[^.]*merges/i);
   expect(text).toMatch(/fast-forward[^.]*repair push|repair[^.]*fast-forward push/i);
   expect(text).toMatch(/security[^.]*permanent on-chain[^.]*architecture/i);
-  expect(text).toMatch(/manager[^.]*Orca (?:chat|conversation)/i);
+  expect(text).toMatch(/GitHub[^.]*durable user-owned conversation/i);
   expect(text).toMatch(/Telegram[^.]*never[^.]*authoriz|silence[^.]*never[^.]*authoriz/i);
 });
 
@@ -118,7 +119,7 @@ test('peer publication preserves human blocks and exact public receipts', () => 
 
 test('manager continuity reuses valid state and keeps publication bounded', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/manager owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);
+  expect(text).toMatch(/manager lane owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);
   expect(text).toMatch(/Reuse[^.]*worktree[^.]*owner[^.]*unchanged receipts/i);
   expect(text).toMatch(/Settlement returns continuity[^.]*manager[^.]*rather than retaining an idle PR coordinator/i);
   expect(text).toMatch(/dirty worktree[^.]*unpushed candidate[^.]*user-owned work[^.]*proven/i);
@@ -133,7 +134,7 @@ test('bounded watch jobs settle without inheriting standalone lifetime', () => {
   const watch = compact('skills/axstack-watch/SKILL.md');
   expect(watch).toMatch(/standalone live watch[^.]*timer receipts[^.]*common expiry/i);
   expect(watch).toMatch(/bounded manager PR job ends[^.]*current event[^.]*descendant settle/i);
-  expect(watch).toMatch(/returns exact receipts[^.]*reusable manager[^.]*releases proven resources/i);
+  expect(watch).toMatch(/returns exact receipts[^.]*logical manager lane[^.]*releases proven resources/i);
   expect(watch).toMatch(/never waits for merge[^.]*or stops[^.]*recurring schedule/i);
   expect(watch).toMatch(/End a standalone watch[^.]*merge[^.]*cancellation[^.]*24 h deadline/i);
 });

@@ -14,7 +14,7 @@ Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
 including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
-When the current session is the reusable watch manager, load
+When the current session is a fresh watch-manager session, load
 [Native PR managers](../axstack/references/automations.md) and follow only its
 discovery, admission, recovery, and settlement branch. Do not adopt or repair a
 PR, materialize `axstack-owner`, or check out a PR branch in the manager
@@ -71,9 +71,9 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. The native watch manager reuses one dedicated workspace on its
-staggered 15-minute schedule, covers every eligible own PR, and starts only
-bounded actionable-event jobs. Waiting PRs reserve no execution slots and
+anything. Each native watch-manager pass starts a fresh finite session in one
+persistent dedicated workspace on its staggered 15-minute schedule, covers
+every eligible own PR, and starts only bounded actionable-event jobs. Waiting PRs reserve no execution slots and
 there is no watch deadline for manager automation. `axstack-monitor` stays an
 optional read-only observer that never sends. One read-only PR observation
 needs neither. The bounded PR coordinator is the live owner for its event;
@@ -127,8 +127,8 @@ the current revision, and a recorded hold or next owner where work remains.
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
 The monitor never sends. The manager deduplicates authorized notifications;
-absent policy or failed relay uses its current Orca conversation and leaves
-every existing hold open.
+absent policy or failed relay uses the recorded durable GitHub or user-owned
+conversation and leaves every existing hold open.
 
 ## 5. State readiness precisely
 
@@ -140,9 +140,9 @@ observed state distinct from merged, and the human merges by default.
 ## 6. End and preserve continuity
 
 A bounded manager PR job ends as soon as its current event and every owned
-descendant settle. It returns exact receipts and remaining state to the
-reusable manager, releases proven resources, and never waits for merge or stops
-the manager's recurring schedule.
+descendant settle. It returns exact receipts and remaining state to the logical
+manager lane's durable continuity, releases proven resources, and never waits
+for merge or stops the manager's recurring schedule.
 
 End a standalone watch early when all required PRs merge, at cancellation, or
 at its shared default 24 h deadline. There is no watch deadline for manager
