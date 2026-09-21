@@ -32,13 +32,14 @@ describe('instruction CLI routing', () => {
     expect(readFileSync(instructions, 'utf8')).toBe('personal');
   });
 
-  test('Codex harness resolves skills and AGENTS.md from CODEX_HOME', () => {
+  test('Codex harness resolves shared skills and AGENTS.md from CODEX_HOME', () => {
     const { root, bundle } = fixture();
     const codexHome = join(root, 'codex-home');
     const installed = runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'codex', '--yes'], {
       env: { HOME: root, CODEX_HOME: codexHome },
     });
     expect(installed.out).toContain(`instruction created: ${codexHome}/AGENTS.md`);
+    expect(existsSync(join(root, '.agents', 'skills', 'axstack', 'roles.json'))).toBe(true);
     expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8').split('\n')[1]).toBe(FIRST_LINE);
     runCli(CLI, ['uninstall', '--harness', 'codex', '--yes'], {
       env: { HOME: root, CODEX_HOME: codexHome },
