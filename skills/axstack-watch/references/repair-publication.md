@@ -8,9 +8,9 @@ and peer modes stop with a report before this branch.
 Re-read the accepted maintenance snapshot, writable ownership, publication
 authority, remote head and base, and current feedback. Route an accepted fix to
 the original author session only when the run itself launched that session and
-evidence permits. For an adopted own PR under the automation, the repair
-author is the automation session (Claude/Opus) or a dispatched
-`axstack-author` (Sol); record that repair's actual provenance before
+evidence permits. For an adopted own PR under the manager, the repair author is
+the manager PR coordinator or a dispatched `axstack-author`; record that
+repair's actual provenance before
 selecting the reviewer, because the authored-review pairing follows the actual
 provenance of the repair, never the PR's historical author. A missing,
 stale, or materially changed boundary holds the repair while read-only
@@ -34,13 +34,11 @@ required by the authored review rule in `axstack-review`.
 Publication stays held until the current authored review receipt covers the
 exact new revision and base, all six angles, applicable acceptance, the reply
 body identities, and every affected boundary, with no unresolved material
-finding or urgent hold. Under an automation the escalation gate of
-[Automation sessions](../../axstack/references/automations.md) also runs on
-the local SHA. `escalate` creates a token, pins the candidate at
-`refs/axstack/decisions/<token>`, opens the decision token, sends its message,
-and exits instead of pushing. `proceed` permits publication only with no
-unresolved validated blocking finding, and a push before the gate settles is
-forbidden.
+finding or urgent hold. Under a manager PR job, a serious-risk escalation
+preserves the local candidate and exact context, records the hold in the
+compact record and reusable manager conversation, and sends only an authorized
+deduplicated notification. Publication remains held until the user decides in
+that conversation and all exact inputs are revalidated.
 
 ## 3. Revalidate immediately before publication
 
@@ -57,9 +55,9 @@ Use `gh stack` for the adopted PR only, preserving unrelated stack entries.
 Bind the operation to the exact reviewed revision, then verify the submission
 receipt and remote state.
 
-An automation session pushes fast-forward only: run the section 3 publication
+Manager automation pushes fast-forward only: run the section 3 publication
 readback immediately before the push, then `git push` to the PR branch with no
-lease or force, and no `gh stack` sync or restack from an automation. A
+lease or force, and no `gh stack` sync or restack from a manager. A
 non-fast-forward remote is a recorded hold, never a rewrite.
 
 If the send outcome is unknown, inspect remote IDs, bodies, and actor before any

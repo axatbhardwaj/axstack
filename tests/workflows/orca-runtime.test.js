@@ -97,19 +97,13 @@ test('all active skill runtime instructions are Orca-only', () => {
   }
 });
 
-test('native watch hold is lifted: driver mutates, watchdog stays read-only', () => {
+test('native watch manager is bounded and requires canary evidence', () => {
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
-  expect(watch).toMatch(/provider[^.]*supported/i);
-  for (const missing of ['model', 'effort', 'permission']) {
-    expect(watch).toMatch(new RegExp(`${missing}[^.]*unsupported|cannot[^.]*${missing}`, 'i'));
-  }
-  expect(watch).not.toMatch(/activation[^.]*(?:is|are|remains?) held|capability hold/i);
-  expect(watch).toMatch(/lifted[^.]*user decision|user decision[^.]*lifted/i);
-  expect(watch).toMatch(/driver every 15 minutes[^.]*dispatches and exits[^.]*mutating owner/i);
-  expect(watch).toMatch(/watchdog[^.]*model-free[^.]*read-only[^.]*no gate[^.]*`watchdog\.log`/i);
-  expect(watch).toMatch(/no[^.]*custom[^.]*scheduler/i);
-  expect(watch).toMatch(/hourly/i);
-  expect(watch).toMatch(/no watch deadline[^.]*automations/i);
+  expect(watch).toMatch(/reuses\s+one dedicated workspace/i);
+  expect(watch).toMatch(/at most five bounded actionable-event jobs/i);
+  expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
+  expect(watch).toMatch(/canary[^.]*same-session reuse/i);
+  expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom\s+scheduler/i);
 });
 
 test('preset bundles retain three role tables in the frozen container', () => {
@@ -118,8 +112,8 @@ test('preset bundles retain three role tables in the frozen container', () => {
     const data = JSON.parse(read(`profiles/presets/${name}.json`));
     expect(Object.keys(data)).toEqual(['version', 'roles']);
     expect(data.version).toBe(1);
-    expect(data.roles).toHaveLength(25);
-    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(25);
+    expect(data.roles).toHaveLength(24);
+    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(24);
   }
   const mixed = JSON.parse(read('profiles/presets/mixed.json'));
   expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();

@@ -74,20 +74,19 @@
       }
     },
     {
-      "id": "monitor-watchdog-split",
-      "title": "Monitor reads product state; watchdog reads watch health",
+      "id": "standalone-monitor-lifetime",
+      "title": "Standalone monitor reads product state for a bounded watch lifetime",
       "skill_ref": "axstack-watch",
       "input": {
         "request": "A delivered PR is under watch. A reviewer approves while required CI is still pending.",
-        "facts": "Monitor and watchdog run on their own timers with the same 24h expiry. No user renewal."
+        "facts": "A standalone monitor runs on its cadence with a 24h expiry. No user renewal."
       },
       "expected": {
         "monitor": "Reads GitHub and all feedback plus latest checks on its cadence; surfaces actionable events with persisted, acknowledged IDs",
-        "watchdog": "Reads only watch health on its cadence; owns its timer and snapshot; reports handshake to the owner",
-        "steady_state": "No-change ticks wake neither owner nor driver",
+        "steady_state": "No-change ticks do not wake the owner",
         "readiness": "Owner validates against current required checks, feedback, approvals, and mergeability; a review approval alone is NOT merge-ready",
         "api_errors": "Block readiness; never imply coverage",
-        "expiry": "Both stop at the same 24h deadline including open PRs; timer receipts verified and cleaned up on early closure, cancel, or expiry"
+        "expiry": "The standalone monitor stops at the 24h deadline including an open PR; timer receipts are verified and cleaned up on early closure, cancel, or expiry"
       }
     },
     {

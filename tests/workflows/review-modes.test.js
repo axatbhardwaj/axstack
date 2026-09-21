@@ -17,7 +17,7 @@ test('review modes: eight raw scenario contracts cover the amendments', () => {
     'unknown-author',
     'unavailable-cross-model-reviewer',
     'stale-authoring-change',
-    'automation-comment-publication',
+    'automation-verdict-publication',
     'automation-incomplete-publishes-nothing',
   ]);
   for (const scenario of data.cases) {
@@ -26,6 +26,11 @@ test('review modes: eight raw scenario contracts cover the amendments', () => {
     expect(scenario.input.candidate).toBeTruthy();
     expect(scenario.expected).toBeTruthy();
   }
+  const automation = data.cases.find((c) => c.id === 'automation-verdict-publication');
+  expect(automation.input.caller).toMatch(/review manager|bounded PR coordinator/i);
+  expect(automation.expected.publication).toMatch(/APPROVE|REQUEST_CHANGES/);
+  expect(JSON.stringify(automation)).not.toMatch(/gate token/i);
+  expect(automation.expected.publication).not.toMatch(/COMMENT/i);
 });
 
 // The remaining checks are shipped prompt-policy structure, not proof that a
@@ -116,7 +121,7 @@ test('review modes: new runs discover one preset and snapshot all role states', 
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
-  expect(routing).toMatch(/all 25 role IDs|complete 25-role map/i);
+  expect(routing).toMatch(/all 24 role IDs|complete 24-role map/i);
   expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
   expect(routing).toMatch(/absent[^.]*hold[^.]*only that role|only that role[^.]*hold/i);
   expect(routing).toMatch(/later[^.]*must not[^.]*silently[^.]*snapshot|snapshot[^.]*must not[^.]*silently[^.]*later/i);
@@ -162,9 +167,9 @@ test('review modes: automation verdicts bind the reviewed commit and carry the m
   expect(review).toMatch(/re-check head, base, draft status, authorship, and allowlist/i);
   expect(review).toContain('<!-- axstack-automation verdict head=<sha> -->');
   expect(review).toMatch(/`INCOMPLETE`[^.]*unknown GitHub state submits nothing/i);
-  expect(review).toMatch(/`escalate` opens a bound decision token[^.]*exits/i);
-  expect(review).toMatch(/`proceed` permits `APPROVE`[^.]*no validated blocker/i);
-  expect(review).toMatch(/permits `REQUEST_CHANGES`[^.]*at least one evidenced validated blocker/i);
+  expect(review).toMatch(/serious-risk escalation[^.]*holds submission[^.]*manager conversation/i);
+  expect(review).toMatch(/`APPROVE` requires no validated blocker/i);
+  expect(review).toMatch(/`REQUEST_CHANGES` requires at least one evidenced validated blocker/i);
   expect(review).toMatch(/never submits a `COMMENT` review/i);
 });
 

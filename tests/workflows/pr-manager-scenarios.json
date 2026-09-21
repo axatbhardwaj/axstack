@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "evidence": "evaluation input and expected decisions; not a scheduler implementation or live-runtime receipt",
+  "cases": [
+    {
+      "id": "thirty-pr-coverage",
+      "input": "30 eligible PRs: 10 waiting in watch mode, 15 other waiting, 5 actionable",
+      "expected": ["scan all discovery pages", "waiting PRs occupy no execution slots", "admit at most 5 actionable jobs in the relevant manager"],
+      "forbidden": ["monitor only the first 5 or 10 PRs", "keep a job alive until merge"]
+    },
+    {
+      "id": "unchanged-tick",
+      "input": "a manager tick observes no new exact-head event",
+      "expected": ["reuse the manager chat", "create no PR job", "stay quiet"],
+      "forbidden": ["create a fresh manager session", "repeat an unchanged review"]
+    },
+    {
+      "id": "busy-tick",
+      "input": "a scheduled tick arrives while the same manager chat is still handling its prior tick",
+      "expected": ["do not start overlapping manager work", "record busy behavior as canary-unverified before activation"],
+      "forbidden": ["borrow capacity from the other manager", "claim atomic exclusion from prompt text"]
+    },
+    {
+      "id": "parked-resources",
+      "input": "a PR waits for CI, reviewer, user decision, or merge after all owned descendants settle",
+      "expected": ["persist exact PR/head/base/action/candidate context", "release settled native resources", "free the execution slot"],
+      "forbidden": ["hold a slot until merge", "poll or keep a per-PR timer alive"]
+    },
+    {
+      "id": "scope-authority",
+      "input": "a peer review and an authored repair are both eligible",
+      "expected": ["peer code remains read-only", "repair only defi-com/monorepo or defi-com/mobile", "human retains merge authority"],
+      "forbidden": ["force push", "rebase or restack", "broaden the repair allowlist"]
+    },
+    {
+      "id": "recovery-unknown-ownership",
+      "input": "the reusable manager session is lost and one PR has ambiguous live ownership",
+      "expected": ["reconcile actual workers, GitHub, and compact record", "hold only the ambiguous PR", "continue eligible unambiguous work"],
+      "forbidden": ["copy old authority", "automatically take over live user work"]
+    },
+    {
+      "id": "approval-head-changed",
+      "input": "the user approved an exceptional action, then the PR head or base changed",
+      "expected": ["revalidate exact candidate, head, base, and event", "hold stale approval in the manager chat"],
+      "forbidden": ["treat Telegram delivery or silence as authority", "apply approval to the changed revision"]
+    },
+    {
+      "id": "fair-sixth-job",
+      "input": "five same-manager jobs execute and a sixth actionable PR is waiting",
+      "expected": ["preserve the waiting PR", "admit oldest actionable unserved work after a slot settles"],
+      "forbidden": ["drop the sixth PR", "starve it behind repeatedly served PRs"]
+    }
+  ]
+}

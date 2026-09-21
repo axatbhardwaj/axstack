@@ -53,9 +53,9 @@
       "expected": { "after": "Ownership transfers only for the accepted boundary and O1 stops.", "actions": ["validate acceptance against the intended handoff", "record the acceptance receipt", "transfer only accepted authority"], "forbidden": ["transfer on input acceptance alone", "expand O2 authority", "keep two owners"] }
     },
     {
-      "id": "native-watch-capability-gap",
-      "input": { "before": "The user lifted the native-watch hold; the automations contract expects the driver on Opus with the watchdog checking model identity.", "event": "Native Orca automation supports provider but cannot pin model, effort, or permission, and the driver records a model other than the expected one." },
-      "expected": { "after": "Mutation pauses for that run, the mismatch is recorded, and the finding goes to the watchdog path under the automation-health criterion.", "actions": ["record the driver's actual model identity on every tick", "pause mutation for the mismatched run", "route the finding to the watchdog and the gate"], "forbidden": ["substitute a model silently", "build a scheduler or polling loop", "clear the hold by silence"] }
+      "id": "native-manager-canary-gap",
+      "input": { "before": "Two reusable manager prompts and schedules are configured but remain disabled.", "event": "Source checks pass, while same-session reuse, busy-tick behavior, session-loss recovery, and total process and memory effects have no live receipts." },
+      "expected": { "after": "Activation remains unverified and disabled while repository delivery may continue.", "actions": ["record the four live evidence gaps", "run only a separately authorized bounded native canary before activation"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"] }
     },
     {
       "id": "idle-is-not-complete",

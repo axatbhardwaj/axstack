@@ -26,7 +26,7 @@ Read `roles.json` from the installed shared root `skills/axstack/`. The installe
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 25 role rows once. An active run keeps the exact snapshot until the user
+all 24 role rows once. An active run keeps the exact snapshot until the user
 explicitly changes it.
 
 Select the requested role by stable ID. A missing or null model holds only that role;

@@ -9,6 +9,12 @@ Produce one evidence-bound verdict for an exact candidate revision using the
 review count and model routing required by its mode. Report within the
 requested authority; the human merges unless separately authorized otherwise.
 
+When the current session is the reusable review manager, load
+[Native PR managers](../axstack/references/automations.md) and follow only its
+discovery, admission, recovery, and settlement branch. Do not review a PR,
+materialize `axstack-owner`, or check out a PR branch in the manager workspace.
+Each admitted bounded PR coordinator re-enters this skill in peer mode.
+
 Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
 audit edge remains active. Load [Shared routing](../axstack/references/routing.md)
@@ -16,8 +22,8 @@ to select the mode and scope identity, and apply the shared
 [PR-shape policy](../axstack/references/pr-shape.md). For an owned candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
-When the caller is an Orca driver automation, load
-[Automation sessions](../axstack/references/automations.md): its reviewer briefs
+When the caller is a bounded review-manager PR job, load
+[Native PR managers](../axstack/references/automations.md): its reviewer briefs
 carry the required escalation field and every eligible peer PR takes a binding
 `APPROVE` or `REQUEST_CHANGES` verdict under the automation exception below.
 
@@ -71,13 +77,13 @@ fallback.
 Before dispatch, read [Orca runtime](../axstack/references/orca-runtime.md).
 Standalone peer review or watch adoption then materializes `axstack-owner`,
 reusing a live owner when one exists. Once materialized, that owner is the sole
-coordinator: only the owner launches the writer, reviewers, monitor, and
-watchdog. The current chat does not compete with it. Workers create no children
-or recursive teams.
+coordinator: only the owner launches the writer, reviewers, and optional
+monitor. The current chat does not compete with it. Leaf workers create no
+recursive teams.
 
 Automation exception — Standalone owner: no separate `axstack-owner` is
-materialized when the caller is the Orca driver automation; the automation
-session is the owner for every PR it handles.
+materialized when the caller is a bounded manager PR job; that PR coordinator
+owns the event and settles after its skill-owned reviewers settle.
 
 ## Review the candidate
 
@@ -230,9 +236,9 @@ Escalate to user: yes | no — <criterion> — <reason>
 Every brief ends with the `Escalate to user` field and the reviewer answers it
 in the receipt. A reviewer may cite only a security concern, a permanent
 on-chain state change, or an architectural change in approach. Health is not a
-reviewer criterion. The answer is input to the PR escalation gate, not a veto
-and not a verdict; see
-[Automation sessions](../axstack/references/automations.md) for the gate.
+reviewer criterion. The answer is escalation input, not a veto or verdict; see
+[Native PR managers](../axstack/references/automations.md) for the manager-chat
+hold.
 
 ## Template: review receipt (one block per revision)
 
@@ -268,12 +274,11 @@ relay delivery fails, send the same escalation there. Failed delivery never reso
 concern. Use no private escalation script. Public installations inherit no
 private transport values or configuration.
 
-Under an automation session, credible serious risk found by a reviewer still
-raises the standing internal prompt and dependent-action hold immediately, and
-the gate governs only external notification: the internal prompt lands in the
-run record and the automation session's own Orca conversation. `escalate`
-opens the bound decision token, sends through `axstack-relay`, and exits
-without waiting; `proceed` never overrides a validated blocking finding.
+Under a manager PR job, credible serious risk found by a reviewer raises the
+standing internal prompt and dependent-action hold immediately in the compact
+run record and reusable manager's Orca conversation. The authorized
+`axstack-relay` notification points the user there; delivery or silence never
+authorizes action.
 
 ## Publishing rule
 
@@ -322,13 +327,12 @@ to the intended commit.
 ## Automation exception
 
 For a peer PR selected under
-[Automation sessions](../axstack/references/automations.md), apply the same
-complete-review and exact-commit requirements, then run the Luna gate.
-`escalate` opens a bound decision token, sends its message, and exits without
-submitting. `proceed` permits `APPROVE` only with no validated blocker and
-permits `REQUEST_CHANGES` only with at least one evidenced validated blocker.
-`INCOMPLETE`, unavailable inputs, unresolved disagreement, or unknown GitHub
-state submits nothing.
+[Native PR managers](../axstack/references/automations.md), apply the same
+complete-review and exact-commit requirements. A serious-risk escalation holds
+submission in the reusable manager conversation. Otherwise `APPROVE` requires
+no validated blocker and `REQUEST_CHANGES` requires at least one evidenced
+validated blocker. `INCOMPLETE`, unavailable inputs, unresolved disagreement,
+or unknown GitHub state submits nothing.
 
 Immediately before `gh pr review`, re-read self's reviews at the head. If one
 already exists, skip submission and record its id. Otherwise re-check head,

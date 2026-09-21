@@ -40,7 +40,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 25 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 24 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -139,10 +139,10 @@ session and evidence remain valid.
   authorized-maintenance scope. A changed head or comment is an event, not
   repair authority. Repairs return to the original author only for a
   run-launched session and receive refreshed authored review before scoped
-  `gh stack` publication. `gh stack` publication does not apply to automation
-  repairs: the automation session (or a dispatched `axstack-author`) repairs in
-  a per-PR child worktree, the local SHA is reviewed and gated, and the repair
-  lands by fast-forward `git push` after `proceed`.
+  `gh stack` publication. `gh stack` publication does not apply to manager
+  repairs: the bounded PR job repairs in its per-PR child worktree, the local
+  SHA receives the actual-author-provenance review, and the exact candidate
+  lands by fast-forward `git push` after final readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
 
@@ -173,40 +173,35 @@ gate. An applicable `Notification policy` may use `axstack-relay`; otherwise the
 current Orca conversation is the fallback. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
-`message_id`. The PR automation's decision tokens are the narrow exception: a
-fixed Hermes script writes the user's bound decision to a file for the driver
-to consume; no session polls Telegram. Delivery failure never clears the
-underlying hold.
+`message_id`. PR-manager notifications point the user to the reusable manager's
+Orca conversation; Telegram delivery, replies, and silence grant no action
+authority. Delivery failure never clears the underlying hold.
 
-Healthy watch observations remain quiet. The optional `axstack-monitor` is
-read-only and never sends; `axstack-watchdog` never mutates GitHub. Under the
-rev-3 PR automation it performs four model-free health checks and sends new
-occurrences directly, with no health gate.
+Healthy watch observations remain quiet. The optional `axstack-monitor` is a
+read-only observer for standalone watches and never sends.
 
 ## Native watch automations
 
-The accepted PR-automation contract is a 15-minute driver automation and an
-hourly watchdog, with quiet healthy checks, deduplicated occurrences, one live
-dispatch marker per PR, and decision tokens for user-authorized actions.
+The accepted contract has exactly two reusable native manager chats: review at
+minutes `0,15,30,45` and watch at `7,22,37,52`. Each has a dedicated manager
+workspace, scans complete discovery pages, and admits at most five executing
+PR jobs. Waiting PRs stay covered and consume no slot after owned descendants
+settle. Each job uses one repository-parented worktree; managers never check out
+PR branches in their own workspaces.
 
-The driver is the automation session itself, with no `axstack-monitor` or
-`axstack-owner` role row. It uses the agent selected in Orca; changing that
-selection does not change the configured reviewers or impose a model hold.
 Requested reviews cover any accessible repository; automatic repairs retain
-their separate explicit repository scope. Orca owns scheduling and run history;
-Axstack adds no custom scheduler, polling loop, or historical runtime fallback.
+their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,
+reuse, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
+cursor files, polling loop, or historical runtime fallback.
 
 ## Automations
 
-Two native Orca automations run the installed skills: a driver every 15 minutes
-that discovers work through four GitHub searches, dispatches exact-head peer
-reviews and own-PR repairs, consumes decision tokens, and exits; and an hourly
-model-free watchdog that evaluates four liveness checks and exits without
-launching a session. PR reviewers use exactly three escalation criteria. A gate
-`escalate` opens a bound decision token and exits, while `proceed` permits only
-the verdict or fast-forward push supported by the reviewed evidence. There are
-no `COMMENT` reviews, obligations, watch deadline, terminal cleanup sweep, or
-health gate. The current operational contract is
+The review and watch managers use short packaged prompts that load the current
+relative contract and invoke `axstack-review` or `axstack-watch`. Bounded jobs
+publish ordinary exact-head review verdicts or reviewed fast-forward repairs;
+the human merges. Exceptional security, permanent-on-chain, or architectural
+decisions remain held in the manager conversation with an authorized
+deduplicated Telegram notification. The current operational contract is
 `skills/axstack/references/automations.md`.
 
 ## Run record and evidence

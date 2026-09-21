@@ -17,7 +17,8 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Automation driver/monitor/watchdog: see [Watch health](#watch-health).
+- Automation review/watch managers and optional monitor: see
+  [Watch health](#watch-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -109,12 +110,11 @@ differs from merged; human merges.
 
 ## Watch health
 
-The user lifted the native-watch hold by user decision on 2026-09-16. The
-driver automation is a mutating owner for its PRs; `axstack-watchdog` stays
-independent and read-only. The driver every 15 minutes dispatches and exits;
-the watchdog is model-free, has no gate, and records `watchdog.log`; there is
-no watch deadline for automations. Build no custom scheduler and use no legacy
-fallback. Details live in
+The native review and watch managers reuse separate dedicated workspaces on
+staggered 15-minute schedules. Each admits at most five executing PR jobs;
+waiting PRs remain covered without reserving slots. Bounded PR jobs own their
+events, use per-PR worktrees, and settle after descendants settle. Build no
+custom scheduler, state engine, or legacy fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (close-out and meaningful checkpoints)
