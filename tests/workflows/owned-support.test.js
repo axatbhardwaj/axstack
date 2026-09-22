@@ -208,7 +208,14 @@ test('owned-support: explain caps the primary view without losing decisions', ()
   ]) {
     expect(normalized).toContain(essential);
   }
-  expect(normalized).toMatch(/supporting detail[^.]*linked (?:ticket|appendix)/i);
+  expect(normalized).toMatch(
+    /live reader questions[^.]*answers[^.]*inspected evidence[^.]*(?:unknown|open)[^.]*rather than invent/i,
+  );
+  for (const counted of ['headings', 'table text', 'labels', 'captions']) {
+    expect(normalized).toMatch(new RegExp(`reader-visible words[^.]*${counted}`, 'i'));
+  }
+  expect(normalized).toMatch(/(?:appendix|collapsible content)[^.]*same artifact[^.]*counts[^.]*700/i);
+  expect(normalized).toMatch(/supporting detail[^.]*separate linked (?:ticket|appendix)/i);
   expect(normalized).toMatch(/essential answers[^.]*not[^.]*hid/i);
   expect(normalized).toMatch(/evidence[^.]*not[^.]*silently discard/i);
 });

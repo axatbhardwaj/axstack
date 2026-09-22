@@ -52,10 +52,14 @@ immediately before an actual profile dispatch.
    chat, HTML, and every other requested format. Preserve in that primary view
    the answer or purpose, key rationale, meaningful alternatives, main data or
    operational boundary, status and uncertainty, and live reader questions
-   with their answers. If the draft is longer, compress repetition first and
-   move only supporting detail to a linked ticket or appendix. Essential
-   answers must not be hidden behind links, and evidence must not be silently
-   discarded.
+   with evidence-supported answers, labeling any question the inspected
+   evidence does not answer as **unknown** or **open** rather than inventing an
+   answer. Count the primary artifact's reader-visible words, including
+   headings, table text, and diagram or figure labels and captions. An appendix
+   or collapsible content in the same artifact counts toward the 700-word
+   maximum. If the draft is longer, compress repetition first and move only
+   supporting detail to a separate linked ticket or appendix. Essential answers
+   must not be hidden behind links, and evidence must not be silently discarded.
 2. For a simple request, answer concisely in the current chat. Use a compact
    diagram when useful. This needs no mandatory agent or intermediate artifact.
 3. For a complex visual, use the configured `axstack-explainer` role to create
