@@ -60,6 +60,16 @@ test('manager sessions reconcile before admission and duplicates close without s
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
 });
 
+test('one ordered successor may retire an exact positively completed predecessor', () => {
+  const text = compact('skills/axstack/references/automations.md');
+  expect(text).toMatch(/one successor[^.]*native (?:run )?ordering[^.]*cleanup claim/i);
+  expect(text).toMatch(/exact automation[^.]*run[^.]*workspace[^.]*terminal incarnation/i);
+  expect(text).toMatch(/positive completion[^.]*zero[^.]*descendants[^.]*settled/i);
+  expect(text).toMatch(/save[^.]*continuity[^.]*before[^.]*exact[^.]*close/i);
+  expect(text).toMatch(/re-list[^.]*process tree[^.]*exit[^.]*before[^.]*release/i);
+  expect(text).toMatch(/age[^.]*status[^.]*idle[^.]*never[^.]*authority/i);
+});
+
 test('manager event identity survives same-head changes', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/unchanged exact head[^.]*new event identity[^.]*actionable/i);
@@ -179,7 +189,7 @@ test('bounded watch jobs settle without inheriting standalone lifetime', () => {
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(4);
+  expect(data.version).toBe(5);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
   expect(data.evidence).toMatch(/not a scheduler implementation|not.*runtime receipt/i);
@@ -208,6 +218,10 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'unresolved-teardown',
     'exited-tree-retained-metadata',
     'settled-tree-archive-hold',
+    'completed-predecessor-cleanup',
+    'predecessor-cleanup-safety-hold',
+    'competing-successor-cleanup',
+    'predecessor-cleanup-failure-dedupe',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();

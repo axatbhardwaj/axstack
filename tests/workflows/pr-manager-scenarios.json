@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "evidence": "behavioral evaluation inputs and expected decisions; this fixture is not a model evaluation result, scheduler implementation, or live-runtime receipt",
   "cases": [
     {
@@ -97,6 +97,30 @@
       "input": "all exact workers and descendants are positively settled, but evidence archive verification failed so the workspace must remain",
       "expected": ["preserve the workspace and record a cleanup hold", "leave the execution slot free", "continue unrelated eligible PRs"],
       "forbidden": ["remove unverified evidence", "disable the lane solely for this settled workspace cleanup hold"]
+    },
+    {
+      "id": "completed-predecessor-cleanup",
+      "input": "the ordered successor finds a predecessor with positive completion, exact automation/run/workspace/terminal-incarnation matches, saved continuity, zero active or unsettled descendants, and a terminal that survived",
+      "expected": ["claim cleanup as the one ordered successor", "save cleanup continuity before exact native close", "prove the entire predecessor process tree exited before ownership release", "remove only the clean evidence-safe childless worktree through native cleanup"],
+      "forbidden": ["take over predecessor PR work", "infer exit from completed status or idle", "remove dirty, unpushed, or unarchived evidence"]
+    },
+    {
+      "id": "predecessor-cleanup-safety-hold",
+      "input": "an earlier pass is old and marked completed, but its exact terminal incarnation mismatches and native inventory shows an unexpected terminal with user_takeover while descendant settlement is unknown",
+      "expected": ["preserve the predecessor and evidence", "pause admission for unresolved lane ownership", "record the cleanup hold and resume condition once"],
+      "forbidden": ["kill by age or completed status", "bypass user_takeover", "close an unexpected terminal", "admit PR work from the successor"]
+    },
+    {
+      "id": "competing-successor-cleanup",
+      "input": "two overlapping successors both observe the same positively completed predecessor as cleanup-eligible before either mutates it",
+      "expected": ["reconcile native successor ordering", "allow only the earlier ordered successor to claim cleanup", "make the later successor reconcile the first claim and perform no cleanup"],
+      "forbidden": ["race two close operations", "guess a winner without ordering evidence", "create a custom lock or state engine"]
+    },
+    {
+      "id": "predecessor-cleanup-failure-dedupe",
+      "input": "the one ordered successor saved continuity and attempted exact native predecessor close, but close or exit proof is failed or uncertain and the same condition appears next pass",
+      "expected": ["preserve ownership, workspace, and evidence", "pause the lane with the exact resume condition", "deduplicate the unchanged cleanup hold and notification"],
+      "forbidden": ["release ownership without full process-tree exit proof", "remove the worktree", "retry cleanup or notify on every pass"]
     }
   ]
 }

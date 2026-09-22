@@ -66,6 +66,38 @@ intent alone is insufficient. Conversely a completed run row does not prove exit
 If these facts remain unknown, report the hold at the durable decision location;
 do not silently stand down forever or replace a potentially live owner.
 
+### Guarded completed-predecessor recovery
+
+A successor may retire a positively completed predecessor whose manager terminal
+survived only through this narrow recovery path. Eligibility requires an exact
+automation ID, run ID, workspace ID, and terminal incarnation match, a positive
+completion receipt bound to that incarnation, zero active or unsettled descendants,
+and every owned Task and Dispatch settled. A completed row or saved retirement
+intent alone is not positive completion. Age, status, and idle state are never
+cleanup authority. Active, unknown, protected, identity-mismatched,
+`user_takeover`, unexpected-terminal, permission-held, or otherwise unverifiable
+state preserves the predecessor and pauses admission; this path never takes over
+its PR work.
+
+Exactly one successor, selected by native run ordering, may write the cleanup
+claim. Immediately before writing, re-read the complete lane inventory and
+ordering; then save and read back claimant identity, predecessor identity,
+completion, and zero-descendant continuity before the exact native workspace
+close. A later successor reconciles that claim and performs no cleanup mutation.
+Missing ordering or a conflicting claim holds both cleanup and admission. This
+ordering is not an atomic lock; activation still depends on the overlap canary
+proving that two successors cannot both mutate one predecessor.
+
+Use the version-matched native workspace close against the receipt's complete
+workspace ID, never an individually guessed terminal or broad selector. After
+close, re-list native runs, workspaces, terminals, Tasks, and Dispatches and prove
+the full predecessor process tree exited before ownership release. Save and read
+back the exit and release receipts, then use native worktree cleanup only when the
+workspace has no children, dirty or unknown files, unpushed commits, unarchived
+evidence, or user-owned work. Preserve every failed or uncertain close, exit,
+release, or removal with its exact resume condition and pause the lane. An
+unchanged cleanup failure gets no destructive retry or duplicate notification.
+
 Before PR admission, reconcile old pass resources and reclaim every safely
 removable earlier pass workspace under the retirement guards below. This is
 routine cleanup on every admitted pass; do not wait for the three-workspace
