@@ -64,6 +64,30 @@ source copy or workspace.
 Archive success proves only preservation of the listed bytes. It does not prove
 settlement, exit, ownership, a clean worktree, publication, or removal safety.
 
+For a settled merged run whose forge merge is confirmed, generated reviewer
+scratch is disposable after a compact durable receipt is written outside the
+review worktree and read back. Bind that receipt to the exact repository, Run,
+Task, Dispatch, reviewer workspace and terminal, exact head SHA and base SHA,
+review verdict, coverage and limitations, test and CI result pointers, and the
+user authorization and scope for cleanup. Keep the reviewer report and any
+unique evidence needed to support its verdict; use the private evidence archive
+for unique evidence whose exact bytes must survive. Raw reproducible probes and
+logs need not be archived solely to retire a completed review worktree.
+
+Classify each proposed scratch file against its recorded owner and purpose.
+Never treat dirty source, unmerged or unpushed work, unknown or user-owned files,
+or active or `user_takeover` terminals as disposable scratch. For an otherwise
+eligible candidate, make an exact-path dry-run listing each proposed file and
+directory expected to be empty afterward for removal; check the paths are inside
+the owned reviewer worktree, regular files or directories as expected, and
+neither symlinks, hard links, nor unclassified content. Re-read the durable
+receipt, Git status, native ownership and liveness, and each path immediately
+before any unlink. Remove only the same validated files by nonrecursive
+exact-path unlink, then remove only listed empty directories; stop on a mismatch.
+Never use a glob, recursive command, force, or broad clean. Record the removed
+paths and re-read Git status before native worktree removal. This scratch
+decision does not waive any other preservation or native removal guard.
+
 ## Apply distinct native operations
 
 Treat these operations as separate decisions and receipts:
