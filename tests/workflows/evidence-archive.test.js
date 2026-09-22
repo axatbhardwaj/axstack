@@ -81,9 +81,14 @@ function runTaskArchive(f, extra = [], {
 test('archives only explicitly classified evidence with private verified receipts', () => {
   const f = fixture();
   const receipt = runArchive(f);
-  const manifest = JSON.parse(readFileSync(receipt.manifestPath, 'utf8'));
+  const manifestRaw = readFileSync(receipt.manifestPath, 'utf8');
+  const manifest = JSON.parse(manifestRaw);
 
   expect(receipt.status).toBe('archived');
+  expect(Object.keys(receipt)).toEqual([
+    'status', 'archiveDir', 'manifestPath', 'manifestHash', 'files',
+  ]);
+  expect(receipt.archiveDir).toContain(`/defi-com--monorepo/pr-123/${'a'.repeat(40)}/ctx_fixture123`);
   expect(receipt.manifestHash).toMatch(/^[0-9a-f]{64}$/);
   expect(manifest.identity).toEqual({
     repo: 'defi-com/monorepo',
@@ -92,6 +97,7 @@ test('archives only explicitly classified evidence with private verified receipt
     dispatch: 'ctx_fixture123',
   });
   expect(Object.keys(manifest.files)).toEqual(['nested/receipt.json', 'review.md']);
+  expect(manifestRaw).toBe(JSON.stringify(manifest, null, 2) + '\n');
   expect(readFileSync(join(receipt.archiveDir, 'files', 'review.md'), 'utf8')).toBe('review evidence\n');
   expect(existsSync(join(receipt.archiveDir, 'files', 'dirty-source.js'))).toBe(false);
   expect(lstatSync(receipt.archiveDir).mode & 0o077).toBe(0);

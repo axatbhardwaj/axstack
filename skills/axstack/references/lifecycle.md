@@ -6,10 +6,10 @@ receipts.
 
 ## Roster (compact)
 
-- Driver: current chat; owns scope, decisions, dependencies, tracker mutations,
+- Driver: current chat; owns scope, decisions, dependencies, external-tracker mutations,
   and integration.
 - Owner: driver owns loop PRs; `axstack-owner` serves standalone watch/review
-  without a live driver. It may publish within PR scope and user authority.
+  without a live driver. It may perform PR-scoped publication within user authority.
   Human merge is default.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
@@ -22,7 +22,7 @@ receipts.
 
 Prefer parallel independent bounded work; no redundant workers. Per
 [standing contracts](contracts.md), fanout is dependency/capacity-driven with
-no fixed count within host/spending limits. [PR shape](pr-shape.md) covers
+no fixed count. [PR shape](pr-shape.md) covers
 theme/size; queue via `gh stack`.
 
 ## Ownership
@@ -34,9 +34,9 @@ Owned implementation enters review through the revision-bound
 
 ## Native handoff and resume
 
-Preparation completion/watch expiry writes a record. Resume reconciles it,
-keeps the owner, and launches no handoff. Only an explicit user transfer request
-enters this branch.
+Preparation completion/watch expiry writes a record. Resume reconciles it and
+launches no handoff. Only an explicit user request to transfer ownership enters
+this branch.
 
 1. Reconcile the [Run record](run-record.md) with Orca Tasks, Dispatches,
    sessions, revisions, forge, pending receipts, and timer expiries; live owners
@@ -44,13 +44,13 @@ enters this branch.
 2. Load the [Orca runtime boundary](orca-runtime.md), then follow its
    version-matched runtime-owned handoff guidance. Never guess calls, paths,
    roles, or fallback models. Guide discovery does not prove capability.
-3. If native capability is missing, report the setup gap and keep the owner; no
-   replacement or transfer launches. Read-only reconciliation may continue.
+3. If capability is missing, report the gap and keep the current owner; no replacement or ownership transfer launches.
+   Read-only work may continue.
 4. Record recipient/pending receipt before launch. If uncertain, reconcile the
    workspace/session before retry and block duplicates.
-5. Launch is not ownership. Record explicit acceptance before changing it; the
-   current owner remains accountable until then. A prior owner seeing a valid
-   accepted replacement stops.
+5. Launch is not ownership. Record the explicit acceptance receipt before changing ownership;
+   the current owner remains accountable until then. A prior
+   owner seeing a valid accepted replacement stops.
 
 Complete record: goal, authority, intent, IDs, revisions, evidence, pending
 receipts/timers, unresolved decisions, next action, and transfer status.

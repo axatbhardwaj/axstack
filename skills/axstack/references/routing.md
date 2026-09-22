@@ -5,14 +5,14 @@ Choose a route and load only what it needs.
 ## Role routing
 
 Presets: `mixed`, `codex-only`, `claude-only`. For a new run, read
-`profiles.preset` from `.axstack-manifest.json` at the loaded skills root, or an
-explicit selection in the run record. Require one unambiguous preset; missing
-or contradictory sources hold. Never infer from live profiles, `list_profiles`,
+`profiles.preset` from `.axstack-manifest.json` at the actually loaded skills
+root, or an explicit user selection in the run record. Require one preset;
+missing or contradictory sources are a setup gap: hold. Never infer from `list_profiles`,
 harness, tools, credentials, quota, subscription, or default to `mixed`.
 
 At run start, capture one **routing snapshot**: all 24 role IDs with
-provider/model/mode/effort, explicit absences, and no invented default. An
-absent or unconfigured role holds only its work. A role installed or changed later
+provider/model/mode/effort and absent or unconfigured roles recorded explicitly.
+An absent role holds only that role's work. A role installed or changed later
 must not silently enter the snapshot; adding it needs an explicit user
 decision. Live profiles are authoritative at snapshot time and for availability;
 bundled presets are setup inputs, not runtime proof.
@@ -126,4 +126,4 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
   orchestrator or assume an imported own PR's author.
-- Direct later phase: start there and pass its identity check.
+- Direct later phase: start there and pass that phase's identity check.

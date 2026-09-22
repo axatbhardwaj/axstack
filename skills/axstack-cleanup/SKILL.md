@@ -1,6 +1,6 @@
 ---
 name: axstack-cleanup
-description: Retire eligible completed Orca subagent resources after accepted settlement or an explicitly scoped backlog-cleanup request, while preserving active, user-owned, uncertain, or useful work.
+description: When completed Orca subagent resources need bounded retirement, use axstack-cleanup after accepted settlement or for an explicitly scoped backlog.
 ---
 
 # Cleanup
