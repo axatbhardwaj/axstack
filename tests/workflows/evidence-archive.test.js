@@ -54,6 +54,28 @@ function runArchive(f, extra = [], { expectFail = false, script = SCRIPT } = {})
   return JSON.parse(result.stdout.toString());
 }
 
+function runTaskArchive(f, extra = [], { expectFail = false } = {}) {
+  const result = Bun.spawnSync([
+    BUN_BIN, SCRIPT,
+    '--source-root', f.source,
+    '--archive-root', f.archive,
+    '--repo', 'defi-com/monorepo',
+    '--run', 'run_fixture123',
+    '--task', 'task_fixture123',
+    '--head', 'a'.repeat(40),
+    '--dispatch', 'ctx_fixture123',
+    '--file', 'review.md',
+    ...extra,
+  ], { stdout: 'pipe', stderr: 'pipe' });
+  const out = result.stdout.toString() + result.stderr.toString();
+  if (expectFail) {
+    expect(result.exitCode).not.toBe(0);
+    return out;
+  }
+  expect(result.exitCode, out).toBe(0);
+  return JSON.parse(result.stdout.toString());
+}
+
 test('archives only explicitly classified evidence with private verified receipts', () => {
   const f = fixture();
   const receipt = runArchive(f);
@@ -82,6 +104,33 @@ test('repeat invocation verifies the same immutable archive and stable receipt',
   expect(second.status).toBe('verified');
   expect(second.archiveDir).toBe(first.archiveDir);
   expect(second.manifestHash).toBe(first.manifestHash);
+});
+
+test('archives non-PR supervised evidence under exact run and task identity', () => {
+  const f = fixture();
+  const receipt = runTaskArchive(f);
+  const manifest = JSON.parse(readFileSync(receipt.manifestPath, 'utf8'));
+
+  expect(receipt.archiveDir).toContain('/run-run_fixture123/task-task_fixture123/');
+  expect(manifest.identity).toEqual({
+    repo: 'defi-com/monorepo',
+    run: 'run_fixture123',
+    task: 'task_fixture123',
+    head: 'a'.repeat(40),
+    dispatch: 'ctx_fixture123',
+  });
+});
+
+test('refuses incomplete or mixed PR and run/task identities before archive creation', () => {
+  for (const extra of [
+    ['--pr', '123'],
+    ['--task', 'task_other'],
+  ]) {
+    const f = fixture();
+    const out = runTaskArchive(f, extra, { expectFail: true });
+    expect(out).toMatch(/identity|mutually exclusive|run.*task|pr/i);
+    expect(existsSync(f.archive)).toBe(false);
+  }
 });
 
 test('installed skill layout runs without repository source files', () => {
