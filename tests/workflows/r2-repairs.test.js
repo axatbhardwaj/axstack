@@ -67,7 +67,7 @@ test('every independently callable substantive phase has an explicit load path t
   const phases = [
     'axstack-align', 'axstack-spec', 'axstack-tickets', 'axstack-implement',
     'axstack-review', 'axstack-watch',
-    'axstack-research', 'axstack-explain', 'axstack-improve',
+    'axstack-research', 'axstack-explain', 'axstack-improve', 'axstack-cleanup',
   ];
   const audit = `${root}/skills/axstack-audit/SKILL.md`;
   for (const phase of phases) {
