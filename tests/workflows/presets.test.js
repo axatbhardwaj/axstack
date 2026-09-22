@@ -223,6 +223,13 @@ test('presets: public docs and shared references never state a stale role count'
   expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
 });
 
+test('presets: public workflow table names the current codex-only peer model families', () => {
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  expect(workflows).toContain(
+    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna max |',
+  );
+});
+
 test('presets: monitor remains a standalone read-only observer', () => {
   for (const preset of presetNames) {
     const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));
