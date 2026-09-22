@@ -45,7 +45,7 @@ const expected = {
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
     c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'max'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'xhigh'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     a('claude-opus-5-5', 'medium'),
     c('gpt-6-luna', 'xhigh'),
@@ -61,7 +61,7 @@ const expected = {
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
     c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'max'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-sol', 'low'),
     c('gpt-6-luna', 'xhigh'),
@@ -125,6 +125,16 @@ test('presets: Codex auditor effort agrees with audit skill and workflow table',
     expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`))).toEndWith('| Luna xhigh |');
   }
   expect(audit).toContain('`axstack-auditor` profile (codex/gpt-6-luna xhigh)');
+});
+
+test('presets: Codex explainer reviewer uses supported Luna effort', () => {
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
+    expect(reviewer).toMatchObject({
+      provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh',
+    });
+  }
 });
 
 test('presets: provider boundaries, intentional adviser absence, and reviewer identities are explicit', () => {

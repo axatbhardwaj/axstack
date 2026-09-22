@@ -124,7 +124,7 @@
       "provider": "codex",
       "model": "gpt-6-luna",
       "modeId": "full-access",
-      "thinkingOptionId": "max",
+      "thinkingOptionId": "xhigh",
       "notes": "Independent visual explanation reviewer: checks the exact artifact for source fidelity and rendered behavior where warranted. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
     },
     {
