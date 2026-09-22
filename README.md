@@ -26,6 +26,7 @@ scheduler, or runtime database to operate. Orca is the only supported runtime.
 | Answer a bounded question with sources | `axstack-research` |
 | Explain a system or identify improvements | `axstack-explain`, `axstack-improve` |
 | Measure a run's outcomes and gaps | `axstack-audit` |
+| Retire eligible completed subagent resources | `axstack-cleanup` |
 | Send an explicit message or authorized notification | `axstack-relay` |
 
 Start at the phase you need. Small, bounded changes can begin with your request
@@ -91,6 +92,9 @@ upgrades, conflicts, and uninstalling.
   bypassed. The human merges by default.
 - **Resumable progress.** Work retains ownership, decisions, and evidence so a
   later session can reconcile what happened before continuing.
+- **Bounded cleanup.** The driver can retire proven completed subagent resources
+  inline or from an explicitly scoped backlog without touching active, manual,
+  uncertain, user-owned, dirty, unpushed, or useful unmerged work.
 
 Choose an explicit role preset:
 [mixed](profiles/presets/mixed.json),

@@ -1,20 +1,18 @@
 # Shared routing (every owned phase loads this)
 
-Choose a route; load only the phase and references needed next.
+Choose a route and load only what it needs.
 
 ## Role routing
 
 Presets: `mixed`, `codex-only`, `claude-only`. For a new run, read
-`profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an explicit user selection recorded in the run record. Proceed
-only with exactly one unambiguous preset; missing or contradictory sources are
-a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
-tools, credentials, quota, subscription, or default to `mixed`.
+`profiles.preset` from `.axstack-manifest.json` at the loaded skills root, or an
+explicit selection in the run record. Require one unambiguous preset; missing
+or contradictory sources hold. Never infer from live profiles, `list_profiles`,
+harness, tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 24 role
-IDs with provider/model/mode/effort, absent or unconfigured roles recorded
-explicitly, and no invented provider default. An absent or unconfigured role
-holds only that role's work, not the run. A role installed or changed later
+At run start, capture one **routing snapshot**: all 24 role IDs with
+provider/model/mode/effort, explicit absences, and no invented default. An
+absent or unconfigured role holds only its work. A role installed or changed later
 must not silently enter the snapshot; adding it needs an explicit user
 decision. Live profiles are authoritative at snapshot time and for availability;
 bundled presets are setup inputs, not runtime proof.
@@ -69,6 +67,8 @@ step (3) for user routing, with no substitution or same-provider review.
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits.
+- Accepted worker/Task/Run completion or bounded backlog request -> invoke
+  `axstack-cleanup` inline in the driver; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
   record, keep its owner, launch no native handoff.
@@ -126,4 +126,4 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
   orchestrator or assume an imported own PR's author.
-- Direct later phase: start there and pass that phase's identity check.
+- Direct later phase: start there and pass its identity check.

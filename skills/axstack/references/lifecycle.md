@@ -1,31 +1,29 @@
 # Shared lifecycle and receipts
 
-Phases load through [Standing contracts](contracts.md).
-Delegated or resumable work uses a driver-owned [Run record](run-record.md)
-binding state and receipts to exact revisions.
+Phases load through [Standing contracts](contracts.md). Delegated or resumable
+work uses a driver-owned [Run record](run-record.md) binding state and
+receipts.
 
 ## Roster (compact)
 
-- Driver: current chat; owns scope, decisions, cross-PR dependencies,
-  external-tracker mutations, integration.
-- Owner: driver owns loop PRs; `axstack-owner` only for standalone watch/review
-  without live driver. It may perform PR-scoped publication within user authority. Human
-  merge is default.
+- Driver: current chat; owns scope, decisions, dependencies, tracker mutations,
+  and integration.
+- Owner: driver owns loop PRs; `axstack-owner` serves standalone watch/review
+  without a live driver. It may publish within PR scope and user authority.
+  Human merge is default.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
 - Reviewers: peer = two independent `axstack-reviewer-primary` and
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Automation review/watch managers and optional monitor: see
-  [Watch health](#watch-health).
-- Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
-  audits itself.
+- Automation managers and optional monitor: see [Watch health](#watch-health).
+- Auditor (`axstack-auditor`): report-only; never edits, merges, or audits itself.
 
-Prefer parallel independent bounded work; no redundant workers.
-Per [standing contracts](contracts.md), fanout is dependency/capacity-driven
-with no fixed count within host/spending limits. [PR shape](pr-shape.md)
-covers theme/size; queue via `gh stack`.
+Prefer parallel independent bounded work; no redundant workers. Per
+[standing contracts](contracts.md), fanout is dependency/capacity-driven with
+no fixed count within host/spending limits. [PR shape](pr-shape.md) covers
+theme/size; queue via `gh stack`.
 
 ## Ownership
 
@@ -36,27 +34,26 @@ Owned implementation enters review through the revision-bound
 
 ## Native handoff and resume
 
-Preparation completion/watch expiry writes a record. Ordinary resume
-reconciles it, keeps the current owner, and launches no native handoff.
-Only an explicit user request to transfer ownership enters this branch.
+Preparation completion/watch expiry writes a record. Resume reconciles it,
+keeps the owner, and launches no handoff. Only an explicit user transfer request
+enters this branch.
 
 1. Reconcile the [Run record](run-record.md) with Orca Tasks, Dispatches,
-   sessions, Git revisions, forge, pending receipts, and timer expiries; live
-   owners and authoritative Dispatches beat stale state.
+   sessions, revisions, forge, pending receipts, and timer expiries; live owners
+   and authoritative Dispatches beat stale state.
 2. Load the [Orca runtime boundary](orca-runtime.md), then follow its
    version-matched runtime-owned handoff guidance. Never guess calls, paths,
    roles, or fallback models. Guide discovery does not prove capability.
-3. If the native capability is missing, report the exact setup gap and
-   keep the current owner; no replacement or ownership transfer launches.
-   Read-only reconciliation may continue.
+3. If native capability is missing, report the setup gap and keep the owner; no
+   replacement or transfer launches. Read-only reconciliation may continue.
 4. Record recipient/pending receipt before launch. If uncertain, reconcile the
-   actual workspace/session before retry and block duplicates.
-5. Launch is not ownership. Record the recipient's explicit acceptance receipt
-   before changing ownership; current owner remains accountable until then. A
-   prior owner seeing a different valid accepted owner stops.
+   workspace/session before retry and block duplicates.
+5. Launch is not ownership. Record explicit acceptance before changing it; the
+   current owner remains accountable until then. A prior owner seeing a valid
+   accepted replacement stops.
 
 Complete record: goal, authority, intent, IDs, revisions, evidence, pending
-receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
+receipts/timers, unresolved decisions, next action, and transfer status.
 
 ## Receipts (bind each decision to evidence)
 
@@ -87,7 +84,9 @@ are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
 deduplicated by runtime identity. Healthy unchanged observations produce no
-user-facing update.
+user-facing update. After accepting worker, Task, or Run completion, the driver
+invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
+dispatches cleanup work.
 
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
 receipts, and stalls through the version-matched orchestration guide. Never
@@ -133,7 +132,8 @@ terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-close selected external-tracker tickets when applicable; (5) mark the
+use `axstack-cleanup` and close selected external-tracker tickets when applicable;
+(5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
 receipt or `counts zero`; release and ticket receipts; archive timestamp.
