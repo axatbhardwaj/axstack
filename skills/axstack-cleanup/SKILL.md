@@ -81,9 +81,15 @@ Treat these operations as separate decisions and receipts:
 3. **Worktree removal.** Re-read Git status, branch/upstream divergence,
    unpushed commits, forge merge/publication state, children, terminals, and
    archived evidence immediately before the native exact-workspace removal.
-   Account for branch-deletion side effects explicitly, then re-list both native
-   workspaces and Git refs. A failed hook or uncertain response preserves the
-   resource; never force or substitute shell deletion.
+   When archived evidence is the last dirt, use the evidence archive helper's
+   manifest-bound retirement operation and require an empty pending set; never
+   unlink through prose or a shell loop. Verify the effective Archive Script
+   provenance before native removal: an unknown or required-but-untrusted hook
+   holds. Record its native outcome as `unconfigured`, `passed`, `failed`, or
+   `unknown`; only `unconfigured` or trusted `passed` may advance. Account for
+   branch-deletion side effects explicitly, then re-list both native workspaces
+   and Git refs. A failed or unknown hook outcome or uncertain response preserves
+   the resource; never force or substitute shell deletion.
 4. **Chat archival.** Attempt it only if the version-matched runtime guide
    advertises a distinct supported operation and the scoped chat is eligible.
    Otherwise record chat archival as unsupported. Process exit, worker release,

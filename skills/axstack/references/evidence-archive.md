@@ -59,12 +59,44 @@ state and require exit proof for that exact terminal incarnation. A task
 terminal, manual chat, unexpected terminal, failed close, or uncertain exit
 remains protected.
 
-After receipt and continuity readback, if the only remaining Git dirt is the
-verified archived untracked evidence, compare its current bytes with the
-manifest again and unlink only those exact regular evidence files individually.
-Never remove tracked or unknown files, directories, or any path whose hash now
-differs. Re-read Git and native state; any remaining or uncertain dirt holds
-retirement.
+After receipt and continuity readback, invoke the same installed helper with
+the same identity and complete `--file` set, plus the recorded manifest hash:
+
+```sh
+bun scripts/archive-evidence.js \
+  --source-root <absolute-worktree-or-evidence-root> \
+  --archive-root <absolute-private-archive-root> \
+  --repo <owner/repository> --pr <number> --head <40-character-sha> \
+  --dispatch <exact-dispatch-id> \
+  --file <classified-relative-file> [--file <classified-relative-file> ...] \
+  --operation retire --manifest-hash <recorded-64-character-sha256>
+```
+
+Use the corresponding `--run` and `--task` identity for a non-PR archive. The
+retirement operation independently verifies the immutable private archive, its
+exact identity and complete file set, the caller-recorded manifest hash, the
+exact Git top-level and HEAD, and every remaining source file. It refuses
+tracked, staged, or unclassified dirt; changed bytes; unsafe or overlapping
+roots; symlinks; hard links; and non-regular files. It applies exact unlinks only
+to matching listed files and never removes directories.
+
+Record the retirement receipt's `removed`, `alreadyAbsent`, and `pending` file
+sets. A repeat invocation reconciles already absent files without changing the
+manifest. A partial or failed invocation preserves the archive; resolve its
+exact hold and retry the same operation until `pending` is empty. Never replace
+this operation with a shell loop, broad deletion, force, or a waiver.
+
+Re-read Git and native state after successful retirement. Any remaining or
+uncertain dirt holds worktree removal. Settlement, liveness/no-writer proof,
+useful-work and publication checks, evidence classification, and removal
+authority remain driver decisions; archive or retirement success proves none of
+them.
+
+Before native worktree removal, verify the effective **Archive Script**
+provenance. An unknown hook or a required hook whose provenance is not trusted
+holds removal. Record its native outcome as exactly `unconfigured`, `passed`,
+`failed`, or `unknown`; only `unconfigured` or a trusted `passed` outcome may
+advance, while `failed` and `unknown` preserve the resource.
 
 Only then use the version-matched Orca guide's native worktree cleanup operation
 with the exact workspace identity. Never use shell recursive deletion and never
