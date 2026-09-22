@@ -7,7 +7,7 @@ native cleanup.
 
 ## Eligibility
 
-First prove the exact repository, PR, 40-character head SHA, Task/Dispatch,
+First prove the exact repository, PR or Run/Task, 40-character head SHA, Dispatch,
 workspace, terminal incarnation, automation ownership, descendant settlement,
 and liveness from current native state. A manual chat, `user_takeover`, an
 active or unknown task terminal, an unsettled descendant, unpushed commits,
@@ -34,6 +34,11 @@ bun scripts/archive-evidence.js \
   --file <classified-relative-file> [--file <classified-relative-file> ...]
 ```
 
+For a supervised resource without a PR identity, replace `--pr <number>` with
+`--run <exact-run-id> --task <exact-task-id>`. The two identity forms are
+mutually exclusive; never invent a PR number. Existing PR archives retain their
+path, manifest bytes, and receipt interface.
+
 The helper refuses path escapes, symlinks, non-private archive directories,
 identity changes, and existing content that does not verify. It copies only the
 listed regular files, writes them with private permissions, hashes their exact
@@ -41,7 +46,7 @@ bytes, and emits a JSON receipt containing the archive directory, manifest path,
 manifest hash, and file count. Repeating the same command verifies the immutable
 archive and returns the same receipt; it does not overwrite it.
 
-Record the receipt plus the exact repo/PR/head/Task/Dispatch/workspace/terminal
+Record the receipt plus the exact repo/PR or Run/Task/head/Dispatch/workspace/terminal
 identities in durable lane continuity, then read the continuity and archive
 manifest back before cleanup. If either readback differs or is unavailable,
 preserve the worktree.
