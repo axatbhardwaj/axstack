@@ -126,11 +126,9 @@ contains a code diff or agent-instruction changes, load and follow
 [Simplify the diff](../axstack/references/simplify-diff.md), then rerun affected
 green checks after any edit. Do not load it for general human-facing or
 marketing prose. Record the required evidence line whether simplification was
-applied or found not applicable:
-
-```text
-Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
-```
+applied or found not applicable in the `Simplification:` line of the
+[section 5 implementation receipt](#5-verify-and-return-the-candidate),
+including evidence and retained complexity.
 
 ## 5. Verify and return the candidate
 
