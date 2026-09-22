@@ -60,10 +60,10 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
   const rows = [
-    ['mixed', 'Codex / Sol (`codex/gpt-5.6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5` medium'],
-    ['mixed', 'Claude / Opus (`claude/claude-opus-5`)', 'axstack-reviewer-primary', '`codex/gpt-5.6-sol` medium'],
+    ['mixed', 'Codex / Sol (`codex/gpt-5.6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5-5` medium'],
+    ['mixed', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-primary', '`codex/gpt-5.6-sol` medium'],
     ['codex-only', 'Codex / Sol (`codex/gpt-5.6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-5.6-terra` xhigh'],
-    ['claude-only', 'Claude / Opus (`claude/claude-opus-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5` xhigh'],
+    ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5` xhigh'],
   ];
   for (const text of [review, routing]) {
     for (const row of rows) {
@@ -142,9 +142,9 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'gpt-5.6-sol', 'medium'], ['claude', 'claude-opus-5', 'medium']],
+    mixed: [['codex', 'gpt-5.6-sol', 'medium'], ['claude', 'claude-opus-5-5', 'medium']],
     'codex-only': [['codex', 'gpt-5.6-sol', 'medium'], ['codex', 'gpt-5.6-terra', 'xhigh']],
-    'claude-only': [['claude', 'claude-opus-5', 'medium'], ['claude', 'claude-sonnet-5', 'xhigh']],
+    'claude-only': [['claude', 'claude-opus-5-5', 'medium'], ['claude', 'claude-sonnet-5', 'xhigh']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;

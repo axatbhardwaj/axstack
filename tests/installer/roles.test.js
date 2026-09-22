@@ -19,7 +19,7 @@ test('installed readiness compares role IDs with the selected bundle', () => {
   const expectedRoles = [
     role('axstack-author', 'gpt-5.6-sol'),
     role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    role('axstack-reviewer-secondary', 'claude-opus-5'),
+    role('axstack-reviewer-secondary', 'claude-opus-5-5'),
     { ...role('axstack-checker', null), provider: 'antigravity' },
   ];
   const installed = installedRoleBytes('mixed', [
@@ -99,8 +99,8 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-author', 'claude-opus-5'), provider: 'claude' },
-    { ...role('axstack-reviewer-primary', 'claude-opus-5'), provider: 'claude' },
+    { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
+    { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
       ...role('axstack-reviewer-secondary', 'claude-sonnet-5'),
       provider: 'claude', thinkingOptionId: 'xhigh',
@@ -131,7 +131,7 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
     { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
     role('axstack-author', 'gpt-5.6-sol'),
     role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    { ...role('axstack-reviewer-secondary', 'claude-opus-5'), provider: 'claude', thinkingOptionId: 'medium' },
+    { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'medium' },
     { ...role('axstack-arena-judge-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
   ];
   expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
