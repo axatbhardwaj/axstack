@@ -160,7 +160,7 @@
       "provider": "codex",
       "model": "gpt-6-luna",
       "modeId": "full-access",
-      "thinkingOptionId": "max",
+      "thinkingOptionId": "xhigh",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
     },
     {

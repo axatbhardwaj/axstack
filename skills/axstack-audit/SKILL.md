@@ -25,7 +25,7 @@ immediately before an actual auditor profile or session dispatch. Ordinary
 audit reading and record writing do not load it, and the auditor never
 dispatches.
 
-Core owns the `axstack-auditor` profile (codex/gpt-6-luna max) and its
+Core owns the `axstack-auditor` profile (codex/gpt-6-luna xhigh) and its
 invocation. This skill governs what that auditor reads, measures, and proposes.
 The user-chosen improvement mode is a tested, independently reviewed PR that a
 human merges.
