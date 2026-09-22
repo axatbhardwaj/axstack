@@ -12,8 +12,8 @@ const p = (id, provider, model, effort = 'medium') => ({
 });
 const PRESETS = {
   mixed: [
-    p('axstack-author', 'codex', 'gpt-5.6-sol'),
-    p('axstack-reviewer-primary', 'codex', 'gpt-5.6-sol'),
+    p('axstack-author', 'codex', 'gpt-6-sol'),
+    p('axstack-reviewer-primary', 'codex', 'gpt-6-sol'),
     p('axstack-reviewer-secondary', 'claude', 'claude-opus-5-5'),
     p('axstack-checker', 'antigravity', null, 'low'),
   ],

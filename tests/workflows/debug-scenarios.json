@@ -276,7 +276,7 @@
       "skill_ref": "axstack-debug",
       "input": {
         "request": "First fix failed; escalate.",
-        "facts": "Preset codex-only. axstack-advisor-fable is model null (intentional). Astra is available. Investigators 1-4 are Sol/Terra/Sol/Terra."
+        "facts": "Preset codex-only. axstack-advisor-fable is model null (intentional). Astra is available. Investigators 1-4 are all Sol at their configured efforts."
       },
       "expected": {
         "decision": "Ordinary diagnosis proceeds at L1 with Astra alone; record Fable as an intentional absence; fan out the four codex investigators. If the run exposes a high-stakes or serious-risk condition, the standing contracts override and the single-provider high-stakes hold applies.",

@@ -32,7 +32,7 @@
       "id": "axstack-author",
       "name": "Axstack author",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Validate configured availability at launch; hold affected work without fallback."
@@ -41,7 +41,7 @@
       "id": "axstack-reviewer-primary",
       "name": "Axstack reviewer (primary)",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Primary reviewer in the ordered mixed peer pair: Sol medium followed by Opus medium. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
@@ -77,7 +77,7 @@
       "id": "axstack-research-code",
       "name": "Axstack research code",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
@@ -122,7 +122,7 @@
       "id": "axstack-explainer-review",
       "name": "Axstack explainer reviewer",
       "provider": "codex",
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "max",
       "notes": "Independent visual explanation reviewer: checks the exact artifact for source fidelity and rendered behavior where warranted. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
@@ -140,7 +140,7 @@
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "codex",
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
@@ -158,7 +158,7 @@
       "id": "axstack-auditor",
       "name": "Axstack auditor",
       "provider": "codex",
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "max",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
@@ -176,7 +176,7 @@
       "id": "axstack-debug-investigator-2",
       "name": "Axstack debug investigator 2",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity."
@@ -194,7 +194,7 @@
       "id": "axstack-debug-investigator-4",
       "name": "Axstack debug investigator 4",
       "provider": "codex",
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity."

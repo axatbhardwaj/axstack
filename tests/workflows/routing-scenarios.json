@@ -4,18 +4,18 @@
   "cases": [
     {
       "id": "mixed-sol-authored",
-      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "codex/gpt-5.6-sol medium", "candidate": "SHA A", "base": "SHA B" },
+      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "codex/gpt-6-sol medium", "candidate": "SHA A", "base": "SHA B" },
       "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "coverage": "all six angles and acceptance against exact SHA A and base SHA B" }
     },
     {
       "id": "mixed-opus-authored",
       "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "claude/claude-opus-5-5 medium", "candidate": "SHA C", "base": "SHA D" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium"], "coverage": "all six angles and acceptance against exact SHA C and base SHA D" }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium"], "coverage": "all six angles and acceptance against exact SHA C and base SHA D" }
     },
     {
       "id": "codex-sol-authored",
-      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-5.6-sol medium", "candidate": "SHA E", "base": "SHA F" },
-      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-5.6-terra xhigh"], "independence": "different model, not cross-provider" }
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-sol medium", "candidate": "SHA E", "base": "SHA F" },
+      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "independence": "different model, not cross-provider" }
     },
     {
       "id": "claude-opus-authored",
@@ -23,8 +23,8 @@
       "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-sonnet-5 xhigh"], "independence": "different model, not cross-provider" }
     },
     {
-      "id": "codex-terra-authored-unsupported",
-      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-5.6-terra", "candidate": "SHA G1", "base": "SHA H1" },
+      "id": "codex-luna-authored-unsupported",
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-luna", "candidate": "SHA G1", "base": "SHA H1" },
       "expected": { "status": "INCOMPLETE", "action": "ask user for explicit routing", "forbidden": ["reverse route to axstack-reviewer-primary", "infer pairing from slot position"] }
     },
     {
@@ -35,12 +35,12 @@
     {
       "id": "mixed-peer",
       "input": { "preset": "mixed", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA I", "base": "SHA J" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium", "axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium", "axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }
     },
     {
       "id": "codex-peer",
       "input": { "preset": "codex-only", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA K", "base": "SHA L" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium", "axstack-reviewer-secondary: codex/gpt-5.6-terra xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium", "axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
     },
     {
       "id": "claude-peer",
@@ -55,11 +55,11 @@
     {
       "id": "owner-authored-candidate",
       "input": { "preset": "mixed", "mode": "authored", "owner": "claude/claude-opus-5-5 medium", "actualWriter": "same owner session", "candidate": "SHA Q", "base": "SHA R" },
-      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-5.6-sol medium"], "forbidden": ["treat owner as non-author", "owner self-review"] }
+      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium"], "forbidden": ["treat owner as non-author", "owner self-review"] }
     },
     {
       "id": "required-model-unavailable",
-      "input": { "preset": "codex-only", "role": "axstack-reviewer-secondary", "availability": "gpt-5.6-terra unavailable" },
+      "input": { "preset": "codex-only", "role": "axstack-reviewer-secondary", "availability": "gpt-6-luna unavailable" },
       "expected": { "status": "HOLD", "action": "report gap and ask user", "forbidden": ["fallback", "quota routing", "subscription inference"] }
     },
     {

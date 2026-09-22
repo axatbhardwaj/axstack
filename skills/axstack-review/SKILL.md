@@ -116,9 +116,9 @@ owns the event and settles after its skill-owned reviewers settle.
 
      | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
      | --- | --- | --- |
-     | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
-     | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
-     | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
+     | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
+     | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` medium) |
+     | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
      | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
 
      Provenance is matched on provider/model ID; record effort, but never use
