@@ -49,6 +49,7 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
 
 const EXPECTED_SKILLS = [
   'axstack-align',
+  'axstack-cleanup',
   'axstack-spec',
   'axstack-tickets',
   'axstack-implement',
@@ -59,6 +60,7 @@ const EXPECTED_SKILLS = [
 // Standalone phases callable directly; each must explicitly load shared contracts.
 const STANDALONE_PHASES = [
   'axstack-align',
+  'axstack-cleanup',
   'axstack-spec',
   'axstack-tickets',
   'axstack-implement',

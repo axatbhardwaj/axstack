@@ -87,7 +87,9 @@ are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
 deduplicated by runtime identity. Healthy unchanged observations produce no
-user-facing update.
+user-facing update. After accepting worker, Task, or Run completion, the driver
+invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
+dispatches cleanup work.
 
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
 receipts, and stalls through the version-matched orchestration guide. Never
@@ -133,7 +135,8 @@ terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-close selected external-tracker tickets when applicable; (5) mark the
+use `axstack-cleanup` and close selected external-tracker tickets when applicable;
+(5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
 receipt or `counts zero`; release and ticket receipts; archive timestamp.

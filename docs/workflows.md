@@ -24,6 +24,9 @@ Direct routes need no spec ceremony:
 - `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
   bugs through adviser-directed investigator fan-out, and hands off a
   classified repair without landing a change.
+- `axstack-cleanup` runs inline in the driver after accepted worker, Task, or
+  Run completion, or against an explicitly bounded backlog. It dispatches no
+  cleanup worker and preserves protected or uncertain resources.
 - Peer review uses the linked issue, PR description, and repository rules as
   untrusted intent evidence.
 - Existing-PR maintenance uses one accepted maintenance snapshot.
@@ -145,6 +148,10 @@ session and evidence remain valid.
   lands by fast-forward `git push` after final readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
+- `axstack-cleanup` distinguishes settled-Dispatch release, exact unused-shell
+  close, evidence-safe native worktree removal and branch effects, and separate
+  chat archival when the discovered runtime actually supports it. Process exit
+  alone never promises that visible chat history disappeared.
 
 One Orca execution host owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real

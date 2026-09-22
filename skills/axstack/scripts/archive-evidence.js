@@ -68,12 +68,12 @@ function parseArgs(argv) {
     if (!flag?.startsWith('--') || value === undefined) fail(`invalid argument near ${flag ?? '(end)'}`);
     const key = flag.slice(2);
     if (key === 'file') values.files.push(value);
-    else if (['source-root', 'archive-root', 'repo', 'pr', 'head', 'dispatch'].includes(key)) {
+    else if (['source-root', 'archive-root', 'repo', 'pr', 'run', 'task', 'head', 'dispatch'].includes(key)) {
       if (values[key] !== undefined) fail(`duplicate --${key}`);
       values[key] = value;
     } else fail(`unknown argument: ${flag}`);
   }
-  for (const key of ['source-root', 'archive-root', 'repo', 'pr', 'head', 'dispatch']) {
+  for (const key of ['source-root', 'archive-root', 'repo', 'head', 'dispatch']) {
     if (!values[key]) fail(`missing --${key}`);
   }
   if (values.files.length === 0) fail('at least one --file is required');
@@ -81,7 +81,18 @@ function parseArgs(argv) {
     fail('source and archive roots must be absolute');
   }
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(values.repo)) fail('repo must be owner/name');
-  if (!/^[1-9][0-9]*$/.test(values.pr)) fail('pr must be a positive integer');
+  const hasPr = values.pr !== undefined;
+  const hasRun = values.run !== undefined;
+  const hasTask = values.task !== undefined;
+  if (hasPr === hasRun || hasRun !== hasTask) {
+    fail('identity requires either --pr or both --run and --task, mutually exclusive');
+  }
+  if (hasPr && !/^[1-9][0-9]*$/.test(values.pr)) fail('pr must be a positive integer');
+  for (const key of ['run', 'task']) {
+    if (values[key] !== undefined && !/^[A-Za-z0-9_-]+$/.test(values[key])) {
+      fail(`${key} contains unsafe characters`);
+    }
+  }
   if (!/^[0-9a-f]{40}$/.test(values.head)) fail('head must be an exact 40-character lowercase SHA');
   if (!/^[A-Za-z0-9_-]+$/.test(values.dispatch)) fail('dispatch contains unsafe characters');
   values.files = [...new Set(values.files)].sort();
@@ -228,18 +239,18 @@ async function main() {
   ) fail('source and archive roots must not contain each other');
 
   const collected = await collectSource(sourceRoot, args.files);
-  const identity = {
-    repo: args.repo,
-    pr: Number(args.pr),
-    head: args.head,
-    dispatch: args.dispatch,
-  };
+  const identity = args.pr
+    ? { repo: args.repo, pr: Number(args.pr), head: args.head, dispatch: args.dispatch }
+    : { repo: args.repo, run: args.run, task: args.task, head: args.head, dispatch: args.dispatch };
   const repoSlug = args.repo.replace('/', '--');
-  const archiveDir = join(archiveRoot, repoSlug, `pr-${args.pr}`, args.head, args.dispatch);
+  const identityParts = args.pr
+    ? [`pr-${args.pr}`]
+    : [`run-${args.run}`, `task-${args.task}`];
+  const archiveDir = join(archiveRoot, repoSlug, ...identityParts, args.head, args.dispatch);
 
   await assertSafeAncestors(archiveRoot);
   let current = archiveRoot;
-  const generated = [repoSlug, `pr-${args.pr}`, args.head];
+  const generated = [repoSlug, ...identityParts, args.head];
   await ensurePrivateDir(current);
   for (const part of generated) {
     current = join(current, part);

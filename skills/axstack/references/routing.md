@@ -69,6 +69,8 @@ step (3) for user routing, with no substitution or same-provider review.
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits.
+- Accepted worker/Task/Run completion or bounded backlog request -> invoke
+  `axstack-cleanup` inline in the driver; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
   record, keep its owner, launch no native handoff.
