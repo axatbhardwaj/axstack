@@ -12,6 +12,15 @@
       }
     },
     {
+      "id": "settled-terminal-protected-worktree",
+      "title": "A settled worker is releasable while its worktree remains protected",
+      "input": {
+        "invocation": "Run axstack-cleanup inline after accepting the worker output.",
+        "request": "Release completed subagent resources without losing candidate work.",
+        "state": "The exact author Dispatch is settled and its required output is captured. Its worktree has useful unmerged changes and must remain available to the driver."
+      }
+    },
+    {
       "id": "scoped-backlog-partial-inventory",
       "title": "A bounded backlog contains independent safe and uncertain resources",
       "input": {

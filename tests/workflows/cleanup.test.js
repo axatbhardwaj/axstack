@@ -9,6 +9,7 @@ test('cleanup evaluator inputs are expectation-free independent-review briefs', 
   expect(data.version).toBe(1);
   expect(data.cases.map(({ id }) => id)).toEqual([
     'accepted-completion-with-protected-neighbors',
+    'settled-terminal-protected-worktree',
     'scoped-backlog-partial-inventory',
     'non-pr-evidence-preservation',
     'operation-boundaries-and-chat-history',

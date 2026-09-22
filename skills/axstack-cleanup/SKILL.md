@@ -71,6 +71,9 @@ Treat these operations as separate decisions and receipts:
 1. **Worker release.** After the matching completion is accepted, use the
    runtime guide's settled-Dispatch release operation. Release is not
    cancellation, terminal-close proof, worktree removal, or chat archival.
+   Once required output is captured, a dirty or useful unmerged worktree does
+   not block release of its accepted settled worker; retain the worktree under
+   its own classification and receipt.
 2. **Unused shell close.** Close only a positively identified unused setup
    shell with the guide's exact-terminal operation. Re-list and require exit for
    that same terminal incarnation. Never close a worker, manual, unexpected, or

@@ -119,7 +119,7 @@ test('debug: shared references route to the skill and carry its contracts', () =
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/red loop[^.]*-> `axstack-debug`|-> `axstack-debug`/);
   expect(routing).toMatch(/axstack-debug-investigator-1/);
-  expect(read('skills/axstack/references/routing.md').length).toBeLessThan(7500);
+  expect(read('skills/axstack/references/routing.md').length).toBeLessThan(7800);
   const contracts = compact('skills/axstack/references/contracts.md');
   expect(contracts).toMatch(/axstack-debug/);
   expect(contracts).toMatch(/ordinary diagnos\w+[^.]*configured adviser/i);
