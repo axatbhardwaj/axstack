@@ -32,14 +32,18 @@ function fixture() {
   return { root, source, archive };
 }
 
-function runArchive(f, extra = [], { expectFail = false, script = SCRIPT } = {}) {
+function runArchive(f, extra = [], {
+  expectFail = false,
+  head = 'a'.repeat(40),
+  script = SCRIPT,
+} = {}) {
   const result = Bun.spawnSync([
     BUN_BIN, script,
     '--source-root', f.source,
     '--archive-root', f.archive,
     '--repo', 'defi-com/monorepo',
     '--pr', '123',
-    '--head', 'a'.repeat(40),
+    '--head', head,
     '--dispatch', 'ctx_fixture123',
     '--file', 'review.md',
     '--file', 'nested/receipt.json',
@@ -52,6 +56,12 @@ function runArchive(f, extra = [], { expectFail = false, script = SCRIPT } = {})
   }
   expect(result.exitCode, out).toBe(0);
   return JSON.parse(result.stdout.toString());
+}
+
+function git(cwd, ...args) {
+  const result = Bun.spawnSync(['git', '-C', cwd, ...args], { stdout: 'pipe', stderr: 'pipe' });
+  expect(result.exitCode, result.stderr.toString()).toBe(0);
+  return result.stdout.toString().trim();
 }
 
 function runTaskArchive(f, extra = [], {
@@ -194,6 +204,32 @@ test('refuses a group-readable archive root', () => {
 
   expect(out).toMatch(/private|permission|0700/i);
   expect(existsSync(join(f.archive, 'defi-com--monorepo'))).toBe(false);
+});
+
+test('retires the complete PR manifest file set and preserves neighboring state', () => {
+  const f = fixture();
+  git(f.source, 'init', '-q');
+  git(f.source, 'config', 'user.email', 'fixture@example.com');
+  git(f.source, 'config', 'user.name', 'Fixture');
+  git(f.source, 'add', 'dirty-source.js');
+  git(f.source, 'commit', '-qm', 'fixture');
+  const head = git(f.source, 'rev-parse', 'HEAD');
+  const archive = runArchive(f, [], { head });
+
+  const receipt = runArchive(f, [
+    '--operation', 'retire',
+    '--manifest-hash', archive.manifestHash,
+  ], { head });
+
+  expect(existsSync(join(f.source, 'review.md'))).toBe(false);
+  expect(existsSync(join(f.source, 'nested', 'receipt.json'))).toBe(false);
+  expect(receipt.status).toBe('retired');
+  expect(receipt.removed).toEqual(['nested/receipt.json', 'review.md']);
+  expect(receipt.alreadyAbsent).toEqual([]);
+  expect(receipt.pending).toEqual([]);
+  expect(existsSync(join(f.source, 'nested'))).toBe(true);
+  expect(readFileSync(join(f.source, 'dirty-source.js'), 'utf8')).toBe('must stay outside archive\n');
+  expect(existsSync(archive.manifestPath)).toBe(true);
 });
 
 test('native retirement closes setup shells before exit proof and removes only verified evidence', () => {
