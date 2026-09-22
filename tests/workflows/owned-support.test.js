@@ -193,6 +193,26 @@ test('owned-support: explain scales from direct answers to verified visuals', ()
   expect(lower.includes('source'), 'material claims must be source-checked').toBeTruthy();
 });
 
+test('owned-support: explain caps the primary view without losing decisions', () => {
+  const text = readSkill('axstack-explain');
+  const normalized = text.toLowerCase().replace(/\s+/g, ' ');
+  expect(text).toMatch(/primary reader-facing explanation[^.]*maximum of 700 words/i);
+  expect(text).toMatch(/chat[^.]*HTML[^.]*requested format/i);
+  for (const essential of [
+    'answer or purpose',
+    'key rationale',
+    'meaningful alternatives',
+    'main data or operational boundary',
+    'status and uncertainty',
+    'live reader questions',
+  ]) {
+    expect(normalized).toContain(essential);
+  }
+  expect(normalized).toMatch(/supporting detail[^.]*linked (?:ticket|appendix)/i);
+  expect(normalized).toMatch(/essential answers[^.]*not[^.]*hid/i);
+  expect(normalized).toMatch(/evidence[^.]*not[^.]*silently discard/i);
+});
+
 test('owned-support: explain distinguishes evidence and bounds every gap', () => {
   const text = readSkill('axstack-explain');
   for (const label of ['source implemented', 'tested', 'live observed', 'planned/proposed', 'unknown']) {

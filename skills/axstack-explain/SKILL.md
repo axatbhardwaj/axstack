@@ -48,12 +48,20 @@ immediately before an actual profile dispatch.
 
 ## 2. Choose proportional output
 
-1. For a simple request, answer concisely in the current chat. Use a compact
+1. Keep the primary reader-facing explanation to a maximum of 700 words in
+   chat, HTML, and every other requested format. Preserve in that primary view
+   the answer or purpose, key rationale, meaningful alternatives, main data or
+   operational boundary, status and uncertainty, and live reader questions
+   with their answers. If the draft is longer, compress repetition first and
+   move only supporting detail to a linked ticket or appendix. Essential
+   answers must not be hidden behind links, and evidence must not be silently
+   discarded.
+2. For a simple request, answer concisely in the current chat. Use a compact
    diagram when useful. This needs no mandatory agent or intermediate artifact.
-2. For a complex visual, use the configured `axstack-explainer` role to create
+3. For a complex visual, use the configured `axstack-explainer` role to create
    self-contained HTML, or use the requested artifact format. An explicit user
    theme wins; otherwise use the dark default.
-3. Profile IDs are presets, not availability proof. Before dispatch, follow the
+4. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
 
