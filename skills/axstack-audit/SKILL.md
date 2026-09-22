@@ -79,6 +79,10 @@ counts with denominators plus the evidence behind the count:
   evidence path is absent, or `UNKNOWN` with the reason when its records are
   unavailable.
 - Independent exact-revision review status and unresolved findings.
+- Simplification applicability determinations evidenced / total candidate diffs,
+  and complete simplification receipts / total candidates, broken down as
+  `applied`, `not-applicable`, or `UNKNOWN` with the reason. This measures
+  applicability and completeness; it is not a quality score.
 - Rework cycles with causes.
 - Avoidable user interventions where records support the call, and no call where they do not.
 - Parallelizable tasks identified versus dispatched, judged with dependency and writer isolation.

@@ -121,6 +121,17 @@ green evidence. For structure-preserving work, make only the accepted
 structural edits and keep the unchanged baseline and equivalence evidence
 green.
 
+At this post-green refactor step, inspect the changed paths. When the candidate
+contains a code diff or agent-instruction changes, load and follow
+[Simplify the diff](../axstack/references/simplify-diff.md), then rerun affected
+green checks after any edit. Do not load it for general human-facing or
+marketing prose. Record the required evidence line whether simplification was
+applied or found not applicable:
+
+```text
+Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
+```
+
 ## 5. Verify and return the candidate
 
 Run the acceptance checks and affected integration boundaries. Record commands,
@@ -138,6 +149,7 @@ Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence>
+Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
 Unverified: <boundaries + reasons>
