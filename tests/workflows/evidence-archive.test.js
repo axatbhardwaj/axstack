@@ -38,6 +38,7 @@ function runArchive(f, extra = [], {
   expectFail = false,
   files = ['review.md', 'nested/receipt.json'],
   head = 'a'.repeat(40),
+  env = process.env,
   script = SCRIPT,
   source = f.source,
 } = {}) {
@@ -51,7 +52,7 @@ function runArchive(f, extra = [], {
     '--dispatch', 'ctx_fixture123',
     ...files.flatMap((file) => ['--file', file]),
     ...extra,
-  ], { stdout: 'pipe', stderr: 'pipe' });
+  ], { stdout: 'pipe', stderr: 'pipe', env });
   const out = result.stdout.toString() + result.stderr.toString();
   if (expectFail) {
     expect(result.exitCode).not.toBe(0);
@@ -428,6 +429,33 @@ test('retirement rejects changed HEAD and unsafe archived or source file types',
     });
     expect(out).toMatch(/not a regular file/i);
   }
+});
+
+test('retirement detects a same-byte source replacement between preflight and unlink', () => {
+  const f = fixture();
+  const head = initializeRepo(f);
+  const archive = runArchive(f, [], { head });
+  const wrapperDir = join(f.root, 'bin');
+  const wrapper = join(wrapperDir, 'git');
+  mkdirSync(wrapperDir);
+  writeFileSync(wrapper, `#!/bin/sh
+if [ "$3" = status ]; then
+  cp "$RACE_SOURCE" "$RACE_SOURCE.swap"
+  mv "$RACE_SOURCE.swap" "$RACE_SOURCE"
+fi
+exec "${Bun.which('git')}" "$@"
+`);
+  chmodSync(wrapper, 0o755);
+
+  const out = runArchive(f, ['--operation', 'retire', '--manifest-hash', archive.manifestHash], {
+    expectFail: true,
+    head,
+    env: { ...process.env, PATH: `${wrapperDir}:${process.env.PATH}`, RACE_SOURCE: join(f.source, 'review.md') },
+  });
+
+  expect(out).toMatch(/source changed before retirement/i);
+  expect(readFileSync(join(f.source, 'review.md'), 'utf8')).toBe('review evidence\n');
+  expect(existsSync(archive.manifestPath)).toBe(true);
 });
 
 test('native retirement closes setup shells before exit proof and removes only verified evidence', () => {

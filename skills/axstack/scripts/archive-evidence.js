@@ -311,9 +311,22 @@ async function inspectSource(sourceRoot, rel) {
       for (const key of ['dev', 'ino', 'size', 'mtimeNs', 'nlink']) {
         if (st[key] !== after[key]) fail(`source changed during verification: ${rel}`);
       }
-      return { bytes, sha256: sha256(bytes), size: bytes.length };
+      return {
+        bytes,
+        sha256: sha256(bytes),
+        size: bytes.length,
+        fingerprint: Object.fromEntries(
+          ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'nlink'].map((key) => [key, after[key]]),
+        ),
+      };
     }
   }
+}
+
+function sameSource(left, right) {
+  return left.size === right.size &&
+    left.sha256 === right.sha256 &&
+    Object.keys(left.fingerprint).every((key) => left.fingerprint[key] === right.fingerprint[key]);
 }
 
 async function verifyRetirementSource(sourceRoot, head, files, manifest) {
@@ -358,11 +371,17 @@ async function retireEvidence(args, sourceRoot, archiveRoot, archiveDir, identit
   const removed = [];
   const alreadyAbsent = args.files.filter((rel) => !states[rel]);
 
+  for (const rel of args.files) {
+    if (!states[rel]) continue;
+    const current = await inspectSource(sourceRoot, rel);
+    if (!current || !sameSource(current, states[rel])) fail(`source changed before retirement: ${rel}`);
+  }
+
   for (let index = 0; index < args.files.length; index += 1) {
     const rel = args.files[index];
     if (!states[rel]) continue;
     const current = await inspectSource(sourceRoot, rel);
-    if (!current || current.size !== states[rel].size || current.sha256 !== states[rel].sha256) {
+    if (!current || !sameSource(current, states[rel])) {
       fail(`source changed before retirement: ${rel}`);
     }
     try {
