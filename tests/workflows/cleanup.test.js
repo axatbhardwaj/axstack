@@ -37,3 +37,12 @@ test('cleanup loads shared policy and leaves runtime commands to discovered guid
   ]) expect(skill).toContain(reference);
   expect(skill).not.toMatch(/orca orchestration (?:send|check|worker-release)|orca terminal close|orca worktree rm/);
 });
+
+test('cleanup binds evidence retirement and native hook trust without shell deletion', () => {
+  const skill = read('skills/axstack-cleanup/SKILL.md');
+  expect(skill).toMatch(/manifest-bound retirement[^.]*empty pending set/i);
+  expect(skill).toMatch(/Archive Script[^.]*unknown[^.]*untrusted[^.]*holds/i);
+  for (const outcome of ['unconfigured', 'passed', 'failed', 'unknown']) expect(skill).toContain(`\`${outcome}\``);
+  expect(skill).toMatch(/never[^.]*shell loop/i);
+  expect(skill).not.toMatch(/\bgit clean\b|\brm\s+-r|\bfind\b[^\n]*-delete/);
+});

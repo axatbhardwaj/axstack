@@ -7,6 +7,7 @@ import {
   readFile,
   rename,
   rm,
+  unlink,
   writeFile,
 } from 'node:fs/promises';
 
@@ -68,7 +69,7 @@ function parseArgs(argv) {
     if (!flag?.startsWith('--') || value === undefined) fail(`invalid argument near ${flag ?? '(end)'}`);
     const key = flag.slice(2);
     if (key === 'file') values.files.push(value);
-    else if (['source-root', 'archive-root', 'repo', 'pr', 'run', 'task', 'head', 'dispatch'].includes(key)) {
+    else if (['source-root', 'archive-root', 'repo', 'pr', 'run', 'task', 'head', 'dispatch', 'operation', 'manifest-hash'].includes(key)) {
       if (values[key] !== undefined) fail(`duplicate --${key}`);
       values[key] = value;
     } else fail(`unknown argument: ${flag}`);
@@ -76,6 +77,7 @@ function parseArgs(argv) {
   for (const key of ['source-root', 'archive-root', 'repo', 'head', 'dispatch']) {
     if (!values[key]) fail(`missing --${key}`);
   }
+  values.operation ??= 'archive';
   if (values.files.length === 0) fail('at least one --file is required');
   if (!isAbsolute(values['source-root']) || !isAbsolute(values['archive-root'])) {
     fail('source and archive roots must be absolute');
@@ -95,6 +97,13 @@ function parseArgs(argv) {
   }
   if (!/^[0-9a-f]{40}$/.test(values.head)) fail('head must be an exact 40-character lowercase SHA');
   if (!/^[A-Za-z0-9_-]+$/.test(values.dispatch)) fail('dispatch contains unsafe characters');
+  if (!['archive', 'retire'].includes(values.operation)) fail('operation must be archive or retire');
+  if (values.operation === 'retire' && !/^[0-9a-f]{64}$/.test(values['manifest-hash'] ?? '')) {
+    fail('retirement requires an exact lowercase --manifest-hash');
+  }
+  if (values.operation === 'archive' && values['manifest-hash'] !== undefined) {
+    fail('--manifest-hash applies only to retirement');
+  }
   values.files = [...new Set(values.files)].sort();
   for (const file of values.files) {
     const parts = file.split('/');
@@ -212,6 +221,203 @@ async function verifyArchive(archiveDir, identity, collected) {
   };
 }
 
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+async function verifyRetirementArchive(archiveRoot, archiveDir, identity, files, manifestHash) {
+  const archiveRel = relative(archiveRoot, archiveDir);
+  let current = archiveRoot;
+  for (const part of ['', ...archiveRel.split('/')]) {
+    if (part) current = join(current, part);
+    const st = await assertRealPath(current, 'directory');
+    if ((st.mode & 0o077) !== 0) fail(`archive permissions are not private: ${current}`);
+  }
+
+  const manifestPath = join(archiveDir, 'manifest.json');
+  const manifestStat = await assertRealPath(manifestPath, 'file');
+  if (manifestStat.nlink !== 1) fail(`refusing hard-linked archive file: ${manifestPath}`);
+  if ((manifestStat.mode & 0o077) !== 0) fail(`archive manifest permissions are not private: ${manifestPath}`);
+  const manifestBytes = await readFile(manifestPath);
+  if (sha256(manifestBytes) !== manifestHash) fail('recorded manifest hash mismatch');
+
+  let manifest;
+  try {
+    manifest = JSON.parse(manifestBytes.toString());
+  } catch {
+    fail(`invalid archive manifest: ${manifestPath}`);
+  }
+  if (manifest.version !== 1 || !sameJson(manifest.identity, identity)) {
+    fail(`archive manifest identity mismatch: ${manifestPath}`);
+  }
+  const manifestFiles = Object.keys(manifest.files ?? {}).sort();
+  if (!sameJson(manifestFiles, files)) fail(`archive manifest file set mismatch: ${manifestPath}`);
+  if (!manifestBytes.equals(Buffer.from(JSON.stringify(manifest, null, 2) + '\n'))) {
+    fail(`archive manifest bytes are not canonical: ${manifestPath}`);
+  }
+
+  const filesRoot = join(archiveDir, 'files');
+  const filesRootStat = await assertRealPath(filesRoot, 'directory');
+  if ((filesRootStat.mode & 0o077) !== 0) fail(`archive permissions are not private: ${filesRoot}`);
+  for (const rel of files) {
+    const expected = manifest.files[rel];
+    if (!expected || !/^[0-9a-f]{64}$/.test(expected.sha256) || !Number.isSafeInteger(expected.size) || expected.size < 0) {
+      fail(`invalid archive manifest entry: ${rel}`);
+    }
+    await assertNoSymlinkComponents(filesRoot, rel);
+    const archived = join(filesRoot, rel);
+    const st = await assertRealPath(archived, 'file');
+    if (st.nlink !== 1) fail(`refusing hard-linked archive file: ${archived}`);
+    if ((st.mode & 0o077) !== 0) fail(`archived evidence permissions are not private: ${archived}`);
+    const bytes = await readFile(archived);
+    if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) {
+      fail(`archived evidence hash mismatch: ${rel}`);
+    }
+  }
+  const actualFiles = await listArchiveFiles(archiveDir);
+  const expectedFiles = ['manifest.json', ...files.map((rel) => `files/${rel}`)].sort();
+  if (!sameJson(actualFiles, expectedFiles)) fail(`archive contains unexpected or missing files: ${archiveDir}`);
+  return { archiveDir, manifestPath, manifestHash, files: files.length, manifest };
+}
+
+function gitOutput(sourceRoot, args) {
+  const result = Bun.spawnSync(['git', '-C', sourceRoot, ...args], { stdout: 'pipe', stderr: 'pipe' });
+  if (result.exitCode !== 0) {
+    fail(`git ${args.join(' ')} failed: ${result.stderr.toString().trim() || `exit ${result.exitCode}`}`);
+  }
+  return result.stdout.toString();
+}
+
+async function inspectSource(sourceRoot, rel) {
+  let current = sourceRoot;
+  const parts = rel.split('/');
+  for (let index = 0; index < parts.length; index += 1) {
+    current = join(current, parts[index]);
+    const st = await lstat(current, { bigint: true }).catch((err) => {
+      if (err?.code === 'ENOENT') return null;
+      throw err;
+    });
+    if (!st) return null;
+    if (st.isSymbolicLink()) fail(`refusing symlink: ${current}`);
+    if (index < parts.length - 1 && !st.isDirectory()) fail(`not a directory: ${current}`);
+    if (index === parts.length - 1) {
+      if (!st.isFile()) fail(`not a regular file: ${current}`);
+      if (st.nlink !== 1n) fail(`refusing hard-linked source file: ${current}`);
+      const bytes = await readFile(current);
+      const after = await lstat(current, { bigint: true }).catch((err) => {
+        if (err?.code === 'ENOENT') fail(`source changed during verification: ${rel}`);
+        throw err;
+      });
+      for (const key of ['dev', 'ino', 'size', 'mtimeNs', 'nlink']) {
+        if (st[key] !== after[key]) fail(`source changed during verification: ${rel}`);
+      }
+      return {
+        bytes,
+        sha256: sha256(bytes),
+        size: bytes.length,
+        fingerprint: Object.fromEntries(
+          ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'nlink'].map((key) => [key, after[key]]),
+        ),
+      };
+    }
+  }
+}
+
+function sameSource(left, right) {
+  return left.size === right.size &&
+    left.sha256 === right.sha256 &&
+    Object.keys(left.fingerprint).every((key) => left.fingerprint[key] === right.fingerprint[key]);
+}
+
+async function verifyRetirementSource(sourceRoot, head, files, manifest) {
+  await assertSafeAncestors(sourceRoot);
+  await assertRealPath(sourceRoot, 'directory');
+  const topLevel = resolve(gitOutput(sourceRoot, ['rev-parse', '--show-toplevel']).trim());
+  if (topLevel !== sourceRoot) fail(`source root is not the exact Git top-level: ${sourceRoot}`);
+  const actualHead = gitOutput(sourceRoot, ['rev-parse', 'HEAD']).trim();
+  if (actualHead !== head) fail(`Git HEAD mismatch: expected ${head}, found ${actualHead}`);
+
+  const states = {};
+  for (const rel of files) {
+    const state = await inspectSource(sourceRoot, rel);
+    if (state && (state.size !== manifest.files[rel].size || state.sha256 !== manifest.files[rel].sha256)) {
+      fail(`source evidence hash mismatch: ${rel}`);
+    }
+    states[rel] = state;
+  }
+
+  const expectedUntracked = new Set(files.filter((rel) => states[rel]));
+  const statusEntries = gitOutput(sourceRoot, [
+    'status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignored=no',
+  ]).split('\0').filter(Boolean);
+  for (const entry of statusEntries) {
+    const code = entry.slice(0, 2);
+    const rel = entry.slice(3);
+    if (code !== '??' || !expectedUntracked.delete(rel)) {
+      fail(`tracked, staged, or unclassified Git dirt: ${rel || '(unknown)'}`);
+    }
+  }
+  if (expectedUntracked.size > 0) {
+    fail(`source evidence is not classified as untracked: ${[...expectedUntracked].sort()[0]}`);
+  }
+  return states;
+}
+
+async function retireEvidence(args, sourceRoot, archiveRoot, archiveDir, identity) {
+  const archive = await verifyRetirementArchive(
+    archiveRoot, archiveDir, identity, args.files, args['manifest-hash'],
+  );
+  const states = await verifyRetirementSource(sourceRoot, args.head, args.files, archive.manifest);
+  const removed = [];
+  const alreadyAbsent = args.files.filter((rel) => !states[rel]);
+
+  for (const rel of args.files) {
+    if (!states[rel]) continue;
+    const current = await inspectSource(sourceRoot, rel);
+    if (!current || !sameSource(current, states[rel])) fail(`source changed before retirement: ${rel}`);
+  }
+
+  for (let index = 0; index < args.files.length; index += 1) {
+    const rel = args.files[index];
+    if (!states[rel]) continue;
+    const current = await inspectSource(sourceRoot, rel);
+    if (!current || !sameSource(current, states[rel])) {
+      fail(`source changed before retirement: ${rel}`);
+    }
+    try {
+      await unlink(join(sourceRoot, rel));
+    } catch (err) {
+      const pending = args.files.slice(index).filter((file) => states[file]);
+      console.log(JSON.stringify({
+        status: 'partial',
+        archiveDir: archive.archiveDir,
+        manifestPath: archive.manifestPath,
+        manifestHash: archive.manifestHash,
+        files: archive.files,
+        removed,
+        alreadyAbsent,
+        pending,
+      }));
+      fail(`retirement stopped at ${rel}: ${err.message}`);
+    }
+    if (await lstat(join(sourceRoot, rel)).catch((err) => err?.code === 'ENOENT' ? null : Promise.reject(err))) {
+      fail(`source still exists after unlink: ${rel}`);
+    }
+    removed.push(rel);
+  }
+
+  console.log(JSON.stringify({
+    status: 'retired',
+    archiveDir: archive.archiveDir,
+    manifestPath: archive.manifestPath,
+    manifestHash: archive.manifestHash,
+    files: archive.files,
+    removed,
+    alreadyAbsent,
+    pending: [],
+  }));
+}
+
 async function listArchiveFiles(root, prefix = '') {
   const files = [];
   const entries = await readdir(join(root, prefix), { withFileTypes: true });
@@ -238,7 +444,6 @@ async function main() {
     archiveToSource === '' || (!archiveToSource.startsWith('..') && !isAbsolute(archiveToSource))
   ) fail('source and archive roots must not contain each other');
 
-  const collected = await collectSource(sourceRoot, args.files);
   const identity = args.pr
     ? { repo: args.repo, pr: Number(args.pr), head: args.head, dispatch: args.dispatch }
     : { repo: args.repo, run: args.run, task: args.task, head: args.head, dispatch: args.dispatch };
@@ -249,6 +454,12 @@ async function main() {
   const archiveDir = join(archiveRoot, repoSlug, ...identityParts, args.head, args.dispatch);
 
   await assertSafeAncestors(archiveRoot);
+  if (args.operation === 'retire') {
+    await retireEvidence(args, sourceRoot, archiveRoot, archiveDir, identity);
+    return;
+  }
+
+  const collected = await collectSource(sourceRoot, args.files);
   let current = archiveRoot;
   const generated = [repoSlug, ...identityParts, args.head];
   await ensurePrivateDir(current);
