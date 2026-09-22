@@ -17,9 +17,9 @@ const root = import.meta.dir.slice(0, -'/tests/installer'.length);
 
 test('installed readiness compares role IDs with the selected bundle', () => {
   const expectedRoles = [
-    role('axstack-author', 'gpt-5.6-sol'),
-    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    role('axstack-reviewer-secondary', 'claude-opus-5'),
+    role('axstack-author', 'gpt-6-sol'),
+    role('axstack-reviewer-primary', 'gpt-6-sol'),
+    role('axstack-reviewer-secondary', 'claude-opus-5-5'),
     { ...role('axstack-checker', null), provider: 'antigravity' },
   ];
   const installed = installedRoleBytes('mixed', [
@@ -40,9 +40,9 @@ test('single-provider readiness accepts only the intentionally unavailable advis
   const roles = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
-    role('axstack-author', 'gpt-5.6-sol'),
-    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-5.6-terra'), thinkingOptionId: 'xhigh' },
+    role('axstack-author', 'gpt-6-sol'),
+    role('axstack-reviewer-primary', 'gpt-6-sol'),
+    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
   ];
 
   expect(assessRoleReadiness(roles, 'codex-only')).toEqual({ ready: true, gaps: [] });
@@ -99,8 +99,8 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-author', 'claude-opus-5'), provider: 'claude' },
-    { ...role('axstack-reviewer-primary', 'claude-opus-5'), provider: 'claude' },
+    { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
+    { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
       ...role('axstack-reviewer-secondary', 'claude-sonnet-5'),
       provider: 'claude', thinkingOptionId: 'xhigh',
@@ -114,9 +114,9 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
   const codex = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
-    role('axstack-author', 'gpt-5.6-sol'),
-    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-5.6-terra'), thinkingOptionId: 'xhigh' },
+    role('axstack-author', 'gpt-6-sol'),
+    role('axstack-reviewer-primary', 'gpt-6-sol'),
+    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
     { ...role('axstack-arena-judge-astra', 'gpt-6-astra'), thinkingOptionId: 'xhigh' },
     { ...role('axstack-arena-judge-fable', null), thinkingOptionId: 'xhigh' },
   ];
@@ -129,9 +129,9 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
   const mixed = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
-    role('axstack-author', 'gpt-5.6-sol'),
-    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    { ...role('axstack-reviewer-secondary', 'claude-opus-5'), provider: 'claude', thinkingOptionId: 'medium' },
+    role('axstack-author', 'gpt-6-sol'),
+    role('axstack-reviewer-primary', 'gpt-6-sol'),
+    { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'medium' },
     { ...role('axstack-arena-judge-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
   ];
   expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
@@ -143,9 +143,9 @@ test('readiness rejects a null model on a non-intentional row such as an investi
   const roles = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
     { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
-    role('axstack-author', 'gpt-5.6-sol'),
-    role('axstack-reviewer-primary', 'gpt-5.6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-5.6-terra'), thinkingOptionId: 'xhigh' },
+    role('axstack-author', 'gpt-6-sol'),
+    role('axstack-reviewer-primary', 'gpt-6-sol'),
+    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
     role('axstack-debug-investigator-1', null),
   ];
   expect(assessRoleReadiness(roles, 'codex-only').gaps).toEqual([

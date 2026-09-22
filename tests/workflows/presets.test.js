@@ -40,49 +40,49 @@ const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
-    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
-    ag(null, 'low'), a('claude-opus-5', 'medium'),
-    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'low'), ag(null, 'high'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
+    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
+    ag(null, 'low'), a('claude-opus-5-5', 'medium'),
+    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-luna', 'max'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    a('claude-opus-5', 'medium'),
-    c('gpt-5.6-luna', 'max'),
-    a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'max'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
+    a('claude-opus-5-5', 'medium'),
+    c('gpt-6-luna', 'max'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'),
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
     c(null, 'high'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-sol', 'medium'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
-    c('gpt-5.6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'), c(null, 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'medium'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-luna', 'max'),
-    c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-luna', 'max'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-terra', 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'max'),
+    c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'low'),
+    c('gpt-6-luna', 'max'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'),
   ],
   'claude-only': [
     a(null, 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5', 'high'), a('claude-opus-5', 'medium'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-sonnet-5', 'low'), a('claude-opus-5', 'medium'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
+    a('claude-opus-5-5', 'high'), a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-sonnet-5', 'low'), a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
     a(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5', 'high'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5-5', 'high'), a('claude-sonnet-5', 'xhigh'),
     a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'),
   ],
 };
@@ -221,6 +221,13 @@ test('presets: public docs and shared references never state a stale role count'
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
   expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
+});
+
+test('presets: public workflow table names the current codex-only peer model families', () => {
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  expect(workflows).toContain(
+    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna max |',
+  );
 });
 
 test('presets: monitor remains a standalone read-only observer', () => {
