@@ -79,6 +79,8 @@ Use only a named run-owned scratch prefix recorded with the Dispatch. Require
 `git status --porcelain=v1 -z --untracked-files=all` to show all dirt as
 untracked files inside that run-owned scratch prefix; any tracked, staged,
 unmerged or unpushed work, dirty source, or dirt outside it holds. Validate that
+the detached checkout still matches the reviewed head and check local commits
+against recorded remote refs; unknown divergence holds. Validate that
 the exact reviewed scratch prefix names the recorded directory inside the exact
 reviewer worktree, never a repository-root target or symlink. Inspect every
 descendant for symlinks, hard links, special files, unknown content, user-owned

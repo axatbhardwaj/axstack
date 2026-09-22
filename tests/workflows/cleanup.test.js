@@ -74,3 +74,14 @@ test('merged-run reviewer scratch needs a durable receipt and exact-path removal
   expect(skill).toMatch(/unknown content[^.]*user-owned\s+files/is);
   expect(skill).toMatch(/active[^.]*user_takeover/is);
 });
+
+test('shared reviewer evidence rules honor the guarded compact-receipt path', () => {
+  const cleanup = read('skills/axstack-cleanup/SKILL.md');
+  const runtime = read('skills/axstack/references/orca-runtime.md');
+  const automations = read('skills/axstack/references/automations.md');
+  expect(cleanup).toMatch(/settled merged run[^.]*forge merge is confirmed[\s\S]*?raw reviewer report may be discarded/is);
+  expect(runtime).toMatch(/before removing a reviewer worktree[\s\S]*?settled\s+merged run[\s\S]*?compact durable receipt[\s\S]*?axstack-cleanup/is);
+  expect(runtime).toMatch(/preserve\s+active[^.]*unmerged[^.]*unique evidence/is);
+  expect(automations).toMatch(/PR-job[^.]*reviewer scratch[^.]*axstack-cleanup/is);
+  expect(automations).toMatch(/never changes manager pass preservation or retirement guards/is);
+});
