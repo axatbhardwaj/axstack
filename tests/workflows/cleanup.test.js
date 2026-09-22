@@ -44,7 +44,7 @@ test('cleanup binds archived evidence retirement and native hook trust', () => {
   expect(skill).toMatch(/Archive Script[^.]*unknown[^.]*untrusted[^.]*holds/i);
   for (const outcome of ['unconfigured', 'passed', 'failed', 'unknown']) expect(skill).toContain(`\`${outcome}\``);
   expect(skill).toMatch(/never[^.]*shell loop/i);
-  expect(skill).not.toMatch(/\bgit clean\b|\brm\s+-rf\b|\bfind\b[^\n]*-delete/);
+  expect(skill).not.toMatch(/\brm\s+-r\b|\bfind\b[^\n]*-delete/);
 });
 
 test('merged-run reviewer scratch needs a durable receipt and exact-path removal', () => {
@@ -63,11 +63,14 @@ test('merged-run reviewer scratch needs a durable receipt and exact-path removal
   expect(skill).toMatch(/all dirt[^.]*run-owned scratch prefix/is);
   expect(skill).toMatch(/symlinks[^.]*special files[^.]*unknown content/is);
   expect(skill).toMatch(/dry-run[^.]*exact scoped path/is);
-  expect(skill).toContain('rm -r -- "$scratch_dir"');
+  expect(skill).toContain('git clean -nd -- <exact reviewed scratch prefix>');
+  expect(skill).toMatch(/sole target[^.]*classified directory/is);
+  expect(skill).toContain('git clean -fd -- <same exact prefix>');
   expect(skill).toMatch(/recheck[^.]*clean (?:Git )?status/is);
   expect(skill).toMatch(/never[^.]*repository-root target/is);
-  expect(skill).not.toMatch(/nonrecursive\s+exact-path unlink|\bgit clean\b|\brm\s+-rf\b/);
+  expect(skill).not.toMatch(/nonrecursive\s+exact-path unlink|\brm\s+-r\b|git clean[^`\n]*-x\b|git clean[^`\n]*-ff\b/);
+  expect(skill).toMatch(/no unresolved variable[^.]*destructive target/is);
   expect(skill).toMatch(/unmerged[^.]*unpushed[^.]*dirty source/is);
-  expect(skill).toMatch(/unknown content[^.]*user-owned files/is);
+  expect(skill).toMatch(/unknown content[^.]*user-owned\s+files/is);
   expect(skill).toMatch(/active[^.]*user_takeover/is);
 });

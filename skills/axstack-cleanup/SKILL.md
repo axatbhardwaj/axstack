@@ -34,8 +34,8 @@ Never clean a manual chat, the current driver, `user_takeover`, an active or
 unknown worker, an unsettled descendant, or a resource with ambiguous ownership.
 Preserve dirty or unknown files, unpushed commits, unmerged useful work,
 ambiguous publication, and evidence that has not been durably preserved. Do not
-force, bulk-clean, override a hook failure, edit a runtime database, or add a
-scheduler, daemon, or state machine.
+force native removal, bulk-clean, override a hook failure, edit a runtime
+database, or add a scheduler, daemon, or state machine.
 
 ## Reconcile each candidate
 
@@ -79,19 +79,24 @@ Use only a named run-owned scratch prefix recorded with the Dispatch. Require
 `git status --porcelain=v1 -z --untracked-files=all` to show all dirt as
 untracked files inside that run-owned scratch prefix; any tracked, staged,
 unmerged or unpushed work, dirty source, or dirt outside it holds. Validate that
-the absolute `scratch_dir` is the recorded directory inside the exact reviewer
-worktree, never a repository-root target or symlink. Inspect every descendant,
-including ignored files, for symlinks, hard links, special files, unknown content,
-or user-owned files; any mismatch holds. Active or `user_takeover` terminals
+the exact reviewed scratch prefix names the recorded directory inside the exact
+reviewer worktree, never a repository-root target or symlink. Inspect every
+descendant for symlinks, hard links, special files, unknown content, user-owned
+files, or ignored files; any mismatch holds. Active or `user_takeover` terminals
 also hold.
 
-Make a dry-run of the exact scoped path: list `scratch_dir` and all descendants
-with their types, confirm each belongs to generated reviewer scratch, and record
-that inventory. Re-read the compact receipt, complete Git status, directory
-contents, native ownership and liveness immediately before removal; any change
-holds. With `scratch_dir` bound to that validated absolute path, remove only
-`rm -r -- "$scratch_dir"`, then recheck clean Git status and record the path and
-outcome. Never use `-x`, a glob, a repository-root target, force, or broad clean.
+List the exact scoped path and all descendants with their types, confirm each
+belongs to generated reviewer scratch, and record that inventory. Dry-run the
+exact scoped path from the reviewer worktree root with
+`git clean -nd -- <exact reviewed scratch prefix>`
+with the concrete reviewed relative prefix substituted for the angle-bracket
+notation. Compare its sole target to the classified directory; an empty,
+partial, or different result holds. Re-read the compact receipt, complete Git
+status, directory contents, native ownership and liveness immediately before
+removal; any change holds. Then run `git clean -fd -- <same exact prefix>` with
+the identical concrete path and recheck clean Git status, recording the path and
+outcome. Use no unresolved variable as a destructive target. Never use `-x`, a
+glob, a repository-root target, extra force, or broad clean.
 This scratch decision does not waive any other preservation or native removal
 guard.
 
