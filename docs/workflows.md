@@ -200,6 +200,17 @@ shared manager workspace or a PR-job worktree, or cleans preserved candidates,
 evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
 publication state. Manual review/watch remains outside this scheduled lifecycle.
 
+One natively ordered successor may recover an exact positively completed
+predecessor whose terminal survived, but only after matching its automation,
+run, workspace, and terminal incarnation and proving zero unsettled descendants.
+It saves and reads back the cleanup claim before exact native close, then proves
+the full process tree exited before ownership release or guarded worktree removal.
+Age, status, or idle state alone never authorizes cleanup. Conflicting successors,
+identity mismatch, unknown or protected state, `user_takeover`, unexpected
+terminals, dirty or unpushed work, and unarchived evidence hold cleanup; an
+unchanged failure is deduplicated. Native ordering is not an atomic lock, so the
+overlap canary remains an activation requirement.
+
 Each bounded job uses a private `0700` temporary directory inside its own
 worktree. Cleanup targets only the validated owned path: no `TMPDIR` globs,
 shared-root sweeps, or general cache wipes, and uncertain files remain for
