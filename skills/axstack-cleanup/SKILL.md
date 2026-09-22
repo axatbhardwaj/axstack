@@ -57,9 +57,9 @@ Classify exact evidence files individually. Save the compact cleanup decision
 and identities in the private run record or another configured durable private
 location outside disposable worktrees. When the evidence archive applies, use
 its helper with either the existing PR identity or the non-PR Run and Task
-identity; never invent a PR number. Read back both the durable record and the
-archive manifest, including hashes and exact identities, before removing any
-source copy or workspace.
+identity; never invent a PR number. Read back the durable record and, when an
+archive is used, its manifest, including hashes and exact identities, before
+removing any source copy or workspace.
 
 Archive success proves only preservation of the listed bytes. It does not prove
 settlement, exit, ownership, a clean worktree, publication, or removal safety.
@@ -69,24 +69,31 @@ scratch is disposable after a compact durable receipt is written outside the
 review worktree and read back. Bind that receipt to the exact repository, Run,
 Task, Dispatch, reviewer workspace and terminal, exact head SHA and base SHA,
 review verdict, coverage and limitations, test and CI result pointers, and the
-user authorization and scope for cleanup. Keep the reviewer report and any
-unique evidence needed to support its verdict; use the private evidence archive
-for unique evidence whose exact bytes must survive. Raw reproducible probes and
-logs need not be archived solely to retire a completed review worktree.
+user authorization and scope for cleanup. A raw reviewer report may be discarded
+after its verdict and limitations are compacted into that read-back receipt;
+use the private evidence archive for unique evidence whose exact bytes must
+survive. Raw reproducible probes and logs need not be archived solely to retire
+a completed review worktree.
 
-Classify each proposed scratch file against its recorded owner and purpose.
-Never treat dirty source, unmerged or unpushed work, unknown or user-owned files,
-or active or `user_takeover` terminals as disposable scratch. For an otherwise
-eligible candidate, make an exact-path dry-run listing each proposed file and
-directory expected to be empty afterward for removal; check the paths are inside
-the owned reviewer worktree, regular files or directories as expected, and
-neither symlinks, hard links, nor unclassified content. Re-read the durable
-receipt, Git status, native ownership and liveness, and each path immediately
-before any unlink. Remove only the same validated files by nonrecursive
-exact-path unlink, then remove only listed empty directories; stop on a mismatch.
-Never use a glob, recursive command, force, or broad clean. Record the removed
-paths and re-read Git status before native worktree removal. This scratch
-decision does not waive any other preservation or native removal guard.
+Use only a named run-owned scratch prefix recorded with the Dispatch. Require
+`git status --porcelain=v1 -z --untracked-files=all` to show all dirt as
+untracked files inside that run-owned scratch prefix; any tracked, staged,
+unmerged or unpushed work, dirty source, or dirt outside it holds. Validate that
+the absolute `scratch_dir` is the recorded directory inside the exact reviewer
+worktree, never a repository-root target or symlink. Inspect every descendant,
+including ignored files, for symlinks, hard links, special files, unknown content,
+or user-owned files; any mismatch holds. Active or `user_takeover` terminals
+also hold.
+
+Make a dry-run of the exact scoped path: list `scratch_dir` and all descendants
+with their types, confirm each belongs to generated reviewer scratch, and record
+that inventory. Re-read the compact receipt, complete Git status, directory
+contents, native ownership and liveness immediately before removal; any change
+holds. With `scratch_dir` bound to that validated absolute path, remove only
+`rm -r -- "$scratch_dir"`, then recheck clean Git status and record the path and
+outcome. Never use `-x`, a glob, a repository-root target, force, or broad clean.
+This scratch decision does not waive any other preservation or native removal
+guard.
 
 ## Apply distinct native operations
 
