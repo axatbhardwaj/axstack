@@ -54,14 +54,16 @@ function runArchive(f, extra = [], { expectFail = false, script = SCRIPT } = {})
   return JSON.parse(result.stdout.toString());
 }
 
-function runTaskArchive(f, extra = [], { expectFail = false } = {}) {
+function runTaskArchive(f, extra = [], {
+  expectFail = false,
+  identityArgs = ['--run', 'run_fixture123', '--task', 'task_fixture123'],
+} = {}) {
   const result = Bun.spawnSync([
     BUN_BIN, SCRIPT,
     '--source-root', f.source,
     '--archive-root', f.archive,
     '--repo', 'defi-com/monorepo',
-    '--run', 'run_fixture123',
-    '--task', 'task_fixture123',
+    ...identityArgs,
     '--head', 'a'.repeat(40),
     '--dispatch', 'ctx_fixture123',
     '--file', 'review.md',
@@ -122,12 +124,12 @@ test('archives non-PR supervised evidence under exact run and task identity', ()
 });
 
 test('refuses incomplete or mixed PR and run/task identities before archive creation', () => {
-  for (const extra of [
-    ['--pr', '123'],
-    ['--task', 'task_other'],
+  for (const [identityArgs, extra] of [
+    [['--run', 'run_fixture123', '--task', 'task_fixture123'], ['--pr', '123']],
+    [['--run', 'run_fixture123'], []],
   ]) {
     const f = fixture();
-    const out = runTaskArchive(f, extra, { expectFail: true });
+    const out = runTaskArchive(f, extra, { expectFail: true, identityArgs });
     expect(out).toMatch(/identity|mutually exclusive|run.*task|pr/i);
     expect(existsSync(f.archive)).toBe(false);
   }
