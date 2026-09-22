@@ -95,8 +95,13 @@ owner. Remove only that exact validated owned path, with no glob or parent-root
 deletion; never wipe a general cache. Uncertain temporary files are preserved
 for later reconciliation. Incidental tool-managed caches are not review evidence.
 Before removing a reviewer worktree, preserve its report and supporting evidence
-in the driver's Orca workspace and update the run record's paths. Terminal
-release alone is not permission to discard evidence or remove the worktree.
+in the driver's Orca workspace and update the run record's paths. For a settled
+merged run with a confirmed forge merge, the compact durable receipt in
+[axstack-cleanup](../../axstack-cleanup/SKILL.md) satisfies this preservation
+rule only after its classification, readback, and removal guards pass. Preserve
+active or unmerged review evidence and unique evidence whose bytes must survive;
+uncertain ownership or evidence holds. Terminal release alone is not permission
+to discard evidence or remove the worktree.
 
 ## Consume, settle, and recover
 

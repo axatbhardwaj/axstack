@@ -34,8 +34,8 @@ Never clean a manual chat, the current driver, `user_takeover`, an active or
 unknown worker, an unsettled descendant, or a resource with ambiguous ownership.
 Preserve dirty or unknown files, unpushed commits, unmerged useful work,
 ambiguous publication, and evidence that has not been durably preserved. Do not
-force, bulk-clean, override a hook failure, edit a runtime database, or add a
-scheduler, daemon, or state machine.
+force native removal, bulk-clean, override a hook failure, edit a runtime
+database, or add a scheduler, daemon, or state machine.
 
 ## Reconcile each candidate
 
@@ -57,12 +57,50 @@ Classify exact evidence files individually. Save the compact cleanup decision
 and identities in the private run record or another configured durable private
 location outside disposable worktrees. When the evidence archive applies, use
 its helper with either the existing PR identity or the non-PR Run and Task
-identity; never invent a PR number. Read back both the durable record and the
-archive manifest, including hashes and exact identities, before removing any
-source copy or workspace.
+identity; never invent a PR number. Read back the durable record and, when an
+archive is used, its manifest, including hashes and exact identities, before
+removing any source copy or workspace.
 
 Archive success proves only preservation of the listed bytes. It does not prove
 settlement, exit, ownership, a clean worktree, publication, or removal safety.
+
+For a settled merged run whose forge merge is confirmed, generated reviewer
+scratch is disposable after a compact durable receipt is written outside the
+review worktree and read back. Bind that receipt to the exact repository, Run,
+Task, Dispatch, reviewer workspace and terminal, exact head SHA and base SHA,
+review verdict, coverage and limitations, test and CI result pointers, and the
+user authorization and scope for cleanup. A raw reviewer report may be discarded
+after its verdict and limitations are compacted into that read-back receipt;
+use the private evidence archive for unique evidence whose exact bytes must
+survive. Raw reproducible probes and logs need not be archived solely to retire
+a completed review worktree.
+
+Use only a named run-owned scratch prefix recorded with the Dispatch. Require
+`git status --porcelain=v1 -z --untracked-files=all` to show all dirt as
+untracked files inside that run-owned scratch prefix; any tracked, staged,
+unmerged or unpushed work, dirty source, or dirt outside it holds. Validate that
+the detached checkout still matches the reviewed head and check local commits
+against recorded remote refs; unknown divergence holds. Validate that
+the exact reviewed scratch prefix names the recorded directory inside the exact
+reviewer worktree, never a repository-root target or symlink. Inspect every
+descendant for symlinks, hard links, special files, unknown content, user-owned
+files, or ignored files; any mismatch holds. Active or `user_takeover` terminals
+also hold.
+
+List the exact scoped path and all descendants with their types, confirm each
+belongs to generated reviewer scratch, and record that inventory. Dry-run the
+exact scoped path from the reviewer worktree root with
+`git clean -nd -- <exact reviewed scratch prefix>`
+with the concrete reviewed relative prefix substituted for the angle-bracket
+notation. Compare its sole target to the classified directory; an empty,
+partial, or different result holds. Re-read the compact receipt, complete Git
+status, directory contents, native ownership and liveness immediately before
+removal; any change holds. Then run `git clean -fd -- <same exact prefix>` with
+the identical concrete path and recheck clean Git status, recording the path and
+outcome. Use no unresolved variable as a destructive target. Never use `-x`, a
+glob, a repository-root target, extra force, or broad clean.
+This scratch decision does not waive any other preservation or native removal
+guard.
 
 ## Apply distinct native operations
 
