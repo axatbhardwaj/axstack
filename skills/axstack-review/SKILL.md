@@ -174,6 +174,16 @@ owns the event and settles after its skill-owned reviewers settle.
    existing material-scope, security, downtime,
    data-loss, major-design-risk, or unavailable-model hold.
 
+   Also under angle 6, independently classify the pinned diff. When it contains
+   code or agent-instruction changes, load
+   [Simplify the diff](../axstack/references/simplify-diff.md) and independently
+   verify both the simplification receipt and the relevant diff; for excluded
+   prose, verify the receipt's `not-applicable` evidence without loading the
+   reference. A simplification finding names the concrete location, consequence,
+   and simpler behavior-preserving alternative. Preserve trust boundaries,
+   accessibility, meaningful why-comments, uncertainty, and authority; do not
+   turn this judgment into a deletion quota or score.
+
    Verify the applicable spec, ticket, or intent acceptance, executable
    evidence, exact candidate SHA, current base, and affected integration
    boundary, plus rendered interaction evidence for relevant UI work. A

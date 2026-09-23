@@ -20,6 +20,9 @@ not an additional runtime skill or phase.
   illustrate the rule; they do not create new global requirements.
 - Use original prose. Changes to writing do not authorize changes to models,
   review topology, approval checkpoints, stores, timers or mutation authority.
+- For post-green code diffs and agent instructions, use the shared
+  [simplify-diff contract](../skills/axstack/references/simplify-diff.md) rather
+  than duplicating its rules here.
 
 Validation has distinct layers: package/link/frontmatter checks, structural
 policy assertions, isolated model simulations, and actual runtime evidence.
