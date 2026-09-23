@@ -250,9 +250,9 @@ test('published manifest identity matches the repository it is published from', 
   expect(manifest.bugs).toContain(slug);
 });
 
-test('CLI reports the subscription-routing setup version', () => {
+test('CLI reports the release version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
-  expect(result.out.trim()).toBe('axstack 0.20.11');
+  expect(result.out.trim()).toBe('axstack 0.20.12');
 });
 
 test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
