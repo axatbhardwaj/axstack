@@ -1,9 +1,11 @@
 # Workspace hygiene for driver-owned Orca runs
 
 This is a prompt contract for drivers, not a cleanup daemon or new Orca
-protocol. Use the version-matched Orca guides for native operations. A worker
-never sweeps or removes another session. Record each decision and native
-readback in the private run record; uncertain ownership, liveness, or evidence
+protocol. Use the version-matched Orca guides for native operations. Dispatched
+workers never sweep or remove another session. A scheduled pass with recorded
+cleanup authority acts as its lane's driver for the sweep; read-only observers
+only report leftovers. Record each decision and native readback in the private
+run record; uncertain ownership, liveness, or evidence
 holds only the affected resource.
 
 ## Settlement
@@ -11,8 +13,8 @@ holds only the affected resource.
 At intermediate completion, once a worker or reviewer Dispatch is accepted,
 the driver releases it natively, confirms closure from a fresh native terminal
 list, then removes its worktree, descendants first, after the preservation
-checks below. Keep the author worktree and session until merge so repairs return
-to the same author. Release, terminal closure, worktree removal, and branch
+checks below. Keep the author worktree and session until the PR merges or closes
+so repairs return to the same author. Release, terminal closure, worktree removal, and branch
 retirement each need their own receipt.
 
 At final settlement, no eligible non-driver session or worktree remains,
@@ -42,26 +44,37 @@ reviewers use separate worktrees and separate evidence folders; neither reads
 the other's first-pass work. Authors commit the candidate before reporting
 done. Workers never push; the driver publishes under candidate-publication.
 
-If a completed non-author worktree has uncommitted or unpublished content,
+If a completed eligible worktree has uncommitted or unpublished content,
 salvage before removal: create a salvage ref in that worktree, run `git add -A`
 and commit everything on that ref, write a `git bundle` for it into the private
 run folder, then run `git bundle verify`. Record the bundle path, bundle SHA-256, and salvage commit SHA in the
 receipt before removing the worktree. A failed verify holds the worktree. Never
-salvage an author worktree before merge. Ignored non-cache files (anything other
-than known build and dependency caches), submodule changes, and content outside
+salvage an author worktree before merge or closure. Ignored non-cache files
+(anything other than known build and dependency caches), submodule changes, and content outside
 the worktree hold instead of being salvaged. Preserve any ambiguous source or
 publication state. Recheck the native owner and liveness immediately before
 removal, and use exact native worktree removal without force.
 
 ## Driver-start orphan sweep
 
-Drivers only sweep on phase-skill entry; dispatched workers never sweep. Scope
-the sweep to the current repository and the per-run worktrees in other
+Drivers sweep on phase-skill entry. A scheduled pass that owns its lane with
+recorded cleanup authority runs the driver-start orphan sweep after predecessor
+terminal cleanup, scoped to repositories listed in its run record. On
+phase-skill entry, scope the sweep to the current repository and the
+per-run worktrees in other
 repositories recorded in the driver's run records. If Orca is unreachable,
 report one line and continue the phase; an unreachable host holds only its
 items. This is standing authority to remove an orphan after salvage when every
 owning Dispatch and descendant is settled, ownership and liveness are rechecked
 from a fresh native list, and evidence is durable. Remove descendants first.
+An author worktree of a merged or closed PR is sweep-eligible when its head
+commit is retrievable from the forge (for example, the PR's recorded head or a
+remote branch contains it); unverifiable state is a hold. For an eligible
+author worktree, salvage first if dirty, under the preservation guards above.
+Phase-skill entry drivers report sweep results and holds in chat and run record.
+A scheduled review-manager pass records sweep results and holds in its
+continuity record's Open holds table; a cleanup-authorized watch pass records
+them in its own continuity Open holds table. Both are silent when nothing was removed.
 Branches with a remote counterpart are never deleted. List live or unsettled
 work, genuine `user_takeover`, and items without provable Axstack provenance in
 one table with their reason; do not remove them.

@@ -2,7 +2,7 @@
   "version": 1,
   "evidence": "Contract decision scenarios, not live Orca cleanup proof",
   "cases": [
-    {"id":"author-retained-until-merge","input":"An author's Dispatch is accepted while its PR remains open.","expected":"Retain its session and worktree for repairs.","contractPattern":"author worktree and session.{0,100}until merge"},
+    {"id":"author-retained-while-open","input":"An author's Dispatch is accepted while its PR remains open.","expected":"Retain its session and worktree for repairs until merge or closure.","contractPattern":"author worktree and session.{0,100}until the PR merges or closes"},
     {"id":"reviewer-removed-at-acceptance","input":"A reviewer's Dispatch is accepted and its evidence is durable.","expected":"Release its terminal, verify closure, and remove its worktree.","contractPattern":"intermediate completion.{0,250}removes its worktree"},
     {"id":"dirty-non-author-salvaged","input":"A completed non-author worktree has uncommitted source and no protection hold.","expected":"Commit on a salvage ref, bundle, verify, then remove.","contractPattern":"git add -A.{0,220}git bundle verify.{0,180}removing"},
     {"id":"failed-bundle-verify","input":"The salvage bundle fails git bundle verify.","expected":"Hold the worktree.","contractPattern":"failed verify.{0,100}hold"},

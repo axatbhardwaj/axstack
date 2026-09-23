@@ -71,7 +71,7 @@ settlement, exit, ownership, a clean worktree, publication, or removal safety.
 For a completed non-author worktree with useful local content, follow the
 [Workspace hygiene](../axstack/references/workspace-hygiene.md) salvage path
 before removal; a verified bundle changes preservation classification, not
-native ownership or liveness. Keep an author worktree until merge.
+native ownership or liveness. Keep an author worktree until its PR merges or closes.
 
 For a settled reviewer Dispatch, the reviewer worktree can be retired while its
 PR remains open, before merge, after its report and supporting evidence are
