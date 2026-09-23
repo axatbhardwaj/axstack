@@ -30,6 +30,11 @@ launch, overlapping-pass behavior, recovery after session loss, nested
 dispatch depth for coordinator-launched leaves, and total process and memory
 effects. A firing timestamp proves neither delivery nor useful completion.
 
+Do not write `~/.claude.json` except through the packaged `trust-path.js`
+preflight for an exact Orca-registered repository root or worktree before a
+Claude launch. The helper changes only that path's trust flag; it does not
+answer any dialog.
+
 ## Session admission
 
 Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
