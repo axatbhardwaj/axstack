@@ -35,6 +35,7 @@ test('existing workflow entry points point to the shared contract', () => {
     expect(read(`skills/axstack/references/${path}`)).toContain('workspace-hygiene.md');
   }
   expect(read('skills/axstack-cleanup/SKILL.md')).toContain('workspace-hygiene.md');
+  expect(read('skills/axstack/references/routing.md')).toContain('Choose a route; load only the phase and references needed next.');
   const phases = ['align', 'audit', 'debug', 'explain', 'implement', 'improve', 'research', 'review', 'spec', 'tickets', 'watch'];
   for (const phase of phases) {
     const text = read(`skills/axstack-${phase}/SKILL.md`);

@@ -81,6 +81,11 @@ test('manager jobs use private per-Dispatch scratch without broad cleanup', () =
   const runtime = compact('skills/axstack/references/orca-runtime.md');
   const manager = compact('skills/axstack/references/automations.md');
   expect(runtime).toMatch(/TMPDIR[^.]*0700 folder/i);
+  expect(runtime).toMatch(/real path[^.]*recorded run evidence folder/i);
+  expect(runtime).toMatch(/not a symbolic link[^.]*recorded Dispatch owner/i);
+  expect(runtime).toMatch(/exact validated owned path[^.]*no glob or parent-root deletion/i);
+  expect(runtime).toMatch(/uncertain temporary paths[^.]*preserv/i);
+  expect(runtime).toMatch(/worktree-local temporary paths[^.]*same guards/i);
   expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
   expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
   expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
@@ -155,7 +160,8 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
   expect(text).toMatch(/manager lane owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);
   expect(text).toMatch(/Reuse[^.]*worktree[^.]*owner[^.]*unchanged receipts/i);
   expect(text).toMatch(/Settlement returns continuity[^.]*manager[^.]*rather than retaining an idle PR coordinator/i);
-  expect(text).toMatch(/dirty source[^.]*unarchived review evidence[^.]*user-owned work[^.]*proven/i);
+  expect(text).toMatch(/dirty source[\s\S]*?unpushed commits[\s\S]*?salvage path/i);
+  expect(text).toMatch(/review evidence not yet durable[^.]*user-owned[^.]*proven/i);
   expect(text).toMatch(/pending external result[^.]*unconfirmed review submission[^.]*not pending CI/i);
   expect(text).toMatch(/ascending repository and PR-number tie breaks/i);
 });

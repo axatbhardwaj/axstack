@@ -69,7 +69,8 @@ test('review placement isolates each reviewer and preserves private run evidence
   expect(runtime).toMatch(/<run dir>\/evidence\/<dispatch>\/[^.]*brief[^.]*completion receipt/i);
   expect(runtime).toMatch(/per-Dispatch run folder[\s\S]*?first-pass cross-read/i);
   expect(runtime).toMatch(/tracked candidate files[^.]*read-only/i);
-  expect(runtime).toMatch(/before removing a reviewer worktree[^.]*read back[^.]*private evidence archive/i);
+  expect(runtime).toMatch(/before removing a reviewer worktree[^.]*read back[^.]*private run evidence folder/i);
+  expect(runtime).toMatch(/private evidence archive[^.]*only[^.]*legacy in-worktree evidence/i);
   expect(review).toContain('orca-runtime.md#reviewer-workspaces-and-evidence');
   expect(review).toContain('Workspace: <Orca worktree ID + absolute path>');
   expect(review).toContain('Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)');

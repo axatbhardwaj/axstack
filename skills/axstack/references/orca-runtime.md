@@ -113,9 +113,17 @@ checkout of the exact candidate SHA and the pinned base in that child.
 Name the private `<run dir>/evidence/<dispatch>/` folder in the brief and
 completion receipt. Keep tracked candidate files read-only and peer folders
 isolated. Scope `TMPDIR` to that 0700 folder for owned commands where supported.
+Before use or temporary-file cleanup, validate that its real path equals or
+is inside the recorded run evidence folder, is not a symbolic link, and matches the recorded
+Dispatch owner. Worktree-local temporary paths use the same guards against
+their recorded worktree and owner. Remove only an exact validated owned
+path, with no glob or parent-root deletion; never wipe a general cache.
+Uncertain temporary paths are preserved for reconciliation.
 Before removing a reviewer worktree, read back its report and supporting
-evidence from the private evidence archive, then record their paths in the
-private run record. Incidental caches are not evidence. A settled reviewer Dispatch can be
+evidence from the private run evidence folder and record their paths. Files
+already there need no archive step; the private evidence archive applies only
+to legacy in-worktree evidence. Incidental caches are not evidence.
+A settled reviewer Dispatch can be
 cleaned before PR merge through [axstack-cleanup](../../axstack-cleanup/SKILL.md)
 only after its classification, readback, and removal guards pass. Preserve
 active or unknown review evidence and unique evidence whose bytes must survive;

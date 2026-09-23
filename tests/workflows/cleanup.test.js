@@ -101,7 +101,7 @@ test('shared reviewer evidence rules honor the guarded compact-receipt path', ()
   const runtime = read('skills/axstack/references/orca-runtime.md');
   const automations = read('skills/axstack/references/automations.md');
   expect(cleanup).toMatch(/settled reviewer Dispatch[\s\S]*?raw reviewer report may be discarded/is);
-  expect(runtime).toMatch(/before removing a reviewer worktree[\s\S]*?private evidence archive[\s\S]*?settled reviewer Dispatch[\s\S]*?axstack-cleanup/is);
+  expect(runtime).toMatch(/before removing a reviewer worktree[\s\S]*?private run evidence folder[\s\S]*?legacy in-worktree evidence[\s\S]*?settled reviewer Dispatch[\s\S]*?axstack-cleanup/is);
   expect(runtime).toMatch(/preserve\s+active[^.]*unknown[^.]*unique evidence/is);
   expect(automations).toMatch(/settled PR job[\s\S]*?private evidence archive[\s\S]*?read back[\s\S]*?axstack-cleanup/is);
   expect(automations).toMatch(/reviewer and PR-job worktrees in the same pass/is);
@@ -139,4 +139,13 @@ test('removed reviewer checkout ref is deleted only with proven provenance and r
   expect(cleanup).toMatch(/created for the removed reviewer checkout[^.]*tip[^.]*reachable[^.]*preserved author candidate[^.]*confirmed remote PR\s+head/is);
   expect(cleanup).toMatch(/expected-old[^.]*ref deletion/is);
   expect(cleanup).toMatch(/never delete\s+the author branch[^.]*generic force/is);
+});
+
+test('finished non-author PR jobs can use verified salvage while genuine holds remain', () => {
+  const manager = read('skills/axstack/references/automations.md');
+  const archive = read('skills/axstack/references/evidence-archive.md');
+  expect(manager).toMatch(/completed non-author\s+PR-job worktree[\s\S]*workspace-hygiene\.md[\s\S]*salvage/i);
+  expect(manager).toMatch(/unknown liveness[^.]*user_takeover[^.]*ambiguous publication/i);
+  expect(archive).toMatch(/completed non-author[\s\S]*workspace-hygiene\.md[\s\S]*salvage/i);
+  expect(archive).toMatch(/ambiguous\s+publication[^.]*unknown file[^.]*protected/i);
 });

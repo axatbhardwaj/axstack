@@ -27,7 +27,8 @@ test('settled PR jobs release terminals and retire both worktree levels after ar
   expect(text).toContain('worker-release');
   expect(text).toMatch(/private evidence archive[\s\S]*?read back[\s\S]*?axstack-cleanup[\s\S]*?reviewer and PR-job worktrees/i);
   expect(text).toMatch(/merged or closed PR[^.]*never[^.]*keep a job worktree/i);
-  expect(text).toMatch(/dirty source[^.]*unpushed commits[^.]*`user_takeover`[^.]*unknown liveness[^.]*ambiguous publication/i);
+  expect(text).toMatch(/dirty source[\s\S]*?unpushed commits[\s\S]*?salvage path/i);
+  expect(text).toMatch(/`user_takeover`[^.]*unknown liveness[^.]*ambiguous publication/i);
 });
 
 test('continuity stays bounded and both command kinds use private run TMPDIR', () => {
