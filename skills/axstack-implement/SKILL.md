@@ -184,7 +184,7 @@ For each PR:
    use the forge-native blocking check wait, bounded and used once per revision, then
    re-evaluate. Timeout, error, or missing wait capability records `held` at
    that revision with reason and resume condition; it never triggers author
-   repair. Notify “checks pending, resume when green”, not “decision needed”.
+   repair. Keep CI-pending state in Orca.
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
    findings to the same author for a new revision, increments `repairs`, and
    returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
@@ -193,10 +193,11 @@ For each PR:
 
 One run-level completion wait covers every unsettled Dispatch; the bounded
 forge check wait is the only other wait. End a turn only when every required PR
-is `merge-ready` or `held`, after notification (b) or (a). Raise serious risk
-(c) immediately when found. Notifications use `axstack-relay` under the recorded
-Notification policy: (a) a user-decision hold, (b) the merge-ready set and the
-all-merged event—two per run—and (c) serious risk; never progress.
+is `merge-ready` or `held`. Under the recorded Notification policy,
+`axstack-relay` sends only a serious risk immediately or a genuine blocked
+operation that needs user intervention after bounded safe recovery. Questions,
+spec approvals, progress, CI pending, merge-ready, merged, and completion stay
+in Orca.
 
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
 driver resumes on the user's next message or `/axstack-watch`; no Orca merge

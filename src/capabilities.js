@@ -4,7 +4,7 @@
 export const BUN_FLOOR = '1.3.14';
 
 export const PROBE_LIMITATIONS = [
-  'A host binary probe cannot prove each agent session\'s Linear MCP access; skill prompts perform a session preflight instead.',
+  'Linear guide discovery does not prove a requested issue or document operation; skill prompts preflight the current guide and command help.',
   'A host binary probe cannot prove model availability or quotas; an unavailable or exhausted model pauses affected work until the user decides.',
   'Stored role model, effort, and permission intent does not prove Orca launch parity or a successful agent execution.',
 ];
@@ -18,6 +18,7 @@ const CHECK_LABELS = {
   'orca-runtime': 'Orca runtime connection',
   'orca-orchestration-guide': 'Orca orchestration guide capability',
   'orca-cli-guide': 'Orca CLI guide capability',
+  'orca-linear-guide': 'Orca Linear guide capability',
 };
 
 // The real commands behind each probe. gh-stack runs the actual
@@ -48,6 +49,7 @@ function orcaCommand(name, executable) {
     return [executable, ['skills', 'get', 'orchestration', '--json']];
   }
   if (name === 'orca-cli-guide') return [executable, ['skills', 'get', 'orca-cli', '--json']];
+  if (name === 'orca-linear-guide') return [executable, ['skills', 'get', 'orca-linear', '--json']];
   return null;
 }
 
@@ -65,7 +67,11 @@ function validateOrcaOutput(name, stdout) {
       runtime?.reachable === true && runtime?.connectionState === 'connected';
     return { ok: ready, stdout: ready ? 'ready and connected' : 'runtime is not ready and connected' };
   }
-  const expected = name === 'orca-cli-guide' ? 'orca-cli' : 'orchestration';
+  const expected = name === 'orca-cli-guide'
+    ? 'orca-cli'
+    : name === 'orca-linear-guide'
+      ? 'orca-linear'
+      : 'orchestration';
   const ready = parsed?.name === expected && typeof parsed?.markdown === 'string' && parsed.markdown.length > 0;
   return { ok: ready, stdout: ready ? `${expected} guide available` : `${expected} guide unavailable` };
 }
@@ -110,7 +116,7 @@ export async function checkCapabilities(exec, resolution = {}) {
   const orcaExecutable = resolveOrcaExecutable(resolution);
   const names = [
     'bun', 'git', 'gh', 'gh-stack', 'orca-binary', 'orca-runtime',
-    'orca-orchestration-guide', 'orca-cli-guide',
+    'orca-orchestration-guide', 'orca-cli-guide', 'orca-linear-guide',
   ];
   const checks = [];
   for (const name of names) {

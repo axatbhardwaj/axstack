@@ -24,10 +24,12 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    Linear store. Record the exact approved spec revision and selected store.
 
 2. **Preflight the selected store.** Markdown mode works independently. In
-   Linear mode, check the actual session's required MCP tools and document
-   access. Missing access is an actionable setup gap: preserve the selected
-   store, record the gap, and stop affected work. Proceed only with verified
-   access; a recorded gap never switches stores. In GitHub mode, use
+   Linear mode, load the current `orca-linear` guide and current
+   `orca linear --help`. Use its native issue operations for capability
+   tickets. When the pinned specification requires a Linear document read,
+   inspect the guide's document guidance and command help for that operation;
+   hold that operation with its evidence when it is unadvertised or unavailable. There is
+   no MCP fallback and no store switch. In GitHub mode, use
    authenticated `gh` to verify the target repository and issue access for the
    current identity before reading or writing the capability map. Preserve the
    selected store and stop affected work on an access gap.

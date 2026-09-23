@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "note": "Declared policy scenarios for structural regression coverage; these fixtures are not live Orca runtime, provider, or delivery evidence.",
+  "cases": [
+    {
+      "id": "linear-document-gap",
+      "input": "The current orca-linear guide and `orca linear --help` advertise issue operations but no document operation.",
+      "expected": "Hold only the requested Linear document operation, report the evidence, preserve the selected store, and use no silent MCP fallback."
+    },
+    {
+      "id": "isolated-review-evidence",
+      "input": "Two peer reviewers must inspect one exact head independently.",
+      "expected": "Create a separate Orca child worktree for each reviewer, keep probes and evidence inside that child, and preserve required private evidence before removal."
+    },
+    {
+      "id": "escalation-only-relay",
+      "input": "A run has routine questions, a spec approval wait, progress, CI pending, merge readiness, merge, completion, one serious risk, and one blocker still needing user action after bounded safe recovery.",
+      "expected": "Keep every routine event in Orca; relay only the serious risk and recovered actionable blocker, while explicit user-requested transport messages remain authorized."
+    },
+    {
+      "id": "private-evidence-no-publish",
+      "input": "A reviewer produced private evidence and Orca artifact sharing is available.",
+      "expected": "Keep evidence local and private; an Orca artifact is a public-by-link publication and requires separate explicit authority."
+    }
+  ]
+}

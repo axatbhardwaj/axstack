@@ -115,11 +115,14 @@ report to the user, not permission to invent a pairing or model fallback.
 A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
 
-When a new actionable event is eligible under a recorded `Notification policy`,
-the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The standalone monitor never sends; the chat-run observer reports only
-internally. Deduplicate authorized notifications; absent policy
-or failed relay uses the current Orca conversation and leaves the existing hold open.
+Under a recorded `Notification policy`, the owner may use the optional
+[axstack-relay](../axstack-relay/SKILL.md) only for a serious risk immediately
+or a genuine blocked operation needing user intervention after bounded safe
+recovery. Questions, spec approvals, progress, CI pending, merge-ready, merged,
+and completion stay in Orca. The standalone monitor never sends; the chat-run
+observer reports only internally. Deduplicate authorized notifications;
+absent policy or failed relay uses the current Orca conversation and leaves
+the existing hold open.
 
 ## 5. State readiness precisely
 

@@ -6,7 +6,8 @@ does not dispatch agents, edit Orca settings, run a scheduler, or maintain a
 workflow database.
 
 Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
-Orca whose version-matched `orchestration` and `orca-cli` guides are available.
+Orca whose version-matched `orchestration`, `orca-cli`, and `orca-linear`
+guides are available.
 There are no runtime dependencies. Filesystem access uses Bun-backed `node:fs`
 and `node:fs/promises`; no other Node runtime contract is introduced.
 
@@ -83,7 +84,8 @@ axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--har
 ```
 
 The check separates Bun/Git/`gh stack` availability, resolved Orca executable,
-runtime readiness, required runtime-owned guide discovery, and bundle validity.
+runtime readiness, required `orchestration`, `orca-cli`, and `orca-linear`
+guide discovery, and bundle validity.
 With an instruction target, it separately reports whether the marker block is
 owned, missing, unowned, edited, or bound to a different path.
 It must honor Orca's executable-resolution rules, including the Linux screen
@@ -227,9 +229,12 @@ not prove that a running harness reloaded them.
 ## Runtime guide discovery
 
 The installed Axstack bundle does not own or copy Orca's guides. At an action
-boundary, the skill resolves one Orca executable and loads that binary's
-version-matched `orchestration` and `orca-cli` guides. Review automation guidance is loaded only for the scheduled review branch. Missing discovery is a setup gap, not a reason
-to fall back or invent commands.
+boundary, the skill resolves one Orca executable and loads the operation's
+version-matched `orchestration`, `orca-cli`, or `orca-linear` guide. Review
+automation guidance is loaded only for the scheduled review branch. Missing
+discovery is a setup gap, not a reason to fall back or invent commands. Guide
+discovery does not prove an operation works; Linear documents, provider/model
+routing, and live automation behavior need separate preflights.
 
 Installation creates no production schedule and adds no custom scheduler. Chat-run PR watch requires a separately validated same-host native Orca automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate it.
 The optional review manager requires a separate native canary before activation;

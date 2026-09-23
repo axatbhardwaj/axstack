@@ -13,19 +13,18 @@ binding state and receipts to exact revisions.
   merge is default.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
-- Reviewers: peer = two independent `axstack-reviewer-primary` and
-  `axstack-reviewer-secondary` sessions with identical brief and isolated first
-  pass; authored = one eligible configured reviewer from actual author
-  provenance. Owner and author never review.
+- Reviewers: peer = two configured roles with the same brief and isolated first
+  pass; authored = one eligible role from author provenance. Each uses a
+  separate Orca child worktree, keeps evidence there, and preserves it before
+  removal. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
-Prefer parallel independent bounded work; no redundant workers.
-Per [standing contracts](contracts.md), fanout is dependency/capacity-driven
-with no fixed count within host/spending limits. [PR shape](pr-shape.md)
-covers theme/size; queue via `gh stack`.
+Prefer parallel independent bounded work; no redundant workers. Fanout is dependency- and
+capacity-driven within host/spending limits. [PR shape](pr-shape.md) covers
+theme/size; queue dependencies through `gh stack`.
 
 ## Ownership
 

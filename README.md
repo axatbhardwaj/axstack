@@ -46,7 +46,8 @@ need to manually coordinate every agent or repeat an approval that is still vali
 ## Quick start
 
 You need Bun >=1.3.14, Git, the GitHub CLI (`gh`), the `gh stack` extension,
-and a running Orca with its `orca-cli` and `orchestration` guides available.
+and a running Orca with its `orca-cli`, `orchestration`, and `orca-linear`
+guides available.
 The agents selected by your preset must also be available in Orca.
 
 Install the CLI and skills for your harness. For example, for Codex:

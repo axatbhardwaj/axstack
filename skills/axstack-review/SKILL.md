@@ -188,7 +188,8 @@ This section applies to peer and authored PR modes.
    branch below. For every reviewer, apply
    [Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)
    before launch; report-only scope does not waive checkout isolation or
-   worktree-local artifacts.
+   worktree-local artifacts. Each reviewer uses a separate Orca child worktree;
+   preserve its private evidence before removal.
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
      from the routing snapshot. Send both the identical six-angle brief with no

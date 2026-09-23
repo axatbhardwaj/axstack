@@ -172,7 +172,9 @@ pin the observed head and base. The bounded PR coordinator loads the
 review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
-coordinator. Reviewers retain the isolation required by `axstack-review`.
+coordinator. Reviewers retain the isolation required by `axstack-review`:
+each runs in a separate Orca child worktree, keeps its probes and evidence
+inside that worktree, and preserves required evidence before removal.
 
 Give each job a private job-local temporary directory under its per-PR
 worktree, following the ownership, containment, and cleanup checks in the
