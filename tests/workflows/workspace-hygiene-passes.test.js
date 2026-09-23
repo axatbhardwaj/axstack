@@ -33,3 +33,19 @@ test('task-owned watch pass closes only its receipt terminal as final action', (
   expect(runtime).toMatch(/pass start[^.]*finished predecessor terminals[^.]*same automation[^.]*dedicated workspace/i);
   expect(runtime).toMatch(/own close[^.]*runtime_error[^.]*next pass[^.]*not a hold/i);
 });
+
+test('scheduled passes sweep recorded repositories after predecessor cleanup', () => {
+  const hygiene = read('skills/axstack/references/workspace-hygiene.md').replace(/\s+/g, ' ');
+  const manager = read('skills/axstack/references/automations.md').replace(/\s+/g, ' ');
+  const watch = read('skills/axstack-watch/references/watch-runtime.md').replace(/\s+/g, ' ');
+
+  expect(hygiene).toMatch(/every scheduled pass[^.]*driver-start orphan sweep[^.]*repositories listed in its run record/i);
+  expect(hygiene).toMatch(/author worktree of a merged or closed PR[^.]*head is on the remote[^.]*salvage[^.]*dirty/i);
+  for (const runtime of [manager, watch]) {
+    expect(runtime).toMatch(/pass start[\s\S]*?finished predecessor terminals[\s\S]*?then run the driver-start orphan sweep/i);
+    expect(runtime).toMatch(/sweep[^.]*silent when nothing was removed/i);
+    expect(runtime).toMatch(/sweep results[^.]*continuity[^.]*Open holds/i);
+  }
+  expect(manager).toMatch(/session admission[\s\S]*?pass-start predecessor cleanup and sweep[^.]*before discovery or admission/i);
+  expect(watch).toMatch(/report sweep results and holds to the driver/i);
+});

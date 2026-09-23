@@ -32,6 +32,8 @@ effects. A firing timestamp proves neither delivery nor useful completion.
 
 ## Session admission
 
+Perform the pass-start predecessor cleanup and sweep in
+[Finite-session teardown](#finite-session-teardown) before discovery or admission.
 Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
 sessions, and liveness across all workspaces belonging to the lane before
 discovery or admission; never infer lane ownership from an empty local workspace.
@@ -242,6 +244,9 @@ or separate model gate.
 At pass start, clear finished predecessor terminals of the same automation in
 the dedicated workspace only after proving completion, by the exact-handle
 fallback in [Workspace hygiene](workspace-hygiene.md).
+Then run the driver-start orphan sweep for repositories listed in this lane's
+run record, under the same guards. The sweep is silent when nothing was removed;
+record sweep results and holds in the continuity record's Open holds table.
 
 After admission closes, settle every owned PR job and all descendants before the
 manager session closes; active or unknown descendants keep their PR slot occupied

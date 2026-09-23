@@ -16,7 +16,7 @@ const rules = [
   /salvage ref[\s\S]*git add -A[\s\S]*git bundle[\s\S]*git bundle verify[\s\S]*path, bundle SHA-256, and salvage commit SHA/i,
   /failed verify holds[\s\S]*Never[\s\S]*author worktree before merge/i,
   /ignored non-cache files[\s\S]*submodule changes[\s\S]*outside[\s\S]*worktree hold/i,
-  /Drivers only sweep on phase-skill entry; dispatched workers never sweep/i,
+  /Drivers sweep on phase-skill entry; workers outside finite scheduled passes never sweep/i,
   /current repository[\s\S]*per-run worktrees in other[\s\S]*repositories/i,
   /Orca is unreachable[\s\S]*one line and continue[\s\S]*unreachable host/i,
   /every[\s\S]*owning Dispatch and descendant[\s\S]*fresh native list[\s\S]*evidence is durable/i,

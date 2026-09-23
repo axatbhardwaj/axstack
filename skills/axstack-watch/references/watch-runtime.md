@@ -48,6 +48,10 @@ permission enforcement.
 At pass start, clear finished predecessor terminals of the same automation in
 the dedicated workspace only after proving completion, using the exact-handle
 fallback in [Workspace hygiene](../../axstack/references/workspace-hygiene.md).
+Then run the driver-start orphan sweep for repositories listed in this watch's
+run record, under the same guards. The sweep is silent when nothing was removed;
+report sweep results and holds to the driver for the continuity record's Open
+holds table.
 After each task-owned automation pass reports or completes a quiet observation,
 run `orca terminal close --terminal <exact handle from the run receipt> --json`
 as the final action. Close only the pass's own terminal; never use `--all` or
@@ -56,8 +60,9 @@ holds that pass for native reconciliation; never guess a replacement handle.
 If its own close returns `runtime_error`, leave the terminal for the next pass;
 this expected close failure is not a hold.
 
-The observer reads the private run record and native inbox/Task identities, then
-sends only a bounded internal Orca report of precise deltas to the recorded Run.
+Apart from the guarded sweep, the observer reads the private run record and
+native inbox/Task identities, then sends only a bounded internal Orca report of
+precise deltas to the recorded Run.
 It never writes `progress.md`, edits files or PRs, dispatches authors, replies,
 reviews, pushes, merges, or sends user notifications. The driver records
 disposition after current-revision observation, a hold, or a uniquely identified
