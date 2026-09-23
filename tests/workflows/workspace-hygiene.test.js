@@ -59,3 +59,32 @@ test('eleven cleanup scenarios have distinct inputs and contract-covered outcome
     expect(contract(), id).toMatch(new RegExp(contractPattern, 'is'));
   }
 });
+
+test('sidebar contract names roles, records status checkpoints, and limits lineage', () => {
+  const text = contract().replace(/\s+/g, ' ');
+  for (const name of ['<run> driver', '<run> author #<pr>', '<run> review #<pr> r<n>']) {
+    expect(text).toContain(name);
+  }
+  expect(text).toMatch(/orca worktree set --display-name/i);
+  expect(text).toMatch(/primary.*secondary/i);
+  expect(text).toMatch(/authors carry no round number/i);
+  expect(text).toMatch(/task ID.*before a PR number exists/i);
+  expect(text).toMatch(/--comment.*dispatch.*settlement.*verdict.*short SHA.*hold/is);
+  expect(text).toMatch(/--workspace-status.*never.*completed.*hold/is);
+  expect(text).toMatch(/reviewer under.*author.*author under.*driver.*same repository/is);
+  expect(text).toMatch(/dependency order.*names.*gh stack/is);
+  expect(text).toMatch(/cross-repository parents.*silently dropped/is);
+  expect(text).toMatch(/remote.*new-child.*invalid/is);
+});
+
+test('worker dispatch entry points link the sidebar contract', () => {
+  for (const path of [
+    'skills/axstack/references/orca-runtime.md',
+    'skills/axstack-implement/SKILL.md',
+    'skills/axstack-review/SKILL.md',
+    'skills/axstack-watch/references/watch-runtime.md',
+    'skills/axstack/references/automations.md',
+  ]) {
+    expect(read(path), path).toContain('workspace-hygiene.md#readable-sidebar');
+  }
+});

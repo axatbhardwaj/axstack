@@ -111,6 +111,8 @@ PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
+At PR-job and reviewer dispatch, apply [Readable sidebar](workspace-hygiene.md#readable-sidebar).
+
 The logical manager lane owns ongoing discovery and continuity across finite
 sessions; the bounded PR coordinator owns only its admitted event. Do not create a second live owner or
 writer for the same PR. Reuse an existing valid per-PR worktree, owner, and

@@ -7,6 +7,7 @@ description: When a candidate PR or bounded codebase needs review, use axstack-r
 
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+At reviewer dispatch, apply [Readable sidebar](../axstack/references/workspace-hygiene.md#readable-sidebar).
 
 Manual review keeps the user’s chat and workspace open.
 

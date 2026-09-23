@@ -1,6 +1,7 @@
 # Watch runtime
 
 Read this before starting, resuming, or stopping automated PR observation.
+For observer or repair dispatches, apply [Readable sidebar](../../axstack/references/workspace-hygiene.md#readable-sidebar).
 
 ## Standalone watch
 

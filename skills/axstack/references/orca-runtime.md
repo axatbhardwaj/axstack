@@ -73,16 +73,13 @@ candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
 
-A worker worktree carries the lineage of the work it serves. Create it with
-`--parent-worktree` naming the candidate's worktree, so a reviewer, repair, or
-child-task checkout appears under the candidate it belongs to instead of as an
-unrelated top-level row. `--no-parent` is only for unrelated, independent work
-with no parent context, never a review or repair of an existing candidate. When
-a worktree was created with the wrong lineage, correct it in place with
-`worktree set --parent-worktree`; that is metadata and does not disturb a
-running worker. Lineage is presentation and reconciliation state, never
-authority: it grants nothing, and a correct parent never substitutes for the
-Task, Dispatch, and receipt evidence above.
+Create a worker worktree with `--parent-worktree` naming the candidate's
+worktree when both are in the same repository; see
+[Readable sidebar](workspace-hygiene.md#readable-sidebar) for naming, status,
+and parentage at dispatch. `--no-parent` is for unrelated work with no parent
+context. Where supported, correct wrong lineage in place with
+`worktree set --parent-worktree`. Lineage is presentation, never authority: it
+grants nothing and cannot replace Task, Dispatch, and receipt evidence.
 
 Every reviewer gets a separate Orca child worktree parented to the candidate.
 Keep that reviewer's probes and private evidence in its separate private

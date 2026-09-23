@@ -66,3 +66,21 @@ otherwise hold. Report the mislabel to Orca upstream through the driver.
 For `release_unknown`, reconcile with native worker inspection. If a fresh
 native terminal list confirms the terminal is gone, record the readback and
 proceed; otherwise hold.
+
+## Readable sidebar
+
+Set the Orca display name with `orca worktree set --display-name` when creating
+each run worktree. Use run first, then role, space-separated: `<run> driver`,
+`<run> author #<pr>`, and `<run> review #<pr> r<n>`. Peer reviewers append
+`primary` or `secondary`; authors carry no round number. Use the task ID in
+place of `#<pr>` before a PR number exists, then update the name when assigned.
+
+Set `--comment` at dispatch, at settlement with the verdict and short SHA, and
+on a hold with its reason. Use `--workspace-status` for the coarse state and
+the comment for detail; never set `--workspace-status completed` for a hold.
+
+Use worktree parentage only to present ownership where supported: reviewer under
+its author, author under its driver in the same repository. Dependency order
+lives in names and `gh stack`. Do not rely on cross-repository parents, which
+Orca silently dropped, or remote `new-child`, which is invalid. Native Run,
+Task, and Dispatch receipts remain the source of ownership truth.
