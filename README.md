@@ -107,11 +107,10 @@ model is unavailable. See [workflow and routing details](docs/workflows.md).
 ## Optional PR automation
 
 Manual review and watch work independently of scheduled automation.
-For recurring use, Axstack defines two native Orca manager lanes: one discovers
-eligible peer-review requests, and the other monitors your open PRs and handles
-authorized repair events.
+For recurring peer review, Axstack defines one optional native Orca review manager.
+Own-PR observation and authorized repair remain user-driven through `axstack-watch`.
 
-The lanes use staggered 15-minute schedules. Each pass uses a fresh finite
+The review manager uses a 15-minute schedule. Each pass uses a fresh finite
 session in an isolated workspace and admits eligible actionable PR events within
 measured host capacity. Waiting PRs remain tracked without consuming
 execution slots, so a large open-PR backlog does not require an idle agent per PR.
@@ -121,8 +120,7 @@ release capacity only after native descendant settlement. Uncertain execution
 teardown pauses the lane; settled evidence cleanup does not occupy a slot.
 
 Scheduling is opt-in and requires host-specific runtime validation before
-activation. Installing Axstack does not turn it on. Repairs are limited to
-explicitly allowed repositories; automation never merges for you.
+activation. Installing Axstack does not turn it on. The review automation never merges for you.
 See [PR-manager setup and safety](skills/axstack/references/automations.md).
 
 ## Documentation

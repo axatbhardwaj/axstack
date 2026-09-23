@@ -5,7 +5,7 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 
 # Watch
 
-Manual invocation does not enter the scheduled manager lifecycle; never close the user’s chat or workspace.
+Manual watch keeps the user’s chat and workspace open.
 
 Leave each adopted PR with one accountable owner, current readiness evidence,
 and user-facing updates that name its current milestone and next wake or
@@ -16,13 +16,6 @@ Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
 including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
-When the current session is a fresh watch-manager session, load
-[Native PR managers](../axstack/references/automations.md) and follow only its
-discovery, admission, recovery, and settlement branch. Do not adopt or repair a
-PR, materialize `axstack-owner`, or check out a PR branch in the manager
-workspace. Each admitted bounded PR coordinator re-enters this skill in its
-recorded mode.
-
 Preserve any explicitly named PR, repository, or peer scope. For broad
 discovery of the user's own PRs (such as “my” or “our” PRs), run
 `gh api user --jq .login` on the execution host, then select open PRs authored
@@ -30,10 +23,6 @@ by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
 The authenticated human login selects PRs. Runtime session IDs coordinate work
 only and establish neither human identity nor write, reply, or merge authority.
-When the session is a bounded watch-manager PR job, also load
-[Native PR managers](../axstack/references/automations.md): the bounded PR
-coordinator owns that event and its allowlist bounds every mutation.
-
 ## 1. Adopt and reconcile
 
 Start from actual state. Reconcile the PR's remote head and base, ownership,
@@ -73,13 +62,9 @@ Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
-anything. Each native watch-manager pass starts a fresh finite session in an
-isolated per-pass workspace on its staggered 15-minute schedule, covers
-every eligible own PR, and starts only bounded actionable-event jobs. Waiting PRs reserve no execution slots and
-there is no watch deadline for manager automation. `axstack-monitor` stays an
-optional read-only observer that never sends. One read-only PR observation
-needs neither. The bounded PR coordinator is the live owner for its event;
-materialize no `axstack-owner` and start no automation for a read-only check.
+anything. Task-owned observations use their recorded wakes and expiry.
+`axstack-monitor` stays an optional read-only observer that never sends. One read-only PR observation
+needs neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -102,9 +87,7 @@ A healthy unchanged observation produces no user-facing message.
 
 Observation-only and peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
-follow [Repair and publication](references/repair-publication.md). A manager PR
-job repairs in its per-PR child worktree created through `orca-cli`;
-the manager workspace never checks out a PR branch.
+follow [Repair and publication](references/repair-publication.md).
 
 ### Feedback routing
 
@@ -115,11 +98,9 @@ snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
 session only when the run itself launched that session and evidence allows,
 then receive refreshed review under the authored mode rule before publication.
-For an adopted own PR under the manager, the original authoring session is
-not a run-launched session: the repair author is the manager PR coordinator or
-a dispatched `axstack-author`, and the authored-review
-pairing follows the recorded actual provenance of that repair, not the PR's
-historical author. Unknown, mixed, or unsupported author provenance
+For an adopted own PR, the authored-review pairing follows the recorded
+actual provenance of its repair author, not the PR's historical author.
+Unknown, mixed, or unsupported author provenance
 that cannot establish the eligible configured reviewer is an exact gap to
 report to the user, not permission to invent a pairing or model fallback.
 
@@ -128,9 +109,8 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor never sends. The manager deduplicates authorized notifications;
-absent policy or failed relay uses the recorded durable GitHub or user-owned
-conversation and leaves every existing hold open.
+The monitor never sends. Deduplicate authorized notifications; absent policy
+or failed relay leaves the existing hold open.
 
 ## 5. State readiness precisely
 
@@ -141,14 +121,9 @@ observed state distinct from merged, and the human merges by default.
 
 ## 6. End and preserve continuity
 
-A bounded manager PR job ends as soon as its current event and every owned
-descendant settle. It returns exact receipts and remaining state to the logical
-manager lane's durable continuity, releases proven resources, and never waits
-for merge or stops the manager's recurring schedule.
-
 End a standalone watch early when all required PRs merge, at cancellation, or
-at its shared default 24 h deadline. There is no watch deadline for manager
-automation. In every case, stop and verify all owned registrations.
+at its shared default 24 h deadline. In every case, stop all owned
+registrations and verify their receipts.
 
 At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither

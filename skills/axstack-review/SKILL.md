@@ -5,7 +5,7 @@ description: When a candidate PR needs final review, use axstack-review for conf
 
 # Review
 
-Manual invocation does not enter the scheduled manager lifecycle; never close the user’s chat or workspace.
+Manual review keeps the user’s chat and workspace open.
 
 Produce one evidence-bound verdict for an exact candidate revision using the
 review count and model routing required by its mode. Report within the
@@ -89,17 +89,17 @@ owns the event and settles after its skill-owned reviewers settle.
 
 ## Review the candidate
 
-1. **Pin the brief.** For an owned candidate, verify remote confirmation of the
-   candidate SHA before reviewer dispatch. For an automation repair, confirm
-   instead the local immutable candidate SHA with `git rev-parse` in the
-   per-PR child worktree and pin the remote pre-repair head as the
-   expected-old remote SHA; remote equality is re-checked at the publication
-   readback, per the automation repair exception of the
+1. **Pin the brief.** For an implementation candidate, verify remote confirmation
+   of the candidate SHA before reviewer dispatch under the
    [candidate-publication boundary](../axstack/references/candidate-publication.md).
-   Record the PR URL, exact candidate
-   SHA and current base, applicable intent or spec/ticket identity and
-   acceptance, exclusions, authority, actual author provenance for authored
-   mode, and all six angles.
+   For manual adopted-PR maintenance under
+   [Repair and publication](../axstack-watch/references/repair-publication.md),
+   confirm the exact local candidate SHA with `git rev-parse` in the owned
+   worktree, pin the remote pre-repair head and current base, and review code and
+   reply bodies before publication. Record the PR URL, exact candidate SHA,
+   current base, applicable intent or spec/ticket identity and acceptance,
+   exclusions, authority, actual author provenance for authored mode, and all
+   six angles.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
    branch below. For every reviewer, apply

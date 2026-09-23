@@ -1,17 +1,12 @@
-# Native PR managers
+# Native peer-review manager
 
-Read this only for the two native Orca PR-manager automations. The historical
+Read this for the optional native Orca peer-review automation. The historical
 automation specs and plans describe retired designs and are not instructions.
 
 ## Topology and schedules
 
-There are exactly two logical manager lanes:
-
-- **Review manager:** runs at minutes `0,15,30,45` and invokes
-  [axstack-review](../../axstack-review/SKILL.md) for eligible peer reviews.
-- **Watch manager:** runs at minutes `7,22,37,52` and invokes
-  [axstack-watch](../../axstack-watch/SKILL.md) for eligible own-PR watch or
-  repair events.
+The review manager runs at minutes `0,15,30,45` and invokes
+[axstack-review](../../axstack-review/SKILL.md) for eligible peer reviews.
 
 Use a new isolated workspace for every scheduled pass, with one fresh finite
 manager session. Configure native repo-created worktree mode against the
@@ -21,8 +16,8 @@ launch; the manager must not move itself from a shared launch workspace.
 Keep lane continuity and evidence outside disposable manager workspaces at
 the configured durable absolute paths. A manager never checks out a PR branch
 in its pass workspace. Missed slots do not replay a backlog; the next ordinary pass
-discovers current state. The two short packaged prompts sit beside this file
-and discover these rules by relative link instead of copying them.
+discovers current state. The short packaged review prompt sits beside this file
+and discovers these rules by relative link instead of copying them.
 
 Provision one explicit absolute continuity path per automation ID in the
 scheduled prompt. Follow [Run record](run-record.md) for its contents; the
@@ -136,32 +131,26 @@ only when its body ends with
 or a retained legacy receipt proves that provenance; otherwise never replace
 it automatically.
 
-The watch manager covers every open non-draft PR authored by self. It may
-repair only `defi-com/monorepo` and `defi-com/mobile`; PRs elsewhere remain
-observed but read-only. Preserve deploy-on-push exclusions, lowest-first stack
-dependencies, and existing ownership boundaries. Peer code is always
-read-only.
-
 Coverage is not execution. Waiting for CI, a reviewer, a user decision, or a
 merge occupies no execution slot after owned work and descendants settle.
-Watch membership never reserves a slot and no job stays active merely until a
+Review waiting state never reserves a slot and no job stays active merely until a
 PR merges or closes. Thirty open PRs, including ten settled waiting PRs, are
 all scanned; those ten occupy zero slots.
 
 ## Admission and fairness
 
-The review manager and watch manager admit all eligible actionable PR events
+The review manager admits all eligible actionable PR events
 that measured host capacity can support across ticks. Before each admission,
-inspect available memory, CPU load, and active worker trees across both lanes;
+inspect available memory, CPU load, and active worker trees across the host;
 account for the whole proposed worker tree, dependencies, spending limits, and
 exclusive ownership. Report unavailable metrics as unknown; use the remaining
 host evidence rather than treating a missing metric alone as a blocker. Defer
 an event when observed pressure or uncertain headroom cannot support its whole
 tree, record the reason, and remeasure on the next pass. Do not use a fixed
-PR-job count or reserve capacity for either lane.
+PR-job count or reserve a fixed slot.
 
-A slot covers one bounded PR event and remains occupied while its author,
-reviewers, or other owned descendants are active or unsettled. Leaf workers do
+A slot covers one bounded PR event and remains occupied while its reviewers
+or other owned descendants are active or unsettled. Leaf workers do
 not create recursive teams. Settlement of the PR job and every descendant
 frees the slot even while the PR stays open.
 
@@ -180,7 +169,7 @@ writer for the same PR. Reuse an existing valid per-PR worktree, owner, and
 unchanged receipts before creating anything. Otherwise create one separate
 Orca worktree per PR job, parented to that repository's primary worktree, and
 pin the observed head and base. The bounded PR coordinator loads the
-appropriate skill, launches only the reviewers or author that skill owns,
+review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`.
@@ -194,12 +183,12 @@ containment is uncertain.
 
 An unchanged exact head and unchanged event identity creates no job; an
 unchanged exact head with a new event identity remains actionable. Event
-identity includes the applicable review ID and body digest, check identity and
-result, or other current GitHub event receipt. Dedupe from current GitHub state,
+identity includes the applicable review ID and body digest, request identity, or other current GitHub event
+receipt. Dedupe from current GitHub state,
 native Orca Task and Dispatch state, and the existing compact run record; do
 not create machine cursor files or a queue engine. Record enough to resume: PR,
-head, base, event identity, mode, owner and worker receipts, candidate,
-publication receipt, hold, and next action. GitHub remains authoritative for
+head, base, event identity, mode, owner and worker receipts, verdict,
+submission receipt, hold, and next action. GitHub remains authoritative for
 open state, revisions, reviews, checks, and merge state.
 
 ## Held job settlement
@@ -236,10 +225,10 @@ lane before another pass can admit work rather than accumulating active passes
 or claiming capacity from an uncertain process tree.
 
 When the current event is handled, settle and release owned native resources.
-Preserve dirty worktrees, unpushed candidates, unarchived review evidence, pending
+Preserve dirty worktrees, unarchived review evidence, pending
 external results, and user-owned work until durability and ownership are
 proven. Unknown liveness, `user_takeover`, and ambiguous publication likewise
-forbid cleanup. Here a pending external result means an unconfirmed publication
+forbid cleanup. Here a pending external result means an unconfirmed review submission
 or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
 record, never in an idle model, per-PR timer, or polling loop.
 Follow the [private evidence archive](evidence-archive.md) when evidence is the
@@ -251,7 +240,7 @@ read back the archive and compact receipt, then follow
 the reviewer checkout before merge. This does not release active jobs or manager
 pass workspaces.
 
-## Review and repair authority
+## Review authority
 
 Peer review follows `axstack-review` peer mode: two isolated configured
 reviewers inspect the exact head and base. Complete review may publish the
@@ -269,21 +258,8 @@ private or local artifacts. Write the local HTML copy under the established
 `review-PR-<num>.html` reserved for `defi-com/monorepo`. Never publish a
 `COMMENT` review. An ambiguous submission is looked up before retry.
 
-An own PR becomes actionable for repair only when a failing check has a base
-check-run with the same name and producing app identity observed passing (or a
-legacy status has the same context), or when a new current-head
-`CHANGES_REQUESTED` review has both an unhandled review ID and an unhandled body
-digest. Missing, pending, or same-name/different-app base evidence holds repair.
-A new head or generic event grants no repair authority by itself.
-
-Authorized own-PR repair follows `axstack-watch`: produce the smallest repair
-in the per-PR worktree, obtain the actual-author-provenance reviewer pairing,
-and publish only a reviewed fast-forward repair push after exact-current
-candidate, head, base, event, allowlist, deploy, and remote readback receipts.
-Reconcile an ambiguous review or push result before any retry.
-
 No manager, coordinator, or worker may merge, close, force-push, rebase,
-restack, broaden scope, or use `gh stack` mutation. Human merge remains the
+restack, broaden scope, or mutate a PR branch. Human merge remains the
 boundary.
 
 ## Exceptional decisions and notifications
@@ -314,7 +290,7 @@ self-close. Waiting PRs still occupy zero slots once their owned trees settle.
 
 Cleanup of PR-job setup shells stays scoped to positively identified owned unused
 setup shells: use the native exact-terminal close operation for each only.
-Preserve dirty worktrees, unpushed candidates, unarchived review evidence, user-owned
+Preserve dirty worktrees, unarchived review evidence, user-owned
 terminals, unknown liveness, `user_takeover`, and ambiguous publication state.
 Never classify all dirt as evidence. If explicitly classified evidence is the
 last retention reason, apply and verify the [private evidence archive](evidence-archive.md),

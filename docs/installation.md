@@ -228,14 +228,12 @@ not prove that a running harness reloaded them.
 
 The installed Axstack bundle does not own or copy Orca's guides. At an action
 boundary, the skill resolves one Orca executable and loads that binary's
-version-matched `orchestration` and `orca-cli` guides. Automation guidance is
-loaded only for the watch branch. Missing discovery is a setup gap, not a reason
+version-matched `orchestration` and `orca-cli` guides. Review automation guidance is loaded only for the scheduled review branch. Missing discovery is a setup gap, not a reason
 to fall back or invent commands.
 
-Native watch activation is currently held: provider selection exists, but
-model, effort, permission, and bounded-expiry support do not preserve the
-accepted contract. Installation creates no production schedule and adds no
-custom scheduler.
+Installation creates no production schedule and adds no custom scheduler.
+The optional review manager requires a separate native canary before activation;
+installed guidance does not prove live behavior.
 
 ## Historical migration
 
