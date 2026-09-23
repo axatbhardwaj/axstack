@@ -60,24 +60,14 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
-test('manager sessions reconcile before admission and duplicates close without shared writes', () => {
+test('manager sessions reconcile before admission in the dedicated workspace', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/new isolated workspace for every scheduled pass/i);
+  expect(text).toMatch(/native existing-workspace mode[^.]*--fresh-session/i);
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native Orca[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no shared-record write/i);
-  expect(text).toMatch(/duplicate[^.]*close[^.]*only[^.]*itself/i);
+  expect(text).toMatch(/duplicate[^.]*ends[^.]*session/i);
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
-});
-
-test('one ordered successor may retire an exact positively completed predecessor', () => {
-  const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/one successor[^.]*native (?:run )?ordering[^.]*cleanup claim/i);
-  expect(text).toMatch(/exact automation[^.]*run[^.]*workspace[^.]*terminal incarnation/i);
-  expect(text).toMatch(/positive completion[^.]*zero[^.]*descendants[^.]*settled/i);
-  expect(text).toMatch(/save[^.]*continuity[^.]*before[^.]*exact[^.]*close/i);
-  expect(text).toMatch(/re-list[^.]*process tree[^.]*exit[^.]*before[^.]*release/i);
-  expect(text).toMatch(/age[^.]*status[^.]*idle[^.]*never[^.]*authority/i);
 });
 
 test('manager event identity survives same-head changes', () => {
@@ -125,15 +115,11 @@ test('execution settlement frees capacity independently of retained cleanup stat
   expect(text).toMatch(/cleanup hold[^.]*unrelated eligible PRs[^.]*continue/i);
 });
 
-test('manager teardown preserves continuity and makes self-close the final action', () => {
+test('manager pass ends after compact continuity and PR resource cleanup', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
-  expect(text).toMatch(/save[^.]*continuity[^.]*user decisions[^.]*before[^.]*self-close/i);
-  expect(text).toMatch(/positively identified[^.]*owned[^.]*unused setup shells/i);
-  expect(text).toMatch(/exact terminal[^.]*close|native exact-terminal[^.]*close/i);
-  expect(text).toMatch(/self-close[^.]*final action/i);
-  expect(text).toMatch(/dirty worktrees[^.]*review evidence/i);
-  expect(text).toMatch(/user-owned[^.]*unknown liveness[^.]*user_takeover[^.]*ambiguous publication/i);
+  expect(text).toMatch(/save[^.]*continuity[^.]*last pass summary[^.]*ends/i);
+  expect(text).not.toMatch(/self-close|terminal close --worktree|old pass worktree/i);
 });
 
 test('user decisions remain actionable after the finite manager session closes', () => {
@@ -196,7 +182,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('0e9d75a989dba5ba3199b375a9ad900db1c133c360f41b36dc94131440656f7a');
+  )).toBe('83c02199145668bfcf8b797801849441d8d02f3ec35b959d6d2e1743a8e448f5');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',
@@ -205,10 +191,10 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'unresolved-teardown',
     'exited-tree-retained-metadata',
     'settled-tree-archive-hold',
-    'completed-predecessor-cleanup',
-    'predecessor-cleanup-safety-hold',
-    'competing-successor-cleanup',
-    'predecessor-cleanup-failure-dedupe',
+    'settled-job-release-and-cleanup',
+    'closed-pr-worktree-cleanup',
+    'compact-continuity-archive',
+    'workspace-local-temporary-files',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();
