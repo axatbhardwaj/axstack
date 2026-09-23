@@ -67,7 +67,7 @@ test('every independently callable substantive phase has an explicit load path t
   const phases = [
     'axstack-align', 'axstack-spec', 'axstack-tickets', 'axstack-implement',
     'axstack-review', 'axstack-watch',
-    'axstack-research', 'axstack-explain', 'axstack-improve',
+    'axstack-research', 'axstack-explain', 'axstack-improve', 'axstack-cleanup',
   ];
   const audit = `${root}/skills/axstack-audit/SKILL.md`;
   for (const phase of phases) {
@@ -107,8 +107,11 @@ test('persistent owner consolidates report-only review and driver presents it', 
   expect(reportOnly).toMatch(/driver[^.]*presents/i);
 });
 
-test('README separates structural checks, qualitative evaluation, and live proof', () => {
+test('README describes the product and links operational detail instead of a run log', () => {
   const readme = read('README.md');
-  expect(readme).toMatch(/Structural checks[^.]*qualitative scenario evaluation[^.]*not[^.]*live runtime proof/i);
-  expect(readme).toMatch(/runtime facts[^.]*not proof/i);
+  expect(readme).toContain('## What you can do');
+  expect(readme).toContain('## Quick start');
+  expect(readme).toContain('docs/workflows.md');
+  expect(readme).toContain('docs/installation.md');
+  expect(readme).not.toMatch(/## Runtime evidence and holds|## Historical migration boundary/);
 });

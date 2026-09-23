@@ -30,7 +30,7 @@ test('owned-scenarios: eight bounded cases have inputs and expected decisions', 
     'report-only-verdict',
     'observation-dominance',
     'adoption-authority',
-    'monitor-watchdog-split',
+    'standalone-monitor-lifetime',
     'ambiguous-publish',
     'candidate-publish-before-review',
   ]) {
@@ -45,4 +45,7 @@ test('owned-scenarios: eight bounded cases have inputs and expected decisions', 
     ).toBeTruthy();
     expect(c.input.request && c.input.facts, `${c.id}: needs request and facts`).toBeTruthy();
   }
+  const standalone = data.cases.find((c) => c.id === 'standalone-monitor-lifetime');
+  expect(JSON.stringify(standalone)).not.toMatch(/watchdog/i);
+  expect(JSON.stringify(standalone)).toMatch(/standalone[\s\S]*24h|24h[\s\S]*standalone/i);
 });

@@ -25,6 +25,8 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
 - `--bundle` defaults to the package root and contains `skills/` plus
   `profiles/presets/*.json`.
 - `--skills-dir` is required unless a verified harness default resolves it.
+  Codex defaults to the shared `~/.agents/skills` root; an explicit override
+  remains authoritative and disables automatic legacy Codex-root retirement.
 - `--instructions` selects the instruction file that receives Axstack's owned
   marker block. `--harness claude` defaults to `~/.claude/CLAUDE.md`;
   `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`;
@@ -35,6 +37,23 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
   reads `~/.claude/skills`, so its own directory is only needed for the owned
   routing block; Antigravity (IDE and `agy` CLI) reads `~/.gemini/config/skills`
   only.
+
+For a default Codex install, Axstack first installs and verifies the canonical
+`~/.agents/skills` copy. It then retires only unchanged files owned by the
+legacy `$CODEX_HOME/skills/.axstack-manifest.json`. Modified, missing, unowned,
+or symlinked content is preserved or refused and reported; an instruction
+conflict preserves the complete legacy install. An unchanged owned Codex
+`AGENTS.md` binding is transferred to the canonical manifest without changing
+the instruction bytes. Other harness ownership, settings, and inert profile
+provenance remain untouched. Repeated installs verify the same canonical
+preset and converge without duplicate skill entries.
+
+If retirement leaves only the legacy manifest's Claude-settings ownership,
+first confirm its `files` map is empty and it has no instruction or profile
+conflict. Then finish that owner with
+`axstack uninstall --skills-dir "${CODEX_HOME:-$HOME/.codex}/skills" --yes`;
+the settings sidecar preserves the value while any other install still owns it.
+
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
   Code subagent-default transaction. They do not configure Orca roles.
 - `--force` may replace an edited owned asset; it never adopts or removes
@@ -52,7 +71,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 25 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 24 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -152,7 +171,7 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
-A new run records the selected preset plus all 25 role rows. An active run keeps
+A new run records the selected preset plus all 24 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
@@ -199,7 +218,7 @@ survives.
 | Harness | Default directory | Status |
 | --- | --- | --- |
 | Claude | `~/.claude/skills` | documented upstream |
-| Codex | `$CODEX_HOME/skills` (default `~/.codex/skills`) | documented upstream |
+| Codex | `~/.agents/skills` | documented upstream |
 | OpenCode | `~/.config/opencode/skills` | documented upstream |
 | Antigravity | `~/.gemini/config/skills` | documented upstream |
 | Grok | explicit `--skills-dir` only | auto-discovery unverified |
@@ -211,15 +230,15 @@ not prove that a running harness reloaded them.
 
 The installed Axstack bundle does not own or copy Orca's guides. At an action
 boundary, the skill resolves one Orca executable and loads the operation's
-version-matched `orchestration`, `orca-cli`, or `orca-linear` guide plus named
-conditional references. Automation guidance is loaded only for the watch
-branch. Missing discovery is a setup gap, not a reason to fall back or invent
-commands. Guide discovery does not prove an operation works; Linear documents,
-provider/model routing, and live automation behavior need separate preflights.
+version-matched `orchestration`, `orca-cli`, or `orca-linear` guide. Review
+automation guidance is loaded only for the scheduled review branch. Missing
+discovery is a setup gap, not a reason to fall back or invent commands. Guide
+discovery does not prove an operation works; Linear documents, provider/model
+routing, and live automation behavior need separate preflights.
 
-The user lifted the native-watch hold on 2026-09-16. Installation still creates
-no production schedule and adds no custom scheduler; activation and live-host
-verification require separate authority.
+Installation creates no production schedule and adds no custom scheduler. Chat-run PR watch requires a separately validated same-host native Orca automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate it.
+The optional review manager requires a separate native canary before activation;
+installed guidance does not prove live behavior.
 
 ## Historical migration
 

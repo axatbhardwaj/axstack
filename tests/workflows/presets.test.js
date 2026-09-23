@@ -23,7 +23,6 @@ const roleIds = [
   'axstack-explore-codebase',
   'axstack-explore-execution',
   'axstack-monitor',
-  'axstack-watchdog',
   'axstack-auditor',
   'axstack-debug-investigator-1',
   'axstack-debug-investigator-2',
@@ -41,49 +40,49 @@ const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
-    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'medium'),
-    ag(null, 'low'), a('claude-opus-5', 'medium'),
-    c('gpt-5.6-sol', 'medium'), a('claude-opus-5', 'low'), ag(null, 'high'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
+    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
+    ag(null, 'low'), a('claude-opus-5-5', 'medium'),
+    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-luna', 'max'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    a('claude-opus-5', 'medium'), a('claude-opus-5', 'medium'),
-    c('gpt-5.6-luna', 'max'),
-    a('claude-opus-5', 'medium'), c('gpt-5.6-sol', 'medium'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-5.6-terra', 'low'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'xhigh'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
+    a('claude-opus-5-5', 'medium'),
+    c('gpt-6-luna', 'xhigh'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'),
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
     c(null, 'high'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-sol', 'medium'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'xhigh'),
-    c('gpt-5.6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'), c(null, 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'medium'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-luna', 'max'),
-    c('gpt-5.6-terra', 'xhigh'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-terra', 'low'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-luna', 'max'),
-    c('gpt-5.6-sol', 'medium'), c('gpt-5.6-terra', 'low'),
-    c('gpt-5.6-sol', 'high'), c('gpt-5.6-terra', 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'low'),
+    c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'),
   ],
   'claude-only': [
     a(null, 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5', 'high'), a('claude-opus-5', 'medium'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-sonnet-5', 'low'), a('claude-opus-5', 'medium'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
+    a('claude-opus-5-5', 'high'), a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-sonnet-5', 'low'), a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
     a(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'high'),
     a('claude-sonnet-5', 'xhigh'), a('claude-sonnet-5', 'low'),
-    a('claude-sonnet-5', 'low'), a('claude-sonnet-5', 'low'),
+    a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5', 'high'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5-5', 'high'), a('claude-sonnet-5', 'xhigh'),
     a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'),
   ],
 };
@@ -112,6 +111,29 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       expect(profile.name).toBeTruthy();
       expect(profile.notes).toBeTruthy();
     }
+  }
+});
+
+test('presets: Codex auditor effort agrees with audit skill and workflow table', () => {
+  const audit = readFileSync(`${root}/skills/axstack-audit/SKILL.md`, 'utf8');
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const auditor = roles.find(({ id }) => id === 'axstack-auditor');
+    expect(auditor).toMatchObject({ provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh' });
+    expect(workflows).toContain(`| \`${preset}\` |`);
+    expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`))).toEndWith('| Luna xhigh |');
+  }
+  expect(audit).toContain('`axstack-auditor` profile (codex/gpt-6-luna xhigh)');
+});
+
+test('presets: Codex explainer reviewer uses supported Luna effort', () => {
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
+    expect(reviewer).toMatchObject({
+      provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh',
+    });
   }
 });
 
@@ -213,32 +235,33 @@ test('presets: public docs and shared references never state a stale role count'
   ];
   for (const file of files) {
     const text = readFileSync(`${root}/${file}`, 'utf8');
-    // "25 role rows", "25-role inputs", "25 stable role IDs", "25 stable IDs".
+    // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
     const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
     expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
-    expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
+    if (file !== 'README.md') {
+      expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
+    }
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
   expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
 });
 
-test('presets: monitor/watchdog notes carry the lifted hold, not the held wording', () => {
+test('presets: public workflow table names the current codex-only peer model families', () => {
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  expect(workflows).toContain(
+    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
+  );
+});
+
+test('presets: monitor remains a standalone read-only observer', () => {
   for (const preset of presetNames) {
     const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));
     const monitor = byId['axstack-monitor'].notes;
-    const watchdog = byId['axstack-watchdog'].notes;
-    for (const notes of [monitor, watchdog]) {
-      expect(notes, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
-    }
-    // The driver is the automation session itself; the monitor is not redefined as it.
+    expect(monitor, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
     expect(monitor).not.toMatch(/driver automation|mutating owner|pushes/i);
     expect(monitor).toMatch(/optional[^.]*read-only|read-only[^.]*optional/i);
     expect(monitor).toMatch(/never sends/i);
-    expect(monitor).toMatch(/not the driver|driver is the automation session/i);
-    expect(watchdog).toMatch(/independent read-only/i);
-    expect(watchdog).toMatch(/automation health/i);
-    expect(watchdog).toMatch(/never mutates GitHub/i);
-    expect(watchdog).toMatch(/(?:only|one)[^.]*gate-authorized[^.]*send[^.]*watchdog\.json/i);
-    expect(watchdog).not.toMatch(/never sends/i);
+    expect(monitor).toMatch(/standalone PR watch/i);
+    expect(byId['axstack-watchdog']).toBeUndefined();
   }
 });

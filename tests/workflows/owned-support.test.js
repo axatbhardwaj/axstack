@@ -193,6 +193,33 @@ test('owned-support: explain scales from direct answers to verified visuals', ()
   expect(lower.includes('source'), 'material claims must be source-checked').toBeTruthy();
 });
 
+test('owned-support: explain caps the primary view without losing decisions', () => {
+  const text = readSkill('axstack-explain');
+  const normalized = text.toLowerCase().replace(/\s+/g, ' ');
+  expect(text).toMatch(/primary reader-facing explanation[^.]*maximum of 700 words/i);
+  expect(text).toMatch(/chat[^.]*HTML[^.]*requested format/i);
+  for (const essential of [
+    'answer or purpose',
+    'key rationale',
+    'meaningful alternatives',
+    'main data or operational boundary',
+    'status and uncertainty',
+    'live reader questions',
+  ]) {
+    expect(normalized).toContain(essential);
+  }
+  expect(normalized).toMatch(
+    /live reader questions[^.]*answers[^.]*inspected evidence[^.]*(?:unknown|open)[^.]*rather than invent/i,
+  );
+  for (const counted of ['headings', 'table text', 'labels', 'captions']) {
+    expect(normalized).toMatch(new RegExp(`reader-visible words[^.]*${counted}`, 'i'));
+  }
+  expect(normalized).toMatch(/(?:appendix|collapsible content)[^.]*same artifact[^.]*counts[^.]*700/i);
+  expect(normalized).toMatch(/supporting detail[^.]*separate linked (?:ticket|appendix)/i);
+  expect(normalized).toMatch(/essential answers[^.]*not[^.]*hid/i);
+  expect(normalized).toMatch(/evidence[^.]*not[^.]*silently discard/i);
+});
+
 test('owned-support: explain distinguishes evidence and bounds every gap', () => {
   const text = readSkill('axstack-explain');
   for (const label of ['source implemented', 'tested', 'live observed', 'planned/proposed', 'unknown']) {
@@ -228,7 +255,7 @@ test('owned-support: every HTML explanation triggers full exact-artifact QA', ()
 test('owned-support: role retirement and stale-upgrade migration are explicit', () => {
   const profiles = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'));
   expect(profiles.roles.some(({ id }) => id === 'axstack-docs'), 'retired prose role must be absent').toBe(false);
-  expect(profiles.roles.length, 'all current roles remain').toBe(25);
+  expect(profiles.roles.length, 'all current roles remain').toBe(24);
   const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +
     readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
   expect(docs).toMatch(/ordinary[^.]*upgrade[^.]*retain[^.]*axstack-docs/i);

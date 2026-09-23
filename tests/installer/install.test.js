@@ -175,16 +175,17 @@ test('partial failure rolls back created files and writes no manifest', () => {
   expect(existsSync(join(skillsDir, '.axstack-manifest.json'))).toBe(false);
 });
 
-test('--harness codex honors CODEX_HOME outside the home guard', () => {
+test('--harness codex uses the shared agents root while honoring CODEX_HOME for config', () => {
   const root = makeTempRoot();
   const bundle = writeFixtureBundle(root);
   const codexHome = join(root, 'codex-home');
   mkdirSync(codexHome, { recursive: true });
-  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'codex'], {
-    env: { CODEX_HOME: codexHome },
+  const r = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--harness', 'codex', '--yes'], {
+    env: { HOME: root, CODEX_HOME: codexHome },
   });
   expect(r.ok).toBe(true);
-  expect(existsSync(join(codexHome, 'skills', 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(join(root, '.agents', 'skills', 'axstack-demo', 'SKILL.md'))).toBe(true);
+  expect(existsSync(join(codexHome, 'skills', 'axstack-demo', 'SKILL.md'))).toBe(false);
 });
 
 test('--harness codex without CODEX_HOME needs explicit home confirmation', () => {

@@ -8,6 +8,7 @@ const FIRST_LINE = 'Use Axstack for engineering work: invoke the matching `axsta
 const PHASE_SKILLS = [
   'axstack-align',
   'axstack-audit',
+  'axstack-cleanup',
   'axstack-debug',
   'axstack-explain',
   'axstack-implement',

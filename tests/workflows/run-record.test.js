@@ -125,18 +125,20 @@ test('run-record: use is proportional and content stays compact and private', ()
   expect(text).toMatch(/copied|backed up/i);
 });
 
-test('run-record: feature remains prose-only with no runtime companion', () => {
+test('run-record stays prose-only; the evidence helper has no runtime control', () => {
   const runtimeFiles = [
     ...filesBelow(`${root}/src`),
     ...filesBelow(`${root}/bin`),
   ];
   expect(runtimeFiles.filter((path) => /run-record|progress-ledger|progress\.md/i.test(path))).toEqual([]);
-  expect(filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/'))).toEqual([]);
+  const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/'));
+  expect(skillScripts).toEqual([`${root}/skills/axstack/scripts/archive-evidence.js`]);
+  expect(readFileSync(skillScripts[0], 'utf8')).not.toMatch(/\borca\b|terminal close|worktree remove/i);
 });
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {
   const skillFiles = filesBelow(`${root}/skills`).filter((path) => path.endsWith('/SKILL.md'));
-  expect(skillFiles).toHaveLength(12);
+  expect(skillFiles).toHaveLength(13);
   for (const path of skillFiles) {
     const lines = readFileSync(path, 'utf8').split('\n');
     const descriptions = lines.filter((line) => line.startsWith('description:'));

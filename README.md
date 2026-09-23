@@ -1,142 +1,137 @@
 # Axstack
 
-Axstack is a standalone toolkit for finishing agreed engineering work with less
-supervision while retaining independent review. Chat drives execution; a Bun
-CLI installs owned skills and role data and checks capabilities. Axstack has no
-daemon, scheduler, runtime database, or workflow state machine.
+Engineering workflows for AI agents, from an idea to a reviewed pull request.
 
-Orca is the only supported active runtime. Its installed, version-matched
-`orchestration`, `orca-cli`, and `orca-linear` guides own supervised runtime,
-worktree/automation, and Linear issue mechanics. Axstack owns scope, role
-choices, evidence, review policy, and one private derived run record. Guide
-discovery is not proof that a specific operation works.
+Axstack is a set of skills for engineers who want agents to carry work forward
+with less supervision, without giving up clear scope, independent review, or
+control over what ships. Use it to plan a feature, implement an agreed task,
+review a teammate's PR, or maintain your own PRs as feedback arrives.
 
-## How a run works
+Your chat stays in charge. Orca provides the worktrees, agent sessions, and
+coordination; Axstack supplies the workflow and review rules. A small Bun CLI
+installs the skills and checks prerequisites. There is no Axstack daemon,
+scheduler, or runtime database to operate. Orca is the only supported runtime.
 
-Invoke the needed phase directly: `axstack-align`, `axstack-spec`,
-`axstack-tickets`, `axstack-implement`, `axstack-review`, and `axstack-watch`.
-Direct `axstack-research`, `axstack-explain`,
-`axstack-improve`, and `axstack-debug` routes need no spec ceremony. `axstack-relay` remains an
-optional inline route for explicit messages and authorized notifications; an
-unavailable or legacy-runtime-only relay falls back to the current conversation
-without changing authority.
+## What you can do
 
-1. Classify new engineering work as substantial, small, or unclear with a brief
-   reason. Small, bounded one-PR work uses the current request or selected issue
-   as a snapshotted small-change intent;
-   substantial or stacked work needs an approved spec and matching ticket map.
-   Substantial work uses Linear by default, or explicitly selected GitHub Issues
-   or repository Markdown, as its authoritative spec and capability tracker.
-   Linear document operations preflight current native guide/help support and
-   hold without MCP fallback or a silent store switch when support is absent.
-2. The current chat drives on whatever model runs it; there is no driver
-   profile. Bind each ready task to the selected role snapshot and an authoritative Orca
-   Run, Task, and Dispatch. Exactly one writer owns a candidate at a time. All
-   subagent and delegated worker dispatches go through Orca orchestration rather than
-   harness-native subagent tools.
-3. Peer PRs receive both configured independent reviewer roles in separate
-   candidate-child worktrees; required private evidence is preserved before
-   either worktree is removed. Authored PRs
-   receive one eligible reviewer from the selected preset's explicit mapping
-   and actual author provenance. Every review binds the exact head and base.
-   Stable IDs are `axstack-reviewer-primary` and `axstack-reviewer-secondary`.
-4. Accepted repairs return to the same author where its session and evidence
-   remain valid. The human merges by default, bottom-up for a stack.
-5. Full handoff requires explicit recipient acceptance of the exact scope and
-   authority before ownership changes. Ordinary resume reconciles the current
-   owner instead of replacing it.
+| Need | Skill |
+| --- | --- |
+| Explore an idea and settle scope | `axstack-align` |
+| Turn agreed scope into a specification | `axstack-spec` |
+| Break a specification into executable tickets | `axstack-tickets` |
+| Build an approved task with tests and independent review | `axstack-implement` |
+| Review a pull request or bounded existing code | `axstack-review` |
+| Monitor or maintain an existing PR | `axstack-watch` |
+| Diagnose a bug and establish a failing check | `axstack-debug` |
+| Answer a bounded question with sources | `axstack-research` |
+| Explain a system or identify improvements | `axstack-explain`, `axstack-improve` |
+| Measure a run's outcomes and gaps | `axstack-audit` |
+| Retire eligible completed subagent resources | `axstack-cleanup` |
+| Send an explicit message or authorized notification | `axstack-relay` |
 
-Active PR fanout is dependency- and capacity-driven; there is no fixed count.
-Each PR has one theme and a measured size under the shared
-[PR-shape policy](skills/axstack/references/pr-shape.md). Routine shape and
-fanout choices remain autonomous inside approved scope. Material scope,
-serious-risk, unavailable-model, and human-merge holds remain explicit.
-The autonomous driver records the rationale band's cohesion rationale; the exception band needs a
-reasonable split attempt and full exception record. Size alone never requires
-user approval.
+Start at the phase you need. Small, bounded changes can begin with your request
+or an existing issue; substantial work needs an approved spec and matching
+tickets before implementation. Research, explanation, and peer review do not
+require a new specification.
 
-## Install from source
+For a larger feature, the usual path is:
 
-Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
-Orca with its runtime-owned guides. Filesystem access uses Bun's implementation
-of `node:fs` and `node:fs/promises`; there are no runtime dependencies.
-
-```sh
-bun bin/axstack.js check --bundle . [--harness claude|codex|opencode|antigravity]
-bun bin/axstack.js install --bundle . --skills-dir <dir> --instructions <file> --preset mixed [--yes]
-bun bin/axstack.js install --bundle . --skills-dir <dir> --preset mixed
-bun bin/axstack.js uninstall --skills-dir <dir> --instructions <file>
+```text
+align → spec → tickets → implement → review → watch
 ```
 
-Use `--harness claude|codex|opencode|antigravity` only for a verified default
-skill directory and rules file. `--claude-settings` and `--no-claude-settings` manage the existing
-Claude Code subagent default transaction; they do not configure Orca roles.
-See [installation details](docs/installation.md).
+The implementation workflow includes the author–review–repair loop. You do not
+need to manually coordinate every agent or repeat an approval that is still valid.
 
-`--instructions` manages one versioned Axstack block in `AGENTS.md`,
-`CLAUDE.md`, or `GEMINI.md`. Harness defaults resolve those files automatically. The block
-requires direct matching phase-skill invocation and requires every subagent, delegated
-worker, reviewer, and cross-harness dispatch to use visible Orca orchestration via the `orca` CLI
-rather than a harness-native subagent tool (e.g. Claude/Codex native subagents). OpenCode
-and Antigravity subagents run as Orca-supervised workers. Text and file
-mode outside the markers are preserved; edited, malformed, unowned, or unsafe
-targets are reported without normal-path adoption. Install exits nonzero when
-an instruction conflict is preserved, while clean and idempotent installs exit
-successfully.
+## Quick start
 
-The public bundle preserves three canonical 25-role inputs:
+You need Bun >=1.3.14, Git, the GitHub CLI (`gh`), the `gh stack` extension,
+and a running Orca with its `orca-cli`, `orchestration`, and `orca-linear`
+guides available.
+The agents selected by your preset must also be available in Orca.
+
+Install the CLI and skills for your harness. For example, for Codex:
+
+```sh
+bun add --global axstack
+axstack check --harness codex
+axstack install --harness codex --preset mixed --yes
+```
+
+Codex skills default to the shared `~/.agents/skills` root while its owned
+`AGENTS.md` block stays under `$CODEX_HOME` (default `~/.codex`). A default
+install safely retires only unchanged manifest-owned legacy Axstack skills;
+use `--skills-dir` for an explicit target without automatic migration.
+
+Then open an Orca chat and ask for the relevant skill:
+
+```text
+$axstack-align Help me scope account recovery.
+$axstack-implement Build the task we agreed on.
+$axstack-review Review this pull request: <PR URL>
+$axstack-review Find issues in <paths> at <commit SHA>.
+$axstack-watch Monitor this PR without making changes: <PR URL>
+$axstack-watch Watch every PR raised by this chat until all merge or close
+```
+
+Use `--harness claude`, `opencode`, or `antigravity` for another supported
+installation target, or provide explicit skill and instruction paths.
+Installation adds an owned instruction block and preserves unrelated content;
+it does not enable automations or prove that every configured model is available.
+See [installation](docs/installation.md) for source installs, custom paths,
+upgrades, conflicts, and uninstalling.
+
+## How work stays controlled
+
+- **One accountable driver, one writer per candidate.** Your current chat
+  coordinates work; separate worktrees keep PR jobs isolated.
+- **Independent review.** Peer PRs receive two independent reviews; authored
+  changes receive a reviewer selected from the actual author's configured
+  pairing. Reviews apply to an exact revision, not just a branch name.
+- **Visible agent work.** Delegation uses visible Orca orchestration via the `orca` CLI,
+  not harness-native subagent tools.
+- **Explicit boundaries.** Agents work within agreed scope. Missing authority,
+  unavailable models, and serious risks are surfaced rather than silently
+  bypassed. The human merges by default.
+- **Resumable progress.** Work retains ownership, decisions, and evidence so a
+  later session can reconcile what happened before continuing.
+- **Bounded cleanup.** The driver can retire proven completed subagent resources
+  inline or from an explicitly scoped backlog without touching active, manual,
+  uncertain, user-owned, dirty, unpushed, or useful unmerged work.
+
+Choose an explicit role preset:
 [mixed](profiles/presets/mixed.json),
-[codex-only](profiles/presets/codex-only.json), and
-[claude-only](profiles/presets/claude-only.json). Each is exactly
-`{ "version": 1, "roles": [...] }`. Installation writes the selected snapshot
-to `<skills-dir>/axstack/roles.json` as
-`{ "version": 1, "preset": "<name>", "roles": [...] }` under normal ownership
-hashes. An edited installed role file is preserved.
+[codex-only](profiles/presets/codex-only.json), or
+[claude-only](profiles/presets/claude-only.json).
+Mixed supports the cross-provider implementation workflow. Single-provider
+presets have workflow limitations; they are not automatic fallbacks when a
+model is unavailable. See [workflow and routing details](docs/workflows.md).
 
-Mixed configures independent Astra and Fable advisers at high. Single-provider
-presets preserve both adviser IDs and mark the unavailable one with `model:
-null` inside that preset's provider bounds; installation remains ready, while
-Align and Spec hold because both receipts are required. The mixed
-`axstack-checker` and `axstack-research-web-google` roles launch Antigravity by
-agent ID with explicit `model: null`; the run records the model reported by the
-TUI. The single-provider presets configure the checker and record the Google
-research branch as intentionally absent. Preset changes affect new runs only. Stored model, effort, and permission
-fields are declared intent until actual Orca launch receipts establish effective
-behavior; installation never proves provider availability or permission parity.
-Subscription availability and quota never select a fallback model.
-End-to-end compatibility remains unverified without matching runtime receipts.
+## Optional PR automation
 
-## Runtime evidence and holds
+Manual review and watch work independently of scheduled automation.
+For recurring peer review, Axstack defines one optional native Orca review manager.
+Own-PR observation and authorized repair remain user-driven through `axstack-watch`. Its chat-run mode can use one optional same-host native Orca observer per Run, about every ten minutes, to report new PR events internally to the original chat. The chat alone directs repairs and publication. Activation needs a live host canary; source and install checks do not prove it is running.
 
-Native Orca exercises have returned Codex, Claude, and OpenCode Muse Spark
-worker completions, same-terminal follow-up, separate worktree placement, settlement
-cleanup, `user_takeover` retention, and recovery from `consumer_fenced`. These are
-bounded runtime facts, not proof that every role or harness is compatible.
+The review manager uses a 15-minute schedule. Each pass uses a fresh finite
+session in an isolated workspace and admits eligible actionable PR events within
+measured host capacity. Waiting PRs remain tracked without consuming
+execution slots, so a large open-PR backlog does not require an idle agent per PR.
+Completed passes save continuity and retire their own verified resources.
+Held jobs preserve evidence, use private worktree-local temporary paths, and
+release capacity only after native descendant settlement. Uncertain execution
+teardown pauses the lane; settled evidence cleanup does not occupy a slot.
 
-Input acceptance is not agent readiness. A trust prompt was observed after an
-accepted launch, so startup recovery must inspect the existing attempt, never
-answer trust or permission prompts on the worker's behalf, and never create a
-duplicate writer. A `worker_done` advances work only when its Task and Dispatch
-match the active attempt and its revision evidence verifies.
+Scheduling is opt-in and requires host-specific runtime validation before
+activation. Installing Axstack does not turn it on. The review automation never merges for you.
+See [PR-manager setup and safety](skills/axstack/references/automations.md).
 
-The user lifted the native-watch hold by decision on 2026-09-16. The driver
-every 15 minutes dispatches and exits; the watchdog is model-free and
-read-only, has no gate, and records `watchdog.log`; there is no watch deadline
-for automations. Axstack uses no historical fallback and introduces no custom
-scheduler.
+## Documentation
 
-Mobile completion/reply behavior remains unverified. Structural checks and
-qualitative scenario evaluation are not live runtime proof.
-
-## Historical migration boundary
-
-Older releases used Paseo for orchestration and could leave profile ownership
-provenance or retired skills behind. That state is historical and inert in the
-Orca runtime. Migration preserves user-edited and unknown assets and records
-legacy ownership without reading, writing, or deleting live host configuration.
-Use the explicit migration guidance in [installation](docs/installation.md);
-release installation, host cutover, and old-timer cleanup need separate
-authorization.
+- [Installation and configuration](docs/installation.md)
+- [Workflows, review policy, and model routing](docs/workflows.md)
+- [PR scope and sizing](skills/axstack/references/pr-shape.md)
+- [Releases](https://github.com/axatbhardwaj/axstack/releases)
 
 ## License
 

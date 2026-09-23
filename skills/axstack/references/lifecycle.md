@@ -17,7 +17,8 @@ binding state and receipts to exact revisions.
   pass; authored = one eligible role from author provenance. Each uses a
   separate Orca child worktree, keeps evidence there, and preserves it before
   removal. Owner and author never review.
-- Automation driver/monitor/watchdog: see [Watch health](#watch-health).
+- Automation review manager and monitors: see
+  [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -27,9 +28,10 @@ theme/size; queue dependencies through `gh stack`.
 
 ## Ownership
 
-The PR owner remains accountable for candidate, fixes, evidence, monitoring;
-peer code stays read-only. Missing or idle sessions never transfer ownership.
-Owned implementation enters review through the revision-bound
+The PR owner is accountable for candidate, fixes, evidence, monitoring; a
+chat-run observer reports only to its driver. Peer code stays read-only.
+Missing or idle sessions never transfer ownership.
+Owned work enters review via the revision-bound
 [candidate-publication boundary](candidate-publication.md).
 
 ## Native handoff and resume
@@ -61,12 +63,13 @@ receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
 Store receipt references, not raw output, in the [Run record](run-record.md).
 
 - Session receipt: actual agent/workspace IDs, requested provider/model and
-  role; reuse on resume rather than spawn a replacement.
+  role; reuse on resume.
 - Acceptance receipt: sender/recipient, accepted scope/authority, timestamp,
   and ownership session receipt.
-- Review receipt: mode, applicable provenance, reviewer, SHA/base,
+- Review receipt: mode, provenance, reviewer, SHA/base,
   verdict (`APPROVE | REQUEST_CHANGES | INCOMPLETE`), coverage, limitations and
-  findings. Changed code needs a receipt for its new revision.
+  findings. Changed code needs a new receipt. Codebase: revision/scope,
+  `COMPLETE | INCOMPLETE` coverage, no PR verdict.
 - Submission receipt: actual commit, review, remote confirmation; ambiguity
   requires external lookup before retry.
 - Audit receipt: scope, evidenced PASS/FAIL/UNKNOWN counts/denominators and
@@ -85,7 +88,9 @@ are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
 deduplicated by runtime identity. Healthy unchanged observations produce no
-user-facing update.
+user-facing update. After accepting worker, Task, or Run completion, the driver
+invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
+dispatches cleanup work.
 
 Detect completed-but-unadvanced work, failed sessions, unresolved launch
 receipts, and stalls through the version-matched orchestration guide. Never
@@ -95,25 +100,25 @@ On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
 identity. Respect settlement protection including `user_takeover`.
 
 No execution heartbeat or substitute scheduler is created by Axstack. Native
-watch automation follows [Watch health](#watch-health).
+review automation follows [Review automation health](#review-automation-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
-deadline and preserve remaining work; there is no watch deadline for
-automations. A PR is merge-ready only with the applicable review receipt(s) at
+deadline and preserve remaining work; the review automation has no task-owned
+deadline. A PR is merge-ready only with the applicable review receipt(s) at
 its exact head; green CI or tests alone never make it merge-ready. Merge-ready
 differs from merged; human merges.
 
-## Watch health
+## Review automation health
 
-The user lifted the native-watch hold by user decision on 2026-09-16. The
-driver automation is a mutating owner for its PRs; `axstack-watchdog` stays
-independent and read-only. The driver every 15 minutes dispatches and exits;
-the watchdog is model-free, has no gate, and records `watchdog.log`; there is
-no watch deadline for automations. Build no custom scheduler and use no legacy
-fallback. Details live in
+The native review manager uses fresh finite sessions in isolated per-pass
+workspaces on a 15-minute schedule. It admits eligible actionable PR
+events within measured host capacity; waiting PRs remain covered without
+reserving slots. Bounded PR jobs own their
+events, use per-PR worktrees, and settle after descendants settle. Build no
+custom scheduler, state engine, or legacy fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).
 
 ## Audit hook (close-out and meaningful checkpoints)
@@ -132,7 +137,8 @@ terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-close selected external-tracker tickets when applicable; (5) mark the
+use `axstack-cleanup` and close selected external-tracker tickets when applicable;
+(5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
 receipt or `counts zero`; release and ticket receipts; archive timestamp.

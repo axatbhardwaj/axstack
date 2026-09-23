@@ -12,14 +12,14 @@ const p = (id, provider, model, effort = 'medium') => ({
 });
 const PRESETS = {
   mixed: [
-    p('axstack-author', 'codex', 'gpt-5.6-sol'),
-    p('axstack-reviewer-primary', 'codex', 'gpt-5.6-sol'),
-    p('axstack-reviewer-secondary', 'claude', 'claude-opus-5'),
+    p('axstack-author', 'codex', 'gpt-6-sol'),
+    p('axstack-reviewer-primary', 'codex', 'gpt-6-sol'),
+    p('axstack-reviewer-secondary', 'claude', 'claude-opus-5-5'),
     p('axstack-checker', 'antigravity', null, 'low'),
   ],
   'claude-only': [
-    p('axstack-author', 'claude', 'claude-opus-5'),
-    p('axstack-reviewer-primary', 'claude', 'claude-opus-5'),
+    p('axstack-author', 'claude', 'claude-opus-5-5'),
+    p('axstack-reviewer-primary', 'claude', 'claude-opus-5-5'),
     p('axstack-reviewer-secondary', 'claude', 'claude-sonnet-5', 'xhigh'),
     p('axstack-checker', 'claude', 'claude-sonnet-5', 'low'),
   ],

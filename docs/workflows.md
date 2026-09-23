@@ -21,9 +21,17 @@ Direct routes need no spec ceremony:
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code.
+- Manual `axstack-review` can inspect existing code at an exact revision within
+  a named scope. Both configured peer reviewers inspect six lenses independently;
+  the driver reports validated defects and risks, improvement opportunities,
+  unverified leads, and `COMPLETE` or `INCOMPLETE` coverage. This report does
+  not approve a PR or publish findings.
 - `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
   bugs through adviser-directed investigator fan-out, and hands off a
   classified repair without landing a change.
+- `axstack-cleanup` runs inline in the driver after accepted worker, Task, or
+  Run completion, or against an explicitly bounded backlog. It dispatches no
+  cleanup worker and preserves protected or uncertain resources.
 - Peer review uses the linked issue, PR description, and repository rules as
   untrusted intent evidence.
 - Existing-PR maintenance uses one accepted maintenance snapshot.
@@ -40,15 +48,15 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 25 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 24 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna max |
-| `codex-only` | Sol medium | Sol medium; Terra xhigh | Astra high / unavailable | Luna max |
+| `mixed` | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna xhigh |
+| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |
 | `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
@@ -145,14 +153,16 @@ session and evidence remain valid.
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
-  repair authority. Repairs return to the original author only for a
-  run-launched session and receive refreshed authored review before scoped
-  `gh stack` publication. `gh stack` publication does not apply to automation
-  repairs: the automation session (or a dispatched `axstack-author`) repairs in
-  a per-PR child worktree, the local SHA is reviewed and gated, and the repair
-  lands by fast-forward `git push` after `proceed`.
+  repair authority. Within an implementation run, fixes return to the original
+  author and follow its publish-before-review loop. Manual adopted-PR repair
+  reviews the exact local SHA and reply bodies before `gh stack` publication
+  and remote readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
+- `axstack-cleanup` distinguishes settled-Dispatch release, exact unused-shell
+  close, evidence-safe native worktree removal and branch effects, and separate
+  chat archival when the discovered runtime actually supports it. Process exit
+  alone never promises that visible chat history disappeared.
 
 One Orca execution host owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real
@@ -183,41 +193,80 @@ safe recovery. Questions, spec approvals, progress, CI pending, merge-ready,
 merged, and completion stay in Orca. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
-`message_id`. The PR automation's decision tokens are the narrow exception: a
-fixed Hermes script writes the user's bound decision to a file for the driver
-to consume; no session polls Telegram. Delivery failure never clears the
-underlying hold.
+`message_id`. PR-manager notifications point the user to GitHub or a durable
+user-owned conversation; Telegram delivery, replies, and silence grant no action
+authority. Delivery failure never clears the underlying hold.
 
-Healthy watch observations remain quiet. The optional `axstack-monitor` is
-read-only and never sends; `axstack-watchdog` never mutates GitHub. Under the
-rev-3 PR automation it performs four model-free health checks and sends new
-occurrences directly, with no health gate.
+Healthy watch observations remain quiet. The optional `axstack-monitor` is a
+read-only observer for standalone watches and never sends.
 
-## Native watch automations
+## Chat-run PR watch
 
-The accepted PR-automation contract is a 15-minute driver automation and an
-hourly watchdog, with quiet healthy checks, deduplicated occurrences, one live
-dispatch marker per PR, and decision tokens for user-authorized actions.
+Use `axstack-watch` chat-run mode to watch every PR raised by this chat's Run, including later verified publications and PRs the driver explicitly adopts. One same-host native Orca automation observes about every ten minutes in fresh finite read-only sessions and reports new current-state events to the original Run. The initiating chat alone routes repairs, review, publication, and notifications. Independent PRs can repair in parallel with one writer per PR; stack ancestor changes invalidate child evidence. Unchanged complete passes stay quiet. An incomplete scan leaves readiness `UNKNOWN`.
 
-The driver is the automation session itself, with no `axstack-monitor` or
-`axstack-owner` role row. It uses the agent selected in Orca; changing that
-selection does not change the configured reviewers or impose a model hold.
-Requested reviews cover any accessible repository; automatic repairs retain
-their separate explicit repository scope. Orca owns scheduling and run history;
-Axstack adds no custom scheduler, polling loop, or historical runtime fallback.
+The watch lasts until all member PRs merge or close, or you cancel it. Stop requires readback that its own automation is disabled; worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require same-host native canary receipts.
 
-## Automations
+## Optional native peer-review automation
 
-Two native Orca automations run the installed skills: a driver every 15 minutes
-that discovers work through four GitHub searches, dispatches exact-head peer
-reviews and own-PR repairs, consumes decision tokens, and exits; and an hourly
-model-free watchdog that evaluates four liveness checks and exits without
-launching a session. PR reviewers use exactly three escalation criteria. A gate
-`escalate` opens a bound decision token and exits, while `proceed` permits only
-the verdict or fast-forward push supported by the reviewed evidence. There are
-no `COMMENT` reviews, obligations, watch deadline, terminal cleanup sweep, or
-health gate. The current operational contract is
+The optional native review manager runs at minutes `0,15,30,45`. Each
+scheduled pass uses a fresh finite session in a new isolated workspace, scans complete
+discovery pages, and admits eligible actionable PR events within measured host
+capacity. Waiting PRs stay covered and consume no slot after
+owned descendants settle. Each job uses one repository-parented worktree; the
+manager never checks out PR branches in its own workspace.
+
+Every pass reconciles saved, GitHub, and native Orca state across all same-lane
+workspaces before admission. A
+confirmed same-lane manager makes the new duplicate do no work or shared-record
+write and close only itself. Normal teardown settles descendants, saves durable
+continuity and decisions outside disposable workspaces, then retires its own
+verified isolated pass workspace as the final action. It never bulk-closes a
+shared manager workspace or a PR-job worktree, or cleans preserved
+evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
+publication state. Manual review and user-driven `axstack-watch` remain outside
+this scheduled lifecycle.
+
+One natively ordered successor may recover an exact positively completed
+predecessor whose terminal survived, but only after matching its automation,
+run, workspace, and terminal incarnation and proving zero unsettled descendants.
+It saves and reads back the cleanup claim before exact native close, then proves
+the full process tree exited before ownership release or guarded worktree removal.
+Age, status, or idle state alone never authorizes cleanup. Conflicting successors,
+identity mismatch, unknown or protected state, `user_takeover`, unexpected
+terminals, dirty or unpushed work, and unarchived evidence hold cleanup; an
+unchanged failure is deduplicated. Native ordering is not an atomic lock, so the
+overlap canary remains an activation requirement.
+
+Each bounded job uses a private `0700` temporary directory inside its own
+worktree. Cleanup targets only the validated owned path: no `TMPDIR` globs,
+shared-root sweeps, or general cache wipes, and uncertain files remain for
+reconciliation. Permission prompts and provider safety refusals are incomplete
+holds, never bypass or cross-model retry signals. The coordinator preserves the
+evidence, settles the exact owned tree through Orca's supported lifecycle, and
+releases capacity only after native settlement is verified. Unresolved execution
+teardown pauses the lane; retained evidence or cleanup metadata does not consume
+a slot after positive full-tree settlement. Once settled, an unchanged held
+event remains deduplicated while unrelated eligible PRs continue.
+
+Requested peer reviews cover any accessible repository. Orca owns schedules,
+sessions, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
+cursor files, polling loop, or historical runtime fallback.
+
+## Review automation
+
+The review manager uses one short packaged prompt that loads the current
+relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
+exact-head review verdicts; the human merges. Manual adopted-PR maintenance
+uses `axstack-watch` with local-SHA review before authorized publication.
+Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
+after manager self-close, with an authorized deduplicated Telegram notification.
+The current operational contract is
 `skills/axstack/references/automations.md`.
+
+These documents and their source-contract tests define expected decisions.
+Scenario fixtures are behavioral-evaluation inputs, not model-evaluation
+results, and neither form is live proof; activation still requires the native
+canary described by the operational contract.
 
 ## Run record and evidence
 
@@ -231,6 +280,8 @@ Predeclared scenario evaluation is qualitative behavior evidence, not determinis
 compatibility requires actual guide discovery, role/session evidence, worktree
 and Dispatch receipts, completion delivery, and cleanup as applicable. Mobile
 completion and reply behavior remain unverified.
+End-to-end compatibility remains unverified for any route without matching
+runtime receipts; evidence from one route does not establish support for all roles.
 
 ## Historical migration
 

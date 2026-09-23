@@ -30,16 +30,13 @@ remote confirmation. Reviewers inspect a detached immutable checkout of the
 confirmed candidate SHA and pinned base, never only the movable branch name.
 Any author repair creates a new revision and repeats this boundary.
 
-## Automation repair exception
+## Immutable checkout shape
 
-For an automation repair under
-[Automation sessions](automations.md), the candidate is a local immutable
-commit SHA in the per-PR child worktree, not a published remote ref. The
-reviewer confirms that exact local SHA with `git rev-parse` in the worktree
-instead of remote equality, and inspects a detached checkout of it with the
-pinned base. The remote ref is expected to still be the pre-repair head; record
-it as the expected-old remote SHA rather than requiring it to equal the
-candidate. Remote equality is re-checked at the publication readback of the
-watch skill's repair-publication reference immediately before the fast-forward
-push. Ordinary workflows keep the remote confirmation above; the
-exception never applies outside an automation session.
+The immutable checkout is an Orca worktree of the already-registered repo:
+`ORCA worktree create --repo id:<repoId> --name review-<pr>-<sha7> --json`,
+then `git checkout --detach <candidate SHA>` inside it. Never materialize it
+as a `git clone` into a temp directory followed by `orca repo add`; each
+`repo add` registers a duplicate top-level repo and leaves a stale record once
+the directory is gone. Release preparation uses a `release/<version>` worktree
+of the same registered repo the same way. Release the checkout with
+`ORCA worktree rm` after its receipt is recorded.

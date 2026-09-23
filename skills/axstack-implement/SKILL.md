@@ -121,6 +121,15 @@ green evidence. For structure-preserving work, make only the accepted
 structural edits and keep the unchanged baseline and equivalence evidence
 green.
 
+At this post-green refactor step, inspect the changed paths. When the candidate
+contains a code diff or agent-instruction changes, load and follow
+[Simplify the diff](../axstack/references/simplify-diff.md), then rerun affected
+green checks after any edit. Do not load it for general human-facing or
+marketing prose. Record the required evidence line whether simplification was
+applied or found not applicable in the `Simplification:` line of the
+[section 5 implementation receipt](#5-verify-and-return-the-candidate),
+including evidence and retained complexity.
+
 ## 5. Verify and return the candidate
 
 Run the acceptance checks and affected integration boundaries. Record commands,
@@ -138,6 +147,7 @@ Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence>
+Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
 Unverified: <boundaries + reasons>
@@ -163,7 +173,11 @@ For each PR:
 1. Dispatch `axstack-author` under §§3-5 and consume its strict-TDD receipt.
 2. Publish through candidate-publication and read back the exact SHA.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
-   author provenance.
+   author provenance. After each settled review, run `axstack-cleanup` for its
+   exact reviewer resources before PR merge, preserving and reading back the
+   private evidence archive before eligible worktree retirement. A later review
+   uses a fresh child checkout. Keep the author candidate until merge and
+   Close-out; a cleanup hold preserves only the affected reviewer resource.
 4. Route the verdict. `APPROVE` at that head plus `axstack-watch` §5's full
    predicate—required checks, all feedback, approvals, mergeability, and
    exact-revision receipts—records `merge-ready`. With required checks pending,
@@ -188,7 +202,7 @@ in Orca.
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
 driver resumes on the user's next message or `/axstack-watch`; no Orca merge
 wake exists today. Re-read forge state: record forge-merged PRs as `merged`;
-changed heads or feedback return to step 1; release nothing before Close-out.
+changed heads or feedback return to step 1; retain useful author work before Close-out.
 Run Close-out once only after every required PR is forge-merged and acceptance
 passes. It settles workers, records counts, makes the auditor decision and
 settlement, releases worktrees, closes eligible tickets, and archives the run.

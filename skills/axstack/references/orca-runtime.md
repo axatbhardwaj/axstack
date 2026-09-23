@@ -38,7 +38,7 @@ Read `roles.json` from the installed shared root `skills/axstack/`. The installe
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 25 role rows once. An active run keeps the exact snapshot until the user
+all 24 role rows once. An active run keeps the exact snapshot until the user
 explicitly changes it.
 
 Select the requested role by stable ID. A missing or null model holds only that role;
@@ -54,6 +54,15 @@ The single-provider preset's null adviser is intentional installation data, not
 readiness failure; because Align and Spec require both adviser receipts, either
 null adviser still holds those phases. The current chat is the driver and has
 no role row in any preset.
+
+## Materialize checkouts as worktrees of the registered repo
+
+Every reviewer, release, or worker checkout is `ORCA worktree create --repo
+id:<repoId> ...` under the repo Orca already registers. `ORCA repo add` is a
+one-time import of a new repository; running it on a clone of a registered
+repo creates a second top-level repo record, so it never materializes a
+checkout. See [Candidate publication](candidate-publication.md) for the
+detached immutable review checkout.
 
 ## Supervise one authoritative attempt
 
@@ -85,15 +94,19 @@ An `input_accepted` stage proves only that input reached the terminal. Require
 started, and verify the requested role independently before trusting its work.
 A workspace trust, hook review, permission, authentication, or model prompt is
 a visible hold. Never answer a trust or permission prompt on the worker's
-behalf. Preserve the attempt and use only the runtime guide's inspection and
-recovery procedure; reconcile before retry so no duplicate writer starts.
+behalf. A permission prompt or provider safety refusal is a held, incomplete
+outcome, never consent or completion. Never bypass or retry it through another
+model. Preserve the attempt and its evidence, then use only
+the runtime guide's inspection and recovery procedure; reconcile before any
+authorized retry so no duplicate writer starts.
 
 ## Reviewer workspaces and evidence
 
 Give each reviewer a separate Orca-managed child worktree under the candidate's
 worktree, including report-only reviews and rechecks; never share the author's
-checkout or another reviewer's checkout. Reuse that reviewer's own child only
-after its previous Dispatch has settled. Use the runtime-owned worktree guide,
+checkout or another reviewer's checkout. A later review gets a fresh Orca-managed
+child worktree after the prior settled review's evidence and cleanup are
+reconciled. Use the runtime-owned worktree guide,
 not a raw Git worktree or temporary clone. Before dispatch, verify a detached
 checkout of the exact candidate SHA and the pinned base in that child.
 
@@ -101,11 +114,21 @@ Keep reviewer-authored reports, probes, and logs inside the reviewer's worktree
 in an untracked, dispatch-specific artifact directory, not in `/tmp` or a
 provider scratch directory. Name its absolute path in the brief and completion
 receipt; keep tracked candidate files read-only and do not commit artifacts.
-For test tools that need temporary files, use a worktree-local temporary
-directory where supported; incidental tool-managed caches are not review evidence.
+For tools that need temporary files, create one worktree-local, task- and
+dispatch-specific directory with mode `0700`, and scope `TMPDIR` to the owned
+command where supported. Before use or cleanup, validate that its real path is
+inside the exact worktree, is not a symbolic link, and matches the recorded
+owner. Remove only that exact validated owned path, with no glob or parent-root
+deletion; never wipe a general cache. Uncertain temporary files are preserved
+for later reconciliation. Incidental tool-managed caches are not review evidence.
 Before removing a reviewer worktree, preserve its report and supporting evidence
-in the driver's Orca workspace and update the run record's paths. Terminal
-release alone is not permission to discard evidence or remove the worktree.
+in the private evidence archive outside the disposable checkout, verify manifest
+readback, and update the run record's paths. A settled reviewer Dispatch can be
+cleaned before PR merge through [axstack-cleanup](../../axstack-cleanup/SKILL.md)
+only after its classification, readback, and removal guards pass. Preserve
+active or unknown review evidence and unique evidence whose bytes must survive;
+uncertain ownership or evidence holds. Terminal release alone is not permission
+to discard evidence or remove the worktree.
 
 ## Consume, settle, and recover
 

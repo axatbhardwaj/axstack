@@ -65,9 +65,9 @@ listing all pass.
 ## Preserve identity and authority
 
 Delivery is one-way; no session polls Telegram. Hermes does not route a reply
-back to the sending session; its own agent answers replies. Outside the fixed
-decision-token flow below, a reply is never a receipt, decision, or authority
-for this session, and no persistent owner is needed to send. Every ordinary
+back to the sending session; its own agent answers replies. A reply is never a
+receipt, decision, or authority for this session, and no persistent owner is
+needed to send. Every ordinary
 message must say where the user acts: the current Orca conversation, the Orca
 worktree, or the GitHub PR. Do not invent reply commands.
 
@@ -76,25 +76,6 @@ It grants no merge, publication, ownership-transfer, or model-substitution
 authority. Delivery is transport evidence only. Revalidate any user decision
 that arrives through an authorized channel against the current task and
 existing action boundaries before acting; silence never grants permission.
-
-## Decision tokens
-
-An automation escalation is the narrow exception defined by
-[Automation sessions](../axstack/references/automations.md). The PR agent opens
-an immutable-bound decision token, sends one message with the exact
-`/axstack-decide approve <token>` and `/axstack-decide reject <token>` replies,
-records the send receipt, and
-exits without waiting. The Hermes script decides by validating the private
-channel and updating only an open token file; Hermes never performs the bound
-GitHub or Git action. The driver consumes the file on a later tick, revalidates
-all bound state, marks an approval spent before acting, performs only that
-action, and records its receipt.
-
-This does not create a reply channel for the sending agent: Hermes pushes the
-decision to the file through the fixed `axstack-decide` script, and the driver
-reads that file. Delivery is one-way; no session polls Telegram. Token creation,
-decision, and consumption keep their separate writers and authority; a message
-receipt alone authorizes nothing.
 
 ## Reconcile, deliver, and record
 

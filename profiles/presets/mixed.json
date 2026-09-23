@@ -23,7 +23,7 @@
       "id": "axstack-owner",
       "name": "Axstack PR owner",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers."
@@ -32,7 +32,7 @@
       "id": "axstack-author",
       "name": "Axstack author",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Validate configured availability at launch; hold affected work without fallback."
@@ -41,7 +41,7 @@
       "id": "axstack-reviewer-primary",
       "name": "Axstack reviewer (primary)",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Primary reviewer in the ordered mixed peer pair: Sol medium followed by Opus medium. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
@@ -50,7 +50,7 @@
       "id": "axstack-reviewer-secondary",
       "name": "Axstack reviewer (secondary)",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Secondary reviewer in the ordered mixed peer pair: Sol medium followed by Opus medium. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
@@ -68,7 +68,7 @@
       "id": "axstack-research-requirements",
       "name": "Axstack research requirements",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Validate configured availability at launch; hold affected work without fallback."
@@ -77,7 +77,7 @@
       "id": "axstack-research-code",
       "name": "Axstack research code",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
@@ -86,7 +86,7 @@
       "id": "axstack-research-web",
       "name": "Axstack research web",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
@@ -122,9 +122,9 @@
       "id": "axstack-explainer-review",
       "name": "Axstack explainer reviewer",
       "provider": "codex",
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "modeId": "full-access",
-      "thinkingOptionId": "max",
+      "thinkingOptionId": "xhigh",
       "notes": "Independent visual explanation reviewer: checks the exact artifact for source fidelity and rendered behavior where warranted. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
     },
     {
@@ -140,7 +140,7 @@
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "codex",
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
@@ -149,34 +149,25 @@
       "id": "axstack-monitor",
       "name": "Axstack monitor",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Optional independent read-only PR observer, not the driver: the five-minute driver is the automation session itself. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, never authors, reviews, or replies. Healthy snapshots stay quiet. Hold was lifted by user decision on 2026-09-16."
-    },
-    {
-      "id": "axstack-watchdog",
-      "name": "Axstack watchdog",
-      "provider": "claude",
-      "model": "claude-opus-5",
-      "modeId": "bypassPermissions",
-      "thinkingOptionId": "medium",
-      "notes": "Hourly independent read-only automation health checker: compares the recorded driver model with the expected one, checks run history, precheck errors, duplicate handling, and relay receipts, and passes findings to the gate under the automation-health criterion. Never mutates GitHub and never authors, reviews, or replies; its only gate-authorized automation-health send is recorded in watchdog.json."
+      "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof."
     },
     {
       "id": "axstack-auditor",
       "name": "Axstack auditor",
       "provider": "codex",
-      "model": "gpt-5.6-luna",
+      "model": "gpt-6-luna",
       "modeId": "full-access",
-      "thinkingOptionId": "max",
+      "thinkingOptionId": "xhigh",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
     },
     {
       "id": "axstack-debug-investigator-1",
       "name": "Axstack debug investigator 1",
       "provider": "claude",
-      "model": "claude-opus-5",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
       "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity."
@@ -185,7 +176,7 @@
       "id": "axstack-debug-investigator-2",
       "name": "Axstack debug investigator 2",
       "provider": "codex",
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity."
@@ -203,7 +194,7 @@
       "id": "axstack-debug-investigator-4",
       "name": "Axstack debug investigator 4",
       "provider": "codex",
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
       "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity."

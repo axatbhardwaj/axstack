@@ -11,7 +11,7 @@ only with exactly one unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, capture one **routing snapshot**: the complete map of all 25 role
+At run start, capture one **routing snapshot**: the complete map of all 24 role
 IDs with provider/model/mode/effort, absent or unconfigured roles recorded
 explicitly, and no invented provider default. An absent or unconfigured role
 holds only that role's work, not the run. A role installed or changed later
@@ -27,25 +27,25 @@ routing, subscription inference, or silent provider/model/effort substitution.
 
 Role IDs:
 
-- The current chat drives (no role ID); `axstack-owner` owns one PR and
+- Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
 
   | Preset | Author | Reviewer (model/effort) |
   | --- | --- | --- |
-  | `mixed` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5` medium) |
-  | `mixed` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-primary` (`codex/gpt-5.6-sol` medium) |
-  | `codex-only` | Codex / Sol (`codex/gpt-5.6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-5.6-terra` xhigh) |
-  | `claude-only` | Claude / Opus (`claude/claude-opus-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
+  | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
+  | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` medium) |
+  | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
+  | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
 - `axstack-advisor-astra` and `axstack-advisor-fable` advise independently
   and author align arena candidates; `axstack-arena-judge-astra` and
   `axstack-arena-judge-fable` judge them. `axstack-auditor` audits;
   `axstack-checker` reports discrepancies.
-- `axstack-explainer` authors explanations; `axstack-explainer-review`
-  reviews them. `axstack-monitor` observes only; `axstack-watchdog` sends
-  only gate-authorized health escalations.
-- `axstack-debug-investigator-1..4` each probe one L1 brief.
+- `axstack-explainer`/`axstack-explainer-review`: explain/review.
+  `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
+  internal reports to its Run and original driver.
+- `axstack-debug-investigator-1..4` probe L1 briefs.
 
 Provenance is matched on provider/model ID; effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
@@ -69,6 +69,8 @@ step (3) for user routing, with no substitution or same-provider review.
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits.
+- Accepted worker/Task/Run completion or bounded backlog request -> invoke
+  `axstack-cleanup` inline in the driver; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
   record, keep its owner, launch no native handoff.
@@ -77,9 +79,12 @@ step (3) for user routing, with no substitution or same-provider review.
   handoff guide, and require explicit recipient acceptance before ownership
   changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
+- Codebase review -> `axstack-review` codebase mode, report only.
 - A status question about an own open PR or stack ("check now", "what's left",
   "are we done", or "is it approved") -> `axstack-watch` in observation-only
   mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
+- Chat-run PR watch -> `axstack-watch`: original driver; verified run PRs
+  and explicit adoptions only.
 - Other own PR work -> `axstack-review` authored mode or `axstack-watch`
   adoption.
 
