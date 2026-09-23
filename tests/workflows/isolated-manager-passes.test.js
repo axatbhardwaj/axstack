@@ -36,7 +36,8 @@ test('continuity stays bounded and both command kinds use workspace-local TMPDIR
   expect(text).toContain('[Run record](run-record.md)');
   expect(text).not.toContain('Append older pass history');
   expect(record).toMatch(/current lane state[^.]*open holds[^.]*watermarks[^.]*last pass summary/i);
-  expect(record).toMatch(/older pass history[^.]*archive file beside[^.]*never re-read it by default/i);
+  expect(record).toMatch(/superseded history[^.]*separate history file beside/i);
+  expect(record).toMatch(/never re-read history[^.]*by default/i);
   expect(text).toMatch(/TMPDIR[^.]*manager and job commands[^.]*inside[^.]*owning workspace/i);
   expect(text).not.toMatch(/self-close|self-retirement|three-workspace threshold/);
 });

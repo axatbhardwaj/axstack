@@ -49,10 +49,15 @@ forge/PR state, and the approved spec remain sources of truth. The driver
 verifies exact SHAs and receipts before recording a transition; a worker claim
 alone is not verification.
 
-For the scheduled review manager, keep only current lane state, open holds,
-watermarks, and the last pass summary in its durable continuity record (a few
-dozen lines). Append older pass history to an archive file beside that record;
-never re-read it by default. Read it only for a specific recovery question.
+For the scheduled review manager, use the
+[Review-manager continuity template](#review-manager-continuity-template).
+Each pass overwrites its four current-state sections for current lane state,
+open holds, watermarks, and last pass summary. Read back the saved record before
+terminal close. Write superseded history once to a separate history file beside
+the record; a pass with no change appends at most one line. Never re-read history
+by default; read it only for a specific recovery question.
+About 60 lines is the normal budget, not a truncation rule. Open holds and
+watermarks are never dropped to meet that budget.
 
 Before changing `Driver` or a task `Owner`, verify that the prior driver is
 inactive against actual Orca session and Dispatch state, or that an explicit accepted transfer
@@ -103,6 +108,30 @@ references. Include no tokens, transcripts, full worker output, credentials,
 private prompts, or machine-specific paths beyond the private record's own
 resolved location. Publication of a sanitized summary needs separate
 authority.
+
+## Review-manager continuity template
+
+Keep this fixed Markdown shape in the manager's configured durable continuity
+file. Replace the contents of each section on every admitted pass; retain every
+open hold and watermark until its verified disposition. Put older pass details
+in the adjacent history file, not below this template.
+
+```markdown
+# Review-manager continuity
+
+## Lane state
+- Automation ID, native run ID, workspace and exact terminal receipt: <IDs>
+- Active PR jobs and descendants: <PR, Task/Dispatch, owner, revision, state>
+
+## Open holds
+- <PR or lane, reason, evidence, owner, resume condition; or none>
+
+## Watermarks
+- <PR/event identity, exact head/base, last observed receipt; or none>
+
+## Last pass
+- <UTC time, admitted/settled counts, changed state, evidence pointer>
+```
 
 ## Compact template
 
