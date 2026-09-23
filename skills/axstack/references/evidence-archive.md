@@ -1,14 +1,14 @@
 # Private evidence archive
 
 Use this only when local review or coordinator evidence is the last reason a
-finished automation-owned worktree cannot be retired. It archives evidence; it
+finished Orca-owned worktree cannot be retired. It archives evidence; it
 never decides that a terminal or worktree is safe to remove and never performs
 native cleanup.
 
 ## Eligibility
 
 First prove the exact repository, PR or Run/Task, 40-character head SHA, Dispatch,
-workspace, terminal incarnation, automation ownership, descendant settlement,
+workspace, terminal incarnation, Orca ownership, descendant settlement,
 and liveness from current native state. A manual chat, `user_takeover`, an
 active or unknown task terminal, an unsettled descendant, unpushed commits,
 dirty source, ambiguous publication, or an unknown file remains protected.
@@ -51,6 +51,14 @@ identities in durable lane continuity, then read the continuity and archive
 manifest back before cleanup. If either readback differs or is unavailable,
 preserve the worktree.
 
+For a reviewer checkout with another Dispatch's scratch, archive and read back
+each Dispatch's complete file set independently. The installed helper's retire
+operation may reject another Dispatch's scratch as unclassified dirt. After
+full union classification and verified per-Dispatch archives, use
+[axstack-cleanup](../../axstack-cleanup/SKILL.md)'s exact per-prefix dry-run and
+clean recovery; never force, use a broad target, or treat archive success as
+removal authority.
+
 ## Native retirement
 
 Retire descendants before their parent. For each positively identified unused
@@ -83,10 +91,12 @@ to matching listed files and never removes directories.
 Record the retirement receipt's `removed`, `alreadyAbsent`, and `pending` file
 sets. A repeat invocation reconciles already absent files without changing the
 manifest. A partial or failed invocation preserves the archive; resolve its
-exact hold and retry the same operation until `pending` is empty. Never replace
-this operation with a shell loop, broad deletion, force, or a waiver.
+exact hold and retry the same operation until `pending` is empty. The verified
+multiple-Dispatch recovery above uses only axstack-cleanup's exact per-prefix
+path. Never replace either path with a shell loop, broad deletion, force, or a
+waiver.
 
-Re-read Git and native state after successful retirement. Any remaining or
+Re-read Git and native state after successful evidence removal. Any remaining or
 uncertain dirt holds worktree removal. Settlement, liveness/no-writer proof,
 useful-work and publication checks, evidence classification, and removal
 authority remain driver decisions; archive or retirement success proves none of

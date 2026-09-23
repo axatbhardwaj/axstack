@@ -163,7 +163,11 @@ For each PR:
 1. Dispatch `axstack-author` under §§3-5 and consume its strict-TDD receipt.
 2. Publish through candidate-publication and read back the exact SHA.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
-   author provenance.
+   author provenance. After each settled review, run `axstack-cleanup` for its
+   exact reviewer resources before PR merge, preserving and reading back the
+   private evidence archive before eligible worktree retirement. A later review
+   uses a fresh child checkout. Keep the author candidate until merge and
+   Close-out; a cleanup hold preserves only the affected reviewer resource.
 4. Route the verdict. `APPROVE` at that head plus `axstack-watch` §5's full
    predicate—required checks, all feedback, approvals, mergeability, and
    exact-revision receipts—records `merge-ready`. With required checks pending,
@@ -187,7 +191,7 @@ all-merged event—two per run—and (c) serious risk; never progress.
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
 driver resumes on the user's next message or `/axstack-watch`; no Orca merge
 wake exists today. Re-read forge state: record forge-merged PRs as `merged`;
-changed heads or feedback return to step 1; release nothing before Close-out.
+changed heads or feedback return to step 1; retain useful author work before Close-out.
 Run Close-out once only after every required PR is forge-merged and acceptance
 passes. It settles workers, records counts, makes the auditor decision and
 settlement, releases worktrees, closes eligible tickets, and archives the run.

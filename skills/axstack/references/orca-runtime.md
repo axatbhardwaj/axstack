@@ -78,8 +78,9 @@ authorized retry so no duplicate writer starts.
 
 Give each reviewer a separate Orca-managed child worktree under the candidate's
 worktree, including report-only reviews and rechecks; never share the author's
-checkout or another reviewer's checkout. Reuse that reviewer's own child only
-after its previous Dispatch has settled. Use the runtime-owned worktree guide,
+checkout or another reviewer's checkout. A later review gets a fresh Orca-managed
+child worktree after the prior settled review's evidence and cleanup are
+reconciled. Use the runtime-owned worktree guide,
 not a raw Git worktree or temporary clone. Before dispatch, verify a detached
 checkout of the exact candidate SHA and the pinned base in that child.
 
@@ -95,11 +96,11 @@ owner. Remove only that exact validated owned path, with no glob or parent-root
 deletion; never wipe a general cache. Uncertain temporary files are preserved
 for later reconciliation. Incidental tool-managed caches are not review evidence.
 Before removing a reviewer worktree, preserve its report and supporting evidence
-in the driver's Orca workspace and update the run record's paths. For a settled
-merged run with a confirmed forge merge, the compact durable receipt in
-[axstack-cleanup](../../axstack-cleanup/SKILL.md) satisfies this preservation
-rule only after its classification, readback, and removal guards pass. Preserve
-active or unmerged review evidence and unique evidence whose bytes must survive;
+in the private evidence archive outside the disposable checkout, verify manifest
+readback, and update the run record's paths. A settled reviewer Dispatch can be
+cleaned before PR merge through [axstack-cleanup](../../axstack-cleanup/SKILL.md)
+only after its classification, readback, and removal guards pass. Preserve
+active or unknown review evidence and unique evidence whose bytes must survive;
 uncertain ownership or evidence holds. Terminal release alone is not permission
 to discard evidence or remove the worktree.
 
