@@ -72,7 +72,7 @@ const expected = {
   'claude-only': [
     a(null, 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5-5', 'high'), a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'), a('claude-opus-5-5', 'medium'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5-5', 'medium'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'low'), a(null, 'high'),
@@ -82,7 +82,7 @@ const expected = {
     a('claude-sonnet-5', 'low'),
     a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a('claude-opus-5-5', 'high'), a('claude-sonnet-5', 'xhigh'),
+    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'),
   ],
 };
@@ -124,6 +124,16 @@ test('presets: Sol author runs at high effort while the primary reviewer stays m
     expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('medium');
   }
 });
+
+for (const id of ['axstack-owner', 'axstack-debug-investigator-3']) {
+  test(`presets: claude-only lowers ${id} to medium`, () => {
+    const role = readJson('profiles/presets/claude-only.json').roles
+      .find((entry) => entry.id === id);
+    expect(role).toMatchObject({
+      provider: 'claude', model: 'claude-opus-5-5', thinkingOptionId: 'medium',
+    });
+  });
+}
 
 test('presets: Codex auditor effort agrees with audit skill and workflow table', () => {
   const audit = readFileSync(`${root}/skills/axstack-audit/SKILL.md`, 'utf8');

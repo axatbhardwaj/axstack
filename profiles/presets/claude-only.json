@@ -25,7 +25,7 @@
       "provider": "claude",
       "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers."
     },
     {
@@ -187,8 +187,8 @@
       "provider": "claude",
       "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-opus-5-5 at high effort because it has fewer model families."
+      "thinkingOptionId": "medium",
+      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-opus-5-5 at medium effort because it has fewer model families."
     },
     {
       "id": "axstack-debug-investigator-4",
