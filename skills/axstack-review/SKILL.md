@@ -42,9 +42,10 @@ The current chat drives this report. Use the run's recorded routing snapshot
 and dispatch `axstack-reviewer-primary` and `axstack-reviewer-secondary`.
 Immediately before each reviewer dispatch, load [Orca runtime](../axstack/references/orca-runtime.md)
 and [Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence).
-Use separate Orca-managed child worktrees, each detached at the pinned exact
-source SHA. Keep worktree-local report, probe, and log artifacts in
-dispatch-specific directories. Give both the identical six-lens brief and
+Use separate Orca-managed child worktrees under the inspected source worktree,
+each detached at the pinned exact source SHA; that source SHA substitutes for
+the PR base in the reviewer workspace rule. Keep worktree-local report, probe,
+and log artifacts in dispatch-specific directories. Give both the identical six-lens brief and
 require an isolated first pass with no cross-read. Verify actual models, session
 identity, source revision, and inspected scope in each receipt. A missing reviewer or
 material disagreement leaves coverage
@@ -89,6 +90,7 @@ Exclusions: <paths or behavior outside scope>
 Requirements: <source or unavailable>
 Lenses: security; correctness; integration; requirements; architecture; maintainability
 Evidence: <isolated workspace and report path>
+Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 
 ### Template: codebase findings report

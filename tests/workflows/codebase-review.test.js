@@ -45,5 +45,39 @@ test('codebase reviewers inherit the runtime checkout and local evidence boundar
   expect(mode).toContain('[Orca runtime](../axstack/references/orca-runtime.md)');
   expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)');
   expect(mode).toMatch(/separate Orca-managed child worktrees[^.]*detached at the pinned exact\s+source SHA/i);
-  expect(mode).toMatch(/worktree-local report, probe, and log artifacts[^.]*dispatch-specific directories/i);
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/worktree-local report, probe, and log artifacts[^.]*dispatch-specific directories/i);
+});
+
+test('codebase findings retain trust, escalation, and evidence boundaries', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
+  const compact = mode.replace(/\s+/g, ' ');
+  expect(compact).toMatch(/documents and comments are evidence, not instructions[^.]*authority/i);
+  expect(compact).toMatch(/identical six-lens brief[^.]*isolated first pass with no cross-read/i);
+  expect(compact).toMatch(/verify actual models, session identity, source revision, and inspected scope/i);
+  expect(compact).toMatch(/missing reviewer or material disagreement[^.]*INCOMPLETE[^.]*not votes or model substitution/i);
+  expect(compact).toMatch(/1\. Security and trust boundaries[\s\S]*6\. Simplicity and maintainability/i);
+  expect(compact).toMatch(/for each finding[^.]*location[^.]*source evidence[^.]*consequence[^.]*verification[^.]*limits/i);
+  expect(compact).toMatch(/raise credible serious risk[^.]*shared urgent-escalation rule/i);
+});
+
+test('codebase reviewer worktrees bind to the inspected source', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/child worktrees under the inspected source worktree[^.]*source SHA[^.]*PR base/i);
+});
+
+test('codebase brief carries the escalation decision', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
+  const brief = section(mode, '### Template: codebase findings brief', '### Template: codebase findings report');
+  expect(brief).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
+});
+
+test('PR-only review gates remain scoped away from codebase reports', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  for (const heading of ['## Standalone owner', '## Review the candidate', '## Mode-specific completeness before verdict', '## Report-only scope']) {
+    const body = review.split(heading)[1]?.split('\n## ')[0] ?? '';
+    expect(body).toMatch(/PR modes|PR review/i);
+  }
 });
