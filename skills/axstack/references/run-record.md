@@ -54,7 +54,7 @@ alone is not verification.
 
 For the scheduled review manager, use the
 [Review-manager continuity template](#review-manager-continuity-template).
-Each pass overwrites its four current-state sections for current lane state,
+Every admitted pass overwrites its four current-state sections for current lane state,
 open holds, watermarks, and last pass summary. Read back the saved record before
 terminal close. Write superseded history once to a separate history file beside
 the record; a pass with no change appends at most one line. Never re-read history
@@ -116,7 +116,7 @@ authority.
 ## Review-manager continuity template
 
 Keep this fixed Markdown shape in the manager's configured durable continuity
-file. Replace the contents of each section on every admitted pass; retain every
+file. Every admitted pass replaces the contents of each section; retain every
 open hold and watermark until its verified disposition. Put older pass details
 in the adjacent history file, not below this template.
 
