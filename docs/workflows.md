@@ -192,9 +192,9 @@ read-only observer for standalone watches and never sends.
 The accepted contract has exactly two logical native manager lanes: review at
 minutes `0,15,30,45` and watch at `7,22,37,52`. Each scheduled pass uses a
 fresh finite session in a new isolated workspace, scans complete
-discovery pages, and admits at most five executing
-PR jobs. Waiting PRs stay covered and consume no slot after owned descendants
-settle. Each job uses one repository-parented worktree; managers never check out
+discovery pages, and admits eligible actionable PR events within measured host
+capacity across both lanes. Waiting PRs stay covered and consume no slot after
+owned descendants settle. Each job uses one repository-parented worktree; managers never check out
 PR branches in their own workspaces.
 
 Every pass reconciles saved, GitHub, and native Orca state across all same-lane

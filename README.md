@@ -112,8 +112,8 @@ eligible peer-review requests, and the other monitors your open PRs and handles
 authorized repair events.
 
 The lanes use staggered 15-minute schedules. Each pass uses a fresh finite
-session in an isolated workspace and admits at most five executing PR jobs per
-lane, fewer under resource pressure. Waiting PRs remain tracked without consuming
+session in an isolated workspace and admits eligible actionable PR events within
+measured host capacity. Waiting PRs remain tracked without consuming
 execution slots, so a large open-PR backlog does not require an idle agent per PR.
 Completed passes save continuity and retire their own verified resources.
 Held jobs preserve evidence, use private worktree-local temporary paths, and
