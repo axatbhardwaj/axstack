@@ -21,7 +21,7 @@ test('manual codebase findings mode has its own bounded report path', () => {
   expect(mode).toMatch(/improvement opportunities/i);
   expect(mode).toMatch(/unverified leads/i);
   expect(mode).toMatch(/COMPLETE[^.]*INCOMPLETE|INCOMPLETE[^.]*COMPLETE/);
-  expect(mode).toMatch(/zero findings[^.]*inspected scope/i);
+  expect(mode).toMatch(/zero findings[^.]*inspected scope;\s*never claim repository-wide certification/i);
   expect(mode).toMatch(/missing reviewer or\s+material disagreement[^.]*INCOMPLETE/i);
   expect(mode.replace(/\s+/g, ' ')).toMatch(/no PR owner, publication, manager admission, or external writes/i);
   expect(mode).toMatch(/PR.shape|PR-only shape/i);
@@ -72,6 +72,13 @@ test('codebase brief carries the escalation decision', () => {
   const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
   const brief = section(mode, '### Template: codebase findings brief', '### Template: codebase findings report');
   expect(brief).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
+});
+
+test('codebase report carries the escalation answer', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
+  const report = mode.split('### Template: codebase findings report')[1]?.split('```')[1] ?? '';
+  expect(report).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
 });
 
 test('PR-only review gates remain scoped away from codebase reports', () => {
