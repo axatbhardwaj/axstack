@@ -185,8 +185,9 @@ This section applies to peer and authored PR modes.
    worktree, pin the remote pre-repair head and current base, and review code and
    reply bodies before publication. Record the PR URL, exact candidate SHA,
    current base, applicable intent or spec/ticket identity and acceptance,
-   exclusions, authority, actual author provenance for authored mode, and all
-   six angles.
+   exclusions, authority, and all six angles. In authored mode, record the
+   author's actual provider and model from the Orca launch receipt in the
+   dispatch brief; a `Claude-Session` trailer is attribution, not provenance.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [Orca runtime](../axstack/references/orca-runtime.md), then apply exactly one
    branch below. For every reviewer, apply
@@ -329,11 +330,14 @@ no merge authority.
 Candidate: <PR URL> rev <sha> (immutable checkout)
 Workspace: <Orca worktree ID + absolute path>
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
-Mode: <peer | authored> Actual author: <session/model evidence | n/a>
+Mode: <peer | authored> Actual author: <provider/model from Orca launch receipt + session | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
 Escalate to user: yes | no — <criterion> — <reason>
 ```
+
+The `Claude-Session` trailer is attribution, not provenance; use the Orca
+launch receipt for the actual author provider and model.
 
 Every brief ends with the `Escalate to user` field and the reviewer answers it
 in the receipt. A reviewer may cite only a security concern, a permanent

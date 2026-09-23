@@ -80,6 +80,7 @@ and parentage at dispatch. `--no-parent` is for unrelated work with no parent
 context. Where supported, correct wrong lineage in place with
 `worktree set --parent-worktree`. Lineage is presentation, never authority: it
 grants nothing and cannot replace Task, Dispatch, and receipt evidence.
+`--no-parent` is never used for a review or repair checkout.
 
 Every reviewer gets a separate Orca child worktree parented to the candidate.
 Keep that reviewer's probes and private evidence in its separate private

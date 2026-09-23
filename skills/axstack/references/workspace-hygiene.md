@@ -24,6 +24,15 @@ its final action. Manual chats, automation dedicated workspaces, and genuine
 `user_takeover` sessions are never removed. Deleting a session means closing
 its terminal; agent chat history is not deleted.
 
+If native exact terminal close returns `runtime_error` for a provably finished
+agent, send `/quit` + Enter to that exact terminal, wait about 5 seconds, then
+send `exit` + Enter. Confirm it left a fresh native terminal list. Never use
+this fallback for a working, user-taken-over, or unclear agent; never use
+`--all` or a name selector. A finite scheduled pass whose own close fails
+leaves its terminal for the next pass, without treating that expected failure
+as a hold. At pass start, clear only provably finished predecessor terminals
+of the same automation in its dedicated workspace by this exact-handle path.
+
 ## Preserve before removal
 
 Workers write reports, probes, logs, evidence, and scratch to the private
@@ -67,12 +76,21 @@ For `release_unknown`, reconcile with native worker inspection. If a fresh
 native terminal list confirms the terminal is gone, record the readback and
 proceed; otherwise hold.
 
+## Known Orca issues
+
+Mark these for upstream reporting: in Orca 1.4.209 desktop, `orca terminal
+close` on an agent terminal returns `runtime_error` with `Error invoking remote
+method 'session:set': TypeError: Cannot convert undefined or null to object`.
+Dispatch into an existing terminal marks the worker retained/`user_takeover`.
+Cross-repository `--parent-worktree` is silently dropped.
+
 ## Readable sidebar
 
 Set the Orca display name with `orca worktree set --display-name` when creating
 each run worktree. Use run first, then role, space-separated: `<run> driver`,
 `<run> author #<pr>`, and `<run> review #<pr> r<n>`. Peer reviewers append
-`primary` or `secondary`; authors carry no round number. Use the task ID in
+`primary` or `secondary`; authored reviewers have no `primary` or `secondary`
+qualifier, and authors carry no round number. Use the task ID in
 place of `#<pr>` before a PR number exists, then update the name when assigned.
 
 Set `--comment` at dispatch, at settlement with the verdict and short SHA, and

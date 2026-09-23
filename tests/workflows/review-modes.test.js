@@ -178,6 +178,8 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(raw).toContain('Escalate to user: yes | no — <criterion> — <reason>');
   const brief = raw.slice(raw.indexOf('## Template: candidate review brief'), raw.indexOf('## Template: review receipt'));
   expect(brief).toContain('Escalate to user: yes | no — <criterion> — <reason>');
+  expect(brief).toMatch(/Actual author: <provider\/model from Orca launch receipt[^>]*>/);
+  expect(brief).toMatch(/Claude-Session[^.]*attribution[^.]*not provenance/i);
   const receipt = raw.slice(raw.indexOf('## Template: review receipt'), raw.indexOf('## Prompt-only urgent escalation'));
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/security concern[^.]*permanent on-chain state change[^.]*architectural change in approach/i);
