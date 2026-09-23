@@ -46,15 +46,17 @@ observer's read-only and reporting limits are policy boundaries, not runtime
 permission enforcement.
 
 At pass start, a read-only chat-run observer or `axstack-monitor` reports
-finished predecessor terminals and other leftovers to its driver; it must never
+finished predecessor terminals and other leftovers to its initiating driver; it must never
 salvage or remove another session or worktree. A task-owned watch pass with
-recorded maintenance authority acts as its lane's driver: clear only proven
+recorded cleanup authority acts as its lane's driver: clear only proven
 finished predecessor terminals of the same automation in its dedicated
 workspace, using the exact-handle fallback in
 [Workspace hygiene](../../axstack/references/workspace-hygiene.md), then run
 the driver-start orphan sweep for repositories listed in its run record under
-the same guards. That maintenance pass is silent when nothing was removed and
-reports sweep results and holds to the driver for the run record.
+the same guards. Recorded cleanup authority is separate from and does not imply
+repair or maintenance authority. That cleanup-authorized watch pass is silent
+when nothing was removed and records sweep results and holds in its continuity
+Open holds table.
 After each task-owned automation pass reports or completes a quiet observation,
 run `orca terminal close --terminal <exact handle from the run receipt> --json`
 as the final action. Close only the pass's own terminal; never use `--all` or

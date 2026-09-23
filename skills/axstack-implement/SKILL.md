@@ -183,8 +183,8 @@ For each PR:
    `axstack-cleanup` for its exact reviewer resources before PR merge,
    preserving and reading back the
    private evidence archive before eligible worktree retirement. A later review
-   uses a fresh child checkout. Keep the author candidate until merge and
-   Close-out; a cleanup hold preserves only the affected reviewer resource.
+   uses a fresh child checkout. Keep the author candidate until its PR merges or
+   closes; a cleanup hold preserves only the affected reviewer resource.
 4. Route the verdict. `APPROVE` at that head plus `axstack-watch` §5's full
    predicate—required checks, all feedback, approvals, mergeability, and
    exact-revision receipts—records `merge-ready`. With required checks pending,

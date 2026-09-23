@@ -73,8 +73,8 @@ remote branch contains it); unverifiable state is a hold. For an eligible
 author worktree, salvage first if dirty, under the preservation guards above.
 Phase-skill entry drivers report sweep results and holds in chat and run record.
 A scheduled review-manager pass records sweep results and holds in its
-continuity record's Open holds table; a maintenance watch pass reports them to
-its driver for the run record. Both are silent when nothing was removed.
+continuity record's Open holds table; a cleanup-authorized watch pass records
+them in its own continuity Open holds table. Both are silent when nothing was removed.
 Branches with a remote counterpart are never deleted. List live or unsettled
 work, genuine `user_takeover`, and items without provable Axstack provenance in
 one table with their reason; do not remove them.
