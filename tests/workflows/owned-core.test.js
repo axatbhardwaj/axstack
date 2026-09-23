@@ -202,10 +202,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
     /original author session[^.]*run itself launched|run itself launched[^.]*original author/i.test(text),
     'authorized repairs reuse the original author only for a session the run itself launched',
   ).toBeTruthy();
-  expect(
-    /adopted own PR under the manager[^.]*manager PR coordinator[^.]*dispatched `axstack-author`/i.test(text),
-    'an adopted own PR under the manager is repaired by its coordinator or a dispatched axstack-author',
-  ).toBeTruthy();
+  expect(/actual provenance of its repair author/i.test(text)).toBeTruthy();
   expect(
     /exact[\s\S]*(reply|response|public)[\s\S]*(text|bodies)|exact text/i.test(text),
     'authorized publication requires the exact public reply text reviewed',
@@ -228,7 +225,7 @@ test('owned-core: authorized repairs use original author with reviewed code and 
   ).toBeTruthy();
 });
 
-test('owned-core: one persistent owner; manager and standalone watch remain separate', () => {
+test('owned-core: one persistent owner and standalone watch remain explicit', () => {
   const text = skill('axstack-watch');
   expect(
     /one (persistent )?owner/i.test(text),
@@ -237,8 +234,6 @@ test('owned-core: one persistent owner; manager and standalone watch remain sepa
   expect(/monitor/i.test(text), 'must name the optional standalone monitor').toBeTruthy();
   expect(/optional read-only observer/i.test(text), 'monitor must remain read-only').toBeTruthy();
   expect(/Orca runtime/i.test(text), 'watch must name the Orca runtime boundary').toBeTruthy();
-  expect(/isolated per-pass workspace/i.test(text), 'manager must have an isolated pass workspace').toBeTruthy();
-  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting membership must not reserve a slot').toBeTruthy();
   expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
   expect(/reconcil/i.test(text), 'uncertain state must be reconciled').toBeTruthy();
 });
@@ -367,19 +362,6 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
   ).toBeTruthy();
 });
 
-test('owned-core: finite watch-manager sessions keep bounded event policy', () => {
-  const text = skill('axstack-watch');
-  expect(/watch-manager pass[^.]*fresh finite session[^.]*isolated per-pass workspace/i.test(text), 'watch manager must use fresh sessions in isolated pass workspaces').toBeTruthy();
-  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting PRs must not reserve slots').toBeTruthy();
-  expect(/no watch deadline[^.]*manager automation/i.test(text), 'manager automation must not inherit the standalone deadline').toBeTruthy();
-  expect(/never poll|polling loop/i.test(text), 'no polling loop').toBeTruthy();
-  expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();
-  expect(
-    /approval alone/i.test(text),
-    'a review approval alone must not count as merge-ready',
-  ).toBeTruthy();
-});
-
 test('owned-core: publication keys reply bodies to feedback IDs with freshness checks', () => {
   const text = skill('axstack-watch');
   expect(/feedback IDs/i.test(text), 'reply bodies must key to feedback IDs').toBeTruthy();
@@ -413,8 +395,8 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
   expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
-  expect(watch).toMatch(/bounded PR coordinator[^.]*live owner[^.]*event/i);
-  expect(watch).toMatch(/materialize no `axstack-owner`[^.]*start no automation[^.]*read-only check/i);
+  expect(watch).toMatch(/one accountable owner/i);
+  expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
   expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
 

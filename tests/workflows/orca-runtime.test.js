@@ -97,13 +97,12 @@ test('all active skill runtime instructions are Orca-only', () => {
   }
 });
 
-test('native watch manager uses capacity admission and requires canary evidence', () => {
-  const watch = read('skills/axstack-watch/references/watch-runtime.md');
-  expect(watch).toMatch(/new isolated workspace and fresh finite session/i);
-  expect(watch).toMatch(/bounded actionable-event jobs[^.]*measured host capacity/i);
-  expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
-  expect(watch).toMatch(/canary[^.]*fresh-session launch/i);
-  expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom\s+scheduler/i);
+test('review manager uses capacity admission and requires canary evidence', () => {
+  const manager = read('skills/axstack/references/automations.md');
+  expect(manager).toMatch(/new isolated workspace for every scheduled pass/i);
+  expect(manager).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
+  expect(manager).toMatch(/canary must prove fresh-session/i);
+  expect(manager).not.toMatch(/watch manager|watch lane/i);
 });
 
 test('preset bundles retain three role tables in the frozen container', () => {
