@@ -99,9 +99,13 @@ separately. Dry-run the exact scoped path from the reviewer worktree root with
 `git clean -nd -- <exact reviewed scratch prefix>`
 with the concrete reviewed relative prefix substituted for the angle-bracket
 notation. Compare its sole target to the classified directory; an empty,
-partial, or different result holds. Re-read the compact receipt, complete Git
-status including ignored files, every directory inventory, native ownership and
-liveness immediately before each deletion; any changed inventory holds. Then run
+partial, or different result holds. Immediately before each deletion, including
+each next deletion, re-read the compact receipt, complete Git status with
+whole-worktree dirt and ignored files, every remaining prefix inventory, and
+native ownership and liveness. Compare these reads against the expected
+post-deletion state: previously deleted proven prefixes and their files are
+absent, while remaining classified prefixes and outside content still match.
+Only unexpected changes hold. Then run
 `git clean -fd -- <same exact prefix>` with the identical concrete path, record
 that path and outcome, and repeat for the next proven prefix. Recheck clean Git status
 after the last deletion. Require final clean Git status before native

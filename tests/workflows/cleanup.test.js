@@ -36,7 +36,14 @@ test('merged reviewer checkout with two passes requires per-file proof and per-p
   expect(scratch).toMatch(/each[^.]*prefix[^.]*settled Dispatch/is);
   expect(scratch).toMatch(/each[^.]*prefix[^.]*exact-path dry-run[^.]*exact-path deletion/is);
   expect(scratch).toMatch(/final clean (?:Git )?status[^.]*native\s+exact-workspace removal[^.]*without force/is);
-  expect(scratch).toMatch(/changed (?:inventory|inventories)[^.]*holds/is);
+  expect(scratch).toMatch(/expected\s+post-deletion state/is);
+  expect(scratch).toMatch(/every remaining (?:proven )?prefix[^.]*inventory/is);
+  expect(scratch).toMatch(/whole-worktree dirt[^.]*ignored files/is);
+  expect(scratch).toMatch(/before each deletion[^.]*each next deletion[^.]*native ownership and liveness/is);
+  expect(scratch).toMatch(/only unexpected changes[^.]*hold/is);
+  expect(scratch).toMatch(/dirt outside (?:them|those prefixes) holds/is);
+  expect(scratch).toMatch(/ignored files across the whole\s+worktree too/is);
+  expect(scratch).toMatch(/unknown or ignored content holds/is);
 });
 
 test('cleanup loads shared policy and leaves runtime commands to discovered guides', () => {
