@@ -1,7 +1,7 @@
 {
-  "version": 6,
+  "version": 7,
   "evidence": "behavioral evaluation inputs and expected decisions; this fixture is not a model evaluation result, scheduler implementation, or live-runtime receipt",
-  "migration": "v6 replaces three retired watch or repair holdouts with peer-review cases: thirty-peer-pr-coverage, durable-review-decision, and same-head-new-peer-request. Other holdouts retain their decisions; duplicate-manager-self-close drops an obsolete cross-lane phrase. SHA-256 of the first nine cases: 0e9d75a989dba5ba3199b375a9ad900db1c133c360f41b36dc94131440656f7a.",
+  "migration": "v7 adds exact own-terminal close, native predecessor reconciliation, and bounded terminal retention to the dedicated-workspace holdouts.",
   "cases": [
     {
       "id": "thirty-peer-pr-coverage",
@@ -11,26 +11,26 @@
     },
     {
       "id": "finite-unchanged-pass",
-      "input": "a fresh manager session reconciles all workspaces for its automation, observes no new exact-head event, and has no descendants",
-      "expected": ["create no PR job", "save reconciled continuity", "close the finite manager session as its final action"],
+      "input": "a fresh manager session in its dedicated existing workspace reconciles the lane, observes no new exact-head event, and has no descendants",
+      "expected": ["create no PR job", "save compact reconciled continuity", "exact close of its own terminal as the final action"],
       "forbidden": ["retain an idle manager chat", "repeat an unchanged review"]
     },
     {
       "id": "duplicate-manager-self-close",
-      "input": "a new review-manager session in an empty isolated workspace finds another live review manager with three active PR jobs in a different workspace of the same automation",
-      "expected": ["perform no PR work", "make no shared-record write", "close only the new duplicate session"],
+      "input": "a new review-manager session in the dedicated workspace finds another confirmed live manager with three active PR jobs in the same lane",
+      "expected": ["perform no PR work", "make no shared-record write", "exact close of only the new duplicate terminal"],
       "forbidden": ["interrupt the established manager", "borrow capacity from an unrelated run"]
     },
     {
       "id": "owned-shell-cleanup",
-      "input": "all descendants settled; three exact terminals are proven owned unused setup shells, while review reports, a dirty unpushed candidate, and a user-owned terminal remain",
-      "expected": ["close only the three exact owned unused setup-shell terminals", "preserve worktrees, candidate, evidence, and user terminal", "save continuity before self-close"],
+      "input": "all descendants settled; three exact worker terminals are owned, while review reports, a dirty unpushed candidate, and a user-owned terminal remain",
+      "expected": ["release only the three exact owned worker terminals", "preserve protected candidate, evidence, and user terminal", "save continuity before exact own-terminal close"],
       "forbidden": ["blanket-close the workspace", "delete or clean preserved candidate state"]
     },
     {
       "id": "durable-review-decision",
       "input": "a peer review raises an architecture decision after all descendants settle; exact head/base and finding evidence must survive manager closure",
-      "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "close the finite manager only after saving continuity"],
+      "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "close the exact manager terminal only after saving continuity"],
       "forbidden": ["depend on the closed manager chat for the answer", "treat Telegram or silence as authority"]
     },
     {
@@ -42,7 +42,7 @@
     {
       "id": "unsettled-descendant",
       "input": "current PR work appears finished, but its reviewer is live and a descendant release result is unknown while saved state says completed",
-      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not self-close until descendants settle"],
+      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not close the manager terminal until descendants settle"],
       "forbidden": ["trust stale completed state", "release or close unknown-live resources"]
     },
     {
@@ -100,28 +100,28 @@
       "forbidden": ["remove unverified evidence", "disable the lane solely for this settled workspace cleanup hold"]
     },
     {
-      "id": "completed-predecessor-cleanup",
-      "input": "the ordered successor finds a predecessor with positive completion, exact automation/run/workspace/terminal-incarnation matches, saved continuity, zero active or unsettled descendants, and a terminal that survived",
-      "expected": ["claim cleanup as the one ordered successor", "save cleanup continuity before exact native close", "prove the entire predecessor process tree exited before ownership release", "remove only the clean evidence-safe childless worktree through native cleanup"],
-      "forbidden": ["take over predecessor PR work", "infer exit from completed status or idle", "remove dirty, unpushed, or unarchived evidence"]
+      "id": "settled-job-release-and-cleanup",
+      "input": "the PR job and reviewers settle with private evidence archived and read back, and their worktrees have no protection holds",
+      "expected": ["worker-release the settled worker terminals", "retire reviewer worktrees through axstack-cleanup", "retire the PR-job worktree in the same pass"],
+      "forbidden": ["close the dedicated manager workspace", "remove unarchived evidence", "retain clean worktrees until merge"]
     },
     {
-      "id": "predecessor-cleanup-safety-hold",
-      "input": "an earlier pass is old and marked completed, but its exact terminal incarnation mismatches and native inventory shows an unexpected terminal with user_takeover while descendant settlement is unknown",
-      "expected": ["preserve the predecessor and evidence", "pause admission for unresolved lane ownership", "record the cleanup hold and resume condition once"],
-      "forbidden": ["kill by age or completed status", "bypass user_takeover", "close an unexpected terminal", "admit PR work from the successor"]
+      "id": "closed-pr-worktree-cleanup",
+      "input": "a PR closes after its job settles; its private evidence is archived and read back, with no dirty source, unpushed commits, user takeover, unknown liveness, or ambiguous publication",
+      "expected": ["resolve the user-decision hold by archive and cleanup", "remove the reviewer and PR-job worktrees in the same pass"],
+      "forbidden": ["keep a clean job worktree solely because the PR closed", "discard a genuine protection hold"]
     },
     {
-      "id": "competing-successor-cleanup",
-      "input": "two overlapping successors both observe the same positively completed predecessor as cleanup-eligible before either mutates it",
-      "expected": ["reconcile native successor ordering", "allow only the earlier ordered successor to claim cleanup", "make the later successor reconcile the first claim and perform no cleanup"],
-      "forbidden": ["race two close operations", "guess a winner without ordering evidence", "create a custom lock or state engine"]
+      "id": "compact-continuity-archive",
+      "input": "many manager passes have accumulated, including old summaries and current open holds",
+      "expected": ["keep current lane state, open holds, watermarks, and the last pass summary in the compact record", "append older pass history to the archive file beside it", "read only compact continuity by default"],
+      "forbidden": ["grow the continuity record without bound", "re-read the full archive on every pass"]
     },
     {
-      "id": "predecessor-cleanup-failure-dedupe",
-      "input": "the one ordered successor saved continuity and attempted exact native predecessor close, but close or exit proof is failed or uncertain and the same condition appears next pass",
-      "expected": ["preserve ownership, workspace, and evidence", "pause the lane with the exact resume condition", "deduplicate the unchanged cleanup hold and notification"],
-      "forbidden": ["release ownership without full process-tree exit proof", "remove the worktree", "retry cleanup or notify on every pass"]
+      "id": "workspace-local-temporary-files",
+      "input": "manager and PR-job commands need temporary files while running in their respective Orca workspaces",
+      "expected": ["set TMPDIR inside each command's owning workspace", "validate ownership and containment before cleanup", "preserve uncertain temporary paths"],
+      "forbidden": ["write temporary files under / or a shared root", "sweep a shared temporary directory"]
     }
   ]
 }

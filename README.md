@@ -114,10 +114,10 @@ For recurring peer review, Axstack defines one optional native Orca review manag
 Own-PR observation and authorized repair remain user-driven through `axstack-watch`. Its chat-run mode can use one optional same-host native Orca observer per Run, about every ten minutes, to report new PR events internally to the original chat. The chat alone directs repairs and publication. Activation needs a live host canary; source and install checks do not prove it is running.
 
 The review manager uses a 15-minute schedule. Each pass uses a fresh finite
-session in an isolated workspace and admits eligible actionable PR events within
+session in one dedicated existing workspace and admits eligible actionable PR events within
 measured host capacity. Waiting PRs remain tracked without consuming
 execution slots, so a large open-PR backlog does not require an idle agent per PR.
-Completed passes save continuity and retire their own verified resources.
+Completed passes save compact continuity and close only their own exact terminal.
 Held jobs preserve evidence, use private worktree-local temporary paths, and
 release capacity only after native descendant settlement. Uncertain execution
 teardown pauses the lane; settled evidence cleanup does not occupy a slot.

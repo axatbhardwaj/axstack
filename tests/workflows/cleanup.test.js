@@ -103,8 +103,8 @@ test('shared reviewer evidence rules honor the guarded compact-receipt path', ()
   expect(cleanup).toMatch(/settled reviewer Dispatch[\s\S]*?raw reviewer report may be discarded/is);
   expect(runtime).toMatch(/before removing a reviewer worktree[\s\S]*?private evidence archive[\s\S]*?settled reviewer Dispatch[\s\S]*?axstack-cleanup/is);
   expect(runtime).toMatch(/preserve\s+active[^.]*unknown[^.]*unique evidence/is);
-  expect(automations).toMatch(/PR-job[^.]*reviewer scratch[^.]*axstack-cleanup/is);
-  expect(automations).toMatch(/never changes manager pass preservation or retirement guards/is);
+  expect(automations).toMatch(/settled PR job[\s\S]*?private evidence archive[\s\S]*?read back[\s\S]*?axstack-cleanup/is);
+  expect(automations).toMatch(/reviewer and PR-job worktrees in the same pass/is);
 });
 
 test('open PR reviewer retirement preserves the author and starts a fresh later review', () => {
@@ -123,13 +123,13 @@ test('open PR reviewer retirement preserves the author and starts a fresh later 
   expect(implement).toMatch(/author candidate[^.]*until[^.]*merge/is);
 });
 
-test('PR-job reviewer cleanup always archives and reads back evidence before merge', () => {
+test('PR-job and reviewer cleanup archives and reads back evidence in the same pass', () => {
   const automations = read('skills/axstack/references/automations.md');
-  const reviewerCleanup = automations.match(/For a completed PR-job[\s\S]*?before merge\./)?.[0];
+  const reviewerCleanup = automations.match(/For a settled PR job[\s\S]*?same pass\./)?.[0];
   expect(reviewerCleanup).toBeString();
-  expect(reviewerCleanup).toMatch(/reviewer scratch[\s\S]*private evidence archive[\s\S]*read back[\s\S]*before merge/is);
+  expect(reviewerCleanup).toMatch(/private evidence archive[\s\S]*read back[\s\S]*reviewer and PR-job worktrees/is);
   expect(automations).not.toMatch(/reviewer scratch may instead[^.]*compact receipt/is);
-  expect(automations).toMatch(/never changes manager pass preservation or retirement guards/is);
+  expect(automations).toMatch(/merged or closed PR[^.]*never keep a job worktree/i);
 });
 
 test('removed reviewer checkout ref is deleted only with proven provenance and reachable tip', () => {

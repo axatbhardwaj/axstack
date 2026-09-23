@@ -49,6 +49,11 @@ forge/PR state, and the approved spec remain sources of truth. The driver
 verifies exact SHAs and receipts before recording a transition; a worker claim
 alone is not verification.
 
+For the scheduled review manager, keep only current lane state, open holds,
+watermarks, and the last pass summary in its durable continuity record (a few
+dozen lines). Append older pass history to an archive file beside that record;
+never re-read it by default. Read it only for a specific recovery question.
+
 Before changing `Driver` or a task `Owner`, verify that the prior driver is
 inactive against actual Orca session and Dispatch state, or that an explicit accepted transfer
 permits reassignment. Idle alone never reassigns ownership.

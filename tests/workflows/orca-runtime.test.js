@@ -99,7 +99,8 @@ test('all active skill runtime instructions are Orca-only', () => {
 
 test('review manager uses capacity admission and requires canary evidence', () => {
   const manager = read('skills/axstack/references/automations.md');
-  expect(manager).toMatch(/new isolated workspace for every scheduled pass/i);
+  expect(manager).toContain('dedicated existing Orca workspace');
+  expect(manager).toMatch(/native existing-workspace mode[^.]*--fresh-session/i);
   expect(manager).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
   expect(manager).toMatch(/canary must prove fresh-session/i);
   expect(manager).not.toMatch(/watch manager|watch lane/i);

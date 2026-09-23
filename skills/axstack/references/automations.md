@@ -8,21 +8,18 @@ automation specs and plans describe retired designs and are not instructions.
 The review manager runs at minutes `0,15,30,45` and invokes
 [axstack-review](../../axstack-review/SKILL.md) for eligible peer reviews.
 
-Use a new isolated workspace for every scheduled pass, with one fresh finite
-manager session. Configure native repo-created worktree mode against the
-designated manager repository; never target an existing shared workspace.
-Do not use `--reuse-session`. The scheduler creates the pass workspace before
-launch; the manager must not move itself from a shared launch workspace.
-Keep lane continuity and evidence outside disposable manager workspaces at
-the configured durable absolute paths. A manager never checks out a PR branch
-in its pass workspace. Missed slots do not replay a backlog; the next ordinary pass
+Use one dedicated existing Orca workspace owned by this automation. Configure
+native existing-workspace mode with `--fresh-session`, never `--reuse-session`;
+each pass gets a fresh finite manager session. Keep lane continuity and evidence
+at configured durable absolute paths. A manager never checks out a PR branch
+in its workspace. Missed slots do not replay a backlog; the next ordinary pass
 discovers current state. The short packaged review prompt sits beside this file
 and discovers these rules by relative link instead of copying them.
 
 Provision one explicit absolute continuity path per automation ID in the
-scheduled prompt. Follow [Run record](run-record.md) for its contents; the
-repository's absolute Git common directory is a valid durable root, but a pass
-worktree is not. Missing or non-durable continuity configuration holds admission.
+scheduled prompt. The repository's absolute Git common directory is a valid
+durable root; missing or non-durable configuration holds admission. Keep
+continuity bounded and archive old pass history per [Run record](run-record.md).
 
 This is prompt policy, not proof that Orca starts a fresh session or prevents
 overlapping passes. Before activation a native canary must prove fresh-session
@@ -33,14 +30,14 @@ effects. A firing timestamp proves neither delivery nor useful completion.
 ## Session admission
 
 Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
-sessions, and liveness across all workspaces belonging to the same automation
-before discovery or admission; never infer lane ownership from an empty local
-workspace. Bind the lane to the automation ID and pass to its native run ID,
-workspace ID, and terminal identity, not a title or directory-name guess.
+sessions, and liveness across all workspaces belonging to the lane before
+discovery or admission; never infer lane ownership from an empty local workspace.
+Bind the lane to the automation ID and pass to its native run ID, workspace ID,
+and terminal identity, not a title or directory-name guess.
 A confirmed live manager for the same lane remains authoritative.
 The new duplicate does no PR work, makes no shared-record write, touches
-nothing owned by the live manager, and closes only itself as its final action
-by the same guarded isolated-workspace retirement below, not a tab-only close.
+nothing owned by the live manager, and closes only its own exact terminal as
+its final action under the guard below.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -54,65 +51,13 @@ Read every page of native runs, workers, and workspace inventory; truncated or
 failed inventory holds admission and cleanup rather than implying absence.
 
 A prior manager does not retain the lane merely because its automation run
-status says failed or dispatched. Require confirmed native process exit for its
-exact terminal incarnation, saved continuity, and settlement of all owned jobs
-and descendants before releasing its lane ownership. Absence or saved retirement
-intent alone is insufficient. Conversely a completed run row does not prove exit.
+status says failed or dispatched. Reconcile a surviving prior terminal using
+exact identity and proven completion from native state before treating it as
+live or releasing ownership. Require confirmed process exit for its exact
+terminal incarnation, saved continuity, and settlement of all owned jobs and
+descendants before ownership release. A completed run row alone does not prove exit.
 If these facts remain unknown, report the hold at the durable decision location;
 do not silently stand down forever or replace a potentially live owner.
-
-### Guarded completed-predecessor recovery
-
-A successor may retire a positively completed predecessor whose manager terminal
-survived only through this narrow recovery path. Eligibility requires an exact
-automation ID, run ID, workspace ID, and terminal incarnation match, a positive
-completion receipt bound to that incarnation, zero active or unsettled descendants,
-and every owned Task and Dispatch settled. A completed row or saved retirement
-intent alone is not positive completion. Age, status, and idle state are never
-cleanup authority. Active, unknown, protected, identity-mismatched,
-`user_takeover`, unexpected-terminal, permission-held, or otherwise unverifiable
-state preserves the predecessor and pauses admission; this path never takes over
-its PR work.
-
-Exactly one successor, selected by native run ordering, may write the cleanup
-claim. Immediately before writing, re-read the complete lane inventory and
-ordering; then save and read back claimant identity, predecessor identity,
-completion, and zero-descendant continuity before the exact native workspace
-close. A later successor reconciles that claim and performs no cleanup mutation.
-Missing ordering or a conflicting claim holds both cleanup and admission. This
-ordering is not an atomic lock; activation still depends on the overlap canary
-proving that two successors cannot both mutate one predecessor.
-
-Use the version-matched native workspace close against the receipt's complete
-workspace ID, never an individually guessed terminal or broad selector. After
-close, re-list native runs, workspaces, terminals, Tasks, and Dispatches and prove
-the full predecessor process tree exited before ownership release. Save and read
-back the exit and release receipts, then use native worktree cleanup only when the
-workspace has no children, dirty or unknown files, unpushed commits, unarchived
-evidence, or user-owned work. Preserve every failed or uncertain close, exit,
-release, or removal with its exact resume condition and pause the lane. An
-unchanged cleanup failure gets no destructive retry or duplicate notification.
-
-Before PR admission, reconcile old pass resources and reclaim every safely
-removable earlier pass workspace under the retirement guards below. This is
-routine cleanup on every admitted pass; do not wait for the three-workspace
-threshold to start cleanup. Save confirmed exit and ownership-release receipts
-before removing each workspace. Preserve dirty, unpushed, evidence-bearing,
-user-owned, active, or uncertain resources; the threshold never relaxes these guards.
-Explicitly classified evidence may cease to block cleanup only after the
-[private evidence archive](evidence-archive.md) is verified and its receipt is
-read back from durable continuity. This never makes other dirt disposable.
-After cleanup, re-list and count only the earlier pass workspaces still remaining.
-If three or more unreclaimed
-earlier pass workspaces remain, disable only this automation through the native
-CLI, verify the disabled setting, save/report the cleanup hold, and admit no new
-PR jobs. Also pause on a confirmed earlier-manager retirement failure or
-unresolved lane ownership. A settled PR-job worktree retained for evidence is a
-cleanup hold, not unsettled execution or lane ownership.
-Already-dispatched passes still reconcile and retire only their own safe resources;
-this threshold is a stop condition, not an atomic hard cap on in-flight creations.
-An uncertain disable is a reported failure, not proof scheduling stopped. Resume
-only after ownership/cleanup is verified and explicit activation authority exists.
 
 ## Discovery and coverage
 
@@ -176,12 +121,13 @@ coordinator. Reviewers retain the isolation required by `axstack-review`:
 each runs in a separate Orca child worktree, keeps its probes and evidence
 inside that worktree, and preserves required evidence before removal.
 
-Give each job a private job-local temporary directory under its per-PR
-worktree, following the ownership, containment, and cleanup checks in the
-[runtime boundary](orca-runtime.md#reviewer-workspaces-and-evidence). Never
-delete through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a
-general cache. Preserve evidence and any temporary path whose ownership or
-containment is uncertain.
+Set `TMPDIR` for manager and job commands to a private directory inside each
+command's owning workspace. Follow ownership, containment, and cleanup checks
+in the [runtime boundary](orca-runtime.md#reviewer-workspaces-and-evidence).
+Never write temporary files under `/` or another shared root. Never delete
+through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a general
+cache. Preserve evidence and any temporary path with uncertain ownership or
+containment.
 
 An unchanged exact head and unchanged event identity creates no job; an
 unchanged exact head with a new event identity remains actionable. Event
@@ -222,12 +168,12 @@ hold, preserve the workspace, and let unrelated eligible PRs continue.
 
 An active, unknown, protected, or unverifiable coordinator or descendant is
 different: preserve its evidence and keep its slot occupied. Unresolved
-execution teardown, or failure to retire the manager pass itself, pauses the
-lane before another pass can admit work rather than accumulating active passes
-or claiming capacity from an uncertain process tree.
+execution teardown pauses the lane before another pass can admit work rather
+than claiming capacity from an uncertain process tree.
 
-When the current event is handled, settle and release owned native resources.
-Preserve dirty worktrees, unarchived review evidence, pending
+When the current event is handled, settle the PR job and descendants, then use
+native `worker-release` for their worker terminals. Preserve dirty source,
+unpushed commits, unarchived review evidence, pending
 external results, and user-owned work until durability and ownership are
 proven. Unknown liveness, `user_takeover`, and ambiguous publication likewise
 forbid cleanup. Here a pending external result means an unconfirmed review submission
@@ -235,12 +181,13 @@ or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
 record, never in an idle model, per-PR timer, or polling loop.
 Follow the [private evidence archive](evidence-archive.md) when evidence is the
 only local state to preserve; archive success does not relax any other guard.
-For a completed PR-job, including one whose PR remains open, archive classified
-reviewer scratch through the [private evidence archive](evidence-archive.md),
-read back the archive and compact receipt, then follow
-[axstack-cleanup](../../axstack-cleanup/SKILL.md)'s exact-path guards to retire
-the reviewer checkout before merge. This does not release active jobs or manager
-pass workspaces.
+For a settled PR job, archive classified scratch through the
+[private evidence archive](evidence-archive.md), read back its archive and
+compact receipt, then use [axstack-cleanup](../../axstack-cleanup/SKILL.md)'s
+exact-path guards to retire reviewer and PR-job worktrees in the same pass.
+A merged or closed PR must never keep a job worktree waiting for a user decision;
+resolve that hold by archive and cleanup. Preserve genuine protections: dirty
+source, unpushed commits, `user_takeover`, unknown liveness, and ambiguous publication.
 
 ## Review authority
 
@@ -285,50 +232,23 @@ or separate model gate.
 ## Finite-session teardown
 
 After admission closes, settle every owned PR job and all descendants before the
-manager session ends; active or unknown descendants keep their PR slot occupied
-and must be reconciled rather than trusted from saved status. Then save durable
-continuity, evidence locations, pending receipts, and user decisions before
-self-close. Waiting PRs still occupy zero slots once their owned trees settle.
+manager session closes; active or unknown descendants keep their PR slot occupied
+and must be reconciled from native state. Release settled worker terminals and
+complete guarded evidence archival and worktree cleanup in this pass. Save
+continuity, open decisions, and the last pass summary and read back the save.
+Use the exact native terminal close for this pass's own terminal from its run
+receipt: `orca terminal close --terminal <exact-handle> --json`. Terminal close
+is the final action. Never use `--all`, a broad or name selector, or another
+terminal in the dedicated workspace; uncertain identity or close outcome holds
+the lane for native reconciliation, never a guessed retry.
+Waiting PRs still occupy zero slots once their owned trees settle. A failed
+cleanup remains a recorded hold with its exact resume condition, but does not
+keep settled execution active.
 
-Cleanup of PR-job setup shells stays scoped to positively identified owned unused
-setup shells: use the native exact-terminal close operation for each only.
-Preserve dirty worktrees, unarchived review evidence, user-owned
-terminals, unknown liveness, `user_takeover`, and ambiguous publication state.
-Never classify all dirt as evidence. If explicitly classified evidence is the
-last retention reason, apply and verify the [private evidence archive](evidence-archive.md),
-update durable continuity, and read it back before native retirement.
-Completed PR-job reviewer scratch uses axstack-cleanup after archive and readback;
-it never changes manager pass preservation or retirement guards.
-
-For the manager pass only, verify native run/workspace identity, exclusive
-automation ownership, no unsettled descendants, and a fresh terminal inventory
-containing only this manager and its proven unused setup shells. No other pass
-may target this workspace. If an unexpected terminal or user takeover is present,
-do not bulk-close; preserve the workspace and report the hold at its durable
-decision location. Never bulk-close a shared manager workspace or a PR-job worktree.
-
-After saving continuity, use the version-matched native workspace retirement:
-`terminal close --worktree id:<exact-native-workspace-id> --all --json`.
-Copy the complete ID from the run/workspace receipt; never use a name, branch,
-path-only selector, or `active` for this destructive operation.
-Self-close is the final action; perform no record write or cleanup afterward.
-A failed or uncertain close is not proof of retirement. The next admitted pass
-reconciles prior retirement from native state before trusting saved intent.
-Retire only positively identified completed pass resources; do not kill another
-live or unknown manager. Remove an old pass worktree only with native cleanup
-after terminal retirement is confirmed and it has no unpushed commits,
-unarchived evidence, children, user-owned work, unknown files, or unexplained
-dirty source. A verified evidence archive does not require otherwise clean Git
-state, but every remaining change must still be positively classified and safe;
-unknown dirt blocks removal. Never use recursive shell deletion. Failed cleanup
-remains recorded, not silently forgotten. Failed PR-job workspace cleanup stays
-a cleanup hold after execution settles; failed or unverifiable manager-pass
-retirement pauses the lane instead of allowing active passes to accumulate.
-
-The activation canary must additionally prove distinct workspace IDs per pass,
-cross-workspace lane admission, self-retirement and absence after client reconnect,
-and bounded retained worktrees over repeated passes. A shell-only close test does
-not prove agent resume-record retirement. Do not activate on source checks alone.
+The activation canary must prove fresh sessions in the dedicated workspace,
+same-lane overlap admission, recovery after session loss, nested dispatch depth,
+process and memory effects, and terminals in the dedicated workspace bounded
+over repeated passes. Do not activate on source checks alone.
 
 ## Recovery and limits
 
