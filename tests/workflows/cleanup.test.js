@@ -122,3 +122,21 @@ test('open PR reviewer retirement preserves the author and starts a fresh later 
   expect(implement).toMatch(/after each[^.]*review[^.]*axstack-cleanup[^.]*before PR merge/is);
   expect(implement).toMatch(/author candidate[^.]*until[^.]*merge/is);
 });
+
+test('PR-job reviewer cleanup always archives and reads back evidence before merge', () => {
+  const automations = read('skills/axstack/references/automations.md');
+  const reviewerCleanup = automations.match(/For a completed PR-job[\s\S]*?before merge\./)?.[0];
+  expect(reviewerCleanup).toBeString();
+  expect(reviewerCleanup).toMatch(/reviewer scratch[\s\S]*private evidence archive[\s\S]*read back[\s\S]*before merge/is);
+  expect(automations).not.toMatch(/reviewer scratch may instead[^.]*compact receipt/is);
+  expect(automations).toMatch(/never changes manager pass preservation or retirement guards/is);
+});
+
+test('removed reviewer checkout ref is deleted only with proven provenance and reachable tip', () => {
+  const cleanup = read('skills/axstack-cleanup/SKILL.md');
+  expect(cleanup).toMatch(/re-list both native workspaces\s+and Git refs[\s\S]*?Read back each remaining local review ref/is);
+  expect(cleanup).toMatch(/unknown origin[^.]*unique commits[^.]*active\s+worktree[^.]*remote counterpart[^.]*preserved/is);
+  expect(cleanup).toMatch(/created for the removed reviewer checkout[^.]*tip[^.]*reachable[^.]*preserved author candidate[^.]*confirmed remote PR\s+head/is);
+  expect(cleanup).toMatch(/expected-old[^.]*ref deletion/is);
+  expect(cleanup).toMatch(/never delete\s+the author branch[^.]*generic force/is);
+});

@@ -238,9 +238,12 @@ or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
 record, never in an idle model, per-PR timer, or polling loop.
 Follow the [private evidence archive](evidence-archive.md) when evidence is the
 only local state to preserve; archive success does not relax any other guard.
-For a completed, forge-merged PR-job, classified reviewer scratch may instead
-follow [axstack-cleanup](../../axstack-cleanup/SKILL.md)'s compact receipt and
-exact-path guards. This does not release active jobs or manager pass workspaces.
+For a completed PR-job, including one whose PR remains open, archive classified
+reviewer scratch through the [private evidence archive](evidence-archive.md),
+read back the archive and compact receipt, then follow
+[axstack-cleanup](../../axstack-cleanup/SKILL.md)'s exact-path guards to retire
+the reviewer checkout before merge. This does not release active jobs or manager
+pass workspaces.
 
 ## Review and repair authority
 
@@ -310,8 +313,8 @@ terminals, unknown liveness, `user_takeover`, and ambiguous publication state.
 Never classify all dirt as evidence. If explicitly classified evidence is the
 last retention reason, apply and verify the [private evidence archive](evidence-archive.md),
 update durable continuity, and read it back before native retirement.
-The completed, forge-merged PR-job reviewer scratch exception above uses
-axstack-cleanup; it never changes manager pass preservation or retirement guards.
+Completed PR-job reviewer scratch uses axstack-cleanup after archive and readback;
+it never changes manager pass preservation or retirement guards.
 
 For the manager pass only, verify native run/workspace identity, exclusive
 automation ownership, no unsettled descendants, and a fresh terminal inventory

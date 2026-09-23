@@ -147,8 +147,16 @@ Treat these operations as separate decisions and receipts:
    holds. Record its native outcome as `unconfigured`, `passed`, `failed`, or
    `unknown`; only `unconfigured` or trusted `passed` may advance. Account for
    branch-deletion side effects explicitly, then re-list both native workspaces
-   and Git refs. A failed or unknown hook outcome or uncertain response preserves
-   the resource; never force or substitute shell deletion.
+   and Git refs. Read back each remaining local review ref against its recorded
+   name and tip. Any branch with unknown origin, unique commits, an active
+   worktree, or a remote counterpart must be preserved. Only when provenance
+   proves a ref was created for the removed reviewer checkout and its tip is
+   already reachable from the preserved author candidate or confirmed remote PR
+   head, permit
+   exact-ref expected-old ref deletion and read back its absence. Never delete
+   the author branch or use generic force. A failed or unknown hook outcome or
+   uncertain response preserves the resource; never force or substitute shell
+   deletion.
 4. **Chat archival.** Attempt it only if the version-matched runtime guide
    advertises a distinct supported operation and the scoped chat is eligible.
    Otherwise record chat archival as unsupported. Process exit, worker release,
