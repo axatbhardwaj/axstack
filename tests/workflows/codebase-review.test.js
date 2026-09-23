@@ -37,3 +37,13 @@ test('codebase mode is directly routed and distinct from PR receipts', () => {
   expect(lifecycle).toMatch(/codebase[^.]*COMPLETE[^.]*INCOMPLETE/i);
   expect(review).toMatch(/## Template: codebase findings report[\s\S]*Revision:[^\n]*[\s\S]*Inspected scope:[^\n]*[\s\S]*Exclusions:[^\n]*[\s\S]*Coverage:[^\n]*[\s\S]*Limitations:/i);
 });
+
+test('codebase reviewers inherit the runtime checkout and local evidence boundary', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
+  expect(mode).toMatch(/Immediately before each reviewer dispatch, load/i);
+  expect(mode).toContain('[Orca runtime](../axstack/references/orca-runtime.md)');
+  expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)');
+  expect(mode).toMatch(/separate Orca-managed child worktrees[^.]*detached at the pinned exact\s+source SHA/i);
+  expect(mode).toMatch(/worktree-local report, probe, and log artifacts[^.]*dispatch-specific directories/i);
+});

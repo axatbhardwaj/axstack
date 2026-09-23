@@ -63,13 +63,13 @@ receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
 Store receipt references, not raw output, in the [Run record](run-record.md).
 
 - Session receipt: actual agent/workspace IDs, requested provider/model and
-  role; reuse on resume rather than spawn a replacement.
+  role; reuse on resume.
 - Acceptance receipt: sender/recipient, accepted scope/authority, timestamp,
   and ownership session receipt.
-- Review receipt: mode, applicable provenance, reviewer, SHA/base,
+- Review receipt: mode, provenance, reviewer, SHA/base,
   verdict (`APPROVE | REQUEST_CHANGES | INCOMPLETE`), coverage, limitations and
-  findings. Changed code needs a receipt for its new revision. Codebase
-  coverage is `COMPLETE | INCOMPLETE` at revision and scope, with no PR verdict.
+  findings. Changed code needs a new receipt. Codebase: revision/scope,
+  `COMPLETE | INCOMPLETE` coverage, no PR verdict.
 - Submission receipt: actual commit, review, remote confirmation; ambiguity
   requires external lookup before retry.
 - Audit receipt: scope, evidenced PASS/FAIL/UNKNOWN counts/denominators and
@@ -87,7 +87,8 @@ covers only ordinary reading, writing, and local checks. Heartbeat deliveries
 are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
-deduplicated by runtime identity. After accepting worker, Task, or Run completion, the driver
+deduplicated by runtime identity. Healthy unchanged observations produce no
+user-facing update. After accepting worker, Task, or Run completion, the driver
 invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
 dispatches cleanup work.
 
