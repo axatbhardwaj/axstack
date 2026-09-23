@@ -177,8 +177,11 @@ For each PR:
 1. Dispatch `axstack-author` under §§3-5 and consume its strict-TDD receipt.
 2. Publish through candidate-publication and read back the exact SHA.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
-   author provenance. After each settled review, run `axstack-cleanup` for its
-   exact reviewer resources before PR merge, preserving and reading back the
+   author provenance. State the author's actual provider and model from the
+   Orca launch receipt in the review dispatch brief; a `Claude-Session`
+   trailer is attribution, not provenance. After each settled review, run
+   `axstack-cleanup` for its exact reviewer resources before PR merge,
+   preserving and reading back the
    private evidence archive before eligible worktree retirement. A later review
    uses a fresh child checkout. Keep the author candidate until merge and
    Close-out; a cleanup hold preserves only the affected reviewer resource.

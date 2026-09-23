@@ -17,6 +17,8 @@ test('scheduled manager uses one dedicated workspace and finite fresh sessions',
   expect(text).toMatch(/exact native terminal close[^.]*own terminal[^.]*run receipt/i);
   expect(text).toMatch(/terminal close[^.]*final action/i);
   expect(text).toMatch(/surviving prior terminal[^.]*exact identity[^.]*proven completion[^.]*native state/i);
+  expect(text).toMatch(/pass start[^.]*finished predecessor terminals[^.]*same automation[^.]*dedicated workspace/i);
+  expect(text).toMatch(/own close[^.]*runtime_error[^.]*next pass[^.]*not a hold/i);
   expect(text).toMatch(/terminals[^.]*dedicated workspace[^.]*bounded[^.]*repeated passes/i);
   expect(text).toMatch(/Never use `--all`[^.]*broad or name selector[^.]*another terminal/i);
   expect(compact('skills/axstack/references/review-manager-prompt.md')).toMatch(/exact close[^.]*own terminal[^.]*final action/i);

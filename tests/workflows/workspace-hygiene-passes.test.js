@@ -30,4 +30,6 @@ test('task-owned watch pass closes only its receipt terminal as final action', (
   expect(runtime).toContain('orca terminal close --terminal <exact handle from the run receipt> --json');
   expect(runtime).toMatch(/terminal close[^.]*final action/i);
   expect(runtime).toMatch(/never[^.]*--all[^.]*another terminal[^.]*shared workspace/i);
+  expect(runtime).toMatch(/pass start[^.]*finished predecessor terminals[^.]*same automation[^.]*dedicated workspace/i);
+  expect(runtime).toMatch(/own close[^.]*runtime_error[^.]*next pass[^.]*not a hold/i);
 });

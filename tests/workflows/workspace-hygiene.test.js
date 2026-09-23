@@ -77,6 +77,20 @@ test('sidebar contract names roles, records status checkpoints, and limits linea
   expect(text).toMatch(/remote.*new-child.*invalid/is);
 });
 
+test('sidebar reviewer qualifiers apply only to peer reviews', () => {
+  const sidebar = contract().split('## Readable sidebar')[1];
+  expect(sidebar).toMatch(/Peer reviewers[^.]*primary[^.]*secondary/i);
+  expect(sidebar).toMatch(/authored reviewers[^.]*no[^.]*primary[^.]*secondary[^.]*qualifier/i);
+  expect(sidebar).toMatch(/authors carry no round number/i);
+});
+
+test('finished agent-terminal close failure has an exact guarded fallback', () => {
+  const text = contract();
+  expect(text).toMatch(/runtime_error[\s\S]*\/quit[\s\S]*5 seconds[\s\S]*exit[\s\S]*fresh native terminal list/i);
+  expect(text).toMatch(/never[^.]*working[^.]*user.taken.over[^.]*unclear agent/i);
+  expect(text).toMatch(/Known Orca issues[\s\S]*upstream reporting[\s\S]*Orca 1\.4\.209[\s\S]*session:set/i);
+});
+
 test('worker dispatch entry points link the sidebar contract', () => {
   for (const path of [
     'skills/axstack/references/orca-runtime.md',

@@ -46,6 +46,7 @@ test('runtime boundary requires worker worktrees to carry their parent lineage',
     states(/--no-parent/, /unrelated/i),
     'no sentence reserves --no-parent for unrelated work',
   ).toBe(true);
+  expect(runtime).toMatch(/--no-parent[^.]*never[^.]*review or repair checkout/i);
   expect(
     states(/worktree set/, /--parent-worktree/),
     'no sentence says a wrong lineage is correctable in place',

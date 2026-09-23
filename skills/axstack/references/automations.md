@@ -239,6 +239,10 @@ or separate model gate.
 
 ## Finite-session teardown
 
+At pass start, clear finished predecessor terminals of the same automation in
+the dedicated workspace only after proving completion, by the exact-handle
+fallback in [Workspace hygiene](workspace-hygiene.md).
+
 After admission closes, settle every owned PR job and all descendants before the
 manager session closes; active or unknown descendants keep their PR slot occupied
 and must be reconciled from native state. Release settled worker terminals and
@@ -250,6 +254,8 @@ receipt: `orca terminal close --terminal <exact-handle> --json`. Terminal close
 is the final action. Never use `--all`, a broad or name selector, or another
 terminal in the dedicated workspace; uncertain identity or close outcome holds
 the lane for native reconciliation, never a guessed retry.
+If its own close returns `runtime_error`, leave the terminal for the next pass;
+this expected close failure is not a hold.
 Waiting PRs still occupy zero slots once their owned trees settle. A failed
 cleanup remains a recorded hold with its exact resume condition, but does not
 keep settled execution active.
