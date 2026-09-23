@@ -6,6 +6,7 @@ existing Orca workspace. Enter through the installed `axstack-review` skill; tha
 every eligible peer-review event and invoke the skill through Orca for each
 admitted bounded PR job. Keep complete coverage and admit actionable events
 within measured host capacity, preserve exact ownership and receipts, settle
-completed trees, and stay quiet when nothing changed. Reconcile before admission, save durable
-continuity and the last pass summary, then end the session. Reconcile the whole
-lane, not just this workspace. Never check out a PR branch here.
+completed trees, and stay quiet when nothing changed. Reconcile before admission,
+save durable continuity and the last pass summary, then exact close of your own terminal as
+the final action under the contract. Reconcile the whole lane, not just this
+workspace. Never check out a PR branch here.

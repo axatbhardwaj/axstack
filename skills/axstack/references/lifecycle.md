@@ -113,13 +113,12 @@ differs from merged; human merges.
 
 ## Review automation health
 
-The native review manager uses fresh finite sessions in isolated per-pass
-workspaces on a 15-minute schedule. It admits eligible actionable PR
-events within measured host capacity; waiting PRs remain covered without
-reserving slots. Bounded PR jobs own their
-events, use per-PR worktrees, and settle after descendants settle. Build no
-custom scheduler, state engine, or legacy fallback. Details live in
-[Watch runtime](../../axstack-watch/references/watch-runtime.md).
+The native review manager uses fresh finite sessions in one dedicated existing
+Orca workspace on a 15-minute schedule. It admits actionable PR events within
+measured host capacity; waiting PRs remain covered without reserving slots.
+Bounded PR jobs use per-PR worktrees and settle after descendants. Build no
+custom scheduler, state engine, or legacy fallback. See
+[Review manager](automations.md).
 
 ## Audit hook (close-out and meaningful checkpoints)
 

@@ -17,11 +17,9 @@ discovers current state. The short packaged review prompt sits beside this file
 and discovers these rules by relative link instead of copying them.
 
 Provision one explicit absolute continuity path per automation ID in the
-scheduled prompt. Follow [Run record](run-record.md) for its contents; the
-repository's absolute Git common directory is a valid durable root. Missing or
-non-durable continuity configuration holds admission. Keep the current lane state,
-open holds, watermarks, and last pass summary in a compact record of a few dozen
-lines. Append older pass history to an archive file beside it; never re-read by default.
+scheduled prompt. The repository's absolute Git common directory is a valid
+durable root; missing or non-durable configuration holds admission. Keep
+continuity bounded and archive old pass history per [Run record](run-record.md).
 
 This is prompt policy, not proof that Orca starts a fresh session or prevents
 overlapping passes. Before activation a native canary must prove fresh-session
@@ -38,7 +36,8 @@ Bind the lane to the automation ID and pass to its native run ID, workspace ID,
 and terminal identity, not a title or directory-name guess.
 A confirmed live manager for the same lane remains authoritative.
 The new duplicate does no PR work, makes no shared-record write, touches
-nothing owned by the live manager, and ends only its own session.
+nothing owned by the live manager, and closes only its own exact terminal as
+its final action under the guard below.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -52,10 +51,11 @@ Read every page of native runs, workers, and workspace inventory; truncated or
 failed inventory holds admission and cleanup rather than implying absence.
 
 A prior manager does not retain the lane merely because its automation run
-status says failed or dispatched. Require confirmed native process exit for its
-exact terminal incarnation, saved continuity, and settlement of all owned jobs
-and descendants before releasing its lane ownership. A completed run row alone
-does not prove exit.
+status says failed or dispatched. Reconcile a surviving prior terminal using
+exact identity and proven completion from native state before treating it as
+live or releasing ownership. Require confirmed process exit for its exact
+terminal incarnation, saved continuity, and settlement of all owned jobs and
+descendants before ownership release. A completed run row alone does not prove exit.
 If these facts remain unknown, report the hold at the durable decision location;
 do not silently stand down forever or replace a potentially live owner.
 
@@ -232,17 +232,23 @@ or separate model gate.
 ## Finite-session teardown
 
 After admission closes, settle every owned PR job and all descendants before the
-manager session ends; active or unknown descendants keep their PR slot occupied
+manager session closes; active or unknown descendants keep their PR slot occupied
 and must be reconciled from native state. Release settled worker terminals and
 complete guarded evidence archival and worktree cleanup in this pass. Save
-continuity, open decisions, and the last pass summary, then the session ends.
+continuity, open decisions, and the last pass summary and read back the save.
+Use the exact native terminal close for this pass's own terminal from its run
+receipt: `orca terminal close --terminal <exact-handle> --json`. Terminal close
+is the final action. Never use `--all`, a broad or name selector, or another
+terminal in the dedicated workspace; uncertain identity or close outcome holds
+the lane for native reconciliation, never a guessed retry.
 Waiting PRs still occupy zero slots once their owned trees settle. A failed
 cleanup remains a recorded hold with its exact resume condition, but does not
 keep settled execution active.
 
 The activation canary must prove fresh sessions in the dedicated workspace,
 same-lane overlap admission, recovery after session loss, nested dispatch depth,
-and process and memory effects. Do not activate on source checks alone.
+process and memory effects, and terminals in the dedicated workspace bounded
+over repeated passes. Do not activate on source checks alone.
 
 ## Recovery and limits
 

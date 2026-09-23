@@ -66,7 +66,7 @@ test('manager sessions reconcile before admission in the dedicated workspace', (
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native Orca[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no shared-record write/i);
-  expect(text).toMatch(/duplicate[^.]*ends[^.]*session/i);
+  expect(text).toMatch(/duplicate[^.]*closes only its own exact terminal/i);
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
 });
 
@@ -118,8 +118,9 @@ test('execution settlement frees capacity independently of retained cleanup stat
 test('manager pass ends after compact continuity and PR resource cleanup', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
-  expect(text).toMatch(/save[^.]*continuity[^.]*last pass summary[^.]*exact native terminal close/i);
-  expect(text).not.toMatch(/terminal close --worktree|old pass worktree|--all/i);
+  const teardown = text.split('## Finite-session teardown')[1].split('## Recovery and limits')[0];
+  expect(teardown).toMatch(/Save continuity[^.]*last pass summary[\s\S]*?exact native terminal close/i);
+  expect(text).not.toMatch(/terminal close --worktree|old pass worktree/i);
 });
 
 test('user decisions remain actionable after the finite manager session closes', () => {
@@ -183,7 +184,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('83c02199145668bfcf8b797801849441d8d02f3ec35b959d6d2e1743a8e448f5');
+  )).toBe('bddf98f6b4414c38f6901aa6b82bcf7b6e08c7f7b7e8a0eb37fbc078438a2064');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',

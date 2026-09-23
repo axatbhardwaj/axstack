@@ -117,7 +117,7 @@ The review manager uses a 15-minute schedule. Each pass uses a fresh finite
 session in one dedicated existing workspace and admits eligible actionable PR events within
 measured host capacity. Waiting PRs remain tracked without consuming
 execution slots, so a large open-PR backlog does not require an idle agent per PR.
-Completed passes save compact continuity and end their sessions.
+Completed passes save compact continuity and close only their own exact terminal.
 Held jobs preserve evidence, use private worktree-local temporary paths, and
 release capacity only after native descendant settlement. Uncertain execution
 teardown pauses the lane; settled evidence cleanup does not occupy a slot.

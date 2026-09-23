@@ -217,14 +217,15 @@ manager never checks out PR branches in its own workspace.
 
 Every pass reconciles saved, GitHub, and native Orca state across the lane before
 admission. A confirmed same-lane manager makes the new duplicate do no work or
-shared-record write; it ends its own session. The pass settles descendants,
+shared-record write; it closes only its own exact terminal. The pass settles
+descendants,
 releases worker terminals, archives private evidence and reads it back, then
 uses `axstack-cleanup` guards to remove reviewer and PR-job worktrees. A merged
 or closed PR does not keep a clean job worktree waiting for a user decision.
 Dirty source, unpushed commits, `user_takeover`, unknown liveness, and ambiguous
-publication remain cleanup holds. The manager saves compact continuity and
-ends its session. Manual review and user-driven `axstack-watch` remain outside
-this scheduled lifecycle.
+publication remain cleanup holds. The manager saves compact continuity, then
+closes its own exact terminal as the final action. Manual review and user-driven
+`axstack-watch` remain outside this scheduled lifecycle.
 
 Manager and job commands set `TMPDIR` to a private directory inside their owning
 workspace. Each bounded job uses a private `0700` directory. Cleanup targets
