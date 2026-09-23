@@ -44,7 +44,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/descendants[^.]*active|active[^.]*descendants/i);
   expect(text).toMatch(/settlement[^.]*releases execution capacity/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
-  expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
+  expect(text).toMatch(/unknown PR-input ownership[^.]*only[^.]*affected PR/i);
   expect(text).toMatch(/canary[^.]*fresh-session launch[^.]*overlapping-pass behavior[^.]*recovery/i);
   expect(text).toMatch(/canary[^.]*nested dispatch depth[^.]*coordinator-launched leaves/i);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
@@ -98,6 +98,16 @@ test('held manager jobs settle natively before releasing capacity', () => {
   expect(manager).toMatch(/do not mark[^.]*PR job settled[^.]*until[^.]*verif(?:y|ies)[^.]*settlement/i);
   expect(manager).toMatch(/failed manager-pass retirement[^.]*pauses the lane/i);
   expect(manager).toMatch(/unknown[^.]*user-owned[^.]*never[^.]*kill/i);
+});
+
+test('unverified active descendants pause admission while bound orphans stay PR-local', () => {
+  const manager = compact('skills/axstack/references/automations.md');
+  const scenarios = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
+  const unresolved = scenarios.cases.find(({ id }) => id === 'unresolved-teardown');
+  expect(unresolved.expected).toContain('pause the manager lane before another pass admits work');
+  expect(manager).toMatch(/unverified (?:exit|settlement)[^.]*coordinator or descendant[^.]*pauses? the lane/i);
+  expect(manager).toMatch(/protected process[^.]*pauses? the lane/i);
+  expect(manager).toMatch(/positively bound[^.]*settled PR job[^.]*PR-local/i);
 });
 
 test('held-event dedupe avoids retry storms without starving unrelated PRs', () => {

@@ -29,6 +29,12 @@ test('a positively bound orphan is handled within its PR while independent work 
   expect(contract).toMatch(/shared-host[\s\S]*ownership\s+uncertainty[\s\S]*pauses? the lane/i);
 });
 
+test('OS SIGTERM authority is confined to a freshly identified escaped orphan', () => {
+  expect(contract).toMatch(/OS\s+SIGTERM[^.]*orphan[^.]*PID[^.]*start time[^.]*executable[^.]*CWD[^.]*ownership/i);
+  expect(contract).toMatch(/verify[^.]*exit[^.]*native settlement/i);
+  expect(contract).toMatch(/agents[^.]*native lifecycle/i);
+});
+
 test('packaged prompts defer to a recorded attention-only notification policy', () => {
   expect(contract).toMatch(/recorded Notification policy[\s\S]*deduplicated[\s\S]*escalations requiring attention/i);
   expect(contract).toMatch(/under 40 words/i);

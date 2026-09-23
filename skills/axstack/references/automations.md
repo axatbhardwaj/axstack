@@ -145,7 +145,8 @@ read-only.
 Coverage is not execution. Waiting for CI, a reviewer, a user decision, or a
 merge consumes no execution capacity after owned work and descendants settle.
 Watch membership never reserves capacity and no job stays active merely until a
-PR merges or closes. Scan all thirty open PRs even if ten are waiting.
+PR merges or closes. Scan every open PR, including those waiting on external
+results.
 
 ## Admission and fairness
 
@@ -159,8 +160,8 @@ from the other lane. Leaf workers do not create recursive teams.
 
 Inspect all eligible PRs before admission. Preserve unserved work in the
 compact run record and select the oldest actionable unserved event first, with
-ascending repository and PR-number tie breaks. A sixth independent event may
-be admitted while five jobs run when resources and limits permit; repeatedly
+ascending repository and PR-number tie breaks. An additional independent event
+may be admitted while others run when resources and limits permit; repeatedly
 changing PRs cannot starve older unserved work.
 
 ## Per-PR jobs
@@ -212,6 +213,10 @@ Unknown or user-owned work is never a kill target. Do not mark the PR job settle
 until native state verifies settlement of the coordinator and every descendant.
 Unrelated eligible PRs continue after the tree is verified settled, while the
 held PR waits durably for its resume condition.
+Unverified exit or lifecycle settlement of an active or unknown owned
+coordinator or descendant, or a protected process, keeps that PR job unsettled
+and pauses the lane before another pass admits work. Preserve the process and
+its evidence until native state verifies settlement.
 
 Execution settlement and cleanup retention are separate. Positive full-tree
 process exit plus native Task and Dispatch settlement releases execution capacity.
@@ -223,10 +228,14 @@ hold, preserve the workspace, and let unrelated eligible PRs continue.
 An orphan process positively bound to one settled PR job remains a PR-local
 cleanup hold when host health is sound; unrelated eligible PRs continue.
 Immediately before any narrow automatic termination, recheck the exact process
-identity, incarnation, process tree, and ownership against native receipts. Only
-an exclusively owned orphan from that settled job may receive graceful TERM;
-verify exit and native settlement before releasing its resources. If identity
-changes or exit is unverified, preserve the process and hold that PR. Unknown or
+identity, incarnation, process tree, and ownership against native receipts. OS
+SIGTERM is permitted only for that escaped orphan, after fresh PID, start time,
+executable, CWD under its per-PR worktree, and exclusive ownership proof;
+active agents and descendants retain the native lifecycle rule. Only an
+exclusively owned orphan from that settled job
+may receive graceful TERM; verify exit and native settlement before releasing
+its resources. If identity changes or exit is unverified, preserve the process
+and hold that PR; ownership uncertainty also pauses the lane. Unknown or
 user-owned work is never terminated. Actual shared-host risk or ownership
 uncertainty pauses the lane and escalates with the exact evidence; a PR-local
 orphan alone does not broaden the hold. Failed manager-pass retirement still
@@ -352,9 +361,10 @@ not prove agent resume-record retirement. Do not activate on source checks alone
 
 On a lost manager session, native recovery first reconciles actual Orca
 workers and Dispatches, GitHub state, and the compact run record. Reuse valid
-unchanged receipts. Unknown ownership blocks only the affected PR, as does
-unknown liveness, approval, or publication outcome; recovery never copies old
-capability, replaces a live writer, or takes over live user work. Other
+unchanged receipts. Unknown PR-input ownership, approval, or publication outcome
+blocks only the affected PR; uncertain process teardown pauses the lane as
+above. Recovery never copies old capability, replaces a live writer, or takes
+over live user work. Other
 unambiguous work may proceed.
 
 Use only native schedules and Orca orchestration. Add no daemon, shell precheck,
