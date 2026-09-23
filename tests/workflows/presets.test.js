@@ -40,7 +40,7 @@ const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
     a('claude-fable-5-1', 'high'),
-    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
     c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
@@ -56,7 +56,7 @@ const expected = {
   'codex-only': [
     c('gpt-6-astra', 'high'),
     c(null, 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'medium'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
     c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
@@ -111,6 +111,17 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       expect(profile.name).toBeTruthy();
       expect(profile.notes).toBeTruthy();
     }
+  }
+});
+
+test('presets: Sol author runs at high effort while the primary reviewer stays medium', () => {
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
+    expect(byId['axstack-author']).toMatchObject({
+      provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high',
+    });
+    expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('medium');
   }
 });
 
@@ -249,7 +260,7 @@ test('presets: public docs and shared references never state a stale role count'
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
+    '| `codex-only` | Sol high | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
   );
 });
 

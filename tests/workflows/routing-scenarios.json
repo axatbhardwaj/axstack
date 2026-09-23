@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "mixed-sol-authored",
-      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "codex/gpt-6-sol medium", "candidate": "SHA A", "base": "SHA B" },
+      "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "codex/gpt-6-sol high", "candidate": "SHA A", "base": "SHA B" },
       "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "coverage": "all six angles and acceptance against exact SHA A and base SHA B" }
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "id": "codex-sol-authored",
-      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-sol medium", "candidate": "SHA E", "base": "SHA F" },
+      "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-sol high", "candidate": "SHA E", "base": "SHA F" },
       "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "independence": "different model, not cross-provider" }
     },
     {
