@@ -140,12 +140,10 @@ session and evidence remain valid.
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
-  repair authority. Repairs return to the original author only for a
-  run-launched session and receive refreshed authored review before scoped
-  `gh stack` publication. `gh stack` publication does not apply to manager
-  repairs: the bounded PR job repairs in its per-PR child worktree, the local
-  SHA receives the actual-author-provenance review, and the exact candidate
-  lands by fast-forward `git push` after final readback.
+  repair authority. Within an implementation run, fixes return to the original
+  author and follow its publish-before-review loop. Manual adopted-PR repair
+  reviews the exact local SHA and reply bodies before `gh stack` publication
+  and remote readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
 - `axstack-cleanup` distinguishes settled-Dispatch release, exact unused-shell
@@ -187,15 +185,14 @@ authority. Delivery failure never clears the underlying hold.
 Healthy watch observations remain quiet. The optional `axstack-monitor` is a
 read-only observer for standalone watches and never sends.
 
-## Native watch automations
+## Optional native peer-review automation
 
-The accepted contract has exactly two logical native manager lanes: review at
-minutes `0,15,30,45` and watch at `7,22,37,52`. Each scheduled pass uses a
-fresh finite session in a new isolated workspace, scans complete
+The optional native review manager runs at minutes `0,15,30,45`. Each
+scheduled pass uses a fresh finite session in a new isolated workspace, scans complete
 discovery pages, and admits eligible actionable PR events within measured host
-capacity across both lanes. Waiting PRs stay covered and consume no slot after
-owned descendants settle. Each job uses one repository-parented worktree; managers never check out
-PR branches in their own workspaces.
+capacity. Waiting PRs stay covered and consume no slot after
+owned descendants settle. Each job uses one repository-parented worktree; the
+manager never checks out PR branches in its own workspace.
 
 Every pass reconciles saved, GitHub, and native Orca state across all same-lane
 workspaces before admission. A
@@ -203,9 +200,10 @@ confirmed same-lane manager makes the new duplicate do no work or shared-record
 write and close only itself. Normal teardown settles descendants, saves durable
 continuity and decisions outside disposable workspaces, then retires its own
 verified isolated pass workspace as the final action. It never bulk-closes a
-shared manager workspace or a PR-job worktree, or cleans preserved candidates,
+shared manager workspace or a PR-job worktree, or cleans preserved
 evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
-publication state. Manual review/watch remains outside this scheduled lifecycle.
+publication state. Manual review and user-driven `axstack-watch` remain outside
+this scheduled lifecycle.
 
 One natively ordered successor may recover an exact positively completed
 predecessor whose terminal survived, but only after matching its automation,
@@ -229,18 +227,17 @@ teardown pauses the lane; retained evidence or cleanup metadata does not consume
 a slot after positive full-tree settlement. Once settled, an unchanged held
 event remains deduplicated while unrelated eligible PRs continue.
 
-Requested reviews cover any accessible repository; automatic repairs retain
-their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,
+Requested peer reviews cover any accessible repository. Orca owns schedules,
 sessions, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
 cursor files, polling loop, or historical runtime fallback.
 
-## Automations
+## Review automation
 
-The review and watch managers use short packaged prompts that load the current
-relative contract and invoke `axstack-review` or `axstack-watch`. Bounded jobs
-publish ordinary exact-head review verdicts or reviewed fast-forward repairs;
-the human merges. Exceptional security, permanent-on-chain, or architectural
-decisions remain actionable in GitHub or a durable user-owned conversation
+The review manager uses one short packaged prompt that loads the current
+relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
+exact-head review verdicts; the human merges. Manual adopted-PR maintenance
+uses `axstack-watch` with local-SHA review before authorized publication.
+Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
 after manager self-close, with an authorized deduplicated Telegram notification.
 The current operational contract is
 `skills/axstack/references/automations.md`.

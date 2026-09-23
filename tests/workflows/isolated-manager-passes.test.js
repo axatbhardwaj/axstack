@@ -33,9 +33,9 @@ test('retention failure stops future scheduled growth and exit proof permits rec
 test('manual invocations do not enter scheduled lifecycle', () => {
   for (const skill of ['review', 'watch']) {
     const text = read(`skills/axstack-${skill}/SKILL.md`);
-    expect(text).toContain('Manual invocation does not enter the scheduled manager lifecycle');
-    expect(text).toContain('never close the user’s chat or workspace');
+    expect(text).toMatch(/Manual (review|watch) keeps the user’s chat and workspace open/);
   }
+  expect(read('skills/axstack-watch/SKILL.md')).not.toMatch(/scheduled pass|watch-manager/i);
 });
 
 test('retention counts leftovers only after routine safe reclamation', () => {

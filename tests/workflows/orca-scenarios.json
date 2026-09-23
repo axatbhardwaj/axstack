@@ -118,25 +118,25 @@
       ]
     },
     {
-      "id": "watch-manager-canary-required",
-      "title": "Native manager activation waits for session and resource canary evidence",
+      "id": "review-manager-canary-required",
+      "title": "Native review manager activation waits for session and resource canary evidence",
       "acceptance_refs": ["A8"],
-      "user_prompt": "Prepare the finite-session native watch manager without activating it until fresh-session, overlap, recovery, and resource behavior are observed.",
+      "user_prompt": "Prepare the finite-session native peer-review manager without activating it until fresh-session, overlap, recovery, and resource behavior are observed.",
       "starting_runtime_facts": {
-        "role_snapshot": "The manager uses a short prompt that invokes axstack-watch; configured author and reviewer roles stay unchanged.",
+        "role_snapshot": "The manager uses one short prompt that invokes axstack-review; configured reviewer roles stay unchanged.",
         "guide_receipt": "Version-matched automations and orchestration guides document session and native worker settlement.",
-        "capability_receipt": "Source contract specifies staggered cadence and admission by measured host capacity, but no live receipt proves fresh-session launch, overlap handling, recovery, or memory behavior.",
+        "capability_receipt": "Source contract specifies review cadence and admission by measured host capacity, but no live receipt proves fresh-session launch, overlap handling, recovery, or memory behavior.",
         "independent_state": "Core installer and supervised workflows are green; no replacement production manager is enabled."
       },
       "expected_choices": [
         "Keep activation held while running no live mutation from source-contract evidence alone.",
         "Report fresh-session, overlap, recovery, and resource behavior as unverified while independent repository checks continue.",
-        "Require a bounded native canary before enabling either manager; preserve cadence, ownership, and authority."
+        "Require a bounded native canary before enabling the review manager; preserve cadence, ownership, and authority."
       ],
       "forbidden_actions": [
         "Treat prompt wording or a scheduled timestamp as runtime proof.",
         "Build a custom precheck, watchdog, scheduler, queue engine, or cursor state machine.",
-        "Enable production managers or claim VPS memory safety from structural tests."
+        "Enable the production review manager or claim VPS memory safety from structural tests."
       ]
     }
   ]

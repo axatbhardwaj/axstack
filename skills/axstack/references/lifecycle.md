@@ -17,8 +17,8 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Automation review/watch managers and optional monitor: see
-  [Watch health](#watch-health).
+- Automation review manager and optional standalone monitor: see
+  [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
@@ -99,21 +99,21 @@ On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
 identity. Respect settlement protection including `user_takeover`.
 
 No execution heartbeat or substitute scheduler is created by Axstack. Native
-watch automation follows [Watch health](#watch-health).
+review automation follows [Review automation health](#review-automation-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
-deadline and preserve remaining work; there is no watch deadline for
-automations. A PR is merge-ready only with the applicable review receipt(s) at
+deadline and preserve remaining work; the review automation has no task-owned
+deadline. A PR is merge-ready only with the applicable review receipt(s) at
 its exact head; green CI or tests alone never make it merge-ready. Merge-ready
 differs from merged; human merges.
 
-## Watch health
+## Review automation health
 
-Native review and watch lanes use fresh finite sessions in isolated per-pass
-workspaces on staggered 15-minute schedules. Each admits eligible actionable PR
+The native review manager uses fresh finite sessions in isolated per-pass
+workspaces on a 15-minute schedule. It admits eligible actionable PR
 events within measured host capacity; waiting PRs remain covered without
 reserving slots. Bounded PR jobs own their
 events, use per-PR worktrees, and settle after descendants settle. Build no

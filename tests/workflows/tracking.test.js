@@ -43,24 +43,14 @@ test('delivery and recovery preserve runtime identity and ownership', () => {
   expect(lifecycle).toMatch(/tracking[^.]*no[^.]*merge[^.]*release[^.]*model-substitution[^.]*scope/i);
 });
 
-test('native managers and standalone watch boundaries remain explicit', () => {
-  const watch = compact('skills/axstack-watch/references/watch-runtime.md');
+test('review automation and manual watch boundaries remain explicit', () => {
+  const watch = compact('skills/axstack-watch/SKILL.md');
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
-  expect(watch).toMatch(/separate native watch manager/i);
-  expect(watch).toMatch(/bounded actionable-event jobs[^.]*measured host capacity/i);
-  expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
-  expect(watch).toMatch(/fresh-session launch[^.]*overlapping scheduled pass[^.]*session loss/i);
-  expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom scheduler/i);
-  expect(lifecycle).toMatch(/review and watch lanes[^.]*isolated per-pass workspaces/i);
-  expect(lifecycle).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
-  expect(workflows).toMatch(/exactly two logical native manager lanes/i);
-  expect(workflows).toMatch(/waiting PRs[^.]*consume no slot/i);
-
-  const watchSkill = compact('skills/axstack-watch/SKILL.md');
-  const readme = compact('README.md');
-  for (const text of [watchSkill, readme]) {
-    expect(text).toMatch(/fresh finite|finite session/i);
-    expect(text).toMatch(/waiting PRs[^.]*slots/i);
-  }
+  expect(watch).toMatch(/observation-only/i);
+  expect(watch).toMatch(/authorized maintenance/i);
+  expect(watch).not.toMatch(/watch-manager|scheduled pass/i);
+  expect(lifecycle).toMatch(/native review manager[^.]*isolated per-pass workspaces/i);
+  expect(workflows).toMatch(/optional native review manager/i);
+  expect(workflows).toMatch(/user-driven `axstack-watch`/i);
 });

@@ -7,30 +7,26 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // These are source-contract checks. The separately frozen model evaluation is
 // the behavioral evidence; passing these checks alone proves no runtime result.
-test('thin PR managers expose two short finite-session native prompts', () => {
+test('review manager exposes one short finite-session native prompt', () => {
   const reviewPath = 'skills/axstack/references/review-manager-prompt.md';
-  const watchPath = 'skills/axstack/references/watch-manager-prompt.md';
-  for (const path of [reviewPath, watchPath]) {
+  expect(existsSync(`${root}/skills/axstack/references/watch-manager-prompt.md`)).toBe(false);
+  for (const path of [reviewPath]) {
     expect(existsSync(`${root}/${path}`), `${path} exists`).toBe(true);
     expect(read(path).length, `${path} stays thin`).toBeLessThan(2200);
     expect(read(path), `${path} discovers the contract relatively`).toContain('../axstack/references/automations.md');
   }
   expect(compact(reviewPath)).toMatch(/axstack-review/i);
-  expect(compact(watchPath)).toMatch(/axstack-watch/i);
   const reviewSkill = compact('skills/axstack-review/SKILL.md');
-  const watchSkill = compact('skills/axstack-watch/SKILL.md');
   expect(reviewSkill).toMatch(/fresh review-manager session[\s\S]{0,220}follow only[^.]*discovery[^.]*admission/i);
   expect(reviewSkill).toMatch(/Do not review a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
-  expect(watchSkill).toMatch(/fresh watch-manager session[\s\S]{0,220}follow only[^.]*discovery[^.]*admission/i);
-  expect(watchSkill).toMatch(/Do not adopt or repair a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
 });
 
 test('manager contract admits actionable events by measured host capacity, not fixed job counts', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/exactly two[^.]*logical manager lanes/i);
-  expect(text).toMatch(/review manager[^.]*watch manager[^.]*measured host capacity/i);
+  expect(text).toMatch(/review manager/i);
+  expect(text).not.toMatch(/watch manager|watch lane|own-PR repair/i);
   expect(text).toMatch(/available (?:memory|RAM)[^.]*CPU[^.]*active worker trees/i);
-  expect(text).toMatch(/admit all eligible actionable[^.]*capacity/i);
+  expect(text).toMatch(/admits all eligible actionable[^.]*measured host capacity/i);
   expect(text).not.toMatch(/(?:at most|maximum of|cap of) (?:five|5|one|1) (?:concurrently executing )?(?:PR )?(?:tasks|jobs)/i);
   expect(text).toMatch(/complete discovery pages|every discovery page|all discovery pages/i);
   expect(text).toMatch(/waiting[^.]*does not[^.]*execution slot|waiting[^.]*occup(?:y|ies) no[^.]*slot/i);
@@ -43,7 +39,6 @@ test('current manager guidance has no numeric PR execution cap', () => {
     'skills/axstack/references/automations.md',
     'skills/axstack/references/lifecycle.md',
     'skills/axstack/references/review-manager-prompt.md',
-    'skills/axstack/references/watch-manager-prompt.md',
     'skills/axstack-watch/references/watch-runtime.md',
     'README.md',
     'docs/workflows.md',
@@ -137,7 +132,7 @@ test('manager teardown preserves continuity and makes self-close the final actio
   expect(text).toMatch(/positively identified[^.]*owned[^.]*unused setup shells/i);
   expect(text).toMatch(/exact terminal[^.]*close|native exact-terminal[^.]*close/i);
   expect(text).toMatch(/self-close[^.]*final action/i);
-  expect(text).toMatch(/dirty worktrees[^.]*unpushed candidates[^.]*review evidence/i);
+  expect(text).toMatch(/dirty worktrees[^.]*review evidence/i);
   expect(text).toMatch(/user-owned[^.]*unknown liveness[^.]*user_takeover[^.]*ambiguous publication/i);
 });
 
@@ -146,27 +141,6 @@ test('user decisions remain actionable after the finite manager session closes',
   expect(text).toMatch(/GitHub[^.]*durable user-owned conversation/i);
   expect(text).toMatch(/never depend[^.]*closed manager (?:chat|conversation|session)/i);
   expect(text).toMatch(/revalidate[^.]*candidate[^.]*head[^.]*base[^.]*event/i);
-});
-
-test('manager contract preserves authority and exceptional chat holds', () => {
-  const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/defi-com\/monorepo[^.]*defi-com\/mobile/i);
-  expect(text).toMatch(/peer code[^.]*read-only/i);
-  expect(text).toMatch(/human merge|human[^.]*merges/i);
-  expect(text).toMatch(/fast-forward[^.]*repair push|repair[^.]*fast-forward push/i);
-  expect(text).toMatch(/security[^.]*permanent on-chain[^.]*architecture/i);
-  expect(text).toMatch(/GitHub[^.]*durable user-owned conversation/i);
-  expect(text).toMatch(/Telegram[^.]*never[^.]*authoriz|silence[^.]*never[^.]*authoriz/i);
-});
-
-test('watch repair admission preserves regression evidence and review dedupe', () => {
-  const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/failing check[^.]*base check-run[^.]*same name[^.]*producing app identity[^.]*passing/i);
-  expect(text).toMatch(/legacy status[^.]*same context/i);
-  expect(text).toMatch(/`CHANGES_REQUESTED` review[^.]*review ID[^.]*body digest/i);
-  expect(text).toMatch(/missing[^.]*pending[^.]*same-name\/different-app[^.]*holds repair/i);
-  expect(text).toMatch(/new head or generic event[^.]*no repair authority/i);
-  expect(text).toMatch(/deploy-on-push exclusions[^.]*lowest-first stack/i);
 });
 
 test('peer publication preserves human blocks and exact public receipts', () => {
@@ -180,41 +154,39 @@ test('peer publication preserves human blocks and exact public receipts', () => 
   expect(text).toMatch(/Never publish a `COMMENT` review/i);
 });
 
+test('review manager preserves peer, decision, notification, and merge boundaries', () => {
+  const manager = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+  expect(review).toMatch(/Peer code stays readonly/i);
+  expect(manager).toMatch(/security concern[^.]*permanent on-chain[^.]*architecture decision/i);
+  expect(manager).toMatch(/Telegram delivery[^.]*Telegram reply[^.]*silence never authorizes/i);
+  expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
+  expect(manager).toMatch(/Human merge remains the boundary/i);
+});
+
 test('manager continuity reuses valid state and keeps publication bounded', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/manager lane owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);
   expect(text).toMatch(/Reuse[^.]*worktree[^.]*owner[^.]*unchanged receipts/i);
   expect(text).toMatch(/Settlement returns continuity[^.]*manager[^.]*rather than retaining an idle PR coordinator/i);
-  expect(text).toMatch(/dirty worktree[^.]*unpushed candidate[^.]*user-owned work[^.]*proven/i);
-  expect(text).toMatch(/pending external result[^.]*unconfirmed publication or send outcome[^.]*not pending CI/i);
+  expect(text).toMatch(/dirty worktrees[^.]*user-owned work[^.]*proven/i);
+  expect(text).toMatch(/pending external result[^.]*unconfirmed review submission[^.]*not pending CI/i);
   expect(text).toMatch(/ascending repository and PR-number tie breaks/i);
-  expect(text).toMatch(/fast-forward repair push[^.]*exact-current candidate[^.]*remote readback/i);
-  expect(text).toMatch(/ambiguous review or push result[^.]*before any retry/i);
-  expect(text).toMatch(/may merge, close, force-push, rebase, restack[\s\S]{0,160}Human merge/i);
-});
-
-test('bounded watch jobs settle without inheriting standalone lifetime', () => {
-  const watch = compact('skills/axstack-watch/SKILL.md');
-  expect(watch).toMatch(/standalone live watch[^.]*timer receipts[^.]*common expiry/i);
-  expect(watch).toMatch(/bounded manager PR job ends[^.]*current event[^.]*descendant settle/i);
-  expect(watch).toMatch(/returns exact receipts[^.]*logical manager lane[^.]*releases proven resources/i);
-  expect(watch).toMatch(/never waits for merge[^.]*or stops[^.]*recurring schedule/i);
-  expect(watch).toMatch(/End a standalone watch[^.]*merge[^.]*cancellation[^.]*24 h deadline/i);
 });
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(5);
+  expect(data.version).toBe(6);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
   expect(data.evidence).toMatch(/not a scheduler implementation|not.*runtime receipt/i);
   const holdoutIds = [
-    'thirty-pr-coverage',
+    'thirty-peer-pr-coverage',
     'finite-unchanged-pass',
     'duplicate-manager-self-close',
     'owned-shell-cleanup',
-    'durable-user-decision',
-    'same-head-new-review-event',
+    'durable-review-decision',
+    'same-head-new-peer-request',
     'unsettled-descendant',
     'recovery-unknown-ownership',
     'resource-aware-sixth-job',
@@ -224,7 +196,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('c3c0697eaae0efe1c95e09117c9488f1e7c9418f00ccefeaeee1bee111890679');
+  )).toBe('0e9d75a989dba5ba3199b375a9ad900db1c133c360f41b36dc94131440656f7a');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',
