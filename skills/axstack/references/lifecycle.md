@@ -29,9 +29,10 @@ covers theme/size; queue via `gh stack`.
 
 ## Ownership
 
-The PR owner remains accountable for candidate, fixes, evidence, monitoring; chat-run observer reports only to its driver.
-peer code stays read-only. Missing or idle sessions never transfer ownership.
-Owned implementation enters review through the revision-bound
+The PR owner is accountable for candidate, fixes, evidence, monitoring; a
+chat-run observer reports only to its driver. Peer code stays read-only.
+Missing or idle sessions never transfer ownership.
+Owned work enters review via the revision-bound
 [candidate-publication boundary](candidate-publication.md).
 
 ## Native handoff and resume
