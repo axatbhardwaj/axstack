@@ -48,12 +48,12 @@ test('native managers and standalone watch boundaries remain explicit', () => {
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
   expect(watch).toMatch(/separate native watch manager/i);
-  expect(watch).toMatch(/at most five bounded actionable-event jobs/i);
+  expect(watch).toMatch(/bounded actionable-event jobs[^.]*measured host capacity/i);
   expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
   expect(watch).toMatch(/fresh-session launch[^.]*overlapping scheduled pass[^.]*session loss/i);
   expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom scheduler/i);
   expect(lifecycle).toMatch(/review and watch lanes[^.]*isolated per-pass workspaces/i);
-  expect(lifecycle).toMatch(/at most five executing PR jobs/i);
+  expect(lifecycle).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
   expect(workflows).toMatch(/exactly two logical native manager lanes/i);
   expect(workflows).toMatch(/waiting PRs[^.]*consume no slot/i);
 

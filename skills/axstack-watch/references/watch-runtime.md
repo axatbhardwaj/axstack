@@ -18,8 +18,8 @@ The separate native watch manager lane follows the
 uses a new isolated workspace and fresh finite session at minutes `7,22,37,52`.
 Continuity survives outside disposable workspaces; admission reconciles the
 whole lane across workspaces. It scans every eligible own PR and
-admits at most five bounded actionable-event jobs. Waiting PRs stay covered
-without reserving slots. Each job uses its own repository-parented worktree and
+admits bounded actionable-event jobs within measured host capacity. Waiting PRs
+stay covered without reserving slots. Each job uses its own repository-parented worktree and
 settles with all descendants; no model, per-PR timer, or polling loop waits for
 CI, review, a user decision, or merge.
 

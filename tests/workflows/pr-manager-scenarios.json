@@ -4,9 +4,9 @@
   "cases": [
     {
       "id": "thirty-pr-coverage",
-      "input": "30 eligible PRs: 10 waiting in watch mode, 15 other waiting, 5 actionable",
-      "expected": ["scan all discovery pages", "waiting PRs occupy no execution slots", "admit at most 5 actionable jobs in the relevant manager"],
-      "forbidden": ["monitor only the first 5 or 10 PRs", "keep a job alive until merge"]
+      "input": "30 eligible PRs: 10 waiting in watch mode, 15 other waiting, 5 actionable; measured host capacity supports every actionable worker tree",
+      "expected": ["scan all discovery pages", "waiting PRs occupy no execution slots", "admit all 5 actionable events"],
+      "forbidden": ["cap discovery or admission at a fixed job count", "keep a job alive until merge"]
     },
     {
       "id": "finite-unchanged-pass",
@@ -51,10 +51,10 @@
       "forbidden": ["copy old authority", "automatically take over live user work"]
     },
     {
-      "id": "fair-sixth-job",
-      "input": "five same-manager jobs execute and a sixth actionable PR is waiting",
-      "expected": ["preserve the waiting PR", "admit oldest actionable unserved work after a slot settles"],
-      "forbidden": ["drop the sixth PR", "starve it behind repeatedly served PRs"]
+      "id": "resource-aware-sixth-job",
+      "input": "five same-manager jobs execute and a sixth actionable PR is waiting; host memory and CPU measurements show capacity for its full worker tree",
+      "expected": ["admit the sixth event without waiting for an arbitrary slot", "serve older unserved work before repeatedly changed PRs"],
+      "forbidden": ["defer solely because five jobs execute", "starve it behind repeatedly served PRs"]
     },
     {
       "id": "private-job-temp-cleanup",

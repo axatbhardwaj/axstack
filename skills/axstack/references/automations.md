@@ -150,11 +150,15 @@ all scanned; those ten occupy zero slots.
 
 ## Admission and fairness
 
-Each manager admits at most five concurrently executing PR tasks across ticks.
-The review manager admits at most five, and the watch manager admits at most
-five. Their caps are separate; never borrow unused capacity from the other
-lane. Admit fewer when the whole worker tree would put the host under resource
-pressure.
+The review manager and watch manager admit all eligible actionable PR events
+that measured host capacity can support across ticks. Before each admission,
+inspect available memory, CPU load, and active worker trees across both lanes;
+account for the whole proposed worker tree, dependencies, spending limits, and
+exclusive ownership. Report unavailable metrics as unknown; use the remaining
+host evidence rather than treating a missing metric alone as a blocker. Defer
+an event when observed pressure or uncertain headroom cannot support its whole
+tree, record the reason, and remeasure on the next pass. Do not use a fixed
+PR-job count or reserve capacity for either lane.
 
 A slot covers one bounded PR event and remains occupied while its author,
 reviewers, or other owned descendants are active or unsettled. Leaf workers do
@@ -163,8 +167,10 @@ frees the slot even while the PR stays open.
 
 Inspect all eligible PRs before admission. Preserve unserved work in the
 compact run record and select the oldest actionable unserved event first, with
-ascending repository and PR-number tie breaks. A sixth event is admitted after
-a slot settles; repeatedly changing PRs cannot starve older unserved work.
+ascending repository and PR-number tie breaks. Continue admitting eligible
+events while measured capacity supports their whole worker trees. Reconsider
+deferred events as trees settle or host capacity changes; repeatedly changing
+PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 

@@ -25,16 +25,31 @@ test('thin PR managers expose two short finite-session native prompts', () => {
   expect(watchSkill).toMatch(/Do not adopt or repair a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
 });
 
-test('manager contract separates coverage from per-manager execution capacity', () => {
+test('manager contract admits actionable events by measured host capacity, not fixed job counts', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/exactly two[^.]*logical manager lanes/i);
-  expect(text).toMatch(/review manager[^.]*at most (?:five|5)/i);
-  expect(text).toMatch(/watch manager[^.]*at most (?:five|5)/i);
-  expect(text).toMatch(/no borrowing|never borrow/i);
+  expect(text).toMatch(/review manager[^.]*watch manager[^.]*measured host capacity/i);
+  expect(text).toMatch(/available (?:memory|RAM)[^.]*CPU[^.]*active worker trees/i);
+  expect(text).toMatch(/admit all eligible actionable[^.]*capacity/i);
+  expect(text).not.toMatch(/(?:at most|maximum of|cap of) (?:five|5|one|1) (?:concurrently executing )?(?:PR )?(?:tasks|jobs)/i);
   expect(text).toMatch(/complete discovery pages|every discovery page|all discovery pages/i);
   expect(text).toMatch(/waiting[^.]*does not[^.]*execution slot|waiting[^.]*occup(?:y|ies) no[^.]*slot/i);
   expect(text).toMatch(/oldest actionable[^.]*unserved|fair/i);
   expect(text).not.toMatch(/at most (?:eight|8) live dispatch markers/i);
+});
+
+test('current manager guidance has no numeric PR execution cap', () => {
+  for (const path of [
+    'skills/axstack/references/automations.md',
+    'skills/axstack/references/lifecycle.md',
+    'skills/axstack/references/review-manager-prompt.md',
+    'skills/axstack/references/watch-manager-prompt.md',
+    'skills/axstack-watch/references/watch-runtime.md',
+    'README.md',
+    'docs/workflows.md',
+  ]) {
+    expect(compact(path), path).not.toMatch(/(?:at most|maximum of|cap(?:ped)? (?:at|of)) (?:five|5|one|1) (?:executing |concurrent(?:ly)? |bounded )?(?:PR |actionable-event )?(?:jobs|tasks)/i);
+  }
 });
 
 test('manager contract uses bounded PR jobs and native recovery without a queue engine', () => {
@@ -202,14 +217,14 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'same-head-new-review-event',
     'unsettled-descendant',
     'recovery-unknown-ownership',
-    'fair-sixth-job',
+    'resource-aware-sixth-job',
   ];
   expect(data.cases.slice(0, holdoutIds.length).map(({ id }) => id)).toEqual(holdoutIds);
   expect(Bun.CryptoHasher.hash(
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('cf0ebc1697c9f4ee253acc9a3f35cb3def1f51bb9edf3cc6a0a3d58cd046cdf1');
+  )).toBe('c3c0697eaae0efe1c95e09117c9488f1e7c9418f00ccefeaeee1bee111890679');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',
