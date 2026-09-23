@@ -45,7 +45,7 @@ test('codebase reviewers inherit the runtime checkout and local evidence boundar
   expect(mode).toContain('[Orca runtime](../axstack/references/orca-runtime.md)');
   expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)');
   expect(mode).toMatch(/separate Orca-managed child worktrees[^.]*detached at the pinned exact\s+source SHA/i);
-  expect(mode.replace(/\s+/g, ' ')).toMatch(/worktree-local report, probe, and log artifacts[^.]*dispatch-specific directories/i);
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/reports, probes, and logs[^.]*private per-Dispatch run folder/i);
 });
 
 test('codebase findings retain trust, escalation, and evidence boundaries', () => {

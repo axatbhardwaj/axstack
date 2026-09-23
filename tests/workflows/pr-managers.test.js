@@ -77,15 +77,14 @@ test('manager event identity survives same-head changes', () => {
   expect(text).toMatch(/review ID[^.]*body digest/i);
 });
 
-test('manager jobs use private owned scratch without broad cleanup', () => {
+test('manager jobs use private per-Dispatch scratch without broad cleanup', () => {
   const runtime = compact('skills/axstack/references/orca-runtime.md');
   const manager = compact('skills/axstack/references/automations.md');
-  expect(runtime).toMatch(/worktree-local[^.]*task[^.]*dispatch[^.]*0700/i);
-  expect(runtime).toMatch(/real path[^.]*inside[^.]*worktree[^.]*not a symbolic link/i);
-  expect(runtime).toMatch(/exact validated owned path[^.]*no glob/i);
-  expect(runtime).toMatch(/never[^.]*wipe[^.]*cache/i);
-  expect(runtime).toMatch(/uncertain temporary[^.]*preserv/i);
-  expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*private directory/i);
+  expect(runtime).toMatch(/TMPDIR[^.]*0700 folder/i);
+  expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
+  expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
+  expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
+  expect(manager).toMatch(/uncertain ownership[^.]*containment/i);
 });
 
 test('held manager jobs settle natively before releasing capacity', () => {

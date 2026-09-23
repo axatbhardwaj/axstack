@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "evidence": "Contract decision scenarios, not live Orca cleanup proof",
+  "cases": [
+    {"id":"author-retained-until-merge","input":"An author's Dispatch is accepted while its PR remains open.","expected":"Retain its session and worktree for repairs.","contractPattern":"author worktree and session.{0,100}until merge"},
+    {"id":"reviewer-removed-at-acceptance","input":"A reviewer's Dispatch is accepted and its evidence is durable.","expected":"Release its terminal, verify closure, and remove its worktree.","contractPattern":"intermediate completion.{0,250}removes its worktree"},
+    {"id":"dirty-non-author-salvaged","input":"A completed non-author worktree has uncommitted source and no protection hold.","expected":"Commit on a salvage ref, bundle, verify, then remove.","contractPattern":"git add -A.{0,220}git bundle verify.{0,180}removing"},
+    {"id":"failed-bundle-verify","input":"The salvage bundle fails git bundle verify.","expected":"Hold the worktree.","contractPattern":"failed verify.{0,100}hold"},
+    {"id":"ignored-non-cache-file","input":"A completed worktree has an ignored file that is not a known build or dependency cache.","expected":"Hold instead of salvaging.","contractPattern":"ignored non-cache.{0,150}hold"},
+    {"id":"genuine-user-takeover","input":"Native ownership confirms a genuine user_takeover terminal.","expected":"List and preserve the terminal.","contractPattern":"genuine.{0,35}`user_takeover`.{0,100}never removed"},
+    {"id":"repair-labelled-takeover","input":"An author repair terminal is labelled user_takeover and the run record has its exact repair Dispatch ID.","expected":"Treat it as owned for settlement; otherwise hold.","contractPattern":"repair Dispatch ID.{0,80}otherwise hold"},
+    {"id":"unreachable-host","input":"Orca is unreachable during driver-start sweep.","expected":"Report one line and continue; hold only host items.","contractPattern":"Orca is unreachable.{0,110}continue.{0,110}unreachable host"},
+    {"id":"terminal-absent-native-list","input":"A worker release result is release_unknown but native inspection and fresh terminal list show it gone.","expected":"Record the reconciliation and proceed.","contractPattern":"release_unknown.{0,130}fresh.{0,20}terminal list.{0,120}proceed"},
+    {"id":"cross-repo-worktree","input":"The run record lists a settled Axstack worktree in another repository.","expected":"Include it in sweep and remove when all guards pass.","contractPattern":"per-run worktrees in other.{0,25}repositories.{0,350}remove"},
+    {"id":"remote-branch-counterpart","input":"A settled worktree branch has a remote counterpart.","expected":"Keep the branch.","contractPattern":"remote counterpart are never deleted"}
+  ]
+}
