@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
 const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
+const routing = () => read('skills/axstack/references/routing.md');
 
 // These checks exercise the shipped instruction contract. They do not prove
 // model decisions or native Orca behavior; the scenarios need independent evaluation.
@@ -27,6 +28,7 @@ test('same-head feedback and checks are events while unchanged complete passes s
 
 test('observer reports internally; only original driver routes repairs and writers', () => {
   const text = watch() + runtime();
+  expect(routing()).toMatch(/axstack-monitor[^.]*standalone watch[^.]*never sends[^.]*chat-run watch[^.]*bounded internal reports[^.]*Run/);
   expect(runtime()).toMatch(/It never writes[\s\S]*?dispatches authors/i);
   expect(text).toMatch(/driver[^.]*alone[^.]*repair/i);
   expect(text).toMatch(/independent PRs[^.]*parallel/i);
@@ -49,6 +51,7 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     'membership-and-later-publication', 'same-head-delta',
     'quiet-and-incomplete', 'authority-and-writers',
     'stack-and-publication-order', 'recovery-and-stop',
+    'repair-loop-until-ready',
   ]);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(20);

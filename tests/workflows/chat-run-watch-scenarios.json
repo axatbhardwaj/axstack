@@ -31,6 +31,11 @@
       "id": "recovery-and-stop",
       "input": "A duplicate report arrives, D closes, then the user cancels while a pass and author Task remain unsettled; disable readback is ambiguous.",
       "expected": "Reconcile native identities before duplicate work. Prevent new work, hold stop on ambiguous own-automation disable, and keep worker settlement and archive pending with the driver."
+    },
+    {
+      "id": "repair-loop-until-ready",
+      "input": "Root PR A was repaired and republished at H2, but its approval applies to H1. A new actionable comment arrives at H2, main advances, and PR B is stacked on A. After A is repaired again, another failed check appears at its next head.",
+      "expected": "Driver sends each A repair to its same author, rebases A on the advanced base, republishes and obtains independent review at each new head, then revalidates B after A changes. Re-read comments, checks, threads, and approvals at the current head; H1 approval does not carry over. Repeat the repair and readiness decision after the failed check until both PRs satisfy the full merge-ready predicate or each remaining PR has a concrete hold."
     }
   ]
 }
