@@ -64,21 +64,25 @@ removing any source copy or workspace.
 Archive success proves only preservation of the listed bytes. It does not prove
 settlement, exit, ownership, a clean worktree, publication, or removal safety.
 
-For a settled merged run whose forge merge is confirmed, generated reviewer
-scratch is disposable after a compact durable receipt is written outside the
-review worktree and read back. Bind that receipt to the exact repository, Run,
+For a settled reviewer Dispatch, the reviewer worktree can be retired while its
+PR remains open, before merge, after its report and supporting evidence are
+archived privately and read back. Generated reviewer scratch is disposable
+after a compact durable receipt is written outside the review worktree and read
+back. Bind that receipt to the exact repository, Run,
 Task, Dispatch, reviewer workspace and terminal, exact head SHA and base SHA,
 review verdict, coverage and limitations, test and CI result pointers, and the
 user authorization and scope for cleanup. A raw reviewer report may be discarded
 after its verdict and limitations are compacted into that read-back receipt;
-use the private evidence archive for unique evidence whose exact bytes must
-survive. Raw reproducible probes and logs need not be archived solely to retire
-a completed review worktree.
+use the private evidence archive for the report and supporting evidence. Verify
+each Dispatch archive and manifest readback independently. Preserve the separate
+author candidate with useful unmerged work; reviewer cleanup never removes it.
 
-Use only a named run-owned scratch prefix recorded with the Dispatch. Two or
+Use only a named run-owned scratch prefix recorded with the Dispatch. Multiple
+Dispatches in the same reviewer worktree are recovery for missed earlier
+cleanup; after independent archives and readback, use per-prefix removal. Two or
 more review passes in the same reviewer worktree may leave distinct prefixes;
 each named run-owned scratch prefix must belong to an accepted settled Dispatch
-in the merged Run. Require `git status --porcelain=v1 -z --untracked-files=all`
+in the Run. Require `git status --porcelain=v1 -z --untracked-files=all`
 to show all dirt as untracked files inside a run-owned scratch prefix. Prove
 every remaining untracked file individually belongs to one of those named
 run-owned scratch prefixes; any tracked, staged, unmerged or unpushed work,
@@ -132,9 +136,13 @@ Treat these operations as separate decisions and receipts:
 3. **Worktree removal.** Re-read Git status, branch/upstream divergence,
    unpushed commits, forge merge/publication state, children, terminals, and
    archived evidence immediately before the native exact-workspace removal.
-   When archived evidence is the last dirt, use the evidence archive helper's
-   manifest-bound retirement operation and require an empty pending set; never
-   unlink through prose or a shell loop. Verify the effective Archive Script
+   When archived evidence is the last dirt for one Dispatch, use the evidence
+   archive helper's manifest-bound retirement operation and require an empty
+   pending set. If multiple Dispatch scratch prefixes remain in one checkout,
+   the helper may reject the other Dispatch's files as unclassified; after
+   independently verified per-Dispatch archives and full union classification,
+   use the exact per-prefix dry-run and clean above. Never unlink through prose
+   or a shell loop. Verify the effective Archive Script
    provenance before native removal: an unknown or required-but-untrusted hook
    holds. Record its native outcome as `unconfigured`, `passed`, `failed`, or
    `unknown`; only `unconfigured` or trusted `passed` may advance. Account for

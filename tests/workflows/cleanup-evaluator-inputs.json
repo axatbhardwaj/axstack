@@ -57,12 +57,21 @@
       }
     },
     {
+      "id": "open-pr-settled-reviewer",
+      "title": "An open PR has a settled review and a later review may be needed",
+      "input": {
+        "invocation": "Run axstack-cleanup after accepting the exact reviewer Dispatch.",
+        "request": "Preserve the review evidence and retire eligible reviewer resources before PR merge.",
+        "state": "The PR remains open. The detached reviewer child has a settled Dispatch, verified private archive and readback, and only classified run-owned scratch. The author candidate checkout holds useful unmerged work and must remain. A later revision may need another review in a new child checkout."
+      }
+    },
+    {
       "id": "two-review-passes-one-checkout",
       "title": "Two settled review passes left separate scratch in one reviewer checkout",
       "input": {
-        "invocation": "Run axstack-cleanup for the exact merged Run and reviewer workspace.",
+        "invocation": "Run axstack-cleanup for the exact open PR and reviewer workspace.",
         "request": "Retire the reviewer workspace after preserving the accepted review evidence.",
-        "state": "The merged PR has two accepted, settled review Dispatches that used the same detached reviewer checkout. Each recorded a different named run-owned scratch directory. Both directories contain untracked files, and one unrelated untracked file may also be present. The reviewer checkout has no tracked changes or unpushed commits; fresh native liveness, complete Git status including ignored files, durable receipt readback, and exact directory inventories must determine whether removal is safe."
+        "state": "The open PR has two accepted, settled review Dispatches that used the same detached reviewer checkout because earlier cleanup was missed. Each recorded a different named run-owned scratch directory. Both directories contain untracked files, and one unrelated untracked file may also be present. The reviewer checkout has no tracked changes or unpushed commits; independently verified per-Dispatch private archives, fresh native liveness, complete Git status including ignored files, durable receipt readback, and exact directory inventories must determine whether removal is safe. The separate author candidate remains unmerged and protected."
       }
     }
   ]
