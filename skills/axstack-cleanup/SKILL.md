@@ -75,10 +75,15 @@ use the private evidence archive for unique evidence whose exact bytes must
 survive. Raw reproducible probes and logs need not be archived solely to retire
 a completed review worktree.
 
-Use only a named run-owned scratch prefix recorded with the Dispatch. Require
-`git status --porcelain=v1 -z --untracked-files=all` to show all dirt as
-untracked files inside that run-owned scratch prefix; any tracked, staged,
-unmerged or unpushed work, dirty source, or dirt outside it holds. Validate that
+Use only a named run-owned scratch prefix recorded with the Dispatch. Two or
+more review passes in the same reviewer worktree may leave distinct prefixes;
+each named run-owned scratch prefix must belong to an accepted settled Dispatch
+in the merged Run. Require `git status --porcelain=v1 -z --untracked-files=all`
+to show all dirt as untracked files inside a run-owned scratch prefix. Prove
+every remaining untracked file individually belongs to one of those named
+run-owned scratch prefixes; any tracked, staged, unmerged or unpushed work,
+dirty source, or dirt outside them holds. Check ignored files across the whole
+worktree too; unknown or ignored content holds. Validate that
 the detached checkout still matches the reviewed head and check local commits
 against recorded remote refs; unknown divergence holds. Validate that
 the exact reviewed scratch prefix names the recorded directory inside the exact
@@ -87,17 +92,21 @@ descendant for symlinks, hard links, special files, unknown content, user-owned
 files, or ignored files; any mismatch holds. Active or `user_takeover` terminals
 also hold.
 
-List the exact scoped path and all descendants with their types, confirm each
-belongs to generated reviewer scratch, and record that inventory. Dry-run the
-exact scoped path from the reviewer worktree root with
+For each prefix, list the exact scoped path and all descendants with their
+types, confirm each belongs to generated reviewer scratch, and record that
+inventory. For each prefix, perform an exact-path dry-run and exact-path deletion
+separately. Dry-run the exact scoped path from the reviewer worktree root with
 `git clean -nd -- <exact reviewed scratch prefix>`
 with the concrete reviewed relative prefix substituted for the angle-bracket
 notation. Compare its sole target to the classified directory; an empty,
 partial, or different result holds. Re-read the compact receipt, complete Git
-status, directory contents, native ownership and liveness immediately before
-removal; any change holds. Then run `git clean -fd -- <same exact prefix>` with
-the identical concrete path and recheck clean Git status, recording the path and
-outcome. Use no unresolved variable as a destructive target. Never use `-x`, a
+status including ignored files, every directory inventory, native ownership and
+liveness immediately before each deletion; any changed inventory holds. Then run
+`git clean -fd -- <same exact prefix>` with the identical concrete path, record
+that path and outcome, and repeat for the next proven prefix. Recheck clean Git status
+after the last deletion. Require final clean Git status before native
+exact-workspace removal without force. Use no unresolved variable as a destructive target.
+Never use `-x`, a
 glob, a repository-root target, extra force, or broad clean.
 This scratch decision does not waive any other preservation or native removal
 guard.

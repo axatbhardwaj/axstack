@@ -14,6 +14,7 @@ test('cleanup evaluator inputs are expectation-free independent-review briefs', 
     'non-pr-evidence-preservation',
     'operation-boundaries-and-chat-history',
     'idempotent-retry-after-hook-failure',
+    'two-review-passes-one-checkout',
   ]);
   for (const entry of data.cases) {
     expect(entry.title).toBeString();
@@ -24,6 +25,18 @@ test('cleanup evaluator inputs are expectation-free independent-review briefs', 
       expect(forbidden in entry).toBe(false);
     }
   }
+});
+
+test('merged reviewer checkout with two passes requires per-file proof and per-prefix removal', () => {
+  const skill = read('skills/axstack-cleanup/SKILL.md');
+  const scratch = skill.match(/Use only a named run-owned scratch prefix[\s\S]*?(?=\n\n## Apply distinct native operations)/)?.[0];
+  expect(scratch).toBeString();
+  expect(scratch).toMatch(/two\s+or\s+more[^.]*review passes[^.]*same (?:reviewer )?worktree/is);
+  expect(scratch).toMatch(/every (?:remaining )?untracked file[^.]*individually[^.]*named\s+run-owned scratch prefix/is);
+  expect(scratch).toMatch(/each[^.]*prefix[^.]*settled Dispatch/is);
+  expect(scratch).toMatch(/each[^.]*prefix[^.]*exact-path dry-run[^.]*exact-path deletion/is);
+  expect(scratch).toMatch(/final clean (?:Git )?status[^.]*native\s+exact-workspace removal[^.]*without force/is);
+  expect(scratch).toMatch(/changed (?:inventory|inventories)[^.]*holds/is);
 });
 
 test('cleanup loads shared policy and leaves runtime commands to discovered guides', () => {

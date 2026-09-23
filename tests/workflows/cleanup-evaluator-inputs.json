@@ -55,6 +55,15 @@
         "request": "Continue cleanup without losing work.",
         "state": "The prior receipt proves Dispatch release and terminal exit. Native worktree removal failed a hook and the workspace remains. Git and forge state may have changed since that receipt."
       }
+    },
+    {
+      "id": "two-review-passes-one-checkout",
+      "title": "Two settled review passes left separate scratch in one reviewer checkout",
+      "input": {
+        "invocation": "Run axstack-cleanup for the exact merged Run and reviewer workspace.",
+        "request": "Retire the reviewer workspace after preserving the accepted review evidence.",
+        "state": "The merged PR has two accepted, settled review Dispatches that used the same detached reviewer checkout. Each recorded a different named run-owned scratch directory. Both directories contain untracked files, and one unrelated untracked file may also be present. The reviewer checkout has no tracked changes or unpushed commits; fresh native liveness, complete Git status including ignored files, durable receipt readback, and exact directory inventories must determine whether removal is safe."
+      }
     }
   ]
 }
