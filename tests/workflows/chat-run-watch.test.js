@@ -55,3 +55,13 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     expect(scenario.expected.length).toBeGreaterThan(30);
   }
 });
+
+test('chat-run driver keeps repairing each member through current-head readiness', () => {
+  const text = runtime();
+  expect(text).toMatch(/repeat repair[^.]*mode-specific publication and independent review[^.]*current-head checks[^.]*full readiness/i);
+  expect(text).toMatch(/until[^.]*merge-ready predicate[^.]*concrete hold/i);
+  expect(text).toMatch(/rebase[^.]*root[^.]*advanced base/i);
+  expect(text).toMatch(/actionable comments/i);
+  expect(text).toMatch(/revalidat[^.]*stacked descendants/i);
+  expect(text).toMatch(/historical approvals[^.]*threads[^.]*cleared/i);
+});

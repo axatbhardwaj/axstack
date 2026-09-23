@@ -70,6 +70,14 @@ driver-owned `gh stack` publication and remote readback. The driver never
 self-reviews; the human merges. Observation alone grants no repair or
 public-reply authority.
 
+On new comments, failed checks, or base movement, repeat repair, the
+mode-specific publication and independent review steps above, current-head
+checks, and the full readiness decision for each member until every merge-ready
+predicate is satisfied or a concrete hold is recorded. Rebase the root PR against an advanced
+base, address actionable comments, and revalidate stacked descendants after
+ancestor changes. Never assume historical approvals or threads have cleared;
+re-read all feedback and approvals at the current head before readiness.
+
 Stop only when all members merged or closed, or on user cancellation. Re-read
 membership and confirm no ambiguous publication or unsettled pass; cancellation
 prevents new work but does not prove running workers exited. The observer may
