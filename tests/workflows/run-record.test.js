@@ -131,8 +131,11 @@ test('run-record stays prose-only; the evidence helper has no runtime control', 
     ...filesBelow(`${root}/bin`),
   ];
   expect(runtimeFiles.filter((path) => /run-record|progress-ledger|progress\.md/i.test(path))).toEqual([]);
-  const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/'));
-  expect(skillScripts).toEqual([`${root}/skills/axstack/scripts/archive-evidence.js`]);
+  const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')).sort();
+  expect(skillScripts).toEqual([
+    `${root}/skills/axstack/scripts/archive-evidence.js`,
+    `${root}/skills/axstack/scripts/trust-path.js`,
+  ].sort());
   expect(readFileSync(skillScripts[0], 'utf8')).not.toMatch(/\borca\b|terminal close|worktree remove/i);
 });
 
