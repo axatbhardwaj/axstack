@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "note": "Decision scenarios for independent prompt evaluation. Bun checks fixture shape and source contract only, not model or live Orca behavior.",
+  "cases": [
+    {
+      "id": "membership-and-later-publication",
+      "input": "Run R published PRs A and B; the same login owns unrelated C. A later verified R publication adds D while watching. B is draft.",
+      "expected": "Scan A, B, and D on the next pass; exclude C. Draft B stays watched but cannot be merge-ready."
+    },
+    {
+      "id": "same-head-delta",
+      "input": "A has unchanged head/base but a new failed check attempt, edited review body, and dismissed approval.",
+      "expected": "Report distinct identities and body digest changes to R; driver observes current state before disposition."
+    },
+    {
+      "id": "quiet-and-incomplete",
+      "input": "One pass is complete and unchanged; the next misses page two of B's comments.",
+      "expected": "First pass has no wake or notification. Second records incomplete coverage and UNKNOWN readiness, without a false merge-ready claim."
+    },
+    {
+      "id": "authority-and-writers",
+      "input": "A and B each need a repair; A has two feedback items. The observer reports both while the original driver is busy.",
+      "expected": "Observer dispatches nothing and does not interrupt the busy driver. Driver may assign parallel child worktrees for A and B, with one writer and candidate for both A items."
+    },
+    {
+      "id": "stack-and-publication-order",
+      "input": "A is a run-created parent of B and gets a new commit; adopted own PR E needs a fix.",
+      "expected": "Invalidate B evidence and repair lowest ancestor first. Driver publishes/readbacks A before independent authored review; E receives exact-local-SHA independent review before driver gh stack publication/readback."
+    },
+    {
+      "id": "recovery-and-stop",
+      "input": "A duplicate report arrives, D closes, then the user cancels while a pass and author Task remain unsettled; disable readback is ambiguous.",
+      "expected": "Reconcile native identities before duplicate work. Prevent new work, hold stop on ambiguous own-automation disable, and keep worker settlement and archive pending with the driver."
+    }
+  ]
+}

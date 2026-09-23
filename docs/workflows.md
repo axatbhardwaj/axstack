@@ -190,6 +190,12 @@ authority. Delivery failure never clears the underlying hold.
 Healthy watch observations remain quiet. The optional `axstack-monitor` is a
 read-only observer for standalone watches and never sends.
 
+## Chat-run PR watch
+
+Use `axstack-watch` chat-run mode to watch every PR raised by this chat's Run, including later verified publications and PRs the driver explicitly adopts. One same-host native Orca automation observes about every ten minutes in fresh finite read-only sessions and reports new current-state events to the original Run. The initiating chat alone routes repairs, review, publication, and notifications. Independent PRs can repair in parallel with one writer per PR; stack ancestor changes invalidate child evidence. Unchanged complete passes stay quiet. An incomplete scan leaves readiness `UNKNOWN`.
+
+The watch lasts until all member PRs merge or close, or you cancel it. Stop requires readback that its own automation is disabled; worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require same-host native canary receipts.
+
 ## Optional native peer-review automation
 
 The optional native review manager runs at minutes `0,15,30,45`. Each

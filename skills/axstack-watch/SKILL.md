@@ -16,8 +16,8 @@ Its required edge loads [Shared lifecycle](../axstack/references/lifecycle.md),
 including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
-Preserve any explicitly named PR, repository, or peer scope. For broad
-discovery of the user's own PRs (such as “my” or “our” PRs), run
+Select the operating mode before discovery. Preserve any explicitly named PR,
+repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run
 `gh api user --jq .login` on the execution host, then select open PRs authored
 by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.
@@ -46,6 +46,11 @@ authority is unverified, record the hold and continue read-only.
 
 Choose one mode from the user's authority and record it before dispatch:
 
+- **Chat-run watch:** the initiating chat remains the only driver and record
+  writer for every PR raised in its Run, including later verified publications
+  and explicitly adopted members. Follow [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch)
+  for the one native observer. This mode has no replacement `axstack-owner` or
+  standalone 24 h expiry.
 - **Observation-only:** reconcile and report CI, reviews, and PR state. It
   dispatches no author and sends no reply. This restriction dominates every
   repair path, including obvious fixes after changed heads or feedback.
@@ -63,8 +68,9 @@ load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
-`axstack-monitor` stays an optional read-only observer that never sends. One read-only PR observation
-needs neither. Start no automation for a read-only check.
+`axstack-monitor` stays an optional read-only observer for standalone watch
+that never sends. Chat-run mode permits only its bounded internal Orca report
+to the recorded Run and original driver. One read-only PR observation needs neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -85,7 +91,9 @@ Every user-facing update is actionable: name the current milestone, the next
 wake or condition, and an ETA when the forge exposes one, such as CI median.
 A healthy unchanged observation produces no user-facing message.
 
-Observation-only and peer wakes produce a read-only report and stop. For an
+Chat-run observer wakes deliver only internal reports; the original driver
+alone reconciles and acts under the recorded authority. Observation-only and
+peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
 follow [Repair and publication](references/repair-publication.md).
 
@@ -109,7 +117,8 @@ the current revision, and a recorded hold or next owner where work remains.
 
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
-The monitor never sends. Deduplicate authorized notifications; absent policy
+The standalone monitor never sends; the chat-run observer reports only
+internally. Deduplicate authorized notifications; absent policy
 or failed relay uses the current Orca conversation and leaves the existing hold open.
 
 ## 5. State readiness precisely
@@ -120,6 +129,10 @@ readiness `UNKNOWN`; review approval alone is not merge-ready. Merge-ready is an
 observed state distinct from merged, and the human merges by default.
 
 ## 6. End and preserve continuity
+
+End a chat-run watch only after all members merged or closed or user
+cancellation, with own-automation disable/readback and driver-owned cleanup
+receipts in [Watch runtime](references/watch-runtime.md#chat-run-watch).
 
 End a standalone watch early when all required PRs merge, at cancellation, or
 at its shared default 24 h deadline. In every case, stop all owned
