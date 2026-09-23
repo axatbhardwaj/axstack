@@ -27,7 +27,7 @@ routing, subscription inference, or silent provider/model/effort substitution.
 
 Role IDs:
 
-- The current chat drives (no role ID); `axstack-owner` owns one PR and
+- Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
@@ -42,10 +42,10 @@ Role IDs:
   and author align arena candidates; `axstack-arena-judge-astra` and
   `axstack-arena-judge-fable` judge them. `axstack-auditor` audits;
   `axstack-checker` reports discrepancies.
-- `axstack-explainer` authors explanations; `axstack-explainer-review`
-  reviews them. `axstack-monitor` is an optional read-only standalone-watch
-  observer that never sends.
-- `axstack-debug-investigator-1..4` each probe one L1 brief.
+- `axstack-explainer`/`axstack-explainer-review`: explain/review.
+  `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
+  internal reports to its Run and original driver.
+- `axstack-debug-investigator-1..4` probe L1 briefs.
 
 Provenance is matched on provider/model ID; effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
