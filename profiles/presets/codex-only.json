@@ -152,7 +152,7 @@
       "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet."
+      "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof."
     },
     {
       "id": "axstack-auditor",

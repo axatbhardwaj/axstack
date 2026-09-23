@@ -231,7 +231,7 @@ boundary, the skill resolves one Orca executable and loads that binary's
 version-matched `orchestration` and `orca-cli` guides. Review automation guidance is loaded only for the scheduled review branch. Missing discovery is a setup gap, not a reason
 to fall back or invent commands.
 
-Installation creates no production schedule and adds no custom scheduler.
+Installation creates no production schedule and adds no custom scheduler. Chat-run PR watch requires a separately validated same-host native Orca automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate it.
 The optional review manager requires a separate native canary before activation;
 installed guidance does not prove live behavior.
 

@@ -70,7 +70,7 @@ pending external receipt pointers and timer expiries so an uncertain launch,
 send, or watch can be looked up before any retry.
 
 Resume from compact pointers to commands or evidence, not copied transcripts.
-Reconcile named sessions, revisions, PR state, watches, and deliveries before
+For chat-run watch, record member PR publication/adoption receipts, exact driver session, native automation/workspace identity, observation/report IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named sessions, revisions, PR state, watches, and deliveries before
 creating or redelivering anything. Touch only this run; no global sweep, new
 runtime database, or scheduler follows from the record.
 

@@ -17,7 +17,7 @@ binding state and receipts to exact revisions.
   `axstack-reviewer-secondary` sessions with identical brief and isolated first
   pass; authored = one eligible configured reviewer from actual author
   provenance. Owner and author never review.
-- Automation review manager and optional standalone monitor: see
+- Automation review manager and monitors: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
@@ -29,7 +29,7 @@ covers theme/size; queue via `gh stack`.
 
 ## Ownership
 
-The PR owner remains accountable for candidate, fixes, evidence, monitoring;
+The PR owner remains accountable for candidate, fixes, evidence, monitoring; chat-run observer reports only to its driver.
 peer code stays read-only. Missing or idle sessions never transfer ownership.
 Owned implementation enters review through the revision-bound
 [candidate-publication boundary](candidate-publication.md).

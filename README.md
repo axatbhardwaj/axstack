@@ -69,6 +69,7 @@ $axstack-align Help me scope account recovery.
 $axstack-implement Build the task we agreed on.
 $axstack-review Review this pull request: <PR URL>
 $axstack-watch Monitor this PR without making changes: <PR URL>
+$axstack-watch Watch every PR raised by this chat until all merge or close
 ```
 
 Use `--harness claude`, `opencode`, or `antigravity` for another supported
@@ -108,7 +109,7 @@ model is unavailable. See [workflow and routing details](docs/workflows.md).
 
 Manual review and watch work independently of scheduled automation.
 For recurring peer review, Axstack defines one optional native Orca review manager.
-Own-PR observation and authorized repair remain user-driven through `axstack-watch`.
+Own-PR observation and authorized repair remain user-driven through `axstack-watch`. Its chat-run mode can use one optional same-host native Orca observer per Run, about every ten minutes, to report new PR events internally to the original chat. The chat alone directs repairs and publication. Activation needs a live host canary; source and install checks do not prove it is running.
 
 The review manager uses a 15-minute schedule. Each pass uses a fresh finite
 session in an isolated workspace and admits eligible actionable PR events within

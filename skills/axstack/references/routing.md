@@ -82,6 +82,7 @@ step (3) for user routing, with no substitution or same-provider review.
 - A status question about an own open PR or stack ("check now", "what's left",
   "are we done", or "is it approved") -> `axstack-watch` in observation-only
   mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
+- Chat-run PR watch -> `axstack-watch`: original driver; later verified publications and explicit adoptions only.
 - Other own PR work -> `axstack-review` authored mode or `axstack-watch`
   adoption.
 
