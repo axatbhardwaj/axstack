@@ -63,12 +63,13 @@ receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
 Store receipt references, not raw output, in the [Run record](run-record.md).
 
 - Session receipt: actual agent/workspace IDs, requested provider/model and
-  role; reuse on resume rather than spawn a replacement.
+  role; reuse on resume.
 - Acceptance receipt: sender/recipient, accepted scope/authority, timestamp,
   and ownership session receipt.
-- Review receipt: mode, applicable provenance, reviewer, SHA/base,
+- Review receipt: mode, provenance, reviewer, SHA/base,
   verdict (`APPROVE | REQUEST_CHANGES | INCOMPLETE`), coverage, limitations and
-  findings. Changed code needs a receipt for its new revision.
+  findings. Changed code needs a new receipt. Codebase: revision/scope,
+  `COMPLETE | INCOMPLETE` coverage, no PR verdict.
 - Submission receipt: actual commit, review, remote confirmation; ambiguity
   requires external lookup before retry.
 - Audit receipt: scope, evidenced PASS/FAIL/UNKNOWN counts/denominators and

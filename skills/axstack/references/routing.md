@@ -79,6 +79,8 @@ step (3) for user routing, with no substitution or same-provider review.
   handoff guide, and require explicit recipient acceptance before ownership
   changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
+- Manual codebase findings review -> `axstack-review`, codebase mode: pin
+  revision and scope; reuse the peer roles for a report-only inspection.
 - A status question about an own open PR or stack ("check now", "what's left",
   "are we done", or "is it approved") -> `axstack-watch` in observation-only
   mode. Explicit "address", "patch", or "fix" grants authorized maintenance.

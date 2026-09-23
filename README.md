@@ -20,7 +20,7 @@ scheduler, or runtime database to operate. Orca is the only supported runtime.
 | Turn agreed scope into a specification | `axstack-spec` |
 | Break a specification into executable tickets | `axstack-tickets` |
 | Build an approved task with tests and independent review | `axstack-implement` |
-| Review a pull request | `axstack-review` |
+| Review a pull request or bounded existing code | `axstack-review` |
 | Monitor or maintain an existing PR | `axstack-watch` |
 | Diagnose a bug and establish a failing check | `axstack-debug` |
 | Answer a bounded question with sources | `axstack-research` |
@@ -68,6 +68,7 @@ Then open an Orca chat and ask for the relevant skill:
 $axstack-align Help me scope account recovery.
 $axstack-implement Build the task we agreed on.
 $axstack-review Review this pull request: <PR URL>
+$axstack-review Find issues in <paths> at <commit SHA>.
 $axstack-watch Monitor this PR without making changes: <PR URL>
 ```
 

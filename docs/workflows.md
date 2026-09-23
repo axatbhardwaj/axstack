@@ -21,6 +21,11 @@ Direct routes need no spec ceremony:
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code.
+- Manual `axstack-review` can inspect existing code at an exact revision within
+  a named scope. Both configured peer reviewers inspect six lenses independently;
+  the driver reports validated defects and risks, improvement opportunities,
+  unverified leads, and `COMPLETE` or `INCOMPLETE` coverage. This report does
+  not approve a PR or publish findings.
 - `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
   bugs through adviser-directed investigator fan-out, and hands off a
   classified repair without landing a change.
