@@ -118,8 +118,8 @@ test('execution settlement frees capacity independently of retained cleanup stat
 test('manager pass ends after compact continuity and PR resource cleanup', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
-  expect(text).toMatch(/save[^.]*continuity[^.]*last pass summary[^.]*ends/i);
-  expect(text).not.toMatch(/self-close|terminal close --worktree|old pass worktree/i);
+  expect(text).toMatch(/save[^.]*continuity[^.]*last pass summary[^.]*exact native terminal close/i);
+  expect(text).not.toMatch(/terminal close --worktree|old pass worktree|--all/i);
 });
 
 test('user decisions remain actionable after the finite manager session closes', () => {
@@ -162,7 +162,8 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(6);
+  expect(data.version).toBe(7);
+  expect(data.migration).toMatch(/v7[^.]*exact own-terminal close/i);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
   expect(data.evidence).toMatch(/not a scheduler implementation|not.*runtime receipt/i);

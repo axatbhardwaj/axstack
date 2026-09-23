@@ -14,6 +14,12 @@ test('scheduled manager uses one dedicated workspace and finite fresh sessions',
   expect(text).toContain('never checks out a PR branch');
   expect(compact('skills/axstack/references/review-manager-prompt.md')).toContain('dedicated existing Orca workspace');
   expect(text).not.toMatch(/new isolated workspace for every scheduled pass|repo-created worktree mode|terminal close --worktree|earlier pass workspaces/);
+  expect(text).toMatch(/exact native terminal close[^.]*own terminal[^.]*run receipt/i);
+  expect(text).toMatch(/terminal close[^.]*final action/i);
+  expect(text).toMatch(/surviving prior terminal[^.]*exact identity[^.]*proven completion[^.]*native state/i);
+  expect(text).toMatch(/terminals[^.]*dedicated workspace[^.]*bounded[^.]*repeated passes/i);
+  expect(text).not.toMatch(/--all|broad selector|name selector/);
+  expect(compact('skills/axstack/references/review-manager-prompt.md')).toMatch(/exact close[^.]*own terminal[^.]*final action/i);
 });
 
 test('settled PR jobs release terminals and retire both worktree levels after archive', () => {
@@ -26,8 +32,11 @@ test('settled PR jobs release terminals and retire both worktree levels after ar
 
 test('continuity stays bounded and both command kinds use workspace-local TMPDIR', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/current lane state[^.]*open holds[^.]*watermarks[^.]*last pass summary/i);
-  expect(text).toMatch(/older pass history[^.]*archive file beside[^.]*never re-read by default/i);
+  const record = compact('skills/axstack/references/run-record.md');
+  expect(text).toContain('[Run record](run-record.md)');
+  expect(text).not.toContain('Append older pass history');
+  expect(record).toMatch(/current lane state[^.]*open holds[^.]*watermarks[^.]*last pass summary/i);
+  expect(record).toMatch(/older pass history[^.]*archive file beside[^.]*never re-read it by default/i);
   expect(text).toMatch(/TMPDIR[^.]*manager and job commands[^.]*inside[^.]*owning workspace/i);
   expect(text).not.toMatch(/self-close|self-retirement|three-workspace threshold/);
 });

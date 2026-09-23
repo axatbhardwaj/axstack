@@ -50,7 +50,7 @@ test('review automation and manual watch boundaries remain explicit', () => {
   expect(watch).toMatch(/observation-only/i);
   expect(watch).toMatch(/authorized maintenance/i);
   expect(watch).not.toMatch(/watch-manager|scheduled pass/i);
-  expect(lifecycle).toMatch(/native review manager[^.]*isolated per-pass workspaces/i);
+  expect(lifecycle).toMatch(/native review manager[^.]*dedicated existing (?:Orca )?workspace/i);
   expect(workflows).toMatch(/optional native review manager/i);
   expect(workflows).toMatch(/user-driven `axstack-watch`/i);
 });
