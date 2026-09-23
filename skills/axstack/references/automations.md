@@ -111,6 +111,8 @@ PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
+At PR-job and reviewer dispatch, apply [Readable sidebar](workspace-hygiene.md#readable-sidebar).
+
 The logical manager lane owns ongoing discovery and continuity across finite
 sessions; the bounded PR coordinator owns only its admitted event. Do not create a second live owner or
 writer for the same PR. Reuse an existing valid per-PR worktree, owner, and
@@ -121,12 +123,12 @@ review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`:
-each runs in a separate Orca child worktree, keeps its probes and evidence
-inside that worktree, and preserves required evidence before removal.
+each runs in a separate Orca child worktree, writes probes and evidence to
+its private per-Dispatch run folder, and reads back evidence before removal.
 
-Set `TMPDIR` for manager and job commands to a private directory inside each
-command's owning workspace. Follow ownership, containment, and cleanup checks
-in the [runtime boundary](orca-runtime.md#reviewer-workspaces-and-evidence).
+Set `TMPDIR` for manager and job commands to each Dispatch's 0700 private
+`<run dir>/evidence/<dispatch>/` folder under
+[Workspace hygiene](workspace-hygiene.md).
 Never write temporary files under `/` or another shared root. Never delete
 through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a general
 cache. Preserve evidence and any temporary path with uncertain ownership or
@@ -175,22 +177,25 @@ execution teardown pauses the lane before another pass can admit work rather
 than claiming capacity from an uncertain process tree.
 
 When the current event is handled, settle the PR job and descendants, then use
-native `worker-release` for their worker terminals. Preserve dirty source,
-unpushed commits, unarchived review evidence, pending
-external results, and user-owned work until durability and ownership are
-proven. Unknown liveness, `user_takeover`, and ambiguous publication likewise
-forbid cleanup. Here a pending external result means an unconfirmed review submission
+native `worker-release` for their worker terminals. For a completed non-author
+PR-job worktree with dirty source or unpushed commits, use the
+[Workspace hygiene](workspace-hygiene.md) salvage path before removal.
+Preserve review evidence not yet durable, pending external results, and user-owned
+work until durability and ownership are proven. Unknown liveness, genuine
+`user_takeover`, and ambiguous publication likewise forbid cleanup. Here a
+pending external result means an unconfirmed review submission
 or send outcome, not pending CI. Waiting state belongs in GitHub and the compact
 record, never in an idle model, per-PR timer, or polling loop.
-Follow the [private evidence archive](evidence-archive.md) when evidence is the
-only local state to preserve; archive success does not relax any other guard.
-For a settled PR job, archive classified scratch through the
+Follow the [private evidence archive](evidence-archive.md) when legacy
+in-worktree evidence is the only local state to preserve; archive success does not relax any other guard.
+For a settled PR job with legacy in-worktree scratch, archive it through the
 [private evidence archive](evidence-archive.md), read back its archive and
 compact receipt, then use [axstack-cleanup](../../axstack-cleanup/SKILL.md)'s
 exact-path guards to retire reviewer and PR-job worktrees in the same pass.
 A merged or closed PR must never keep a job worktree waiting for a user decision;
-resolve that hold by archive and cleanup. Preserve genuine protections: dirty
-source, unpushed commits, `user_takeover`, unknown liveness, and ambiguous publication.
+resolve that hold by archive, verified salvage when needed, and cleanup.
+Preserve genuine protections: `user_takeover`, unknown liveness, ambiguous
+publication, and failed salvage verification.
 
 ## Review authority
 

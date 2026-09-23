@@ -9,9 +9,12 @@ native cleanup.
 
 First prove the exact repository, PR or Run/Task, 40-character head SHA, Dispatch,
 workspace, terminal incarnation, Orca ownership, descendant settlement,
-and liveness from current native state. A manual chat, `user_takeover`, an
-active or unknown task terminal, an unsettled descendant, unpushed commits,
-dirty source, ambiguous publication, or an unknown file remains protected.
+and liveness from current native state. A manual chat, genuine `user_takeover`,
+an active or unknown task terminal, an unsettled descendant, ambiguous
+publication, or an unknown file remains protected. Completed non-author
+worktrees with dirty source or unpushed commits use the
+[Workspace hygiene](workspace-hygiene.md) salvage path before removal; this
+archive helper never treats source changes as evidence-only cleanup.
 
 Classify each evidence file explicitly. Do not equate a dirty worktree with
 disposable evidence, archive a whole worktree, or copy source changes as a way

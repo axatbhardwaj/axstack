@@ -5,6 +5,9 @@ description: When an approved capability needs executable tasks, use axstack-tic
 
 # Tickets
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Produce an executable capability map tied to the exact approved spec revision.
 Keep user-visible capabilities in the selected store, keep implementation detail
 in the repository, reconcile lifecycle state, and stop before implementation.

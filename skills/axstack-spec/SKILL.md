@@ -5,6 +5,9 @@ description: When agreed work needs an approved baseline, use axstack-spec to wr
 
 # Specification baseline
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Produce one user-approved specification whose exact revision can govern
 ticketing and execution.
 

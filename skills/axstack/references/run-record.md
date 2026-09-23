@@ -31,6 +31,9 @@ On resume, discover existing runs and match both repository and scope;
 never blindly select the latest. Git metadata is not pushed, but it can be
 copied or backed up, so its contents remain private and compact.
 
+Record per-run cross-repository worktrees for the driver-start sweep in
+[Workspace hygiene](workspace-hygiene.md).
+
 ## Writer and transitions
 
 The driver is the sole record writer. Workers send concise receipts; they do
@@ -51,7 +54,7 @@ alone is not verification.
 
 For the scheduled review manager, use the
 [Review-manager continuity template](#review-manager-continuity-template).
-Each pass overwrites its four current-state sections for current lane state,
+Every admitted pass overwrites its four current-state sections for current lane state,
 open holds, watermarks, and last pass summary. Read back the saved record before
 terminal close. Write superseded history once to a separate history file beside
 the record; a pass with no change appends at most one line. Never re-read history
@@ -81,8 +84,9 @@ send, or watch can be looked up before any retry.
 
 Resume from compact pointers to commands or evidence, not copied transcripts.
 For chat-run watch, record member PR publication/adoption receipts, exact driver session, native automation/workspace identity, observation/report IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named sessions, revisions, PR state, watches, and deliveries before
-creating or redelivering anything. Touch only this run; no global sweep, new
-runtime database, or scheduler follows from the record.
+creating or redelivering anything. Outside the bounded driver-start orphan
+sweep, touch only this run; no unscoped global sweep, runtime database, or
+scheduler follows from the record.
 
 ## Decision trail and learnings
 
@@ -112,7 +116,7 @@ authority.
 ## Review-manager continuity template
 
 Keep this fixed Markdown shape in the manager's configured durable continuity
-file. Replace the contents of each section on every admitted pass; retain every
+file. Every admitted pass replaces the contents of each section; retain every
 open hold and watermark until its verified disposition. Put older pass details
 in the adjacent history file, not below this template.
 
@@ -146,6 +150,7 @@ Routing: <preset + source + snapshot ref>
 Notification policy: <none | transport/target label/host/instructions path>
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>
+Worktrees in other repositories: <per-run repository and worktree IDs or none>
 Evidence: <check/review/submission/audit receipt pointers>
 Pending: <launch/acceptance/external receipts + timer execution heartbeat actual ID + handshake + deadline>
 Unresolved: <decision -> next owner + next action>

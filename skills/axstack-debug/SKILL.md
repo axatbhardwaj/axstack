@@ -5,6 +5,9 @@ description: When a bug, failing test, regression, or wrong behavior needs a roo
 
 # Debug
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Produce a diagnosis record with a red-capable loop, a confirmed root cause or
 an honest UNKNOWN, and a classified hand-off. This skill never lands, commits,
 pushes, or publishes a product change; the repair goes to `axstack-implement`.

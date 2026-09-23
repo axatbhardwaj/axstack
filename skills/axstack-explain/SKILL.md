@@ -5,6 +5,9 @@ description: When understanding a system, change, or implementation gap, use axs
 
 # Explain
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Explain a system, change, current behavior, intended behavior, or implementation
 gap from inspected evidence. This direct route needs no spec ceremony. Use
 project documentation as evidence where relevant. It supersedes `axstack-docs`; if a stale install

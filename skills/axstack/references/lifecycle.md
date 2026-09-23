@@ -1,6 +1,7 @@
 # Shared lifecycle and receipts
 
 Phases load through [Standing contracts](contracts.md).
+Driver settlement follows [Workspace hygiene](workspace-hygiene.md).
 Delegated or resumable work uses a driver-owned [Run record](run-record.md)
 binding state and receipts to exact revisions.
 
@@ -15,8 +16,7 @@ binding state and receipts to exact revisions.
   Workers launch no recursive teams.
 - Reviewers: peer = two configured roles with the same brief and isolated first
   pass; authored = one eligible role from author provenance. Each uses a
-  separate Orca child worktree, keeps evidence there, and preserves it before
-  removal. Owner and author never review.
+  separate Orca child worktree and private per-Dispatch evidence folder. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or

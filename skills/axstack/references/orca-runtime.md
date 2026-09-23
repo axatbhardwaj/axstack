@@ -73,21 +73,18 @@ candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
 
-A worker worktree carries the lineage of the work it serves. Create it with
-`--parent-worktree` naming the candidate's worktree, so a reviewer, repair, or
-child-task checkout appears under the candidate it belongs to instead of as an
-unrelated top-level row. `--no-parent` is only for unrelated, independent work
-with no parent context, never a review or repair of an existing candidate. When
-a worktree was created with the wrong lineage, correct it in place with
-`worktree set --parent-worktree`; that is metadata and does not disturb a
-running worker. Lineage is presentation and reconciliation state, never
-authority: it grants nothing, and a correct parent never substitutes for the
-Task, Dispatch, and receipt evidence above.
+Create a worker worktree with `--parent-worktree` naming the candidate's
+worktree when both are in the same repository; see
+[Readable sidebar](workspace-hygiene.md#readable-sidebar) for naming, status,
+and parentage at dispatch. `--no-parent` is for unrelated work with no parent
+context. Where supported, correct wrong lineage in place with
+`worktree set --parent-worktree`. Lineage is presentation, never authority: it
+grants nothing and cannot replace Task, Dispatch, and receipt evidence.
 
 Every reviewer gets a separate Orca child worktree parented to the candidate.
-Keep that reviewer's probes and private evidence inside its worktree, with no
-first-pass cross-read. Preserve the required evidence in the private run record
-before removal; untracked files never prove a reviewer worktree disposable.
+Keep that reviewer's probes and private evidence in its separate private
+per-Dispatch run folder under [Workspace hygiene](workspace-hygiene.md), with no
+first-pass cross-read. Untracked files never prove a worktree disposable.
 
 An `input_accepted` stage proves only that input reached the terminal. Require
 `turn_started` plus runtime/session inspection before treating the agent as
@@ -110,20 +107,20 @@ reconciled. Use the runtime-owned worktree guide,
 not a raw Git worktree or temporary clone. Before dispatch, verify a detached
 checkout of the exact candidate SHA and the pinned base in that child.
 
-Keep reviewer-authored reports, probes, and logs inside the reviewer's worktree
-in an untracked, dispatch-specific artifact directory, not in `/tmp` or a
-provider scratch directory. Name its absolute path in the brief and completion
-receipt; keep tracked candidate files read-only and do not commit artifacts.
-For tools that need temporary files, create one worktree-local, task- and
-dispatch-specific directory with mode `0700`, and scope `TMPDIR` to the owned
-command where supported. Before use or cleanup, validate that its real path is
-inside the exact worktree, is not a symbolic link, and matches the recorded
-owner. Remove only that exact validated owned path, with no glob or parent-root
-deletion; never wipe a general cache. Uncertain temporary files are preserved
-for later reconciliation. Incidental tool-managed caches are not review evidence.
-Before removing a reviewer worktree, preserve its report and supporting evidence
-in the private evidence archive outside the disposable checkout, verify manifest
-readback, and update the run record's paths. A settled reviewer Dispatch can be
+Name the private `<run dir>/evidence/<dispatch>/` folder in the brief and
+completion receipt. Keep tracked candidate files read-only and peer folders
+isolated. Scope `TMPDIR` to that 0700 folder for owned commands where supported.
+Before use or temporary-file cleanup, validate that its real path equals or
+is inside the recorded run evidence folder, is not a symbolic link, and matches the recorded
+Dispatch owner. Worktree-local temporary paths use the same guards against
+their recorded worktree and owner. Remove only an exact validated owned
+path, with no glob or parent-root deletion; never wipe a general cache.
+Uncertain temporary paths are preserved for reconciliation.
+Before removing a reviewer worktree, read back its report and supporting
+evidence from the private run evidence folder and record their paths. Files
+already there need no archive step; the private evidence archive applies only
+to legacy in-worktree evidence. Incidental caches are not evidence.
+A settled reviewer Dispatch can be
 cleaned before PR merge through [axstack-cleanup](../../axstack-cleanup/SKILL.md)
 only after its classification, readback, and removal guards pass. Preserve
 active or unknown review evidence and unique evidence whose bytes must survive;
@@ -142,8 +139,10 @@ On `consumer_fenced`, stop consuming under that identity. Reconcile the active
 coordinator and delivery through the runtime guide; never bypass the fence,
 forge a sender, borrow a terminal identity, or partially acknowledge the
 delivery. Settlement is also runtime-owned: reuse, retain, or release a settled
-terminal only through the guide. A `user_takeover` result requires retention;
-do not close, release, reuse, or send commands to that terminal as cleanup.
+terminal only through the guide. A genuine `user_takeover` result requires
+retention; do not close, release, reuse, or send commands to that terminal as
+cleanup. Apply only the recorded
+repair Dispatch ID exception in [Workspace hygiene](workspace-hygiene.md).
 
 Contact loss, silence, idle state, or an absent status never proves exit or
 transfers authority. Ordinary restart and resume reconcile the same owner,

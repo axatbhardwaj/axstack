@@ -5,6 +5,9 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 
 # Watch
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Manual watch keeps the user’s chat and workspace open.
 
 Leave each adopted PR with one accountable owner, current readiness evidence,

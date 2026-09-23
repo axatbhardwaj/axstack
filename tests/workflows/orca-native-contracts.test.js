@@ -27,15 +27,17 @@ test('Linear document operations fail closed without native support', () => {
   }
 });
 
-test('reviewers use isolated children and preserve private evidence before cleanup', () => {
+test('reviewers use isolated children and preserve private run evidence before cleanup', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
   const review = read('skills/axstack-review/SKILL.md');
   const automations = read('skills/axstack/references/automations.md');
+  const hygiene = read('skills/axstack/references/workspace-hygiene.md');
   for (const text of [lifecycle, review, automations]) {
     expect(text).toMatch(/separate[^.]*child\s+worktree|one[^.]*child\s+worktree[^.]*reviewer/i);
-    expect(text).toMatch(/evidence[^.]*inside[^.]*worktree|worktree[^.]*evidence/i);
-    expect(text).toMatch(/preserv[^.]*(?:evidence|it)[^.]*before[^.]*remov/i);
+    expect(text).toContain('workspace-hygiene.md');
   }
+  expect(hygiene).toMatch(/peer[\s\S]*separate evidence folders[\s\S]*first-pass/i);
+  expect(hygiene).toMatch(/completion receipt[\s\S]*before removing/i);
   expect(automations).not.toMatch(/finished worker'?s untracked artefacts are not/i);
 });
 

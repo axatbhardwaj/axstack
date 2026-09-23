@@ -5,6 +5,9 @@ description: When a substantive run needs evidence review, use axstack-audit to 
 
 # Audit
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Produce one evidence-bound audit record for the assigned substantive run or
 checkpoint. Separate what the run achieved, how it followed the workflow, and
 how completely the evidence supports either judgment. Improvement proposals

@@ -5,6 +5,9 @@ description: When one bounded question needs verified answers, use axstack-resea
 
 # Research
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Produce a source-linked Markdown note that answers one bounded question and
 makes every evidentiary gap visible.
 

@@ -15,6 +15,7 @@ Before any runtime action, load and follow:
 - [Lifecycle and receipts](../axstack/references/lifecycle.md)
 - [Shared routing](../axstack/references/routing.md)
 - [Orca runtime boundary](../axstack/references/orca-runtime.md)
+- [Workspace hygiene](../axstack/references/workspace-hygiene.md) for settlement, salvage, and driver-start sweep
 - [Private evidence archive](../axstack/references/evidence-archive.md) when
   evidence is the last removable-worktree blocker
 
@@ -24,16 +25,19 @@ and worktree removal. Do not embed or improvise a competing command protocol.
 ## Authority and scope
 
 Inline cleanup may consider only resources owned by the accepted completion it
-is processing. Backlog cleanup requires an explicit bounded selector such as a
+is processing. Driver-start orphan sweeps use the standing authority in
+[Workspace hygiene](../axstack/references/workspace-hygiene.md). Backlog
+cleanup requires an explicit bounded selector such as a
 Run, Task set, workspace set, repository, or named age window; age narrows an
 inventory but never establishes eligibility. A partial inventory holds only the
 resource whose identity or state is incomplete while other independently proven
 resources may proceed.
 
-Never clean a manual chat, the current driver, `user_takeover`, an active or
-unknown worker, an unsettled descendant, or a resource with ambiguous ownership.
-Preserve dirty or unknown files, unpushed commits, unmerged useful work,
-ambiguous publication, and evidence that has not been durably preserved. Do not
+Never clean a manual chat, the current driver, genuine `user_takeover`, an
+active or unknown worker, an unsettled descendant, or a resource with ambiguous
+ownership.
+Preserve unknown files, unmerged author work, ambiguous publication, and
+evidence that has not been durably preserved. Do not
 force native removal, bulk-clean, override a hook failure, edit a runtime
 database, or add a scheduler, daemon, or state machine.
 
@@ -64,6 +68,11 @@ removing any source copy or workspace.
 Archive success proves only preservation of the listed bytes. It does not prove
 settlement, exit, ownership, a clean worktree, publication, or removal safety.
 
+For a completed non-author worktree with useful local content, follow the
+[Workspace hygiene](../axstack/references/workspace-hygiene.md) salvage path
+before removal; a verified bundle changes preservation classification, not
+native ownership or liveness. Keep an author worktree until merge.
+
 For a settled reviewer Dispatch, the reviewer worktree can be retired while its
 PR remains open, before merge, after its report and supporting evidence are
 archived privately and read back. Generated reviewer scratch is disposable
@@ -86,8 +95,8 @@ in the Run. Require `git status --porcelain=v1 -z --untracked-files=all`
 to show all dirt as untracked files inside a run-owned scratch prefix. Prove
 every remaining untracked file individually belongs to one of those named
 run-owned scratch prefixes; any tracked, staged, unmerged or unpushed work,
-dirty source, or dirt outside them holds. Check ignored files across the whole
-worktree too; unknown or ignored content holds. Validate that
+dirty source, or dirt outside them enters the salvage check above or holds.
+Check ignored files across the whole worktree too; unknown or ignored non-cache content holds. Validate that
 the detached checkout still matches the reviewed head and check local commits
 against recorded remote refs; unknown divergence holds. Validate that
 the exact reviewed scratch prefix names the recorded directory inside the exact
