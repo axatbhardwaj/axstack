@@ -125,7 +125,7 @@
       "starting_runtime_facts": {
         "role_snapshot": "The manager uses a short prompt that invokes axstack-watch; configured author and reviewer roles stay unchanged.",
         "guide_receipt": "Version-matched automations and orchestration guides document session and native worker settlement.",
-        "capability_receipt": "Source contract specifies staggered cadence and five-job capacity, but no live receipt proves fresh-session launch, overlap handling, recovery, or memory behavior.",
+        "capability_receipt": "Source contract specifies staggered cadence and resource-based admission without a fixed PR-job cap, but no live receipt proves fresh-session launch, overlap handling, recovery, or memory behavior.",
         "independent_state": "Core installer and supervised workflows are green; no replacement production manager is enabled."
       },
       "expected_choices": [

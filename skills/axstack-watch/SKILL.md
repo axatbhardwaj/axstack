@@ -75,7 +75,7 @@ load. When the watch needs a new owner or automated observation, first read
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
 anything. Each native watch-manager pass starts a fresh finite session in an
 isolated per-pass workspace on its staggered 15-minute schedule, covers
-every eligible own PR, and starts only bounded actionable-event jobs. Waiting PRs reserve no execution slots and
+every eligible own PR, and starts only bounded actionable-event jobs. Waiting PRs consume no execution capacity and
 there is no watch deadline for manager automation. `axstack-monitor` stays an
 optional read-only observer that never sends. One read-only PR observation
 needs neither. The bounded PR coordinator is the live owner for its event;

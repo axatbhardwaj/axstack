@@ -113,8 +113,10 @@ differs from merged; human merges.
 ## Watch health
 
 Native review and watch lanes use fresh finite sessions in isolated per-pass
-workspaces on staggered 15-minute schedules. Each admits at most five executing PR jobs;
-waiting PRs remain covered without reserving slots. Bounded PR jobs own their
+workspaces on 15-minute schedules. Admit independent events by
+observed host resources, provider and spending limits, dependencies, and
+fairness, with no fixed numeric PR-job cap. Waiting PRs remain covered
+without reserving execution capacity. Bounded PR jobs own their
 events, use per-PR worktrees, and settle after descendants settle. Build no
 custom scheduler, state engine, or legacy fallback. Details live in
 [Watch runtime](../../axstack-watch/references/watch-runtime.md).

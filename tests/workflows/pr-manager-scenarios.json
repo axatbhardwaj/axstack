@@ -4,8 +4,8 @@
   "cases": [
     {
       "id": "thirty-pr-coverage",
-      "input": "30 eligible PRs: 10 waiting in watch mode, 15 other waiting, 5 actionable",
-      "expected": ["scan all discovery pages", "waiting PRs occupy no execution slots", "admit at most 5 actionable jobs in the relevant manager"],
+      "input": "30 eligible PRs: 10 waiting in watch mode, 15 other waiting, 5 actionable; host resources can support all actionable jobs",
+      "expected": ["scan all discovery pages", "waiting PRs consume no execution capacity", "admit all 5 independent actionable jobs when resources and limits permit"],
       "forbidden": ["monitor only the first 5 or 10 PRs", "keep a job alive until merge"]
     },
     {
@@ -41,7 +41,7 @@
     {
       "id": "unsettled-descendant",
       "input": "current PR work appears finished, but its reviewer is live and a descendant release result is unknown while saved state says completed",
-      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not self-close until descendants settle"],
+      "expected": ["reconcile native descendant state", "keep the PR job unsettled", "do not self-close until descendants settle"],
       "forbidden": ["trust stale completed state", "release or close unknown-live resources"]
     },
     {
@@ -52,9 +52,9 @@
     },
     {
       "id": "fair-sixth-job",
-      "input": "five same-manager jobs execute and a sixth actionable PR is waiting",
-      "expected": ["preserve the waiting PR", "admit oldest actionable unserved work after a slot settles"],
-      "forbidden": ["drop the sixth PR", "starve it behind repeatedly served PRs"]
+      "input": "five same-manager jobs execute and a sixth independent actionable PR is waiting; host resources and provider limits permit another job",
+      "expected": ["admit the sixth PR without waiting for a numeric slot", "prefer older unserved work fairly"],
+      "forbidden": ["drop the sixth PR", "wait solely for one of five jobs to settle"]
     },
     {
       "id": "private-job-temp-cleanup",
@@ -65,7 +65,7 @@
     {
       "id": "permission-prompt-hold",
       "input": "native inspection confirms the exact automation-owned reviewer is waiting at a permission prompt and has not sent worker_done",
-      "expected": ["record an incomplete held outcome with prompt evidence", "use only the runtime-supported recovery path", "keep the slot until the whole owned tree is verified settled"],
+      "expected": ["record an incomplete held outcome with prompt evidence", "use only the runtime-supported recovery path", "keep the PR job unsettled until the whole owned tree is verified settled"],
       "forbidden": ["answer or bypass the prompt", "forge completion or kill unknown work"]
     },
     {
@@ -83,19 +83,19 @@
     {
       "id": "unresolved-teardown",
       "input": "a held job preserved its evidence, but native inspection cannot verify one descendant's process exit or lifecycle settlement",
-      "expected": ["keep the affected slot occupied", "pause the manager lane before another pass admits work", "preserve the uncertain descendant and evidence"],
-      "forbidden": ["claim the slot is free", "accumulate another active pass or kill user-owned work"]
+      "expected": ["keep the affected PR job unsettled", "pause the manager lane before another pass admits work", "preserve the uncertain descendant and evidence"],
+      "forbidden": ["claim the PR job is settled", "accumulate another active pass or kill user-owned work"]
     },
     {
       "id": "exited-tree-retained-metadata",
       "input": "native execution-host receipts prove the exact coordinator and every descendant process exited, with no live descendants, but identity-unproven resource metadata is retained without a cleanup action",
-      "expected": ["free the execution slot", "preserve the retained metadata and evidence for reconciliation", "continue unrelated eligible PRs"],
+      "expected": ["release execution capacity", "preserve the retained metadata and evidence for reconciliation", "continue unrelated eligible PRs"],
       "forbidden": ["treat retained metadata alone as a live worker", "force unsupported cleanup"]
     },
     {
       "id": "settled-tree-archive-hold",
       "input": "all exact workers and descendants are positively settled, but evidence archive verification failed so the workspace must remain",
-      "expected": ["preserve the workspace and record a cleanup hold", "leave the execution slot free", "continue unrelated eligible PRs"],
+      "expected": ["preserve the workspace and record a cleanup hold", "leave settled execution capacity available", "continue unrelated eligible PRs"],
       "forbidden": ["remove unverified evidence", "disable the lane solely for this settled workspace cleanup hold"]
     },
     {
@@ -121,6 +121,36 @@
       "input": "the one ordered successor saved continuity and attempted exact native predecessor close, but close or exit proof is failed or uncertain and the same condition appears next pass",
       "expected": ["preserve ownership, workspace, and evidence", "pause the lane with the exact resume condition", "deduplicate the unchanged cleanup hold and notification"],
       "forbidden": ["release ownership without full process-tree exit proof", "remove the worktree", "retry cleanup or notify on every pass"]
+    },
+    {
+      "id": "resource-admission-beyond-five",
+      "input": "Six unrelated actionable PR events are discovered across all pages, with five jobs running, sound host health, available provider budget, and no dependency conflict.",
+      "expected": ["admit the sixth independent job now", "keep one manager per lane and one owner and writer per PR", "select older unserved events fairly"],
+      "forbidden": ["wait for a numeric slot", "truncate discovery at five PRs"]
+    },
+    {
+      "id": "pr-local-bound-orphan",
+      "input": "Native receipts positively bind an orphan process to one settled PR job; host health is sound and other PR events are independent.",
+      "expected": ["hold cleanup only for the affected PR", "continue unrelated eligible PRs", "recheck exact process identity and ownership before any narrow termination"],
+      "forbidden": ["pause the entire lane solely for this orphan", "kill an unverified process"]
+    },
+    {
+      "id": "orphan-identity-change",
+      "input": "A previously bound orphan has a changed process incarnation at the moment of proposed termination.",
+      "expected": ["withhold TERM and preserve the process", "hold the affected PR with an exact resume condition"],
+      "forbidden": ["terminate by stale PID", "treat saved ownership as current proof"]
+    },
+    {
+      "id": "shared-host-or-ownership-uncertainty",
+      "input": "An orphan may be user-owned or host telemetry shows pressure affecting unrelated work.",
+      "expected": ["preserve unknown or user-owned work", "escalate and pause lane admission for actual shared-host or ownership uncertainty"],
+      "forbidden": ["terminate an unknown process", "continue fanout as if host health were sound"]
+    },
+    {
+      "id": "attention-only-notification",
+      "input": "A manager has a routine routing choice, progress update, merge-ready PR, and one serious escalation requiring attention; a recorded live Notification policy exists.",
+      "expected": ["send only one deduplicated escalation under 40 words", "point to the durable decision location"],
+      "forbidden": ["send routing, progress, or merge-ready notices", "hardcode a Telegram recipient in packaged prompts"]
     }
   ]
 }

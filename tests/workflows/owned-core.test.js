@@ -238,7 +238,7 @@ test('owned-core: one persistent owner; manager and standalone watch remain sepa
   expect(/optional read-only observer/i.test(text), 'monitor must remain read-only').toBeTruthy();
   expect(/Orca runtime/i.test(text), 'watch must name the Orca runtime boundary').toBeTruthy();
   expect(/isolated per-pass workspace/i.test(text), 'manager must have an isolated pass workspace').toBeTruthy();
-  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting membership must not reserve a slot').toBeTruthy();
+  expect(/waiting PRs[^.]*no execution capacity/i.test(text), 'waiting membership must not reserve capacity').toBeTruthy();
   expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
   expect(/reconcil/i.test(text), 'uncertain state must be reconciled').toBeTruthy();
 });
@@ -370,7 +370,7 @@ test('owned-core: observation-only dominates every repair path; adoption verifie
 test('owned-core: finite watch-manager sessions keep bounded event policy', () => {
   const text = skill('axstack-watch');
   expect(/watch-manager pass[^.]*fresh finite session[^.]*isolated per-pass workspace/i.test(text), 'watch manager must use fresh sessions in isolated pass workspaces').toBeTruthy();
-  expect(/waiting PRs[^.]*no execution slots/i.test(text), 'waiting PRs must not reserve slots').toBeTruthy();
+  expect(/waiting PRs[^.]*no execution capacity/i.test(text), 'waiting PRs must not reserve capacity').toBeTruthy();
   expect(/no watch deadline[^.]*manager automation/i.test(text), 'manager automation must not inherit the standalone deadline').toBeTruthy();
   expect(/never poll|polling loop/i.test(text), 'no polling loop').toBeTruthy();
   expect(/dedup/i.test(text), 'actionable events must remain deduplicated').toBeTruthy();

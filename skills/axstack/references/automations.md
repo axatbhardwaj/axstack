@@ -20,7 +20,7 @@ Do not use `--reuse-session`. The scheduler creates the pass workspace before
 launch; the manager must not move itself from a shared launch workspace.
 Keep lane continuity and evidence outside disposable manager workspaces at
 the configured durable absolute paths. A manager never checks out a PR branch
-in its pass workspace. Missed slots do not replay a backlog; the next ordinary pass
+in its pass workspace. Missed passes do not replay a backlog; the next ordinary pass
 discovers current state. The two short packaged prompts sit beside this file
 and discover these rules by relative link instead of copying them.
 
@@ -143,28 +143,25 @@ dependencies, and existing ownership boundaries. Peer code is always
 read-only.
 
 Coverage is not execution. Waiting for CI, a reviewer, a user decision, or a
-merge occupies no execution slot after owned work and descendants settle.
-Watch membership never reserves a slot and no job stays active merely until a
-PR merges or closes. Thirty open PRs, including ten settled waiting PRs, are
-all scanned; those ten occupy zero slots.
+merge consumes no execution capacity after owned work and descendants settle.
+Watch membership never reserves capacity and no job stays active merely until a
+PR merges or closes. Scan all thirty open PRs even if ten are waiting.
 
 ## Admission and fairness
 
-Each manager admits at most five concurrently executing PR tasks across ticks.
-The review manager admits at most five, and the watch manager admits at most
-five. Their caps are separate; never borrow unused capacity from the other
-lane. Admit fewer when the whole worker tree would put the host under resource
-pressure.
-
-A slot covers one bounded PR event and remains occupied while its author,
-reviewers, or other owned descendants are active or unsettled. Leaf workers do
-not create recursive teams. Settlement of the PR job and every descendant
-frees the slot even while the PR stays open.
+There is no fixed numeric concurrent PR-job cap or slot accounting for either
+manager. Admit independent actionable events according to observed host resources,
+provider availability and spending limits, dependencies, and fairness. Check
+the whole worker tree and host health before additional dispatch; reduce fanout
+when resource pressure, review backlog, or rework warrants it. The review and
+watch lanes have separate managers and ownership; neither borrows authority
+from the other lane. Leaf workers do not create recursive teams.
 
 Inspect all eligible PRs before admission. Preserve unserved work in the
 compact run record and select the oldest actionable unserved event first, with
-ascending repository and PR-number tie breaks. A sixth event is admitted after
-a slot settles; repeatedly changing PRs cannot starve older unserved work.
+ascending repository and PR-number tie breaks. A sixth independent event may
+be admitted while five jobs run when resources and limits permit; repeatedly
+changing PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
@@ -211,23 +208,29 @@ Preserve the prompt or refusal evidence, then follow the version-matched
 orchestration recovery and cleanup guidance for every owned descendant. Use
 only supported native lifecycle actions and receipt-supplied next actions;
 saved status, contact loss, and a coordinator narrative do not settle a worker.
-Unknown or user-owned work is never a kill target. Do not release the PR slot
+Unknown or user-owned work is never a kill target. Do not mark the PR job settled
 until native state verifies settlement of the coordinator and every descendant.
 Unrelated eligible PRs continue after the tree is verified settled, while the
 held PR waits durably for its resume condition.
 
 Execution settlement and cleanup retention are separate. Positive full-tree
-process exit plus native Task and Dispatch settlement frees the slot. Retained
-metadata does not occupy an execution slot: preserve it and its evidence for
+process exit plus native Task and Dispatch settlement releases execution capacity.
+Retained metadata consumes no execution capacity: preserve it and its evidence for
 reconciliation without reviving the failed job. Likewise, an archive hold
 blocks workspace removal, not settled execution capacity; record the cleanup
 hold, preserve the workspace, and let unrelated eligible PRs continue.
 
-An active, unknown, protected, or unverifiable coordinator or descendant is
-different: preserve its evidence and keep its slot occupied. Unresolved
-execution teardown, or failure to retire the manager pass itself, pauses the
-lane before another pass can admit work rather than accumulating active passes
-or claiming capacity from an uncertain process tree.
+An orphan process positively bound to one settled PR job remains a PR-local
+cleanup hold when host health is sound; unrelated eligible PRs continue.
+Immediately before any narrow automatic termination, recheck the exact process
+identity, incarnation, process tree, and ownership against native receipts. Only
+an exclusively owned orphan from that settled job may receive graceful TERM;
+verify exit and native settlement before releasing its resources. If identity
+changes or exit is unverified, preserve the process and hold that PR. Unknown or
+user-owned work is never terminated. Actual shared-host risk or ownership
+uncertainty pauses the lane and escalates with the exact evidence; a PR-local
+orphan alone does not broaden the hold. Failed manager-pass retirement still
+pauses the lane before another pass admits work.
 
 When the current event is handled, settle and release owned native resources.
 Preserve dirty worktrees, unpushed candidates, unarchived review evidence, pending
@@ -284,10 +287,12 @@ decision is held in GitHub or a durable user-owned conversation that survives
 the finite manager session. Store the PR, head, base, action, candidate,
 decision context, durable decision location, and preserved candidate bytes or
 refs in the compact record. The decision must never depend on a closed manager
-chat. Send one deduplicated Telegram notification only when the recorded
-`Notification policy` authorizes it, using
-[axstack-relay](../../axstack-relay/SKILL.md) and telling the user where the
-durable decision is actionable.
+chat. The recorded Notification policy governs both managers: Telegram is for
+deduplicated escalations requiring attention, under 40 words, with a pointer to
+the durable decision location. Send no routing, progress, or merge-ready notices.
+Use [axstack-relay](../../axstack-relay/SKILL.md) only when that policy authorizes
+the escalation; recipient and channel are configured in the live prompt, never
+hardcoded in this package.
 
 Telegram delivery, a Telegram reply, or silence never authorizes an action.
 After a decision, revalidate the exact candidate, head, base, event, authority,
@@ -298,10 +303,10 @@ or separate model gate.
 ## Finite-session teardown
 
 After admission closes, settle every owned PR job and all descendants before the
-manager session ends; active or unknown descendants keep their PR slot occupied
+manager session ends; active or unknown descendants remain unsettled
 and must be reconciled rather than trusted from saved status. Then save durable
 continuity, evidence locations, pending receipts, and user decisions before
-self-close. Waiting PRs still occupy zero slots once their owned trees settle.
+self-close. Waiting PRs consume no execution capacity once their owned trees settle.
 
 Cleanup of PR-job setup shells stays scoped to positively identified owned unused
 setup shells: use the native exact-terminal close operation for each only.

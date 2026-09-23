@@ -48,19 +48,19 @@ test('native managers and standalone watch boundaries remain explicit', () => {
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
   expect(watch).toMatch(/separate native watch manager/i);
-  expect(watch).toMatch(/at most five bounded actionable-event jobs/i);
-  expect(watch).toMatch(/waiting PRs[^.]*without reserving slots/i);
+  expect(watch).toMatch(/no fixed numeric PR-job cap/i);
+  expect(watch).toMatch(/waiting PRs[^.]*without reserving execution capacity/i);
   expect(watch).toMatch(/fresh-session launch[^.]*overlapping scheduled pass[^.]*session loss/i);
   expect(watch).toMatch(/precheck[^.]*watchdog[^.]*custom scheduler/i);
   expect(lifecycle).toMatch(/review and watch lanes[^.]*isolated per-pass workspaces/i);
-  expect(lifecycle).toMatch(/at most five executing PR jobs/i);
+  expect(lifecycle).toMatch(/no fixed numeric PR-job cap/i);
   expect(workflows).toMatch(/exactly two logical native manager lanes/i);
-  expect(workflows).toMatch(/waiting PRs[^.]*consume no slot/i);
+  expect(workflows).toMatch(/waiting PRs[^.]*consume no execution capacity/i);
 
   const watchSkill = compact('skills/axstack-watch/SKILL.md');
   const readme = compact('README.md');
   for (const text of [watchSkill, readme]) {
     expect(text).toMatch(/fresh finite|finite session/i);
-    expect(text).toMatch(/waiting PRs[^.]*slots/i);
+    expect(text).toMatch(/waiting PRs[^.]*execution capacity/i);
   }
 });

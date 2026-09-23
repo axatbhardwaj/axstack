@@ -192,8 +192,10 @@ read-only observer for standalone watches and never sends.
 The accepted contract has exactly two logical native manager lanes: review at
 minutes `0,15,30,45` and watch at `7,22,37,52`. Each scheduled pass uses a
 fresh finite session in a new isolated workspace, scans complete
-discovery pages, and admits at most five executing
-PR jobs. Waiting PRs stay covered and consume no slot after owned descendants
+discovery pages, and admits independent actionable events by observed host
+resources, provider and spending limits, dependencies, and fairness. There is
+no fixed numeric concurrent PR-job cap or slot accounting. Waiting PRs stay
+covered and consume no execution capacity after owned descendants
 settle. Each job uses one repository-parented worktree; managers never check out
 PR branches in their own workspaces.
 
@@ -224,10 +226,13 @@ shared-root sweeps, or general cache wipes, and uncertain files remain for
 reconciliation. Permission prompts and provider safety refusals are incomplete
 holds, never bypass or cross-model retry signals. The coordinator preserves the
 evidence, settles the exact owned tree through Orca's supported lifecycle, and
-releases capacity only after native settlement is verified. Unresolved execution
-teardown pauses the lane; retained evidence or cleanup metadata does not consume
-a slot after positive full-tree settlement. Once settled, an unchanged held
-event remains deduplicated while unrelated eligible PRs continue.
+releases resources only after native settlement is verified. A process positively
+bound to one settled PR job can be handled as a PR-local orphan while host health
+is sound and unrelated eligible PRs continue. Narrow automatic termination
+requires a fresh exact identity and ownership check, graceful TERM, and verified
+exit; unknown or user-owned work is never a target. Actual shared-host risk or
+ownership uncertainty pauses the lane. Retained evidence or cleanup metadata
+does not consume execution capacity after positive full-tree settlement.
 
 Requested reviews cover any accessible repository; automatic repairs retain
 their `defi-com/monorepo` and `defi-com/mobile` scope. Orca owns schedules,
@@ -241,7 +246,10 @@ relative contract and invoke `axstack-review` or `axstack-watch`. Bounded jobs
 publish ordinary exact-head review verdicts or reviewed fast-forward repairs;
 the human merges. Exceptional security, permanent-on-chain, or architectural
 decisions remain actionable in GitHub or a durable user-owned conversation
-after manager self-close, with an authorized deduplicated Telegram notification.
+after manager self-close. The recorded Notification policy permits only
+deduplicated Telegram escalations requiring attention under 40 words, with no
+routing, progress, or merge-ready notices. Recipient and channel belong in live
+prompts, not the packaged contract.
 The current operational contract is
 `skills/axstack/references/automations.md`.
 

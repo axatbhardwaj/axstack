@@ -112,13 +112,14 @@ eligible peer-review requests, and the other monitors your open PRs and handles
 authorized repair events.
 
 The lanes use staggered 15-minute schedules. Each pass uses a fresh finite
-session in an isolated workspace and admits at most five executing PR jobs per
-lane, fewer under resource pressure. Waiting PRs remain tracked without consuming
-execution slots, so a large open-PR backlog does not require an idle agent per PR.
+session in an isolated workspace and admits independent PR jobs by observed
+host resources, provider and spending limits, dependencies, and fairness, with
+no fixed numeric concurrent PR-job cap. Waiting PRs remain tracked without
+consuming execution capacity, so a large backlog needs no idle agent per PR.
 Completed passes save continuity and retire their own verified resources.
 Held jobs preserve evidence, use private worktree-local temporary paths, and
 release capacity only after native descendant settlement. Uncertain execution
-teardown pauses the lane; settled evidence cleanup does not occupy a slot.
+teardown pauses the lane; settled evidence cleanup does not consume execution capacity.
 
 Scheduling is opt-in and requires host-specific runtime validation before
 activation. Installing Axstack does not turn it on. Repairs are limited to

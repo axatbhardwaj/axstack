@@ -25,14 +25,14 @@ test('thin PR managers expose two short finite-session native prompts', () => {
   expect(watchSkill).toMatch(/Do not adopt or repair a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
 });
 
-test('manager contract separates coverage from per-manager execution capacity', () => {
+test('manager contract separates coverage from resource-based admission', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/exactly two[^.]*logical manager lanes/i);
-  expect(text).toMatch(/review manager[^.]*at most (?:five|5)/i);
-  expect(text).toMatch(/watch manager[^.]*at most (?:five|5)/i);
-  expect(text).toMatch(/no borrowing|never borrow/i);
+  expect(text).toMatch(/no fixed numeric concurrent PR-job cap/i);
+  expect(text).toMatch(/observed host resources[^.]*provider availability[^.]*spending limits/i);
+  expect(text).toMatch(/separate managers[^.]*neither borrows authority/i);
   expect(text).toMatch(/complete discovery pages|every discovery page|all discovery pages/i);
-  expect(text).toMatch(/waiting[^.]*does not[^.]*execution slot|waiting[^.]*occup(?:y|ies) no[^.]*slot/i);
+  expect(text).toMatch(/waiting[^.]*consumes? no execution capacity/i);
   expect(text).toMatch(/oldest actionable[^.]*unserved|fair/i);
   expect(text).not.toMatch(/at most (?:eight|8) live dispatch markers/i);
 });
@@ -42,7 +42,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/one separate Orca worktree per PR job/i);
   expect(text).toMatch(/manager[^.]*never[^.]*checks? out[^.]*PR branch/i);
   expect(text).toMatch(/descendants[^.]*active|active[^.]*descendants/i);
-  expect(text).toMatch(/settlement[^.]*frees[^.]*slot|slot[^.]*freed[^.]*settled/i);
+  expect(text).toMatch(/settlement[^.]*releases execution capacity/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
   expect(text).toMatch(/canary[^.]*fresh-session launch[^.]*overlapping-pass behavior[^.]*recovery/i);
@@ -95,8 +95,8 @@ test('held manager jobs settle natively before releasing capacity', () => {
   expect(runtime).toMatch(/never[^.]*bypass[^.]*retry[^.]*another model/i);
   expect(manager).toMatch(/native runtime inspection[^.]*actual hold/i);
   expect(manager).toMatch(/do not forge[^.]*worker_done/i);
-  expect(manager).toMatch(/release[^.]*slot[^.]*until[^.]*verif(?:y|ies)[^.]*settlement/i);
-  expect(manager).toMatch(/unresolved execution teardown[^.]*pause[^.]*lane/i);
+  expect(manager).toMatch(/do not mark[^.]*PR job settled[^.]*until[^.]*verif(?:y|ies)[^.]*settlement/i);
+  expect(manager).toMatch(/failed manager-pass retirement[^.]*pauses the lane/i);
   expect(manager).toMatch(/unknown[^.]*user-owned[^.]*never[^.]*kill/i);
 });
 
@@ -109,9 +109,9 @@ test('held-event dedupe avoids retry storms without starving unrelated PRs', () 
 
 test('execution settlement frees capacity independently of retained cleanup state', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/positive[^.]*full-tree[^.]*process exit[^.]*frees[^.]*slot/i);
-  expect(text).toMatch(/retained metadata[^.]*does not[^.]*occupy[^.]*slot/i);
-  expect(text).toMatch(/archive[^.]*workspace removal[^.]*not[^.]*execution capacity/i);
+  expect(text).toMatch(/positive[^.]*full-tree[^.]*process exit[^.]*releases execution capacity/i);
+  expect(text).toMatch(/retained metadata[^.]*consumes no execution capacity/i);
+  expect(text).toMatch(/archive[^.]*workspace removal[^.]*not settled execution capacity/i);
   expect(text).toMatch(/cleanup hold[^.]*unrelated eligible PRs[^.]*continue/i);
 });
 
@@ -209,7 +209,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('cf0ebc1697c9f4ee253acc9a3f35cb3def1f51bb9edf3cc6a0a3d58cd046cdf1');
+  )).toBe('d53481a3855a0eed82c9295a2c444757a1189c67fa13d6e29cc43f8e5e9adde1');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',
@@ -222,6 +222,11 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'predecessor-cleanup-safety-hold',
     'competing-successor-cleanup',
     'predecessor-cleanup-failure-dedupe',
+    'resource-admission-beyond-five',
+    'pr-local-bound-orphan',
+    'orphan-identity-change',
+    'shared-host-or-ownership-uncertainty',
+    'attention-only-notification',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();
