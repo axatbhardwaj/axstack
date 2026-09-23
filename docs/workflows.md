@@ -50,8 +50,8 @@ role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna max |
-| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna max |
+| `mixed` | Sol medium | Sol medium; Opus medium | Astra high / Fable high | Luna xhigh |
+| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |
 | `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:

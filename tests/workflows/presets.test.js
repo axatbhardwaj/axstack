@@ -45,10 +45,10 @@ const expected = {
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
     c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'max'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'xhigh'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     a('claude-opus-5-5', 'medium'),
-    c('gpt-6-luna', 'max'),
+    c('gpt-6-luna', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'),
@@ -61,10 +61,10 @@ const expected = {
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
     c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'max'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-sol', 'low'),
-    c('gpt-6-luna', 'max'),
+    c('gpt-6-luna', 'xhigh'),
     c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'),
@@ -111,6 +111,29 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       expect(profile.name).toBeTruthy();
       expect(profile.notes).toBeTruthy();
     }
+  }
+});
+
+test('presets: Codex auditor effort agrees with audit skill and workflow table', () => {
+  const audit = readFileSync(`${root}/skills/axstack-audit/SKILL.md`, 'utf8');
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const auditor = roles.find(({ id }) => id === 'axstack-auditor');
+    expect(auditor).toMatchObject({ provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh' });
+    expect(workflows).toContain(`| \`${preset}\` |`);
+    expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`))).toEndWith('| Luna xhigh |');
+  }
+  expect(audit).toContain('`axstack-auditor` profile (codex/gpt-6-luna xhigh)');
+});
+
+test('presets: Codex explainer reviewer uses supported Luna effort', () => {
+  for (const preset of ['mixed', 'codex-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
+    expect(reviewer).toMatchObject({
+      provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh',
+    });
   }
 });
 
@@ -226,7 +249,7 @@ test('presets: public docs and shared references never state a stale role count'
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna max |',
+    '| `codex-only` | Sol medium | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
   );
 });
 
