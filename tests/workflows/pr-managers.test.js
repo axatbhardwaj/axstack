@@ -85,7 +85,7 @@ test('manager jobs use private owned scratch without broad cleanup', () => {
   expect(runtime).toMatch(/exact validated owned path[^.]*no glob/i);
   expect(runtime).toMatch(/never[^.]*wipe[^.]*cache/i);
   expect(runtime).toMatch(/uncertain temporary[^.]*preserv/i);
-  expect(manager).toMatch(/private job-local temporary directory/i);
+  expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*private directory/i);
 });
 
 test('held manager jobs settle natively before releasing capacity', () => {
@@ -155,7 +155,7 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
   expect(text).toMatch(/manager lane owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);
   expect(text).toMatch(/Reuse[^.]*worktree[^.]*owner[^.]*unchanged receipts/i);
   expect(text).toMatch(/Settlement returns continuity[^.]*manager[^.]*rather than retaining an idle PR coordinator/i);
-  expect(text).toMatch(/dirty worktrees[^.]*user-owned work[^.]*proven/i);
+  expect(text).toMatch(/dirty source[^.]*unarchived review evidence[^.]*user-owned work[^.]*proven/i);
   expect(text).toMatch(/pending external result[^.]*unconfirmed review submission[^.]*not pending CI/i);
   expect(text).toMatch(/ascending repository and PR-number tie breaks/i);
 });

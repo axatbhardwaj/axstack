@@ -209,36 +209,26 @@ The watch lasts until all member PRs merge or close, or you cancel it. Stop requ
 ## Optional native peer-review automation
 
 The optional native review manager runs at minutes `0,15,30,45`. Each
-scheduled pass uses a fresh finite session in a new isolated workspace, scans complete
+scheduled pass uses a fresh finite session in one dedicated existing workspace, scans complete
 discovery pages, and admits eligible actionable PR events within measured host
 capacity. Waiting PRs stay covered and consume no slot after
 owned descendants settle. Each job uses one repository-parented worktree; the
 manager never checks out PR branches in its own workspace.
 
-Every pass reconciles saved, GitHub, and native Orca state across all same-lane
-workspaces before admission. A
-confirmed same-lane manager makes the new duplicate do no work or shared-record
-write and close only itself. Normal teardown settles descendants, saves durable
-continuity and decisions outside disposable workspaces, then retires its own
-verified isolated pass workspace as the final action. It never bulk-closes a
-shared manager workspace or a PR-job worktree, or cleans preserved
-evidence, user sessions, unknown liveness, `user_takeover`, or ambiguous
-publication state. Manual review and user-driven `axstack-watch` remain outside
+Every pass reconciles saved, GitHub, and native Orca state across the lane before
+admission. A confirmed same-lane manager makes the new duplicate do no work or
+shared-record write; it ends its own session. The pass settles descendants,
+releases worker terminals, archives private evidence and reads it back, then
+uses `axstack-cleanup` guards to remove reviewer and PR-job worktrees. A merged
+or closed PR does not keep a clean job worktree waiting for a user decision.
+Dirty source, unpushed commits, `user_takeover`, unknown liveness, and ambiguous
+publication remain cleanup holds. The manager saves compact continuity and
+ends its session. Manual review and user-driven `axstack-watch` remain outside
 this scheduled lifecycle.
 
-One natively ordered successor may recover an exact positively completed
-predecessor whose terminal survived, but only after matching its automation,
-run, workspace, and terminal incarnation and proving zero unsettled descendants.
-It saves and reads back the cleanup claim before exact native close, then proves
-the full process tree exited before ownership release or guarded worktree removal.
-Age, status, or idle state alone never authorizes cleanup. Conflicting successors,
-identity mismatch, unknown or protected state, `user_takeover`, unexpected
-terminals, dirty or unpushed work, and unarchived evidence hold cleanup; an
-unchanged failure is deduplicated. Native ordering is not an atomic lock, so the
-overlap canary remains an activation requirement.
-
-Each bounded job uses a private `0700` temporary directory inside its own
-worktree. Cleanup targets only the validated owned path: no `TMPDIR` globs,
+Manager and job commands set `TMPDIR` to a private directory inside their owning
+workspace. Each bounded job uses a private `0700` directory. Cleanup targets
+only the validated owned path: no `TMPDIR` globs,
 shared-root sweeps, or general cache wipes, and uncertain files remain for
 reconciliation. Permission prompts and provider safety refusals are incomplete
 holds, never bypass or cross-model retry signals. The coordinator preserves the
@@ -259,7 +249,7 @@ relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
 exact-head review verdicts; the human merges. Manual adopted-PR maintenance
 uses `axstack-watch` with local-SHA review before authorized publication.
 Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
-after manager self-close, with an authorized deduplicated Telegram notification.
+after the manager session ends, with an authorized deduplicated Telegram notification.
 The current operational contract is
 `skills/axstack/references/automations.md`.
 

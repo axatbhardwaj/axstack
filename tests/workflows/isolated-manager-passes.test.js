@@ -19,7 +19,7 @@ test('scheduled manager uses one dedicated workspace and finite fresh sessions',
 test('settled PR jobs release terminals and retire both worktree levels after archive', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toContain('worker-release');
-  expect(text).toMatch(/private evidence archive[^.]*read back[^.]*axstack-cleanup[^.]*reviewer and PR-job worktrees/i);
+  expect(text).toMatch(/private evidence archive[\s\S]*?read back[\s\S]*?axstack-cleanup[\s\S]*?reviewer and PR-job worktrees/i);
   expect(text).toMatch(/merged or closed PR[^.]*never[^.]*keep a job worktree/i);
   expect(text).toMatch(/dirty source[^.]*unpushed commits[^.]*`user_takeover`[^.]*unknown liveness[^.]*ambiguous publication/i);
 });
@@ -28,7 +28,7 @@ test('continuity stays bounded and both command kinds use workspace-local TMPDIR
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/current lane state[^.]*open holds[^.]*watermarks[^.]*last pass summary/i);
   expect(text).toMatch(/older pass history[^.]*archive file beside[^.]*never re-read by default/i);
-  expect(text).toMatch(/manager and job commands[^.]*TMPDIR[^.]*inside[^.]*owning workspace/i);
+  expect(text).toMatch(/TMPDIR[^.]*manager and job commands[^.]*inside[^.]*owning workspace/i);
   expect(text).not.toMatch(/self-close|self-retirement|three-workspace threshold/);
 });
 
