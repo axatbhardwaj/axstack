@@ -34,7 +34,7 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "medium",
+      "thinkingOptionId": "high",
       "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Validate configured availability at launch; hold affected work without fallback."
     },
     {

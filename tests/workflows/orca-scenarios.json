@@ -15,7 +15,7 @@
           "`orca skills get orchestration --json` => {\"name\":\"orchestration\",\"version\":\"0.9.4\",\"ok\":true}",
           "`orca skills get orca-cli --json` => {\"name\":\"orca-cli\",\"version\":\"0.9.4\",\"ok\":true}"
         ],
-        "run": "Run run_demo has active Task task_t3 and no active Dispatch; the installed Axstack role snapshot pins axstack-author to codex/gpt-6-sol medium.",
+        "run": "Run run_demo has active Task task_t3 and no active Dispatch; the installed Axstack role snapshot pins axstack-author to codex/gpt-6-sol high.",
         "legacy": "A `paseo` executable and old Paseo profiles still exist for rollback, but Orca is the approved sole target runtime."
       },
       "expected_choices": [
