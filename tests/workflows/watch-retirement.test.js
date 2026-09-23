@@ -25,3 +25,22 @@ test('manual adopted repair reviews its local SHA before publication, while impl
   expect(ordinary).toMatch(/remote ref back[^.]*candidate SHA/);
   expect(ordinary).not.toMatch(/manager PR repair/);
 });
+
+test('current user guidance contains no scheduled own-PR repair path', () => {
+  for (const path of ['README.md', 'docs/installation.md', 'docs/workflows.md']) {
+    const guidance = read(path);
+    expect(guidance, path).not.toMatch(/watch.manager|watch lane|manager repairs|bounded PR job repairs|fast-forward `git push`/i);
+  }
+  const workflows = read('docs/workflows.md');
+  expect(workflows).toMatch(/Manual adopted-PR repair[^.]*local SHA[^.]*`gh stack` publication/i);
+});
+
+test('manual watch keeps a concrete fallback when relay is unavailable', () => {
+  const watch = read('skills/axstack-watch/SKILL.md');
+  expect(watch).toMatch(/absent policy\s+or failed relay[^.]*current Orca conversation[^.]*hold open/i);
+});
+
+test('review distinguishes implementation publication from local-SHA maintenance review', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  expect(review).toMatch(/For an owned implementation candidate,\s*load and verify the\s*\[candidate-publication boundary\]/);
+});

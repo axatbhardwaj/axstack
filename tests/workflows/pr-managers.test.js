@@ -154,6 +154,16 @@ test('peer publication preserves human blocks and exact public receipts', () => 
   expect(text).toMatch(/Never publish a `COMMENT` review/i);
 });
 
+test('review manager preserves peer, decision, notification, and merge boundaries', () => {
+  const manager = compact('skills/axstack/references/automations.md');
+  const review = compact('skills/axstack-review/SKILL.md');
+  expect(review).toMatch(/Peer code stays readonly/i);
+  expect(manager).toMatch(/security concern[^.]*permanent on-chain[^.]*architecture decision/i);
+  expect(manager).toMatch(/Telegram delivery[^.]*Telegram reply[^.]*silence never authorizes/i);
+  expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
+  expect(manager).toMatch(/Human merge remains the boundary/i);
+});
+
 test('manager continuity reuses valid state and keeps publication bounded', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/manager lane owns ongoing discovery and continuity[^.]*coordinator owns only[^.]*event/i);

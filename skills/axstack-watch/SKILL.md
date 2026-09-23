@@ -110,7 +110,7 @@ the current revision, and a recorded hold or next owner where work remains.
 When a new actionable event is eligible under a recorded `Notification policy`,
 the owner may use the optional [axstack-relay](../axstack-relay/SKILL.md).
 The monitor never sends. Deduplicate authorized notifications; absent policy
-or failed relay leaves the existing hold open.
+or failed relay uses the current Orca conversation and leaves the existing hold open.
 
 ## 5. State readiness precisely
 

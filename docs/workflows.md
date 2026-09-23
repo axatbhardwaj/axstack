@@ -140,12 +140,10 @@ session and evidence remain valid.
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
-  repair authority. Repairs return to the original author only for a
-  run-launched session and receive refreshed authored review before scoped
-  `gh stack` publication. `gh stack` publication does not apply to manager
-  repairs: the bounded PR job repairs in its per-PR child worktree, the local
-  SHA receives the actual-author-provenance review, and the exact candidate
-  lands by fast-forward `git push` after final readback.
+  repair authority. Within an implementation run, fixes return to the original
+  author and follow its publish-before-review loop. Manual adopted-PR repair
+  reviews the exact local SHA and reply bodies before `gh stack` publication
+  and remote readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
 - `axstack-cleanup` distinguishes settled-Dispatch release, exact unused-shell
