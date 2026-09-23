@@ -1,9 +1,11 @@
 # Workspace hygiene for driver-owned Orca runs
 
 This is a prompt contract for drivers, not a cleanup daemon or new Orca
-protocol. Use the version-matched Orca guides for native operations. A worker
-never sweeps or removes another session. Record each decision and native
-readback in the private run record; uncertain ownership, liveness, or evidence
+protocol. Use the version-matched Orca guides for native operations. Dispatched
+workers never sweep or remove another session. A scheduled pass with recorded
+cleanup authority acts as its lane's driver for the sweep; read-only observers
+only report leftovers. Record each decision and native readback in the private
+run record; uncertain ownership, liveness, or evidence
 holds only the affected resource.
 
 ## Settlement
@@ -11,8 +13,8 @@ holds only the affected resource.
 At intermediate completion, once a worker or reviewer Dispatch is accepted,
 the driver releases it natively, confirms closure from a fresh native terminal
 list, then removes its worktree, descendants first, after the preservation
-checks below. Keep the author worktree and session until merge so repairs return
-to the same author. Release, terminal closure, worktree removal, and branch
+checks below. Keep the author worktree and session until the PR merges or closes
+so repairs return to the same author. Release, terminal closure, worktree removal, and branch
 retirement each need their own receipt.
 
 At final settlement, no eligible non-driver session or worktree remains,
@@ -55,19 +57,24 @@ removal, and use exact native worktree removal without force.
 
 ## Driver-start orphan sweep
 
-Drivers sweep on phase-skill entry; workers outside finite scheduled passes never sweep. Every
-scheduled pass also runs the driver-start orphan sweep after predecessor terminal
-cleanup, scoped to repositories listed in its run record. On phase-skill entry, scope
-the sweep to the current repository and the per-run worktrees in other
+Drivers sweep on phase-skill entry. A scheduled pass that owns its lane with
+recorded cleanup authority runs the driver-start orphan sweep after predecessor
+terminal cleanup, scoped to repositories listed in its run record. On
+phase-skill entry, scope the sweep to the current repository and the
+per-run worktrees in other
 repositories recorded in the driver's run records. If Orca is unreachable,
 report one line and continue the phase; an unreachable host holds only its
 items. This is standing authority to remove an orphan after salvage when every
 owning Dispatch and descendant is settled, ownership and liveness are rechecked
 from a fresh native list, and evidence is durable. Remove descendants first.
-An author worktree of a merged or closed PR is sweep-eligible when its head is
-on the remote; salvage first if dirty, under the preservation guards above.
-Record sweep results and holds in the continuity record's Open holds table;
-the pass is silent when nothing was removed.
+An author worktree of a merged or closed PR is sweep-eligible when its head
+commit is retrievable from the forge (for example, the PR's recorded head or a
+remote branch contains it); unverifiable state is a hold. For an eligible
+author worktree, salvage first if dirty, under the preservation guards above.
+Phase-skill entry drivers report sweep results and holds in chat and run record.
+A scheduled review-manager pass records sweep results and holds in its
+continuity record's Open holds table; a maintenance watch pass reports them to
+its driver for the run record. Both are silent when nothing was removed.
 Branches with a remote counterpart are never deleted. List live or unsettled
 work, genuine `user_takeover`, and items without provable Axstack provenance in
 one table with their reason; do not remove them.
