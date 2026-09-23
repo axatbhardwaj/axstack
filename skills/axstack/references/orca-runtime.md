@@ -87,8 +87,8 @@ Keep that reviewer's probes and private evidence in its separate private
 per-Dispatch run folder under [Workspace hygiene](workspace-hygiene.md), with no
 first-pass cross-read. Untracked files never prove a worktree disposable.
 
-Before launching a Claude worker in a checkout, run the packaged
-`skills/axstack/scripts/trust-path.js --path <absolute checkout path>` for that
+Before launching a Claude worker in a checkout, from the installed `axstack` skill directory
+run `bun scripts/trust-path.js --path <exact checkout path>` for that
 exact checkout path. It trusts only Orca-registered repository roots and their
 worktrees. A failed preflight holds launch; workers never answer trust or
 permission dialogs. A trust dialog that still appears is a hold.

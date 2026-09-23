@@ -31,6 +31,7 @@ async function inventory(file, command, key) {
   }
   const response = JSON.parse(raw);
   if (response.ok !== true || !Array.isArray(response.result?.[key])) fail(`invalid Orca ${key} inventory`);
+  if (response.result.truncated === true) fail(`truncated Orca ${key} inventory`);
   return response.result[key];
 }
 
@@ -39,6 +40,68 @@ async function configStat(path) {
   if (stat?.isSymbolicLink()) fail(`refusing symlinked Claude config: ${path}`);
   if (stat && !stat.isFile()) fail(`Claude config is not a regular file: ${path}`);
   return stat;
+}
+
+async function snapshot(path) {
+  const stat = await configStat(path);
+  return { stat, raw: stat ? await readFile(path, 'utf8') : null };
+}
+
+async function withLock(path, action) {
+  // The lock serializes this helper's writers; byte checks also catch other writers.
+  const lock = `${path}.axstack-lock`;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    try {
+      await writeFile(lock, `${process.pid}\n`, { flag: 'wx', mode: 0o600 });
+      try { return await action(); }
+      finally { await unlink(lock); }
+    } catch (err) {
+      if (err?.code !== 'EEXIST') throw err;
+      await Bun.sleep(5 + Math.floor(Math.random() * 10));
+    }
+  }
+  fail('Claude config is busy; trust preflight held');
+}
+
+async function trust(configPath, path) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { stat, raw } = await snapshot(configPath);
+    const current = raw === null ? {} : JSON.parse(raw);
+    if (!current || typeof current !== 'object' || Array.isArray(current) ||
+        (current.projects !== undefined && (!current.projects || typeof current.projects !== 'object' || Array.isArray(current.projects)))) {
+      fail('invalid Claude config shape');
+    }
+    if (current.projects?.[path]?.hasTrustDialogAccepted === true) {
+      console.log(JSON.stringify({ status: 'already-trusted', path }));
+      return;
+    }
+    current.projects ??= {};
+    if (current.projects[path] !== undefined && (!current.projects[path] || typeof current.projects[path] !== 'object' || Array.isArray(current.projects[path]))) {
+      fail('invalid Claude project entry');
+    }
+    current.projects[path] ??= {};
+    current.projects[path].hasTrustDialogAccepted = true;
+
+    const temp = `${configPath}.${crypto.randomUUID()}.tmp`;
+    try {
+      await writeFile(temp, `${JSON.stringify(current, null, 2)}\n`, { flag: 'wx', mode: stat ? stat.mode & 0o777 : 0o600 });
+      if (stat) await chmod(temp, stat.mode & 0o777);
+      if ((await snapshot(configPath)).raw !== raw) {
+        await Bun.sleep(5 + Math.floor(Math.random() * 10));
+        continue;
+      }
+      await rename(temp, configPath);
+      const after = await snapshot(configPath);
+      if (JSON.parse(after.raw).projects?.[path]?.hasTrustDialogAccepted === true) {
+        console.log(JSON.stringify({ status: 'trusted', path }));
+        return;
+      }
+    } finally {
+      await unlink(temp).catch((err) => { if (err?.code !== 'ENOENT') throw err; });
+    }
+    await Bun.sleep(5 + Math.floor(Math.random() * 10));
+  }
+  fail('Claude config changed during trust preflight');
 }
 
 async function main() {
@@ -54,33 +117,7 @@ async function main() {
   const home = process.env.HOME;
   if (!home?.startsWith('/')) fail('HOME must be absolute');
   const configPath = `${home.replace(/\/$/, '')}/.claude.json`;
-  const stat = await configStat(configPath);
-  const current = stat ? JSON.parse(await readFile(configPath, 'utf8')) : {};
-  if (!current || typeof current !== 'object' || Array.isArray(current) ||
-      (current.projects !== undefined && (!current.projects || typeof current.projects !== 'object' || Array.isArray(current.projects)))) {
-    fail('invalid Claude config shape');
-  }
-  if (current.projects?.[path]?.hasTrustDialogAccepted === true) {
-    console.log(JSON.stringify({ status: 'already-trusted', path }));
-    return;
-  }
-  current.projects ??= {};
-  if (current.projects[path] !== undefined && (!current.projects[path] || typeof current.projects[path] !== 'object' || Array.isArray(current.projects[path]))) {
-    fail('invalid Claude project entry');
-  }
-  current.projects[path] ??= {};
-  current.projects[path].hasTrustDialogAccepted = true;
-
-  const temp = `${configPath}.${crypto.randomUUID()}.tmp`;
-  try {
-    await writeFile(temp, `${JSON.stringify(current, null, 2)}\n`, { flag: 'wx', mode: stat ? stat.mode & 0o777 : 0o600 });
-    if (stat) await chmod(temp, stat.mode & 0o777);
-    await configStat(configPath);
-    await rename(temp, configPath);
-  } finally {
-    await unlink(temp).catch((err) => { if (err?.code !== 'ENOENT') throw err; });
-  }
-  console.log(JSON.stringify({ status: 'trusted', path }));
+  await withLock(configPath, () => trust(configPath, path));
 }
 
 main().catch((err) => { console.error(err.message); process.exitCode = 1; });
