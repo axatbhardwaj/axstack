@@ -5,6 +5,9 @@ description: When a candidate PR or bounded codebase needs review, use axstack-r
 
 # Review
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Manual review keeps the user’s chat and workspace open.
 
 Produce evidence-bound findings for an exact revision using the review count
@@ -44,8 +47,8 @@ Immediately before each reviewer dispatch, load [Orca runtime](../axstack/refere
 and [Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence).
 Use separate Orca-managed child worktrees under the inspected source worktree,
 each detached at the pinned exact source SHA; that source SHA substitutes for
-the PR base in the reviewer workspace rule. Keep worktree-local report, probe,
-and log artifacts in dispatch-specific directories. Give both the identical six-lens brief and
+the PR base in the reviewer workspace rule. Keep reports, probes, and logs in each private per-Dispatch run folder.
+Give both the identical six-lens brief and
 require an isolated first pass with no cross-read. Verify actual models, session
 identity, source revision, and inspected scope in each receipt. A missing reviewer or
 material disagreement leaves coverage
@@ -188,7 +191,7 @@ This section applies to peer and authored PR modes.
    branch below. For every reviewer, apply
    [Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)
    before launch; report-only scope does not waive checkout isolation or
-   worktree-local artifacts. Each reviewer uses a separate Orca child worktree;
+   private per-Dispatch artifacts. Each reviewer uses a separate Orca child worktree;
    preserve its private evidence before removal.
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
@@ -324,7 +327,7 @@ no merge authority.
 ```text
 Candidate: <PR URL> rev <sha> (immutable checkout)
 Workspace: <Orca worktree ID + absolute path>
-Evidence: <worktree-local report and probe paths>
+Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Mode: <peer | authored> Actual author: <session/model evidence | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
@@ -344,7 +347,7 @@ hold.
 Mode: <peer | authored>
 Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <candidate sha> base <current base>
 Workspace: <Orca worktree ID + absolute path>
-Evidence: <worktree-local report and probe paths>
+Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>

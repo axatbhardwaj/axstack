@@ -1,6 +1,6 @@
 # Shared routing (every owned phase loads this)
 
-Choose a route; load only the phase and references needed next.
+Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 
 ## Role routing
 

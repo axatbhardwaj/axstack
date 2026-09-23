@@ -121,12 +121,12 @@ review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`:
-each runs in a separate Orca child worktree, keeps its probes and evidence
-inside that worktree, and preserves required evidence before removal.
+each runs in a separate Orca child worktree, writes probes and evidence to
+its private per-Dispatch run folder, and reads back evidence before removal.
 
-Set `TMPDIR` for manager and job commands to a private directory inside each
-command's owning workspace. Follow ownership, containment, and cleanup checks
-in the [runtime boundary](orca-runtime.md#reviewer-workspaces-and-evidence).
+Set `TMPDIR` for manager and job commands to each Dispatch's 0700 private
+`<run dir>/evidence/<dispatch>/` folder under
+[Workspace hygiene](workspace-hygiene.md).
 Never write temporary files under `/` or another shared root. Never delete
 through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a general
 cache. Preserve evidence and any temporary path with uncertain ownership or

@@ -5,6 +5,9 @@ description: When an approved task is ready to build or repair, use axstack-impl
 
 # Implement
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 From an accepted scope identity, drive its task/PR map through author -> review
 -> repair until every required PR is merge-ready or held. Keep exact revisions,
 strict TDD evidence, ownership, and unverified boundaries explicit. The human

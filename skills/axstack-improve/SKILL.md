@@ -5,6 +5,9 @@ description: When assessing codebase quality or planning a refactor, use axstack
 
 # Improve
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Find a small set of worthwhile maintainability, architecture, or testability
 improvements from inspected code. This is a direct discovery route: it needs no
 spec or tickets and writes only the requested report. No worthwhile

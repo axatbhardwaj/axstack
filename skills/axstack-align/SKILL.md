@@ -5,6 +5,9 @@ description: When exploring or planning engineering work, use axstack-align to s
 
 # Align
 
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
+
 Leave the work with settled scope, explicit exclusions, and the proportional
 identity its next phase requires. Stop before execution.
 
