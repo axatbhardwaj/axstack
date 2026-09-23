@@ -86,4 +86,3 @@ New rules live in one new reference, `skills/axstack/references/workspace-hygien
 - **Not handled automatically:** the user's manual chats and tabs Orca restored after a restart.
 - **No Orca source changes:** the takeover mislabel is only reported upstream.
 - **No migration:** existing leftovers are handled only by the first driver-start sweep.
-
