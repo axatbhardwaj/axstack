@@ -18,8 +18,11 @@ and discovers these rules by relative link instead of copying them.
 
 Provision one explicit absolute continuity path per automation ID in the
 scheduled prompt. The repository's absolute Git common directory is a valid
-durable root; missing or non-durable configuration holds admission. Keep
-continuity bounded and archive old pass history per [Run record](run-record.md).
+durable root; missing or non-durable configuration holds admission. Follow the
+[Run record](run-record.md). Each pass
+uses the [Review-manager continuity template](run-record.md#review-manager-continuity-template),
+overwrites its four current-state sections, and archives superseded history once
+in the adjacent history file. A no-change pass appends at most one history line.
 
 This is prompt policy, not proof that Orca starts a fresh session or prevents
 overlapping passes. Before activation a native canary must prove fresh-session
@@ -235,7 +238,8 @@ After admission closes, settle every owned PR job and all descendants before the
 manager session closes; active or unknown descendants keep their PR slot occupied
 and must be reconciled from native state. Release settled worker terminals and
 complete guarded evidence archival and worktree cleanup in this pass. Save
-continuity, open decisions, and the last pass summary and read back the save.
+continuity, open decisions, and the last pass summary using the linked template;
+read back all four sections and the save before closing.
 Use the exact native terminal close for this pass's own terminal from its run
 receipt: `orca terminal close --terminal <exact-handle> --json`. Terminal close
 is the final action. Never use `--all`, a broad or name selector, or another
