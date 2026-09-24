@@ -46,6 +46,39 @@
       ]
     },
     {
+      "id": "design-rung-0",
+      "input": {
+        "change": "Adjust an algorithm inside one module; its interface, ownership, data flow, and failure guarantees stay fixed"
+      },
+      "expected": [
+        "Classify Rung 0 from facts",
+        "Ask no design questions and carry no sketch"
+      ]
+    },
+    {
+      "id": "design-rung-1",
+      "input": {
+        "change": "Add an external dependency behind a new adapter for a bounded one-PR feature"
+      },
+      "expected": [
+        "Classify Rung 1 because the change fails Rung 0",
+        "Ask caller-first design questions within the existing budget and record a sketch",
+        "Allow small work unless the existing size reassessment rule applies"
+      ]
+    },
+    {
+      "id": "design-rung-2",
+      "input": {
+        "change": "Choose a hard-to-reverse persisted data model with non-obvious migration trade-offs",
+        "preset": "mixed"
+      },
+      "expected": [
+        "Classify Rung 2 using the existing ADR test and enter the arena",
+        "Frame a rubric for the design question and keep the user decision checkpoint",
+        "Use the currently configured candidate seats and two judges; later all-family widening is a separate task"
+      ]
+    },
+    {
       "id": "settled-term-open-architecture",
       "input": {
         "accepted_canonical_term": "workspace",
