@@ -25,7 +25,7 @@ and worktree removal. Do not embed or improvise a competing command protocol.
 ## Authority and scope
 
 Inline cleanup may consider only resources owned by the accepted completion it
-is processing. Driver-start orphan sweeps use the standing authority in
+is processing. Driver-start orphan sweeps follow the guarded cross-run sweep in
 [Workspace hygiene](../axstack/references/workspace-hygiene.md). Backlog
 cleanup requires an explicit bounded selector such as a
 Run, Task set, workspace set, repository, or named age window; age narrows an

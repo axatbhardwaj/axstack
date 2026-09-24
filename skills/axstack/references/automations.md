@@ -45,9 +45,10 @@ discovery or admission; never infer lane ownership from an empty local workspace
 Bind the lane to the automation ID and pass to its native run ID, workspace ID,
 and terminal identity, not a title or directory-name guess.
 A confirmed live manager for the same lane remains authoritative.
-The new duplicate does no PR work, makes no shared-record write, touches
-nothing owned by the live manager, and closes only its own exact terminal as
-its final action under the guard below.
+Once identified as a duplicate, the new pass does no PR work, makes no further
+shared-record write, touches no live or unsettled resource owned by the live
+manager, and closes only its own exact terminal as its final action under the
+guard below.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -251,7 +252,8 @@ At pass start, clear finished predecessor terminals of the same automation in
 the dedicated workspace only after proving completion, by the exact-handle
 fallback in [Workspace hygiene](workspace-hygiene.md).
 Then run the driver-start orphan sweep for repositories listed in this lane's
-run record, under the same guards. The sweep is silent when nothing was removed;
+run record plus registered repositories on this host containing eligible settled resources
+of any Axstack run on this host, under the same guards. The sweep is silent when nothing was removed;
 record sweep results and holds in the continuity record's Open holds table.
 
 After admission closes, settle every owned PR job and all descendants before the

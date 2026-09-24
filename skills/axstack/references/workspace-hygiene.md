@@ -30,7 +30,8 @@ At final settlement, no eligible non-driver session or worktree remains,
 including the run's worktrees in other repositories. Report each remaining
 resource as a hold with its reason. Recorded native ownership by Run, Task,
 and Dispatch decides; parent/child display lineage does not. The creator closes
-what it created. A finite scheduled pass closes only its own exact terminal as
+what it created at ordinary settlement; the cross-run sweep below may retire
+its settled leftovers. A finite scheduled pass closes only its own exact terminal as
 its final action. Manual chats, automation dedicated workspaces, and genuine
 `user_takeover` sessions are never removed. Deleting a session means closing
 its terminal; agent chat history is not deleted.
@@ -68,14 +69,28 @@ removal, and use exact native worktree removal without force.
 
 Drivers sweep on phase-skill entry. A scheduled pass that owns its lane with
 recorded cleanup authority runs the driver-start orphan sweep after predecessor
-terminal cleanup, scoped to repositories listed in its run record. On
-phase-skill entry, scope the sweep to the current repository and the
-per-run worktrees in other
-repositories recorded in the driver's run records. If Orca is unreachable,
+terminal cleanup, scoped to repositories listed in its run record plus
+registered repositories on this host containing eligible settled resources of
+another Axstack run. On phase-skill entry, scope the sweep to the current repository
+and the per-run worktrees in other repositories recorded in the driver's
+run records, and registered repositories on this host containing eligible settled
+resources of another Axstack run. Inspect other Axstack run records on this host
+too; a live owning run does not protect its settled
+reviewer worktree or merged author after preservation checks. If Orca is unreachable,
 report one line and continue the phase; an unreachable host holds only its
-items. This is standing authority to remove an orphan after salvage when every
-owning Dispatch and descendant is settled, ownership and liveness are rechecked
+items. A sweep may remove resources of ANY Axstack run on this host after salvage
+when every owning Dispatch and descendant is settled (completed or failed), its
+release is confirmed or `release_unknown`, no agent is working, the exact terminal
+has had no output for at least 60 minutes, ownership and liveness are rechecked
 from a fresh native list, and evidence is durable. Remove descendants first.
+For a settled worker dispatched into a shared or driver worktree, close its
+exact terminal individually under the same 60-minute quiet rule: native close,
+else the guarded `/quit` + `exit` fallback above. Never close the live coordinator
+session's terminal for any run (the driver's own terminal) or a user chat.
+Align/Spec adviser sessions reused between rounds remain until
+their owning phase approves or stops; the quiet rule still applies then.
+For a merged or closed PR author with an unreleased settled Dispatch, request
+native worker release first, record its result, then apply the sweep guards.
 An author worktree of a merged or closed PR is sweep-eligible when its head
 commit is retrievable from the forge (for example, the PR's recorded head or a
 remote branch contains it); unverifiable state is a hold. For an eligible
@@ -87,6 +102,9 @@ them in its own continuity Open holds table. Both are silent when nothing was re
 Branches with a remote counterpart are never deleted. List live or unsettled
 work, genuine `user_takeover`, and items without provable Axstack provenance in
 one table with their reason; do not remove them.
+Dirty or unpublished work follows the salvage and publication guards above;
+open-PR authors remain protected until merge or close. Record each removed and
+held resource in the pass continuity (scheduled) or run record (driver start).
 
 ## Native bookkeeping exceptions
 
@@ -96,7 +114,9 @@ the run record contains the exact repair Dispatch ID for that terminal;
 otherwise hold. Report the mislabel to Orca upstream through the driver.
 For `release_unknown`, reconcile with native worker inspection. If a fresh
 native terminal list confirms the terminal is gone, record the readback and
-proceed; otherwise hold.
+proceed; otherwise hold unless inspection proves a settled, quiet worker. Then
+close only that worker's exact terminal under the sweep rule and confirm its
+absence. Unknown liveness holds.
 
 ## Known Orca issues
 
