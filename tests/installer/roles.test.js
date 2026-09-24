@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 import {
@@ -107,6 +107,11 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok, axstack-arena-candidate-antigravity');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(26);
   expect(runCli(cli, args(newBundle), { env: { HOME: home } }).out).not.toContain('added role IDs:');
+  writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: old }) + '\n');
+  const preserved = runCli(cli, args(newBundle), { env: { HOME: home }, expectFail: true });
+  expect(preserved.out).toContain('preserved user edits');
+  expect(preserved.out).not.toContain('added role IDs:');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(24);
 });
 
 test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {

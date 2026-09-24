@@ -109,7 +109,7 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   const review = compact('skills/axstack-review/SKILL.md');
   expect(routing).toMatch(/preset change[^.]*new runs only|new runs[^.]*preset change/i);
   expect(routing).toMatch(/active runs?[^.]*snapshot/i);
-  expect(routing).toMatch(/Changing that snapshot or replacing a session needs an explicit user decision/i);
+  expect(routing).toMatch(/Changing it or replacing a session needs an explicit user decision/i);
   expect(routing).toMatch(/no automatic fallback|never[^.]*fallback/i);
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
   expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);

@@ -20,7 +20,7 @@ are authoritative at snapshot time and for availability; bundled presets are set
 inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
-Changing that snapshot or replacing a session needs an explicit user decision and
+Changing it or replacing a session needs an explicit user decision and
 revalidation. Unavailable models, unsupported efforts, missing roles, and
 incompatible overrides hold only affected work; no automatic fallback, quota
 routing, subscription inference, or silent provider/model/effort substitution.
@@ -88,8 +88,8 @@ step (3) for user routing: no substitution or same-provider review.
 
 ## Proportional scope identity
 
-Classify new work as substantial, small, or unclear; record a brief reason in
-the run record or the brief for tiny direct work.
+Classify new work as substantial, small, or unclear; record it with brief
+reason in the run record, or in the brief for tiny direct work.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work; a
   bounded small feature is not substantial because it is labelled one.
