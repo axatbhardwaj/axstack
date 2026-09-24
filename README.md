@@ -99,7 +99,7 @@ upgrades, conflicts, and uninstalling.
   inline or from an explicitly scoped backlog without touching active, manual,
   uncertain, user-owned, dirty, unpushed, or useful unmerged work.
 
-Choose an explicit role preset:
+Choose an explicit role preset (26 stable role IDs in each):
 [mixed](profiles/presets/mixed.json),
 [codex-only](profiles/presets/codex-only.json), or
 [claude-only](profiles/presets/claude-only.json).

@@ -122,7 +122,7 @@ test('review modes: new runs discover one preset and snapshot all role states', 
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
-  expect(routing).toMatch(/all 24 role IDs|complete 24-role map/i);
+  expect(routing).toMatch(/all 26 role IDs|complete 26-role map/i);
   expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
   expect(routing).toMatch(/Such a role[^.]*holds only that role/i);
   expect(routing).toMatch(/later[^.]*must not[^.]*silently[^.]*snapshot|snapshot[^.]*must not[^.]*silently[^.]*later/i);

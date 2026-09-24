@@ -30,6 +30,8 @@ const roleIds = [
   'axstack-debug-investigator-4',
   'axstack-arena-judge-astra',
   'axstack-arena-judge-fable',
+  'axstack-arena-candidate-grok',
+  'axstack-arena-candidate-antigravity',
 ];
 
 const c = (model, effort) => ['codex', model, 'full-access', effort];
@@ -52,6 +54,7 @@ const expected = {
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'),
+    g(null, 'high'), ag(null, 'high'),
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
@@ -68,6 +71,7 @@ const expected = {
     c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'),
+    c(null, 'high'), c(null, 'high'),
   ],
   'claude-only': [
     a(null, 'high'),
@@ -84,6 +88,7 @@ const expected = {
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'),
+    a(null, 'high'), a(null, 'high'),
   ],
 };
 
