@@ -42,7 +42,9 @@ specialization materially helps; create no new profile.
 Produce a small ranked candidate set. For each candidate include:
 
 1. Source evidence and the scoped problem.
-2. Current and proposed shape.
+2. Current and proposed shape. Only when the scope identity carries a sketch,
+   use the [design lens](../axstack/references/design-lens.md) vocabulary and
+   red flags and return candidates in sketch form.
 3. Concrete benefit and tradeoffs.
 4. Behavior to preserve and test approach.
 5. Uncertainty and recommendation strength.
