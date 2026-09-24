@@ -15,7 +15,7 @@ sketch through the scope identity.
   not reclassify work: Rung 1 can stay small. An unsettled material design
   question still makes routing reassess size.
 - **Rung 2 — arena.** A Rung 1 design that also meets the existing ADR test:
-  a meaningful, hard-to-reverse, non-obvious trade-off. Use Align's existing
+  a meaningful, hard-to-reverse, non-obvious trade-off. Use Align's all-family
   arena for that question.
 
 There is no numeric threshold, file-count gate, or class-count gate.

@@ -14,6 +14,7 @@ test('design lens: factual ladder and proportionate routing', () => {
   expect(lens).toMatch(/Rung 0[\s\S]*?no design questions and carry no sketch/i);
   expect(lens).toMatch(/Rung 1[\s\S]*?fails Rung 0/i);
   expect(lens).toMatch(/Rung 2[\s\S]*?Rung 1[^.]*ADR test[\s\S]*?arena/i);
+  expect(lens).toMatch(/Use Align's all-family\s+arena for that question/i);
   expect(lens).toMatch(/no (?:numeric|file-count|class-count) threshold/i);
   expect(lens).toMatch(/might be small[^.]*not a reason to skip/i);
   expect(lens).toMatch(/Rung 1[^.]*stay small/i);

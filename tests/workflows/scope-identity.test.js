@@ -27,6 +27,11 @@ test('scope identity: routing defines proportional substantial, small, and uncle
   expect(routing).not.toMatch(/New work:[\s\S]*?axstack-align[\s\S]*?axstack-spec[\s\S]*?axstack-tickets[\s\S]*?axstack-implement/i);
 });
 
+test('scope identity: record the classification and its reason at the right scope', () => {
+  const routing = read('skills/axstack/references/routing.md').replace(/\s+/g, ' ');
+  expect(routing).toMatch(/Classify new work as substantial, small, or unclear; record it with brief reason in the run record, or in the brief for tiny direct work\./);
+});
+
 test('scope identity: implementation reports missing substantial prerequisites and stops', () => {
   const implement = read('skills/axstack-implement/SKILL.md');
   expect(implement).toMatch(/substantial work[^.]*approved spec[^.]*matching ticket map/i);

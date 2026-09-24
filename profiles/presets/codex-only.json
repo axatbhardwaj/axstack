@@ -206,7 +206,7 @@
       "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and both candidates by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
+      "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
     },
     {
       "id": "axstack-arena-judge-fable",
@@ -215,7 +215,25 @@
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Required Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and both candidates by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the codex-only preset; the arena-grade decision holds without substitution."
+      "notes": "Required Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the codex-only preset; the arena-grade decision holds without substitution."
+    },
+    {
+      "id": "axstack-arena-candidate-grok",
+      "name": "Axstack arena candidate Grok (unavailable)",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence in the codex-only preset; Grok candidate unavailable. Arena holds without substitution."
+    },
+    {
+      "id": "axstack-arena-candidate-antigravity",
+      "name": "Axstack arena candidate Antigravity (unavailable)",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence in the codex-only preset; Antigravity candidate unavailable. Arena holds without substitution."
     }
   ]
 }

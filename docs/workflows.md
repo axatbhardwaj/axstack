@@ -48,7 +48,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 24 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 26 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -122,9 +122,9 @@ session and evidence remain valid.
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
   consults Astra and Fable independently with the same bounded evidence and
   question. It synthesizes disagreements and reuses unchanged receipts. For a
-  hard-to-reverse design choice it runs one arena round instead: Astra and
-  Fable each author a candidate, `axstack-arena-judge-astra` and
-  `axstack-arena-judge-fable` score both against the driver's rubric, and the
+  hard-to-reverse design choice it runs one arena round instead: Astra,
+  Fable, Grok, and Antigravity each author a candidate, `axstack-arena-judge-astra` and
+  `axstack-arena-judge-fable` score every candidate against the driver's rubric, and the
   driver picks a base, grafts the losers' strong ideas, and presents the
   synthesis as the recommendation; the note lands as `Decisions` rows in the
   run record.

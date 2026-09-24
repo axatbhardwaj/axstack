@@ -1,5 +1,7 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from '../../src/posixpath.js';
+import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 import {
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
@@ -82,6 +84,36 @@ test('preset readiness accepts the configured research routes', () => {
   }
 });
 
+test('a pristine 24-row installation upgrades to 26 and exposes both added IDs', () => {
+  const rootDir = makeTempRoot('axstack-role-upgrade-');
+  const home = rootDir;
+  const skillsDir = join(rootDir, 'installed');
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
+  const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
+  const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
+  const cli = `${root}/bin/axstack.js`;
+  const args = (bundle) => ['install', '--bundle', bundle, '--preset', 'mixed', '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+  runCli(cli, args(oldBundle), { env: { HOME: home } });
+  const rolesPath = join(skillsDir, 'axstack', 'roles.json');
+  const before = readFileSync(rolesPath);
+  expect(JSON.parse(before.toString()).roles).toHaveLength(24);
+  expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
+    'missing selected bundle role: axstack-arena-candidate-grok',
+    'missing selected bundle role: axstack-arena-candidate-antigravity',
+  ]);
+  const result = runCli(cli, args(newBundle), { env: { HOME: home } });
+  expect(result.out).toContain('axstack/roles.json');
+  expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok, axstack-arena-candidate-antigravity');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(26);
+  expect(runCli(cli, args(newBundle), { env: { HOME: home } }).out).not.toContain('added role IDs:');
+  writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: old }) + '\n');
+  const preserved = runCli(cli, args(newBundle), { env: { HOME: home }, expectFail: true });
+  expect(preserved.out).toContain('preserved user edits');
+  expect(preserved.out).not.toContain('added role IDs:');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(24);
+});
+
 test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
   expect(assessRoleReadiness([
     { ...role('axstack-research-web-google', null), provider: 'antigravity' },
@@ -93,6 +125,20 @@ test('mixed Antigravity null models are limited to the configured launch-by-agen
   ], 'mixed').gaps).toContain(
     'axstack-monitor requires a configured model',
   );
+});
+
+test('arena candidate null models follow their configured family or intentional single-provider absence', () => {
+  for (const [id, provider] of [
+    ['axstack-arena-candidate-grok', 'grok'],
+    ['axstack-arena-candidate-antigravity', 'antigravity'],
+  ]) {
+    expect(assessRoleReadiness([{ ...role(id, null), provider }], 'mixed')).toEqual({ ready: true, gaps: [] });
+    expect(assessRoleReadiness([{ ...role(id, null), provider: 'codex' }], 'mixed').gaps).toContain(`${id} requires a configured model`);
+    for (const preset of ['codex-only', 'claude-only']) {
+      const singleProvider = preset === 'codex-only' ? 'codex' : 'claude';
+      expect(assessRoleReadiness([{ ...role(id, null), provider: singleProvider }], preset)).toEqual({ ready: true, gaps: [] });
+    }
+  }
 });
 
 test('claude-only readiness permits the unavailable Astra slot', () => {

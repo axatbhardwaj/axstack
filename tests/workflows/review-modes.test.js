@@ -109,10 +109,16 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   const review = compact('skills/axstack-review/SKILL.md');
   expect(routing).toMatch(/preset change[^.]*new runs only|new runs[^.]*preset change/i);
   expect(routing).toMatch(/active runs?[^.]*snapshot/i);
+  expect(routing).toMatch(/Changing it or replacing a session needs an explicit user decision/i);
   expect(routing).toMatch(/no automatic fallback|never[^.]*fallback/i);
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
   expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
+});
+
+test('review modes: status question cues route to observation-only watch', () => {
+  const routing = compact('skills/axstack/references/routing.md');
+  expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*"check now"[^.]*"what's left"[^.]*"are we done"[^.]*"is it approved"[^.]*axstack-watch[^.]*observation-only/i);
 });
 
 test('review modes: new runs discover one preset and snapshot all role states', () => {
@@ -122,7 +128,7 @@ test('review modes: new runs discover one preset and snapshot all role states', 
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
-  expect(routing).toMatch(/all 24 role IDs|complete 24-role map/i);
+  expect(routing).toMatch(/all 26 role IDs|complete 26-role map/i);
   expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
   expect(routing).toMatch(/Such a role[^.]*holds only that role/i);
   expect(routing).toMatch(/later[^.]*must not[^.]*silently[^.]*snapshot|snapshot[^.]*must not[^.]*silently[^.]*later/i);

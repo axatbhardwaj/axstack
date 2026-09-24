@@ -5,14 +5,14 @@ Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 
 ## Role routing
 
-Presets: `mixed`, `codex-only`, `claude-only`. For a new run, read
+Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
 `profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an explicit user selection recorded in the run record. Proceed
-only with exactly one unambiguous preset; missing or contradictory sources are
+skills root, or an explicit user selection recorded in the run record. Use one
+unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, snapshot all 24 role IDs with provider/model/mode/effort; absent
+At run start, snapshot all 26 role IDs with provider/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; invent no provider default.
 Such a role holds only that role's work. A role installed or changed later must not
 silently enter the snapshot; adding it needs an explicit user decision. Live profiles
@@ -25,8 +25,6 @@ revalidation. Unavailable models, unsupported efforts, missing roles, and
 incompatible overrides hold only affected work; no automatic fallback, quota
 routing, subscription inference, or silent provider/model/effort substitution.
 
-Role IDs:
-
 - Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
@@ -38,10 +36,11 @@ Role IDs:
   | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` medium) |
   | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
   | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
-- `axstack-advisor-astra` and `axstack-advisor-fable` advise independently
-  and author align arena candidates; `axstack-arena-judge-astra` and
-  `axstack-arena-judge-fable` judge them. `axstack-auditor` audits;
-  `axstack-checker` reports discrepancies.
+- `axstack-advisor-astra`/`axstack-advisor-fable` advise independently and
+  author arena candidates; `axstack-arena-candidate-grok`/
+  `axstack-arena-candidate-antigravity` add families.
+  `axstack-arena-judge-astra`/`axstack-arena-judge-fable` judge them.
+  `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
   internal reports to its Run and original driver.
@@ -51,17 +50,16 @@ Provenance is matched on provider/model ID; effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
 infer from slot, driver, owner, or provider. Author and owner never review.
 
-The `axstack-implement` loop requires `mixed`; single-provider presets hold at
-step (3) for user routing, with no substitution or same-provider review.
+`axstack-implement` requires `mixed`; single-provider presets hold at
+step (3) for user routing: no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
 - One bounded research question -> `axstack-research`: verify primary sources
-  and code, return a cited note with limitations. Fan out only distinct
-  questions.
+  and code; return a cited note with limitations. Fan out only distinct questions.
 - Understanding a system, change, or implementation gap -> `axstack-explain`:
-  current/intended behavior, evidence dimensions, and bounded gaps from project
-  docs and rendered behavior. "What could this break" follows
+  current/intended behavior, evidence dimensions, bounded gaps from project docs and
+  rendered behavior. "What could this break" follows
   [Blast radius](blast-radius.md). Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
@@ -69,11 +67,11 @@ step (3) for user routing, with no substitution or same-provider review.
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits.
-- Accepted worker/Task/Run completion or bounded backlog request -> invoke
-  `axstack-cleanup` inline in the driver; never dispatch it.
+- Accepted worker/Task/Run completion or bounded backlog request -> driver invokes
+  `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
-  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
-  record, keep its owner, launch no native handoff.
+  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile run record,
+  keep owner, launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
   handoff guide, and require explicit recipient acceptance before ownership
@@ -81,10 +79,10 @@ step (3) for user routing, with no substitution or same-provider review.
 - Colleague PR review -> `axstack-review`, peer mode.
 - Codebase review -> `axstack-review` codebase mode, report only.
 - A status question about an own open PR or stack ("check now", "what's left",
-  "are we done", or "is it approved") -> `axstack-watch` in observation-only
+  "are we done", or "is it approved") -> `axstack-watch` observation-only
   mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
-- Chat-run PR watch -> `axstack-watch`: original driver; verified run PRs
-  and explicit adoptions only.
+- Chat-run PR watch -> `axstack-watch`: original driver; verified run PRs and
+  explicit adoptions only.
 - Other own PR work -> `axstack-review` authored mode or `axstack-watch`
   adoption.
 

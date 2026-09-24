@@ -27,6 +27,13 @@ test('repairs: both advisers cover Align, Spec, and consequential decisions', ()
   expect(spec).toMatch(/same bounded (?:evidence and question|question and evidence)/i);
 });
 
+test('repairs: arena holds a failed candidate or judge seat for the user', () => {
+  const align = read('skills/axstack-align/SKILL.md');
+  expect(align).toMatch(/configured candidate or judge seat[^.]*unavailable[^.]*failed receipt[^.]*hold that question/i);
+  expect(align).toMatch(/user decides whether to proceed without it/i);
+  expect(align).toMatch(/uncertain dispatch[^.]*reconcile natively[^.]*never treated as absent/i);
+});
+
 test('repairs: mutation authority distinguishes driver scope from PR owner scope', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
   expect(lifecycle).toMatch(/driver[\s\S]{0,180}external-tracker\s+mutations/i);
