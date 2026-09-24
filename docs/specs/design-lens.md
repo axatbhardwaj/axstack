@@ -1,4 +1,4 @@
-# Markdown counterpart of issue #180 approved rev 2 (SHA-256 e953d4733b534c0b8db828100df3680ef4c1fe52e750ced9d10002034ee66156)
+<!-- Markdown counterpart of issue #180 approved rev 2 (SHA-256 e953d4733b534c0b8db828100df3680ef4c1fe52e750ced9d10002034ee66156) -->
 # Design lens for Align, with an all-family design arena
 
 **Status:** Approved rev 2 (2026-09-24). **Repository:** `axatbhardwaj/axstack`. **Source baseline:** `d3bdda1` (v0.20.21). **Align record:** private run `20260924-design-lens-align` (Q1–Q3, D1–D2; research note; four-candidate arena with two judges).

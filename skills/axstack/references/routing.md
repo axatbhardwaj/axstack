@@ -14,9 +14,10 @@ tools, credentials, quota, subscription, or default to `mixed`.
 
 At run start, snapshot all 24 role IDs with provider/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; invent no provider default.
-Such a role holds only that role's work. A role changed later must not silently
-enter the snapshot; adding it needs an explicit user decision. Live profiles prove
-availability; presets are setup inputs, not runtime proof.
+Such a role holds only that role's work. A role installed or changed later must not
+silently enter the snapshot; adding it needs an explicit user decision. Live profiles
+are authoritative at snapshot time and for availability; bundled presets are setup
+inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Changing it or replacing a session needs an explicit user decision and
@@ -101,14 +102,13 @@ reason in the run record, or in the brief for tiny direct work.
 - **Small:** clear, bounded one-PR work. The driver captures the named
   **small-change intent** from the current request or user-chosen existing
   issue plus explicit acceptance checks and exclusions, snapshots it once, and
-  proceeds. No prior snapshot, spec, tickets, or second approval is required;
-  do not route to `axstack-align` solely because the snapshot is not yet written.
-  Strict TDD, mode-specific review, model, risk, and human-merge
+  proceeds. No prior snapshot, spec, tickets, or second approval is required; do not route
+  to `axstack-align` solely because the snapshot is not yet written. Strict TDD,
+  mode-specific review, model, risk, and human-merge
   contracts still apply.
-- **Unclear:** clarify through `axstack-align` or one bounded question, then
-  classify as small or substantial; small ambiguity does not force paperwork.
-  A change meeting the [design lens](design-lens.md)'s Rung 1 is Unclear and
-  clarifies through `axstack-align`.
+- **Unclear:** clarify via `axstack-align` or a bounded question, then
+  classify small or substantial; it does not force substantial-work paperwork.
+  [Design lens](design-lens.md) Rung 1 is Unclear; use `axstack-align`.
 
 Reassess size when growth adds an additional PR, a new execution dependency
 that materially expands scope, an unsettled material design question, or a

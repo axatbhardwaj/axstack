@@ -19,7 +19,7 @@ This preserves the required contracts -> lifecycle -> audit load edge.
 
 ## Design the shape
 
-Set the rung from researched facts before asking design questions. A change
+Set the rung from researched facts; never ask the user to choose it. A change
 inside one module's existing interface, ownership, data flow, and failure
 guarantees is Rung 0: no design questions or sketch. Otherwise load the
 [design lens ladder](../axstack/references/design-lens.md) for Rung 1 or 2

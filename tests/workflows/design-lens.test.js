@@ -21,6 +21,23 @@ test('design lens: factual ladder and proportionate routing', () => {
   expect(text('skills/axstack/references/routing.md')).toMatch(/Unclear:[\s\S]*?Rung 1[^.]*axstack-align/i);
 });
 
+test('design lens: installed roles cannot silently enter an active snapshot', () => {
+  expect(text('skills/axstack/references/routing.md')).toMatch(/A role installed or changed later must not silently enter the snapshot/i);
+});
+
+test('design lens: live profiles remain authoritative for role snapshots', () => {
+  expect(text('skills/axstack/references/routing.md')).toMatch(/Live profiles are authoritative at snapshot time and for availability; bundled presets are setup inputs, not runtime proof/i);
+});
+
+test('design lens: small ambiguity does not force substantial-work paperwork', () => {
+  expect(text('skills/axstack/references/routing.md')).toContain('does not force substantial-work paperwork');
+});
+
+test('design lens: Align settles the rung from facts rather than asking the user', () => {
+  expect(text(reference)).toMatch(/rung[^.]*researched facts[^.]*not a user choice/i);
+  expect(text('skills/axstack-align/SKILL.md')).toMatch(/rung[^.]*researched facts[^.]*never ask the user/i);
+});
+
 test('design lens: ordered questions, vocabulary, and tailored rubric', () => {
   const lens = text(reference);
   expect(lens).toMatch(/Scope:[\s\S]*Caller first:[\s\S]*Shape:[\s\S]*Flow and failure:[\s\S]*Reversibility:/i);
@@ -35,6 +52,8 @@ test('design lens: ordered questions, vocabulary, and tailored rubric', () => {
 test('design lens: sketch block and conditional phase wiring', () => {
   const lens = text(reference);
   for (const line of ['Usage:', 'Shape:', 'Binding:', 'Flow + failure:', 'We accept:', 'Rejected:', 'Open:']) expect(lens).toContain(line);
+  const sketch = read(reference).match(/```text\n([\s\S]*?)\n```/)?.[1];
+  expect(sketch).toMatch(/^Shape: <signatures or a <=10-line ASCII\/Mermaid diagram>$/m);
   const phases = {
     align: 'skills/axstack-align/SKILL.md',
     spec: 'skills/axstack-spec/SKILL.md',
@@ -48,17 +67,25 @@ test('design lens: sketch block and conditional phase wiring', () => {
   }
   expect(text(phases.align)).toMatch(/Design the shape[\s\S]*?Rung 0: no design questions or sketch/i);
   expect(text(phases.align)).toMatch(/Otherwise load the[\s\S]*?design-lens\.md/i);
+  expect(text(phases.align)).toMatch(/unresolved areas[^.]*existing budget/i);
+  expect(text(phases.align)).toMatch(/design question alone[^.]*small work[^.]*substantial/i);
   expect(text(phases.spec)).toMatch(/sketch[^.]*approved revision[^.]*Usage[^.]*acceptance/i);
   expect(text(phases.tickets)).toMatch(/sketch[^.]*modules[^.]*named failure[^.]*acceptance[^.]*split signal/i);
   expect(text(phases.implement)).toMatch(/scope identity carries a sketch[^.]*author brief/i);
   expect(text(phases.implement)).toMatch(/Normal behavior path[^.]*first red check[^.]*Usage/i);
+  expect(text(phases.implement)).toMatch(/structure-preserving path stays as is/i);
   expect(text(phases.implement)).toMatch(/first[^.]*red check[^.]*Usage/i);
   expect(text(phases.implement)).toMatch(/repeated workaround[^.]*unnamed boundary[^.]*sketch conflict[\s\S]*?only the affected decision[^.]*Align[^.]*material-revision/i);
   expect(text(phases.review)).toMatch(/architecture[\s\S]*?sketch[^.]*red flags[\s\S]*?Binding[^.]*accepted spec revision[^.]*finding/i);
   expect(text(phases.improve)).toMatch(/sketch[\s\S]*?vocabulary[^.]*red flags/i);
+  expect(text(phases.improve)).toMatch(/return candidates in sketch form/i);
   for (const phase of ['spec', 'tickets', 'implement', 'review', 'improve']) {
     expect(text(phases[phase]), phase).toMatch(/only when[^.]*scope identity[^.]*sketch/i);
   }
+});
+
+test('design lens: spec counterpart has a comment header and one source heading', () => {
+  expect(read('docs/specs/design-lens.md')).toMatch(/^<!-- Markdown counterpart of issue #180 approved rev 2 \(SHA-256 [a-f0-9]{64}\) -->\n# Design lens for Align/m);
 });
 
 test('design lens: structural scenario cases are present', () => {
