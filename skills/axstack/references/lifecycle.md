@@ -99,7 +99,7 @@ session liveness, delivery, and verified advancement are distinct evidence.
 On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
 identity. Respect settlement protection including `user_takeover`.
 
-No execution heartbeat or substitute scheduler is created by Axstack. Native
+Axstack creates no heartbeat or substitute scheduler. Native
 review automation follows [Review automation health](#review-automation-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
 
@@ -131,15 +131,16 @@ nothing without tested independent review.
 
 ## Close-out
 
-PRs merge by forge state—not branch ancestry; close out: (1) settle every worker
+PRs merge by forge state; close out: (1) settle every worker
 terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-use `axstack-cleanup` and close selected external-tracker tickets when applicable;
+use `axstack-cleanup`, remove the run's own automations under
+[Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt or `counts zero`; release and ticket receipts; archive timestamp.
+receipt or `counts zero`; automation, release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.

@@ -32,7 +32,7 @@ resource as a hold with its reason. Recorded native ownership by Run, Task,
 and Dispatch decides; parent/child display lineage does not. The creator closes
 what it created at ordinary settlement; the cross-run sweep below may retire
 its settled leftovers. A finite scheduled pass closes only its own exact terminal as
-its final action. Manual chats, automation dedicated workspaces, and genuine
+its final action. Manual chats, active automation dedicated workspaces, and genuine
 `user_takeover` sessions are never removed. Deleting a session means closing
 its terminal; agent chat history is not deleted.
 
@@ -44,6 +44,25 @@ this fallback for a working, user-taken-over, or unclear agent; never use
 leaves its terminal for the next pass, without treating that expected failure
 as a hold. At pass start, clear only provably finished predecessor terminals
 of the same automation in its dedicated workspace by this exact-handle path.
+
+## Owned automation retirement
+
+At Close-out, reconcile the run record with native automation inventory and
+retire only automation IDs created by that Run. When a task-owned per-run watch
+reaches completion or expiry, retire it too. In either case, disable and verify
+native readback before removal. The cross-run sweep may retire a disabled per-run
+watch only when its owning run is closed or every watched PR is merged or closed.
+Never remove automations the run did not create or the durable review manager.
+Uncertain ownership, watch state, or disable result holds that automation.
+
+For an eligible disabled per-run watch, run `orca automations remove <id>` on
+its exact ID and verify absence by native readback. Remove its dedicated workspace
+only after confirming its exact ownership, no live terminal, a clean worktree,
+and a head on the remote. If the dedicated workspace is dirty or unpublished,
+use the salvage and bundle verification below before removal; failed verification
+or uncertain liveness is a hold. The current scheduled pass cannot remove its
+own workspace while its terminal is live; the driver or a later sweep finishes
+that step. Record separate automation and workspace receipts.
 
 ## Preserve before removal
 
