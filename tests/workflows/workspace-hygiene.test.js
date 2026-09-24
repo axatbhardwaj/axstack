@@ -91,6 +91,27 @@ test('finished agent-terminal close failure has an exact guarded fallback', () =
   expect(text).toMatch(/Known Orca issues[\s\S]*upstream reporting[\s\S]*Orca 1\.4\.209[\s\S]*session:set/i);
 });
 
+test('safe deletion contract limits shell targets and preserves prompt holds', () => {
+  const safe = contract().split('## Safe deletion')[1]?.split('\n## ')[0] ?? '';
+  expect(safe).toMatch(/literal absolute path|\$\{VAR:\?\}/i);
+  expect(safe).toContain('rm -rf -- "${EV:?}/mut"');
+  expect(safe).toMatch(/own evidence folder.*TMPDIR.*worktree/is);
+  expect(safe).toMatch(/bare `\$VAR`.*glob on a\s+variable.*`\/`.*`HOME`.*shared root/is);
+  expect(safe).toMatch(/git clean -- <exact prefix>.*tool-native cleanup/is);
+  expect(safe).toMatch(/safety prompt.*hold/is);
+});
+
+test('author, reviewer, runtime, and PR job briefs carry safe deletion rule', () => {
+  for (const path of [
+    'skills/axstack/references/orca-runtime.md',
+    'skills/axstack-implement/SKILL.md',
+    'skills/axstack-review/SKILL.md',
+    'skills/axstack/references/automations.md',
+  ]) {
+    expect(read(path), path).toContain('workspace-hygiene.md#safe-deletion');
+  }
+});
+
 test('worker dispatch entry points link the sidebar contract', () => {
   for (const path of [
     'skills/axstack/references/orca-runtime.md',

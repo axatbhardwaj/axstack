@@ -72,6 +72,8 @@ small-change intent, brief, authority, role snapshot, worktree, base, and
 candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
+Put the [Safe deletion](workspace-hygiene.md#safe-deletion) rule in every
+worker brief.
 
 Create a worker worktree with `--parent-worktree` naming the candidate's
 worktree when both are in the same repository; see
