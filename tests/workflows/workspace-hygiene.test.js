@@ -3,13 +3,16 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const contract = () => read('skills/axstack/references/workspace-hygiene.md');
+const retirement = () => (
+  contract().split('## Owned automation retirement')[1]?.split('\n## ')[0] ?? ''
+).replace(/\s+/g, ' ');
 
 const rules = [
   /intermediate completion[\s\S]*accepted[\s\S]*releases[\s\S]*fresh native terminal[\s\S]*descendants first/i,
   /final settlement[\s\S]*other repositories[\s\S]*hold with its reason/i,
   /author worktree and session until the PR merges or closes/i,
   /native ownership by Run, Task,[\s\S]*Dispatch[\s\S]*creator closes/i,
-  /manual chats, active automation dedicated workspaces, and genuine[\s\S]*`user_takeover`[\s\S]*never removed/i,
+  /manual chats, automation dedicated workspaces, and genuine[\s\S]*`user_takeover`[\s\S]*never removed/i,
   /deleting a session means closing[\s\S]*terminal; agent chat history is not deleted/i,
   /<run dir>\/evidence\/<dispatch>\/[\s\S]*dispatch brief and completion receipt[\s\S]*Peer[\s\S]*reviewers/i,
   /Authors commit the candidate before reporting[\s\S]*done/i,
@@ -47,25 +50,60 @@ test('existing workflow entry points point to the shared contract', () => {
   for (const path of ['lifecycle.md', 'routing.md']) {
     expect(Buffer.byteLength(read(`skills/axstack/references/${path}`))).toBeLessThan(7800);
   }
+  expect(Buffer.byteLength(read('skills/axstack/references/lifecycle.md'))).toBeLessThan(7750);
 });
 
 test('cleanup scenarios have distinct inputs and contract-covered outcomes', () => {
   const fixture = JSON.parse(read('tests/workflows/workspace-hygiene-scenarios.json'));
-  expect(fixture.cases).toHaveLength(19);
-  expect(new Set(fixture.cases.map(({ id }) => id)).size).toBe(19);
+  expect(fixture.cases).toHaveLength(20);
+  expect(new Set(fixture.cases.map(({ id }) => id)).size).toBe(20);
   for (const { id, input, expected, contractPattern } of fixture.cases) {
     expect(input.length, id).toBeGreaterThan(20);
     expect(expected.length, id).toBeGreaterThan(5);
-    expect(contract(), id).toMatch(new RegExp(contractPattern, 'is'));
+    expect(contract().replace(/\s+/g, ' '), id).toMatch(new RegExp(contractPattern, 'is'));
   }
 });
 
 test('owned watch removal is part of close-out and watch stop', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
+  const skill = read('skills/axstack-watch/SKILL.md');
   expect(lifecycle.split('## Close-out')[1]).toMatch(/remove[^.]*run's own automations[^.]*Workspace hygiene/i);
-  expect(watch).toMatch(/disable[^.]*readback[\s\S]*removes that automation by exact ID and verifies absence/i);
-  expect(watch).toMatch(/dedicated workspace after the observer terminal closes/i);
+  const chat = watch.split('## Chat-run watch')[1];
+  expect(chat).toMatch(/observer may\s+disable only its own automation[^.]*verify native disable\/readback/i);
+  expect(chat).toMatch(/driver removes the automation by exact ID[^.]*verifies absence[^.]*dedicated workspace after the observer terminal closes/i);
+  expect(skill).toMatch(/own-automation disable\/readback and driver-owned automation\s+removal/i);
+});
+
+test('standalone watch owner removes its own stopped automation', () => {
+  const standalone = read('skills/axstack-watch/references/watch-runtime.md').split('## Standalone watch')[1]?.split('## Chat-run watch')[0] ?? '';
+  expect(standalone).toMatch(/owner[^.]*disable[^.]*read back[^.]*remove[^.]*exact ID/i);
+});
+
+test('automation retirement proves the recorded owning Run created the exact ID', () => {
+  expect(retirement()).toMatch(/Close-out[^.]*recorded owning Run[^.]*created[^.]*automation IDs/i);
+});
+
+test('automation retirement disables and reads back before exact-ID removal', () => {
+  expect(retirement()).toMatch(/disable[^.]*verify native readback[^.]*before[^.]*`orca automations remove <id>`/i);
+  expect(retirement()).toMatch(/`orca automations remove <id>`[^.]*verify absence by native readback/i);
+});
+
+test('automation retirement holds uncertain recorded ownership and watch state', () => {
+  expect(retirement()).toMatch(/uncertain recorded ownership[^.]*watch state[^.]*disable result[^.]*holds/i);
+});
+
+test('automation workspace removal retains all four guards and rechecks liveness', () => {
+  expect(retirement()).toMatch(/exact ownership[^.]*no live terminal[^.]*clean worktree[^.]*head on the remote/i);
+  expect(retirement()).toMatch(/Recheck ownership and liveness immediately before workspace removal/i);
+  expect(retirement()).toMatch(/dirty or unpublished[^.]*salvage[^.]*failed verification[^.]*hold/i);
+});
+
+test('durable and user automation workspaces remain protected', () => {
+  expect(retirement()).toMatch(/durable review manager and its dedicated workspace/i);
+  expect(retirement()).toMatch(/user-created automation and its dedicated workspace/i);
+  expect(retirement()).toMatch(/only[^.]*retired owned per-run watch's workspace/i);
+  expect(retirement()).not.toMatch(/(?:may|can|permitted to)[^.]*remove[^.]*review manager[^.]*workspace|review manager[^.]*workspace[^.]*may be removed/i);
 });
 
 test('cross-run sweep keeps quiet, provenance, and phase guards', () => {

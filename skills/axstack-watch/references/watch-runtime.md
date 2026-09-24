@@ -10,8 +10,8 @@ A standalone PR owner remains accountable through the default 24-hour window.
 current GitHub state, persists event IDs, wakes the owner only for a new
 actionable event, and never sends or mutates. Healthy observations update
 quietly. Reuse prior watch identity rather than registering a duplicate, and
-stop task-owned registrations at completion, cancellation, or expiry. Disable
-and read back the watch's own automation, then remove it by exact ID under
+stop task-owned registrations at completion, cancellation, or expiry. The owner
+must disable and read back its own automation, then remove it by exact ID under
 [Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-automation-retirement).
 Remove its dedicated workspace only after the terminal and preservation guards pass.
 
@@ -112,10 +112,10 @@ Stop only when all members merged or closed, or on user cancellation recorded
 by the driver in the run record. Re-read membership and confirm no ambiguous
 publication or unsettled pass; cancellation
 prevents new work but does not prove running workers exited. The observer may
-disable only its own automation and must verify native disable/readback. It then
-removes that automation by exact ID and verifies absence. A failed or uncertain
-disable or removal is a hold. Report the stop receipt to the driver; the driver
-removes the dedicated workspace after the observer terminal closes under
+disable only its own automation and must verify native disable/readback. A failed
+or uncertain disable is a hold. Report the stop receipt to the driver; the
+driver removes the automation by exact ID, verifies absence, and removes the
+dedicated workspace after the observer terminal closes under
 [Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-automation-retirement).
 The driver separately settles workers, preserves evidence, and archives the run;
 an unavailable driver leaves those steps pending. The standalone 24-hour expiry
