@@ -626,6 +626,16 @@ export async function installBundle({
         if (rel in ownedFiles) installedHashes[rel] = ownedFiles[rel];
       }
     }
+    const previousRoles = desired.find(({ rel }) => rel === 'axstack/roles.json')?.current;
+    if (previousRoles && summary.updated.some((rel) => rel.startsWith('axstack/roles.json'))) {
+      try {
+        const old = JSON.parse(previousRoles.toString());
+        if (Array.isArray(old.roles)) {
+          const oldIds = new Set(old.roles.map((role) => role?.id));
+          summary.addedRoleIds = bundle.bundleRoles.filter((role) => !oldIds.has(role.id)).map((role) => role.id);
+        }
+      } catch { /* No reliable role-ID diff for malformed prior bytes. */ }
+    }
 
     // Stale manifest entries (owned files the bundle no longer ships):
     // the phase-1 plan validated every stale destination read-only

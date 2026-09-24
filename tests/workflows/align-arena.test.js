@@ -77,6 +77,13 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
   }
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/axstack-arena-judge-astra[^.]*axstack-arena-judge-fable[^.]*judge them/);
+  expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*axstack-arena-candidate-antigravity[^.]*families/i);
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    for (const judge of roles.filter(({ id }) => id.startsWith('axstack-arena-judge-'))) {
+      expect(judge.notes).toMatch(/every candidate by label/i);
+    }
+  }
 });
 
 test('align arena: scenario corpus covers four families and availability holds', () => {

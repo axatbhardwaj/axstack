@@ -372,7 +372,7 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
 test('structural: Rung 2 adds every configured family without changing the ordinary adviser pair', () => {
   const align = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
   const arena = align.slice(align.indexOf('## Arena for hard-to-reverse design choices'), align.indexOf('## Bound the interview'));
-  expect(arena).toMatch(/Rung 2 designs\s+alone enter the arena/i);
+  expect(arena).toMatch(/\. Rung 2 designs\s+alone enter the arena/i);
   for (const family of ['astra', 'fable', 'grok', 'antigravity']) {
     const role = ['astra', 'fable'].includes(family) ? `axstack-advisor-${family}` : `axstack-arena-candidate-${family}`;
     expect(arena).toContain(role);

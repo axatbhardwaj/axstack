@@ -5,10 +5,10 @@ Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 
 ## Role routing
 
-Presets: `mixed`, `codex-only`, `claude-only`. For new runs, read
+Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
 `profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an explicit user selection recorded in the run record. Proceed
-only with exactly one unambiguous preset; missing or contradictory sources are
+skills root, or an explicit user selection recorded in the run record. Use one
+unambiguous preset; missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
@@ -20,12 +20,10 @@ are authoritative at snapshot time and for availability; bundled presets are set
 inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
-Changing that snapshot or replacing a session needs a user decision and
+Changing that snapshot or replacing a session needs an explicit user decision and
 revalidation. Unavailable models, unsupported efforts, missing roles, and
 incompatible overrides hold only affected work; no automatic fallback, quota
 routing, subscription inference, or silent provider/model/effort substitution.
-
-Role IDs:
 
 - Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
@@ -38,10 +36,10 @@ Role IDs:
   | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` medium) |
   | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
   | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
-- `axstack-advisor-astra` and `axstack-advisor-fable` advise and author Align
-  arena candidates. `axstack-arena-candidate-grok` and
-  `axstack-arena-candidate-antigravity` add the other families.
-  `axstack-arena-judge-astra` and `axstack-arena-judge-fable` judge them.
+- `axstack-advisor-astra`/`axstack-advisor-fable` advise independently and
+  author arena candidates; `axstack-arena-candidate-grok`/
+  `axstack-arena-candidate-antigravity` add families.
+  `axstack-arena-judge-astra`/`axstack-arena-judge-fable` judge them.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
@@ -52,16 +50,15 @@ Provenance is matched on provider/model ID; effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
 infer from slot, driver, owner, or provider. Author and owner never review.
 
-The `axstack-implement` loop requires `mixed`; single-provider presets hold at
-step (3) for user routing, with no substitution or same-provider review.
+`axstack-implement` requires `mixed`; single-provider presets hold at
+step (3) for user routing: no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
 - One bounded research question -> `axstack-research`: verify primary sources
-  and code, return a cited note with limitations. Fan out only distinct
-  questions.
+  and code; return a cited note with limitations. Fan out only distinct questions.
 - Understanding a system, change, or implementation gap -> `axstack-explain`:
-  current/intended behavior, evidence, and bounded gaps from docs and
+  current/intended behavior, evidence dimensions, bounded gaps from project docs and
   rendered behavior. "What could this break" follows
   [Blast radius](blast-radius.md). Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
@@ -70,18 +67,19 @@ step (3) for user routing, with no substitution or same-provider review.
 - Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
   scope, rank evidenced candidates, report only; no spec, tickets, or source
   edits.
-- Accepted worker/Task/Run completion or bounded backlog request -> invoke
-  `axstack-cleanup` inline in the driver; never dispatch it.
+- Accepted worker/Task/Run completion or bounded backlog request -> driver invokes
+  `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
-  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile the run
-  record, keep its owner, launch no native handoff.
+  [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile run record,
+  keep owner, launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
   Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
   handoff guide, and require explicit recipient acceptance before ownership
   changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
 - Codebase review -> `axstack-review` codebase mode, report only.
-- A status question about an own open PR or stack -> `axstack-watch` in observation-only
+- A status question about an own open PR or stack ("check now", "what's left",
+  "are we done", or "is it approved") -> `axstack-watch` observation-only
   mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
 - Chat-run PR watch -> `axstack-watch`: original driver; verified run PRs and
   explicit adoptions only.
@@ -90,8 +88,8 @@ step (3) for user routing, with no substitution or same-provider review.
 
 ## Proportional scope identity
 
-Classify new work as substantial, small, or unclear; record it with brief
-reason in the run record, or in the brief for tiny direct work.
+Classify new work as substantial, small, or unclear; record a brief reason in
+the run record or the brief for tiny direct work.
 
 - **Substantial:** substantial features, multi-PR work, or stacked work; a
   bounded small feature is not substantial because it is labelled one.
