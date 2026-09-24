@@ -56,7 +56,7 @@ Only an explicit user request to transfer ownership enters this branch.
    prior owner seeing a different valid accepted owner stops.
 
 Complete record: goal, authority, intent, IDs, revisions, evidence, pending
-receipts/timers, unresolved decisions, next action, and transfer ownership/gap.
+receipts/timers, unresolved decisions, next action, and transfer status.
 
 ## Receipts (bind each decision to evidence)
 
@@ -87,8 +87,8 @@ covers only ordinary reading, writing, and local checks. Heartbeat deliveries
 are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
-deduplicated by runtime identity. Healthy unchanged observations produce no
-user-facing update. After accepting worker, Task, or Run completion, the driver
+deduplicated by runtime identity. Healthy unchanged passes are silent.
+After accepting worker, Task, or Run completion, the driver
 invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
 dispatches cleanup work.
 
@@ -99,8 +99,8 @@ session liveness, delivery, and verified advancement are distinct evidence.
 On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
 identity. Respect settlement protection including `user_takeover`.
 
-No execution heartbeat or substitute scheduler is created by Axstack. Native
-review automation follows [Review automation health](#review-automation-health).
+Axstack creates no execution heartbeat or substitute scheduler. See
+[Review automation health](#review-automation-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
@@ -131,15 +131,16 @@ nothing without tested independent review.
 
 ## Close-out
 
-PRs merge by forge state—not branch ancestry; close out: (1) settle every worker
+PRs merge by forge state; close out: (1) settle every worker
 terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
 pending, never skipped silently; (4) release merged run worktrees and branches;
-use `axstack-cleanup` and close selected external-tracker tickets when applicable;
+use `axstack-cleanup`, remove the run's own automations under
+[Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt or `counts zero`; release and ticket receipts; archive timestamp.
+receipt or `counts zero`; automation, release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.

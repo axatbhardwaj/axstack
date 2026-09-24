@@ -137,8 +137,9 @@ observed state distinct from merged, and the human merges by default.
 ## 6. End and preserve continuity
 
 End a chat-run watch only after all members merged or closed or user
-cancellation, with own-automation disable/readback and driver-owned cleanup
-receipts in [Watch runtime](references/watch-runtime.md#chat-run-watch).
+cancellation, with own-automation disable/readback and driver-owned automation
+removal and workspace cleanup receipts in
+[Watch runtime](references/watch-runtime.md#chat-run-watch).
 
 End a standalone watch early when all required PRs merge, at cancellation, or
 at its shared default 24 h deadline. In every case, stop all owned

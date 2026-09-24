@@ -33,8 +33,8 @@ and Dispatch decides; parent/child display lineage does not. The creator closes
 what it created at ordinary settlement; the cross-run sweep below may retire
 its settled leftovers. A finite scheduled pass closes only its own exact terminal as
 its final action. Manual chats, automation dedicated workspaces, and genuine
-`user_takeover` sessions are never removed. Deleting a session means closing
-its terminal; agent chat history is not deleted.
+`user_takeover` sessions are never removed by ordinary settlement or sweep.
+Deleting a session means closing its terminal; agent chat history is not deleted.
 
 If native exact terminal close returns `runtime_error` for a provably finished
 agent, send `/quit` + Enter to that exact terminal, wait about 5 seconds, then
@@ -44,6 +44,30 @@ this fallback for a working, user-taken-over, or unclear agent; never use
 leaves its terminal for the next pass, without treating that expected failure
 as a hold. At pass start, clear only provably finished predecessor terminals
 of the same automation in its dedicated workspace by this exact-handle path.
+
+## Owned automation retirement
+
+At Close-out, reconcile the run record with native inventory: the recorded
+owning Run must have created the exact automation IDs selected for retirement.
+The sweeping pass uses that recorded owning Run, not its own Run, for cross-run
+watches. A cross-run sweep may retire a disabled per-run watch only when its
+owning run is closed or every watched PR is merged or closed. Uncertain recorded
+ownership, watch state, or disable result holds the affected automation.
+
+For each eligible automation, disable it and verify native readback before
+`orca automations remove <id>` on its exact ID, and verify absence by native
+readback. The observer only disables and reports; the driver removes its own
+run's automation. Only a retired owned per-run watch's workspace may be removed
+under these guards. Never remove the durable review manager and its dedicated
+workspace or a user-created automation and its dedicated workspace.
+
+Remove that dedicated workspace only after confirming its exact ownership, no
+live terminal, a clean worktree, and a head on the remote. Recheck ownership and
+liveness immediately before workspace removal. If dirty or unpublished, use the
+salvage and bundle verification below before removal; failed verification or
+uncertain liveness is a hold. The current scheduled pass cannot remove its own
+workspace while its terminal is live; the driver or a later sweep finishes that
+step. Record separate automation and workspace receipts.
 
 ## Preserve before removal
 
