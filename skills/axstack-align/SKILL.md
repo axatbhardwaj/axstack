@@ -81,29 +81,30 @@ hold Align; safe fact work may continue without substitution.
 
 ## Arena for hard-to-reverse design choices
 
-Critique of one draft anchors every reader to that draft's shape. When a
-question is arena-grade, the same test as for an ADR (a meaningful,
+Critique of one draft anchors every reader to that draft's shape. Rung 2 designs
+alone enter the arena: they meet the same test as for an ADR (a meaningful,
 hard-to-reverse, non-obvious trade-off: architecture, module boundaries, data
-model, migration strategy), replace the critique round for that question with
+model, migration strategy). Replace the critique round for that question with
 one arena round. Small or routine questions never enter the arena.
 
 1. **Frame.** The driver writes the brief (the artifact, its constraints, the
    settled decisions it must respect) and three to six gradeable rubric
    criteria. Candidates receive only the brief; the rubric is for judging.
-2. **Fan out.** `axstack-advisor-astra` and `axstack-advisor-fable` each
-   independently produce one candidate design plus a short rationale naming
-   the alternatives considered and rejected, from the same bounded evidence and
-   question, without cross-reading. The driver authors no candidate.
-3. **Cross-judge.** After both candidates are complete, `axstack-arena-judge-astra`
-   and `axstack-arena-judge-fable` each independently score every candidate
-   per criterion from the rubric and candidates by label, and recommend a base
-   with a reason. Judges never author, never cross-read each other.
+2. **Fan out.** Produce one candidate per configured family independently from the same brief,
+   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-fable`,
+   `axstack-arena-candidate-grok`, and `axstack-arena-candidate-antigravity`.
+   Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
+3. **Cross-judge.** After every candidate completes, give the judges anonymized,
+   relabeled candidates against the rubric.
+   `axstack-arena-judge-astra` and `axstack-arena-judge-fable` each independently
+   score every candidate against the driver-tailored rubric per criterion and
+   recommend a base with a reason. Judges never author, never cross-read each other.
 4. **Pick.** The driver reads every candidate end to end and scores per
    criterion, not on holistic feel, then compares with both judges. Agreement
    confirms the base. Disagreement between judges or with the driver means one
-   reading is biased or the rubric was ambiguous: re-read both rationales and
+   reading is biased or the rubric was ambiguous: re-read the rationales and
    decide with a stated reason; never average verdicts or fabricate consensus.
-5. **Graft.** Walk the losing candidate once more for the one or two ideas
+5. **Graft.** Walk the losing candidates once more for the one or two ideas
    worth porting and fold them into the base by hand so the result stays
    coherent under one mental model. Convergence on the same shape is a strong
    agreement signal: adopt the consensus shape, no graft. Wide divergence
@@ -117,9 +118,11 @@ Record the synthesis note (base, grafts and their source candidate, rejections,
 dropouts, both judge verdicts) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
 [Orca runtime](../axstack/references/orca-runtime.md) immediately before the
-first candidate or judge dispatch. If either adviser or judge seat is
-unavailable, hold that question without substitution; unaffected fact work
-and questions continue.
+first candidate or judge dispatch. If any configured candidate or judge seat is
+unavailable at launch or returns a failed receipt, hold that question without
+substitution, record the gap, and ask: the user decides whether to proceed without it.
+For an uncertain dispatch, reconcile natively; it is never treated as absent.
+Unaffected fact work and questions continue.
 
 ## Bound the interview
 

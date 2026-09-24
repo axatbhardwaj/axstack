@@ -369,6 +369,17 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
   expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
 });
 
+test('structural: Rung 2 adds every configured family without changing the ordinary adviser pair', () => {
+  const align = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
+  const arena = align.slice(align.indexOf('## Arena for hard-to-reverse design choices'), align.indexOf('## Bound the interview'));
+  expect(arena).toMatch(/Rung 2 designs\s+alone enter the arena/i);
+  for (const family of ['astra', 'fable', 'grok', 'antigravity']) {
+    const role = ['astra', 'fable'].includes(family) ? `axstack-advisor-${family}` : `axstack-arena-candidate-${family}`;
+    expect(arena).toContain(role);
+  }
+  expect(align.slice(0, align.indexOf('## Arena for hard-to-reverse design choices'))).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-fable[^.]*independently/i);
+});
+
 test('structural: align reads back understanding without a pre-spec agreement gate', () => {
   const text = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
   expect(/explicit user agreement before/i.test(text), 'align must not require agreement before producing the spec').toBe(false);

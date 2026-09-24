@@ -75,7 +75,7 @@
       "expected": [
         "Classify Rung 2 using the existing ADR test and enter the arena",
         "Frame a rubric for the design question and keep the user decision checkpoint",
-        "Use the currently configured candidate seats and two judges; later all-family widening is a separate task"
+        "Fan out independent Astra, Fable, Grok, and Antigravity candidates from one brief without cross-reading; two judges score anonymized labels against the driver-tailored rubric"
       ]
     },
     {
@@ -92,6 +92,36 @@
         "Keep the architecture tradeoff explicitly unresolved",
         "Create a proposed ADR only when the tradeoff is hard to reverse and non-obvious",
         "Do not imply implementation or spec approval"
+      ]
+    },
+    {
+      "id": "arena-grok-unavailable",
+      "input": {
+        "change": "Hard-to-reverse persisted data model choice",
+        "preset": "mixed",
+        "seat": "Grok candidate",
+        "launch": "Orca refused the configured seat"
+      },
+      "expected": [
+        "Pause this design question and record the Grok seat failure",
+        "Ask the user whether to proceed without Grok; do not substitute a provider",
+        "Continue only unrelated fact work; reconcile uncertain dispatches natively before treating them as absent"
+      ]
+    },
+    {
+      "id": "arena-single-provider-hold",
+      "input": {
+        "change": "Hard-to-reverse module boundary choice",
+        "presets": [
+          "codex-only",
+          "claude-only"
+        ],
+        "seats": "second adviser and judge are intentionally absent"
+      },
+      "expected": [
+        "Hold the Rung 2 arena in either single-provider preset",
+        "Record absent seats and ask the user before any reduced arena",
+        "Do not substitute models or infer availability from the preset"
       ]
     }
   ]
