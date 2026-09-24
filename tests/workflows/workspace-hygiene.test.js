@@ -49,15 +49,26 @@ test('existing workflow entry points point to the shared contract', () => {
   }
 });
 
-test('eleven cleanup scenarios have distinct inputs and contract-covered outcomes', () => {
+test('cleanup scenarios have distinct inputs and contract-covered outcomes', () => {
   const fixture = JSON.parse(read('tests/workflows/workspace-hygiene-scenarios.json'));
-  expect(fixture.cases).toHaveLength(11);
-  expect(new Set(fixture.cases.map(({ id }) => id)).size).toBe(11);
+  expect(fixture.cases).toHaveLength(16);
+  expect(new Set(fixture.cases.map(({ id }) => id)).size).toBe(16);
   for (const { id, input, expected, contractPattern } of fixture.cases) {
     expect(input.length, id).toBeGreaterThan(20);
     expect(expected.length, id).toBeGreaterThan(5);
     expect(contract(), id).toMatch(new RegExp(contractPattern, 'is'));
   }
+});
+
+test('cross-run sweep keeps quiet, provenance, and phase guards', () => {
+  const hygiene = contract();
+  expect(hygiene).toMatch(/ANY Axstack run on this host[\s\S]*every owning Dispatch[^.]*settled[^.]*release[^.]*`release_unknown`[^.]*60 minutes/i);
+  expect(hygiene).toMatch(/shared or driver worktree[\s\S]*close[^.]*individually[\s\S]*driver's own terminal[^.]*user chat/i);
+  expect(hygiene).toMatch(/Align\/Spec adviser[^.]*phase approves or stops/i);
+  expect(hygiene).toMatch(/genuine `user_takeover`[^.]*Axstack provenance/i);
+  expect(hygiene).toMatch(/Dirty or unpublished[^.]*open-PR authors/i);
+  expect(read('skills/axstack/references/automations.md')).toMatch(/sweep[\s\S]*any Axstack run on this host/i);
+  expect(read('skills/axstack-watch/references/watch-runtime.md')).toMatch(/sweep[\s\S]*any Axstack run on this host/i);
 });
 
 test('sidebar contract names roles, records status checkpoints, and limits lineage', () => {

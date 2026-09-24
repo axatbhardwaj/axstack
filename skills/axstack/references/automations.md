@@ -251,7 +251,8 @@ At pass start, clear finished predecessor terminals of the same automation in
 the dedicated workspace only after proving completion, by the exact-handle
 fallback in [Workspace hygiene](workspace-hygiene.md).
 Then run the driver-start orphan sweep for repositories listed in this lane's
-run record, under the same guards. The sweep is silent when nothing was removed;
+run record, including eligible settled resources of any Axstack run on this host
+under the same guards. The sweep is silent when nothing was removed;
 record sweep results and holds in the continuity record's Open holds table.
 
 After admission closes, settle every owned PR job and all descendants before the

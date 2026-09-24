@@ -53,7 +53,8 @@ finished predecessor terminals of the same automation in its dedicated
 workspace, using the exact-handle fallback in
 [Workspace hygiene](../../axstack/references/workspace-hygiene.md), then run
 the driver-start orphan sweep for repositories listed in its run record under
-the same guards. Recorded cleanup authority is separate from and does not imply
+the same guards, including eligible settled resources of any Axstack run on this host.
+Recorded cleanup authority is separate from and does not imply
 repair or maintenance authority. That cleanup-authorized watch pass is silent
 when nothing was removed and records sweep results and holds in its continuity
 Open holds table.
