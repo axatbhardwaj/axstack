@@ -69,11 +69,13 @@ removal, and use exact native worktree removal without force.
 
 Drivers sweep on phase-skill entry. A scheduled pass that owns its lane with
 recorded cleanup authority runs the driver-start orphan sweep after predecessor
-terminal cleanup, scoped to repositories listed in its run record. On
-phase-skill entry, scope the sweep to the current repository and the
-per-run worktrees in other
-repositories recorded in the driver's run records. Inspect other Axstack run
-records on this host too; a live owning run does not protect its settled
+terminal cleanup, scoped to repositories listed in its run record plus
+registered repositories on this host containing eligible settled resources of
+another Axstack run. On phase-skill entry, scope the sweep to the current repository
+and the per-run worktrees in other repositories recorded in the driver's
+run records, and registered repositories on this host containing eligible settled
+resources of another Axstack run. Inspect other Axstack run records on this host
+too; a live owning run does not protect its settled
 reviewer worktree or merged author after preservation checks. If Orca is unreachable,
 report one line and continue the phase; an unreachable host holds only its
 items. A sweep may remove resources of ANY Axstack run on this host after salvage
@@ -83,9 +85,12 @@ has had no output for at least 60 minutes, ownership and liveness are rechecked
 from a fresh native list, and evidence is durable. Remove descendants first.
 For a settled worker dispatched into a shared or driver worktree, close its
 exact terminal individually under the same 60-minute quiet rule: native close,
-else the guarded `/quit` + `exit` fallback above. Never close the driver's own terminal
-or a user chat. Align/Spec adviser sessions reused between rounds remain until
+else the guarded `/quit` + `exit` fallback above. Never close the live coordinator
+session's terminal for any run (the driver's own terminal) or a user chat.
+Align/Spec adviser sessions reused between rounds remain until
 their owning phase approves or stops; the quiet rule still applies then.
+For a merged or closed PR author with an unreleased settled Dispatch, request
+native worker release first, record its result, then apply the sweep guards.
 An author worktree of a merged or closed PR is sweep-eligible when its head
 commit is retrievable from the forge (for example, the PR's recorded head or a
 remote branch contains it); unverifiable state is a hold. For an eligible

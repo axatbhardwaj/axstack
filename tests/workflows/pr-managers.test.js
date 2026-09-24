@@ -65,7 +65,7 @@ test('manager sessions reconcile before admission in the dedicated workspace', (
   expect(text).toMatch(/native existing-workspace mode[^.]*--fresh-session/i);
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native Orca[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
-  expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no shared-record write/i);
+  expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no further shared-record write/i);
   expect(text).toMatch(/duplicate[^.]*closes only its own exact terminal/i);
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
 });

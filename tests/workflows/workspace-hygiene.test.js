@@ -71,6 +71,32 @@ test('cross-run sweep keeps quiet, provenance, and phase guards', () => {
   expect(read('skills/axstack-watch/references/watch-runtime.md')).toMatch(/sweep[\s\S]*any Axstack run on this host/i);
 });
 
+test('cross-run removal requires an idle agent and resolves release_unknown explicitly', () => {
+  const sweep = (contract().split('## Driver-start orphan sweep')[1]?.split('## Native bookkeeping exceptions')[0] ?? '').replace(/\s+/g, ' ');
+  const bookkeeping = contract().split('## Native bookkeeping exceptions')[1]?.split('## Known Orca issues')[0] ?? '';
+  expect(sweep).toMatch(/release is confirmed or `release_unknown`, no agent is working, the exact terminal[^.]*60 minutes/i);
+  expect(bookkeeping).toMatch(/For `release_unknown`[\s\S]{0,250}otherwise hold unless inspection proves a settled, quiet worker[\s\S]{0,100}close only that worker's exact terminal under the sweep rule and confirm its\s+absence/i);
+  expect(bookkeeping).toMatch(/Unknown liveness holds\./);
+});
+
+test('sweep releases settled merged authors and protects every coordinator terminal', () => {
+  const sweep = (contract().split('## Driver-start orphan sweep')[1]?.split('## Native bookkeeping exceptions')[0] ?? '').replace(/\s+/g, ' ');
+  expect(sweep).toMatch(/merged or closed PR author[^.]*unreleased settled Dispatch[^.]*native worker release first[^.]*then apply the sweep guards/i);
+  expect(sweep).toMatch(/Never close the live coordinator session's terminal for any run[^.]*user chat/i);
+});
+
+test('scheduled sweep scope and duplicate manager boundaries are explicit', () => {
+  const hygiene = contract();
+  const manager = read('skills/axstack/references/automations.md');
+  const watch = read('skills/axstack-watch/references/watch-runtime.md');
+  const cleanup = read('skills/axstack-cleanup/SKILL.md');
+  for (const text of [hygiene, manager, watch].map((value) => value.replace(/\s+/g, ' '))) {
+    expect(text).toMatch(/repositories listed in (?:its|this lane's) run record[^.]*registered repositories on this host[^.]*eligible settled resources/i);
+  }
+  expect(manager.replace(/\s+/g, ' ')).toMatch(/Once identified as a duplicate[^.]*no further shared-record write[^.]*no live or unsettled resource owned by the live manager/i);
+  expect(cleanup).toMatch(/Driver-start orphan sweeps follow the guarded cross-run sweep in\s*\[Workspace hygiene\]/i);
+});
+
 test('sidebar contract names roles, records status checkpoints, and limits lineage', () => {
   const text = contract().replace(/\s+/g, ' ');
   for (const name of ['<run> driver', '<run> author #<pr>', '<run> review #<pr> r<n>']) {
