@@ -41,8 +41,12 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    issues represent user-visible capabilities; one capability may span several
    tasks and PRs. GitHub capability issues link the approved spec issue and its
    SHA-256 body digest. Keep detailed execution breakdowns in the repository.
-   For every capability, derive acceptance checks from the pinned spec and
-   identify internal tasks, dependencies, PR ownership, and worktrees. For each task the driver records
+   For every capability, derive acceptance checks from the pinned spec. Only
+   when its scope identity carries a sketch, follow the
+   [design lens](../axstack/references/design-lens.md) sketch's modules, put
+   its named failure in capability acceptance, and treat a task spanning a
+   sketch boundary as a split signal. Identify internal tasks, dependencies,
+   PR ownership, and worktrees. For each task the driver records
    one theme and a coarse size estimate from the ownership, interface, and
    dependency map. A task estimated in the exception band is assessed for a
    split at mapping time and split where a green, atomic, reviewable split

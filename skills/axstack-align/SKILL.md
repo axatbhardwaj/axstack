@@ -17,6 +17,17 @@ Load before acting:
 
 This preserves the required contracts -> lifecycle -> audit load edge.
 
+## Design the shape
+
+Set the rung from researched facts; never ask the user to choose it. A change
+inside one module's existing interface, ownership, data flow, and failure
+guarantees is Rung 0: no design questions or sketch. Otherwise load the
+[design lens ladder](../axstack/references/design-lens.md) for Rung 1 or 2
+and settle only unresolved areas in its order within the existing budget. Carry a
+Rung 1 or 2 sketch in the substantial spec's `Design` section or the returned
+small-change intent. A design question alone does not make small work
+substantial; apply routing's existing size reassessment rule.
+
 ## Settle the frontier
 
 1. **Research and map dependencies.** Inspect the available code, docs, and

@@ -84,7 +84,16 @@ Size alone never requires user approval.
 Use the normal behavior path unless the accepted improvement scope is
 explicitly marked **structure-preserving**. The author never chooses that tag.
 
+Only when the scope identity carries a sketch, copy it into the author brief
+under the [design lens](../axstack/references/design-lens.md).
+
 ### Normal behavior path
+
+When that sketch exists, make the first red check target its `Usage` line.
+The structure-preserving path stays as is.
+If a repeated workaround or unnamed boundary conflicts with the sketch, the
+author stops and returns a sketch conflict. The driver reopens only the
+affected decision through Align under the existing material-revision rule.
 
 Choose a behavior from the accepted scope, including its failure behavior or a
 real integration boundary. Test it through an observable interface rather than

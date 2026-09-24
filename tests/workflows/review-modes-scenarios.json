@@ -105,6 +105,21 @@
       }
     },
     {
+      "id": "binding-deviation",
+      "skill_ref": "axstack-review",
+      "input": {
+        "mode": "authored",
+        "actual_author": "Sol high session author-sol",
+        "candidate": "SHA S on current base T",
+        "scope": "approved spec with a sketch whose Binding commits the storage owner",
+        "change": "candidate moves storage ownership across the committed boundary without an accepted spec revision"
+      },
+      "expected": {
+        "coverage": "architecture angle compares the sketch and red flags",
+        "finding": "unrevised Binding deviation is a finding"
+      }
+    },
+    {
       "id": "automation-incomplete-publishes-nothing",
       "skill_ref": "axstack-review",
       "input": {

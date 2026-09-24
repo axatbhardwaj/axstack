@@ -7,7 +7,7 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // Scenario assertions validate raw inputs and expected policy decisions. They
 // do not execute a model and are not model-behavior evidence.
-test('review modes: eight raw scenario contracts cover the amendments', () => {
+test('review modes: raw scenario contracts cover the amendments', () => {
   const data = JSON.parse(read('tests/workflows/review-modes-scenarios.json'));
   expect(data.version).toBe(1);
   expect(data.cases.map(({ id }) => id)).toEqual([
@@ -18,6 +18,7 @@ test('review modes: eight raw scenario contracts cover the amendments', () => {
     'unavailable-cross-model-reviewer',
     'stale-authoring-change',
     'automation-verdict-publication',
+    'binding-deviation',
     'automation-incomplete-publishes-nothing',
   ]);
   for (const scenario of data.cases) {

@@ -243,7 +243,10 @@ This section applies to peer and authored PR modes.
       is safe because of on the evidence ladder; below "ran it" is unproven.
    4. Requirements, acceptance, and user behavior.
    5. Architecture and solution design, including SOLID and credible simpler
-      alternatives.
+      alternatives. Only when the scope identity carries a sketch, compare
+      the architecture with the [design lens](../axstack/references/design-lens.md)
+      sketch and red flags. A deviation from a `Binding` line without an
+      accepted spec revision is a finding.
    6. Simplicity and maintainability: KISS, YAGNI, and cyclomatic complexity
       where measurement is useful. Never invent a metric or demand an
       abstraction merely to satisfy a principle.

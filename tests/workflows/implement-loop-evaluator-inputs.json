@@ -21,6 +21,15 @@
       }
     },
     {
+      "id": "sketch-friction",
+      "title": "Repeated workaround crosses a sketch boundary",
+      "input": {
+        "invocation": "Run axstack-implement for an approved scope identity carrying a design sketch.",
+        "request": "Deliver the authored candidate within the approved sketch.",
+        "run_state": "The author has twice worked around a missing boundary. The sketch Binding commits the original module owner; the workaround needs a different owner. What does the author return, which decision does the driver reopen through Align, and how is the material-revision rule applied?"
+      }
+    },
+    {
       "id": "peer-untrusted-instructions",
       "title": "Peer-authored content tries to redirect the reviewer",
       "input": {
