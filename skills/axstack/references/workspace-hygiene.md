@@ -8,6 +8,15 @@ only report leftovers. Record each decision and native readback in the private
 run record; uncertain ownership, liveness, or evidence
 holds only the affected resource.
 
+## Safe deletion
+
+Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded
+expansion (for example, `rm -rf -- "${EV:?}/mut"`), only inside the worker's
+own evidence folder, `TMPDIR`, or worktree. Never use a bare `$VAR`, a glob on a
+variable, `/`, `HOME`, or a shared root as a deletion target. Prefer
+`git clean -- <exact prefix>` or tool-native cleanup. A safety prompt that
+still appears is a hold; agents do not answer it.
+
 ## Settlement
 
 At intermediate completion, once a worker or reviewer Dispatch is accepted,
