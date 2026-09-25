@@ -37,7 +37,7 @@ implementation. Research, explanation, and peer review can start directly.
 | Failure mode | How Axstack responds |
 | --- | --- |
 | Wrong thing built | Align rounds clarify the request; a four-family arena compares approaches for hard choices. |
-| Nobody really reviewed it | Strict TDD checks behavior first; cross-provider review checks the exact revision. |
+| Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
 | Agents left a mess | Orca makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
 
@@ -98,19 +98,20 @@ upgrades, conflicts, and uninstalling.
 - Peer PRs receive two independent reviews. Authored changes receive a reviewer
   selected from the author's configured pairing. Reviews bind to exact revisions.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
-  unavailable models, and serious risks surface as holds. The human merges.
+  unavailable models, and serious risks surface as holds. The human merges by default.
 
 Choose one explicit preset (26 roles each): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
 [claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
-implementation review; single-provider presets have workflow limits. See
+implementation review; single-provider presets have workflow limits and are
+not automatic fallbacks when a model is unavailable. See
 [workflow and routing details](docs/workflows.md).
 
 ## Optional PR automation
 
 Manual review and watch work without a schedule. An optional native Orca review
 manager can handle recurring peer review; chat-run watch can observe owned PRs.
-Own-PR repairs stay chat-driven.
+Own-PR repairs stay chat-driven; the review automation never merges for you.
 Activation is opt-in and needs live host validation. See
 [PR-manager setup and safety](skills/axstack/references/automations.md).
 
@@ -126,6 +127,7 @@ Activation is opt-in and needs live host validation. See
 - [Installation and configuration](docs/installation.md)
 - [Workflows, review policy, and model routing](docs/workflows.md)
 - [PR scope and sizing](skills/axstack/references/pr-shape.md)
+- [Releases](https://github.com/axatbhardwaj/axstack/releases)
 
 ## License
 
