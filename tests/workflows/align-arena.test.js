@@ -25,7 +25,7 @@ test('align arena: gated to hard-to-reverse choices and replaces critique for th
   expect(text).toMatch(/same test as for an ADR/i);
   expect(text).toMatch(/small or routine questions never enter the arena/i);
   expect(text).toMatch(/Rung 2[^.]*arena/i);
-  expect(text).toMatch(/replace the critique round for that question with one arena round/i);
+  expect(text).toMatch(/replace the critique round for that question with an arena/i);
   // The pre-consultation draft rule is explicitly overridden for arena-grade questions,
   // in align and in the standing contracts, so the two never conflict.
   expect(text).toMatch(/drafts the prioritized frontier and recommendations, except for an arena-grade question[^.]*drafts no recommendation until the candidates and judge verdicts return/);
@@ -43,7 +43,10 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   for (const id of ['axstack-advisor-astra', 'axstack-advisor-fable', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity']) expect(text).toContain(id);
   expect(text).toMatch(/one candidate per configured family[^.]*same brief[^.]*without cross-reading/i);
   expect(text).toMatch(/the driver authors no candidate/i);
-  expect(text).toMatch(/axstack-arena-judge-astra[^.]*axstack-arena-judge-fable[^.]*each independently score/i);
+  expect(text).toMatch(/round 1[^.]*axstack-arena-judge-opus[^.]*score/i);
+  expect(text).toMatch(/round 2[^.]*axstack-arena-judge-fable[^.]*axstack-arena-judge-astra[^.]*independently score/i);
+  expect(text).toMatch(/driver and the Opus judge disagree on the base[^.]*user rejects the round-1 synthesis/i);
+  expect(text).toMatch(/same anonymized candidates and rubric/i);
   expect(text).toMatch(/anonymized[^.]*relabeled candidates[^.]*rubric/i);
   expect(text).toMatch(/judges never author, never cross-read/i);
   expect(text).toMatch(/reads every candidate end to end/i);
@@ -55,7 +58,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
 
 test('align arena: synthesis lands in Decisions rows and absent seats hold only that question', () => {
   const text = compact('skills/axstack-align/SKILL.md');
-  expect(text).toMatch(/synthesis note[^.]*both judge verdicts[^.]*`Decisions` rows/i);
+  expect(text).toMatch(/synthesis note[^.]*judge verdicts per round[^.]*`Decisions` rows/i);
   expect(text).toMatch(/configured candidate or judge seat[^.]*unavailable[^.]*hold that question/i);
   expect(text).toMatch(/user decides whether to proceed without it/i);
   expect(text).toMatch(/uncertain dispatch[^.]*reconcile[^.]*never treated as absent/i);
@@ -64,6 +67,13 @@ test('align arena: synthesis lands in Decisions rows and absent seats hold only 
 test('align arena: judge seats exist in every preset at xhigh and mirror adviser availability', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const opus = roles.find(({ id }) => id === 'axstack-arena-judge-opus');
+    expect(opus, `${preset}: missing Opus judge`).toBeTruthy();
+    expect(opus.provider).toBe(preset === 'codex-only' ? 'codex' : 'claude');
+    expect(opus.model).toBe(preset === 'codex-only' ? null : 'claude-opus-5-5');
+    expect(opus.modeId).toBe(preset === 'codex-only' ? 'full-access' : 'bypassPermissions');
+    expect(opus.thinkingOptionId).toBe('xhigh');
+    expect(opus.notes).toMatch(/read-only.*round 1/i);
     for (const seat of ['astra', 'fable']) {
       const judge = roles.find(({ id }) => id === `axstack-arena-judge-${seat}`);
       const adviser = roles.find(({ id }) => id === `axstack-advisor-${seat}`);
@@ -76,12 +86,15 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
     }
   }
   const routing = compact('skills/axstack/references/routing.md');
-  expect(routing).toMatch(/axstack-arena-judge-astra[^.]*axstack-arena-judge-fable[^.]*judge them/);
+  expect(routing).toMatch(/axstack-arena-judge-opus[^.]*round 1[^.]*axstack-arena-judge-fable[^.]*axstack-arena-judge-astra[^.]*round 2/i);
   expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*axstack-arena-candidate-antigravity[^.]*families/i);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
-    for (const judge of roles.filter(({ id }) => id.startsWith('axstack-arena-judge-'))) {
-      expect(judge.notes).toMatch(/every candidate by label/i);
+    for (const arenaRole of roles.filter(({ id }) => id.startsWith('axstack-arena-'))) {
+      expect(arenaRole.thinkingOptionId).not.toBe('max');
+      if (arenaRole.id.startsWith('axstack-arena-judge-')) {
+        expect(arenaRole.notes).toMatch(/every candidate by label/i);
+      }
     }
   }
 });

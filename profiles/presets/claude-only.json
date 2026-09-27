@@ -218,6 +218,15 @@
       "notes": "Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
     },
     {
+      "id": "axstack-arena-judge-opus",
+      "name": "Axstack arena judge Opus",
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "xhigh",
+      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging."
+    },
+    {
       "id": "axstack-arena-candidate-grok",
       "name": "Axstack arena candidate Grok (unavailable)",
       "provider": "claude",

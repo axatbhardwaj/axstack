@@ -68,7 +68,7 @@ export function assessRoleReadiness(roles, preset) {
     (preset === 'mixed' && role.id === 'axstack-research-x' && role.provider === 'grok') ||
     (preset === 'mixed' && role.id === 'axstack-arena-candidate-grok' && role.provider === 'grok') ||
     (preset === 'mixed' && role.id === 'axstack-arena-candidate-antigravity' && role.provider === 'antigravity') ||
-    (preset === 'codex-only' && ['axstack-advisor-fable', 'axstack-arena-judge-fable', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(role.id)) ||
+    (preset === 'codex-only' && ['axstack-advisor-fable', 'axstack-arena-judge-fable', 'axstack-arena-judge-opus', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(role.id)) ||
     (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(role.id))
   );
   for (const role of roles) {

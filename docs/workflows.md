@@ -48,7 +48,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 26 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 27 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -122,12 +122,14 @@ session and evidence remain valid.
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
   consults Astra and Fable independently with the same bounded evidence and
   question. It synthesizes disagreements and reuses unchanged receipts. For a
-  hard-to-reverse design choice it runs one arena round instead: Astra,
-  Fable, Grok, and Antigravity each author a candidate, `axstack-arena-judge-astra` and
-  `axstack-arena-judge-fable` score every candidate against the driver's rubric, and the
-  driver picks a base, grafts the losers' strong ideas, and presents the
-  synthesis as the recommendation; the note lands as `Decisions` rows in the
-  run record.
+  hard-to-reverse design choice it runs an arena instead: Astra, Fable, Grok,
+  and Antigravity each author a candidate. `axstack-arena-judge-opus` scores
+  them in round 1; the driver compares its own pick with that verdict. If they
+  disagree on the base or the user rejects the round-1 synthesis,
+  `axstack-arena-judge-fable` and `axstack-arena-judge-astra` independently
+  score the same anonymized candidates and rubric in round 2. The driver
+  picks a base, grafts strong ideas, and records judge verdicts per round in
+  the `Decisions` rows without averaging.
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline. Linear is the default authoritative store;
   GitHub Issues and repository Markdown are explicit alternatives. A GitHub

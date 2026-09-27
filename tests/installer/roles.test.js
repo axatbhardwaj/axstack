@@ -88,7 +88,7 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-arena-judge-opus');
   const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -112,6 +112,27 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   expect(preserved.out).toContain('preserved user edits');
   expect(preserved.out).not.toContain('added role IDs:');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(24);
+});
+
+test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge', () => {
+  const rootDir = makeTempRoot('axstack-opus-upgrade-');
+  const skillsDir = join(rootDir, 'installed');
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const old = current.filter(({ id }) => id !== 'axstack-arena-judge-opus');
+  const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
+  const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
+  const args = (bundle) => ['install', '--bundle', bundle, '--preset', 'mixed', '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+  runCli(`${root}/bin/axstack.js`, args(oldBundle), { env: { HOME: rootDir } });
+  const rolesPath = join(skillsDir, 'axstack', 'roles.json');
+  const before = readFileSync(rolesPath);
+  expect(JSON.parse(before.toString()).roles).toHaveLength(26);
+  expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
+    'missing selected bundle role: axstack-arena-judge-opus',
+  ]);
+  const result = runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } });
+  expect(result.out).toContain('added role IDs: axstack-arena-judge-opus');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(27);
+  expect(runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('added role IDs:');
 });
 
 test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
@@ -183,6 +204,14 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
   expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
     'axstack-arena-judge-fable requires a configured model',
   ]);
+});
+
+test('Opus judge is absent only in codex-only readiness', () => {
+  const opus = { ...role('axstack-arena-judge-opus', null), provider: 'codex', thinkingOptionId: 'xhigh' };
+  expect(assessRoleReadiness([opus], 'codex-only')).toEqual({ ready: true, gaps: [] });
+  expect(assessRoleReadiness([{ ...opus, provider: 'claude' }], 'mixed').gaps).toContain(
+    'axstack-arena-judge-opus requires a configured model',
+  );
 });
 
 test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {
