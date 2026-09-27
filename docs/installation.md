@@ -184,7 +184,9 @@ both cross-provider research routes as intentional absences. Their
 unavailable adviser and its matching arena judge seat remain explicit
 same-provider `model: null` roles, which do not make installation unready;
 Align and Spec still hold until both Astra and Fable can return independent
-receipts, and an arena-grade Align question holds until both judge seats can. The current chat drives on whatever
+receipts. For an arena-grade Align question, round 1 needs Opus; round 2, if
+invoked, needs Fable and Astra; a required seat that is unavailable holds that
+round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
 the affected work. There is no model substitution, subscription inference, or
 quota routing.

@@ -102,7 +102,8 @@ an arena. Small or routine questions never enter the arena.
    synthesis,
    run round 2: `axstack-arena-judge-fable` and `axstack-arena-judge-astra`
    independently score the same anonymized candidates and rubric. Judges never
-   author, never cross-read each other, and never average verdicts.
+   author, never cross-read each other, and never average verdicts. After round-2
+   verdicts return, the driver re-picks in step 4 and re-presents in step 6.
 4. **Pick.** The driver reads every candidate end to end and scores per
    criterion, not on holistic feel, then compares with the judge verdicts from
    each completed round. Agreement confirms the base. On disagreement, re-read

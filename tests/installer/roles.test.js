@@ -212,6 +212,9 @@ test('Opus judge is absent only in codex-only readiness', () => {
   expect(assessRoleReadiness([{ ...opus, provider: 'claude' }], 'mixed').gaps).toContain(
     'axstack-arena-judge-opus requires a configured model',
   );
+  expect(assessRoleReadiness([{ ...opus, provider: 'claude' }], 'claude-only').gaps).toContain(
+    'axstack-arena-judge-opus requires a configured model',
+  );
 });
 
 test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {

@@ -21,7 +21,7 @@ inputs, not runtime proof.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Changing it or replacing a session needs an explicit user decision and
-revalidation. Unavailable models, efforts, roles, or overrides hold affected
+revalidation. Unavailable models, efforts, roles, or overrides hold only affected
 work; no automatic fallback, quota routing, subscription inference, or silent
 provider/model/effort substitution.
 

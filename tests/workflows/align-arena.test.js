@@ -47,6 +47,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   expect(text).toMatch(/round 2[^.]*axstack-arena-judge-fable[^.]*axstack-arena-judge-astra[^.]*independently score/i);
   expect(text).toMatch(/driver and the Opus judge disagree on the base[^.]*user rejects the round-1 synthesis/i);
   expect(text).toMatch(/same anonymized candidates and rubric/i);
+  expect(text).toMatch(/after round-2 verdicts return[^.]*re-picks in step 4[^.]*re-presents in step 6/i);
   expect(text).toMatch(/anonymized[^.]*relabeled candidates[^.]*rubric/i);
   expect(text).toMatch(/judges never author, never cross-read/i);
   expect(text).toMatch(/reads every candidate end to end/i);
@@ -105,4 +106,10 @@ test('align arena: scenario corpus covers four families and availability holds',
   expect(byId['design-rung-2'].expected.join(' ')).toMatch(/Astra[^.]*Fable[^.]*Grok[^.]*Antigravity/i);
   expect(byId['arena-grok-unavailable'].expected.join(' ')).toMatch(/Pause[^.]*Ask the user/i);
   expect(byId['arena-single-provider-hold'].expected.join(' ')).toMatch(/Hold[^.]*single-provider/i);
+});
+
+test('installation guide holds only the judge seats needed by each arena round', () => {
+  const installation = compact('docs/installation.md');
+  expect(installation).toMatch(/arena-grade Align question[^.]*round 1[^.]*Opus[^.]*round 2[^.]*Fable[^.]*Astra[^.]*required seat[^.]*unavailable[^.]*holds/i);
+  expect(installation).not.toMatch(/arena-grade Align question holds until both judge seats can/i);
 });
