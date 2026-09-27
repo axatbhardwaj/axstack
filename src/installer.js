@@ -632,7 +632,9 @@ export async function installBundle({
         const old = JSON.parse(previousRoles.toString());
         if (Array.isArray(old.roles)) {
           const oldIds = new Set(old.roles.map((role) => role?.id));
+          const newIds = new Set(bundle.bundleRoles.map((role) => role.id));
           summary.addedRoleIds = bundle.bundleRoles.filter((role) => !oldIds.has(role.id)).map((role) => role.id);
+          summary.removedRoleIds = old.roles.filter((role) => !newIds.has(role?.id)).map((role) => role.id);
         }
       } catch { /* No reliable role-ID diff for malformed prior bytes. */ }
     }

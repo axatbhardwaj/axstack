@@ -11,13 +11,13 @@
       "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Fable; reuse only unchanged receipts."
     },
     {
-      "id": "axstack-advisor-fable",
-      "name": "Axstack Fable adviser (unavailable)",
+      "id": "axstack-advisor-opus",
+      "name": "Axstack Opus adviser (unavailable)",
       "provider": "codex",
       "model": null,
       "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Required independent Fable adviser for Align, Spec, and unresolved consequential decisions; unavailable in codex-only. The explicit null holds Align and Spec without provider substitution."
+      "thinkingOptionId": "xhigh",
+      "notes": "Opus adviser intentionally absent in codex-only; the explicit null holds Align and Spec without substitution."
     },
     {
       "id": "axstack-owner",
@@ -209,13 +209,13 @@
       "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
     },
     {
-      "id": "axstack-arena-judge-fable",
-      "name": "Axstack arena judge Fable",
+      "id": "axstack-escalation-fable",
+      "name": "Axstack escalation Fable (unavailable)",
       "provider": "codex",
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Required Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the codex-only preset; the arena-grade decision holds without substitution."
+      "notes": "Fable escalation intentionally absent in codex-only; a required use holds without substitution. Read-only round 2 judge; never authors a candidate."
     },
     {
       "id": "axstack-arena-judge-opus",

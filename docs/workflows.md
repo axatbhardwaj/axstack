@@ -53,11 +53,11 @@ under `profiles/presets/` each contain exactly
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
 
-| Preset | Author | Ordered peer reviewers | Astra / Fable advisers | Auditor |
+| Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol medium; Opus medium | Astra high / Fable high | Luna xhigh |
+| `mixed` | Sol high | Sol medium; Opus medium | Astra high / Opus xhigh | Luna xhigh |
 | `codex-only` | Sol high | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |
-| `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Fable high | Sonnet xhigh |
+| `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Opus xhigh | Sonnet xhigh |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
@@ -120,16 +120,18 @@ session and evidence remain valid.
 ## Phases
 
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
-  consults Astra and Fable independently with the same bounded evidence and
+  consults Astra and Opus independently with the same bounded evidence and
   question. It synthesizes disagreements and reuses unchanged receipts. For a
-  hard-to-reverse design choice it runs an arena instead: Astra, Fable, Grok,
+  hard-to-reverse design choice it runs an arena instead: Astra, Opus, Grok,
   and Antigravity each author a candidate. `axstack-arena-judge-opus` scores
   them in round 1; the driver compares its own pick with that verdict. If they
   disagree on the base or the user rejects the round-1 synthesis,
-  `axstack-arena-judge-fable` and `axstack-arena-judge-astra` independently
+  `axstack-escalation-fable` and `axstack-arena-judge-astra` independently
   score the same anonymized candidates and rubric in round 2. The driver
   picks a base, grafts strong ideas, and records judge verdicts per round in
-  the `Decisions` rows without averaging.
+  the `Decisions` rows without averaging. Fable escalation uses a fresh
+  session for round 2, high-stakes agreement, or the bounded trigger in
+  [Standing contracts](../skills/axstack/references/contracts.md).
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline. Linear is the default authoritative store;
   GitHub Issues and repository Markdown are explicit alternatives. A GitHub

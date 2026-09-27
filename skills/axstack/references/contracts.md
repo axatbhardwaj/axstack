@@ -48,7 +48,7 @@ The current chat is the driver, whatever model runs it; there is no driver
 profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
-consults `axstack-advisor-astra` and `axstack-advisor-fable` independently with
+consults `axstack-advisor-astra` and `axstack-advisor-opus` independently with
 the same bounded evidence and question. The one exception is an arena-grade
 Align question: there the driver frames the brief and rubric, the advisers
 author candidates, and the driver assesses only after the candidates and judge
@@ -62,11 +62,11 @@ For `axstack-debug`, ordinary diagnosis consults the preset's configured
 adviser roles (both in `mixed`; the one configured adviser in a single-provider
 preset, recording the other as an intentional absence). The high-stakes and
 serious-risk contracts override that rule whenever their conditions arise. A
-configured but unavailable adviser holds debug L1 and L2 without substitution.
+configured but unavailable adviser holds debug L1; an unavailable escalation seat holds L2 without substitution.
 Reuse a debug receipt while its evidence packet is unchanged.
 
-High-stakes decisions require both advisers' plain AGREE and the driver's
-accepted assessment. Resolve disagreement with bounded checks; silence and an
+High-stakes decisions require `axstack-advisor-astra` and
+`axstack-escalation-fable` plain AGREE plus the driver's accepted assessment. Resolve disagreement with bounded checks; silence and an
 unavailable model do not authorize fallback. Ordinary work uses the configured
 author and reviewer roles selected by review mode and the routing snapshot. The
 existing mixed high-stakes route keeps its Opus high author and Sol high
@@ -75,6 +75,15 @@ checkpoint can satisfy the authored final review after revalidation; preserve
 its effort and do not add a redundant reviewer. No single-provider high-stakes
 mapping is defined: pause for an explicit user decision rather than borrowing
 another preset or inventing a route. There is no silent fallback.
+
+Use `axstack-escalation-fable` only for arena round 2, high-stakes decisions,
+or when two attempts at the same named goal fail a stated acceptance check
+(including debug L2 or a spec decision rejected twice). It also applies when
+Astra and Opus still contradict after one reconciliation with no safe
+discriminating check. A bare "stuck" claim needs pointers to two failed attempts;
+setup slips and new user requirements do not count. Each use starts a fresh
+session that never reuses an adviser or candidate context. Escalation never
+resets existing holds or attempt budgets.
 
 ## Serious risk
 

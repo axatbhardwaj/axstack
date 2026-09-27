@@ -142,8 +142,9 @@ The complete bundle is validated before writes:
 - every role has valid preserved fields, while the mixed checker,
   `axstack-research-web-google`, `axstack-research-x`, and both arena candidate launch-by-agent-id
   routes explicitly permit `model: null`;
-  in each single-provider preset, the unavailable adviser and its matching arena
-  judge seat explicitly permit `model: null`, as do both cross-provider research routes and both arena candidate seats;
+  in each single-provider preset, the unavailable adviser and round-2 seat
+  explicitly permit `model: null`, as do both cross-provider research routes
+  and both arena candidate seats;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
@@ -181,11 +182,11 @@ The mixed checker and `axstack-research-web-google` have provider
 their notes authorize launch by agent ID, and the run record snapshots the model
 reported by the TUI. The single-provider presets configure the checker and keep
 both cross-provider research routes as intentional absences. Their
-unavailable adviser and its matching arena judge seat remain explicit
-same-provider `model: null` roles, which do not make installation unready;
-Align and Spec still hold until both Astra and Fable can return independent
+unavailable adviser and round-2 seat remain explicit same-provider
+`model: null` roles, which do not make installation unready;
+Align and Spec still hold until both Astra and Opus can return independent
 receipts. For an arena-grade Align question, round 1 needs Opus; round 2, if
-invoked, needs Fable and Astra; a required seat that is unavailable holds that
+invoked, needs escalation Fable and Astra; a required seat that is unavailable holds that
 round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
 the affected work. There is no model substitution, subscription inference, or

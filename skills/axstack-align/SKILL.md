@@ -65,7 +65,7 @@ user round, the driver independently drafts the prioritized frontier and
 recommendations, except for an arena-grade question (below), where the driver
 writes the brief and rubric but drafts no recommendation until the candidates
 and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
-`axstack-advisor-fable` independently, without cross-reading, using the same
+`axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
 or rejects each material point with a reason. Use one focused reply when
@@ -91,7 +91,7 @@ an arena. Small or routine questions never enter the arena.
    settled decisions it must respect) and three to six gradeable rubric
    criteria. Candidates receive only the brief; the rubric is for judging.
 2. **Fan out.** Produce one candidate per configured family independently from the same brief,
-   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-fable`,
+   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-opus`,
    `axstack-arena-candidate-grok`, and `axstack-arena-candidate-antigravity`.
    Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
 3. **Cross-judge.** After every candidate completes, give round 1 judge
@@ -100,7 +100,7 @@ an arena. Small or routine questions never enter the arena.
    The driver compares its own pick with the Opus verdict. Only if the driver
    and the Opus judge disagree on the base, or the user rejects the round-1
    synthesis,
-   run round 2: `axstack-arena-judge-fable` and `axstack-arena-judge-astra`
+   run round 2 with fresh sessions: `axstack-escalation-fable` and `axstack-arena-judge-astra`
    independently score the same anonymized candidates and rubric. Judges never
    author, never cross-read each other, and never average verdicts. After round-2
    verdicts return, the driver re-picks in step 4 and re-presents in step 6.

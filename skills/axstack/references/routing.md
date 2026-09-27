@@ -7,13 +7,12 @@ Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 
 Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
 `profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an explicit user selection recorded in the run record. Use one
-unambiguous preset; missing or contradictory sources are
+skills root, or an explicit user selection in the run record. Missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At run start, snapshot all 27 role IDs with provider/model/mode/effort; absent
-or unconfigured roles are recorded explicitly; invent no provider default.
+At start, snapshot all 27 role IDs with provider/model/mode/effort; absent
+or unconfigured roles are recorded explicitly; never default.
 Such a role holds only that role's work. A role installed or changed later must not
 silently enter the snapshot; adding it needs an explicit user decision. Live profiles
 are authoritative at snapshot time and for availability; bundled presets are setup
@@ -36,10 +35,11 @@ provider/model/effort substitution.
   | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` medium) |
   | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
   | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
-- `axstack-advisor-astra`/`axstack-advisor-fable` advise and author candidates;
+- `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   `axstack-arena-candidate-grok`/
   `axstack-arena-candidate-antigravity` add families.
-  `axstack-arena-judge-opus` judges round 1; `axstack-arena-judge-fable`/`axstack-arena-judge-astra` judge round 2.
+  `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
+  High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
