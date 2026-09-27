@@ -633,8 +633,10 @@ export async function installBundle({
         if (Array.isArray(old.roles)) {
           const oldIds = new Set(old.roles.map((role) => role?.id));
           const newIds = new Set(bundle.bundleRoles.map((role) => role.id));
-          summary.addedRoleIds = bundle.bundleRoles.filter((role) => !oldIds.has(role.id)).map((role) => role.id);
-          summary.removedRoleIds = old.roles.filter((role) => !newIds.has(role?.id)).map((role) => role.id);
+          const addedRoleIds = bundle.bundleRoles.filter((role) => !oldIds.has(role.id)).map((role) => role.id);
+          const removedRoleIds = old.roles.filter((role) => role?.id && !newIds.has(role.id)).map((role) => role.id);
+          summary.addedRoleIds = addedRoleIds;
+          summary.removedRoleIds = removedRoleIds;
         }
       } catch { /* No reliable role-ID diff for malformed prior bytes. */ }
     }

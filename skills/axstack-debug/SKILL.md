@@ -91,7 +91,7 @@ before any further probe or attempt.
 | L0 | entry | driver alone | phases 1–7; at most one fix attempt through `axstack-implement` |
 | L1 | the L0 fix attempt failed; or phases 1–3 complete plus at least one discriminating probe (or a recorded reason no safe probe exists) and no hypothesis ranks | the preset's configured advisers, independently, same evidence packet | ranked hypotheses and one investigator brief per hypothesis |
 | L1 fan-out | driver merges the adviser plans | `axstack-debug-investigator-1..4`, identical packet, distinct briefs, no cross-reading | one receipt per brief |
-| L2 | two failed attempts at the same named goal and stated acceptance check | `axstack-escalation-fable` on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
+| L2 | two failed attempts at the same named goal and stated acceptance check (second failure overall); or each fix reveals a new symptom elsewhere | `axstack-advisor-astra` and `axstack-escalation-fable` (fresh session) on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
 
 L1 is inadmissible without a red loop. Ordinary diagnosis is not a high-stakes
 decision: in `mixed` both advisers are consulted and both receipts are
@@ -100,8 +100,8 @@ records the other as an intentional absence. Whenever a run exposes a
 high-stakes architecture choice, serious security, downtime, or data-loss
 risk, the standing high-stakes and serious-risk contracts override this rule,
 including the single-provider high-stakes hold. An adviser configured but
-unavailable at launch holds L1 without substitution; an unavailable escalation
-seat holds L2. L0 continues.
+unavailable at launch holds L1 without substitution; a null or unavailable L2
+seat holds L2 without substitution. L0 continues.
 Reuse an L1 adviser receipt while the packet is unchanged; a changed packet needs
 a fresh receipt.
 

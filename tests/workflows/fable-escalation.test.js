@@ -12,6 +12,7 @@ test('presets: Opus advises and Fable escalates with explicit absence', () => {
     expect(roles).toHaveLength(27);
     expect(byId['axstack-advisor-fable']).toBeUndefined();
     expect(byId['axstack-arena-judge-fable']).toBeUndefined();
+    if (preset !== 'claude-only') expect(byId['axstack-advisor-astra'].notes).toContain('question as Opus');
     for (const [id, model] of [
       ['axstack-advisor-opus', 'claude-opus-5-5'],
       ['axstack-escalation-fable', 'claude-fable-5-1'],
@@ -32,7 +33,7 @@ test('workflow: escalation is bounded, fresh, and leaves prior holds intact', ()
   expect(contracts).toMatch(/setup slips[^.]*new user requirements[^.]*do not count/i);
   expect(contracts).toMatch(/fresh session[^.]*never reuses[^.]*adviser[^.]*candidate/i);
   expect(contracts).toMatch(/never resets[^.]*holds[^.]*attempt budgets/i);
-  expect(prose('skills/axstack-debug/SKILL.md')).toMatch(/\| L2 \|[^|]*\| `axstack-escalation-fable`[^|]*\|/i);
+  expect(prose('skills/axstack-debug/SKILL.md')).toMatch(/\| L2 \|[^|]*\| `axstack-advisor-astra` and `axstack-escalation-fable`[^|]*\|/i);
   expect(prose('skills/axstack-audit/references/record.md')).toMatch(/Decisions:.*escalation trigger.*evidence pointers.*outcome changed/i);
   expect(prose('skills/axstack-align/SKILL.md')).toContain('`axstack-advisor-opus`');
   expect(prose('skills/axstack-spec/SKILL.md')).toContain('`axstack-advisor-opus`');

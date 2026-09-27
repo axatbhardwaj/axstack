@@ -8,7 +8,7 @@
       "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Fable; reuse only unchanged receipts."
+      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Opus; reuse only unchanged receipts."
     },
     {
       "id": "axstack-advisor-opus",

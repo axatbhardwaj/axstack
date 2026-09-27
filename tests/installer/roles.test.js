@@ -162,6 +162,25 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
   }
 });
 
+test('a null row in prior installed roles does not hide removed role IDs', () => {
+  const rootDir = makeTempRoot('axstack-null-role-diff-');
+  const skillsDir = join(rootDir, 'installed');
+  const old = [role('axstack-driver'), role('axstack-retired')];
+  const current = [role('axstack-driver'), role('axstack-new')];
+  const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
+  const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
+  const args = (bundle, force = false) => ['install', '--bundle', bundle, '--preset', 'mixed', '--skills-dir', skillsDir, '--no-claude-settings', '--yes', ...(force ? ['--force'] : [])];
+  const cli = `${root}/bin/axstack.js`;
+  runCli(cli, args(oldBundle), { env: { HOME: rootDir } });
+  const rolesPath = join(skillsDir, 'axstack', 'roles.json');
+  writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: [null, old[1]] }) + '\n');
+
+  const result = runCli(cli, args(newBundle, true), { env: { HOME: rootDir } });
+  expect(result.out).toContain('added role IDs: axstack-driver, axstack-new');
+  expect(result.out).toContain('removed role IDs: axstack-retired');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toEqual(current);
+});
+
 test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
   expect(assessRoleReadiness([
     { ...role('axstack-research-web-google', null), provider: 'antigravity' },
