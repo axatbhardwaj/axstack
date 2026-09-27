@@ -7,7 +7,7 @@ const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
   'axstack-advisor-astra',
-  'axstack-advisor-fable',
+  'axstack-advisor-opus',
   'axstack-owner',
   'axstack-author',
   'axstack-reviewer-primary',
@@ -29,7 +29,7 @@ const roleIds = [
   'axstack-debug-investigator-3',
   'axstack-debug-investigator-4',
   'axstack-arena-judge-astra',
-  'axstack-arena-judge-fable',
+  'axstack-escalation-fable',
   'axstack-arena-judge-opus',
   'axstack-arena-candidate-grok',
   'axstack-arena-candidate-antigravity',
@@ -42,7 +42,7 @@ const ag = (model, effort) => ['antigravity', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
-    a('claude-fable-5-1', 'high'),
+    a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
@@ -59,7 +59,7 @@ const expected = {
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
-    c(null, 'high'),
+    c(null, 'xhigh'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
@@ -76,7 +76,7 @@ const expected = {
   ],
   'claude-only': [
     a(null, 'high'),
-    a('claude-fable-5-1', 'high'),
+    a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-opus-5-5', 'medium'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5-5', 'medium'),
@@ -172,7 +172,7 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
     const unavailableId = preset === 'codex-only'
-      ? 'axstack-advisor-fable'
+      ? 'axstack-advisor-opus'
       : 'axstack-advisor-astra';
     expect(profiles.find(({ id }) => id === unavailableId)?.model).toBeNull();
   }
@@ -270,7 +270,7 @@ test('presets: public docs and shared references never state a stale role count'
     }
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
-  expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
+  expect(install).toMatch(/unavailable adviser and round-2 seat explicitly permit `model: null`/);
 });
 
 test('presets: public workflow table names the current codex-only peer model families', () => {

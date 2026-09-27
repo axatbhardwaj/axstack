@@ -41,7 +41,7 @@ test('installed readiness compares role IDs with the selected bundle', () => {
 test('single-provider readiness accepts only the intentionally unavailable adviser', () => {
   const roles = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
@@ -135,6 +135,33 @@ test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge',
   expect(runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('added role IDs:');
 });
 
+test('retired Fable seats migrate to Opus adviser and escalation seat once', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const rootDir = makeTempRoot('axstack-fable-migration-');
+    const skillsDir = join(rootDir, 'installed');
+    const current = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8')).roles;
+    const old = current.map((entry) => {
+      if (entry.id === 'axstack-advisor-opus') return { ...entry, id: 'axstack-advisor-fable' };
+      if (entry.id === 'axstack-escalation-fable') return { ...entry, id: 'axstack-arena-judge-fable' };
+      return entry;
+    });
+    const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { [preset]: old } });
+    const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { [preset]: current } });
+    const args = (bundle) => ['install', '--bundle', bundle, '--preset', preset, '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+    const cli = `${root}/bin/axstack.js`;
+    runCli(cli, args(oldBundle), { env: { HOME: rootDir }, expectFail: preset === 'codex-only' });
+    const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
+    expect(result.out).toContain('added role IDs: axstack-advisor-opus, axstack-escalation-fable');
+    expect(result.out).toContain('removed role IDs: axstack-advisor-fable, axstack-arena-judge-fable');
+    const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
+    expect(installed).toHaveLength(27);
+    expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
+    const again = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
+    expect(again.out).not.toContain('added role IDs:');
+    expect(again.out).not.toContain('removed role IDs:');
+  }
+});
+
 test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
   expect(assessRoleReadiness([
     { ...role('axstack-research-web-google', null), provider: 'antigravity' },
@@ -165,7 +192,7 @@ test('arena candidate null models follow their configured family or intentional 
 test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
     { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
     { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
     { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
@@ -180,12 +207,12 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
 test('arena judge seats follow the adviser absence rule per provider preset', () => {
   const codex = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
     { ...role('axstack-arena-judge-astra', 'gpt-6-astra'), thinkingOptionId: 'xhigh' },
-    { ...role('axstack-arena-judge-fable', null), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-escalation-fable', null), thinkingOptionId: 'xhigh' },
   ];
   expect(assessRoleReadiness(codex, 'codex-only')).toEqual({ ready: true, gaps: [] });
   codex.find(({ id }) => id === 'axstack-arena-judge-astra').model = null;
@@ -195,14 +222,14 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
 
   const mixed = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-fable', 'claude-fable-5-1'), provider: 'claude', thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'medium' },
-    { ...role('axstack-arena-judge-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
+    { ...role('axstack-escalation-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
   ];
   expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
-    'axstack-arena-judge-fable requires a configured model',
+    'axstack-escalation-fable requires a configured model',
   ]);
 });
 
@@ -220,7 +247,7 @@ test('Opus judge is absent only in codex-only readiness', () => {
 test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {
   const roles = [
     { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-fable', null), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },

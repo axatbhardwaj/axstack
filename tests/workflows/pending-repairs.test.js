@@ -16,11 +16,11 @@ test('repairs: substantive runs require the explicitly loaded audit skill and ho
 test('repairs: both advisers cover Align, Spec, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`));
-    for (const id of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
+    for (const id of ['axstack-advisor-astra', 'axstack-advisor-opus']) {
       const notes = profiles.roles.find((role) => role.id === id)?.notes ?? '';
       expect(notes).toMatch(/Align/i);
       expect(notes).toMatch(/Spec/i);
-      expect(notes).toMatch(/consequential decisions/i);
+      expect(notes).toMatch(id === 'axstack-advisor-opus' && preset !== 'codex-only' ? /debug L1/i : /(?:consequential decisions|intentionally absent)/i);
     }
   }
   const spec = read('skills/axstack-spec/SKILL.md');

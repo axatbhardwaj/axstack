@@ -52,7 +52,7 @@ test('debug: fix attempts are defined and the ladder has three rungs with exact 
   for (const rung of ['L0', 'L1', 'L2']) expect(text).toContain(rung);
   expect(text).toMatch(/\| L0 \|.{0,80}at most one fix attempt/i);
   expect(text).toMatch(/\| L1 \| the L0 fix attempt failed/i);
-  expect(text).toMatch(/second failure|second fix attempt failed/i);
+  expect(text).toMatch(/two failed attempts[^.]*same named goal/i);
   expect(text).toMatch(/before any third/i);
   expect(text).toMatch(/L1 is inadmissible without a red loop/i);
   expect(text).toMatch(/\| L2 \|.{0,400}architecture.{0,400}the user decides/i);
@@ -64,7 +64,7 @@ test('debug: adviser rule, plan merge, fan-out floor and completion are explicit
   expect(text).toMatch(/mixed[^.]*both advisers[^.]*both receipts/i);
   expect(text).toMatch(/single-provider[^.]*one configured adviser/i);
   expect(text).toMatch(/high-stakes[^.]*serious-risk[^.]*override/i);
-  expect(text).toMatch(/configured but unavailable[^.]*holds? L1 and L2/i);
+  expect(text).toMatch(/configured but unavailable[^.]*holds? L1[^.]*unavailable escalation[^.]*holds L2/i);
   expect(text).toMatch(/de-duplicates?[^.]*ranks? the union with reasons recorded in the run record/i);
   expect(text).toMatch(/briefs? [<≤]=? seats|briefs? (?:never exceed|at most)[^.]*seats/i);
   expect(text).toMatch(/untested \(queued\)|recorded as untested/i);

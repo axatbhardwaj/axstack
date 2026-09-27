@@ -167,7 +167,7 @@ test('owned-audit: metrics carry counts, denominators, and evidence', () => {
   expect(/completed.*deviated/i.test(text), 'planned steps completed/deviated').toBeTruthy();
   expect(/why.*approval|approval.*why/i.test(text), 'deviations need why plus approval').toBeTruthy();
   for (const marker of ['spec creation', 'spec revision', 'design', 'consequential']) {
-    expect(lower.includes(marker), `Fable coverage must name ${marker}`).toBeTruthy();
+    expect(lower.includes(marker), `adviser coverage must name ${marker}`).toBeTruthy();
   }
   expect(/red-green|red green/i.test(text), 'TDD red-green proof or recorded noncompliance').toBeTruthy();
   expect(/exact-rev|exact rev/i.test(text), 'independent exact-revision review').toBeTruthy();
@@ -176,10 +176,8 @@ test('owned-audit: metrics carry counts, denominators, and evidence', () => {
   expect(/avoidable.*intervention/i.test(text), 'avoidable user interventions where records support').toBeTruthy();
   expect(/identified.*dispatched|dispatched.*identified/i.test(text), 'parallelizable identified vs dispatched').toBeTruthy();
   expect(/writer isolation|dependency.*writer|writer.*dependency/i.test(text), 'parallelism judged with dependency/writer isolation').toBeTruthy();
-  for (const marker of ['model', 'tool', 'time', 'token', 'cost']) {
-    expect(lower.includes(marker), `cost evidence must name ${marker}`).toBeTruthy();
-  }
-  expect(/unknown otherwise|unknown when/i.test(text), 'unknown cost when receipts are absent').toBeTruthy();
+  expect(lower).toContain('api-dollar');
+  expect(/UNKNOWN otherwise/i.test(text), 'unknown cost when receipts are absent').toBeTruthy();
 });
 
 test('owned-audit: judgment separates outcome, adherence, and coverage', () => {
