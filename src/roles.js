@@ -7,7 +7,7 @@ const PROVIDER_BOUNDS = Object.freeze({
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
     'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'claude/claude-opus-5-5', 'medium'],
-    'claude/claude-opus-5-5': ['axstack-reviewer-primary', 'codex/gpt-6-sol', 'medium'],
+    'claude/claude-opus-5-5': ['axstack-reviewer-primary', 'codex/gpt-6-sol', 'high'],
   },
   'codex-only': {
     'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'codex/gpt-6-luna', 'xhigh'],

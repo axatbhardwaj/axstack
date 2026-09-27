@@ -44,16 +44,16 @@ const expected = {
     c('gpt-6-astra', 'high'),
     a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
+    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'medium'),
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
-    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
+    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'xhigh'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'high'),
     a('claude-opus-5-5', 'medium'),
     c('gpt-6-luna', 'xhigh'),
-    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'high'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
     g(null, 'high'), ag(null, 'high'),
   ],
@@ -61,16 +61,16 @@ const expected = {
     c('gpt-6-astra', 'high'),
     c(null, 'xhigh'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'low'),
     c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
     c(null, 'high'), c(null, 'high'),
   ],
@@ -120,14 +120,14 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
   }
 });
 
-test('presets: Sol author runs at high effort while the primary reviewer stays medium', () => {
+test('presets: Sol author and primary reviewer run at high effort', () => {
   for (const preset of ['mixed', 'codex-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
     expect(byId['axstack-author']).toMatchObject({
       provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high',
     });
-    expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('medium');
+    expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('high');
   }
 });
 
@@ -276,7 +276,7 @@ test('presets: public docs and shared references never state a stale role count'
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol high | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
+    '| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |',
   );
 });
 
