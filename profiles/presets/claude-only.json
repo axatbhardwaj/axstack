@@ -11,13 +11,13 @@
       "notes": "Required independent Astra adviser for Align, Spec, and unresolved consequential decisions; unavailable in claude-only. The explicit null holds Align and Spec without provider substitution."
     },
     {
-      "id": "axstack-advisor-fable",
-      "name": "Axstack Fable adviser",
+      "id": "axstack-advisor-opus",
+      "name": "Axstack Opus adviser",
       "provider": "claude",
-      "model": "claude-fable-5-1",
+      "model": "claude-opus-5-5",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Independent Fable adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Astra; reuse only unchanged receipts."
+      "thinkingOptionId": "xhigh",
+      "notes": "Independent Opus adviser for Align, Spec, and debug L1; authors the Claude arena candidate. Same bounded evidence and question as Astra; reuse only unchanged receipts."
     },
     {
       "id": "axstack-owner",
@@ -209,13 +209,22 @@
       "notes": "Required Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the claude-only preset; the arena-grade decision holds without substitution."
     },
     {
-      "id": "axstack-arena-judge-fable",
-      "name": "Axstack arena judge Fable",
+      "id": "axstack-escalation-fable",
+      "name": "Axstack escalation Fable",
       "provider": "claude",
       "model": "claude-fable-5-1",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
+      "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate."
+    },
+    {
+      "id": "axstack-arena-judge-opus",
+      "name": "Axstack arena judge Opus",
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "xhigh",
+      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging."
     },
     {
       "id": "axstack-arena-candidate-grok",

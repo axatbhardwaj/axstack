@@ -7,7 +7,7 @@ const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
   'axstack-advisor-astra',
-  'axstack-advisor-fable',
+  'axstack-advisor-opus',
   'axstack-owner',
   'axstack-author',
   'axstack-reviewer-primary',
@@ -29,7 +29,8 @@ const roleIds = [
   'axstack-debug-investigator-3',
   'axstack-debug-investigator-4',
   'axstack-arena-judge-astra',
-  'axstack-arena-judge-fable',
+  'axstack-escalation-fable',
+  'axstack-arena-judge-opus',
   'axstack-arena-candidate-grok',
   'axstack-arena-candidate-antigravity',
 ];
@@ -41,41 +42,41 @@ const ag = (model, effort) => ['antigravity', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('gpt-6-astra', 'high'),
-    a('claude-fable-5-1', 'high'),
+    a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'medium'),
+    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'medium'),
     ag(null, 'low'), a('claude-opus-5-5', 'medium'),
-    c('gpt-6-sol', 'medium'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
+    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5', 'xhigh'), c('gpt-6-luna', 'xhigh'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'high'),
     a('claude-opus-5-5', 'medium'),
     c('gpt-6-luna', 'xhigh'),
-    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'medium'),
-    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'low'),
-    c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'),
+    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
+    a('claude-sonnet-5', 'xhigh'), c('gpt-6-sol', 'high'),
+    c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
     g(null, 'high'), ag(null, 'high'),
   ],
   'codex-only': [
     c('gpt-6-astra', 'high'),
-    c(null, 'high'),
+    c(null, 'xhigh'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'), c(null, 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'xhigh'), c('gpt-6-sol', 'low'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'low'),
     c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'medium'), c('gpt-6-sol', 'low'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'xhigh'),
-    c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
+    c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
     c(null, 'high'), c(null, 'high'),
   ],
   'claude-only': [
     a(null, 'high'),
-    a('claude-fable-5-1', 'high'),
+    a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-opus-5-5', 'medium'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-sonnet-5', 'low'), a('claude-opus-5-5', 'medium'),
@@ -87,7 +88,7 @@ const expected = {
     a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5', 'xhigh'),
-    a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'),
+    a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
     a(null, 'high'), a(null, 'high'),
   ],
 };
@@ -119,14 +120,14 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
   }
 });
 
-test('presets: Sol author runs at high effort while the primary reviewer stays medium', () => {
+test('presets: Sol author and primary reviewer run at high effort', () => {
   for (const preset of ['mixed', 'codex-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
     expect(byId['axstack-author']).toMatchObject({
       provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high',
     });
-    expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('medium');
+    expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('high');
   }
 });
 
@@ -171,7 +172,7 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
     const unavailableId = preset === 'codex-only'
-      ? 'axstack-advisor-fable'
+      ? 'axstack-advisor-opus'
       : 'axstack-advisor-astra';
     expect(profiles.find(({ id }) => id === unavailableId)?.model).toBeNull();
   }
@@ -269,13 +270,13 @@ test('presets: public docs and shared references never state a stale role count'
     }
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
-  expect(install).toMatch(/unavailable adviser and its matching arena judge seat explicitly permit `model: null`/);
+  expect(install).toMatch(/unavailable adviser and round-2 seat explicitly permit `model: null`/);
 });
 
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol high | Sol medium; Luna xhigh | Astra high / unavailable | Luna xhigh |',
+    '| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |',
   );
 });
 

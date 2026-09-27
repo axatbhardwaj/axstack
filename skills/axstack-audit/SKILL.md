@@ -47,7 +47,8 @@ Use actual records, never memory:
 
 - the approved spec, or the accepted peer, research, or maintenance scope;
 - the decision log and configured `axstack-advisor-astra` and
-  `axstack-advisor-fable` receipts;
+  `axstack-advisor-opus` receipts and fresh `axstack-escalation-fable`
+  receipts when triggered;
 - exact git revisions;
 - test and review evidence; and
 - the run execution record at its recorded `progress.md` path.
@@ -71,7 +72,10 @@ counts with denominators plus the evidence behind the count:
 - Planned steps completed and deviated, each deviation with why and approval.
 - Configured adviser coverage across Align, Spec creation, Spec revision,
   solution design, and unresolved consequential decisions, including
-  independent same-question receipts, disagreement synthesis, and both plain AGREE receipts where high-stakes.
+  independent same-question receipts and disagreement synthesis. Measure
+  Astra/Opus routine coverage and Astra/Fable high-stakes plain AGREE coverage
+  over eligible uses; record escalation triggers, evidence pointers, and whether
+  the outcome changed.
 - Debug evidence where `axstack-debug` ran: rung reached, loop command, fix
   attempts with why each failed, adviser and investigator receipts, and
   isolation evidence (pinned worktree, preserved probe artifacts).
@@ -95,7 +99,7 @@ counts with denominators plus the evidence behind the count:
   record. Record `UNKNOWN` when a receipt lacks the measurement.
   This is evidence, not a score to game. Audit treats routine shape choices as
   autonomous driver decisions; size alone never requires user approval.
-- Actual model, tool, time, token, and cost figures when provider receipts are available, unknown otherwise.
+- API-dollar cost by model when provider receipts are available, UNKNOWN otherwise.
 
 Record `UNKNOWN` where evidence is absent. Never count missing evidence as a
 pass or collapse gaps into a vanity score. Prefer parallelism for genuinely

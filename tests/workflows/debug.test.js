@@ -58,13 +58,22 @@ test('debug: fix attempts are defined and the ladder has three rungs with exact 
   expect(text).toMatch(/\| L2 \|.{0,400}architecture.{0,400}the user decides/i);
 });
 
+test('debug: L2 preserves both triggers, both architecture seats, and the user checkpoint', () => {
+  const row = read(SKILL).split('\n').find((line) => line.startsWith('| L2 |'));
+  expect(row).toMatch(/two failed attempts[^|]*same named goal[^|]*acceptance check/i);
+  expect(row).toMatch(/or each fix reveals a new symptom elsewhere/i);
+  expect(row).toMatch(/axstack-advisor-astra[^|]*axstack-escalation-fable[^|]*fresh session/i);
+  expect(row).toMatch(/the user decides before any third attempt/i);
+  expect(compact(SKILL)).toMatch(/(?:null|unavailable)[^.]*holds L2 without substitution/i);
+});
+
 test('debug: adviser rule, plan merge, fan-out floor and completion are explicit', () => {
   const text = compact(SKILL);
   expect(text).toMatch(/ordinary diagnos\w+[^.]*not a high-stakes decision/i);
   expect(text).toMatch(/mixed[^.]*both advisers[^.]*both receipts/i);
   expect(text).toMatch(/single-provider[^.]*one configured adviser/i);
   expect(text).toMatch(/high-stakes[^.]*serious-risk[^.]*override/i);
-  expect(text).toMatch(/configured but unavailable[^.]*holds? L1 and L2/i);
+  expect(text).toMatch(/configured but unavailable[^.]*holds? L1[^.]*null or unavailable L2[^.]*holds L2/i);
   expect(text).toMatch(/de-duplicates?[^.]*ranks? the union with reasons recorded in the run record/i);
   expect(text).toMatch(/briefs? [<≤]=? seats|briefs? (?:never exceed|at most)[^.]*seats/i);
   expect(text).toMatch(/untested \(queued\)|recorded as untested/i);
@@ -152,7 +161,7 @@ test('debug: scenario corpus carries the twenty spec cases', () => {
     'loop-unbuildable': /list what was tried[\s\S]*no advisers/i,
     'probe-failure-vs-fix-failure': /fix attempts remain 0[\s\S]*L1 is not triggered/i,
     'implementation-slip': /ledger stays at 0/i,
-    'first-fix-failed-fanout': /Astra and Fable independently[\s\S]*untested \(queued\)/i,
+    'first-fix-failed-fanout': /Astra and Opus independently[\s\S]*untested \(queued\)/i,
     'advisers-disagree-ranking': /only hypotheses both advisers refute are dropped[\s\S]*no vote/i,
     'five-hypotheses-four-seats': /fifth as untested \(queued\)/i,
     'zero-investigators': /hold[\s\S]*no substitution[\s\S]*L1 is not satisfied/i,

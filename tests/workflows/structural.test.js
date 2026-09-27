@@ -350,7 +350,7 @@ test('structural: runtime reference treats installed role snapshot as authoritat
 
 test('structural: contracts carry dual-adviser consultation without a driver profile', () => {
   const text = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
-  for (const adviser of ['axstack-advisor-astra', 'axstack-advisor-fable']) {
+  for (const adviser of ['axstack-advisor-astra', 'axstack-advisor-opus']) {
     expect(text.includes(adviser), `contracts must name ${adviser}`).toBeTruthy();
   }
   expect(/Align[\s\S]*Spec|Spec[\s\S]*Align/i.test(text), 'contracts must cover Align and Spec').toBeTruthy();
@@ -359,7 +359,7 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
   expect(/synthesi[sz].*disagree|disagree.*synthesi[sz]/i.test(text)).toBeTruthy();
   expect(/driver.*owns|owns.*decision/i.test(text), 'contracts must keep decision ownership with the driver').toBeTruthy();
   expect(/unchanged[^.]*receipt|receipt[^.]*unchanged/i.test(text), 'contracts must reuse unchanged receipts').toBeTruthy();
-  expect(/both[^.]*plain AGREE|plain AGREE[^.]*both/i.test(text), 'contracts must require both plain AGREE receipts').toBeTruthy();
+  expect(/axstack-advisor-astra[^.]*axstack-escalation-fable[^.]*plain AGREE/i.test(text), 'contracts must require both plain AGREE receipts').toBeTruthy();
   expect(/driver[\s\S]*accept/i.test(text), 'contracts must require driver acceptance alongside AGREE').toBeTruthy();
   expect(/no silent\s+fallback|never.*fallback/i.test(text), 'contracts must forbid silent fallback').toBeTruthy();
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
@@ -373,11 +373,10 @@ test('structural: Rung 2 adds every configured family without changing the ordin
   const align = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
   const arena = align.slice(align.indexOf('## Arena for hard-to-reverse design choices'), align.indexOf('## Bound the interview'));
   expect(arena).toMatch(/\. Rung 2 designs\s+alone enter the arena/i);
-  for (const family of ['astra', 'fable', 'grok', 'antigravity']) {
-    const role = ['astra', 'fable'].includes(family) ? `axstack-advisor-${family}` : `axstack-arena-candidate-${family}`;
+  for (const role of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity']) {
     expect(arena).toContain(role);
   }
-  expect(align.slice(0, align.indexOf('## Arena for hard-to-reverse design choices'))).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-fable[^.]*independently/i);
+  expect(align.slice(0, align.indexOf('## Arena for hard-to-reverse design choices'))).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-opus[^.]*independently/i);
 });
 
 test('structural: align reads back understanding without a pre-spec agreement gate', () => {

@@ -336,6 +336,7 @@ async function main() {
         if (summary.added.length) console.log(`added: ${summary.added.join(', ')}`);
         if (summary.updated.length) console.log(`updated: ${summary.updated.join(', ')}`);
         if (summary.addedRoleIds?.length) console.log(`added role IDs: ${summary.addedRoleIds.join(', ')}`);
+        if (summary.removedRoleIds?.length) console.log(`removed role IDs: ${summary.removedRoleIds.join(', ')}`);
         if (summary.removed.length) console.log(`removed: ${summary.removed.join(', ')}`);
         if (summary.unchanged.length) console.log(`unchanged: ${summary.unchanged.join(', ')}`);
       }

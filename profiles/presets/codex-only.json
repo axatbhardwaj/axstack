@@ -8,16 +8,16 @@
       "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Fable; reuse only unchanged receipts."
+      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Opus; reuse only unchanged receipts."
     },
     {
-      "id": "axstack-advisor-fable",
-      "name": "Axstack Fable adviser (unavailable)",
+      "id": "axstack-advisor-opus",
+      "name": "Axstack Opus adviser (unavailable)",
       "provider": "codex",
       "model": null,
       "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Required independent Fable adviser for Align, Spec, and unresolved consequential decisions; unavailable in codex-only. The explicit null holds Align and Spec without provider substitution."
+      "thinkingOptionId": "xhigh",
+      "notes": "Opus adviser intentionally absent in codex-only; the explicit null holds Align and Spec without substitution."
     },
     {
       "id": "axstack-owner",
@@ -43,8 +43,8 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Primary reviewer in the ordered codex-only peer pair: Sol medium followed by Luna xhigh. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+      "thinkingOptionId": "high",
+      "notes": "Primary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
     },
     {
       "id": "axstack-reviewer-secondary",
@@ -53,7 +53,7 @@
       "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol medium followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+      "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
     },
     {
       "id": "axstack-checker",
@@ -79,7 +79,7 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "medium",
+      "thinkingOptionId": "high",
       "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
     },
     {
@@ -133,7 +133,7 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
+      "thinkingOptionId": "high",
       "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Validate configured availability at launch; hold affected work without fallback."
     },
     {
@@ -142,7 +142,7 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "low",
+      "thinkingOptionId": "high",
       "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
     },
     {
@@ -169,8 +169,8 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at medium effort because it has fewer model families."
+      "thinkingOptionId": "high",
+      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
     },
     {
       "id": "axstack-debug-investigator-2",
@@ -178,8 +178,8 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "low",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at low effort because it has fewer model families."
+      "thinkingOptionId": "high",
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
     },
     {
       "id": "axstack-debug-investigator-3",
@@ -196,8 +196,8 @@
       "provider": "codex",
       "model": "gpt-6-sol",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at xhigh effort because it has fewer model families."
+      "thinkingOptionId": "high",
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
     },
     {
       "id": "axstack-arena-judge-astra",
@@ -209,13 +209,22 @@
       "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
     },
     {
-      "id": "axstack-arena-judge-fable",
-      "name": "Axstack arena judge Fable",
+      "id": "axstack-escalation-fable",
+      "name": "Axstack escalation Fable (unavailable)",
       "provider": "codex",
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Required Arena judge (Fable seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged. Intentionally absent in the codex-only preset; the arena-grade decision holds without substitution."
+      "notes": "Fable escalation intentionally absent in codex-only; a required use holds without substitution. Read-only round 2 judge; never authors a candidate."
+    },
+    {
+      "id": "axstack-arena-judge-opus",
+      "name": "Axstack arena judge Opus",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "xhigh",
+      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. Intentionally absent in the codex-only preset; round 1 holds without substitution."
     },
     {
       "id": "axstack-arena-candidate-grok",

@@ -65,7 +65,7 @@ user round, the driver independently drafts the prioritized frontier and
 recommendations, except for an arena-grade question (below), where the driver
 writes the brief and rubric but drafts no recommendation until the candidates
 and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
-`axstack-advisor-fable` independently, without cross-reading, using the same
+`axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
 or rejects each material point with a reason. Use one focused reply when
@@ -85,25 +85,30 @@ Critique of one draft anchors every reader to that draft's shape. Rung 2 designs
 alone enter the arena: they meet the same test as for an ADR (a meaningful,
 hard-to-reverse, non-obvious trade-off: architecture, module boundaries, data
 model, migration strategy). Replace the critique round for that question with
-one arena round. Small or routine questions never enter the arena.
+an arena. Small or routine questions never enter the arena.
 
 1. **Frame.** The driver writes the brief (the artifact, its constraints, the
    settled decisions it must respect) and three to six gradeable rubric
    criteria. Candidates receive only the brief; the rubric is for judging.
 2. **Fan out.** Produce one candidate per configured family independently from the same brief,
-   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-fable`,
+   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-opus`,
    `axstack-arena-candidate-grok`, and `axstack-arena-candidate-antigravity`.
    Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
-3. **Cross-judge.** After every candidate completes, give the judges anonymized,
-   relabeled candidates against the rubric.
-   `axstack-arena-judge-astra` and `axstack-arena-judge-fable` each independently
-   score every candidate against the driver-tailored rubric per criterion and
-   recommend a base with a reason. Judges never author, never cross-read each other.
+3. **Cross-judge.** After every candidate completes, give round 1 judge
+   `axstack-arena-judge-opus` the anonymized, relabeled candidates and rubric to
+   score every candidate per criterion and recommend a base with a reason.
+   The driver compares its own pick with the Opus verdict. Only if the driver
+   and the Opus judge disagree on the base, or the user rejects the round-1
+   synthesis,
+   run round 2 with fresh sessions: `axstack-escalation-fable` and `axstack-arena-judge-astra`
+   independently score the same anonymized candidates and rubric. Judges never
+   author, never cross-read each other, and never average verdicts. After round-2
+   verdicts return, the driver re-picks in step 4 and re-presents in step 6.
 4. **Pick.** The driver reads every candidate end to end and scores per
-   criterion, not on holistic feel, then compares with both judges. Agreement
-   confirms the base. Disagreement between judges or with the driver means one
-   reading is biased or the rubric was ambiguous: re-read the rationales and
-   decide with a stated reason; never average verdicts or fabricate consensus.
+   criterion, not on holistic feel, then compares with the judge verdicts from
+   each completed round. Agreement confirms the base. On disagreement, re-read
+   the rationales and decide with a stated reason; never average verdicts or
+   fabricate consensus.
 5. **Graft.** Walk the losing candidates once more for the one or two ideas
    worth porting and fold them into the base by hand so the result stays
    coherent under one mental model. Convergence on the same shape is a strong
@@ -111,16 +116,16 @@ one arena round. Small or routine questions never enter the arena.
    means the frame was under-specified: reframe and rerun once, never
    average.
 6. **Present.** The synthesized design is the recommendation in the next
-   `Qn`, with its trade-off, judge verdicts, and what was grafted or rejected.
+   `Qn`, with its trade-off, judge verdicts per round, and what was grafted or rejected.
    The user still decides; spec approval remains the one human checkpoint.
 
 Record the synthesis note (base, grafts and their source candidate, rejections,
-dropouts, both judge verdicts) as `Decisions` rows in the
+dropouts, judge verdicts per round) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
 [Orca runtime](../axstack/references/orca-runtime.md) immediately before the
-first candidate or judge dispatch. If any configured candidate or judge seat is
-unavailable at launch or returns a failed receipt, hold that question without
-substitution, record the gap, and ask: the user decides whether to proceed without it.
+first candidate or judge dispatch. If any configured candidate or judge seat
+required for that round is unavailable at launch or returns a failed receipt,
+hold that question without substitution, record the gap, and ask: the user decides whether to proceed without it.
 For an uncertain dispatch, reconcile natively; it is never treated as absent.
 Unaffected fact work and questions continue.
 

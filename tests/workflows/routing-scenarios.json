@@ -10,7 +10,7 @@
     {
       "id": "mixed-opus-authored",
       "input": { "preset": "mixed", "mode": "authored", "actualAuthor": "claude/claude-opus-5-5 medium", "candidate": "SHA C", "base": "SHA D" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium"], "coverage": "all six angles and acceptance against exact SHA C and base SHA D" }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high"], "coverage": "all six angles and acceptance against exact SHA C and base SHA D" }
     },
     {
       "id": "codex-sol-authored",
@@ -35,12 +35,12 @@
     {
       "id": "mixed-peer",
       "input": { "preset": "mixed", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA I", "base": "SHA J" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium", "axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high", "axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "cross-provider independence"] }
     },
     {
       "id": "codex-peer",
       "input": { "preset": "codex-only", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA K", "base": "SHA L" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium", "axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high", "axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
     },
     {
       "id": "claude-peer",
@@ -55,7 +55,7 @@
     {
       "id": "owner-authored-candidate",
       "input": { "preset": "mixed", "mode": "authored", "owner": "claude/claude-opus-5-5 medium", "actualWriter": "same owner session", "candidate": "SHA Q", "base": "SHA R" },
-      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol medium"], "forbidden": ["treat owner as non-author", "owner self-review"] }
+      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high"], "forbidden": ["treat owner as non-author", "owner self-review"] }
     },
     {
       "id": "required-model-unavailable",
@@ -74,8 +74,8 @@
     },
     {
       "id": "late-role-after-preset-switch",
-      "input": { "runStartPreset": "codex-only", "runStartSnapshot": "all 26 role IDs, including absent or unconfigured roles", "newSelectedPreset": "claude-only", "runState": "active", "lateFirstUse": "axstack-explainer" },
-      "expected": { "route": "resolve axstack-explainer from the run-start codex-only snapshot", "snapshotCoverage": "all 26 role IDs captured at run start; absent or unconfigured roles are recorded explicitly without a provider default", "absenceScope": "an absent role holds only that role's work, not the whole run", "forbidden": ["resolve the late role from the newly selected claude-only preset", "snapshot only previously used roles", "invent a provider default for an absent or unconfigured role"] }
+      "input": { "runStartPreset": "codex-only", "runStartSnapshot": "all 27 role IDs, including absent or unconfigured roles", "newSelectedPreset": "claude-only", "runState": "active", "lateFirstUse": "axstack-explainer" },
+      "expected": { "route": "resolve axstack-explainer from the run-start codex-only snapshot", "snapshotCoverage": "all 27 role IDs captured at run start; absent or unconfigured roles are recorded explicitly without a provider default", "absenceScope": "an absent role holds only that role's work, not the whole run", "forbidden": ["resolve the late role from the newly selected claude-only preset", "snapshot only previously used roles", "invent a provider default for an absent or unconfigured role"] }
     },
     {
       "id": "late-installed-role-not-adopted",

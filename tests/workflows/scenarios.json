@@ -9,7 +9,7 @@
       "spec_ref": "Model roles: unavailable or exhausted model pauses affected work and requires user decision before another model is used. No automatic fallback.",
       "input": {
         "run_state": "Two-PR stack in progress. PR-A owner=Opus medium implementing; PR-B queued behind PR-A.",
-        "event": "Opus medium reports quota-exhausted mid-implementation on PR-A. Sol medium reviewers remain available.",
+        "event": "Opus medium reports quota-exhausted mid-implementation on PR-A. Sol high reviewers remain available.",
         "user_instruction": "No model substitution authorized."
       },
       "expected": {

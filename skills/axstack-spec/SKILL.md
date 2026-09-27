@@ -41,7 +41,7 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    acceptance. First record the driver's
    independent assessment, then load
    [Orca runtime](../axstack/references/orca-runtime.md) before dispatching the
-   configured `axstack-advisor-astra` and `axstack-advisor-fable` independently,
+   configured `axstack-advisor-astra` and `axstack-advisor-opus` independently,
    without cross-reading, with the same bounded evidence and question. The
    driver synthesizes disagreements. Cache both receipts with the draft and
    reuse unchanged receipts only while their evidence, scope, and question
@@ -50,7 +50,8 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    criteria, exclusions, and both adviser receipts or the reported hold.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
-   require both advisers' plain AGREE. Present one
+   require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`
+   session to return plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
 5. **Snapshot the baseline.** Record the approved revision identity and a

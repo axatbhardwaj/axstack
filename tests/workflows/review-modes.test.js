@@ -62,7 +62,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
   const rows = [
     ['mixed', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5-5` medium'],
-    ['mixed', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-primary', '`codex/gpt-6-sol` medium'],
+    ['mixed', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-primary', '`codex/gpt-6-sol` high'],
     ['codex-only', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-6-luna` xhigh'],
     ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5` xhigh'],
   ];
@@ -128,7 +128,7 @@ test('review modes: new runs discover one preset and snapshot all role states', 
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
-  expect(routing).toMatch(/all 26 role IDs|complete 26-role map/i);
+  expect(routing).toMatch(/all 27 role IDs|complete 27-role map/i);
   expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
   expect(routing).toMatch(/Such a role[^.]*holds only that role/i);
   expect(routing).toMatch(/later[^.]*must not[^.]*silently[^.]*snapshot|snapshot[^.]*must not[^.]*silently[^.]*later/i);
@@ -149,8 +149,8 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'gpt-6-sol', 'medium'], ['claude', 'claude-opus-5-5', 'medium']],
-    'codex-only': [['codex', 'gpt-6-sol', 'medium'], ['codex', 'gpt-6-luna', 'xhigh']],
+    mixed: [['codex', 'gpt-6-sol', 'high'], ['claude', 'claude-opus-5-5', 'medium']],
+    'codex-only': [['codex', 'gpt-6-sol', 'high'], ['codex', 'gpt-6-luna', 'xhigh']],
     'claude-only': [['claude', 'claude-opus-5-5', 'medium'], ['claude', 'claude-sonnet-5', 'xhigh']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
