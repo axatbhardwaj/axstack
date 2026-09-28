@@ -215,7 +215,7 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
     { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
     { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
-      ...role('axstack-reviewer-secondary', 'claude-sonnet-5'),
+      ...role('axstack-reviewer-secondary', 'claude-sonnet-5-5'),
       provider: 'claude', thinkingOptionId: 'xhigh',
     },
   ];

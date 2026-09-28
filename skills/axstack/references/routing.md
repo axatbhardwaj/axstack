@@ -34,7 +34,7 @@ provider/model/effort substitution.
   | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
   | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` high) |
   | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
-  | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5` xhigh) |
+  | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` xhigh) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   `axstack-arena-candidate-grok`/
   `axstack-arena-candidate-antigravity` add families.
