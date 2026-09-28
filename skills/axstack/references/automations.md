@@ -49,6 +49,13 @@ Once identified as a duplicate, the new pass does no PR work, makes no further
 shared-record write, touches no live or unsettled resource owned by the live
 manager, and closes only its own exact terminal as its final action under the
 guard below.
+A duplicate pass admits nothing and runs read-only discovery into its own pass
+note in its private evidence folder, recording new eligible events and the unserved count.
+If a duplicate pass finds the live owner's coordinator idle at its prompt, its
+final agent turn ended without `worker_done` for more than five minutes (nudged
+or not), as in [Per-PR jobs](#per-pr-jobs), record the stalled owner in its own
+pass note and send one deduplicated notification under the recorded
+`Notification policy`.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -130,6 +137,21 @@ Orca worktree per PR job, parented to that repository's primary worktree, and
 pin the observed head and base. The bounded PR coordinator loads the
 review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
+Check the admitted coordinator soon after start and while waiting, using native
+terminal and Dispatch inspection. If an idle coordinator's final agent turn ended
+without `worker_done` and it is at its prompt, nudge it once by typed terminal
+input restating its brief.
+For this lane, the nudge is the one brief confirmation, and a second ask follows
+this stop rule, not an open-ended hold; see [Orca runtime](orca-runtime.md) for
+the confirmation boundary.
+If still idle because its next turn ended without `worker_done` or it stays idle
+at its prompt five minutes after the nudge, use native `worker-stop`, reconcile
+its Task, Dispatch, and descendants, and record the event unserved (INCOMPLETE,
+re-admissible).
+A started coordinator waiting on its reviewers (a live reviewer Dispatch or a
+running wait) is not idle and is never stopped by this rule.
+Once the tree is settled, continue discovery and admission;
+an uncertain stop or live descendant retains the slot and holds admission.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`:
 each runs in a separate Orca child worktree, writes probes and evidence to
