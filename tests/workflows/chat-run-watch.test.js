@@ -52,6 +52,8 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     'quiet-and-incomplete', 'authority-and-writers',
     'stack-and-publication-order', 'recovery-and-stop',
     'repair-loop-until-ready',
+    'human-approval-survives-repair',
+    'maintenance-loop-until-ready',
   ]);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(20);
@@ -67,4 +69,18 @@ test('chat-run driver keeps repairing each member through current-head readiness
   expect(text).toMatch(/actionable comments/i);
   expect(text).toMatch(/revalidat[^.]*stacked descendants/i);
   expect(text).toMatch(/historical approvals[^.]*threads[^.]*cleared/i);
+});
+
+test('own PR watch never re-requests a human approver after repair', () => {
+  expect(watch()).toMatch(/human approval[^.]*forge counts[^.]*never re-request[^.]*review/i);
+  expect(watch()).toMatch(/forge dismissed[^.]*last-push approval[^.]*hold and tell[^.]*user[^.]*auto-requesting re-review/i);
+  expect(watch()).toMatch(/initial review requests[^.]*before any human approval[^.]*allowed/i);
+  expect(runtime()).toMatch(/re-read[^.]*approvals[^.]*state[^.]*not re-request/i);
+});
+
+test('authorized own PR maintenance loops through feedback, base movement, and readiness', () => {
+  expect(watch()).toMatch(/authorized[^.]*own.PR maintenance[^.]*keep repairing[^.]*rebasing[^.]*base/i);
+  expect(watch()).toMatch(/re-run checks[^.]*every review comment and thread[^.]*human team member[^.]*required CI[^.]*green/i);
+  expect(watch()).toMatch(/approval[^.]*fixes and rebases[^.]*forge dismissed/i);
+  expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });

@@ -34,8 +34,18 @@
     },
     {
       "id": "repair-loop-until-ready",
-      "input": "Root PR A was repaired and republished at H2, but its approval applies to H1. A new actionable comment arrives at H2, main advances, and PR B is stacked on A. After A is repaired again, another failed check appears at its next head.",
-      "expected": "Driver sends each A repair to its same author, rebases A on the advanced base, republishes and obtains independent review at each new head, then revalidates B after A changes. Re-read comments, checks, threads, and approvals at the current head; H1 approval does not carry over. Repeat the repair and readiness decision after the failed check until both PRs satisfy the full merge-ready predicate or each remaining PR has a concrete hold."
+      "input": "Root PR A was repaired and republished at H2, but its Axstack authored-review receipt applies to H1. A new actionable comment arrives at H2, main advances, and PR B is stacked on A. After A is repaired again, another failed check appears at its next head.",
+      "expected": "Driver sends each A repair to its same author, rebases A on the advanced base, republishes and obtains independent authored review at each new head, then revalidates B after A changes. Re-read comments, checks, threads, and approvals at the current head; the H1 authored-review receipt does not carry over. Repeat the repair and readiness decision after the failed check until both PRs satisfy the full merge-ready predicate or each remaining PR has a concrete hold."
+    },
+    {
+      "id": "human-approval-survives-repair",
+      "input": "A human approved the driver's own PR, then requested a small fix. After the author repairs and replies, the forge still counts that approval; a second PR's approval was dismissed, and a third PR's rules require last-push approval.",
+      "expected": "For the first PR, resolve feedback and proceed to merge-ready when all other checks pass, without re-requesting the human approver. Hold the second and third PRs, tell the user why a fresh approval is required, and do not auto-request re-review. Initial requests on PRs with no human approval remain allowed; the human merges."
+    },
+    {
+      "id": "maintenance-loop-until-ready",
+      "input": "An authorized own PR has an approved human team member, unresolved review threads and failing CI. The author fixes feedback, the base advances twice, and CI initially fails again after a rebase; the forge keeps the human approval throughout.",
+      "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready for human merge without re-requesting that approval."
     }
   ]
 }
