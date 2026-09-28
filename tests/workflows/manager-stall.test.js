@@ -21,7 +21,9 @@ test('an idle PR coordinator is bounded, not awaited indefinitely', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/idle[^.]*coordinator[^.]*nudge[^.]*once/i);
   expect(text).toMatch(/still idle[^.]*worker-stop[^.]*unserved/i);
-  expect(text).toMatch(/still idle[^.]*`turn_started`[^.]*absent[^.]*five minutes[^.]*worker-stop[^.]*unserved/i);
+  expect(text).toMatch(/idle coordinator[^.]*final agent turn ended without `worker_done`[^.]*nudge[^.]*once/i);
+  expect(text).toMatch(/still idle[^.]*next turn[^.]*without `worker_done`[^.]*or[^.]*five minutes after the nudge[^.]*worker-stop[^.]*unserved/i);
   expect(text).toMatch(/started coordinator[^.]*waiting on (its )?reviewers[^.]*not idle[^.]*never stopped/i);
   expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*notif/i);
+  expect(text).toMatch(/duplicate[^.]*final agent turn ended without `worker_done`[^.]*#per-pr-jobs/i);
 });

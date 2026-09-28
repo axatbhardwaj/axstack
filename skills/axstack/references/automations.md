@@ -51,10 +51,11 @@ manager, and closes only its own exact terminal as its final action under the
 guard below.
 A duplicate pass admits nothing and runs read-only discovery into its own pass
 note in its private evidence folder, recording new eligible events and the unserved count.
-If a duplicate pass finds the live owner's job without `turn_started` past the
-five-minute start bound in [Per-PR jobs](#per-pr-jobs),
-record the stalled owner in its own pass note and send one deduplicated notification
-under the recorded `Notification policy`.
+If a duplicate pass finds the live owner's coordinator's final agent turn ended
+without `worker_done` after a nudge, or it stayed idle at its prompt five minutes
+after the nudge, as in [Per-PR jobs](#per-pr-jobs), record the stalled owner in
+its own pass note and send one deduplicated notification under the recorded
+`Notification policy`.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -136,12 +137,14 @@ Orca worktree per PR job, parented to that repository's primary worktree, and
 pin the observed head and base. The bounded PR coordinator loads the
 review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
-Check the admitted coordinator soon after start and while waiting, using its
-native Dispatch state. If an idle coordinator has no `turn_started`, nudge it once
-by typed terminal input restating its brief, then recheck `turn_started`.
-If still idle because `turn_started` is absent five minutes after dispatch, use
-native `worker-stop`, reconcile its Task, Dispatch, and descendants, and record
-the event unserved (INCOMPLETE, re-admissible).
+Check the admitted coordinator soon after start and while waiting, using native
+terminal and Dispatch inspection. If an idle coordinator's final agent turn ended
+without `worker_done` and it is at its prompt, nudge it once by typed terminal
+input restating its brief.
+If still idle because its next turn ended without `worker_done` or it stays idle
+at its prompt five minutes after the nudge, use native `worker-stop`, reconcile
+its Task, Dispatch, and descendants, and record the event unserved (INCOMPLETE,
+re-admissible).
 A started coordinator waiting on its reviewers is not idle and is never stopped
 by this rule. Once the tree is settled, continue discovery and admission;
 an uncertain stop or live descendant retains the slot and holds admission.
