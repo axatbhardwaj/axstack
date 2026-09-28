@@ -101,7 +101,8 @@ started, and verify the requested role independently before trusting its work.
 If a worker asks to confirm its own dispatch brief, the dispatching owner
 confirms once by typed terminal input restating the brief's authority, then
 re-verifies `turn_started`. That confirmation never answers a trust or permission prompt;
-a second ask is a hold.
+it answers only the agent's own model-turn question about its brief, never a
+harness or tool dialog, and adds no authority. A second ask is a hold.
 A workspace trust, hook review, permission, authentication, or model prompt is
 a visible hold. Never answer a trust or permission prompt on the worker's
 behalf. A permission prompt or provider safety refusal is a held, incomplete
