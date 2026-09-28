@@ -20,8 +20,8 @@ const PRESETS = {
   'claude-only': [
     p('axstack-author', 'claude', 'claude-opus-5-5'),
     p('axstack-reviewer-primary', 'claude', 'claude-opus-5-5'),
-    p('axstack-reviewer-secondary', 'claude', 'claude-sonnet-5-5', 'xhigh'),
-    p('axstack-checker', 'claude', 'claude-sonnet-5-5', 'low'),
+    p('axstack-reviewer-secondary', 'claude', 'claude-sonnet-5-5', 'high'),
+    p('axstack-checker', 'claude', 'claude-sonnet-5-5', 'high'),
   ],
 };
 

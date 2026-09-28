@@ -13,7 +13,7 @@ const AUTHORED_ROUTES = Object.freeze({
     'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'codex/gpt-6-luna', 'xhigh'],
   },
   'claude-only': {
-    'claude/claude-opus-5-5': ['axstack-reviewer-secondary', 'claude/claude-sonnet-5-5', 'xhigh'],
+    'claude/claude-opus-5-5': ['axstack-reviewer-secondary', 'claude/claude-sonnet-5-5', 'high'],
   },
 });
 

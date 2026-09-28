@@ -209,7 +209,7 @@ This section applies to peer and authored PR modes.
      | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
      | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` high) |
      | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
-     | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` xhigh) |
+     | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` high) |
 
      Provenance is matched on provider/model ID; record effort, but never use
      effort to create a mapping. Any other author provenance for the
@@ -222,7 +222,7 @@ This section applies to peer and authored PR modes.
    Mixed preset review is cross-provider. Single-provider review uses the
    configured different models and is not cross-provider independence. The
    claude-only Sonnet explanation author/reviewer exception is session
-   independence only: separate `axstack-explainer` at xhigh and
+   independence only: separate `axstack-explainer` at high and
    `axstack-explainer-review` at high. It never permits same-model code review.
 
    For the existing high-stakes Opus high author / Sol high checkpoint route,
