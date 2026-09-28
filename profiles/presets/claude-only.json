@@ -50,7 +50,7 @@
       "id": "axstack-reviewer-secondary",
       "name": "Axstack reviewer (secondary)",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Secondary reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet xhigh. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
@@ -59,7 +59,7 @@
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default."
@@ -86,7 +86,7 @@
       "id": "axstack-research-web",
       "name": "Axstack research web",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
@@ -113,7 +113,7 @@
       "id": "axstack-explainer",
       "name": "Axstack explainer",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Validate configured availability at launch; hold affected work without fallback."
@@ -122,7 +122,7 @@
       "id": "axstack-explainer-review",
       "name": "Axstack explainer reviewer",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
       "notes": "Independent visual explanation reviewer: checks the exact artifact for source fidelity and rendered behavior where warranted. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
@@ -131,7 +131,7 @@
       "id": "axstack-explore-codebase",
       "name": "Axstack codebase explorer",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Validate configured availability at launch; hold affected work without fallback."
@@ -140,7 +140,7 @@
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
@@ -149,7 +149,7 @@
       "id": "axstack-monitor",
       "name": "Axstack monitor",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
       "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof."
@@ -158,7 +158,7 @@
       "id": "axstack-auditor",
       "name": "Axstack auditor",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
@@ -176,10 +176,10 @@
       "id": "axstack-debug-investigator-2",
       "name": "Axstack debug investigator 2",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
     },
     {
       "id": "axstack-debug-investigator-3",
@@ -194,10 +194,10 @@
       "id": "axstack-debug-investigator-4",
       "name": "Axstack debug investigator 4",
       "provider": "claude",
-      "model": "claude-sonnet-5",
+      "model": "claude-sonnet-5-5",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats claude-sonnet-5-5 at xhigh effort because it has fewer model families; independence comes from brief isolation."
     },
     {
       "id": "axstack-arena-judge-astra",
