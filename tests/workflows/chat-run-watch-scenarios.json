@@ -46,6 +46,16 @@
       "id": "maintenance-loop-until-ready",
       "input": "An authorized own PR has an approved human team member, unresolved review threads and failing CI. The author fixes feedback, the base advances twice, and CI initially fails again after a rebase; the forge keeps the human approval throughout.",
       "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready for human merge without re-requesting that approval."
+    },
+    {
+      "id": "harness-native-driver-wake",
+      "input": "The driver harness has a native scheduled-wake capability and owns two open PRs. One still has a failing required check and unresolved thread; ten minutes pass, then both PRs eventually merge.",
+      "expected": "Record the harness-native mechanism and wake the original driver chat every ten minutes without an Orca observer. Each wake runs the repair, feedback, rebase, CI, and approval loop; delegated authors and reviewers still use Orca. Stop and verify the chosen wake after both PRs merge."
+    },
+    {
+      "id": "orca-observer-fallback",
+      "input": "The driver harness has no native monitoring or scheduled-wake capability, and an authorized own PR remains open. Later the user cancels before expiry.",
+      "expected": "Record the absence and use the existing Orca */10 chat-run observer to report internally and wake the original driver for each maintenance loop. Stop and read back the observer on cancellation; do not run a daemon or keep a polling model active between wakes."
     }
   ]
 }

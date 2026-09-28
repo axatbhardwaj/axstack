@@ -52,7 +52,7 @@ Choose one mode from the user's authority and record it before dispatch:
 - **Chat-run watch:** the initiating chat remains the only driver and record
   writer for every PR raised in its Run, including later verified publications
   and explicitly adopted members. Follow [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch)
-  for the one native observer. This mode has no replacement `axstack-owner` or
+  for its scheduled driver wake and Orca fallback. This mode has no replacement `axstack-owner` or
   standalone 24 h expiry.
 - **Observation-only:** reconcile and report CI, reviews, and PR state. It
   dispatches no author and sends no reply. This restriction dominates every
@@ -72,8 +72,9 @@ load. When the watch needs a new owner or automated observation, first read
 [Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
 `axstack-monitor` stays an optional read-only observer for standalone watch
-that never sends. Chat-run mode permits only its bounded internal Orca report
-to the recorded Run and original driver. One read-only PR observation needs neither. Start no automation for a read-only check.
+that never sends. For own open PRs in chat-run mode, wake the driver chat every 10 minutes by default;
+the Orca fallback observer permits only bounded internal reports to the recorded
+Run and original driver. One read-only PR observation needs neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -94,8 +95,9 @@ Every user-facing update is actionable: name the current milestone, the next
 wake or condition, and an ETA when the forge exposes one, such as CI median.
 A healthy unchanged observation produces no user-facing message.
 
-Chat-run observer wakes deliver only internal reports; the original driver
-alone reconciles and acts under the recorded authority. Observation-only and
+Harness-native chat-run wakes resume the original driver; Orca fallback observer
+wakes deliver only internal reports. The original driver alone reconciles and
+acts under the recorded authority. Observation-only and
 peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
 follow [Repair and publication](references/repair-publication.md).
@@ -144,9 +146,10 @@ human approval remain allowed.
 
 ## 6. End and preserve continuity
 
-End a chat-run watch only after all members merged or closed or user
-cancellation, with own-automation disable/readback and driver-owned automation
-removal and workspace cleanup receipts in
+End a chat-run watch after all members merged or closed, user cancellation, or
+the recorded wake expires. Stop the chosen wake and verify its stop receipt;
+the Orca fallback also needs own-automation disable/readback and driver-owned automation
+removal and workspace cleanup under
 [Watch runtime](references/watch-runtime.md#chat-run-watch).
 
 End a standalone watch early when all required PRs merge, at cancellation, or
@@ -170,7 +173,7 @@ Owner: <profile + session> Worktree: <path>
 Scope: <approved rev, small-change intent, or maintenance snapshot>
 Capability: <issue + lifecycle state>
 CI/review: <current states + evidence refs>
-Watch: <automation ids or stopped registration receipts + expiry>
+Watch: <chosen wake mechanism, native id or command, stop receipt + expiry>
 Remaining: <next actions + owner>
 Resume: <known commands or verified refs needed to reconcile from this revision>
 ```

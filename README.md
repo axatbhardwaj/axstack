@@ -109,10 +109,16 @@ not automatic fallbacks when a model is unavailable. See
 
 ## Optional PR automation
 
-Manual review and watch work without a schedule. An optional native Orca review
-manager can handle recurring peer review; chat-run watch can observe owned PRs.
-Own-PR repairs stay chat-driven; the review automation never merges for you.
-Activation is opt-in and needs live host validation. See
+Manual review works without a schedule. Own open PRs in chat-run mode use a
+harness-native monitoring or scheduled wake to resume the driver chat every 10
+minutes; the existing Orca `*/10` observer is fallback only when the harness
+has no such capability. Each wake checks feedback, base, CI, and human approval;
+delegated work still uses Orca. Stop the chosen wake when all watched PRs merge
+or close, the user cancels, or it expires.
+
+An optional native Orca review manager handles recurring peer review; the
+review automation never merges for you. Its activation is opt-in and needs
+live host validation. See
 [PR-manager setup and safety](skills/axstack/references/automations.md).
 
 ## Some notes

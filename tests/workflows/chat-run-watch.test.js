@@ -5,6 +5,8 @@ const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').
 const watch = () => read('skills/axstack-watch/SKILL.md');
 const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
 const routing = () => read('skills/axstack/references/routing.md');
+const docs = () => read('docs/workflows.md');
+const readme = () => read('README.md');
 
 // These checks exercise the shipped instruction contract. They do not prove
 // model decisions or native Orca behavior; the scenarios need independent evaluation.
@@ -22,7 +24,7 @@ test('same-head feedback and checks are events while unchanged complete passes s
   expect(text).toMatch(/unchanged head[^.]*new check/i);
   expect(text).toMatch(/review[^.]*body digest/i);
   expect(text).toMatch(/all pages[^.]*every member/i);
-  expect(text).toMatch(/healthy unchanged[^.]*no wake/i);
+  expect(text).toMatch(/healthy unchanged[^.]*no notification/i);
   expect(text).toMatch(/API[^.]*incomplete[^.]*UNKNOWN/i);
 });
 
@@ -54,6 +56,8 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     'repair-loop-until-ready',
     'human-approval-survives-repair',
     'maintenance-loop-until-ready',
+    'harness-native-driver-wake',
+    'orca-observer-fallback',
   ]);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(20);
@@ -83,4 +87,21 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
   expect(watch()).toMatch(/re-run checks[^.]*every review comment and thread[^.]*human team member[^.]*required CI[^.]*green/i);
   expect(watch()).toMatch(/approval[^.]*fixes and rebases[^.]*forge dismissed/i);
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
+});
+
+test('own open PRs wake the driver every ten minutes through its harness first', () => {
+  expect(watch()).toMatch(/own open PRs[^.]*every 10 minutes by default/i);
+  expect(runtime()).toMatch(/harness[^.]*native monitoring or scheduled.wake[^.]*driver chat[^.]*10 minutes/i);
+  expect(runtime()).toMatch(/only when[^.]*harness[^.]*none[^.]*Orca[^.]*observer/i);
+  expect(runtime()).toMatch(/record[^.]*chosen mechanism[^.]*run record/i);
+  expect(runtime()).toMatch(/each[^.]*wake[^.]*maintenance loop/i);
+  expect(runtime()).toMatch(/delegated[^.]*Orca[^.]*no daemon[^.]*no polling model between wakes/i);
+});
+
+test('chosen wake stops at merge, cancellation, or expiry and docs describe the default', () => {
+  expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*user cancels[^.]*expires/i);
+  expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*cancellation[^.]*expires/i);
+  expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
+  expect(docs()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
+  expect(readme()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
 });
