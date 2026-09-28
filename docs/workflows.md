@@ -57,7 +57,7 @@ role.
 | --- | --- | --- | --- | --- |
 | `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Luna xhigh |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |
-| `claude-only` | Opus medium | Opus medium; Sonnet xhigh | unavailable / Opus xhigh | Sonnet xhigh |
+| `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high |
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it

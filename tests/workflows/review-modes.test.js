@@ -64,7 +64,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
     ['mixed', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5-5` medium'],
     ['mixed', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-primary', '`codex/gpt-6-sol` high'],
     ['codex-only', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-6-luna` xhigh'],
-    ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5-5` xhigh'],
+    ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5-5` high'],
   ];
   for (const text of [review, routing]) {
     for (const row of rows) {
@@ -151,7 +151,7 @@ test('review modes: neutral reviewer IDs carry each ordered preset pair', () => 
   const pairs = {
     mixed: [['codex', 'gpt-6-sol', 'high'], ['claude', 'claude-opus-5-5', 'medium']],
     'codex-only': [['codex', 'gpt-6-sol', 'high'], ['codex', 'gpt-6-luna', 'xhigh']],
-    'claude-only': [['claude', 'claude-opus-5-5', 'medium'], ['claude', 'claude-sonnet-5-5', 'xhigh']],
+    'claude-only': [['claude', 'claude-opus-5-5', 'medium'], ['claude', 'claude-sonnet-5-5', 'high']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
