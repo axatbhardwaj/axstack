@@ -37,7 +37,7 @@ driver: `*/10 * * * *`, explicit timezone, existing-workspace mode, native
 missed-run grace, and fresh finite sessions. Preflight the installed preset and
 configured monitor role, effective scheduled provider/model/effort, fresh
 session, same-Run delivery and safe request-bound live-driver wake. If a
-capability is missing, hold activation; never add a custom daemon, scheduler, cursor
+fallback capability is missing, hold activation; never add a custom daemon, scheduler, cursor
 database, second driver, or fallback model. Source guidance and installation do
 not prove live activation. Native creation exposes provider but no model/effort
 override; require effective-session receipts.

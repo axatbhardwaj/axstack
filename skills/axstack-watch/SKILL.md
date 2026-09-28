@@ -136,9 +136,10 @@ and exact-revision receipts before any merge-ready statement. API errors leave
 readiness `UNKNOWN`; review approval alone is not merge-ready. Merge-ready is an
 observed state distinct from merged, and the human merges by default.
 Under authorized own-PR maintenance, keep repairing and rebasing onto the base
-when it moves, then re-run checks, until every review comment and thread is
-addressed, at least one human team member's approval still counts, and required
-CI is green; only then record merge-ready. A human approval persists through
+when it moves, then re-run checks, until the head is rebased on the current base,
+every review comment and thread is addressed, at least one human team member's
+approval still counts, and required CI is green; only then record merge-ready.
+A human approval persists through
 fixes and rebases while the forge counts it: never re-request that approver's
 review; if the forge dismissed it or requires last-push approval, hold and tell
 the user without auto-requesting re-review. Initial review requests before any
@@ -148,6 +149,7 @@ human approval remain allowed.
 
 End a chat-run watch after all members merged or closed, user cancellation, or
 the recorded wake expires. Stop the chosen wake and verify its stop receipt;
+a failed or uncertain harness wake stop is a hold.
 the Orca fallback also needs own-automation disable/readback and driver-owned automation
 removal and workspace cleanup under
 [Watch runtime](references/watch-runtime.md#chat-run-watch).

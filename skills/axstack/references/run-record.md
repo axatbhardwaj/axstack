@@ -83,7 +83,10 @@ pending external receipt pointers and timer expiries so an uncertain launch,
 send, or watch can be looked up before any retry.
 
 Resume from compact pointers to commands or evidence, not copied transcripts.
-For chat-run watch, record member PR publication/adoption receipts, exact driver session, native automation/workspace identity, observation/report IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named sessions, revisions, PR state, watches, and deliveries before
+For chat-run watch, record the chosen wake mechanism and its identity or command
+(including the workspace for an Orca fallback),
+member PR publication/adoption receipts, exact driver session, observation/report
+IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named sessions, revisions, PR state, watches, and deliveries before
 creating or redelivering anything. Outside the bounded driver-start orphan
 sweep, touch only this run; no unscoped global sweep, runtime database, or
 scheduler follows from the record.

@@ -239,7 +239,7 @@ discovery is a setup gap, not a reason to fall back or invent commands. Guide
 discovery does not prove an operation works; Linear documents, provider/model
 routing, and live automation behavior need separate preflights.
 
-Installation creates no production schedule and adds no custom scheduler. Chat-run PR watch requires a separately validated same-host native Orca automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate it.
+Installation creates no production schedule and adds no custom scheduler. Chat-run own-PR watch uses a harness-native monitoring or scheduled wake every 10 minutes by default. Only when the harness has no such capability does the Orca `*/10` observer serve as fallback; it needs separately validated same-host automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate either path.
 The optional review manager requires a separate native canary before activation;
 installed guidance does not prove live behavior.
 

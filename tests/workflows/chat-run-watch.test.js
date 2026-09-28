@@ -7,6 +7,8 @@ const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
 const routing = () => read('skills/axstack/references/routing.md');
 const docs = () => read('docs/workflows.md');
 const readme = () => read('README.md');
+const installation = () => read('docs/installation.md');
+const runRecord = () => read('skills/axstack/references/run-record.md');
 
 // These checks exercise the shipped instruction contract. They do not prove
 // model decisions or native Orca behavior; the scenarios need independent evaluation.
@@ -104,4 +106,21 @@ test('chosen wake stops at merge, cancellation, or expiry and docs describe the 
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
   expect(docs()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
   expect(readme()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
+});
+
+test('installation and run record describe the selected wake', () => {
+  expect(installation()).toMatch(/chat-run[^.]*harness.native[^.]*10 minutes[^.]*default/i);
+  expect(installation()).toMatch(/only when[^.]*harness[^.]*no[^.]*Orca[^.]*fallback/i);
+  expect(runRecord()).toMatch(/chat-run watch[^.]*chosen wake mechanism[^.]*identity or command/i);
+});
+
+test('wake failure guards and human merge authority stay explicit', () => {
+  expect(runtime()).toMatch(/failed or uncertain stop is a hold/i);
+  expect(runtime()).toMatch(/fallback capability[^.]*missing[^.]*hold activation/i);
+  expect(watch()).toMatch(/failed or uncertain harness wake stop[^.]*hold/i);
+  expect(watch()).toMatch(/human merges by default/i);
+});
+
+test('own-PR merge-ready requires a head rebased on the current base', () => {
+  expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*every review comment and thread[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
 });
