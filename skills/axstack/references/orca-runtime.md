@@ -98,6 +98,10 @@ permission dialogs. A trust dialog that still appears is a hold.
 An `input_accepted` stage proves only that input reached the terminal. Require
 `turn_started` plus runtime/session inspection before treating the agent as
 started, and verify the requested role independently before trusting its work.
+If a worker asks to confirm its own dispatch brief, the dispatching owner
+confirms once by typed terminal input restating the brief's authority, then
+re-verifies `turn_started`. That confirmation never answers a trust or permission prompt;
+a second ask is a hold.
 A workspace trust, hook review, permission, authentication, or model prompt is
 a visible hold. Never answer a trust or permission prompt on the worker's
 behalf. A permission prompt or provider safety refusal is a held, incomplete

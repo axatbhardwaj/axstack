@@ -49,6 +49,11 @@ Once identified as a duplicate, the new pass does no PR work, makes no further
 shared-record write, touches no live or unsettled resource owned by the live
 manager, and closes only its own exact terminal as its final action under the
 guard below.
+A duplicate pass admits nothing and runs read-only discovery into its own pass
+note, recording new eligible events and the unserved count.
+If a duplicate pass finds the live owner's job stalled past the bounded window,
+record the stalled owner in its own pass note and send one deduplicated notification
+under the recorded `Notification policy`.
 Unknown liveness blocks admission and shared-record writes; it does not
 authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
 and other user-owned sessions.
@@ -130,6 +135,13 @@ Orca worktree per PR job, parented to that repository's primary worktree, and
 pin the observed head and base. The bounded PR coordinator loads the
 review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
+Check the admitted coordinator soon after start and while waiting, using its
+native Dispatch state. If an idle coordinator remains `dispatched`, nudge it once
+by typed terminal input restating its brief, then check for `turn_started`.
+If still idle after five minutes from dispatch, use native `worker-stop`, reconcile
+its Task, Dispatch, and descendants, and record the event unserved (INCOMPLETE,
+re-admissible). Once the tree is settled, continue discovery and admission;
+an uncertain stop or live descendant retains the slot and holds admission.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Reviewers retain the isolation required by `axstack-review`:
 each runs in a separate Orca child worktree, writes probes and evidence to
