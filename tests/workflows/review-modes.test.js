@@ -92,7 +92,8 @@ test('review modes: provenance and availability gaps stop without fallback', () 
   expect(review).toMatch(/exact[^.]*gap[^.]*ask the user/i);
   expect(review).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(review).toMatch(/no[^.]*invent[^.]*pair|never[^.]*invent[^.]*pair/i);
-  expect(review).toMatch(/unavailable[^.]*INCOMPLETE|INCOMPLETE[^.]*unavailable/i);
+  expect(review).toMatch(/unavailable[^.]*ask the user|ask the user[^.]*unavailable/i);
+  expect(review).toContain('do not lower effort or choose any automatic fallback');
 });
 
 test('review modes: eligible high-stakes checkpoint is revalidated, not duplicated', () => {
@@ -111,7 +112,8 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   expect(routing).toMatch(/preset change[^.]*new runs only|new runs[^.]*preset change/i);
   expect(routing).toMatch(/active runs?[^.]*snapshot/i);
   expect(routing).toMatch(/Changing it or replacing a session needs an explicit user decision/i);
-  expect(routing).toMatch(/no quota routing[^.]*silent substitution/i);
+  expect(routing).toMatch(/no automatic fallback|never[^.]*fallback/i);
+  expect(routing).toContain('silent provider/model/effort substitution');
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
   expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);

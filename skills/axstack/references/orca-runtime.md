@@ -47,9 +47,13 @@ model holds only that role; never launch a provider default. Resolve Codex
 classes with `scripts/resolve-models.js`, passing the catalog path explicitly;
 missing or malformed catalogs hold. The first launch of each Claude class uses
 its alias. Read the exact ID from the first assistant turn's `message.model` in
-`~/.claude/projects/<worktree-path-slug>/*.jsonl`; later launches of that class
-use the recorded exact ID. Before read-back record `alias, unresolved`; unknown
-ID holds provenance-dependent work. A worker self-report is a labeled last
+that worker's own session transcript at
+`~/.claude/projects/<worktree-path-slug>/*.jsonl`; the worktree path slug
+replaces each non-alphanumeric character with `-`. Identify the file by the
+worker's session ID, or use the newest file created after launch. Later launches
+of that class use the recorded exact ID. Before read-back record `alias,
+unresolved`; record an unknown read-back as unknown and hold
+provenance-dependent work. A worker self-report is a labeled last
 resort. Launch-by-agent-id routes for which Orca exposes no
 `--model` override (today: `grok`, `antigravity`) record `model: null` with an explicit note and are
 launchable; the run record snapshots the model the TUI reports. Validate provider, model, and effort

@@ -16,7 +16,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Independent Opus adviser for Align, Spec, and debug L1; authors the Claude arena candidate. Same bounded evidence and question as Astra; reuse only unchanged receipts.",
+      "notes": "Independent Opus adviser for Align, Spec, and debug L1; authors the Claude arena candidate. Same bounded evidence and question as Astra; reuse only unchanged receipts. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -25,7 +25,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers.",
+      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -52,7 +52,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Secondary reviewer in the ordered mixed peer pair: Sol high followed by Opus medium. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
+      "notes": "Secondary reviewer in the ordered mixed peer pair: Sol high followed by Opus medium. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -61,7 +61,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits.",
+      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -79,7 +79,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Sonnet high research requirements analyst: scopes bounded questions and acceptance for a research task. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Sonnet high research requirements analyst: scopes bounded questions and acceptance for a research task. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -88,7 +88,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Sonnet high research code investigator: verifies behavior against inspected code and executable evidence. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Sonnet high research code investigator: verifies behavior against inspected code and executable evidence. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -106,7 +106,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Sonnet high research web reader: gathers primary-source facts efficiently. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Sonnet high research web reader: gathers primary-source facts efficiently. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -133,7 +133,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -151,7 +151,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Read-only UI verifier: runs Playwright or the browser against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Read-only UI verifier: runs Playwright or the browser against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -160,7 +160,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -169,7 +169,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Sonnet high execution explorer: runs bounded checks of runtime behavior where authorized. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Sonnet high execution explorer: runs bounded checks of runtime behavior where authorized. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -187,7 +187,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Optional Sonnet high independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof.",
+      "notes": "Optional Sonnet high independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -196,7 +196,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Sonnet high read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself.",
+      "notes": "Sonnet high read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -214,7 +214,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity.",
+      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -232,7 +232,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity.",
+      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -259,7 +259,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate.",
+      "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "fable"
     },
     {
@@ -268,7 +268,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging.",
+      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. Claude alias resolves at first launch; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {

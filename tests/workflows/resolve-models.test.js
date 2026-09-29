@@ -37,3 +37,16 @@ test('resolver holds missing and malformed catalogs and empty eligible classes',
     expect(result.output).toBe('');
   }
 });
+
+test('resolver rejects catalogs missing required provenance or a model array', () => {
+  for (const data of [
+    { fetched_at: '2026-09-29T19:05:03Z', models: [model('gpt-6-sol')] },
+    { client_version: '0.157.1', models: [model('gpt-6-sol')] },
+    { client_version: '0.157.1', fetched_at: '2026-09-29T19:05:03Z', models: {} },
+  ]) {
+    const result = run(data);
+    expect(result.status).toBe(1);
+    expect(result.output).toBe('');
+    expect(result.error).toContain('malformed catalog');
+  }
+});

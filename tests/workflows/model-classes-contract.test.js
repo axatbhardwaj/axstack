@@ -20,6 +20,10 @@ test('Claude alias resolves through first assistant transcript turn', () => {
   expect(runtime).toMatch(/later launch[^.]*recorded exact ID/i);
   expect(runtime).toMatch(/alias, unresolved/i);
   expect(runtime).toMatch(/unknown[^.]*hold/i);
+  expect(runtime).toMatch(/worker.s own session transcript/i);
+  expect(runtime).toMatch(/worktree path[^.]*non-alphanumeric[^.]*-/i);
+  expect(runtime).toMatch(/session ID|newest file after launch/i);
+  expect(runtime).toMatch(/record[^.]*unknown[^.]*hold/i);
 });
 
 test('only explicit pre-turn Codex model rejection permits recorded within-class retry', () => {
@@ -34,7 +38,15 @@ test('only explicit pre-turn Codex model rejection permits recorded within-class
     expect(text, path).toMatch(/--retry-of/);
     expect(text, path).toMatch(/same class[^.]*provider[^.]*effort/i);
     expect(text, path).toMatch(/Claude rejection[^.]*hold/i);
+    expect(text, path).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
   }
+  for (const path of ['docs/installation.md', 'docs/workflows.md']) {
+    expect(compact(path), path).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
+  }
+  const contracts = compact('skills/axstack/references/contracts.md');
+  expect(contracts).toContain('pause affected work, record the gap, and ask the user');
+  expect(contracts).toContain("Every substitution requires the user's decision: configured alternatives and native fallback prose are not defaults.");
+  expect(contracts).toMatch(/except[^.]*within-class|within-class[^.]*exception/i);
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/timeout[^.]*quota[^.]*hold/i);
   expect(routing).toMatch(/tried ID[^.]*error[^.]*fallback ID/i);

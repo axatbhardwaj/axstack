@@ -145,6 +145,16 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
   }
 });
 
+test('Claude class notes state first-launch alias and rejection hold', () => {
+  for (const preset of presetNames) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    for (const role of roles.filter(({ provider, modelClass }) => provider === 'claude' && modelClass)) {
+      expect(role.notes, `${preset}: ${role.id}`).toContain('Claude alias resolves at first launch; a Claude rejection holds');
+      expect(role.notes).not.toContain('Codex rejection');
+    }
+  }
+});
+
 test('UI verification routes rendered checks to the read-only verifier', () => {
   const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
   expect(rule).toMatch(/every Playwright, browser, or rendered-UI check/i);

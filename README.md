@@ -104,7 +104,7 @@ Choose one explicit preset (32 roles each): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
 [claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
 implementation review; single-provider presets have workflow limits and are
-not automatic cross-class fallbacks when a model is unavailable. See
+not automatic cross-class or cross-provider fallbacks when a model is unavailable. See
 [workflow and routing details](docs/workflows.md).
 
 In `mixed` and `claude-only`, auditing, requirements/code/web research,

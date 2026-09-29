@@ -24,11 +24,11 @@
 - `axstack-auditor`/`axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
   `axstack-explore-execution`/`axstack-monitor`:
-  `claude-sonnet-5-5` high in mixed/claude-only.
+  `claude/sonnet` high in mixed/claude-only.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
   internal reports to its Run and original driver.
 - Sol pairs `axstack-auditor-sol`/`axstack-research-code-sol`/
-  `axstack-explore-execution-sol`: `codex/gpt-6-sol` high in
+  `axstack-explore-execution-sol`: `codex/sol` high in
   mixed/codex-only; intentionally absent in claude-only. Dispatch each
   independently from its Sonnet seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.

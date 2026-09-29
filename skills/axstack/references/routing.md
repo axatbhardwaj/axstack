@@ -27,7 +27,8 @@ never re-resolve it.
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Changing it or replacing a session needs an explicit user decision and
 revalidation. Unavailable models, efforts, roles, or overrides hold only affected
-work; no quota routing, subscription inference, or silent substitution. Only
+work; no automatic fallback, quota routing, subscription inference, or silent
+provider/model/effort substitution. Only
 explicit model rejection before the first turn permits Codex `--retry-of` with
 the next eligible ID in the same class, provider, and effort. Fence the failed
 Dispatch and record tried ID, error, and fallback ID in the snapshot and reply.
