@@ -237,6 +237,8 @@ Run Close-out once only after every required PR is forge-merged, the run's
 Release step is settled or not applicable, and acceptance passes. It settles
 workers, records counts, makes the auditor decision and
 settlement, releases worktrees, closes eligible tickets, and archives the run.
+Without an Autopilot or Release record, the Release step is not applicable for
+both Close-out and run completion.
 
 The loop requires the `mixed` two-provider authored-review row. `codex-only` or
 `claude-only` holds at step (3) for an explicit user routing choice, with no

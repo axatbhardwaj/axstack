@@ -17,7 +17,8 @@ That covers tracker access, adviser or arena-seat availability, diligence
 FINDINGS when the phase records a hold, CI-wait timeout, readiness UNKNOWN,
 dismissed approval, wake or cleanup uncertainty, single-provider routing, an
 existing tag or version, and failed publish. Diligence FINDINGS during implement
-follow its §6 repair route; only a recorded hold pauses autopilot.
+follow its §6 repair route; at spec, tickets, or release preparation the driver
+resolves them before advancing, and only a recorded hold pauses autopilot.
 
 Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
 <ts>)` and the next step in the private run record. A user answer to the hold

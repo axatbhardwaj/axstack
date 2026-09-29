@@ -66,6 +66,26 @@ rule('Close-out records installed version', autopilot, 'Close-out last', /releas
 rule('closed-unmerged watch holds and continues wake', watch, 'A required PR closed without merging', /decision hold.*wake remains active/);
 rule('closed-unmerged runtime holds and continues wake', runtime, 'A required PR closed without merging', /decision hold.*wake remains active/);
 
+rule('silence cannot grant release authority', autopilot, 'The small-work Align read-back names', /silence cannot fill a missing authority or target/);
+rule('relay never sends policy-enabled progress', () => read('skills/axstack-relay/SKILL.md'), 'Progress, CI pending, and completion are never eligible', /merely because a policy exists/);
+rule('implement documents absent merge wake', implement, "driver resumes on the user's next message", /no Orca merge wake exists today/);
+rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms that merge', /tag and wait for the staged publish/);
+rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
+rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
+rule('explicit stop after Align is honored', () => read('skills/axstack-align/SKILL.md'), 'an explicit stop-after-Align request', /ends here/);
+rule('workflow human gate remains human', () => read('docs/workflows.md'), 'The human approves substantial specs', /every merge including release PRs, and the npm stage/);
+rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);
+rule('routing substantial work advances', () => read('skills/axstack/references/routing.md'), 'Preparation: substantial work', /handoff path above, then continues under autopilot when eligible/);
+rule('workflow notifications have only bounded categories', () => read('docs/workflows.md'), 'An applicable `Notification policy`', /only for a user-decision hold.*serious-risk hold.*at most two merge-ready\/merged milestones per run/);
+rule('recordless implement release is inapplicable', implement, 'Without an Autopilot or Release record', /Release step is not applicable/);
+rule('diligence repairs at owning phase', autopilot, 'Diligence FINDINGS during implement', /§6 repair route.*spec, tickets, or release preparation.*resolves them before advancing/);
+rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS during implement', /only a recorded hold pauses autopilot/);
+
+test('run record requires a Release decision line', () => {
+  expect(readFileSync(`${root}/skills/axstack/references/run-record.md`, 'utf8'))
+    .toMatch(/^Release: <AGENTS\.md file:line \+ tag-triggered workflow path \+ named install hosts> \| not applicable \(<reason>\)$/m);
+});
+
 test('a recorded hold stops all dependent work', () => {
   expect(autopilot()).not.toContain('Continue safe independent work');
 });

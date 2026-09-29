@@ -209,9 +209,10 @@ keeps the current owner and a resumable record.
 
 Serious security, downtime, data-loss, and major-design risks are raised in a
 prompt immediately and hold dependent dangerous work. This is not a runtime
-gate. An applicable `Notification policy` may use `axstack-relay` for serious
-risk immediately or a genuine blocker needing user intervention after bounded
-safe recovery. Questions, spec approvals, progress, CI pending, merge-ready,
+gate. An applicable `Notification policy` may use `axstack-relay` only for a
+user-decision hold (including spec or npm approval and a genuine blocker after
+bounded safe recovery), a serious-risk hold immediately, or at most two merge-ready/merged milestones per run.
+Questions, spec approvals, progress, CI pending, merge-ready,
 merged, and completion stay in Orca unless the recorded Notification policy
 names it. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
