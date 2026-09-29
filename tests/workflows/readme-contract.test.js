@@ -42,7 +42,7 @@ test('README explains four failure modes and gives a compact first run', () => {
 
 test('README preserves preset and merge boundaries', () => {
   const presets = readme.slice(readme.indexOf('Choose one explicit preset'), readme.indexOf('## Optional PR automation'));
-  expect(presets).toMatch(/single-provider presets[^.]*not automatic fallbacks when a model is unavailable/i);
+  expect(presets).toMatch(/single-provider presets[^.]*not automatic cross-class fallbacks when a model is unavailable/i);
   const why = readme.slice(readme.indexOf('## Why Axstack'), readme.indexOf('## Quick start'));
   expect(why).toMatch(/mixed[^|]*cross-provider review/i);
   const automation = readme.slice(readme.indexOf('## Optional PR automation'), readme.indexOf('## Some notes'));

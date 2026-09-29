@@ -245,8 +245,8 @@ test('claude-only intentional-absence allowlist contains exactly the accepted ID
 
 test('installed presets route analysis roles to the selected provider', () => {
   const expected = {
-    mixed: ['claude', 'claude-sonnet-5-5', 'high'],
-    'claude-only': ['claude', 'claude-sonnet-5-5', 'high'],
+    mixed: ['claude', 'sonnet', 'high'],
+    'claude-only': ['claude', 'sonnet', 'high'],
     'codex-only': null,
   };
   const analysisIds = [
@@ -264,9 +264,9 @@ test('installed presets route analysis roles to the selected provider', () => {
     for (const id of analysisIds) {
       const actual = byId[id];
       const codexOnlyRoute = id === 'axstack-auditor'
-        ? ['codex', 'gpt-6-luna', 'xhigh']
-        : ['codex', 'gpt-6-sol', 'high'];
-      expect([actual.provider, actual.model, actual.thinkingOptionId], `${preset}: ${id}`)
+        ? ['codex', 'luna', 'xhigh']
+        : ['codex', 'sol', 'high'];
+      expect([actual.provider, actual.modelClass ?? actual.model, actual.thinkingOptionId], `${preset}: ${id}`)
         .toEqual(route ?? codexOnlyRoute);
     }
     if (preset === 'mixed') {
@@ -292,7 +292,7 @@ test('installed presets expose independent Sol analysis pair seats', () => {
       const pair = roles.find((entry) => entry.id === id);
       expect(pair, `${preset}: ${id}`).toMatchObject(preset === 'claude-only'
         ? { provider: 'claude', model: null }
-        : { provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high' });
+        : { provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high' });
     }
   }
 });

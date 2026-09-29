@@ -343,7 +343,7 @@ test('structural: runtime reference treats installed role snapshot as authoritat
   expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
   expect(text).toMatch(/bundled[^.]*setup inputs/i);
   expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
-  expect(text).toMatch(/missing or null model[^.]*holds only that role/i);
+  expect(text).toMatch(/missing class and missing or null[^.]*model holds only that role/i);
   expect(text).toMatch(/never launch a provider default/i);
   expect(text).toMatch(/reconcile existing attempts first/i);
 });

@@ -6,15 +6,15 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 test('diligence role is configured in every preset with supported effort', () => {
-  for (const [preset, provider, model] of [
-    ['mixed', 'claude', 'claude-sonnet-5-5'],
-    ['claude-only', 'claude', 'claude-sonnet-5-5'],
-    ['codex-only', 'codex', 'gpt-6-sol'],
+  for (const [preset, provider, modelClass] of [
+    ['mixed', 'claude', 'sonnet'],
+    ['claude-only', 'claude', 'sonnet'],
+    ['codex-only', 'codex', 'sol'],
   ]) {
     const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
     expect(roles).toHaveLength(32);
     expect(roles.find(({ id }) => id === 'axstack-diligence')).toMatchObject({
-      provider, model, thinkingOptionId: 'high',
+      provider, modelClass, thinkingOptionId: 'high',
     });
   }
 });
@@ -22,7 +22,9 @@ test('diligence role is configured in every preset with supported effort', () =>
 test('every Sonnet preset row stays at high effort or below', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
-    for (const role of roles.filter(({ model }) => model?.startsWith('claude-sonnet-'))) {
+    const sonnet = roles.filter(({ modelClass }) => modelClass === 'sonnet');
+    if (preset !== 'codex-only') expect(sonnet.length).toBeGreaterThan(0);
+    for (const role of sonnet) {
       expect(['low', 'medium', 'high'], `${preset}: ${role.id}`).toContain(role.thinkingOptionId);
     }
   }

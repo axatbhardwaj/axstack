@@ -172,13 +172,14 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
-A new run records the selected preset plus all 32 role rows. An active run keeps
-that snapshot after a later preset install unless the user explicitly changes
-it and accepts the resulting evidence invalidation.
+A new run records the selected preset plus all 32 role rows. Class rows resolve
+at run start; each role snapshot records class, exact ID, source, and time.
+An active run and resume reuse that snapshot after a later preset install unless
+the user explicitly changes it and accepts the resulting evidence invalidation.
 
 The `mixed` and `claude-only` presets assign `axstack-auditor`,
 `axstack-research-requirements`, `axstack-research-code`, `axstack-research-web`,
-`axstack-explore-execution`, and `axstack-monitor` to Claude Sonnet 5.5 high.
+`axstack-explore-execution`, and `axstack-monitor` to the Claude Sonnet class at high effort.
 The `codex-only` assignments for these roles are unchanged.
 The three `-sol` pair seats for auditor, research-code, and explore-execution
 use Sol high in `mixed` and `codex-only`; `claude-only` records intentional
@@ -198,8 +199,13 @@ receipts. For an arena-grade Align question, round 1 needs Opus; round 2, if
 invoked, needs escalation Fable and Astra; a required seat that is unavailable holds that
 round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
-the affected work. There is no model substitution, subscription inference, or
-quota routing.
+the affected work. Codex class resolution reads the explicit catalog path via
+`skills/axstack/scripts/resolve-models.js`; a missing or malformed catalog
+holds. Claude launches an alias once per class, reads the exact ID from the
+first assistant transcript turn, then reuses it. Only explicit model rejection
+before that turn permits a recorded Codex retry within the same class, provider,
+and effort. Claude rejection, timeout, quota, and auth failures hold; no
+subscription inference or quota routing applies.
 
 `modeId` and similar permission fields remain conservative declared intent.
 They do not prove the effective Orca launcher mode, sandboxing, or permission

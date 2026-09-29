@@ -72,7 +72,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   }
   expect(review).toMatch(/recorded exact model ID[^.]*derive[^.]*class/i);
   expect(review).toMatch(/no class[^.]*INCOMPLETE/i);
-  expect(routing).toMatch(/provenance is matched on provider\/model ID/i);
+  expect(routing).toMatch(/provenance is matched on provider\/model class/i);
 });
 
 test('review modes: authored review is one complete exact-revision review', () => {
@@ -92,7 +92,7 @@ test('review modes: provenance and availability gaps stop without fallback', () 
   expect(review).toMatch(/exact[^.]*gap[^.]*ask the user/i);
   expect(review).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(review).toMatch(/no[^.]*invent[^.]*pair|never[^.]*invent[^.]*pair/i);
-  expect(review).toMatch(/unavailable[^.]*ask the user|ask the user[^.]*unavailable/i);
+  expect(review).toMatch(/unavailable[^.]*INCOMPLETE|INCOMPLETE[^.]*unavailable/i);
 });
 
 test('review modes: eligible high-stakes checkpoint is revalidated, not duplicated', () => {
@@ -111,7 +111,7 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   expect(routing).toMatch(/preset change[^.]*new runs only|new runs[^.]*preset change/i);
   expect(routing).toMatch(/active runs?[^.]*snapshot/i);
   expect(routing).toMatch(/Changing it or replacing a session needs an explicit user decision/i);
-  expect(routing).toMatch(/no automatic fallback|never[^.]*fallback/i);
+  expect(routing).toMatch(/no quota routing[^.]*silent substitution/i);
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
   expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
@@ -149,15 +149,15 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'gpt-6-sol', 'high'], ['claude', 'claude-opus-5-5', 'medium']],
-    'codex-only': [['codex', 'gpt-6-sol', 'high'], ['codex', 'gpt-6-luna', 'xhigh']],
-    'claude-only': [['claude', 'claude-opus-5-5', 'medium'], ['claude', 'claude-sonnet-5-5', 'high']],
+    mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
+    'codex-only': [['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
+    'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
     const byId = Object.fromEntries(profiles.map((profile) => [profile.id, profile]));
     for (const [index, id] of ['axstack-reviewer-primary', 'axstack-reviewer-secondary'].entries()) {
-      expect([byId[id].provider, byId[id].model, byId[id].thinkingOptionId]).toEqual(pair[index]);
+      expect([byId[id].provider, byId[id].modelClass, byId[id].thinkingOptionId]).toEqual(pair[index]);
       expect(byId[id].notes).toMatch(/peer|authored/i);
     }
   }

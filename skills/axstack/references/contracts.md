@@ -36,11 +36,13 @@ the revised scope and plan.
 
 ## Model discipline
 
-Validate the configured provider and model at actual launch. If it is
-unavailable or exhausted, pause affected work, record the gap, and ask the
-user. Never infer a route from quota state or subscription entitlement. Every
-substitution requires the user's decision: configured alternatives and native
-fallback prose are not defaults.
+Validate the configured provider, resolved model, and effort at actual launch.
+Only explicit model rejection before the first turn permits a Codex retry with
+`--retry-of`: take the next eligible version in the same class, provider, and
+effort, and record the failed ID, error, and fallback ID. A Claude rejection
+holds. Unavailable or exhausted models otherwise hold affected work for the
+user. Never infer a route from quota state or subscription entitlement; other
+substitutions require the user's decision.
 
 ## Driver and adviser split
 

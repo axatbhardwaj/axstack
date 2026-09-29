@@ -61,7 +61,7 @@ role.
 
 In `mixed` and `claude-only`, `axstack-auditor`, `axstack-research-requirements`,
 `axstack-research-code`, `axstack-research-web`, `axstack-explore-execution`,
-and `axstack-monitor` use Claude Sonnet 5.5 high. `codex-only` keeps its Codex
+and `axstack-monitor` use the Claude Sonnet class at high effort. `codex-only` keeps its Codex
 assignments for those roles. Mixed web-google and X retain their source-specific
 Antigravity and Grok routes.
 The new `-sol` auditor, research-code, and explore-execution seats use Sol high
@@ -72,10 +72,15 @@ their findings per claim without averaging.
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
 from the installed shared root `skills/axstack/` and records the whole table for
-a new run. Active runs retain their snapshot after later installation changes.
+a new run. Per role it records class, exact ID, source, and time. Codex classes
+resolve from a passed catalog path using `skills/axstack/scripts/resolve-models.js`;
+missing or malformed catalogs hold. Claude's first class launch passes the alias,
+then the first assistant transcript turn supplies the exact ID for later launches.
+Unknown Claude IDs hold provenance-dependent work. Active runs and resume reuse
+their snapshot after later installation changes.
 
 Peer roles keep the stable IDs `axstack-reviewer-primary` and
-`axstack-reviewer-secondary`; their provider/model mappings come only from the
+`axstack-reviewer-secondary`; their provider/class mappings come only from the
 selected preset.
 
 The unavailable adviser in each single-provider preset stays explicitly
@@ -88,7 +93,10 @@ launchable; the run record snapshots the model the TUI reports. Missing or unava
 work. Model, effort, and permission values express requested intent until real
 Orca receipts establish the effective session. Stored `modeId` is not permission
 parity or a sandbox. No route is inferred from subscription, quota, harness,
-provider defaults, or installed tools, and no model is substituted silently.
+provider defaults, or installed tools. Only explicit model rejection before the
+first turn permits a recorded Codex retry with `--retry-of` to the next eligible
+model in the same class, provider, and effort. Claude rejection, timeout, quota,
+and auth failures hold.
 
 ## Orca runtime boundary
 

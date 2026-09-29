@@ -14,13 +14,13 @@ test('presets: Opus advises and Fable escalates with explicit absence', () => {
     expect(byId['axstack-arena-judge-fable']).toBeUndefined();
     if (preset !== 'claude-only') expect(byId['axstack-advisor-astra'].notes).toContain('question as Opus');
     for (const [id, model] of [
-      ['axstack-advisor-opus', 'claude-opus-5-5'],
-      ['axstack-escalation-fable', 'claude-fable-5-1'],
+      ['axstack-advisor-opus', 'opus'],
+      ['axstack-escalation-fable', 'fable'],
     ]) {
-      expect(byId[id]?.model).toBe(preset === 'codex-only' ? null : model);
+      expect((byId[id]?.modelClass ?? byId[id]?.model)).toBe(preset === 'codex-only' ? null : model);
       expect(byId[id]?.thinkingOptionId).toBe('xhigh');
     }
-    expect(roles.filter(({ model }) => model === 'claude-opus-5-5').every(({ thinkingOptionId }) => thinkingOptionId !== 'max')).toBe(true);
+    expect(roles.filter(({ modelClass }) => modelClass === 'opus').every(({ thinkingOptionId }) => thinkingOptionId !== 'max')).toBe(true);
   }
 });
 

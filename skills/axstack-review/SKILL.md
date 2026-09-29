@@ -232,8 +232,11 @@ This section applies to peer and authored PR modes.
    an eligible current non-author, non-owner checkpoint can satisfy the authored
    final review after revalidation against the pinned brief. Preserve Sol high
    effort and spawn no redundant final reviewer. If a required reviewer is
-   unavailable, report that exact model gap, mark review `INCOMPLETE`, and ask
-   the user; do not lower effort or choose any automatic fallback.
+   unavailable, report that exact model gap and mark review `INCOMPLETE`.
+   Only explicit model rejection before the first turn permits Codex
+   `--retry-of` with the next eligible ID in the same class, provider, and
+   effort; fence and record the rejected attempt. Timeout and quota hold;
+   Claude rejection holds. Never lower effort or cross class/provider.
 
    Continue only when session receipts prove the required models, non-author
    independence, actual author provenance where applicable, and exact brief.

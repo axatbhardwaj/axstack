@@ -71,7 +71,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
     const opus = roles.find(({ id }) => id === 'axstack-arena-judge-opus');
     expect(opus, `${preset}: missing Opus judge`).toBeTruthy();
     expect(opus.provider).toBe(preset === 'codex-only' ? 'codex' : 'claude');
-    expect(opus.model).toBe(preset === 'codex-only' ? null : 'claude-opus-5-5');
+    expect(opus.modelClass ?? opus.model).toBe(preset === 'codex-only' ? null : 'opus');
     expect(opus.modeId).toBe(preset === 'codex-only' ? 'full-access' : 'bypassPermissions');
     expect(opus.thinkingOptionId).toBe('xhigh');
     expect(opus.notes).toMatch(/read-only.*round 1/i);
@@ -81,7 +81,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
       expect(judge, `${preset}: missing judge ${seat}`).toBeTruthy();
       expect(judge.thinkingOptionId).toBe('xhigh');
       expect(judge.provider).toBe(adviser.provider);
-      expect(judge.model).toBe(seat === 'astra' ? adviser.model : preset === 'codex-only' ? null : 'claude-fable-5-1');
+      expect(judge.modelClass ?? judge.model).toBe(seat === 'astra' ? (adviser.modelClass ?? adviser.model) : preset === 'codex-only' ? null : 'fable');
       expect(judge.notes).toMatch(/read-only/i);
       expect(judge.notes).toMatch(/never authors a candidate/i);
     }

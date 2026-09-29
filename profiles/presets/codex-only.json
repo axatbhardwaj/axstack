@@ -5,10 +5,10 @@
       "id": "axstack-advisor-astra",
       "name": "Axstack Astra adviser",
       "provider": "codex",
-      "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Opus; reuse only unchanged receipts."
+      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Opus; reuse only unchanged receipts.",
+      "modelClass": "astra"
     },
     {
       "id": "axstack-advisor-opus",
@@ -23,91 +23,91 @@
       "id": "axstack-owner",
       "name": "Axstack PR owner",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers."
+      "notes": "Persistent PR owner: one owner per PR, accountable for candidate, fixes, verification evidence, and monitoring. May delegate coding but never edits a worker-owned candidate concurrently. Launches eligible independent reviewers.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-author",
       "name": "Axstack author",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-reviewer-primary",
       "name": "Axstack reviewer (primary)",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Primary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+      "notes": "Primary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-reviewer-secondary",
       "name": "Axstack reviewer (secondary)",
       "provider": "codex",
-      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
+      "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
+      "modelClass": "luna"
     },
     {
       "id": "axstack-diligence",
       "name": "Axstack diligence checker",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits."
+      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "codex",
-      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default."
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default.",
+      "modelClass": "luna"
     },
     {
       "id": "axstack-research-requirements",
       "name": "Axstack research requirements",
       "provider": "codex",
-      "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "astra"
     },
     {
       "id": "axstack-research-code",
       "name": "Axstack research code",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-research-code-sol",
       "name": "Axstack research code Sol",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation."
+      "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-research-web",
       "name": "Axstack research web",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Research web reader: gathers primary-source facts efficiently. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Research web reader: gathers primary-source facts efficiently. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-research-web-google",
@@ -131,127 +131,127 @@
       "id": "axstack-explainer",
       "name": "Axstack explainer",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-explainer-review",
       "name": "Axstack explainer reviewer",
       "provider": "codex",
-      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Independent visual explanation reviewer: checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Independent visual explanation reviewer: checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "luna"
     },
     {
       "id": "axstack-ui-verifier",
       "name": "Axstack UI verifier",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Read-only UI verifier: runs Playwright or the browser against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Read-only UI verifier: runs Playwright or the browser against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-explore-codebase",
       "name": "Axstack codebase explorer",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
+      "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-explore-execution-sol",
       "name": "Axstack execution explorer Sol",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Sol high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation."
+      "notes": "Independent Sol high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-monitor",
       "name": "Axstack monitor",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof."
+      "notes": "Optional independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-auditor",
       "name": "Axstack auditor",
       "provider": "codex",
-      "model": "gpt-6-luna",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
+      "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself.",
+      "modelClass": "luna"
     },
     {
       "id": "axstack-auditor-sol",
       "name": "Axstack auditor Sol",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Sol high read-only auditor: checks the same bounded run evidence without cross-reading. Reports findings for driver reconciliation; never edits, merges, or activates."
+      "notes": "Independent Sol high read-only auditor: checks the same bounded run evidence without cross-reading. Reports findings for driver reconciliation; never edits, merges, or activates.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-debug-investigator-1",
       "name": "Axstack debug investigator 1",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
+      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sol class at high effort because it has fewer model families.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-debug-investigator-2",
       "name": "Axstack debug investigator 2",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sol class at high effort because it has fewer model families.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-debug-investigator-3",
       "name": "Axstack debug investigator 3",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
+      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sol class at high effort because it has fewer model families.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-debug-investigator-4",
       "name": "Axstack debug investigator 4",
       "provider": "codex",
-      "model": "gpt-6-sol",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats gpt-6-sol at high effort because it has fewer model families."
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sol class at high effort because it has fewer model families.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-arena-judge-astra",
       "name": "Axstack arena judge Astra",
       "provider": "codex",
-      "model": "gpt-6-astra",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged."
+      "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged.",
+      "modelClass": "astra"
     },
     {
       "id": "axstack-escalation-fable",
