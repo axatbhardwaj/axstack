@@ -19,6 +19,11 @@ role dispatch, load the [Orca runtime
 sequence](../axstack/references/orca-runtime.md). Use existing
 `axstack-explore-codebase` or `axstack-research-code` roles only when their
 specialization materially helps; create no new profile.
+When dispatching `axstack-research-code`, dispatch `axstack-research-code-sol`
+independently on the same bounded brief without cross-reading. The driver
+reconciles findings per claim and never averages them. Record an intentionally
+absent Sol pair and proceed with the base seat alone; a configured but
+unavailable pair holds its work.
 
 ## 1. Bound discovery
 

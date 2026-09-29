@@ -87,6 +87,22 @@ test('preset readiness accepts the configured research routes', () => {
   }
 });
 
+test('claude-only intentional-absence allowlist contains exactly the accepted IDs', () => {
+  const source = readFileSync(`${root}/src/roles.js`, 'utf8');
+  const clause = source.match(/\(preset === 'claude-only' && \[([^\]]+)\]\.includes\(role\.id\)\)/)?.[1];
+  expect(clause).toBeTruthy();
+  const ids = [...clause.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+  expect(ids).toEqual([
+    'axstack-advisor-astra', 'axstack-arena-judge-astra',
+    'axstack-research-web-google', 'axstack-research-x',
+    'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
+    'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
+  ]);
+  expect(assessRoleReadiness([
+    { id: 'axstack-auditor', name: 'Auditor', provider: 'claude', model: null },
+  ], 'claude-only').gaps).toContain('axstack-auditor requires a configured model');
+});
+
 test('installed presets route analysis roles to the selected provider', () => {
   const expected = {
     mixed: ['claude', 'claude-sonnet-5-5', 'high'],
