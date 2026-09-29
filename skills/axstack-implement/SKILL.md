@@ -208,6 +208,8 @@ For each PR:
    returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
    risk, or the third `REQUEST_CHANGES` on one PR records `held`. A changed
    parent sends its child back to step 1.
+   Merge-ready also requires a current diligence `PASS` at that head; diligence
+   `FINDINGS` return to the same author within the review round.
 
 One run-level completion wait covers every unsettled Dispatch; the bounded
 forge check wait is the only other wait. End a turn only when every required PR

@@ -56,6 +56,15 @@
       "notes": "Secondary reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet high. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
     },
     {
+      "id": "axstack-diligence",
+      "name": "Axstack diligence checker",
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits."
+    },
+    {
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "claude",

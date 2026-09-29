@@ -54,6 +54,9 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    rationale with the task; actual measurement and exception evidence follow in
    the implement receipt. Mapping time requires no actual SHAs or line counts.
    Every capability ends with the fields below and an explicit dependency list.
+   Before accepting the map, dispatch `axstack-diligence` under
+   [Diligence](../axstack/references/diligence.md) to confirm every spec
+   acceptance item maps to a capability's acceptance.
    These routine mapping and split choices are autonomous driver decisions
    within the approved spec; size alone never requires user approval.
 

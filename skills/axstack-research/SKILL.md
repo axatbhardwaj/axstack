@@ -60,6 +60,9 @@ is part of research.
    or tool output for every answer-changing claim. Apply the source standards
    for citations, freshness, revisions, and access dates. Continue until each
    material claim has direct evidence or a named evidence gap.
+   Before the driver folds verified claims, dispatch `axstack-diligence` under
+   [Diligence](../axstack/references/diligence.md) to reopen cited sources for
+   answer-changing claims and flag mismatches.
 
 4. **Form the verdict.** Mark every material claim as **verified**,
    **inference**, or **unverified** using the source standards. Derive

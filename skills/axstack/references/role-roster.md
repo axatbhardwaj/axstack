@@ -18,6 +18,8 @@
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
+- `axstack-diligence`: read-only [diligence checks](diligence.md) for every PR
+  review round and bounded research, spec, ticket, receipt, and release claims.
 - `axstack-ui-verifier`: [UI checks](ui-verification.md).
 - `axstack-auditor`/`axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/

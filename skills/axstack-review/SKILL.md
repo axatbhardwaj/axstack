@@ -234,6 +234,11 @@ This section applies to peer and authored PR modes.
 
    Continue only when session receipts prove the required models, non-author
    independence, actual author provenance where applicable, and exact brief.
+   In peer and authored PR review rounds, dispatch `axstack-diligence`
+   independently alongside the configured reviewer(s) on the same exact revision
+   and base. Follow [Diligence](../axstack/references/diligence.md). A diligence
+   `FINDINGS` receipt returns validated findings to the same author in the same
+   round; it is not an extra `REQUEST_CHANGES` round.
 3. **Inspect all six angles.** In peer mode each reviewer covers every angle;
    in authored mode the one reviewer covers all six angles:
    1. Security and trust boundaries.
@@ -321,6 +326,8 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
   covering the whole brief, all six angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
   complete evidence with no blocker permits `APPROVE`.
+- **Diligence:** a current `PASS` is required with reviewer approval for
+  merge-ready; `FINDINGS` return to the author in that round.
 - **Incomplete or stale:** use `INCOMPLETE`; never fabricate `APPROVE` or
   `REQUEST_CHANGES`.
 

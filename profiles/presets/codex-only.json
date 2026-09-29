@@ -56,6 +56,15 @@
       "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
     },
     {
+      "id": "axstack-diligence",
+      "name": "Axstack diligence checker",
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits."
+    },
+    {
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "codex",
