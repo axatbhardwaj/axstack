@@ -80,6 +80,24 @@ rule('workflow notifications have only bounded categories', () => read('docs/wor
 rule('recordless implement release is inapplicable', implement, 'Without an Autopilot or Release record', /Release step is not applicable/);
 rule('diligence repairs at owning phase', autopilot, 'Diligence FINDINGS during implement', /§6 repair route.*spec, tickets, or release preparation.*resolves them before advancing/);
 rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS during implement', /only a recorded hold pauses autopilot/);
+rule('workflow routine events always stay in Orca', () => read('docs/workflows.md'), 'Progress, CI pending, and completion', /always stay in Orca/);
+rule('implement routine events always stay in Orca', implement, 'Progress, CI pending, and completion', /always stay in Orca/);
+rule('watch routine events always stay in Orca', watch, 'Progress, CI pending, and completion', /always stay in Orca/);
+rule('workflow relay remains bounded', () => read('docs/workflows.md'), 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
+rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
+rule('watch relay remains bounded', watch, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
+rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /spec for human approval at gate 1.*small work Align read-back/);
+rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
+rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);
+rule('registry wake verifies package and version', autopilot, 'A wake verifies the registry', /expected package and version/);
+rule('adopted PR requires maintenance snapshot', autopilot, 'Later run PRs join', /explicitly adopted PR joins only with its maintenance snapshot/);
+rule('healthy ticks stay quiet', autopilot, 'Healthy ticks stay quiet', /^Healthy ticks stay quiet\.$/);
+rule('relay deduplicates by purpose and revision', autopilot, 'Across implementation and release', /deduplicate by purpose and revision/);
+rule('milestone cap spans implementation and release', autopilot, 'Across implementation and release', /merge-ready and merged notifications together are capped at two per run/);
+rule('relay shares budget across implementation and release', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /deduplicate across implementation and release/);
+rule('implement arms watch at first published PR', implement, 'The eligible run arms', /first published PR/);
+rule('Align continues small work to Implement', () => read('skills/axstack-align/SKILL.md'), 'Substantial work continues to', /small work continues from its small-change intent to Implement/);
+rule('workflow arms watch at first published PR', () => read('docs/workflows.md'), 'Implement arms maintain-mode watch', /first published PR/);
 
 test('run record requires a Release decision line', () => {
   expect(readFileSync(`${root}/skills/axstack/references/run-record.md`, 'utf8'))

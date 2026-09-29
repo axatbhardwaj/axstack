@@ -128,8 +128,11 @@ Under a recorded `Notification policy`, the owner may use the optional
 [axstack-relay](../axstack-relay/SKILL.md) only for a serious risk immediately,
 a genuine blocked operation needing user intervention after bounded safe
 recovery, or decision holds and capped milestones named by the recorded policy.
-Questions, spec approvals, progress, CI pending, merge-ready, merged, and
-completion stay in Orca unless the recorded Notification policy names it.
+Routine questions stay in Orca. Progress, CI pending, and completion always stay
+in Orca.
+Only the bounded categories—user-decision holds (including spec approval),
+serious-risk holds, and at most two merge-ready/merged milestones per run—may
+be relayed under the recorded Notification policy.
 The standalone monitor never sends; the chat-run observer reports only
 internally. Deduplicate authorized notifications;
 absent policy or failed relay uses the current Orca conversation and leaves

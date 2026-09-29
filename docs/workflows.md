@@ -212,10 +212,12 @@ prompt immediately and hold dependent dangerous work. This is not a runtime
 gate. An applicable `Notification policy` may use `axstack-relay` only for a
 user-decision hold (including spec or npm approval and a genuine blocker after
 bounded safe recovery), a serious-risk hold immediately, or at most two merge-ready/merged milestones per run.
-Questions, spec approvals, progress, CI pending, merge-ready,
-merged, and completion stay in Orca unless the recorded Notification policy
-names it. The relay normally delivers one-way
-through native `hermes send`: it checks CLI lookup and the configured target,
+Routine questions stay in Orca. Progress, CI pending, and completion always stay
+in Orca.
+Only the bounded categories—user-decision holds (including spec approval),
+serious-risk holds, and at most two merge-ready/merged milestones per run—may
+be relayed under the recorded Notification policy. The relay normally delivers
+one-way through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
 `message_id`. PR-manager notifications point the user to GitHub or a durable
 user-owned conversation; Telegram delivery, replies, and silence grant no action

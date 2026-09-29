@@ -1,8 +1,8 @@
-<!-- Approved spec #215 rev 2; GitHub issue body SHA-256: fdded13f4642a48224a1aadf7efba7979de967e213684f12a50c91d09b73b2b8 -->
+<!-- Approved spec #215 rev 3; GitHub issue body SHA-256: fa3779fee33c87604a23dead0814e5833f66a3e5764269edfbff8a821cd4193a -->
 
 # Autopilot: runs advance on their own and stop only for human actions
 
-**Status:** Approved rev 2 (2026-09-30).
+**Status:** Approved rev 3 (2026-09-30). Rev 3 amends scope 1: diligence FINDINGS are a repair at the owning phase, not an autopilot hold (user acceptance, 2026-09-30).
 **Repository:** `axatbhardwaj/axstack`.
 **Baseline:** `462d636` (v0.20.30).
 **Align record:** private run `20260930-autopilot` (Q1–Q4).
@@ -23,7 +23,8 @@ Implementation always flows into watch in maintain mode. Where the repo defines 
 
 1. **New reference `skills/axstack/references/autopilot.md`.** Each phase skill gets one pointer to it; `lifecycle.md` has no room left, so it is untouched.
    - **When a run advances:** the run advances only when the finishing phase returned its completed identity (small-change intent, approved spec, ticket map, merge-ready, merged) and the run record has no open hold.
-   - **Holds stop the run:** any hold recorded by any phase stops autopilot and records its reason and resume condition. That covers tracker access, adviser or arena-seat availability, diligence FINDINGS, CI-wait timeouts, readiness `UNKNOWN`, dismissed approvals, wake or cleanup uncertainty, single-provider routing, an existing tag or version, and a failed publish.
+   - **Diligence FINDINGS (rev 3):** a repair at the owning phase, not a hold. Implement FINDINGS follow its §6 repair route; at spec, tickets or release preparation the driver resolves them before advancing. Only a recorded hold (for example a third review round, or a finding that cannot be resolved) pauses the run.
+   - **Holds stop the run:** any hold recorded by any phase stops autopilot and records its reason and resume condition. That covers tracker access, adviser or arena-seat availability, CI-wait timeouts, readiness `UNKNOWN`, dismissed approvals, wake or cleanup uncertainty, single-provider routing, an existing tag or version, and a failed publish.
    - **Run-record line:** `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>)`, plus the next step.
 2. **Eligibility.**
    - Autopilot applies to authorized engineering-delivery runs.

@@ -225,8 +225,11 @@ is `merge-ready` or `held`. Under the recorded Notification policy,
 `axstack-relay` sends only a serious risk immediately, a genuine blocked
 operation needing user intervention after bounded safe recovery, or the
 decision holds and capped milestones named by the recorded Notification policy.
-Questions, spec approvals, progress, CI pending, merge-ready, merged, and
-completion stay in Orca unless the recorded Notification policy names it.
+Routine questions stay in Orca. Progress, CI pending, and completion always stay
+in Orca.
+Only the bounded categories—user-decision holds (including spec approval),
+serious-risk holds, and at most two merge-ready/merged milestones per run—may
+be relayed under the recorded Notification policy.
 
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
 driver resumes on the user's next message, `/axstack-watch`, or the armed
