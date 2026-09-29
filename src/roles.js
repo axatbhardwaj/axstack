@@ -4,6 +4,18 @@ const PROVIDER_BOUNDS = Object.freeze({
   'claude-only': new Set(['claude']),
 });
 
+const CLASS_PROVIDERS = Object.freeze({
+  fable: 'claude', opus: 'claude', sonnet: 'claude', haiku: 'claude',
+  astra: 'codex', sol: 'codex', luna: 'codex',
+});
+
+export function deriveModelClass(model) {
+  if (typeof model !== 'string') return null;
+  return model.match(/^gpt-(\d+(?:\.\d+)*)-(astra|sol|luna)$/)?.[2]
+    ?? model.match(/^claude-(fable|opus|sonnet|haiku)-/)?.[1]
+    ?? null;
+}
+
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
     'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'claude/claude-opus-5-5', 'medium'],
@@ -36,11 +48,21 @@ export function assertBundleRoles(roles) {
     }
     if (ids.has(role.id)) throw new Error(`invalid bundle roles: duplicate role ID ${role.id}`);
     ids.add(role.id);
-    if (!Object.hasOwn(role, 'model')) {
+    const hasClass = Object.hasOwn(role, 'modelClass');
+    if (hasClass && !Object.hasOwn(CLASS_PROVIDERS, role.modelClass)) {
+      throw new Error(`invalid bundle roles: ${role.id} has an unsupported modelClass`);
+    }
+    if (hasClass && role.provider !== CLASS_PROVIDERS[role.modelClass]) {
+      throw new Error(`invalid bundle roles: ${role.id} model class does not match provider`);
+    }
+    if (!hasClass && !Object.hasOwn(role, 'model')) {
       throw new Error('invalid bundle roles: model must be a non-empty string or explicit null');
     }
-    if (role.model !== null && (typeof role.model !== 'string' || role.model.trim() === '')) {
+    if (Object.hasOwn(role, 'model') && role.model !== null && (typeof role.model !== 'string' || role.model.trim() === '')) {
       throw new Error('invalid bundle roles: model must be a non-empty string or explicit null');
+    }
+    if (hasClass && typeof role.model === 'string' && deriveModelClass(role.model) !== role.modelClass) {
+      throw new Error(`invalid bundle roles: ${role.id} model pin does not match model class`);
     }
     for (const field of ['icon', 'color', 'modeId', 'thinkingOptionId', 'notes']) {
       if (role[field] !== undefined && typeof role[field] !== 'string') {
@@ -75,7 +97,7 @@ export function assessRoleReadiness(roles, preset) {
     if (!bounds.has(role.provider)) {
       gaps.push(`${role.id} provider ${JSON.stringify(role.provider)} is outside ${preset} bounds (${[...bounds].join('|')})`);
     }
-    if (!isIntentionalAbsence(role) && (typeof role.model !== 'string' || role.model.trim() === '')) {
+    if (!isIntentionalAbsence(role) && !Object.hasOwn(role, 'modelClass') && (typeof role.model !== 'string' || role.model.trim() === '')) {
       gaps.push(`${role.id} requires a configured model`);
     }
   }

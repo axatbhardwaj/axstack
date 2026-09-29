@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 import {
+  assertBundleRoles,
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
   installedRoleBytes,
@@ -19,6 +20,62 @@ const root = import.meta.dir.slice(0, -'/tests/installer'.length);
 const solPairIds = [
   'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
 ];
+
+test('model classes derive only from complete Codex IDs and Claude family prefixes', () => {
+  for (const [modelClass, id, provider] of [
+    ['sol', 'gpt-6.10-sol', 'codex'],
+    ['astra', 'gpt-6-astra', 'codex'],
+    ['luna', 'gpt-6.1-luna', 'codex'],
+    ...['fable', 'opus', 'sonnet', 'haiku'].map((name) => [name, `claude-${name}-5-5`, 'claude']),
+  ]) {
+    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), provider, modelClass }])).not.toThrow();
+  }
+  for (const id of ['gpt-5.6-terra', 'gpt-5.5', 'gpt-reserve', 'gpt-6-sol-preview', 'xgpt-6-sol']) {
+    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), modelClass: 'sol' }])).toThrow();
+  }
+});
+
+test('role rows accept class only, class with matching pin, legacy pin and allowlisted absence', () => {
+  const rows = [
+    { id: 'axstack-driver', name: 'Driver', provider: 'codex', modelClass: 'sol' },
+    { ...role('axstack-monitor', null), modelClass: 'astra' },
+    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
+    role('axstack-research-code', 'gpt-5.6-terra'),
+    { ...role('axstack-checker', null), provider: 'antigravity' },
+  ];
+  expect(() => assertBundleRoles(rows)).not.toThrow();
+  expect(assessRoleReadiness(rows, 'mixed')).toEqual({ ready: true, gaps: [] });
+});
+
+test('role rows reject class/provider and pin/class mismatches before installation', () => {
+  for (const [row, message] of [
+    [{ ...role('axstack-driver', null), provider: 'claude', modelClass: 'sol' }, /class.*provider/i],
+    [{ ...role('axstack-driver', 'gpt-6-luna'), modelClass: 'sol' }, /pin.*class/i],
+    [{ ...role('axstack-driver', 'gpt-5.6-terra'), modelClass: 'sol' }, /pin.*class/i],
+    [{ ...role('axstack-driver', null), modelClass: 'terra' }, /modelClass/i],
+    [{ id: 'axstack-driver', name: 'Driver', provider: 'codex' }, /model/i],
+  ]) {
+    expect(() => assertBundleRoles([row])).toThrow(message);
+  }
+});
+
+test('upgrade reports existing role IDs when modelClass or model changes', () => {
+  const rootDir = makeTempRoot('axstack-model-field-upgrade-');
+  const skillsDir = join(rootDir, 'installed');
+  const old = [role('axstack-driver', 'gpt-6-sol'), role('axstack-monitor', 'gpt-6-astra')];
+  const current = [
+    { ...old[0], modelClass: 'sol' },
+    { ...old[1], model: 'gpt-6.1-astra' },
+  ];
+  const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
+  const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
+  const cli = `${root}/bin/axstack.js`;
+  const args = (bundle) => ['install', '--bundle', bundle, '--preset', 'mixed', '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+  runCli(cli, args(oldBundle), { env: { HOME: rootDir } });
+  const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
+  expect(result.out).toContain('changed role models: axstack-driver (modelClass), axstack-monitor (model)');
+  expect(runCli(cli, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('changed role models:');
+});
 
 test('installed readiness compares role IDs with the selected bundle', () => {
   const expectedRoles = [

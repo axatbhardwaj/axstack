@@ -635,8 +635,16 @@ export async function installBundle({
           const newIds = new Set(bundle.bundleRoles.map((role) => role.id));
           const addedRoleIds = bundle.bundleRoles.filter((role) => !oldIds.has(role.id)).map((role) => role.id);
           const removedRoleIds = old.roles.filter((role) => role?.id && !newIds.has(role.id)).map((role) => role.id);
+          const oldById = new Map(old.roles.filter((role) => role?.id).map((role) => [role.id, role]));
+          const changedRoleModels = bundle.bundleRoles.flatMap((role) => {
+            const previous = oldById.get(role.id);
+            if (!previous) return [];
+            const fields = ['modelClass', 'model'].filter((field) => previous[field] !== role[field]);
+            return fields.length ? [`${role.id} (${fields.join(', ')})`] : [];
+          });
           summary.addedRoleIds = addedRoleIds;
           summary.removedRoleIds = removedRoleIds;
+          summary.changedRoleModels = changedRoleModels;
         }
       } catch { /* No reliable role-ID diff for malformed prior bytes. */ }
     }

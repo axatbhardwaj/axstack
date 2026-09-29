@@ -14,6 +14,23 @@ const profile = (id, provider = 'codex') => ({
 });
 
 describe('preset bundle validation', () => {
+  test('rejects class/provider and pin/class mismatches before writing installer targets', () => {
+    for (const row of [
+      { ...profile('axstack-driver'), modelClass: 'opus' },
+      { ...profile('axstack-driver'), model: 'gpt-6-luna', modelClass: 'sol' },
+    ]) {
+      const root = makeTempRoot('axstack-invalid-model-class-');
+      const bundle = writeFixtureBundle(root, { presets: { mixed: [row] } });
+      const skillsDir = join(root, 'installed');
+      const result = runCli([
+        'install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir,
+        '--no-claude-settings', '--yes',
+      ], { env: { HOME: root }, expectFail: true });
+      expect(result.out).toMatch(/model (class.*provider|pin.*class)/i);
+      expect(existsSync(skillsDir)).toBe(false);
+    }
+  });
+
   test('ships the role roster referenced by shared routing', async () => {
     const validated = await validateBundle(join(import.meta.dir, '..', '..'), 'mixed');
     expect(validated.files.map(({ rel }) => rel)).toContain('axstack/references/role-roster.md');
