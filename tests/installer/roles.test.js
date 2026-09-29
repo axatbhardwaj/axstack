@@ -16,6 +16,9 @@ const role = (id, model = 'model') => ({
 });
 
 const root = import.meta.dir.slice(0, -'/tests/installer'.length);
+const solPairIds = [
+  'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
+];
 
 test('installed readiness compares role IDs with the selected bundle', () => {
   const expectedRoles = [
@@ -84,11 +87,65 @@ test('preset readiness accepts the configured research routes', () => {
   }
 });
 
+test('installed presets route analysis roles to the selected provider', () => {
+  const expected = {
+    mixed: ['claude', 'claude-sonnet-5-5', 'high'],
+    'claude-only': ['claude', 'claude-sonnet-5-5', 'high'],
+    'codex-only': null,
+  };
+  const analysisIds = [
+    'axstack-auditor', 'axstack-research-code', 'axstack-explore-execution',
+  ];
+  for (const [preset, route] of Object.entries(expected)) {
+    const rootDir = makeTempRoot(`axstack-analysis-${preset}-`);
+    const skillsDir = join(rootDir, 'installed');
+    runCli(`${root}/bin/axstack.js`, [
+      'install', '--bundle', root, '--preset', preset, '--skills-dir', skillsDir,
+      '--no-claude-settings', '--yes',
+    ], { env: { HOME: rootDir } });
+    const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+    const byId = Object.fromEntries(roles.map((entry) => [entry.id, entry]));
+    for (const id of analysisIds) {
+      const actual = byId[id];
+      const codexOnlyRoute = id === 'axstack-auditor'
+        ? ['codex', 'gpt-6-luna', 'xhigh']
+        : ['codex', 'gpt-6-sol', 'high'];
+      expect([actual.provider, actual.model, actual.thinkingOptionId], `${preset}: ${id}`)
+        .toEqual(route ?? codexOnlyRoute);
+    }
+    if (preset === 'mixed') {
+      expect(byId['axstack-research-web-google'].provider).toBe('antigravity');
+      expect(byId['axstack-research-x'].provider).toBe('grok');
+    }
+  }
+});
+
+test('installed presets expose independent Sol analysis pair seats', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const rootDir = makeTempRoot(`axstack-sol-pairs-${preset}-`);
+    const skillsDir = join(rootDir, 'installed');
+    runCli(`${root}/bin/axstack.js`, [
+      'install', '--bundle', root, '--preset', preset, '--skills-dir', skillsDir,
+      '--no-claude-settings', '--yes',
+    ], { env: { HOME: rootDir } });
+    const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+    expect(roles).toHaveLength(31);
+    for (const id of [
+      'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
+    ]) {
+      const pair = roles.find((entry) => entry.id === id);
+      expect(pair, `${preset}: ${id}`).toMatchObject(preset === 'claude-only'
+        ? { provider: 'claude', model: null }
+        : { provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high' });
+    }
+  }
+});
+
 test('a pristine 24-row installation upgrades to 26 and exposes both added IDs', () => {
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-arena-judge-opus', 'axstack-ui-verifier'].includes(id));
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-arena-judge-opus', 'axstack-ui-verifier', ...solPairIds].includes(id));
   const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -117,7 +174,7 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
 test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge', () => {
   const rootDir = makeTempRoot('axstack-opus-upgrade-');
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-ui-verifier');
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-ui-verifier' && !solPairIds.includes(id));
   const old = current.filter(({ id }) => id !== 'axstack-arena-judge-opus');
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -138,7 +195,7 @@ test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge',
 test('a pristine 27-row installation reports the added UI verifier', () => {
   const rootDir = makeTempRoot('axstack-ui-verifier-upgrade-');
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !solPairIds.includes(id));
   const old = current.filter(({ id }) => id !== 'axstack-ui-verifier');
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -150,6 +207,24 @@ test('a pristine 27-row installation reports the added UI verifier', () => {
   const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
   expect(result.out).toContain('added role IDs: axstack-ui-verifier');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(28);
+});
+
+test('a pristine 28-row installation reports all three Sol pair seats', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const rootDir = makeTempRoot(`axstack-sol-upgrade-${preset}-`);
+    const skillsDir = join(rootDir, 'installed');
+    const current = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8')).roles;
+    const old = current.filter(({ id }) => !solPairIds.includes(id));
+    const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { [preset]: old } });
+    const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { [preset]: current } });
+    const args = (bundle) => ['install', '--bundle', bundle, '--preset', preset, '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+    runCli(`${root}/bin/axstack.js`, args(oldBundle), { env: { HOME: rootDir } });
+    const result = runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } });
+    expect(result.out).toContain(`added role IDs: ${solPairIds.join(', ')}`);
+    const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
+    expect(installed).toHaveLength(31);
+    expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
+  }
 });
 
 test('retired Fable seats migrate to Opus adviser and escalation seat once', () => {
@@ -171,7 +246,7 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
     expect(result.out).toContain('added role IDs: axstack-advisor-opus, axstack-escalation-fable');
     expect(result.out).toContain('removed role IDs: axstack-advisor-fable, axstack-arena-judge-fable');
     const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
-    expect(installed).toHaveLength(28);
+    expect(installed).toHaveLength(31);
     expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
     const again = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
     expect(again.out).not.toContain('added role IDs:');

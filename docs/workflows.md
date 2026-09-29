@@ -48,20 +48,26 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 28 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 31 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Luna xhigh |
-| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |
-| `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high |
+| `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Sonnet high + Sol high |
+| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
+| `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high (Sol absent) |
 
-In `mixed` and `claude-only`, `axstack-research-requirements`,
-`axstack-research-web`, and `axstack-monitor` use Claude Sonnet 5.5 high.
-`codex-only` keeps its Codex assignments for those roles.
+In `mixed` and `claude-only`, `axstack-auditor`, `axstack-research-requirements`,
+`axstack-research-code`, `axstack-research-web`, `axstack-explore-execution`,
+and `axstack-monitor` use Claude Sonnet 5.5 high. `codex-only` keeps its Codex
+assignments for those roles. Mixed web-google and X retain their source-specific
+Antigravity and Grok routes.
+The new `-sol` auditor, research-code, and explore-execution seats use Sol high
+in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.
+Dispatch the base and Sol seats independently on the same brief, then reconcile
+their findings per claim without averaging.
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it

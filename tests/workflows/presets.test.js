@@ -15,6 +15,7 @@ const roleIds = [
   'axstack-checker',
   'axstack-research-requirements',
   'axstack-research-code',
+  'axstack-research-code-sol',
   'axstack-research-web',
   'axstack-research-web-google',
   'axstack-research-x',
@@ -23,8 +24,10 @@ const roleIds = [
   'axstack-ui-verifier',
   'axstack-explore-codebase',
   'axstack-explore-execution',
+  'axstack-explore-execution-sol',
   'axstack-monitor',
   'axstack-auditor',
+  'axstack-auditor-sol',
   'axstack-debug-investigator-1',
   'axstack-debug-investigator-2',
   'axstack-debug-investigator-3',
@@ -47,13 +50,13 @@ const expected = {
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'medium'),
     ag(null, 'low'), a('claude-sonnet-5-5', 'high'),
-    c('gpt-6-sol', 'high'), a('claude-sonnet-5-5', 'high'), ag(null, 'high'),
+    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'), a('claude-sonnet-5-5', 'high'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-luna', 'xhigh'),
     a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
+    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
     a('claude-sonnet-5-5', 'high'),
-    c('gpt-6-luna', 'xhigh'),
+    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
@@ -65,13 +68,13 @@ const expected = {
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
     c('gpt-6-sol', 'medium'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
+    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'low'),
-    c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-luna', 'xhigh'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
@@ -80,22 +83,36 @@ const expected = {
   'claude-only': [
     a(null, 'high'),
     a('claude-opus-5-5', 'xhigh'),
-    a('claude-opus-5-5', 'medium'), a('claude-opus-5-5', 'medium'),
-    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
-    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'), a(null, 'high'),
+    a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'),
+    a('claude-opus-5-5', 'medium'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
     a(null, 'high'),
-    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
+    a(null, 'high'),
+    a(null, 'high'),
     a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
-    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'),
-    a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'),
-    a(null, 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
-    a(null, 'high'), a(null, 'high'),
-  ],
-};
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a(null, 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
+    a(null, 'high'),
+    a('claude-opus-5-5', 'medium'),
+    a('claude-sonnet-5-5', 'high'),
+    a('claude-opus-5-5', 'medium'),
+    a('claude-sonnet-5-5', 'high'),
+    a(null, 'xhigh'),
+    a('claude-fable-5-1', 'xhigh'),
+    a('claude-opus-5-5', 'xhigh'),
+    a(null, 'high'),
+    a(null, 'high'),
+  ],};
 
 // Structural data checks only. They do not execute agents or prove routing behavior.
 test('presets: canonical assets replace the legacy profile', () => {
@@ -196,17 +213,23 @@ for (const id of ['axstack-owner', 'axstack-debug-investigator-3']) {
   });
 }
 
-test('presets: Codex auditor effort agrees with audit skill and workflow table', () => {
+test('presets: auditor route agrees with audit skill and workflow table', () => {
   const audit = readFileSync(`${root}/skills/axstack-audit/SKILL.md`, 'utf8');
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
-  for (const preset of ['mixed', 'codex-only']) {
+  for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const auditor = roles.find(({ id }) => id === 'axstack-auditor');
-    expect(auditor).toMatchObject({ provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh' });
+    const sonnet = preset !== 'codex-only';
+    expect(auditor).toMatchObject(sonnet
+      ? { provider: 'claude', model: 'claude-sonnet-5-5', thinkingOptionId: 'high' }
+      : { provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh' });
     expect(workflows).toContain(`| \`${preset}\` |`);
-    expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`))).toEndWith('| Luna xhigh |');
+    expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`)))
+      .toEndWith(sonnet
+        ? (preset === 'mixed' ? '| Sonnet high + Sol high |' : '| Sonnet high (Sol absent) |')
+        : '| Luna xhigh + Sol high |');
   }
-  expect(audit).toContain('`axstack-auditor` profile (codex/gpt-6-luna xhigh)');
+  expect(audit.replace(/\s+/g, ' ')).toContain('`axstack-auditor` profile (claude/claude-sonnet-5-5 high in mixed/claude-only; codex/gpt-6-luna xhigh in codex-only)');
 });
 
 test('presets: Codex explainer reviewer uses supported Luna effort', () => {
@@ -331,7 +354,7 @@ test('presets: public docs and shared references never state a stale role count'
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |',
+    '| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |',
   );
 });
 

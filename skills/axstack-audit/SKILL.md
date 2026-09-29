@@ -28,8 +28,13 @@ immediately before an actual auditor profile or session dispatch. Ordinary
 audit reading and record writing do not load it, and the auditor never
 dispatches.
 
-Core owns the `axstack-auditor` profile (codex/gpt-6-luna xhigh) and its
-invocation. This skill governs what that auditor reads, measures, and proposes.
+Core owns the `axstack-auditor` profile (claude/claude-sonnet-5-5 high in
+mixed/claude-only; codex/gpt-6-luna xhigh in codex-only) and its invocation.
+This skill governs what that auditor reads, measures, and proposes.
+Dispatch `axstack-auditor` and `axstack-auditor-sol` independently on the same
+bounded brief, without cross-reading. The driver reconciles findings per claim;
+never average verdicts. Record an intentionally absent Sol seat and continue
+with the base auditor alone; a configured but unavailable seat holds its work.
 The user-chosen improvement mode is a tested, independently reviewed PR that a
 human merges.
 
