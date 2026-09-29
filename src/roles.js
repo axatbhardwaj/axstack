@@ -49,7 +49,7 @@ export function assertBundleRoles(roles) {
     if (ids.has(role.id)) throw new Error(`invalid bundle roles: duplicate role ID ${role.id}`);
     ids.add(role.id);
     const hasClass = Object.hasOwn(role, 'modelClass');
-    if (hasClass && !Object.hasOwn(CLASS_PROVIDERS, role.modelClass)) {
+    if (hasClass && (typeof role.modelClass !== 'string' || !Object.hasOwn(CLASS_PROVIDERS, role.modelClass))) {
       throw new Error(`invalid bundle roles: ${role.id} has an unsupported modelClass`);
     }
     if (hasClass && role.provider !== CLASS_PROVIDERS[role.modelClass]) {

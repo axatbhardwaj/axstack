@@ -6,6 +6,7 @@ import {
   assertBundleRoles,
   assessInstalledRoleSnapshot,
   assessRoleReadiness,
+  deriveModelClass,
   installedRoleBytes,
 } from '../../src/roles.js';
 
@@ -35,6 +36,28 @@ test('model classes derive only from complete Codex IDs and Claude family prefix
   }
 });
 
+test('deriveModelClass maps exact model families and rejects IDs outside them', () => {
+  for (const [model, expected] of [
+    ['gpt-6-sol', 'sol'],
+    ['gpt-6.1-sol', 'sol'],
+    ['gpt-6.10-luna', 'luna'],
+    ['claude-opus-5-5', 'opus'],
+    ['gpt-5.6-terra', null],
+    ['gpt-5.5', null],
+    ['gpt-reserve', null],
+    ['gpt-sol', null],
+    ['gpt-6..1-sol', null],
+    ['gpt-6-sol-mini', null],
+    ['xgpt-6-sol', null],
+    ['claude-opus', null],
+    ['claude-opusx-5', null],
+    ['xclaude-opus-5', null],
+    ['claude-terra-1', null],
+  ]) {
+    expect(deriveModelClass(model), model).toBe(expected);
+  }
+});
+
 test('role rows accept class only, class with matching pin, legacy pin and allowlisted absence', () => {
   const rows = [
     { id: 'axstack-driver', name: 'Driver', provider: 'codex', modelClass: 'sol' },
@@ -53,6 +76,7 @@ test('role rows reject class/provider and pin/class mismatches before installati
     [{ ...role('axstack-driver', 'gpt-6-luna'), modelClass: 'sol' }, /pin.*class/i],
     [{ ...role('axstack-driver', 'gpt-5.6-terra'), modelClass: 'sol' }, /pin.*class/i],
     [{ ...role('axstack-driver', null), modelClass: 'terra' }, /modelClass/i],
+    [{ ...role('axstack-driver', null), modelClass: ['sol'] }, /modelClass/i],
     [{ id: 'axstack-driver', name: 'Driver', provider: 'codex' }, /model/i],
   ]) {
     expect(() => assertBundleRoles([row])).toThrow(message);
@@ -62,10 +86,11 @@ test('role rows reject class/provider and pin/class mismatches before installati
 test('upgrade reports existing role IDs when modelClass or model changes', () => {
   const rootDir = makeTempRoot('axstack-model-field-upgrade-');
   const skillsDir = join(rootDir, 'installed');
-  const old = [role('axstack-driver', 'gpt-6-sol'), role('axstack-monitor', 'gpt-6-astra')];
+  const old = [role('axstack-driver', 'gpt-6-sol'), role('axstack-monitor', 'gpt-6-astra'), role('axstack-checker', 'gpt-6-luna')];
   const current = [
     { ...old[0], modelClass: 'sol' },
     { ...old[1], model: 'gpt-6.1-astra' },
+    { ...old[2] },
   ];
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -74,6 +99,7 @@ test('upgrade reports existing role IDs when modelClass or model changes', () =>
   runCli(cli, args(oldBundle), { env: { HOME: rootDir } });
   const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
   expect(result.out).toContain('changed role models: axstack-driver (modelClass), axstack-monitor (model)');
+  expect(result.out).not.toContain('axstack-checker (');
   expect(runCli(cli, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('changed role models:');
 });
 

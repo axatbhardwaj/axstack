@@ -1,4 +1,4 @@
-<!-- Approved spec: GitHub issue #210 rev 2; issue body SHA-256: d2903d3455661765e724c44b93ab84ef45382124d0e4ef27f80ab95bb63706e8 -->
+<!-- Approved spec: GitHub issue #210 rev 2; SHA-256 of gh output (issue body plus trailing newline): d2903d3455661765e724c44b93ab84ef45382124d0e4ef27f80ab95bb63706e8; raw issue body SHA-256: d7c3d3b7d9e5c1620e41bae76e86f698bd8c942076d25b571743dabf6741d0f5 -->
 # Model classes: roles follow the latest model of their class
 
 **Status:** Approved rev 2 (2026-09-30).
