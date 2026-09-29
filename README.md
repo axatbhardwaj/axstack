@@ -107,6 +107,9 @@ implementation review; single-provider presets have workflow limits and are
 not automatic fallbacks when a model is unavailable. See
 [workflow and routing details](docs/workflows.md).
 
+In `mixed` and `claude-only`, requirements research, web research, and the
+optional monitor use Claude Sonnet 5.5 high.
+
 ## Optional PR automation
 
 Manual review works without a schedule. Own open PRs in chat-run mode use a

@@ -42,6 +42,8 @@ provider/model/effort substitution.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
+- `axstack-research-requirements`/`axstack-research-web`/`axstack-monitor`:
+  Sonnet 5.5 high in mixed/claude-only.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
   internal reports to its Run and original driver.
 - `axstack-debug-investigator-1..4` probe L1 briefs.
@@ -55,18 +57,17 @@ step (3) for user routing: no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
-- One bounded research question -> `axstack-research`: verify primary sources
-  and code; return a cited note with limitations. Fan out only distinct questions.
-- Understanding a system, change, or implementation gap -> `axstack-explain`:
-  current/intended behavior, evidence dimensions, bounded gaps from project docs and
-  rendered behavior. "What could this break" follows
+- Bounded research -> `axstack-research`: verify primary sources and code;
+  cite limitations. Fan out distinct questions.
+- Understand a system or gap -> `axstack-explain`:
+  current/intended behavior and bounded gaps from docs and renders.
+  "What could this break" follows
   [Blast radius](blast-radius.md). Publication needs separate authority.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).
-- Codebase-quality or refactor discovery -> `axstack-improve`: inspect bounded
-  scope, rank evidenced candidates, report only; no spec, tickets, or source
-  edits.
+- Code quality/refactor discovery -> `axstack-improve`: inspect bounded
+  scope, rank candidates with evidence, report only; no source edits.
 - Accepted worker/Task/Run completion or bounded backlog request -> driver invokes
   `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the

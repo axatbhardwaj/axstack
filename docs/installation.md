@@ -176,6 +176,10 @@ A new run records the selected preset plus all 27 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
 
+The `mixed` and `claude-only` presets assign `axstack-research-requirements`,
+`axstack-research-web`, and `axstack-monitor` to Claude Sonnet 5.5 high.
+The `codex-only` assignments for these roles are unchanged.
+
 The mixed checker and `axstack-research-web-google` have provider
 `antigravity`; mixed `axstack-research-x` has provider `grok`. All three use
 `model: null` because Orca exposes no model override for those agent-ID routes;
