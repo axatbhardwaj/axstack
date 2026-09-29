@@ -135,6 +135,7 @@ The owner checks current required checks, all feedback, approvals, mergeability,
 and exact-revision receipts before any merge-ready statement. API errors leave
 readiness `UNKNOWN`; review approval alone is not merge-ready. Merge-ready is an
 observed state distinct from merged, and the human merges by default.
+A current diligence `PASS` at the exact head is required before any merge-ready statement.
 Under authorized own-PR maintenance, keep repairing and rebasing onto the base
 when it moves, then re-run checks, until the head is rebased on the current base,
 every review comment and thread is addressed, at least one human team member's

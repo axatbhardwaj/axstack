@@ -21,7 +21,7 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
     /authoring\s*\|\s*published\s*\|\s*in-review\s*\|\s*repairing\(n\)\s*\|\s*merge-ready\s*\|\s*merged\s*\|\s*held/i,
   );
   expect(loaded).toMatch(/REQUEST_CHANGES[^.]*same author[^.]*new revision[^.]*repairs/i);
-  expect(loaded).toMatch(/third `?REQUEST_CHANGES`?[^.]*held/i);
+  expect(loaded).toMatch(/third review round with `REQUEST_CHANGES` and\/or diligence `FINDINGS`[^.]*held/i);
   expect(loaded).toMatch(/`codex-only`[^.]*`claude-only`[^.]*hold[^.]*step \(3\)[^.]*no substitution/i);
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
   expect(loaded).toMatch(/merge-ready[^.]*human boundary[^.]*user merges/i);

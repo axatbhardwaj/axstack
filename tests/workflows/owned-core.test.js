@@ -398,7 +398,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
-  expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
+  expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [

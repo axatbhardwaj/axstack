@@ -45,5 +45,7 @@ as a `git clone` into a temp directory followed by `orca repo add`; each
 the directory is gone. Release preparation uses a `release/<version>` worktree
 of the same registered repo the same way. Release the checkout with
 `ORCA worktree rm` after its receipt is recorded.
-For a release PR, dispatch `axstack-diligence` to check the release PR body
+
+For a release PR, dispatch `axstack-diligence` under
+[Diligence](diligence.md) to check the release PR body
 against the merged PRs before publication.
