@@ -29,11 +29,20 @@ test('analysis pairs: code and execution research retain both paired routes', ()
 
 test('analysis pairs: routing and declared scenarios cover presence and absence', () => {
   const routing = compact('skills/axstack/references/routing.md');
+  const sonnet = routing.split('- `axstack-ui-verifier`')[1]?.split('- Sol pairs ')[0];
   const pairs = routing.split('- Sol pairs ')[1]?.split('- `axstack-debug-investigator')[0];
+  expect(sonnet).toBeTruthy();
+  for (const role of [
+    'axstack-auditor', 'axstack-research-requirements', 'axstack-research-code',
+    'axstack-research-web', 'axstack-explore-execution', 'axstack-monitor',
+  ]) expect(sonnet).toContain(role);
+  expect(sonnet).toContain('claude-sonnet-5-5');
   expect(pairs).toBeTruthy();
-  expect(pairs).toMatch(/auditor[^.]*code research[^.]*execution/i);
-  expect(pairs).toMatch(/mixed\/codex-only[^.]*absent in claude-only/i);
-  expect(pairs).toMatch(/independent[^.]*same brief[^.]*without cross-reading/i);
+  for (const role of [
+    'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
+  ]) expect(pairs).toContain(role);
+  expect(pairs).toMatch(/mixed\/codex-only[^.]*absent claude-only/i);
+  expect(pairs).toMatch(/independent[^.]*same brief[^.]*no cross-reading/i);
   expect(pairs).toMatch(/reconcile[^.]*claims[^.]*never average/i);
   expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
 
@@ -65,6 +74,7 @@ test('analysis pairs: routing preserves original ownership and direct-route duti
   expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
   expect(routing).toMatch(/verify primary sources and code/i);
   expect(routing).toMatch(/escalate via adviser-directed investigators/i);
+  expect(routing).toMatch(/red loop wanted -> `axstack-debug`/i);
   expect(routing).toMatch(/rank bounded candidates with evidence/i);
   expect(routing).toMatch(/reconcile run record[^.]*launch no native handoff/i);
   expect(routing).toMatch(/runtime-owned handoff guide[^.]*explicit recipient acceptance/i);
