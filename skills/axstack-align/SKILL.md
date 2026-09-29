@@ -5,6 +5,9 @@ description: When exploring or planning engineering work, use axstack-align to s
 
 # Align
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -166,7 +169,7 @@ record or spec. Read-only scope keeps proposed documentation in the permitted
 private record or response. Documentation is neither implementation nor spec
 approval; record chosen document names and paths once per run.
 
-## Read back, classify, and stop
+## Read back, classify, and route
 
 1. Read back the decisions, constraints, exclusions, and remaining evidence
    gaps. For substantial work, this summary becomes part of the draft spec in
@@ -189,6 +192,7 @@ approval; record chosen document names and paths once per run.
    [Orca runtime](../axstack/references/orca-runtime.md) immediately before
    actual dispatch. Alignment completion never dispatches a recipient.
 
-Alignment stops for both sizes only when the handoff is usable, its next scope
-identity is explicit, and execution has not started. The user invokes
-`axstack-implement` to execute.
+Alignment completes for both sizes only when the handoff is usable and its next
+scope identity is explicit. An eligible delivery run continues under Autopilot;
+an explicit stop-after-Align request ends here. Substantial work continues to
+Spec, and small work continues from its small-change intent to Implement.

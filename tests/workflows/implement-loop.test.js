@@ -26,6 +26,7 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
   expect(loaded).toMatch(/merge-ready[^.]*human boundary[^.]*user merges/i);
   expect(loaded).toMatch(/resumes[^.]*next message[^.]*`?\/axstack-watch`?/i);
+  expect(loaded).toMatch(/resumes[^.]*armed chat-run watch wake/i);
   expect(loaded).toMatch(/done[^.]*every required PR[^.]*forge-merged[^.]*Close-out/i);
 });
 

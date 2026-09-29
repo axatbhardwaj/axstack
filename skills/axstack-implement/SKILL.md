@@ -5,6 +5,9 @@ description: When an approved task is ready to build or repair, use axstack-impl
 
 # Implement
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 Include [Safe deletion](../axstack/references/workspace-hygiene.md#safe-deletion) in author briefs.
@@ -215,23 +218,34 @@ For each PR:
    `repairs` once and counts once toward the third-round hold.
 
 One run-level completion wait covers every unsettled Dispatch; the bounded
-forge check wait is the only other wait. End a turn only when every required PR
+forge check wait is the only other implementation wait. The eligible run arms
+one maintain-mode chat-run watch at its first published PR; that watch owns its
+10-minute harness wake or Orca fallback. End a turn only when every required PR
 is `merge-ready` or `held`. Under the recorded Notification policy,
-`axstack-relay` sends only a serious risk immediately or a genuine blocked
-operation that needs user intervention after bounded safe recovery. Questions,
-spec approvals, progress, CI pending, merge-ready, merged, and completion stay
+`axstack-relay` sends only a serious risk immediately, a genuine blocked
+operation needing user intervention after bounded safe recovery, or the
+decision holds and capped milestones named by the recorded Notification policy.
+Routine questions stay in Orca. Progress, CI pending, and completion always stay
 in Orca.
+Only the bounded categories—user-decision holds (including spec approval),
+serious-risk holds, and at most two merge-ready/merged milestones per run—may
+be relayed under the recorded Notification policy.
 
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
-driver resumes on the user's next message or `/axstack-watch`; no Orca merge
-wake exists today. Re-read forge state: record forge-merged PRs as `merged`;
+driver resumes on the user's next message, `/axstack-watch`, or the armed
+chat-run watch wake; no Orca merge wake exists today.
+Re-read forge state: record forge-merged PRs as `merged`;
 changed heads or feedback return to step 1; retain useful author work before Close-out.
-Run Close-out once only after every required PR is forge-merged and acceptance
-passes. It settles workers, records counts, makes the auditor decision and
+Run Close-out once only after every required PR is forge-merged, the run's
+Release step is settled or not applicable, and acceptance passes. It settles
+workers, records counts, makes the auditor decision and
 settlement, releases worktrees, closes eligible tickets, and archives the run.
+Without an Autopilot or Release record, the Release step is not applicable for
+both Close-out and run completion.
 
 The loop requires the `mixed` two-provider authored-review row. `codex-only` or
 `claude-only` holds at step (3) for an explicit user routing choice, with no
 substitution or same-provider review. Derived PR states are `authoring |
 published | in-review | repairing(n) | merge-ready | merged | held`. The run is
-done only when every required PR is forge-merged and Close-out has receipts.
+done only when every required PR is forge-merged, the run's Release step is
+settled or not applicable, and Close-out has receipts.

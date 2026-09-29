@@ -5,12 +5,15 @@ description: When an approved capability needs executable tasks, use axstack-tic
 
 # Tickets
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
 Produce an executable capability map tied to the exact approved spec revision.
 Keep user-visible capabilities in the selected store, keep implementation detail
-in the repository, reconcile lifecycle state, and stop before implementation.
+in the repository, reconcile lifecycle state, and return a map for continuation.
 
 Before mapping, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required edge to [Shared lifecycle](../axstack/references/lifecycle.md),
@@ -100,5 +103,5 @@ Recommendation: <move to In Review | keep open | close | other> (driver verifies
 
 5. **Return the mapping.** Report the pinned spec revision, selected store, map
    references, mutations performed by the driver, recorded gaps, and unresolved
-   decisions. Stop with a map ready for lifecycle continuation; implementation
-   has not started.
+   decisions. With a complete map and no hold, an eligible delivery run
+   continues to Implement in the same driver chat.

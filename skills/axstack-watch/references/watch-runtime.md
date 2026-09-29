@@ -90,8 +90,10 @@ busy, missing, fenced, protected, or permission-held driver is never interrupted
 or replaced.
 
 The driver records one Notification policy: `axstack-relay` Telegram home only
-for a user-decision hold, first merge-ready and fully merged milestones (at most
-two), or serious-risk hold. Quiet ticks never notify.
+for a user-decision hold (including spec and npm approval), merge-ready or
+merged milestones (at most two across implementation and release), or a
+serious-risk hold.
+Quiet ticks never notify.
 
 The driver alone routes repair. Re-read remote head/base and native ownership.
 Independent PRs may repair in parallel in separate Orca child worktrees within
@@ -116,8 +118,13 @@ re-read all feedback and approvals at the current head before readiness.
 Re-reading approvals checks current state, not re-requesting review from a
 human who already approved.
 
-Stop the chosen wake only when every watched PR is merged or closed, the user cancels,
-or it expires. The driver stops a harness-native wake and verifies its stop receipt;
+Stop the chosen wake only when every watched PR is merged or closed and the
+run's release step is settled or not applicable, the user cancels, or it
+expires. Without an Autopilot or Release record, the release step is not
+applicable to this watch. A required PR closed without merging records a
+decision hold and the wake remains active while unexpired until the user
+resolves scope, cancels, or the wake expires; the run is not release-eligible.
+The driver stops a harness-native wake and verifies its stop receipt;
 a failed or uncertain stop is a hold. Re-read membership and confirm no ambiguous
 publication or unsettled pass; cancellation
 prevents new work but does not prove running workers exited. The observer may
