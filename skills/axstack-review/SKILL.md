@@ -204,17 +204,18 @@ This section applies to peer and authored PR modes.
    - **Authored:** exactly one eligible independent reviewer from this complete
      mapping:
 
-     | Preset | Actual author provider/model | Reviewer role (configured model/effort) |
+     | Preset | Actual author provider/class | Reviewer role (configured class/effort) |
      | --- | --- | --- |
-     | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
-     | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` high) |
-     | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
-     | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` high) |
+     | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |
+     | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
+     | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+     | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 
      The diligence receipt is separate and does not count as a reviewer receipt.
 
-     Provenance is matched on provider/model ID; record effort, but never use
-     effort to create a mapping. Any other author provenance for the
+     From the recorded exact model ID, derive its class and match provenance
+     on provider/class; record effort, but never use effort to create a mapping.
+     An ID with no class is `INCOMPLETE`. Any other author provenance for the
      selected preset is unsupported and `INCOMPLETE`, including its secondary
      reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
      ask the user. Never derive a reverse pairing from slot position. The

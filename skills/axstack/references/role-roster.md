@@ -5,12 +5,12 @@
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
 
-  | Preset | Author | Reviewer (model/effort) |
+  | Preset | Author class | Reviewer (class/effort) |
   | --- | --- | --- |
-  | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
-  | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` high) |
-  | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
-  | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` high) |
+  | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |
+  | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+  | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   `axstack-arena-candidate-grok`/
   `axstack-arena-candidate-antigravity` add families.

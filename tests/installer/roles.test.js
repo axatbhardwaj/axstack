@@ -140,6 +140,53 @@ test('single-provider readiness accepts only the intentionally unavailable advis
   );
 });
 
+test('authored pairing accepts all four class routes and newer exact author IDs', () => {
+  for (const [preset, author, primary, secondary] of [
+    ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
+    ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
+    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
+    ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
+  ]) {
+    const rows = [
+      { ...role('axstack-author', author[2]), provider: author[0] },
+      { id: 'axstack-reviewer-primary', name: 'Primary', provider: primary[0], modelClass: primary[1], thinkingOptionId: primary[2] },
+      { id: 'axstack-reviewer-secondary', name: 'Secondary', provider: secondary[0], modelClass: secondary[1], thinkingOptionId: secondary[2] },
+    ];
+    expect(assessRoleReadiness(rows, preset), `${preset}: ${author[2]}`).toEqual({ ready: true, gaps: [] });
+    rows[0] = { ...rows[0], modelClass: author[1] };
+    expect(assessRoleReadiness(rows, preset).ready).toBe(true);
+    rows[0] = { id: 'axstack-author', name: 'Author', provider: author[0], modelClass: author[1] };
+    expect(assessRoleReadiness(rows, preset)).toEqual({ ready: true, gaps: [] });
+  }
+});
+
+test('authored pairing rejects author IDs without a class and wrong reviewer class or effort', () => {
+  const rows = [
+    role('axstack-author', 'gpt-5.6-terra'),
+    { ...role('axstack-reviewer-primary', null), modelClass: 'sol', thinkingOptionId: 'high' },
+    { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium' },
+  ];
+  for (const model of ['gpt-5.6-terra', 'unknown']) {
+    rows[0].model = model;
+    expect(assessRoleReadiness(rows, 'mixed').gaps).toContain(`authored routing gap: unsupported axstack-author route codex/${model}`);
+  }
+  rows[0].model = 'gpt-5.6-sol';
+  rows[2] = { ...rows[2], provider: 'codex', modelClass: 'luna' };
+  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/medium'))).toBe(true);
+  rows[2] = { ...rows[2], provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' };
+  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/medium'))).toBe(true);
+});
+
+test('class-only reviewer distinctness compares classes before exact IDs exist', () => {
+  const rows = [
+    { ...role('axstack-reviewer-primary', null), modelClass: 'sol' },
+    { ...role('axstack-reviewer-secondary', null), modelClass: 'luna' },
+  ];
+  expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
+  rows[1].modelClass = 'sol';
+  expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain('reviewer pair must use two distinct models');
+});
+
 test('readiness accepts the intentionally unavailable X research route', () => {
   const mixed = [
     role('axstack-research-x', null),

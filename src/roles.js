@@ -18,16 +18,18 @@ export function deriveModelClass(model) {
 
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
-    'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'claude/claude-opus-5-5', 'medium'],
-    'claude/claude-opus-5-5': ['axstack-reviewer-primary', 'codex/gpt-6-sol', 'high'],
+    'codex/sol': ['axstack-reviewer-secondary', 'claude/opus', 'medium'],
+    'claude/opus': ['axstack-reviewer-primary', 'codex/sol', 'high'],
   },
   'codex-only': {
-    'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'codex/gpt-6-luna', 'xhigh'],
+    'codex/sol': ['axstack-reviewer-secondary', 'codex/luna', 'xhigh'],
   },
   'claude-only': {
-    'claude/claude-opus-5-5': ['axstack-reviewer-secondary', 'claude/claude-sonnet-5-5', 'high'],
+    'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'high'],
   },
 });
+
+const roleClass = (role) => role.modelClass ?? deriveModelClass(role.model);
 
 export function assertBundleRoles(roles) {
   if (!Array.isArray(roles) || roles.length === 0) {
@@ -108,7 +110,11 @@ export function assessRoleReadiness(roles, preset) {
   const primary = byId.get('axstack-reviewer-primary');
   const secondary = byId.get('axstack-reviewer-secondary');
   if (primary && secondary) {
-    if (primary.model === secondary.model) gaps.push('reviewer pair must use two distinct models');
+    const bothResolved = typeof primary.model === 'string' && typeof secondary.model === 'string';
+    const sameReviewer = primary.provider === secondary.provider && (bothResolved
+      ? primary.model === secondary.model
+      : roleClass(primary) !== null && roleClass(primary) === roleClass(secondary));
+    if (sameReviewer) gaps.push('reviewer pair must use two distinct models');
     if (preset === 'mixed' && primary.provider === secondary.provider) {
       gaps.push('mixed reviewer pair must use different providers');
     }
@@ -116,14 +122,14 @@ export function assessRoleReadiness(roles, preset) {
 
   const author = byId.get('axstack-author');
   if (author) {
-    const authorRoute = `${author.provider}/${author.model}`;
+    const authorRoute = `${author.provider}/${roleClass(author) ?? author.model}`;
     const route = AUTHORED_ROUTES[preset]?.[authorRoute];
     if (!route) {
       gaps.push(`authored routing gap: unsupported axstack-author route ${authorRoute}`);
     } else {
       const [reviewerId, reviewerRoute, effort] = route;
       const reviewer = byId.get(reviewerId);
-      if (!reviewer || `${reviewer.provider}/${reviewer.model}` !== reviewerRoute || reviewer.thinkingOptionId !== effort) {
+      if (!reviewer || `${reviewer.provider}/${roleClass(reviewer)}` !== reviewerRoute || reviewer.thinkingOptionId !== effort) {
         gaps.push(`authored routing gap: ${reviewerId} must be ${reviewerRoute}/${effort} for author ${authorRoute}`);
       }
     }

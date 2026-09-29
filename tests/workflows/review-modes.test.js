@@ -62,19 +62,19 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
   const rows = [
-    ['mixed', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`claude/claude-opus-5-5` medium'],
-    ['mixed', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-primary', '`codex/gpt-6-sol` high'],
-    ['codex-only', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-6-luna` xhigh'],
-    ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5-5` high'],
+    ['mixed', '`codex/sol`', 'axstack-reviewer-secondary', '`claude/opus` medium'],
+    ['mixed', '`claude/opus`', 'axstack-reviewer-primary', '`codex/sol` high'],
+    ['codex-only', '`codex/sol`', 'axstack-reviewer-secondary', '`codex/luna` xhigh'],
+    ['claude-only', '`claude/opus`', 'axstack-reviewer-secondary', '`claude/sonnet` high'],
   ];
-  for (const text of [review, roster]) {
+  for (const text of [review, roster, compact('skills/axstack-audit/SKILL.md')]) {
     for (const row of rows) {
       for (const cell of row) expect(text).toContain(cell);
     }
   }
-  for (const text of [review, routing]) {
-    expect(text).toMatch(/provenance is matched on provider\/model ID/i);
-  }
+  expect(review).toMatch(/recorded exact model ID[^.]*derive[^.]*class/i);
+  expect(review).toMatch(/no class[^.]*INCOMPLETE/i);
+  expect(routing).toMatch(/provenance is matched on provider\/model ID/i);
 });
 
 test('review modes: authored review is one complete exact-revision review', () => {
