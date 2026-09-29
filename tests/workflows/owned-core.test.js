@@ -50,7 +50,7 @@ function skill(name) {
 // structural checks; behavioral evidence comes from scenario evaluation).
 
 test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
-  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'lifecycle.md']) {
+  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -278,7 +278,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
       `${name}: must not introduce a programmatic gate/engine`,
     ).toBe(false);
   }
-  for (const ref of ['routing.md', 'lifecycle.md']) {
+  for (const ref of ['routing.md', 'role-roster.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
     expect(text.length, `${ref} must stay compact (<7800 chars)`).toBeLessThan(7800);
   }

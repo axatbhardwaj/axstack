@@ -47,7 +47,7 @@ test('existing workflow entry points point to the shared contract', () => {
   }
   const record = read('skills/axstack/references/run-record.md');
   expect(record).toMatch(/Worktrees in other repositories: <per-run repository and worktree IDs or none>/);
-  for (const path of ['lifecycle.md', 'routing.md']) {
+  for (const path of ['lifecycle.md', 'routing.md', 'role-roster.md']) {
     expect(Buffer.byteLength(read(`skills/axstack/references/${path}`))).toBeLessThan(7800);
   }
   expect(Buffer.byteLength(read('skills/axstack/references/lifecycle.md'))).toBeLessThan(7750);

@@ -14,6 +14,11 @@ const profile = (id, provider = 'codex') => ({
 });
 
 describe('preset bundle validation', () => {
+  test('ships the role roster referenced by shared routing', async () => {
+    const validated = await validateBundle(join(import.meta.dir, '..', '..'), 'mixed');
+    expect(validated.files.map(({ rel }) => rel)).toContain('axstack/references/role-roster.md');
+  });
+
   test('loads every valid preset and selects the requested profile payload', async () => {
     const root = makeTempRoot('axstack-preset-bundle-');
     const mixed = [profile('axstack-driver')];

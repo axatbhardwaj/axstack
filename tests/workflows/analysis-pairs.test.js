@@ -29,8 +29,9 @@ test('analysis pairs: code and execution research retain both paired routes', ()
 
 test('analysis pairs: routing and declared scenarios cover presence and absence', () => {
   const routing = compact('skills/axstack/references/routing.md');
-  const sonnet = routing.split('- `axstack-ui-verifier`')[1]?.split('- Sol pairs ')[0];
-  const pairs = routing.split('- Sol pairs ')[1]?.split('- `axstack-debug-investigator')[0];
+  const roster = compact('skills/axstack/references/role-roster.md');
+  const sonnet = roster.split('- `axstack-ui-verifier`')[1]?.split('- Sol pairs ')[0];
+  const pairs = roster.split('- Sol pairs ')[1]?.split('- `axstack-debug-investigator')[0];
   expect(sonnet).toBeTruthy();
   for (const role of [
     'axstack-auditor', 'axstack-research-requirements', 'axstack-research-code',
@@ -41,9 +42,11 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
   for (const role of [
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
   ]) expect(pairs).toContain(role);
-  expect(pairs).toMatch(/mixed\/codex-only[^.]*absent claude-only/i);
-  expect(pairs).toMatch(/independent[^.]*same brief[^.]*no cross-reading/i);
-  expect(pairs).toMatch(/reconcile[^.]*claims[^.]*never average/i);
+  expect(pairs).toMatch(/mixed\/codex-only[^.]*intentionally absent in claude-only/i);
+  expect(pairs).toMatch(/independent[^.]*same bounded brief[^.]*without cross-reading/i);
+  expect(pairs).toMatch(/reconcile[^.]*findings per claim[^.]*never averages/i);
+  expect(pairs).toMatch(/intentional absence[^.]*continue with Sonnet alone/i);
+  expect(pairs).toMatch(/configured[^.]*unavailable seat holds only its affected work/i);
   expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
 
   const cases = JSON.parse(read('tests/workflows/routing-scenarios.json')).cases;
@@ -70,7 +73,8 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
 
 test('analysis pairs: routing preserves original ownership and direct-route duties', () => {
   const routing = compact('skills/axstack/references/routing.md');
-  expect(routing).toMatch(/`axstack-owner` owns one PR/i);
+  const roster = compact('skills/axstack/references/role-roster.md');
+  expect(roster).toMatch(/`axstack-owner` owns one PR/i);
   expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
   expect(routing).toMatch(/verify primary sources and code/i);
   expect(routing).toMatch(/escalate via adviser-directed investigators/i);

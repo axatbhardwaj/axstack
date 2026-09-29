@@ -188,8 +188,8 @@ test('UI verification: debug delegates both L0 and L1 browser reproductions', ()
 });
 
 test('UI verification: shared routing lists the verifier role', () => {
-  const routing = readFileSync(`${root}/skills/axstack/references/routing.md`, 'utf8');
-  expect(routing).toMatch(/^- `axstack-ui-verifier`:.*\(ui-verification\.md\)/m);
+  const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
+  expect(roster).toMatch(/^- `axstack-ui-verifier`:.*\(ui-verification\.md\)/m);
 });
 
 test('presets: Sol author and primary reviewer run at high effort', () => {
