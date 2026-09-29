@@ -111,9 +111,9 @@ export function assessRoleReadiness(roles, preset) {
   const secondary = byId.get('axstack-reviewer-secondary');
   if (primary && secondary) {
     const bothResolved = typeof primary.model === 'string' && typeof secondary.model === 'string';
-    const sameReviewer = primary.provider === secondary.provider && (bothResolved
+    const sameReviewer = bothResolved
       ? primary.model === secondary.model
-      : roleClass(primary) !== null && roleClass(primary) === roleClass(secondary));
+      : roleClass(primary) !== null && roleClass(primary) === roleClass(secondary);
     if (sameReviewer) gaps.push('reviewer pair must use two distinct models');
     if (preset === 'mixed' && primary.provider === secondary.provider) {
       gaps.push('mixed reviewer pair must use different providers');

@@ -177,7 +177,7 @@ test('authored pairing rejects author IDs without a class and wrong reviewer cla
   expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/medium'))).toBe(true);
 });
 
-test('class-only reviewer distinctness compares classes before exact IDs exist', () => {
+test('reviewer distinctness compares resolved IDs or unresolved classes', () => {
   const rows = [
     { ...role('axstack-reviewer-primary', null), modelClass: 'sol' },
     { ...role('axstack-reviewer-secondary', null), modelClass: 'luna' },
@@ -185,6 +185,16 @@ test('class-only reviewer distinctness compares classes before exact IDs exist',
   expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
   rows[1].modelClass = 'sol';
   expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain('reviewer pair must use two distinct models');
+
+  rows[0] = role('axstack-reviewer-primary', 'gpt-6-sol');
+  rows[1] = role('axstack-reviewer-secondary', 'gpt-6.1-sol');
+  expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
+  rows[1].model = 'gpt-6-sol';
+  expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain('reviewer pair must use two distinct models');
+
+  rows[0].model = null;
+  rows[1].model = null;
+  expect(assessRoleReadiness(rows, 'codex-only').gaps).not.toContain('reviewer pair must use two distinct models');
 });
 
 test('readiness accepts the intentionally unavailable X research route', () => {

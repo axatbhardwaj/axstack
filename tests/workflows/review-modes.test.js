@@ -62,15 +62,13 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
   const rows = [
-    ['mixed', '`codex/sol`', 'axstack-reviewer-secondary', '`claude/opus` medium'],
-    ['mixed', '`claude/opus`', 'axstack-reviewer-primary', '`codex/sol` high'],
-    ['codex-only', '`codex/sol`', 'axstack-reviewer-secondary', '`codex/luna` xhigh'],
-    ['claude-only', '`claude/opus`', 'axstack-reviewer-secondary', '`claude/sonnet` high'],
+    '| `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |',
+    '| `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |',
+    '| `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |',
+    '| `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |',
   ];
   for (const text of [review, roster, compact('skills/axstack-audit/SKILL.md')]) {
-    for (const row of rows) {
-      for (const cell of row) expect(text).toContain(cell);
-    }
+    for (const row of rows) expect(text).toContain(row);
   }
   expect(review).toMatch(/recorded exact model ID[^.]*derive[^.]*class/i);
   expect(review).toMatch(/no class[^.]*INCOMPLETE/i);
