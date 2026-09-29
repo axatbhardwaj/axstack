@@ -145,6 +145,36 @@ test('UI verification routes rendered checks to the read-only verifier', () => {
   expect(ui?.expected?.forbidden).toContain('PR writer performs rendered check');
 });
 
+for (const preset of presetNames) {
+  test(`UI verification: ${preset} explainer reviewer keeps text and fidelity`, () => {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const notes = roles.find(({ id }) => id === 'axstack-explainer-review')?.notes;
+    expect(notes).toMatch(/checks the exact artifact for text and source fidelity/i);
+    expect(notes).toMatch(/rendered pass belongs to axstack-ui-verifier/i);
+    expect(notes).not.toMatch(/rendered behavior where warranted/i);
+  });
+}
+
+test('UI verification: visual QA keeps explainer text and fidelity review', () => {
+  const qa = readFileSync(`${root}/skills/axstack-explain/references/visual-qa.md`, 'utf8');
+  expect(qa).toMatch(/The explainer reviewer checks text and source fidelity/i);
+});
+
+test('UI verification: the PR writer remains the sole writer', () => {
+  const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
+  expect(rule).toMatch(/The PR writer remains the sole writer/i);
+});
+
+test('UI verification: debug delegates both L0 and L1 browser reproductions', () => {
+  const debug = readFileSync(`${root}/skills/axstack-debug/SKILL.md`, 'utf8');
+  expect(debug).toMatch(/L0 or L1 headless-browser reproduction through\s+\[UI verification\]\(\.\.\/axstack\/references\/ui-verification\.md\)/i);
+});
+
+test('UI verification: shared routing lists the verifier role', () => {
+  const routing = readFileSync(`${root}/skills/axstack/references/routing.md`, 'utf8');
+  expect(routing).toMatch(/^- `axstack-ui-verifier`:.*\(ui-verification\.md\)/m);
+});
+
 test('presets: Sol author and primary reviewer run at high effort', () => {
   for (const preset of ['mixed', 'codex-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
