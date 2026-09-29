@@ -11,10 +11,10 @@ skills root, or an explicit user selection in the run record. Missing or contrad
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At start, snapshot all 27 role IDs with provider/model/mode/effort; absent
+At start, snapshot all 28 role IDs with provider/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; never default.
-Such a role holds only that role's work. A role installed or changed later must not
-silently enter the snapshot; adding it needs an explicit user decision. Live profiles
+Such a role holds only its work. Later installed or changed roles need an
+explicit user decision to enter the snapshot. Live profiles
 are authoritative at snapshot time and for availability; bundled presets are setup
 inputs, not runtime proof.
 
@@ -42,6 +42,7 @@ provider/model/effort substitution.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`/`axstack-explainer-review`: explain/review.
+- `axstack-ui-verifier`: [UI checks](ui-verification.md).
 - `axstack-research-requirements`/`axstack-research-web`/`axstack-monitor`:
   Sonnet 5.5 high in mixed/claude-only.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
@@ -57,8 +58,8 @@ step (3) for user routing: no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
-- Bounded research -> `axstack-research`: verify primary sources and code;
-  cite limitations. Fan out distinct questions.
+- Bounded research -> `axstack-research`: verify primary sources and code,
+  cite limits, and fan out distinct questions.
 - Understand a system or gap -> `axstack-explain`:
   current/intended behavior and bounded gaps from docs and renders.
   "What could this break" follows
@@ -66,8 +67,8 @@ step (3) for user routing: no substitution or same-provider review.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).
-- Code quality/refactor discovery -> `axstack-improve`: inspect bounded
-  scope, rank candidates with evidence, report only; no source edits.
+- Code quality/refactor discovery -> `axstack-improve`: rank bounded
+  candidates with evidence; report only, no source edits.
 - Accepted worker/Task/Run completion or bounded backlog request -> driver invokes
   `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the

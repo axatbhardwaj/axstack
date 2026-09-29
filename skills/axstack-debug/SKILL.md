@@ -39,6 +39,8 @@ recorded reason.
    loop cannot be built, stop, list what was tried, and ask the user for an
    environment, a redacted artifact, or instrumentation permission. Done when
    the command has run once and its red output is recorded.
+   Delegate any L0 or L1 headless-browser reproduction through
+   [UI verification](../axstack/references/ui-verification.md).
 2. **Reproduce and minimise.** Confirm the loop reproduces the user's failure
    and not a neighbour. Remove inputs, callers, config, data, and steps one at
    a time within a stated budget until the repro is the smallest practical;

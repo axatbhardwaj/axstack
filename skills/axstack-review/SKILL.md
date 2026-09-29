@@ -279,7 +279,8 @@ This section applies to peer and authored PR modes.
 
    Verify the applicable spec, ticket, or intent acceptance, executable
    evidence, exact candidate SHA, current base, and affected integration
-   boundary, plus rendered interaction evidence for relevant UI work. A
+   boundary, plus rendered interaction evidence for relevant UI work through
+   [UI verification](../axstack/references/ui-verification.md). A
    passing test is insufficient when it checks the wrong behavior. Call out
    seeded regressions, inadequate checks, and every unverified boundary. Every
    mode-required receipt records concrete evidence and consequences, coverage,

@@ -100,7 +100,7 @@ upgrades, conflicts, and uninstalling.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
   unavailable models, and serious risks surface as holds. The human merges by default.
 
-Choose one explicit preset (27 roles each): [mixed](profiles/presets/mixed.json)
+Choose one explicit preset (28 roles each): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
 [claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
 implementation review; single-provider presets have workflow limits and are

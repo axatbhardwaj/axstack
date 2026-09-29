@@ -20,6 +20,7 @@ const roleIds = [
   'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
+  'axstack-ui-verifier',
   'axstack-explore-codebase',
   'axstack-explore-execution',
   'axstack-monitor',
@@ -49,6 +50,7 @@ const expected = {
     c('gpt-6-sol', 'high'), a('claude-sonnet-5-5', 'high'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-luna', 'xhigh'),
+    a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
     a('claude-sonnet-5-5', 'high'),
     c('gpt-6-luna', 'xhigh'),
@@ -66,6 +68,7 @@ const expected = {
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'medium'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'low'),
     c('gpt-6-luna', 'xhigh'),
@@ -83,6 +86,7 @@ const expected = {
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'), a(null, 'high'),
     a(null, 'high'),
     a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
@@ -118,6 +122,27 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       expect(profile.notes).toBeTruthy();
     }
   }
+});
+
+test('UI verification routes rendered checks to the read-only verifier', () => {
+  const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
+  expect(rule).toMatch(/every Playwright, browser, or rendered-UI check/i);
+  expect(rule).toMatch(/Orca[\s\S]*axstack-ui-verifier/i);
+  expect(rule).toMatch(/read-only/i);
+  expect(rule).toMatch(/dispatch.s evidence folder/i);
+  expect(rule).toMatch(/desktop[\s\S]*mobile[\s\S]*reduced-motion/i);
+  for (const path of [
+    'skills/axstack-implement/SKILL.md',
+    'skills/axstack-review/SKILL.md',
+    'skills/axstack-explain/references/visual-qa.md',
+    'skills/axstack-debug/SKILL.md',
+  ]) {
+    expect(readFileSync(`${root}/${path}`, 'utf8'), path).toContain('ui-verification.md');
+  }
+  const cases = readJson('tests/workflows/routing-scenarios.json').cases;
+  const ui = cases.find(({ id }) => id === 'ui-change-rendered-check');
+  expect(ui?.expected?.role).toBe('axstack-ui-verifier');
+  expect(ui?.expected?.forbidden).toContain('PR writer performs rendered check');
 });
 
 test('presets: Sol author and primary reviewer run at high effort', () => {
