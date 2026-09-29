@@ -13,7 +13,7 @@ For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` fold
 
 Produce an executable capability map tied to the exact approved spec revision.
 Keep user-visible capabilities in the selected store, keep implementation detail
-in the repository, reconcile lifecycle state, and stop before implementation.
+in the repository, reconcile lifecycle state, and return a map for continuation.
 
 Before mapping, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required edge to [Shared lifecycle](../axstack/references/lifecycle.md),

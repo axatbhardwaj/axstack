@@ -29,10 +29,11 @@ Choose the applicable message type:
   answer or action needed.
 - **Routine run events:** questions, spec approvals, progress, CI pending,
   merge-ready, merged, and completion stay in Orca unless the recorded
-  Notification policy names it. A policy may name decision holds and at most
-  two merge-ready/merged milestones per run; deduplicate across implementation
-  and release. They never become proactive relay messages merely because the
-  run is waiting.
+  Notification policy names it. A policy may name only user-decision holds and
+  at most two merge-ready/merged milestones per run; deduplicate across implementation
+  and release. Progress, CI pending, and completion are never eligible merely
+  because a policy exists. They never become proactive relay messages merely
+  because the run is waiting.
 
 Verify the transport, execution host, and intended recipient from the user's
 request, trusted caller context, or an existing private notification policy.

@@ -222,21 +222,25 @@ forge check wait is the only other implementation wait. The eligible run arms
 one maintain-mode chat-run watch at its first published PR; that watch owns its
 10-minute harness wake or Orca fallback. End a turn only when every required PR
 is `merge-ready` or `held`. Under the recorded Notification policy,
-`axstack-relay` sends a serious risk immediately or a genuine blocked
-operation that needs user intervention after bounded safe recovery. Questions,
-spec approvals, progress, CI pending, merge-ready, merged, and completion stay
-in Orca unless the recorded Notification policy names it.
+`axstack-relay` sends only a serious risk immediately, a genuine blocked
+operation needing user intervention after bounded safe recovery, or the
+decision holds and capped milestones named by the recorded Notification policy.
+Questions, spec approvals, progress, CI pending, merge-ready, merged, and
+completion stay in Orca unless the recorded Notification policy names it.
 
 Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
-driver resumes on the user's next message or the armed chat-run watch wake.
+driver resumes on the user's next message, `/axstack-watch`, or the armed
+chat-run watch wake; no Orca merge wake exists today.
 Re-read forge state: record forge-merged PRs as `merged`;
 changed heads or feedback return to step 1; retain useful author work before Close-out.
-Run Close-out once only after every required PR is forge-merged and acceptance
-passes. It settles workers, records counts, makes the auditor decision and
+Run Close-out once only after every required PR is forge-merged, the run's
+Release step is settled or not applicable, and acceptance passes. It settles
+workers, records counts, makes the auditor decision and
 settlement, releases worktrees, closes eligible tickets, and archives the run.
 
 The loop requires the `mixed` two-provider authored-review row. `codex-only` or
 `claude-only` holds at step (3) for an explicit user routing choice, with no
 substitution or same-provider review. Derived PR states are `authoring |
 published | in-review | repairing(n) | merge-ready | merged | held`. The run is
-done only when every required PR is forge-merged and Close-out has receipts.
+done only when every required PR is forge-merged, the run's Release step is
+settled or not applicable, and Close-out has receipts.

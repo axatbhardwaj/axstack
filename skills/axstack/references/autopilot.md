@@ -13,14 +13,17 @@ Advance only after the finishing phase returns its completed identity (a
 small-change intent, approved spec, matching ticket map, merge-ready or merged
 state) and the run record has no open hold. A hold from any phase stops the run:
 record its reason, owner, and resume condition, then take no dependent action.
-Examples include tracker access, adviser or arena-seat availability, diligence
-FINDINGS, CI-wait timeout, readiness UNKNOWN, dismissed approval, wake or cleanup
-uncertainty, single-provider routing, an existing tag or version, and failed
-publish. Continue safe independent work only within the phase's own rules.
+That covers tracker access, adviser or arena-seat availability, diligence
+FINDINGS when the phase records a hold, CI-wait timeout, readiness UNKNOWN,
+dismissed approval, wake or cleanup uncertainty, single-provider routing, an
+existing tag or version, and failed publish. Diligence FINDINGS during implement
+follow its §6 repair route; only a recorded hold pauses autopilot.
 
 Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
 <ts>)` and the next step in the private run record. A user answer to the hold
 resumes after reconciliation; silence does not.
+Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
+human approval)` as a decision hold eligible under the Notification policy.
 
 ## Phase sequence
 
@@ -49,7 +52,9 @@ Maintain is the default mode for run-created PRs. End the chat-run watch when
 every watched PR is merged or closed and the run's release step is settled or
 not applicable, or when the user cancels. Expiry is a recorded stop with
 resumable state, never a silent renewal. A required PR closed without merging
-is incomplete scope; it does not make the run release-eligible.
+is incomplete scope; it does not make the run release-eligible. On wake expiry
+record `Autopilot: paused (wake expired; resume: user reauthorizes a wake)` and
+notify under the recorded Notification policy when user action is needed.
 
 ## Release and install, when applicable
 
@@ -58,11 +63,14 @@ file:line + tag-triggered workflow path + named install hosts> | not applicable
 (<reason>)`. The predicate is an AGENTS.md release rule naming an existing
 tag-triggered workflow. A partial match is not applicable and its reason is
 noted. Install hosts come only from explicit targets; an absent host list is a
-decision hold, not permission to infer hosts.
+decision hold, not permission to infer hosts. A missing install host list at
+Align or spec time is a decision hold before release authority is presented.
 
 Show the `Release:` line in the spec for human approval at gate 1, or the small
 work Align read-back. Copy that decision to `Authority:` in the run record.
 This authority is per run and never carries over to another run or repository.
+The small-work Align read-back names the existing Release and host-mutation
+authority and explicit hosts; silence cannot fill a missing authority or target.
 
 After all required feature PRs merge, open one release PR. Default to a patch
 version, or minor if a `feat` commit landed since the last tag. This normal run
@@ -71,7 +79,8 @@ merge-ready, then waits for human merge. Once the forge confirms that merge,
 tag and wait for the staged publish. Human npm stage approval is a decision
 hold: agents never run `npm stage approve`. A wake verifies the registry reports
 the expected package and version. Install on the named hosts, verify version
-and roles, then run Close-out last with release and install receipts.
+and roles, then run Close-out last with release and install receipts and the
+installed version.
 
 An existing version or tag, failed publish, pending approval, uncertain
 registry result, missing host access, or failed install verification is a
@@ -86,6 +95,9 @@ tags, wakes, publications, and completed receipts under lifecycle and
 run-record before advancing. Only the original driver advances. Wakes do not
 reset attempt budgets and do not grant approvals. Cancel sets `Autopilot: off`,
 stops new actions, and ends the watch under watch §6 with guarded settlement.
+Cancellation does not cancel a running author Dispatch by inference; let it
+report, then settle that exact Dispatch under lifecycle guards without new
+publication.
 
 Use the run's recorded Notification policy through `axstack-relay`.
 Decision holds, including spec and npm approval, are always eligible. Across

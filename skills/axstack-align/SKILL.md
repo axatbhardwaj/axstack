@@ -169,7 +169,7 @@ record or spec. Read-only scope keeps proposed documentation in the permitted
 private record or response. Documentation is neither implementation nor spec
 approval; record chosen document names and paths once per run.
 
-## Read back, classify, and stop
+## Read back, classify, and route
 
 1. Read back the decisions, constraints, exclusions, and remaining evidence
    gaps. For substantial work, this summary becomes part of the draft spec in

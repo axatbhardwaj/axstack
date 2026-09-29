@@ -89,9 +89,10 @@ supported; require request-bound `turn_started` and driver event receipt. A
 busy, missing, fenced, protected, or permission-held driver is never interrupted
 or replaced.
 
-The driver records one Notification policy. Under the run's policy, use
-`axstack-relay` Telegram home for decision holds, at most two merge-ready or
-merged milestones across implementation and release, and serious-risk holds.
+The driver records one Notification policy: `axstack-relay` Telegram home only
+for a user-decision hold (including spec and npm approval), merge-ready or
+merged milestones (at most two across implementation and release), or a
+serious-risk hold.
 Quiet ticks never notify.
 
 The driver alone routes repair. Re-read remote head/base and native ownership.
@@ -119,8 +120,11 @@ human who already approved.
 
 Stop the chosen wake only when every watched PR is merged or closed and the
 run's release step is settled or not applicable, the user cancels, or it
-expires. A required PR closed without merging remains incomplete scope; it
-does not make the run release-eligible. The driver stops a harness-native wake and verifies its stop receipt;
+expires. Without an Autopilot or Release record, the release step is not
+applicable to this watch. A required PR closed without merging records a
+decision hold and the wake remains active while unexpired until the user
+resolves scope, cancels, or the wake expires; the run is not release-eligible.
+The driver stops a harness-native wake and verifies its stop receipt;
 a failed or uncertain stop is a hold. Re-read membership and confirm no ambiguous
 publication or unsettled pass; cancellation
 prevents new work but does not prove running workers exited. The observer may

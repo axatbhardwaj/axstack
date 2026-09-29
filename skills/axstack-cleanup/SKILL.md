@@ -5,9 +5,6 @@ description: When completed Orca subagent resources need bounded retirement, use
 
 # Cleanup
 
-For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
-for phase continuation and holds.
-
 Run cleanup inline in the driver after accepting a worker, Task, or Run
 completion, or for the exact backlog scope the user named. This skill never
 dispatches a cleanup worker and never retires its current driver session.
