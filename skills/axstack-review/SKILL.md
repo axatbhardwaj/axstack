@@ -406,8 +406,9 @@ Mode-required exact-revision completeness gates external approval,
 [merge-ready declarations](#authored-mode-own-pr), and authorized submission. It never gates returning
 evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
-- Peer mode requires both current reviews and no unresolved material finding
-  beyond the validated defects reported by `REQUEST_CHANGES`.
+- Peer mode requires both current reviews, a separate current diligence receipt,
+  and no unresolved material finding beyond the validated defects reported by
+  `REQUEST_CHANGES`.
 - Authored mode requires its one current eligible configured reviewer receipt and
   a separate current diligence receipt; applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and

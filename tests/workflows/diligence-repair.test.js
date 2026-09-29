@@ -42,3 +42,15 @@ test('release check has its own linked paragraph', () => {
   const rule = read('skills/axstack/references/candidate-publication.md');
   expect(rule).toMatch(/`ORCA worktree rm` after its receipt is recorded\.\n\nFor a release PR, dispatch `axstack-diligence` under\n\[Diligence\]\(diligence\.md\) to check the release PR body\nagainst the merged PRs before publication\./);
 });
+
+test('publication returns diligence FINDINGS to the same author before publishing', () => {
+  expect(compact('skills/axstack/references/candidate-publication.md')).toMatch(/Resolve `FINDINGS` with the same author before publishing\./);
+});
+
+test('diligence FINDINGS are report-only and stay in the owning phase', () => {
+  expect(compact('skills/axstack/references/diligence.md')).toMatch(/`FINDINGS` identifies a mismatch for the driver to resolve at the owning phase; it does not edit the artifact or create another review round by itself\./);
+});
+
+test('peer publishing also requires its separate current diligence receipt', () => {
+  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/- Peer mode requires both current reviews, a separate current diligence receipt, and no unresolved material finding[^.]{0,100}\./);
+});
