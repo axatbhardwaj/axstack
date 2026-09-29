@@ -5,6 +5,9 @@ description: When a substantive run needs evidence review, use axstack-audit to 
 
 # Audit
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 

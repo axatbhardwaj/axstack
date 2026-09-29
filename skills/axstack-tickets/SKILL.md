@@ -5,6 +5,9 @@ description: When an approved capability needs executable tasks, use axstack-tic
 
 # Tickets
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -100,5 +103,5 @@ Recommendation: <move to In Review | keep open | close | other> (driver verifies
 
 5. **Return the mapping.** Report the pinned spec revision, selected store, map
    references, mutations performed by the driver, recorded gaps, and unresolved
-   decisions. Stop with a map ready for lifecycle continuation; implementation
-   has not started.
+   decisions. With a complete map and no hold, an eligible delivery run
+   continues to Implement in the same driver chat.

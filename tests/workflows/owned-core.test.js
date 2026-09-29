@@ -282,6 +282,9 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
     expect(text.length, `${ref} must stay compact (<7800 chars)`).toBeLessThan(7800);
   }
+  const autopilot = readFileSync(join(skillsDir, 'axstack', 'references', 'autopilot.md'), 'utf8');
+  expect(/(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(autopilot)).toBe(false);
+  expect(/state machine|programmatic gate|decision engine/i.test(autopilot)).toBe(false);
 });
 
 test('owned-core: all presets expose stable configured role IDs', () => {

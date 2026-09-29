@@ -5,6 +5,9 @@ description: When agreed work needs an approved baseline, use axstack-spec to wr
 
 # Specification baseline
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -75,7 +78,8 @@ Material change: <none | description + affected PRs/tasks + hold state>
    The snapshot is ready for ticketing when its authoritative revision,
    counterpart, and preserved ref resolve to the approved content. Return that
    exact identity; routine execution of the settled plan needs no repeat adviser
-   consultation or spec approval.
+   consultation or spec approval. In an eligible delivery run with no hold,
+   continue to Tickets in the same driver chat.
 
 ## Material revisions
 

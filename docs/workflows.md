@@ -212,7 +212,8 @@ prompt immediately and hold dependent dangerous work. This is not a runtime
 gate. An applicable `Notification policy` may use `axstack-relay` for serious
 risk immediately or a genuine blocker needing user intervention after bounded
 safe recovery. Questions, spec approvals, progress, CI pending, merge-ready,
-merged, and completion stay in Orca. The relay normally delivers one-way
+merged, and completion stay in Orca unless the recorded Notification policy
+names it. The relay normally delivers one-way
 through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
 `message_id`. PR-manager notifications point the user to GitHub or a durable
@@ -224,9 +225,16 @@ read-only observer for standalone watches and never sends.
 
 ## Chat-run PR watch
 
+For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
+continues from Align through the eligible phase sequence in the same chat.
+The human approves substantial specs, every merge including release PRs, and
+the npm stage. An open hold pauses the run. Implement arms maintain-mode watch
+at its first published PR; release and install run only under recorded per-run
+authority, and Close-out follows their verified receipts.
+
 Use `axstack-watch` chat-run mode to watch every PR raised by this chat's Run, including later verified publications and PRs the driver explicitly adopts. A harness-native monitoring or scheduled wake resumes the driver chat every 10 minutes by default; only when the harness has no such capability does the existing Orca `*/10` observer act as fallback. Record the chosen mechanism in the run record. Each wake runs the own-PR maintenance loop: address feedback, rebase on base movement, rerun required CI, and check the forge-counted human approval. Delegated work still runs through Orca; there is no daemon or polling model between wakes. Independent PRs can repair in parallel with one writer per PR; stack ancestor changes invalidate child evidence. An incomplete scan leaves readiness `UNKNOWN`.
 
-The watch lasts until all member PRs merge or close, you cancel it, or its wake expires. Stop and verify the chosen wake; an Orca fallback also needs automation disable/readback and workspace retirement. Worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require native receipts.
+The watch lasts until all member PRs merge or close and the run's release step is settled or not applicable, you cancel it, or its wake expires. Stop and verify the chosen wake; an Orca fallback also needs automation disable/readback and workspace retirement. Worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require native receipts.
 
 ## Optional native peer-review automation
 

@@ -36,7 +36,9 @@
   instructions for the current task.
 - Cut a release with `chore(release): vX.Y.Z`, run the tag-triggered
   `.github/workflows/publish.yml`, then reinstall and verify it on desktop and
-  VPS under separately applicable release and host-mutation authority.
+  VPS only under release and host-mutation authority recorded for that run.
+  The human merges the release PR and approves the npm stage; agents never run
+  `npm stage approve`.
 
 ## Interfaces
 

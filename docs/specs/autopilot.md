@@ -96,4 +96,3 @@ One PR if it stays coherent. Split per `pr-shape.md` if needed; the driver decid
 - No auto spec approval, and no npm approval by agents.
 - No daemon, scheduler or state machine beyond the existing harness wake and Orca fallback.
 - No change to peer reviews of other people's PRs or to the VPS review manager.
-

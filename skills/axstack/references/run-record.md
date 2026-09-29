@@ -151,6 +151,8 @@ Authority: <who authorized which mutation>
 Intent: <approved spec rev | small-change intent | adopted snapshot | peer/read-only mode>
 Routing: <preset + source + snapshot ref>
 Notification policy: <none | transport/target label/host/instructions path>
+Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>); next: <step>
+Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>

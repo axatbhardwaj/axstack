@@ -76,13 +76,13 @@ test('scope identity: execution boundaries accept the same two identities', () =
   expect(contracts).toMatch(/recorded\s+(?:current\s+)?request[^.]*existing\s+issue[^.]*acceptance\s+checks[^.]*exclusions[^.]*snapshot/i);
 });
 
-test('scope identity: alignment stops with a handoff for both sizes and tickets carry dependencies', () => {
+test('scope identity: alignment returns a handoff for both sizes and tickets carry dependencies', () => {
   const align = read('skills/axstack-align/SKILL.md');
   const tickets = read('skills/axstack-tickets/SKILL.md');
   expect(align).toMatch(/small-change intent[^.]*handoff/i);
   expect(align).toMatch(/approved spec[^.]*ticket map[^.]*handoff/i);
-  expect(align).toMatch(/stop[^.]*both/i);
-  expect(align).toMatch(/user[^.]*invokes[^.]*axstack-implement[^.]*execute/i);
+  expect(align).toMatch(/completes for both sizes[^.]*handoff[^.]*usable/i);
+  expect(align).toMatch(/eligible delivery run[^.]*continues under Autopilot/i);
   expect(align).not.toMatch(/skip to that phase skill/i);
   expect(tickets).toMatch(/^Depends:/m);
   expect(tickets).toMatch(/still-valid approval[^.]*never repeated/i);

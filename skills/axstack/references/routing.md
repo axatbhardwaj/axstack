@@ -86,7 +86,7 @@ reason in the run record, or in the brief for tiny direct work.
   Require an approved spec plus a ticket map tied to that exact spec
   revision, with acceptance checks and dependencies in the explicitly selected
   Markdown, GitHub Issues, or Linear store. Prepare via `axstack-align` -> `axstack-spec`
-  (one approval) -> `axstack-tickets` -> handoff, then stop.
+  (one approval) -> `axstack-tickets` -> handoff, then continue under autopilot when eligible.
 - **Small:** clear, bounded one-PR work. The driver captures the named
   **small-change intent** from the current request or user-chosen existing
   issue plus explicit acceptance checks and exclusions, snapshots it once, and
@@ -107,7 +107,7 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
 ## Lifecycle routes (mode-specific scope identity required)
 
 - Preparation: substantial work follows the align -> spec -> tickets ->
-  handoff path above, then stops; small work uses the driver-captured
+  handoff path above, then continues under autopilot when eligible; small work uses the driver-captured
   small-change intent.
 - Execution: with its identity present, `axstack-implement` ->
   `axstack-review` -> `axstack-watch`.

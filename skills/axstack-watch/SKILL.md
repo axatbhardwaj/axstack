@@ -5,6 +5,9 @@ description: When babysitting an existing PR, use axstack-watch to monitor or ma
 
 # Watch
 
+For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
+for phase continuation and holds.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -49,7 +52,8 @@ authority is unverified, record the hold and continue read-only.
 
 Choose one mode from the user's authority and record it before dispatch:
 
-- **Chat-run watch:** the initiating chat remains the only driver and record
+- **Chat-run watch:** authorized maintain mode is the default for run-created
+  PRs. The initiating chat remains the only driver and record
   writer for every PR raised in its Run, including later verified publications
   and explicitly adopted members. Follow [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch)
   for its scheduled driver wake and Orca fallback. This mode has no replacement `axstack-owner` or
@@ -121,10 +125,10 @@ A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
 
 Under a recorded `Notification policy`, the owner may use the optional
-[axstack-relay](../axstack-relay/SKILL.md) only for a serious risk immediately
+[axstack-relay](../axstack-relay/SKILL.md) for a serious risk immediately
 or a genuine blocked operation needing user intervention after bounded safe
 recovery. Questions, spec approvals, progress, CI pending, merge-ready, merged,
-and completion stay in Orca. The standalone monitor never sends; the chat-run
+and completion stay in Orca unless the recorded Notification policy names it. The standalone monitor never sends; the chat-run
 observer reports only internally. Deduplicate authorized notifications;
 absent policy or failed relay uses the current Orca conversation and leaves
 the existing hold open.
@@ -148,8 +152,10 @@ human approval remain allowed.
 
 ## 6. End and preserve continuity
 
-End a chat-run watch after all members merged or closed, user cancellation, or
-the recorded wake expires. Stop the chosen wake and verify its stop receipt;
+End a chat-run watch after all members merged or closed and the run's release
+step is settled or not applicable, user cancellation, or the recorded wake
+expires. A required PR closed without merging holds completion and release
+eligibility. Stop the chosen wake and verify its stop receipt;
 a failed or uncertain harness wake stop is a hold.
 the Orca fallback also needs own-automation disable/readback and driver-owned automation
 removal and workspace cleanup under
