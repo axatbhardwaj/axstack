@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Input-only implement-loop and autopilot evaluator briefs; no expected decisions are stored here. The implement-loop cases use the old/new PR3 comparison, while the autopilot cases use approved spec #215 rev 2 and one candidate head. Record independent decisions separately from Bun structural tests.",
+  "note": "Input-only implement-loop and autopilot evaluator briefs; no expected decisions are stored here. The implement-loop cases use the old/new PR3 comparison, while the autopilot cases use approved spec #215 rev 3 and one candidate head. Record independent decisions separately from Bun structural tests.",
   "cases": [
     {
       "id": "ci-wait-exhausted-held",
@@ -56,7 +56,7 @@
     },
     {
       "id": "autopilot-hold-resume", "title": "Hold then resume",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Resume safely", "run_state": "Implement diligently repairs FINDINGS with the same author until the bounded third-round rule records a hold. Later the human answers that hold. Explain repair versus pause and reconciliation before resuming."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Resume safely", "run_state": "Implement repairs diligence FINDINGS with the same author until the bounded third-round rule records a hold. Later the human answers that hold. Explain repair versus pause and reconciliation before resuming."}
     },
     {
       "id": "autopilot-cancel", "title": "Cancel with owned resources",
