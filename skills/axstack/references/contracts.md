@@ -40,7 +40,11 @@ Validate the configured provider and model at actual launch. If it is
 unavailable or exhausted, pause affected work, record the gap, and ask the
 user. Never infer a route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives and native
-fallback prose are not defaults.
+fallback prose are not defaults. The only within-class exception is explicit
+model rejection before the first turn: Codex may retry with `--retry-of` using
+the next eligible version in the same class, provider, and effort, recording
+the failed ID, error, and fallback ID. Claude rejection holds. Timeout, quota,
+and auth failures hold.
 
 ## Driver and adviser split
 

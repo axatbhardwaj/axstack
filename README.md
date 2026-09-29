@@ -104,11 +104,11 @@ Choose one explicit preset (32 roles each): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
 [claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
 implementation review; single-provider presets have workflow limits and are
-not automatic fallbacks when a model is unavailable. See
+not automatic cross-class or cross-provider fallbacks when a model is unavailable. See
 [workflow and routing details](docs/workflows.md).
 
 In `mixed` and `claude-only`, auditing, requirements/code/web research,
-execution exploration, and the optional monitor use Claude Sonnet 5.5 high.
+execution exploration, and the optional monitor use the Claude Sonnet class at high effort.
 Auditing, code research, and execution exploration have independent Sol high
 pair seats in `mixed` and `codex-only`; `claude-only` records them as absent.
 

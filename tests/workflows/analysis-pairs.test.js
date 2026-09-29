@@ -37,7 +37,7 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
     'axstack-auditor', 'axstack-research-requirements', 'axstack-research-code',
     'axstack-research-web', 'axstack-explore-execution', 'axstack-monitor',
   ]) expect(sonnet).toContain(role);
-  expect(sonnet).toContain('claude-sonnet-5-5');
+  expect(sonnet).toContain('claude/sonnet');
   expect(pairs).toBeTruthy();
   for (const role of [
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',

@@ -4,18 +4,32 @@ const PROVIDER_BOUNDS = Object.freeze({
   'claude-only': new Set(['claude']),
 });
 
+const CLASS_PROVIDERS = Object.freeze({
+  fable: 'claude', opus: 'claude', sonnet: 'claude', haiku: 'claude',
+  astra: 'codex', sol: 'codex', luna: 'codex',
+});
+
+export function deriveModelClass(model) {
+  if (typeof model !== 'string') return null;
+  return model.match(/^gpt-(\d+(?:\.\d+)*)-(astra|sol|luna)$/)?.[2]
+    ?? model.match(/^claude-(fable|opus|sonnet|haiku)-/)?.[1]
+    ?? null;
+}
+
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
-    'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'claude/claude-opus-5-5', 'medium'],
-    'claude/claude-opus-5-5': ['axstack-reviewer-primary', 'codex/gpt-6-sol', 'high'],
+    'codex/sol': ['axstack-reviewer-secondary', 'claude/opus', 'medium'],
+    'claude/opus': ['axstack-reviewer-primary', 'codex/sol', 'high'],
   },
   'codex-only': {
-    'codex/gpt-6-sol': ['axstack-reviewer-secondary', 'codex/gpt-6-luna', 'xhigh'],
+    'codex/sol': ['axstack-reviewer-secondary', 'codex/luna', 'xhigh'],
   },
   'claude-only': {
-    'claude/claude-opus-5-5': ['axstack-reviewer-secondary', 'claude/claude-sonnet-5-5', 'high'],
+    'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'high'],
   },
 });
+
+const roleClass = (role) => role.modelClass ?? deriveModelClass(role.model);
 
 export function assertBundleRoles(roles) {
   if (!Array.isArray(roles) || roles.length === 0) {
@@ -36,11 +50,21 @@ export function assertBundleRoles(roles) {
     }
     if (ids.has(role.id)) throw new Error(`invalid bundle roles: duplicate role ID ${role.id}`);
     ids.add(role.id);
-    if (!Object.hasOwn(role, 'model')) {
+    const hasClass = Object.hasOwn(role, 'modelClass');
+    if (hasClass && (typeof role.modelClass !== 'string' || !Object.hasOwn(CLASS_PROVIDERS, role.modelClass))) {
+      throw new Error(`invalid bundle roles: ${role.id} has an unsupported modelClass`);
+    }
+    if (hasClass && role.provider !== CLASS_PROVIDERS[role.modelClass]) {
+      throw new Error(`invalid bundle roles: ${role.id} model class does not match provider`);
+    }
+    if (!hasClass && !Object.hasOwn(role, 'model')) {
       throw new Error('invalid bundle roles: model must be a non-empty string or explicit null');
     }
-    if (role.model !== null && (typeof role.model !== 'string' || role.model.trim() === '')) {
+    if (Object.hasOwn(role, 'model') && role.model !== null && (typeof role.model !== 'string' || role.model.trim() === '')) {
       throw new Error('invalid bundle roles: model must be a non-empty string or explicit null');
+    }
+    if (hasClass && typeof role.model === 'string' && deriveModelClass(role.model) !== role.modelClass) {
+      throw new Error(`invalid bundle roles: ${role.id} model pin does not match model class`);
     }
     for (const field of ['icon', 'color', 'modeId', 'thinkingOptionId', 'notes']) {
       if (role[field] !== undefined && typeof role[field] !== 'string') {
@@ -75,7 +99,7 @@ export function assessRoleReadiness(roles, preset) {
     if (!bounds.has(role.provider)) {
       gaps.push(`${role.id} provider ${JSON.stringify(role.provider)} is outside ${preset} bounds (${[...bounds].join('|')})`);
     }
-    if (!isIntentionalAbsence(role) && (typeof role.model !== 'string' || role.model.trim() === '')) {
+    if (!isIntentionalAbsence(role) && !Object.hasOwn(role, 'modelClass') && (typeof role.model !== 'string' || role.model.trim() === '')) {
       gaps.push(`${role.id} requires a configured model`);
     }
   }
@@ -86,7 +110,11 @@ export function assessRoleReadiness(roles, preset) {
   const primary = byId.get('axstack-reviewer-primary');
   const secondary = byId.get('axstack-reviewer-secondary');
   if (primary && secondary) {
-    if (primary.model === secondary.model) gaps.push('reviewer pair must use two distinct models');
+    const bothResolved = typeof primary.model === 'string' && typeof secondary.model === 'string';
+    const sameReviewer = bothResolved
+      ? primary.model === secondary.model
+      : roleClass(primary) !== null && roleClass(primary) === roleClass(secondary);
+    if (sameReviewer) gaps.push('reviewer pair must use two distinct models');
     if (preset === 'mixed' && primary.provider === secondary.provider) {
       gaps.push('mixed reviewer pair must use different providers');
     }
@@ -94,14 +122,14 @@ export function assessRoleReadiness(roles, preset) {
 
   const author = byId.get('axstack-author');
   if (author) {
-    const authorRoute = `${author.provider}/${author.model}`;
+    const authorRoute = `${author.provider}/${roleClass(author) ?? author.model}`;
     const route = AUTHORED_ROUTES[preset]?.[authorRoute];
     if (!route) {
       gaps.push(`authored routing gap: unsupported axstack-author route ${authorRoute}`);
     } else {
       const [reviewerId, reviewerRoute, effort] = route;
       const reviewer = byId.get(reviewerId);
-      if (!reviewer || `${reviewer.provider}/${reviewer.model}` !== reviewerRoute || reviewer.thinkingOptionId !== effort) {
+      if (!reviewer || `${reviewer.provider}/${roleClass(reviewer)}` !== reviewerRoute || reviewer.thinkingOptionId !== effort) {
         gaps.push(`authored routing gap: ${reviewerId} must be ${reviewerRoute}/${effort} for author ${authorRoute}`);
       }
     }

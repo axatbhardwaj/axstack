@@ -67,7 +67,7 @@ describe('explicit preset selection', () => {
       const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
       for (const id of ['axstack-research-requirements', 'axstack-research-web', 'axstack-monitor']) {
         expect(roles.find((role) => role.id === id)).toMatchObject({
-          provider: 'claude', model: 'claude-sonnet-5-5', thinkingOptionId: 'high',
+          provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high',
         });
       }
     }

@@ -38,22 +38,41 @@ Read `roles.json` from the installed shared root `skills/axstack/`. The installe
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 32 role rows once. An active run keeps the exact snapshot until the user
-explicitly changes it.
+all 32 role rows once. For each role record class, resolved exact ID, source,
+and time. An active run keeps the exact snapshot; resume reuses it without
+re-resolution until the user explicitly changes it.
 
-Select the requested role by stable ID. A missing or null model holds only that role;
-never launch a provider default. Launch-by-agent-id routes for which Orca exposes no
+Select the requested role by stable ID. A missing class and missing or null
+model holds only that role; never launch a provider default. Resolve Codex
+classes with `scripts/resolve-models.js`, passing the catalog path explicitly;
+missing or malformed catalogs hold. The first launch of each Claude class uses
+its alias. Read the exact ID from the first assistant turn's `message.model` in
+that worker's own session transcript at
+`~/.claude/projects/<worktree-path-slug>/*.jsonl`; the worktree path slug
+replaces each non-alphanumeric character with `-`. Identify the file by the
+worker's session ID, or use the newest file created after launch. Later launches
+of that class use the recorded exact ID. Before read-back record `alias,
+unresolved`; record an unknown read-back as unknown and hold
+provenance-dependent work. A worker self-report is a labeled last
+resort. Launch-by-agent-id routes for which Orca exposes no
 `--model` override (today: `grok`, `antigravity`) record `model: null` with an explicit note and are
 launchable; the run record snapshots the model the TUI reports. Validate provider, model, and effort
 against the guide and actual launch capability. Stored `modeId` and other
 permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
 settings, and completed work are separate evidence. An unsupported or
-unavailable value holds affected work for the user's decision without fallback.
+unavailable value holds affected work for the user's decision except the narrow
+retry below.
 The single-provider preset's null adviser and round-2 seat are intentional installation data, not
 readiness failure; because Align and Spec require both adviser receipts, either
 null adviser still holds those phases. The current chat is the driver and has
 no role row in any preset.
+
+Only explicit model rejection before the first turn permits a Codex
+`--retry-of` with the next eligible ID in the same class, provider, and effort.
+Fence the rejected Dispatch and record tried ID, error, and fallback ID in the
+snapshot and reply. Timeout, quota, auth, and other failures hold; Claude
+rejection holds. Apply this to every role, including advisers and judges.
 
 ## Materialize checkouts as worktrees of the registered repo
 

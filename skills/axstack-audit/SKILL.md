@@ -28,8 +28,8 @@ immediately before an actual auditor profile or session dispatch. Ordinary
 audit reading and record writing do not load it, and the auditor never
 dispatches.
 
-Core owns the `axstack-auditor` profile (claude/claude-sonnet-5-5 high in
-mixed/claude-only; codex/gpt-6-luna xhigh in codex-only) and its invocation.
+Core owns the `axstack-auditor` profile (claude/sonnet high in
+mixed/claude-only; codex/luna xhigh in codex-only) and its invocation.
 This skill governs what that auditor reads, measures, and proposes.
 Dispatch `axstack-auditor` and `axstack-auditor-sol` independently on the same
 bounded brief, without cross-reading. The driver reconciles findings per claim;
@@ -91,6 +91,14 @@ counts with denominators plus the evidence behind the count:
   evidence path is absent, or `UNKNOWN` with the reason when its records are
   unavailable.
 - Independent exact-revision review status and unresolved findings.
+  For authored PRs, measure the selected reviewer against this class pairing:
+
+  | Preset | Author class | Reviewer (class/effort) |
+  | --- | --- | --- |
+  | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |
+  | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+  | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - Simplification applicability determinations evidenced / total candidate diffs,
   and complete simplification receipts / total candidates, broken down as
   `applied`, `not-applicable`, or `UNKNOWN` with the reason. This measures

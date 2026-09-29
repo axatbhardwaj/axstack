@@ -11,22 +11,33 @@ skills root, or an explicit user selection in the run record. Missing or contrad
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At start, snapshot all 32 role IDs with provider/model/mode/effort; absent
+At start, snapshot all 32 role IDs with provider/modelClass/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; never default.
 Such a role holds only its work. Later installed or changed roles need an
 explicit user decision to enter the snapshot. Live profiles
 are authoritative at snapshot time and for availability; bundled presets are setup
 inputs, not runtime proof.
+For each role record class, resolved exact ID, source (catalog, transcript, or
+pin), and time. Codex classes resolve through
+`skills/axstack/scripts/resolve-models.js` with an explicit catalog
+path; missing or malformed catalog holds. Claude classes start as `alias,
+unresolved` until transcript read-back. Resume must reuse the snapshot and
+never re-resolve it.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Changing it or replacing a session needs an explicit user decision and
 revalidation. Unavailable models, efforts, roles, or overrides hold only affected
 work; no automatic fallback, quota routing, subscription inference, or silent
-provider/model/effort substitution.
+provider/model/effort substitution. Only
+explicit model rejection before the first turn permits Codex `--retry-of` with
+the next eligible ID in the same class, provider, and effort. Fence the failed
+Dispatch and record tried ID, error, and fallback ID in the snapshot and reply.
+Timeout, quota, auth, and other failures hold; Claude rejection holds.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
 
-Provenance is matched on provider/model ID; effort never maps. Missing table-row
+Provenance is matched on provider/model class derived from the recorded exact ID;
+effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
 infer from slot, driver, owner, or provider. Author and owner never review.
 

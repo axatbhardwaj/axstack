@@ -46,74 +46,74 @@ const g = (model, effort) => ['grok', model, 'full-access', effort];
 const ag = (model, effort) => ['antigravity', model, 'full-access', effort];
 const expected = {
   mixed: [
-    c('gpt-6-astra', 'high'),
-    a('claude-opus-5-5', 'xhigh'),
-    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'medium'),
-    a('claude-sonnet-5-5', 'high'),
-    ag(null, 'low'), a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'), a('claude-sonnet-5-5', 'high'), ag(null, 'high'),
+    c('astra', 'high'),
+    a('opus', 'xhigh'),
+    a('opus', 'medium'), c('sol', 'high'),
+    c('sol', 'high'), a('opus', 'medium'),
+    a('sonnet', 'high'),
+    ag(null, 'low'), a('sonnet', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), ag(null, 'high'),
     g(null, 'high'),
-    a('claude-sonnet-5-5', 'high'), c('gpt-6-luna', 'xhigh'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
-    a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
-    a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-astra', 'xhigh'), a('claude-fable-5-1', 'xhigh'), a('claude-opus-5-5', 'xhigh'),
+    a('sonnet', 'high'), c('luna', 'xhigh'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'), a('sonnet', 'high'), c('sol', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
+    a('opus', 'medium'), c('sol', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
+    c('astra', 'xhigh'), a('fable', 'xhigh'), a('opus', 'xhigh'),
     g(null, 'high'), ag(null, 'high'),
   ],
   'codex-only': [
-    c('gpt-6-astra', 'high'),
+    c('astra', 'high'),
     c(null, 'xhigh'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'high'),
-    c('gpt-6-luna', 'low'), c('gpt-6-astra', 'medium'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
+    c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'high'), c('luna', 'xhigh'),
+    c('sol', 'high'),
+    c('luna', 'low'), c('astra', 'medium'),
+    c('sol', 'high'), c('sol', 'high'), c('sol', 'low'), c(null, 'high'),
     c(null, 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
-    c('gpt-6-sol', 'medium'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'low'),
-    c('gpt-6-luna', 'xhigh'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
-    c('gpt-6-astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
+    c('sol', 'high'), c('luna', 'xhigh'),
+    c('sol', 'medium'),
+    c('sol', 'high'), c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'low'),
+    c('luna', 'xhigh'), c('sol', 'high'),
+    c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'high'), c('sol', 'high'),
+    c('astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
     c(null, 'high'), c(null, 'high'),
   ],
   'claude-only': [
     a(null, 'high'),
-    a('claude-opus-5-5', 'xhigh'),
-    a('claude-opus-5-5', 'medium'),
-    a('claude-opus-5-5', 'medium'),
-    a('claude-opus-5-5', 'medium'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
+    a('opus', 'xhigh'),
+    a('opus', 'medium'),
+    a('opus', 'medium'),
+    a('opus', 'medium'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
     a(null, 'high'),
-    a('claude-sonnet-5-5', 'high'),
+    a('sonnet', 'high'),
     a(null, 'high'),
     a(null, 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
     a(null, 'high'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'),
+    a('sonnet', 'high'),
+    a('sonnet', 'high'),
     a(null, 'high'),
-    a('claude-opus-5-5', 'medium'),
-    a('claude-sonnet-5-5', 'high'),
-    a('claude-opus-5-5', 'medium'),
-    a('claude-sonnet-5-5', 'high'),
+    a('opus', 'medium'),
+    a('sonnet', 'high'),
+    a('opus', 'medium'),
+    a('sonnet', 'high'),
     a(null, 'xhigh'),
-    a('claude-fable-5-1', 'xhigh'),
-    a('claude-opus-5-5', 'xhigh'),
+    a('fable', 'xhigh'),
+    a('opus', 'xhigh'),
     a(null, 'high'),
     a(null, 'high'),
   ],};
@@ -133,14 +133,24 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
     expect(data.version).toBe(1);
     expect(Object.keys(data)).toEqual(['version', 'roles']);
     expect(data.roles.map(({ id }) => id)).toEqual(roleIds);
-    expect(data.roles.map(({ provider, model, modeId, thinkingOptionId }) =>
-      [provider, model, modeId, thinkingOptionId])).toEqual(expected[preset]);
+    expect(data.roles.map(({ provider, model, modelClass, modeId, thinkingOptionId }) =>
+      [provider, modelClass ?? model, modeId, thinkingOptionId])).toEqual(expected[preset]);
     for (const profile of data.roles) {
-      expect(Object.keys(profile)).toEqual([
-        'id', 'name', 'provider', 'model', 'modeId', 'thinkingOptionId', 'notes',
-      ]);
+      expect(Object.keys(profile)).toEqual(profile.modelClass
+        ? ['id', 'name', 'provider', 'modeId', 'thinkingOptionId', 'notes', 'modelClass']
+        : ['id', 'name', 'provider', 'model', 'modeId', 'thinkingOptionId', 'notes']);
       expect(profile.name).toBeTruthy();
       expect(profile.notes).toBeTruthy();
+    }
+  }
+});
+
+test('Claude class notes state first-launch alias and rejection hold', () => {
+  for (const preset of presetNames) {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    for (const role of roles.filter(({ provider, modelClass }) => provider === 'claude' && modelClass)) {
+      expect(role.notes, `${preset}: ${role.id}`).toContain('Claude alias resolves at first launch; a Claude rejection holds');
+      expect(role.notes).not.toContain('Codex rejection');
     }
   }
 });
@@ -201,7 +211,7 @@ test('presets: Sol author and primary reviewer run at high effort', () => {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
     expect(byId['axstack-author']).toMatchObject({
-      provider: 'codex', model: 'gpt-6-sol', thinkingOptionId: 'high',
+      provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high',
     });
     expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('high');
   }
@@ -212,7 +222,7 @@ for (const id of ['axstack-owner', 'axstack-debug-investigator-3']) {
     const role = readJson('profiles/presets/claude-only.json').roles
       .find((entry) => entry.id === id);
     expect(role).toMatchObject({
-      provider: 'claude', model: 'claude-opus-5-5', thinkingOptionId: 'medium',
+      provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium',
     });
   });
 }
@@ -225,15 +235,15 @@ test('presets: auditor route agrees with audit skill and workflow table', () => 
     const auditor = roles.find(({ id }) => id === 'axstack-auditor');
     const sonnet = preset !== 'codex-only';
     expect(auditor).toMatchObject(sonnet
-      ? { provider: 'claude', model: 'claude-sonnet-5-5', thinkingOptionId: 'high' }
-      : { provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh' });
+      ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high' }
+      : { provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh' });
     expect(workflows).toContain(`| \`${preset}\` |`);
     expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`)))
       .toEndWith(sonnet
         ? (preset === 'mixed' ? '| Sonnet high + Sol high |' : '| Sonnet high (Sol absent) |')
         : '| Luna xhigh + Sol high |');
   }
-  expect(audit.replace(/\s+/g, ' ')).toContain('`axstack-auditor` profile (claude/claude-sonnet-5-5 high in mixed/claude-only; codex/gpt-6-luna xhigh in codex-only)');
+  expect(audit.replace(/\s+/g, ' ')).toContain('`axstack-auditor` profile (claude/sonnet high in mixed/claude-only; codex/luna xhigh in codex-only)');
 });
 
 test('presets: Codex explainer reviewer uses supported Luna effort', () => {
@@ -241,7 +251,7 @@ test('presets: Codex explainer reviewer uses supported Luna effort', () => {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
     expect(reviewer).toMatchObject({
-      provider: 'codex', model: 'gpt-6-luna', thinkingOptionId: 'xhigh',
+      provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh',
     });
   }
 });
