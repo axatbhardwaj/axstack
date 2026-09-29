@@ -11,7 +11,7 @@ skills root, or an explicit user selection in the run record. Missing or contrad
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At start, snapshot all 28 role IDs with provider/model/mode/effort; absent
+At start, snapshot all 32 role IDs with provider/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; never default.
 Such a role holds only its work. Later installed or changed roles need an
 explicit user decision to enter the snapshot. Live profiles
@@ -24,30 +24,7 @@ revalidation. Unavailable models, efforts, roles, or overrides hold only affecte
 work; no automatic fallback, quota routing, subscription inference, or silent
 provider/model/effort substitution.
 
-- Chat drives (no role ID); `axstack-owner` owns one PR and
-  `axstack-author` its sole writer.
-- `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
-  peer pair. Peer review uses both; authored review uses this table:
-
-  | Preset | Author | Reviewer (model/effort) |
-  | --- | --- | --- |
-  | `mixed` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`claude/claude-opus-5-5` medium) |
-  | `mixed` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-primary` (`codex/gpt-6-sol` high) |
-  | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
-  | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` high) |
-- `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
-  `axstack-arena-candidate-grok`/
-  `axstack-arena-candidate-antigravity` add families.
-  `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
-  High-stakes/trigger: fresh [contract](contracts.md) session.
-  `axstack-auditor` audits; `axstack-checker` reports discrepancies.
-- `axstack-explainer`/`axstack-explainer-review`: explain/review.
-- `axstack-ui-verifier`: [UI checks](ui-verification.md).
-- `axstack-research-requirements`/`axstack-research-web`/`axstack-monitor`:
-  Sonnet 5.5 high in mixed/claude-only.
-  `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
-  internal reports to its Run and original driver.
-- `axstack-debug-investigator-1..4` probe L1 briefs.
+Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
 
 Provenance is matched on provider/model ID; effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never

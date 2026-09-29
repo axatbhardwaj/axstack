@@ -211,6 +211,8 @@ This section applies to peer and authored PR modes.
      | `codex-only` | Codex / Sol (`codex/gpt-6-sol`) | `axstack-reviewer-secondary` (`codex/gpt-6-luna` xhigh) |
      | `claude-only` | Claude / Opus (`claude/claude-opus-5-5`) | `axstack-reviewer-secondary` (`claude/claude-sonnet-5-5` high) |
 
+     The diligence receipt is separate and does not count as a reviewer receipt.
+
      Provenance is matched on provider/model ID; record effort, but never use
      effort to create a mapping. Any other author provenance for the
      selected preset is unsupported and `INCOMPLETE`, including its secondary
@@ -234,6 +236,11 @@ This section applies to peer and authored PR modes.
 
    Continue only when session receipts prove the required models, non-author
    independence, actual author provenance where applicable, and exact brief.
+   In peer and authored PR review rounds, dispatch `axstack-diligence`
+   independently alongside the configured reviewer(s) on the same exact revision
+   and base. Follow [Diligence](../axstack/references/diligence.md). A diligence
+   `FINDINGS` receipt returns validated findings to the same author in the same
+   round; it is not an extra `REQUEST_CHANGES` round.
 3. **Inspect all six angles.** In peer mode each reviewer covers every angle;
    in authored mode the one reviewer covers all six angles:
    1. Security and trust boundaries.
@@ -321,12 +328,14 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
   covering the whole brief, all six angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
   complete evidence with no blocker permits `APPROVE`.
+- **Diligence:** a current `PASS` is required with reviewer approval for
+  merge-ready; `FINDINGS` return to the author in that round.
 - **Incomplete or stale:** use `INCOMPLETE`; never fabricate `APPROVE` or
   `REQUEST_CHANGES`.
 
 The owner verifies and synthesizes the mode-required evidence without voting.
-A peer receipt count of one is incomplete; an authored receipt count other
-than one is not the selected mode. Passing tests or reviewer unanimity grants
+A peer reviewer receipt count of one is incomplete; an authored reviewer
+receipt count other than one is not the selected mode. Passing tests or reviewer unanimity grants
 no merge authority.
 
 ## Template: candidate review brief
@@ -397,10 +406,11 @@ Mode-required exact-revision completeness gates external approval,
 [merge-ready declarations](#authored-mode-own-pr), and authorized submission. It never gates returning
 evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
-- Peer mode requires both current reviews and no unresolved material finding
-  beyond the validated defects reported by `REQUEST_CHANGES`.
-- Authored mode requires its one current eligible configured review and applicable
-  scope identity to remain valid.
+- Peer mode requires both current reviews, a separate current diligence receipt,
+  and no unresolved material finding beyond the validated defects reported by
+  `REQUEST_CHANGES`.
+- Authored mode requires its one current eligible configured reviewer receipt and
+  a separate current diligence receipt; applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.
 

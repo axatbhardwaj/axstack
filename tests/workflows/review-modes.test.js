@@ -56,6 +56,7 @@ test('review modes: authored routing follows actual author provenance', () => {
 
 test('review modes: authored routing enumerates only the accepted preset mappings', () => {
   const review = compact('skills/axstack-review/SKILL.md');
+  const roster = compact('skills/axstack/references/role-roster.md');
   const routing = compact('skills/axstack/references/routing.md');
   expect(review).toMatch(/any other author provenance[^.]*INCOMPLETE/i);
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
@@ -66,10 +67,12 @@ test('review modes: authored routing enumerates only the accepted preset mapping
     ['codex-only', 'Codex / Sol (`codex/gpt-6-sol`)', 'axstack-reviewer-secondary', '`codex/gpt-6-luna` xhigh'],
     ['claude-only', 'Claude / Opus (`claude/claude-opus-5-5`)', 'axstack-reviewer-secondary', '`claude/claude-sonnet-5-5` high'],
   ];
-  for (const text of [review, routing]) {
+  for (const text of [review, roster]) {
     for (const row of rows) {
       for (const cell of row) expect(text).toContain(cell);
     }
+  }
+  for (const text of [review, routing]) {
     expect(text).toMatch(/provenance is matched on provider\/model ID/i);
   }
 });
@@ -128,7 +131,7 @@ test('review modes: new runs discover one preset and snapshot all role states', 
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);
-  expect(routing).toMatch(/all 28 role IDs|complete 28-role map/i);
+  expect(routing).toMatch(/all 32 role IDs|complete 32-role map/i);
   expect(routing).toMatch(/absent or unconfigured[^.]*recorded explicitly|recorded explicitly[^.]*absent or unconfigured/i);
   expect(routing).toMatch(/Such a role[^.]*holds only its work/i);
   expect(routing).toMatch(/later installed or changed roles[^.]*explicit user decision[^.]*snapshot/i);

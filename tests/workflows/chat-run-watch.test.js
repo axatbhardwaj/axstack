@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
 const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
-const routing = () => read('skills/axstack/references/routing.md');
+const roster = () => read('skills/axstack/references/role-roster.md');
 const docs = () => read('docs/workflows.md');
 const readme = () => read('README.md');
 const installation = () => read('docs/installation.md');
@@ -32,7 +32,7 @@ test('same-head feedback and checks are events while unchanged complete passes s
 
 test('observer reports internally; only original driver routes repairs and writers', () => {
   const text = watch() + runtime();
-  expect(routing()).toMatch(/axstack-monitor[^.]*standalone watch[^.]*never sends[^.]*chat-run watch[^.]*bounded internal reports[^.]*Run/);
+  expect(roster()).toMatch(/axstack-monitor[^.]*standalone watch[^.]*never sends[^.]*chat-run watch[^.]*bounded internal reports[^.]*Run/);
   expect(runtime()).toMatch(/It never writes[\s\S]*?dispatches authors/i);
   expect(text).toMatch(/driver[^.]*alone[^.]*repair/i);
   expect(text).toMatch(/independent PRs[^.]*parallel/i);

@@ -29,8 +29,9 @@ is part of research.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
    Every other research run dispatches every configured research branch through
-   Orca: requirements (Claude), code (Codex), web (Claude), web-google
-   (Gemini/Antigravity, with Google Search built in), and X (Grok).
+   Orca: requirements, code, and web (Sonnet high in mixed/claude-only;
+   Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
+   built in), and X (Grok).
    Give each branch one owner, allow no cross-reading, and require a cited note
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.
@@ -41,16 +42,27 @@ is part of research.
 
    - `axstack-research-requirements`: requirements and intent.
    - `axstack-research-code`: code behavior.
+   - `axstack-research-code-sol`: independent Sol code investigation.
    - `axstack-research-web`: web and external sources.
    - `axstack-research-web-google`: Google-Search-grounded web sources via Gemini/Antigravity.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
    - `axstack-explore-codebase`: broad codebase mapping.
    - `axstack-explore-execution`: execution and runtime traces.
+   - `axstack-explore-execution-sol`: independent Sol execution investigation.
+
+   When dispatching `axstack-research-code` or `axstack-explore-execution`,
+   dispatch its `-sol` pair independently on the same bounded brief without
+   cross-reading. The driver reconciles agreement and disagreement per claim,
+   never averaging findings. Record an intentionally absent pair and proceed
+   with the base seat alone; a configured but unavailable seat holds its work.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards
    for citations, freshness, revisions, and access dates. Continue until each
    material claim has direct evidence or a named evidence gap.
+   Before the driver folds verified claims, dispatch `axstack-diligence` under
+   [Diligence](../axstack/references/diligence.md) to reopen cited sources for
+   answer-changing claims and flag mismatches.
 
 4. **Form the verdict.** Mark every material claim as **verified**,
    **inference**, or **unverified** using the source standards. Derive

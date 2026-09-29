@@ -86,7 +86,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
       expect(judge.notes).toMatch(/never authors a candidate/i);
     }
   }
-  const routing = compact('skills/axstack/references/routing.md');
+  const routing = compact('skills/axstack/references/role-roster.md');
   expect(routing).toMatch(/axstack-arena-judge-opus[^.]*round 1[^.]*axstack-escalation-fable[^.]*axstack-arena-judge-astra[^.]*round 2/i);
   expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*axstack-arena-candidate-antigravity[^.]*families/i);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {

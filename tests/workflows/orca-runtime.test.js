@@ -114,8 +114,8 @@ test('preset bundles retain three role tables in the frozen container', () => {
     const data = JSON.parse(read(`profiles/presets/${name}.json`));
     expect(Object.keys(data)).toEqual(['version', 'roles']);
     expect(data.version).toBe(1);
-    expect(data.roles).toHaveLength(28);
-    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(28);
+    expect(data.roles).toHaveLength(32);
+    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(32);
   }
   const mixed = JSON.parse(read('profiles/presets/mixed.json'));
   expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();

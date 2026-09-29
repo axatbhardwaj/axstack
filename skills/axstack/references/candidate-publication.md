@@ -6,6 +6,11 @@ Within recorded PR-scoped publication authority, the owner reconciles that
 receipt against the actual local candidate SHA and base. The owner does not edit
 the author's candidate; required code changes return to the author.
 
+Before publication, dispatch `axstack-diligence` under
+[Diligence](diligence.md) to check the author receipt against its evidence
+folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
+`FINDINGS` with the same author before publishing.
+
 Publish the existing commits through `gh stack`. Prefer a fast-forward push.
 Before a history rewrite, confirm the expected-old remote SHA and use lease
 protection; a mismatch holds publication. If the push outcome is ambiguous,
@@ -40,3 +45,7 @@ as a `git clone` into a temp directory followed by `orca repo add`; each
 the directory is gone. Release preparation uses a `release/<version>` worktree
 of the same registered repo the same way. Release the checkout with
 `ORCA worktree rm` after its receipt is recorded.
+
+For a release PR, dispatch `axstack-diligence` under
+[Diligence](diligence.md) to check the release PR body
+against the merged PRs before publication.

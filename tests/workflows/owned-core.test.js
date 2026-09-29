@@ -50,7 +50,7 @@ function skill(name) {
 // structural checks; behavioral evidence comes from scenario evaluation).
 
 test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
-  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'lifecycle.md']) {
+  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -278,7 +278,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
       `${name}: must not introduce a programmatic gate/engine`,
     ).toBe(false);
   }
-  for (const ref of ['routing.md', 'lifecycle.md']) {
+  for (const ref of ['routing.md', 'role-roster.md', 'lifecycle.md']) {
     const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
     expect(text.length, `${ref} must stay compact (<7800 chars)`).toBeLessThan(7800);
   }
@@ -287,7 +287,7 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
     .roles.map(({ id }) => id);
-  expect(expectedIds).toHaveLength(28);
+  expect(expectedIds).toHaveLength(32);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
@@ -398,7 +398,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
-  expect(lifecycle).toMatch(/merge-ready only[^.]*review receipt[^.]*exact head[^.]*green CI or tests alone never/i);
+  expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [

@@ -1,0 +1,71 @@
+import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+
+const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
+const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
+const compact = (path) => read(path).replace(/\s+/g, ' ');
+
+test('diligence role is configured in every preset with supported effort', () => {
+  for (const [preset, provider, model] of [
+    ['mixed', 'claude', 'claude-sonnet-5-5'],
+    ['claude-only', 'claude', 'claude-sonnet-5-5'],
+    ['codex-only', 'codex', 'gpt-6-sol'],
+  ]) {
+    const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
+    expect(roles).toHaveLength(32);
+    expect(roles.find(({ id }) => id === 'axstack-diligence')).toMatchObject({
+      provider, model, thinkingOptionId: 'high',
+    });
+  }
+});
+
+test('every Sonnet preset row stays at high effort or below', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
+    for (const role of roles.filter(({ model }) => model?.startsWith('claude-sonnet-'))) {
+      expect(['low', 'medium', 'high'], `${preset}: ${role.id}`).toContain(role.thinkingOptionId);
+    }
+  }
+});
+
+test('diligence contract checks intent, claims, metadata and evidence without edits', () => {
+  const rule = compact('skills/axstack/references/diligence.md');
+  for (const term of [
+    'read-only', 'PASS', 'FINDINGS', 'changed line', 'in scope', 'silently weakened',
+    'PR body', 'commit messages', 'author receipt', 'numbers', 'IDs', 'versions',
+    'test counts', 'sizes', 'paths', 'stale references', 'release PR body', 'merged PRs',
+  ]) expect(rule).toContain(term);
+  expect(rule).toMatch(/never (?:authors|edits)/);
+});
+
+test('every review round has independent exact-revision diligence and a PASS gate', () => {
+  const review = compact('skills/axstack-review/SKILL.md');
+  const implement = compact('skills/axstack-implement/SKILL.md');
+  expect(review).toMatch(/peer and authored.*axstack-diligence.*same exact revision/);
+  expect(review).toMatch(/independent.*configured reviewer/);
+  expect(review).toMatch(/diligence `FINDINGS`.*same author.*same round/);
+  expect(implement).toMatch(/Merge-ready.*diligence `PASS`/);
+});
+
+for (const [phase, path, rule] of [
+  ['research', 'skills/axstack-research/SKILL.md', /Before the driver folds verified claims.*axstack-diligence.*reopen cited sources.*answer-changing claims/],
+  ['spec', 'skills/axstack-spec/SKILL.md', /Before user approval.*axstack-diligence.*draft against.*Align decisions/],
+  ['tickets', 'skills/axstack-tickets/SKILL.md', /axstack-diligence.*every spec acceptance item.*capability's acceptance/],
+  ['publication', 'skills/axstack/references/candidate-publication.md', /Before publication.*axstack-diligence.*author receipt.*evidence folder.*red\/green.*counts.*SHAs.*paths/],
+  ['release', 'skills/axstack/references/candidate-publication.md', /release PR.*axstack-diligence.*release PR body.*merged PRs.*before publication/],
+]) {
+  test(`${phase} runs diligence at its decision boundary`, () => {
+    expect(compact(path)).toMatch(rule);
+  });
+}
+
+test('routing and docs count the 32 roles with a roster entry', () => {
+  expect(read('skills/axstack/references/routing.md')).toContain('all 32 role IDs');
+  expect(read('skills/axstack/references/role-roster.md')).toMatch(/^- `axstack-diligence`:.*\(diligence\.md\)/m);
+  for (const path of [
+    'README.md', 'docs/installation.md', 'docs/workflows.md',
+    'skills/axstack/references/orca-runtime.md',
+    'tests/workflows/routing-scenarios.json',
+    'tests/workflows/debug-scenarios.json',
+  ]) expect(read(path), path).toContain('32');
+});

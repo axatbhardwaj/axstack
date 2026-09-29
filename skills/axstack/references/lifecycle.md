@@ -107,8 +107,8 @@ Tracking grants no merge, release, model-substitution, or scope authority.
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; the review automation has no task-owned
-deadline. A PR is merge-ready only with the applicable review receipt(s) at
-its exact head; green CI or tests alone never make it merge-ready. Merge-ready
+deadline. Merge-ready requires applicable review receipt(s) and current diligence
+`PASS` at the exact head; CI/tests alone are insufficient. Merge-ready
 differs from merged; human merges.
 
 ## Review automation health

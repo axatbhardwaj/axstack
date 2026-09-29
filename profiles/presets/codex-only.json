@@ -56,6 +56,15 @@
       "notes": "Secondary reviewer in the ordered codex-only peer pair: Sol high followed by Luna xhigh. Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated."
     },
     {
+      "id": "axstack-diligence",
+      "name": "Axstack diligence checker",
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits."
+    },
+    {
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "codex",
@@ -81,6 +90,15 @@
       "modeId": "full-access",
       "thinkingOptionId": "high",
       "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Validate configured availability at launch; hold affected work without fallback."
+    },
+    {
+      "id": "axstack-research-code-sol",
+      "name": "Axstack research code Sol",
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation."
     },
     {
       "id": "axstack-research-web",
@@ -155,6 +173,15 @@
       "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Validate configured availability at launch; hold affected work without fallback."
     },
     {
+      "id": "axstack-explore-execution-sol",
+      "name": "Axstack execution explorer Sol",
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Independent Sol high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation."
+    },
+    {
       "id": "axstack-monitor",
       "name": "Axstack monitor",
       "provider": "codex",
@@ -171,6 +198,15 @@
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
       "notes": "Read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself."
+    },
+    {
+      "id": "axstack-auditor-sol",
+      "name": "Axstack auditor Sol",
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Independent Sol high read-only auditor: checks the same bounded run evidence without cross-reading. Reports findings for driver reconciliation; never edits, merges, or activates."
     },
     {
       "id": "axstack-debug-investigator-1",

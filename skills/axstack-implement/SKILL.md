@@ -206,8 +206,13 @@ For each PR:
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
    findings to the same author for a new revision, increments `repairs`, and
    returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
-   risk, or the third `REQUEST_CHANGES` on one PR records `held`. A changed
-   parent sends its child back to step 1.
+   risk, or the third review round with `REQUEST_CHANGES` and/or diligence
+   `FINDINGS` on one PR records `held`. A changed parent sends its child back
+   to step 1.
+   Merge-ready also requires a current diligence `PASS` at that head; diligence
+   `FINDINGS` return to the same author within the review round.
+   A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` increments
+   `repairs` once and counts once toward the third-round hold.
 
 One run-level completion wait covers every unsettled Dispatch; the bounded
 forge check wait is the only other wait. End a turn only when every required PR

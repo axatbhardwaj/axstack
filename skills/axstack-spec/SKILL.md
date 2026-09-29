@@ -54,6 +54,9 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    session to return plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
+   Before user approval, dispatch `axstack-diligence` under
+   [Diligence](../axstack/references/diligence.md) to check the draft against
+   the Align decisions for anything dropped, added, or softened.
 5. **Snapshot the baseline.** Record the approved revision identity and a
    concise repository Markdown counterpart. In Linear mode, the native
    document remains authoritative. In GitHub mode, the approved issue body is
