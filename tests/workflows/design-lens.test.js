@@ -23,7 +23,7 @@ test('design lens: factual ladder and proportionate routing', () => {
 });
 
 test('design lens: installed roles cannot silently enter an active snapshot', () => {
-  expect(text('skills/axstack/references/routing.md')).toMatch(/A role installed or changed later must not silently enter the snapshot/i);
+  expect(text('skills/axstack/references/routing.md')).toMatch(/Later installed or changed roles need an\s+explicit user decision to enter the snapshot/i);
 });
 
 test('design lens: live profiles remain authoritative for role snapshots', () => {

@@ -88,7 +88,7 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-arena-judge-opus');
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-arena-judge-opus', 'axstack-ui-verifier'].includes(id));
   const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -117,7 +117,7 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
 test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge', () => {
   const rootDir = makeTempRoot('axstack-opus-upgrade-');
   const skillsDir = join(rootDir, 'installed');
-  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-ui-verifier');
   const old = current.filter(({ id }) => id !== 'axstack-arena-judge-opus');
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
@@ -133,6 +133,23 @@ test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge',
   expect(result.out).toContain('added role IDs: axstack-arena-judge-opus');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(27);
   expect(runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('added role IDs:');
+});
+
+test('a pristine 27-row installation reports the added UI verifier', () => {
+  const rootDir = makeTempRoot('axstack-ui-verifier-upgrade-');
+  const skillsDir = join(rootDir, 'installed');
+  const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles;
+  const old = current.filter(({ id }) => id !== 'axstack-ui-verifier');
+  const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
+  const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
+  const args = (bundle) => ['install', '--bundle', bundle, '--preset', 'mixed', '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
+  const cli = `${root}/bin/axstack.js`;
+  runCli(cli, args(oldBundle), { env: { HOME: rootDir } });
+  const rolesPath = join(skillsDir, 'axstack', 'roles.json');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(27);
+  const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
+  expect(result.out).toContain('added role IDs: axstack-ui-verifier');
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(28);
 });
 
 test('retired Fable seats migrate to Opus adviser and escalation seat once', () => {
@@ -154,7 +171,7 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
     expect(result.out).toContain('added role IDs: axstack-advisor-opus, axstack-escalation-fable');
     expect(result.out).toContain('removed role IDs: axstack-advisor-fable, axstack-arena-judge-fable');
     const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
-    expect(installed).toHaveLength(27);
+    expect(installed).toHaveLength(28);
     expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
     const again = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
     expect(again.out).not.toContain('added role IDs:');

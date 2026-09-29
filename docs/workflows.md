@@ -48,7 +48,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 27 stable IDs.
+`{ "version": 1, "roles": [...] }` and the same 28 stable IDs.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -58,6 +58,10 @@ role.
 | `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Luna xhigh |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh |
 | `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high |
+
+In `mixed` and `claude-only`, `axstack-research-requirements`,
+`axstack-research-web`, and `axstack-monitor` use Claude Sonnet 5.5 high.
+`codex-only` keeps its Codex assignments for those roles.
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it

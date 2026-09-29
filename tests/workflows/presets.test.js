@@ -20,6 +20,7 @@ const roleIds = [
   'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
+  'axstack-ui-verifier',
   'axstack-explore-codebase',
   'axstack-explore-execution',
   'axstack-monitor',
@@ -45,12 +46,13 @@ const expected = {
     a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'medium'),
-    ag(null, 'low'), a('claude-opus-5-5', 'medium'),
-    c('gpt-6-sol', 'high'), a('claude-opus-5-5', 'low'), ag(null, 'high'),
+    ag(null, 'low'), a('claude-sonnet-5-5', 'high'),
+    c('gpt-6-sol', 'high'), a('claude-sonnet-5-5', 'high'), ag(null, 'high'),
     g(null, 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-luna', 'xhigh'),
+    a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
-    a('claude-opus-5-5', 'medium'),
+    a('claude-sonnet-5-5', 'high'),
     c('gpt-6-luna', 'xhigh'),
     a('claude-opus-5-5', 'medium'), c('gpt-6-sol', 'high'),
     a('claude-sonnet-5-5', 'high'), c('gpt-6-sol', 'high'),
@@ -66,6 +68,7 @@ const expected = {
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('gpt-6-sol', 'high'), c('gpt-6-luna', 'xhigh'),
+    c('gpt-6-sol', 'medium'),
     c('gpt-6-sol', 'high'), c('gpt-6-sol', 'high'),
     c('gpt-6-sol', 'low'),
     c('gpt-6-luna', 'xhigh'),
@@ -79,10 +82,11 @@ const expected = {
     a('claude-opus-5-5', 'xhigh'),
     a('claude-opus-5-5', 'medium'), a('claude-opus-5-5', 'medium'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'),
-    a('claude-sonnet-5-5', 'high'), a('claude-opus-5-5', 'medium'),
+    a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
     a('claude-opus-5-5', 'medium'), a('claude-sonnet-5-5', 'high'), a(null, 'high'),
     a(null, 'high'),
     a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
+    a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'), a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
     a('claude-sonnet-5-5', 'high'),
@@ -118,6 +122,57 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       expect(profile.notes).toBeTruthy();
     }
   }
+});
+
+test('UI verification routes rendered checks to the read-only verifier', () => {
+  const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
+  expect(rule).toMatch(/every Playwright, browser, or rendered-UI check/i);
+  expect(rule).toMatch(/Orca[\s\S]*axstack-ui-verifier/i);
+  expect(rule).toMatch(/read-only/i);
+  expect(rule).toMatch(/dispatch.s evidence folder/i);
+  expect(rule).toMatch(/desktop[\s\S]*mobile[\s\S]*reduced-motion/i);
+  for (const path of [
+    'skills/axstack-implement/SKILL.md',
+    'skills/axstack-review/SKILL.md',
+    'skills/axstack-explain/references/visual-qa.md',
+    'skills/axstack-debug/SKILL.md',
+  ]) {
+    expect(readFileSync(`${root}/${path}`, 'utf8'), path).toContain('ui-verification.md');
+  }
+  const cases = readJson('tests/workflows/routing-scenarios.json').cases;
+  const ui = cases.find(({ id }) => id === 'ui-change-rendered-check');
+  expect(ui?.expected?.role).toBe('axstack-ui-verifier');
+  expect(ui?.expected?.forbidden).toContain('PR writer performs rendered check');
+});
+
+for (const preset of presetNames) {
+  test(`UI verification: ${preset} explainer reviewer keeps text and fidelity`, () => {
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    const notes = roles.find(({ id }) => id === 'axstack-explainer-review')?.notes;
+    expect(notes).toMatch(/checks the exact artifact for text and source fidelity/i);
+    expect(notes).toMatch(/rendered pass belongs to axstack-ui-verifier/i);
+    expect(notes).not.toMatch(/rendered behavior where warranted/i);
+  });
+}
+
+test('UI verification: visual QA keeps explainer text and fidelity review', () => {
+  const qa = readFileSync(`${root}/skills/axstack-explain/references/visual-qa.md`, 'utf8');
+  expect(qa).toMatch(/The explainer reviewer checks text and source fidelity/i);
+});
+
+test('UI verification: the PR writer remains the sole writer', () => {
+  const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
+  expect(rule).toMatch(/The PR writer remains the sole writer/i);
+});
+
+test('UI verification: debug delegates both L0 and L1 browser reproductions', () => {
+  const debug = readFileSync(`${root}/skills/axstack-debug/SKILL.md`, 'utf8');
+  expect(debug).toMatch(/L0 or L1 headless-browser reproduction through\s+\[UI verification\]\(\.\.\/axstack\/references\/ui-verification\.md\)/i);
+});
+
+test('UI verification: shared routing lists the verifier role', () => {
+  const routing = readFileSync(`${root}/skills/axstack/references/routing.md`, 'utf8');
+  expect(routing).toMatch(/^- `axstack-ui-verifier`:.*\(ui-verification\.md\)/m);
 });
 
 test('presets: Sol author and primary reviewer run at high effort', () => {

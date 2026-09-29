@@ -71,7 +71,7 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 27 stable
+Each has exactly `{ "version": 1, "roles": [...] }` with the same 28 stable
 role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
@@ -172,9 +172,13 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
-A new run records the selected preset plus all 27 role rows. An active run keeps
+A new run records the selected preset plus all 28 role rows. An active run keeps
 that snapshot after a later preset install unless the user explicitly changes
 it and accepts the resulting evidence invalidation.
+
+The `mixed` and `claude-only` presets assign `axstack-research-requirements`,
+`axstack-research-web`, and `axstack-monitor` to Claude Sonnet 5.5 high.
+The `codex-only` assignments for these roles are unchanged.
 
 The mixed checker and `axstack-research-web-google` have provider
 `antigravity`; mixed `axstack-research-x` has provider `grok`. All three use

@@ -148,8 +148,9 @@ including evidence and retained complexity.
 
 Run the acceptance checks and affected integration boundaries. Record commands,
 observed outputs, and verified states. UI work includes rendered interaction
-evidence when relevant. Name every unavailable OS, harness, credential, or
-other boundary instead of implying coverage.
+evidence through [UI verification](../axstack/references/ui-verification.md)
+when relevant. Name every unavailable OS, harness, credential, or other
+boundary instead of implying coverage.
 
 After the last change, pin the exact candidate revision and return this compact
 implementation receipt to the driver:
