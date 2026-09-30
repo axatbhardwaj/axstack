@@ -28,6 +28,8 @@ Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
 while independent work proceeds; use `paused` when no authorized action can
 advance. A user answer to the hold resumes affected work after reconciliation;
 silence does not.
+At each verified Autopilot transition, mirror the `Autopilot:` line in the
+driver worktree's Orca `--comment`; the private run record remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold eligible under the Notification policy.
 

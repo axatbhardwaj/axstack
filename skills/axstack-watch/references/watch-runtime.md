@@ -42,8 +42,19 @@ database, second driver, or fallback model. Source guidance and installation do
 not prove live activation. Native creation exposes provider but no model/effort
 override; require effective-session receipts.
 
-Each driver wake or fallback pass reads all pages of current GitHub state for every member: exact head
-and base, check app/run/attempt/result or legacy status context,
+Each driver wake or fallback pass first runs the digest once per repository
+from the installed `axstack` skill directory:
+`bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's private run-record path>`.
+Exit 0 means unchanged: when no pending local action remains in `Next:` or the
+native inbox, end the turn with no text or notification. Exit 10 supplies deltas
+to reconcile with current PR and local state; the driver saves only the printed
+`watermark` field as JSON after disposition. A fallback observer reports deltas
+internally and never writes it. Exit 2 means incomplete coverage:
+readiness is `UNKNOWN`, so hold affected decisions and reconcile the API or
+pagination gap. A digest result does not replace the readiness predicate.
+
+Complete coverage requires all pages of current GitHub state for every member:
+exact head and base, check app/run/attempt/result or legacy status context,
 review/request/comment/thread IDs, body digest, edits, deletion or resolution
 when exposed, draft/readiness and merge state. An unchanged head with a new
 check, edited review, or changed request is an event. Observable current state
