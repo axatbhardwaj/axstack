@@ -236,8 +236,9 @@ serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
 
 Merge-ready opens the merge boundary. Only the chat-run driver holding the
-approved ticket map is the merge actor for run-created or explicitly adopted
-own PRs into an `integration` base. Apply `axstack-watch` §5's merge card and
+approved ticket map is the merge actor for own PRs inside the approved ticket
+map (run-created or explicitly adopted into it) when they target an
+`integration` base. Apply `axstack-watch` §5's merge card and
 full predicate; an approval alone never grants merge authority. A peer PR or
 `deploying` base waits for the user to merge, in either approval mode. A
 manager, worker, reviewer, automation, or standalone watch must never merge.

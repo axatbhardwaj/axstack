@@ -34,7 +34,7 @@ human approval)` as a decision hold eligible under the Notification policy.
 ## Phase sequence
 
 - Small: Align read-back, small-change intent, implement, watch in maintain
-  mode, merge under the watch §5 predicate. An opted-in Align refinement is part
+  mode, human merge. An opted-in Align refinement is part
   of read-back.
 - Substantial: Align, spec draft with advisers and diligence, human spec
   approval at gate 1, tickets with diligence, implement, watch in maintain mode,
@@ -44,8 +44,9 @@ human approval)` as a decision hold eligible under the Notification policy.
 Do not seek another phase-start instruction after a completed identity.
 Spec approval is always the human's decision. Audit self-improvement PRs follow
 the same merge predicate. Only the original chat-run driver with the approved
-ticket map may auto-merge eligible own PRs into `integration` bases. The user
-merges peer PRs and PRs into `deploying` bases. Managers, workers, automations,
+ticket map may auto-merge PRs satisfying `axstack-implement` §6's approved
+ticket-map membership and `integration` base conditions. The user merges peer
+PRs and PRs into `deploying` bases. Managers, workers, reviewers, automations,
 and standalone watches never merge. A stack follows its guarded bottom-up rule.
 
 ## Implement into maintain watch
