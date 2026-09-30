@@ -9,9 +9,10 @@ Dispatch, session, worktree, messaging, settlement, and scheduling state.
 
 Resolve one Orca executable for the session and reuse it. Prefer
 `ORCA_CLI_COMMAND` when set, then the checkout's `orca-dev` when
-`ORCA_DEV_REPO_ROOT` is set, the Linux-safe `orca-ide` outside managed
-terminals, and otherwise `orca`. If the selected executable fails, report that
-exact gap; never switch binaries silently.
+`ORCA_DEV_REPO_ROOT` is set, then `orca` inside an agent or managed terminal,
+then the Linux-safe `orca-ide` outside managed terminals, and otherwise `orca`.
+If the selected executable fails, report that exact gap; never switch binaries
+silently.
 
 Load only the selected executable's version-matched guides needed by the
 operation through `skills get orchestration --json`,
@@ -96,6 +97,11 @@ small-change intent, brief, authority, role snapshot, worktree, base, and
 candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
+For each distinct host, harness, model, effort, and trust boundary in a wave,
+launch the first real task and confirm `turn_started`, provenance, and ownership
+before launching further tasks with that configuration. A rejection must stop
+sibling launches of that configuration; record the failure and keep unrelated
+configurations eligible. `input_accepted` alone does not clear this gate.
 Put the [Safe deletion](workspace-hygiene.md#safe-deletion) rule in every
 worker brief.
 

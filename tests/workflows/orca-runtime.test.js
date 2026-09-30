@@ -89,6 +89,28 @@ test('runtime decisions cover startup, fencing, settlement, and accepted handoff
   expect(runtime).toMatch(/same[^.]*owner|current owner/i);
 });
 
+test('a wave proves its first real worker before launching configuration siblings', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md').replace(/\s+/g, ' ');
+  expect(runtime).toMatch(/each distinct host[^.]*harness[^.]*model[^.]*effort[^.]*trust boundary/i);
+  expect(runtime).toMatch(/first real task[^.]*turn_started[^.]*provenance[^.]*ownership[^.]*before[^.]*further tasks/i);
+  expect(runtime).toMatch(/rejection[^.]*stop[^.]*sibling launches[^.]*configuration/i);
+
+  const scenarios = JSON.parse(read('tests/workflows/launch-readiness-scenarios.json'));
+  expect(scenarios.cases.map(({ id }) => id)).toEqual([
+    'first-worker-rejected',
+    'first-worker-proven',
+  ]);
+  for (const { input, expected } of scenarios.cases) {
+    expect(input.configuration).toEqual(['host', 'harness', 'model', 'effort', 'trust boundary']);
+    expect(expected.action).toBeTruthy();
+  }
+});
+
+test('managed Orca sessions select orca before orca-ide', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md').replace(/\s+/g, ' ');
+  expect(runtime).toMatch(/ORCA_CLI_COMMAND[^.]*ORCA_DEV_REPO_ROOT[^.]*`orca`[^.]*managed terminal[^.]*`orca-ide`[^.]*outside managed terminals/i);
+});
+
 test('all active skill runtime instructions are Orca-only', () => {
   const markdown = filesBelow('skills').filter((path) => path.endsWith('.md'));
   for (const path of markdown) {

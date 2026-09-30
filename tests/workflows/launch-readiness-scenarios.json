@@ -1,0 +1,25 @@
+{
+  "note": "Input-only scenarios for independent evaluation; prose tests do not prove live launches.",
+  "cases": [
+    {
+      "id": "first-worker-rejected",
+      "input": {
+        "configuration": ["host", "harness", "model", "effort", "trust boundary"],
+        "wave": "Three same-configuration tasks are ready. The first real worker is rejected before turn_started. An unrelated configuration is also ready."
+      },
+      "expected": {
+        "action": "Stop the two sibling launches for the rejected configuration; preserve the rejection and keep unrelated configuration work eligible."
+      }
+    },
+    {
+      "id": "first-worker-proven",
+      "input": {
+        "configuration": ["host", "harness", "model", "effort", "trust boundary"],
+        "wave": "The first real worker reports turn_started, but provenance and ownership have not been checked."
+      },
+      "expected": {
+        "action": "Check provenance and ownership before launching another task with the same configuration."
+      }
+    }
+  ]
+}
