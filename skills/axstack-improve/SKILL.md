@@ -46,7 +46,7 @@ unavailable pair holds its work.
 
 For a test audit, load [Test value](../axstack/references/test-value.md) and
 bound scope to one owner boundary. Mark every test declaration in scope
-R/F/C/D as a completeness floor, not a deletion quota; zero candidates is valid.
+R/F/C/D as a completeness floor. It is not a deletion quota; zero candidates is valid.
 Report reviewed and eligible counts. Each C/D carries the reference's evidence:
 exact test name and location, detectable failure, named keeper or
 vacuity/obsolescence proof, and validation command. Require its deletion proof

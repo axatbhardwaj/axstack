@@ -10,7 +10,7 @@ const linkedPolicy = (skill) => readFileSync(
 const sentences = (text) => text.replace(/\[[^\]]+\]\([^)]+\)/g, 'reference')
   .replace(/\s+/g, ' ').split(/[.!?]\s+/);
 const requires = (text, ...concepts) => sentences(text).some((sentence) =>
-  !/\b(?:do not|must not|never|optional|may)\b/i.test(sentence)
+  !/\b(?:not|never|skip|avoid\w*|optional|may)\b/i.test(sentence)
   && concepts.every((concept) => concept.test(sentence)));
 
 test('authors gate all new and changed tests and reject failures', () => {
@@ -53,7 +53,8 @@ test('test audits account for the bounded scope and route only proven cleanup th
     /\bR\s*\/\s*F\s*\/\s*C\s*\/\s*D\b/, /\bcompleteness\b/i,
   )).toBe(true);
   expect(sentences(policy).some((sentence) =>
-    /\b(?:no|not a) deletion quota\b/i.test(sentence),
+    /\b(?:no|not)\b/i.test(sentence) && /\bdelet\w*\b/i.test(sentence)
+    && /\bquota\b/i.test(sentence),
   )).toBe(true);
   expect(requires(policy, /\breport\w*\b/i, /\breviewed\b/i, /\beligible\b/i, /\bcounts?\b/i)).toBe(true);
   expect(requires(policy,
@@ -69,8 +70,9 @@ test('test audits account for the bounded scope and route only proven cleanup th
   )).toBe(true);
   expect(sentences(policy).some((sentence) =>
     /\breport\w*\b/i.test(sentence) && /\bF\b/.test(sentence)
-    && /test-only production seams/i.test(sentence)
-    && /\bdo not change\b/i.test(sentence),
+    && /\bproduction seams?\b/i.test(sentence)
+    && /\btest-only\b|\bonly\b.*\btests?\b/i.test(sentence)
+    && /\b(?:do not|never|without) (?:chang|edit|modif)\w*\b|\bunchanged\b/i.test(sentence),
   )).toBe(true);
   expect(requires(policy, /\bdiscovery\b/i, /\breport[- ]only\b/i)).toBe(true);
 });
