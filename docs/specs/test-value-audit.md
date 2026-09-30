@@ -1,8 +1,8 @@
-<!-- Approved spec counterpart. Authoritative: https://github.com/axatbhardwaj/axstack/issues/223 rev 4 body SHA-256 5013c74db2f1c51379f98c892d3983b33122dc57ef230fd669bee7e358d7159e -->
+<!-- Approved spec counterpart. Authoritative: https://github.com/axatbhardwaj/axstack/issues/223 rev 4.1 body SHA-256 462e826daa7c97dbfb114822be0fcaecef37dd54321f0304ff266c9c34345275 -->
 
 # Spec: test-value audit (stop and remove slop tests)
 
-Run: 20260930-test-slop-audit · Store: GitHub issue (axatbhardwaj/axstack) · Rev 4 (2026-09-30; rev 3 approved, rev 4 accepts user decisions Q4/Q5 after the pilot)
+Run: 20260930-test-slop-audit · Store: GitHub issue (axatbhardwaj/axstack) · Rev 4.1 (2026-09-30; rev 3 approved, rev 4 accepts user decisions Q4/Q5 after the pilot; 4.1 aligns two Consumer lines with D8, no decision change)
 
 ## Outcome
 Axstack stops agents writing low-value tests and removes existing redundant or useless ones:
@@ -33,8 +33,8 @@ Axstack stops agents writing low-value tests and removes existing redundant or u
 Consumers:
 - Implement: authors apply the gate to every new or changed test; a test failing the gate is not added.
 - Review: under existing angles, test hunks (added, changed, removed) are checked against the reference, and for removed tests the named keepers are inspected; peer mode stays report-only.
-- Improve: a test-audit lens marks every test declaration in the bounded scope R/F/C/D (completeness floor instead of a quota), reports reviewed and eligible counts, and returns C/D with evidence; accepted C/D batches go to Implement as structure-preserving work (same-check green before/after), through its normal independent review.
-- Weekly: a packaged scheduled prompt (beside `automations.md`) runs Improve's test-audit lens on one owner-boundary scope, then Implement on proven C/D only, and opens at most one PR per week after independent review. Rules:
+- Improve: a test-audit lens marks every test declaration in the bounded scope R/F/C/D (completeness floor instead of a quota), reports reviewed and eligible counts, and returns C/D with evidence; accepted C/D batches and authorized F repairs go to Implement (C/D as structure-preserving work; F repairs with the F proof rule) (same-check green before/after), through its normal independent review.
+- Weekly: a packaged scheduled prompt (beside `automations.md`) runs Improve's test-audit lens on one owner-boundary scope, then Implement on proven C/D and F repairs only, and opens at most one PR per week after independent review. Rules:
   - Scope: next boundary derived from the last test-audit PR (no cursor file or state); never re-propose candidates from a closed unmerged test-audit PR.
   - Skip the week while a test-audit PR is still open.
   - Red or flaky baseline, overlap with live Orca work (existing Orca worktree/Run ownership on the same paths), or zero proven candidates: publish nothing, report only.
@@ -63,5 +63,6 @@ Consumers:
 2. Improve test-audit lens + AGENTS.md prose rule + docs (A2 rest, A3, A5).
 3. Pilot on the `improve` boundary (A6), then its F repairs (A8).
 4. Weekly prompt + activation docs, informed by the pilot (A4).
+
 
 

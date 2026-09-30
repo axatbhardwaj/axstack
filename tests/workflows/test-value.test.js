@@ -10,7 +10,7 @@ const linkedPolicy = (skill) => readFileSync(
 const sentences = (text) => text.replace(/\[[^\]]+\]\([^)]+\)/g, 'reference')
   .replace(/\s+/g, ' ').split(/[.!?]\s+/);
 const requires = (text, ...concepts) => sentences(text).some((sentence) =>
-  !/\b(?:not|never|skip|avoid\w*|optional|may)\b/i.test(sentence)
+  !/\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i.test(sentence)
   && concepts.every((concept) => concept.test(sentence)));
 
 test('authors gate all new and changed tests and reject failures', () => {
@@ -57,6 +57,7 @@ test('test audits account for the bounded scope and route only proven cleanup th
     && /\bquota\b/i.test(sentence),
   )).toBe(true);
   expect(requires(policy, /\breport\w*\b/i, /\breviewed\b/i, /\beligible\b/i, /\bcounts?\b/i)).toBe(true);
+  expect(requires(policy, /\b(?:report|document)\b/i, /\bF\b/, /\bfindings?\b/i)).toBe(true);
   expect(requires(policy,
     /\b(?:every|each|all)\b/i, /\bC\s*\/\s*D\b/, /\bevidence\b/i,
     /\bname\b/i, /\blocation\b/i, /\bfailure\b/i, /\bkeeper\b/i,

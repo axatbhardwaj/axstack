@@ -66,6 +66,13 @@ For each C/D, record the exact test name and location, what failure it can
 detect, the named keeper or evidence of vacuity/obsolescence, and the validation
 command. Missing evidence leaves the candidate retained and report-only.
 
+## F proof
+
+An authorized F repair preserves its contract: the repaired check passes on the
+base, goes red when its instruction or code is removed or inverted by a
+targeted disposable mutation restored byte for byte, and survives equivalent
+rewording for semantic prose. Never weaken or loosen an assertion.
+
 ## Deletion proof
 
 Pin base and candidate revisions. Run the suite green before and after the

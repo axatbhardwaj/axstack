@@ -12,7 +12,7 @@ Steps: <completed / deviated + why + approval per deviation>
 Advisers: <Astra/Opus configured coverage / eligible uses + same-question receipts; Astra/Fable high-stakes AGREE coverage / eligible uses>
 Decisions: <escalation trigger + evidence pointers + outcome changed yes/no, or n/a>
 Debug: <rung reached + loop command + fix attempts + adviser and investigator receipts + isolation evidence | n/a>
-TDD: <applicable evidence path: normal real red-green | accepted structure-preserving old revision green before edits + same checks new revision green; absent proof: noncompliance | unavailable records: UNKNOWN with reason>
+TDD: <applicable evidence path: normal real red-green | accepted structure-preserving old revision green before edits + same checks new revision green | F-repair base-green/removal-inversion-red/rewording-green evidence; absent proof: noncompliance | unavailable records: UNKNOWN with reason>
 Review: <exact-rev independent review status + unresolved findings>
 Rework: <cycles + causes>
 Interventions: <avoidable user interventions, or unsupported by records>

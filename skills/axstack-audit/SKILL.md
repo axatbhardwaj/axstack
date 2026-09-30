@@ -94,7 +94,9 @@ counts with denominators plus the evidence behind the count:
 - Applicable test-first evidence: normal behavior changes have real red-green
   proof; explicitly accepted structure-preserving work has the old revision
   green before edits and the same checks green on the new revision, plus
-  applicable equivalence evidence. Record noncompliance when the applicable
+  applicable equivalence evidence. Authorized F repairs use
+  [F proof](../axstack/references/test-value.md#f-proof).
+  Record noncompliance when the applicable
   evidence path is absent, or `UNKNOWN` with the reason when its records are
   unavailable.
 - Independent exact-revision review status and unresolved findings.

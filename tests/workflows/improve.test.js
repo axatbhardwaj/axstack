@@ -8,6 +8,7 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // Structural instruction-contract checks only. They verify declared routing
 // and evidence boundaries, not whether a model will follow those instructions.
+// requires checks affirmative instructions; prohibitions keep explicit negation.
 
 test('improve: direct discovery is bounded and report-only', () => {
   const text = compact('skills/axstack-improve/SKILL.md');
@@ -95,7 +96,8 @@ test('improve: normal TDD and bounded ownership remain intact', () => {
 test('improve: implementation receipt and audit accept the applicable evidence path', () => {
   const implement = compact('skills/axstack-implement/SKILL.md');
   const auditPolicy = compact('skills/axstack-audit/SKILL.md');
-  const audit = `${auditPolicy} ${compact('skills/axstack-audit/references/record.md')}`;
+  const auditRecord = compact('skills/axstack-audit/references/record.md');
+  const audit = `${auditPolicy} ${auditRecord}`;
   expect(implement).toMatch(/TDD:[^>]*normal red\/green[^>]*structure-preserving[^>]*old-green[^>]*same-check-new-green/i);
   expect(audit).toMatch(/normal[^.]*real red[- ]green|red[- ]green[^.]*normal/i);
   expect(audit).toMatch(/structure-preserving[^.]*old revision[^.]*green[^.]*same checks[^.]*new revision[^.]*green/i);
@@ -108,4 +110,25 @@ test('improve: implementation receipt and audit accept the applicable evidence p
   expect(audit).toMatch(/missing|absent/i);
   expect(audit).toMatch(/noncompliance|UNKNOWN/i);
   expect(audit).toMatch(/applicable[^.]*evidence path|evidence path[^.]*applicable/i);
+  expect(requires(implement,
+    /normal behavior path unless/i, /accepted scope/i, /structure-preserving/i,
+    /explicitly authorizes[^.]*F repairs/i,
+  )).toBe(true);
+  for (const [owner, text] of [['implement', implement], ['audit', auditPolicy]]) {
+    expect(requires(text,
+      /authorized F repairs?/i, /\b(?:use|apply|follow)\b/i, /\bF proof\b/i,
+    ), owner).toBe(true);
+    expect(text, owner).toContain('../axstack/references/test-value.md#f-proof');
+  }
+  for (const text of [implement, auditRecord]) {
+    expect(text).toMatch(/TDD:[^>]*F-repair[^>]*base-green[^>]*removal-inversion-red[^>]*rewording-green/i);
+  }
+  const proof = read('skills/axstack/references/test-value.md').split('## F proof')[1]?.split('\n## ')[0] ?? '';
+  expect(requires(proof,
+    /authorized F repair/i, /(?:check|test) (?:passes|is green) on the base/i,
+    /red[^.]*instruction or code/i, /removed/i, /inverted/i,
+    /targeted disposable mutation restored byte for byte/i,
+    /survives equivalent rewording/i,
+  )).toBe(true);
+  expect(proof).toMatch(/(?:never|do not) (?:weaken or loosen|loosen or weaken)(?: an?)? assertions?/i);
 });

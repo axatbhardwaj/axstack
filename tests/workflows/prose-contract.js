@@ -4,7 +4,7 @@ export const sentences = (text) => text
   .replace(/\s+/g, ' ')
   .split(/[.!?;]\s+|\s+and (?=never\b)/i);
 
-const denied = /\b(?:not|never|skip|avoid\w*|optional|may)\b/i;
+const denied = /\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i;
 export const requires = (text, ...concepts) => sentences(text).some((sentence) =>
   !denied.test(sentence) && concepts.every((concept) => concept.test(sentence)));
 
