@@ -42,10 +42,10 @@ The immutable checkout is an Orca worktree of the already-registered repo:
 then `git checkout --detach <candidate SHA>` inside it. Never materialize it
 as a `git clone` into a temp directory followed by `orca repo add`; each
 `repo add` registers a duplicate top-level repo and leaves a stale record once
-the directory is gone. Release preparation uses a `release/<version>` worktree
-of the same registered repo the same way. Release the checkout with
+the directory is gone. Release diligence runs on the final version-bump PR's
+immutable checkout in the same registered repo. Release the checkout with
 `ORCA worktree rm` after its receipt is recorded.
 
-For a release PR, dispatch `axstack-diligence` under
-[Diligence](diligence.md) to check the release PR body
-against the merged PRs before publication.
+Before the final version-bump PR's merge card, dispatch `axstack-diligence`
+under [Diligence](diligence.md) to compare its bump with the merged PRs.
+Review, diligence, and human approval then cover that same head.

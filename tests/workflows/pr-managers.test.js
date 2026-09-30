@@ -151,7 +151,7 @@ test('review manager preserves peer, decision, notification, and merge boundarie
   expect(manager).toMatch(/security concern[^.]*permanent on-chain[^.]*architecture decision/i);
   expect(manager).toMatch(/Telegram delivery[^.]*Telegram reply[^.]*silence never authorizes/i);
   expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
-  expect(manager).toMatch(/Human merge remains the boundary/i);
+  expect(manager).toMatch(/user merges PRs handled by these roles/i);
 });
 
 test('manager continuity reuses valid state and keeps publication bounded', () => {

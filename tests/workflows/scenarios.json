@@ -182,7 +182,7 @@
       },
       "expected": {
         "required": ["Obtain refreshed review receipt for rev X+1 (reuse unchanged evidence, review delta plus affected behavior; broader review for bigger scope/base/behavior changes)", "Confirm no open urgent hold", "Receipt shows verdict APPROVE with candidate SHA, coverage, and limitations"],
-        "forbidden": ["Publishing on the stale rev X receipt", "Declaring merge-ready under an open urgent hold", "Treating reviewer unanimity or passing tests as merge authority (human merges)"],
+        "forbidden": ["Publishing on the stale rev X receipt", "Declaring merge-ready under an open urgent hold", "Treating reviewer unanimity or passing tests alone as merge authority"],
         "evidence": "Current receipt with SHA, verdict, coverage, limitations; hold-state record"
       }
     }

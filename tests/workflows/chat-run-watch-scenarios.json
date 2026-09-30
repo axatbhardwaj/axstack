@@ -40,7 +40,7 @@
     {
       "id": "human-approval-survives-repair",
       "input": "A human approved the driver's own PR, then requested a small fix. After the author repairs and replies, the forge still counts that approval; a second PR's approval was dismissed, and a third PR's rules require last-push approval.",
-      "expected": "For the first PR, resolve feedback and proceed to merge-ready when all other checks pass, without re-requesting the human approver. Hold the second and third PRs, tell the user why a fresh approval is required, and do not auto-request re-review. Initial requests on PRs with no human approval remain allowed; the human merges."
+      "expected": "For the first PR, resolve feedback and proceed to merge-ready when all other checks pass, without re-requesting the human approver. Hold the second and third PRs, tell the user why a fresh approval is required, and do not auto-request re-review. Initial requests on PRs with no human approval remain allowed; only the chat-run driver may auto-merge an eligible integration PR after the full predicate."
     },
     {
       "id": "maintenance-loop-until-ready",

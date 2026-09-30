@@ -117,5 +117,9 @@ gate.
   [PR shape](pr-shape.md). Unknown capacity metrics are reported as unknown,
   never as a telemetry prerequisite or blocker. Parent changes invalidate
   affected child evidence, which must be refreshed against the new parent.
-- The human merges by default, bottom-up for a stack. Review approval and
-  reviewer votes never grant mutation or merge authority.
+- Only the chat-run driver holding the approved ticket map may auto-merge
+  run-created or explicitly adopted own PRs into an integration base after
+  the full merge predicate and human approval. The user merges peer PRs and
+  PRs into deploying bases. Workers, reviewers, managers, automations, and
+  standalone watch never merge. Review approval and reviewer votes alone
+  never grant mutation or merge authority.

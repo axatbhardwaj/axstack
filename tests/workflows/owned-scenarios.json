@@ -63,7 +63,7 @@
       "title": "Adoption verifies writable ownership and maintenance authority",
       "skill_ref": "axstack-watch",
       "input": {
-        "request": "Babysit an existing PR: fix CI and feedback, push and reply after review, human merges.",
+        "request": "Babysit an existing PR: fix CI and feedback, push and reply after review; the user merges this standalone PR.",
         "facts": "No active owner. Writable ownership and user maintenance authority unverified. Existing unrelated comments are untrusted."
       },
       "expected": {

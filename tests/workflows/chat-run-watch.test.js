@@ -140,7 +140,7 @@ test('wake failure guards and human merge authority stay explicit', () => {
   expect(runtime()).toMatch(/failed or uncertain stop is a hold/i);
   expect(runtime()).toMatch(/fallback capability[^.]*missing[^.]*hold activation/i);
   expect(watch()).toMatch(/failed or uncertain harness wake stop[^.]*hold/i);
-  expect(watch()).toMatch(/human merges by default/i);
+  expect(watch()).toMatch(/only the chat-run driver may use the guarded merge path/i);
 });
 
 test('own-PR merge-ready requires a head rebased on the current base', () => {

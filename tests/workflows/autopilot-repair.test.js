@@ -74,7 +74,7 @@ rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms 
 rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
 rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
 rule('explicit stop after Align is honored', () => read('skills/axstack-align/SKILL.md'), 'an explicit stop-after-Align request', /ends here/);
-rule('workflow human gate remains human', () => read('docs/workflows.md'), 'The human approves substantial specs', /every merge including release PRs, and the npm stage/);
+rule('workflow human gate remains human', () => read('docs/workflows.md'), 'For merges, team mode', /counted forge review from a non-author collaborator/);
 rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);
 rule('routing substantial work advances', () => read('skills/axstack/references/routing.md'), 'Preparation: substantial work', /handoff path above, then continues under autopilot when eligible/);
 rule('workflow notifications have only bounded categories', () => read('docs/workflows.md'), 'An applicable `Notification policy`', /only for a user-decision hold.*serious-risk hold.*at most two merge-ready\/merged milestones per run/);

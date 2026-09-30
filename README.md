@@ -39,7 +39,7 @@ implementation. Research, explanation, and peer review can start directly.
 | Wrong thing built | Align rounds clarify the request; a four-family arena compares approaches for hard choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
-| Agents left a mess | Orca makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
+| Agents left a mess | Orca makes delegation visible, one writer owns each PR, cleanup stays bounded, and only the chat-run driver may auto-merge eligible integration PRs. |
 
 ## Quick start
 
@@ -98,7 +98,9 @@ upgrades, conflicts, and uninstalling.
 - Peer PRs receive two independent reviews. Authored changes receive a reviewer
   selected from the author's configured pairing. Reviews bind to exact revisions.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
-  unavailable models, and serious risks surface as holds. The human merges by default.
+  unavailable models, and serious risks surface as holds. Only the chat-run
+  driver may auto-merge eligible integration PRs after human approval and all
+  checks; the user merges peer PRs and PRs into deploying bases.
 
 Choose one explicit preset (each contains all role IDs): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
@@ -130,7 +132,8 @@ live host validation. See
 
 - Orca is the only supported active runtime. Axstack adds no daemon or runtime
   database.
-- A human merges by default.
+- The user merges peer PRs and PRs into deploying bases. Only the chat-run
+  driver may auto-merge eligible integration PRs under the full predicate.
 - This is an early project; expect the workflows to evolve.
 
 ## Documentation
