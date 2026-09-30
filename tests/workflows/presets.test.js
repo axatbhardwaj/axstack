@@ -335,17 +335,19 @@ test('presets: all packaged Markdown pointers resolve', () => {
   }
 });
 
-test('presets: active guidance and workflow tests contain no literal role count', () => {
+test('presets: active guidance and tests contain no literal role count', () => {
   const files = [
     'README.md', 'docs/installation.md', 'docs/workflows.md',
     ...readdirSync(`${root}/skills`, { recursive: true })
       .filter((path) => path.endsWith('.md')).map((path) => `skills/${path}`),
     ...readdirSync(`${root}/tests/workflows`)
       .filter((path) => /\.(?:js|json)$/.test(path)).map((path) => `tests/workflows/${path}`),
+    ...readdirSync(`${root}/tests/installer`)
+      .filter((path) => path.endsWith('.js')).map((path) => `tests/installer/${path}`),
   ];
   for (const file of files) {
     expect(readFileSync(`${root}/${file}`, 'utf8'), file)
-      .not.toMatch(/\b\d+[ -](?:stable )?(?:role(?:s| rows| IDs)?|IDs)\b/i);
+      .not.toMatch(/\b\d+[ -](?:[a-z]+[ -])?(?:role(?:s| rows| IDs)?|IDs)\b/i);
   }
 });
 

@@ -285,7 +285,8 @@ test('installed presets expose independent Sol analysis pair seats', () => {
       '--no-claude-settings', '--yes',
     ], { env: { HOME: rootDir } });
     const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
-    expect(roles).toHaveLength(32);
+    const presetRoles = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8')).roles;
+    expect(roles).toHaveLength(presetRoles.length);
     for (const id of [
       'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
     ]) {
@@ -378,7 +379,6 @@ test('a pristine 28-row installation reports all three Sol pair seats', () => {
     const result = runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } });
     expect(result.out).toContain(`added role IDs: ${solPairIds.join(', ')}`);
     const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
-    expect(installed).toHaveLength(31);
     expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
   }
 });
@@ -394,9 +394,9 @@ test('a 31-row installation reports the added diligence role', () => {
     const args = (bundle) => ['install', '--bundle', bundle, '--preset', preset, '--skills-dir', skillsDir, '--no-claude-settings', '--yes'];
     runCli(`${root}/bin/axstack.js`, args(oldBundle), { env: { HOME: rootDir } });
     const result = runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } });
-    expect(old).toHaveLength(31);
+    expect(old).toHaveLength(current.length - 1);
     expect(result.out).toContain('added role IDs: axstack-diligence');
-    expect(JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles).toHaveLength(32);
+    expect(JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles).toHaveLength(current.length);
   }
 });
 
@@ -419,7 +419,6 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
     expect(result.out).toContain('added role IDs: axstack-advisor-opus, axstack-escalation-fable');
     expect(result.out).toContain('removed role IDs: axstack-advisor-fable, axstack-arena-judge-fable');
     const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
-    expect(installed).toHaveLength(32);
     expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));
     const again = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
     expect(again.out).not.toContain('added role IDs:');
