@@ -132,7 +132,8 @@ dropouts, judge verdicts per round) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
 [Orca runtime](../axstack/references/orca-runtime.md) immediately before the
 first candidate or judge dispatch. If an optional Grok or Antigravity candidate
-fails to launch, fence it, record `absent (<reason>)`, name it once in the next
+malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
+record `absent (<reason>)`, name it once in the next
 read-back, and continue with available candidates without relay or substitution.
 A required adviser, candidate, or judge unavailable at launch or returning a
 failed receipt holds that question without substitution; record the gap and ask

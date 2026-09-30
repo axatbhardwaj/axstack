@@ -14,6 +14,7 @@ test('analysis pairs: audit dispatch keeps every reconciliation boundary', () =>
   expect(audit).toMatch(/intentionally absent Sol seat[^.]*continue[^.]*base auditor alone/i);
   expect(audit).toMatch(/auditor-sol` is optional[^.]*fails[^.]*fence/i);
   expect(audit).toMatch(/auditor: UNKNOWN \(unlaunchable\)/i);
+  expect(audit).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
 });
 
 test('analysis pairs: code and execution research retain both paired routes', () => {
@@ -25,7 +26,7 @@ test('analysis pairs: code and execution research retain both paired routes', ()
   expect(rule).toMatch(/driver reconciles agreement and disagreement per claim/i);
   expect(rule).toMatch(/never averaging findings/i);
   expect(rule).toMatch(/intentionally absent pair[^.]*proceed[^.]*base seat alone/i);
-  expect(rule).toMatch(/-sol` pair is optional[^.]*failed launch/i);
+  expect(rule).toMatch(/-sol` pair is optional[^.]*launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
 });
 
 test('analysis pairs: routing and declared scenarios cover presence and absence', () => {
@@ -71,6 +72,7 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
   expect(improve).toMatch(/driver reconciles[^.]*per claim[^.]*never averages/i);
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
   expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);
+  expect(improve).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
 });
 
 test('analysis pairs: routing preserves original ownership and direct-route duties', () => {

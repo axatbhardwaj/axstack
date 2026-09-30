@@ -60,7 +60,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
 test('align arena: synthesis lands in Decisions rows and absent seats hold only that question', () => {
   const text = compact('skills/axstack-align/SKILL.md');
   expect(text).toMatch(/synthesis note[^.]*judge verdicts per round[^.]*`Decisions` rows/i);
-  expect(text).toMatch(/optional Grok or Antigravity candidate[^.]*fails to launch[^.]*absent/i);
+  expect(text).toMatch(/optional Grok or Antigravity candidate[^.]*malfunctions[^.]*absent/i);
   expect(text).toMatch(/required adviser, candidate, or judge[^.]*unavailable[^.]*holds that question/i);
   expect(text).toMatch(/uncertain dispatch[^.]*reconcile[^.]*never treated as absent/i);
 });

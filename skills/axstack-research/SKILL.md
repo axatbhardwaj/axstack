@@ -36,7 +36,8 @@ is part of research.
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.
    An unconfigured branch is recorded as intentionally absent. A configured
-   optional branch that fails to launch is fenced, recorded `absent (<reason>)`,
+   optional branch that malfunctions (launch failure, trust/login prompt, or
+   prompt block) is fenced, recorded `absent (<reason>)`,
    named once in the next read-back, then skipped without relay or substitution;
    continue with available branches. Required branches hold their affected work.
    These routes are data presets, not proof of live readiness; before dispatch,
@@ -57,8 +58,9 @@ is part of research.
    dispatch its `-sol` pair independently on the same bounded brief without
    cross-reading. The driver reconciles agreement and disagreement per claim,
    never averaging findings. Record an intentionally absent pair and proceed
-   with the base seat alone. The `-sol` pair is optional: fence a failed launch,
-   record `absent (<reason>)`, and continue with the base seat. In mixed fan-out,
+   with the base seat alone. The `-sol` pair is optional: fence a launch failure,
+   trust/login prompt, or prompt block; record `absent (<reason>)`, and continue
+   with the base seat. In mixed fan-out,
    retain a Codex and a Claude seat or hold the affected fan-out.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,

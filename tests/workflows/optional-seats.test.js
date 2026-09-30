@@ -31,14 +31,17 @@ test('optional seats are enumerated and absent only after a recorded failure', (
 test('shared rules qualify only optional seats and preserve required holds', () => {
   const contracts = read('skills/axstack/references/contracts.md');
   const routing = read('skills/axstack/references/routing.md');
-  expect(contracts).toMatch(/enumerated optional seats in \[Role roster\]\(role-roster\.md\) may be recorded absent/i);
-  expect(contracts).toMatch(/required adviser,[^.]*hold without substitution/i);
-  expect(routing).toMatch(/optional seats enumerated in \[Role roster\]\(role-roster\.md\) can be marked absent/i);
-  expect(routing).toMatch(/required seats hold without substitution/i);
-  expect(routing).toMatch(/model: null` single-provider[^.]*remain unchanged/i);
-  expect(routing).toMatch(/model: null[^.]*required[^.]*hold/i);
+  expect(contracts).toMatch(/Optional seats follow \[Role roster\]\(role-roster\.md\)/i);
+  expect(contracts).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
+  expect(routing).toMatch(/Optional-seat absence[^.]*follow \[Role roster\]\(role-roster\.md\)/i);
+  expect(routing).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
+  expect(routing).toMatch(/intentional single-provider `model: null` absences/i);
+  for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
   expect(routing).toContain('Codex `--retry-of`');
   expect(routing).toContain('pre-turn Codex rejection');
+  for (const prose of [contracts, routing]) {
+    expect(prose).toMatch(/base auditor[^.]*preflight rejection[^.]*Close-out/i);
+  }
 });
 
 test('research and arena continue after optional dropout, with required seats held', () => {
@@ -49,6 +52,9 @@ test('research and arena continue after optional dropout, with required seats he
   expect(align).toMatch(/optional[^.]*candidate[^.]*absent[^.]*continue/i);
   expect(align).toMatch(/required adviser, candidate, or judge[^.]*holds/i);
   expect(align).toMatch(/adviser[^.]*unavailable[^.]*hold/i);
+  for (const prose of [research, align]) {
+    expect(prose).toMatch(/launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
+  }
 });
 
 test('unlaunchable base auditor archives UNKNOWN with route and error', () => {
