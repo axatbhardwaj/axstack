@@ -90,6 +90,9 @@ explicitly marked **structure-preserving**. The author never chooses that tag.
 Only when the scope identity carries a sketch, copy it into the author brief
 under the [design lens](../axstack/references/design-lens.md).
 
+Authors apply the gate in [Test value](../axstack/references/test-value.md)
+to every new or changed test. A test failing the gate is not added.
+
 ### Normal behavior path
 
 When that sketch exists, make the first red check target its `Usage` line.

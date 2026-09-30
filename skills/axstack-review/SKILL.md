@@ -264,6 +264,10 @@ This section applies to peer and authored PR modes.
       where measurement is useful. Never invent a metric or demand an
       abstraction merely to satisfy a principle.
 
+   Under the existing angles, check added, changed, and removed test hunks
+   against [Test value](../axstack/references/test-value.md). For removed tests,
+   inspect the named keepers. Peer mode remains report-only.
+
    Under angle 6, verify the recorded shape against the pinned head and base.
    A mismatch between the recorded and measured total is a finding. Apply the
    level matching the measured total. The rationale band requires only its
