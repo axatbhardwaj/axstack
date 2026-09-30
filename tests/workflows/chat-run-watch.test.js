@@ -33,10 +33,15 @@ test('same-head feedback and checks are events while unchanged complete passes s
 
 test('chat-run wake uses the PR digest before deciding whether to act', () => {
   const text = runtime();
+  const invocation = text.match(/Each driver wake[\s\S]*?Exit 0/)?.[0] ?? '';
   expect(text).toMatch(/(?:each|every) driver wake[^.]*first runs[^.]*pr-digest\.js/i);
-  expect(text).toMatch(/--watermark[^.]*path[^.]*private run record/i);
+  expect(invocation).toMatch(/once per repository/i);
+  expect(invocation).toMatch(/installed[^.]*axstack[^.]*skill directory/i);
+  expect(invocation).toMatch(/bun scripts\/pr-digest\.js --repo <owner\/name> --prs <[^>]*every watched member[^>]*in that repo> --watermark <[^>]*repository[^>]*private run.record path>/i);
+  expect(runRecord()).toMatch(/PR digest watermarks: <repo (?:->|→) absolute path inside this private run record> \| none/i);
   expect(text).toMatch(/exit 0[^.]*unchanged[^.]*no pending local action[^.]*end the turn[^.]*no text/i);
   expect(text).toMatch(/exit 10[^.]*delta[^.]*reconcil/i);
+  expect(text).toMatch(/saves? (?:only |exactly )?the printed `watermark` field as JSON[^.]*after disposition/i);
   expect(text).toMatch(/exit 2[^.]*readiness[^.]*UNKNOWN/i);
 });
 
