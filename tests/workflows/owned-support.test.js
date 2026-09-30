@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync } from 'node:fs';
+import { loadedReferences } from './prose-contract.js';
 
 // NOTE: structural checks only. They verify packaging, frontmatter, and
 // relative-reference integrity of the owned support skills — not
@@ -96,7 +97,7 @@ test('owned-support: independently callable via shared references', () => {
   for (const name of OWNED) {
     const text = readSkill(name);
     for (const ref of ['../axstack/references/orca-runtime.md', '../axstack/references/contracts.md']) {
-      expect(text.includes(ref), `${name}: must load shared reference ${ref}`).toBeTruthy();
+      expect(loadedReferences(text), `${name}: must load shared reference ${ref}`).toContain(ref);
     }
   }
 });

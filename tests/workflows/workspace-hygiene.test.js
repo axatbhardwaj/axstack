@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const contract = () => read('skills/axstack/references/workspace-hygiene.md');
@@ -43,6 +44,7 @@ test('existing workflow entry points point to the shared contract', () => {
   for (const phase of phases) {
     const text = read(`skills/axstack-${phase}/SKILL.md`);
     expect(text, phase).toMatch(/driver entry[^;]*workspace-hygiene\.md/i);
+    expect(requires(text, /driver entry/i, /sweep/i, /Workspace hygiene/i), phase).toBe(true);
     expect(text, phase).toMatch(/dispatch brief[^.]*<run dir>\/evidence\/<dispatch>\//i);
   }
   const record = read('skills/axstack/references/run-record.md');
