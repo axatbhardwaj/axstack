@@ -82,6 +82,11 @@ unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
 hold Align; safe fact work may continue without substitution.
 
+An optional adviser note may be deferred or rejected in a `Decisions` row with
+the draft unchanged; it needs no new adviser pair. Changed draft text, a
+blocking finding, or a high-stakes decision requires fresh receipts on the new
+revision.
+
 ## Arena for hard-to-reverse design choices
 
 Critique of one draft anchors every reader to that draft's shape. Rung 2 designs

@@ -299,6 +299,11 @@ This section applies to peer and authored PR modes.
    mode-required receipt records concrete evidence and consequences, coverage,
    limitations, and findings without a finding quota.
 
+   For each finding, name its defect class and list every instance of that
+   class in the pinned diff and dependent surfaces: callers, sibling docs,
+   README, and tests. A later instance of an already-named class is a coverage
+   miss; record it as such rather than treating it as a new kind of defect.
+
    For an accepted scope explicitly marked structure-preserving, verify its
    preserved contract, listed files, old-revision green characterization, and
    the same checks green on the new revision, plus applicable artifact or

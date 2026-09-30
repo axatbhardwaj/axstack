@@ -206,6 +206,10 @@ For each PR:
    re-evaluate. Timeout, error, or missing wait capability records `held` at
    that revision with reason and resume condition; it never triggers author
    repair. Keep CI-pending state in Orca.
+   `APPROVE` with only non-blocking findings plus diligence `PASS` can be
+   `merge-ready` when the full predicate passes. The driver records the
+   non-blocking notes and does not elect a repair; only the user can ask for
+   polish.
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
    findings to the same author for a new revision, increments `repairs`, and
    returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
