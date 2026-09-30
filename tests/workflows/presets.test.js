@@ -347,7 +347,7 @@ test('presets: active guidance and tests contain no literal role count', () => {
   ];
   for (const file of files) {
     expect(readFileSync(`${root}/${file}`, 'utf8'), file)
-      .not.toMatch(/\b\d+[ -](?:[a-z]+[ -])?(?:role(?:s| rows| IDs)?|IDs)\b/i);
+      .not.toMatch(/\b\d+[ -](?:[a-z]+[ -])?(?:role(?:s| rows| IDs)?|IDs|row)\b/i);
   }
 });
 

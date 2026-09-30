@@ -298,7 +298,7 @@ test('installed presets expose independent Sol analysis pair seats', () => {
   }
 });
 
-test('a pristine 24-row installation upgrades to 26 and exposes both added IDs', () => {
+test('an installation without arena candidates reports both added IDs', () => {
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
@@ -311,7 +311,7 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   runCli(cli, args(oldBundle), { env: { HOME: home } });
   const rolesPath = join(skillsDir, 'axstack', 'roles.json');
   const before = readFileSync(rolesPath);
-  expect(JSON.parse(before.toString()).roles).toHaveLength(24);
+  expect(JSON.parse(before.toString()).roles).toHaveLength(old.length);
   expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
     'missing selected bundle role: axstack-arena-candidate-grok',
     'missing selected bundle role: axstack-arena-candidate-antigravity',
@@ -319,16 +319,16 @@ test('a pristine 24-row installation upgrades to 26 and exposes both added IDs',
   const result = runCli(cli, args(newBundle), { env: { HOME: home } });
   expect(result.out).toContain('axstack/roles.json');
   expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok, axstack-arena-candidate-antigravity');
-  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(26);
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(current.length);
   expect(runCli(cli, args(newBundle), { env: { HOME: home } }).out).not.toContain('added role IDs:');
   writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: old }) + '\n');
   const preserved = runCli(cli, args(newBundle), { env: { HOME: home }, expectFail: true });
   expect(preserved.out).toContain('preserved user edits');
   expect(preserved.out).not.toContain('added role IDs:');
-  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(24);
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(old.length);
 });
 
-test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge', () => {
+test('an installation without the Opus judge reports its added ID', () => {
   const rootDir = makeTempRoot('axstack-opus-upgrade-');
   const skillsDir = join(rootDir, 'installed');
   const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-ui-verifier', 'axstack-diligence', ...solPairIds].includes(id));
@@ -339,17 +339,17 @@ test('a pristine 26-row installation upgrades to 27 and exposes the Opus judge',
   runCli(`${root}/bin/axstack.js`, args(oldBundle), { env: { HOME: rootDir } });
   const rolesPath = join(skillsDir, 'axstack', 'roles.json');
   const before = readFileSync(rolesPath);
-  expect(JSON.parse(before.toString()).roles).toHaveLength(26);
+  expect(JSON.parse(before.toString()).roles).toHaveLength(old.length);
   expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
     'missing selected bundle role: axstack-arena-judge-opus',
   ]);
   const result = runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } });
   expect(result.out).toContain('added role IDs: axstack-arena-judge-opus');
-  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(27);
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(current.length);
   expect(runCli(`${root}/bin/axstack.js`, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('added role IDs:');
 });
 
-test('a pristine 27-row installation reports the added UI verifier', () => {
+test('an installation without the UI verifier reports its added ID', () => {
   const rootDir = makeTempRoot('axstack-ui-verifier-upgrade-');
   const skillsDir = join(rootDir, 'installed');
   const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => id !== 'axstack-diligence' && !solPairIds.includes(id));
@@ -360,13 +360,13 @@ test('a pristine 27-row installation reports the added UI verifier', () => {
   const cli = `${root}/bin/axstack.js`;
   runCli(cli, args(oldBundle), { env: { HOME: rootDir } });
   const rolesPath = join(skillsDir, 'axstack', 'roles.json');
-  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(27);
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(old.length);
   const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
   expect(result.out).toContain('added role IDs: axstack-ui-verifier');
-  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(28);
+  expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(current.length);
 });
 
-test('a pristine 28-row installation reports all three Sol pair seats', () => {
+test('an installation without Sol pair seats reports their added IDs', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const rootDir = makeTempRoot(`axstack-sol-upgrade-${preset}-`);
     const skillsDir = join(rootDir, 'installed');
@@ -383,7 +383,7 @@ test('a pristine 28-row installation reports all three Sol pair seats', () => {
   }
 });
 
-test('a 31-row installation reports the added diligence role', () => {
+test('an installation without diligence reports its added ID', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const rootDir = makeTempRoot(`axstack-diligence-upgrade-${preset}-`);
     const skillsDir = join(rootDir, 'installed');
