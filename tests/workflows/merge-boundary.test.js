@@ -70,21 +70,40 @@ test('auto-merge requires ticket-map membership; Small, peer, and deploying PRs 
   expect(sentence(watch, 'Standalone watch and peer PRs')).toContain('human merge');
 });
 
-test('the guard and interim stack hold are explicit in both actor and predicate', () => {
+test('freshness and merge preconditions hold unsafe singleton and stack merges', () => {
   expect(sentence(implement, 'Apply `axstack-watch`')).toContain('an approval alone never grants merge authority');
-  expect(sentence(implement, 'Use `gh pr merge')).toMatch(/only after.*re-reads every predicate term.*confirms merge commits are allowed/i);
-  expect(sentence(implement, 'Stack members merge')).toMatch(/watch §5.*retarget rule.*hold the stack for the user/i);
+  const policy = watch.replace(/\s+/g, ' ');
+  expect(policy).toMatch(/target base.*head.*ancestor.*singleton.*bottom.*head/i);
+  expect(policy).toMatch(/CI re-run.*(?:cannot|never|does not).*freshness/i);
   expect(sentence(watch, 'Immediately before each automated merge')).toContain('re-read every term from the forge');
-  expect(sentence(watch, 'Confirm the repository')).toMatch(/allows merge commits.*otherwise hold for the user/i);
-  expect(watch).toContain('gh pr merge <n> --merge --match-head-commit <sha> --delete-branch');
-  expect(sentence(watch, 'For a singleton PR')).toContain('one guarded merge');
-  expect(sentence(watch, 'A failed guard')).toMatch(/changed base.*uncertain merge result.*holds/i);
-  expect(sentence(watch, 'Stack auto-merge waits')).toContain('retarget-bound rule');
+  expect(policy).toMatch(/merge commits.*delete_branch_on_merge.*merge queue.*hold/i);
+});
+
+test('singleton and native stack merge instructions preserve reviewed evidence', () => {
+  const policy = watch.replace(/\s+/g, ' ');
+  const driver = implement.replace(/\s+/g, ' ');
+  for (const text of [policy, driver]) {
+    expect(text).toMatch(/gh pr merge <n> --merge --match-head-commit <sha>/);
+    expect(text).toMatch(/--delete-branch.*only when no open PR.*base/i);
+    expect(text).toMatch(/merge-async.*top.*reviewed head.*merge_method.*merge_action.*direct_merge/i);
+    expect(text).toMatch(/reconcil.*(?:HTTP )?200.*(?:HTTP )?409/i);
+    const noStackMutation = text.match(/(?:never retarget|no retargeting)[^.]*\./i)?.[0];
+    expect(noStackMutation).toMatch(/(?:delete a stack branch|branch deletion).*rebase.*stack/i);
+    expect(text).toMatch(/(?:every|each).*member.*(?:head|SHA).*reviewed.*ancestor/i);
+  }
+  expect(policy).toMatch(/PUT \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async.*GET \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async\/\{uuid\}/i);
+  expect(policy).toMatch(/never `bypass_rules`/i);
+  expect(policy).toMatch(/whole.stack.*every open downstack member.*partial stack holds/i);
+  expect(policy).toMatch(/(?:failed|timed-out|unknown status).*holds for the user/i);
+  expect(policy).toMatch(/failing push run.*target base.*run.wide hold/i);
 });
 
 test('merge decision scenarios remain input-only for independent evaluation', () => {
   const { cases } = JSON.parse(read('tests/workflows/merge-boundary-scenarios.json'));
-  expect(cases).toHaveLength(15);
+  expect(cases.length).toBeGreaterThanOrEqual(25);
+  for (const id of ['stack-two-member', 'stack-changed-head', 'stack-base-mismatch', 'stack-target-base-moved', 'stack-nonlinear', 'stack-partial', 'stack-probe-failed', 'stack-postmerge-mismatch', 'singleton-child-base', 'postmerge-push-fails', 'stack-existing-request', 'repository-auto-delete', 'merge-queue']) {
+    expect(cases.some((scenario) => scenario.id === id), `missing scenario: ${id}`).toBe(true);
+  }
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(50);
     expect(scenario.expected).toBeUndefined();

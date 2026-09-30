@@ -178,6 +178,10 @@ For each current head and base SHA, every merge-ready term must hold:
   `PASS` are bound to the current head and base. No `Escalate to user`,
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk
   hold affects this merge. Every review comment and thread must be addressed.
+  The current target base head must be an ancestor of the singleton head or
+  bottom stack member head; unknown ancestry holds. A CI re-run does not restore
+  this freshness after the base moves. Update the branch and refresh head-bound
+  evidence instead.
 - Veto: no `do-not-merge` label and no chat `hold` applies.
 
 Under authorized own-PR maintenance, keep repairing and rebasing onto the base
@@ -197,13 +201,29 @@ policy with one relay; relay text never supplies approval. A changed head or
 base requires a refreshed card.
 
 Immediately before each automated merge, re-read every term from the forge.
-Confirm the repository allows merge commits; otherwise hold for the user.
-For a singleton PR, perform one guarded merge with
-`gh pr merge <n> --merge --match-head-commit <sha> --delete-branch`.
-The server-enforced head guard prevents merging a newly pushed head. A failed
-guard, changed base, or uncertain merge result holds for fresh reconciliation.
-Stack auto-merge waits for the separate retarget-bound rule; never infer that a
-child's reviewed diff survived its parent's merge.
+Confirm merge commits are allowed, `delete_branch_on_merge` is false, and the
+base has no merge queue; otherwise hold for the user. For a singleton PR, use
+`gh pr merge <n> --merge --match-head-commit <sha>`; add `--delete-branch` only
+when no open PR uses its branch as base. A failed head guard, changed base, or
+uncertain merge result holds for fresh reconciliation.
+
+For a native `gh stack`, automate only a whole-stack merge: the top is the
+highest open member, and every open downstack member satisfies the full
+predicate, including scope. A partial stack holds for the user. Re-read each
+member's head and base; each must equal its reviewed head and base. Request
+`PUT /repos/{o}/{r}/pulls/{top}/merge-async` with `sha` equal to the top
+reviewed head, `merge_method: merge`, and `merge_action: direct_merge` (never
+`bypass_rules`). Poll `GET /repos/{o}/{r}/pulls/{top}/merge-async/{uuid}` to
+`merged` or `failed`. Reconcile HTTP 200 (already merged or queued) and HTTP
+409 (existing request) against this exact request; a mismatch holds. A failed,
+timed-out, or unknown status holds for the user; never retry blindly.
+After `merged`, read back every member as MERGED with its actual head equal to
+its reviewed head and an ancestor of the merge result; otherwise take a
+serious-risk hold. No retargeting, branch deletion, or rebase of a reviewed
+member is allowed inside the stack.
+
+After any automated merge, a failing push run on the target base for that
+merge result is a run-wide hold on further automated merges until resolved.
 
 ## 6. End and preserve continuity
 
