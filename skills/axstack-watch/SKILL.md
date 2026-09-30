@@ -204,8 +204,10 @@ Immediately before each automated merge, re-read every term from the forge.
 Confirm merge commits are allowed, `delete_branch_on_merge` is false, and the
 base has no merge queue; otherwise hold for the user. For a singleton PR, use
 `gh pr merge <n> --merge --match-head-commit <sha>`; add `--delete-branch` only
-when no open PR uses its branch as base. A failed head guard, changed base, or
-uncertain merge result holds for fresh reconciliation.
+when no open PR uses its branch as base. A failed head guard or uncertain merge
+result holds for fresh reconciliation. If the target base moves after final
+readback, the singleton head guard or stack top `sha` decides whether the merge
+proceeds; the push run on the merge result decides any further-merge hold.
 
 For a native `gh stack`, automate only a whole-stack merge: the top is the
 highest open member, and every open downstack member satisfies the full

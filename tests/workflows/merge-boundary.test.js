@@ -98,10 +98,16 @@ test('singleton and native stack merge instructions preserve reviewed evidence',
   expect(policy).toMatch(/failing push run.*target base.*run.wide hold/i);
 });
 
+test('a base move after final readback follows the guarded merge result', () => {
+  const policy = watch.replace(/\s+/g, ' ');
+  expect(policy).toMatch(/base (?:moves|advances|changes).*after.*(?:preflight|final readback).*head guard.*stack.*sha.*push run.*hold/i);
+  expect(policy).not.toMatch(/changed base[^.]*holds for fresh reconciliation/i);
+});
+
 test('merge decision scenarios remain input-only for independent evaluation', () => {
   const { cases } = JSON.parse(read('tests/workflows/merge-boundary-scenarios.json'));
   expect(cases.length).toBeGreaterThanOrEqual(25);
-  for (const id of ['stack-two-member', 'stack-changed-head', 'stack-base-mismatch', 'stack-target-base-moved', 'stack-nonlinear', 'stack-partial', 'stack-probe-failed', 'stack-postmerge-mismatch', 'singleton-child-base', 'postmerge-push-fails', 'stack-existing-request', 'repository-auto-delete', 'merge-queue']) {
+  for (const id of ['stack-two-member', 'stack-changed-head', 'stack-base-mismatch', 'stack-target-base-moved', 'stack-nonlinear', 'stack-partial', 'stack-probe-failed', 'stack-postmerge-mismatch', 'singleton-child-base', 'postmerge-push-fails', 'stack-existing-request', 'repository-auto-delete', 'merge-queue', 'stack-out-of-map-member', 'base-moves-after-preflight']) {
     expect(cases.some((scenario) => scenario.id === id), `missing scenario: ${id}`).toBe(true);
   }
   for (const scenario of cases) {
