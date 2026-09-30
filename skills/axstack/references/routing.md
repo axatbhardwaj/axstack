@@ -22,7 +22,7 @@ pin), and time. Codex classes resolve through
 `skills/axstack/scripts/resolve-models.js` with an explicit catalog
 path; missing or malformed catalog holds. Claude classes start as `alias,
 unresolved` until transcript read-back. Resume must reuse the snapshot and
-never re-resolve it.
+never re-resolve it except for the recorded pre-turn Codex rejection amendment below.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Changing it or replacing a session needs an explicit user decision and
@@ -32,6 +32,11 @@ provider/model/effort substitution. Only
 explicit model rejection before the first turn permits Codex `--retry-of` with
 the next eligible ID in the same class, provider, and effort. Fence the failed
 Dispatch and record tried ID, error, and fallback ID in the snapshot and reply.
+For a pre-turn Codex rejection, amend the routing snapshot once with the rejected
+slug and error; later same-class resolution in this run passes `--exclude` for
+each rejected slug. Each retry keeps `--retry-of` lineage and the same class,
+provider, and effort. This is the sole exception to snapshot immutability;
+it grants no other model substitution.
 Timeout, quota, auth, and other failures hold; Claude rejection holds.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.

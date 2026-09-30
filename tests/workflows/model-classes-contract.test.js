@@ -12,6 +12,18 @@ test('run snapshot records class resolution and reuses it on resume', () => {
   expect(routing).toMatch(/provider\/model class/i);
 });
 
+test('pre-turn Codex rejection alone amends the routing snapshot with retry lineage', () => {
+  const routing = compact('skills/axstack/references/routing.md');
+  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  for (const text of [routing, runtime]) {
+    expect(text).toMatch(/pre-turn Codex rejection[^.]*amend[^.]*routing snapshot/i);
+    expect(text).toMatch(/--exclude[^.]*rejected slug/i);
+    expect(text).toMatch(/--retry-of[^.]*lineage/i);
+    expect(text).toMatch(/same class[^.]*provider[^.]*effort/i);
+    expect(text).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
+  }
+});
+
 test('Claude alias resolves through first assistant transcript turn', () => {
   const runtime = compact('skills/axstack/references/orca-runtime.md');
   expect(runtime).toMatch(/first launch[^.]*Claude class[^.]*alias/i);

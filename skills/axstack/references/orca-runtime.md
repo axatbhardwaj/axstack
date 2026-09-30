@@ -40,7 +40,8 @@ profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
 all role IDs once. For each role record class, resolved exact ID, source,
 and time. An active run keeps the exact snapshot; resume reuses it without
-re-resolution until the user explicitly changes it.
+re-resolution until the user explicitly changes it, except for the recorded
+pre-turn Codex rejection amendment below.
 
 Select the requested role by stable ID. A missing class and missing or null
 model holds only that role; never launch a provider default. Resolve Codex
@@ -73,6 +74,10 @@ Only explicit model rejection before the first turn permits a Codex
 Fence the rejected Dispatch and record tried ID, error, and fallback ID in the
 snapshot and reply. Timeout, quota, auth, and other failures hold; Claude
 rejection holds. Apply this to every role, including advisers and judges.
+For a pre-turn Codex rejection, amend the routing snapshot once with the rejected
+slug and error. Later same-class resolution in this run passes `--exclude` for
+each rejected slug; each retry keeps `--retry-of` lineage and the same class,
+provider, and effort. No other failure changes the snapshot or permits substitution.
 
 ## Materialize checkouts as worktrees of the registered repo
 
