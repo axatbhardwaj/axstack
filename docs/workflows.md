@@ -53,9 +53,9 @@ The packaged [weekly prompt](../skills/axstack/references/test-audit-weekly.md)
 is repo-agnostic policy. No automation is created by this delivery; scheduling
 starts later for each repository the user names.
 
-1. Record the repository and test-path allowlist, one explicit role preset, a
-   finite pass budget, standing edit and PR-open authority, and the run's
-   Notification policy. Zero deletions is normal; proven F repairs are eligible.
+1. Record the repository and test-path allowlist, a finite pass budget, and
+   standing edit and PR-open authority. Zero deletions is normal; proven F
+   repairs are eligible.
 2. In that repository's dedicated existing Orca workspace, load the current
    `orca skills get orca-cli` automation guide and command help. Configure a
    native weekly automation with `--fresh-session` and the packaged prompt,
@@ -65,11 +65,11 @@ starts later for each repository the user names.
    sessions, overlap admission, recovery after session loss, nested dispatch
    depth, process/memory effects, and bounded terminals over repeated passes.
    Preserve runtime receipts; source checks alone do not establish these facts.
-4. Activate only after authority and canary evidence are recorded. Each pass
-   derives one boundary from test-audit PR history, skips open PRs, unsafe
-   baselines or empty candidate sets, and opens at most one independently
-   reviewed test-only PR per week through the driver. Workers never push;
-   the human merges.
+4. Missing authority, or no passing native canary, holds activation. Each pass
+   derives one boundary from test-audit PR history, skips open PRs, overlap with
+   live Orca Run/worktree ownership, unsafe baselines or empty candidate sets,
+   and opens at most one independently reviewed test-only PR per week through
+   the driver. Workers never push; the human merges.
 
 ## Role presets
 
