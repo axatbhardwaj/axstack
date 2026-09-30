@@ -84,9 +84,9 @@ Size alone never requires user approval.
 
 ## 3. Establish test-first evidence
 
-Use the normal behavior path unless the accepted scope is explicitly marked
-**structure-preserving** or explicitly authorizes **F repairs**. The author
-never chooses those exceptions.
+Use the normal behavior path unless the accepted improvement scope is
+explicitly marked **structure-preserving**, or the accepted scope explicitly
+authorizes **F repairs**. The author never chooses those exceptions.
 
 Only when the scope identity carries a sketch, copy it into the author brief
 under the [design lens](../axstack/references/design-lens.md).

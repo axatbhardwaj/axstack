@@ -67,7 +67,10 @@ test('improve: explanation is optional and selection preserves the phase boundar
 
 test('improve: structure-preserving work uses old-green same-check evidence', () => {
   const text = compact('skills/axstack-implement/SKILL.md');
-  expect(text).toMatch(/accepted[^.]*scope[^.]*structure-preserving/i);
+  expect(requires(text,
+    /normal behavior path unless/i,
+    /(?:accepted|approved) improvement scope[^.]*explicitly (?:marked|designated)[^.]*structure-preserving/i,
+  )).toBe(true);
   expect(text).toMatch(/behavioral baseline|characterization/i);
   expect(requires(text,
     /old revision/i, /must (?:run|be) green/i, /before[^.]*structural (?:edit|change)/i,
