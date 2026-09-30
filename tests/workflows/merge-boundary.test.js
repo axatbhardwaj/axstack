@@ -72,36 +72,36 @@ test('auto-merge requires ticket-map membership; Small, peer, and deploying PRs 
 
 test('freshness and merge preconditions hold unsafe singleton and stack merges', () => {
   expect(sentence(implement, 'Apply `axstack-watch`')).toContain('an approval alone never grants merge authority');
-  const policy = watch.replace(/\s+/g, ' ');
-  expect(policy).toMatch(/target base.*head.*ancestor.*singleton.*bottom.*head/i);
-  expect(policy).toMatch(/CI re-run.*(?:cannot|never|does not).*freshness/i);
-  expect(sentence(watch, 'Immediately before each automated merge')).toContain('re-read every term from the forge');
-  expect(policy).toMatch(/merge commits.*delete_branch_on_merge.*merge queue.*hold/i);
+  expect(sentence(watch, 'The current target base head')).toMatch(/target base head must be an ancestor of the singleton head or bottom stack member head; unknown ancestry holds/i);
+  expect(sentence(watch, 'A CI re-run')).toMatch(/does not restore.*freshness/i);
+  expect(sentence(watch, 'Immediately before each automated merge')).toMatch(/re-read every term from the forge/i);
+  expect(sentence(watch, 'Confirm merge commits')).toMatch(/merge commits are allowed.*`delete_branch_on_merge` is false.*base has no merge queue; otherwise hold for the user/i);
+  expect(sentence(implement, 'Re-read every predicate term')).toMatch(/watch §5 before merging/i);
+  expect(sentence(implement, 'Confirm merge commits')).toMatch(/merge commits are allowed.*`delete_branch_on_merge` is false.*base has no merge queue; otherwise hold for the user/i);
 });
 
 test('singleton and native stack merge instructions preserve reviewed evidence', () => {
-  const policy = watch.replace(/\s+/g, ' ');
-  const driver = implement.replace(/\s+/g, ' ');
-  for (const text of [policy, driver]) {
-    expect(text).toMatch(/gh pr merge <n> --merge --match-head-commit <sha>/);
-    expect(text).toMatch(/--delete-branch.*only when no open PR.*base/i);
-    expect(text).toMatch(/merge-async.*top.*reviewed head.*merge_method.*merge_action.*direct_merge/i);
-    expect(text).toMatch(/reconcil.*(?:HTTP )?200.*(?:HTTP )?409/i);
-    const noStackMutation = text.match(/(?:never retarget|no retargeting)[^.]*\./i)?.[0];
-    expect(noStackMutation).toMatch(/(?:delete a stack branch|branch deletion).*rebase.*stack/i);
-    expect(text).toMatch(/(?:every|each).*member.*(?:head|SHA).*reviewed.*ancestor/i);
-  }
-  expect(policy).toMatch(/PUT \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async.*GET \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async\/\{uuid\}/i);
-  expect(policy).toMatch(/never `bypass_rules`/i);
-  expect(policy).toMatch(/whole.stack.*every open downstack member.*partial stack holds/i);
-  expect(policy).toMatch(/(?:failed|timed-out|unknown status).*holds for the user/i);
-  expect(policy).toMatch(/failing push run.*target base.*run.wide hold/i);
+  expect(sentence(watch, 'For a singleton PR')).toMatch(/gh pr merge <n> --merge --match-head-commit <sha>.*--delete-branch.*only when no open PR uses its branch as base/i);
+  expect(sentence(implement, 'For a singleton')).toMatch(/gh pr merge <n> --merge --match-head-commit <sha>.*--delete-branch.*only when no open PR uses its branch as base/i);
+  expect(sentence(implement, 'For a native')).toMatch(/top reviewed head.*`merge_method: merge`.*`merge_action: direct_merge`/i);
+  expect(sentence(watch, 'No retargeting')).toMatch(/no retargeting.*branch deletion.*rebase.*inside the stack/i);
+  expect(sentence(implement, 'Never retarget')).toMatch(/never retarget.*delete a stack branch.*rebase.*merging/i);
+  expect(sentence(watch, 'A failed head guard')).toMatch(/failed head guard or uncertain merge result holds for fresh reconciliation/i);
+  expect(sentence(watch, 'For a native `gh stack`')).toMatch(/only a whole-stack merge.*top is the highest open member.*every open downstack member satisfies the full predicate, including scope/i);
+  expect(sentence(watch, 'A partial stack')).toMatch(/holds for the user/i);
+  expect(sentence(watch, 'Re-read each member')).toMatch(/head and base; each must equal its reviewed head and base/i);
+  expect(sentence(watch, 'Request `PUT')).toMatch(/PUT \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async.*`sha` equal to the top reviewed head.*`merge_method: merge`.*`merge_action: direct_merge`.*never `bypass_rules`/i);
+  expect(sentence(watch, 'Poll `GET')).toMatch(/GET \/repos\/\{o\}\/\{r\}\/pulls\/\{top\}\/merge-async\/\{uuid\}.*`merged` or `failed`/i);
+  expect(sentence(watch, 'Reconcile HTTP 200')).toMatch(/HTTP 200.*HTTP 409.*this exact request; a mismatch holds/i);
+  expect(sentence(watch, 'A failed,')).toMatch(/failed, timed-out, or unknown status holds for the user; never retry blindly/i);
+  expect(sentence(watch, 'After `merged`')).toMatch(/every member as MERGED.*actual head equal to its reviewed head.*ancestor of the merge result; otherwise take a serious-risk hold/i);
+  expect(sentence(implement, 'Reconcile HTTP 200')).toMatch(/HTTP 200 or 409 against the intended request.*every merged member.*head equals its reviewed head.*ancestor of the merge result.*hold unknown or failed outcomes/i);
+  expect(sentence(watch, 'After any automated merge')).toMatch(/failing push run on the target base.*merge result.*run-wide hold on further automated merges/i);
+  expect(sentence(implement, 'A failing push run')).toMatch(/target base after an automated merge.*holds further automated merges run-wide/i);
 });
 
 test('a base move after final readback follows the guarded merge result', () => {
-  const policy = watch.replace(/\s+/g, ' ');
-  expect(policy).toMatch(/base (?:moves|advances|changes).*after.*(?:preflight|final readback).*head guard.*stack.*sha.*push run.*hold/i);
-  expect(policy).not.toMatch(/changed base[^.]*holds for fresh reconciliation/i);
+  expect(sentence(watch, 'If the target base moves')).toMatch(/after final readback.*singleton head guard or stack top `sha` decides whether the merge proceeds; the push run.*decides any further-merge hold/i);
 });
 
 test('merge decision scenarios remain input-only for independent evaluation', () => {
