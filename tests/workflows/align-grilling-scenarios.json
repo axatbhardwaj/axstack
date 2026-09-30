@@ -103,9 +103,9 @@
         "launch": "Orca refused the configured seat"
       },
       "expected": [
-        "Pause this design question and record the Grok seat failure",
-        "Ask the user whether to proceed without Grok; do not substitute a provider",
-        "Continue only unrelated fact work; reconcile uncertain dispatches natively before treating them as absent"
+        "Fence the failed Grok attempt and record absent (Orca refused launch)",
+        "Name the absence once in the next read-back; continue with available candidates without relay or substitution",
+        "Keep Codex and Claude in this mixed fan-out; reconcile uncertain dispatches natively before treating them as absent"
       ]
     },
     {

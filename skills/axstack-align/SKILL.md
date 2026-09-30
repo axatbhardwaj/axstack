@@ -82,6 +82,11 @@ unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
 hold Align; safe fact work may continue without substitution.
 
+An optional adviser note may be deferred or rejected in a `Decisions` row with
+the draft unchanged; it needs no new adviser pair. Changed draft text, a
+blocking finding, or a high-stakes decision requires fresh receipts on the new
+revision.
+
 ## Arena for hard-to-reverse design choices
 
 Critique of one draft anchors every reader to that draft's shape. Rung 2 designs
@@ -126,9 +131,14 @@ Record the synthesis note (base, grafts and their source candidate, rejections,
 dropouts, judge verdicts per round) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
 [Orca runtime](../axstack/references/orca-runtime.md) immediately before the
-first candidate or judge dispatch. If any configured candidate or judge seat
-required for that round is unavailable at launch or returns a failed receipt,
-hold that question without substitution, record the gap, and ask: the user decides whether to proceed without it.
+first candidate or judge dispatch. If an optional Grok or Antigravity candidate
+malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
+record `absent (<reason>)`, name it once in the next
+read-back, and continue with available candidates without relay or substitution.
+A required adviser, candidate, or judge unavailable at launch or returning a
+failed receipt holds that question without substitution; record the gap and ask
+whether to proceed. In mixed fan-out retain at least one Codex and one Claude
+seat, or hold the affected question.
 For an uncertain dispatch, reconcile natively; it is never treated as absent.
 Unaffected fact work and questions continue.
 

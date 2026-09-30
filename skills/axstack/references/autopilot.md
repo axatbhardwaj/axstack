@@ -11,32 +11,43 @@ not a mode change.
 
 Advance only after the finishing phase returns its completed identity (a
 small-change intent, approved spec, matching ticket map, merge-ready or merged
-state) and the run record has no open hold. A hold from any phase stops the run:
-record its reason, owner, and resume condition, then take no dependent action.
-That covers tracker access, adviser or arena-seat availability, diligence
-FINDINGS when the phase records a hold, CI-wait timeout, readiness UNKNOWN,
-dismissed approval, wake or cleanup uncertainty, single-provider routing, an
-existing tag or version, and failed publish. Diligence FINDINGS during implement
+state) and no hold affects the next action. Record each hold's reason, owner,
+scope, and resume condition. Run-wide holds for authority, scope, cancellation,
+or run-spanning serious risk stop the run. A task, PR, resource, or operation hold
+blocks only its dependants; continue independent authorized work. Unclear impact
+holds the potentially affected work until its boundary is resolved. For example,
+tracker access, adviser or arena-seat availability, CI-wait timeout, readiness
+UNKNOWN, dismissed approval, wake or cleanup uncertainty, single-provider routing,
+an existing tag or version, and failed publish hold the work that needs them.
+Diligence FINDINGS during implement
 follow its §6 repair route; at spec, tickets, or release preparation the driver
 resolves them before advancing, and only a recorded hold pauses autopilot.
 
 Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
-<ts>)` and the next step in the private run record. A user answer to the hold
-resumes after reconciliation; silence does not.
+<ts>)` and the next step in `Next:`. Keep `on` for scoped holds
+while independent work proceeds; use `paused` when no authorized action can
+advance. A user answer to the hold resumes affected work after reconciliation;
+silence does not.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold eligible under the Notification policy.
 
 ## Phase sequence
 
 - Small: Align read-back, small-change intent, implement, watch in maintain
-  mode, human merge. An opted-in Align refinement is part of read-back.
+  mode, human merge. An opted-in Align refinement is part
+  of read-back.
 - Substantial: Align, spec draft with advisers and diligence, human spec
   approval at gate 1, tickets with diligence, implement, watch in maintain mode,
-  merge-ready, human merge. An opted-in Align refinement is part of gate 1.
+  merge-ready, merge under the watch §5 predicate. An opted-in Align refinement
+  is part of gate 1.
 
 Do not seek another phase-start instruction after a completed identity.
-Spec approval is always the human's decision. Every PR merge is the human's,
-including a release PR and each PR in a stack, bottom-up.
+Spec approval is always the human's decision. Audit self-improvement PRs follow
+the same merge predicate. Only the original chat-run driver with the approved
+ticket map may auto-merge PRs satisfying `axstack-implement` §6's approved
+ticket-map membership and `integration` base conditions. The user merges peer
+PRs and PRs into `deploying` bases. Managers, workers, reviewers, automations,
+and standalone watches never merge. A stack follows its guarded bottom-up rule.
 
 ## Implement into maintain watch
 

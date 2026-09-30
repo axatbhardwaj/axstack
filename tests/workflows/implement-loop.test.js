@@ -24,7 +24,8 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
   expect(loaded).toMatch(/third review round with `REQUEST_CHANGES` and\/or diligence `FINDINGS`[^.]*held/i);
   expect(loaded).toMatch(/`codex-only`[^.]*`claude-only`[^.]*hold[^.]*step \(3\)[^.]*no substitution/i);
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
-  expect(loaded).toMatch(/merge-ready[^.]*human boundary[^.]*user merges/i);
+  expect(loaded).toMatch(/merge-ready opens the merge boundary/i);
+  expect(loaded).toMatch(/chat-run driver holding the approved ticket map is the merge actor/i);
   expect(loaded).toMatch(/resumes[^.]*next message[^.]*`?\/axstack-watch`?/i);
   expect(loaded).toMatch(/resumes[^.]*armed chat-run watch wake/i);
   expect(loaded).toMatch(/done[^.]*every required PR[^.]*forge-merged[^.]*Close-out/i);
@@ -32,11 +33,10 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
 
 test('implement loop: close-out requires an Archived record with every step receipt', () => {
   expect(loaded).toMatch(/compact record[^.]*counts and denominators/i);
+  expect(loaded).toMatch(/auditor: UNKNOWN \(unlaunchable\)[^.]*attempted route and error[^.]*archive receipt/i);
+  expect(loaded).toMatch(/launched auditor Dispatch must settle/i);
   expect(loaded).toMatch(
-    /unavailable auditor leaves close-out pending, never skipped silently/i,
-  );
-  expect(loaded).toMatch(
-    /settlement receipt[^.]*compact record path[^.]*auditor decision[^.]*settlement receipt[^.]*counts zero[^.]*release[^.]*ticket receipts[^.]*archive timestamp/i,
+    /settlement receipt[^.]*compact record path[^.]*auditor decision[^.]*settlement receipt[^.]*counts zero[^.]*unlaunchable UNKNOWN archive receipt[^.]*release[^.]*ticket receipts[^.]*archive timestamp/i,
   );
   expect(loaded).toMatch(
     /`active`\/receipt-incomplete record[^.]*close-out pending[^.]*never done/i,

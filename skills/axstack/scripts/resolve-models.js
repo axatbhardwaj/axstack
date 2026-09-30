@@ -8,10 +8,14 @@ const option = (name) => {
 const path = option('--catalog');
 const modelClass = option('--class');
 const effort = option('--effort');
+const excluded = args.flatMap((arg, index) => arg === '--exclude' ? [args[index + 1]] : []);
 
 try {
   if (!path || !['astra', 'sol', 'luna'].includes(modelClass) || !effort) {
     throw new Error('expected --catalog path --class astra|sol|luna --effort level');
+  }
+  if (excluded.some((slug) => !slug || slug.startsWith('--'))) {
+    throw new Error('expected slug after --exclude');
   }
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
   if (!Array.isArray(catalog.models) || typeof catalog.client_version !== 'string'
@@ -23,6 +27,7 @@ try {
     .filter((entry) => entry && entry.visibility === 'list'
       && typeof entry.slug === 'string'
       && classPattern.test(entry.slug)
+      && !excluded.includes(entry.slug)
       && Array.isArray(entry.supported_reasoning_levels)
       && entry.supported_reasoning_levels.some((level) => level?.effort === effort))
     .map((entry) => entry.slug)

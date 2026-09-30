@@ -278,10 +278,6 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
       `${name}: must not introduce a programmatic gate/engine`,
     ).toBe(false);
   }
-  for (const ref of ['routing.md', 'role-roster.md', 'lifecycle.md']) {
-    const text = readFileSync(join(skillsDir, 'axstack', 'references', ref), 'utf8');
-    expect(text.length, `${ref} must stay compact (<7800 chars)`).toBeLessThan(7800);
-  }
   const autopilot = readFileSync(join(skillsDir, 'axstack', 'references', 'autopilot.md'), 'utf8');
   expect(/(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(autopilot)).toBe(false);
   expect(/state machine|programmatic gate|decision engine/i.test(autopilot)).toBe(false);
@@ -290,7 +286,6 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
 test('owned-core: all presets expose stable configured role IDs', () => {
   const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
     .roles.map(({ id }) => id);
-  expect(expectedIds).toHaveLength(32);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);

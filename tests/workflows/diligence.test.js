@@ -14,7 +14,7 @@ test('diligence role is configured in every preset with supported effort', () =>
     ['codex-only', 'codex', 'sol'],
   ]) {
     const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
-    expect(roles).toHaveLength(32);
+    expect(roles.map(({ id }) => id)).toEqual(JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id));
     expect(roles.find(({ id }) => id === 'axstack-diligence')).toMatchObject({
       provider, modelClass, thinkingOptionId: 'high',
     });
@@ -69,13 +69,13 @@ for (const [phase, path, rule] of [
   });
 }
 
-test('routing and docs count the 32 roles with a roster entry', () => {
-  expect(read('skills/axstack/references/routing.md')).toContain('all 32 role IDs');
+test('routing and docs describe all role IDs with a roster entry', () => {
+  expect(read('skills/axstack/references/routing.md')).toContain('all role IDs');
   expect(read('skills/axstack/references/role-roster.md')).toMatch(/^- `axstack-diligence`:.*\(diligence\.md\)/m);
   for (const path of [
     'README.md', 'docs/installation.md', 'docs/workflows.md',
     'skills/axstack/references/orca-runtime.md',
     'tests/workflows/routing-scenarios.json',
     'tests/workflows/debug-scenarios.json',
-  ]) expect(read(path), path).toContain('32');
+  ]) expect(read(path), path).toMatch(/role IDs/i);
 });

@@ -302,7 +302,9 @@ test('presets: research fans out through the Google web route', () => {
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
   expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);
-  expect(research).toMatch(/unconfigured or unavailable branch[^.]*absent[^.]*never substituted/i);
+  expect(research).toMatch(/unconfigured branch[^.]*intentionally absent/i);
+  expect(research).toMatch(/configured\s+optional branch that malfunctions[^.]*is fenced, recorded `absent \(<reason>\)`/i);
+  expect(research).toMatch(/without relay or substitution/i);
 
   const mixed = readJson('profiles/presets/mixed.json').roles;
   const google = mixed.find(({ id }) => id === 'axstack-research-web-google');
@@ -335,31 +337,30 @@ test('presets: all packaged Markdown pointers resolve', () => {
   }
 });
 
-test('presets: scenario corpora never reference a stale role count', () => {
-  const roleCount = readJson('profiles/presets/mixed.json').roles.length;
-  const corpora = readdirSync(`${root}/tests/workflows`).filter((f) => f.endsWith('-scenarios.json'));
-  expect(corpora.length).toBeGreaterThan(0);
-  for (const file of corpora) {
-    const text = readFileSync(`${root}/tests/workflows/${file}`, 'utf8');
-    const stale = text.match(/\b(\d+)(?=[ -]role\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
-    expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
+test('presets: active guidance and tests contain no literal role count', () => {
+  const files = [
+    'README.md', 'docs/installation.md', 'docs/workflows.md',
+    ...readdirSync(`${root}/skills`, { recursive: true })
+      .filter((path) => path.endsWith('.md')).map((path) => `skills/${path}`),
+    ...readdirSync(`${root}/tests/workflows`)
+      .filter((path) => /\.(?:js|json)$/.test(path)).map((path) => `tests/workflows/${path}`),
+    ...readdirSync(`${root}/tests/installer`)
+      .filter((path) => path.endsWith('.js')).map((path) => `tests/installer/${path}`),
+  ];
+  for (const file of files) {
+    expect(readFileSync(`${root}/${file}`, 'utf8'), file)
+      .not.toMatch(/\b\d+[ -](?:[a-z]+[ -])?(?:role(?:s| rows| IDs)?|IDs|row)\b/i);
   }
 });
 
-test('presets: public docs and shared references never state a stale role count', () => {
-  const roleCount = readJson('profiles/presets/mixed.json').roles.length;
+test('presets: public docs and shared references describe all role IDs', () => {
   const files = [
     'README.md', 'docs/installation.md', 'docs/workflows.md',
     'skills/axstack/references/routing.md', 'skills/axstack/references/orca-runtime.md',
   ];
   for (const file of files) {
     const text = readFileSync(`${root}/${file}`, 'utf8');
-    // "24 role rows", "24-role inputs", "24 stable role IDs", "24 stable IDs".
-    const stale = text.match(/\b(\d+)(?=[ -](?:stable )?(?:role|IDs)\b)/g)?.filter((n) => Number(n) !== roleCount) ?? [];
-    expect(stale, `${file}: role counts must be ${roleCount}`).toEqual([]);
-    if (file !== 'README.md') {
-      expect(text, `${file}: must state the role count`).toMatch(new RegExp(`\\b${roleCount}(?=[ -](?:stable )?(?:role|IDs)\\b)`));
-    }
+    expect(text.replace(/\s+/g, ' '), file).toMatch(/all role IDs/i);
   }
   const install = readFileSync(`${root}/docs/installation.md`, 'utf8').replace(/\s+/g, ' ');
   expect(install).toMatch(/unavailable adviser and round-2 seat explicitly permit `model: null`/);

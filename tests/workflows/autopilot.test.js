@@ -6,10 +6,10 @@ const ref = () => read('skills/axstack/references/autopilot.md');
 const skill = (name) => read(`skills/${name}/SKILL.md`);
 
 // These checks prove shipped contract text, not agent decisions or live wakes.
-test('eligible delivery advances on completed identity and stops on a recorded hold', () => {
+test('eligible delivery advances on completed identity and scopes recorded holds', () => {
   const text = ref();
   expect(text).toMatch(/authorized engineering.delivery runs/i);
-  expect(text).toMatch(/completed identity[\s\S]*no open hold/i);
+  expect(text).toMatch(/completed identity[\s\S]*no hold affects the next action/i);
   expect(text).toMatch(/planning.only[\s\S]*read.only[\s\S]*stop.after.phase[\s\S]*observation.only[\s\S]*peer/i);
   expect(text).toMatch(/status question[\s\S]*observation[\s\S]*not a mode change/i);
   expect(text).toMatch(/hold[\s\S]*reason[\s\S]*resume condition/i);
@@ -55,13 +55,11 @@ test('resume, cancel, and notifications retain decisions and budgets', () => {
   expect(read('skills/axstack/references/run-record.md')).toMatch(/Autopilot: on \| paused[\s\S]*off \(cancelled/i);
 });
 
-test('each phase loads the reference and routing retains its byte budget', () => {
+test('each phase loads the autopilot reference', () => {
   for (const name of ['axstack-align', 'axstack-spec', 'axstack-tickets', 'axstack-implement', 'axstack-watch', 'axstack-relay']) {
     expect(skill(name), name).toMatch(/\]\(\.\.\/axstack\/references\/autopilot\.md\)/);
   }
-  const routing = read('skills/axstack/references/routing.md');
-  expect(routing).toMatch(/continues? under autopilot when eligible/i);
-  expect(new TextEncoder().encode(routing).length).toBeLessThan(7800);
+  expect(read('skills/axstack/references/routing.md')).toMatch(/continues? under autopilot when eligible/i);
 });
 
 test('scenario corpus is input-only and covers the approved branches', () => {

@@ -88,6 +88,15 @@ are acknowledged with no user-facing text. Process each whole delivery before
 acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
 and receipts before advancing the run record. Duplicate deliveries are
 deduplicated by runtime identity. Healthy unchanged passes are silent.
+Accepted `worker_done` completes a Task only with evidence: a required
+change with empty base→head diff or missing named artifact is ack-only.
+Re-dispatch the same author once; a repeat holds that Task with reason and
+resume condition. In the same driver turn, dispatch each unblocked dependent
+after verifying scope, authority, owner, revisions, and dependencies;
+record why others are not ready in `Next:`. An unreachable predecessor holds.
+Update one `Next:` line on each transition: owner, last receipt time, next
+action, hold; reconcile it for status questions. A stale
+Dispatch receipt is evidence, never completion of a newer Dispatch or Task.
 After accepting worker, Task, or Run completion, the driver
 invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
 dispatches cleanup work.
@@ -134,13 +143,16 @@ nothing without tested independent review.
 PRs merge by forge state; close out: (1) settle every worker
 terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
-non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
-pending, never skipped silently; (4) release merged run worktrees and branches;
+non-zero/requested, else `counts zero`. A base auditor preflight rejection
+(no Dispatch started) records `auditor: UNKNOWN (unlaunchable)` with the
+attempted route and error as the archive receipt; no substitution. A launched
+auditor Dispatch must settle; (4) release merged run worktrees and branches;
 use `axstack-cleanup`, remove the run's own automations under
 [Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt or `counts zero`; automation, release, and ticket receipts; archive timestamp.
+receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; automation,
+release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.

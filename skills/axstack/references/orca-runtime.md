@@ -9,9 +9,10 @@ Dispatch, session, worktree, messaging, settlement, and scheduling state.
 
 Resolve one Orca executable for the session and reuse it. Prefer
 `ORCA_CLI_COMMAND` when set, then the checkout's `orca-dev` when
-`ORCA_DEV_REPO_ROOT` is set, the Linux-safe `orca-ide` outside managed
-terminals, and otherwise `orca`. If the selected executable fails, report that
-exact gap; never switch binaries silently.
+`ORCA_DEV_REPO_ROOT` is set, then `orca` inside an agent or managed terminal,
+then the Linux-safe `orca-ide` outside managed terminals, and otherwise `orca`.
+If the selected executable fails, report that exact gap; never switch binaries
+silently.
 
 Load only the selected executable's version-matched guides needed by the
 operation through `skills get orchestration --json`,
@@ -38,9 +39,10 @@ Read `roles.json` from the installed shared root `skills/axstack/`. The installe
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 32 role rows once. For each role record class, resolved exact ID, source,
+all role IDs once. For each role record class, resolved exact ID, source,
 and time. An active run keeps the exact snapshot; resume reuses it without
-re-resolution until the user explicitly changes it.
+re-resolution until the user explicitly changes it, except for the recorded
+pre-turn Codex rejection amendment below.
 
 Select the requested role by stable ID. A missing class and missing or null
 model holds only that role; never launch a provider default. Resolve Codex
@@ -62,7 +64,8 @@ permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
 settings, and completed work are separate evidence. An unsupported or
 unavailable value holds affected work for the user's decision except the narrow
-retry below.
+retry below and the optional-seat and base-auditor exceptions in
+[Model discipline](contracts.md#model-discipline).
 The single-provider preset's null adviser and round-2 seat are intentional installation data, not
 readiness failure; because Align and Spec require both adviser receipts, either
 null adviser still holds those phases. The current chat is the driver and has
@@ -73,6 +76,10 @@ Only explicit model rejection before the first turn permits a Codex
 Fence the rejected Dispatch and record tried ID, error, and fallback ID in the
 snapshot and reply. Timeout, quota, auth, and other failures hold; Claude
 rejection holds. Apply this to every role, including advisers and judges.
+For a pre-turn Codex rejection, amend the routing snapshot once with the rejected
+slug and error. Later same-class resolution in this run passes `--exclude` for
+each rejected slug; each retry keeps `--retry-of` lineage and the same class,
+provider, and effort. No other failure changes the snapshot or permits substitution.
 
 ## Materialize checkouts as worktrees of the registered repo
 
@@ -91,6 +98,11 @@ small-change intent, brief, authority, role snapshot, worktree, base, and
 candidate to the Task; preserve the returned
 Task, Dispatch, terminal, agent, and worktree identities. Exactly one Dispatch
 may write a candidate at a time.
+For each distinct host, harness, model, effort, and trust boundary in a wave,
+launch the first real task and confirm `turn_started`, provenance, and ownership
+before launching further tasks with that configuration. A rejection must stop
+sibling launches of that configuration; record the failure and keep unrelated
+configurations eligible. `input_accepted` alone does not clear this gate.
 Put the [Safe deletion](workspace-hygiene.md#safe-deletion) rule in every
 worker brief.
 

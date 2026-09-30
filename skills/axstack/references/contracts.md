@@ -45,6 +45,9 @@ model rejection before the first turn: Codex may retry with `--retry-of` using
 the next eligible version in the same class, provider, and effort, recording
 the failed ID, error, and fallback ID. Claude rejection holds. Timeout, quota,
 and auth failures hold.
+Optional seats follow [Role roster](role-roster.md), while required seats,
+including `model: null`, hold without substitution except that a base auditor
+preflight rejection follows [Close-out](lifecycle.md#close-out).
 
 ## Driver and adviser split
 

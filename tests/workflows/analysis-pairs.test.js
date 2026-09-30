@@ -12,7 +12,9 @@ test('analysis pairs: audit dispatch keeps every reconciliation boundary', () =>
   expect(audit).toMatch(/driver reconciles findings per claim/i);
   expect(audit).toMatch(/never average verdicts/i);
   expect(audit).toMatch(/intentionally absent Sol seat[^.]*continue[^.]*base auditor alone/i);
-  expect(audit).toMatch(/configured but unavailable seat holds its work/i);
+  expect(audit).toMatch(/auditor-sol` is optional[^.]*fails[^.]*fence/i);
+  expect(audit).toMatch(/auditor: UNKNOWN \(unlaunchable\)/i);
+  expect(audit).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
 });
 
 test('analysis pairs: code and execution research retain both paired routes', () => {
@@ -24,7 +26,7 @@ test('analysis pairs: code and execution research retain both paired routes', ()
   expect(rule).toMatch(/driver reconciles agreement and disagreement per claim/i);
   expect(rule).toMatch(/never averaging findings/i);
   expect(rule).toMatch(/intentionally absent pair[^.]*proceed[^.]*base seat alone/i);
-  expect(rule).toMatch(/configured but unavailable seat holds its work/i);
+  expect(rule).toMatch(/-sol` pair is optional[^.]*launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
 });
 
 test('analysis pairs: routing and declared scenarios cover presence and absence', () => {
@@ -46,7 +48,8 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
   expect(pairs).toMatch(/independent[^.]*same bounded brief[^.]*without cross-reading/i);
   expect(pairs).toMatch(/reconcile[^.]*findings per claim[^.]*never averages/i);
   expect(pairs).toMatch(/intentional absence[^.]*continue with Sonnet alone/i);
-  expect(pairs).toMatch(/configured[^.]*unavailable seat holds only its affected work/i);
+  expect(roster).toMatch(/Optional seats:/i);
+  expect(roster).toMatch(/fence the attempt, record `absent \(<reason>\)`/i);
   expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
 
   const cases = JSON.parse(read('tests/workflows/routing-scenarios.json')).cases;
@@ -68,7 +71,8 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
   expect(improve).toMatch(/independently[^.]*same bounded brief[^.]*without cross-reading/i);
   expect(improve).toMatch(/driver reconciles[^.]*per claim[^.]*never averages/i);
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
-  expect(improve).toMatch(/configured but unavailable[^.]*holds/i);
+  expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);
+  expect(improve).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
 });
 
 test('analysis pairs: routing preserves original ownership and direct-route duties', () => {

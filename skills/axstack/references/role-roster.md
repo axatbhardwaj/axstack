@@ -32,6 +32,16 @@
   mixed/codex-only; intentionally absent in claude-only. Dispatch each
   independently from its Sonnet seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.
-  Record intentional absence and continue with Sonnet alone; a configured
-  but unavailable seat holds only its affected work.
+  Record intentional absence and continue with Sonnet alone.
+- Optional seats: `axstack-arena-candidate-grok`,
+  `axstack-arena-candidate-antigravity`, `axstack-research-web-google`,
+  `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
+  `axstack-explore-execution-sol`, `axstack-auditor-sol`.
+  Always dispatch optional seats when configured and available. Only a
+  launch failure, trust/login prompt, or prompt block makes one absent:
+  fence the attempt, record `absent (<reason>)`, name it once in the next
+  read-back, and skip it without a relay or substitution. An uncertain
+  dispatch is reconciled, not called absent. A mixed fan-out still includes
+  at least one Codex and one Claude seat; otherwise hold that fan-out.
+  Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` probe L1 briefs.

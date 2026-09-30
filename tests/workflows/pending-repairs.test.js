@@ -27,10 +27,11 @@ test('repairs: both advisers cover Align, Spec, and consequential decisions', ()
   expect(spec).toMatch(/same bounded (?:evidence and question|question and evidence)/i);
 });
 
-test('repairs: arena holds a failed candidate or judge seat for the user', () => {
+test('repairs: arena skips optional failures and holds required seats', () => {
   const align = read('skills/axstack-align/SKILL.md');
-  expect(align).toMatch(/configured candidate or judge seat[^.]*unavailable[^.]*failed receipt[^.]*hold that question/i);
-  expect(align).toMatch(/user decides whether to proceed without it/i);
+  expect(align).toMatch(/optional Grok or Antigravity candidate[^.]*malfunctions[^.]*absent/i);
+  expect(align).toMatch(/required adviser, candidate, or judge[^.]*failed receipt holds[^.]*question/i);
+  expect(align).toMatch(/record the gap and ask[^.]*whether to proceed/i);
   expect(align).toMatch(/uncertain dispatch[^.]*reconcile natively[^.]*never treated as absent/i);
 });
 

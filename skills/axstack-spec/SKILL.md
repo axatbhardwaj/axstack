@@ -51,6 +51,10 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    remain unchanged. If either adviser is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
    criteria, exclusions, and both adviser receipts or the reported hold.
+   An optional adviser note may be deferred or rejected in a `Decisions` row
+   with the draft unchanged; it needs no new adviser pair. Changed draft text,
+   a blocking finding, or a high-stakes decision requires fresh receipts on
+   the new revision.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
    require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`

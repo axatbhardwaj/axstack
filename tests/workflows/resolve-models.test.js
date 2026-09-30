@@ -5,11 +5,12 @@ const script = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.j
 const catalog = (models) => ({ client_version: '0.157.1', fetched_at: '2026-09-29T19:05:03Z', models });
 const model = (slug, visibility = 'list', levels = ['high']) => ({ slug, visibility, supported_reasoning_levels: levels.map((effort) => ({ effort })) });
 
-function run(data, modelClass = 'sol', effort = 'high') {
+function run(data, modelClass = 'sol', effort = 'high', excluded = []) {
   const dir = mkdtempSync(`${process.env.AXSTACK_TEST_TMP_ROOT ?? process.env.TMPDIR ?? '/tmp'}/axstack-model-catalog-`);
   const path = `${dir}/catalog.json`;
   if (data !== null) writeFileSync(path, typeof data === 'string' ? data : JSON.stringify(data));
-  const result = Bun.spawnSync(['bun', script, '--catalog', path, '--class', modelClass, '--effort', effort], {
+  const result = Bun.spawnSync(['bun', script, '--catalog', path, '--class', modelClass, '--effort', effort,
+    ...excluded.flatMap((slug) => ['--exclude', slug])], {
     stdout: 'pipe', stderr: 'pipe', env: { ...process.env, HOME: process.env.HOME },
   });
   return { status: result.exitCode, output: result.stdout.toString(), error: result.stderr.toString(), path };
@@ -27,6 +28,21 @@ test('resolver returns ordered eligible candidates and catalog provenance', () =
     candidates: ['gpt-6.10-sol', 'gpt-6.9-sol', 'gpt-6.1-sol', 'gpt-6-sol'],
     catalog: { path: result.path, client_version: '0.157.1', fetched_at: '2026-09-29T19:05:03Z' },
   });
+});
+
+test('resolver excludes rejected slugs and selects the next eligible model', () => {
+  const result = run(catalog([model('gpt-6.1-sol'), model('gpt-6-sol')]), 'sol', 'high', ['gpt-6.1-sol']);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output).model).toBe('gpt-6-sol');
+  expect(JSON.parse(result.output).candidates).toEqual(['gpt-6-sol']);
+});
+
+test('resolver holds when repeated exclusions remove every eligible model', () => {
+  const result = run(catalog([model('gpt-6.1-sol'), model('gpt-6-sol')]), 'sol', 'high',
+    ['gpt-6.1-sol', 'gpt-6-sol']);
+  expect(result.status).not.toBe(0);
+  expect(result.output).toBe('');
+  expect(result.error).toMatch(/no eligible sol model/i);
 });
 
 test('resolver holds missing and malformed catalogs and empty eligible classes', () => {

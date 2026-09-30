@@ -51,7 +51,7 @@ only affected work.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and the same 32 stable IDs.
+`{ "version": 1, "roles": [...] }` and list all role IDs in the same order.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
