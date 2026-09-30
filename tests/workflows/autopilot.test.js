@@ -6,10 +6,10 @@ const ref = () => read('skills/axstack/references/autopilot.md');
 const skill = (name) => read(`skills/${name}/SKILL.md`);
 
 // These checks prove shipped contract text, not agent decisions or live wakes.
-test('eligible delivery advances on completed identity and stops on a recorded hold', () => {
+test('eligible delivery advances on completed identity and scopes recorded holds', () => {
   const text = ref();
   expect(text).toMatch(/authorized engineering.delivery runs/i);
-  expect(text).toMatch(/completed identity[\s\S]*no open hold/i);
+  expect(text).toMatch(/completed identity[\s\S]*no hold affects the next action/i);
   expect(text).toMatch(/planning.only[\s\S]*read.only[\s\S]*stop.after.phase[\s\S]*observation.only[\s\S]*peer/i);
   expect(text).toMatch(/status question[\s\S]*observation[\s\S]*not a mode change/i);
   expect(text).toMatch(/hold[\s\S]*reason[\s\S]*resume condition/i);

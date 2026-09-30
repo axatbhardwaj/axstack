@@ -46,6 +46,10 @@ reconcile the record with actual Orca sessions and Dispatches, exact revisions, 
 state, and the approved intent. Prevent a duplicate writer, mark approval or
 evidence for an older revision stale, and distinguish task completion from a
 capability being merged.
+Maintain one `Next:` line after each accepted receipt or hold transition. It
+names the driver or task owner, last receipt time, next concrete action, and
+any hold with its affected dependency and resume condition. Use it to answer
+status questions after reconciling current evidence.
 
 The record is derived progress, not authority. Orca sessions and Dispatches, Git revisions,
 forge/PR state, and the approved spec remain sources of truth. The driver
@@ -151,7 +155,8 @@ Authority: <who authorized which mutation>
 Intent: <approved spec rev | small-change intent | adopted snapshot | peer/read-only mode>
 Routing: <preset + source + snapshot ref>
 Notification policy: <none | transport/target label/host/instructions path>
-Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>); next: <step>
+Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>)
+Next: <owner; last receipt time; next action; hold or none>
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
 IDs: <repo/project + workspace/agent receipt pointers>

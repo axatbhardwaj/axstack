@@ -41,9 +41,10 @@ rule('relay shared milestone budget', () => read('skills/axstack-relay/SKILL.md'
 rule('relay categories remain bounded', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /user-decision holds.*at most two merge-ready\/merged milestones/);
 rule('AGENTS human npm gate', () => read('AGENTS.md'), 'The human merges the release PR', /approves the npm stage; agents never run/);
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
-rule('hold stops dependent work', autopilot, 'A hold from any phase stops the run:', /take no dependent action/);
-for (const item of ['tracker access', 'adviser or arena-seat availability', 'diligence FINDINGS', 'CI-wait timeout', 'readiness UNKNOWN', 'dismissed approval', 'wake or cleanup uncertainty', 'single-provider routing', 'existing tag or version', 'failed publish']) {
-  test(`hold enumeration: ${item}`, () => expect(sentence(autopilot(), 'That covers')).toContain(item));
+rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
+rule('scoped hold blocks dependants', autopilot, 'A task, PR, resource, or operation hold', /blocks only its dependants; continue independent authorized work/);
+for (const item of ['tracker access', 'adviser or arena-seat availability', 'CI-wait timeout', 'readiness UNKNOWN', 'dismissed approval', 'wake or cleanup uncertainty', 'single-provider routing', 'existing tag or version', 'failed publish']) {
+  test(`hold example: ${item}`, () => expect(autopilot()).toContain(item));
 }
 rule('silence cannot resume', autopilot, 'A user answer to the hold', /silence does not/);
 rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /human's decision/);
@@ -104,8 +105,8 @@ test('run record requires a Release decision line', () => {
     .toMatch(/^Release: <AGENTS\.md file:line \+ tag-triggered workflow path \+ named install hosts> \| not applicable \(<reason>\)$/m);
 });
 
-test('a recorded hold stops all dependent work', () => {
-  expect(autopilot()).not.toContain('Continue safe independent work');
+test('a scoped hold leaves independent authorized work available', () => {
+  expect(autopilot()).toContain('continue independent authorized work');
 });
 
 test('holdout: human approval and merge authority stay explicit', () => {
