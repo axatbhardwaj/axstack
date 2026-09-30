@@ -10,7 +10,7 @@ const linkedPolicy = (skill) => readFileSync(
 const sentences = (text) => text.replace(/\[[^\]]+\]\([^)]+\)/g, 'reference')
   .replace(/\s+/g, ' ').split(/[.!?]\s+/);
 const requires = (text, ...concepts) => sentences(text).some((sentence) =>
-  !/\b(?:not|never|skip|avoid\w*|optional|may)\b/i.test(sentence)
+  !/\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i.test(sentence)
   && concepts.every((concept) => concept.test(sentence)));
 
 test('authors gate all new and changed tests and reject failures', () => {
@@ -57,6 +57,7 @@ test('test audits account for the bounded scope and route only proven cleanup th
     && /\bquota\b/i.test(sentence),
   )).toBe(true);
   expect(requires(policy, /\breport\w*\b/i, /\breviewed\b/i, /\beligible\b/i, /\bcounts?\b/i)).toBe(true);
+  expect(requires(policy, /\b(?:report|document)\b/i, /\bF\b/, /\bfindings?\b/i)).toBe(true);
   expect(requires(policy,
     /\b(?:every|each|all)\b/i, /\bC\s*\/\s*D\b/, /\bevidence\b/i,
     /\bname\b/i, /\blocation\b/i, /\bfailure\b/i, /\bkeeper\b/i,
@@ -68,8 +69,22 @@ test('test audits account for the bounded scope and route only proven cleanup th
     /\bsame[- ]check\b/i, /\bgreen\b/i, /\bbefore\b/i, /\bafter\b/i,
     /\bindependent\b.*\breview\b/i,
   )).toBe(true);
+  expect(requires(policy,
+    /\bonly\b/i, /\bauthoriz\w*\b/i, /\bF repairs?\b/,
+    /\broute\w*\b/i, /\baxstack-implement\b/,
+    /\b(?:through|via)(?: its| an?)?(?: normal)? independent review\b/i,
+  )).toBe(true);
+  expect(requires(policy,
+    /\brepaired (?:check|test)\b/i, /\bpass\w*\b.*\bbase\b/i,
+    /\bred\b/i, /\bremov\w*\b/i, /\binvert\w*\b/i,
+    /\bdisposable mutation\b/i, /\brestor\w*\b.*\bbyte for byte\b/i,
+    /\bsurviv\w*\b.*\breword\w*\b/i,
+  )).toBe(true);
   expect(sentences(policy).some((sentence) =>
-    /\breport\w*\b/i.test(sentence) && /\bF\b/.test(sentence)
+    /\b(?:never|do not) (?:weaken or loosen|loosen or weaken)(?: an?)? assertions?\b/i.test(sentence),
+  )).toBe(true);
+  expect(sentences(policy).some((sentence) =>
+    /\breport\w*\b/i.test(sentence)
     && /\bproduction seams?\b/i.test(sentence)
     && /\btest-only\b|\bonly\b.*\btests?\b/i.test(sentence)
     && /\b(?:do not|never|without) (?:chang|edit|modif)\w*\b|\bunchanged\b/i.test(sentence),

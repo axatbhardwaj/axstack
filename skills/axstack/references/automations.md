@@ -3,6 +3,10 @@
 Read this for the optional native Orca peer-review automation. The historical
 automation specs and plans describe retired designs and are not instructions.
 
+For optional weekly test audits, use the separate packaged
+[Weekly test-audit prompt](test-audit-weekly.md).
+The native canary below is also required before weekly activation.
+
 ## Topology and schedules
 
 The review manager runs at minutes `0,15,30,45` and invokes

@@ -47,6 +47,30 @@ multi-PR or stacked work. Unclear work is clarified, then classified. A deeper p
 the same identity before action; missing preparation names the gap and holds
 only affected work.
 
+## Weekly test-audit activation
+
+The packaged [weekly prompt](../skills/axstack/references/test-audit-weekly.md)
+is repo-agnostic policy. No automation is created by this delivery; scheduling
+starts later for each repository the user names.
+
+1. Record the repository and test-path allowlist, a finite pass budget, and
+   standing edit and PR-open authority. Zero deletions is normal; proven F
+   repairs are eligible.
+2. In that repository's dedicated existing Orca workspace, load the current
+   `orca skills get orca-cli` automation guide and command help. Configure a
+   native weekly automation with `--fresh-session` and the packaged prompt,
+   including the activation record's values. Do not add a scheduler or cursor.
+3. Before enabling the schedule, pass the
+   [native activation canary](../skills/axstack/references/automations.md): fresh
+   sessions, overlap admission, recovery after session loss, nested dispatch
+   depth, process/memory effects, and bounded terminals over repeated passes.
+   Preserve runtime receipts; source checks alone do not establish these facts.
+4. Missing authority, or no passing native canary, holds activation. Each pass
+   derives one boundary from test-audit PR history, skips open PRs, overlap with
+   live Orca Run/worktree ownership, unsafe baselines or empty candidate sets,
+   and opens at most one independently reviewed test-only PR per week through
+   the driver. Workers never push; the human merges.
+
 ## Role presets
 
 Installation requires one explicit canonical preset. The three bundle files

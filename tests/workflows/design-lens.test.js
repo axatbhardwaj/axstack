@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
@@ -80,9 +81,13 @@ test('design lens: sketch block and conditional phase wiring', () => {
   expect(text(phases.review)).toMatch(/architecture[\s\S]*?sketch[^.]*red flags[\s\S]*?Binding[^.]*accepted spec revision[^.]*finding/i);
   expect(text(phases.improve)).toMatch(/sketch[\s\S]*?vocabulary[^.]*red flags/i);
   expect(text(phases.improve)).toMatch(/return candidates in sketch form/i);
-  for (const phase of ['spec', 'tickets', 'implement', 'review', 'improve']) {
+  for (const phase of ['spec', 'tickets', 'implement', 'review']) {
     expect(text(phases[phase]), phase).toMatch(/only when[^.]*scope identity[^.]*sketch/i);
   }
+  expect(requires(text(phases.improve),
+    /only (?:when|if)/i, /scope identity (?:carries|contains) a sketch/i,
+    /vocabulary[^.]*red flags/i, /return candidates in sketch form/i,
+  ), 'improve').toBe(true);
 });
 
 test('design lens: spec counterpart has a comment header and one source heading', () => {

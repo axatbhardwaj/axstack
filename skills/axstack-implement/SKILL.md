@@ -85,13 +85,20 @@ Size alone never requires user approval.
 ## 3. Establish test-first evidence
 
 Use the normal behavior path unless the accepted improvement scope is
-explicitly marked **structure-preserving**. The author never chooses that tag.
+explicitly marked **structure-preserving**, or the accepted scope explicitly
+authorizes **F repairs**. The author never chooses those exceptions.
 
 Only when the scope identity carries a sketch, copy it into the author brief
 under the [design lens](../axstack/references/design-lens.md).
 
 Authors apply the gate in [Test value](../axstack/references/test-value.md)
 to every new or changed test. A test failing the gate is not added.
+
+### F-repair path
+
+For explicitly authorized F repairs, use [F proof](../axstack/references/test-value.md#f-proof):
+base-green, targeted removal/inversion-red with byte-for-byte restore, and
+equivalent-rewording-green. Never weaken or loosen an assertion.
 
 ### Normal behavior path
 
@@ -167,7 +174,7 @@ Candidate: <PR or branch> base <sha> revision <sha>
 Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
-TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence>
+TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>

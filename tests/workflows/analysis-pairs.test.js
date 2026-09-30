@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -68,7 +69,10 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
 test('analysis pairs: improve dispatches code research with its Sol pair', () => {
   const improve = compact('skills/axstack-improve/SKILL.md');
   expect(improve).toMatch(/axstack-research-code[^.]*axstack-research-code-sol/i);
-  expect(improve).toMatch(/independently[^.]*same bounded brief[^.]*without cross-reading/i);
+  expect(requires(improve,
+    /axstack-research-code[^.]*axstack-research-code-sol/i,
+    /independently[^.]*(?:same|identical) bounded brief[^.]*without cross-reading/i,
+  )).toBe(true);
   expect(improve).toMatch(/driver reconciles[^.]*per claim[^.]*never averages/i);
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
   expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);

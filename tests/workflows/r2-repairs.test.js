@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { loadedReferences } from './prose-contract.js';
 
 function normalize(path) {
   const absolute = path.startsWith('/');
@@ -21,18 +22,7 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 function explicitLoads(path) {
   const text = readFileSync(path, 'utf8');
-  const links = [];
-  const paragraphs = text.split(/\n\s*\n/);
-  for (let index = 0; index < paragraphs.length; index++) {
-    const paragraph = paragraphs[index];
-    if (!/\bload(?:s|ed)?\b/i.test(paragraph)) continue;
-    for (const match of paragraph.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) links.push(match[1]);
-    // A load directive may introduce a link list in the following paragraph.
-    if (paragraph.trimEnd().endsWith(':') && /^\s*[-*]\s+\[/m.test(paragraphs[index + 1] ?? '')) {
-      for (const match of paragraphs[index + 1].matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) links.push(match[1]);
-    }
-  }
-  return [...new Set(links)]
+  return loadedReferences(text)
     .filter((link) => !/^(https?:|#|mailto:)/.test(link))
     .map((link) => normalize(`${dirname(path)}/${link.split('#')[0]}`));
 }

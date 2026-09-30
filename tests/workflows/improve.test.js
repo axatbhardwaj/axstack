@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -7,6 +8,7 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 
 // Structural instruction-contract checks only. They verify declared routing
 // and evidence boundaries, not whether a model will follow those instructions.
+// requires checks affirmative instructions; prohibitions keep explicit negation.
 
 test('improve: direct discovery is bounded and report-only', () => {
   const text = compact('skills/axstack-improve/SKILL.md');
@@ -23,16 +25,20 @@ test('improve: direct discovery is bounded and report-only', () => {
   expect(text).toMatch(/read[^.]*code[^.]*history[^.]*tests/i);
   expect(text).toMatch(/requested report[^.]*only|writes? only[^.]*report/i);
   expect(text).toMatch(/no worthwhile (?:change|improvement)[^.]*valid/i);
-  expect(text).toMatch(/does not|never|no automatic/i);
-  expect(text).toMatch(/source code|domain documentation|issue/i);
-  expect(text).toMatch(/auto[^.]*refactor|automatic[^.]*refactor/i);
+  expect(sentences(text).some((sentence) =>
+    /(?:does not|must not|never) (?:edit|change)[^.]*source code[^.]*domain documentation[^.]*issues/i.test(sentence),
+  )).toBe(true);
+  expect(sentences(text).some((sentence) =>
+    /(?:never|must not|does not) (?:auto-refactor|automatically refactor)/i.test(sentence),
+  )).toBe(true);
 });
 
 test('improve: findings are evidenced, ranked, and decision-useful', () => {
   const text = compact('skills/axstack-improve/SKILL.md');
-  for (const marker of ['maintainability', 'architecture', 'testability', 'source evidence', 'current', 'proposed', 'benefit', 'tradeoff', 'behavior to preserve', 'test approach', 'uncertainty', 'recommendation strength']) {
+  for (const marker of ['maintainability', 'architecture', 'testability', 'current', 'proposed', 'benefit', 'tradeoff', 'behavior to preserve', 'test approach', 'uncertainty', 'recommendation strength']) {
     expect(text.toLowerCase()).toContain(marker);
   }
+  expect(requires(text, /(?:source|inspected) evidence/i, /scoped problem/i)).toBe(true);
   expect(text).toMatch(/small[^.]*ranked[^.]*candidate/i);
   expect(text).toMatch(/KISS[^.]*YAGNI[^.]*SOLID[^.]*judg/i);
   expect(text).toMatch(/no invented metrics|never invent[^.]*metric/i);
@@ -46,7 +52,9 @@ test('improve: explanation is optional and selection preserves the phase boundar
   const text = compact('skills/axstack-improve/SKILL.md');
   expect(text).toMatch(/axstack-explain/);
   expect(text).toMatch(/worthwhile[^.]*before[^.]*after|before[^.]*after[^.]*visual/i);
-  expect(text).toMatch(/never force[^.]*HTML|no mandatory HTML/i);
+  expect(sentences(text).some((sentence) =>
+    /(?:never|do not) (?:force|require)[^.]*HTML|no mandatory HTML/i.test(sentence),
+  )).toBe(true);
   expect(text).toMatch(/unresolved[^.]*design[^.]*axstack-align|axstack-align[^.]*unresolved[^.]*design/i);
   expect(text).toMatch(/clear[^.]*authorized[^.]*small-change intent|small-change intent[^.]*settled/i);
   expect(text).toMatch(/no[^.]*new approval|without[^.]*new approval/i);
@@ -59,9 +67,14 @@ test('improve: explanation is optional and selection preserves the phase boundar
 
 test('improve: structure-preserving work uses old-green same-check evidence', () => {
   const text = compact('skills/axstack-implement/SKILL.md');
-  expect(text).toMatch(/accepted[^.]*scope[^.]*structure-preserving/i);
+  expect(requires(text,
+    /normal behavior path unless/i,
+    /(?:accepted|approved) improvement scope[^.]*explicitly (?:marked|designated)[^.]*structure-preserving/i,
+  )).toBe(true);
   expect(text).toMatch(/behavioral baseline|characterization/i);
-  expect(text).toMatch(/old revision[^.]*green[^.]*before[^.]*structural edit/i);
+  expect(requires(text,
+    /old revision/i, /must (?:run|be) green/i, /before[^.]*structural (?:edit|change)/i,
+  )).toBe(true);
   expect(text).toMatch(/same checks[^.]*new revision[^.]*green/i);
   expect(text).toMatch(/never[^.]*manufacture[^.]*red|no[^.]*fabricated[^.]*red/i);
   expect(text).toMatch(/mutation[^.]*optional|optional[^.]*mutation/i);
@@ -71,7 +84,10 @@ test('improve: structure-preserving work uses old-green same-check evidence', ()
 test('improve: normal TDD and bounded ownership remain intact', () => {
   const implement = compact('skills/axstack-implement/SKILL.md');
   expect(implement).toMatch(/bug|new behavior/i);
-  expect(implement).toMatch(/separate[^.]*scope|separately[^.]*accepted/i);
+  expect(requires(implement,
+    /bug|new behavior/i, /separately accepted|requires separate acceptance/i,
+    /normal[^.]*real red[^.]*green/i,
+  )).toBe(true);
   expect(implement).toMatch(/red[^.]*green/i);
   expect(implement).toMatch(/outside[^.]*listed[^.]*files|exceed[^.]*files/i);
   expect(implement).toMatch(/reassess/i);
@@ -82,11 +98,40 @@ test('improve: normal TDD and bounded ownership remain intact', () => {
 
 test('improve: implementation receipt and audit accept the applicable evidence path', () => {
   const implement = compact('skills/axstack-implement/SKILL.md');
-  const audit = `${compact('skills/axstack-audit/SKILL.md')} ${compact('skills/axstack-audit/references/record.md')}`;
+  const auditPolicy = compact('skills/axstack-audit/SKILL.md');
+  const auditRecord = compact('skills/axstack-audit/references/record.md');
+  const audit = `${auditPolicy} ${auditRecord}`;
   expect(implement).toMatch(/TDD:[^>]*normal red\/green[^>]*structure-preserving[^>]*old-green[^>]*same-check-new-green/i);
   expect(audit).toMatch(/normal[^.]*real red[- ]green|red[- ]green[^.]*normal/i);
   expect(audit).toMatch(/structure-preserving[^.]*old revision[^.]*green[^.]*same checks[^.]*new revision[^.]*green/i);
+  expect(requires(auditPolicy,
+    /explicitly accepted structure-preserving work/i,
+    /old revision green before (?:edits|changes)/i,
+    /(?:same|identical) checks green on the new revision/i,
+    /(?:artifact|equivalence) evidence/i,
+  )).toBe(true);
   expect(audit).toMatch(/missing|absent/i);
   expect(audit).toMatch(/noncompliance|UNKNOWN/i);
   expect(audit).toMatch(/applicable[^.]*evidence path|evidence path[^.]*applicable/i);
+  expect(requires(implement,
+    /normal behavior path unless/i, /accepted scope/i, /structure-preserving/i,
+    /explicitly authorizes[^.]*F repairs/i,
+  )).toBe(true);
+  for (const [owner, text] of [['implement', implement], ['audit', auditPolicy]]) {
+    expect(requires(text,
+      /authorized F repairs?/i, /\b(?:use|apply|follow)\b/i, /\bF proof\b/i,
+    ), owner).toBe(true);
+    expect(text, owner).toContain('../axstack/references/test-value.md#f-proof');
+  }
+  for (const text of [implement, auditRecord]) {
+    expect(text).toMatch(/TDD:[^>]*F-repair[^>]*base-green[^>]*removal-inversion-red[^>]*rewording-green/i);
+  }
+  const proof = read('skills/axstack/references/test-value.md').split('## F proof')[1]?.split('\n## ')[0] ?? '';
+  expect(requires(proof,
+    /authorized F repair/i, /(?:check|test) (?:passes|is green) on the base/i,
+    /red[^.]*instruction or code/i, /removed/i, /inverted/i,
+    /targeted disposable mutation restored byte for byte/i,
+    /survives equivalent rewording/i,
+  )).toBe(true);
+  expect(proof).toMatch(/(?:never|do not) (?:weaken or loosen|loosen or weaken)(?: an?)? assertions?/i);
 });
