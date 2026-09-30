@@ -71,8 +71,8 @@ profiles/presets/codex-only.json
 profiles/presets/claude-only.json
 ```
 
-Each has exactly `{ "version": 1, "roles": [...] }` with the same 32 stable
-role IDs. Installation writes `<skills-dir>/axstack/roles.json` as
+Each has exactly `{ "version": 1, "roles": [...] }` and lists all role IDs
+in the same order. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
 role store and no Orca configuration merge.
@@ -172,7 +172,7 @@ to rewrite them.
 ## Role behavior after installation
 
 The runtime reads `roles.json` from the installed shared root `skills/axstack/`.
-A new run records the selected preset plus all 32 role rows. Class rows resolve
+A new run records the selected preset plus all role IDs. Class rows resolve
 at run start; each role snapshot records class, exact ID, source, and time.
 An active run and resume reuse that snapshot after a later preset install unless
 the user explicitly changes it and accepts the resulting evidence invalidation.

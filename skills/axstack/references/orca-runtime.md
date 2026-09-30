@@ -38,7 +38,7 @@ Read `roles.json` from the installed shared root `skills/axstack/`. The installe
 shape is `{ "version": 1, "preset": "<name>", "roles": [...] }`. Bundled
 profiles are setup inputs shaped as
 `{ "version": 1, "roles": [...] }`. A new run records the selected preset and
-all 32 role rows once. For each role record class, resolved exact ID, source,
+all role IDs once. For each role record class, resolved exact ID, source,
 and time. An active run keeps the exact snapshot; resume reuses it without
 re-resolution until the user explicitly changes it.
 

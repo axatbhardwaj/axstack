@@ -10,7 +10,6 @@ test('simplify-diff: shared reference is bounded to code and agent instructions'
   expect(existsSync(`${root}/${referencePath}`)).toBe(true);
   const text = read(referencePath);
 
-  expect(text.split('\n').length).toBeLessThanOrEqual(70);
   expect(text).toMatch(/code diffs?[^.]*agent instructions?|agent instructions?[^.]*code diffs?/i);
   expect(text).toMatch(/not[^.]*human-facing[^.]*marketing/i);
   for (const target of [

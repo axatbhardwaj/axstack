@@ -110,12 +110,13 @@ test('review manager uses capacity admission and requires canary evidence', () =
 
 test('preset bundles retain three role tables in the frozen container', () => {
   const names = ['mixed', 'codex-only', 'claude-only'];
+  const expectedIds = JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id);
   for (const name of names) {
     const data = JSON.parse(read(`profiles/presets/${name}.json`));
     expect(Object.keys(data)).toEqual(['version', 'roles']);
     expect(data.version).toBe(1);
-    expect(data.roles).toHaveLength(32);
-    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(32);
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(expectedIds.length);
   }
   const mixed = JSON.parse(read('profiles/presets/mixed.json'));
   expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();

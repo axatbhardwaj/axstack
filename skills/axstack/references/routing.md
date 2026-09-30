@@ -11,7 +11,7 @@ skills root, or an explicit user selection in the run record. Missing or contrad
 a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At start, snapshot all 32 role IDs with provider/modelClass/model/mode/effort; absent
+At start, snapshot all role IDs with provider/modelClass/model/mode/effort; absent
 or unconfigured roles are recorded explicitly; never default.
 Such a role holds only its work. Later installed or changed roles need an
 explicit user decision to enter the snapshot. Live profiles

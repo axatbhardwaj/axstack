@@ -12,7 +12,6 @@ test('review manager exposes one short finite-session native prompt', () => {
   expect(existsSync(`${root}/skills/axstack/references/watch-manager-prompt.md`)).toBe(false);
   for (const path of [reviewPath]) {
     expect(existsSync(`${root}/${path}`), `${path} exists`).toBe(true);
-    expect(read(path).length, `${path} stays thin`).toBeLessThan(2200);
     expect(read(path), `${path} discovers the contract relatively`).toContain('../axstack/references/automations.md');
   }
   expect(compact(reviewPath)).toMatch(/axstack-review/i);

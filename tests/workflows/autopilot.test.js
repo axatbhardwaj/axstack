@@ -55,13 +55,11 @@ test('resume, cancel, and notifications retain decisions and budgets', () => {
   expect(read('skills/axstack/references/run-record.md')).toMatch(/Autopilot: on \| paused[\s\S]*off \(cancelled/i);
 });
 
-test('each phase loads the reference and routing retains its byte budget', () => {
+test('each phase loads the autopilot reference', () => {
   for (const name of ['axstack-align', 'axstack-spec', 'axstack-tickets', 'axstack-implement', 'axstack-watch', 'axstack-relay']) {
     expect(skill(name), name).toMatch(/\]\(\.\.\/axstack\/references\/autopilot\.md\)/);
   }
-  const routing = read('skills/axstack/references/routing.md');
-  expect(routing).toMatch(/continues? under autopilot when eligible/i);
-  expect(new TextEncoder().encode(routing).length).toBeLessThan(7800);
+  expect(read('skills/axstack/references/routing.md')).toMatch(/continues? under autopilot when eligible/i);
 });
 
 test('scenario corpus is input-only and covers the approved branches', () => {

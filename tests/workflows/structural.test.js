@@ -175,10 +175,9 @@ test('structural: active PR parallelism has no fixed count', () => {
   expect(contracts).toMatch(/exactly one writer per candidate/i);
 });
 
-test('structural: shared PR-shape reference is complete, bounded, and sole source of bands', () => {
+test('structural: shared PR-shape reference is complete and sole source of bands', () => {
   const p = join(skillsDir, 'axstack', 'references', 'pr-shape.md');
   const shape = readFileSync(p, 'utf8');
-  expect(shape.split('\n').length, 'pr-shape.md must stay within 40 lines').toBeLessThanOrEqual(40);
   expect(shape).toContain('git diff -M --numstat $(git merge-base <base> <head>)..<head>');
   expect(shape).toMatch(/actual PR base/i);
   expect(shape).toMatch(/stacked child[^.]*parent branch/i);

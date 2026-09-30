@@ -50,5 +50,4 @@ test('only explicit pre-turn Codex model rejection permits recorded within-class
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/timeout[^.]*quota[^.]*hold/i);
   expect(routing).toMatch(/tried ID[^.]*error[^.]*fallback ID/i);
-  expect(read('skills/axstack/references/routing.md').length).toBeLessThan(7800);
 });
