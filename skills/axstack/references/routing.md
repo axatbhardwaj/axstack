@@ -38,10 +38,9 @@ each rejected slug. Each retry keeps `--retry-of` lineage and the same class,
 provider, and effort. This is the sole exception to snapshot immutability;
 it grants no other model substitution.
 Timeout, quota, auth, and other failures hold; Claude rejection holds.
-Optional-seat absence, intentional single-provider `model: null` absences, and
-mixed Codex+Claude fan-out follow [Role roster](role-roster.md); required seats,
-including `model: null`, hold without substitution except that a base auditor
-preflight rejection follows [Close-out](lifecycle.md#close-out).
+[Model discipline](contracts.md#model-discipline) governs optional seats,
+auditor preflight, and required holds; [Role roster](role-roster.md) governs
+single-provider absence and mixed Codex+Claude fan-out.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
 

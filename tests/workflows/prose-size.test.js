@@ -11,8 +11,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   const alwaysLoaded = ['contracts.md', 'lifecycle.md', 'routing.md']
     .reduce((sum, path) => sum + bytes(`axstack/references/${path}`), 0);
 
-  // Initial baseline: 249,958 and 21,682 bytes. T3b2's compact shared-rule
-  // qualifications need an interim loaded ceiling; owner decides the reset.
+  // Initial baseline: 249,958 and 21,682 bytes. T3b2 loaded bytes: 23,361;
+  // 5% ceiling: 24,530; driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
   expect(total).toBeLessThanOrEqual(262456);
-  expect(alwaysLoaded).toBeLessThanOrEqual(23457);
+  expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

@@ -33,15 +33,12 @@ test('shared rules qualify only optional seats and preserve required holds', () 
   const routing = read('skills/axstack/references/routing.md');
   expect(contracts).toMatch(/Optional seats follow \[Role roster\]\(role-roster\.md\)/i);
   expect(contracts).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
-  expect(routing).toMatch(/Optional-seat absence[^.]*follow \[Role roster\]\(role-roster\.md\)/i);
-  expect(routing).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
-  expect(routing).toMatch(/intentional single-provider `model: null` absences/i);
+  expect(routing).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
+  expect(routing).toMatch(/\[Role roster\]\(role-roster\.md\) governs[^.]*single-provider absence[^.]*mixed Codex\+Claude fan-out/i);
   for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
   expect(routing).toContain('Codex `--retry-of`');
   expect(routing).toContain('pre-turn Codex rejection');
-  for (const prose of [contracts, routing]) {
-    expect(prose).toMatch(/base auditor[^.]*preflight rejection[^.]*Close-out/i);
-  }
+  expect(contracts).toMatch(/base auditor[^.]*preflight rejection[^.]*Close-out/i);
 });
 
 test('research and arena continue after optional dropout, with required seats held', () => {
@@ -66,4 +63,11 @@ test('unlaunchable base auditor archives UNKNOWN with route and error', () => {
     expect(prose).toMatch(/launched[^.]*Dispatch[^.]*settle/i);
     expect(prose).toMatch(/no substitution/i);
   }
+});
+
+test('runtime launch hold defers to shared optional-seat and auditor exceptions', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md');
+  const launchRule = runtime.split('An unsupported or')[1]?.split('The single-provider')[0];
+  expect(launchRule).toMatch(/unavailable value holds affected work/i);
+  expect(launchRule).toMatch(/optional-seat[^.]*base-auditor[^.]*\[Model discipline\]\(contracts\.md#model-discipline\)/i);
 });

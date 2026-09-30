@@ -64,7 +64,8 @@ permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
 settings, and completed work are separate evidence. An unsupported or
 unavailable value holds affected work for the user's decision except the narrow
-retry below.
+retry below and the optional-seat and base-auditor exceptions in
+[Model discipline](contracts.md#model-discipline).
 The single-provider preset's null adviser and round-2 seat are intentional installation data, not
 readiness failure; because Align and Spec require both adviser receipts, either
 null adviser still holds those phases. The current chat is the driver and has
