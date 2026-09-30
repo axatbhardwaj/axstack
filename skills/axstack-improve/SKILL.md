@@ -52,8 +52,13 @@ R/F/C/D as a completeness floor. It is not a deletion quota; zero candidates is 
 Report reviewed and eligible counts. Each C/D carries the reference's evidence:
 exact test name and location, detectable failure, named keeper or
 vacuity/obsolescence proof, and validation command. Require its deletion proof
-before routing candidates. Report F and test-only production seams; do not
-change them. Only explicitly authorized, proven C/D batches route to
+before routing candidates. Report test-only production seams; do not change
+them. Report F findings. Only explicitly authorized F repairs route to
+`axstack-implement` through its normal independent review: the repaired check
+passes on the base, goes red when its instruction or code is removed or
+inverted by a targeted disposable mutation restored byte for byte, and
+survives equivalent rewording for semantic prose. Never weaken or loosen an
+assertion. Only explicitly authorized, proven C/D batches route to
 `axstack-implement` as explicitly structure-preserving work: same-check green
 before/after, through its normal independent review. Discovery remains report-only.
 

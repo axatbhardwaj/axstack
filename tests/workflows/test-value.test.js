@@ -68,8 +68,22 @@ test('test audits account for the bounded scope and route only proven cleanup th
     /\bsame[- ]check\b/i, /\bgreen\b/i, /\bbefore\b/i, /\bafter\b/i,
     /\bindependent\b.*\breview\b/i,
   )).toBe(true);
+  expect(requires(policy,
+    /\bonly\b/i, /\bauthoriz\w*\b/i, /\bF repairs?\b/,
+    /\broute\w*\b/i, /\baxstack-implement\b/,
+    /\b(?:through|via)(?: its| an?)?(?: normal)? independent review\b/i,
+  )).toBe(true);
+  expect(requires(policy,
+    /\brepaired (?:check|test)\b/i, /\bpass\w*\b.*\bbase\b/i,
+    /\bred\b/i, /\bremov\w*\b/i, /\binvert\w*\b/i,
+    /\bdisposable mutation\b/i, /\brestor\w*\b.*\bbyte for byte\b/i,
+    /\bsurviv\w*\b.*\breword\w*\b/i,
+  )).toBe(true);
   expect(sentences(policy).some((sentence) =>
-    /\breport\w*\b/i.test(sentence) && /\bF\b/.test(sentence)
+    /\b(?:never|do not) (?:weaken or loosen|loosen or weaken)(?: an?)? assertions?\b/i.test(sentence),
+  )).toBe(true);
+  expect(sentences(policy).some((sentence) =>
+    /\breport\w*\b/i.test(sentence)
     && /\bproduction seams?\b/i.test(sentence)
     && /\btest-only\b|\bonly\b.*\btests?\b/i.test(sentence)
     && /\b(?:do not|never|without) (?:chang|edit|modif)\w*\b|\bunchanged\b/i.test(sentence),

@@ -1,8 +1,8 @@
-<!-- Approved spec counterpart. Authoritative: https://github.com/axatbhardwaj/axstack/issues/223 body SHA-256 e3da9f602183f94a7f0e20da0d74fbc21c619a6215e3aeddb6fea59d80612d6d -->
+<!-- Approved spec counterpart. Authoritative: https://github.com/axatbhardwaj/axstack/issues/223 rev 4 body SHA-256 5013c74db2f1c51379f98c892d3983b33122dc57ef230fd669bee7e358d7159e -->
 
 # Spec: test-value audit (stop and remove slop tests)
 
-Run: 20260930-test-slop-audit · Store: GitHub issue (axatbhardwaj/axstack) · Draft rev 3 (2026-09-30)
+Run: 20260930-test-slop-audit · Store: GitHub issue (axatbhardwaj/axstack) · Rev 4 (2026-09-30; rev 3 approved, rev 4 accepts user decisions Q4/Q5 after the pilot)
 
 ## Outcome
 Axstack stops agents writing low-value tests and removes existing redundant or useless ones:
@@ -17,6 +17,8 @@ Axstack stops agents writing low-value tests and removes existing redundant or u
 - D4 No deletion quota, score, or numeric target. Zero candidates is a valid result. (advisers; Hutch 0.79%, simplify-diff precedent)
 - D5 Campaign ledger machinery and mutation kill matrices are out of scope for now.
 - D6 Pilot on axstack's own `tests/workflows/` with a repo-local prose-test rule.
+- D7 Pilot found R10/F11/C0/D0. Pilot repairs its F findings. (Q4)
+- D8 The weekly run also repairs F (weak assertions), not only deletes. (Q5)
 
 ## Design
 `test-value.md` holds, ported and credited (OpenClaw test-audit, MIT; pstack; Pocock):
@@ -36,7 +38,7 @@ Consumers:
   - Scope: next boundary derived from the last test-audit PR (no cursor file or state); never re-propose candidates from a closed unmerged test-audit PR.
   - Skip the week while a test-audit PR is still open.
   - Red or flaky baseline, overlap with live Orca work (existing Orca worktree/Run ownership on the same paths), or zero proven candidates: publish nothing, report only.
-  - Published diff touches test files only: deletions and consolidations. Forbidden: skip/only/xfail, snapshot rewrites, coverage-threshold, CI, or line-cap edits. Non-test paths byte-identical to base after mutation restore.
+  - Published diff touches test files only: deletions, consolidations, and F repairs. An F repair must pass on the base and go red when its contract's instruction or code is removed or inverted (targeted disposable mutation, restored byte for byte); it never weakens or loosens an assertion. Forbidden: skip/only/xfail, snapshot rewrites, coverage-threshold, CI, or line-cap edits. Non-test paths byte-identical to base after mutation restore.
   - Workers never push; the driver opens the PR; the human merges. Notify per the run's Notification policy (decision park, merge-ready, serious-risk hold); never progress.
   - Activation (later, per repo) records the repo and path allowlist, a finite budget, standing edit and PR-open authority, and passes the `automations.md` native canary. This run creates no automation.
 
@@ -46,17 +48,20 @@ Consumers:
 - A3 Improve's lens marks every declaration in scope and routes proven C/D to Implement as structure-preserving.
 - A4 Weekly prompt file exists, is repo-agnostic, and states every weekly rule above; docs/workflows.md explains activation. Prompt-contract checks cover: red/flaky baseline, overlap, open test-audit PR, and zero proven candidates each publish nothing; forbidden edits are listed. No automation is created; no claim of weekly runtime behavior before an activation canary.
 - A5 AGENTS.md gains the local prose-test rule: a prose-contract test of a semantic instruction must fail when the instruction is removed or inverted and survive rewording; exact prompt-byte or public-key contracts are exempt.
-- A6 Pilot on one boundary, `tests/workflows/improve.test.js` and its peers it duplicates: R/F/C/D marks for every declaration in scope, proven C/D removed, a unique prose or config contract and any ambiguous candidate shown retained, suite green before and after, ending at a reviewed merge-ready PR. Zero justified deletions is an acceptable result.
+- A6 Pilot on one boundary (done: R10/F11/C0/D0, no deletions), `tests/workflows/improve.test.js` and its peers it duplicates: R/F/C/D marks for every declaration in scope, proven C/D removed, a unique prose or config contract and any ambiguous candidate shown retained, suite green before and after, ending at a reviewed merge-ready PR. Zero justified deletions is an acceptable result.
+- A8 Pilot repairs the 11 F findings: each repaired test goes red on removal or inversion of its instruction and survives rewording (A5); suite green; ends at a reviewed merge-ready PR.
 - A7 New tests this run adds obey A5 and the gate: a few contract tests per PR, not one per bullet.
 
 ## Exclusions
 - No new skill, role, daemon, scheduler, or state; no Axstack-created automation (activation is later and per repo).
 - No deletion quota or score; no mutation-matrix tooling; no full campaign ledger.
-- F (weak-assertion repair) and test-only production-seam removal: reported, not changed, in the weekly run.
+- Test-only production-seam removal: reported, not changed, in the weekly run.
 - No changes to other repos in this run.
 
 ## Plan (PRs, stacked with gh stack; coherent batches, ~200 lines preferred)
 1. test-value reference + Implement and Review wiring (A1, A2 part, A7).
 2. Improve test-audit lens + AGENTS.md prose rule + docs (A2 rest, A3, A5).
-3. Pilot removal on `improve.test.js` boundary (A6).
+3. Pilot on the `improve` boundary (A6), then its F repairs (A8).
 4. Weekly prompt + activation docs, informed by the pilot (A4).
+
+
