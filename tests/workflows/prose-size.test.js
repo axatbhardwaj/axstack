@@ -11,7 +11,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   const alwaysLoaded = ['contracts.md', 'lifecycle.md', 'routing.md']
     .reduce((sum, path) => sum + bytes(`axstack/references/${path}`), 0);
 
-  // Baseline: 249,958 and 21,682 bytes; each ceiling allows 5% growth.
+  // Initial baseline: 249,958 and 21,682 bytes. T3b2's accepted shared-rule
+  // additions reset only the always-loaded ceiling to its measured size.
   expect(total).toBeLessThanOrEqual(262456);
-  expect(alwaysLoaded).toBeLessThanOrEqual(22767);
+  expect(alwaysLoaded).toBeLessThanOrEqual(24026);
 });

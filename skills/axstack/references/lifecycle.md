@@ -143,13 +143,17 @@ nothing without tested independent review.
 PRs merge by forge state; close out: (1) settle every worker
 terminal; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
-non-zero/requested, else `counts zero`; an unavailable auditor leaves close-out
-pending, never skipped silently; (4) release merged run worktrees and branches;
+non-zero/requested, else `counts zero`. If the base auditor is unlaunchable
+(preflight rejection, no Dispatch started), record `auditor: UNKNOWN
+(unlaunchable)` with the attempted route and error as the archive receipt;
+finish Close-out; no substitution. A launched auditor Dispatch must settle
+normally; (4) release merged run worktrees and branches;
 use `axstack-cleanup`, remove the run's own automations under
 [Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt or `counts zero`; automation, release, and ticket receipts; archive timestamp.
+receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; automation,
+release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.

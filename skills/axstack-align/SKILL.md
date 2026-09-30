@@ -131,9 +131,13 @@ Record the synthesis note (base, grafts and their source candidate, rejections,
 dropouts, judge verdicts per round) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
 [Orca runtime](../axstack/references/orca-runtime.md) immediately before the
-first candidate or judge dispatch. If any configured candidate or judge seat
-required for that round is unavailable at launch or returns a failed receipt,
-hold that question without substitution, record the gap, and ask: the user decides whether to proceed without it.
+first candidate or judge dispatch. If an optional Grok or Antigravity candidate
+fails to launch, fence it, record `absent (<reason>)`, name it once in the next
+read-back, and continue with available candidates without relay or substitution.
+A required adviser, candidate, or judge unavailable at launch or returning a
+failed receipt holds that question without substitution; record the gap and ask
+whether to proceed. In mixed fan-out retain at least one Codex and one Claude
+seat, or hold the affected question.
 For an uncertain dispatch, reconcile natively; it is never treated as absent.
 Unaffected fact work and questions continue.
 

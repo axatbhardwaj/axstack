@@ -34,7 +34,13 @@ This skill governs what that auditor reads, measures, and proposes.
 Dispatch `axstack-auditor` and `axstack-auditor-sol` independently on the same
 bounded brief, without cross-reading. The driver reconciles findings per claim;
 never average verdicts. Record an intentionally absent Sol seat and continue
-with the base auditor alone; a configured but unavailable seat holds its work.
+with the base auditor alone. `axstack-auditor-sol` is optional: if its launch
+fails, fence it, record `absent (<reason>)`, name it once in the next read-back,
+and continue with the base auditor without relay or substitution.
+If the base auditor is unlaunchable (preflight rejection, no Dispatch started),
+record `auditor: UNKNOWN (unlaunchable)` with the attempted route and error as
+the archive receipt; archive the run. A launched auditor Dispatch must settle
+normally. There is no substitution for the base auditor.
 The user-chosen improvement mode is a tested, independently reviewed PR that a
 human merges.
 

@@ -302,7 +302,9 @@ test('presets: research fans out through the Google web route', () => {
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
   expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);
-  expect(research).toMatch(/unconfigured or unavailable branch[^.]*absent[^.]*never substituted/i);
+  expect(research).toMatch(/unconfigured branch[^.]*intentionally absent/i);
+  expect(research).toMatch(/configured\s+optional branch that fails to launch is fenced, recorded `absent \(<reason>\)`/i);
+  expect(research).toMatch(/without relay or substitution/i);
 
   const mixed = readJson('profiles/presets/mixed.json').roles;
   const google = mixed.find(({ id }) => id === 'axstack-research-web-google');

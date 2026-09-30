@@ -17,6 +17,10 @@ Such a role holds only its work. Later installed or changed roles need an
 explicit user decision to enter the snapshot. Live profiles
 are authoritative at snapshot time and for availability; bundled presets are setup
 inputs, not runtime proof.
+The optional seats enumerated in [Role roster](role-roster.md) can be marked
+absent only after their failed launch is fenced and recorded; dispatch them
+when configured and available. Intentional `model: null` single-provider
+absences remain unchanged; `model: null` for a required seat still holds.
 For each role record class, resolved exact ID, source (catalog, transcript, or
 pin), and time. Codex classes resolve through
 `skills/axstack/scripts/resolve-models.js` with an explicit catalog
@@ -38,6 +42,11 @@ each rejected slug. Each retry keeps `--retry-of` lineage and the same class,
 provider, and effort. This is the sole exception to snapshot immutability;
 it grants no other model substitution.
 Timeout, quota, auth, and other failures hold; Claude rejection holds.
+For optional seats only, a launch failure, trust/login prompt, or prompt block
+records `absent (<reason>)` and permits the unaffected work to continue.
+Required seats hold without substitution. An uncertain Dispatch must be
+reconciled, never assumed absent. In mixed fan-out retain a Codex and a Claude
+seat; hold the affected fan-out if that cannot be met without substitution.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
 

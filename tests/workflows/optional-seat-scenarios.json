@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "note": "Input-only scenarios for independent Codex and Claude evaluation. Expected policy decisions are not live dispatch evidence.",
+  "cases": [
+    {
+      "id": "optional-present",
+      "input": { "preset": "mixed", "fanout": "code research", "solPair": "configured and launchable" },
+      "expected": { "action": "Dispatch Sonnet and Sol independently from the same brief", "forbidden": ["skip Sol", "substitute another role"] }
+    },
+    {
+      "id": "optional-absent",
+      "input": { "preset": "mixed", "fanout": "research", "googleSeat": "trust/login prompt", "otherSeats": "Sonnet code and Sol code launchable" },
+      "expected": { "action": "Fence Google attempt; record absent (trust/login prompt); name it once in next read-back; continue with Sonnet and Sol without relay", "forbidden": ["substitute Google", "drop Codex or Claude"] }
+    },
+    {
+      "id": "mixed-provider-loss",
+      "input": { "preset": "mixed", "fanout": "code research", "solPair": "launch failure", "otherCodexSeat": "none" },
+      "expected": { "status": "HOLD affected fan-out", "reason": "Mixed fan-out would have no Codex seat", "forbidden": ["substitute model", "claim mixed coverage"] }
+    },
+    {
+      "id": "required-adviser-outage",
+      "input": { "phase": "Align", "adviser": "Astra", "launch": "unavailable" },
+      "expected": { "status": "HOLD Align", "forbidden": ["mark adviser optional", "substitute provider"] }
+    },
+    {
+      "id": "required-fable-outage",
+      "input": { "phase": "high-stakes", "seat": "Fable", "launch": "unavailable" },
+      "expected": { "status": "HOLD decision", "forbidden": ["skip Fable", "substitute provider"] }
+    },
+    {
+      "id": "model-null-required",
+      "input": { "preset": "codex-only", "phase": "Align", "role": "axstack-advisor-opus", "model": null },
+      "expected": { "status": "HOLD Align", "forbidden": ["treat as optional absence", "substitute role"] }
+    },
+    {
+      "id": "auditor-unlaunchable",
+      "input": { "phase": "Close-out", "auditor": "preflight rejected", "dispatchStarted": false, "attemptedRoute": "claude/sonnet high", "error": "profile unavailable" },
+      "expected": { "action": "Archive with auditor: UNKNOWN (unlaunchable), attempted route and error", "forbidden": ["substitute auditor", "claim audit PASS"] }
+    },
+    {
+      "id": "auditor-launched",
+      "input": { "phase": "Close-out", "auditor": "Dispatch started then failed" },
+      "expected": { "status": "HOLD until launched Dispatch settles", "forbidden": ["use unlaunchable archive exception"] }
+    }
+  ]
+}

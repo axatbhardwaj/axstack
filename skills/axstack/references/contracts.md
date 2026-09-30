@@ -45,6 +45,11 @@ model rejection before the first turn: Codex may retry with `--retry-of` using
 the next eligible version in the same class, provider, and effort, recording
 the failed ID, error, and fallback ID. Claude rejection holds. Timeout, quota,
 and auth failures hold.
+The enumerated optional seats in [Role roster](role-roster.md) may be recorded
+absent after a fenced launch failure, trust/login prompt, or prompt block;
+continue the unaffected work without substitution or relay. Required adviser,
+judge, author, and reviewer seats still hold without substitution. A required
+`model: null` is a hold, not an optional absence.
 
 ## Driver and adviser split
 

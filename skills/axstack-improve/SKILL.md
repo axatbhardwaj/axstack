@@ -22,8 +22,9 @@ specialization materially helps; create no new profile.
 When dispatching `axstack-research-code`, dispatch `axstack-research-code-sol`
 independently on the same bounded brief without cross-reading. The driver
 reconciles findings per claim and never averages them. Record an intentionally
-absent Sol pair and proceed with the base seat alone; a configured but
-unavailable pair holds its work.
+absent Sol pair and proceed with the base seat alone. A configured optional
+Sol pair that fails to launch is fenced, recorded `absent (<reason>)`, and
+skipped without substitution; continue with the base seat.
 
 ## 1. Bound discovery
 
