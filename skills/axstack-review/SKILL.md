@@ -14,7 +14,8 @@ Manual review keeps the user’s chat and workspace open.
 
 Produce evidence-bound findings for an exact revision using the review count
 and model routing required by its mode. Report within the requested authority;
-the human merges PRs unless separately authorized otherwise.
+reviewers never merge. The chat-run driver alone may merge eligible integration
+PRs under the full predicate; the user merges peer PRs and deploying-base PRs.
 
 When the current session is a fresh review-manager session, load
 [Native PR managers](../axstack/references/automations.md) and follow only its
@@ -430,7 +431,9 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.
 
-The human merges by default. Review approval never supplies merge authority.
+Reviewers never merge. Their approval is one term of the chat-run driver's
+merge predicate, never merge authority by itself. The user merges peer PRs and
+PRs into deploying bases.
 
 ## Report-only scope
 

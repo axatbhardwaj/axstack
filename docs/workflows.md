@@ -69,7 +69,8 @@ starts later for each repository the user names.
    derives one boundary from test-audit PR history, skips open PRs, overlap with
    live Orca Run/worktree ownership, unsafe baselines or empty candidate sets,
    and opens at most one independently reviewed test-only PR per week through
-   the driver. Workers never push; the human merges.
+   the driver. Workers never push or merge. The user merges the weekly
+   test-audit PR, including one into an integration base; automations never merge.
 
 ## Role presets
 
@@ -220,8 +221,10 @@ One Orca execution host owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real
 dependencies, writer isolation, host capacity, and spending limits. Each PR has
 one theme and a measured size under the shared
-[PR-shape policy](../skills/axstack/references/pr-shape.md). The human merges
-by default; review approval never grants merge authority.
+[PR-shape policy](../skills/axstack/references/pr-shape.md). Only the chat-run
+driver holding the approved ticket map may auto-merge eligible integration PRs
+after human approval and the full predicate. The user merges peer PRs and PRs
+into deploying bases; review approval alone never grants merge authority.
 For the rationale band, the autonomous driver records a cohesion rationale. The exception band
 requires a reasonable split attempt and full exception record. These are
 autonomous driver choices; size alone never requires user approval.
@@ -260,14 +263,22 @@ read-only observer for standalone watches and never sends.
 
 For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
 continues from Align through the eligible phase sequence in the same chat.
-The human approves substantial specs, every merge including release PRs, and
-the npm stage. An open hold pauses the run. Implement arms maintain-mode watch
+The human approves substantial specs. For merges, team mode requires a counted
+forge review from a non-author collaborator with write, maintain, or admin
+permission; solo mode requires the user's chat reply naming the PR or stack
+after its merge card. Only the chat-run driver may auto-merge eligible integration
+PRs after approval and the full predicate; the user merges peer PRs and PRs into
+deploying bases.
+The current release path still requires the user to merge its release PR and
+approve the npm stage until the tag-only release change lands. Run-wide holds
+stop the run; a task, PR, resource, or operation hold blocks its affected
+dependencies. Implement arms maintain-mode watch
 at its first published PR; release and install run only under recorded per-run
 authority, and Close-out follows their verified receipts.
 
 Use `axstack-watch` chat-run mode to watch every PR raised by this chat's Run, including later verified publications and PRs the driver explicitly adopts. A harness-native monitoring or scheduled wake resumes the driver chat every 10 minutes by default; only when the harness has no such capability does the existing Orca `*/10` observer act as fallback. Record the chosen mechanism in the run record. Each wake runs the own-PR maintenance loop: address feedback, rebase on base movement, rerun required CI, and check the forge-counted human approval. Delegated work still runs through Orca; there is no daemon or polling model between wakes. Independent PRs can repair in parallel with one writer per PR; stack ancestor changes invalidate child evidence. An incomplete scan leaves readiness `UNKNOWN`.
 
-The watch lasts until all member PRs merge or close and the run's release step is settled or not applicable, you cancel it, or its wake expires. Stop and verify the chosen wake; an Orca fallback also needs automation disable/readback and workspace retirement. Worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require native receipts.
+The watch lasts until all member PRs merge or close and the run's release step is settled or not applicable, you cancel it, or its wake expires. Stop and verify the chosen wake; an Orca fallback also needs automation disable/readback and workspace retirement. Worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. Only the chat-run driver may auto-merge eligible integration PRs after the full predicate; the user merges peer PRs and PRs into deploying bases. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require native receipts.
 
 ## Optional native peer-review automation
 
@@ -310,7 +321,8 @@ cursor files, polling loop, or historical runtime fallback.
 
 The review manager uses one short packaged prompt that loads the current
 relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
-exact-head review verdicts; the human merges. Manual adopted-PR maintenance
+exact-head review verdicts; managers and workers never merge. The user merges
+PRs handled by this automation. Manual adopted-PR maintenance
 uses `axstack-watch` with local-SHA review before authorized publication.
 Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
 after the manager session ends, with an authorized deduplicated Telegram notification.

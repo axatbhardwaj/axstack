@@ -157,6 +157,8 @@ Routing: <preset + source + snapshot ref>
 Notification policy: <none | transport/target label/host/instructions path>
 Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>)
 Next: <owner; last receipt time; next action; hold or none>
+Approval mode: <solo | team; collaborator readback receipt>
+Deploying bases: <base -> integration | deploying; docs/workflow evidence>
 PR digest watermarks: <repo -> absolute path inside this private run record> | none
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>

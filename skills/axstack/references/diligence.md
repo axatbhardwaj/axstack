@@ -17,7 +17,7 @@ before user approval: flag anything dropped, added, or softened. For tickets,
 map every spec acceptance item to a capability's acceptance. Before candidate
 publication, compare the author receipt with its evidence folder: red/green
 logs exist, and counts, SHAs, and paths match. For release preparation, compare
-the release PR body with the merged PRs.
+the final PR's version bump with the merged PRs before its merge card.
 
 `FINDINGS` identifies a mismatch for the driver to resolve at the owning phase;
 it does not edit the artifact or create another review round by itself.

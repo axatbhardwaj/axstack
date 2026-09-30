@@ -250,9 +250,9 @@ private or local artifacts. Write the local HTML copy under the established
 `review-PR-<num>.html` reserved for `defi-com/monorepo`. Never publish a
 `COMMENT` review. An ambiguous submission is looked up before retry.
 
-No manager, coordinator, or worker may merge, close, force-push, rebase,
-restack, broaden scope, or mutate a PR branch. Human merge remains the
-boundary.
+No manager, automation coordinator, or worker may merge, close, force-push,
+rebase, restack, broaden scope, or mutate a PR branch. The user merges PRs
+handled by these roles; chat-run auto-merge authority never transfers to them.
 
 ## Exceptional decisions and notifications
 

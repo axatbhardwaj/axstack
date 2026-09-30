@@ -10,8 +10,8 @@ binding state and receipts to exact revisions.
 - Driver: current chat; owns scope, decisions, cross-PR dependencies,
   external-tracker mutations, integration.
 - Owner: driver owns loop PRs; `axstack-owner` only for standalone watch/review
-  without live driver. It may perform PR-scoped publication within user authority. Human
-  merge is default.
+  without live driver. It may perform PR-scoped publication within user authority.
+  Standalone owners never merge; the user merges their PRs.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
 - Reviewers: peer = two configured roles with the same brief and isolated first
@@ -111,6 +111,9 @@ identity. Respect settlement protection including `user_takeover`.
 Axstack creates no execution heartbeat or substitute scheduler. See
 [Review automation health](#review-automation-health).
 Tracking grants no merge, release, model-substitution, or scope authority.
+Only the chat-run driver holding the approved ticket map may auto-merge eligible
+run PRs into an integration base after the full merge predicate. The user merges
+peer PRs and PRs into deploying bases; managers, workers, and automations never merge.
 
 ## Deadline (one rule for every owned timer)
 
@@ -118,7 +121,8 @@ The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; the review automation has no task-owned
 deadline. Merge-ready requires applicable review receipt(s) and current diligence
 `PASS` at the exact head; CI/tests alone are insufficient. Merge-ready
-differs from merged; human merges.
+differs from merged. An eligible chat-run driver may merge only under the
+full predicate; otherwise the user merges.
 
 ## Review automation health
 

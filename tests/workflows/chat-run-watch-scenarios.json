@@ -40,12 +40,12 @@
     {
       "id": "human-approval-survives-repair",
       "input": "A human approved the driver's own PR, then requested a small fix. After the author repairs and replies, the forge still counts that approval; a second PR's approval was dismissed, and a third PR's rules require last-push approval.",
-      "expected": "For the first PR, resolve feedback and proceed to merge-ready when all other checks pass, without re-requesting the human approver. Hold the second and third PRs, tell the user why a fresh approval is required, and do not auto-request re-review. Initial requests on PRs with no human approval remain allowed; the human merges."
+      "expected": "For the first PR, resolve feedback and proceed to merge-ready when all other checks pass, without re-requesting the human approver. Hold the second and third PRs, tell the user why a fresh approval is required, and do not auto-request re-review. Initial requests on PRs with no human approval remain allowed; only the chat-run driver may auto-merge an eligible integration PR after the full predicate."
     },
     {
       "id": "maintenance-loop-until-ready",
       "input": "An authorized own PR has an approved human team member, unresolved review threads and failing CI. The author fixes feedback, the base advances twice, and CI initially fails again after a rebase; the forge keeps the human approval throughout.",
-      "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready for human merge without re-requesting that approval."
+      "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready without re-requesting that approval; only the chat-run driver may merge this eligible integration PR after the full merge predicate."
     },
     {
       "id": "harness-native-driver-wake",

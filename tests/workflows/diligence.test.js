@@ -43,8 +43,9 @@ test('diligence contract checks intent, claims, metadata and evidence without ed
   for (const term of [
     'read-only', 'PASS', 'FINDINGS', 'changed line', 'in scope', 'silently weakened',
     'PR body', 'commit messages', 'author receipt', 'numbers', 'IDs', 'versions',
-    'test counts', 'sizes', 'paths', 'stale references', 'release PR body', 'merged PRs',
+    'test counts', 'sizes', 'paths', 'stale references', 'merged PRs',
   ]) expect(rule).toContain(term);
+  expect(rule).toMatch(/For release preparation, compare the final PR's version bump with the merged PRs before its merge card\./);
   expect(rule).toMatch(/never (?:authors|edits)/);
 });
 
@@ -62,7 +63,7 @@ for (const [phase, path, rule] of [
   ['spec', 'skills/axstack-spec/SKILL.md', /Before user approval.*axstack-diligence.*draft against.*Align decisions/],
   ['tickets', 'skills/axstack-tickets/SKILL.md', /axstack-diligence.*every spec acceptance item.*capability's acceptance/],
   ['publication', 'skills/axstack/references/candidate-publication.md', /Before publication.*axstack-diligence.*author receipt.*evidence folder.*red\/green.*counts.*SHAs.*paths/],
-  ['release', 'skills/axstack/references/candidate-publication.md', /release PR.*axstack-diligence.*release PR body.*merged PRs.*before publication/],
+  ['release', 'skills/axstack/references/candidate-publication.md', /version-bump PR.*axstack-diligence.*bump.*merged PRs/],
 ]) {
   test(`${phase} runs diligence at its decision boundary`, () => {
     expect(compact(path)).toMatch(rule);

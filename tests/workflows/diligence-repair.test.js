@@ -40,7 +40,9 @@ test('diligence rejects stale receipts and binds PR evidence to head and base', 
 
 test('release check has its own linked paragraph', () => {
   const rule = read('skills/axstack/references/candidate-publication.md');
-  expect(rule).toMatch(/`ORCA worktree rm` after its receipt is recorded\.\n\nFor a release PR, dispatch `axstack-diligence` under\n\[Diligence\]\(diligence\.md\) to check the release PR body\nagainst the merged PRs before publication\./);
+  const paragraph = rule.split(/\n\s*\n/).find((part) => part.startsWith("Before the final version-bump PR's merge card"));
+  expect(paragraph).toMatch(/dispatch `axstack-diligence`\nunder \[Diligence\]\(diligence\.md\) to compare its bump with the merged PRs\./);
+  expect(paragraph).toMatch(/Review, diligence, and human approval then cover that same head\./);
 });
 
 test('publication returns diligence FINDINGS to the same author before publishing', () => {

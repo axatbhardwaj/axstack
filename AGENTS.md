@@ -15,7 +15,9 @@
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
 - Use `gh stack` for dependent PRs. Workers do not push, submit, merge, publish,
-  or release; the human merges by default, bottom-up for a stack.
+  or release. Only the chat-run driver may auto-merge approved run PRs into an
+  integration base after the full merge predicate; the user merges peer PRs and
+  PRs into deploying bases. Whole eligible stacks merge together.
 
 ## Engineering
 

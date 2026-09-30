@@ -34,6 +34,8 @@ Choose the applicable message type:
   and release. Progress, CI pending, and completion are never eligible merely
   because a policy exists. They never become proactive relay messages merely
   because the run is waiting.
+  A solo-repository merge card is a user-decision hold eligible under that
+  policy; relaying the card never counts as chat approval or merge authority.
 
 Verify the transport, execution host, and intended recipient from the user's
 request, trusted caller context, or an existing private notification policy.
