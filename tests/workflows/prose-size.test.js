@@ -11,8 +11,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   const alwaysLoaded = ['contracts.md', 'lifecycle.md', 'routing.md']
     .reduce((sum, path) => sum + bytes(`axstack/references/${path}`), 0);
 
-  // Initial baseline: 249,958 and 21,682 bytes. T3b2 loaded bytes: 23,361;
-  // 5% ceiling: 24,530; driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(262456);
+  // Aggregate baseline: 268,118 bytes on main; 273,308 with #245/#246; 2% headroom: 278,775.
+  // driver acceptance recorded in run 20260930-test-slop-audit.
+  // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
+  // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
+  expect(total).toBeLessThanOrEqual(278775);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
