@@ -114,10 +114,13 @@ test('a base move after final readback follows the guarded merge result', () => 
 
 test('merge decision scenarios remain input-only for independent evaluation', () => {
   const { cases } = JSON.parse(read('tests/workflows/merge-boundary-scenarios.json'));
-  expect(cases.length).toBeGreaterThanOrEqual(25);
-  for (const id of ['stack-two-member', 'stack-changed-head', 'stack-base-mismatch', 'stack-target-base-moved', 'stack-nonlinear', 'stack-partial', 'stack-probe-failed', 'stack-postmerge-mismatch', 'singleton-child-base', 'postmerge-push-fails', 'stack-existing-request', 'repository-auto-delete', 'merge-queue', 'stack-out-of-map-member', 'base-moves-after-preflight']) {
+  const originalIds = ['team-integration', 'solo-chat', 'marker-is-not-approval', 'read-only-approver', 'empty-check-set', 'skipped-required-job', 'stale-approval', 'veto-label', 'chat-hold', 'unknown-deploy-class', 'dependency-hold', 'deploying-and-peer', 'singleton-guard', 'wrong-actor', 'merge-commits-disabled'];
+  const newIds = ['stack-two-member', 'stack-changed-head', 'stack-base-mismatch', 'stack-target-base-moved', 'stack-nonlinear', 'stack-partial', 'stack-probe-failed', 'stack-postmerge-mismatch', 'singleton-child-base', 'postmerge-push-fails', 'stack-existing-request', 'repository-auto-delete', 'merge-queue', 'stack-out-of-map-member', 'base-moves-after-preflight'];
+  expect(cases).toHaveLength(30);
+  for (const id of [...originalIds, ...newIds]) {
     expect(cases.some((scenario) => scenario.id === id), `missing scenario: ${id}`).toBe(true);
   }
+  expect(cases.find((scenario) => scenario.id === 'postmerge-push-fails')?.input).toMatch(/\bdev\b/i);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(50);
     expect(scenario.expected).toBeUndefined();
