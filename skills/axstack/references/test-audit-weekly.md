@@ -51,8 +51,8 @@ Keep one writer and private revision-bound receipts; workers never push.
 Obtain independent review using Implement's configured authored-review roles and
 verify the exact candidate's checks before publication. The driver uses
 `gh stack` and opens at most one test-audit PR per week after independent review.
-Only the chat-run driver may auto-merge that PR into an integration base after
-the full predicate; the user merges it into a deploying base.
+The user merges the weekly test-audit PR, including one into an integration base.
+Automations and workers never merge.
 
 Notify only under the run's Notification policy: a decision park, merge-ready
 (within the run's milestone cap), or serious-risk hold; never progress or

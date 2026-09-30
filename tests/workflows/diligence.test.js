@@ -43,8 +43,9 @@ test('diligence contract checks intent, claims, metadata and evidence without ed
   for (const term of [
     'read-only', 'PASS', 'FINDINGS', 'changed line', 'in scope', 'silently weakened',
     'PR body', 'commit messages', 'author receipt', 'numbers', 'IDs', 'versions',
-    'test counts', 'sizes', 'paths', 'stale references', 'version bump', 'merged PRs',
+    'test counts', 'sizes', 'paths', 'stale references', 'merged PRs',
   ]) expect(rule).toContain(term);
+  expect(rule).toMatch(/For release preparation, compare the final PR's version bump with the merged PRs before its merge card\./);
   expect(rule).toMatch(/never (?:authors|edits)/);
 });
 

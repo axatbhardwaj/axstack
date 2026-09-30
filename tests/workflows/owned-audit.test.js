@@ -191,9 +191,10 @@ test('owned-audit: judgment separates outcome, adherence, and coverage', () => {
 test('owned-audit: proposals follow the bounded validation loop', () => {
   const text = readAudit();
   const lower = text.toLowerCase();
-  for (const marker of ['observed failure', 'inefficiency', 'root cause', 'counterevidence', 'bounded', 'hypothesized', 'regression scenario first', 'holdout', 'reviewed pr', 'merge predicate']) {
+  for (const marker of ['observed failure', 'inefficiency', 'root cause', 'counterevidence', 'bounded', 'hypothesized', 'regression scenario first', 'holdout', 'reviewed pr']) {
     expect(lower.includes(marker), `proposal loop must state ${marker}`).toBeTruthy();
   }
+  expect(text.replace(/\s+/g, ' ')).toMatch(/the authorized delivery path: the auditor suggests[^.]*same merge predicate[^.]*eligible self-improvement PRs; the user merges peer PRs and deploying-base PRs\./i);
   expect(/cost.*quality comparison|quality.*cost/i.test(text), 'cost/quality comparison when measured').toBeTruthy();
   expect(/auditor suggests/i.test(text), 'auditor suggests; driver arranges author and review').toBeTruthy();
 });

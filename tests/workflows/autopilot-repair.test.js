@@ -75,6 +75,8 @@ rule('only original driver advances', autopilot, 'Only the original driver advan
 rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
 rule('explicit stop after Align is honored', () => read('skills/axstack-align/SKILL.md'), 'an explicit stop-after-Align request', /ends here/);
 rule('workflow human gate remains human', () => read('docs/workflows.md'), 'For merges, team mode', /counted forge review from a non-author collaborator/);
+rule('current release keeps the human gates until T5', () => read('docs/workflows.md'), 'The current release path', /user.*merge.*release PR.*approve.*npm stage/);
+rule('run-wide hold stops the run', () => read('docs/workflows.md'), 'Run-wide holds', /stop the run/);
 rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);
 rule('routing substantial work advances', () => read('skills/axstack/references/routing.md'), 'Preparation: substantial work', /handoff path above, then continues under autopilot when eligible/);
 rule('workflow notifications have only bounded categories', () => read('docs/workflows.md'), 'An applicable `Notification policy`', /only for a user-decision hold.*serious-risk hold.*at most two merge-ready\/merged milestones per run/);

@@ -69,9 +69,8 @@ starts later for each repository the user names.
    derives one boundary from test-audit PR history, skips open PRs, overlap with
    live Orca Run/worktree ownership, unsafe baselines or empty candidate sets,
    and opens at most one independently reviewed test-only PR per week through
-   the driver. Workers never push or merge; only the chat-run driver may
-   auto-merge eligible integration PRs after the full predicate. The user merges
-   peer PRs and PRs into deploying bases.
+   the driver. Workers never push or merge. The user merges the weekly
+   test-audit PR, including one into an integration base; automations never merge.
 
 ## Role presets
 
@@ -270,7 +269,10 @@ permission; solo mode requires the user's chat reply naming the PR or stack
 after its merge card. Only the chat-run driver may auto-merge eligible integration
 PRs after approval and the full predicate; the user merges peer PRs and PRs into
 deploying bases.
-A hold blocks its affected dependencies. Implement arms maintain-mode watch
+The current release path still requires the user to merge its release PR and
+approve the npm stage until the tag-only release change lands. Run-wide holds
+stop the run; a task, PR, resource, or operation hold blocks its affected
+dependencies. Implement arms maintain-mode watch
 at its first published PR; release and install run only under recorded per-run
 authority, and Close-out follows their verified receipts.
 
