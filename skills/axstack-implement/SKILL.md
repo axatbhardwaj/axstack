@@ -252,11 +252,20 @@ map (run-created or explicitly adopted into it) when they target an
 full predicate; an approval alone never grants merge authority. A peer PR or
 `deploying` base waits for the user to merge, in either approval mode. A
 manager, worker, reviewer, automation, or standalone watch must never merge.
-Use `gh pr merge <n> --merge --match-head-commit <sha> --delete-branch` only
-after the driver re-reads every predicate term and confirms merge commits are
-allowed. A singleton gets one guarded merge. Stack members merge bottom-up only
-under watch §5's retarget rule; until that rule is established, hold the stack
-for the user. The driver resumes on the user's next message, `/axstack-watch`,
+Re-read every predicate term under watch §5 before merging. Confirm merge
+commits are allowed, `delete_branch_on_merge` is false, and the base has no
+merge queue; otherwise hold for the user. For a singleton, use
+`gh pr merge <n> --merge --match-head-commit <sha>` and add `--delete-branch`
+only when no open PR uses its branch as base. For a native `gh stack`, merge
+only the whole stack through `merge-async`: pass the top reviewed head as `sha`,
+`merge_method: merge`, and `merge_action: direct_merge`, then poll its UUID.
+Reconcile HTTP 200 or 409 against the intended request, verify every merged
+member's actual head equals its reviewed head and is an ancestor of the merge
+result, and hold unknown or failed outcomes; watch §5 owns the detailed rule.
+Never retarget, delete a stack branch, or rebase a reviewed stack member for
+merging. A failing push run on the target base after an automated merge holds
+further automated merges run-wide. The driver resumes on the user's next
+message, `/axstack-watch`,
 or the armed chat-run watch wake; no Orca merge wake exists today.
 Re-read forge state: record forge-merged PRs as `merged`;
 changed heads or feedback return to step 1; retain useful author work before Close-out.
