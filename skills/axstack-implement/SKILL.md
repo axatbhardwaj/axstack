@@ -15,8 +15,8 @@ At author dispatch, apply [Readable sidebar](../axstack/references/workspace-hyg
 
 From an accepted scope identity, drive its task/PR map through author -> review
 -> repair until every required PR is merge-ready or held. Keep exact revisions,
-strict TDD evidence, ownership, and unverified boundaries explicit. The human
-merges; the same run later reconciles those merges and closes out.
+strict TDD evidence, ownership, and unverified boundaries explicit. The same
+run later reconciles merges and closes out.
 
 ## 1. Admit the work
 
@@ -235,9 +235,18 @@ Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
 
-Merge-ready is the human boundary: the user merges, bottom-up for a stack. The
-driver resumes on the user's next message, `/axstack-watch`, or the armed
-chat-run watch wake; no Orca merge wake exists today.
+Merge-ready opens the merge boundary. Only the chat-run driver holding the
+approved ticket map is the merge actor for run-created or explicitly adopted
+own PRs into an `integration` base. Apply `axstack-watch` §5's merge card and
+full predicate; an approval alone never grants merge authority. A peer PR or
+`deploying` base waits for the user to merge, in either approval mode. A
+manager, worker, reviewer, automation, or standalone watch must never merge.
+Use `gh pr merge <n> --merge --match-head-commit <sha> --delete-branch` only
+after the driver re-reads every predicate term and confirms merge commits are
+allowed. A singleton gets one guarded merge. Stack members merge bottom-up only
+under watch §5's retarget rule; until that rule is established, hold the stack
+for the user. The driver resumes on the user's next message, `/axstack-watch`,
+or the armed chat-run watch wake; no Orca merge wake exists today.
 Re-read forge state: record forge-merged PRs as `merged`;
 changed heads or feedback return to step 1; retain useful author work before Close-out.
 Run Close-out once only after every required PR is forge-merged, the run's
