@@ -20,7 +20,10 @@ Direct routes need no spec ceremony:
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement
-  candidates without editing code.
+  candidates without editing code. Its test-audit lens marks every declaration
+  in one owner boundary R/F/C/D, reports reviewed and eligible counts, and routes
+  authorized, proven cleanup to Implement as structure-preserving work through
+  independent review.
 - Manual `axstack-review` can inspect existing code at an exact revision within
   a named scope. Both configured peer reviewers inspect six lenses independently;
   the driver reports validated defects and risks, improvement opportunities,
@@ -166,7 +169,10 @@ session and evidence remain valid.
   new-green. One author writes and returns a local receipt without pushing. The
   owner reconciles it, publishes the unchanged commits through `gh stack`, and
   confirms the remote SHA before review. Local green and CI green remain
-  separate evidence.
+  separate evidence. Authors apply the shared
+  [test-value gate](../skills/axstack/references/test-value.md) to each new or
+  changed test; reviewers check added, changed, and removed test hunks, including
+  the named keepers or vacuity/obsolescence evidence for removals.
 - `axstack-review` gives peer PRs two isolated same-brief reviewers and authored
   PRs one eligible cross-family/preset-mapped reviewer. Every reviewer runs in
   a separate candidate-child worktree, with private evidence preserved before

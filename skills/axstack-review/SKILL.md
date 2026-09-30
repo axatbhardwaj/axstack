@@ -266,7 +266,8 @@ This section applies to peer and authored PR modes.
 
    Under the existing angles, check added, changed, and removed test hunks
    against [Test value](../axstack/references/test-value.md). For removed tests,
-   inspect the named keepers. Peer mode remains report-only.
+   inspect the named keepers. Removing a test without a named keeper or
+   vacuity/obsolescence evidence is a finding. Peer mode remains report-only.
 
    Under angle 6, verify the recorded shape against the pinned head and base.
    A mismatch between the recorded and measured total is a finding. Apply the

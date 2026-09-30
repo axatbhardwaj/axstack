@@ -42,6 +42,19 @@ unavailable pair holds its work.
 4. Apply KISS, YAGNI, and SOLID as judgment, not a mandatory scorecard. Use no
    invented metrics and no arbitrary complexity targets.
 
+### Test-audit lens
+
+For a test audit, load [Test value](../axstack/references/test-value.md) and
+bound scope to one owner boundary. Mark every test declaration in scope
+R/F/C/D as a completeness floor, not a deletion quota; zero candidates is valid.
+Report reviewed and eligible counts. Each C/D carries the reference's evidence:
+exact test name and location, detectable failure, named keeper or
+vacuity/obsolescence proof, and validation command. Require its deletion proof
+before routing candidates. Report F and test-only production seams; do not
+change them. Only explicitly authorized, proven C/D batches route to
+`axstack-implement` as explicitly structure-preserving work: same-check green
+before/after, through its normal independent review. Discovery remains report-only.
+
 ## 2. Return decision evidence
 
 Produce a small ranked candidate set. For each candidate include:

@@ -28,6 +28,9 @@
 - Run tests with `bun:test`. Keep installer tests under `tests/installer/` and
   workflow tests under `tests/workflows/`; prose-contract tests may read skill
   Markdown directly.
+- A prose-contract test of a semantic instruction must fail when the instruction
+  is removed or inverted and survive rewording; exact prompt-byte or public-key
+  contracts are exempt.
 - Never edit live home configuration during development. Use temporary homes
   and fixtures.
 - Keep coherent commits around 200 lines when practical and use semantic
