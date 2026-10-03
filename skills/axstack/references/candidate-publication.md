@@ -37,14 +37,19 @@ Any author repair creates a new revision and repeats this boundary.
 
 ## Immutable checkout shape
 
-The immutable checkout is an Orca worktree of the already-registered repo:
-`ORCA worktree create --repo id:<repoId> --name review-<pr>-<sha7> --json`,
-then `git checkout --detach <candidate SHA>` inside it. Never materialize it
-as a `git clone` into a temp directory followed by `orca repo add`; each
-`repo add` registers a duplicate top-level repo and leaves a stale record once
-the directory is gone. Release preparation uses a `release/<version>` worktree
-of the same registered repo the same way. Release the checkout with
-`ORCA worktree rm` after its receipt is recorded.
+The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.
+Follow [T3 runtime](t3-runtime.md) for async `delegate_task` and exact attempt
+identity. The checkout is disposable, made from the existing repository; never
+register a duplicate repository or replace it with a movable branch checkout.
+Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.
+Snapshot driver HEAD and full status, including untracked entries, before dispatch.
+After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.
+Each peer reviewer has a separate checkout and evidence folder with no first-pass
+cross-read. Later review gets a fresh checkout.
+Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force.
+Verify Git worktree absence under [Workspace hygiene](workspace-hygiene.md);
+reviewer retirement preserves the separate author candidate until merge or closure.
+Release checks use the same driver-made SHA-pinned detached-checkout procedure.
 
 For a release PR, dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the release PR body

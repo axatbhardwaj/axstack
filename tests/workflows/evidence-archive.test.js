@@ -458,14 +458,13 @@ exec "${Bun.which('git')}" "$@"
   expect(existsSync(archive.manifestPath)).toBe(true);
 });
 
-test('native retirement closes setup shells before exit proof and removes only verified evidence', () => {
+test('T3 retirement archives metadata separately and removes only verified evidence', () => {
   const contract = readFileSync(CONTRACT, 'utf8');
-  expect(contract).toMatch(/unused\s+setup shell[^.]*exact-terminal close[^.]*re-list[^.]*exit/i);
+  expect(contract).toMatch(/terminal run evidence[^.]*read back[^.]*before thread archival/i);
+  expect(contract).toContain('`t3_thread_organize` archive');
   expect(contract).toMatch(/--operation retire --manifest-hash/);
   expect(contract).toMatch(/removed[^.]*alreadyAbsent[^.]*pending/);
   expect(contract).toMatch(/never replace[^.]*shell loop[^.]*broad deletion/i);
-  expect(contract).toMatch(/Archive Script[^.]*provenance/i);
-  expect(contract).toMatch(/unknown hook[^.]*provenance is not trusted[^.]*holds/i);
-  for (const outcome of ['unconfigured', 'passed', 'failed', 'unknown']) expect(contract).toContain(`\`${outcome}\``);
-  expect(contract).toMatch(/native worktree cleanup/i);
+  expect(contract).toMatch(/git worktree remove <path>[^.]*without force/);
+  expect(contract).toContain('git worktree list --porcelain');
 });
