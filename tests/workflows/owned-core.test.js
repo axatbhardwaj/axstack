@@ -50,7 +50,7 @@ function skill(name) {
 // structural checks; behavioral evidence comes from scenario evaluation).
 
 test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
-  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
+  for (const ref of ['t3-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,

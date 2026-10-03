@@ -50,20 +50,21 @@ test('tracking scenarios retain thirteen explicit decision boundaries', () => {
 
 test('execution binds the T3 driver thread and one authoritative dispatch attempt', () => {
   const implement = normalize(read('skills/axstack-implement/SKILL.md'));
-  const runtime = normalize(read('skills/axstack/references/orca-runtime.md'));
+  const runtime = normalize(read('skills/axstack/references/t3-runtime.md'));
   expect(implement).toMatch(/T3 driver thread[^.]*one authoritative[^.]*dispatch attempt/i);
-  expect(runtime).toMatch(/exactly one Dispatch[^.]*write[^.]*candidate/i);
-  expect(runtime).toMatch(/input_accepted[^.]*only[^.]*terminal/i);
-  expect(runtime).toMatch(/turn_started[^.]*inspection/i);
-  expect(runtime).toMatch(/trust[^.]*prompt[^.]*never answer|never answer[^.]*trust/i);
+  expect(runtime).toContain("The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked files or repairs an author's source.");
+  expect(runtime).toContain('Input acceptance, started state, effective settings and completed work must remain distinct evidence.');
+  expect(runtime).toContain('Never answer trust or permission prompts; brief confirmation adds no authority and does not answer a harness or tool dialog.');
 });
 
 test('delivery and recovery preserve runtime identity and ownership', () => {
-  const runtime = normalize(read('skills/axstack/references/orca-runtime.md'));
-  expect(runtime).toMatch(/older Dispatch[^.]*never completes[^.]*newer Dispatch/i);
-  expect(runtime).toMatch(/consumer_fenced[^.]*stop consuming/i);
-  expect(runtime).toMatch(/user_takeover[^.]*retention/i);
-  expect(runtime).toMatch(/same author[^.]*session[^.]*evidence/i);
+  const runtime = normalize(read('skills/axstack/references/t3-runtime.md'));
+  for (const pin of [
+    'An older attempt never completes a newer one; stale or duplicate receipts remain evidence, deduplicated by runtime identity.',
+    'On a T3 `threadId/runId` mismatch the driver must stop consuming and reconcile the recorded driver identity with native state; never forge a sender or borrow an identity to bypass the mismatch.',
+    'The driver must retain a user-taken-over T3 thread; never send cleanup commands to it, including `t3_thread_organize` settle or archive.',
+    'A repair must use `t3_thread_send(writerThreadId, mode:queue)` to the same author in the same attempt and worktree; pin the new candidate revision.',
+  ]) expect(runtime).toContain(pin);
 });
 
 test('review automation and manual watch boundaries remain explicit', () => {

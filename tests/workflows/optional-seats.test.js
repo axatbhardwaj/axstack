@@ -66,28 +66,22 @@ test('unlaunchable base auditor archives UNKNOWN with route and error', () => {
   }
 });
 
-test('runtime launch hold defers to shared optional-seat and auditor exceptions', () => {
-  const runtime = read('skills/axstack/references/orca-runtime.md');
-  const launchRule = runtime.split('An unsupported or')[1]?.split('The single-provider')[0];
-  expect(launchRule).toMatch(/unavailable value holds affected work/i);
-  expect(launchRule).toMatch(/optional-seat[^.]*base-auditor[^.]*\[Model discipline\]\(contracts\.md#model-discipline\)/i);
+test('runtime holds preserve intentional absences and shared optional-seat exceptions', () => {
+  const runtime = read('skills/axstack/references/t3-runtime.md');
+  expect(runtime).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
+  expect(runtime).toContain('Intentional absent seats remain recorded absences; availability is runtime proof.');
+  expect(read('skills/axstack/references/routing.md')).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
 });
 
 test('null-model role binds a catalog ID while intentional single-provider seats remain absent', () => {
-  const runtime = read('skills/axstack/references/orca-runtime.md');
-  const concepts = [/Grok/i, /Antigravity/i, /model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /record/i, /exact/i, /ID|identifier/i];
-  const rule = sentences(runtime).find((sentence) => requires(sentence, ...concepts));
-  expect(requires(runtime, ...concepts)).toBe(true);
-  expect(requires(sentences(runtime).filter((sentence) => sentence !== rule).join('. '), ...concepts)).toBe(false);
-  expect(requires(`Do not ${rule}`, ...concepts)).toBe(false);
-  expect(requires('For Grok and Antigravity roles with model:null lacking a class, record the exact identifier from the first listed model in saved capabilities.', ...concepts)).toBe(true);
-  expect(runtime).toMatch(/single-provider[^.]*null adviser[^.]*intentional installation data/i);
-  expect(runtime).toMatch(/null adviser[^.]*holds those phases/i);
+  const runtime = read('skills/axstack/references/t3-runtime.md');
+  expect(runtime).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
+  expect(runtime).toContain('For codex or claude, a role lacking both model and class is an intentional absence and must hold; never use a provider default for that role.');
 });
 
 test('Codex and Claude missing model and class explicitly hold as intentional absences', () => {
-  const concepts = [/Codex/i, /Claude/i, /neither|missing/i, /model/i, /class/i, /intentional/i, /absen/i, /hold/i];
-  for (const path of ['orca-runtime.md', 'routing.md']) {
+  const concepts = [/Codex/i, /Claude/i, /neither|missing|lacking/i, /model/i, /class/i, /intentional/i, /absen/i, /hold/i];
+  for (const path of ['t3-runtime.md', 'routing.md']) {
     const text = read(`skills/axstack/references/${path}`);
     const matches = sentences(text).filter((sentence) => requires(sentence, ...concepts));
     expect(matches, path).toHaveLength(1);

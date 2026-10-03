@@ -13,18 +13,12 @@ test('run snapshot records class resolution and reuses it on resume', () => {
   expect(routing).toMatch(/provider\/model class/i);
 });
 
-test('pre-turn Codex rejection alone amends the routing snapshot with retry lineage', () => {
+test('T3 rejection preserves the routing snapshot without an automatic retry', () => {
   const routing = compact('skills/axstack/references/routing.md');
-  const runtime = compact('skills/axstack/references/orca-runtime.md');
-  for (const text of [runtime]) {
-    expect(text).toMatch(/pre-turn Codex rejection[^.]*amend[^.]*routing snapshot/i);
-    expect(text).toMatch(/--exclude[^.]*rejected slug/i);
-    expect(text).toMatch(/--retry-of[^.]*lineage/i);
-    expect(text).toMatch(/same class[^.]*provider[^.]*effort/i);
-    expect(text).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
-  }
+  const runtime = compact('skills/axstack/references/t3-runtime.md');
+  expect(runtime).toContain('Auth, quota, timeout and rejection do not select an alternative.');
   expect(routing).toContain('changes require the user’s explicit decision');
-  expect(routing).not.toMatch(/--retry-of|--exclude/);
+  for (const text of [routing, runtime]) expect(text).not.toMatch(/--retry-of|--exclude/);
 });
 
 const modelRules = [
@@ -90,24 +84,19 @@ for (const { name, path, concepts } of modelRules.filter(({ name }) => name in h
   });
 }
 
-test('only explicit pre-turn Codex model rejection permits recorded within-class retry', () => {
+test('T3 model rejection holds without automatic within-class substitution', () => {
   for (const path of [
     'skills/axstack/references/contracts.md',
     'skills/axstack/references/routing.md',
-    'skills/axstack/references/orca-runtime.md',
+    'skills/axstack/references/t3-runtime.md',
     'skills/axstack-review/SKILL.md',
   ]) {
     const text = compact(path);
-    if (!path.endsWith('/orca-runtime.md')) {
-      expect(text, path).toMatch(/rejection[^.]*hold/i);
-      expect(text, path).not.toMatch(/--retry-of/);
-      continue;
-    }
-    expect(text, path).toMatch(/explicit model rejection[^.]*before[^.]*first turn/i);
-    expect(text, path).toMatch(/--retry-of/);
-    expect(text, path).toMatch(/same class[^.]*provider[^.]*effort/i);
-    expect(text, path).toMatch(/Claude rejection[^.]*hold/i);
-    expect(text, path).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
+    if (path.endsWith('/t3-runtime.md')) {
+      expect(text).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
+      expect(text).toContain('Auth, quota, timeout and rejection do not select an alternative.');
+    } else expect(text, path).toMatch(/rejection[^.]*hold/i);
+    expect(text, path).not.toMatch(/--retry-of/);
   }
   for (const path of ['docs/installation.md', 'docs/workflows.md']) {
     expect(compact(path), path).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);

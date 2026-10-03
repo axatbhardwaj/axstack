@@ -106,11 +106,11 @@ test('manager and watch sweep boundaries follow T3 hygiene', () => {
 test('retained entry points preserve routing and safe-deletion links', () => {
   expect(read('skills/axstack-cleanup/SKILL.md')).toContain('workspace-hygiene.md');
   expect(read('skills/axstack/references/routing.md')).toContain('Choose a route; load only the phase and references needed next.');
-  expect(read('skills/axstack/references/orca-runtime.md')).toContain('workspace-hygiene.md');
+  expect(read('skills/axstack/references/t3-runtime.md')).toContain('workspace-hygiene.md');
   for (const phase of ['align', 'audit', 'debug', 'explain', 'implement', 'improve', 'research', 'review', 'spec', 'tickets', 'watch']) {
     expect(read(`skills/axstack-${phase}/SKILL.md`)).toMatch(/driver entry[^;]*workspace-hygiene\.md/i);
   }
-  for (const path of ['skills/axstack/references/orca-runtime.md', 'skills/axstack-implement/SKILL.md', 'skills/axstack-review/SKILL.md', 'skills/axstack/references/automations.md']) {
+  for (const path of ['skills/axstack/references/t3-runtime.md', 'skills/axstack-implement/SKILL.md', 'skills/axstack-review/SKILL.md', 'skills/axstack/references/automations.md']) {
     expect(read(path), path).toContain('workspace-hygiene.md#safe-deletion');
   }
 });

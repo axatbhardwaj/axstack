@@ -410,3 +410,53 @@ test('T3 dispatch binds either scope identity and its evidence to the dispatch k
   expect(bindsScope('The brief, authority, role snapshot, candidate and base are bound to the dispatch key alongside the approved spec or small-change intent.')).toBe(true);
   expect(bindsScope(instruction.replace('binds', 'does not bind'))).toBe(false);
 });
+
+// Surviving workflow checks from the retired runtime suite. These verify
+// shipped contracts and packaging, rather than live runtime compliance.
+for (const [path, pin] of [
+  ['skills/axstack-spec/SKILL.md', 'For missing Linear access through the executor MCP, record its guide/help evidence, hold only that operation, and stop this phase without mutation or store switch; the selected document remains authoritative.'],
+  ['skills/axstack-tickets/SKILL.md', 'When the pinned spec requires a document read, verify that operation separately; missing access holds the affected operation without mutation or store switch.'],
+]) test(`T3 workflow safety: Linear access in ${path}`, () => {
+  expect(normalize(read(path))).toContain(pin);
+});
+
+test('T3 review placement retains the checkout and private evidence receipt interface', () => {
+  const review = read('skills/axstack-review/SKILL.md');
+  expect(review).toContain('t3-runtime.md#role-dispatch-by-permitted-writes');
+  expect(review).toContain('Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>');
+  expect(review).toContain('Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)');
+});
+
+// Review isolation/readback, publication authority, readiness, current-attempt
+// completion and ownership already have exact pins or instruction checks above.
+test('preset bundles retain three role tables in the frozen container', () => {
+  const names = ['mixed', 'codex-only', 'claude-only'];
+  const expectedIds = JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id);
+  for (const name of names) {
+    const data = JSON.parse(read(`profiles/presets/${name}.json`));
+    expect(Object.keys(data)).toEqual(['version', 'roles']);
+    expect(data.version).toBe(1);
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(expectedIds.length);
+  }
+  const mixed = JSON.parse(read('profiles/presets/mixed.json'));
+  expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();
+});
+
+test('public guidance distinguishes active Orca from historical Paseo state', () => {
+  const docs = [read('README.md'), read('docs/installation.md'), read('docs/workflows.md')].join('\n');
+  expect(docs).toMatch(/Orca[^.]*only supported(?: active)? runtime|only supported(?: active)? runtime[^.]*Orca/i);
+  expect(docs).toMatch(/historical[^.]*Paseo|Paseo[^.]*historical/i);
+  expect(docs).toMatch(/compatib[^.]*unverified|unverified[^.]*compatib/i);
+  expect(docs).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);
+});
+
+test('Telegram requires recorded authority and keeps routine events in the driver thread', () => {
+  const relay = normalize(read('skills/axstack-relay/SKILL.md'));
+  for (const pin of [
+    'an explicit standing instruction to contact the user via Telegram authorizes proactive outreach for a credible serious risk immediately, or for a genuine blocked operation that still needs user intervention after bounded safe recovery.',
+    'questions, spec approvals, progress, CI pending, merge-ready, merged, and completion stay in the driver conversation unless the recorded Notification policy names it.',
+    'A policy may name only user-decision holds and at most two merge-ready/merged milestones per run; deduplicate across implementation and release.',
+    'Progress, CI pending, and completion are never eligible merely because a policy exists.',
+  ]) expect(relay).toContain(pin);
+});

@@ -128,7 +128,7 @@ and auth failures hold.
 ## Orca runtime boundary
 
 Immediately before dispatch, delivery processing, settlement, recovery, or
-handoff, load the shared `skills/axstack/references/orca-runtime.md`. It resolves
+handoff, load the shared `skills/axstack/references/t3-runtime.md`. It resolves
 one Orca executable, then loads only the version-matched guide needed by the
 operation: `orchestration` for Run/Task/Dispatch supervision, `orca-cli` for
 worktrees, automations, handoff, and publication, and `orca-linear` for Linear

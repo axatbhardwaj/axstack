@@ -151,7 +151,7 @@ test('structural: standalone phases explicitly load shared references', () => {
       `${name}: must explicitly load shared axstack reference(s)`,
     ).toBeTruthy();
   }
-  for (const ref of ['orca-runtime.md', 'contracts.md']) {
+  for (const ref of ['t3-runtime.md', 'contracts.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -300,14 +300,12 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
   expect(plan).toMatch(/\*\*Historical:\*\*/);
 });
 
-test('structural: runtime reference delegates to version-matched Orca guides', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/resolve one Orca executable/i);
-  expect(text).toContain('skills get orchestration --json');
-  expect(text).toContain('skills get orca-cli --json');
-  expect(text).toMatch(/returned schemas[^.]*rather than[^.]*copying/i);
-  expect(text).toMatch(/Run[^.]*Task[^.]*Dispatch/i);
-  expect(text).toMatch(/preserve[^.]*Task[^.]*Dispatch[^.]*terminal[^.]*agent[^.]*worktree/i);
+test('structural: runtime reference uses the advertised T3 schema and native identities', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 't3-runtime.md'), 'utf8');
+  expect(requires(text, /driver/i, /T3 thread/i, /save/i, /orchestrator_capabilities/i, /JSON/i, /advertised tool schema/i)).toBe(true);
+  for (const identity of ['taskId/childThreadId/childRunId', 'threadId/runId/worktree/branch/base SHA']) {
+    expect(text).toContain(identity);
+  }
 });
 
 test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
@@ -339,13 +337,13 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
 });
 
 test('structural: runtime reference treats installed role snapshot as authoritative', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
-  expect(text).toMatch(/bundled[^.]*setup inputs/i);
-  expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
-  expect(requires(text, /model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /exact/i, /ID/i)).toBe(true);
-  expect(requires(text, /unavailable models/i, /unsupported effort/i, /holds resolution/i, /without substitution/i)).toBe(true);
-  expect(text).toMatch(/reconcile existing attempts first/i);
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 't3-runtime.md'), 'utf8');
+  expect(requires(text, /installed/i, /skills\/axstack\/roles.json/i, /snapshot/i, /preset/i, /stable role IDs/i)).toBe(true);
+  expect(text).toContain('Bundled presets are setup inputs.');
+  const normalized = text.replace(/\s+/g, ' ');
+  expect(normalized).toContain("Resume preserves that snapshot with no re-resolution; changes require the user's explicit decision.");
+  expect(normalized).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
+  expect(normalized).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
 });
 
 test('structural: contracts carry dual-adviser consultation without a driver profile', () => {
