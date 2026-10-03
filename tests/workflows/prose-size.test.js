@@ -13,8 +13,11 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
 
   // Aggregate baseline: 268,118 bytes on main; 273,308 with #245/#246; 2% headroom: 278,775.
   // driver acceptance recorded in run 20260930-test-slop-audit.
+  // driver acceptance in run 20261003-t3code-migration (T1;
+  // T5b lowers it after orca-runtime.md is deleted).
+  // Additive T3 reference: 12,810 bytes; preserve the existing aggregate headroom.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(278775);
+  expect(total).toBeLessThanOrEqual(291585);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

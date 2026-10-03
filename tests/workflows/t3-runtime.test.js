@@ -6,9 +6,10 @@ const runtime = () => read('skills/axstack/references/t3-runtime.md');
 const blocks = (text) => text.split(/\n\s*\n/).map((part) => part.replace(/[`*]/g, '').replace(/\s+/g, ' ').trim());
 // Each contract is local to one paragraph/table: scattered vocabulary cannot
 // satisfy it. These prove prose instructions, not live T3 compliance.
-const satisfies = (block, patterns) => /\bmust\b/i.test(block)
-  && !/\b(?:must not|need not|optional|may instead)\b/i.test(block)
+const satisfies = (block, patterns) => /\b(?:must|shall|require(?:d|s)?)\b/i.test(block)
+  && !/\b(?:must not|shall not|not required|need not|optional|may instead)\b/i.test(block)
   && patterns.every((pattern) => new RegExp(pattern, 'i').test(block));
+const invert = (text) => text.replace(/\b(?:must|shall|require(?:d|s)?)\b/gi, 'need not');
 
 // Independent paraphrases exercise meaning while API identifiers stay exact.
 const rules = [
@@ -70,7 +71,7 @@ const rules = [
     'After each delegated completion the driver must verify HEAD and git status --porcelain are unchanged; any change is a hold.'],
   ['launch recovery inventory', ['t3_thread_list', 'titleContains', 'fully paginated', 'exact whole.title', 'git worktree list', 'reserved branch'],
     'Launch recovery must combine fully paginated t3_thread_list titleContains results filtered by exact whole-title equality with git worktree list and keep the reserved branch.'],
-  ['launch recovery outcomes', ['one exact match.*adopt', 'proven absence.*relaunch once', 'several.*incomplete.*hold'],
+  ['launch recovery outcomes', ['one exact match.*adopt|adopt.*one exact match', 'proven absence.*relaunch once|relaunch once.*proven absence', 'several.*incomplete.*hold|hold.*several.*incomplete'],
     'Recovery must adopt one exact match, relaunch once on proven absence, and hold for several matches or an incomplete inventory.'],
   ['post-launch wait', ['post.launch', 't3_thread_wait', 'timeoutMs:120000', 'failed.*launch failure', 'timed.out', 'activeRunId', 'worktreePath', 'started', 'preparing.*hold', 'next wake'],
     'Post-launch t3_thread_wait with timeoutMs:120000 must classify failed as launch failure, timed-out activeRunId plus worktreePath as started, and still preparing as a hold re-read at the next wake.'],
@@ -104,6 +105,10 @@ const rules = [
     'Input acceptance, started and completed must remain distinct evidence; silence never proves exit and resume preserves the same owner.'],
   ['ownership transfer', ['explicit.*transfer', 'recipient acceptance', 'scope', 'revision', 'authority', 'before.*ownership', 'current owner'],
     'An explicit transfer must validate recipient acceptance against scope, revision and authority before ownership changes; until then the current owner remains accountable.'],
+  ['authority fence', ['authority fence', 'stop.*consum', 'reconcile.*coordinator', 'never.*forge.*sender', 'borrow.*identity', 'partial.*acknowledg'],
+    'At an authority fence the driver must stop consuming and reconcile the coordinator; never forge a sender, borrow an identity or partially acknowledge delivery.'],
+  ['user takeover retention', ['user takeover', 'retain', 'never.*release.*reuse.*command'],
+    'After user takeover the driver must retain the session and never release, reuse or send cleanup commands to it.'],
   ['native runtime boundary', ['no Axstack daemon', 'DB', 'lock', 'scheduler', 'private evidence', 'explicit publication authority', 'no merge.*release.*authority'],
     'The runtime must provide no Axstack daemon, DB, lock or scheduler; private evidence needs explicit publication authority and receipts grant no merge or release authority.'],
 ];
@@ -115,10 +120,10 @@ for (const [name, patterns, paraphrase] of rules) {
     expect(matching.length, `missing binding rule: ${name}`).toBeGreaterThan(0);
     expect(source.filter((block) => !matching.includes(block)).some((block) => satisfies(block, patterns))).toBe(false);
     for (const block of matching) {
-      expect(satisfies(block.replace(/\bmust\b/gi, 'need not'), patterns), `inverted ${name}`).toBe(false);
+      expect(satisfies(invert(block), patterns), `inverted ${name}`).toBe(false);
     }
-    expect(satisfies(paraphrase, patterns), `paraphrase ${name}`).toBe(true);
-    expect(satisfies(paraphrase.replace(/\bmust\b/gi, 'need not'), patterns)).toBe(false);
+    expect(satisfies(paraphrase.replace(/\bmust\b/gi, 'shall'), patterns), `paraphrase ${name}`).toBe(true);
+    expect(satisfies(invert(paraphrase), patterns)).toBe(false);
   });
 }
 
@@ -137,7 +142,7 @@ test('AC2 runtime recovery scenarios depend on removal-sensitive contracts', () 
       const source = blocks(runtime());
       expect(source.some((block) => satisfies(block, patterns)), scenario.id).toBe(true);
       expect(source.filter((block) => !satisfies(block, patterns)).some((block) => satisfies(block, patterns))).toBe(false);
-      expect(source.map((block) => satisfies(block, patterns) ? block.replace(/\bmust\b/gi, 'need not') : block)
+      expect(source.map((block) => satisfies(block, patterns) ? invert(block) : block)
         .some((block) => satisfies(block, patterns))).toBe(false);
       expect(satisfies(paraphrase, patterns)).toBe(true);
     }
