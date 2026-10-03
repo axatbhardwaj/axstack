@@ -20,7 +20,7 @@ Stack: `gh stack`. Base is `main`. Each task is one PR and builds on the one bef
 | Capability | Tasks | Spec acceptance covered |
 |---|---|---|
 | C1 T3 runtime contract (dispatch, binding, receipts, lifecycle, cleanup, recovery) | T1, T2, T3 | AC2 (scenario tests), AC4 |
-| C2 Review manager and watch on T3 scheduled tasks | T4, T9 (canary) | AC2 (manager rules), AC9 (canary) |
+| C2 Review manager and watch on T3 scheduled tasks | T4, T9 (canary) | AC2 (manager rules, bound-watch scenario), AC9 (canary) |
 | C3 Phase skills, routing and presets on T3 | T5a, T5b | AC4 (links), AC6 |
 | C4 Installer validates T3 and reroutes instructions | T6 | AC5 |
 | C5 Docs and the no-active-Orca guard | T7 | AC3, AC10 (docs) |
@@ -59,8 +59,8 @@ Secondary edits: automations.md:37, orca-runtime.md:124, routing.md:20,24 (trust
        read-back lines), run-record.test.js:139 (trust-path reference)
 Size est: 500-900
 Acceptance: resolve-models.js resolves codex/claude classes and model:null roles from a saved
-       capabilities fixture and holds on missing values (red then green); no trust-path reference remains;
-       bun test green
+       capabilities fixture and holds on missing values (red then green); no trust-path reference remains
+       in the AC3 paths (excluding docs/specs, docs/plans); prose-size green; bun test green
 Depends: T1
 ```
 
@@ -108,7 +108,8 @@ Depends: T3
 
 ```text
 Capability: C3  Internal task: T5a migrate phase skills, routing, presets -> author -> t3m-t5a
-Theme: phase entry points and shared routing (orca-runtime.md still present but unreferenced after)
+Theme: phase entry points and shared routing (orca-runtime.md still present, unreferenced by skills
+       and references after T5a)
 Primary files: SKILL.md for align, audit, debug, explain, implement, improve, relay, research, review,
        spec, tickets (11); skills/axstack/references/routing.md, run-record.md, contracts.md,
        autopilot.md, diligence.md, ui-verification.md; AGENTS.md; profiles/presets/*.json (notes only);
@@ -122,7 +123,7 @@ Size est: 1500-2000
 Acceptance: the 11 SKILL.md bodies plus routing/contracts/run-record/autopilot/diligence/ui-verification
        reference t3-runtime.md, not orca-runtime.md; the relay fallback is the T3 driver thread;
        ui-verification uses preview_* tools; presets keep 32 role ids and every note mentioning Orca,
-       the TUI or agy now names T3 (mixed.json:119,281,290); always-loaded routing/contracts under cap
+       the TUI or agy now names T3 (including mixed.json:119,128,281,290); always-loaded routing/contracts under cap
        or acceptance recorded; prose-size green; bun test green
 Depends: T4
 ```
@@ -137,9 +138,13 @@ Secondary edits: every remaining reader of orca-runtime.md: cleanup.test.js:56,1
        workspace-hygiene.test.js:38,187,198, review-checkout.test.js:12, tracking.test.js:26,36,
        owned-support.test.js:99, manager-stall.test.js:15, pr-managers.test.js:80,95,
        model-classes-contract.test.js:17,28,45, optional-seats.test.js:69, structural.test.js:153,302-310,
-       341-348, owned-core.test.js:53; prose-size.test.js (lower the aggregate ceiling, recorded acceptance)
+       341-348, owned-core.test.js:53, presets.test.js:359; docs/workflows.md:131 (link repoint only;
+       assertions stay in T7); t3-runtime.test.js (folded checks and orca-native-contracts T3
+       equivalents); prose-size.test.js (lower the aggregate ceiling, recorded acceptance)
 Size est: 700-1000 (mostly deletions)
-Acceptance: orca-runtime.md and orca-runtime.test.js are deleted and `git grep orca-runtime` is empty;
+Acceptance: orca-runtime.md and orca-runtime.test.js are deleted and no reference to the file
+       `orca-runtime.md` remains in the AC3 paths (excluding docs/specs, docs/plans; the T6 probe name
+       `orca-runtime` in src/ and tests/installer/ is removed in T6);
        prose-size green with the lowered ceiling; bun test green
 Depends: T5a
 ```
@@ -154,7 +159,8 @@ Size est: 600-1100
 Acceptance: t3 presence + nightly floor by version and date (an older same-version nightly fails);
        MCP readiness reported as "verified by driver preflight"; no Orca probes; generated block
        routes via T3 with the standing writer-launch authorization; hand-written Orca lines reported,
-       not edited; temporary homes; bun test green
+       not edited; the `orca-runtime` probe name is gone; temporary homes; prose-size green; bun test
+       green
 Depends: T5b
 ```
 
@@ -173,7 +179,8 @@ Acceptance: the structural check fails on active Orca content or file names unde
        (reinstall v0.20.31; restore both global-instruction backups on both hosts; manager schedule
        enabled:false; delete armed run watches; stop and disable the t3 serve service; re-enable the
        Orca automation) plus one-week Orca retention;
-       `git grep -il orca -- ':!docs/specs' ':!docs/plans'` lists only exempt files; bun test green
+       `git grep -il orca -- ':!docs/specs' ':!docs/plans'` lists only exempt files; prose-size green;
+       bun test green
 Depends: T6
 ```
 
