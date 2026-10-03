@@ -44,21 +44,15 @@ and time. An active run keeps the exact snapshot; resume reuses it without
 re-resolution until the user explicitly changes it, except for the recorded
 pre-turn Codex rejection amendment below.
 
-Select the requested role by stable ID. A missing class and missing or null
-model holds only that role; never launch a provider default. Resolve Codex
-classes with `scripts/resolve-models.js`, passing the catalog path explicitly;
-missing or malformed catalogs hold. The first launch of each Claude class uses
-its alias. Read the exact ID from the first assistant turn's `message.model` in
-that worker's own session transcript at
-`~/.claude/projects/<worktree-path-slug>/*.jsonl`; the worktree path slug
-replaces each non-alphanumeric character with `-`. Identify the file by the
-worker's session ID, or use the newest file created after launch. Later launches
-of that class use the recorded exact ID. Before read-back record `alias,
-unresolved`; record an unknown read-back as unknown and hold
-provenance-dependent work. A worker self-report is a labeled last
-resort. Launch-by-agent-id routes for which Orca exposes no
-`--model` override (today: `grok`, `antigravity`) record `model: null` with an explicit note and are
-launchable; the run record snapshots the model the TUI reports. Validate provider, model, and effort
+Select the requested role by stable ID. Use a preset `model` as given.
+Otherwise resolve `modelClass` to the newest matching provider ID: Codex
+`gpt-<N>-<class>`, Claude `claude-<class>-<N>-<N>`.
+For `model:null` roles lacking a class, use the first listed provider model in saved
+capabilities and record the exact ID. Use `scripts/resolve-models.js --provider <provider> --capabilities <path>`
+with saved T3 capabilities JSON; missing or malformed
+capabilities, unavailable models, or unsupported effort holds resolution without
+substitution. Claude exact IDs resolve from capabilities, retiring alias and
+transcript read-back. Validate provider, model, and effort
 against the guide and actual launch capability. Stored `modeId` and other
 permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective
@@ -120,11 +114,7 @@ Keep that reviewer's probes and private evidence in its separate private
 per-Dispatch run folder under [Workspace hygiene](workspace-hygiene.md), with no
 first-pass cross-read. Untracked files never prove a worktree disposable.
 
-Before launching a Claude worker in a checkout, from the installed `axstack` skill directory
-run `bun scripts/trust-path.js --path <exact checkout path>` for that
-exact checkout path. It trusts only Orca-registered repository roots and their
-worktrees. A failed preflight holds launch; workers never answer trust or
-permission dialogs. A trust dialog that still appears is a hold.
+Workers never answer trust or permission dialogs; a dialog that appears holds launch.
 
 An `input_accepted` stage proves only that input reached the terminal. Require
 `turn_started` plus runtime/session inspection before treating the agent as

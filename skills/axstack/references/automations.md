@@ -30,6 +30,8 @@ Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispat
 completion and cleanup boundaries; a manager never checks out a PR branch in
 its pass worktree. Missed slots do not replay a backlog.
 
+T3 sessions are exempt from Claude trust preflight.
+
 ## Session admission
 
 Perform guarded predecessor retirement in [Finite-session teardown](#finite-session-teardown).

@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -24,19 +25,41 @@ test('pre-turn Codex rejection alone amends the routing snapshot with retry line
   }
 });
 
-test('Claude alias resolves through first assistant transcript turn', () => {
-  const runtime = compact('skills/axstack/references/orca-runtime.md');
-  expect(runtime).toMatch(/first launch[^.]*Claude class[^.]*alias/i);
-  expect(runtime).toMatch(/\.claude\/projects\/<worktree-path-slug>\/\*\.jsonl/);
-  expect(runtime).toMatch(/first assistant turn[^.]*message\.model/i);
-  expect(runtime).toMatch(/later launch[^.]*recorded exact ID/i);
-  expect(runtime).toMatch(/alias, unresolved/i);
-  expect(runtime).toMatch(/unknown[^.]*hold/i);
-  expect(runtime).toMatch(/worker.s own session transcript/i);
-  expect(runtime).toMatch(/worktree path[^.]*non-alphanumeric[^.]*-/i);
-  expect(runtime).toMatch(/session ID|newest file after launch/i);
-  expect(runtime).toMatch(/record[^.]*unknown[^.]*hold/i);
-});
+const modelRules = [
+  {
+    name: 'resolution provenance', path: 'routing.md',
+    concepts: [/record|log/i, /class|famil/i, /exact|resolved|precise/i, /\b(?:ID|identifier)s?\b/i, /source|provenance/i, /capabilities/i, /time(?:stamp)?/i],
+    rewording: 'Log the time, source capabilities, class and exact ID for every role.',
+  },
+  {
+    name: 'both provider classes', path: 'routing.md',
+    concepts: [/resolv/i, /Codex/i, /Claude/i, /class/i, /saved/i, /capabilities/i, /--provider/i, /--capabilities/i],
+    rewording: 'With --capabilities and --provider, resolve the Claude and Codex classes from saved capabilities.',
+  },
+  {
+    name: 'transcript retirement', path: 'routing.md',
+    concepts: [/Claude/i, /exact|resolved|precise/i, /\b(?:ID|identifier)s?\b/i, /capabilities/i, /replac|retir|supersed/i, /transcript/i],
+    rewording: 'Capabilities supply each Claude exact ID and retire transcript read-back.',
+  },
+  {
+    name: 'trust preflight exemption', path: 'automations.md',
+    concepts: [/T3/i, /session/i, /Claude/i, /trust/i, /preflight/i, /exempt|unnecessary|dispens/i],
+    rewording: 'Claude trust preflight is unnecessary for sessions running in T3.',
+  },
+];
+
+for (const { name, path, concepts, rewording } of modelRules) {
+  test(`T3 model rule: ${name} rejects removal and generic negation, accepts independent wording`, () => {
+    const text = read(`skills/axstack/references/${path}`);
+    const matches = sentences(text).filter((sentence) => requires(sentence, ...concepts));
+    expect(matches, name).toHaveLength(1);
+    expect(requires(text, ...concepts)).toBe(true);
+    expect(requires(sentences(text).filter((sentence) => !matches.includes(sentence)).join('. '), ...concepts)).toBe(false);
+    // One shared inversion for all rules, rather than hand-picked per-rule flips.
+    expect(requires(`Do not ${matches[0]}`, ...concepts)).toBe(false);
+    expect(requires(rewording, ...concepts)).toBe(true);
+  });
+}
 
 test('only explicit pre-turn Codex model rejection permits recorded within-class retry', () => {
   for (const path of [

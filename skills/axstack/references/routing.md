@@ -17,11 +17,12 @@ Such a role holds only its work. Later installed or changed roles need an
 explicit user decision to enter the snapshot. Live profiles
 are authoritative at snapshot time and for availability; bundled presets are setup
 inputs, not runtime proof.
-For each role record class, resolved exact ID, source (catalog, transcript, or
-pin), and time. Codex classes resolve through
-`skills/axstack/scripts/resolve-models.js` with an explicit catalog
-path; missing or malformed catalog holds. Claude classes start as `alias,
-unresolved` until transcript read-back. Resume must reuse the snapshot and
+For each role record class, resolved exact ID, source (`capabilities`), and time.
+Resolve Codex and Claude classes with
+`skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path>`
+using saved T3 capabilities JSON; missing or malformed capabilities holds.
+Claude exact IDs come from capabilities, replacing transcript read-back.
+Resume must reuse the snapshot and
 never re-resolve it except for the recorded pre-turn Codex rejection amendment below.
 
 Preset changes apply to new runs only; an active run keeps its snapshot.

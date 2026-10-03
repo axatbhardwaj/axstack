@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
@@ -70,4 +71,16 @@ test('runtime launch hold defers to shared optional-seat and auditor exceptions'
   const launchRule = runtime.split('An unsupported or')[1]?.split('The single-provider')[0];
   expect(launchRule).toMatch(/unavailable value holds affected work/i);
   expect(launchRule).toMatch(/optional-seat[^.]*base-auditor[^.]*\[Model discipline\]\(contracts\.md#model-discipline\)/i);
+});
+
+test('null-model role binds a catalog ID while intentional single-provider seats remain absent', () => {
+  const runtime = read('skills/axstack/references/orca-runtime.md');
+  const concepts = [/model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /record/i, /exact/i, /ID|identifier/i];
+  const rule = sentences(runtime).find((sentence) => requires(sentence, ...concepts));
+  expect(requires(runtime, ...concepts)).toBe(true);
+  expect(requires(sentences(runtime).filter((sentence) => sentence !== rule).join('. '), ...concepts)).toBe(false);
+  expect(requires(`Do not ${rule}`, ...concepts)).toBe(false);
+  expect(requires('For roles with model:null lacking a class, record the exact identifier from the first listed model in saved capabilities.', ...concepts)).toBe(true);
+  expect(runtime).toMatch(/single-provider[^.]*null adviser[^.]*intentional installation data/i);
+  expect(runtime).toMatch(/null adviser[^.]*holds those phases/i);
 });

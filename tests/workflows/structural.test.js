@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const SEP = '/';
 
@@ -342,8 +343,8 @@ test('structural: runtime reference treats installed role snapshot as authoritat
   expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
   expect(text).toMatch(/bundled[^.]*setup inputs/i);
   expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
-  expect(text).toMatch(/missing class and missing or null[^.]*model holds only that role/i);
-  expect(text).toMatch(/never launch a provider default/i);
+  expect(requires(text, /model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /exact/i, /ID/i)).toBe(true);
+  expect(requires(text, /unavailable models/i, /unsupported effort/i, /holds resolution/i, /without substitution/i)).toBe(true);
   expect(text).toMatch(/reconcile existing attempts first/i);
 });
 
