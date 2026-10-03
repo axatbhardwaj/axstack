@@ -75,6 +75,7 @@ The current chat/driver has no role row in any preset.
 
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.
+Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
 
 The branch must be `axstack/<run>/<role>/<task>-a<n>`; lowercase each segment
 and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its

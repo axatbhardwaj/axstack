@@ -50,7 +50,7 @@ test('Telegram is limited to serious risk, recovered blockers, and explicit send
   expect(text).toMatch(/bounded safe recovery/i);
   expect(text).toMatch(/user intervention/i);
   for (const routine of ['questions', 'spec approvals', 'progress', 'CI pending', 'merge-ready', 'merged', 'completion']) {
-    expect(text, routine).toMatch(new RegExp(`${routine}[^.]*driver conversation|${routine}[^.]*T3|T3[^.]*${routine}`, 'i'));
+    expect(text, routine).toMatch(new RegExp(`${routine}[^.]*driver conversation|${routine}[^.]*T3 driver thread|T3 driver thread[^.]*${routine}`, 'i'));
   }
 });
 

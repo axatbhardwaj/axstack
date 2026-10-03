@@ -23,12 +23,15 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
 1. **Select the authoritative store.** Use Linear through the executor MCP only
    for repositories in `defi-com`. Keep specs for other repositories on GitHub;
    if the issue, PR or repository-file location is unclear, ask before creating
-   a planning artifact. Name the store before writing; one recorded choice
+   a planning artifact. Use GitHub Issues or repository Markdown when the user
+   explicitly selects it, and for non-`defi-com` repositories under that boundary.
+   Name the store before writing; one recorded choice
    leaves no implicit fallback.
 2. **Preflight external-tracker access.** In Linear mode, inspect the executor
    MCP's advertised document operations before any write. Verify read, create,
-   and update support separately. Missing access holds that operation without
-   mutation or store switch; the selected document remains authoritative.
+   and update support separately. For missing Linear access through the executor
+   MCP, record its guide/help evidence, hold only that operation, and stop this
+   phase without mutation or store switch; the selected document remains authoritative.
    A later tickets-phase check cannot replace this preflight. In GitHub mode, use
    authenticated `gh` to verify the target
    repository, issues enabled, and the current identity's issue read and write

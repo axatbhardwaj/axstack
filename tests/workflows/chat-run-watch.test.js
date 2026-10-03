@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
@@ -45,10 +46,15 @@ test('chat-run wake uses the PR digest before deciding whether to act', () => {
   expect(text).toMatch(/exit 2[^.]*readiness[^.]*UNKNOWN/i);
 });
 
-test('verified Autopilot transitions update the private T3 run record', () => {
-  const instruction = autopilot().match(/[^.]*verified Autopilot transition[^.]*\./i)?.[0] ?? '';
-  expect(instruction).toMatch(/update[^.]*private run record[^.]*T3 driver thread/i);
-  expect(instruction).not.toMatch(/\b(?:never|do not|don't)\b/i);
+test('driver records verified Autopilot transitions in the authoritative private run record', () => {
+  const recordsTransition = (text) => requires(text, /driver/i, /record\w*/i,
+    /each|every/i, /verified/i, /Autopilot:/i, /transition\w*/i,
+    /private run record/i, /remain\w* authoritative/i);
+  const instruction = 'The driver records each verified `Autopilot:` transition in the private run record, which remains authoritative.';
+  expect(recordsTransition(autopilot())).toBe(true);
+  expect(recordsTransition(autopilot().replace(instruction, ''))).toBe(false);
+  expect(recordsTransition('Every verified Autopilot: transition is recorded by the driver in the private run record, which remains authoritative.')).toBe(true);
+  expect(recordsTransition(instruction.replace('records', 'does not record'))).toBe(false);
 });
 
 test('observer reports internally; only original driver routes repairs and writers', () => {

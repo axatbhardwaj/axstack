@@ -54,13 +54,13 @@ test('scope identity: execution boundaries accept the same two identities', () =
   const review = read('skills/axstack-review/SKILL.md');
   const authored = review.slice(review.indexOf('## Authored mode'), review.indexOf('## Standalone owner'));
   const launch = read('skills/axstack/references/t3-runtime.md');
-  expect(launch).toContain('scope/authority');
   const watch = read('skills/axstack-watch/SKILL.md');
   const feedback = watch.slice(watch.indexOf('### Feedback routing'), watch.indexOf('## 5. State readiness')).replace(/\s+/g, ' ');
   for (const [name, text] of [
     ['contracts', contracts],
     ['implement', implement],
     ['authored review', authored],
+    ['T3 runtime brief', launch],
     ['watch feedback routing', feedback],
   ]) {
     expect(text, `${name}: missing named small identity`).toMatch(/small-change intent/i);

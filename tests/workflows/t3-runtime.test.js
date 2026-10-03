@@ -399,3 +399,14 @@ test('prohibits remains stateless for global expressions', () => {
   expect(prohibits('No glob.', prohibition, /glob/)).toBe(true);
   expect(prohibits('No glob.', prohibition, /glob/)).toBe(true);
 });
+
+test('T3 dispatch binds either scope identity and its evidence to the dispatch key', () => {
+  const bindsScope = (text) => requires(text, /dispatch/i, /bind\w*|bound/i,
+    /approved spec/i, /small-change intent/i, /brief/i, /authority/i,
+    /role snapshot/i, /base/i, /candidate/i, /dispatch key/i);
+  const instruction = 'Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.';
+  expect(bindsScope(runtime())).toBe(true);
+  expect(bindsScope(runtime().replace(instruction, ''))).toBe(false);
+  expect(bindsScope('The brief, authority, role snapshot, candidate and base are bound to the dispatch key alongside the approved spec or small-change intent.')).toBe(true);
+  expect(bindsScope(instruction.replace('binds', 'does not bind'))).toBe(false);
+});

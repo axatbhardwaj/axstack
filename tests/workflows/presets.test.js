@@ -435,7 +435,7 @@ const migrationPins = [
   ['skills/axstack-review/SKILL.md', 'Rejection, timeout, quota and auth failures hold affected work without substitution.'],
   ['skills/axstack-spec/SKILL.md', 'Use Linear through the executor MCP only for repositories in `defi-com`.'],
   ['skills/axstack-spec/SKILL.md', 'Keep specs for other repositories on GitHub; if the issue, PR or repository-file location is unclear, ask before creating a planning artifact.'],
-  ['skills/axstack-spec/SKILL.md', 'Missing access holds that operation without mutation or store switch; the selected document remains authoritative.'],
+  ['skills/axstack-spec/SKILL.md', 'For missing Linear access through the executor MCP, record its guide/help evidence, hold only that operation, and stop this phase without mutation or store switch; the selected document remains authoritative.'],
   ['skills/axstack-tickets/SKILL.md', 'In Linear mode, use only the executor MCP for `defi-com` repositories and verify its advertised issue operations.'],
   ['skills/axstack-tickets/SKILL.md', 'When the pinned spec requires a document read, verify that operation separately; missing access holds the affected operation without mutation or store switch.'],
   ['skills/axstack/references/autopilot.md', 'Cancellation does not cancel a running author run by inference; let it report, then settle that exact attempt under lifecycle guards without new publication.'],
