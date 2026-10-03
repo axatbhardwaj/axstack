@@ -28,7 +28,7 @@ test('README explains four failure modes and gives a compact first run', () => {
     ['Wrong thing built', /align[^|]*arena/i],
     ['Nobody really reviewed it', /TDD[^|]*review[^|]*revision/i],
     ['Design rot', /design lens[^|]*Improve/i],
-    ['Agents left a mess', /Orca[^|]*one writer[^|]*cleanup[^|]*human merges/i],
+    ['Agents left a mess', /T3[^|]*one writer[^|]*cleanup[^|]*human merges/i],
   ]);
   for (const [failure, fix] of fixes) {
     const row = why.split('\n').find((line) => line.startsWith(`| ${failure} |`));

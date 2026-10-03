@@ -1,15 +1,44 @@
 # Installation
 
 Axstack's Bun CLI installs owned chat skills plus one selected role snapshot and
-checks host capabilities. Orca is the only supported active runtime. The CLI
-does not dispatch agents, edit Orca settings, run a scheduler, or maintain a
+checks host capabilities. T3 Code is the only supported active runtime. The CLI
+does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
 workflow database.
 
 Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
-Orca whose version-matched `orchestration`, `orca-cli`, and `orca-linear`
-guides are available.
+T3 Code nightly >= `0.0.46-nightly.20261003.2610`. The driver is a T3 thread
+with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
 There are no runtime dependencies. Filesystem access uses Bun-backed `node:fs`
 and `node:fs/promises`; no other Node runtime contract is introduced.
+
+## T3 setup
+
+Set `worktreeCleanup` to `off` for every Axstack project before dispatch;
+Axstack preserves author worktrees and salvages evidence before retirement.
+The driver reads back this setting via `t3_project_read` where exposed, or
+records the setup limitation.
+
+For remote and Android access on the existing tailnet, run:
+
+```sh
+t3 serve --tailscale-serve
+t3 pair
+```
+
+Run `t3 serve --tailscale-serve` as a VPS user service and pair the Android
+app with `t3 pair`. T3 Connect is outside this setup. Service installation,
+network access, and pairing require their own authorized host checks.
+
+Install Antigravity through T3 provider settings using its managed runtime,
+then complete the user's browser sign-in before its canary. T3 uses Google's
+Antigravity ACP agent (`agy_acp_server`); the IDE/`agy` CLI skill paths below
+are separate installer targets and do not configure this managed runtime.
+Antigravity roles receive self-contained briefs; its runtime does not read
+`~/.agents/skills`. A missing runtime, sign-in, or canary holds those roles.
+
+Grok CLI must be >=1.0.13 on desktop and VPS. T3 advertising Grok does not
+prove the CLI runs. Hermes relay remains unchanged: verify native `hermes send`
+and its configured home channel under recorded notification authority.
 
 ## Commands
 
@@ -55,7 +84,7 @@ conflict. Then finish that owner with
 the settings sidecar preserves the value while any other install still owns it.
 
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
-  Code subagent-default transaction. They do not configure Orca roles.
+  Code subagent-default transaction. They do not configure T3 roles.
 - `--force` may replace an edited owned asset; it never adopts or removes
   unrelated state.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
@@ -75,7 +104,7 @@ Each has exactly `{ "version": 1, "roles": [...] }` and lists all role IDs
 in the same order. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
-role store and no Orca configuration merge.
+role store and no T3 configuration merge.
 
 ### Check
 
@@ -83,13 +112,14 @@ role store and no Orca configuration merge.
 axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
 ```
 
-The check separates Bun/Git/`gh stack` availability, resolved Orca executable,
-runtime readiness, required `orchestration`, `orca-cli`, and `orca-linear`
-guide discovery, and bundle validity.
+The check separates Bun/Git/`gh stack` availability, the `t3` executable and
+nightly version floor, in-session MCP readiness, and bundle validity.
+The CLI labels in-session MCP readiness as "verified by driver preflight";
+the driver saves `orchestrator_capabilities` and follows its advertised schema.
 With an instruction target, it separately reports whether the marker block is
-owned, missing, unowned, edited, or bound to a different path.
-It must honor Orca's executable-resolution rules, including the Linux screen
-reader name collision, and must not switch binaries after a failed resolution.
+owned, missing, unowned, edited, or bound to a different path. Hand-written
+legacy routing outside the owned block is reported for manual migration and
+preserved byte for byte.
 
 A successful check is not provider/model availability, effective permission,
 skill reload, task execution, mobile delivery, or end-to-end compatibility
@@ -110,10 +140,12 @@ are pruned only when empty, and the target root is never removed.
 The deterministic `<!-- axstack:begin v1 -->` / `<!-- axstack:end -->` block
 contains the target-derived Axstack entry path and model-free routing prose. It
 also routes every subagent, delegated worker, reviewer, and cross-harness dispatch
-through Orca orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides)
-so the work stays visible. It forbids harness-native subagent tools (e.g. Claude/Codex
-native subagents); workers such as OpenCode and Antigravity subagents
-run as Orca-supervised workers, never via harness-native delegation.
+through the `t3-code` MCP. It forbids harness-native subagent tools. The current
+T3 thread is the driver; read-only roles use async `delegate_task`, while authors
+use `t3_thread_launch` in their own SHA-pinned worktrees. The standing block
+authorizes writer launch; it grants no push, merge, release, or host mutation.
+The [runtime reference](../skills/axstack/references/t3-runtime.md) owns the dispatch
+and receipt protocol.
 
 Create, update, repeated install, check, and uninstall preserve every byte and
 the file mode outside the markers. The manifest binds the canonical instruction
@@ -188,9 +220,9 @@ reconciles their findings.
 
 The mixed checker and `axstack-research-web-google` have provider
 `antigravity`; mixed `axstack-research-x` has provider `grok`. All three use
-`model: null` because Orca exposes no model override for those agent-ID routes;
-their notes authorize launch by agent ID, and the run record snapshots the model
-reported by the TUI. The single-provider presets configure the checker and keep
+`model: null` with notes authorizing their agent-ID routes; T3 resolves the exact
+model from the first entry for that provider in saved capabilities. Empty
+Antigravity model catalogs hold. The single-provider presets configure the checker and keep
 both cross-provider research routes as intentional absences. Their
 unavailable adviser and round-2 seat remain explicit same-provider
 `model: null` roles, which do not make installation unready;
@@ -199,25 +231,25 @@ receipts. For an arena-grade Align question, round 1 needs Opus; round 2, if
 invoked, needs escalation Fable and Astra; a required seat that is unavailable holds that
 round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
-the affected work. Codex class resolution reads the explicit catalog path via
-`skills/axstack/scripts/resolve-models.js`; a missing or malformed catalog
-holds. Claude launches an alias once per class, reads the exact ID from the
-first assistant transcript turn, then reuses it. Only explicit model rejection
-before that turn permits a recorded Codex retry within the same class, provider,
-and effort. Claude rejection, timeout, quota, and auth failures hold; no
-subscription inference or quota routing applies.
+the affected work. Codex and Claude class resolution reads the saved T3 capabilities catalog via
+`skills/axstack/scripts/resolve-models.js --provider`; missing or malformed
+catalogs hold. A preset model is used as given; class rows resolve to the newest
+matching catalog ID. Resume retains the recorded snapshot without re-resolution.
+Rejection, timeout, quota, and auth failures hold; no subscription inference,
+quota routing, or alternative-model retry applies.
 
 `modeId` and similar permission fields remain conservative declared intent.
-They do not prove the effective Orca launcher mode, sandboxing, or permission
-parity. Requested provider/model/effort, input acceptance, effective session
-settings, and completed behavior are separate evidence classes.
+They do not prove effective T3 `runtimeMode`, sandboxing, or permission parity.
+Requested provider/model/effort, input acceptance, effective session settings,
+and completed behavior are separate evidence classes. Follow the runtime
+reference for provider option IDs and configuration read-back.
 
 ## Claude Code subagent default
 
 The preserved Claude-settings feature manages only
 `env.CLAUDE_CODE_SUBAGENT_MODEL = "opus"` when its existing ownership and
 availability conditions allow. It does not change the main conversation,
-select an Axstack role, force built-in agents, or configure Orca.
+select an Axstack role, force built-in agents, or configure T3.
 
 Axstack merges that one key and preserves all unrelated settings and environment
 values. A pre-existing value is preserved and never adopted. Missing Claude,
@@ -238,25 +270,27 @@ survives.
 | Claude | `~/.claude/skills` | documented upstream |
 | Codex | `~/.agents/skills` | documented upstream |
 | OpenCode | `~/.config/opencode/skills` | documented upstream |
-| Antigravity | `~/.gemini/config/skills` | documented upstream |
+| Antigravity IDE / `agy` CLI | `~/.gemini/config/skills` | documented upstream |
 | Grok | explicit `--skills-dir` only | auto-discovery unverified |
 
 Prefer explicit paths and current upstream CLI guidance. Installing files does
 not prove that a running harness reloaded them.
 
-## Runtime guide discovery
+## Runtime preflight and schedules
 
-The installed Axstack bundle does not own or copy Orca's guides. At an action
-boundary, the skill resolves one Orca executable and loads the operation's
-version-matched `orchestration`, `orca-cli`, or `orca-linear` guide. Review
-automation guidance is loaded only for the scheduled review branch. Missing
-discovery is a setup gap, not a reason to fall back or invent commands. Guide
-discovery does not prove an operation works; Linear documents, provider/model
-routing, and live automation behavior need separate preflights.
+At an action boundary, load the packaged [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
+and save the actual `orchestrator_capabilities` JSON. Missing capability holds
+the affected operation. Provider/model routing, Linear documents through the
+executor MCP, and live schedule behavior need separate preflights.
 
-Installation creates no production schedule and adds no custom scheduler. Chat-run own-PR watch uses a harness-native monitoring or scheduled wake every 10 minutes by default. Only when the harness has no such capability does the Orca `*/10` observer serve as fallback; it needs separately validated same-host automation, installed preset and effective observer model/effort, same-Run report delivery, safe original-driver wake, and own-automation stop/readback. Installed bytes alone do not activate either path.
-The optional review manager requires a separate native canary before activation;
-installed guidance does not prove live behavior.
+Installation creates no production schedule and adds no custom scheduler.
+Chat-run own-PR watch uses a bound T3 schedule every 10 minutes by default;
+record its ID, driver thread, and expiry. Missing schedule capability holds
+activation. Delete the schedule by its exact ID and verify absence with
+`list_scheduled_tasks` when the watch ends; uncertainty preserves the hold.
+The optional review manager uses an unbound 15-minute T3 schedule and requires
+its separate native canary before activation. Installed guidance does not prove
+live behavior. See [Review manager](../skills/axstack/references/automations.md).
 
 ## Historical migration
 
@@ -275,8 +309,8 @@ retired `axstack-driver` row leaves `roles.json` on the next install because
 that file is rewritten as one owned snapshot. A --force uninstall/install
 cycle remains only for discarding edited copies you have decided to abandon;
 edited, custom, and unknown assets otherwise survive. `axstack-explain`
-supersedes the old docs route. Full ownership transfer uses Orca's runtime-owned
-handoff guidance and still requires explicit recipient acceptance.
+supersedes the old docs route. Full ownership transfer uses the T3 runtime
+contract and still requires explicit recipient acceptance.
 
 Do not mutate live historical configuration during development or migration
 tests. Host cutover, old-timer cleanup, release installation, and global cleanup
@@ -292,4 +326,19 @@ axstack uninstall --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
 ```
 
 The second install should report no changes. These scratch examples do not
-activate Orca sessions or schedules.
+activate T3 threads or schedules.
+
+## Rollback
+
+Use the recorded host-mutation authority and verified backups for these steps:
+
+1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.
+2. Restore the backed-up `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` global instructions on both hosts.
+3. Set the recorded T3 manager schedule to `enabled:false` and verify the disabled state.
+4. Delete every armed run watch by its recorded schedule ID and verify absence.
+5. Stop and disable the `t3 serve` user service on the VPS.
+6. Re-enable the Orca automation and verify its enabled state.
+
+Orca stays installed for one week after the VPS canary; keep its automation disabled,
+rather than deleting it, after the T3 canary passes. Do not uninstall it during
+that retention window.

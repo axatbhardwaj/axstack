@@ -80,7 +80,7 @@ describe('instruction CLI routing', () => {
     const instructions = join(root, 'AGENTS.md');
     writeFileSync(instructions, 'Use Haoshoku routing for legacy skills.');
     const result = runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills, '--instructions', instructions]);
-    expect(result.out).toMatch(/note: legacy routing text \(Haoshoku\/Orca\) remains outside the Axstack block/i);
+    expect(result.out).toMatch(/note: legacy routing text remains outside the Axstack block/i);
     expect(readFileSync(instructions, 'utf8')).toStartWith('Use Haoshoku routing for legacy skills.');
   });
 

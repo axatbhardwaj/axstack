@@ -535,7 +535,7 @@ export async function installBundle({
     });
     if (findLegacyRoutingLines(existingInstructionsRaw ?? '').length > 0) {
       legacyInstructionNote =
-        'legacy routing text (Haoshoku/Orca) remains outside the Axstack block; preserved for manual migration';
+        'legacy routing text remains outside the Axstack block; preserved for manual migration';
     }
   }
 

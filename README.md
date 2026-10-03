@@ -6,8 +6,8 @@ Engineering workflows for AI agents, from a first question to a reviewed PR.
 align → spec → tickets → implement → review → watch
 ```
 
-Axstack gives your current chat a way to scope work, build it with tests, and
-review the exact result. Orca provides worktrees, agent sessions, and visible
+Axstack gives your current T3 thread a way to scope work, build it with tests, and
+review the exact result. T3 Code provides worktrees, agent threads, and visible
 coordination. You can start at the phase you need.
 
 ## What you can do
@@ -39,14 +39,14 @@ implementation. Research, explanation, and peer review can start directly.
 | Wrong thing built | Align rounds clarify the request; a four-family arena compares approaches for hard choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
-| Agents left a mess | Orca makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
+| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
 
 ## Quick start
 
 > [!NOTE]
 > You need Bun >=1.3.14, Git, the GitHub CLI (`gh`) with `gh stack`, and a
-> running Orca with the `orca-cli`, `orchestration`, and `orca-linear` guides.
-> The agents selected by your preset must also be available in Orca.
+> running T3 Code nightly >= `0.0.46-nightly.20261003.2610`.
+> The agents selected by your preset must also be available through T3.
 
 Install the CLI and skills. This example targets Codex:
 
@@ -56,7 +56,7 @@ axstack check --harness codex
 axstack install --harness codex --preset mixed --yes
 ```
 
-Open an Orca chat and ask for the phase you need:
+Open a T3 thread and ask for the phase you need:
 
 ```text
 $axstack-align Help me scope account recovery.
@@ -83,7 +83,9 @@ sets an explicit target without automatic migration.
 Use `--harness claude`, `opencode`, or `antigravity` with `axstack check` and
 `axstack install`, or provide explicit skill and instruction paths. Installation
 adds an owned instruction block and preserves unrelated content. It does not
-enable automations or prove that every configured model is available.
+enable schedules or prove that every configured model is available. T3 uses
+its managed Antigravity runtime with separate browser sign-in; the IDE/`agy`
+skill paths do not configure that runtime.
 
 </details>
 
@@ -92,9 +94,10 @@ upgrades, conflicts, and uninstalling.
 
 ## How work stays controlled
 
-- The current chat drives scope, coordination, and publication. Delegation uses
-  visible Orca orchestration via the `orca` CLI, not harness-native subagent
-  tools. Separate worktrees keep one writer on each candidate.
+- The current T3 thread drives scope, coordination, and publication. Delegation uses
+  visible T3 orchestration via the `t3-code` MCP; harness-native subagent
+  tools are forbidden. Separate worktrees keep one writer on each candidate.
+  See the [T3 runtime boundary](skills/axstack/references/t3-runtime.md).
 - Peer PRs receive two independent reviews. Authored changes receive a reviewer
   selected from the author's configured pairing. Reviews bind to exact revisions.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
@@ -115,20 +118,18 @@ pair seats in `mixed` and `codex-only`; `claude-only` records them as absent.
 ## Optional PR automation
 
 Manual review works without a schedule. Own open PRs in chat-run mode use a
-harness-native monitoring or scheduled wake to resume the driver chat every 10
-minutes; the existing Orca `*/10` observer is fallback only when the harness
-has no such capability. Each wake checks feedback, base, CI, and human approval;
-delegated work still uses Orca. Stop the chosen wake when all watched PRs merge
-or close, the user cancels, or it expires.
+bound T3 schedule to resume the driver thread every 10 minutes. Each wake
+checks feedback, base, CI, and approval. Stop and verify deletion of the watch
+when all watched PRs merge or close and release is settled or not applicable, the user cancels,
+or it expires.
 
-An optional native Orca review manager handles recurring peer review; the
-review automation never merges for you. Its activation is opt-in and needs
-live host validation. See
-[PR-manager setup and safety](skills/axstack/references/automations.md).
+An optional native T3 review manager runs finite peer-review passes every 15
+minutes; the review automation never merges for you. Activation needs live
+host validation. See [PR-manager setup and safety](skills/axstack/references/automations.md).
 
 ## Some notes
 
-- Orca is the only supported active runtime. Axstack adds no daemon or runtime
+- T3 Code is the only supported active runtime. Axstack adds no daemon or runtime
   database.
 - A human merges by default.
 - This is an early project; expect the workflows to evolve.

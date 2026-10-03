@@ -220,7 +220,7 @@ test('CLI reports hand-written legacy routing gaps without editing either global
     const result = runCli(cli, checkArgs, checkOptions);
     expect(result.out).not.toContain('No gaps detected.');
     expect(result.out).toMatch(/gap: legacy routing.*manual migration/i);
-    expect(install.out).toContain('legacy routing text (Haoshoku/Orca)');
+    expect(install.out).toContain('legacy routing text remains outside the Axstack block; preserved for manual migration');
     expect(readFileSync(file, 'utf8')).toBe(installed);
     writeFileSync(file + '.other', original);
     const existingConflict = runCli(cli, ['check', '--skills-dir', skills, '--instructions', file + '.other'], checkOptions);
