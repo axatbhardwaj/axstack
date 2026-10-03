@@ -18,6 +18,7 @@ for (const pin of pins) test(`tracking safety: ${pin}`, () => {
   expect(text.split(pin).length).toBe(2);
 });
 const rules = [
+  ['writer marker delivery', [/launched writer/i, /sends/i, /marker/i, /t3_thread_send/i, /mode: queue/i, /recorded driver thread/i], 'Using t3_thread_send with mode: queue, the launched writer sends its marker to the recorded driver thread.'],
   ['forbidden wait loops', [/sleep/i, /poll loops/i, /forbidden/i], 'Sleep and poll loops are forbidden.'],
   ['wait timeout re-arm', [/t3_thread_wait/i, /recorded watch/i, /re-arm/i, /waits/i, /timeout/i], 'Re-arm waits on timeout using t3_thread_wait and the recorded watch.'],
   ['next transition', [/update/i, /Next:/i, /transition/i, /owner/i, /hold/i], 'At each transition update Next: with owner and hold.'],

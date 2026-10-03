@@ -85,7 +85,8 @@ test('manager jobs use private per-Dispatch scratch without broad cleanup', () =
   expect(runtime).toMatch(/exact validated owned path[^.]*no glob[^.]*no parent-root deletion/i);
   expect(runtime).toMatch(/Uncertain paths[^.]*preserv/i);
   expect(runtime).toMatch(/equivalent guards[^.]*worktree-local paths/i);
-  expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
+  expect(manager).toContain('Set `TMPDIR` for manager and job commands to an owned 0700 directory under the system temp directory, named from the dispatch key and recorded in the receipt, following [Workspace hygiene](workspace-hygiene.md).');
+  expect(manager).toContain('Evidence files stay in the private `<run dir>/evidence/<dispatch>/` folder.');
   expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
   expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
   expect(manager).toMatch(/uncertain ownership[^.]*containment/i);

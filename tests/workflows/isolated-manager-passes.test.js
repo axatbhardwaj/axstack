@@ -33,7 +33,7 @@ test('continuity stays bounded and both command kinds use private run TMPDIR', (
   expect(record).toMatch(/current lane state[^.]*open holds[^.]*watermarks[^.]*last pass summary/i);
   expect(record).toMatch(/superseded history[^.]*separate history file beside/i);
   expect(record).toMatch(/never re-read history[^.]*by default/i);
-  expect(text).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
+  expect(text).toContain('Set `TMPDIR` for manager and job commands to an owned 0700 directory under the system temp directory, named from the dispatch key and recorded in the receipt, following [Workspace hygiene](workspace-hygiene.md).');
   expect(text).not.toMatch(/self-close|self-retirement|three-workspace threshold/);
 });
 
