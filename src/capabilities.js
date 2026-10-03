@@ -1,10 +1,12 @@
 // Host capability checks. Injected execution keeps tests off live runtimes.
 export const BUN_FLOOR = '1.3.14';
-export const T3_FLOOR = '0.0.46-nightly.20261003';
+export const T3_FLOOR = '0.0.46-nightly.20261003.2610';
 
 export const PROBE_LIMITATIONS = [
   'T3 orchestration MCP readiness, provider auth, models and effort are verified by driver preflight inside a T3 thread, never from the binary probe.',
-  'Stored role intent and a T3 version do not prove effective launch configuration or successful agent execution.',
+  'A binary probe cannot prove model availability or quotas.',
+  'An unavailable or exhausted model pauses affected work until the user decides.',
+  'Stored role model, effort and permission intent do not prove T3 launch parity or successful agent execution.',
 ];
 
 const CHECK_LABELS = {
@@ -24,14 +26,17 @@ export const PROBE_COMMANDS = {
 };
 
 function validT3Version(stdout) {
-  const match = /^(?:t3\s+)?v?(\d+\.\d+\.\d+)(?:-nightly\.(\d{8})(?:\.\d+)?)?$/.exec(stdout.trim());
-  if (!match || !meetsFloor(match[1], T3_FLOOR.split('-')[0])) return false;
+  const match = /^(?:t3\s+)?v?(\d+\.\d+\.\d+)(?:-nightly\.(\d{8})(?:\.(\d+))?)?$/.exec(stdout.trim());
+  const [floorVersion, floorNightly] = T3_FLOOR.split('-nightly.');
+  const [floorDate, floorBuild] = floorNightly.split('.');
+  if (!match || !meetsFloor(match[1], floorVersion)) return false;
   if (!match[2]) return true;
   const date = match[2];
   const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
   const parsed = new Date(`${iso}T00:00:00Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso
-    && date >= T3_FLOOR.split('nightly.')[1];
+    && (date > floorDate || (date === floorDate && match[3] !== undefined
+      && Number(match[3]) >= Number(floorBuild)));
 }
 
 function validateT3Result(result) {

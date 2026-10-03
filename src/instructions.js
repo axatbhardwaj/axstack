@@ -12,7 +12,7 @@ export function renderInstructionBlock() {
     'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through T3 Code orchestration using the `t3-code` MCP.',
     'Use `delegate_task` for non-writer roles.',
     'Use `t3_thread_launch` for writers.',
-    'Follow [T3 runtime](skills/axstack/references/t3-runtime.md) for the runtime contract.',
+    'Follow `references/t3-runtime.md` in the installed `axstack` skill for the runtime contract.',
     'The user authorizes Axstack drivers in T3 to run full-access and launch top-level writer threads and worktrees within approved scope.',
     'Do not use a harness native subagent tool for delegated work.',
     END,

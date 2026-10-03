@@ -11,6 +11,7 @@ import {
   runRealCheck,
 } from '../../src/capabilities.js';
 import * as capabilities from '../../src/capabilities.js';
+import { sentences, requires } from '../workflows/prose-contract.js';
 import { BUN_BIN, makeTempRoot, runCli as runBunCli } from './helpers.js';
 
 const CLI = join(import.meta.dir, '../../bin/axstack.js');
@@ -32,8 +33,58 @@ test('all tools present reports ok with probe-limit disclaimer', async () => {
   expect(report.checks.map((check) => check.name)).toEqual(['bun', 'git', 'gh', 'gh-stack', 't3-binary']);
   expect(report.gaps).toEqual([]);
   expect(report.limitations.join(' ')).toMatch(/T3.*MCP.*provider auth.*models.*effort.*verified by driver preflight.*T3 thread/i);
-  expect(report.limitations.join(' ')).toMatch(/quota|model/i);
+  expect(report.limitations.join(' ')).toMatch(/quotas/i);
 });
+
+
+// Prose commitments: one sentence must carry the whole rule, independent of order.
+const prohibits = (text, ...concepts) => sentences(text).some((sentence) =>
+  sentence.match(/\b(?:cannot|can not|do not|does not|never)\b/gi)?.length === 1
+  && concepts.every((concept) => concept.test(sentence))
+  && requires(sentence.replace(/\b(?:cannot|can not|do not|does not|never)\b/i, ''), /^/));
+const limitationRules = {
+  binary: (text) => prohibits(text, /binary probe/i, /prov\w*/i, /model availability/i, /quotas?/i),
+  pause: (text) => requires(text, /unavailable/i, /exhausted/i, /models?/i,
+    /affected work/i, /paus\w*/i, /until (?:the )?user decid\w*/i),
+  parity: (text) => prohibits(text, /stored role/i, /model/i, /effort/i,
+    /permission intent/i, /prov\w*/i, /T3 launch parity/i),
+};
+const limitationHoldouts = {
+  binary: [
+    'A binary probe does not prove quotas or model availability.',
+    'Model availability and quotas cannot be proven by a binary probe.',
+  ],
+  pause: [
+    'If a model is exhausted or unavailable, pause affected work until the user decides.',
+    'Affected work pauses until the user decides when models are unavailable or exhausted.',
+  ],
+  parity: [
+    'Stored role permission intent, effort and model do not prove T3 launch parity.',
+    'T3 launch parity cannot be proven by stored role model, effort and permission intent.',
+  ],
+};
+const limitationInversions = (text) => [
+  'Do not follow this instruction: ' + text,
+  text.replace(/\b(?:cannot|can not)\b/gi, 'can').replace(/\b(?:do not|does not)\b/gi, 'does'),
+  text.replace(/\b(pause\w*|prov\w*)\b/gi, 'avoid $1'),
+  text.replace(/\bpaus\w*/gi, 'continues'),
+  text.replace(/\buser\b/gi, 'author'),
+  text.replace(/\buntil\b/gi, 'before'),
+  text.replace(/\bpermission intent\b/gi, 'intent'),
+  text.replace(/[.]$/, '') + ' only for optional work',
+].filter((changed) => changed !== text);
+for (const [name, accepts] of Object.entries(limitationRules)) {
+  test(`probe limitation ${name} rejects removal and inversions and accepts holdouts`, () => {
+    const source = capabilities.PROBE_LIMITATIONS;
+    const matching = source.filter(accepts);
+    expect(matching.length).toBeGreaterThan(0);
+    expect(accepts(source.filter((sentence) => !accepts(sentence)).join(' '))).toBe(false);
+    for (const holdout of limitationHoldouts[name]) expect(accepts(holdout), holdout).toBe(true);
+    for (const sentence of [...matching, ...limitationHoldouts[name]]) {
+      for (const changed of limitationInversions(sentence)) expect(accepts(changed), changed).toBe(false);
+    }
+  });
+}
 
 test('missing gh stack extension is reported as a gap', async () => {
   const report = await checkCapabilities(fakeExec({ 'gh-stack': { ok: false, stdout: '' } }));
@@ -51,7 +102,10 @@ test('missing T3 is a capability gap', async () => {
 test('T3 floor rejects older nightlies, releases and malformed output', async () => {
   for (const [stdout, ok] of [
     ['t3 v0.0.46-nightly.20261003.2610', true],
-    ['0.0.46-nightly.20261003', true],
+    ['0.0.46-nightly.20261003', false],
+    ['t3 v0.0.46-nightly.20261003.2609', false],
+    ['t3 v0.0.46-nightly.20261003.2611', true],
+    ['t3 v0.0.46-nightly.20261003.99', false],
     ['t3 v0.0.46-nightly.20261004.1', true],
     ['t3 v0.0.46-nightly.20261002.9999', false],
     ['t3 v0.0.45-nightly.20261004.1', false],
@@ -71,7 +125,7 @@ test('T3 floor rejects older nightlies, releases and malformed output', async ()
     const report = await checkCapabilities(fakeExec({ 't3-binary': { ok: true, stdout } }));
     expect(report.checks.find((check) => check.name === 't3-binary')?.ok, stdout).toBe(ok);
   }
-  expect(capabilities.T3_FLOOR).toBe('0.0.46-nightly.20261003');
+  expect(capabilities.T3_FLOOR).toBe('0.0.46-nightly.20261003.2610');
 });
 
 test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => {

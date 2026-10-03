@@ -20,7 +20,9 @@ describe('owned instruction block primitives', () => {
     expect(block).toBe(renderInstructionBlock());
     expect(block).toStartWith('<!-- axstack:begin v1 -->');
     expect(block).toEndWith('<!-- axstack:end -->');
-    expect(block).toContain('skills/axstack/references/t3-runtime.md');
+    expect(block).toContain('installed `axstack` skill');
+    expect(block).toContain('`references/t3-runtime.md`');
+    expect(block).not.toMatch(/\]\([^)]*t3-runtime\.md\)/);
     expect(renderInstructionBlock.length).toBe(0);
     expect(block).not.toMatch(/model|opus|claude|codex|orca/i);
   });
@@ -159,7 +161,7 @@ test('legacy routing detector excludes owned text and unrelated mentions', () =>
   expect(findLegacyRoutingLines('<!-- axstack:begin v1 -->\n' + legacy + '\n<!-- axstack:end -->')).toEqual([]);
 });
 
-test('CLI reports hand-written legacy routing gaps without editing either global instruction file', () => {
+function legacyRoutingFixture() {
   const root = makeTempRoot('axstack-legacy-routing-');
   const home = join(root, 'home');
   const fakeBin = join(root, 'fake-bin');
@@ -169,7 +171,39 @@ test('CLI reports hand-written legacy routing gaps without editing either global
     writeFileSync(file, `#!/bin/sh\necho '${output}'\n`);
     chmodSync(file, 0o755);
   }
-  const bundle = writeFixtureBundle(root);
+  return { root, home, fakeBin, bundle: writeFixtureBundle(root) };
+}
+
+test('CLI reports legacy routing before installation without editing the file', () => {
+  const { root, home, fakeBin } = legacyRoutingFixture();
+  const file = join(root, 'AGENTS.md');
+  const original = 'Use Orca orchestration via the orca CLI for every delegated worker.\n';
+  writeFileSync(file, original);
+  const result = runCli(join(import.meta.dir, '../../bin/axstack.js'), ['check', '--skills-dir', join(root, 'skills'), '--instructions', file], {
+    expectFail: true, env: { HOME: home, PATH: fakeBin },
+  });
+  expect(result.out).toMatch(/instruction missing.*marker block is absent/i);
+  expect(result.out).toMatch(/gap: legacy routing.*manual migration/i);
+  expect(result.out).not.toContain('No gaps detected.');
+  expect(readFileSync(file, 'utf8')).toBe(original);
+});
+
+test('CLI check handles a nonexistent instruction file with conflicting ownership', () => {
+  const { root, home, fakeBin, bundle } = legacyRoutingFixture();
+  const cli = join(import.meta.dir, '../../bin/axstack.js');
+  const skills = join(root, 'skills');
+  runCli(cli, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills, '--instructions', join(root, 'AGENTS.md'), '--no-claude-settings', '--yes'], { env: { HOME: home } });
+  const result = runCli(cli, ['check', '--skills-dir', skills, '--instructions', join(root, 'absent.md')], {
+    expectFail: true, env: { HOME: home, PATH: fakeBin },
+  });
+  expect(result.out).toContain('instruction conflict:');
+  expect(result.out).not.toContain('ENOENT');
+  expect(result.out).not.toContain('axstack:');
+  expect(result.out).not.toContain('No gaps detected.');
+});
+
+test('CLI reports hand-written legacy routing gaps without editing either global instruction file', () => {
+  const { root, home, fakeBin, bundle } = legacyRoutingFixture();
   for (const [harness, directory, filename] of [['claude', '.claude', 'CLAUDE.md'], ['codex', '.codex', 'AGENTS.md']]) {
     mkdirSync(join(home, directory), { recursive: true });
     const file = join(home, directory, filename);
@@ -177,16 +211,22 @@ test('CLI reports hand-written legacy routing gaps without editing either global
     writeFileSync(file, original);
     const skills = join(root, harness + '-skills');
     const cli = join(import.meta.dir, '../../bin/axstack.js');
-    runCli(cli, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills,
+    const checkArgs = ['check', '--skills-dir', skills, '--harness', harness];
+    const checkOptions = { expectFail: true, env: { HOME: home, CODEX_HOME: join(home, '.codex'), CLAUDE_CONFIG_DIR: join(home, '.claude'), PATH: fakeBin } };
+    const install = runCli(cli, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skills,
       '--instructions', file, '--no-claude-settings', '--yes'], { env: { HOME: home } });
     const installed = readFileSync(file, 'utf8');
     expect(installed).toStartWith(original);
-    const result = runCli(cli, ['check', '--skills-dir', skills, '--harness', harness], {
-      expectFail: true, env: { HOME: home, CODEX_HOME: join(home, '.codex'), CLAUDE_CONFIG_DIR: join(home, '.claude'), PATH: fakeBin },
-    });
-    expect(result.out).toContain('No gaps detected.');
+    const result = runCli(cli, checkArgs, checkOptions);
+    expect(result.out).not.toContain('No gaps detected.');
     expect(result.out).toMatch(/gap: legacy routing.*manual migration/i);
+    expect(install.out).toContain('legacy routing text (Haoshoku/Orca)');
     expect(readFileSync(file, 'utf8')).toBe(installed);
+    writeFileSync(file + '.other', original);
+    const existingConflict = runCli(cli, ['check', '--skills-dir', skills, '--instructions', file + '.other'], checkOptions);
+    expect(existingConflict.out).toContain('instruction conflict:');
+    expect(existingConflict.out).toMatch(/gap: legacy routing.*manual migration/i);
+    expect(readFileSync(file + '.other', 'utf8')).toBe(original);
     runCli(cli, ['uninstall', '--skills-dir', skills, '--instructions', file, '--no-claude-settings', '--yes'], { env: { HOME: home } });
     expect(readFileSync(file, 'utf8')).toBe(original);
   }

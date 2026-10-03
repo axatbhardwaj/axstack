@@ -399,7 +399,6 @@ async function main() {
     }
     if (command === 'check') {
       const report = await checkCapabilities(runRealCheck);
-      printCheckReport(report);
       if (flags.bundle) {
         const bundle = await validateBundle(resolve(flags.bundle));
         const presetNames = Object.keys(bundle.presets);
@@ -419,15 +418,20 @@ async function main() {
           `instruction ${instruction.status}: ${instruction.path}` +
             (instruction.reason ? ` (${instruction.reason})` : ''),
         );
-        if (instruction.status !== 'owned') process.exitCode = 1;
-        if (instruction.status !== 'missing') {
-          const text = readFileSync(instruction.path, 'utf8');
-          if (findLegacyRoutingLines(text).length > 0) {
-            console.log('gap: legacy routing remains outside the Axstack block; preserved for manual migration');
-            process.exitCode = 1;
-          }
+        if (instruction.status !== 'owned') {
+          report.gaps.push(`instruction ${instruction.status}: ${instruction.reason ?? 'Axstack binding is absent'}`);
+        }
+        let text;
+        try {
+          text = readFileSync(instruction.path, 'utf8');
+        } catch (err) {
+          if (err?.code !== 'ENOENT') throw err;
+        }
+        if (text !== undefined && findLegacyRoutingLines(text).length > 0) {
+          report.gaps.push('gap: legacy routing remains outside the Axstack block; preserved for manual migration');
         }
       }
+      printCheckReport(report);
       if (report.gaps.length > 0) process.exitCode = 1;
       return;
     }
