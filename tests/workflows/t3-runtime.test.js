@@ -52,8 +52,7 @@ const subjects = {
   'stale completion': /\bolder attempt\s+(?:is\s+)?never\s+complet\w*[^.;]*\bnewer\b|\bnewer attempt\s+is never completed by an older attempt\b/i,
   'delegate untouched': /^(?!.*\bfiles?\s+(?:change|changed|writ))[^.;]*(?:(?:\btracked[^.;]*\buntracked|\buntracked[^.;]*\btracked)[^.;]*\buntouched|\btracked files[^.;]*untouched alongside untracked files)/i,
   'question incomplete': /\bquestion\s+(?:stays|remains|is)\s+incomplete\b/i,
-  'reserved branch': /^(?!.*(?:\bonly until\b|\buntil recovery begins\b))[^.;]*\b(?:ke(?:ep|pt)[^.;]*reserved branch|reserved branch[^.;]*ke(?:ep|pt))[^.;]*\bthrough(?:out)?\s+recovery\b|\bthrough recovery\s+keep[^.;]*reserved branch/i,
-  'review tracked files': /^(?!.*\bwritable\b)[^.;]*read.only/i,
+  'reserved branch': /^(?!.*(?:\bonly until\b|\buntil recovery begins\b))[^.;]*(?:(?:\bke(?:ep|pt)[^.;]*reserved branch|\breserved branch[^.;]*ke(?:ep|pt))[^.;]*\bthrough(?:out)?\s+recovery\b|\bthrough recovery\s+keep[^.;]*reserved branch)/i,
 };
 const invertedState = /\b(?:un(?:completed|running|preserved|required|stable|kept|owned|validated|armed)|in(?:eligible|exact)|oldest|writable)\b|\breleas\w*[^.;]*\bhold\b/i;
 const accepts = (text, { name, concepts, prohibition }) => sentences(text).some((sentence) =>
@@ -81,8 +80,8 @@ const definitions = [
   ['absent seats', [/intentional/i, /\babsent seats/i, /\brecorded absences/i]],
   ['runtime availability', [/\bavailability/i, /\bruntime proof/i]],
   ['codex effort', [/\bcodex/i, /\beffort/i, /\boption ID/i, /\breasoningEffort/]],
-  ['claude effort', [/\bclaude/i, /\beffort/i, /\boption ID/i, /\beffort/i]],
-  ['grok effort', [/grok/i, /\breasoningEffort/, /\bexclud/i, /\bmax/i]],
+  ['claude effort', [/\bclaude/i, /\beffort/i, /\b(?:option ID effort|effort option ID)\b/i]],
+  ['grok effort', [/\bgrok/i, /\breasoningEffort/, /\bexclud\w* max\b/i]],
   ['Grok CLI floor', [/\bCLI/, /\brequir|must/i, /≥1\.0\.13/]],
   ['Grok readiness proof', [/grok/i, /\balone/i, /\bprove|establish/i, /\bCLI/i, /\bruns/i], /\bdoes not|cannot/i],
   ['opencode effort', [/\bopencode/i, /\beffort/i, /\bvariant/], /\bno OpenCode role enters this migration/i],
@@ -129,7 +128,7 @@ const definitions = [
   ['status persistence', [/\bdriver/i, /\bpersist/i, /\btask_status/, /\bprivate evidence/i, /\bbefore/i, /\bt3_thread_read/, /\bdelegated task/i]],
   ['whole status', [/\bsave/i, /\bwhole response/i, /\bbefore/i, /\bconsum|expand/i, /\bresult/i]],
   ['delegate completion', [/\bdelegated completion/i, /\brequir/i, /\bterminal/i, /\bcompleted/, /\bresult_available/, /\bhasPendingChildRuns:false/, /\bAXSTACK-DONE/]],
-  ['question incomplete', [/\bquestion/i, /incomplete/i, /\bcompleted/i]],
+  ['question incomplete', [/\bquestion/i, /\bincomplete/i, /\bcompleted/i]],
   ['writer completion', [/\blaunched writer completion/i, /\brequir/i, /\bterminal/i, /\bt3_thread_wait/, /\bnon.empty diff/i, /\bclean tree/i, /\bred\/green/i]],
   ['message progress', [/\breceipt message alone/i, /\bonly/i, /\bprogress/i]],
   ['current completion', [/\bcompletion/i, /\bcurrent attempt key/i, /\bcandidate SHA/i]],
@@ -701,7 +700,7 @@ const actions = {
     ['preparing hold', [/still preparing/i, /hold/i, /next wake/i]],
   ],
   'writer-death-after-idle': [
-    ['watch failure', [/failed run/i, /hold/i, /incomplete/i]],
+    ['watch failure', [/failed run/i, /hold/i, /\bincomplete/i]],
     ['replacement attempt', [/terminal failure/i, /a<n\+1>/]],
     ['failed branch salvage', [/failed/i, /branch/i, /salvage/i]],
   ],
