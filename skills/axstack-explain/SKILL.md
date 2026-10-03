@@ -16,7 +16,7 @@ exposes both skills, route the request here only.
 Before acting, load [Standing contracts](../axstack/references/contracts.md),
 then follow its required lifecycle and audit pointers. Explanation work has no
 scope baseline. Ordinary work in the current chat needs no launch preflight;
-load the [Orca runtime boundary](../axstack/references/orca-runtime.md) only
+load the [T3 runtime boundary](../axstack/references/t3-runtime.md) only
 immediately before an actual profile dispatch.
 
 ## 1. Bound the question and evidence

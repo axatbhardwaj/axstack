@@ -11,7 +11,6 @@ for phase continuation and holds.
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 Include [Safe deletion](../axstack/references/workspace-hygiene.md#safe-deletion) in author briefs.
-At author dispatch, apply [Readable sidebar](../axstack/references/workspace-hygiene.md#settlement).
 
 From an accepted scope identity, drive its task/PR map through author -> review
 -> repair until every required PR is merge-ready or held. Keep exact revisions,
@@ -53,17 +52,20 @@ valid recorded identity and revisions; otherwise report the hold and exact gap.
 
 For substantive delegated or resumable work, use the shared
 [run record](../axstack/references/run-record.md). Reconcile it on restart with
-the approved scope, Orca and forge state, exact revisions, tickets, and watches.
+the approved scope, T3 threads/runs and forge state, exact revisions, tickets, and watches.
 Reuse valid owners and authors; ambiguity holds a replacement writer.
 
-At execution start, bind work to the driver-owned Orca Run and one authoritative
-Task/Dispatch attempt. Preserve the actual IDs and process completion deliveries
-through the shared lifecycle. Do not activate a task-owned automation outside
+At execution start, bind work to the T3 driver thread and one authoritative
+dispatch attempt. Preserve the actual thread/task/run IDs and process completion
+receipts through the shared lifecycle. Do not activate a task-owned automation outside
 the accepted automations contract.
 
 Immediately before an actual role dispatch, read and follow the
-[Orca runtime boundary](../axstack/references/orca-runtime.md). Ordinary local
+[T3 runtime boundary](../axstack/references/t3-runtime.md). Ordinary local
 reading and writing does not require that launch reference.
+
+Launch authors through `t3_thread_launch` in their own SHA-pinned worktrees;
+use async `delegate_task` for non-writers under the runtime contract.
 
 One persistent owner remains accountable for each PR. Exactly one author writes
 it; accepted repairs return there while its evidence is usable, and the owner
@@ -202,7 +204,7 @@ For each PR:
 2. Publish through candidate-publication and read back the exact SHA.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
    author provenance. State the author's actual provider and model from the
-   Orca launch receipt in the review dispatch brief; a `Claude-Session`
+   T3 launch receipt in the review dispatch brief; a `Claude-Session`
    trailer is attribution, not provenance. After each settled review, run
    `axstack-cleanup` for its exact reviewer resources before PR merge,
    preserving and reading back the
@@ -215,7 +217,7 @@ For each PR:
    use the forge-native blocking check wait, bounded and used once per revision, then
    re-evaluate. Timeout, error, or missing wait capability records `held` at
    that revision with reason and resume condition; it never triggers author
-   repair. Keep CI-pending state in Orca.
+   repair. Keep CI-pending state in the T3 driver thread.
    `APPROVE` with only non-blocking findings plus diligence `PASS` can be
    `merge-ready` when the full predicate passes. The driver records the
    non-blocking notes and does not elect a repair; only the user can ask for
@@ -231,16 +233,17 @@ For each PR:
    A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` increments
    `repairs` once and counts once toward the third-round hold.
 
-One run-level completion wait covers every unsettled Dispatch; the bounded
+The T3 run watch reconciles every unsettled dispatch attempt; the bounded
 forge check wait is the only other implementation wait. The eligible run arms
 one maintain-mode chat-run watch at its first published PR; that watch owns its
-10-minute harness wake or Orca fallback. End a turn only when every required PR
-is `merge-ready` or `held`. Under the recorded Notification policy,
+bound 10-minute T3 schedule wake.
+A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
+With settled threads, end a turn only when every required PR is `merge-ready` or `held`. Under the recorded Notification policy,
 `axstack-relay` sends only a serious risk immediately, a genuine blocked
 operation needing user intervention after bounded safe recovery, or the
 decision holds and capped milestones named by the recorded Notification policy.
-Routine questions stay in Orca. Progress, CI pending, and completion always stay
-in Orca.
+Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
+in the T3 driver thread.
 Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
@@ -266,7 +269,7 @@ Never retarget, delete a stack branch, or rebase a reviewed stack member for
 merging. A failing push run on the target base after an automated merge holds
 further automated merges run-wide. The driver resumes on the user's next
 message, `/axstack-watch`,
-or the armed chat-run watch wake; no Orca merge wake exists today.
+or the armed chat-run watch wake; verify merge state through the forge on wake.
 Re-read forge state: record forge-merged PRs as `merged`;
 changed heads or feedback return to step 1; retain useful author work before Close-out.
 Run Close-out once only after every required PR is forge-merged, the run's

@@ -91,7 +91,7 @@ test('peer content is intent evidence and never reviewer instructions', () => {
 
 test('persistent owner consolidates report-only review and driver presents it', () => {
   const review = read('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/standalone peer review[^.]*materializes `axstack-owner`/i);
+  expect(review).toMatch(/Standalone peer review[^.]*reuses that driver/i);
   const reportOnly = review.slice(review.indexOf('## Report-only scope'), review.indexOf('## Authorized submission'));
   expect(reportOnly).toMatch(/owner[^.]*consolidat/i);
   expect(reportOnly).toMatch(/driver[^.]*presents/i);

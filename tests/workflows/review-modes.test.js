@@ -111,9 +111,9 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   const review = compact('skills/axstack-review/SKILL.md');
   expect(routing).toMatch(/preset change[^.]*new runs only|new runs[^.]*preset change/i);
   expect(routing).toMatch(/active runs?[^.]*snapshot/i);
-  expect(routing).toMatch(/Changing it or replacing a session needs an explicit user decision/i);
-  expect(routing).toMatch(/no automatic fallback|never[^.]*fallback/i);
-  expect(routing).toContain('silent provider/model/effort substitution');
+  expect(routing).toMatch(/Replacing a session needs an explicit user decision/i);
+  expect(routing).toContain("holds that role with no substitution");
+  expect(routing).toMatch(/provider[^.]*model[^.]*effort[^.]*no substitution/i);
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
   expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
@@ -187,7 +187,7 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(raw).toContain('Escalate to user: yes | no — <criterion> — <reason>');
   const brief = raw.slice(raw.indexOf('## Template: candidate review brief'), raw.indexOf('## Template: review receipt'));
   expect(brief).toContain('Escalate to user: yes | no — <criterion> — <reason>');
-  expect(brief).toMatch(/Actual author: <provider\/model from Orca launch receipt[^>]*>/);
+  expect(brief).toMatch(/Actual author: <provider\/model from T3 launch receipt[^>]*>/);
   expect(brief).toMatch(/Claude-Session[^.]*attribution[^.]*not provenance/i);
   const receipt = raw.slice(raw.indexOf('## Template: review receipt'), raw.indexOf('## Prompt-only urgent escalation'));
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);

@@ -72,8 +72,8 @@ test('review placement isolates each reviewer and preserves private run evidence
   expect(runtime).toMatch(/tracked candidate files[^.]*read-only/i);
   expect(runtime).toMatch(/before removing a reviewer worktree[^.]*read back[^.]*private run evidence folder/i);
   expect(runtime).toMatch(/private evidence archive[^.]*only[^.]*legacy in-worktree evidence/i);
-  expect(review).toContain('orca-runtime.md#reviewer-workspaces-and-evidence');
-  expect(review).toContain('Workspace: <Orca worktree ID + absolute path>');
+  expect(review).toContain('t3-runtime.md#role-dispatch-by-permitted-writes');
+  expect(review).toContain('Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>');
   expect(review).toContain('Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)');
 });
 
@@ -117,7 +117,7 @@ test('all active skill runtime instructions are Orca-only', () => {
     expect(readFileSync(path, 'utf8'), `${path} retains active Paseo instructions`).not.toMatch(/Paseo|paseo/);
   }
   for (const phase of ['align', 'audit', 'explain', 'implement', 'improve', 'research', 'review', 'spec', 'tickets', 'watch']) {
-    expect(read(`skills/axstack-${phase}/SKILL.md`)).toContain(`../axstack/references/${phase === 'watch' ? 't3' : 'orca'}-runtime.md`);
+    expect(read(`skills/axstack-${phase}/SKILL.md`)).toContain(`../axstack/references/t3-runtime.md`);
   }
 });
 

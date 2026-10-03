@@ -74,7 +74,7 @@ test('routing and docs describe all role IDs with a roster entry', () => {
   expect(read('skills/axstack/references/role-roster.md')).toMatch(/^- `axstack-diligence`:.*\(diligence\.md\)/m);
   for (const path of [
     'README.md', 'docs/installation.md', 'docs/workflows.md',
-    'skills/axstack/references/orca-runtime.md',
+    'skills/axstack/references/t3-runtime.md',
     'tests/workflows/routing-scenarios.json',
     'tests/workflows/debug-scenarios.json',
   ]) expect(read(path), path).toMatch(/role IDs/i);

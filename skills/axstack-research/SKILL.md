@@ -29,7 +29,7 @@ is part of research.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
    Every other research run dispatches every configured research branch through
-   Orca: requirements, code, and web (Sonnet high in mixed/claude-only;
+   T3 `delegate_task`: requirements, code, and web (Sonnet high in mixed/claude-only;
    Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
    built in), and X (Grok).
    Give each branch one owner, allow no cross-reading, and require a cited note
@@ -41,7 +41,7 @@ is part of research.
    named once in the next read-back, then skipped without relay or substitution;
    continue with available branches. Required branches hold their affected work.
    These routes are data presets, not proof of live readiness; before dispatch,
-   follow the [Orca runtime boundary](../axstack/references/orca-runtime.md),
+   follow the [T3 runtime boundary](../axstack/references/t3-runtime.md),
    confirm availability, and keep implementation out of every branch:
 
    - `axstack-research-requirements`: requirements and intent.
