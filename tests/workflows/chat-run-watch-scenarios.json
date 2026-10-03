@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "note": "Decision scenarios for independent prompt evaluation. Bun checks fixture shape and source contract only, not model or live Orca behavior.",
+  "version": 2,
+  "note": "Decision scenarios for independent prompt evaluation; Bun checks source contracts and fixture shape, not model or live T3 behavior.",
   "cases": [
     {
       "id": "membership-and-later-publication",
@@ -19,8 +19,8 @@
     },
     {
       "id": "authority-and-writers",
-      "input": "A and B each need a repair; A has two feedback items. The observer reports both while the original driver is busy.",
-      "expected": "Observer dispatches nothing and does not interrupt the busy driver. Driver may assign parallel child worktrees for A and B, with one writer and candidate for both A items."
+      "input": "A and B need repairs; A has two feedback items. The bound T3 wake resumes the original driver.",
+      "expected": "The original driver may assign parallel T3 writer worktrees for A and B, with one writer and candidate for both A items."
     },
     {
       "id": "stack-and-publication-order",
@@ -29,8 +29,8 @@
     },
     {
       "id": "recovery-and-stop",
-      "input": "A duplicate report arrives, D closes, then the user cancels while a pass and author Task remain unsettled; disable readback is ambiguous.",
-      "expected": "Reconcile native identities before duplicate work. Prevent new work, hold stop on ambiguous own-automation disable, and keep worker settlement and archive pending with the driver."
+      "input": "A duplicate completion arrives, D closes, then the user cancels while a pass and author run remain unsettled; schedule deletion readback is ambiguous.",
+      "expected": "Reconcile native identities before duplicate work, prevent new work, hold on uncertain delete_scheduled_task/list_scheduled_tasks absence and preserve worker settlement and archive with the driver."
     },
     {
       "id": "repair-loop-until-ready",
@@ -48,14 +48,14 @@
       "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready for human merge without re-requesting that approval."
     },
     {
-      "id": "harness-native-driver-wake",
-      "input": "The driver harness has a native scheduled-wake capability and owns two open PRs. One still has a failing required check and unresolved thread; ten minutes pass, then both PRs eventually merge.",
-      "expected": "Record the harness-native mechanism and wake the original driver chat every ten minutes without an Orca observer. Each wake runs the repair, feedback, rebase, CI, and approval loop; delegated authors and reviewers still use Orca. Stop and verify the chosen wake after both PRs merge."
+      "id": "t3-bound-driver-wake",
+      "input": "The original T3 driver owns two open PRs and a recorded bound 600000ms schedule; one required check fails and a thread remains unresolved.",
+      "expected": "The bound T3 schedule resumes the original driver every ten minutes; each wake reconciles unsettled runs and runs the authorized maintenance loop. Delete only its recorded ID and list_scheduled_tasks to verify absence after completion."
     },
     {
-      "id": "orca-observer-fallback",
-      "input": "The driver harness has no native monitoring or scheduled-wake capability, and an authorized own PR remains open. Later the user cancels before expiry.",
-      "expected": "Record the absence and use the existing Orca */10 chat-run observer to report internally and wake the original driver for each maintenance loop. Stop and read back the observer on cancellation; do not run a daemon or keep a polling model active between wakes."
+      "id": "t3-watch-deletion-hold",
+      "input": "The user cancels a bound T3 watch; delete_scheduled_task returns uncertain and list_scheduled_tasks still lists the recorded ID.",
+      "expected": "Prevent new work, preserve the hold and recorded ID, reconcile deletion before claiming stopped, and never delete another schedule or replace the original driver."
     }
   ]
 }

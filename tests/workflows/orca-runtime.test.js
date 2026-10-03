@@ -117,16 +117,16 @@ test('all active skill runtime instructions are Orca-only', () => {
     expect(readFileSync(path, 'utf8'), `${path} retains active Paseo instructions`).not.toMatch(/Paseo|paseo/);
   }
   for (const phase of ['align', 'audit', 'explain', 'implement', 'improve', 'research', 'review', 'spec', 'tickets', 'watch']) {
-    expect(read(`skills/axstack-${phase}/SKILL.md`)).toContain('../axstack/references/orca-runtime.md');
+    expect(read(`skills/axstack-${phase}/SKILL.md`)).toContain(`../axstack/references/${phase === 'watch' ? 't3' : 'orca'}-runtime.md`);
   }
 });
 
 test('review manager uses capacity admission and requires canary evidence', () => {
   const manager = read('skills/axstack/references/automations.md');
-  expect(manager).toContain('dedicated existing Orca workspace');
-  expect(manager).toMatch(/native existing-workspace mode[^.]*--fresh-session/i);
+  expect(manager).toContain('T3 project `axstack-review-lane`');
+  expect(manager).toMatch(/schedule_task[^.]*everyMs:900000[^.]*bindToCurrentThread:false/i);
   expect(manager).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
-  expect(manager).toMatch(/canary must prove fresh-session/i);
+  expect(manager).toMatch(/Disable the previous automation only after all four T3 canary checks pass/i);
   expect(manager).not.toMatch(/watch manager|watch lane/i);
 });
 

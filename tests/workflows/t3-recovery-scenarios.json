@@ -59,6 +59,19 @@
       "expected": {
         "action": "Retain the open-PR author; classify ignored non-cache content, salvage and verify its bundle before archiving and exact removal; unknown content or failed verification holds."
       }
+    },
+    {
+      "id": "bound-watch-wake-and-deletion",
+      "input": "A bound schedule wakes the idle driver after a writer dies without a receipt; later all runs settle, but the first deletion readback is uncertain.",
+      "contracts": [
+        "Each wake reconciles all unsettled runs before running the authorized maintenance loop.",
+        "A failed run holds incomplete work even when its writer sent no receipt.",
+        "Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.",
+        "An uncertain delete preserves the hold and recorded schedule ID."
+      ],
+      "expected": {
+        "action": "Arm schedule_task with bindToCurrentThread:true and everyMs:600000, record its ID, reconcile failed runs as incomplete, then delete_scheduled_task only for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
+      }
     }
   ]
 }

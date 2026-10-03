@@ -233,7 +233,7 @@ test('owned-core: one persistent owner and standalone watch remain explicit', ()
   ).toBeTruthy();
   expect(/monitor/i.test(text), 'must name the optional standalone monitor').toBeTruthy();
   expect(/optional read-only observer/i.test(text), 'monitor must remain read-only').toBeTruthy();
-  expect(/Orca runtime/i.test(text), 'watch must name the Orca runtime boundary').toBeTruthy();
+  expect(/T3 runtime/i.test(text), 'watch must name the T3 runtime boundary').toBeTruthy();
   expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
   expect(/reconcil/i.test(text), 'uncertain state must be reconciled').toBeTruthy();
 });

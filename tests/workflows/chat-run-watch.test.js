@@ -12,7 +12,7 @@ const runRecord = () => read('skills/axstack/references/run-record.md');
 const autopilot = () => read('skills/axstack/references/autopilot.md');
 
 // These checks exercise the shipped instruction contract. They do not prove
-// model decisions or native Orca behavior; the scenarios need independent evaluation.
+// model decisions or native T3 behavior; the scenarios need independent evaluation.
 test('chat-run membership admits run publications and explicit adoptions only', () => {
   const text = watch() + runtime();
   expect(text).toMatch(/chat-run watch/i);
@@ -65,8 +65,8 @@ test('chat-run cancellation and terminal state stop only owned automation after 
   const text = watch() + runtime();
   expect(text).toMatch(/all members merged or closed[^.]*user cancellation/i);
   expect(text).toMatch(/re-read membership[^.]*ambiguous publication/i);
-  expect(text).toMatch(/disable[^.]*own automation[^.]*readback/i);
-  expect(text).toMatch(/failed or uncertain disable[^.]*hold/i);
+  expect(text).toMatch(/delete[^.]*recorded watch[^.]*delete_scheduled_task[^.]*absence[^.]*list_scheduled_tasks/i);
+  expect(text).toMatch(/uncertain delete[^.]*hold/i);
   expect(text).toMatch(/standalone[^.]*24.h/i);
 });
 
@@ -79,8 +79,8 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     'repair-loop-until-ready',
     'human-approval-survives-repair',
     'maintenance-loop-until-ready',
-    'harness-native-driver-wake',
-    'orca-observer-fallback',
+    't3-bound-driver-wake',
+    't3-watch-deletion-hold',
   ]);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(20);
@@ -113,13 +113,12 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });
 
-test('own open PRs wake the driver every ten minutes through its harness first', () => {
+test('own open PRs wake the original T3 driver every ten minutes', () => {
   expect(watch()).toMatch(/own open PRs[^.]*every 10 minutes by default/i);
-  expect(runtime()).toMatch(/harness[^.]*native monitoring or scheduled.wake[^.]*driver chat[^.]*10 minutes/i);
-  expect(runtime()).toMatch(/only when[^.]*harness[^.]*none[^.]*Orca[^.]*observer/i);
-  expect(runtime()).toMatch(/record[^.]*chosen mechanism[^.]*run record/i);
-  expect(runtime()).toMatch(/each[^.]*wake[^.]*maintenance loop/i);
-  expect(runtime()).toMatch(/delegated[^.]*Orca[^.]*no daemon[^.]*no polling model between wakes/i);
+  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:600000`');
+  expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*expiry/i);
+  expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
+  expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
 });
 
 test('chosen wake stops at merge, cancellation, or expiry and docs describe the default', () => {
@@ -137,12 +136,47 @@ test('installation and run record describe the selected wake', () => {
 });
 
 test('wake failure guards and human merge authority stay explicit', () => {
-  expect(runtime()).toMatch(/failed or uncertain stop is a hold/i);
-  expect(runtime()).toMatch(/fallback capability[^.]*missing[^.]*hold activation/i);
-  expect(watch()).toMatch(/failed or uncertain harness wake stop[^.]*hold/i);
+  expect(runtime()).toMatch(/uncertain delete[^.]*hold/i);
+  expect(runtime()).toMatch(/missing schedule capability[^.]*holds activation/i);
+  expect(watch()).toMatch(/failed or uncertain schedule deletion[^.]*hold/i);
   expect(watch()).toMatch(/human merges by default/i);
 });
 
 test('own-PR merge-ready requires a head rebased on the current base', () => {
   expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*every review comment and thread[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
 });
+
+
+test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
+  const scenario = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json')).cases
+    .find(({ id }) => id === 'bound-watch-wake-and-deletion');
+  expect(scenario).toBeDefined();
+  expect(scenario.contracts).toEqual([
+    'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
+    'A failed run holds incomplete work even when its writer sent no receipt.',
+    'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
+    'An uncertain delete preserves the hold and recorded schedule ID.',
+  ]);
+  const text = runtime();
+  for (const sentence of scenario.contracts) expect(text).toContain(sentence);
+  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:600000',
+    'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
+    expect(scenario.expected.action).toContain(concept);
+    expect(scenario.expected.action.replaceAll(concept, '')).not.toContain(concept);
+  }
+});
+
+for (const sentence of [
+  'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
+  'A failed run holds incomplete work even when its writer sent no receipt.',
+  'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
+  'An uncertain delete preserves the hold and recorded schedule ID.',
+]) {
+  test(`T3 watch safety: ${sentence}`, () => {
+    const accepts = (text) => text.includes(sentence);
+    const text = runtime();
+    expect(accepts(text)).toBe(true);
+    expect(accepts(text.replace(sentence, ''))).toBe(false);
+    expect(accepts(text.replace(sentence, sentence.replace(/reconciles|holds|only|preserves/i, 'inverted')))).toBe(false);
+  });
+}

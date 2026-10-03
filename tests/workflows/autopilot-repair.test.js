@@ -83,7 +83,7 @@ rule('diligence repairs at owning phase', autopilot, 'Diligence FINDINGS during 
 rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS during implement', /only a recorded hold pauses autopilot/);
 rule('workflow routine events always stay in Orca', () => read('docs/workflows.md'), 'Progress, CI pending, and completion', /always stay in Orca/);
 rule('implement routine events always stay in Orca', implement, 'Progress, CI pending, and completion', /always stay in Orca/);
-rule('watch routine events always stay in Orca', watch, 'Progress, CI pending, and completion', /always stay in Orca/);
+rule('watch routine events always stay in T3', watch, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('workflow relay remains bounded', () => read('docs/workflows.md'), 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('watch relay remains bounded', watch, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
