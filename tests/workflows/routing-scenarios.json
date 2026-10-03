@@ -15,7 +15,7 @@
     {
       "id": "ui-change-rendered-check",
       "input": { "phase": "implement", "change": "UI interaction", "candidate": "SHA UI", "check": "confirm desktop and mobile behavior in browser" },
-      "expected": { "role": "axstack-ui-verifier", "route": "Orca Dispatch at SHA UI; read-only rendered check with evidence paths", "forbidden": ["PR writer performs rendered check", "verifier edits source"] }
+      "expected": { "role": "axstack-ui-verifier", "route": "T3 delegate_task in a disposable detached checkout at SHA UI with preview_* tools; read-only rendered check with evidence paths", "forbidden": ["PR writer performs rendered check", "verifier edits source"] }
     },
     {
       "id": "mixed-sol-authored",

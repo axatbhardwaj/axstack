@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
@@ -12,7 +13,7 @@ const runRecord = () => read('skills/axstack/references/run-record.md');
 const autopilot = () => read('skills/axstack/references/autopilot.md');
 
 // These checks exercise the shipped instruction contract. They do not prove
-// model decisions or native Orca behavior; the scenarios need independent evaluation.
+// model decisions or native T3 behavior; the scenarios need independent evaluation.
 test('chat-run membership admits run publications and explicit adoptions only', () => {
   const text = watch() + runtime();
   expect(text).toMatch(/chat-run watch/i);
@@ -45,10 +46,15 @@ test('chat-run wake uses the PR digest before deciding whether to act', () => {
   expect(text).toMatch(/exit 2[^.]*readiness[^.]*UNKNOWN/i);
 });
 
-test('verified Autopilot transitions update the driver sidebar comment', () => {
-  const instruction = autopilot().match(/[^.]*verified Autopilot transition[^.]*\./i)?.[0] ?? '';
-  expect(instruction).toMatch(/mirror[^.]*Autopilot:[^.]*driver worktree[^.]*--comment/i);
-  expect(instruction).not.toMatch(/\b(?:never|do not|don't)\b/i);
+test('driver records verified Autopilot transitions in the authoritative private run record', () => {
+  const recordsTransition = (text) => requires(text, /driver/i, /record\w*/i,
+    /each|every/i, /verified/i, /Autopilot:/i, /transition\w*/i,
+    /private run record/i, /remain\w* authoritative/i);
+  const instruction = 'The driver records each verified `Autopilot:` transition in the private run record, which remains authoritative.';
+  expect(recordsTransition(autopilot())).toBe(true);
+  expect(recordsTransition(autopilot().replace(instruction, ''))).toBe(false);
+  expect(recordsTransition('Every verified Autopilot: transition is recorded by the driver in the private run record, which remains authoritative.')).toBe(true);
+  expect(recordsTransition(instruction.replace('records', 'does not record'))).toBe(false);
 });
 
 test('observer reports internally; only original driver routes repairs and writers', () => {
@@ -65,8 +71,8 @@ test('chat-run cancellation and terminal state stop only owned automation after 
   const text = watch() + runtime();
   expect(text).toMatch(/all members merged or closed[^.]*user cancellation/i);
   expect(text).toMatch(/re-read membership[^.]*ambiguous publication/i);
-  expect(text).toMatch(/disable[^.]*own automation[^.]*readback/i);
-  expect(text).toMatch(/failed or uncertain disable[^.]*hold/i);
+  expect(text).toMatch(/delete[^.]*recorded watch[^.]*delete_scheduled_task[^.]*absence[^.]*list_scheduled_tasks/i);
+  expect(text).toMatch(/uncertain delete[^.]*hold/i);
   expect(text).toMatch(/standalone[^.]*24.h/i);
 });
 
@@ -79,8 +85,8 @@ test('chat-run scenario corpus covers decisions beyond source checks', () => {
     'repair-loop-until-ready',
     'human-approval-survives-repair',
     'maintenance-loop-until-ready',
-    'harness-native-driver-wake',
-    'orca-observer-fallback',
+    't3-bound-driver-wake',
+    't3-watch-deletion-hold',
   ]);
   for (const scenario of cases) {
     expect(scenario.input.length).toBeGreaterThan(20);
@@ -113,36 +119,100 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });
 
-test('own open PRs wake the driver every ten minutes through its harness first', () => {
+test('own open PRs wake the original T3 driver every ten minutes', () => {
   expect(watch()).toMatch(/own open PRs[^.]*every 10 minutes by default/i);
-  expect(runtime()).toMatch(/harness[^.]*native monitoring or scheduled.wake[^.]*driver chat[^.]*10 minutes/i);
-  expect(runtime()).toMatch(/only when[^.]*harness[^.]*none[^.]*Orca[^.]*observer/i);
-  expect(runtime()).toMatch(/record[^.]*chosen mechanism[^.]*run record/i);
-  expect(runtime()).toMatch(/each[^.]*wake[^.]*maintenance loop/i);
-  expect(runtime()).toMatch(/delegated[^.]*Orca[^.]*no daemon[^.]*no polling model between wakes/i);
+  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:600000`');
+  expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*expiry/i);
+  expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
+  expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
 });
 
 test('chosen wake stops at merge, cancellation, or expiry and docs describe the default', () => {
   expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*user cancels[^.]*expires/i);
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*cancellation[^.]*expires/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
-  expect(docs()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
-  expect(readme()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
+  expect(docs()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
+  expect(readme()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
 });
 
 test('installation and run record describe the selected wake', () => {
-  expect(installation()).toMatch(/chat-run[^.]*harness.native[^.]*10 minutes[^.]*default/i);
-  expect(installation()).toMatch(/only when[^.]*harness[^.]*no[^.]*Orca[^.]*fallback/i);
-  expect(runRecord()).toMatch(/chat-run watch[^.]*chosen wake mechanism[^.]*identity or command/i);
+  expect(installation()).toMatch(/chat-run[^.]*bound T3 schedule[^.]*10 minutes[^.]*default/i);
+  expect(installation()).toMatch(/missing schedule capability[^.]*holds activation/i);
+  expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });
 
 test('wake failure guards and human merge authority stay explicit', () => {
-  expect(runtime()).toMatch(/failed or uncertain stop is a hold/i);
-  expect(runtime()).toMatch(/fallback capability[^.]*missing[^.]*hold activation/i);
-  expect(watch()).toMatch(/failed or uncertain harness wake stop[^.]*hold/i);
+  expect(runtime()).toMatch(/uncertain delete[^.]*hold/i);
+  expect(runtime()).toMatch(/missing schedule capability[^.]*holds activation/i);
+  expect(watch()).toMatch(/failed or uncertain schedule deletion[^.]*hold/i);
   expect(watch()).toMatch(/human merges by default/i);
 });
 
 test('own-PR merge-ready requires a head rebased on the current base', () => {
   expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*every review comment and thread[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
+});
+
+
+test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
+  const scenario = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json')).cases
+    .find(({ id }) => id === 'bound-watch-wake-and-deletion');
+  expect(scenario).toBeDefined();
+  expect(scenario.contracts).toEqual([
+    'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
+    'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+    'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
+    'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
+    'A failed run holds incomplete work even when its writer sent no receipt.',
+    'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
+    'An uncertain delete preserves the hold and recorded schedule ID.',
+  ]);
+  const text = runtime();
+  for (const sentence of scenario.contracts) expect(text).toContain(sentence);
+  expect(scenario.input).toContain('all runs settle while a PR stays open with CI pending');
+  expect(scenario.input).toContain('all PRs merge but release is still pending');
+  expect(scenario.expected.action).toContain('keep the same schedule armed while CI or release is pending');
+  expect(scenario.expected.action).toContain('never create a second watch');
+  expect(scenario.expected.action).toContain('delete only after chat-run stop conditions');
+  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:600000',
+    'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
+    expect(scenario.expected.action).toContain(concept);
+    expect(scenario.expected.action.replaceAll(concept, '')).not.toContain(concept);
+  }
+});
+
+for (const sentence of [
+  'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
+  'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+  'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
+  'Wake only the exact live original driver.',
+  'A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.',
+  "The orphan sweep covers the run record's repositories plus registered repositories on this host.",
+  'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
+  'A failed run holds incomplete work even when its writer sent no receipt.',
+  'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
+  'An uncertain delete preserves the hold and recorded schedule ID.',
+]) {
+  test(`T3 watch safety: ${sentence}`, () => {
+    const accepts = (text) => text.includes(sentence);
+    const text = runtime();
+    expect(accepts(text)).toBe(true);
+    expect(accepts(text.replace(sentence, ''))).toBe(false);
+    expect(accepts(text.replace(sentence, sentence.replace(/^(\S+)/, '$1 not')))).toBe(false);
+  });
+}
+
+test('recovery scenario does not interrupt the busy driver', () => {
+  const scenario = JSON.parse(read('tests/workflows/chat-run-watch-scenarios.json')).cases
+    .find(({ id }) => id === 'recovery-and-stop');
+  const sentence = 'does not interrupt the busy driver';
+  expect(scenario.expected).toContain(sentence);
+  expect(scenario.expected.replace(sentence, '')).not.toContain(sentence);
+});
+
+test('watch frontmatter and unchanged links keep their single-line form', () => {
+  const text = readFileSync(`${import.meta.dir}/../../skills/axstack-watch/SKILL.md`, 'utf8');
+  expect(text).toContain('description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.\n');
+  expect(text).toContain('On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.');
+  expect(text).toContain("repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run\n");
+  expect(text).not.toMatch(/\[[^\]]*\n[^\]]*\]\(/);
 });

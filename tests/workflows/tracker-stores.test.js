@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -12,7 +13,14 @@ test('tracker stores: GitHub Issues is a first-class spec and capability store',
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
 
-  expect(spec).toMatch(/Linear[^.]*default[^.]*GitHub Issues[^.]*repository Markdown/i);
+  expect(spec).toMatch(/Linear[^.]*executor MCP[^.]*defi-com/i);
+  const alternatives = (text) => requires(text, /GitHub Issues/i, /repository Markdown/i,
+    /user/i, /explicit\w*/i, /select\w*/i, /non-`?defi-com|outside defi-com/i);
+  const instruction = 'Use GitHub Issues or repository Markdown when the user explicitly selects it, and for non-`defi-com` repositories under that boundary.';
+  expect(alternatives(spec)).toBe(true);
+  expect(alternatives(spec.replace(instruction, ''))).toBe(false);
+  expect(alternatives('Use repository Markdown or GitHub Issues for repositories outside defi-com and when explicitly selected by the user.')).toBe(true);
+  expect(alternatives('Do not use repository Markdown or GitHub Issues for repositories outside defi-com and when explicitly selected by the user.')).toBe(false);
   expect(spec).toMatch(/GitHub mode[^.]*target repository[^.]*issues enabled[^.]*read and write access/i);
   expect(spec).toMatch(/GitHub issue URL[^.]*SHA-256 body digest/i);
 
@@ -24,7 +32,7 @@ test('tracker stores: GitHub Issues is a first-class spec and capability store',
 
   expect(routing).toMatch(/Markdown, GitHub Issues, or Linear store/i);
   expect(lifecycle).toMatch(/close selected external-tracker tickets/i);
-  expect(workflows).toMatch(/Linear is the default[^.]*GitHub Issues[^.]*repository Markdown/i);
+  expect(workflows).toMatch(/Linear[^.]*executor MCP[^.]*defi-com/i);
 });
 
 test('tracker stores: checker roles cover the selected external tracker', () => {

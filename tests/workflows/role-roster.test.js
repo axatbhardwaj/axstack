@@ -8,7 +8,7 @@ test('routing loads the extracted roster and keeps the class-resolution contract
   const routing = read('skills/axstack/references/routing.md');
   expect(routing).toContain('Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.');
   expect(routing).toContain('For each role record class, resolved exact ID, source');
-  expect(routing).toContain('Resume must reuse the snapshot and');
+  expect(routing).toContain('Resume must reuse the saved capabilities and role snapshot');
 });
 
 test('roster names class routes for Sonnet and Sol analysis seats', () => {
@@ -21,7 +21,7 @@ test('routing and roster links resolve inside the packaged references', () => {
   for (const name of ['routing.md', 'role-roster.md']) {
     for (const [, target] of read(`skills/axstack/references/${name}`).matchAll(/\]\(([^)]+)\)/g)) {
       const path = target.split('#')[0];
-      expect(path).toMatch(/^[a-z-]+\.md$/);
+      expect(path).toMatch(/^[a-z0-9-]+\.md$/);
       expect(existsSync(`${root}/skills/axstack/references/${path}`)).toBe(true);
     }
   }

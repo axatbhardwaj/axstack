@@ -6,7 +6,7 @@ import { makeTempRoot, runCli as runBunCli } from './helpers.js';
 const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const runCli = (args, opts) => runBunCli(CLI, args, opts);
 
-function writeOrcaBundle(root, { skillBody = '# Axstack\n', roles } = {}) {
+function writeLegacyRuntimeBundle(root, { skillBody = '# Axstack\n', roles } = {}) {
   const bundle = join(root, 'bundle');
   mkdirSync(join(bundle, 'skills', 'axstack'), { recursive: true });
   mkdirSync(join(bundle, 'profiles', 'presets'), { recursive: true });
@@ -28,8 +28,8 @@ function writeOrcaBundle(root, { skillBody = '# Axstack\n', roles } = {}) {
 }
 
 test('installs roles as an ordinary owned axstack file and preserves edits', () => {
-  const root = makeTempRoot('axstack-orca-roles-');
-  const bundle = writeOrcaBundle(root);
+  const root = makeTempRoot('axstack-legacy-runtime-roles-');
+  const bundle = writeLegacyRuntimeBundle(root);
   const skillsDir = join(root, 'skills');
   const roleFile = join(skillsDir, 'axstack', 'roles.json');
 
@@ -51,12 +51,12 @@ test('installs roles as an ordinary owned axstack file and preserves edits', () 
 });
 
 test('rejects malformed or duplicate roles before target writes', () => {
-  const root = makeTempRoot('axstack-orca-invalid-');
+  const root = makeTempRoot('axstack-legacy-runtime-invalid-');
   const roles = [
     { id: 'axstack-driver', name: 'Driver', provider: 'codex', model: 'm' },
     { id: 'axstack-driver', name: 'Duplicate', provider: 'claude', model: 'm' },
   ];
-  const bundle = writeOrcaBundle(root, { roles });
+  const bundle = writeLegacyRuntimeBundle(root, { roles });
   const skillsDir = join(root, 'skills');
   const result = runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir], {
     expectFail: true,
@@ -66,8 +66,8 @@ test('rejects malformed or duplicate roles before target writes', () => {
 });
 
 test('obsolete --profile is rejected with migration guidance before writes', () => {
-  const root = makeTempRoot('axstack-orca-obsolete-');
-  const bundle = writeOrcaBundle(root);
+  const root = makeTempRoot('axstack-legacy-runtime-obsolete-');
+  const bundle = writeLegacyRuntimeBundle(root);
   const skillsDir = join(root, 'skills');
   const oldConfig = join(root, 'paseo.json');
   writeFileSync(oldConfig, 'untouched\n');
@@ -78,15 +78,15 @@ test('obsolete --profile is rejected with migration guidance before writes', () 
   ]) {
     const result = runCli(args, { expectFail: true });
     expect(result.out).toMatch(/--profile.*obsolete|obsolete.*--profile/i);
-    expect(result.out).toMatch(/roles\.json|Orca/i);
+    expect(result.out).toMatch(/roles\.json|T3/i);
     expect(existsSync(skillsDir)).toBe(false);
     expect(readFileSync(oldConfig, 'utf8')).toBe('untouched\n');
   }
 });
 
 test('legacy profile provenance remains inert across install and uninstall', () => {
-  const root = makeTempRoot('axstack-orca-legacy-');
-  const bundle = writeOrcaBundle(root, { skillBody: '# Axstack v2\n' });
+  const root = makeTempRoot('axstack-legacy-runtime-legacy-');
+  const bundle = writeLegacyRuntimeBundle(root, { skillBody: '# Axstack v2\n' });
   const skillsDir = join(root, 'skills');
   mkdirSync(join(skillsDir, 'axstack'), { recursive: true });
   writeFileSync(join(skillsDir, 'axstack', 'SKILL.md'), '# Axstack v1\n');

@@ -2,7 +2,8 @@ import { test, expect } from 'bun:test';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
-import { readFileSync, existsSync, lstatSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { requires, sentences } from './prose-contract.js';
 
 const SEP = '/';
 
@@ -69,6 +70,147 @@ const STANDALONE_PHASES = [
 ];
 
 // NOTE: structural checks only. They verify packaging, not instruction-following behavior.
+
+// Only this named pattern list is excluded from the active-reference scan.
+const RETIRED_REFERENCES = {
+  runtime: /orca/i,
+  predecessor: /paseo/i,
+  legacyConstant: /^export const LEGACY_ROUTING_PATTERN = [^\n]+;$/m,
+  rollbackAutomation: '6. Re-enable the Orca automation and verify its enabled state.',
+  installerFixtures: [
+    'expect(block).not.toMatch(/model|opus|claude|codex|orca/i);',
+    "const legacy = 'Route all reviewers and writers through Orca orchestration.';",
+    "expect(findLegacyRoutingLines('Orca is installed for rollback.')).toEqual([]);",
+    "const original = 'Use Orca orchestration via the orca CLI for every delegated worker.\\n';",
+    "const original = 'Use Orca orchestration via the orca CLI for every delegated worker.\\nKeep my personal rules.\\n';",
+  ],
+};
+
+const activePaths = ['skills', 'src', 'bin', 'profiles', 'tests', 'README.md',
+  'docs/workflows.md', 'docs/installation.md', 'AGENTS.md', 'package.json'];
+
+function activeReferences(base) {
+  const violations = [];
+  const scan = (path) => {
+    const absolute = join(base, path);
+    if (!existsSync(absolute)) return;
+    if (RETIRED_REFERENCES.runtime.test(path)) violations.push(`${path}: filename`);
+    if (lstatSync(absolute).isDirectory()) {
+      for (const name of readdirSync(absolute)) scan(`${path}/${name}`);
+      return;
+    }
+    let text = readFileSync(absolute, 'utf8');
+    if (path === 'src/instructions.js') text = text.replace(RETIRED_REFERENCES.legacyConstant, '');
+    if (path === 'tests/installer/instructions.test.js') {
+      text = text.split('\n').filter((line) => !RETIRED_REFERENCES.installerFixtures.includes(line.trim())).join('\n');
+    }
+    if (path === 'tests/workflows/structural.test.js') {
+      text = text.replace(/^const RETIRED_REFERENCES = \{[\s\S]*?^\};/m, '');
+    }
+    if (path === 'docs/installation.md') text = text.replace(/^## Rollback\n[\s\S]*?(?=^## |$(?![\s\S]))/m, '');
+    if (RETIRED_REFERENCES.runtime.test(text)) violations.push(`${path}: content`);
+  };
+  for (const path of activePaths) scan(path);
+  return violations;
+}
+
+test('structural: active paths contain no retired runtime dependency or routing', () => {
+  expect(activeReferences(root)).toEqual([]);
+});
+
+test('structural: reference guard covers content, filenames, and narrow exemptions', () => {
+  const fixture = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/t7-guard-`);
+  const put = (path, text) => {
+    mkdirSync(dirname(join(fixture, path)), { recursive: true });
+    writeFileSync(join(fixture, path), text);
+  };
+  const retired = RETIRED_REFERENCES.runtime.source;
+  try {
+    for (const path of ['skills/probe.md', 'src/probe.js', 'bin/probe.js',
+      'profiles/probe.json', 'tests/probe.js', ...activePaths.slice(5)]) {
+      put(path, `Route through ${retired.toUpperCase()}.`);
+      expect(activeReferences(fixture), path).toEqual([`${path}: content`]);
+      writeFileSync(join(fixture, path), 'T3');
+    }
+    for (const directory of activePaths.slice(0, 5)) {
+      const path = `${directory}/${retired}-runtime.md`;
+      put(path, 'T3');
+      expect(activeReferences(fixture), path).toEqual([`${path}: filename`]);
+      rmSync(join(fixture, path));
+    }
+    put('src/instructions.js', `export const LEGACY_ROUTING_PATTERN = /${retired}/i;`);
+    put('tests/installer/instructions.test.js', RETIRED_REFERENCES.installerFixtures.join('\n'));
+    put('tests/workflows/structural.test.js', `const RETIRED_REFERENCES = {\n  runtime: /${retired}/i,\n};`);
+    put('docs/installation.md', `# Installation\nT3\n## Rollback\nReinstall ${retired}.\n## Examples\nT3`);
+    put(`docs/specs/${retired}.md`, retired);
+    put(`docs/plans/${retired}.md`, retired);
+    expect(activeReferences(fixture)).toEqual([]);
+    for (const path of ['src/instructions.js', 'tests/installer/instructions.test.js',
+      'tests/workflows/structural.test.js', 'docs/installation.md']) {
+      const original = readFileSync(join(fixture, path), 'utf8');
+      writeFileSync(join(fixture, path), `${original}\nUse ${retired} for routing.`);
+      expect(activeReferences(fixture), path).toEqual([`${path}: content`]);
+      writeFileSync(join(fixture, path), original);
+    }
+  } finally {
+    rmSync(fixture, { recursive: true });
+  }
+});
+
+test('structural: skill Markdown excludes the retired predecessor', () => {
+  for (const path of skillMarkdownFiles) {
+    expect(readFileSync(path, 'utf8'), path).not.toMatch(RETIRED_REFERENCES.predecessor);
+  }
+});
+
+test('structural: public guidance identifies T3 and qualifies runtime evidence', () => {
+  const docs = ['README.md', 'docs/installation.md', 'docs/workflows.md']
+    .map((path) => readFileSync(join(root, path), 'utf8'));
+  const activeRuntime = (text) => requires(text, /T3 Code/i, /only supported active runtime/i);
+  for (const text of docs) {
+    expect(activeRuntime(text)).toBe(true);
+    const matching = sentences(text).filter(activeRuntime);
+    expect(activeRuntime(sentences(text).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
+  }
+  expect(activeRuntime('The only supported active runtime is T3 Code.')).toBe(true);
+  expect(activeRuntime('T3 Code is not the only supported active runtime.')).toBe(false);
+  expect(docs.join('\n')).toMatch(/historical[^.]*Paseo|Paseo[^.]*historical/i);
+  expect(docs.join('\n')).toMatch(/compatib[^.]*unverified|unverified[^.]*compatib/i);
+  expect(docs.join('\n')).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);
+});
+
+test('structural: installation records setup and the ordered rollback boundary', () => {
+  const installation = readFileSync(join(root, 'docs/installation.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(installation).toContain('0.0.46-nightly.20261003.2610');
+  expect(installation).toContain('t3 serve --tailscale-serve');
+  expect(installation).toContain('t3 pair');
+  for (const [concepts, holdout] of [
+    [[/worktreeCleanup/, /off/, /Axstack project/i], 'For each Axstack project, worktreeCleanup must be off.'],
+    [[/Antigravity/i, /T3/i, /managed runtime/i, /sign.in/i], 'Use the T3 managed runtime for Antigravity and complete browser sign-in.'],
+    [[/Grok CLI/i, /(?:>=|≥)1\.0\.13/], 'Grok CLI must be >=1.0.13.'],
+  ]) {
+    const accepts = (text) => requires(text, ...concepts);
+    expect(accepts(installation)).toBe(true);
+    expect(accepts(holdout)).toBe(true);
+    expect(accepts(`Do not follow this instruction: ${holdout}`)).toBe(false);
+    const matching = sentences(installation).filter(accepts);
+    expect(accepts(sentences(installation).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
+  }
+  let previous = -1;
+  for (const pin of [
+    '1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
+    '2. Restore the backed-up `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` global instructions on both hosts.',
+    '3. Set the recorded T3 manager schedule to `enabled:false` and verify the disabled state.',
+    '4. Delete every armed run watch by its recorded schedule ID and verify absence.',
+    '5. Stop and disable the `t3 serve` user service on the VPS.',
+    RETIRED_REFERENCES.rollbackAutomation,
+  ]) {
+    const position = installation.indexOf(pin);
+    expect(position, pin).toBeGreaterThan(previous);
+    previous = position;
+  }
+  expect(installation).toMatch(/stays installed for one week after the VPS canary/i);
+});
 
 test('structural: shared root has no entry file and all six phase skills exist', () => {
   expect(existsSync(join(skillsDir, 'axstack', 'SKILL.md'))).toBe(false);
@@ -150,7 +292,7 @@ test('structural: standalone phases explicitly load shared references', () => {
       `${name}: must explicitly load shared axstack reference(s)`,
     ).toBeTruthy();
   }
-  for (const ref of ['orca-runtime.md', 'contracts.md']) {
+  for (const ref of ['t3-runtime.md', 'contracts.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -171,7 +313,7 @@ test('structural: active PR parallelism has no fixed count', () => {
 
   const contracts = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
   expect(contracts).toMatch(/no fixed active-PR count/i);
-  expect(contracts).toMatch(/one Orca execution host owns a run/i);
+  expect(contracts).toMatch(/one T3 host\/server owns a run/i);
   expect(contracts).toMatch(/exactly one writer per candidate/i);
 });
 
@@ -299,14 +441,12 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
   expect(plan).toMatch(/\*\*Historical:\*\*/);
 });
 
-test('structural: runtime reference delegates to version-matched Orca guides', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/resolve one Orca executable/i);
-  expect(text).toContain('skills get orchestration --json');
-  expect(text).toContain('skills get orca-cli --json');
-  expect(text).toMatch(/returned schemas[^.]*rather than[^.]*copying/i);
-  expect(text).toMatch(/Run[^.]*Task[^.]*Dispatch/i);
-  expect(text).toMatch(/preserve[^.]*Task[^.]*Dispatch[^.]*terminal[^.]*agent[^.]*worktree/i);
+test('structural: runtime reference uses the advertised T3 schema and native identities', () => {
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 't3-runtime.md'), 'utf8');
+  expect(requires(text, /driver/i, /T3 thread/i, /save/i, /orchestrator_capabilities/i, /JSON/i, /advertised tool schema/i)).toBe(true);
+  for (const identity of ['taskId/childThreadId/childRunId', 'threadId/runId/worktree/branch/base SHA']) {
+    expect(text).toContain(identity);
+  }
 });
 
 test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
@@ -338,13 +478,13 @@ test('structural: review receipt distinguishes verdicts with SHA, coverage, limi
 });
 
 test('structural: runtime reference treats installed role snapshot as authoritative', () => {
-  const text = readFileSync(join(skillsDir, 'axstack', 'references', 'orca-runtime.md'), 'utf8');
-  expect(text).toMatch(/roles\.json[^.]*installed shared root `skills\/axstack\/`/i);
-  expect(text).toMatch(/bundled[^.]*setup inputs/i);
-  expect(text).toMatch(/active run[^.]*keeps[^.]*exact snapshot/i);
-  expect(text).toMatch(/missing class and missing or null[^.]*model holds only that role/i);
-  expect(text).toMatch(/never launch a provider default/i);
-  expect(text).toMatch(/reconcile existing attempts first/i);
+  const text = readFileSync(join(skillsDir, 'axstack', 'references', 't3-runtime.md'), 'utf8');
+  expect(requires(text, /installed/i, /skills\/axstack\/roles.json/i, /snapshot/i, /preset/i, /stable role IDs/i)).toBe(true);
+  expect(text).toContain('Bundled presets are setup inputs.');
+  const normalized = text.replace(/\s+/g, ' ');
+  expect(normalized).toContain("Resume preserves that snapshot with no re-resolution; changes require the user's explicit decision.");
+  expect(normalized).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
+  expect(normalized).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
 });
 
 test('structural: contracts carry dual-adviser consultation without a driver profile', () => {
@@ -364,7 +504,7 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
   expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
   expect(/axstack-driver|effective effort|return[^.]*medium/i.test(text), 'contracts must not carry a driver profile or effort rule').toBe(false);
-  expect(/current chat[^.]*driver|driver[^.]*current chat/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
+  expect(/current T3 thread[^.]*driver|driver[^.]*current T3 thread/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
   expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
 });
 

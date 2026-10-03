@@ -37,7 +37,7 @@ test('current user guidance contains no scheduled own-PR repair path', () => {
 
 test('manual watch keeps a concrete fallback when relay is unavailable', () => {
   const watch = read('skills/axstack-watch/SKILL.md');
-  expect(watch).toMatch(/absent policy\s+or failed relay[^.]*current Orca conversation[^.]*hold open/i);
+  expect(watch).toMatch(/absent policy\s+or failed relay[^.]*current T3 driver thread[^.]*hold open/i);
 });
 
 test('review distinguishes implementation publication from local-SHA maintenance review', () => {

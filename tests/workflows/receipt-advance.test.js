@@ -8,18 +8,18 @@ const record = () => read('skills/axstack/references/run-record.md');
 
 test('accepted worker receipt advances every ready dependent in the same turn', () => {
   const text = lifecycle();
-  expect(text).toMatch(/accepted `worker_done`[\s\S]*same driver turn[\s\S]*each unblocked dependent/i);
-  expect(text).toMatch(/record why others are not ready in `Next:`/i);
+  expect(text).toMatch(/Dispatch each unblocked dependent[^;]*dependencies in the same driver turn/i);
+  expect(text).toMatch(/record why others are not\s+ready/i);
   expect(text).toMatch(/Next:[\s\S]*owner[\s\S]*last receipt time[\s\S]*next\s+action[\s\S]*hold/i);
-  expect(text).toMatch(/reconcile it for status questions/i);
-  expect(text).toMatch(/stale[\s\S]*Dispatch receipt[\s\S]*never completion of a newer Dispatch or Task/i);
+  expect(text).toMatch(/reconcile it for\s+status questions/i);
+  expect(text).toMatch(/Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one/i);
 });
 
-test('ack-only receipt retries its author once before a task hold', () => {
+test('incomplete receipt returns to its author once before a task hold', () => {
   const text = lifecycle();
-  expect(text).toMatch(/required\s+change with empty base→head diff/i);
-  expect(text).toMatch(/missing named artifact is ack-only/i);
-  expect(text).toMatch(/same author once[\s\S]*repeat holds that Task/i);
+  expect(text).toMatch(/required change with an empty base-to-head diff/i);
+  expect(text).toMatch(/missing named artifact,[\s\S]*retain the incomplete state/i);
+  expect(text).toMatch(/same author once[^.]*hold on repeat/i);
 });
 
 test('autopilot scopes holds by dependency while preserving run-wide gates', () => {

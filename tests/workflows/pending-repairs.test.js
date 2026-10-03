@@ -61,8 +61,8 @@ test('repairs: every skill route target resolves in the package', () => {
 
 test('repairs: ordinary handoff and resume stay governed by shared lifecycle', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toContain('[Orca runtime boundary](orca-runtime.md)');
+  expect(lifecycle).toContain('[T3 runtime](t3-runtime.md)');
   expect(lifecycle).toMatch(/explicit acceptance receipt[^.]*before changing ownership/i);
   expect(lifecycle).toMatch(/only an explicit user request to transfer\s+ownership/i);
-  expect(lifecycle).toMatch(/keep the current\s+owner[\s\S]*no replacement or ownership transfer launches/i);
+  expect(lifecycle).toMatch(/Missing capability holds transfer[^.]*current owner retained/i);
 });

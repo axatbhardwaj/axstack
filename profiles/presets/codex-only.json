@@ -34,7 +34,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -70,7 +70,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. A null model means explicit user selection is required before dispatch and must never launch a provider default.",
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. An intentionally absent role stays absent; configured null-model bindings resolve from saved T3 capabilities.",
       "modelClass": "luna"
     },
     {
@@ -79,7 +79,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Research requirements analyst: scopes bounded questions and acceptance for a research task. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "astra"
     },
     {
@@ -88,7 +88,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Research code investigator: verifies behavior against inspected code and executable evidence. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -106,7 +106,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "low",
-      "notes": "Research web reader: gathers primary-source facts efficiently. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Research web reader: gathers primary-source facts efficiently. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -133,7 +133,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -142,7 +142,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Independent visual explanation reviewer: checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Independent visual explanation reviewer: checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "luna"
     },
     {
@@ -151,7 +151,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Read-only UI verifier: runs Playwright or the browser against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Read-only UI verifier: uses T3 preview_* tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -160,7 +160,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {
@@ -169,7 +169,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Resolve the class at run start; hold unavailable models except explicit pre-turn Codex rejection within class.",
+      "notes": "Execution explorer: runs bounded checks of runtime behavior where authorized. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
     {

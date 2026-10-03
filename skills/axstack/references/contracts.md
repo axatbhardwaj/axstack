@@ -39,19 +39,18 @@ the revised scope and plan.
 Validate the configured provider and model at actual launch. If it is
 unavailable or exhausted, pause affected work, record the gap, and ask the
 user. Never infer a route from quota state or subscription entitlement. Every
-substitution requires the user's decision: configured alternatives and native
-fallback prose are not defaults. The only within-class exception is explicit
-model rejection before the first turn: Codex may retry with `--retry-of` using
-the next eligible version in the same class, provider, and effort, recording
-the failed ID, error, and fallback ID. Claude rejection holds. Timeout, quota,
-and auth failures hold.
+substitution requires the user's decision: configured alternatives are not
+defaults. Rejection, timeout, quota and auth failures hold affected work.
+Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
+or recovery; resolve models from the saved capabilities snapshot and verify
+requested and effective settings separately.
 Optional seats follow [Role roster](role-roster.md), while required seats,
-including `model: null`, hold without substitution except that a base auditor
+including resolved `model: null` bindings, hold without substitution except that a base auditor
 preflight rejection follows [Close-out](lifecycle.md#close-out).
 
 ## Driver and adviser split
 
-The current chat is the driver, whatever model runs it; there is no driver
+The current T3 thread is the driver, whatever model runs it; there is no driver
 profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
@@ -105,7 +104,7 @@ gate.
 
 - The driver owns run scope, cross-PR coordination, integration, and every
   selected external-tracker mutation. The checker reports discrepancies only.
-- One Orca execution host owns a run. There is no fixed active-PR count;
+- One T3 host/server owns a run. There is no fixed active-PR count;
   fanout is dependency- and capacity-driven within configured host resource and
   spending limits. The driver reduces fanout when the run record shows rework,
   review backlog, or resource pressure, queues conflicting or dependent work,

@@ -50,7 +50,7 @@ function skill(name) {
 // structural checks; behavioral evidence comes from scenario evaluation).
 
 test('owned-core: shared routing and lifecycle/receipt references exist and are loaded', () => {
-  for (const ref of ['orca-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
+  for (const ref of ['t3-runtime.md', 'contracts.md', 'routing.md', 'role-roster.md', 'lifecycle.md']) {
     expect(
       existsSync(join(skillsDir, 'axstack', 'references', ref)),
       `missing shared reference skills/axstack/references/${ref}`,
@@ -233,7 +233,7 @@ test('owned-core: one persistent owner and standalone watch remain explicit', ()
   ).toBeTruthy();
   expect(/monitor/i.test(text), 'must name the optional standalone monitor').toBeTruthy();
   expect(/optional read-only observer/i.test(text), 'monitor must remain read-only').toBeTruthy();
-  expect(/Orca runtime/i.test(text), 'watch must name the Orca runtime boundary').toBeTruthy();
+  expect(/T3 runtime/i.test(text), 'watch must name the T3 runtime boundary').toBeTruthy();
   expect(/dedup/i.test(text), 'must deduplicate event IDs').toBeTruthy();
   expect(/reconcil/i.test(text), 'uncertain state must be reconciled').toBeTruthy();
 });
@@ -387,21 +387,21 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   const watch = skill('axstack-watch');
 
   expect(
-    /driver turn does not end[^.]*Dispatch is unsettled[^.]*completion wait[^.]*armed[^.]*re-armed on timeout[^.]*sleep or poll loops are forbidden/i.test(lifecycle),
-    'an unsettled Dispatch must keep one completion wait armed and forbid sleep or poll loops',
+    /End a driver turn[^.]*unsettled launched thread[^.]*bound run watch is armed/i.test(lifecycle),
+    'an unsettled launched thread must keep its bound run watch armed',
   ).toBeTruthy();
-  expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
+  expect(lifecycle).toMatch(/Healthy unchanged passes are silent/i);
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
   expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
-  expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
+  expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through T3[^.]*lifecycle close-out/i);
   expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [
     'forge state',
-    'settle every worker terminal',
+    'settle every T3 worker run and archive eligible threads',
     'user interventions',
     'deviations from plan',
     'repairs',
@@ -438,7 +438,7 @@ test('owned-core: align and spec use both configured advisers; auditor role exis
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
+  for (const name of ['axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 't3-runtime.md']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();
@@ -463,17 +463,16 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
   expect(spec).toMatch(/project documentation/i);
 });
 
-test('owned-core: docs and readme document harnesses and orca subagent orchestration', () => {
+test('owned-core: docs and readme document harnesses and T3 dispatch', () => {
   const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
-  expect(install).toMatch(/\|\s*Antigravity\s*\|\s*`~\/\.gemini\/config\/skills`\s*\|\s*documented upstream\s*\|/);
+  expect(install).toMatch(/\|\s*Antigravity IDE \/ `agy` CLI\s*\|\s*`~\/\.gemini\/config\/skills`\s*\|\s*documented upstream\s*\|/);
   expect(install).toMatch(/\|\s*OpenCode\s*\|\s*`~\/\.config\/opencode\/skills`\s*\|\s*documented upstream\s*\|/);
-  expect(install).toMatch(/forbids harness-native subagent/i);
+  expect(install.replace(/\s+/g, ' ')).toContain('It forbids harness-native subagent tools.');
 
-  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  expect(workflows).toMatch(/orca.*orchestration.*via.*`?orca`?.*cli/is);
-  expect(workflows).toMatch(/(?:forbid|not use).*harness-native subagent/is);
+  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(workflows).toContain('All subagent, delegated-worker, reviewer, and cross-harness work uses T3 orchestration through the `t3-code` MCP.');
+  expect(workflows).toContain('Do not use harness-native subagent tools.');
 
-  const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  expect(readme).toMatch(/visible Orca orchestration via the `orca` CLI/);
-  expect(readme).toMatch(/harness-native subagent/);
+  const readme = readFileSync(join(root, 'README.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(readme).toContain('Delegation uses visible T3 orchestration via the `t3-code` MCP; harness-native subagent tools are forbidden.');
 });

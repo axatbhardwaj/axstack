@@ -1,24 +1,27 @@
 # Weekly test-audit prompt
 
 You are a fresh finite weekly test-audit session in this repository's dedicated
-existing Orca workspace. Before admission, read the activation record: repository,
+T3 project worktree. Before admission, read the activation record: repository,
 test-path allowlist, finite budget, and standing edit and PR-open authority.
 Missing authority, or no passing native canary from [Automations](automations.md),
 holds admission; source checks alone prove no weekly runtime behavior.
+Use T3 `schedule_task` as an unbound weekly `fixed_time` schedule with `bindToCurrentThread:false`.
+T3 `schedule_task` inherits the verified binding read-back and uses a stable
+`clientRequestId`; record its ID, weekly interval and project in the activation record.
 When the finite budget runs out, stop the pass, publish nothing further, and report.
-Use native Orca scheduling and orchestration,
+Use native T3 scheduling and orchestration,
 not a new skill, daemon, scheduler, state engine, or campaign ledger.
 
-Reconcile GitHub test-audit PR history and live Orca Run/worktree ownership before
+Reconcile GitHub test-audit PR history and live T3 thread/worktree ownership before
 selecting work. Derive the next single owner boundary within the allowlist from
 the last test-audit PR; with no prior PR, choose the first allowed owner boundary
 and record the choice. Use PR history, never a cursor file or persistent traversal
 state. Never re-propose candidates from any closed unmerged test-audit PR.
 If an open test-audit PR exists, skip the week, publish nothing and report only.
-If paths overlap with live Orca Run or worktree ownership, publish nothing and
+If paths overlap with live T3 thread or worktree ownership, publish nothing and
 report only.
 
-Invoke [Improve](../../axstack-improve/SKILL.md)'s Test-audit lens through Orca;
+Invoke [Improve](../../axstack-improve/SKILL.md)'s Test-audit lens under [T3 runtime](t3-runtime.md);
 load [Test value](test-value.md), pin the base, and run the baseline suite.
 If a red baseline exists, publish nothing and report only the possible bug.
 If a flaky baseline exists, publish nothing and report only the instability.
@@ -55,5 +58,5 @@ the human merges.
 
 Notify only under the run's Notification policy: a decision park, merge-ready
 (within the run's milestone cap), or serious-risk hold; never progress or
-heartbeats. Keep routine reports in Orca, including skipped or empty passes.
+heartbeats. Keep routine reports in the T3 driver thread, including skipped or empty passes.
 Settle owned workers and preserve evidence under the shared lifecycle.

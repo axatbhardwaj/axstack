@@ -1,8 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-
-const root = `${import.meta.dir}/../..`;
-const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
+const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
+const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
 test('cleanup evaluator inputs are expectation-free independent-review briefs', () => {
   const data = JSON.parse(read('tests/workflows/cleanup-evaluator-inputs.json'));
@@ -28,124 +27,91 @@ test('cleanup evaluator inputs are expectation-free independent-review briefs', 
   }
 });
 
-test('reviewer checkout with two passes requires per-file proof and per-prefix removal', () => {
-  const skill = read('skills/axstack-cleanup/SKILL.md');
-  const scratch = skill.match(/Use only a named run-owned scratch prefix[\s\S]*?(?=\n\n## Apply distinct native operations)/)?.[0];
-  expect(scratch).toBeString();
-  expect(scratch).toMatch(/two\s+or\s+more[^.]*review passes[^.]*same (?:reviewer )?worktree/is);
-  expect(scratch).toMatch(/every (?:remaining )?untracked file[^.]*individually[^.]*named\s+run-owned scratch prefix/is);
-  expect(scratch).toMatch(/each[^.]*prefix[^.]*settled Dispatch/is);
-  expect(scratch).toMatch(/each[^.]*prefix[^.]*exact-path dry-run[^.]*exact-path deletion/is);
-  expect(scratch).toMatch(/final clean (?:Git )?status[^.]*native\s+exact-workspace removal[^.]*without force/is);
-  expect(scratch).toMatch(/expected\s+post-deletion state/is);
-  expect(scratch).toMatch(/every remaining (?:proven )?prefix[^.]*inventory/is);
-  expect(scratch).toMatch(/whole-worktree dirt[^.]*ignored files/is);
-  expect(scratch).toMatch(/before each deletion[^.]*each next deletion[^.]*native ownership and liveness/is);
-  expect(scratch).toMatch(/only unexpected changes[^.]*hold/is);
-  expect(scratch).toMatch(/dirt outside (?:them|those prefixes) enters the salvage check above or holds/is);
-  expect(scratch).toMatch(/ignored files across the whole\s+worktree too/is);
-  expect(scratch).toMatch(/unknown or ignored non-cache content holds/is);
+const skill = () => read('skills/axstack-cleanup/SKILL.md');
+const pins = [
+  "Never clean a user-created thread, the current driver, a user-taken-over thread, an active or unknown worker, an unsettled descendant, or a resource with ambiguous ownership.",
+  "Preserve unknown files, unmerged author work, ambiguous publication, and evidence that has not been durably preserved.",
+  "Archive success proves only preservation of the listed bytes; it does not prove settlement, liveness, ownership, a clean worktree, publication, or removal safety.",
+  "Keep an author worktree until its PR merges or closes.",
+  "For a settled reviewer task, its checkout can be retired while the PR remains open, before merge, after its report and supporting evidence are archived privately and read back.",
+  "Require `git status --porcelain=v1 -z --untracked-files=all` to show all dirt as untracked files inside a run-owned scratch prefix.",
+  "Prove every remaining untracked file individually belongs to one of those named run-owned scratch prefixes; any tracked, staged, unmerged or unpushed work, dirty source, or dirt outside them enters the salvage check above or holds.",
+  "Inspect every descendant for symlinks, hard links, special files, unknown content, user-owned files, or ignored files; any mismatch holds.",
+  "For each prefix, perform an exact-path dry-run and exact-path deletion separately.",
+  "Immediately before each deletion, including each next deletion, re-read the compact receipt, complete Git status with whole-worktree dirt and ignored files, every remaining prefix inventory, and native ownership and liveness.",
+  "Never use `-x`, a glob, a repository-root target, extra force, or broad clean.",
+  "Use no unresolved variable as a destructive target.",
+  "Require final clean Git status before exact `git worktree remove <path>` without force.",
+  "Never delete the author branch or use generic force."
+];
+// Safety contracts are exact text; changes require deliberate test edits.
+const restoredCleanupPins = [
+  "A raw reviewer report may be discarded after its verdict and limitations are compacted into that read-back receipt;",
+  "use the private evidence archive for the report and supporting evidence.",
+  "Preserve the separate author candidate with useful unmerged work; reviewer cleanup never removes it.",
+  "Multiple tasks in the same reviewer worktree are recovery for missed earlier cleanup; after independent archives and readback, use per-prefix removal.",
+  "Two or more review passes in the same reviewer worktree may leave distinct prefixes; each named run-owned scratch prefix must belong to an accepted settled task in the run.",
+  "Check ignored files across the whole worktree too; classified ignored non-cache content enters the verified salvage path, while unknown content holds.",
+  "Compare its sole target to the classified directory; an empty, partial, or different result holds.",
+  "Only unexpected changes hold.",
+  "Recheck clean Git status after the last deletion.",
+  "Never unlink through prose or a shell loop.",
+];
+for (const pin of [...pins, ...restoredCleanupPins]) test(`cleanup exact safety: ${pin}`, () => {
+  const text = normalize(skill());
+  expect(text).toContain(pin);
+  expect(text.split(pin).length).toBe(2);
 });
-
-test('cleanup loads shared policy and leaves runtime commands to discovered guides', () => {
-  const skill = read('skills/axstack-cleanup/SKILL.md');
-  for (const reference of [
-    '../axstack/references/contracts.md',
-    '../axstack/references/lifecycle.md',
-    '../axstack/references/routing.md',
-    '../axstack/references/orca-runtime.md',
-    '../axstack/references/evidence-archive.md',
-  ]) expect(skill).toContain(reference);
-  expect(skill).not.toMatch(/orca orchestration (?:send|check|worker-release)|orca terminal close|orca worktree rm/);
+test('cleanup forbids recursive shell deletion', () => {
+  expect(skill()).not.toMatch(/\brm\s+-r\b|\bfind\b[^\n]*-delete/);
 });
-
-test('cleanup binds archived evidence retirement and native hook trust', () => {
-  const skill = read('skills/axstack-cleanup/SKILL.md');
-  expect(skill).toMatch(/manifest-bound retirement[^.]*empty\s+pending set/i);
-  expect(skill).toMatch(/Archive Script[^.]*unknown[^.]*untrusted[^.]*holds/i);
-  for (const outcome of ['unconfigured', 'passed', 'failed', 'unknown']) expect(skill).toContain(`\`${outcome}\``);
-  expect(skill).toMatch(/never[^.]*shell loop/i);
-  expect(skill).not.toMatch(/\brm\s+-r\b|\bfind\b[^\n]*-delete/);
+const restoredRelatedPins = [
+  ['skills/axstack/references/evidence-archive.md',
+    'Completed non-author worktrees with dirty source or unpushed commits use the [Workspace hygiene](workspace-hygiene.md) salvage path before removal; this archive helper never treats source changes as evidence-only cleanup.'],
+  ['skills/axstack/references/evidence-archive.md',
+    'A user-created or user-taken-over thread, an active or unknown run, an unsettled descendant, ambiguous publication, or an unknown file remains protected.'],
+  ['skills/axstack-implement/SKILL.md',
+    'After each settled review, run `axstack-cleanup` for its exact reviewer resources before PR merge, preserving and reading back the private evidence archive before eligible worktree retirement.'],
+];
+for (const [path, pin] of restoredRelatedPins) test(`cleanup related exact safety: ${pin}`, () => {
+  const text = normalize(read(path));
+  expect(text).toContain(pin);
+  expect(text.split(pin).length).toBe(2);
 });
-
-test('settled reviewer scratch needs a durable receipt and exact-path removal', () => {
-  const skill = read('skills/axstack-cleanup/SKILL.md');
-  const receipt = skill.match(/For a settled reviewer Dispatch[\s\S]*?(?=\n\nUse only a named)/)?.[0];
-  expect(receipt).toBeString();
-  expect(receipt).toMatch(/PR remains open[^.]*before merge/is);
-  expect(receipt).toMatch(/reviewer\s+scratch[^.]*disposable/is);
-  for (const detail of [
-    'exact head SHA', 'base SHA', 'review verdict', 'limitations',
-    'test and CI result pointers', 'user authorization', 'scope',
-  ]) expect(receipt).toContain(detail);
-  expect(receipt).toMatch(/raw reviewer report[^.]*discard/is);
-  expect(receipt).toMatch(/private evidence archive[^.]*report and supporting evidence/is);
-  expect(skill).toMatch(/git status --porcelain=v1 -z --untracked-files=all/);
-  expect(skill).toMatch(/all dirt[^.]*run-owned scratch prefix/is);
-  expect(skill).toMatch(/symlinks[^.]*special files[^.]*unknown content/is);
-  expect(skill).toMatch(/dry-run[^.]*exact scoped path/is);
-  expect(skill).toContain('git clean -nd -- <exact reviewed scratch prefix>');
-  expect(skill).toMatch(/sole target[^.]*classified directory/is);
-  expect(skill).toContain('git clean -fd -- <same exact prefix>');
-  expect(skill).toMatch(/recheck[^.]*clean (?:Git )?status/is);
-  expect(skill).toMatch(/never[^.]*repository-root target/is);
-  expect(skill).not.toMatch(/nonrecursive\s+exact-path unlink|\brm\s+-r\b|git clean[^`\n]*-x\b|git clean[^`\n]*-ff\b/);
-  expect(skill).toMatch(/no unresolved variable[^.]*destructive target/is);
-  expect(skill).toMatch(/unmerged[^.]*unpushed[^.]*dirty source/is);
-  expect(skill).toMatch(/unknown content[^.]*user-owned\s+files/is);
-  expect(skill).toMatch(/active[^.]*user_takeover/is);
+test('cleanup uses the shared T3 contract inline and separates operations', () => {
+  for (const ref of ['contracts.md', 'lifecycle.md', 'routing.md', 't3-runtime.md', 'workspace-hygiene.md', 'evidence-archive.md']) {
+    expect(skill()).toContain(`../axstack/references/${ref}`);
+  }
+  for (const operation of ['t3_thread_organize', 'git worktree remove', 'git branch -d']) expect(skill()).toContain(operation);
+  expect(normalize(skill())).toContain('This skill never dispatches a cleanup worker');
+  expect(normalize(skill())).toContain('manifest-bound retirement operation and require an empty pending set');
+  expect(skill()).toContain('git clean -nd -- <exact reviewed scratch prefix>');
+  expect(skill()).toContain('git clean -fd -- <same exact prefix>');
+  expect(normalize(skill())).toContain('expected post-deletion state');
 });
-
-test('shared reviewer evidence rules honor the guarded compact-receipt path', () => {
-  const cleanup = read('skills/axstack-cleanup/SKILL.md');
-  const runtime = read('skills/axstack/references/orca-runtime.md');
-  const automations = read('skills/axstack/references/automations.md');
-  expect(cleanup).toMatch(/settled reviewer Dispatch[\s\S]*?raw reviewer report may be discarded/is);
-  expect(runtime).toMatch(/before removing a reviewer worktree[\s\S]*?private run evidence folder[\s\S]*?legacy in-worktree evidence[\s\S]*?settled reviewer Dispatch[\s\S]*?axstack-cleanup/is);
-  expect(runtime).toMatch(/preserve\s+active[^.]*unknown[^.]*unique evidence/is);
-  expect(automations).toMatch(/settled PR job[\s\S]*?private evidence archive[\s\S]*?read back[\s\S]*?axstack-cleanup/is);
-  expect(automations).toMatch(/reviewer and PR-job worktrees in the same pass/is);
+test('cleanup AC2 scenario pins author retention and ignored-content preservation', () => {
+  const scenario = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json')).cases.find(({ id }) => id === 'cleanup-unmerged-or-ignored-content');
+  const text = normalize(read('skills/axstack/references/workspace-hygiene.md'));
+  expect(scenario.contracts.length).toBe(7);
+  for (const pin of scenario.contracts) {
+    expect(text).toContain(pin);
+    expect(text.split(pin).length).toBe(2);
+  }
 });
-
-test('open PR reviewer retirement preserves the author and starts a fresh later review', () => {
-  const cleanup = read('skills/axstack-cleanup/SKILL.md');
-  const runtime = read('skills/axstack/references/orca-runtime.md');
-  const archive = read('skills/axstack/references/evidence-archive.md');
-  const implement = read('skills/axstack-implement/SKILL.md');
-  expect(cleanup).toMatch(/reviewer worktree[^.]*PR remains open[^.]*before merge/is);
-  expect(cleanup).toMatch(/preserve[^.]*author candidate[^.]*unmerged/is);
-  expect(cleanup).toMatch(/each Dispatch archive[^.]*manifest readback/is);
-  expect(cleanup).toMatch(/multiple\s+Dispatches[^.]*same reviewer worktree[^.]*per-prefix/is);
-  expect(runtime).toMatch(/later review[^.]*fresh[^.]*child worktree/is);
-  expect(runtime).not.toMatch(/Reuse that reviewer's own child/);
-  expect(archive).toMatch(/another Dispatch's scratch[\s\S]*?per-prefix dry-run/is);
-  expect(implement).toMatch(/after each[^.]*review[^.]*axstack-cleanup[^.]*before PR merge/is);
-  expect(implement).toMatch(/author candidate[^.]*until[^.]*merge/is);
-});
-
-test('PR-job and reviewer cleanup archives and reads back evidence in the same pass', () => {
-  const automations = read('skills/axstack/references/automations.md');
-  const reviewerCleanup = automations.match(/For a settled PR job[\s\S]*?same pass\./)?.[0];
-  expect(reviewerCleanup).toBeString();
-  expect(reviewerCleanup).toMatch(/private evidence archive[\s\S]*read back[\s\S]*reviewer and PR-job worktrees/is);
-  expect(automations).not.toMatch(/reviewer scratch may instead[^.]*compact receipt/is);
-  expect(automations).toMatch(/merged or closed PR[^.]*never keep a job worktree/i);
-});
-
-test('removed reviewer checkout ref is deleted only with proven provenance and reachable tip', () => {
-  const cleanup = read('skills/axstack-cleanup/SKILL.md');
-  expect(cleanup).toMatch(/re-list both native workspaces\s+and Git refs[\s\S]*?Read back each remaining local review ref/is);
-  expect(cleanup).toMatch(/unknown origin[^.]*unique commits[^.]*active\s+worktree[^.]*remote counterpart[^.]*preserved/is);
-  expect(cleanup).toMatch(/created for the removed reviewer checkout[^.]*tip[^.]*reachable[^.]*preserved author candidate[^.]*confirmed remote PR\s+head/is);
-  expect(cleanup).toMatch(/expected-old[^.]*ref deletion/is);
-  expect(cleanup).toMatch(/never delete\s+the author branch[^.]*generic force/is);
-});
-
-test('finished non-author PR jobs can use verified salvage while genuine holds remain', () => {
-  const manager = read('skills/axstack/references/automations.md');
-  const archive = read('skills/axstack/references/evidence-archive.md');
-  expect(manager).toMatch(/completed non-author\s+PR-job worktree[\s\S]*workspace-hygiene\.md[\s\S]*salvage/i);
-  expect(manager).toMatch(/unknown liveness[^.]*user_takeover[^.]*ambiguous publication/i);
-  expect(archive).toMatch(/completed non-author[\s\S]*workspace-hygiene\.md[\s\S]*salvage/i);
-  expect(archive).toMatch(/ambiguous\s+publication[^.]*unknown file[^.]*protected/i);
+test('archive helper keeps exact identity, manifest, and per-prefix recovery guards', () => {
+  const archive = normalize(read('skills/axstack/references/evidence-archive.md'));
+  for (const pin of [
+    'An unknown removal hook or a required hook whose provenance is not trusted holds removal; preserve the worktree.',
+    'If either readback differs or is unavailable, preserve the worktree.',
+    'Never replace either path with a shell loop, broad deletion, force, or a waiver.',
+    'Any remaining or uncertain dirt holds worktree removal.',
+  ]) {
+    expect(archive).toContain(pin);
+    expect(archive.split(pin).length).toBe(2);
+  }
+  expect(archive).toContain('another task');
+  expect(archive).toContain('exact per-prefix dry-run');
+  expect(archive).toContain('--manifest-hash <recorded-64-character-sha256>');
+  expect(archive).toContain('--dispatch <exact-native-run-id>');
+  expect(archive).toContain('Pass the delegated childRunId or launched runId to `--dispatch`, never the colon-separated attempt key.');
 });

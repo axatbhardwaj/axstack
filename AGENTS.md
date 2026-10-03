@@ -2,9 +2,10 @@
 
 ## Operating rules
 
-- Use Orca as the only active runtime. Route every delegated worker, reviewer,
-  or cross-harness dispatch through Orca orchestration, never native subagents.
-- Keep the current chat as driver. Let it own scope, coordination, integration,
+- Use T3 Code as the only active runtime.
+- Route every delegated worker, reviewer, or cross-harness dispatch through the
+  `t3-code` MCP, never native subagents.
+- Keep the current T3 thread as driver. Let it own scope, coordination, integration,
   and forge mutations; keep each worker within its assigned files.
 - Keep exactly one writer per candidate. Return source fixes to that author.
 - Use the phase skills under `skills/axstack*/SKILL.md`; keep shared references
@@ -29,8 +30,8 @@
   workflow tests under `tests/workflows/`; prose-contract tests may read skill
   Markdown directly.
 - A prose-contract test of a semantic instruction must fail when the instruction
-  is removed or inverted and survive rewording; exact prompt-byte or public-key
-  contracts are exempt.
+  is removed or inverted and survive rewording; exact-text safety, exact prompt-byte,
+  or public-key contracts are exempt.
 - Never edit live home configuration during development. Use temporary homes
   and fixtures.
 - Keep coherent commits around 200 lines when practical and use semantic

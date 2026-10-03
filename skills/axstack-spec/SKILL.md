@@ -20,18 +20,19 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
 
 ## Procedure
 
-1. **Select the authoritative store.** Use a native Linear document by
-   default, or GitHub Issues or repository Markdown when the user explicitly
-   selects either alternative. Name the store before writing; one recorded
-   choice leaves no implicit fallback.
-2. **Preflight external-tracker access.** In Linear mode, load the current
-   `orca-linear` guide, then inspect its document guidance and current
-   `orca linear --help` before any document write. Verify native read, create,
-   and update support separately. If any document operation is unadvertised or
-   unavailable, record its guide/help evidence, hold only that operation, and
-   stop this phase without mutation. There is no MCP fallback and no store
-   switch; the selected Linear document remains authoritative. A later
-   tickets-phase check cannot replace this preflight. In GitHub mode, use
+1. **Select the authoritative store.** Use Linear through the executor MCP only
+   for repositories in `defi-com`. Keep specs for other repositories on GitHub;
+   if the issue, PR or repository-file location is unclear, ask before creating
+   a planning artifact. Use GitHub Issues or repository Markdown when the user
+   explicitly selects it, and for non-`defi-com` repositories under that boundary.
+   Name the store before writing; one recorded choice
+   leaves no implicit fallback.
+2. **Preflight external-tracker access.** In Linear mode, inspect the executor
+   MCP's advertised document operations before any write. Verify read, create,
+   and update support separately. For missing Linear access through the executor
+   MCP, record its guide/help evidence, hold only that operation, and stop this
+   phase without mutation or store switch; the selected document remains authoritative.
+   A later tickets-phase check cannot replace this preflight. In GitHub mode, use
    authenticated `gh` to verify the target
    repository, issues enabled, and the current identity's issue read and write
    access before any issue write. Record the repository and identity checked.
@@ -43,7 +44,7 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    sketch in the approved revision's `Design` section and its `Usage` line in
    acceptance. First record the driver's
    independent assessment, then load
-   [Orca runtime](../axstack/references/orca-runtime.md) before dispatching the
+   [T3 runtime](../axstack/references/t3-runtime.md) before dispatching the
    configured `axstack-advisor-astra` and `axstack-advisor-opus` independently,
    without cross-reading, with the same bounded evidence and question. The
    driver synthesizes disagreements. Cache both receipts with the draft and

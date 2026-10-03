@@ -19,8 +19,9 @@ Before mapping, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required edge to [Shared lifecycle](../axstack/references/lifecycle.md),
 including the lifecycle audit hook. Read the
 [PR-shape policy](../axstack/references/pr-shape.md) before sizing tasks. Read the
-[Orca runtime boundary](../axstack/references/orca-runtime.md) immediately before
-an actual checker dispatch, not for ordinary mapping or state reconciliation.
+[T3 runtime boundary](../axstack/references/t3-runtime.md) immediately before
+an actual checker dispatch. Ordinary mapping or state reconciliation needs
+no dispatch preflight.
 
 ## Procedure
 
@@ -30,12 +31,10 @@ an actual checker dispatch, not for ordinary mapping or state reconciliation.
    Linear store. Record the exact approved spec revision and selected store.
 
 2. **Preflight the selected store.** Markdown mode works independently. In
-   Linear mode, load the current `orca-linear` guide and current
-   `orca linear --help`. Use its native issue operations for capability
-   tickets. When the pinned specification requires a Linear document read,
-   inspect the guide's document guidance and command help for that operation;
-   hold that operation with its evidence when it is unadvertised or unavailable. There is
-   no MCP fallback and no store switch. In GitHub mode, use
+   Linear mode, use only the executor MCP for `defi-com` repositories and verify
+   its advertised issue operations. When the pinned spec requires a document
+   read, verify that operation separately; missing access holds the affected
+   operation without mutation or store switch. In GitHub mode, use
    authenticated `gh` to verify the target repository and issue access for the
    current identity before reading or writing the capability map. Preserve the
    selected store and stop affected work on an access gap.

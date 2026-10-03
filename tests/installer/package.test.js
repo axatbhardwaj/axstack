@@ -227,7 +227,8 @@ test('published manifest carries the metadata an npm page needs', () => {
   // for rather than merely a non-empty list.
   expect(manifest.keywords).toContain('claude-code');
   expect(manifest.keywords).toContain('codex');
-  expect(manifest.keywords).toContain('orca');
+  expect(manifest.keywords).toContain('t3-code');
+  expect(manifest.description).toMatch(/T3 Code/);
 });
 
 test('published manifest identity matches the repository it is published from', () => {

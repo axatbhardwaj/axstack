@@ -1,6 +1,8 @@
 # Diligence
 
-Dispatch `axstack-diligence` through Orca with a pinned brief and evidence paths.
+Read the [T3 runtime boundary](t3-runtime.md) before dispatch.
+Dispatch `axstack-diligence` with async `delegate_task` in the driver worktree,
+using a pinned brief and private evidence paths.
 It is read-only, never authors or edits, and returns `PASS` or `FINDINGS`
 with locations, observed evidence, and limits. A stale or missing receipt is
 not a pass. Keep its first pass independent of other reviewers and workers.

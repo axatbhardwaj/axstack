@@ -1,12 +1,12 @@
-// Host capability checks. `exec` is injected so tests never touch a live
-// runtime. Resolve Orca exactly once and reuse it: a failed choice never
-// triggers a fallback to another binary.
+// Host capability checks. Injected execution keeps tests off live runtimes.
 export const BUN_FLOOR = '1.3.14';
+export const T3_FLOOR = '0.0.46-nightly.20261003.2610';
 
 export const PROBE_LIMITATIONS = [
-  'Linear guide discovery does not prove a requested issue or document operation; skill prompts preflight the current guide and command help.',
-  'A host binary probe cannot prove model availability or quotas; an unavailable or exhausted model pauses affected work until the user decides.',
-  'Stored role model, effort, and permission intent does not prove Orca launch parity or a successful agent execution.',
+  'T3 orchestration MCP readiness, provider auth, models and effort are verified by driver preflight inside a T3 thread, never from the binary probe.',
+  'A binary probe cannot prove model availability or quotas.',
+  'An unavailable or exhausted model pauses affected work until the user decides.',
+  'Stored role model, effort and permission intent do not prove T3 launch parity or successful agent execution.',
 ];
 
 const CHECK_LABELS = {
@@ -14,66 +14,34 @@ const CHECK_LABELS = {
   git: 'git CLI',
   gh: 'gh CLI',
   'gh-stack': 'gh stack extension',
-  'orca-binary': 'resolved Orca CLI',
-  'orca-runtime': 'Orca runtime connection',
-  'orca-orchestration-guide': 'Orca orchestration guide capability',
-  'orca-cli-guide': 'Orca CLI guide capability',
-  'orca-linear-guide': 'Orca Linear guide capability',
+  't3-binary': `T3 Code CLI >= ${T3_FLOOR}`,
 };
 
-// The real commands behind each probe. gh-stack runs the actual
-// `gh stack --help`: a "stack" substring in `gh extension list` output is not
-// proof the extension command works.
+// Run the extension command itself, not a substring in an extension listing.
 export const PROBE_COMMANDS = {
   git: ['git', ['--version']],
   gh: ['gh', ['--version']],
   'gh-stack': ['gh', ['stack', '--help']],
+  't3-binary': ['t3', ['--version']],
 };
 
-export function resolveOrcaExecutable({ env = Bun.env, platform = process.platform } = {}) {
-  if (typeof env.ORCA_CLI_COMMAND === 'string' && env.ORCA_CLI_COMMAND.trim() !== '') {
-    return env.ORCA_CLI_COMMAND.trim();
-  }
-  if (typeof env.ORCA_DEV_REPO_ROOT === 'string' && env.ORCA_DEV_REPO_ROOT.trim() !== '') {
-    return 'orca-dev';
-  }
-  const managed = Boolean(env.ORCA_TERMINAL_HANDLE || env.ORCA_WORKTREE_ID);
-  if (platform === 'linux' && !managed) return 'orca-ide';
-  return 'orca';
+function validT3Version(stdout) {
+  const match = /^(?:t3\s+)?v?(\d+\.\d+\.\d+)(?:-nightly\.(\d{8})(?:\.(\d+))?)?$/.exec(stdout.trim());
+  const [floorVersion, floorNightly] = T3_FLOOR.split('-nightly.');
+  const [floorDate, floorBuild] = floorNightly.split('.');
+  if (!match || !meetsFloor(match[1], floorVersion)) return false;
+  if (!match[2]) return true;
+  const date = match[2];
+  const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+  const parsed = new Date(`${iso}T00:00:00Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso
+    && (date > floorDate || (date === floorDate && match[3] !== undefined
+      && Number(match[3]) >= Number(floorBuild)));
 }
 
-function orcaCommand(name, executable) {
-  if (name === 'orca-binary') return [executable, ['--version']];
-  if (name === 'orca-runtime') return [executable, ['status', '--json']];
-  if (name === 'orca-orchestration-guide') {
-    return [executable, ['skills', 'get', 'orchestration', '--json']];
-  }
-  if (name === 'orca-cli-guide') return [executable, ['skills', 'get', 'orca-cli', '--json']];
-  if (name === 'orca-linear-guide') return [executable, ['skills', 'get', 'orca-linear', '--json']];
-  return null;
-}
-
-function validateOrcaOutput(name, stdout) {
-  if (name === 'orca-binary') return { ok: true, stdout };
-  let parsed;
-  try {
-    parsed = JSON.parse(stdout);
-  } catch {
-    return { ok: false, stdout: 'invalid JSON response' };
-  }
-  if (name === 'orca-runtime') {
-    const runtime = parsed?.result?.runtime;
-    const ready = parsed?.ok === true && runtime?.state === 'ready' &&
-      runtime?.reachable === true && runtime?.connectionState === 'connected';
-    return { ok: ready, stdout: ready ? 'ready and connected' : 'runtime is not ready and connected' };
-  }
-  const expected = name === 'orca-cli-guide'
-    ? 'orca-cli'
-    : name === 'orca-linear-guide'
-      ? 'orca-linear'
-      : 'orchestration';
-  const ready = parsed?.name === expected && typeof parsed?.markdown === 'string' && parsed.markdown.length > 0;
-  return { ok: ready, stdout: ready ? `${expected} guide available` : `${expected} guide unavailable` };
+function validateT3Result(result) {
+  if (!result?.ok || validT3Version(String(result.stdout ?? ''))) return result;
+  return { ok: false, stdout: `requires T3 >= ${T3_FLOOR}; got ${String(result.stdout ?? '').trim() || 'malformed version'}` };
 }
 
 // Pure semver-floor comparison over numeric prefix segments ("1.3.14" style;
@@ -89,12 +57,12 @@ export function meetsFloor(version, floor = BUN_FLOOR) {
   return true;
 }
 
-export async function runRealCheck(name, { orcaExecutable = resolveOrcaExecutable() } = {}) {
+export async function runRealCheck(name) {
   if (name === 'bun') {
     const version = Bun.version;
     return { ok: meetsFloor(version), stdout: `v${version}` };
   }
-  const [cmd, args] = orcaCommand(name, orcaExecutable) ?? PROBE_COMMANDS[name];
+  const [cmd, args] = PROBE_COMMANDS[name];
   try {
     const result = Bun.spawnSync([cmd, ...args], {
       stdout: 'pipe',
@@ -103,7 +71,8 @@ export async function runRealCheck(name, { orcaExecutable = resolveOrcaExecutabl
     });
     if (result.exitCode === 0) {
       const stdout = result.stdout.toString().trim();
-      return name.startsWith('orca-') ? validateOrcaOutput(name, stdout) : { ok: true, stdout };
+      const checked = { ok: true, stdout };
+      return name === 't3-binary' ? validateT3Result(checked) : checked;
     }
     const detail = (result.stderr.toString().trim() || result.stdout.toString().trim()).slice(0, 120);
     return { ok: false, stdout: detail || `exit ${result.exitCode}` };
@@ -112,27 +81,22 @@ export async function runRealCheck(name, { orcaExecutable = resolveOrcaExecutabl
   }
 }
 
-export async function checkCapabilities(exec, resolution = {}) {
-  const orcaExecutable = resolveOrcaExecutable(resolution);
-  const names = [
-    'bun', 'git', 'gh', 'gh-stack', 'orca-binary', 'orca-runtime',
-    'orca-orchestration-guide', 'orca-cli-guide', 'orca-linear-guide',
-  ];
+export async function checkCapabilities(exec) {
+  const names = ['bun', 'git', 'gh', 'gh-stack', 't3-binary'];
   const checks = [];
   for (const name of names) {
     let result;
     try {
-      result = await exec(name, { orcaExecutable });
+      result = await exec(name);
     } catch (err) {
       result = { ok: false, stdout: err?.message ?? 'error' };
     }
+    if (name === 't3-binary') result = validateT3Result(result);
     const ok = !!result?.ok;
     const baseLabel = CHECK_LABELS[name] ?? name;
     checks.push({
       name,
-      label: !ok && name.startsWith('orca-')
-        ? `${baseLabel} via ${orcaExecutable}`
-        : baseLabel,
+      label: baseLabel,
       ok,
       detail: ok
         ? String(result?.stdout ?? '').trim().slice(0, 120) || 'found'

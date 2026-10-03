@@ -100,10 +100,10 @@
         "change": "Hard-to-reverse persisted data model choice",
         "preset": "mixed",
         "seat": "Grok candidate",
-        "launch": "Orca refused the configured seat"
+        "launch": "T3 refused the configured seat"
       },
       "expected": [
-        "Fence the failed Grok attempt and record absent (Orca refused launch)",
+        "Fence the failed Grok attempt and record absent (T3 refused launch)",
         "Name the absence once in the next read-back; continue with available candidates without relay or substitution",
         "Keep Codex and Claude in this mixed fan-out; reconcile uncertain dispatches natively before treating them as absent"
       ]

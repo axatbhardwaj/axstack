@@ -1,71 +1,71 @@
 {
-  "version": 1,
-  "note": "Raw before/event/after Orca tracking-policy cases for independent evaluation. These expected decisions are not observed agent behavior.",
+  "version": 2,
+  "note": "T3 tracking-policy scenarios; declared instructions, not observed agent behavior.",
   "cases": [
     {
       "id": "missed-completion-delivery",
-      "input": { "before": "Author A owns Task T1 through Dispatch D1 at SHA S1; no completion delivery was observed.", "event": "Runtime reconciliation shows D1 settled and exposes a queued worker_done with candidate S2 and a test receipt." },
-      "expected": { "after": "The whole D1 delivery is consumed, its identity and S2 are verified, and eligible dependent work may advance.", "actions": ["match sender, T1, and D1 before acknowledgment", "verify S2 and its receipts", "record the transition"], "forbidden": ["treat settled status alone as completion", "acknowledge only part of the delivery", "advance against unverified S2"] }
+      "input": {"before": "Author A owns task T1 through attempt a1 at SHA S1; no completion delivery was observed.", "event": "Persisted task_status shows completed, result_available, hasPendingChildRuns:false and AXSTACK-DONE at S2; driver isolation checks agree."},
+      "expected": {"after": "The whole a1 delivery is consumed, its identity and S2 are verified, and eligible dependent work may advance.", "actions": ["match sender, T1, and a1 before advancement", "verify S2 and its receipts", "record the transition"], "forbidden": ["treat settled status alone as completion", "advance only part of the delivery", "advance against unverified S2"]}
     },
     {
       "id": "reviewed-task-awaiting-advancement",
-      "input": { "before": "Task T1 has a current APPROVE receipt for SHA S3; dependent Task T2 remains pending.", "event": "A valid D1 completion delivery wakes the driver." },
-      "expected": { "after": "The exact review receipt, authority, and dependencies are verified; ready T2 advances under a new authoritative Dispatch.", "actions": ["verify SHA, review receipt, authority, and dependency readiness", "create one Dispatch only if every gate is satisfied", "persist the transition"], "forbidden": ["leave verified ready work unadvanced", "advance from a stale review", "bypass authority or dependencies"] }
+      "input": {"before": "task T1 has a current APPROVE receipt for SHA S3; dependent task T2 remains pending.", "event": "A valid a1 completion delivery wakes the driver."},
+      "expected": {"after": "The exact review receipt, authority, and dependencies are verified; ready T2 advances under a new authoritative attempt.", "actions": ["verify SHA, review receipt, authority, and dependency readiness", "create one attempt only if every gate is satisfied", "persist the transition"], "forbidden": ["leave verified ready work unadvanced", "advance from a stale review", "bypass authority or dependencies"]}
     },
     {
       "id": "duplicate-delivery",
-      "input": { "before": "Delivery E1 already advanced T2 and its receipt is recorded.", "event": "The same D1 worker_done delivery arrives again." },
-      "expected": { "after": "The duplicate is deduplicated by runtime identity and recorded state remains single and consistent.", "actions": ["reconcile E1 against the run record", "reuse the recorded transition"], "forbidden": ["launch T2 again", "create a duplicate writer", "publish duplicate user-facing updates"] }
+      "input": {"before": "Delivery E1 already advanced T2 and its receipt is recorded.", "event": "The same a1 AXSTACK-DONE delivery arrives again."},
+      "expected": {"after": "The duplicate is deduplicated by runtime identity and recorded state remains single and consistent.", "actions": ["reconcile E1 against the run record", "reuse the recorded transition"], "forbidden": ["launch T2 again", "create a duplicate writer", "publish duplicate user-facing updates"]}
     },
     {
       "id": "input-accepted-before-turn",
-      "input": { "before": "Task T3 has one Dispatch D3 and no verified agent turn.", "event": "The launch receipt says input_accepted, then session inspection shows a workspace-trust prompt." },
-      "expected": { "after": "D3 remains the sole pending attempt and startup is held for the user.", "actions": ["record input acceptance separately from turn start", "preserve D3 for reconciliation", "report the trust hold"], "forbidden": ["answer the trust prompt", "claim the agent started", "launch another Dispatch"] }
+      "input": {"before": "task T3 has one attempt a3 and no verified agent turn.", "event": "t3_thread_launch returned preparing; thread inspection reveals a permission prompt before any verified active run."},
+      "expected": {"after": "a3 remains the sole pending attempt and startup is held for the user.", "actions": ["record input acceptance separately from run start", "preserve a3 for reconciliation", "report the trust hold"], "forbidden": ["answer the trust prompt", "claim the agent started", "launch another attempt"]}
     },
     {
-      "id": "fenced-consumer",
-      "input": { "before": "Coordinator C1 is consuming D4 and has not acknowledged its delivery.", "event": "The runtime returns consumer_fenced because C2 is now authoritative." },
-      "expected": { "after": "C1 stops consuming and the whole delivery remains available for C2 reconciliation.", "actions": ["preserve the delivery unacknowledged", "reconcile the authoritative coordinator through the runtime guide"], "forbidden": ["borrow C2 identity", "partially acknowledge the delivery", "bypass the fence"] }
+      "id": "driver-identity-mismatch",
+      "input": {"before": "Driver C1 is consuming a4 but native thread/run identity disagrees with its record.", "event": "Native inspection reveals a threadId/runId mismatch with the recorded driver identity."},
+      "expected": {"after": "C1 stops consuming, preserves the whole delivery, and reconciles the recorded driver identity before advancement.", "actions": ["preserve the whole delivery as evidence", "stop consuming and reconcile recorded driver identity through t3-runtime.md"], "forbidden": ["borrow another driver identity", "advance a partial delivery", "bypass the mismatch"]}
     },
     {
-      "id": "restart-reconcile-existing-dispatch",
-      "input": { "before": "A resumed run records active Task T5, Dispatch D5, terminal A, and remaining scope.", "event": "The driver restarts and resumes execution." },
-      "expected": { "after": "D5 and terminal A are reconciled and retained when runtime state agrees; no second writer is created.", "actions": ["inspect D5 before any launch", "reuse A and recorded scope", "repair only stale derived fields from receipts"], "forbidden": ["create a replacement before reconciliation", "silently expand authority", "run two writers"] }
+      "id": "restart-reconcile-existing-attempt",
+      "input": {"before": "A resumed run records active task T5, attempt a5, thread A, and remaining scope.", "event": "The driver restarts and resumes execution."},
+      "expected": {"after": "a5 and thread A are reconciled and retained when runtime state agrees; no second writer is created.", "actions": ["inspect a5 before any launch", "reuse A and recorded scope", "repair only stale derived fields from receipts"], "forbidden": ["create a replacement before reconciliation", "silently expand authority", "run two writers"]}
     },
     {
       "id": "stalled-author",
-      "input": { "before": "Author A remains recorded active with no verified progress across expected checkpoints.", "event": "Runtime inspection observes unchanged Git and ambiguous session state." },
-      "expected": { "after": "The uncertainty is recorded and bounded recovery occurs only through the existing Task and Dispatch.", "actions": ["verify session, SHA, receipts, and ownership", "record the next recovery action", "hold unsafe advancement"], "forbidden": ["assume idle means complete", "launch a duplicate author", "expand scope or authority"] }
+      "input": {"before": "Author A remains recorded active with no verified progress across expected checkpoints.", "event": "Runtime inspection observes unchanged Git and ambiguous session state."},
+      "expected": {"after": "Hold unsafe advancement and reconcile the same T3 attempt through t3_thread_read and terminal evidence.", "actions": ["verify session, SHA, receipts, and ownership", "record the next recovery action", "hold unsafe advancement"], "forbidden": ["assume idle means complete", "launch a duplicate author", "expand scope or authority"]}
     },
     {
       "id": "user-takeover-settlement",
-      "input": { "before": "Terminal A belongs to settled Dispatch D6.", "event": "Runtime settlement reports user_takeover." },
-      "expected": { "after": "Terminal A is retained for the user and excluded from reuse or cleanup.", "actions": ["record user_takeover", "leave the terminal retained"], "forbidden": ["close the terminal", "reuse it for another task", "send cleanup commands"] }
+      "input": {"before": "Thread A belongs to settled attempt a6.", "event": "Runtime settlement reports user-taken-over."},
+      "expected": {"after": "Thread A is retained for the user and excluded from reuse or cleanup.", "actions": ["record user-taken-over", "leave the thread retained"], "forbidden": ["close the thread", "reuse it for another task", "send cleanup commands"]}
     },
     {
       "id": "older-completion-after-retry",
-      "input": { "before": "Task T7 moved from failed Dispatch D7 to authorized retry D8.", "event": "A late valid worker_done for D7 arrives while D8 is active." },
-      "expected": { "after": "The D7 receipt is recorded as late evidence but cannot complete D8 or T7.", "actions": ["match the exact Dispatch identity", "preserve the late receipt", "continue reconciling D8"], "forbidden": ["settle D8 from D7", "replace the active writer", "discard identity fields"] }
+      "input": {"before": "task T7 moved from failed attempt a7 to authorized retry a8.", "event": "A late valid AXSTACK-DONE for a7 arrives while a8 is active."},
+      "expected": {"after": "The a7 receipt is recorded as late evidence but cannot complete a8 or T7.", "actions": ["match the exact attempt identity", "preserve the late receipt", "continue reconciling a8"], "forbidden": ["settle a8 from a7", "replace the active writer", "discard identity fields"]}
     },
     {
       "id": "accepted-handoff",
-      "input": { "before": "The user explicitly requested full transfer from owner O1 to recipient O2 and the exact handoff record is prepared.", "event": "O2 explicitly accepts the recorded scope, revisions, authority, and pending request." },
-      "expected": { "after": "Ownership transfers only for the accepted boundary and O1 stops.", "actions": ["validate acceptance against the intended handoff", "record the acceptance receipt", "transfer only accepted authority"], "forbidden": ["transfer on input acceptance alone", "expand O2 authority", "keep two owners"] }
+      "input": {"before": "The user explicitly requested full transfer from owner O1 to recipient O2 and the exact handoff record is prepared.", "event": "O2 explicitly accepts the recorded scope, revisions, authority, and pending request."},
+      "expected": {"after": "Ownership transfers only for the accepted boundary and O1 stops.", "actions": ["validate acceptance against the intended handoff", "record the acceptance receipt", "transfer only accepted authority"], "forbidden": ["transfer on input acceptance alone", "expand O2 authority", "keep two owners"]}
     },
     {
       "id": "native-manager-canary-gap",
-      "input": { "before": "One finite-session peer-review manager prompt and schedule are configured but remain disabled.", "event": "Source checks pass, while fresh-session launch, overlapping-pass behavior, session-loss recovery, and total process and memory effects have no live receipts." },
-      "expected": { "after": "Activation remains unverified and disabled while repository delivery may continue.", "actions": ["record the four live evidence gaps", "run only a separately authorized bounded native canary before activation"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"] }
+      "input": {"before": "One finite-session peer-review manager prompt and schedule are configured but remain disabled.", "event": "Source checks pass, while fresh-session launch, overlapping-pass behavior, session-loss recovery, and total process and memory effects have no live receipts."},
+      "expected": {"after": "Activation remains unverified and disabled while repository delivery may continue.", "actions": ["record the four live evidence gaps", "run only a separately authorized bounded native canary before activation"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"]}
     },
     {
       "id": "idle-is-not-complete",
-      "input": { "before": "Author A is idle with no matching worker_done and the candidate revision is unchanged.", "event": "The driver reconciles the Task, Dispatch, and session." },
-      "expected": { "after": "A remains incomplete until a matching delivery and required evidence verify completion.", "actions": ["reconcile session, SHA, and receipts", "record the unresolved state and next action"], "forbidden": ["mark A complete because it is idle", "advance dependent work", "transfer ownership because of idleness"] }
+      "input": {"before": "Author A is idle with no matching AXSTACK-DONE and the candidate revision is unchanged.", "event": "The driver reconciles task, attempt key, thread and run."},
+      "expected": {"after": "A remains incomplete until a matching delivery and required evidence verify completion.", "actions": ["reconcile session, SHA, and receipts", "record the unresolved state and next action"], "forbidden": ["mark A complete because it is idle", "advance dependent work", "transfer ownership because of idleness"]}
     },
     {
       "id": "same-author-repair",
-      "input": { "before": "Author A produced candidate S8 and remains usable; review requests an authorized repair.", "event": "The driver prepares the fix loop." },
-      "expected": { "after": "The repair returns to A with existing evidence and one authoritative Dispatch.", "actions": ["verify A's session, worktree, and provenance", "bind the repair to the existing owner and scope"], "forbidden": ["launch a different author without a valid recovery need", "infer A disappeared", "let review expand writer authority"] }
+      "input": {"before": "Author A produced candidate S8 and remains usable; review requests an authorized repair.", "event": "The driver prepares the fix loop."},
+      "expected": {"after": "Repair returns to A with t3_thread_send mode=queue in the same attempt and worktree.", "actions": ["verify A's session, worktree, and provenance", "bind the repair to the existing owner and scope"], "forbidden": ["launch a different author without a valid recovery need", "infer A disappeared", "let review expand writer authority"]}
     }
   ]
 }

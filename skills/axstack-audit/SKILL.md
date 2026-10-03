@@ -23,7 +23,7 @@ shared load edge explicit: Standing contracts require
 substantive phases, and lifecycle's audit hook loads this skill. This audit is
 the terminal exception: it writes its assigned record and does not audit itself.
 
-The dispatching driver reads [Orca runtime](../axstack/references/orca-runtime.md)
+The dispatching driver must read [T3 runtime](../axstack/references/t3-runtime.md)
 immediately before an actual auditor profile or session dispatch. Ordinary
 audit reading and record writing do not load it, and the auditor never
 dispatches.

@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
@@ -36,8 +37,8 @@ test('shared rules qualify only optional seats and preserve required holds', () 
   expect(routing).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
   expect(routing).toMatch(/\[Role roster\]\(role-roster\.md\) governs[^.]*single-provider absence[^.]*mixed Codex\+Claude fan-out/i);
   for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
-  expect(routing).toContain('Codex `--retry-of`');
-  expect(routing).toContain('pre-turn Codex rejection');
+  expect(routing).not.toMatch(/--retry-of|pre-turn Codex rejection/);
+  expect(routing).toContain('holds that role with no substitution');
   expect(contracts).toMatch(/base auditor[^.]*preflight rejection[^.]*Close-out/i);
 });
 
@@ -60,14 +61,35 @@ test('unlaunchable base auditor archives UNKNOWN with route and error', () => {
   for (const prose of [lifecycle, audit]) {
     expect(prose).toMatch(/auditor: UNKNOWN \(unlaunchable\)/i);
     expect(prose).toMatch(/attempted route[^.]*error[^.]*archive/i);
-    expect(prose).toMatch(/launched[^.]*Dispatch[^.]*settle/i);
+    expect(prose).toMatch(/launched[^.]*(?:Dispatch|task)[^.]*settle/i);
     expect(prose).toMatch(/no substitution/i);
   }
 });
 
-test('runtime launch hold defers to shared optional-seat and auditor exceptions', () => {
-  const runtime = read('skills/axstack/references/orca-runtime.md');
-  const launchRule = runtime.split('An unsupported or')[1]?.split('The single-provider')[0];
-  expect(launchRule).toMatch(/unavailable value holds affected work/i);
-  expect(launchRule).toMatch(/optional-seat[^.]*base-auditor[^.]*\[Model discipline\]\(contracts\.md#model-discipline\)/i);
+test('runtime holds preserve intentional absences and shared optional-seat exceptions', () => {
+  const runtime = read('skills/axstack/references/t3-runtime.md');
+  expect(runtime).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
+  expect(runtime).toContain('Intentional absent seats remain recorded absences; availability is runtime proof.');
+  expect(read('skills/axstack/references/routing.md')).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
+});
+
+test('null-model role binds a catalog ID while intentional single-provider seats remain absent', () => {
+  const runtime = read('skills/axstack/references/t3-runtime.md');
+  expect(runtime).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
+  expect(runtime).toContain('For codex or claude, a role lacking both model and class is an intentional absence and must hold; never use a provider default for that role.');
+});
+
+test('Codex and Claude missing model and class explicitly hold as intentional absences', () => {
+  const concepts = [/Codex/i, /Claude/i, /neither|missing|lacking/i, /model/i, /class/i, /intentional/i, /absen/i, /hold/i];
+  for (const path of ['t3-runtime.md', 'routing.md']) {
+    const text = read(`skills/axstack/references/${path}`);
+    const matches = sentences(text).filter((sentence) => requires(sentence, ...concepts));
+    expect(matches, path).toHaveLength(1);
+    expect(requires(sentences(text).filter((sentence) => !matches.includes(sentence)).join('. '), ...concepts)).toBe(false);
+    expect(requires(`Do not ${matches[0]}`, ...concepts)).toBe(false);
+  }
+  for (const text of [
+    'A role for Claude or Codex missing both class and model holds as an intentional absence.',
+    'Hold an intentional absent Codex or Claude seat with neither class nor model.',
+  ]) expect(requires(text, ...concepts)).toBe(true);
 });

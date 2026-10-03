@@ -1,170 +1,112 @@
-# Workspace hygiene for driver-owned Orca runs
+# Workspace hygiene for driver-owned T3 runs
 
-This is a prompt contract for drivers, not a cleanup daemon or new Orca
-protocol. Use the version-matched Orca guides for native operations. Dispatched
-workers never sweep or remove another session. A scheduled pass with recorded
-cleanup authority acts as its lane's driver for the sweep; read-only observers
-only report leftovers. Record each decision and native readback in the private
-run record; uncertain ownership, liveness, or evidence
-holds only the affected resource.
+This is a prompt contract, not a cleanup daemon. Follow [T3 runtime](t3-runtime.md)
+for native identities, terminal run evidence and schema. Dispatched workers never
+sweep or remove another session. A scheduled pass with recorded cleanup authority
+acts as its lane's driver; read-only observers only report leftovers. Uncertain
+ownership, liveness or evidence holds only the affected resource.
+Record each decision and native readback in the private run record.
 
 ## Safe deletion
 
-Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded
-expansion (for example, `rm -rf -- "${EV:?}/mut"`), only inside the worker's
-own evidence folder, `TMPDIR`, or worktree. Never use a bare `$VAR`, a glob on a
-variable, `/`, `HOME`, or a shared root as a deletion target. Prefer
-`git clean -- <exact prefix>` or tool-native cleanup. A safety prompt that
+Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree.
+For example, `rm -rf -- "${EV:?}/mut"` requires a validated owned evidence path.
+Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target.
+Prefer `git clean -- <exact prefix>` or tool-native cleanup. A safety prompt that
 still appears is a hold; agents do not answer it.
+
+## Project preflight
+
+`worktreeCleanup` must be `off` for every Axstack project.
+Preflight reads back `worktreeCleanup` via `t3_project_read` where exposed; otherwise record a limitation pointing to the documented installation setup step.
+Automatic deletion cannot replace evidence readback or salvage. Do not change
+project settings without recorded host-mutation authority.
 
 ## Settlement
 
-At intermediate completion, once a worker or reviewer Dispatch is accepted,
-the driver releases it natively, confirms closure from a fresh native terminal
-list, then removes its worktree, descendants first, after the preservation
-checks below. Keep the author worktree and session until the PR merges or closes
-so repairs return to the same author. Release, terminal closure, worktree removal, and branch
-retirement each need their own receipt.
+Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches.
+Require terminal run evidence before `t3_thread_organize` settle or archive.
+These metadata actions do not remove worktrees. Accept matching delegated task
+or launched run completion under the runtime contract before settlement.
+Keep the author worktree and thread until the PR merges or closes.
+Retain a user-taken-over T3 thread and never send cleanup commands to it, including `t3_thread_organize` settle or archive.
+Never remove the current driver, current pass, an active or unknown thread, an unsettled descendant, or a resource with ambiguous ownership.
+At final settlement, no eligible non-driver thread or worktree remains.
+At final settlement include run-owned worktrees in other repositories of the
+same project and report each remaining resource as a hold with its reason. Recorded
+projectId, threadId/runId, delegated taskId/childThreadId/childRunId, attempt key,
+checkout path and revision decide ownership. Idle alone never proves exit.
 
-At final settlement, no eligible non-driver session or worktree remains,
-including the run's worktrees in other repositories. Report each remaining
-resource as a hold with its reason. Recorded native ownership by Run, Task,
-and Dispatch decides; parent/child display lineage does not. The creator closes
-what it created at ordinary settlement; the cross-run sweep below may retire
-its settled leftovers. A finite scheduled pass closes only its own exact terminal as
-its final action. Manual chats, automation dedicated workspaces, and genuine
-`user_takeover` sessions are never removed by ordinary settlement or sweep.
-Deleting a session means closing its terminal; agent chat history is not deleted.
+Read back the durable receipt and evidence manifest before removing source copies or the worktree; missing or differing readback holds removal.
+Evidence already outside the checkout needs no copy; read back its receipt and
+supporting files. Keep settlement, evidence preservation, thread archival,
+worktree removal and branch retirement as separate receipts.
+Remove only the exact recorded path with `git worktree remove <path>` without force, then read back `git worktree list --porcelain` to verify absence.
+Branches with a remote counterpart are never deleted.
+Use exact `git branch -d <branch>` only for a proven run-owned local-only branch whose tip is reachable from the preserved candidate, verified salvage ref, or confirmed remote PR head; unique or unknown commits hold branch deletion.
+Never delete the author branch for reviewer cleanup. Verify ref absence; a failed
+or uncertain operation preserves the resource and resumes from its last receipt.
 
-If native exact terminal close returns `runtime_error` for a provably finished
-agent, send `/quit` + Enter to that exact terminal, wait about 5 seconds, then
-send `exit` + Enter. Confirm it left a fresh native terminal list. Never use
-this fallback for a working, user-taken-over, or unclear agent; never use
-`--all` or a name selector. A finite scheduled pass whose own close fails
-leaves its terminal for the next pass, without treating that expected failure
-as a hold. At pass start, clear only provably finished predecessor terminals
-of the same automation in its dedicated workspace by this exact-handle path.
+## Owned schedule retirement
 
-## Owned automation retirement
-
-At Close-out, reconcile the run record with native inventory: the recorded
-owning Run must have created the exact automation IDs selected for retirement.
-The sweeping pass uses that recorded owning Run, not its own Run, for cross-run
-watches. A cross-run sweep may retire a disabled per-run watch only when its
-owning run is closed or every watched PR is merged or closed. Uncertain recorded
-ownership, watch state, or disable result holds the affected automation.
-
-For each eligible automation, disable it and verify native readback before
-`orca automations remove <id>` on its exact ID, and verify absence by native
-readback. The observer only disables and reports; the driver removes its own
-run's automation. Only a retired owned per-run watch's workspace may be removed
-under these guards. Never remove the durable review manager and its dedicated
-workspace or a user-created automation and its dedicated workspace.
-
-Remove that dedicated workspace only after confirming its exact ownership, no
-live terminal, a clean worktree, and a head on the remote. Recheck ownership and
-liveness immediately before workspace removal. If dirty or unpublished, use the
-salvage and bundle verification below before removal; failed verification or
-uncertain liveness is a hold. The current scheduled pass cannot remove its own
-workspace while its terminal is live; the driver or a later sweep finishes that
-step. Record separate automation and workspace receipts.
+At Close-out reconcile recorded scheduledTaskIds with `list_scheduled_tasks`:
+the owning run must have created each exact per-run watch selected for retirement.
+Use `delete_scheduled_task` by exact ID and verify absence via
+`list_scheduled_tasks` once nothing remains unsettled. An uncertain result holds
+and retains the recorded ID. Cross-run retirement of an owned per-run watch
+requires that its run is closed or every watched PR is merged or closed.
+Read-only observers report to the driver; they do not remove schedules or worktrees.
+Never remove the durable review-manager schedule, its lane resources, or a
+user-created schedule through ordinary run settlement. See
+[Review manager](automations.md) for scheduled-task health and lane policy.
+Schedule deletion is distinct from thread archival and Git worktree removal.
 
 ## Preserve before removal
 
-Workers write reports, probes, logs, evidence, and scratch to the private
-`<run dir>/evidence/<dispatch>/` directory outside the disposable worktree.
-Name the exact directory in the dispatch brief and completion receipt. Peer
-reviewers use separate worktrees and separate evidence folders; neither reads
-the other's first-pass work. Authors commit the candidate before reporting
-done. Workers never push; the driver publishes under candidate-publication.
+Workers write reports, probes, logs, evidence and scratch to private
+`<run>/evidence/<key>/` outside disposable worktrees. Name the exact directory
+in the brief and completion receipt. Peer reviewers use separate detached
+checkouts and separate evidence folders with no first-pass cross-read. Authors commit
+before reporting done; workers never push. The driver publishes under
+[candidate publication](candidate-publication.md).
 
-If a completed eligible worktree has uncommitted or unpublished content,
-salvage before removal: create a salvage ref in that worktree, run `git add -A`
-and commit everything on that ref, write a `git bundle` for it into the private
-run folder, then run `git bundle verify`. Record the bundle path, bundle SHA-256, and salvage commit SHA in the
-receipt before removing the worktree. A failed verify holds the worktree. Never
-salvage an author worktree before merge or closure. Ignored non-cache files
-(anything other than known build and dependency caches), submodule changes, and content outside
-the worktree hold instead of being salvaged. Preserve any ambiguous source or
-publication state. Recheck the native owner and liveness immediately before
-removal, and use exact native worktree removal without force.
+Before removal of an eligible non-author worktree with uncommitted or unpublished content, create a salvage ref, run `git add -A`, commit on that ref, write a `git bundle` into the private run folder, and run `git bundle verify`.
+Ignored non-cache files must be explicitly classified and preserved in a verified salvage bundle before removal; unknown files hold the worktree.
+Stage each classified ignored file separately with `git add -f -- <exact path>`
+on the salvage ref before the commit; known build and dependency caches are
+excluded. Verify the bundle includes every classified file's bytes and salvage
+commit, beyond the bundle's structural verification.
+Record the bundle path, bundle SHA-256, and salvage commit SHA in the receipt before removing the worktree.
+A failed bundle verify holds the worktree.
+Never salvage an author worktree before merge or closure.
+Submodule changes and content outside the worktree hold instead of being salvaged.
+Preserve ambiguous source or publication state. Recheck native owner, terminal
+run evidence and no-writer proof immediately before archival and removal.
+A verified bundle changes preservation classification, not ownership or liveness.
 
 ## Driver-start orphan sweep
 
-Drivers sweep on phase-skill entry. A scheduled pass that owns its lane with
-recorded cleanup authority runs the driver-start orphan sweep after predecessor
-terminal cleanup, scoped to repositories listed in its run record plus
-registered repositories on this host containing eligible settled resources of
-another Axstack run. On phase-skill entry, scope the sweep to the current repository
-and the per-run worktrees in other repositories recorded in the driver's
-run records, and registered repositories on this host containing eligible settled
-resources of another Axstack run. Inspect other Axstack run records on this host
-too; a live owning run does not protect its settled
-reviewer worktree or merged author after preservation checks. If Orca is unreachable,
-report one line and continue the phase; an unreachable host holds only its
-items. A sweep may remove resources of ANY Axstack run on this host after salvage
-when every owning Dispatch and descendant is settled (completed or failed), its
-release is confirmed or `release_unknown`, no agent is working, the exact terminal
-has had no output for at least 60 minutes, ownership and liveness are rechecked
-from a fresh native list, and evidence is durable. Remove descendants first.
-For a settled worker dispatched into a shared or driver worktree, close its
-exact terminal individually under the same 60-minute quiet rule: native close,
-else the guarded `/quit` + `exit` fallback above. Never close the live coordinator
-session's terminal for any run (the driver's own terminal) or a user chat.
-Align/Spec adviser sessions reused between rounds remain until
-their owning phase approves or stops; the quiet rule still applies then.
-For a merged or closed PR author with an unreleased settled Dispatch, request
-native worker release first, record its result, then apply the sweep guards.
-An author worktree of a merged or closed PR is sweep-eligible when its head
-commit is retrievable from the forge (for example, the PR's recorded head or a
-remote branch contains it); unverifiable state is a hold. For an eligible
-author worktree, salvage first if dirty, under the preservation guards above.
-Phase-skill entry drivers report sweep results and holds in chat and run record.
-A scheduled review-manager pass records sweep results and holds in its
-continuity record's Open holds table; a cleanup-authorized watch pass records
-them in its own continuity Open holds table. Both are silent when nothing was removed.
-Branches with a remote counterpart are never deleted. List live or unsettled
-work, genuine `user_takeover`, and items without provable Axstack provenance in
-one table with their reason; do not remove them.
-Dirty or unpublished work follows the salvage and publication guards above;
-open-PR authors remain protected until merge or close. Record each removed and
-held resource in the pass continuity (scheduled) or run record (driver start).
+Drivers sweep on phase-skill entry. The sweep inventory is fully paginated project-scoped T3 threads plus `git worktree list --porcelain` plus run records.
+Use projectId and exact recorded identities, not title substrings or age, to
+prove Axstack provenance; include per-run worktrees in other repositories only
+when the same project's records identify them. User-created threads and other projects' items are reported, never touched.
+Report an unreachable T3 host and continue the phase; hold only its items.
+Incomplete inventory holds affected eligibility; it never establishes absence.
 
-## Native bookkeeping exceptions
+Cross-run sweep eligibility for another Axstack run's settled reviewer or merged
+or closed author in this project requires all attempts and descendants settled,
+every agent inactive, the exact thread quiet for at least 60 minutes,
+and fresh native state proving ownership and liveness with durable evidence.
+Remove descendants first. Settled reviewer eligibility is independent of whether
+its owning run is live. For a merged or closed author, prove its head is
+retrievable from the forge (recorded PR head or remote branch); unverifiable state holds. Salvage an
+eligible dirty author first under the preservation guards above. Align/Spec
+advisers reused between rounds remain until their owning phase approves or stops.
+Never archive active or waiting workers, or sweep solely because they are idle.
 
-A repair into an existing author terminal may be labelled `user_takeover` or
-`external_terminal`. Treat a repair-labelled terminal as run-owned only when
-the run record contains the exact repair Dispatch ID for that terminal;
-otherwise hold. Report the mislabel to Orca upstream through the driver.
-For `release_unknown`, reconcile with native worker inspection. If a fresh
-native terminal list confirms the terminal is gone, record the readback and
-proceed; otherwise hold unless inspection proves a settled, quiet worker. Then
-close only that worker's exact terminal under the sweep rule and confirm its
-absence. Unknown liveness holds.
-
-## Known Orca issues
-
-Mark these for upstream reporting: in Orca 1.4.209 desktop, `orca terminal
-close` on an agent terminal returns `runtime_error` with `Error invoking remote
-method 'session:set': TypeError: Cannot convert undefined or null to object`.
-Dispatch into an existing terminal marks the worker retained/`user_takeover`.
-Cross-repository `--parent-worktree` is silently dropped.
-
-## Readable sidebar
-
-Set the Orca display name with `orca worktree set --display-name` when creating
-each run worktree. Use run first, then role, space-separated: `<run> driver`,
-`<run> author #<pr>`, and `<run> review #<pr> r<n>`. Peer reviewers append
-`primary` or `secondary`; authored reviewers have no `primary` or `secondary`
-qualifier, and authors carry no round number. Use the task ID in
-place of `#<pr>` before a PR number exists, then update the name when assigned.
-
-Set `--comment` at dispatch, at settlement with the verdict and short SHA, and
-on a hold with its reason. Use `--workspace-status` for the coarse state and
-the comment for detail; never set `--workspace-status completed` for a hold.
-
-Use worktree parentage only to present ownership where supported: reviewer under
-its author, author under its driver in the same repository. Dependency order
-lives in names and `gh stack`. Do not rely on cross-repository parents, which
-Orca silently dropped, or remote `new-child`, which is invalid. Native Run,
-Task, and Dispatch receipts remain the source of ownership truth.
+Record removed and held resources in the private run record, with exact
+identities and resume conditions; phase-entry drivers also report in chat.
+Cleanup-authorized scheduled passes record their own sweep results in continuity
+Open holds. They stay silent when nothing was removed. List live or unsettled
+work, user-taken-over threads, unknown provenance, user-created threads and
+other-project items in one table with reasons. Age never grants deletion authority.

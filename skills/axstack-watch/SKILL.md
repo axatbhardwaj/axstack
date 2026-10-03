@@ -32,7 +32,7 @@ only and establish neither human identity nor write, reply, or merge authority.
 ## 1. Adopt and reconcile
 
 Start from actual state. Reconcile the PR's remote head and base, ownership,
-existing Orca Tasks, Dispatches, sessions, private run record, and watch registrations. Reuse the
+existing T3 tasks, threads and runs, private run record, and watch registrations. Reuse the
 live owner and watch; uncertain state holds new registrations until resolved.
 
 For an existing own PR, read the
@@ -56,7 +56,7 @@ Choose one mode from the user's authority and record it before dispatch:
   PRs. The initiating chat remains the only driver and record
   writer for every PR raised in its Run, including later verified publications
   and explicitly adopted members. Follow [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch)
-  for its scheduled driver wake and Orca fallback. This mode has no replacement `axstack-owner` or
+  for its bound T3 scheduled driver wake. This mode has no replacement `axstack-owner` or
   standalone 24 h expiry.
 - **Observation-only:** reconcile and report CI, reviews, and PR state. It
   dispatches no author and sends no reply. This restriction dominates every
@@ -73,12 +73,12 @@ new authority.
 Read-only checks and updates to the already-owned local record need no runtime
 load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
-[Orca runtime](../axstack/references/orca-runtime.md). Reconcile before creating
+[T3 runtime](../axstack/references/t3-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
 `axstack-monitor` stays an optional read-only observer for standalone watch
 that never sends. For own open PRs in chat-run mode, wake the driver chat every 10 minutes by default;
-the Orca fallback observer permits only bounded internal reports to the recorded
-Run and original driver. One read-only PR observation needs neither. Start no automation for a read-only check.
+the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
+neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
@@ -99,8 +99,7 @@ Every user-facing update is actionable: name the current milestone, the next
 wake or condition, and an ETA when the forge exposes one, such as CI median.
 A healthy unchanged observation produces no user-facing message.
 
-Harness-native chat-run wakes resume the original driver; Orca fallback observer
-wakes deliver only internal reports. The original driver alone reconciles and
+Bound T3 chat-run wakes resume the original driver. The original driver alone reconciles and
 acts under the recorded authority. Observation-only and
 peer wakes produce a read-only report and stop. For an
 authorized maintenance wake that may require a repair or public reply, read and
@@ -128,14 +127,14 @@ Under a recorded `Notification policy`, the owner may use the optional
 [axstack-relay](../axstack-relay/SKILL.md) only for a serious risk immediately,
 a genuine blocked operation needing user intervention after bounded safe
 recovery, or decision holds and capped milestones named by the recorded policy.
-Routine questions stay in Orca. Progress, CI pending, and completion always stay
-in Orca.
+Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
+in the T3 driver thread.
 Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
-The standalone monitor never sends; the chat-run observer reports only
-internally. Deduplicate authorized notifications;
-absent policy or failed relay uses the current Orca conversation and leaves
+The standalone monitor never sends; the chat-run schedule resumes the driver. Deduplicate
+authorized notifications;
+absent policy or failed relay uses the current T3 driver thread and leaves
 the existing hold open.
 
 ## 5. State readiness precisely
@@ -235,9 +234,8 @@ expires. Without an Autopilot or Release record, the release step is not
 applicable to this watch. A required PR closed without merging records a
 decision hold and the wake remains active while unexpired until the user
 resolves scope, cancels, or the wake expires. Stop the chosen wake and verify
-its stop receipt; a failed or uncertain harness wake stop is a hold.
-The Orca fallback also needs own-automation disable/readback and driver-owned automation
-removal and workspace cleanup under
+its stop receipt; a failed or uncertain schedule deletion is a hold.
+Delete only the recorded schedule and verify absence with `list_scheduled_tasks` under
 [Watch runtime](references/watch-runtime.md#chat-run-watch).
 
 End a standalone watch early when all required PRs merge, at cancellation, or
@@ -248,7 +246,7 @@ At every end condition, leave the compact state below in the private run record
 and report it in the current chat, even when work remains. Expiry grants neither
 silent renewal nor ownership-transfer authority.
 
-Transfer ownership through the runtime-owned Orca handoff route only when the
+Transfer ownership through the runtime-owned T3 transfer route only when the
 user explicitly requests it. Before transfer, follow the lifecycle-owned
 preflight for native capability availability, the configured role, and explicit
 recipient acceptance. A failed or incomplete preflight preserves the current

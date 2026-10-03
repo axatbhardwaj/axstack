@@ -51,7 +51,7 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
   expect(pairs).toMatch(/intentional absence[^.]*continue with Sonnet alone/i);
   expect(roster).toMatch(/Optional seats:/i);
   expect(roster).toMatch(/fence the attempt, record `absent \(<reason>\)`/i);
-  expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
+  expect(routing).toMatch(/An unavailable provider, model, role, mode or effort holds that role with no substitution/i);
 
   const cases = JSON.parse(read('tests/workflows/routing-scenarios.json')).cases;
   const mixed = cases.find(({ id }) => id === 'mixed-analysis-sonnet-high');
@@ -83,12 +83,12 @@ test('analysis pairs: routing preserves original ownership and direct-route duti
   const routing = compact('skills/axstack/references/routing.md');
   const roster = compact('skills/axstack/references/role-roster.md');
   expect(roster).toMatch(/`axstack-owner` owns one PR/i);
-  expect(routing).toMatch(/Unavailable models, efforts, roles, or overrides hold only affected work/i);
+  expect(routing).toMatch(/An unavailable provider, model, role, mode or effort holds that role with no substitution/i);
   expect(routing).toMatch(/verify primary sources and code/i);
   expect(routing).toMatch(/escalate via adviser-directed investigators/i);
   expect(routing).toMatch(/red loop wanted -> `axstack-debug`/i);
   expect(routing).toMatch(/rank bounded candidates with evidence/i);
   expect(routing).toMatch(/reconcile run record[^.]*launch no native handoff/i);
-  expect(routing).toMatch(/runtime-owned handoff guide[^.]*explicit recipient acceptance/i);
+  expect(routing).toMatch(/ownership-transfer\s+contract[^.]*explicit recipient acceptance/i);
   expect(routing).toMatch(/Never infer the author from the orchestrator or assume an imported own PR's author/i);
 });

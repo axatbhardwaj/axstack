@@ -42,10 +42,10 @@ test('codebase reviewers inherit the runtime checkout and local evidence boundar
   const review = read('skills/axstack-review/SKILL.md');
   const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
   expect(mode).toMatch(/Immediately before each reviewer dispatch, load/i);
-  expect(mode).toContain('[Orca runtime](../axstack/references/orca-runtime.md)');
-  expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/orca-runtime.md#reviewer-workspaces-and-evidence)');
-  expect(mode).toMatch(/separate Orca-managed child worktrees[^.]*detached at the pinned exact\s+source SHA/i);
-  expect(mode.replace(/\s+/g, ' ')).toMatch(/reports, probes, and logs[^.]*private per-Dispatch run folder/i);
+  expect(mode).toContain('[T3 runtime](../axstack/references/t3-runtime.md)');
+  expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/t3-runtime.md#role-dispatch-by-permitted-writes)');
+  expect(mode).toMatch(/separate driver-made disposable detached checkouts[^.]*detached at the pinned exact\s+source SHA/i);
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/reports, probes, and logs[^.]*private per-dispatch evidence folder/i);
 });
 
 test('codebase findings retain trust, escalation, and evidence boundaries', () => {
@@ -64,7 +64,7 @@ test('codebase findings retain trust, escalation, and evidence boundaries', () =
 test('codebase reviewer worktrees bind to the inspected source', () => {
   const review = read('skills/axstack-review/SKILL.md');
   const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
-  expect(mode.replace(/\s+/g, ' ')).toMatch(/child worktrees under the inspected source worktree[^.]*source SHA[^.]*PR base/i);
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/detached checkouts under the run directory[^.]*source SHA[^.]*PR base/i);
 });
 
 test('codebase brief carries the escalation decision', () => {

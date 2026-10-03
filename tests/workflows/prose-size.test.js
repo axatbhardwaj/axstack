@@ -13,6 +13,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
 
   // Aggregate baseline: 268,118 bytes on main; 273,308 with #245/#246; 2% headroom: 278,775.
   // driver acceptance recorded in run 20260930-test-slop-audit.
+  // Driver acceptance in run 20261003-t3code-migration (T5b): restore the
+  // 278,775-byte aggregate ceiling after retiring the legacy runtime reference.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
   expect(total).toBeLessThanOrEqual(278775);

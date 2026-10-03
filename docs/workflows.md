@@ -1,7 +1,8 @@
 # Axstack workflows
 
-Chat drives execution. Orca is the only supported active runtime and owns
-worktrees, sessions, supervised dispatch, messaging, settlement, and handoff.
+The current T3 thread drives execution. T3 Code is the only supported active
+runtime and owns worktrees, threads, runs, delegated tasks, messaging, and
+native schedules.
 Axstack owns workflow policy, role data, evidence, and the private derived run
 record. It adds no daemon, scheduler, runtime database, or escalation engine.
 
@@ -11,7 +12,7 @@ Axstack implements that skill's specialist capability.
 ## Routing and scope identity
 
 The directly invoked phase loads the applicable shared references for routing,
-lifecycle, Orca runtime boundaries, role/model/risk contracts, the run record,
+lifecycle, T3 runtime boundaries, role/model/risk contracts, the run record,
 and PR shape.
 
 Direct routes need no spec ceremony:
@@ -56,18 +57,19 @@ starts later for each repository the user names.
 1. Record the repository and test-path allowlist, a finite pass budget, and
    standing edit and PR-open authority. Zero deletions is normal; proven F
    repairs are eligible.
-2. In that repository's dedicated existing Orca workspace, load the current
-   `orca skills get orca-cli` automation guide and command help. Configure a
-   native weekly automation with `--fresh-session` and the packaged prompt,
-   including the activation record's values. Do not add a scheduler or cursor.
+2. Configure that repository's dedicated T3 project and lane thread under the
+   [T3 runtime boundary](../skills/axstack/references/t3-runtime.md). Set and
+   read back its role binding, then use `schedule_task` with the packaged prompt
+   and activation values, `bindToCurrentThread:false`, and a stable
+   `clientRequestId`. Do not add a scheduler or cursor.
 3. Before enabling the schedule, pass the
    [native activation canary](../skills/axstack/references/automations.md): fresh
-   sessions, overlap admission, recovery after session loss, nested dispatch
-   depth, process/memory effects, and bounded terminals over repeated passes.
-   Preserve runtime receipts; source checks alone do not establish these facts.
+   pass threads, overlap admission, killed-predecessor recovery, capacity and
+   bounded retained worktrees. Preserve runtime receipts; source checks alone
+   do not establish these facts.
 4. Missing authority, or no passing native canary, holds activation. Each pass
    derives one boundary from test-audit PR history, skips open PRs, overlap with
-   live Orca Run/worktree ownership, unsafe baselines or empty candidate sets,
+   live T3 thread/run and worktree ownership, unsafe baselines or empty candidate sets,
    and opens at most one independently reviewed test-only PR per week through
    the driver. Workers never push; the human merges.
 
@@ -99,12 +101,11 @@ their findings per claim without averaging.
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
 from the installed shared root `skills/axstack/` and records the whole table for
-a new run. Per role it records class, exact ID, source, and time. Codex classes
-resolve from a passed catalog path using `skills/axstack/scripts/resolve-models.js`;
-missing or malformed catalogs hold. Claude's first class launch passes the alias,
-then the first assistant transcript turn supplies the exact ID for later launches.
-Unknown Claude IDs hold provenance-dependent work. Active runs and resume reuse
-their snapshot after later installation changes.
+a new run. Per role it records class, exact ID, source, and time. Codex and
+Claude classes resolve to the newest matching ID from the saved T3 capabilities
+catalog using `skills/axstack/scripts/resolve-models.js --provider`; missing or
+malformed catalogs hold. Active runs and resume reuse their snapshot after
+later installation changes without re-resolution.
 
 Peer roles keep the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-secondary`; their provider/class mappings come only from the
@@ -114,53 +115,47 @@ The unavailable adviser in each single-provider preset stays explicitly
 `model: null` within that provider's bounds. Installer readiness accepts that
 intentional absence, but Align and Spec hold because both independent receipts
 are required. The mixed checker and Google web-research route use provider
-`antigravity`; the X route uses `grok`. Launch-by-agent-id routes for which Orca
-exposes no model override (today: `grok`, `antigravity`) record `model: null` with an explicit note and are
-launchable; the run record snapshots the model the TUI reports. Missing or unavailable roles hold only affected
-work. Model, effort, and permission values express requested intent until real
-Orca receipts establish the effective session. Stored `modeId` is not permission
-parity or a sandbox. No route is inferred from subscription, quota, harness,
-provider defaults, or installed tools. Only explicit model rejection before the
-first turn permits a recorded Codex retry with `--retry-of` to the next eligible
-model in the same class, provider, and effort. Claude rejection, timeout, quota,
-and auth failures hold.
+`antigravity`; the X route uses `grok`. Those agent-ID routes retain
+`model: null` notes and resolve the exact model from the first provider entry
+in saved T3 capabilities. Empty Antigravity catalogs hold. Missing or
+unavailable roles hold only affected work. Requested model, effort, and
+permission values need actual T3 configuration read-back; stored `modeId` is
+neither permission parity nor a sandbox. Rejection, timeout, quota, and auth
+failures hold; no subscription inference, quota routing, or alternative retry
+applies.
 
-## Orca runtime boundary
+## T3 runtime boundary
 
-Immediately before dispatch, delivery processing, settlement, recovery, or
-handoff, load the shared `skills/axstack/references/orca-runtime.md`. It resolves
-one Orca executable, then loads only the version-matched guide needed by the
-operation: `orchestration` for Run/Task/Dispatch supervision, `orca-cli` for
-worktrees, automations, handoff, and publication, and `orca-linear` for Linear
-issues. Axstack follows current command help and named conditional references;
-guide availability is not exercised runtime support. It does not vendor the
-guides or restate a competing command protocol.
+Immediately before dispatch, receipt consumption, or recovery, load the shared
+[T3 runtime reference](../skills/axstack/references/t3-runtime.md). The driver
+saves `orchestrator_capabilities` JSON and follows the advertised tool schema.
+The reference owns role dispatch, provider options, receipts, questions,
+launch recovery, run-watch waits, ownership transfer, and cleanup.
+Capability discovery alone is not execution proof.
 
-All subagent, delegated-worker, reviewer, and cross-harness work goes through Orca
-orchestration via the `orca` CLI (`orca-cli` / `orchestration` guides). Do not use a
-harness-native subagent tool (e.g. Claude/Codex native subagents) for delegated work;
-use Orca runs, tasks, and dispatches instead so the work stays visible. OpenCode
-and Antigravity subagents run as Orca-supervised workers.
+All subagent, delegated-worker, reviewer, and cross-harness work uses T3
+orchestration through the `t3-code` MCP. Do not use harness-native subagent
+tools. Read-only roles use async `delegate_task`; reviewers and investigators
+receive driver-made disposable detached checkouts pinned to candidate and base.
+Authors use `t3_thread_launch` in their own SHA-pinned worktrees. Repairs return
+to the same author and worktree. The current T3 driver owns coordination and
+forge mutations and never writes an author's tracked files.
 
-Supervised work uses native Run, Task, and Dispatch identity. Preserve actual
-terminal, agent, worktree, requested/effective role, and revision receipts.
-`input_accepted` proves only terminal input; `turn_started` and session
-inspection are separate. Trust, permission, hook-review, authentication, and
-model prompts are visible holds. Never answer trust or permission prompts for a
-worker. Reconcile the existing attempt through the runtime guide before retry,
-so one candidate never gains a duplicate writer.
+Preserve native `taskId/childThreadId/childRunId` or
+`threadId/runId/worktree/branch/base SHA`, dispatch key, requested/effective
+configuration, and private evidence. Persist `task_status` before
+`t3_thread_read`; delegated completion needs terminal success, available result,
+settled child runs, and the current `AXSTACK-DONE` marker. Launched writers
+send their marker to the driver, which also verifies terminal `t3_thread_wait`,
+a clean tree, non-empty diff, and red/green logs. An older attempt never
+completes a newer one. Questions remain incomplete until the resumed run settles.
 
-Process each whole delivery before acknowledgment. A `worker_done` belongs only
-to its expected active Task and Dispatch, and its revision evidence still needs
-verification. `consumer_fenced` stops consumption under the stale identity;
-never forge, borrow, or bypass a coordinator identity. Runtime settlement owns
-reuse, retention, and release. A `user_takeover` terminal remains retained and
-is not reused or closed as cleanup.
-
-Ordinary restart reconciles the same owner, author, Task, Dispatch, worktree,
-revisions, and pending receipts. Idle, silence, contact loss, or missing status
-never proves exit. Authorized fixes return to the same original author when its
-session and evidence remain valid.
+Trust, permission, authentication, and provider safety prompts are holds;
+never answer trust or permission prompts for a worker. Unknown liveness,
+silence, or a missing status never proves exit or authorizes a second writer.
+Ordinary resume keeps the owner, author, attempt, worktree, and pending receipts.
+The runtime reference defines exact-title recovery and recipient acceptance
+for explicit ownership transfer.
 
 ## Phases
 
@@ -178,16 +173,16 @@ session and evidence remain valid.
   session for round 2, high-stakes agreement, or the bounded trigger in
   [Standing contracts](../skills/axstack/references/contracts.md).
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
-  user-approved revision baseline. Linear is the default authoritative store;
-  GitHub Issues and repository Markdown are explicit alternatives. A GitHub
-  baseline pins the issue URL and approved body digest. Linear document
-  operations preflight the current `orca-linear` guide and command help; a
-  missing native operation holds only that operation without MCP fallback or a
-  store switch.
+  user-approved revision baseline. Linear through the executor MCP is the
+  default only for `defi-com` repositories; GitHub Issues and repository
+  Markdown are explicit alternatives and the stores for other repositories.
+  A GitHub baseline pins the issue URL and approved body digest. Preflight
+  Linear document access separately through executor; a missing operation
+  holds only that operation without mutation or a store switch. Notion also
+  uses executor, including both accounts.
 - `axstack-tickets` maps user-visible capabilities to dependency-aware internal
-  tasks. Linear is the default selected store with access preflight; GitHub
-  Issues is an explicit external-tracker alternative and repository Markdown
-  is an explicit local alternative. Only the driver mutates lifecycle state.
+  tasks in the selected Markdown, GitHub Issues, or Linear store under the same
+  organization boundary. Only the driver mutates lifecycle state.
 - `axstack-implement` uses strict behavioral RED, GREEN, then refactor. The
   narrow accepted structure-preserving route uses old-green and the same check
   new-green. One author writes and returns a local receipt without pushing. The
@@ -199,7 +194,7 @@ session and evidence remain valid.
   the named keepers or vacuity/obsolescence evidence for removals.
 - `axstack-review` gives peer PRs two isolated same-brief reviewers and authored
   PRs one eligible cross-family/preset-mapped reviewer. Every reviewer runs in
-  a separate candidate-child worktree, with private evidence preserved before
+  a separate detached checkout, with private evidence preserved before
   removal. All cover security,
   correctness, integration, requirements, design, and simplicity. Report-only
   never publishes; authorized submission binds the exact commit.
@@ -211,12 +206,14 @@ session and evidence remain valid.
   and remote readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
-- `axstack-cleanup` distinguishes settled-Dispatch release, exact unused-shell
-  close, evidence-safe native worktree removal and branch effects, and separate
-  chat archival when the discovered runtime actually supports it. Process exit
-  alone never promises that visible chat history disappeared.
+- `axstack-cleanup` settles inline in the driver. Confirm descendants settled,
+  read back private evidence, salvage dirty or ignored non-cache content,
+  archive the exact eligible thread, then remove its exact worktree without
+  force and delete only eligible local branches. T3 metadata actions do not
+  remove worktrees. Authors remain until their PR merges or closes; the current
+  pass, unsettled descendants, and user-taken-over threads remain protected.
 
-One Orca execution host owns a run, one persistent owner owns each PR, and one
+One T3 host/server owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real
 dependencies, writer isolation, host capacity, and spending limits. Each PR has
 one theme and a measured size under the shared
@@ -230,8 +227,8 @@ autonomous driver choices; size alone never requires user approval.
 
 Only an explicit user request transfers ownership. Record the intended
 recipient, exact scope, revisions, authority, and pending request, then follow
-the runtime-owned `orca-cli` handoff guide. Input acceptance and turn start do
-not transfer ownership. The recipient must explicitly accept the exact handoff;
+the [T3 runtime transfer contract](../skills/axstack/references/t3-runtime.md).
+Input acceptance and turn start do not transfer ownership. The recipient must explicitly accept the exact handoff;
 only then does the prior owner stop. Missing capability or ambiguous acceptance
 keeps the current owner and a resumable record.
 
@@ -242,8 +239,8 @@ prompt immediately and hold dependent dangerous work. This is not a runtime
 gate. An applicable `Notification policy` may use `axstack-relay` only for a
 user-decision hold (including spec or npm approval and a genuine blocker after
 bounded safe recovery), a serious-risk hold immediately, or at most two merge-ready/merged milestones per run.
-Routine questions stay in Orca. Progress, CI pending, and completion always stay
-in Orca.
+Routine questions stay in the T3 driver thread. Progress, CI pending, and
+completion always stay in the T3 driver thread.
 Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy. The relay normally delivers
@@ -260,51 +257,66 @@ read-only observer for standalone watches and never sends.
 
 For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
 continues from Align through the eligible phase sequence in the same chat.
-The human approves substantial specs, every merge including release PRs, and
-the npm stage. An open hold pauses the run. Implement arms maintain-mode watch
+The human approves substantial specs, release PRs, peer and deploying-base
+merges, and the npm stage. Only the chat-run driver holding the approved ticket
+map may merge its own eligible integration-base PRs under the full
+[watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely). Managers,
+workers, reviewers, automations, and standalone watches never merge. An open
+hold pauses the run. Implement arms maintain-mode watch
 at its first published PR; release and install run only under recorded per-run
 authority, and Close-out follows their verified receipts.
 
-Use `axstack-watch` chat-run mode to watch every PR raised by this chat's Run, including later verified publications and PRs the driver explicitly adopts. A harness-native monitoring or scheduled wake resumes the driver chat every 10 minutes by default; only when the harness has no such capability does the existing Orca `*/10` observer act as fallback. Record the chosen mechanism in the run record. Each wake runs the own-PR maintenance loop: address feedback, rebase on base movement, rerun required CI, and check the forge-counted human approval. Delegated work still runs through Orca; there is no daemon or polling model between wakes. Independent PRs can repair in parallel with one writer per PR; stack ancestor changes invalidate child evidence. An incomplete scan leaves readiness `UNKNOWN`.
+Use `axstack-watch` chat-run mode to watch every PR raised by this run,
+including later verified publications and PRs explicitly adopted by the driver.
+A bound T3 schedule resumes the driver thread every 10 minutes; record the
+schedule ID and expiry. Each wake reconciles all unsettled dispatch attempts
+and runs the own-PR maintenance loop: feedback, base movement, required CI,
+and approval. Delegated work follows the T3 runtime contract. There is no
+daemon or polling model between wakes. Independent PRs can repair in parallel
+with one writer per PR; a changed stack ancestor invalidates child evidence.
+An incomplete scan leaves readiness `UNKNOWN`.
 
-The watch lasts until all member PRs merge or close and the run's release step is settled or not applicable, you cancel it, or its wake expires. Stop and verify the chosen wake; an Orca fallback also needs automation disable/readback and workspace retirement. Worker settlement and run archive are separate driver steps. Run-created implementation candidates are published and read back before independent authored review. Adopted own-PR maintenance candidates receive independent exact-local-SHA review before driver publication and remote readback. The human merges. Source and installed instructions do not prove scheduled observation, driver wake, or live activation; those require native receipts.
+The watch lasts until all member PRs merge or close and release is settled or
+not applicable, the user cancels, or its wake expires. Delete the schedule by
+its recorded ID and verify absence through `list_scheduled_tasks`; uncertain
+deletion preserves the hold. Settlement and run archive are separate driver
+steps. Implementation candidates are published and read back before independent
+authored review. Adopted own-PR maintenance receives independent exact-local-SHA
+review before driver publication and remote readback. The human merges by
+default. Installed instructions do not prove scheduled observation or driver wake.
 
 ## Optional native peer-review automation
 
-The optional native review manager runs at minutes `0,15,30,45`. Each
-scheduled pass uses a fresh finite session in one dedicated existing workspace, scans complete
-discovery pages, and admits eligible actionable PR events within measured host
-capacity. Waiting PRs stay covered and consume no slot after
-owned descendants settle. Each job uses one repository-parented worktree; the
-manager never checks out PR branches in its own workspace.
+The optional native review manager uses the VPS T3 project `axstack-review-lane`
+on the existing host clone. Configure and read back the lane's `axstack-owner`
+binding, then create an unbound T3 schedule every 15 minutes. Each pass starts
+in a fresh finite worktree from `origin/main`, fetches first, and checks its
+binding. Continuity lives outside worktrees at
+`~/.local/share/axstack/runs/review-manager/progress.md`. Per-PR detached
+review checkouts come from existing host clones; a missing clone holds that job.
 
-Every pass reconciles saved, GitHub, and native Orca state across the lane before
-admission. A confirmed same-lane manager makes the new duplicate do no work or
-shared-record write; it closes only its own exact terminal. The pass settles
-descendants,
-releases worker terminals, archives private evidence and reads it back, then
-uses `axstack-cleanup` guards to remove reviewer and PR-job worktrees. A merged
-or closed PR does not keep a clean job worktree waiting for a user decision.
-Dirty source, unpushed commits, `user_takeover`, unknown liveness, and ambiguous
-publication remain cleanup holds. The manager saves compact continuity, then
-closes its own exact terminal as the final action. Manual review and user-driven
-`axstack-watch` remain outside this scheduled lifecycle.
+Every pass reconciles saved, GitHub, and native T3 state across the lane before
+admission and reads all discovery pages. Incomplete inventory or unknown
+ownership holds admission. A live or uncertain earlier pass keeps its PRs;
+ordering evidence is required to identify the earlier owner. A duplicate
+admits nothing, writes only its private discovery note, and notifies once about
+a stalled owner under the recorded policy.
 
-Manager and job commands set `TMPDIR` to a private directory inside their owning
-workspace. Each bounded job uses a private `0700` directory. Cleanup targets
-only the validated owned path: no `TMPDIR` globs,
-shared-root sweeps, or general cache wipes, and uncertain files remain for
-reconciliation. Permission prompts and provider safety refusals are incomplete
-holds, never bypass or cross-model retry signals. The coordinator preserves the
-evidence, settles the exact owned tree through Orca's supported lifecycle, and
-releases capacity only after native settlement is verified. Unresolved execution
-teardown pauses the lane; retained evidence or cleanup metadata does not consume
-a slot after positive full-tree settlement. Once settled, an unchanged held
-event remains deduplicated while unrelated eligible PRs continue.
+Capacity is measured across the host. Waiting events stay covered and occupy
+no execution slot after descendants settle. Each pass retires eligible settled
+predecessors through `axstack-cleanup` and records retained worktree count.
+Past the authorized storage limit (default 20 lane worktrees), disable the
+schedule with `enabled:false` and hold. The overlap, real-event, killed-predecessor,
+and storage-limit canaries must pass before activation.
 
-Requested peer reviews cover any accessible repository. Orca owns schedules,
-sessions, Tasks, and Dispatches. Axstack adds no custom scheduler, queue engine,
-cursor files, polling loop, or historical runtime fallback.
+Jobs use private owned `0700` scratch paths. Preserve evidence before exact
+cleanup; dirty source, ignored non-cache content, unpushed commits,
+user-taken-over threads, uncertain publication, and unknown liveness hold
+retirement. No broad scratch deletion or forced worktree removal applies.
+Manual review and user-driven `axstack-watch` remain outside this schedule.
+Requested peer reviews cover any accessible repository. T3 owns schedules,
+threads, runs, and delegated tasks; Axstack adds no queue engine, scheduler,
+cursor files, or historical runtime fallback.
 
 ## Review automation
 
@@ -326,14 +338,15 @@ canary described by the operational contract.
 
 Substantive delegated or resumable work uses one compact `progress.md` rooted at
 `git rev-parse --path-format=absolute --git-common-dir`. It is shared across
-worktrees but never tracked. The driver alone writes it; actual Orca state, Git
+worktrees but never tracked. The driver alone writes it; actual T3 state, Git
 revisions, forge state, and approved scope remain authoritative.
 
 Structural checks verify packaging and declared policy, not agent behavior.
 Predeclared scenario evaluation is qualitative behavior evidence, not deterministic proof. Runtime
-compatibility requires actual guide discovery, role/session evidence, worktree
-and Dispatch receipts, completion delivery, and cleanup as applicable. Mobile
-completion and reply behavior remain unverified.
+compatibility requires capability discovery, configuration read-back, native
+thread/run/task and worktree receipts, completion delivery, and cleanup as
+applicable. Mobile completion and reply behavior remain unverified for routes
+without matching live receipts.
 End-to-end compatibility remains unverified for any route without matching
 runtime receipts; evidence from one route does not establish support for all roles.
 

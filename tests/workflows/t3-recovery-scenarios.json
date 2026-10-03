@@ -1,0 +1,80 @@
+{
+  "description": "AC2 instruction scenarios; live T3 exercise is recorded separately at the migration gate. T3/T4 append hygiene and watch cases.",
+  "cases": [
+    {
+      "id": "lost-launch-response",
+      "input": "t3_thread_launch returned no response; one thread with the exact dispatch title appears after pagination and its worktree agrees.",
+      "contracts": ["key and title", "launch recovery inventory", "launch recovery outcomes"],
+      "expected": { "action": "Adopt the one exact match; keep its reserved branch. Relaunch once only on proven absence; multiple matches or incomplete inventory hold." }
+    },
+    {
+      "id": "silent-provisioning-failure",
+      "input": "Launch returned preparing and no notification; the 120000ms post-launch wait reports failed during worktree provisioning.",
+      "contracts": ["SHA baseRef", "post-launch wait", "failure classification"],
+      "expected": { "action": "Record launch failure as incomplete, never completed. A timeout with activeRunId and worktreePath proves started; still preparing holds until the next wake." }
+    },
+    {
+      "id": "writer-death-after-idle",
+      "input": "A started writer dies without sending a receipt after the driver ends its turn; the bound 600000ms watch wakes the driver.",
+      "contracts": ["idle writer watch", "failure classification", "replacement attempt"],
+      "expected": { "action": "Reconcile the failed run and hold incomplete; replace only after terminal failure with a<n+1>, retaining the failed branch for salvage." }
+    },
+    {
+      "id": "stale-completion",
+      "input": "AXSTACK-DONE arrives for a1 at an old candidate SHA while a2 is the current attempt.",
+      "contracts": ["stale completion", "status persistence", "writer completion"],
+      "expected": { "action": "Keep a2 unsettled; the old receipt is evidence only. Persist task_status before thread reads and require terminal state at the current attempt and SHA." }
+    },
+    {
+      "id": "child-question-resume",
+      "input": "task_status is completed with AXSTACK-QUESTION; after an answer the original summary remains unchanged and no resumed-run notification arrives.",
+      "contracts": ["delegate completion", "question resume", "status persistence"],
+      "expected": { "action": "Answer once via t3_thread_send to childThreadId, wait 600000ms on the resumed run with watch rearming, and accept only latestTerminal* newer than the question run." }
+    },
+    {
+      "id": "delegated-reviewer-isolation",
+      "input": "A delegated reviewer writes in a driver-made detached checkout; after completion the driver status has changed.",
+      "contracts": [
+        "The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.",
+        "Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.",
+        "After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.",
+        "Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force."
+      ],
+      "expected": {
+        "action": "Hold advancement if driver HEAD or status changed; preserve separate checkout and private report, read back evidence before exact removal."
+      }
+    },
+    {
+      "id": "cleanup-unmerged-or-ignored-content",
+      "input": "A completed author has an open PR, while a settled non-author checkout contains ignored non-cache source.",
+      "contracts": [
+        "Keep the author worktree and thread until the PR merges or closes.",
+        "Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches.",
+        "Before removal of an eligible non-author worktree with uncommitted or unpublished content, create a salvage ref, run `git add -A`, commit on that ref, write a `git bundle` into the private run folder, and run `git bundle verify`.",
+        "Record the bundle path, bundle SHA-256, and salvage commit SHA in the receipt before removing the worktree.",
+        "A failed bundle verify holds the worktree.",
+        "Ignored non-cache files must be explicitly classified and preserved in a verified salvage bundle before removal; unknown files hold the worktree.",
+        "Never salvage an author worktree before merge or closure."
+      ],
+      "expected": {
+        "action": "Retain the open-PR author; classify ignored non-cache content, salvage and verify its bundle before archiving and exact removal; unknown content or failed verification holds."
+      }
+    },
+    {
+      "id": "bound-watch-wake-and-deletion",
+      "input": "A bound schedule wakes the idle driver after a writer dies without a receipt; later all runs settle while a PR stays open with CI pending, then all PRs merge but release is still pending; after release settles, the first deletion readback is uncertain.",
+      "contracts": [
+        "One bound schedule serves both the run watch and the chat-run watch; never create a second watch.",
+        "For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.",
+        "For a chat-run watch, defer the T3 runtime's \"nothing remains unsettled\" deletion until those chat-run stop conditions.",
+        "Each wake reconciles all unsettled runs before running the authorized maintenance loop.",
+        "A failed run holds incomplete work even when its writer sent no receipt.",
+        "Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.",
+        "An uncertain delete preserves the hold and recorded schedule ID."
+      ],
+      "expected": {
+        "action": "Arm one schedule_task with bindToCurrentThread:true and everyMs:600000, record its ID, reconcile failed runs as incomplete, keep the same schedule armed while CI or release is pending, and never create a second watch; delete only after chat-run stop conditions with delete_scheduled_task for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
+      }
+    }
+  ]
+}

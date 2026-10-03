@@ -13,8 +13,8 @@ test('weekly audits withhold publication on unsafe or empty admission', () => {
   const conditions = [
     [/\b(?:red|fail\w*)\b/i, /\b(?:baseline|starting suite)\b/i],
     [/\b(?:flaky|unstable)\b/i, /\b(?:baseline|starting suite)\b/i],
-    [/\b(?:overlap\w*|conflict\w*)\b/i, /\b(?:live|active)\b/i, /\bOrca\b/i,
-      /\b(?:Run|worktree)\b/i, /\b(?:ownership|owned paths)\b/i],
+    [/\b(?:overlap\w*|conflict\w*)\b/i, /\b(?:live|active)\b/i, /\bT3\b/i,
+      /\b(?:thread|worktree)\b/i, /\b(?:ownership|owned paths)\b/i],
     [/\b(?:open|pending)\b/i, /\btest-audit\b/i, /\bPR\b/i],
     [/\b(?:zero|no)\b/i, /\bproven\b/i, /\bcandidates\b/i],
   ];
@@ -61,4 +61,23 @@ test('weekly admission holds without authority or a canary and stops on exhauste
   expect(sentences(policy).some((sentence) =>
     [/\bbudget\b/i, /\b(?:runs out|exhaust\w*)\b/i, /\bstop\w*\b/i, /\breport\w*\b/i]
       .every((concept) => concept.test(sentence)) && noPublication(sentence))).toBe(true);
+});
+
+
+test('weekly audits use an inherited T3 scheduled binding', () => {
+  const concepts = [/schedule_task/, /T3/, /binding/i, /read.?back/i, /stable/i, /clientRequestId/];
+  expect(requires(policy, ...concepts)).toBe(true);
+  const holdout = 'T3 schedule_task must inherit the binding readback with a stable clientRequestId.';
+  expect(requires(holdout, ...concepts)).toBe(true);
+  expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
+  expect(requires('', ...concepts)).toBe(false);
+});
+
+test('weekly audits use an unbound weekly fixed_time schedule', () => {
+  const concepts = [/schedule_task/, /unbound/i, /weekly/i, /fixed_time/, /bindToCurrentThread:false/];
+  expect(requires(policy, ...concepts)).toBe(true);
+  const holdout = 'For weekly audits, schedule_task must use an unbound fixed_time schedule with bindToCurrentThread:false.';
+  expect(requires(holdout, ...concepts)).toBe(true);
+  expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
+  expect(requires(sentences(policy).filter((sentence) => !requires(sentence, ...concepts)).join('. '), ...concepts)).toBe(false);
 });

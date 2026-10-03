@@ -129,7 +129,7 @@ two independent receipts or clear the hold. Reconcile contradictory receipts
 by evidence or one discriminating rerun, never by vote.
 
 Immediately before an actual adviser or investigator dispatch, load and follow
-[Orca runtime](../axstack/references/orca-runtime.md).
+[T3 runtime](../axstack/references/t3-runtime.md).
 
 ## Isolation
 

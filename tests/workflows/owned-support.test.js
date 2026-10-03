@@ -96,7 +96,10 @@ test('owned-support: explain advertises the approved intent exactly', () => {
 test('owned-support: independently callable via shared references', () => {
   for (const name of OWNED) {
     const text = readSkill(name);
-    for (const ref of ['../axstack/references/orca-runtime.md', '../axstack/references/contracts.md']) {
+    // T5a narrows this transitional load-link check back to t3-runtime.md.
+    const refs = loadedReferences(text);
+    expect(refs.some((ref) => ref.endsWith('-runtime.md'))).toBe(true);
+    for (const ref of ['../axstack/references/contracts.md']) {
       expect(loadedReferences(text), `${name}: must load shared reference ${ref}`).toContain(ref);
     }
   }

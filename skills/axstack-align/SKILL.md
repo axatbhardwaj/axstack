@@ -37,7 +37,7 @@ substantial; apply routing's existing size reassessment rule.
    tools before asking the user. Separate facts from preferences, name evidence
    gaps, and map which decisions unlock others. When a fact needed for the
    frontier is not derivable from the local repo or docs by ordinary reading,
-   dispatch `axstack-research` branches through Orca by source type:
+   dispatch `axstack-research` branches through T3 `delegate_task` by source type:
    requirements, code, web, and, once configured, X. Give one owner per branch,
    use cross-harness routes where the roles allow, and require a cited note per
    the research skill's source standards. The driver folds verified claims into
@@ -76,7 +76,7 @@ material disagreement remains, then surface the choices to the user. Never
 fabricate consensus or impersonate a role.
 
 Immediately before the first actual adviser dispatch, load and follow
-[Orca runtime](../axstack/references/orca-runtime.md). Reuse each adviser
+[T3 runtime](../axstack/references/t3-runtime.md). Reuse each adviser
 session and settled receipt; consult only the changed frontier and reuse
 unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
@@ -130,7 +130,7 @@ an arena. Small or routine questions never enter the arena.
 Record the synthesis note (base, grafts and their source candidate, rejections,
 dropouts, judge verdicts per round) as `Decisions` rows in the
 [run record](../axstack/references/run-record.md). Load
-[Orca runtime](../axstack/references/orca-runtime.md) immediately before the
+[T3 runtime](../axstack/references/t3-runtime.md) immediately before the
 first candidate or judge dispatch. If an optional Grok or Antigravity candidate
 malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
 record `absent (<reason>)`, name it once in the next
@@ -199,7 +199,7 @@ approval; record chosen document names and paths once per run.
    documentation pointers without adding another runtime. Return the compact
    scope and record pointer in the current chat. Native transfer is separate:
    use it only when the user explicitly requests transfer, loading
-   [Orca runtime](../axstack/references/orca-runtime.md) immediately before
+   [T3 runtime](../axstack/references/t3-runtime.md) immediately before
    actual dispatch. Alignment completion never dispatches a recipient.
 
 Alignment completes for both sizes only when the handoff is usable and its next

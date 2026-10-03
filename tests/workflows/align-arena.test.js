@@ -11,7 +11,7 @@ const readJson = (path) => JSON.parse(read(path));
 
 test('align research: dispatches source-specific branches with one owner each', () => {
   const text = compact('skills/axstack-align/SKILL.md');
-  expect(text).toMatch(/not derivable[^.]*local repo[^.]*ordinary reading[^.]*dispatch[^.]*`axstack-research` branches[^.]*through Orca/i);
+  expect(text).toMatch(/not derivable[^.]*local repo[^.]*ordinary reading[^.]*dispatch[^.]*`axstack-research` branches[^.]*through T3/i);
   expect(text).toMatch(/requirements[^.]*code[^.]*web[^.]*once configured[^.]*X/i);
   expect(text).toMatch(/one owner per branch[^.]*cross-harness[^.]*roles allow/i);
   expect(text).toMatch(/cited note[^.]*research skill.s source standards/i);

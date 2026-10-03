@@ -40,9 +40,16 @@ The driver is the sole record writer. Workers send concise receipts; they do
 not edit `progress.md`. This is a prompt contract, not a lock or runtime
 coordination mechanism. Each task names the actual owner session and worktree,
 or a receipt pointer containing both; a role label alone is insufficient.
+Read the [T3 runtime boundary](t3-runtime.md) for native identity and receipt checks.
+Record driver threadId, projectId, host, T3 version, installed Axstack SHA,
+capabilities JSON path and scheduledTaskIds for every watch and manager schedule.
+Per dispatch record key, mechanism, requested target and read-back,
+taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA,
+checkout path with candidate/base SHAs, evidence folder, scope/authority,
+owner, pending receipts, hold and Next.
 
 Update before dispatch and after each verified transition. On resume,
-reconcile the record with actual Orca sessions and Dispatches, exact revisions, forge/PR
+reconcile the record with actual T3 threads and runs, exact revisions, forge/PR
 state, and the approved intent. Prevent a duplicate writer, mark approval or
 evidence for an older revision stale, and distinguish task completion from a
 capability being merged.
@@ -51,7 +58,7 @@ names the driver or task owner, last receipt time, next concrete action, and
 any hold with its affected dependency and resume condition. Use it to answer
 status questions after reconciling current evidence.
 
-The record is derived progress, not authority. Orca sessions and Dispatches, Git revisions,
+The record is derived progress, not authority. T3 threads and runs, Git revisions,
 forge/PR state, and the approved spec remain sources of truth. The driver
 verifies exact SHAs and receipts before recording a transition; a worker claim
 alone is not verification.
@@ -67,7 +74,7 @@ About 60 lines is the normal budget, not a truncation rule. Open holds and
 watermarks are never dropped to meet that budget.
 
 Before changing `Driver` or a task `Owner`, verify that the prior driver is
-inactive against actual Orca session and Dispatch state, or that an explicit accepted transfer
+inactive against actual T3 thread and run state, or that an explicit accepted transfer
 permits reassignment. Idle alone never reassigns ownership.
 Uncertain state or a live conflict holds the transfer; never overwrite the
 field to seize control. A prior driver that sees a different valid accepted
@@ -79,18 +86,17 @@ The driver records `paused` on a user request or a hold; idle alone is neither.
 
 ## Handoff and resumption
 
-Keep handoff state in this same record, never a second wrapper record. Before a
-native handoff launch, add the intended recipient and a pending launch-receipt
-pointer. Record the actual agent/workspace receipt once verified, then the
+Keep handoff state in this same record, never a second wrapper record. Before an
+explicit transfer, add the intended recipient and a pending acceptance-receipt
+pointer. Record the actual thread/worktree identity once verified, then the
 recipient's explicit acceptance receipt before changing ownership. Preserve
 pending external receipt pointers and timer expiries so an uncertain launch,
 send, or watch can be looked up before any retry.
 
 Resume from compact pointers to commands or evidence, not copied transcripts.
-For chat-run watch, record the chosen wake mechanism and its identity or command
-(including the workspace for an Orca fallback),
-member PR publication/adoption receipts, exact driver session, observation/report
-IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named sessions, revisions, PR state, watches, and deliveries before
+For chat-run watch, record the bound T3 schedule and scheduledTaskId,
+member PR publication/adoption receipts, exact driver threadId/runId, observation/report
+IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named threads/runs, revisions, PR state, watches, and deliveries before
 creating or redelivering anything. Outside the bounded driver-start orphan
 sweep, touch only this run; no unscoped global sweep, runtime database, or
 scheduler follows from the record.
@@ -131,8 +137,8 @@ in the adjacent history file, not below this template.
 # Review-manager continuity
 
 ## Lane state
-- Automation ID, native run ID, workspace and exact terminal receipt: <IDs>
-- Active PR jobs and descendants: <PR, Task/Dispatch, owner, revision, state>
+- scheduledTaskId, threadId/runId, workspace and exact terminal receipt: <IDs>
+- Active PR jobs and descendants: <PR, taskId/childThreadId/runId, owner, revision, state>
 
 ## Open holds
 - <PR or lane, reason, evidence, owner, resume condition; or none>
@@ -148,7 +154,7 @@ in the adjacent history file, not below this template.
 
 ```text
 Run: <UTCdate>-<slug>[-<collision suffix>]
-Driver: <session ID> (sole writer)
+Driver: <threadId/runId> (sole writer)
 Goal: <bounded task goal>
 Scope: <repo + accepted bounds>
 Authority: <who authorized which mutation>
@@ -160,10 +166,12 @@ Next: <owner; last receipt time; next action; hold or none>
 PR digest watermarks: <repo -> absolute path inside this private run record> | none
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
-IDs: <repo/project + workspace/agent receipt pointers>
+IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>
+Runtime: <host + T3 version + installed Axstack SHA + capabilities JSON path>
+Schedules: <scheduledTaskIds of every watch and manager schedule>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>
 Evidence: <check/review/submission/audit receipt pointers>
-Pending: <launch/acceptance/external receipts + timer execution heartbeat actual ID + handshake + deadline>
+Pending: <launch/acceptance/external receipts + scheduledTaskIds + runIds + deadline>
 Unresolved: <decision -> next owner + next action>
 Learnings: <root cause, gotcha, or pattern -> evidence ref>
 Resume: <commands or evidence refs bound to exact revisions>

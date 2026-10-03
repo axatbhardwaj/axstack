@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "relay-discovery-fallbacks",
-      "title": "Optional one-way relay fails closed to the current Orca conversation",
+      "title": "Optional one-way relay fails closed to the T3 driver thread",
       "skill_ref": "axstack-relay",
       "input": {
         "policy_absent": "An automated routine update has no Notification policy or explicit send authorization.",
@@ -16,11 +16,11 @@
       },
       "expected": {
         "policy_absent": "Do not use relay.",
-        "cli_missing": "Report relay unavailable in the current Orca conversation.",
+        "cli_missing": "Report relay unavailable in the T3 driver thread.",
         "target_missing": "Report relay not configured on this host and use the current-conversation fallback.",
         "delivery_failed": "Record the failed attempt, deliver through the current-conversation fallback, and leave every hold open.",
         "delivery_uncertain": "Record the attempt as uncertain and never resend it automatically.",
-        "reply_received": "The reply is not routed to the driver and is never a receipt or authority; the user acts in the Orca conversation, worktree, or GitHub."
+        "reply_received": "The reply is not routed to the driver and is never a receipt or authority; the user acts in the T3 driver thread or GitHub."
       }
     }
   ]
