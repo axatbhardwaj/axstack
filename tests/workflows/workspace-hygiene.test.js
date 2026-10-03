@@ -82,23 +82,23 @@ test('owned watch removal is part of close-out and watch stop', () => {
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
   const skill = read('skills/axstack-watch/SKILL.md');
   const chat = watch.split('## Chat-run watch')[1];
-  expect(chat).toMatch(/observer may\s+disable only its own automation[^.]*verify native disable\/readback/i);
-  expect(chat).toMatch(/driver removes the automation by exact ID[^.]*verifies absence[^.]*dedicated workspace after the observer terminal closes/i);
-  expect(skill).toMatch(/own-automation disable\/readback and driver-owned automation\s+removal/i);
+  expect(normalize(chat)).toContain('Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.');
+  expect(chat).toMatch(/driver separately settles workers[^.]*preserves evidence[^.]*archives the run/i);
+  expect(skill).toMatch(/Delete only the recorded schedule[^.]*verify absence[^.]*list_scheduled_tasks/i);
 });
 
 test('standalone watch owner removes its own stopped automation', () => {
   const standalone = read('skills/axstack-watch/references/watch-runtime.md').split('## Standalone watch')[1]?.split('## Chat-run watch')[0] ?? '';
-  expect(standalone).toMatch(/owner[^.]*disable[^.]*read back[^.]*remove[^.]*exact ID/i);
+  expect(standalone).toMatch(/owner deletes only[^.]*recorded T3 schedule[^.]*delete_scheduled_task[^.]*verifies absence[^.]*list_scheduled_tasks[^.]*uncertain deletion holds/i);
 });
 
-test('retained manager and watch sweep boundaries stay covered until T4', () => {
+test('manager and watch sweep boundaries follow T3 hygiene', () => {
   const manager = read('skills/axstack/references/automations.md');
   const watch = read('skills/axstack-watch/references/watch-runtime.md');
   expect(read('skills/axstack-cleanup/SKILL.md')).toMatch(/Driver-start orphan sweeps follow the guarded cross-run sweep in\s*\[Workspace hygiene\]/i);
   for (const text of [manager, watch]) {
-    expect(text).toMatch(/sweep[\s\S]*any Axstack run on this host/i);
-    expect(normalize(text)).toMatch(/repositories listed in (?:its|this lane's) run record[^.]*registered repositories on this host[^.]*eligible settled resources/i);
+    expect(text).toContain('workspace-hygiene.md');
+    expect(normalize(text)).toContain("The orphan sweep covers the run record's repositories plus registered repositories on this host.");
   }
   expect(normalize(manager)).toMatch(/Once identified as a duplicate[^.]*no further shared-record write[^.]*no live or unsettled resource owned by the live manager/i);
 });

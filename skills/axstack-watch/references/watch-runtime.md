@@ -61,6 +61,7 @@ and other leftovers to its initiating driver; it must never salvage or remove
 another session or worktree. A task-owned watch with recorded cleanup authority
 lets its original driver run the driver-start orphan sweep under
 [Workspace hygiene](../../axstack/references/workspace-hygiene.md).
+The orphan sweep covers the run record's repositories plus registered repositories on this host.
 Recorded cleanup authority is separate from and does not imply repair or
 maintenance authority. The cleanup-authorized driver pass is silent when nothing
 was removed and records sweep results and holds in continuity's Open holds table.
@@ -70,7 +71,8 @@ under T3 runtime. It never writes `progress.md`, edits files or PRs, dispatches
 authors, replies, reviews, pushes, merges, or sends user notifications.
 Report delivery, driver disposition and repair completion remain distinct.
 Reconcile prior tasks, thread/run identities, receipts and GitHub before retrying
-an uncertain wake; never replace a busy or user-taken-over driver.
+an uncertain wake. Wake only the exact live original driver.
+A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.
 
 The driver records one Notification policy: `axstack-relay` Telegram home only
 for a user-decision hold (including spec and npm approval), merge-ready or

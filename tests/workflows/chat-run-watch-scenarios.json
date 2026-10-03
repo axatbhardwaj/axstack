@@ -29,8 +29,8 @@
     },
     {
       "id": "recovery-and-stop",
-      "input": "A duplicate completion arrives, D closes, then the user cancels while a pass and author run remain unsettled; schedule deletion readback is ambiguous.",
-      "expected": "Reconcile native identities before duplicate work, prevent new work, hold on uncertain delete_scheduled_task/list_scheduled_tasks absence and preserve worker settlement and archive with the driver."
+      "input": "The original driver is busy when a duplicate completion arrives, D closes, then the user cancels while a pass and author run remain unsettled; schedule deletion readback is ambiguous.",
+      "expected": "Reconcile native identities before duplicate work; the wake does not interrupt the busy driver. Prevent new work, hold on uncertain delete_scheduled_task/list_scheduled_tasks absence and preserve worker settlement and archive with the driver."
     },
     {
       "id": "repair-loop-until-ready",

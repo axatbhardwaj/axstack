@@ -126,7 +126,7 @@ test('review manager uses capacity admission and requires canary evidence', () =
   expect(manager).toContain('T3 project `axstack-review-lane`');
   expect(manager).toMatch(/schedule_task[^.]*everyMs:900000[^.]*bindToCurrentThread:false/i);
   expect(manager).toMatch(/eligible actionable PR events[^.]*measured host capacity/i);
-  expect(manager).toMatch(/Disable the previous automation only after all four T3 canary checks pass/i);
+  expect(manager).toContain('The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.');
   expect(manager).not.toMatch(/watch manager|watch lane/i);
 });
 

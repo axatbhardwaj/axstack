@@ -1,7 +1,6 @@
 ---
 name: axstack-watch
-description: When babysitting an existing PR, use axstack-watch to monitor or maintain it
-within bounded authority.
+description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.
 ---
 
 # Watch
@@ -9,8 +8,7 @@ within bounded authority.
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 
-On driver entry, sweep under [Workspace
-hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
+On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
 Manual watch keeps the user’s chat and workspace open.
@@ -25,8 +23,7 @@ including the end-of-run audit hook. Reach other references only at the steps
 that name them.
 
 Select the operating mode before discovery. Preserve any explicitly named PR,
-repository, or peer scope. For standalone broad discovery of the user's own PRs (such as
-“my” or “our” PRs), run
+repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run
 `gh api user --jq .login` on the execution host, then select open PRs authored
 by that login in the named or current repository. Never hardcode or guess the
 username; a missing or failed authenticated-login lookup is a concrete blocker.

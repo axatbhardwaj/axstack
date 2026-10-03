@@ -13,7 +13,9 @@ The T3 project `axstack-review-lane` uses the VPS's existing
 `axatbhardwaj/axstack` clone with `origin` and `main`.
 Unbound pass worktrees branch from `origin/main` and each pass fetches first.
 Continuity stays at `~/.local/share/axstack/runs/review-manager/progress.md`,
-outside every worktree. Follow the [Run record](run-record.md) and use the
+outside every worktree.
+A missing, non-durable or unreadable continuity path holds admission.
+Follow the [Run record](run-record.md) and use the
 [Review-manager continuity template](run-record.md#review-manager-continuity-template):
 overwrite its four current-state sections and archive superseded history once
 beside it. A no-change pass appends at most one history line.
@@ -31,6 +33,8 @@ its pass worktree. Missed slots do not replay a backlog.
 ## Session admission
 
 Perform guarded predecessor retirement in [Finite-session teardown](#finite-session-teardown).
+Lane identity requires exact thread/run identity, never a title or directory-name
+guess; never infer lane ownership from an empty local workspace.
 Reconcile saved state, current GitHub state, and native T3 threads, runs,
 delegated tasks and liveness across the whole lane before discovery or admission.
 Discovery reads every page of PRs and native threads.
@@ -54,7 +58,9 @@ This is prompt policy, not an atomic lock: the overlap canary must demonstrate
 one admission owner before activation. Count all unsettled PR jobs and descendants.
 
 A failed scheduled run alone proves neither predecessor exit nor release.
-Reconcile exact thread/run identity and terminal evidence, saved continuity,
+Predecessor exit requires exact thread/run identity and terminal run evidence;
+a completed run row alone does not prove the work settled.
+Reconcile saved continuity,
 and settlement of every descendant before releasing ownership.
 Unknown facts hold at the durable decision location; never replace a
 potentially live owner.
@@ -126,7 +132,13 @@ brief once; a second ask holds. An idle final turn without a valid completion
 receipt is incomplete, not successful. A started coordinator waiting on its
 reviewers (a live reviewer task or running wait) is not idle and is never
 stopped for waiting. Reconcile terminal failure and all descendants before
-recording an event unserved and re-admissible; uncertain liveness retains the slot.
+recording an event unserved and re-admissible.
+Steer an idle PR job once with `t3_thread_send`.
+If it is still idle without a valid completion receipt five minutes after the steer,
+stop the owned job with `t3_thread_interrupt` or `task_cancel` as applicable,
+reconcile the coordinator and every descendant, and record the event unserved and re-admissible.
+Uncertain liveness retains the slot only within that five-minute bound;
+unverified settlement after the stop holds lane admission.
 Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Each reviewer uses a separate driver-made detached checkout and
 private evidence folder, with evidence read-back before removal.
@@ -248,8 +260,8 @@ Each pass retires settled predecessor passes and reports the retained worktree
 count. Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
 follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
-Then run the driver-start orphan sweep under Workspace hygiene for recorded
-repositories and other eligible settled resources on this host; the sweep is
+The orphan sweep covers the run record's repositories plus registered repositories on this host.
+Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 `t3_thread_organize` settle/archive changes metadata only; exact guarded Git
@@ -273,7 +285,8 @@ admission owner per PR. The canary reviews or correctly no-ops one real PR event
 The canary reconciles a killed predecessor.
 With a temporary limit equal to the current count, the canary disables the
 schedule and verifies that the following interval creates zero new pass worktrees.
-Disable the previous automation only after all four T3 canary checks pass.
+The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.
+A firing timestamp proves neither delivery nor useful completion.
 Source checks alone do not prove launch, overlap, recovery, or growth behavior.
 
 ## Recovery and limits

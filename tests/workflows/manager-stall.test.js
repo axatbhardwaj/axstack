@@ -24,3 +24,18 @@ test('an idle PR job holds incomplete and a stalled owner notifies once', () => 
   expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*one deduplicated notification/i);
   expect(text).toMatch(/started coordinator[^.]*waiting on its reviewers[^.]*live reviewer task or running wait[^.]*not idle[^.]*never stopped/i);
 });
+
+// The bounded stall actions are deliberate exact-text safety contracts.
+for (const sentence of [
+  'Steer an idle PR job once with `t3_thread_send`.',
+  'If it is still idle without a valid completion receipt five minutes after the steer, stop the owned job with `t3_thread_interrupt` or `task_cancel` as applicable, reconcile the coordinator and every descendant, and record the event unserved and re-admissible.',
+  'Uncertain liveness retains the slot only within that five-minute bound; unverified settlement after the stop holds lane admission.',
+]) {
+  test(`bounded idle PR job safety: ${sentence}`, () => {
+    const accepts = (text) => text.replace(/\s+/g, ' ').includes(sentence);
+    const text = compact('skills/axstack/references/automations.md');
+    expect(accepts(text)).toBe(true);
+    expect(accepts(text.replace(sentence, ''))).toBe(false);
+    expect(accepts(text.replace(sentence, sentence.replace(/Steer|stop|only/, 'inverted')))).toBe(false);
+  });
+}

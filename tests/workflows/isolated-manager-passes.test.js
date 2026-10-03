@@ -51,8 +51,13 @@ const safety = [
   'Missing ordering or ownership evidence holds admission and never guesses a winner.',
   'A truncated or failed inventory holds admission and cleanup.',
   'A binding mismatch holds admission.',
+  'A missing, non-durable or unreadable continuity path holds admission.',
+  'Lane identity requires exact thread/run identity, never a title or directory-name guess; never infer lane ownership from an empty local workspace.',
+  'Predecessor exit requires exact thread/run identity and terminal run evidence; a completed run row alone does not prove the work settled.',
+  'A firing timestamp proves neither delivery nor useful completion.',
+  "The orphan sweep covers the run record's repositories plus registered repositories on this host.",
   'Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule with `update_scheduled_task` using `enabled:false` and hold.',
-  'Disable the previous automation only after all four T3 canary checks pass.',
+  'The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.',
   'The canary reviews or correctly no-ops one real PR event.',
   'A repository without a host clone is a held job.',
   'With a temporary limit equal to the current count, the canary disables the schedule and verifies that the following interval creates zero new pass worktrees.',
@@ -63,7 +68,7 @@ for (const sentence of safety) {
     const text = compact('skills/axstack/references/automations.md');
     expect(accepts(text)).toBe(true);
     expect(accepts(text.replace(sentence, ''))).toBe(false);
-    expect(accepts(text.replace(sentence, `Do not follow: ${sentence.replace(/never|holds|disable|only|reviews|is|disables/i, 'inverted')}`))).toBe(false);
+    expect(accepts(text.replace(sentence, `Do not follow: ${sentence.replace(/^(\S+)/, '$1 not')}`))).toBe(false);
   });
 }
 

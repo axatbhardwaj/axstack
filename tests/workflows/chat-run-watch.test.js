@@ -167,6 +167,9 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
 });
 
 for (const sentence of [
+  'Wake only the exact live original driver.',
+  'A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.',
+  "The orphan sweep covers the run record's repositories plus registered repositories on this host.",
   'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
   'A failed run holds incomplete work even when its writer sent no receipt.',
   'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
@@ -177,6 +180,22 @@ for (const sentence of [
     const text = runtime();
     expect(accepts(text)).toBe(true);
     expect(accepts(text.replace(sentence, ''))).toBe(false);
-    expect(accepts(text.replace(sentence, sentence.replace(/reconciles|holds|only|preserves/i, 'inverted')))).toBe(false);
+    expect(accepts(text.replace(sentence, sentence.replace(/^(\S+)/, '$1 not')))).toBe(false);
   });
 }
+
+test('recovery scenario does not interrupt the busy driver', () => {
+  const scenario = JSON.parse(read('tests/workflows/chat-run-watch-scenarios.json')).cases
+    .find(({ id }) => id === 'recovery-and-stop');
+  const sentence = 'does not interrupt the busy driver';
+  expect(scenario.expected).toContain(sentence);
+  expect(scenario.expected.replace(sentence, '')).not.toContain(sentence);
+});
+
+test('watch frontmatter and unchanged links keep their single-line form', () => {
+  const text = readFileSync(`${import.meta.dir}/../../skills/axstack-watch/SKILL.md`, 'utf8');
+  expect(text).toContain('description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.\n');
+  expect(text).toContain('On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.');
+  expect(text).toContain("repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run\n");
+  expect(text).not.toMatch(/\[[^\]]*\n[^\]]*\]\(/);
+});
