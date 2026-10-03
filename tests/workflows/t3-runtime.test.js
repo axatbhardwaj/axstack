@@ -125,49 +125,49 @@ const sentenceRules = [
   ['missing capability', ['Missing capability (?:must )?holds?', 'affected operation', 'without a substitute runtime'],
     'Missing capability must hold the affected operation without a substitute runtime.', [/\bholds?\b/i, 'permits']],
   ['Grok CLI floor', ['Grok.*CLI.*(?:requires|must be).*≥1\\.0\\.13'],
-    'Grok CLI must be ≥1.0.13.', [/≥1\.0\.13/, '<1.0.13']],
-  ['Grok readiness proof', ['Advertising Grok alone does not prove.*CLI runs'],
-    'Advertising Grok alone does not prove its CLI runs.', [/does not prove/, 'proves']],
-  ['separate binding evidence', ['Record requested and effective values separately', 'worker self.report is not configuration proof'],
-    'Record requested and effective values separately; a worker self-report is not configuration proof.', [/is not configuration proof/, 'is configuration proof']],
-  ['other effort limitation', ["Other providers.*effort read.back remains unverified until exercised"],
-    "Other providers' effort read-back remains unverified until exercised.", [/remains unverified/, 'is verified']],
-  ['canary rejection', ['Rejection (?:stops|blocks).*siblings.*configuration', 'unrelated configurations remain eligible'],
-    'Rejection blocks siblings of that configuration; unrelated configurations remain eligible.', [/stops|blocks/, 'permits']],
-  ['repair ownership', ['Repairs (?:must )?return to (?:that|the same) author'],
-    'Repairs must return to the same author.', [/return to/, 'never return to']],
-  ['idle ownership', ['Missing or idle sessions (?:grant no|never grant) ownership transfer'],
-    'Missing or idle sessions never grant ownership transfer.', [/grant no|never grant/, 'grant']],
-  ['pinned dispatch revisions', ['Pin base and candidate before dispatch'],
-    'Pin base and candidate before dispatch.', [/before dispatch/, 'after dispatch']],
-  ['report identity', ['Reports use absolute private evidence paths', 'report.only head is the pinned candidate SHA'],
-    'Reports use absolute private evidence paths; report-only head is the pinned candidate SHA.', [/absolute private/, 'relative public']],
-  ['stale receipt evidence', ['stale or duplicate receipts remain evidence', 'deduplicated by runtime identity'],
-    'Stale or duplicate receipts remain evidence, deduplicated by runtime identity.', [/remain evidence/, 'complete work']],
-  ['delivery validation', ['Process the whole delivery before acknowledgment', 'advance only after checking sender, scope and artifacts'],
-    'Process the whole delivery before acknowledgment and advance only after checking sender, scope and artifacts.', [/before acknowledgment/, 'after acknowledgment']],
-  ['silence completion', ['Silence is not successful completion'],
-    'Silence is not successful completion.', [/is not/, 'is']],
+    'Grok must use reasoningEffort and exclude max; its CLI must be ≥1.0.13.', [/≥1\.0\.13/, '<1.0.13']],
+  ['Grok readiness proof', ['(?:Advertising Grok|Grok advertised) alone (?:does not prove|cannot establish).*CLI runs'],
+    'Grok advertised alone cannot establish that its CLI runs.', [/does not prove|cannot establish/, 'proves']],
+  ['separate binding evidence', ['(?:Record requested and effective values separately|Keep requested and effective values in separate records)', 'worker self.report is (?:not|never) configuration proof'],
+    'Keep requested and effective values in separate records; a worker self-report is never configuration proof.', [/is (?:not|never) configuration proof/, 'is configuration proof']],
+  ['other effort limitation', ["(?:Other providers.*effort read.back remains unverified until exercised|Effort read.back for other providers stays unverified until tested)"],
+    "Effort read-back for other providers stays unverified until tested.", [/remains unverified|stays unverified/, 'is verified']],
+  ['canary rejection', ['Rejection (?:stops|blocks).*siblings.*configuration', 'unrelated configurations remain (?:eligible|admissible)'],
+    'Rejection blocks siblings using the rejected configuration; unrelated configurations remain admissible.', [/stops|blocks/, 'permits']],
+  ['repair ownership', ['Repairs (?:must )?(?:return to|go back to) (?:that|the same) author'],
+    'Repairs must go back to the same author.', [/return to|go back to/, 'never return to']],
+  ['idle ownership', ['Missing or idle sessions (?:grant no ownership transfer|never grant ownership transfer|never transfer ownership)'],
+    'Missing or idle sessions never transfer ownership.', [/grant no|never grant|never transfer/, 'transfer']],
+  ['pinned dispatch revisions', ['(?:Pin base and candidate before dispatch|Before dispatch, pin the base and candidate)'],
+    'Before dispatch, pin the base and candidate.', [/before dispatch/i, 'after dispatch']],
+  ['report identity', ['Reports (?:use|must name) absolute private evidence paths', 'report.only head (?:is|must equal) the pinned candidate SHA'],
+    'Reports must name absolute private evidence paths; report-only head must equal the pinned candidate SHA.', [/absolute private/, 'relative public']],
+  ['stale receipt evidence', ['stale or duplicate receipts (?:remain evidence|are evidence only)', 'deduplicated by runtime identity'],
+    'An older attempt never completes newer work; stale or duplicate receipts are evidence only, deduplicated by runtime identity.', [/remain evidence|are evidence only/, 'complete work']],
+  ['delivery validation', ['(?:Process|Handle) the whole delivery before acknowledgment', 'advance only after (?:checking|validating) sender, scope and artifacts'],
+    'Handle the whole delivery before acknowledgment; advance only after validating sender, scope and artifacts.', [/before acknowledgment/, 'after acknowledgment']],
+  ['silence completion', ['Silence (?:is not|never establishes) successful completion'],
+    'Silence never establishes successful completion.', [/is not|never establishes/, 'is']],
   ['unreconciled worktree', ['branch or worktree without a reconciled thread prevents proof of absence'],
     'A branch or worktree without a reconciled thread prevents proof of absence.', [/prevents/, 'proves']],
-  ['silence duplicate', ['Never launch a duplicate writer based on silence'],
-    'Never launch a duplicate writer based on silence.', [/Never/, 'Always']],
-  ['unresolved launch', ['unresolved state preserves the attempt'],
-    'An unresolved state preserves the attempt.', [/preserves/, 'discards']],
-  ['unknown writer liveness', ['Unknown liveness holds replacement', 'reconcile the old writer before admitting another'],
-    'Unknown liveness holds replacement; reconcile the old writer before admitting another.', [/holds replacement/, 'permits replacement']],
-  ['uncertain watch deletion', ['uncertain delete preserves the hold and recorded ID'],
-    'An uncertain delete preserves the hold and recorded ID.', [/preserves/, 'clears']],
-  ['cleanup evidence priority', ['Automatic worktree deletion cannot replace evidence readback and salvage'],
-    'Automatic worktree deletion cannot replace evidence readback and salvage.', [/cannot replace/, 'replaces']],
+  ['silence duplicate', ['Never (?:launch|start) a duplicate writer based on silence'],
+    'Never start a duplicate writer based on silence.', [/Never/, 'Always']],
+  ['unresolved launch', ['unresolved state (?:preserves|retains) the attempt'],
+    'An unresolved state retains the attempt.', [/preserves|retains/, 'discards']],
+  ['unknown writer liveness', ['(?:Unknown|Uncertain) liveness (?:holds|blocks) replacement', 'reconcile the old writer before admitting another'],
+    'Uncertain liveness blocks replacement; reconcile the old writer before admitting another.', [/(?:holds|blocks) replacement/, 'permits replacement']],
+  ['uncertain watch deletion', ['uncertain delete (?:preserves|retains) the hold and recorded ID'],
+    'When nothing is unsettled, the driver must delete_scheduled_task and read back absence via list_scheduled_tasks; an uncertain delete retains the hold and recorded ID.', [/preserves|retains/, 'clears']],
+  ['cleanup evidence priority', ['Automatic worktree deletion (?:cannot replace|is no substitute for) evidence readback and salvage'],
+    'Automatic worktree deletion is no substitute for evidence readback and salvage.', [/cannot replace|is no substitute for/, 'replaces']],
   ['safe deletion in briefs', ['(?:Put|Include).*Safe.deletion rule.*every worker brief'],
     'Include the Safe-deletion rule in every worker brief.', [/every worker brief/, 'only author briefs']],
-  ['untracked retention', ['Untracked files never prove a worktree disposable'],
-    'Untracked files never prove a worktree disposable.', [/never prove/, 'prove']],
-  ['driver preset exclusion', ['current (?:chat/driver|driver).*no role row in any preset'],
-    'The current driver has no role row in any preset.', [/no role row/, 'a role row']],
-  ['named private evidence', ['Name the private <run>/evidence/<key>/ folder', 'brief and completion receipt'],
-    'Name the private <run>/evidence/<key>/ folder in the brief and completion receipt.', [/brief and completion receipt/, 'brief only']],
+  ['untracked retention', ['Untracked files (?:never prove a worktree disposable|cannot establish that a worktree is disposable)'],
+    'Untracked files cannot establish that a worktree is disposable.', [/never prove|cannot establish/, 'prove']],
+  ['driver preset exclusion', ['current (?:chat/driver|driver).*no role (?:row|entry) in any preset'],
+    'The current driver has no role entry in any preset.', [/no role (?:row|entry)/, 'a role row']],
+  ['named private evidence', ['(?:Name|Identify) the private <run>/evidence/<key>/ folder', 'brief and completion receipt'],
+    'Identify the private <run>/evidence/<key>/ folder in the brief and completion receipt.', [/brief and completion receipt/, 'brief only']],
   ['T3 settle evidence', ['T3 terminal run evidence.*before.*t3_thread_organize.*settle or archive', 'metadata.*not.*worktree removal'],
     'Require T3 terminal run evidence before t3_thread_organize settle or archive; those metadata actions are not worktree removal.', [/before/, 'after']],
 ];
@@ -177,7 +177,6 @@ for (const [name, patterns, paraphrase, flip] of sentenceRules) {
     const source = sentences(runtime());
     const matching = source.filter((sentence) => matches(sentence, patterns));
     expect(matching.length, `missing binding sentence: ${name}`).toBeGreaterThan(0);
-    expect(source.filter((sentence) => !matching.includes(sentence)).some((sentence) => matches(sentence, patterns))).toBe(false);
     for (const sentence of [...matching, paraphrase]) {
       const reversed = invert(sentence, flip);
       expect(reversed, `no-op inversion: ${name}`).not.toBe(sentence);
@@ -192,7 +191,6 @@ for (const [name, patterns, paraphrase] of rules) {
     const source = blocks(runtime());
     const matching = source.filter((block) => satisfies(block, patterns));
     expect(matching.length, `missing binding rule: ${name}`).toBeGreaterThan(0);
-    expect(source.filter((block) => !matching.includes(block)).some((block) => satisfies(block, patterns))).toBe(false);
     for (const block of matching) {
       expect(satisfies(invert(block), patterns), `inverted ${name}`).toBe(false);
     }
@@ -237,7 +235,6 @@ test('AC2 runtime recovery expected actions are bound to rule text', () => {
       const [, patterns, paraphrase] = entry;
       const source = blocks(runtime());
       expect(source.some((block) => satisfies(block, patterns)), scenario.id).toBe(true);
-      expect(source.filter((block) => !satisfies(block, patterns)).some((block) => satisfies(block, patterns))).toBe(false);
       expect(source.map((block) => satisfies(block, patterns) ? invert(block) : block)
         .some((block) => satisfies(block, patterns))).toBe(false);
       expect(satisfies(paraphrase, patterns)).toBe(true);

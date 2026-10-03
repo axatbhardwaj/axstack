@@ -60,15 +60,15 @@ configuration; unrelated configurations remain eligible.
 
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
-| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree; tracked and untracked files stay untouched; writes only the private evidence folder | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier (`axstack-ui-verifier`) | Must use async `delegate_task`; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to evidence | Same delegated terminal checks |
+| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
+| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs, code-arena writers | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
-| Owner | Driver thread; scope, integration, forge mutations and record | No worker launch |
+| Owner | Driver thread in Driver worktree; never writes tracked files; scope, integration, forge mutations and record | No worker launch |
 
 The driver must be the sole run-record writer and enforce one writer per
-candidate; it never writes tracked candidate files concurrently or repairs an
-author's source. Repairs return to that author. Missing or idle sessions grant
-no ownership transfer.
+candidate; it never writes tracked files or repairs an author's source.
+Repairs return to that author. Missing or idle sessions grant no ownership transfer.
+The current chat/driver has no role row in any preset.
 
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.
@@ -157,6 +157,9 @@ delete preserves the hold and recorded ID.
 
 ## Evidence, prompts and authority
 
+Put the [Safe-deletion rule](workspace-hygiene.md#safe-deletion) in every worker brief.
+Name the private `<run>/evidence/<key>/` folder in the brief and completion receipt.
+
 Before use or temporary cleanup, commands must scope `TMPDIR` to a 0700 owned
 folder whose real path equals or is inside the recorded run evidence folder,
 has no symlink, and matches the dispatch owner. Apply equivalent guards to
@@ -181,8 +184,8 @@ Each reviewer must have a separate checkout and private evidence folder with
 no first-pass cross-read; tracked candidate files remain read-only. Read back
 report and supporting evidence before removing that checkout; evidence already
 outside it needs no archive. Later review gets a fresh checkout; unknown or
-active evidence and unique bytes stay preserved. Terminal settlement alone
-does not authorize discarding evidence.
+active evidence and unique bytes stay preserved. Untracked files never prove a
+worktree disposable. T3 terminal state alone does not authorize discarding evidence.
 
 Input acceptance, started state, effective settings and completed work must
 remain distinct evidence. Silence, contact loss or idle state never proves exit.
@@ -194,13 +197,14 @@ session, scope, revision and authority before changing ownership. The current
 owner remains accountable until then; prior owner stops after acceptance.
 Input acceptance or turn start alone is no transfer receipt.
 
-At an authority fence the driver must stop consuming and reconcile the active
-coordinator with native state; never forge a sender, borrow an identity or
-partially acknowledge a delivery to bypass that fence.
+On a T3 `threadId/runId` mismatch the driver must stop consuming and reconcile
+the recorded driver identity with native state; never forge a sender or borrow
+an identity to bypass the mismatch.
 
-After user takeover the driver must retain the session; never release, reuse
-or send cleanup commands to it. Reuse, retention or release of a settled
-session otherwise follows native settlement and the recorded authority.
+The driver must retain a user-taken-over T3 thread; never send cleanup commands
+to it, including `t3_thread_organize` settle or archive.
+Require T3 terminal run evidence before `t3_thread_organize` settle or archive;
+these metadata actions are not worktree removal.
 
 ## Project preflight and run record
 
