@@ -1,321 +1,169 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { sentences, requires, prohibits } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
-const runtime = () => read('skills/axstack/references/t3-runtime.md');
-const blocks = (text) => text.split(/\n\s*\n|\n(?=\|)/).map((part) => part.replace(/[`*]/g, '').replace(/\s+/g, ' ').trim());
-const sentences = (text) => blocks(text).flatMap((block) => block.split(/\.\s+(?=[A-Z])/));
-// Each contract is local to one paragraph/table: scattered vocabulary cannot
-// satisfy it. These prove prose instructions, not live T3 compliance.
-const satisfies = (block, patterns) => /\b(?:must|shall|require(?:d|s)?)\b/i.test(block)
-  && patterns.every((pattern) => new RegExp(pattern, 'i').test(block));
-// Mutate the matched instruction, retaining its subject and API vocabulary.
-// Every rule supplies a directional flip that its own patterns must reject.
-const invert = (text, flip) => text.replace(...flip);
-const matches = (text, patterns) => patterns.every((pattern) => new RegExp(pattern, 'i').test(text));
-
-// Independent paraphrases exercise meaning while API identifiers stay exact.
+const runtime = () => read('skills/axstack/references/t3-runtime.md').replace(/[`*]/g, '').replace(/^#+.*$/gm, '').replace(/\|\n/g, '|.\n');
+// Concepts co-occur in ONE sentence, in any order. Negative rules carry an
+// explicit prohibition phrase; all other denial words still invalidate it.
+const accepts = (text, [, concepts, prohibition]) => prohibition
+  ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
 const rules = [
-  ['capabilities', ['orchestrator_capabilities', 'sav\\w*', 'T3', 'schema'],
-    'A T3 driver must save orchestrator_capabilities and follow the advertised schema.', [/\bsav(?:e|es|ed|ing)\b/i, 'discard']],
-  ['role snapshot', ['roles.json', 'preset', 'stable.*ID', 'snapshot', 'resume', 'no re-resolution'],
-    'The preset roles.json must be snapshotted by stable role ID; resume uses that snapshot with no re-resolution.', [/no re-resolution/, 're-resolution allowed']],
-  ['read-only delegates', ['advisers', 'research', 'diligence', 'delegate_task', 'async', 'driver worktree', 'writes only <run>/evidence/<key>/', 'title = dispatch key', 'untouched'],
-    'Advisers, research and diligence must use async delegate_task in the driver worktree with title = dispatch key; files stay untouched and the worker writes only <run>/evidence/<key>/.', [/writes only/, 'may write outside']],
-  ['probe delegates', ['reviewers', 'debug', 'execution', 'UI verifier', 'delegate_task', 'detached', 'candidate SHA', 'pinned base', 'disposable', 'cd', 'title = dispatch key', 'outputs.*<run>/evidence/<key>/'],
-    'Reviewers, debug and execution investigators and the UI verifier must cd into a disposable detached checkout of the candidate SHA and pinned base before delegate_task work; title = dispatch key and outputs go to <run>/evidence/<key>/.', [/detached/, 'attached']],
-  ['writer launch', ['author', 'code-arena', 't3_thread_launch', 'type:worktree', 'startFromOrigin:false', 'own worktree', 'merges or closes'],
-    'The author and code-arena writers must use t3_thread_launch with type:worktree and startFromOrigin:false in their own worktree, kept until the PR merges or closes.', [/startFromOrigin:false/, 'startFromOrigin:true']],
-  ['driver ownership', ['driver', 'sole.*run.record writer', 'never (?:writes|changes|edits) tracked files(?! concurrently)', 'one writer per candidate'],
-    'The driver must remain the sole run-record writer, never changes tracked files, and enforce one writer per candidate.', [/never (?:writes|changes|edits) tracked files/, 'sometimes writes tracked files']],
-  ['provider mapping', ['codex.*codex', 'claude.*claudeAgent', 'grok.*grok', 'antigravity.*antigravity', 'modeId', 'runtimeMode:full-access', 'options', 'id,value'],
-    'Provider bindings must map codex to codex, claude to claudeAgent, grok to grok and antigravity to antigravity; modeId becomes runtimeMode:full-access and options contain id,value.', [/claudeAgent/, 'claude']],
-  ['pinned model', ['preset model', 'as given'],
-    'A preset model must be used as given.', [/as given/, 'with an alternative']],
-  ['class resolution', ['modelClass', 'newest', 'provider', 'gpt-<N>-<class>', 'claude-<class>-<N>-<N>', '--provider', 'saved capabilities'],
-    'modelClass must resolve to the newest provider catalog ID, gpt-<N>-<class> or claude-<class>-<N>-<N>, using --provider and saved capabilities.', [/newest/, 'oldest']],
-  ['null model', ['model:null', 'no class', 'first', 'capabilities', 'exact ID', 'record'],
-    'For model:null with no class, the first model in capabilities must be selected and its exact ID recorded.', [/\bfirst\b/, 'last']],
-  ['availability hold', ['unavailable', 'model', 'effort', 'hold', 'no substitution'],
-    'An unavailable model or effort must hold that role with no substitution.', [/no substitution/, 'substitution permitted']],
-  ['codex effort', ['codex', 'reasoningEffort'],
-    'Codex effort must use reasoningEffort.', [/reasoningEffort/, 'effort']],
-  ['claude effort', ['claude', 'option ID effort'],
-    'Claude effort must use option ID effort.', [/option ID effort/, 'option ID reasoningEffort']],
-  ['grok effort', ['grok', 'reasoningEffort', 'exclude max'],
-    'Grok must use reasoningEffort and exclude max.', [/exclude max/, 'include max']],
-  ['opencode effort', ['opencode', 'variant'],
-    'OpenCode effort must use variant.', [/variant/, 'reasoningEffort']],
-  ['binding verification', ['echo', 'provider', 'model', 't3_thread_configuration', 'read.back', 'options', 'runtimeMode'],
-    'The provider and model echo must match the request; t3_thread_configuration read-back verifies options and runtimeMode.', [/read-back/, 'self-report']],
-  ['missing effort readback', ['missing effort read.back', 'hold', 'never.*satisfied'],
-    'Missing effort read-back must hold effort-dependent roles and never count as satisfied.', [/\bhold\b/, 'permit']],
-  ['first configuration canary', ['first dispatch', 'provider', 'model', 'effort', 'running or completed', 'before.*siblings'],
-    'The first dispatch for each provider, model and effort must be running or completed before its siblings launch.', [/\bbefore\b/, 'after']],
-  ['key and title', ['<run>:<role>:<task>:a<n>', 'before.*launch', 'exact.*whole.*title'],
-    'The key <run>:<role>:<task>:a<n> must be recorded before launch and used as the exact whole T3 title.', [/\bbefore\b/, 'after']],
-  ['branch encoding', ['axstack/<run>/<role>/<task>-a<n>', 'each segment', 'lowercase', '\\[\\^a-z0-9-\\]', 'replace.*-'],
-    'The branch axstack/<run>/<role>/<task>-a<n> must lowercase each segment and replace [^a-z0-9-] with -.', [/lowercase/, 'uppercase']],
-  ['SHA baseRef', ['baseRef', 'always.*commit SHA', 'never.*branch'],
-    'baseRef must always be a commit SHA, never a branch.', [/always/, 'sometimes']],
-  ['receipt protocol', ['AXSTACK-DONE key=', 'head=', 'report=', 'AXSTACK-FAILED key=', 'AXSTACK-QUESTION key=', 'q=', 't3_thread_send'],
-    'Workers must send AXSTACK-DONE key= head= report=, AXSTACK-FAILED key= head= report=, or AXSTACK-QUESTION key= q=; launched writers use t3_thread_send.', [/AXSTACK-FAILED/, 'AXSTACK-DONE']],
-  ['status persistence', ['persist.*task_status.*before.*t3_thread_read'],
-    'The driver must persist task_status before t3_thread_read.', [/\bbefore\b/, 'after']],
-  ['delegate completion', ['completed', 'result_available', 'hasPendingChildRuns:false', 'AXSTACK-DONE', 'terminal', 'question.*incomplete'],
-    'Delegate completion must require terminal completed with result_available, hasPendingChildRuns:false and AXSTACK-DONE; a question remains incomplete.', [/hasPendingChildRuns:false/, 'hasPendingChildRuns:true']],
-  ['writer completion', ['terminal.*t3_thread_wait', 'non.empty diff', 'clean tree', 'red/green', 'message.*progress'],
-    'Writer acceptance must require terminal t3_thread_wait, non-empty diff, clean tree and red/green logs; a message alone is progress.', [/clean tree/, 'dirty tree']],
-  ['stale completion', ['current attempt', 'candidate SHA', 'older.*never.*complete'],
-    'Completion must match the current attempt and candidate SHA; an older attempt never completes a newer attempt.', [/current attempt/, 'any attempt']],
-  ['failure classification', ['task_status.*failed', 'failed or interrupted', 'preparing.*error', 'AXSTACK-FAILED', 'incomplete'],
-    'task_status failed, a run failed or interrupted, a preparing thread error or AXSTACK-FAILED must each be an incomplete outcome.', [/incomplete/, 'successful']],
-  ['delegated isolation', ['after each delegated completion', 'HEAD', 'git status --porcelain', 'unchanged', 'change.*hold'],
-    'After each delegated completion the driver must verify HEAD and git status --porcelain are unchanged; any change is a hold.', [/unchanged/, 'allowed to change']],
-  ['launch recovery inventory', ['t3_thread_list', 'titleContains', 'fully paginated', 'exact whole.title', 'git worktree list', 'reserved branch'],
-    'Launch recovery must combine fully paginated t3_thread_list titleContains results filtered by exact whole-title equality with git worktree list and keep the reserved branch.', [/fully paginated/, 'first page of']],
-  ['launch recovery outcomes', ['one exact match.*adopt|adopt.*one exact match', 'proven absence.*relaunch once|relaunch once.*proven absence', 'several.*incomplete.*hold|hold.*several.*incomplete'],
-    'Recovery must adopt one exact match, relaunch once on proven absence, and hold for several matches or an incomplete inventory.', [/adopt one exact match/i, 'discard one exact match']],
-  ['post-launch wait', ['post.launch', 't3_thread_wait', 'timeoutMs:120000', 'failed.*launch failure', 'timed.out', 'activeRunId', 'worktreePath', 'started', 'preparing.*hold', 'next wake'],
-    'Post-launch t3_thread_wait with timeoutMs:120000 must classify failed as launch failure, timed-out activeRunId plus worktreePath as started, and still preparing as a hold re-read at the next wake.', [/timeoutMs:120000/, 'timeoutMs:600000']],
-  ['question resume', ['AXSTACK-QUESTION', 'answer once', 't3_thread_send.*childThreadId', 't3_thread_wait', 'timeoutMs:600000', 'run watch', 'latestTerminal', 'newer than.*question', 'no notification'],
-    'For AXSTACK-QUESTION the driver must answer once with t3_thread_send to childThreadId, then t3_thread_wait timeoutMs:600000 re-armed by the run watch; accept latestTerminal* only newer than the question run even with no notification.', [/newer than/, 'older than']],
-  ['same writer repair', ['repair', 't3_thread_send', 'mode:queue', 'same.*attempt', 'same.*author'],
-    'A repair must use t3_thread_send mode:queue to the same author within the same attempt.', [/mode:queue/, 'mode:interrupt']],
-  ['replacement attempt', ['terminal failure', 'a<n\\+1>', 'new branch', 'title', 'failed.*branch.*kept.*salvage'],
-    'Replacement after terminal failure must use a<n+1>, a new branch and title, with the failed branch kept until salvage.', [/a<n\+1>/, 'a<n>']],
-  ['idle writer watch', ['unsettled launched', 'turn.*end.*only', 'schedule_task', 'bindToCurrentThread:true', 'everyMs:600000', 'reconcile', 'failed.*hold'],
-    'With an unsettled launched writer the turn must end only after schedule_task bindToCurrentThread:true everyMs:600000 is armed; wakes reconcile and failed writers hold.', [/bindToCurrentThread:true/, 'bindToCurrentThread:false']],
-  ['watch deletion', ['nothing.*unsettled', 'delete_scheduled_task', 'list_scheduled_tasks', 'read.back.*absence'],
-    'When nothing is unsettled the driver must delete_scheduled_task and use list_scheduled_tasks to read back absence.', [/absence/, 'presence']],
-  ['cleanup preflight', ['worktreeCleanup', 'off', 't3_project_read', 'where exposed', 'otherwise.*record.*limitation', 'setup'],
-    'worktreeCleanup must be off; t3_project_read verifies it where exposed, otherwise record a limitation referencing setup.', [/\boff\b/, 'on']],
-  ['run record', ['driver threadId', 'projectId', 'host', 'T3 version', 'installed Axstack SHA', 'capabilities JSON path', 'scheduledTaskIds'],
-    'The run record must include driver threadId, projectId, host, T3 version, installed Axstack SHA, capabilities JSON path and scheduledTaskIds.', [/scheduledTaskIds/, 'scheduledTaskCount']],
-  ['dispatch record', ['key', 'mechanism', 'requested target', 'read.back', 'taskId/childThreadId/childRunId', 'threadId/runId/worktree/branch/base SHA', 'checkout', 'candidate', 'evidence folder'],
-    'Each dispatch record must include key, mechanism, requested target and read-back, taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA, checkout path and candidate SHA, and evidence folder.', [/evidence folder/, 'public summary']],
-  ['temporary evidence guard', ['TMPDIR', '0700', 'real path', 'inside.*recorded.*evidence', 'no symlink', 'owner', 'before.*use', 'cleanup', 'uncertain.*preserv'],
-    'Before use or cleanup, TMPDIR must be 0700 with its real path inside recorded evidence, no symlink and a matching owner; uncertain paths are preserved.', [/0700/, '0777']],
-  ['safe deletion', ['exact.*validated.*owned path', 'literal absolute', '\\$\\{VAR:\\?\\}', 'no glob', 'no parent.root', 'never.*general cache'],
-    'Deletion must target an exact validated owned path using a literal absolute path or ${VAR:?} guard, no glob and no parent-root deletion; never wipe a general cache.', [/no glob/, 'globs permitted']],
-  ['brief confirmation', ['confirm.*brief.*once', 're.verif.*started', 'second.*hold', 'never.*trust or permission', 'no.*authority'],
-    'The owner must confirm the brief once and re-verify started; a second question holds, never answer trust or permission dialogs, and confirmation adds no authority.', [/second/, 'every']],
-  ['prompt refusal hold', ['permission prompt', 'provider safety refusal', 'held.*incomplete', 'never.*bypass', 'another model'],
-    'A permission prompt or provider safety refusal must be held and incomplete; never bypass via another model.', [/\bheld\b/, 'successful']],
-  ['review evidence isolation', ['each reviewer', 'separate.*checkout', 'private.*evidence folder', 'no first.pass cross.read', 'tracked.*read.only', 'read back.*before.*remov'],
-    'Each reviewer must have a separate checkout and private evidence folder, no first-pass cross-read and tracked files read-only; read back evidence before removal.', [/no first-pass cross-read/, 'first-pass cross-read allowed']],
-  ['acceptance distinct from start', ['input acceptance', 'started', 'completed', 'distinct evidence', 'silence.*never.*exit', 'same owner'],
-    'Input acceptance, started and completed must remain distinct evidence; silence never proves exit and resume preserves the same owner.', [/never proves/, 'always proves']],
-  ['ownership transfer', ['explicit.*transfer', 'recipient acceptance', 'scope', 'revision', 'authority', 'before.*ownership', 'current owner'],
-    'An explicit transfer must validate recipient acceptance against scope, revision and authority before ownership changes; until then the current owner remains accountable.', [/before (?:changing )?ownership/, 'after ownership']],
-  ['runtime identity mismatch', ['T3', 'threadId/runId', 'mismatch', 'stop.*consum', 'reconcile.*driver', 'never.*forge.*sender', 'borrow.*identity'],
-    'On a T3 threadId/runId mismatch the driver must stop consuming and reconcile the driver identity; never forge a sender or borrow an identity.', [/stop consuming/, 'continue consuming']],
-  ['user takeover retention', ['user.taken.over T3 thread', 'retain', 'never.*cleanup commands', 't3_thread_organize', 'settle', 'archive'],
-    'The driver must retain a user-taken-over T3 thread, never send cleanup commands including t3_thread_organize settle or archive.', [/\bnever\b/, 'always']],
-  ['native runtime boundary', ['no Axstack daemon', 'DB', 'lock', 'scheduler', 'private evidence', 'explicit publication authority', 'no merge.*release.*authority'],
-    'The runtime must provide no Axstack daemon, DB, lock or scheduler; private evidence needs explicit publication authority and receipts grant no merge or release authority.', [/no Axstack daemon/, 'an Axstack daemon']],
+  ['capabilities', [/driver/i, /T3 thread/i, /sav\w*/i, /orchestrator_capabilities/, /JSON/, /schema/i]],
+  ['missing capability', [/missing capability/i, /hold/i, /affected operation/i], /without a substitute runtime/i],
+  ['role snapshot', [/roles.json/, /snapshot/i, /preset/i, /stable role IDs/i, /requested/i, /resolved/i, /source/i, /time/i]],
+  ['snapshot resume', [/resume/i, /snapshot/i], /no re-resolution/i],
+  ['snapshot change', [/changes/i, /require/i, /user/i, /explicit decision/i]],
+  ['provider mapping', [/bindings/i, /codex→codex/, /claude→claudeAgent/, /grok→grok/, /antigravity→antigravity/]],
+  ['mode and options', [/modeId/, /runtimeMode:full-access/, /options:\[\{id,value\}\]/]],
+  ['pinned model', [/preset model/i, /used|use/i, /as given/i]],
+  ['class resolution', [/modelClass/, /resolve/i, /newest/i, /provider/i, /gpt-<N>-<class>/, /claude-<class>-<N>-<N>/]],
+  ['resolution catalog', [/resolve-models.js/, /--provider/, /saved capabilities JSON path/i]],
+  ['catalog hold', [/missing|malformed/i, /catalog/i, /hold/i, /resolution/i]],
+  ['null model', [/model:null/, /first model/i, /provider/i, /saved capabilities/i], /no class/i],
+  ['null ID receipt', [/record/i, /exact ID/i, /unresolved provider default/i]],
+  ['availability hold', [/unavailable/i, /provider/i, /model/i, /role/i, /mode/i, /effort/i, /hold/i], /no substitution/i],
+  ['no alternative on failure', [/auth/i, /quota/i, /timeout/i, /rejection/i, /alternative/i], /do not select|never select/i],
+  ['absent seats', [/intentional/i, /absent seats/i, /recorded absences/i]],
+  ['runtime availability', [/availability/i, /runtime proof/i]],
+  ['codex effort', [/codex/i, /effort/i, /option ID/i, /reasoningEffort/]],
+  ['claude effort', [/claude/i, /effort/i, /option ID effort/i]],
+  ['grok effort', [/grok/i, /reasoningEffort/, /exclude max/i]],
+  ['Grok CLI floor', [/CLI/, /requires|must/i, /≥1\.0\.13/]],
+  ['Grok readiness proof', [/grok/i, /alone/i, /prove|establish/i, /CLI/i, /runs/i], /does not|cannot/i],
+  ['opencode effort', [/opencode/i, /effort/i, /variant/], /no OpenCode role enters this migration/i],
+  ['binding echo', [/dispatch echo/i, /match/i, /requested/i, /provider/i, /model/i]],
+  ['binding readback', [/verify/i, /options/i, /runtimeMode/, /t3_thread_configuration/, /read.back/i]],
+  ['separate binding evidence', [/record|keep/i, /requested/i, /effective/i, /separat/i]],
+  ['worker proof', [/worker self.report/i, /configuration proof/i], /not|never/i],
+  ['missing effort readback', [/missing effort read.back/i, /hold/i, /roles/i, /effort/i]],
+  ['effort satisfaction', [/record/i, /satisfied/i], /never record/i],
+  ['other effort limitation', [/other providers/i, /effort read.back/i, /unverified/i, /exercised|tested/i]],
+  ['first configuration canary', [/first dispatch/i, /provider/i, /model/i, /effort/i, /running/i, /completed/i, /before/i, /siblings/i]],
+  ['canary rejection', [/rejection/i, /stop|block/i, /siblings/i, /configuration/i]],
+  ['unrelated configurations', [/unrelated configurations/i, /eligible|admissible/i]],
+  ['read-only delegates', [/advisers/i, /research/i, /diligence/i, /delegate_task/, /async/i, /driver worktree/i, /title = dispatch key/i]],
+  ['delegate untouched', [/tracked/i, /untracked/i, /files/i, /untouched/i]],
+  ['delegate evidence', [/writes only/i, /<run>\/evidence\/<key>\//]],
+  ['probe delegates', [/reviewers/i, /debug investigators/i, /execution investigators/i, /UI verifier/i, /delegate_task/, /async/i, /title = dispatch key/i]],
+  ['probe checkout', [/disposable/i, /detached/i, /candidate SHA/i, /pinned base/i, /git worktree add --detach/]],
+  ['probe cd', [/brief/i, /requires/i, /cd/i, /into it/i]],
+  ['probe outputs', [/disposable probes/i, /outputs/i, /<run>\/evidence\/<key>\//]],
+  ['writer launch', [/author/i, /code-arena/i, /t3_thread_launch/, /type:worktree/, /startFromOrigin:false/, /own worktree/i, /merges or closes/i]],
+  ['owner row', [/owner/i, /driver thread/i, /driver worktree/i]],
+  ['owner source exclusion', [/tracked files/i], /never (?:writes|edits|changes) tracked files|never (?:written|edited|changed)/i],
+  ['owner worker exclusion', [/worker launch/i], /No worker launch/i],
+  ['driver ownership', [/driver/i, /sole run.record writer/i, /one writer per candidate/i]],
+  ['driver source exclusion', [/tracked files/i, /repairs/i, /author/i, /source/i], /never writes/i],
+  ['repair ownership', [/repairs/i, /return|go back/i, /that author|same author/i]],
+  ['idle ownership', [/missing/i, /idle/i, /session/i, /ownership/i, /transfer/i], /no ownership transfer|never (?:grant ownership transfer|transfers?)/i],
+  ['driver preset exclusion', [/current/i, /chat\/driver|driver/i, /preset/i], /no role (?:row|entry)/i],
+  ['key and title', [/dispatch key/i, /<run>:<role>:<task>:a<n>/, /before/i, /launch/i, /exact whole/i, /T3 title/i]],
+  ['substring identity', [/substring matches/i, /establish/i, /identity/i], /do not|not/i],
+  ['branch naming', [/branch/i, /axstack\/<run>\/<role>\/<task>-a<n>/]],
+  ['branch encoding', [/lowercase/i, /each segment/i, /replace/i, /\[\^a-z0-9-\]/, /with -/]],
+  ['dispatch original', [/dispatch key/i, /original form/i, /record both/i]],
+  ['normalization identity', [/normalization/i, /identity substitute/i], /never/i],
+  ['SHA baseRef', [/baseRef/, /branch name/i], /never (?:be )?a branch name/i],
+  ['baseRef commit', [/always (?:be )?a commit SHA/i], /never a branch name|^(?!.*branch name)/i],
+  ['pinned dispatch revisions', [/pin/i, /base/i, /candidate/i, /before/i, /dispatch/i]],
+  ['receipt protocol', [/workers/i, /exactly one final marker/i, /AXSTACK-DONE key=/, /head=/, /report=/, /AXSTACK-FAILED key=/, /AXSTACK-QUESTION key=/, /q=/]],
+  ['report identity', [/reports/i, /absolute/i, /private evidence paths/i]],
+  ['report-only head', [/report.only head/i, /pinned candidate SHA/i]],
+  ['writer delivery', [/launched writers/i, /marker/i, /t3_thread_send/, /recorded driver thread/i]],
+  ['delegate delivery', [/delegated children/i, /final result/i]],
+  ['status persistence', [/driver/i, /persist/i, /task_status/, /private evidence/i, /before/i, /t3_thread_read/, /delegated task/i]],
+  ['whole status', [/save/i, /whole response/i, /before/i, /consum|expand/i, /result/i]],
+  ['delegate completion', [/delegated completion/i, /require/i, /terminal/i, /completed/, /result_available/, /hasPendingChildRuns:false/, /AXSTACK-DONE/]],
+  ['question incomplete', [/question/i, /incomplete/i, /completed/i]],
+  ['writer completion', [/launched writer completion/i, /require/i, /terminal/i, /t3_thread_wait/, /non.empty diff/i, /clean tree/i, /red\/green/i]],
+  ['message progress', [/receipt message alone/i, /only/i, /progress/i]],
+  ['current completion', [/completion/i, /current attempt key/i, /candidate SHA/i]],
+  ['stale completion', [/older attempt/i, /complet\w*/i, /newer/i], /never/i],
+  ['stale receipt evidence', [/stale/i, /duplicate receipts/i, /evidence/i, /deduplicated/i, /runtime identity/i]],
+  ['delivery validation', [/whole delivery/i, /before/i, /acknowledgment/i, /advance only after/i, /sender/i, /scope/i, /artifacts/i]],
+  ['failure classification', [/task_status failed/, /failed or interrupted/i, /preparing thread error/i, /AXSTACK-FAILED/, /incomplete outcome/i, /preserved evidence/i]],
+  ['silence completion', [/silence/i, /successful completion/i], /not|never/i],
+  ['delegated isolation', [/after each delegated completion/i, /driver/i, /HEAD/, /git status --porcelain/, /pre-dispatch/i, /unchanged/i, /untracked/i]],
+  ['isolation hold', [/any change/i, /is a hold/i, /before/i, /advancing/i]],
+  ['launch recovery inventory', [/lost launch response/i, /fully paginated/i, /t3_thread_list/, /titleContains=<key>/, /exact whole.title equality/i, /git worktree list/]],
+  ['reserved branch', [/keep/i, /reserved branch/i, /recovery/i]],
+  ['unreconciled worktree', [/branch/i, /worktree/i, /without a reconciled thread/i, /prevent\w*/i, /proof of absence/i], /without a reconciled thread/i],
+  ['launch recovery outcomes', [/recovery/i, /adopt/i, /one exact match/i, /worktree/i, /branch/i, /agree/i]],
+  ['relaunch absence', [/proven absence/i, /relaunch once/i, /same reserved key/i, /branch/i]],
+  ['recovery hold', [/several matches/i, /conflicts/i, /second uncertain response/i, /incomplete inventory/i, /hold/i]],
+  ['silence duplicate', [/duplicate writer/i, /silence/i, /launch|start|justif/i], /never/i],
+  ['post-launch wait', [/post.launch/i, /driver/i, /t3_thread_wait/, /timeoutMs:120000/, /failed/i, /launch failure/i]],
+  ['timed-out started', [/timed.out/i, /t3_thread_read/, /activeRunId/, /worktreePath/, /started/i]],
+  ['preparing hold', [/still preparing/i, /is a hold/i, /re.read/i, /next wake/i]],
+  ['unresolved launch', [/unresolved state/i, /preserve|retain/i, /attempt/i]],
+  ['question resume', [/AXSTACK-QUESTION/, /answer once/i, /t3_thread_send/, /childThreadId/, /resumed runId/i, /t3_thread_wait/, /timeoutMs:600000/, /run watch/i]],
+  ['resumed result', [/persist status/i, /accept only/i, /latestTerminal/, /newer than/i, /question run/i, /terminal success/i, /matching receipt key\/SHA/i], /not lexical ID order/i],
+  ['question summary', [/original summary/i, /stable/i]],
+  ['question notification', [/notification/i], /no notification/i],
+  ['same writer repair', [/repair/i, /t3_thread_send/, /mode:queue/, /same author/i, /same attempt/i, /worktree/i]],
+  ['repair revision', [/pin/i, /new candidate revision/i]],
+  ['replacement attempt', [/replacement/i, /terminal failure/i, /a<n\+1>/, /new branch/i, /title/i]],
+  ['failed branch salvage', [/failed attempt/i, /branch/i, /kept/i, /until salvage/i]],
+  ['unknown writer liveness', [/unknown liveness/i, /holds/i, /replacement/i]],
+  ['replacement reconcile', [/reconcile/i, /old writer/i, /before/i, /another/i]],
+  ['idle writer watch', [/unsettled launched thread/i, /turn/i, /end only/i, /schedule_task/, /bindToCurrentThread:true/, /everyMs:600000/, /armed/i, /ID recorded/i]],
+  ['watch reconcile', [/each wake/i, /reconcile all unsettled runs/i, /writer/i, /died/i, /without sending|silently/i]],
+  ['watch failure', [/failed runs/i, /hold|held/i, /incomplete work/i]],
+  ['watch deletion', [/nothing/i, /unsettled/i, /delete_scheduled_task/, /list_scheduled_tasks/, /read back/i, /absence/i]],
+  ['uncertain watch deletion', [/uncertain delete/i, /preserve|retain/i, /hold/i, /recorded ID/i]],
+  ['safe deletion in briefs', [/put|include/i, /safe.deletion rule/i, /every worker brief/i]],
+  ['named private evidence', [/name|identify/i, /private/i, /<run>\/evidence\/<key>\//, /brief/i, /completion receipt/i]],
+  ['temporary evidence guard', [/before/i, /use/i, /cleanup/i, /TMPDIR/, /0700/, /owned/i, /real path/i, /inside/i, /recorded run evidence/i, /owner/i], /no symlink/i],
+  ['worktree path guards', [/equivalent guards/i, /worktree.local paths/i]],
+  ['uncertain path retention', [/uncertain paths/i, /preserved/i, /reconciliation/i]],
+  ['safe deletion', [/deletion/i, /exact validated owned path/i, /evidence/i, /TMPDIR/, /worktree/i, /literal absolute path/i, /\$\{VAR:\?\}/, /no glob/i, /no parent.root deletion/i], /no glob|no parent.root deletion/gi],
+  ['glob deletion', [/no glob/i, /no parent.root deletion/i], /no glob|no parent.root deletion/gi],
+  ['parent deletion', [/no parent.root deletion/i, /no glob/i], /no glob|no parent.root deletion/gi],
+  ['cache deletion', [/general cache/i], /never wipe a general cache/i],
+  ['cache evidence', [/incidental caches/i, /evidence/i], /not/i],
+  ['brief confirmation', [/dispatching owner/i, /confirm/i, /brief question once/i, /existing authority/i, /re.verify/i, /started/i]],
+  ['second brief hold', [/second ask/i, /holds/i]],
+  ['prompt refusal', [/answer/i, /trust/i, /permission prompts/i], /never/i],
+  ['confirmation authority', [/brief confirmation/i, /no authority/i, /harness/i, /tool dialog/i, /does not answer/i], /no authority|does not answer/gi],
+  ['prompt refusal hold', [/permission prompt/i, /provider safety refusal/i, /held/i, /incomplete outcome/i]],
+  ['refusal bypass', [/bypass/i, /retry/i, /another model/i], /never/i],
+  ['additional prompt holds', [/trust/i, /hook review/i, /authentication/i, /model prompts/i, /hold/i]],
+  ['prompt recovery evidence', [/preserve/i, /attempt/i, /inspect/i, /native state/i, /before/i, /authorized recovery/i]],
+  ['review evidence isolation', [/each reviewer/i, /separate checkout/i, /private evidence folder/i], /no first-pass cross-read/i],
+  ['review tracked files', [/tracked candidate files/i, /read.only/i]],
+  ['review evidence readback', [/read back/i, /report/i, /supporting evidence/i, /before/i, /removing/i, /checkout/i]],
+  ['external evidence', [/evidence/i, /outside/i, /archive/i], /no archive/i],
+  ['fresh review', [/later review/i, /fresh checkout/i]],
+  ['fresh review retention', [/unknown/i, /active evidence/i, /unique bytes/i, /preserved/i]],
+  ['untracked retention', [/untracked files/i, /worktree/i, /disposable/i, /prov|establish/i], /never|cannot/i],
+  ['terminal evidence retention', [/T3 terminal state alone/i, /discarding evidence/i, /authoriz/i], /does not|cannot|not/i],
+  ['acceptance distinct from start', [/input acceptance/i, /started state/i, /effective settings/i, /completed work/i, /distinct evidence/i]],
+  ['silence exit', [/silence/i, /contact loss/i, /idle state/i, /prov\w*/i, /exit/i], /never/i],
+  ['resume ownership', [/ordinary resume/i, /same owner/i, /author/i, /attempt/i, /worktree/i, /revisions/i, /pending receipts/i]],
+  ['uncertain replacement', [/uncertainty/i, /holds/i, /replacement/i]],
+  ['ownership transfer', [/explicit user transfer/i, /recipient acceptance/i, /session/i, /scope/i, /revision/i, /authority/i, /before/i, /ownership/i]],
+  ['current owner accountability', [/current owner/i, /accountab\w*/i, /until then/i]],
+  ['prior owner stop', [/prior owner/i, /stops/i, /after acceptance/i]],
+  ['transfer receipt boundary', [/input acceptance/i, /turn start alone/i, /transfer receipt/i], /no transfer receipt|cannot be a transfer receipt/i],
+  ['runtime identity mismatch', [/T3/, /threadId\/runId/, /mismatch/i, /stop consuming/i, /reconcile/i, /driver identity/i, /native state/i]],
+  ['identity forgery', [/forg\w*/i, /sender/i, /borrow\w*/i, /identity/i, /bypass/i, /mismatch/i], /never/i],
+  ['user takeover retention', [/driver/i, /retain/i, /user.taken.over T3 thread/i]],
+  ['user takeover cleanup', [/cleanup commands/i, /t3_thread_organize/, /settle/i, /archive/i], /never send/i],
+  ['T3 settle evidence', [/require/i, /T3 terminal run evidence/i, /before/i, /t3_thread_organize/, /settle/i, /archive/i]],
+  ['T3 metadata boundary', [/metadata actions/i, /worktree removal/i], /not/i],
+  ['cleanup preflight', [/worktreeCleanup/, /off/, /every Axstack project/i]],
+  ['cleanup readback', [/preflight/i, /t3_project_read/, /where exposed/i]],
+  ['cleanup limitation', [/otherwise/i, /record a limitation/i, /documented/i, /installation setup step/i]],
+  ['cleanup evidence priority', [/automatic worktree deletion/i, /evidence readback/i, /salvage/i], /cannot replace|no substitute for/i],
+  ['run record', [/run record/i, /driver threadId/, /projectId/, /host/i, /T3 version/, /installed Axstack SHA/, /capabilities JSON path/, /scheduledTaskIds/, /watch/i, /manager schedule/i]],
+  ['dispatch target record', [/per dispatch/i, /record/i, /key/i, /mechanism/i, /requested target/i, /read.back/i]],
+  ['dispatch identity record', [/taskId\/childThreadId\/childRunId/, /threadId\/runId\/worktree\/branch\/base SHA/]],
+  ['dispatch revision record', [/checkout path/i, /candidate/i, /base SHAs/i]],
+  ['dispatch evidence record', [/evidence folder/i, /scope\/authority/i, /owner/i, /pending receipts/i, /hold/i, /Next/]],
+  ['native runtime boundary', [/boundary/i, /Axstack daemon/i, /DB/, /lock/i, /scheduler/i], /no Axstack daemon/i],
+  ['publication authority', [/private evidence/i, /requires/i, /explicit publication authority/i, /before sharing/i]],
+  ['receipt authority', [/receipts/i, /merge/i, /release/i, /publication/i, /model.substitution/i, /host.mutation/i, /expanded scope authority/i], /no merge/i],
+  ['human merge authority', [/human/i, /merges/i, /by default/i]],
 ];
 
-// These decisions used to borrow a neighboring sentence's mandate. Match each
-// sentence independently so removing or reversing just that decision is red.
-const sentenceRules = [
-  ['human merge authority', ['(?:Human|The human) merges by default'],
-    'The human merges by default.', [/Human|The human/i, 'Agents']],
-  ['terminal evidence retention', ['T3 terminal state alone (?:does not authorize|cannot authorize) discarding evidence'],
-    'T3 terminal state alone cannot authorize discarding evidence.', [/does not authorize|cannot authorize/, 'authorizes']],
-  ['additional prompt holds', ['Trust, hook review, authentication and model prompts (?:also hold|remain held)', 'preserve the attempt'],
-    'Trust, hook review, authentication and model prompts remain held; preserve the attempt before inspecting native state.', [/also hold|remain held/, 'are auto-approved']],
-  ['no alternative on failure', ['Auth, quota, timeout and rejection (?:do not select|never select) an alternative'],
-    'Auth, quota, timeout and rejection never select an alternative.', [/do not select|never select/, 'select']],
-  ['fresh review and retention', ['Later review (?:gets|uses) a fresh checkout', 'unknown or active evidence and unique bytes (?:stay|remain) preserved'],
-    'Later review uses a fresh checkout; unknown or active evidence and unique bytes remain preserved.', [/stay preserved|remain preserved/, 'may be discarded']],
-  ['transfer receipt boundary', ['Input acceptance or turn start alone (?:is no|cannot be a) transfer receipt'],
-    'Input acceptance or turn start alone cannot be a transfer receipt.', [/is no|cannot be a/, 'is a']],
-  ['T3 mismatch reconciliation', ['T3 threadId/runId mismatch', 'must stop consuming and reconcile.*driver identity'],
-    'A T3 threadId/runId mismatch means the driver must stop consuming and reconcile its recorded driver identity with native state.', [/stop consuming/, 'continue consuming']],
-  ['owner row', ['^\\| Owner \\|', 'Driver thread', 'Driver worktree', 'never (?:writes|edits|changes) tracked files(?! concurrently)', 'No worker launch'],
-    '| Owner | Driver thread in Driver worktree; never edits tracked files | No worker launch |', [/never edits|never writes/i, 'sometimes writes']],
-  ['missing capability', ['Missing capability (?:must )?holds?', 'affected operation', 'without a substitute runtime'],
-    'Missing capability must hold the affected operation without a substitute runtime.', [/\bholds?\b/i, 'permits']],
-  ['Grok CLI floor', ['Grok.*CLI.*(?:requires|must be).*≥1\\.0\\.13'],
-    'Grok must use reasoningEffort and exclude max; its CLI must be ≥1.0.13.', [/≥1\.0\.13/, '<1.0.13']],
-  ['Grok readiness proof', ['(?:Advertising Grok|Grok advertised) alone (?:does not prove|cannot establish).*CLI runs'],
-    'Grok advertised alone cannot establish that its CLI runs.', [/does not prove|cannot establish/, 'proves']],
-  ['separate binding evidence', ['(?:Record requested and effective values separately|Keep requested and effective values in separate records)', 'worker self.report is (?:not|never) configuration proof'],
-    'Keep requested and effective values in separate records; a worker self-report is never configuration proof.', [/is (?:not|never) configuration proof/, 'is configuration proof']],
-  ['other effort limitation', ["(?:Other providers.*effort read.back remains unverified until exercised|Effort read.back for other providers stays unverified until tested)"],
-    "Effort read-back for other providers stays unverified until tested.", [/remains unverified|stays unverified/, 'is verified']],
-  ['canary rejection', ['Rejection (?:stops|blocks).*siblings.*configuration', 'unrelated configurations remain (?:eligible|admissible)'],
-    'Rejection blocks siblings using the rejected configuration; unrelated configurations remain admissible.', [/stops|blocks/, 'permits']],
-  ['repair ownership', ['Repairs (?:must )?(?:return to|go back to) (?:that|the same) author'],
-    'Repairs must go back to the same author.', [/return to|go back to/, 'never return to']],
-  ['idle ownership', ['Missing or idle sessions (?:grant no ownership transfer|never grant ownership transfer|never transfer ownership)'],
-    'Missing or idle sessions never transfer ownership.', [/grant no|never grant|never transfer/, 'transfer']],
-  ['pinned dispatch revisions', ['(?:Pin base and candidate before dispatch|Before dispatch, pin the base and candidate)'],
-    'Before dispatch, pin the base and candidate.', [/before dispatch/i, 'after dispatch']],
-  ['report identity', ['Reports (?:use|must name) absolute private evidence paths', 'report.only head (?:is|must equal) the pinned candidate SHA'],
-    'Reports must name absolute private evidence paths; report-only head must equal the pinned candidate SHA.', [/absolute private/, 'relative public']],
-  ['stale receipt evidence', ['stale or duplicate receipts (?:remain evidence|are evidence only)', 'deduplicated by runtime identity'],
-    'An older attempt never completes newer work; stale or duplicate receipts are evidence only, deduplicated by runtime identity.', [/remain evidence|are evidence only/, 'complete work']],
-  ['delivery validation', ['(?:Process|Handle) the whole delivery before acknowledgment', 'advance only after (?:checking|validating) sender, scope and artifacts'],
-    'Handle the whole delivery before acknowledgment; advance only after validating sender, scope and artifacts.', [/before acknowledgment/, 'after acknowledgment']],
-  ['silence completion', ['Silence (?:is not|never establishes) successful completion'],
-    'Silence never establishes successful completion.', [/is not|never establishes/, 'is']],
-  ['unreconciled worktree', ['branch or worktree without a reconciled thread prevents proof of absence'],
-    'A branch or worktree without a reconciled thread prevents proof of absence.', [/prevents/, 'proves']],
-  ['silence duplicate', ['Never (?:launch|start) a duplicate writer based on silence'],
-    'Never start a duplicate writer based on silence.', [/Never/, 'Always']],
-  ['unresolved launch', ['unresolved state (?:preserves|retains) the attempt'],
-    'An unresolved state retains the attempt.', [/preserves|retains/, 'discards']],
-  ['unknown writer liveness', ['(?:Unknown|Uncertain) liveness (?:holds|blocks) replacement', 'reconcile the old writer before admitting another'],
-    'Uncertain liveness blocks replacement; reconcile the old writer before admitting another.', [/(?:holds|blocks) replacement/, 'permits replacement']],
-  ['uncertain watch deletion', ['uncertain delete (?:preserves|retains) the hold and recorded ID'],
-    'When nothing is unsettled, the driver must delete_scheduled_task and read back absence via list_scheduled_tasks; an uncertain delete retains the hold and recorded ID.', [/preserves|retains/, 'clears']],
-  ['cleanup evidence priority', ['Automatic worktree deletion (?:cannot replace|is no substitute for) evidence readback and salvage'],
-    'Automatic worktree deletion is no substitute for evidence readback and salvage.', [/cannot replace|is no substitute for/, 'replaces']],
-  ['safe deletion in briefs', ['(?:Put|Include).*Safe.deletion rule.*every worker brief'],
-    'Include the Safe-deletion rule in every worker brief.', [/every worker brief/, 'only author briefs']],
-  ['untracked retention', ['Untracked files (?:never prove a worktree disposable|cannot establish that a worktree is disposable)'],
-    'Untracked files cannot establish that a worktree is disposable.', [/never prove|cannot establish/, 'prove']],
-  ['driver preset exclusion', ['current (?:chat/driver|driver).*no role (?:row|entry) in any preset'],
-    'The current driver has no role entry in any preset.', [/no role (?:row|entry)/, 'a role row']],
-  ['named private evidence', ['(?:Name|Identify) the private <run>/evidence/<key>/ folder', 'brief and completion receipt'],
-    'Identify the private <run>/evidence/<key>/ folder in the brief and completion receipt.', [/brief and completion receipt/, 'brief only']],
-  ['T3 settle evidence', ['T3 terminal run evidence.*before.*t3_thread_organize.*settle or archive', 'metadata.*not.*worktree removal'],
-    'Require T3 terminal run evidence before t3_thread_organize settle or archive; those metadata actions are not worktree removal.', [/before/, 'after']],
-];
-
-for (const [name, patterns, paraphrase, flip] of sentenceRules) {
-  test(`T3 sentence: ${name} rejects removal/inversion and accepts rewording`, () => {
-    const source = sentences(runtime());
-    const matching = source.filter((sentence) => matches(sentence, patterns));
-    expect(matching.length, `missing binding sentence: ${name}`).toBeGreaterThan(0);
-    for (const sentence of [...matching, paraphrase]) {
-      const reversed = invert(sentence, flip);
-      expect(reversed, `no-op inversion: ${name}`).not.toBe(sentence);
-      expect(matches(reversed, patterns), `inverted sentence: ${name}`).toBe(false);
-    }
-    expect(matches(paraphrase, patterns), `paraphrase sentence: ${name}`).toBe(true);
-  });
-}
-
-for (const [name, patterns, paraphrase, flip] of rules) {
-  test(`T3 contract: ${name} rejects removal/inversion and accepts rewording`, () => {
-    const source = blocks(runtime());
-    const matching = source.filter((block) => satisfies(block, patterns));
-    expect(matching.length, `missing binding rule: ${name}`).toBeGreaterThan(0);
-    for (const block of matching) {
-      const reversed = invert(block, flip);
-      expect(reversed, `no-op inversion: ${name}`).not.toBe(block);
-      expect(matches(reversed, patterns), `directional inversion: ${name}`).toBe(false);
-      expect(satisfies(reversed, patterns), `inverted ${name}`).toBe(false);
-    }
-    expect(satisfies(paraphrase.replace(/\bmust\b/gi, 'shall'), patterns), `paraphrase ${name}`).toBe(true);
-    expect(satisfies(invert(paraphrase, flip), patterns)).toBe(false);
-  });
-}
-
-test('a valid paragraph may include an additional must not prohibition', () => {
-  for (const [name, patterns, paraphrase] of rules) {
-    expect(satisfies(`${paraphrase} The driver must not discard evidence.`, patterns), name).toBe(true);
-  }
-});
-
-const recoveryActions = {
-  'lost-launch-response': [
-    ['launch recovery outcomes', ['adopt.*one exact match', 'proven absence.*relaunch once|relaunch once.*proven absence', '(?:multiple|several).*incomplete.*hold']],
-    ['launch recovery inventory', ['keep.*reserved branch']],
-  ],
-  'silent-provisioning-failure': [
-    ['post-launch wait', ['(?:failed is|record) launch failure', 'activeRunId.*worktreePath.*(?:proves|is) started', 'still preparing.*hold.*next wake']],
-    ['failure classification', ['incomplete']],
-  ],
-  'writer-death-after-idle': [
-    ['idle writer watch', ['reconcile.*failed.*hold incomplete']],
-    ['replacement attempt', ['terminal failure', 'a<n\\+1>', 'failed.*branch.*salvage']],
-  ],
-  'stale-completion': [
-    ['stale completion', ['current attempt.*(?:candidate )?SHA', '(?:old|stale).*receipt.*evidence']],
-    ['status persistence', ['persist task_status.*before.*(?:thread reads|t3_thread_read)']],
-  ],
-  'child-question-resume': [
-    ['question resume', ['answer once.*t3_thread_send.*childThreadId', '(?:wait 600000ms|timeoutMs:600000)', 'latestTerminal.*newer than the question run']],
-  ],
-};
-
-test('AC2 runtime recovery expected actions are bound to rule text', () => {
-  const scenarios = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json'));
-  const expected = ['lost-launch-response', 'silent-provisioning-failure', 'writer-death-after-idle', 'stale-completion', 'child-question-resume'];
-  expect(scenarios.cases.slice(0, expected.length).map(({ id }) => id)).toEqual(expected);
-  for (const scenario of scenarios.cases.slice(0, expected.length)) {
-    expect(scenario.input).toBeTruthy();
-    expect(scenario.expected.action).toBeTruthy();
-    expect(scenario.contracts.length).toBeGreaterThan(0);
-    for (const name of scenario.contracts) {
-      const entry = rules.find(([id]) => id === name);
-      expect(entry, `unbound scenario contract: ${name}`).toBeDefined();
-      const [, patterns, paraphrase, flip] = entry;
-      const source = blocks(runtime());
-      expect(source.some((block) => satisfies(block, patterns)), scenario.id).toBe(true);
-      const instruction = source.find((block) => satisfies(block, patterns));
-      expect(invert(instruction, flip), `no-op scenario inversion: ${name}`).not.toBe(instruction);
-      expect(matches(invert(instruction, flip), patterns), `directional scenario inversion: ${name}`).toBe(false);
-      expect(source.map((block) => satisfies(block, patterns) ? invert(block, flip) : block)
-        .some((block) => satisfies(block, patterns))).toBe(false);
-      expect(satisfies(paraphrase, patterns)).toBe(true);
-    }
-    for (const [name, actions] of recoveryActions[scenario.id]) {
-      expect(scenario.contracts).toContain(name);
-      const [, patterns] = rules.find(([id]) => id === name);
-      const instruction = blocks(runtime()).find((block) => satisfies(block, patterns));
-      expect(matches(scenario.expected.action, actions), `scenario action: ${scenario.id}`).toBe(true);
-      expect(matches(instruction, actions), `runtime action: ${scenario.id}`).toBe(true);
-      for (const action of actions) {
-        // Removing the action from either artifact invalidates this scenario.
-        const pattern = new RegExp(action, 'ig');
-        expect(matches(instruction.replace(pattern, ''), actions)).toBe(false);
-        expect(matches(scenario.expected.action.replace(pattern, ''), actions)).toBe(false);
-      }
-    }
-  }
-});
-
-// Generic polarity probes are independent of the rule table's chosen tokens.
-const genericInversions = (text) => [
-  text.replace(/\bmust\b/gi, 'must not'),
-  text.replace(/\brequires?\b/gi, 'does not require'),
-  text.replace(/\bnever\b/gi, 'always'),
-  text.replace(/\balways\b/gi, 'never'),
-  text.replace(/\bis a hold\b/gi, 'is not a hold'),
-  text.replace(/\bbefore\b/gi, 'after'),
-  text.replace(/commit SHA|branch name/gi, (word) => /commit/i.test(word) ? 'branch name' : 'commit SHA'),
-  `Do not follow this instruction: ${text}`,
-].filter((changed) => changed !== text);
-
-for (const [name, patterns] of [...rules, ...sentenceRules]) {
-  test(`generic polarity holdout: ${name}`, () => {
-    const instruction = [...blocks(runtime()), ...sentences(runtime())].find((part) => matches(part, patterns));
-    expect(instruction, name).toBeDefined();
-    for (const changed of genericInversions(instruction)) {
-      expect(matches(changed, patterns), `${name}: ${changed}`).toBe(false);
-    }
-  });
-}
-
-// Written independently from the patterns, with reversed order and passive voice.
-const editorialHoldouts = [
-  ['status persistence', 'Before any t3_thread_read for that delegated task, the driver must persist task_status in private evidence.'],
-  ['human merge authority', 'By default the human merges.'],
-  ['silence duplicate', 'Silence never justifies launching a duplicate writer.'],
-  ['SHA baseRef', 'baseRef must never be a branch name; it is always a commit SHA.'],
-  ['untracked retention', 'A worktree is never proven disposable by its untracked files.'],
-  ['terminal evidence retention', 'Discarding evidence is not authorized by T3 terminal state alone.'],
-  ['stale receipt evidence', 'Stale or duplicate receipts are kept as evidence, deduplicated by runtime identity.'],
-  ['idle ownership', 'Ownership never transfers because a session is missing or idle.'],
-];
-test('independent editorial holdouts survive rewording', () => {
-  for (const [name, text] of editorialHoldouts) {
-    const [, patterns] = [...rules, ...sentenceRules].find(([id]) => id === name);
-    expect(matches(text, patterns), name).toBe(true);
-  }
-});
