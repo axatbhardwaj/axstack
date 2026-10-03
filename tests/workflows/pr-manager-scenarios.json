@@ -11,21 +11,21 @@
     },
     {
       "id": "finite-unchanged-pass",
-      "input": "a fresh manager session in its dedicated existing workspace reconciles the lane, observes no new exact-head event, and has no descendants",
+      "input": "a fresh manager pass thread in the T3 review lane reconciles the lane, observes no new exact-head event, and has no descendants",
       "expected": ["create no PR job", "save compact reconciled continuity", "end the finite T3 turn after saving continuity"],
       "forbidden": ["retain an idle manager chat", "repeat an unchanged review"]
     },
     {
       "id": "duplicate-manager-finite-turn",
-      "input": "a new review-manager session in the dedicated workspace finds another confirmed live manager with three active PR jobs in the same lane",
+      "input": "a new review-manager pass thread in the T3 review lane finds another confirmed live manager with three active PR jobs in the same lane",
       "expected": ["perform no PR work", "make no shared-record write", "end only the duplicate finite T3 turn"],
       "forbidden": ["interrupt the established manager", "borrow capacity from an unrelated run"]
     },
     {
       "id": "owned-shell-cleanup",
-      "input": "all descendants settled; three exact worker terminals are owned, while review reports, a dirty unpushed candidate, and a user-owned terminal remain",
-      "expected": ["settle only the three exact owned T3 threads", "preserve protected candidate, evidence, and user terminal", "save continuity before ending the finite T3 turn"],
-      "forbidden": ["blanket-close the workspace", "delete or clean preserved candidate state"]
+      "input": "all descendants settled; three exact worker threads are owned, while review reports, a dirty unpushed candidate, and a user-owned thread remain",
+      "expected": ["settle only the three exact owned T3 threads", "preserve protected candidate, evidence, and user thread", "save continuity before ending the finite T3 turn"],
+      "forbidden": ["blanket-archive lane threads", "delete or clean preserved candidate state"]
     },
     {
       "id": "durable-review-decision",
@@ -103,7 +103,7 @@
       "id": "settled-job-release-and-cleanup",
       "input": "the PR job and reviewers settle with private evidence archived and read back, and their worktrees have no protection holds",
       "expected": ["settle terminal T3 threads after verifying run evidence", "retire reviewer worktrees through axstack-cleanup", "retire the PR-job worktree in the same pass"],
-      "forbidden": ["close the dedicated manager workspace", "remove unarchived evidence", "retain clean worktrees until merge"]
+      "forbidden": ["archive the active manager thread", "remove unarchived evidence", "retain clean worktrees until merge"]
     },
     {
       "id": "closed-pr-worktree-cleanup",

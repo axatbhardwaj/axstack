@@ -29,6 +29,7 @@ Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:600000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
 driver thread, chosen mechanism and expiry; the watch inherits the driver binding.
+One bound schedule serves both the run watch and the chat-run watch; never create a second watch.
 Each wake reconciles all unsettled runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime;
@@ -114,8 +115,9 @@ Delete only the recorded watch with `delete_scheduled_task` and read back its ab
 An uncertain delete preserves the hold and recorded schedule ID.
 Re-read membership and confirm no ambiguous publication or unsettled pass;
 cancellation prevents new work but does not prove running workers exited.
-Delete the bound run watch once nothing remains unsettled; continued PR observation
-uses its separately recorded bound watch, with the same exact deletion check.
+For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed
+and the release step is settled or not applicable, or until user cancellation or expiry.
+For a chat-run watch, defer the T3 runtime's "nothing remains unsettled" deletion until those chat-run stop conditions.
 The driver separately settles workers, preserves evidence, and archives the run;
 an unavailable driver leaves those steps pending. The standalone 24-hour expiry
 and peer observation contracts are unchanged.

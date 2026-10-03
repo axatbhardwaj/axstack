@@ -152,6 +152,9 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
     .find(({ id }) => id === 'bound-watch-wake-and-deletion');
   expect(scenario).toBeDefined();
   expect(scenario.contracts).toEqual([
+    'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
+    'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+    'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
     'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
     'A failed run holds incomplete work even when its writer sent no receipt.',
     'Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.',
@@ -159,6 +162,11 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   ]);
   const text = runtime();
   for (const sentence of scenario.contracts) expect(text).toContain(sentence);
+  expect(scenario.input).toContain('all runs settle while a PR stays open with CI pending');
+  expect(scenario.input).toContain('all PRs merge but release is still pending');
+  expect(scenario.expected.action).toContain('keep the same schedule armed while CI or release is pending');
+  expect(scenario.expected.action).toContain('never create a second watch');
+  expect(scenario.expected.action).toContain('delete only after chat-run stop conditions');
   for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:600000',
     'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
     expect(scenario.expected.action).toContain(concept);
@@ -167,6 +175,9 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
 });
 
 for (const sentence of [
+  'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
+  'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+  'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
   'Wake only the exact live original driver.',
   'A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.',
   "The orphan sweep covers the run record's repositories plus registered repositories on this host.",

@@ -62,15 +62,18 @@
     },
     {
       "id": "bound-watch-wake-and-deletion",
-      "input": "A bound schedule wakes the idle driver after a writer dies without a receipt; later all runs settle, but the first deletion readback is uncertain.",
+      "input": "A bound schedule wakes the idle driver after a writer dies without a receipt; later all runs settle while a PR stays open with CI pending, then all PRs merge but release is still pending; after release settles, the first deletion readback is uncertain.",
       "contracts": [
+        "One bound schedule serves both the run watch and the chat-run watch; never create a second watch.",
+        "For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.",
+        "For a chat-run watch, defer the T3 runtime's \"nothing remains unsettled\" deletion until those chat-run stop conditions.",
         "Each wake reconciles all unsettled runs before running the authorized maintenance loop.",
         "A failed run holds incomplete work even when its writer sent no receipt.",
         "Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.",
         "An uncertain delete preserves the hold and recorded schedule ID."
       ],
       "expected": {
-        "action": "Arm schedule_task with bindToCurrentThread:true and everyMs:600000, record its ID, reconcile failed runs as incomplete, then delete_scheduled_task only for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
+        "action": "Arm one schedule_task with bindToCurrentThread:true and everyMs:600000, record its ID, reconcile failed runs as incomplete, keep the same schedule armed while CI or release is pending, and never create a second watch; delete only after chat-run stop conditions with delete_scheduled_task for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
       }
     }
   ]

@@ -188,7 +188,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )) .toBe('6b5489e7ef5a1d2c66d69fbf5c51c972bb09e1b6e9a32efea80072b69ac4797c');
+  )).toBe('1868e51eb131995009de34a71a360b4f56d1e15dd53fd17429fb08322d14c2c2');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',

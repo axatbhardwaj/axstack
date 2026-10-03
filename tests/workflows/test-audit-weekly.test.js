@@ -72,3 +72,12 @@ test('weekly audits use an inherited T3 scheduled binding', () => {
   expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
   expect(requires('', ...concepts)).toBe(false);
 });
+
+test('weekly audits use an unbound weekly fixed_time schedule', () => {
+  const concepts = [/schedule_task/, /unbound/i, /weekly/i, /fixed_time/, /bindToCurrentThread:false/];
+  expect(requires(policy, ...concepts)).toBe(true);
+  const holdout = 'For weekly audits, schedule_task must use an unbound fixed_time schedule with bindToCurrentThread:false.';
+  expect(requires(holdout, ...concepts)).toBe(true);
+  expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
+  expect(requires(sentences(policy).filter((sentence) => !requires(sentence, ...concepts)).join('. '), ...concepts)).toBe(false);
+});

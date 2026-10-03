@@ -60,8 +60,7 @@ one admission owner before activation. Count all unsettled PR jobs and descendan
 A failed scheduled run alone proves neither predecessor exit nor release.
 Predecessor exit requires exact thread/run identity and terminal run evidence;
 a completed run row alone does not prove the work settled.
-Reconcile saved continuity,
-and settlement of every descendant before releasing ownership.
+Require reconciled continuity and settlement of every descendant before releasing ownership.
 Unknown facts hold at the durable decision location; never replace a
 potentially live owner.
 
@@ -128,7 +127,9 @@ review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
 Check admitted delegated jobs with persisted `task_status` before thread reads
 under [T3 runtime](t3-runtime.md). For a worker's own brief question, confirm the
-brief once; a second ask holds. An idle final turn without a valid completion
+brief once.
+A second brief ask follows the five-minute stop rule, never an open-ended hold.
+An idle final turn without a valid completion
 receipt is incomplete, not successful. A started coordinator waiting on its
 reviewers (a live reviewer task or running wait) is not idle and is never
 stopped for waiting. Reconcile terminal failure and all descendants before
@@ -260,10 +261,10 @@ Each pass retires settled predecessor passes and reports the retained worktree
 count. Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
 follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
-The orphan sweep covers the run record's repositories plus registered repositories on this host.
 Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
+The orphan sweep covers the run record's repositories plus registered repositories on this host.
 `t3_thread_organize` settle/archive changes metadata only; exact guarded Git
 worktree removal remains separate. Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.

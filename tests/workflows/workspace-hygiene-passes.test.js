@@ -72,7 +72,8 @@ test('task-owned T3 watch deletion preserves driver settlement', () => {
   expect(runtime).toContain('Delete only the recorded watch with `delete_scheduled_task` and read back its absence with `list_scheduled_tasks`.');
   expect(runtime).toContain('An uncertain delete preserves the hold and recorded schedule ID.');
   expect(runtime).toMatch(/cancellation prevents new work[^.]*does not prove running workers exited/i);
-  expect(runtime).toMatch(/Delete the bound run watch once nothing remains unsettled/i);
+  expect(runtime).toMatch(/chat-run watch[^.]*defer[^.]*nothing remains unsettled[^.]*deletion[^.]*chat-run stop conditions/i);
   expect(runtime).toMatch(/driver separately settles workers[^.]*preserves evidence[^.]*archives the run/i);
   expect(runtime).toMatch(/unavailable driver leaves those steps pending/i);
+  expect(runtime).not.toMatch(/save[^.]*observation continuity/i);
 });
