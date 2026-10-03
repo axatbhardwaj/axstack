@@ -60,21 +60,32 @@ test('capabilities uses an explicit preset pin as given ahead of a class', () =>
   held(resolve(capabilities, ['--model', 'missing', '--class', 'sol']), /missing.*model|model.*missing/i);
 });
 
-test('capabilities model:null without class selects the first listed model without sorting', () => {
+test('capabilities model:null without class holds Codex/Claude and binds launch-by-agent-ID providers', () => {
   const data = fresh();
-  data.providers[0].models.reverse();
-  for (const [provider, model, optionId] of [
-    ['codex', 'gpt-6-sol', 'reasoningEffort'], ['claude', 'claude-opus-5-5', 'effort'],
-    ['grok', 'grok-4.7', 'reasoningEffort'],
-  ]) {
-    const result = resolve(data, ['--model', 'null'], provider);
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.output)).toMatchObject({ model, effortOption: { id: optionId, value: 'high' } });
+  data.providers[2].models.push(entry('grok-9'));
+  for (const provider of ['codex', 'claude']) {
+    held(resolve(data, ['--model', 'null'], provider), /intentional absence/i);
   }
+  const grok = resolve(data, ['--model', 'null'], 'grok');
+  expect(grok.status).toBe(0);
+  expect(JSON.parse(grok.output)).toMatchObject({ model: 'grok-4.7',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
   const result = resolve(capabilities, ['--model', 'null', '--class', 'fable'], 'claude');
   expect(result.status).toBe(0);
   expect(JSON.parse(result.output).model).toBe('claude-fable-5-1');
 });
+
+for (const preset of ['codex-only', 'claude-only']) {
+  test(`capabilities holds every intentional absence in the real ${preset} preset`, () => {
+    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
+    const absent = roles.filter((role) => role.model === null && !role.modelClass);
+    expect(absent.length).toBeGreaterThan(0);
+    for (const role of absent) {
+      held(resolve(capabilities, ['--model', String(role.model)], role.provider, role.thinkingOptionId),
+        /intentional absence/i);
+    }
+  });
+}
 
 test('capabilities validates effort on the selected model without choosing an older model', () => {
   const data = fresh();

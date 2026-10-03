@@ -75,12 +75,27 @@ test('runtime launch hold defers to shared optional-seat and auditor exceptions'
 
 test('null-model role binds a catalog ID while intentional single-provider seats remain absent', () => {
   const runtime = read('skills/axstack/references/orca-runtime.md');
-  const concepts = [/model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /record/i, /exact/i, /ID|identifier/i];
+  const concepts = [/Grok/i, /Antigravity/i, /model:null/i, /lack/i, /class/i, /first/i, /listed/i, /saved/i, /capabilities/i, /record/i, /exact/i, /ID|identifier/i];
   const rule = sentences(runtime).find((sentence) => requires(sentence, ...concepts));
   expect(requires(runtime, ...concepts)).toBe(true);
   expect(requires(sentences(runtime).filter((sentence) => sentence !== rule).join('. '), ...concepts)).toBe(false);
   expect(requires(`Do not ${rule}`, ...concepts)).toBe(false);
-  expect(requires('For roles with model:null lacking a class, record the exact identifier from the first listed model in saved capabilities.', ...concepts)).toBe(true);
+  expect(requires('For Grok and Antigravity roles with model:null lacking a class, record the exact identifier from the first listed model in saved capabilities.', ...concepts)).toBe(true);
   expect(runtime).toMatch(/single-provider[^.]*null adviser[^.]*intentional installation data/i);
   expect(runtime).toMatch(/null adviser[^.]*holds those phases/i);
+});
+
+test('Codex and Claude missing model and class explicitly hold as intentional absences', () => {
+  const concepts = [/Codex/i, /Claude/i, /neither|missing/i, /model/i, /class/i, /intentional/i, /absen/i, /hold/i];
+  for (const path of ['orca-runtime.md', 'routing.md']) {
+    const text = read(`skills/axstack/references/${path}`);
+    const matches = sentences(text).filter((sentence) => requires(sentence, ...concepts));
+    expect(matches, path).toHaveLength(1);
+    expect(requires(sentences(text).filter((sentence) => !matches.includes(sentence)).join('. '), ...concepts)).toBe(false);
+    expect(requires(`Do not ${matches[0]}`, ...concepts)).toBe(false);
+  }
+  for (const text of [
+    'A role for Claude or Codex missing both class and model holds as an intentional absence.',
+    'Hold an intentional absent Codex or Claude seat with neither class nor model.',
+  ]) expect(requires(text, ...concepts)).toBe(true);
 });

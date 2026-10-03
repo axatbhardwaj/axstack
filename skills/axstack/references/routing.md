@@ -22,6 +22,8 @@ Resolve Codex and Claude classes with
 `skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path>`
 using saved T3 capabilities JSON; missing or malformed capabilities holds.
 Claude exact IDs come from capabilities, replacing transcript read-back.
+A Codex or Claude role with neither model nor class is an intentional absence
+and holds.
 Resume must reuse the snapshot and
 never re-resolve it except for the recorded pre-turn Codex rejection amendment below.
 

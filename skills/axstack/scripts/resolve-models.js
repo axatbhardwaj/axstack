@@ -53,7 +53,10 @@ function modelFrom(models, { provider, model: pin, class: modelClass, excluded }
   }
   if (!pin && !modelClass) throw new Error('expected --class or --model (use --model null for a null role)');
   if (!modelClass) {
-    // A null-model role binds the first listed ID; exclusions never pick a default substitute.
+    if (['codex', 'claude'].includes(provider)) {
+      throw new Error(`intentional absence for ${provider}: missing model and class`);
+    }
+    // Launch-by-agent-ID providers bind the first listed ID; exclusions never select a substitute.
     const model = models[0];
     if (!model || excluded.includes(model.id)) throw new Error('missing first listed model');
     return model;

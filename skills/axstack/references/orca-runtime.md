@@ -47,12 +47,14 @@ pre-turn Codex rejection amendment below.
 Select the requested role by stable ID. Use a preset `model` as given.
 Otherwise resolve `modelClass` to the newest matching provider ID: Codex
 `gpt-<N>-<class>`, Claude `claude-<class>-<N>-<N>`.
-For `model:null` roles lacking a class, use the first listed provider model in saved
-capabilities and record the exact ID. Use `scripts/resolve-models.js --provider <provider> --capabilities <path>`
+For Grok and Antigravity `model:null` roles lacking a class, use the first listed
+provider model in saved capabilities and record the exact ID.
+Use `scripts/resolve-models.js --provider <provider> --capabilities <path>`
 with saved T3 capabilities JSON; missing or malformed
 capabilities, unavailable models, or unsupported effort holds resolution without
 substitution. Claude exact IDs resolve from capabilities, retiring alias and
-transcript read-back. Validate provider, model, and effort
+transcript read-back. A Codex or Claude role with neither model nor class is an
+intentional absence and holds. Validate provider, model, and effort
 against the guide and actual launch capability. Stored `modeId` and other
 permission fields are conservative intent, not proof of effective permission
 parity or a security boundary. Requested settings, input acceptance, effective

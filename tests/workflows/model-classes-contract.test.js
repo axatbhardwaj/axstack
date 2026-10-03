@@ -38,13 +38,14 @@ const modelRules = [
   },
   {
     name: 'transcript retirement', path: 'routing.md',
-    concepts: [/Claude/i, /exact|resolved|precise/i, /\b(?:ID|identifier)s?\b/i, /capabilities/i, /replac|retir|supersed/i, /transcript/i],
+    concepts: [/Claude/i, /exact|resolved|precise/i, /\b(?:ID|identifier)s?\b/i,
+      /capabilities.*(?<!-)\b(?:replac|retir|supersed)\w*\b(?!\s+by\b).*transcript|transcript.*(?<!-)\b(?:replaced|retired|superseded)\b.*\bby\b.*capabilities/i],
     rewording: 'Capabilities supply each Claude exact ID and retire transcript read-back.',
   },
   {
     name: 'trust preflight exemption', path: 'automations.md',
-    concepts: [/T3/i, /session/i, /Claude/i, /trust/i, /preflight/i, /exempt|unnecessary|dispens/i],
-    rewording: 'Claude trust preflight is unnecessary for sessions running in T3.',
+    concepts: [/^\s*T3 sessions?\b/i, /Claude/i, /trust/i, /preflight/i, /(?<!-)\b(?:exempt|unnecessary|dispens\w*)\b/i],
+    rewording: 'T3 sessions can dispense with Claude trust preflight.',
   },
 ];
 
@@ -58,6 +59,32 @@ for (const { name, path, concepts, rewording } of modelRules) {
     // One shared inversion for all rules, rather than hand-picked per-rule flips.
     expect(requires(`Do not ${matches[0]}`, ...concepts)).toBe(false);
     expect(requires(rewording, ...concepts)).toBe(true);
+  });
+}
+
+const holdouts = {
+  'trust preflight exemption': 'T3 sessions treat Claude trust preflight as unnecessary.',
+  'transcript retirement': 'Transcript read-back is replaced by capabilities as the source of Claude exact IDs.',
+};
+
+for (const { name, path, concepts } of modelRules.filter(({ name }) => name in holdouts)) {
+  const rule = sentences(read(`skills/axstack/references/${path}`))
+    .find((sentence) => requires(sentence, ...concepts));
+  test(`T3 model rule: ${name} rejects antonym prefixes`, () => {
+    for (const prefix of ['non', 'un', 'non-', 'un-']) {
+      const inverted = rule.replace(/\b(exempt|unnecessary|dispens\w*|replac\w*|retir\w*|supersed\w*)\b/gi, `${prefix}$1`);
+      expect(requires(inverted, ...concepts), inverted).toBe(false);
+    }
+  });
+  test(`T3 model rule: ${name} rejects actor swaps and accepts a second holdout`, () => {
+    // Swap the actors using the same operation for both semantic classes.
+    const actors = name === 'trust preflight exemption' ? ['T3', 'Claude'] : ['capabilities', 'transcript read-back'];
+    for (const sentence of [rule, holdouts[name]]) {
+      const inverted = sentence.replace(new RegExp(actors[0], 'i'), '__actor__')
+        .replace(new RegExp(actors[1], 'i'), actors[0]).replace('__actor__', actors[1]);
+      expect(requires(inverted, ...concepts), inverted).toBe(false);
+    }
+    expect(requires(holdouts[name], ...concepts)).toBe(true);
   });
 }
 
