@@ -12,16 +12,15 @@ test('duplicate pass still runs read-only discovery into its own note', () => {
 });
 
 test('dispatching owner confirms its own brief once when a worker asks', () => {
-  const text = compact('skills/axstack/references/orca-runtime.md');
-  expect(text).toMatch(/worker asks[^.]*confirm[^.]*brief[^.]*dispatching owner[^.]*once/i);
-  expect(text).toMatch(/confirmation[^.]*never[^.]*trust or permission prompt/i);
+  const text = compact('skills/axstack/references/t3-runtime.md');
+  expect(text).toMatch(/dispatching owner[^.]*confirm[^.]*worker's own brief question once/i);
+  expect(text).toMatch(/Never answer trust or permission prompts/i);
 });
 
-test('an idle PR coordinator is bounded, not awaited indefinitely', () => {
+test('an idle PR job holds incomplete and a stalled owner notifies once', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/idle coordinator[^.]*final agent turn ended without `worker_done`[^.]*nudge[^.]*once/i);
-  expect(text).toMatch(/still idle[^.]*next turn[^.]*without `worker_done`[^.]*or[^.]*five minutes after the nudge[^.]*worker-stop[^.]*unserved/i);
-  expect(text).toMatch(/duplicate[^.]*idle at its prompt[^.]*final agent turn ended without `worker_done`[^.]*more than five minutes[^.]*nudged or not[^.]*stalled owner[^.]*notif/i);
-  expect(text).toMatch(/started coordinator[^.]*waiting on (its )?reviewers[^.]*live reviewer Dispatch or a running wait[^.]*not idle[^.]*never stopped/i);
-  expect(text).toMatch(/nudge[^.]*one brief confirmation[^.]*second ask[^.]*stop rule/i);
+  expect(text).toMatch(/idle final turn[^.]*valid completion receipt[^.]*incomplete/i);
+  expect(text).toMatch(/second ask holds/i);
+  expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*one deduplicated notification/i);
+  expect(text).toMatch(/started coordinator[^.]*waiting on its reviewers[^.]*live reviewer task or running wait[^.]*not idle[^.]*never stopped/i);
 });

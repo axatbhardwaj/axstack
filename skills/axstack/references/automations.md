@@ -1,6 +1,6 @@
 # Native peer-review manager
 
-Read this for the optional native Orca peer-review automation. The historical
+Read this for the optional native T3 peer-review schedule. The historical
 automation specs and plans describe retired designs and are not instructions.
 
 For optional weekly test audits, use the separate packaged
@@ -9,77 +9,55 @@ The native canary below is also required before weekly activation.
 
 ## Topology and schedules
 
-The review manager runs at minutes `0,15,30,45` and invokes
-[axstack-review](../../axstack-review/SKILL.md) for eligible peer reviews.
+The T3 project `axstack-review-lane` uses the VPS's existing
+`axatbhardwaj/axstack` clone with `origin` and `main`.
+Unbound pass worktrees branch from `origin/main` and each pass fetches first.
+Continuity stays at `~/.local/share/axstack/runs/review-manager/progress.md`,
+outside every worktree. Follow the [Run record](run-record.md) and use the
+[Review-manager continuity template](run-record.md#review-manager-continuity-template):
+overwrite its four current-state sections and archive superseded history once
+beside it. A no-change pass appends at most one history line.
 
-Use one dedicated existing Orca workspace owned by this automation. Configure
-native existing-workspace mode with `--fresh-session`, never `--reuse-session`;
-each pass gets a fresh finite manager session. Keep lane continuity and evidence
-at configured durable absolute paths. A manager never checks out a PR branch
-in its workspace. Missed slots do not replay a backlog; the next ordinary pass
-discovers current state. The short packaged review prompt sits beside this file
-and discovers these rules by relative link instead of copying them.
-
-Provision one explicit absolute continuity path per automation ID in the
-scheduled prompt. The repository's absolute Git common directory is a valid
-durable root; missing or non-durable configuration holds admission. Follow the
-[Run record](run-record.md). Each pass
-uses the [Review-manager continuity template](run-record.md#review-manager-continuity-template),
-overwrites its four current-state sections, and archives superseded history once
-in the adjacent history file. A no-change pass appends at most one history line.
-
-This is prompt policy, not proof that Orca starts a fresh session or prevents
-overlapping passes. Before activation a native canary must prove fresh-session
-launch, overlapping-pass behavior, recovery after session loss, nested
-dispatch depth for coordinator-launched leaves, and total process and memory
-effects. A firing timestamp proves neither delivery nor useful completion.
-
-Do not write `~/.claude.json` except through the packaged `trust-path.js`
-preflight for an exact Orca-registered repository root or worktree before a
-Claude launch. The helper changes only that path's trust flag; it does not
-answer any dialog.
+Configure the lane thread via `t3_thread_configure` with the `axstack-owner`
+binding and verify its read-back. Then `schedule_task` uses the packaged prompt,
+`everyMs:900000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
+Record the schedule ID, project, lane binding and pass thread/run identities.
+Each pass compares its own `t3_thread_configuration` with the recorded binding.
+A binding mismatch holds admission.
+Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispatch,
+completion and cleanup boundaries; a manager never checks out a PR branch in
+its pass worktree. Missed slots do not replay a backlog.
 
 ## Session admission
 
-Perform the pass-start predecessor cleanup and sweep in
-[Finite-session teardown](#finite-session-teardown) before discovery or admission.
-Reconcile saved state, current GitHub state, and native Orca Tasks, Dispatches,
-sessions, and liveness across all workspaces belonging to the lane before
-discovery or admission; never infer lane ownership from an empty local workspace.
-Bind the lane to the automation ID and pass to its native run ID, workspace ID,
-and terminal identity, not a title or directory-name guess.
+Perform guarded predecessor retirement in [Finite-session teardown](#finite-session-teardown).
+Reconcile saved state, current GitHub state, and native T3 threads, runs,
+delegated tasks and liveness across the whole lane before discovery or admission.
+Discovery reads every page of PRs and native threads.
+A truncated or failed inventory holds admission and cleanup.
+A pass never admits a PR owned by a live or uncertain earlier pass.
 A confirmed live manager for the same lane remains authoritative.
+The earlier pass wins only when ordering evidence exists.
+Missing ordering or ownership evidence holds admission and never guesses a winner.
+
 Once identified as a duplicate, the new pass does no PR work, makes no further
-shared-record write, touches no live or unsettled resource owned by the live
-manager, and closes only its own exact terminal as its final action under the
-guard below.
-A duplicate pass admits nothing and runs read-only discovery into its own pass
-note in its private evidence folder, recording new eligible events and the unserved count.
-If a duplicate pass finds the live owner's coordinator idle at its prompt, its
-final agent turn ended without `worker_done` for more than five minutes (nudged
-or not), as in [Per-PR jobs](#per-pr-jobs), record the stalled owner in its own
-pass note and send one deduplicated notification under the recorded
-`Notification policy`.
+shared-record write and touches no live or unsettled resource owned by the
+live manager. A duplicate pass admits nothing and runs read-only discovery
+into its own pass note in its private evidence folder, recording new eligible
+events and the unserved count. If a duplicate finds a stalled owner idle at its
+prompt with a final turn lacking a completion receipt for more than five
+minutes (nudged or not), record it in that private note and send one deduplicated
+notification under the recorded `Notification policy`.
 Unknown liveness blocks admission and shared-record writes; it does not
-authorize takeover, cleanup, or a duplicate manager. Preserve `user_takeover`
-and other user-owned sessions.
+permit takeover or cleanup. Preserve user-taken-over threads.
+This is prompt policy, not an atomic lock: the overlap canary must demonstrate
+one admission owner before activation. Count all unsettled PR jobs and descendants.
 
-When two new passes overlap, reconcile native run ordering before either admits
-work; the earlier unsettled pass retains the lane. Missing ordering or ownership
-evidence holds admission, never guesses a winner. This is not an atomic lock:
-activation requires an overlap canary proving only one pass admits work. Count
-all unsettled PR jobs and descendants across the lane, not just this workspace.
-Read every page of native runs, workers, and workspace inventory; truncated or
-failed inventory holds admission and cleanup rather than implying absence.
-
-A prior manager does not retain the lane merely because its automation run
-status says failed or dispatched. Reconcile a surviving prior terminal using
-exact identity and proven completion from native state before treating it as
-live or releasing ownership. Require confirmed process exit for its exact
-terminal incarnation, saved continuity, and settlement of all owned jobs and
-descendants before ownership release. A completed run row alone does not prove exit.
-If these facts remain unknown, report the hold at the durable decision location;
-do not silently stand down forever or replace a potentially live owner.
+A failed scheduled run alone proves neither predecessor exit nor release.
+Reconcile exact thread/run identity and terminal evidence, saved continuity,
+and settlement of every descendant before releasing ownership.
+Unknown facts hold at the durable decision location; never replace a
+potentially live owner.
 
 ## Discovery and coverage
 
@@ -130,38 +108,30 @@ PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
-At PR-job and reviewer dispatch, apply [Readable sidebar](workspace-hygiene.md#settlement).
 Include [Safe deletion](workspace-hygiene.md#safe-deletion) in PR-job briefs.
 
 The logical manager lane owns ongoing discovery and continuity across finite
 sessions; the bounded PR coordinator owns only its admitted event. Do not create a second live owner or
 writer for the same PR. Reuse an existing valid per-PR worktree, owner, and
-unchanged receipts before creating anything. Otherwise create one separate
-Orca worktree per PR job, parented to that repository's primary worktree, and
-pin the observed head and base. The bounded PR coordinator loads the
+unchanged receipts before creating anything. Otherwise create one separate detached checkout
+per PR job from its existing
+host clone: `git -C <host clone> worktree add --detach <run>/checkouts/<key> <sha>`;
+pin the observed head and base. A repository without a host clone is a held job. The bounded
+PR coordinator loads the
 review skill, launches only the reviewers that skill owns,
 handles the current actionable event, returns exact receipts, then settles.
-Check the admitted coordinator soon after start and while waiting, using native
-terminal and Dispatch inspection. If an idle coordinator's final agent turn ended
-without `worker_done` and it is at its prompt, nudge it once by typed terminal
-input restating its brief.
-For this lane, the nudge is the one brief confirmation, and a second ask follows
-this stop rule, not an open-ended hold; see [Orca runtime](orca-runtime.md) for
-the confirmation boundary.
-If still idle because its next turn ended without `worker_done` or it stays idle
-at its prompt five minutes after the nudge, use native `worker-stop`, reconcile
-its Task, Dispatch, and descendants, and record the event unserved (INCOMPLETE,
-re-admissible).
-A started coordinator waiting on its reviewers (a live reviewer Dispatch or a
-running wait) is not idle and is never stopped by this rule.
-Once the tree is settled, continue discovery and admission;
-an uncertain stop or live descendant retains the slot and holds admission.
+Check admitted delegated jobs with persisted `task_status` before thread reads
+under [T3 runtime](t3-runtime.md). For a worker's own brief question, confirm the
+brief once; a second ask holds. An idle final turn without a valid completion
+receipt is incomplete, not successful. A started coordinator waiting on its
+reviewers (a live reviewer task or running wait) is not idle and is never
+stopped for waiting. Reconcile terminal failure and all descendants before
+recording an event unserved and re-admissible; uncertain liveness retains the slot.
 Settlement returns continuity to the manager rather than retaining an idle PR
-coordinator. Reviewers retain the isolation required by `axstack-review`:
-each runs in a separate Orca child worktree, writes probes and evidence to
-its private per-Dispatch run folder, and reads back evidence before removal.
+coordinator. Each reviewer uses a separate driver-made detached checkout and
+private evidence folder, with evidence read-back before removal.
 
-Set `TMPDIR` for manager and job commands to each Dispatch's 0700 private
+Set `TMPDIR` for manager and job commands to each dispatch's 0700 private
 `<run dir>/evidence/<dispatch>/` folder under
 [Workspace hygiene](workspace-hygiene.md).
 Never write temporary files under `/` or another shared root. Never delete
@@ -173,7 +143,7 @@ An unchanged exact head and unchanged event identity creates no job; an
 unchanged exact head with a new event identity remains actionable. Event
 identity includes the applicable review ID and body digest, request identity, or other current GitHub event
 receipt. Dedupe from current GitHub state,
-native Orca Task and Dispatch state, and the existing compact run record; do
+native T3 task and thread/run state, and the existing compact run record; do
 not create machine cursor files or a queue engine. Record enough to resume: PR,
 head, base, event identity, mode, owner and worker receipts, verdict,
 submission receipt, hold, and next action. GitHub remains authoritative for
@@ -182,16 +152,16 @@ open state, revisions, reviews, checks, and merge state.
 ## Held job settlement
 
 Use native runtime inspection, not saved prose or silence, to identify an
-actual hold and bind it to the exact Task, Dispatch, terminal, event, and
+actual hold and bind it to the exact task, thread/run, event, and
 evidence. Permission prompts and provider safety refusals are incomplete held
 outcomes: do not answer or bypass them, retry their content through another
-model, or claim completion. Do not forge `worker_done`. Record the held event
+model, or claim completion. Do not forge `AXSTACK-DONE`. Record the held event
 identity and its resume condition in durable continuity. An unchanged hold creates no new job, no
 retry, and no repeated notification; a changed event is reconsidered against
 the original authority rather than assumed safe.
 
-Preserve the prompt or refusal evidence, then follow the version-matched
-orchestration recovery and cleanup guidance for every owned descendant. Use
+Preserve the prompt or refusal evidence, then follow the [T3 runtime](t3-runtime.md)
+recovery and cleanup guidance for every owned descendant. Use
 only supported native lifecycle actions and receipt-supplied next actions;
 saved status, contact loss, and a coordinator narrative do not settle a worker.
 Unknown or user-owned work is never a kill target. Do not release the PR slot
@@ -200,7 +170,7 @@ Unrelated eligible PRs continue after the tree is verified settled, while the
 held PR waits durably for its resume condition.
 
 Execution settlement and cleanup retention are separate. Positive full-tree
-process exit plus native Task and Dispatch settlement frees the slot. Retained
+process exit plus native task and thread/run settlement frees the slot. Retained
 metadata does not occupy an execution slot: preserve it and its evidence for
 reconciliation without reviving the failed job. Likewise, an archive hold
 blocks workspace removal, not settled execution capacity; record the cleanup
@@ -212,7 +182,7 @@ execution teardown pauses the lane before another pass can admit work rather
 than claiming capacity from an uncertain process tree.
 
 When the current event is handled, settle the PR job and descendants, then use
-native `worker-release` for their worker terminals. For a completed non-author
+`t3_thread_organize` to settle their terminal threads after verifying terminal run evidence. For a completed non-author
 PR-job worktree with dirty source or unpushed commits, use the
 [Workspace hygiene](workspace-hygiene.md) salvage path before removal.
 Preserve review evidence not yet durable, pending external results, and user-owned
@@ -274,48 +244,47 @@ or separate model gate.
 
 ## Finite-session teardown
 
-At pass start, clear finished predecessor terminals of the same automation in
-the dedicated workspace only after proving completion, by the exact-handle
-fallback in [Workspace hygiene](workspace-hygiene.md).
-Then run the driver-start orphan sweep for repositories listed in this lane's
-run record plus registered repositories on this host containing eligible settled resources
-of any Axstack run on this host, under the same guards. The sweep is silent when nothing was removed;
-record sweep results and holds in the continuity record's Open holds table.
+Each pass retires settled predecessor passes and reports the retained worktree
+count. Retirement requires terminal run evidence and settled descendants,
+durable continuity, evidence read-back and verified salvage where needed;
+follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
+Then run the driver-start orphan sweep under Workspace hygiene for recorded
+repositories and other eligible settled resources on this host; the sweep is
+silent when nothing was removed. Record sweep results and holds in continuity's
+Open holds table.
+`t3_thread_organize` settle/archive changes metadata only; exact guarded Git
+worktree removal remains separate. Unknown, active or user-taken-over threads,
+ambiguous publication and failed salvage stay preserved.
+Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule
+with `update_scheduled_task` using `enabled:false` and hold.
+Read back the disabled schedule with `list_scheduled_tasks`; uncertainty holds.
 
-After admission closes, settle every owned PR job and all descendants before the
-manager session closes; active or unknown descendants keep their PR slot occupied
-and must be reconciled from native state. Release settled worker terminals and
-complete guarded evidence archival and worktree cleanup in this pass. Save
-continuity, open decisions, and the last pass summary using the linked template;
-read back all four sections and the save before closing.
-Use the exact native terminal close for this pass's own terminal from its run
-receipt: `orca terminal close --terminal <exact-handle> --json`. Terminal close
-is the final action. Never use `--all`, a broad or name selector, or another
-terminal in the dedicated workspace; uncertain identity or close outcome holds
-the lane for native reconciliation, never a guessed retry.
-If its own close returns `runtime_error`, leave the terminal for the next pass;
-this expected close failure is not a hold.
-Waiting PRs still occupy zero slots once their owned trees settle. A failed
-cleanup remains a recorded hold with its exact resume condition, but does not
-keep settled execution active.
+After admission closes, settle every owned PR job and all descendants before
+the manager pass ends. Complete guarded evidence archival and worktree cleanup.
+Save continuity, open decisions, and the last pass summary using the linked
+template; read back all four sections and the save before ending the finite turn.
+Waiting PRs occupy zero slots after their trees settle. Cleanup retention holds
+removal, not settled execution capacity. The next pass retires this settled pass.
 
-The activation canary must prove fresh sessions in the dedicated workspace,
-same-lane overlap admission, recovery after session loss, nested dispatch depth,
-process and memory effects, and terminals in the dedicated workspace bounded
-over repeated passes. Do not activate on source checks alone.
+## Activation canary
+
+The canary runs two overlapping `run_scheduled_task_now` passes and proves one
+admission owner per PR. The canary reviews or correctly no-ops one real PR event.
+The canary reconciles a killed predecessor.
+With a temporary limit equal to the current count, the canary disables the
+schedule and verifies that the following interval creates zero new pass worktrees.
+Disable the previous automation only after all four T3 canary checks pass.
+Source checks alone do not prove launch, overlap, recovery, or growth behavior.
 
 ## Recovery and limits
 
-On a lost manager session, native recovery first reconciles actual Orca
-workers and Dispatches, GitHub state, and the compact run record. Reuse valid
-unchanged receipts. Unknown ownership blocks only the affected PR, as does
-unknown liveness, approval, or publication outcome; recovery never copies old
-capability, replaces a live writer, or takes over live user work. Other
-unambiguous work may proceed.
+On a lost manager session, reconcile native T3 workers, task status, thread/run
+state, GitHub state, and the compact run record. Reuse valid unchanged receipts.
+Unknown ownership blocks only the affected PR; unknown liveness, approval or
+publication outcome preserves its hold. Recovery never replaces a live writer
+or takes over user work. Other unambiguous work can proceed.
 
-Use only native schedules and Orca orchestration. Add no daemon, shell precheck,
+Use only native T3 schedules and orchestration. Add no daemon, shell precheck,
 watchdog script, custom scheduler, cursor or pending sidecar, runtime database,
 workflow state machine, decision interpreter, or programmatic escalation gate.
-The live VPS activation, native fresh-session and overlapping-pass behavior, recovery path,
-nested dispatch depth for coordinator-launched leaves, and resource ceiling
-remain unverified until the canary succeeds.
+Live VPS activation and the four canary outcomes remain unverified until exercised.

@@ -139,5 +139,5 @@ test('launch contract preflights the exact Claude checkout and holds on any rema
   const automations = readFileSync(resolve(import.meta.dir, '../../skills/axstack/references/automations.md'), 'utf8');
   expect(runtime).toMatch(/from the installed `axstack` skill directory[\s\S]*bun scripts\/trust-path\.js --path <exact checkout path>/i);
   expect(runtime).toMatch(/trust dialog[\s\S]*hold/i);
-  expect(automations).toMatch(/\.claude\.json[\s\S]*trust-path\.js[\s\S]*registered/i);
+  expect(automations).toContain('[T3 runtime](t3-runtime.md)');
 });

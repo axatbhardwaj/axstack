@@ -1,7 +1,7 @@
 {
-  "version": 7,
+  "version": 8,
   "evidence": "behavioral evaluation inputs and expected decisions; this fixture is not a model evaluation result, scheduler implementation, or live-runtime receipt",
-  "migration": "v7 adds exact own-terminal close, native predecessor reconciliation, and bounded terminal retention to the dedicated-workspace holdouts.",
+  "migration": "v8 explicitly migrates dedicated-workspace terminal-close holdouts to T3 pass threads, guarded Git retirement, and storage limits; v7 source corpus is preserved in the base revision.",
   "cases": [
     {
       "id": "thirty-peer-pr-coverage",
@@ -12,25 +12,25 @@
     {
       "id": "finite-unchanged-pass",
       "input": "a fresh manager session in its dedicated existing workspace reconciles the lane, observes no new exact-head event, and has no descendants",
-      "expected": ["create no PR job", "save compact reconciled continuity", "exact close of its own terminal as the final action"],
+      "expected": ["create no PR job", "save compact reconciled continuity", "end the finite T3 turn after saving continuity"],
       "forbidden": ["retain an idle manager chat", "repeat an unchanged review"]
     },
     {
-      "id": "duplicate-manager-self-close",
+      "id": "duplicate-manager-finite-turn",
       "input": "a new review-manager session in the dedicated workspace finds another confirmed live manager with three active PR jobs in the same lane",
-      "expected": ["perform no PR work", "make no shared-record write", "exact close of only the new duplicate terminal"],
+      "expected": ["perform no PR work", "make no shared-record write", "end only the duplicate finite T3 turn"],
       "forbidden": ["interrupt the established manager", "borrow capacity from an unrelated run"]
     },
     {
       "id": "owned-shell-cleanup",
       "input": "all descendants settled; three exact worker terminals are owned, while review reports, a dirty unpushed candidate, and a user-owned terminal remain",
-      "expected": ["release only the three exact owned worker terminals", "preserve protected candidate, evidence, and user terminal", "save continuity before exact own-terminal close"],
+      "expected": ["settle only the three exact owned T3 threads", "preserve protected candidate, evidence, and user terminal", "save continuity before ending the finite T3 turn"],
       "forbidden": ["blanket-close the workspace", "delete or clean preserved candidate state"]
     },
     {
       "id": "durable-review-decision",
       "input": "a peer review raises an architecture decision after all descendants settle; exact head/base and finding evidence must survive manager closure",
-      "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "close the exact manager terminal only after saving continuity"],
+      "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "end the finite manager turn only after saving continuity"],
       "forbidden": ["depend on the closed manager chat for the answer", "treat Telegram or silence as authority"]
     },
     {
@@ -42,7 +42,7 @@
     {
       "id": "unsettled-descendant",
       "input": "current PR work appears finished, but its reviewer is live and a descendant release result is unknown while saved state says completed",
-      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not close the manager terminal until descendants settle"],
+      "expected": ["reconcile native descendant state", "keep the PR slot occupied", "do not end the manager pass until descendants settle"],
       "forbidden": ["trust stale completed state", "release or close unknown-live resources"]
     },
     {
@@ -65,7 +65,7 @@
     },
     {
       "id": "permission-prompt-hold",
-      "input": "native inspection confirms the exact automation-owned reviewer is waiting at a permission prompt and has not sent worker_done",
+      "input": "native inspection confirms the exact automation-owned reviewer is waiting at a permission prompt and has not sent AXSTACK-DONE",
       "expected": ["record an incomplete held outcome with prompt evidence", "use only the runtime-supported recovery path", "keep the slot until the whole owned tree is verified settled"],
       "forbidden": ["answer or bypass the prompt", "forge completion or kill unknown work"]
     },
@@ -102,7 +102,7 @@
     {
       "id": "settled-job-release-and-cleanup",
       "input": "the PR job and reviewers settle with private evidence archived and read back, and their worktrees have no protection holds",
-      "expected": ["worker-release the settled worker terminals", "retire reviewer worktrees through axstack-cleanup", "retire the PR-job worktree in the same pass"],
+      "expected": ["settle terminal T3 threads after verifying run evidence", "retire reviewer worktrees through axstack-cleanup", "retire the PR-job worktree in the same pass"],
       "forbidden": ["close the dedicated manager workspace", "remove unarchived evidence", "retain clean worktrees until merge"]
     },
     {
@@ -119,9 +119,39 @@
     },
     {
       "id": "workspace-local-temporary-files",
-      "input": "manager and PR-job commands need temporary files while running in their respective Orca workspaces",
+      "input": "manager and PR-job commands need temporary files while running in their respective T3 workspaces",
       "expected": ["set TMPDIR inside each command's owning workspace", "validate ownership and containment before cleanup", "preserve uncertain temporary paths"],
       "forbidden": ["write temporary files under / or a shared root", "sweep a shared temporary directory"]
+    },
+    {
+      "id": "binding-mismatch",
+      "input": "The unbound pass inherits a model or effort differing from the recorded axstack-owner binding.",
+      "expected": ["compare t3_thread_configuration with recorded binding", "hold admission"],
+      "forbidden": ["admit a PR", "substitute a model"]
+    },
+    {
+      "id": "overlap-ordering-hold",
+      "input": "Two overlapping passes find the same PR but native ordering or earlier ownership is uncertain.",
+      "expected": ["read every inventory page", "hold admission and cleanup when inventory is truncated", "never admit an earlier live or uncertain owned PR"],
+      "forbidden": ["guess a winner", "replace the earlier owner"]
+    },
+    {
+      "id": "retained-worktree-limit",
+      "input": "Retained lane worktrees exceed authorized storage limit 20 after settled predecessor retirement.",
+      "expected": ["report retained count", "update_scheduled_task enabled:false and hold", "read back disabled state"],
+      "forbidden": ["continue admitting work", "delete active worktrees"]
+    },
+    {
+      "id": "four-part-canary",
+      "input": "The previous automation still runs; candidate T3 schedule needs activation evidence.",
+      "expected": ["two overlapping run_scheduled_task_now passes prove one owner", "one real PR event is reviewed or correctly no-ops", "reconcile killed predecessor", "temporary limit equal to current count disables schedule and next interval creates zero new pass worktrees"],
+      "forbidden": ["disable previous automation before all checks pass", "claim live canary from source tests"]
+    },
+    {
+      "id": "missing-host-clone",
+      "input": "An eligible peer PR belongs to a repository without an existing host clone.",
+      "expected": ["record a held job", "continue cross-repo coverage"],
+      "forbidden": ["clone a new repository without authority", "silently omit the PR"]
     }
   ]
 }

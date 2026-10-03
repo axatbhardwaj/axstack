@@ -48,24 +48,24 @@ test('current manager guidance has no numeric PR execution cap', () => {
 
 test('manager contract uses bounded PR jobs and native recovery without a queue engine', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/one separate Orca worktree per PR job/i);
+  expect(text).toMatch(/one separate detached checkout per PR job/i);
   expect(text).toMatch(/manager[^.]*never[^.]*checks? out[^.]*PR branch/i);
   expect(text).toMatch(/descendants[^.]*active|active[^.]*descendants/i);
   expect(text).toMatch(/settlement[^.]*frees[^.]*slot|slot[^.]*freed[^.]*settled/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
-  expect(text).toMatch(/canary[^.]*fresh-session launch[^.]*overlapping-pass behavior[^.]*recovery/i);
-  expect(text).toMatch(/canary[^.]*nested dispatch depth[^.]*coordinator-launched leaves/i);
+  expect(text).toMatch(/canary[^.]*two overlapping[^.]*run_scheduled_task_now[^.]*one admission owner/i);
+  expect(text).toMatch(/canary[^.]*reconciles a killed predecessor/i);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
 test('manager sessions reconcile before admission in the dedicated workspace', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/native existing-workspace mode[^.]*--fresh-session/i);
-  expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native Orca[^.]*before[^.]*admission/i);
+  expect(text).toMatch(/schedule_task[^.]*everyMs:900000[^.]*bindToCurrentThread:false/i);
+  expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native T3[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no further shared-record write/i);
-  expect(text).toMatch(/duplicate[^.]*closes only its own exact terminal/i);
+  expect(text).toMatch(/duplicate[^.]*read-only discovery[^.]*own pass note/i);
   expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
 });
 
@@ -77,14 +77,14 @@ test('manager event identity survives same-head changes', () => {
 });
 
 test('manager jobs use private per-Dispatch scratch without broad cleanup', () => {
-  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  const runtime = compact('skills/axstack/references/t3-runtime.md');
   const manager = compact('skills/axstack/references/automations.md');
-  expect(runtime).toMatch(/TMPDIR[^.]*0700 folder/i);
+  expect(runtime).toMatch(/TMPDIR[^.]*0700 owned folder/i);
   expect(runtime).toMatch(/real path[^.]*recorded run evidence folder/i);
-  expect(runtime).toMatch(/not a symbolic link[^.]*recorded Dispatch owner/i);
-  expect(runtime).toMatch(/exact validated owned path[^.]*no glob or parent-root deletion/i);
-  expect(runtime).toMatch(/uncertain temporary paths[^.]*preserv/i);
-  expect(runtime).toMatch(/worktree-local temporary paths[^.]*same guards/i);
+  expect(runtime).toMatch(/no symlink[^.]*dispatch owner/i);
+  expect(runtime).toMatch(/exact validated owned path[^.]*no glob[^.]*no parent-root deletion/i);
+  expect(runtime).toMatch(/Uncertain paths[^.]*preserv/i);
+  expect(runtime).toMatch(/equivalent guards[^.]*worktree-local paths/i);
   expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
   expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
   expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
@@ -92,12 +92,12 @@ test('manager jobs use private per-Dispatch scratch without broad cleanup', () =
 });
 
 test('held manager jobs settle natively before releasing capacity', () => {
-  const runtime = compact('skills/axstack/references/orca-runtime.md');
+  const runtime = compact('skills/axstack/references/t3-runtime.md');
   const manager = compact('skills/axstack/references/automations.md');
   expect(runtime).toMatch(/permission prompt[^.]*provider safety refusal[^.]*held[^.]*incomplete/i);
   expect(runtime).toMatch(/never[^.]*bypass[^.]*retry[^.]*another model/i);
   expect(manager).toMatch(/native runtime inspection[^.]*actual hold/i);
-  expect(manager).toMatch(/do not forge[^.]*worker_done/i);
+  expect(manager).toMatch(/do not forge[^.]*AXSTACK-DONE/i);
   expect(manager).toMatch(/release[^.]*slot[^.]*until[^.]*verif(?:y|ies)[^.]*settlement/i);
   expect(manager).toMatch(/unresolved execution teardown[^.]*pause[^.]*lane/i);
   expect(manager).toMatch(/unknown[^.]*user-owned[^.]*never[^.]*kill/i);
@@ -121,8 +121,8 @@ test('execution settlement frees capacity independently of retained cleanup stat
 test('manager pass ends after compact continuity and PR resource cleanup', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
-  const teardown = text.split('## Finite-session teardown')[1].split('## Recovery and limits')[0];
-  expect(teardown).toMatch(/Save continuity[^.]*last pass summary[\s\S]*?exact native terminal close/i);
+  const teardown = text.split('## Finite-session teardown')[1].split('## Activation canary')[0];
+  expect(teardown).toMatch(/Save continuity[^.]*last pass summary[\s\S]*?read back[\s\S]*?ending the finite turn/i);
   expect(text).not.toMatch(/terminal close --worktree|old pass worktree/i);
 });
 
@@ -167,15 +167,15 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(7);
-  expect(data.migration).toMatch(/v7[^.]*exact own-terminal close/i);
+  expect(data.version).toBe(8);
+  expect(data.migration).toMatch(/v8[^.]*T3 pass threads/i);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
   expect(data.evidence).toMatch(/not a scheduler implementation|not.*runtime receipt/i);
   const holdoutIds = [
     'thirty-peer-pr-coverage',
     'finite-unchanged-pass',
-    'duplicate-manager-self-close',
+    'duplicate-manager-finite-turn',
     'owned-shell-cleanup',
     'durable-review-decision',
     'same-head-new-peer-request',
@@ -188,7 +188,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('bddf98f6b4414c38f6901aa6b82bcf7b6e08c7f7b7e8a0eb37fbc078438a2064');
+  )) .toBe('6b5489e7ef5a1d2c66d69fbf5c51c972bb09e1b6e9a32efea80072b69ac4797c');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',
@@ -201,6 +201,8 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'closed-pr-worktree-cleanup',
     'compact-continuity-archive',
     'workspace-local-temporary-files',
+    'binding-mismatch', 'overlap-ordering-hold', 'retained-worktree-limit',
+    'four-part-canary', 'missing-host-clone',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();
