@@ -9,6 +9,10 @@ Record each decision and native readback in the private run record.
 
 ## Safe deletion
 
+Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.
+Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.
+Evidence files still go to the private `<run>/evidence/<key>/` folder.
+
 Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree.
 For example, `rm -rf -- "${EV:?}/mut"` requires a validated owned evidence path.
 Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target.

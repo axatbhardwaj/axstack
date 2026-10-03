@@ -3,6 +3,8 @@
 Use this checklist for every HTML explanation and other visual artifacts where
 rendering matters.
 
+Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
+
 1. Identify the final artifact bytes and theme. The explicit user theme wins;
    otherwise use the dark default.
 2. Delegate the rendered pass through [UI verification](../../axstack/references/ui-verification.md).

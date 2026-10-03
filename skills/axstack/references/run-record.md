@@ -47,6 +47,7 @@ Per dispatch record key, mechanism, requested target and read-back,
 taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA,
 checkout path with candidate/base SHAs, evidence folder, scope/authority,
 owner, pending receipts, hold and Next.
+Each dispatch row must record the provider/model echo, configuration read-back, and post-completion HEAD/porcelain check result.
 
 Update before dispatch and after each verified transition. On resume,
 reconcile the record with actual T3 threads and runs, exact revisions, forge/PR
@@ -183,6 +184,10 @@ Resume: <commands or evidence refs bound to exact revisions>
 | Task | Dependencies | Owner | State | Revision evidence | Next action |
 | --- | --- | --- | --- | --- | --- |
 | <task> | <task IDs or none> | <role + session ID + worktree, or receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
+
+| Dispatch key | Provider/model echo | Configuration read-back | Completion receipt | Post-completion HEAD/porcelain check result |
+| --- | --- | --- | --- | --- |
+| <key> | <actual provider/model + evidence ref> | <options/runtimeMode + evidence ref> | <marker + IDs + evidence ref> | <compared HEAD/status + pass/hold + evidence ref> |
 
 Status: <active/paused/held/complete/Archived>
 Updated: <UTC timestamp>

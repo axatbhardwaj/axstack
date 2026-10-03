@@ -52,7 +52,7 @@ test('execution binds the T3 driver thread and one authoritative dispatch attemp
   const implement = normalize(read('skills/axstack-implement/SKILL.md'));
   const runtime = normalize(read('skills/axstack/references/t3-runtime.md'));
   expect(implement).toMatch(/T3 driver thread[^.]*one authoritative[^.]*dispatch attempt/i);
-  expect(runtime).toContain("The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked files or repairs an author's source.");
+  expect(runtime).toContain("The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked candidate source or tests or repairs an author's source.");
   expect(runtime).toContain('Input acceptance, started state, effective settings and completed work must remain distinct evidence.');
   expect(runtime).toContain('Never answer trust or permission prompts; brief confirmation adds no authority and does not answer a harness or tool dialog.');
 });

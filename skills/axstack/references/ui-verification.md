@@ -8,6 +8,7 @@ The PR writer remains the sole writer.
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch and use its
 driver-made disposable detached checkout at the pinned candidate SHA.
 The verifier uses T3 `preview_*` tools for rendered checks.
+Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
 
 Ask for screenshots and observed interactions, accessibility, desktop and
 mobile layouts, and reduced-motion behavior where relevant. The verifier
