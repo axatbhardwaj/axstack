@@ -27,7 +27,7 @@ test('first run PR arms maintain watch and later verified PRs join', () => {
   const text = ref();
   expect(text).toMatch(/first PR[\s\S]*exactly one[\s\S]*axstack-watch[\s\S]*maintain mode/i);
   expect(text).toMatch(/later[\s\S]*PRs[\s\S]*readback/i);
-  expect(text).toMatch(/10.minute[\s\S]*harness[\s\S]*Orca fallback/i);
+  expect(text).toMatch(/bound[\s\S]*schedule_task[\s\S]*everyMs:600000[\s\S]*scheduledTaskId/i);
   expect(text).toMatch(/until[\s\S]*merge.ready[\s\S]*implement §6 step 4[\s\S]*after[\s\S]*watch §5/i);
   expect(text).toMatch(/every watched PR[\s\S]*merged or closed[\s\S]*release step[\s\S]*settled or not applicable/i);
 });
@@ -46,7 +46,7 @@ test('release authority is per run and release closes after install', () => {
 
 test('resume, cancel, and notifications retain decisions and budgets', () => {
   const text = ref();
-  expect(text).toMatch(/every entry[\s\S]*reconcile[\s\S]*owner[\s\S]*Dispatch[\s\S]*approved revision[\s\S]*wakes/i);
+  expect(text).toMatch(/every entry[\s\S]*reconcile[\s\S]*owner[\s\S]*attempt[\s\S]*approved revision[\s\S]*wakes/i);
   expect(text).toMatch(/wakes[\s\S]*do not reset attempt budgets[\s\S]*do not grant approvals/i);
   expect(text).toMatch(/cancel[\s\S]*off[\s\S]*stops new actions[\s\S]*watch §6/i);
   expect(text).toMatch(/decision holds[\s\S]*always eligible/i);

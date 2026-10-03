@@ -172,7 +172,7 @@ test('structural: active PR parallelism has no fixed count', () => {
 
   const contracts = readFileSync(join(skillsDir, 'axstack', 'references', 'contracts.md'), 'utf8');
   expect(contracts).toMatch(/no fixed active-PR count/i);
-  expect(contracts).toMatch(/one Orca execution host owns a run/i);
+  expect(contracts).toMatch(/one T3 host\/server owns a run/i);
   expect(contracts).toMatch(/exactly one writer per candidate/i);
 });
 
@@ -365,7 +365,7 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
   expect(/Opus high/i.test(text) && /Sol high/i.test(text), 'contracts must preserve high-stakes author/reviewer routing').toBeTruthy();
   expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
   expect(/axstack-driver|effective effort|return[^.]*medium/i.test(text), 'contracts must not carry a driver profile or effort rule').toBe(false);
-  expect(/current chat[^.]*driver|driver[^.]*current chat/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
+  expect(/current T3 thread[^.]*driver|driver[^.]*current T3 thread/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
   expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
 });
 

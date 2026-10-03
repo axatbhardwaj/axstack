@@ -27,8 +27,8 @@ test('design lens: installed roles cannot silently enter an active snapshot', ()
   expect(text('skills/axstack/references/routing.md')).toMatch(/Later installed or changed roles need an\s+explicit user decision to enter the snapshot/i);
 });
 
-test('design lens: live profiles remain authoritative for role snapshots', () => {
-  expect(text('skills/axstack/references/routing.md')).toMatch(/Live profiles are authoritative at snapshot time and for availability; bundled presets are setup inputs, not runtime proof/i);
+test('design lens: installed roles and saved capabilities govern role snapshots', () => {
+  expect(text('skills/axstack/references/routing.md')).toMatch(/snapshot all role IDs from installed `skills\/axstack\/roles\.json`/i);
 });
 
 test('design lens: small ambiguity does not force substantial-work paperwork', () => {

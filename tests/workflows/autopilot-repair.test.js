@@ -36,7 +36,7 @@ rule('runtime end waits for Release', runtime, 'Stop the chosen wake only', /rel
 rule('implement notification allowlist', implement, '`axstack-relay` sends only', /serious risk immediately.*genuine blocked operation/);
 rule('watch notification allowlist', watch, '[axstack-relay](../axstack-relay/SKILL.md) only', /serious risk immediately.*genuine blocked operation/);
 rule('runtime notification allowlist and budget', runtime, 'The driver records one Notification policy:', /only for a user-decision hold.*at most two.*serious-risk hold/);
-rule('relay policy exception', () => read('skills/axstack-relay/SKILL.md'), 'merge-ready, merged, and completion stay in Orca', /unless the recorded Notification policy names it/);
+rule('relay policy exception', () => read('skills/axstack-relay/SKILL.md'), 'merge-ready, merged, and completion stay in the driver conversation', /unless the recorded Notification policy names it/);
 rule('relay shared milestone budget', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name', /at most two merge-ready\/merged milestones per run/);
 rule('relay categories remain bounded', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /user-decision holds.*at most two merge-ready\/merged milestones/);
 rule('AGENTS human npm gate', () => read('AGENTS.md'), 'The human merges the release PR', /approves the npm stage; agents never run/);
@@ -62,14 +62,14 @@ rule('implement diligence repairs before hold', autopilot, 'Diligence FINDINGS d
 rule('spec gate records paused state', autopilot, 'Awaiting human spec approval', /Autopilot: paused.*decision hold/);
 rule('wake expiry records paused state and notification', autopilot, 'On wake expiry', /Autopilot: paused.*Notification policy/);
 rule('missing hosts hold at Align or spec', autopilot, 'A missing install host list', /Align or spec time.*decision hold/);
-rule('running author survives cancellation until settlement', autopilot, 'Cancellation does not cancel', /running author Dispatch.*settle/);
+rule('running author survives cancellation until settlement', autopilot, 'Cancellation does not cancel', /running author run.*settle/);
 rule('Close-out records installed version', autopilot, 'Close-out last', /release and install receipts.*installed version/);
 rule('closed-unmerged watch holds and continues wake', watch, 'A required PR closed without merging', /decision hold.*wake remains active/);
 rule('closed-unmerged runtime holds and continues wake', runtime, 'A required PR closed without merging', /decision hold.*wake remains active/);
 
 rule('silence cannot grant release authority', autopilot, 'The small-work Align read-back names', /silence cannot fill a missing authority or target/);
 rule('relay never sends policy-enabled progress', () => read('skills/axstack-relay/SKILL.md'), 'Progress, CI pending, and completion are never eligible', /merely because a policy exists/);
-rule('implement documents absent merge wake', implement, "driver resumes on the user's next message", /no Orca merge wake exists today/);
+rule('implement verifies forge state on wake', implement, "driver resumes on the user's next message", /verify merge state through the forge on wake/);
 rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms that merge', /tag and wait for the staged publish/);
 rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
 rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
@@ -82,7 +82,7 @@ rule('recordless implement release is inapplicable', implement, 'Without an Auto
 rule('diligence repairs at owning phase', autopilot, 'Diligence FINDINGS during implement', /§6 repair route.*spec, tickets, or release preparation.*resolves them before advancing/);
 rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS during implement', /only a recorded hold pauses autopilot/);
 rule('workflow routine events always stay in Orca', () => read('docs/workflows.md'), 'Progress, CI pending, and completion', /always stay in Orca/);
-rule('implement routine events always stay in Orca', implement, 'Progress, CI pending, and completion', /always stay in Orca/);
+rule('implement routine events always stay in T3', implement, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('watch routine events always stay in T3', watch, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('workflow relay remains bounded', () => read('docs/workflows.md'), 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);

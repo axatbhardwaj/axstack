@@ -28,8 +28,8 @@ Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
 while independent work proceeds; use `paused` when no authorized action can
 advance. A user answer to the hold resumes affected work after reconciliation;
 silence does not.
-At each verified Autopilot transition, mirror the `Autopilot:` line in the
-driver worktree's Orca `--comment`; the private run record remains authoritative.
+At each verified Autopilot transition, update the private run record in the
+T3 driver thread; the private run record remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold eligible under the Notification policy.
 
@@ -54,8 +54,8 @@ and standalone watches never merge. A stack follows its guarded bottom-up rule.
 ## Implement into maintain watch
 
 When implement publishes the run's first PR, arm exactly one `axstack-watch`
-chat-run in authorized maintain mode. Use the 10-minute harness wake, with the
-existing Orca fallback when unavailable. Later run PRs join after verified
+chat-run in authorized maintain mode. Read the [T3 runtime boundary](t3-runtime.md) and use its bound
+`schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId. Later run PRs join after verified
 publication readback; an explicitly adopted PR joins only with its maintenance
 snapshot. The original driver alone routes work; one author writes each
 candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
@@ -104,13 +104,13 @@ mutation require the recorded per-run authority and their existing checks.
 ## Resume, cancel, and notify
 
 At every entry (user message, wake, compaction, or new chat), reconcile the
-owner, authoritative Dispatch, approved revision, PR membership, uncertain
+owner, authoritative attempt, approved revision, PR membership, uncertain
 tags, wakes, publications, and completed receipts under lifecycle and
 run-record before advancing. Only the original driver advances. Wakes do not
 reset attempt budgets and do not grant approvals. Cancel sets `Autopilot: off`,
 stops new actions, and ends the watch under watch §6 with guarded settlement.
-Cancellation does not cancel a running author Dispatch by inference; let it
-report, then settle that exact Dispatch under lifecycle guards without new
+Cancellation does not cancel a running author run by inference; let it
+report, then settle that exact attempt under lifecycle guards without new
 publication.
 
 Use the run's recorded Notification policy through `axstack-relay`.

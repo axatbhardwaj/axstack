@@ -9,20 +9,22 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 test('run snapshot records class resolution and reuses it on resume', () => {
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/for each role[^.]*class[^.]*exact ID[^.]*source[^.]*time/i);
-  expect(routing).toMatch(/resume[^.]*reuse[^.]*snapshot[^.]*never re-resolve/i);
+  expect(routing).toMatch(/resume[^.]*reuse[^.]*snapshot[^.]*no re-resolution/i);
   expect(routing).toMatch(/provider\/model class/i);
 });
 
 test('pre-turn Codex rejection alone amends the routing snapshot with retry lineage', () => {
   const routing = compact('skills/axstack/references/routing.md');
   const runtime = compact('skills/axstack/references/orca-runtime.md');
-  for (const text of [routing, runtime]) {
+  for (const text of [runtime]) {
     expect(text).toMatch(/pre-turn Codex rejection[^.]*amend[^.]*routing snapshot/i);
     expect(text).toMatch(/--exclude[^.]*rejected slug/i);
     expect(text).toMatch(/--retry-of[^.]*lineage/i);
     expect(text).toMatch(/same class[^.]*provider[^.]*effort/i);
     expect(text).toMatch(/timeout[^.]*quota[^.]*auth[^.]*hold/i);
   }
+  expect(routing).toContain('changes require the user’s explicit decision');
+  expect(routing).not.toMatch(/--retry-of|--exclude/);
 });
 
 const modelRules = [
@@ -96,6 +98,11 @@ test('only explicit pre-turn Codex model rejection permits recorded within-class
     'skills/axstack-review/SKILL.md',
   ]) {
     const text = compact(path);
+    if (!path.endsWith('/orca-runtime.md')) {
+      expect(text, path).toMatch(/rejection[^.]*hold/i);
+      expect(text, path).not.toMatch(/--retry-of/);
+      continue;
+    }
     expect(text, path).toMatch(/explicit model rejection[^.]*before[^.]*first turn/i);
     expect(text, path).toMatch(/--retry-of/);
     expect(text, path).toMatch(/same class[^.]*provider[^.]*effort/i);
@@ -107,9 +114,9 @@ test('only explicit pre-turn Codex model rejection permits recorded within-class
   }
   const contracts = compact('skills/axstack/references/contracts.md');
   expect(contracts).toContain('pause affected work, record the gap, and ask the user');
-  expect(contracts).toContain("Every substitution requires the user's decision: configured alternatives and native fallback prose are not defaults.");
-  expect(contracts).toMatch(/except[^.]*within-class|within-class[^.]*exception/i);
+  expect(contracts).toContain("Every substitution requires the user's decision: configured alternatives are not defaults.");
+  expect(contracts).not.toMatch(/within-class|--retry-of/);
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/timeout[^.]*quota[^.]*hold/i);
-  expect(routing).toMatch(/tried ID[^.]*error[^.]*fallback ID/i);
+  expect(routing).toContain('no substitution');
 });

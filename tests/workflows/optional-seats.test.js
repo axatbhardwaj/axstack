@@ -37,8 +37,8 @@ test('shared rules qualify only optional seats and preserve required holds', () 
   expect(routing).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
   expect(routing).toMatch(/\[Role roster\]\(role-roster\.md\) governs[^.]*single-provider absence[^.]*mixed Codex\+Claude fan-out/i);
   for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
-  expect(routing).toContain('Codex `--retry-of`');
-  expect(routing).toContain('pre-turn Codex rejection');
+  expect(routing).not.toMatch(/--retry-of|pre-turn Codex rejection/);
+  expect(routing).toContain('holds that role with no substitution');
   expect(contracts).toMatch(/base auditor[^.]*preflight rejection[^.]*Close-out/i);
 });
 

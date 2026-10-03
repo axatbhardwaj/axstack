@@ -8,42 +8,35 @@ Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
 `profiles.preset` from `.axstack-manifest.json` at the actually loaded
 skills root, or an explicit user selection in the run record. Missing or contradictory sources are
-a setup gap: hold. Never infer from live profiles or `list_profiles`, harness,
+a setup gap: hold. Never infer from live profiles, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 
-At start, snapshot all role IDs with provider/modelClass/model/mode/effort; absent
-or unconfigured roles are recorded explicitly; never default.
-Such a role holds only its work. Later installed or changed roles need an
-explicit user decision to enter the snapshot. Live profiles
-are authoritative at snapshot time and for availability; bundled presets are setup
-inputs, not runtime proof.
+At start, snapshot all role IDs from installed `skills/axstack/roles.json`,
+including provider/modelClass/model/mode/effort and intentional absences.
+Absent or unconfigured roles are recorded explicitly; such a role holds only
+its work under the required/optional seat rules.
+Later installed or changed roles need an explicit user decision to enter the snapshot.
 For each role record class, resolved exact ID, source (`capabilities`), and time.
+Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
+or recovery; use its permitted-write role split, completion checks and run watch.
 Resolve Codex and Claude classes with
 `skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path>`
 using saved T3 capabilities JSON; missing or malformed capabilities holds.
 Claude exact IDs come from capabilities, replacing transcript read-back.
+Use an explicit model as given; for `model:null` without a class, only grok and
+antigravity use the provider's first listed model from saved capabilities and
+record its exact ID.
 A Codex or Claude role with neither model nor class is an intentional absence
 and holds.
-Resume must reuse the snapshot and
-never re-resolve it except for the recorded pre-turn Codex rejection amendment below.
-
+Resume must reuse the saved capabilities and role snapshot with no re-resolution; changes require the user’s explicit decision.
+An unavailable provider, model, role, mode or effort holds that role with no substitution.
 Preset changes apply to new runs only; an active run keeps its snapshot.
-Changing it or replacing a session needs an explicit user decision and
-revalidation. Unavailable models, efforts, roles, or overrides hold only affected
-work; no automatic fallback, quota routing, subscription inference, or silent
-provider/model/effort substitution. Only
-explicit model rejection before the first turn permits Codex `--retry-of` with
-the next eligible ID in the same class, provider, and effort. Fence the failed
-Dispatch and record tried ID, error, and fallback ID in the snapshot and reply.
-For a pre-turn Codex rejection, amend the routing snapshot once with the rejected
-slug and error; later same-class resolution in this run passes `--exclude` for
-each rejected slug. Each retry keeps `--retry-of` lineage and the same class,
-provider, and effort. This is the sole exception to snapshot immutability;
-it grants no other model substitution.
-Timeout, quota, auth, and other failures hold; Claude rejection holds.
+Replacing a session needs an explicit user decision and revalidation.
+Timeout, quota, auth and rejection hold affected work.
 [Model discipline](contracts.md#model-discipline) governs optional seats,
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
 single-provider absence and mixed Codex+Claude fan-out.
+Bundled presets are setup inputs, not runtime readiness proof.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
 
@@ -68,14 +61,14 @@ step (3) for user routing: no substitution or same-provider review.
   off a classified repair (explain: how; debug: what's wrong).
 - Code quality/refactor discovery -> `axstack-improve`: rank bounded
   candidates with evidence; report only, no source edits.
-- Accepted worker/Task/Run completion or bounded backlog request -> driver invokes
+- Accepted worker/task/run completion or bounded backlog request -> driver invokes
   `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile run record,
   keep owner, launch no native handoff.
 - Explicit user-requested ownership transfer -> the same lifecycle section.
-  Load the [Orca runtime boundary](orca-runtime.md), follow the runtime-owned
-  handoff guide, and require explicit recipient acceptance before ownership
+  Load the [T3 runtime boundary](t3-runtime.md), follow its ownership-transfer
+  contract, and require explicit recipient acceptance before ownership
   changes. Missing capability is a setup gap; never invent one.
 - Colleague PR review -> `axstack-review`, peer mode.
 - Codebase review -> `axstack-review` codebase mode, report only.

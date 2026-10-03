@@ -12,7 +12,7 @@ test('tracker stores: GitHub Issues is a first-class spec and capability store',
   const lifecycle = compact('skills/axstack/references/lifecycle.md');
   const workflows = compact('docs/workflows.md');
 
-  expect(spec).toMatch(/Linear[^.]*default[^.]*GitHub Issues[^.]*repository Markdown/i);
+  expect(spec).toMatch(/Linear[^.]*executor MCP[^.]*defi-com/i);
   expect(spec).toMatch(/GitHub mode[^.]*target repository[^.]*issues enabled[^.]*read and write access/i);
   expect(spec).toMatch(/GitHub issue URL[^.]*SHA-256 body digest/i);
 

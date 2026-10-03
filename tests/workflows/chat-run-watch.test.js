@@ -45,9 +45,9 @@ test('chat-run wake uses the PR digest before deciding whether to act', () => {
   expect(text).toMatch(/exit 2[^.]*readiness[^.]*UNKNOWN/i);
 });
 
-test('verified Autopilot transitions update the driver sidebar comment', () => {
+test('verified Autopilot transitions update the private T3 run record', () => {
   const instruction = autopilot().match(/[^.]*verified Autopilot transition[^.]*\./i)?.[0] ?? '';
-  expect(instruction).toMatch(/mirror[^.]*Autopilot:[^.]*driver worktree[^.]*--comment/i);
+  expect(instruction).toMatch(/update[^.]*private run record[^.]*T3 driver thread/i);
   expect(instruction).not.toMatch(/\b(?:never|do not|don't)\b/i);
 });
 
@@ -132,7 +132,7 @@ test('chosen wake stops at merge, cancellation, or expiry and docs describe the 
 test('installation and run record describe the selected wake', () => {
   expect(installation()).toMatch(/chat-run[^.]*harness.native[^.]*10 minutes[^.]*default/i);
   expect(installation()).toMatch(/only when[^.]*harness[^.]*no[^.]*Orca[^.]*fallback/i);
-  expect(runRecord()).toMatch(/chat-run watch[^.]*chosen wake mechanism[^.]*identity or command/i);
+  expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });
 
 test('wake failure guards and human merge authority stay explicit', () => {
