@@ -3,6 +3,30 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
+test('cleanup evaluator inputs are expectation-free independent-review briefs', () => {
+  const data = JSON.parse(read('tests/workflows/cleanup-evaluator-inputs.json'));
+  expect(data.version).toBe(1);
+  expect(data.cases.map(({ id }) => id)).toEqual([
+    'accepted-completion-with-protected-neighbors',
+    'settled-terminal-protected-worktree',
+    'scoped-backlog-partial-inventory',
+    'non-pr-evidence-preservation',
+    'operation-boundaries-and-chat-history',
+    'idempotent-retry-after-hook-failure',
+    'open-pr-settled-reviewer',
+    'two-review-passes-one-checkout',
+  ]);
+  for (const entry of data.cases) {
+    expect(entry.title).toBeString();
+    expect(entry.input.invocation).toBeString();
+    expect(entry.input.request).toBeString();
+    expect(entry.input.state).toBeString();
+    for (const forbidden of ['expected', 'required', 'forbidden', 'verdict']) {
+      expect(forbidden in entry).toBe(false);
+    }
+  }
+});
+
 const skill = () => read('skills/axstack-cleanup/SKILL.md');
 const pins = [
   "Never clean a user-created thread, the current driver, a user-taken-over thread, an active or unknown worker, an unsettled descendant, or a resource with ambiguous ownership.",
@@ -20,8 +44,37 @@ const pins = [
   "Require final clean Git status before exact `git worktree remove <path>` without force.",
   "Never delete the author branch or use generic force."
 ];
-for (const pin of pins) test(`cleanup exact safety: ${pin}`, () => {
+// Safety contracts are exact text; changes require deliberate test edits.
+const restoredCleanupPins = [
+  "A raw reviewer report may be discarded after its verdict and limitations are compacted into that read-back receipt;",
+  "use the private evidence archive for the report and supporting evidence.",
+  "Preserve the separate author candidate with useful unmerged work; reviewer cleanup never removes it.",
+  "Multiple tasks in the same reviewer worktree are recovery for missed earlier cleanup; after independent archives and readback, use per-prefix removal.",
+  "Two or more review passes in the same reviewer worktree may leave distinct prefixes; each named run-owned scratch prefix must belong to an accepted settled task in the run.",
+  "Check ignored files across the whole worktree too; classified ignored non-cache content enters the verified salvage path, while unknown content holds.",
+  "Compare its sole target to the classified directory; an empty, partial, or different result holds.",
+  "Only unexpected changes hold.",
+  "Recheck clean Git status after the last deletion.",
+  "Never unlink through prose or a shell loop.",
+];
+for (const pin of [...pins, ...restoredCleanupPins]) test(`cleanup exact safety: ${pin}`, () => {
   const text = normalize(skill());
+  expect(text).toContain(pin);
+  expect(text.split(pin).length).toBe(2);
+});
+test('cleanup forbids recursive shell deletion', () => {
+  expect(skill()).not.toMatch(/\brm\s+-r\b|\bfind\b[^\n]*-delete/);
+});
+const restoredRelatedPins = [
+  ['skills/axstack/references/evidence-archive.md',
+    'Completed non-author worktrees with dirty source or unpushed commits use the [Workspace hygiene](workspace-hygiene.md) salvage path before removal; this archive helper never treats source changes as evidence-only cleanup.'],
+  ['skills/axstack/references/evidence-archive.md',
+    'A user-created or user-taken-over thread, an active or unknown run, an unsettled descendant, ambiguous publication, or an unknown file remains protected.'],
+  ['skills/axstack-implement/SKILL.md',
+    'After each settled review, run `axstack-cleanup` for its exact reviewer resources before PR merge, preserving and reading back the private evidence archive before eligible worktree retirement.'],
+];
+for (const [path, pin] of restoredRelatedPins) test(`cleanup related exact safety: ${pin}`, () => {
+  const text = normalize(read(path));
   expect(text).toContain(pin);
   expect(text.split(pin).length).toBe(2);
 });
