@@ -35,7 +35,7 @@ function validT3Version(stdout) {
   const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
   const parsed = new Date(`${iso}T00:00:00Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso
-    && (date > floorDate || (date === floorDate && match[3] !== undefined
+    && (match[1] !== floorVersion || date > floorDate || (date === floorDate && match[3] !== undefined
       && Number(match[3]) >= Number(floorBuild)));
 }
 

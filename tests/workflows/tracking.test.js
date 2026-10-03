@@ -18,6 +18,7 @@ for (const pin of pins) test(`tracking safety: ${pin}`, () => {
   expect(text.split(pin).length).toBe(2);
 });
 const rules = [
+  ['writer marker delivery', [/launched writer/i, /sends/i, /marker/i, /t3_thread_send/i, /mode: queue/i, /recorded driver thread/i], 'Using t3_thread_send with mode: queue, the launched writer sends its marker to the recorded driver thread.'],
   ['forbidden wait loops', [/sleep/i, /poll loops/i, /forbidden/i], 'Sleep and poll loops are forbidden.'],
   ['wait timeout re-arm', [/t3_thread_wait/i, /recorded watch/i, /re-arm/i, /waits/i, /timeout/i], 'Re-arm waits on timeout using t3_thread_wait and the recorded watch.'],
   ['next transition', [/update/i, /Next:/i, /transition/i, /owner/i, /hold/i], 'At each transition update Next: with owner and hold.'],
@@ -52,7 +53,7 @@ test('execution binds the T3 driver thread and one authoritative dispatch attemp
   const implement = normalize(read('skills/axstack-implement/SKILL.md'));
   const runtime = normalize(read('skills/axstack/references/t3-runtime.md'));
   expect(implement).toMatch(/T3 driver thread[^.]*one authoritative[^.]*dispatch attempt/i);
-  expect(runtime).toContain("The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked files or repairs an author's source.");
+  expect(runtime).toContain("The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked candidate source or tests or repairs an author's source.");
   expect(runtime).toContain('Input acceptance, started state, effective settings and completed work must remain distinct evidence.');
   expect(runtime).toContain('Never answer trust or permission prompts; brief confirmation adds no authority and does not answer a harness or tool dialog.');
 });

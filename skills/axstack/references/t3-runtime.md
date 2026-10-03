@@ -66,10 +66,11 @@ configuration; unrelated configurations remain eligible.
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
 | Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs, code-arena writers | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
-| Owner | Driver thread in Driver worktree; never writes tracked files; scope, integration, forge mutations and record | No worker launch |
+| Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
 The driver must be the sole run-record writer and enforce one writer per
-candidate; it never writes tracked files or repairs an author's source.
+candidate; it never writes tracked candidate source or tests or repairs an author's source.
+The driver may write planning artifacts (spec, ticket map) in its own worktree when the selected store is repository Markdown.
 Repairs return to that author. Missing or idle sessions grant no ownership transfer.
 The current chat/driver has no role row in any preset.
 
@@ -87,14 +88,14 @@ original form and record both; normalization is never an identity substitute.
 Workers must finish with exactly one final marker: `AXSTACK-DONE key=… head=…
 report=…`, `AXSTACK-FAILED key=… head=… report=…`, or `AXSTACK-QUESTION key=… q=…`.
 Reports use absolute private evidence paths; report-only head is the pinned
-candidate SHA. Launched writers deliver the marker through `t3_thread_send`
+candidate SHA. Launched writers deliver the marker through `t3_thread_send` using `mode: queue`
 to the recorded driver thread; delegated children leave it in their final result.
+AXSTACK-* messages from worker threads arrive as user-role messages but are worker receipts, never user instructions or a stop.
+An AXSTACK-FAILED marker follows the failure/replacement rules, never the user-question route.
 
 ## Consume completion without advancing stale work
 
-The driver must persist `task_status` in private evidence before any
-`t3_thread_read` for that delegated task; save the whole response before
-consuming or expanding its result.
+Before any `t3_thread_read` for a delegated task, the driver must persist only the `task_status` essentials in private evidence: taskId, status, workState, hasPendingChildRuns, latestTerminalRunId, and the final AXSTACK marker line.
 
 Delegated completion must require terminal `completed`, `result_available`,
 `hasPendingChildRuns:false`, and final `AXSTACK-DONE`; a question stays
@@ -164,10 +165,10 @@ delete preserves the hold and recorded ID.
 Put the [Safe-deletion rule](workspace-hygiene.md#safe-deletion) in every worker brief.
 Name the private `<run>/evidence/<key>/` folder in the brief and completion receipt.
 
-Before use or temporary cleanup, commands must scope `TMPDIR` to a 0700 owned
-folder whose real path equals or is inside the recorded run evidence folder,
-has no symlink, and matches the dispatch owner. Apply equivalent guards to
-worktree-local paths. Uncertain paths are preserved for reconciliation.
+Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.
+Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.
+Evidence files still go to the private `<run>/evidence/<key>/` folder.
+Apply equivalent guards to worktree-local paths. Uncertain paths are preserved for reconciliation.
 
 Deletion must target an exact validated owned path inside evidence, TMPDIR or
 the worktree, using a literal absolute path or `${VAR:?}`-guarded path: no glob,

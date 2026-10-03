@@ -6,7 +6,7 @@ does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
 workflow database.
 
 Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
-T3 Code nightly >= `0.0.46-nightly.20261003.2610`. The driver is a T3 thread
+T3 Code `0.0.46-nightly.20261003.2610` or newer. The driver is a T3 thread
 with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
 There are no runtime dependencies. Filesystem access uses Bun-backed `node:fs`
 and `node:fs/promises`; no other Node runtime contract is introduced.
@@ -113,7 +113,7 @@ axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--har
 ```
 
 The check separates Bun/Git/`gh stack` availability, the `t3` executable and
-nightly version floor, in-session MCP readiness, and bundle validity.
+version floor, in-session MCP readiness, and bundle validity.
 The CLI labels in-session MCP readiness as "verified by driver preflight";
 the driver saves `orchestrator_capabilities` and follows its advertised schema.
 With an instruction target, it separately reports whether the marker block is

@@ -78,7 +78,7 @@ Store receipt references, not raw output, in the [Run record](run-record.md).
 
 Follow [T3 runtime](t3-runtime.md) for native completion, questions, launch
 recovery and run-watch waits. Delegated notifications wake the driver; a launched
-writer sends its marker with `t3_thread_send` to the recorded driver thread.
+writer sends its marker with `t3_thread_send` using `mode: queue` to the recorded driver thread.
 Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.
 Writer completion requires `AXSTACK-DONE` plus terminal `t3_thread_wait` on the recorded run and candidate checks: non-empty diff, clean tree, and named red/green logs.
 Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one.

@@ -45,7 +45,7 @@ implementation. Research, explanation, and peer review can start directly.
 
 > [!NOTE]
 > You need Bun >=1.3.14, Git, the GitHub CLI (`gh`) with `gh stack`, and a
-> running T3 Code nightly >= `0.0.46-nightly.20261003.2610`.
+> running T3 Code `0.0.46-nightly.20261003.2610` or newer.
 > The agents selected by your preset must also be available through T3.
 
 Install the CLI and skills. This example targets Codex:

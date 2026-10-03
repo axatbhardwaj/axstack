@@ -99,7 +99,7 @@ test('missing T3 is a capability gap', async () => {
   expect(report.checks.find((check) => check.name === 't3-binary')?.ok).toBe(false);
 });
 
-test('T3 floor rejects older nightlies, releases and malformed output', async () => {
+test('T3 floor compares base versions before nightly dates and builds', async () => {
   for (const [stdout, ok] of [
     ['t3 v0.0.46-nightly.20261003.2610', true],
     ['0.0.46-nightly.20261003', false],
@@ -113,7 +113,9 @@ test('T3 floor rejects older nightlies, releases and malformed output', async ()
     ['t3 v1.0.0', true],
     ['t3 v0.0.46', true],
     ['t3 v0.0.45', false],
-    ['t3 v0.0.47-nightly.20261002.1', false],
+    ['t3 v0.0.47-nightly.20261002.1', true],
+    ['t3 v0.0.47-nightly.20261003.2609', true],
+    ['t3 v0.0.47-nightly.20261002', true],
     ['t3 v0.0.47-beta.1', false],
     ['t3 v0.0.46-nightly.20261303.1', false],
     ['t3 v0.0.46-nightly.20260230.1', false],

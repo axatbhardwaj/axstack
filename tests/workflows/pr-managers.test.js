@@ -79,13 +79,14 @@ test('manager event identity survives same-head changes', () => {
 test('manager jobs use private per-Dispatch scratch without broad cleanup', () => {
   const runtime = compact('skills/axstack/references/t3-runtime.md');
   const manager = compact('skills/axstack/references/automations.md');
-  expect(runtime).toMatch(/TMPDIR[^.]*0700 owned folder/i);
-  expect(runtime).toMatch(/real path[^.]*recorded run evidence folder/i);
-  expect(runtime).toMatch(/no symlink[^.]*dispatch owner/i);
+  expect(runtime).toContain('Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.');
+  expect(runtime).toContain('Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.');
+  expect(runtime).toContain('Evidence files still go to the private `<run>/evidence/<key>/` folder.');
   expect(runtime).toMatch(/exact validated owned path[^.]*no glob[^.]*no parent-root deletion/i);
   expect(runtime).toMatch(/Uncertain paths[^.]*preserv/i);
   expect(runtime).toMatch(/equivalent guards[^.]*worktree-local paths/i);
-  expect(manager).toMatch(/TMPDIR[^.]*manager and job commands[^.]*<run dir>\/evidence\/<dispatch>\//i);
+  expect(manager).toContain('Set `TMPDIR` for manager and job commands to an owned 0700 directory under the system temp directory, named from the dispatch key and recorded in the receipt, following [Workspace hygiene](workspace-hygiene.md).');
+  expect(manager).toContain('Evidence files stay in the private `<run dir>/evidence/<dispatch>/` folder.');
   expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
   expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
   expect(manager).toMatch(/uncertain ownership[^.]*containment/i);
