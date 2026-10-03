@@ -359,3 +359,84 @@ for (const [index, rule] of rules.entries()) {
   });
 }
 
+// Each scenario names the sentence checks that must remain in the reference.
+// Action concepts are order-free and are checked in the fixture and reference.
+const recovery = {
+  'lost-launch-response': {
+    'key and title': ['key and title'],
+    'launch recovery inventory': ['launch recovery inventory', 'reserved branch', 'unreconciled worktree'],
+    'launch recovery outcomes': ['launch recovery outcomes', 'relaunch absence', 'recovery hold', 'silence duplicate'],
+  },
+  'silent-provisioning-failure': {
+    'SHA baseRef': ['SHA baseRef', 'baseRef commit'],
+    'post-launch wait': ['post-launch wait', 'timed-out started', 'preparing hold'],
+    'failure classification': ['failure classification'],
+  },
+  'writer-death-after-idle': {
+    'idle writer watch': ['idle writer watch', 'watch reconcile', 'watch failure'],
+    'failure classification': ['failure classification'],
+    'replacement attempt': ['replacement attempt', 'failed branch salvage', 'unknown writer liveness', 'replacement reconcile'],
+  },
+  'stale-completion': {
+    'stale completion': ['current completion', 'stale completion', 'stale receipt evidence'],
+    'status persistence': ['status persistence'],
+    'writer completion': ['writer completion'],
+  },
+  'child-question-resume': {
+    'delegate completion': ['delegate completion', 'question incomplete'],
+    'question resume': ['question resume', 'resumed result', 'question notification'],
+    'status persistence': ['status persistence'],
+  },
+};
+const actions = {
+  'lost-launch-response': [
+    ['launch recovery outcomes', [/adopt/i, /one exact match/i]],
+    ['reserved branch', [/keep/i, /reserved branch/i]],
+    ['relaunch absence', [/relaunch once/i, /proven absence/i]],
+    ['recovery hold', [/matches/i, /incomplete inventory/i, /hold/i]],
+  ],
+  'silent-provisioning-failure': [
+    ['post-launch wait', [/launch failure/i]],
+    ['timed-out started', [/activeRunId/, /worktreePath/, /started/i]],
+    ['preparing hold', [/still preparing/i, /hold/i, /next wake/i]],
+  ],
+  'writer-death-after-idle': [
+    ['watch failure', [/failed run/i, /hold/i, /incomplete/i]],
+    ['replacement attempt', [/terminal failure/i, /a<n\+1>/]],
+    ['failed branch salvage', [/failed/i, /branch/i, /salvage/i]],
+  ],
+  'stale-completion': [
+    ['stale receipt evidence', [/receipt/i, /evidence/i]],
+    ['status persistence', [/persist/i, /task_status/, /before/i, /t3_thread_read|thread reads/i]],
+    ['writer completion', [/require/i, /terminal/i]],
+    ['current completion', [/current attempt/i, /SHA/]],
+  ],
+  'child-question-resume': [
+    ['question resume', [/answer once/i, /t3_thread_send/, /childThreadId/, /600000/, /watch/i]],
+    ['resumed result', [/accept only/i, /latestTerminal/, /newer than/i, /question run/i]],
+  ],
+};
+
+test('AC2 recovery actions stay bound to sentence contracts', () => {
+  const scenarios = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json'));
+  expect(scenarios.cases.slice(0, 5).map(({ id }) => id)).toEqual(Object.keys(recovery));
+  for (const scenario of scenarios.cases.slice(0, 5)) {
+    expect(scenario.input).toBeTruthy();
+    expect(scenario.contracts).toEqual(Object.keys(recovery[scenario.id]));
+    for (const name of Object.values(recovery[scenario.id]).flat()) {
+      const rule = rules.find(([id]) => id === name);
+      expect(rule, name).toBeDefined();
+      expect(accepts(runtime(), rule), `${scenario.id}: ${name}`).toBe(true);
+    }
+    for (const [name, concepts] of actions[scenario.id]) {
+      expect(concepts.every((concept) => concept.test(scenario.expected.action)), `${scenario.id}: action ${name}`).toBe(true);
+      const rule = rules.find(([id]) => id === name);
+      const instruction = sentences(runtime()).find((sentence) => accepts(sentence, rule));
+      expect(concepts.every((concept) => concept.test(instruction)), name).toBe(true);
+      for (const concept of concepts) {
+        const removed = scenario.expected.action.replace(new RegExp(concept.source, 'gi'), '');
+        expect(concepts.every((check) => check.test(removed)), `${scenario.id}: removed action`).toBe(false);
+      }
+    }
+  }
+});
