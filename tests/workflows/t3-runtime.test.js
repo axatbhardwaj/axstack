@@ -120,6 +120,20 @@ const rules = [
 // These decisions used to borrow a neighboring sentence's mandate. Match each
 // sentence independently so removing or reversing just that decision is red.
 const sentenceRules = [
+  ['human merge authority', ['(?:Human|The human) merges by default'],
+    'The human merges by default.', [/Human|The human/i, 'Agents']],
+  ['terminal evidence retention', ['T3 terminal state alone (?:does not authorize|cannot authorize) discarding evidence'],
+    'T3 terminal state alone cannot authorize discarding evidence.', [/does not authorize|cannot authorize/, 'authorizes']],
+  ['additional prompt holds', ['Trust, hook review, authentication and model prompts (?:also hold|remain held)', 'preserve the attempt'],
+    'Trust, hook review, authentication and model prompts remain held; preserve the attempt before inspecting native state.', [/also hold|remain held/, 'are auto-approved']],
+  ['no alternative on failure', ['Auth, quota, timeout and rejection (?:do not select|never select) an alternative'],
+    'Auth, quota, timeout and rejection never select an alternative.', [/do not select|never select/, 'select']],
+  ['fresh review and retention', ['Later review (?:gets|uses) a fresh checkout', 'unknown or active evidence and unique bytes (?:stay|remain) preserved'],
+    'Later review uses a fresh checkout; unknown or active evidence and unique bytes remain preserved.', [/stay preserved|remain preserved/, 'may be discarded']],
+  ['transfer receipt boundary', ['Input acceptance or turn start alone (?:is no|cannot be a) transfer receipt'],
+    'Input acceptance or turn start alone cannot be a transfer receipt.', [/is no|cannot be a/, 'is a']],
+  ['T3 mismatch reconciliation', ['T3 threadId/runId mismatch', 'must stop consuming and reconcile.*driver identity'],
+    'A T3 threadId/runId mismatch means the driver must stop consuming and reconcile its recorded driver identity with native state.', [/stop consuming/, 'continue consuming']],
   ['owner row', ['^\\| Owner \\|', 'Driver thread', 'Driver worktree', 'never (?:writes|edits|changes) tracked files(?! concurrently)', 'No worker launch'],
     '| Owner | Driver thread in Driver worktree; never edits tracked files | No worker launch |', [/never edits|never writes/i, 'sometimes writes']],
   ['missing capability', ['Missing capability (?:must )?holds?', 'affected operation', 'without a substitute runtime'],
@@ -192,12 +206,20 @@ for (const [name, patterns, paraphrase] of rules) {
     const matching = source.filter((block) => satisfies(block, patterns));
     expect(matching.length, `missing binding rule: ${name}`).toBeGreaterThan(0);
     for (const block of matching) {
+      expect(invert(block), `no-op inversion: ${name}`).not.toBe(block);
+      expect(matches(invert(block), patterns), `directional inversion: ${name}`).toBe(false);
       expect(satisfies(invert(block), patterns), `inverted ${name}`).toBe(false);
     }
     expect(satisfies(paraphrase.replace(/\bmust\b/gi, 'shall'), patterns), `paraphrase ${name}`).toBe(true);
     expect(satisfies(invert(paraphrase), patterns)).toBe(false);
   });
 }
+
+test('a valid paragraph may include an additional must not prohibition', () => {
+  for (const [name, patterns, paraphrase] of rules) {
+    expect(satisfies(`${paraphrase} The driver must not discard evidence.`, patterns), name).toBe(true);
+  }
+});
 
 const recoveryActions = {
   'lost-launch-response': [
@@ -235,6 +257,8 @@ test('AC2 runtime recovery expected actions are bound to rule text', () => {
       const [, patterns, paraphrase] = entry;
       const source = blocks(runtime());
       expect(source.some((block) => satisfies(block, patterns)), scenario.id).toBe(true);
+      const instruction = source.find((block) => satisfies(block, patterns));
+      expect(matches(invert(instruction), patterns), `directional scenario inversion: ${name}`).toBe(false);
       expect(source.map((block) => satisfies(block, patterns) ? invert(block) : block)
         .some((block) => satisfies(block, patterns))).toBe(false);
       expect(satisfies(paraphrase, patterns)).toBe(true);
