@@ -32,7 +32,7 @@ test('tracker stores: GitHub Issues is a first-class spec and capability store',
 
   expect(routing).toMatch(/Markdown, GitHub Issues, or Linear store/i);
   expect(lifecycle).toMatch(/close selected external-tracker tickets/i);
-  expect(workflows).toMatch(/Linear is the default[^.]*GitHub Issues[^.]*repository Markdown/i);
+  expect(workflows).toMatch(/Linear[^.]*executor MCP[^.]*defi-com/i);
 });
 
 test('tracker stores: checker roles cover the selected external tracker', () => {

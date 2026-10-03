@@ -438,7 +438,7 @@ test('owned-core: align and spec use both configured advisers; auditor role exis
 
 test('owned-core: docs cover owned skills and role presets without upstream claims', () => {
   const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  for (const name of ['axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 'orca-cli']) {
+  for (const name of ['axstack-review', 'axstack-watch', 'axstack-research', 'axstack-explain', 'axstack-improve', 't3-runtime.md']) {
     expect(workflows.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
   expect(/retir/i.test(workflows), 'workflows doc must note retiring skills reimplements nothing').toBeTruthy();
@@ -463,17 +463,16 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
   expect(spec).toMatch(/project documentation/i);
 });
 
-test('owned-core: docs and readme document harnesses and orca subagent orchestration', () => {
+test('owned-core: docs and readme document harnesses and T3 dispatch', () => {
   const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
-  expect(install).toMatch(/\|\s*Antigravity\s*\|\s*`~\/\.gemini\/config\/skills`\s*\|\s*documented upstream\s*\|/);
+  expect(install).toMatch(/\|\s*Antigravity IDE \/ `agy` CLI\s*\|\s*`~\/\.gemini\/config\/skills`\s*\|\s*documented upstream\s*\|/);
   expect(install).toMatch(/\|\s*OpenCode\s*\|\s*`~\/\.config\/opencode\/skills`\s*\|\s*documented upstream\s*\|/);
-  expect(install).toMatch(/forbids harness-native subagent/i);
+  expect(install.replace(/\s+/g, ' ')).toContain('It forbids harness-native subagent tools.');
 
-  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  expect(workflows).toMatch(/orca.*orchestration.*via.*`?orca`?.*cli/is);
-  expect(workflows).toMatch(/(?:forbid|not use).*harness-native subagent/is);
+  const workflows = readFileSync(join(root, 'docs', 'workflows.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(workflows).toContain('All subagent, delegated-worker, reviewer, and cross-harness work uses T3 orchestration through the `t3-code` MCP.');
+  expect(workflows).toContain('Do not use harness-native subagent tools.');
 
-  const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  expect(readme).toMatch(/visible Orca orchestration via the `orca` CLI/);
-  expect(readme).toMatch(/harness-native subagent/);
+  const readme = readFileSync(join(root, 'README.md'), 'utf8').replace(/\s+/g, ' ');
+  expect(readme).toContain('Delegation uses visible T3 orchestration via the `t3-code` MCP; harness-native subagent tools are forbidden.');
 });

@@ -131,13 +131,13 @@ test('chosen wake stops at merge, cancellation, or expiry and docs describe the 
   expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*user cancels[^.]*expires/i);
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*cancellation[^.]*expires/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
-  expect(docs()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
-  expect(readme()).toMatch(/harness[^.]*native[^.]*10 minutes[^.]*Orca[^.]*fallback/i);
+  expect(docs()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
+  expect(readme()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
 });
 
 test('installation and run record describe the selected wake', () => {
-  expect(installation()).toMatch(/chat-run[^.]*harness.native[^.]*10 minutes[^.]*default/i);
-  expect(installation()).toMatch(/only when[^.]*harness[^.]*no[^.]*Orca[^.]*fallback/i);
+  expect(installation()).toMatch(/chat-run[^.]*bound T3 schedule[^.]*10 minutes[^.]*default/i);
+  expect(installation()).toMatch(/missing schedule capability[^.]*holds activation/i);
   expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });
 
