@@ -30,6 +30,35 @@
       "input": "task_status is completed with AXSTACK-QUESTION; after an answer the original summary remains unchanged and no resumed-run notification arrives.",
       "contracts": ["delegate completion", "question resume", "status persistence"],
       "expected": { "action": "Answer once via t3_thread_send to childThreadId, wait 600000ms on the resumed run with watch rearming, and accept only latestTerminal* newer than the question run." }
+    },
+    {
+      "id": "delegated-reviewer-isolation",
+      "input": "A delegated reviewer writes in a driver-made detached checkout; after completion the driver status has changed.",
+      "contracts": [
+        "The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.",
+        "Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.",
+        "After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.",
+        "Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force."
+      ],
+      "expected": {
+        "action": "Hold advancement if driver HEAD or status changed; preserve separate checkout and private report, read back evidence before exact removal."
+      }
+    },
+    {
+      "id": "cleanup-unmerged-or-ignored-content",
+      "input": "A completed author has an open PR, while a settled non-author checkout contains ignored non-cache source.",
+      "contracts": [
+        "Keep the author worktree and thread until the PR merges or closes.",
+        "Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches.",
+        "Before removal of an eligible non-author worktree with uncommitted or unpublished content, create a salvage ref, run `git add -A`, commit on that ref, write a `git bundle` into the private run folder, and run `git bundle verify`.",
+        "Record the bundle path, bundle SHA-256, and salvage commit SHA in the receipt before removing the worktree.",
+        "A failed bundle verify holds the worktree.",
+        "Ignored non-cache files must be explicitly classified and preserved in a verified salvage bundle before removal; unknown files hold the worktree.",
+        "Never salvage an author worktree before merge or closure."
+      ],
+      "expected": {
+        "action": "Retain the open-PR author; classify ignored non-cache content, salvage and verify its bundle before archiving and exact removal; unknown content or failed verification holds."
+      }
     }
   ]
 }
