@@ -110,6 +110,10 @@ useful-work and publication checks, evidence classification, and removal
 authority remain driver decisions; archive or retirement success proves none of
 them.
 
+Before archival and exact Git worktree removal, verify any effective removal
+hook provenance.
+An unknown removal hook or a required hook whose provenance is not trusted holds removal; preserve the worktree.
+
 After preservation and salvage checks, archive the exact eligible T3 thread
 with `t3_thread_organize`, then remove its exact recorded checkout path using
 `git worktree remove <path>` without force. Verify absence with

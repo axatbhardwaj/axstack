@@ -5,6 +5,7 @@ for native identities, terminal run evidence and schema. Dispatched workers neve
 sweep or remove another session. A scheduled pass with recorded cleanup authority
 acts as its lane's driver; read-only observers only report leftovers. Uncertain
 ownership, liveness or evidence holds only the affected resource.
+Record each decision and native readback in the private run record.
 
 ## Safe deletion
 
@@ -30,8 +31,9 @@ or launched run completion under the runtime contract before settlement.
 Keep the author worktree and thread until the PR merges or closes.
 Retain a user-taken-over T3 thread and never send cleanup commands to it, including `t3_thread_organize` settle or archive.
 Never remove the current driver, current pass, an active or unknown thread, an unsettled descendant, or a resource with ambiguous ownership.
+At final settlement, no eligible non-driver thread or worktree remains.
 At final settlement include run-owned worktrees in other repositories of the
-same project; report each remaining resource as a hold with its reason. Recorded
+same project and report each remaining resource as a hold with its reason. Recorded
 projectId, threadId/runId, delegated taskId/childThreadId/childRunId, attempt key,
 checkout path and revision decide ownership. Idle alone never proves exit.
 
@@ -51,9 +53,9 @@ At Close-out reconcile recorded scheduledTaskIds with `list_scheduled_tasks`:
 the owning run must have created each exact per-run watch selected for retirement.
 Use `delete_scheduled_task` by exact ID and verify absence via
 `list_scheduled_tasks` once nothing remains unsettled. An uncertain result holds
-and retains the recorded ID. A cross-run sweep may retire an owned per-run watch
-only when its run is closed or every watched PR is merged or closed. Read-only
-observers report to the driver; they do not remove schedules or worktrees.
+and retains the recorded ID. Cross-run retirement of an owned per-run watch
+requires that its run is closed or every watched PR is merged or closed.
+Read-only observers report to the driver; they do not remove schedules or worktrees.
 Never remove the durable review-manager schedule, its lane resources, or a
 user-created schedule through ordinary run settlement. See
 [Review manager](automations.md) for scheduled-task health and lane policy.
@@ -64,7 +66,7 @@ Schedule deletion is distinct from thread archival and Git worktree removal.
 Workers write reports, probes, logs, evidence and scratch to private
 `<run>/evidence/<key>/` outside disposable worktrees. Name the exact directory
 in the brief and completion receipt. Peer reviewers use separate detached
-checkouts and evidence folders with no first-pass cross-read. Authors commit
+checkouts and separate evidence folders with no first-pass cross-read. Authors commit
 before reporting done; workers never push. The driver publishes under
 [candidate publication](candidate-publication.md).
 
@@ -91,13 +93,13 @@ when the same project's records identify them. User-created threads and other pr
 Report an unreachable T3 host and continue the phase; hold only its items.
 Incomplete inventory holds affected eligibility; it never establishes absence.
 
-A cross-run sweep may retire another Axstack run's settled reviewer or merged
-or closed author in this project only after all attempts and descendants settle,
-no agent is working, the exact thread has had no output for at least 60 minutes,
-and fresh native state proves ownership and liveness with durable evidence.
-Remove descendants first. A live owning run alone does not protect its settled
-reviewer. For a merged or closed author, prove its head is retrievable from the
-forge (recorded PR head or remote branch); unverifiable state holds. Salvage an
+Cross-run sweep eligibility for another Axstack run's settled reviewer or merged
+or closed author in this project requires all attempts and descendants settled,
+every agent inactive, the exact thread quiet for at least 60 minutes,
+and fresh native state proving ownership and liveness with durable evidence.
+Remove descendants first. Settled reviewer eligibility is independent of whether
+its owning run is live. For a merged or closed author, prove its head is
+retrievable from the forge (recorded PR head or remote branch); unverifiable state holds. Salvage an
 eligible dirty author first under the preservation guards above. Align/Spec
 advisers reused between rounds remain until their owning phase approves or stops.
 Never archive active or waiting workers, or sweep solely because they are idle.

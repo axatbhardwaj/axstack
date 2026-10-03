@@ -23,8 +23,7 @@ const pins = [
 for (const pin of pins) test(`cleanup exact safety: ${pin}`, () => {
   const text = normalize(skill());
   expect(text).toContain(pin);
-  expect(text.replace(pin, '')).not.toContain(pin);
-  expect(text.replace(pin, pin.replace(/^\S+/, '$& not'))).not.toContain(pin);
+  expect(text.split(pin).length).toBe(2);
 });
 test('cleanup uses the shared T3 contract inline and separates operations', () => {
   for (const ref of ['contracts.md', 'lifecycle.md', 'routing.md', 't3-runtime.md', 'workspace-hygiene.md', 'evidence-archive.md']) {
@@ -43,20 +42,19 @@ test('cleanup AC2 scenario pins author retention and ignored-content preservatio
   expect(scenario.contracts.length).toBe(7);
   for (const pin of scenario.contracts) {
     expect(text).toContain(pin);
-    expect(text.replace(pin, '')).not.toContain(pin);
-    expect(text.replace(pin, pin.replace(/^\S+/, '$& not'))).not.toContain(pin);
+    expect(text.split(pin).length).toBe(2);
   }
 });
 test('archive helper keeps exact identity, manifest, and per-prefix recovery guards', () => {
   const archive = normalize(read('skills/axstack/references/evidence-archive.md'));
   for (const pin of [
+    'An unknown removal hook or a required hook whose provenance is not trusted holds removal; preserve the worktree.',
     'If either readback differs or is unavailable, preserve the worktree.',
     'Never replace either path with a shell loop, broad deletion, force, or a waiver.',
     'Any remaining or uncertain dirt holds worktree removal.',
   ]) {
     expect(archive).toContain(pin);
-    expect(archive.replace(pin, '')).not.toContain(pin);
-    expect(archive.replace(pin, pin.replace(/^\S+/, '$& not'))).not.toContain(pin);
+    expect(archive.split(pin).length).toBe(2);
   }
   expect(archive).toContain('another task');
   expect(archive).toContain('exact per-prefix dry-run');

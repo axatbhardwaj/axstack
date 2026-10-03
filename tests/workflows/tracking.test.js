@@ -15,10 +15,11 @@ const pins = [
 for (const pin of pins) test(`tracking safety: ${pin}`, () => {
   const text = normalize(lifecycle());
   expect(text).toContain(pin);
-  expect(text.replace(pin, '')).not.toContain(pin);
-  expect(text.replace(pin, pin.replace(/^\S+/, '$& not'))).not.toContain(pin);
+  expect(text.split(pin).length).toBe(2);
 });
 const rules = [
+  ['forbidden wait loops', [/sleep/i, /poll loops/i, /forbidden/i], 'Sleep and poll loops are forbidden.'],
+  ['wait timeout re-arm', [/t3_thread_wait/i, /recorded watch/i, /re-arm/i, /waits/i, /timeout/i], 'Re-arm waits on timeout using t3_thread_wait and the recorded watch.'],
   ['next transition', [/update/i, /Next:/i, /transition/i, /owner/i, /hold/i], 'At each transition update Next: with owner and hold.'],
   ['dependent advancement', [/dispatch/i, /unblocked dependent/i, /verify/i, /scope/i, /dependencies/i], 'Verify scope and dependencies and dispatch each unblocked dependent.'],
   ['native handoff reconcile', [/reconcile/i, /T3 threads/i, /runs/i, /Git revisions/i, /pending receipts/i], 'Reconcile pending receipts and Git revisions with T3 threads and runs.'],
@@ -45,4 +46,32 @@ test('tracking scenarios retain thirteen explicit decision boundaries', () => {
     expect(scenario.expected.actions.length).toBeGreaterThan(0);
     expect(scenario.expected.forbidden.length).toBeGreaterThan(0);
   }
+});
+
+test('execution binds one authoritative Orca Task and Dispatch', () => {
+  const implement = normalize(read('skills/axstack-implement/SKILL.md'));
+  const runtime = normalize(read('skills/axstack/references/orca-runtime.md'));
+  expect(implement).toMatch(/driver-owned Orca Run[^.]*authoritative[^.]*Task\/Dispatch/i);
+  expect(runtime).toMatch(/exactly one Dispatch[^.]*write[^.]*candidate/i);
+  expect(runtime).toMatch(/input_accepted[^.]*only[^.]*terminal/i);
+  expect(runtime).toMatch(/turn_started[^.]*inspection/i);
+  expect(runtime).toMatch(/trust[^.]*prompt[^.]*never answer|never answer[^.]*trust/i);
+});
+
+test('delivery and recovery preserve runtime identity and ownership', () => {
+  const runtime = normalize(read('skills/axstack/references/orca-runtime.md'));
+  expect(runtime).toMatch(/older Dispatch[^.]*never completes[^.]*newer Dispatch/i);
+  expect(runtime).toMatch(/consumer_fenced[^.]*stop consuming/i);
+  expect(runtime).toMatch(/user_takeover[^.]*retention/i);
+  expect(runtime).toMatch(/same author[^.]*session[^.]*evidence/i);
+});
+
+test('review automation and manual watch boundaries remain explicit', () => {
+  const watch = normalize(read('skills/axstack-watch/SKILL.md'));
+  const workflows = normalize(read('docs/workflows.md'));
+  expect(watch).toMatch(/observation-only/i);
+  expect(watch).toMatch(/authorized maintenance/i);
+  expect(watch).not.toMatch(/watch-manager|scheduled pass/i);
+  expect(workflows).toMatch(/optional native review manager/i);
+  expect(workflows).toMatch(/user-driven `axstack-watch`/i);
 });

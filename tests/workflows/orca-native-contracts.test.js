@@ -36,7 +36,7 @@ test('reviewers use isolated children and preserve private run evidence before c
     expect(text).toMatch(/separate[^.]*(?:child\s+worktree|detached checkout)|one[^.]*child\s+worktree[^.]*reviewer/i);
     expect(text).toContain('workspace-hygiene.md');
   }
-  expect(hygiene).toMatch(/peer[\s\S]*evidence folders[\s\S]*first-pass/i);
+  expect(hygiene).toMatch(/peer[\s\S]*separate evidence folders[\s\S]*first-pass/i);
   expect(hygiene).toMatch(/completion receipt[\s\S]*before removing/i);
   expect(automations).not.toMatch(/finished worker'?s untracked artefacts are not/i);
 });

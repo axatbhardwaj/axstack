@@ -13,13 +13,15 @@ const pins = [
 ];
 for (const pin of pins) test(`review checkout safety: ${pin}`, () => {
   expect(normalize(publication())).toContain(pin);
-  expect(normalize(publication()).replace(pin, '')).not.toContain(pin);
-  expect(normalize(publication()).replace(pin, pin.replace(/^\S+/, '$& not'))).not.toContain(pin);
+  expect(normalize(publication()).split(pin).length).toBe(2);
 });
 test('review isolation AC2 scenario binds each required safety rule', () => {
   const scenario = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json')).cases.find(({ id }) => id === 'delegated-reviewer-isolation');
   expect(scenario.contracts).toEqual(pins);
-  for (const pin of scenario.contracts) expect(normalize(publication())).toContain(pin);
+  for (const pin of scenario.contracts) {
+    expect(normalize(publication())).toContain(pin);
+    expect(normalize(publication()).split(pin).length).toBe(2);
+  }
   expect(scenario.expected.action).toContain('Hold');
 });
 test('later reviews use a fresh checkout', () => {

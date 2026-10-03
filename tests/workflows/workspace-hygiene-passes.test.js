@@ -41,6 +41,8 @@ test('scheduled passes sweep recorded repositories after predecessor cleanup', (
   expect(hygiene).toMatch(/Salvage an eligible dirty author first/i);
   expect(hygiene).toMatch(/phase-entry drivers[^.]*report in chat/i);
   expect(hygiene).toMatch(/silent when nothing was removed/i);
+  expect(manager).toMatch(/pass start[\s\S]*?finished predecessor terminals[\s\S]*?then run the driver-start orphan sweep/i);
+  expect(manager).toMatch(/session admission[\s\S]*?pass-start predecessor cleanup and sweep[^.]*before discovery or admission/i);
   expect(manager).toMatch(/sweep[^.]*silent when nothing was removed/i);
   expect(manager).toMatch(/sweep results[^.]*continuity[^.]*Open holds/i);
   expect(watch).toMatch(/read-only chat-run observer[^.]*axstack-monitor[^.]*reports[^.]*leftovers[^.]*never salvage or remove/i);
@@ -62,4 +64,15 @@ test('lane-owning watch pass records its own sweep results', () => {
 test('author retention ends when its PR merges or closes', () => {
   expect(read('skills/axstack-cleanup/SKILL.md')).toMatch(/Keep an author worktree until its PR merges or closes/i);
   expect(read('skills/axstack-implement/SKILL.md')).toMatch(/Keep the author candidate until its PR merges or\s+closes/i);
+});
+
+test('task-owned watch pass closes only its receipt terminal as final action', () => {
+  const runtime = read('skills/axstack-watch/references/watch-runtime.md');
+  expect(runtime).toMatch(/task-owned[^.]*automation pass/i);
+  expect(runtime).not.toMatch(/save[^.]*observation continuity/i);
+  expect(runtime).toContain('orca terminal close --terminal <exact handle from the run receipt> --json');
+  expect(runtime).toMatch(/terminal close[^.]*final action/i);
+  expect(runtime).toMatch(/never[^.]*--all[^.]*another terminal[^.]*shared workspace/i);
+  expect(runtime).toMatch(/pass start[\s\S]*?read-only chat-run observer[^.]*reports[^.]*finished predecessor terminals/i);
+  expect(runtime).toMatch(/own close[^.]*runtime_error[^.]*next pass[^.]*not a hold/i);
 });
