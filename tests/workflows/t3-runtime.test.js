@@ -8,113 +8,112 @@ const sentences = (text) => blocks(text).flatMap((block) => block.split(/\.\s+(?
 // Each contract is local to one paragraph/table: scattered vocabulary cannot
 // satisfy it. These prove prose instructions, not live T3 compliance.
 const satisfies = (block, patterns) => /\b(?:must|shall|require(?:d|s)?)\b/i.test(block)
-  && !/\b(?:must not|shall not|not required|need not|optional|may instead)\b/i.test(block)
   && patterns.every((pattern) => new RegExp(pattern, 'i').test(block));
 // Mutate the matched instruction, retaining its subject and API vocabulary.
-// Sentence rules supply directional flips; a positive mandate flips by default.
-const invert = (text, flip = [/\b(?:must|shall|require(?:d|s)?)\b/i, 'must not']) => text.replace(...flip);
+// Every rule supplies a directional flip that its own patterns must reject.
+const invert = (text, flip) => text.replace(...flip);
 const matches = (text, patterns) => patterns.every((pattern) => new RegExp(pattern, 'i').test(text));
 
 // Independent paraphrases exercise meaning while API identifiers stay exact.
 const rules = [
   ['capabilities', ['orchestrator_capabilities', 'sav\\w*', 'T3', 'schema'],
-    'A T3 driver must save orchestrator_capabilities and follow the advertised schema.'],
+    'A T3 driver must save orchestrator_capabilities and follow the advertised schema.', [/\bsav(?:e|es|ed|ing)\b/i, 'discard']],
   ['role snapshot', ['roles.json', 'preset', 'stable.*ID', 'snapshot', 'resume', 'no re-resolution'],
-    'The preset roles.json must be snapshotted by stable role ID; resume uses that snapshot with no re-resolution.'],
+    'The preset roles.json must be snapshotted by stable role ID; resume uses that snapshot with no re-resolution.', [/no re-resolution/, 're-resolution allowed']],
   ['read-only delegates', ['advisers', 'research', 'diligence', 'delegate_task', 'async', 'driver worktree', 'writes only <run>/evidence/<key>/', 'title = dispatch key', 'untouched'],
-    'Advisers, research and diligence must use async delegate_task in the driver worktree with title = dispatch key; files stay untouched and the worker writes only <run>/evidence/<key>/.'],
+    'Advisers, research and diligence must use async delegate_task in the driver worktree with title = dispatch key; files stay untouched and the worker writes only <run>/evidence/<key>/.', [/writes only/, 'may write outside']],
   ['probe delegates', ['reviewers', 'debug', 'execution', 'UI verifier', 'delegate_task', 'detached', 'candidate SHA', 'pinned base', 'disposable', 'cd', 'title = dispatch key', 'outputs.*<run>/evidence/<key>/'],
-    'Reviewers, debug and execution investigators and the UI verifier must cd into a disposable detached checkout of the candidate SHA and pinned base before delegate_task work; title = dispatch key and outputs go to <run>/evidence/<key>/.'],
+    'Reviewers, debug and execution investigators and the UI verifier must cd into a disposable detached checkout of the candidate SHA and pinned base before delegate_task work; title = dispatch key and outputs go to <run>/evidence/<key>/.', [/detached/, 'attached']],
   ['writer launch', ['author', 'code-arena', 't3_thread_launch', 'type:worktree', 'startFromOrigin:false', 'own worktree', 'merges or closes'],
-    'The author and code-arena writers must use t3_thread_launch with type:worktree and startFromOrigin:false in their own worktree, kept until the PR merges or closes.'],
+    'The author and code-arena writers must use t3_thread_launch with type:worktree and startFromOrigin:false in their own worktree, kept until the PR merges or closes.', [/startFromOrigin:false/, 'startFromOrigin:true']],
   ['driver ownership', ['driver', 'sole.*run.record writer', 'never (?:writes|changes|edits) tracked files(?! concurrently)', 'one writer per candidate'],
-    'The driver must remain the sole run-record writer, never changes tracked files, and enforce one writer per candidate.'],
+    'The driver must remain the sole run-record writer, never changes tracked files, and enforce one writer per candidate.', [/never (?:writes|changes|edits) tracked files/, 'sometimes writes tracked files']],
   ['provider mapping', ['codex.*codex', 'claude.*claudeAgent', 'grok.*grok', 'antigravity.*antigravity', 'modeId', 'runtimeMode:full-access', 'options', 'id,value'],
-    'Provider bindings must map codex to codex, claude to claudeAgent, grok to grok and antigravity to antigravity; modeId becomes runtimeMode:full-access and options contain id,value.'],
+    'Provider bindings must map codex to codex, claude to claudeAgent, grok to grok and antigravity to antigravity; modeId becomes runtimeMode:full-access and options contain id,value.', [/claudeAgent/, 'claude']],
   ['pinned model', ['preset model', 'as given'],
-    'A preset model must be used as given.'],
+    'A preset model must be used as given.', [/as given/, 'with an alternative']],
   ['class resolution', ['modelClass', 'newest', 'provider', 'gpt-<N>-<class>', 'claude-<class>-<N>-<N>', '--provider', 'saved capabilities'],
-    'modelClass must resolve to the newest provider catalog ID, gpt-<N>-<class> or claude-<class>-<N>-<N>, using --provider and saved capabilities.'],
+    'modelClass must resolve to the newest provider catalog ID, gpt-<N>-<class> or claude-<class>-<N>-<N>, using --provider and saved capabilities.', [/newest/, 'oldest']],
   ['null model', ['model:null', 'no class', 'first', 'capabilities', 'exact ID', 'record'],
-    'For model:null with no class, the first model in capabilities must be selected and its exact ID recorded.'],
+    'For model:null with no class, the first model in capabilities must be selected and its exact ID recorded.', [/\bfirst\b/, 'last']],
   ['availability hold', ['unavailable', 'model', 'effort', 'hold', 'no substitution'],
-    'An unavailable model or effort must hold that role with no substitution.'],
+    'An unavailable model or effort must hold that role with no substitution.', [/no substitution/, 'substitution permitted']],
   ['codex effort', ['codex', 'reasoningEffort'],
-    'Codex effort must use reasoningEffort.'],
+    'Codex effort must use reasoningEffort.', [/reasoningEffort/, 'effort']],
   ['claude effort', ['claude', 'option ID effort'],
-    'Claude effort must use option ID effort.'],
+    'Claude effort must use option ID effort.', [/option ID effort/, 'option ID reasoningEffort']],
   ['grok effort', ['grok', 'reasoningEffort', 'exclude max'],
-    'Grok must use reasoningEffort and exclude max.'],
+    'Grok must use reasoningEffort and exclude max.', [/exclude max/, 'include max']],
   ['opencode effort', ['opencode', 'variant'],
-    'OpenCode effort must use variant.'],
+    'OpenCode effort must use variant.', [/variant/, 'reasoningEffort']],
   ['binding verification', ['echo', 'provider', 'model', 't3_thread_configuration', 'read.back', 'options', 'runtimeMode'],
-    'The provider and model echo must match the request; t3_thread_configuration read-back verifies options and runtimeMode.'],
+    'The provider and model echo must match the request; t3_thread_configuration read-back verifies options and runtimeMode.', [/read-back/, 'self-report']],
   ['missing effort readback', ['missing effort read.back', 'hold', 'never.*satisfied'],
-    'Missing effort read-back must hold effort-dependent roles and never count as satisfied.'],
+    'Missing effort read-back must hold effort-dependent roles and never count as satisfied.', [/\bhold\b/, 'permit']],
   ['first configuration canary', ['first dispatch', 'provider', 'model', 'effort', 'running or completed', 'before.*siblings'],
-    'The first dispatch for each provider, model and effort must be running or completed before its siblings launch.'],
+    'The first dispatch for each provider, model and effort must be running or completed before its siblings launch.', [/\bbefore\b/, 'after']],
   ['key and title', ['<run>:<role>:<task>:a<n>', 'before.*launch', 'exact.*whole.*title'],
-    'The key <run>:<role>:<task>:a<n> must be recorded before launch and used as the exact whole T3 title.'],
+    'The key <run>:<role>:<task>:a<n> must be recorded before launch and used as the exact whole T3 title.', [/\bbefore\b/, 'after']],
   ['branch encoding', ['axstack/<run>/<role>/<task>-a<n>', 'each segment', 'lowercase', '\\[\\^a-z0-9-\\]', 'replace.*-'],
-    'The branch axstack/<run>/<role>/<task>-a<n> must lowercase each segment and replace [^a-z0-9-] with -.'],
+    'The branch axstack/<run>/<role>/<task>-a<n> must lowercase each segment and replace [^a-z0-9-] with -.', [/lowercase/, 'uppercase']],
   ['SHA baseRef', ['baseRef', 'always.*commit SHA', 'never.*branch'],
-    'baseRef must always be a commit SHA, never a branch.'],
+    'baseRef must always be a commit SHA, never a branch.', [/always/, 'sometimes']],
   ['receipt protocol', ['AXSTACK-DONE key=', 'head=', 'report=', 'AXSTACK-FAILED key=', 'AXSTACK-QUESTION key=', 'q=', 't3_thread_send'],
-    'Workers must send AXSTACK-DONE key= head= report=, AXSTACK-FAILED key= head= report=, or AXSTACK-QUESTION key= q=; launched writers use t3_thread_send.'],
+    'Workers must send AXSTACK-DONE key= head= report=, AXSTACK-FAILED key= head= report=, or AXSTACK-QUESTION key= q=; launched writers use t3_thread_send.', [/AXSTACK-FAILED/, 'AXSTACK-DONE']],
   ['status persistence', ['persist.*task_status.*before.*t3_thread_read'],
-    'The driver must persist task_status before t3_thread_read.'],
+    'The driver must persist task_status before t3_thread_read.', [/\bbefore\b/, 'after']],
   ['delegate completion', ['completed', 'result_available', 'hasPendingChildRuns:false', 'AXSTACK-DONE', 'terminal', 'question.*incomplete'],
-    'Delegate completion must require terminal completed with result_available, hasPendingChildRuns:false and AXSTACK-DONE; a question remains incomplete.'],
+    'Delegate completion must require terminal completed with result_available, hasPendingChildRuns:false and AXSTACK-DONE; a question remains incomplete.', [/hasPendingChildRuns:false/, 'hasPendingChildRuns:true']],
   ['writer completion', ['terminal.*t3_thread_wait', 'non.empty diff', 'clean tree', 'red/green', 'message.*progress'],
-    'Writer acceptance must require terminal t3_thread_wait, non-empty diff, clean tree and red/green logs; a message alone is progress.'],
+    'Writer acceptance must require terminal t3_thread_wait, non-empty diff, clean tree and red/green logs; a message alone is progress.', [/clean tree/, 'dirty tree']],
   ['stale completion', ['current attempt', 'candidate SHA', 'older.*never.*complete'],
-    'Completion must match the current attempt and candidate SHA; an older attempt never completes a newer attempt.'],
+    'Completion must match the current attempt and candidate SHA; an older attempt never completes a newer attempt.', [/current attempt/, 'any attempt']],
   ['failure classification', ['task_status.*failed', 'failed or interrupted', 'preparing.*error', 'AXSTACK-FAILED', 'incomplete'],
-    'task_status failed, a run failed or interrupted, a preparing thread error or AXSTACK-FAILED must each be an incomplete outcome.'],
+    'task_status failed, a run failed or interrupted, a preparing thread error or AXSTACK-FAILED must each be an incomplete outcome.', [/incomplete/, 'successful']],
   ['delegated isolation', ['after each delegated completion', 'HEAD', 'git status --porcelain', 'unchanged', 'change.*hold'],
-    'After each delegated completion the driver must verify HEAD and git status --porcelain are unchanged; any change is a hold.'],
+    'After each delegated completion the driver must verify HEAD and git status --porcelain are unchanged; any change is a hold.', [/unchanged/, 'allowed to change']],
   ['launch recovery inventory', ['t3_thread_list', 'titleContains', 'fully paginated', 'exact whole.title', 'git worktree list', 'reserved branch'],
-    'Launch recovery must combine fully paginated t3_thread_list titleContains results filtered by exact whole-title equality with git worktree list and keep the reserved branch.'],
+    'Launch recovery must combine fully paginated t3_thread_list titleContains results filtered by exact whole-title equality with git worktree list and keep the reserved branch.', [/fully paginated/, 'first page of']],
   ['launch recovery outcomes', ['one exact match.*adopt|adopt.*one exact match', 'proven absence.*relaunch once|relaunch once.*proven absence', 'several.*incomplete.*hold|hold.*several.*incomplete'],
-    'Recovery must adopt one exact match, relaunch once on proven absence, and hold for several matches or an incomplete inventory.'],
+    'Recovery must adopt one exact match, relaunch once on proven absence, and hold for several matches or an incomplete inventory.', [/adopt one exact match/i, 'discard one exact match']],
   ['post-launch wait', ['post.launch', 't3_thread_wait', 'timeoutMs:120000', 'failed.*launch failure', 'timed.out', 'activeRunId', 'worktreePath', 'started', 'preparing.*hold', 'next wake'],
-    'Post-launch t3_thread_wait with timeoutMs:120000 must classify failed as launch failure, timed-out activeRunId plus worktreePath as started, and still preparing as a hold re-read at the next wake.'],
+    'Post-launch t3_thread_wait with timeoutMs:120000 must classify failed as launch failure, timed-out activeRunId plus worktreePath as started, and still preparing as a hold re-read at the next wake.', [/timeoutMs:120000/, 'timeoutMs:600000']],
   ['question resume', ['AXSTACK-QUESTION', 'answer once', 't3_thread_send.*childThreadId', 't3_thread_wait', 'timeoutMs:600000', 'run watch', 'latestTerminal', 'newer than.*question', 'no notification'],
-    'For AXSTACK-QUESTION the driver must answer once with t3_thread_send to childThreadId, then t3_thread_wait timeoutMs:600000 re-armed by the run watch; accept latestTerminal* only newer than the question run even with no notification.'],
+    'For AXSTACK-QUESTION the driver must answer once with t3_thread_send to childThreadId, then t3_thread_wait timeoutMs:600000 re-armed by the run watch; accept latestTerminal* only newer than the question run even with no notification.', [/newer than/, 'older than']],
   ['same writer repair', ['repair', 't3_thread_send', 'mode:queue', 'same.*attempt', 'same.*author'],
-    'A repair must use t3_thread_send mode:queue to the same author within the same attempt.'],
+    'A repair must use t3_thread_send mode:queue to the same author within the same attempt.', [/mode:queue/, 'mode:interrupt']],
   ['replacement attempt', ['terminal failure', 'a<n\\+1>', 'new branch', 'title', 'failed.*branch.*kept.*salvage'],
-    'Replacement after terminal failure must use a<n+1>, a new branch and title, with the failed branch kept until salvage.'],
+    'Replacement after terminal failure must use a<n+1>, a new branch and title, with the failed branch kept until salvage.', [/a<n\+1>/, 'a<n>']],
   ['idle writer watch', ['unsettled launched', 'turn.*end.*only', 'schedule_task', 'bindToCurrentThread:true', 'everyMs:600000', 'reconcile', 'failed.*hold'],
-    'With an unsettled launched writer the turn must end only after schedule_task bindToCurrentThread:true everyMs:600000 is armed; wakes reconcile and failed writers hold.'],
+    'With an unsettled launched writer the turn must end only after schedule_task bindToCurrentThread:true everyMs:600000 is armed; wakes reconcile and failed writers hold.', [/bindToCurrentThread:true/, 'bindToCurrentThread:false']],
   ['watch deletion', ['nothing.*unsettled', 'delete_scheduled_task', 'list_scheduled_tasks', 'read.back.*absence'],
-    'When nothing is unsettled the driver must delete_scheduled_task and use list_scheduled_tasks to read back absence.'],
+    'When nothing is unsettled the driver must delete_scheduled_task and use list_scheduled_tasks to read back absence.', [/absence/, 'presence']],
   ['cleanup preflight', ['worktreeCleanup', 'off', 't3_project_read', 'where exposed', 'otherwise.*record.*limitation', 'setup'],
-    'worktreeCleanup must be off; t3_project_read verifies it where exposed, otherwise record a limitation referencing setup.'],
+    'worktreeCleanup must be off; t3_project_read verifies it where exposed, otherwise record a limitation referencing setup.', [/\boff\b/, 'on']],
   ['run record', ['driver threadId', 'projectId', 'host', 'T3 version', 'installed Axstack SHA', 'capabilities JSON path', 'scheduledTaskIds'],
-    'The run record must include driver threadId, projectId, host, T3 version, installed Axstack SHA, capabilities JSON path and scheduledTaskIds.'],
+    'The run record must include driver threadId, projectId, host, T3 version, installed Axstack SHA, capabilities JSON path and scheduledTaskIds.', [/scheduledTaskIds/, 'scheduledTaskCount']],
   ['dispatch record', ['key', 'mechanism', 'requested target', 'read.back', 'taskId/childThreadId/childRunId', 'threadId/runId/worktree/branch/base SHA', 'checkout', 'candidate', 'evidence folder'],
-    'Each dispatch record must include key, mechanism, requested target and read-back, taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA, checkout path and candidate SHA, and evidence folder.'],
+    'Each dispatch record must include key, mechanism, requested target and read-back, taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA, checkout path and candidate SHA, and evidence folder.', [/evidence folder/, 'public summary']],
   ['temporary evidence guard', ['TMPDIR', '0700', 'real path', 'inside.*recorded.*evidence', 'no symlink', 'owner', 'before.*use', 'cleanup', 'uncertain.*preserv'],
-    'Before use or cleanup, TMPDIR must be 0700 with its real path inside recorded evidence, no symlink and a matching owner; uncertain paths are preserved.'],
+    'Before use or cleanup, TMPDIR must be 0700 with its real path inside recorded evidence, no symlink and a matching owner; uncertain paths are preserved.', [/0700/, '0777']],
   ['safe deletion', ['exact.*validated.*owned path', 'literal absolute', '\\$\\{VAR:\\?\\}', 'no glob', 'no parent.root', 'never.*general cache'],
-    'Deletion must target an exact validated owned path using a literal absolute path or ${VAR:?} guard, no glob and no parent-root deletion; never wipe a general cache.'],
+    'Deletion must target an exact validated owned path using a literal absolute path or ${VAR:?} guard, no glob and no parent-root deletion; never wipe a general cache.', [/no glob/, 'globs permitted']],
   ['brief confirmation', ['confirm.*brief.*once', 're.verif.*started', 'second.*hold', 'never.*trust or permission', 'no.*authority'],
-    'The owner must confirm the brief once and re-verify started; a second question holds, never answer trust or permission dialogs, and confirmation adds no authority.'],
+    'The owner must confirm the brief once and re-verify started; a second question holds, never answer trust or permission dialogs, and confirmation adds no authority.', [/second/, 'every']],
   ['prompt refusal hold', ['permission prompt', 'provider safety refusal', 'held.*incomplete', 'never.*bypass', 'another model'],
-    'A permission prompt or provider safety refusal must be held and incomplete; never bypass via another model.'],
+    'A permission prompt or provider safety refusal must be held and incomplete; never bypass via another model.', [/\bheld\b/, 'successful']],
   ['review evidence isolation', ['each reviewer', 'separate.*checkout', 'private.*evidence folder', 'no first.pass cross.read', 'tracked.*read.only', 'read back.*before.*remov'],
-    'Each reviewer must have a separate checkout and private evidence folder, no first-pass cross-read and tracked files read-only; read back evidence before removal.'],
+    'Each reviewer must have a separate checkout and private evidence folder, no first-pass cross-read and tracked files read-only; read back evidence before removal.', [/no first-pass cross-read/, 'first-pass cross-read allowed']],
   ['acceptance distinct from start', ['input acceptance', 'started', 'completed', 'distinct evidence', 'silence.*never.*exit', 'same owner'],
-    'Input acceptance, started and completed must remain distinct evidence; silence never proves exit and resume preserves the same owner.'],
+    'Input acceptance, started and completed must remain distinct evidence; silence never proves exit and resume preserves the same owner.', [/never proves/, 'always proves']],
   ['ownership transfer', ['explicit.*transfer', 'recipient acceptance', 'scope', 'revision', 'authority', 'before.*ownership', 'current owner'],
-    'An explicit transfer must validate recipient acceptance against scope, revision and authority before ownership changes; until then the current owner remains accountable.'],
+    'An explicit transfer must validate recipient acceptance against scope, revision and authority before ownership changes; until then the current owner remains accountable.', [/before (?:changing )?ownership/, 'after ownership']],
   ['runtime identity mismatch', ['T3', 'threadId/runId', 'mismatch', 'stop.*consum', 'reconcile.*driver', 'never.*forge.*sender', 'borrow.*identity'],
-    'On a T3 threadId/runId mismatch the driver must stop consuming and reconcile the driver identity; never forge a sender or borrow an identity.'],
+    'On a T3 threadId/runId mismatch the driver must stop consuming and reconcile the driver identity; never forge a sender or borrow an identity.', [/stop consuming/, 'continue consuming']],
   ['user takeover retention', ['user.taken.over T3 thread', 'retain', 'never.*cleanup commands', 't3_thread_organize', 'settle', 'archive'],
-    'The driver must retain a user-taken-over T3 thread, never send cleanup commands including t3_thread_organize settle or archive.'],
+    'The driver must retain a user-taken-over T3 thread, never send cleanup commands including t3_thread_organize settle or archive.', [/\bnever\b/, 'always']],
   ['native runtime boundary', ['no Axstack daemon', 'DB', 'lock', 'scheduler', 'private evidence', 'explicit publication authority', 'no merge.*release.*authority'],
-    'The runtime must provide no Axstack daemon, DB, lock or scheduler; private evidence needs explicit publication authority and receipts grant no merge or release authority.'],
+    'The runtime must provide no Axstack daemon, DB, lock or scheduler; private evidence needs explicit publication authority and receipts grant no merge or release authority.', [/no Axstack daemon/, 'an Axstack daemon']],
 ];
 
 // These decisions used to borrow a neighboring sentence's mandate. Match each
@@ -200,18 +199,19 @@ for (const [name, patterns, paraphrase, flip] of sentenceRules) {
   });
 }
 
-for (const [name, patterns, paraphrase] of rules) {
+for (const [name, patterns, paraphrase, flip] of rules) {
   test(`T3 contract: ${name} rejects removal/inversion and accepts rewording`, () => {
     const source = blocks(runtime());
     const matching = source.filter((block) => satisfies(block, patterns));
     expect(matching.length, `missing binding rule: ${name}`).toBeGreaterThan(0);
     for (const block of matching) {
-      expect(invert(block), `no-op inversion: ${name}`).not.toBe(block);
-      expect(matches(invert(block), patterns), `directional inversion: ${name}`).toBe(false);
-      expect(satisfies(invert(block), patterns), `inverted ${name}`).toBe(false);
+      const reversed = invert(block, flip);
+      expect(reversed, `no-op inversion: ${name}`).not.toBe(block);
+      expect(matches(reversed, patterns), `directional inversion: ${name}`).toBe(false);
+      expect(satisfies(reversed, patterns), `inverted ${name}`).toBe(false);
     }
     expect(satisfies(paraphrase.replace(/\bmust\b/gi, 'shall'), patterns), `paraphrase ${name}`).toBe(true);
-    expect(satisfies(invert(paraphrase), patterns)).toBe(false);
+    expect(satisfies(invert(paraphrase, flip), patterns)).toBe(false);
   });
 }
 
@@ -254,12 +254,13 @@ test('AC2 runtime recovery expected actions are bound to rule text', () => {
     for (const name of scenario.contracts) {
       const entry = rules.find(([id]) => id === name);
       expect(entry, `unbound scenario contract: ${name}`).toBeDefined();
-      const [, patterns, paraphrase] = entry;
+      const [, patterns, paraphrase, flip] = entry;
       const source = blocks(runtime());
       expect(source.some((block) => satisfies(block, patterns)), scenario.id).toBe(true);
       const instruction = source.find((block) => satisfies(block, patterns));
-      expect(matches(invert(instruction), patterns), `directional scenario inversion: ${name}`).toBe(false);
-      expect(source.map((block) => satisfies(block, patterns) ? invert(block) : block)
+      expect(invert(instruction, flip), `no-op scenario inversion: ${name}`).not.toBe(instruction);
+      expect(matches(invert(instruction, flip), patterns), `directional scenario inversion: ${name}`).toBe(false);
+      expect(source.map((block) => satisfies(block, patterns) ? invert(block, flip) : block)
         .some((block) => satisfies(block, patterns))).toBe(false);
       expect(satisfies(paraphrase, patterns)).toBe(true);
     }
