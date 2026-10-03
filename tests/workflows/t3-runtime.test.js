@@ -279,3 +279,43 @@ test('AC2 runtime recovery expected actions are bound to rule text', () => {
     }
   }
 });
+
+// Generic polarity probes are independent of the rule table's chosen tokens.
+const genericInversions = (text) => [
+  text.replace(/\bmust\b/gi, 'must not'),
+  text.replace(/\brequires?\b/gi, 'does not require'),
+  text.replace(/\bnever\b/gi, 'always'),
+  text.replace(/\balways\b/gi, 'never'),
+  text.replace(/\bis a hold\b/gi, 'is not a hold'),
+  text.replace(/\bbefore\b/gi, 'after'),
+  text.replace(/commit SHA|branch name/gi, (word) => /commit/i.test(word) ? 'branch name' : 'commit SHA'),
+  `Do not follow this instruction: ${text}`,
+].filter((changed) => changed !== text);
+
+for (const [name, patterns] of [...rules, ...sentenceRules]) {
+  test(`generic polarity holdout: ${name}`, () => {
+    const instruction = [...blocks(runtime()), ...sentences(runtime())].find((part) => matches(part, patterns));
+    expect(instruction, name).toBeDefined();
+    for (const changed of genericInversions(instruction)) {
+      expect(matches(changed, patterns), `${name}: ${changed}`).toBe(false);
+    }
+  });
+}
+
+// Written independently from the patterns, with reversed order and passive voice.
+const editorialHoldouts = [
+  ['status persistence', 'Before any t3_thread_read for that delegated task, the driver must persist task_status in private evidence.'],
+  ['human merge authority', 'By default the human merges.'],
+  ['silence duplicate', 'Silence never justifies launching a duplicate writer.'],
+  ['SHA baseRef', 'baseRef must never be a branch name; it is always a commit SHA.'],
+  ['untracked retention', 'A worktree is never proven disposable by its untracked files.'],
+  ['terminal evidence retention', 'Discarding evidence is not authorized by T3 terminal state alone.'],
+  ['stale receipt evidence', 'Stale or duplicate receipts are kept as evidence, deduplicated by runtime identity.'],
+  ['idle ownership', 'Ownership never transfers because a session is missing or idle.'],
+];
+test('independent editorial holdouts survive rewording', () => {
+  for (const [name, text] of editorialHoldouts) {
+    const [, patterns] = [...rules, ...sentenceRules].find(([id]) => id === name);
+    expect(matches(text, patterns), name).toBe(true);
+  }
+});
