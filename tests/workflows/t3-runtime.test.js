@@ -488,6 +488,79 @@ const independentHoldouts = {
   "human merge authority": "Merging is done by the human by default.",
 };
 
+// Swap operands rather than just negating the temporal token. Fronted clauses
+// have a separate shape so "Before B, A" receives the same sensitivity check.
+function clauseSwaps(text) {
+  const fronted = text.match(/^(before|after|until|once)\s+(.+?),\s*(.+)$/i);
+  if (fronted) return [`${fronted[1]} ${fronted[3]}, ${fronted[2]}`];
+  const infix = text.match(/^(.+?)\s+\b(before|after|until|once|then)\b\s+(.+)$/i);
+  return infix ? [`${infix[3]} ${infix[2]} ${infix[1]}`] : [];
+}
+const orderingRules = new Set([
+  'other effort limitation', 'first configuration canary', 'writer launch',
+  'key and title', 'pinned dispatch revisions', 'status persistence', 'whole status',
+  'writer completion', 'delivery validation', 'delegated isolation', 'isolation hold',
+  'launch recovery outcomes', 'question resume', 'resumed result', 'replacement attempt',
+  'failed branch salvage', 'replacement reconcile', 'watch deletion',
+  'temporary evidence guard', 'brief confirmation', 'prompt recovery evidence',
+  'review evidence readback', 'ownership transfer', 'current owner accountability',
+  'prior owner stop', 'T3 settle evidence', 'publication authority',
+]);
+const actorRules = new Set([
+  'capabilities', 'role snapshot', 'read-only delegates', 'probe delegates',
+  'writer launch', 'owner row', 'driver ownership', 'driver source exclusion',
+  'repair ownership', 'writer delivery', 'delegate delivery', 'status persistence',
+  'delegated isolation', 'launch recovery inventory', 'post-launch wait',
+  'question resume', 'same writer repair', 'idle writer watch', 'watch deletion',
+  'brief confirmation', 'review evidence isolation', 'ownership transfer',
+  'current owner accountability', 'prior owner stop', 'runtime identity mismatch',
+  'user takeover retention', 'human merge authority',
+]);
+const actorSwaps = (text) => [
+  ...[['human', 'agent'], ['driver', 'worker'], ['author', 'replacement'],
+    ['owner', 'worker'], ['reviewer', 'author'], ['writers', 'reviewers'],
+    ['children', 'writers'], ['user', 'agent']].flatMap(([actor, other]) => {
+    const pattern = new RegExp(`\\b${actor}\\b`, 'gi');
+    return pattern.test(text) ? [text.replace(pattern, `${other} rather than the ${actor}`)] : [];
+  }),
+  text.replace(/\bto (?:that|the same) author\b/i, 'from that author to a replacement'),
+].filter((changed) => changed !== text);
+const antonymTransforms = [
+  [/\beligible\b/gi, 'ineligible'], [/\bincomplete\b/gi, 'complete'],
+  [/\bcompleted\b/gi, 'uncompleted'], [/\brunning\b/gi, 'unrunning'],
+  [/\buntouched\b/gi, 'touched'], [/\bread-only\b/gi, 'writable after read-only setup'],
+  [/\bpreserved\b/gi, 'unpreserved'], [/\brequired\b/gi, 'unrequired'],
+  [/\bstable\b/gi, 'unstable'], [/\bkept\b/gi, 'unkept'],
+  [/\bowned\b/gi, 'unowned'], [/\bvalidated\b/gi, 'unvalidated'],
+  [/\barmed\b/gi, 'unarmed'], [/\bexact\b/gi, 'inexact'],
+  [/\bnewest\b/gi, 'oldest'], [/\bholds?\b/gi, 'releases any hold on'],
+  [/\bheld\b/gi, 'released from hold'],
+];
+const antonyms = (text) => antonymTransforms.map(([pattern, replacement]) => text.replace(pattern, replacement))
+  .filter((changed) => changed !== text);
+
+for (const rule of rules) {
+  test(`T3 class fixtures: ${rule[0]}`, () => {
+    const text = independentHoldouts[rule[0]];
+    if (orderingRules.has(rule[0])) {
+      expect(clauseSwaps(text).length, rule[0]).toBeGreaterThan(0);
+      for (const changed of clauseSwaps(text)) expect(accepts(changed, rule), changed).toBe(false);
+    }
+    if (actorRules.has(rule[0])) {
+      expect(actorSwaps(text).length, rule[0]).toBeGreaterThan(0);
+      for (const changed of actorSwaps(text)) expect(accepts(changed, rule), changed).toBe(false);
+    }
+    for (const changed of antonyms(text)) expect(accepts(changed, rule), changed).toBe(false);
+  });
+}
+
+test('prohibits is independent of prior calls with a global prohibition', () => {
+  const prohibition = /no glob|no parent-root deletion/gi;
+  expect(prohibits('No glob appears here.', prohibition, /missing concept/)).toBe(false);
+  expect(prohibits('No glob.', prohibition, /no glob/i)).toBe(true);
+  expect(prohibits('No glob.', prohibition, /no glob/i)).toBe(true);
+});
+
 // The same transformations apply to every rule; none are authored per rule.
 const transformations = [
   [/\bmust\b/gi, 'must not'], [/\bshall\b/gi, 'shall not'],
