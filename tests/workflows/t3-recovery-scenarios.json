@@ -1,0 +1,35 @@
+{
+  "description": "AC2 instruction scenarios; live T3 exercise is recorded separately at the migration gate. T3/T4 append hygiene and watch cases.",
+  "cases": [
+    {
+      "id": "lost-launch-response",
+      "input": "t3_thread_launch returned no response; one thread with the exact dispatch title appears after pagination and its worktree agrees.",
+      "contracts": ["key and title", "launch recovery inventory", "launch recovery outcomes"],
+      "expected": { "action": "Adopt the one exact match; keep its reserved branch. Relaunch once only on proven absence; multiple matches or incomplete inventory hold." }
+    },
+    {
+      "id": "silent-provisioning-failure",
+      "input": "Launch returned preparing and no notification; the 120000ms post-launch wait reports failed during worktree provisioning.",
+      "contracts": ["SHA baseRef", "post-launch wait", "failure classification"],
+      "expected": { "action": "Record launch failure, never completed. A timeout with activeRunId and worktreePath proves started; still preparing holds until the next wake." }
+    },
+    {
+      "id": "writer-death-after-idle",
+      "input": "A started writer dies without sending a receipt after the driver ends its turn; the bound 600000ms watch wakes the driver.",
+      "contracts": ["idle writer watch", "failure classification", "replacement attempt"],
+      "expected": { "action": "Reconcile the failed run and hold incomplete; replace only after terminal failure with a<n+1>, retaining the failed branch for salvage." }
+    },
+    {
+      "id": "stale-completion",
+      "input": "AXSTACK-DONE arrives for a1 at an old candidate SHA while a2 is the current attempt.",
+      "contracts": ["stale completion", "status persistence", "writer completion"],
+      "expected": { "action": "Keep a2 unsettled; the old receipt is evidence only. Persist task_status before thread reads and require terminal state at the current attempt and SHA." }
+    },
+    {
+      "id": "child-question-resume",
+      "input": "task_status is completed with AXSTACK-QUESTION; after an answer the original summary remains unchanged and no resumed-run notification arrives.",
+      "contracts": ["delegate completion", "question resume", "status persistence"],
+      "expected": { "action": "Answer once via t3_thread_send to childThreadId, wait 600000ms on the resumed run with watch rearming, and accept only latestTerminal* newer than the question run." }
+    }
+  ]
+}
