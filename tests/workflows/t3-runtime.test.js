@@ -491,6 +491,7 @@ const independentHoldouts = {
 // Swap operands rather than just negating the temporal token. Fronted clauses
 // have a separate shape so "Before B, A" receives the same sensitivity check.
 function clauseSwaps(text) {
+  text = text.replace(/[.;]\s*$/, '');
   const fronted = text.match(/^(before|after|until|once)\s+(.+?),\s*(.+)$/i);
   if (fronted) return [`${fronted[1]} ${fronted[3]}, ${fronted[2]}`];
   const infix = text.match(/^(.+?)\s+\b(before|after|until|once|then)\b\s+(.+)$/i);
