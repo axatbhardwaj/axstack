@@ -31,13 +31,9 @@ const pins = [
 
 for (const [name, sentence] of pins) {
   test(`T3 exact text: ${name}`, () => {
-    const text = exactSentences(reference());
+    const sentences = exactSentences(reference());
     const pinned = normalize(sentence);
-    expect(text.includes(pinned)).toBe(true);
-    expect(text.filter((item) => item !== pinned).includes(pinned)).toBe(false);
-    const altered = pinned.replace(/\b\w+\b/, 'ALTERED');
-    expect(text.map((item) => item === pinned ? altered : item).includes(pinned)).toBe(false);
-    expect(text.map((item) => item === pinned ? `Do not follow this instruction: ${item}` : item).includes(pinned)).toBe(false);
+    expect(sentences.filter((s) => s === pinned).length).toBe(1);
   });
 }
 
