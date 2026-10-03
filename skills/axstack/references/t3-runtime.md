@@ -28,9 +28,12 @@ codex `gpt-<N>-<class>`, claude `claude-<class>-<N>-<N>`. Use
 `scripts/resolve-models.js --provider` with the saved capabilities JSON path;
 a missing or malformed catalog holds resolution.
 
-A `model:null` role with no class must use the first model listed for its
-provider in saved capabilities; record the exact ID, rather than an unresolved
-provider default.
+A `model:null` role lacking a class must use the first model listed for its
+provider in saved capabilities only for grok and antigravity (launch-by-agent-id
+providers); record the exact ID, rather than an unresolved provider default.
+Antigravity must hold when saved capabilities advertise zero models.
+For codex or claude, a role lacking both model and class is an intentional
+absence and must hold; never use a provider default for that role.
 
 An unavailable provider, model, role, mode or effort must hold that role with
 no substitution. Auth, quota, timeout and rejection do not select an alternative.
