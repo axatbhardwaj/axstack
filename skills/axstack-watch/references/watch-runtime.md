@@ -1,7 +1,7 @@
 # Watch runtime
 
 Read this before starting, resuming, or stopping automated PR observation.
-For observer or repair dispatches, apply [Readable sidebar](../../axstack/references/workspace-hygiene.md#readable-sidebar).
+For observer or repair dispatches, apply [Readable sidebar](../../axstack/references/workspace-hygiene.md#settlement).
 
 ## Standalone watch
 
@@ -12,7 +12,7 @@ actionable event, and never sends or mutates. Healthy observations update
 quietly. Reuse prior watch identity rather than registering a duplicate, and
 stop task-owned registrations at completion, cancellation, or expiry. The owner
 must disable and read back its own automation, then remove it by exact ID under
-[Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-automation-retirement).
+[Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-schedule-retirement).
 Remove its dedicated workspace only after the terminal and preservation guards pass.
 
 ## Chat-run watch
@@ -143,7 +143,7 @@ disable only its own automation and must verify native disable/readback. A faile
 or uncertain disable is a hold. Report the stop receipt to the driver; the
 driver removes the automation by exact ID, verifies absence, and removes the
 dedicated workspace after the observer terminal closes under
-[Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-automation-retirement).
+[Workspace hygiene](../../axstack/references/workspace-hygiene.md#owned-schedule-retirement).
 The driver separately settles workers, preserves evidence, and archives the run;
 an unavailable driver leaves those steps pending. The standalone 24-hour expiry
 and peer observation contracts are unchanged.

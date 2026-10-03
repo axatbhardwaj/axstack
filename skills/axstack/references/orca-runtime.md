@@ -108,7 +108,7 @@ worker brief.
 
 Create a worker worktree with `--parent-worktree` naming the candidate's
 worktree when both are in the same repository; see
-[Readable sidebar](workspace-hygiene.md#readable-sidebar) for naming, status,
+[Readable sidebar](workspace-hygiene.md#settlement) for naming, status,
 and parentage at dispatch. `--no-parent` is for unrelated work with no parent
 context. Where supported, correct wrong lineage in place with
 `worktree set --parent-worktree`. Lineage is presentation, never authority: it

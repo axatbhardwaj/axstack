@@ -11,7 +11,7 @@ for phase continuation and holds.
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 Include [Safe deletion](../axstack/references/workspace-hygiene.md#safe-deletion) in author briefs.
-At author dispatch, apply [Readable sidebar](../axstack/references/workspace-hygiene.md#readable-sidebar).
+At author dispatch, apply [Readable sidebar](../axstack/references/workspace-hygiene.md#settlement).
 
 From an accepted scope identity, drive its task/PR map through author -> review
 -> repair until every required PR is merge-ready or held. Keep exact revisions,

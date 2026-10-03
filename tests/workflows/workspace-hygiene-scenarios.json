@@ -1,26 +1,126 @@
 {
-  "version": 1,
-  "evidence": "Contract decision scenarios, not live Orca cleanup proof",
+  "version": 2,
+  "evidence": "Exact safety sentence scenarios; declared instructions, not live T3 cleanup proof",
   "cases": [
-    {"id":"author-retained-while-open","input":"An author's Dispatch is accepted while its PR remains open.","expected":"Retain its session and worktree for repairs until merge or closure.","contractPattern":"author worktree and session.{0,100}until the PR merges or closes"},
-    {"id":"reviewer-removed-at-acceptance","input":"A reviewer's Dispatch is accepted and its evidence is durable.","expected":"Release its terminal, verify closure, and remove its worktree.","contractPattern":"intermediate completion.{0,250}removes its worktree"},
-    {"id":"dirty-non-author-salvaged","input":"A completed non-author worktree has uncommitted source and no protection hold.","expected":"Commit on a salvage ref, bundle, verify, then remove.","contractPattern":"git add -A.{0,220}git bundle verify.{0,180}removing"},
-    {"id":"failed-bundle-verify","input":"The salvage bundle fails git bundle verify.","expected":"Hold the worktree.","contractPattern":"failed verify.{0,100}hold"},
-    {"id":"ignored-non-cache-file","input":"A completed worktree has an ignored file that is not a known build or dependency cache.","expected":"Hold instead of salvaging.","contractPattern":"ignored non-cache.{0,150}hold"},
-    {"id":"genuine-user-takeover","input":"Native ownership confirms a genuine user_takeover terminal.","expected":"List and preserve the terminal.","contractPattern":"genuine.{0,35}`user_takeover`.{0,100}never removed"},
-    {"id":"repair-labelled-takeover","input":"An author repair terminal is labelled user_takeover and the run record has its exact repair Dispatch ID.","expected":"Treat it as owned for settlement; otherwise hold.","contractPattern":"repair Dispatch ID.{0,80}otherwise hold"},
-    {"id":"unreachable-host","input":"Orca is unreachable during driver-start sweep.","expected":"Report one line and continue; hold only host items.","contractPattern":"Orca is unreachable.{0,110}continue.{0,110}unreachable host"},
-    {"id":"terminal-absent-native-list","input":"A worker release result is release_unknown but native inspection and fresh terminal list show it gone.","expected":"Record the reconciliation and proceed.","contractPattern":"release_unknown.{0,130}fresh.{0,20}terminal list.{0,120}proceed"},
-    {"id":"cross-repo-worktree","input":"The run record lists a settled Axstack worktree in another repository.","expected":"Include it in sweep and remove when all guards pass.","contractPattern":"per-run worktrees in other[\\s\\S]{0,25}repositories[\\s\\S]{0,650}remove"},
-    {"id":"remote-branch-counterpart","input":"A settled worktree branch has a remote counterpart.","expected":"Keep the branch.","contractPattern":"remote counterpart are never deleted"},
-    {"id":"other-run-reviewer","input":"A reviewer of another live Axstack run is settled, released, quiet for 60 minutes, and its evidence is durable.","expected":"Remove the settled reviewer worktree even while its owning run remains live.","contractPattern":"live owning run does not protect its settled.{0,25}reviewer worktree.{0,400}ANY Axstack run on this host"},
-    {"id":"other-run-merged-author","input":"An author of another live Axstack run has a merged PR, retrievable head, and no active Dispatch for 60 minutes.","expected":"Remove the merged author worktree after preservation checks.","contractPattern":"live owning run does not protect its settled.{0,60}merged author after preservation checks.{0,400}ANY Axstack run on this host"},
-    {"id":"adviser-between-rounds","input":"An Align or Spec adviser is being reused between rounds; its owning phase is still open and it spoke within 60 minutes.","expected":"Keep the adviser session until phase approval or stop.","contractPattern":"Align/Spec adviser.{0,180}phase approves or stops"},
-    {"id":"release-unknown-shared-terminal","input":"A settled worker in a shared driver worktree has release_unknown, no working agent, and no terminal output for 60 minutes.","expected":"Close its exact terminal, using the guarded native fallback if needed.","contractPattern":"For `release_unknown`[\\s\\S]{0,300}otherwise hold unless inspection proves a settled, quiet worker[\\s\\S]{0,160}exact terminal[\\s\\S]{0,80}Unknown liveness holds"},
-    {"id":"driver-terminal-protected","input":"A settled worker shares the driver's worktree; its terminal is quiet for 60 minutes, but the driver's terminal remains active.","expected":"Close only the worker terminal and never the driver terminal.","contractPattern":"shared or driver worktree[\\s\\S]{0,300}Never close the live coordinator[\\s\\S]{0,80}driver's own terminal"},
-    {"id":"completed-watch-automation","input":"A disabled per-run watch has completed because every watched PR merged or closed, and its dedicated workspace is clean with a remote head and no live terminal.","expected":"Remove the owned automation by exact ID and then its dedicated workspace.","contractPattern":"disabled per-run[\\s\\S]{0,20}watch[\\s\\S]{0,300}merged or closed[\\s\\S]{0,350}orca automations remove <id>[\\s\\S]{0,300}dedicated workspace"},
-    {"id":"watch-workspace-needs-salvage","input":"An eligible disabled per-run watch has a dirty or unpublished dedicated workspace.","expected":"Salvage and verify its work before removing the workspace; preserve it on failed verification.","contractPattern":"dedicated workspace[\\s\\S]{0,500}dirty or unpublished[\\s\\S]{0,200}salvage[\\s\\S]{0,200}hold"},
-    {"id":"durable-review-manager-protected","input":"A durable peer-review manager automation is disabled but was not created by the closing run.","expected":"Preserve the automation and its dedicated workspace.","contractPattern":"durable review manager and its dedicated workspace"},
-    {"id":"unowned-disabled-automation-workspace","input":"A disabled user automation has a dedicated workspace but no recorded Axstack Run creation identity.","expected":"Preserve the automation and workspace even though the automation is disabled.","contractPattern":"user-created automation and its dedicated workspace"}
+    {
+      "id": "author-retained-while-open",
+      "input": "An author has completed its run but its PR remains open.",
+      "expected": "Retain the author worktree for repairs.",
+      "contract": "Keep the author worktree and thread until the PR merges or closes."
+    },
+    {
+      "id": "cleanup-order",
+      "input": "A settled reviewer has evidence and dirty source in its disposable checkout.",
+      "expected": "Settle descendants, preserve bytes, archive metadata, then remove exact resources.",
+      "contract": "Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches."
+    },
+    {
+      "id": "dirty-non-author-salvaged",
+      "input": "A completed non-author has uncommitted or unpublished useful content.",
+      "expected": "Create a salvage ref, commit, bundle and verify before removal.",
+      "contract": "Before removal of an eligible non-author worktree with uncommitted or unpublished content, create a salvage ref, run `git add -A`, commit on that ref, write a `git bundle` into the private run folder, and run `git bundle verify`."
+    },
+    {
+      "id": "salvage-receipt",
+      "input": "The eligible worktree has a verified salvage bundle.",
+      "expected": "Record bundle and commit identities before deleting the checkout.",
+      "contract": "Record the bundle path, bundle SHA-256, and salvage commit SHA in the receipt before removing the worktree."
+    },
+    {
+      "id": "failed-bundle-verify",
+      "input": "The salvage bundle fails git bundle verify.",
+      "expected": "Hold the worktree.",
+      "contract": "A failed bundle verify holds the worktree."
+    },
+    {
+      "id": "ignored-non-cache-file",
+      "input": "A completed worktree has ignored source outside known caches.",
+      "expected": "Explicitly classify and preserve the bytes before any removal.",
+      "contract": "Ignored non-cache files must be explicitly classified and preserved in a verified salvage bundle before removal; unknown files hold the worktree."
+    },
+    {
+      "id": "submodule-or-outside-content",
+      "input": "A settled worktree has submodule changes or content outside its root.",
+      "expected": "Hold without attempting salvage.",
+      "contract": "Submodule changes and content outside the worktree hold instead of being salvaged."
+    },
+    {
+      "id": "author-salvage-protected",
+      "input": "An author has dirty source and an open PR.",
+      "expected": "Keep the author and do not salvage it for retirement.",
+      "contract": "Never salvage an author worktree before merge or closure."
+    },
+    {
+      "id": "user-taken-over-thread",
+      "input": "A settled T3 thread has been taken over by the user.",
+      "expected": "Retain it without cleanup commands.",
+      "contract": "Retain a user-taken-over T3 thread and never send cleanup commands to it, including `t3_thread_organize` settle or archive."
+    },
+    {
+      "id": "driver-and-unsettled-protected",
+      "input": "A candidate shares the current pass worktree or has an unsettled child.",
+      "expected": "Preserve the driver and the unsettled resources.",
+      "contract": "Never remove the current driver, current pass, an active or unknown thread, an unsettled descendant, or a resource with ambiguous ownership."
+    },
+    {
+      "id": "project-inventory",
+      "input": "The phase driver starts a cleanup sweep in one Axstack project.",
+      "expected": "Join native threads, Git worktrees and run records within project scope.",
+      "contract": "The sweep inventory is fully paginated project-scoped T3 threads plus `git worktree list --porcelain` plus run records."
+    },
+    {
+      "id": "user-created-and-other-projects",
+      "input": "The native inventory includes a user-created thread and another project worktree.",
+      "expected": "Report both and leave them untouched.",
+      "contract": "User-created threads and other projects' items are reported, never touched."
+    },
+    {
+      "id": "cleanup-preflight-off",
+      "input": "T3 offers an automatic worktree cleanup setting for this project.",
+      "expected": "Require automatic cleanup off.",
+      "contract": "`worktreeCleanup` must be `off` for every Axstack project."
+    },
+    {
+      "id": "cleanup-preflight-readback",
+      "input": "Project cleanup settings are exposed by the runtime schema.",
+      "expected": "Read the setting through the project API.",
+      "contract": "Preflight reads back `worktreeCleanup` via `t3_project_read` where exposed; otherwise record a limitation pointing to the documented installation setup step."
+    },
+    {
+      "id": "remote-branch-counterpart",
+      "input": "A settled checkout branch has a remote counterpart.",
+      "expected": "Retain that branch.",
+      "contract": "Branches with a remote counterpart are never deleted."
+    },
+    {
+      "id": "local-branch-deletion",
+      "input": "An exact local-only branch belongs to a removed worktree and has no unique commits.",
+      "expected": "Delete only the proven local branch without force and verify absence.",
+      "contract": "Use exact `git branch -d <branch>` only for a proven run-owned local-only branch whose tip is reachable from the preserved candidate, verified salvage ref, or confirmed remote PR head; unique or unknown commits hold branch deletion."
+    },
+    {
+      "id": "preservation-readback",
+      "input": "The evidence helper produced a manifest but continuity cannot be read back.",
+      "expected": "Keep the source and worktree.",
+      "contract": "Read back the durable receipt and evidence manifest before removing source copies or the worktree; missing or differing readback holds removal."
+    },
+    {
+      "id": "no-force-removal",
+      "input": "All preservation and liveness checks passed for an exact checkout.",
+      "expected": "Use exact Git worktree removal and verify its absence.",
+      "contract": "Remove only the exact recorded path with `git worktree remove <path>` without force, then read back `git worktree list --porcelain` to verify absence."
+    },
+    {
+      "id": "safe-deletion-target",
+      "input": "A worker is preparing a shell deletion.",
+      "expected": "Use an owned literal absolute or guarded path.",
+      "contract": "Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree."
+    },
+    {
+      "id": "safe-deletion-prohibitions",
+      "input": "A proposed deletion targets a shared root or uses a bare variable.",
+      "expected": "Reject the unsafe target.",
+      "contract": "Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target."
+    }
   ]
 }

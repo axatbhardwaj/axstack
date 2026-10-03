@@ -130,7 +130,7 @@ PRs cannot starve older unserved work.
 
 ## Per-PR jobs
 
-At PR-job and reviewer dispatch, apply [Readable sidebar](workspace-hygiene.md#readable-sidebar).
+At PR-job and reviewer dispatch, apply [Readable sidebar](workspace-hygiene.md#settlement).
 Include [Safe deletion](workspace-hygiene.md#safe-deletion) in PR-job briefs.
 
 The logical manager lane owns ongoing discovery and continuity across finite
