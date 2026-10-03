@@ -16,7 +16,7 @@ binding state and receipts to exact revisions.
   Workers launch no recursive teams.
 - Reviewers: peer = two configured roles with the same brief and isolated first
   pass; authored = one eligible role from author provenance. Each uses a
-  separate Orca child worktree and private per-Dispatch evidence folder. Owner and author never review.
+  separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
@@ -40,18 +40,17 @@ Preparation completion/watch expiry writes a record. Ordinary resume
 reconciles it, keeps the current owner, and launches no native handoff.
 Only an explicit user request to transfer ownership enters this branch.
 
-1. Reconcile the [Run record](run-record.md) with Orca Tasks, Dispatches,
-   sessions, Git revisions, forge, pending receipts, and timer expiries; live
-   owners and authoritative Dispatches beat stale state.
-2. Load the [Orca runtime boundary](orca-runtime.md), then follow its
-   version-matched runtime-owned handoff guidance. Never guess calls, paths,
-   roles, or fallback models. Guide discovery does not prove capability.
-3. If the native capability is missing, report the exact setup gap and
-   keep the current owner; no replacement or ownership transfer launches.
-   Read-only reconciliation may continue.
-4. Record recipient/pending receipt before launch. If uncertain, reconcile the
-   actual workspace/session before retry and block duplicates.
-5. Launch is not ownership. Record the recipient's explicit acceptance receipt
+1. Reconcile the [Run record](run-record.md) with T3 threads, runs, Git revisions,
+   forge state, pending receipts and scheduled-task expiries; live owners and
+   current attempt identities beat stale state.
+2. Load [T3 runtime](t3-runtime.md) for native resume and transfer. Keep the same
+   owner, author, attempt and worktree on ordinary resume; never guess tools,
+   roles, paths or fallback models. Capability discovery is not execution proof.
+3. Missing capability holds transfer with the current owner retained; read-only
+   reconciliation may continue. Record the recipient and pending receipt before
+   launch; reconcile exact-title thread inventory and Git worktrees before retry
+   to block duplicates.
+4. Launch is not ownership. Record the recipient's explicit acceptance receipt
    before changing ownership; current owner remains accountable until then. A
    prior owner seeing a different valid accepted owner stops.
 
@@ -62,7 +61,7 @@ receipts/timers, unresolved decisions, next action, and transfer status.
 
 Store receipt references, not raw output, in the [Run record](run-record.md).
 
-- Session receipt: actual agent/workspace IDs, requested provider/model and
+- Session receipt: actual projectId, threadId/runId or taskId/childThreadId/childRunId, attempt key and checkout path, requested provider/model and
   role; reuse on resume.
 - Acceptance receipt: sender/recipient, accepted scope/authority, timestamp,
   and ownership session receipt.
@@ -77,39 +76,43 @@ Store receipt references, not raw output, in the [Run record](run-record.md).
 
 ## Execution tracking
 
-The driver consumes native Orca completion and escalation deliveries for the
-active Run. A driver turn does not end while a Dispatch is unsettled unless one
-completion wait from the orchestration guide is armed (background where the
-harness supports it, foreground otherwise) and re-armed on timeout; sleep or
-poll loops are forbidden. An explicitly invoked phase dispatches its configured
-roles through Orca and closes with the lifecycle close-out; in-chat execution
-covers only ordinary reading, writing, and local checks. Heartbeat deliveries
-are acknowledged with no user-facing text. Process each whole delivery before
-acknowledgment and validate its Task, Dispatch, sender, authority, revisions,
-and receipts before advancing the run record. Duplicate deliveries are
-deduplicated by runtime identity. Healthy unchanged passes are silent.
-Accepted `worker_done` completes a Task only with evidence: a required
-change with empty base→head diff or missing named artifact is ack-only.
-Re-dispatch the same author once; a repeat holds that Task with reason and
-resume condition. In the same driver turn, dispatch each unblocked dependent
-after verifying scope, authority, owner, revisions, and dependencies;
-record why others are not ready in `Next:`. An unreachable predecessor holds.
-Update one `Next:` line on each transition: owner, last receipt time, next
-action, hold; reconcile it for status questions. A stale
-Dispatch receipt is evidence, never completion of a newer Dispatch or Task.
-After accepting worker, Task, or Run completion, the driver
-invokes [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never
-dispatches cleanup work.
+Follow [T3 runtime](t3-runtime.md) for native completion, questions, launch
+recovery and run-watch waits. Delegated notifications wake the driver; a launched
+writer sends its marker with `t3_thread_send` to the recorded driver thread.
+Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.
+Writer completion requires `AXSTACK-DONE` plus terminal `t3_thread_wait` on the recorded run and candidate checks: non-empty diff, clean tree, and named red/green logs.
+Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one.
+Process the whole delivery before advancement, validating sender, scope,
+authority, revisions and artifacts. Deduplicate by native task/thread/run identity.
+A question marker stays incomplete; failure, interruption, permission prompts
+and refusals hold with preserved evidence. Receipt messages alone are progress.
+Healthy unchanged passes are silent.
+An explicitly invoked phase dispatches its configured roles through T3 and
+closes with the lifecycle close-out; in-chat execution covers only ordinary
+reading, writing and local checks.
 
-Detect completed-but-unadvanced work, failed sessions, unresolved launch
-receipts, and stalls through the version-matched orchestration guide. Never
-duplicate a writer; idle is not complete. `input_accepted`, `turn_started`,
-session liveness, delivery, and verified advancement are distinct evidence.
-On `consumer_fenced`, reconcile the active coordinator rather than borrowing an
-identity. Respect settlement protection including `user_takeover`.
+For a required change with an empty base-to-head diff or missing named artifact,
+retain the incomplete state, return to the same author once, and hold on repeat.
+Dispatch each unblocked dependent after verifying scope, authority, owner,
+revisions and dependencies in the same driver turn; record why others are not
+ready. An unreachable predecessor holds. Update one `Next:` line on each
+transition with owner, last receipt time, next action and hold; reconcile it for
+status questions. Stale receipts remain evidence only.
 
-Axstack creates no execution heartbeat or substitute scheduler. See
-[Review automation health](#review-automation-health).
+End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles all unsettled runs.
+Use terminal `t3_thread_wait` and the recorded watch as the runtime contract
+requires, re-arming waits on timeout; sleep or poll loops are forbidden. Delete the watch by exact ID and
+verify absence once nothing remains unsettled. After each delegated completion,
+verify the driver's HEAD and status unchanged before advancing. Input acceptance,
+run start, effective configuration, terminal success and verified advancement
+are distinct evidence. Detect completed-but-unadvanced work, failed runs,
+unresolved launch receipts and stalls through native state. Idle is not complete; never duplicate a writer. Reconcile
+thread/run identity mismatches rather than borrowing identities. Retain a
+user-taken-over thread without cleanup commands.
+
+After accepting task or run completion, the driver invokes
+[axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never dispatches cleanup work.
+Axstack creates no heartbeat or substitute scheduler.
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Deadline (one rule for every owned timer)
@@ -122,12 +125,12 @@ differs from merged; human merges.
 
 ## Review automation health
 
-The native review manager uses fresh finite sessions in one dedicated existing
-Orca workspace on a 15-minute schedule. It admits actionable PR events within
-measured host capacity; waiting PRs remain covered without reserving slots.
-Bounded PR jobs use per-PR worktrees and settle after descendants. Build no
-custom scheduler, state engine, or legacy fallback. See
-[Review manager](automations.md).
+The native review manager uses fresh finite T3 pass threads from its dedicated
+lane project on a 15-minute T3 scheduled task. It admits actionable PR events
+within measured host capacity; waiting PRs remain covered without reserving slots.
+Bounded PR jobs use driver-made detached checkouts and settle after descendants.
+Build no custom scheduler, state engine or legacy fallback. See
+[Review manager](automations.md) for binding, canary, capacity and schedule health.
 
 ## Audit hook (close-out and meaningful checkpoints)
 
@@ -140,19 +143,18 @@ nothing without tested independent review.
 
 ## Close-out
 
-PRs merge by forge state; close out: (1) settle every worker
-terminal; (2) compact record with counts and denominators—user
+PRs merge by forge state; close out: (1) settle every T3 worker run and archive eligible threads; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`. A base auditor preflight rejection
-(no Dispatch started) records `auditor: UNKNOWN (unlaunchable)` with the
+(no delegated task started) records `auditor: UNKNOWN (unlaunchable)` with the
 attempted route and error as the archive receipt; no substitution. A launched
-auditor Dispatch must settle; (4) release merged run worktrees and branches;
-use `axstack-cleanup`, remove the run's own automations under
+auditor task must settle; (4) release merged run worktrees and branches;
+use `axstack-cleanup`, remove the run's own scheduled tasks under
 [Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; auditor decision plus settlement
-receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; automation,
+receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; scheduled-task,
 release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.

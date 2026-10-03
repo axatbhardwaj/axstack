@@ -387,21 +387,21 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   const watch = skill('axstack-watch');
 
   expect(
-    /driver turn does not end[^.]*Dispatch is unsettled[^.]*completion wait[^.]*armed[^.]*re-armed on timeout[^.]*sleep or poll loops are forbidden/i.test(lifecycle),
-    'an unsettled Dispatch must keep one completion wait armed and forbid sleep or poll loops',
+    /End a driver turn[^.]*unsettled launched thread[^.]*bound run watch is armed/i.test(lifecycle),
+    'an unsettled launched thread must keep its bound run watch armed',
   ).toBeTruthy();
-  expect(lifecycle).toMatch(/Heartbeat deliveries are acknowledged with no user-facing text/i);
+  expect(lifecycle).toMatch(/Healthy unchanged passes are silent/i);
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
   expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
-  expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through Orca[^.]*lifecycle close-out/i);
+  expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through T3[^.]*lifecycle close-out/i);
   expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [
     'forge state',
-    'settle every worker terminal',
+    'settle every T3 worker run and archive eligible threads',
     'user interventions',
     'deviations from plan',
     'repairs',

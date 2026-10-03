@@ -60,7 +60,7 @@ test('unlaunchable base auditor archives UNKNOWN with route and error', () => {
   for (const prose of [lifecycle, audit]) {
     expect(prose).toMatch(/auditor: UNKNOWN \(unlaunchable\)/i);
     expect(prose).toMatch(/attempted route[^.]*error[^.]*archive/i);
-    expect(prose).toMatch(/launched[^.]*Dispatch[^.]*settle/i);
+    expect(prose).toMatch(/launched[^.]*(?:Dispatch|task)[^.]*settle/i);
     expect(prose).toMatch(/no substitution/i);
   }
 });

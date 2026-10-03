@@ -34,7 +34,7 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
 test('implement loop: close-out requires an Archived record with every step receipt', () => {
   expect(loaded).toMatch(/compact record[^.]*counts and denominators/i);
   expect(loaded).toMatch(/auditor: UNKNOWN \(unlaunchable\)[^.]*attempted route and error[^.]*archive receipt/i);
-  expect(loaded).toMatch(/launched auditor Dispatch must settle/i);
+  expect(loaded).toMatch(/launched auditor task must settle/i);
   expect(loaded).toMatch(
     /settlement receipt[^.]*compact record path[^.]*auditor decision[^.]*settlement receipt[^.]*counts zero[^.]*unlaunchable UNKNOWN archive receipt[^.]*release[^.]*ticket receipts[^.]*archive timestamp/i,
   );
