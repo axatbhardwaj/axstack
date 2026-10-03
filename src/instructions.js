@@ -9,7 +9,11 @@ export function renderInstructionBlock() {
     BEGIN,
     'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
     '`axstack-implement` loops author -> review -> repair until every PR is merge-ready.',
-    'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through Orca orchestration via the `orca` CLI and its `orca-cli` / `orchestration` skills so the work stays visible.',
+    'Route every subagent, delegated worker, reviewer, and cross-harness dispatch through T3 Code orchestration using the `t3-code` MCP.',
+    'Use `delegate_task` for non-writer roles.',
+    'Use `t3_thread_launch` for writers.',
+    'Follow [T3 runtime](skills/axstack/references/t3-runtime.md) for the runtime contract.',
+    'The user authorizes Axstack drivers in T3 to run full-access and launch top-level writer threads and worktrees within approved scope.',
     'Do not use a harness native subagent tool for delegated work.',
     END,
   ].join('\n');
@@ -89,12 +93,13 @@ export function stripInstructionBlock(text, ownership, { force = false } = {}) {
   };
 }
 
+// AC3 exemption: detection only, never an active runtime dependency.
+export const LEGACY_ROUTING_PATTERN = /\bhaoshoku\b.*\b(?:rout\w*|skills?)\b|\b(?:planning-advisor|review-code|paseo-pr-review|paseo-pr-babysit)\b|\borca(?:-cli)?\b.*\b(?:orchestrat\w*|rout\w*|delegat\w*|dispatch\w*|subagents?|workers?|reviewers?)\b|\b(?:orchestrat\w*|rout\w*|delegat\w*|dispatch\w*|subagents?|workers?|reviewers?)\b.*\borca(?:-cli)?\b/i;
+
 export function findLegacyRoutingLines(text) {
   const located = locateInstructionBlock(text);
   const outside = located
     ? text.slice(0, located.start) + text.slice(located.end)
     : text;
-  return outside.split('\n').filter((line) =>
-    /\bhaoshoku\b.*\b(?:rout\w*|skills?)\b|\b(?:planning-advisor|review-code|paseo-pr-review|paseo-pr-babysit)\b/i.test(line),
-  );
+  return outside.split('\n').filter((line) => LEGACY_ROUTING_PATTERN.test(line));
 }

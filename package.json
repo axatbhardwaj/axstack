@@ -1,11 +1,11 @@
 {
   "name": "axstack",
   "version": "0.20.31",
-  "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks Orca capabilities.",
+  "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks T3 Code capabilities.",
   "keywords": [
     "claude-code",
     "codex",
-    "orca",
+    "t3-code",
     "agents",
     "skills",
     "orchestration"
