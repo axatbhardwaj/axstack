@@ -3,13 +3,17 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const runtime = () => read('skills/axstack/references/t3-runtime.md');
-const blocks = (text) => text.split(/\n\s*\n/).map((part) => part.replace(/[`*]/g, '').replace(/\s+/g, ' ').trim());
+const blocks = (text) => text.split(/\n\s*\n|\n(?=\|)/).map((part) => part.replace(/[`*]/g, '').replace(/\s+/g, ' ').trim());
+const sentences = (text) => blocks(text).flatMap((block) => block.split(/\.\s+(?=[A-Z])/));
 // Each contract is local to one paragraph/table: scattered vocabulary cannot
 // satisfy it. These prove prose instructions, not live T3 compliance.
 const satisfies = (block, patterns) => /\b(?:must|shall|require(?:d|s)?)\b/i.test(block)
   && !/\b(?:must not|shall not|not required|need not|optional|may instead)\b/i.test(block)
   && patterns.every((pattern) => new RegExp(pattern, 'i').test(block));
-const invert = (text) => text.replace(/\b(?:must|shall|require(?:d|s)?)\b/gi, 'need not');
+// Mutate the matched instruction, retaining its subject and API vocabulary.
+// Sentence rules supply directional flips; a positive mandate flips by default.
+const invert = (text, flip = [/\b(?:must|shall|require(?:d|s)?)\b/i, 'must not']) => text.replace(...flip);
+const matches = (text, patterns) => patterns.every((pattern) => new RegExp(pattern, 'i').test(text));
 
 // Independent paraphrases exercise meaning while API identifiers stay exact.
 const rules = [
@@ -17,14 +21,14 @@ const rules = [
     'A T3 driver must save orchestrator_capabilities and follow the advertised schema.'],
   ['role snapshot', ['roles.json', 'preset', 'stable.*ID', 'snapshot', 'resume', 'no re-resolution'],
     'The preset roles.json must be snapshotted by stable role ID; resume uses that snapshot with no re-resolution.'],
-  ['read-only delegates', ['advisers', 'research', 'diligence', 'delegate_task', 'async', 'driver worktree', 'evidence', 'untouched'],
-    'Advisers, research and diligence must use async delegate_task in the driver worktree; files stay untouched and outputs go to evidence.'],
-  ['probe delegates', ['reviewers', 'debug', 'execution', 'UI verifier', 'delegate_task', 'detached', 'candidate SHA', 'pinned base', 'disposable', 'cd'],
-    'Reviewers, debug and execution investigators and the UI verifier must cd into a disposable detached checkout of the candidate SHA and pinned base before delegate_task work.'],
+  ['read-only delegates', ['advisers', 'research', 'diligence', 'delegate_task', 'async', 'driver worktree', 'writes only <run>/evidence/<key>/', 'title = dispatch key', 'untouched'],
+    'Advisers, research and diligence must use async delegate_task in the driver worktree with title = dispatch key; files stay untouched and the worker writes only <run>/evidence/<key>/.'],
+  ['probe delegates', ['reviewers', 'debug', 'execution', 'UI verifier', 'delegate_task', 'detached', 'candidate SHA', 'pinned base', 'disposable', 'cd', 'title = dispatch key', 'outputs.*<run>/evidence/<key>/'],
+    'Reviewers, debug and execution investigators and the UI verifier must cd into a disposable detached checkout of the candidate SHA and pinned base before delegate_task work; title = dispatch key and outputs go to <run>/evidence/<key>/.'],
   ['writer launch', ['author', 'code-arena', 't3_thread_launch', 'type:worktree', 'startFromOrigin:false', 'own worktree', 'merges or closes'],
     'The author and code-arena writers must use t3_thread_launch with type:worktree and startFromOrigin:false in their own worktree, kept until the PR merges or closes.'],
-  ['driver ownership', ['driver', 'sole.*run.record writer', 'never.*tracked', 'one writer per candidate'],
-    'The driver must remain the sole run-record writer, never change tracked candidate files, and enforce one writer per candidate.'],
+  ['driver ownership', ['driver', 'sole.*run.record writer', 'never (?:writes|changes|edits) tracked files(?! concurrently)', 'one writer per candidate'],
+    'The driver must remain the sole run-record writer, never changes tracked files, and enforce one writer per candidate.'],
   ['provider mapping', ['codex.*codex', 'claude.*claudeAgent', 'grok.*grok', 'antigravity.*antigravity', 'modeId', 'runtimeMode:full-access', 'options', 'id,value'],
     'Provider bindings must map codex to codex, claude to claudeAgent, grok to grok and antigravity to antigravity; modeId becomes runtimeMode:full-access and options contain id,value.'],
   ['pinned model', ['preset model', 'as given'],
@@ -105,13 +109,83 @@ const rules = [
     'Input acceptance, started and completed must remain distinct evidence; silence never proves exit and resume preserves the same owner.'],
   ['ownership transfer', ['explicit.*transfer', 'recipient acceptance', 'scope', 'revision', 'authority', 'before.*ownership', 'current owner'],
     'An explicit transfer must validate recipient acceptance against scope, revision and authority before ownership changes; until then the current owner remains accountable.'],
-  ['authority fence', ['authority fence', 'stop.*consum', 'reconcile.*coordinator', 'never.*forge.*sender', 'borrow.*identity', 'partial.*acknowledg'],
-    'At an authority fence the driver must stop consuming and reconcile the coordinator; never forge a sender, borrow an identity or partially acknowledge delivery.'],
-  ['user takeover retention', ['user takeover', 'retain', 'never.*release.*reuse.*command'],
-    'After user takeover the driver must retain the session and never release, reuse or send cleanup commands to it.'],
+  ['runtime identity mismatch', ['T3', 'threadId/runId', 'mismatch', 'stop.*consum', 'reconcile.*driver', 'never.*forge.*sender', 'borrow.*identity'],
+    'On a T3 threadId/runId mismatch the driver must stop consuming and reconcile the driver identity; never forge a sender or borrow an identity.'],
+  ['user takeover retention', ['user.taken.over T3 thread', 'retain', 'never.*cleanup commands', 't3_thread_organize', 'settle', 'archive'],
+    'The driver must retain a user-taken-over T3 thread, never send cleanup commands including t3_thread_organize settle or archive.'],
   ['native runtime boundary', ['no Axstack daemon', 'DB', 'lock', 'scheduler', 'private evidence', 'explicit publication authority', 'no merge.*release.*authority'],
     'The runtime must provide no Axstack daemon, DB, lock or scheduler; private evidence needs explicit publication authority and receipts grant no merge or release authority.'],
 ];
+
+// These decisions used to borrow a neighboring sentence's mandate. Match each
+// sentence independently so removing or reversing just that decision is red.
+const sentenceRules = [
+  ['owner row', ['^\\| Owner \\|', 'Driver thread', 'Driver worktree', 'never (?:writes|edits|changes) tracked files(?! concurrently)', 'No worker launch'],
+    '| Owner | Driver thread in Driver worktree; never edits tracked files | No worker launch |', [/never edits|never writes/i, 'sometimes writes']],
+  ['missing capability', ['Missing capability (?:must )?holds?', 'affected operation', 'without a substitute runtime'],
+    'Missing capability must hold the affected operation without a substitute runtime.', [/\bholds?\b/i, 'permits']],
+  ['Grok CLI floor', ['Grok.*CLI.*(?:requires|must be).*≥1\\.0\\.13'],
+    'Grok CLI must be ≥1.0.13.', [/≥1\.0\.13/, '<1.0.13']],
+  ['Grok readiness proof', ['Advertising Grok alone does not prove.*CLI runs'],
+    'Advertising Grok alone does not prove its CLI runs.', [/does not prove/, 'proves']],
+  ['separate binding evidence', ['Record requested and effective values separately', 'worker self.report is not configuration proof'],
+    'Record requested and effective values separately; a worker self-report is not configuration proof.', [/is not configuration proof/, 'is configuration proof']],
+  ['other effort limitation', ["Other providers.*effort read.back remains unverified until exercised"],
+    "Other providers' effort read-back remains unverified until exercised.", [/remains unverified/, 'is verified']],
+  ['canary rejection', ['Rejection (?:stops|blocks).*siblings.*configuration', 'unrelated configurations remain eligible'],
+    'Rejection blocks siblings of that configuration; unrelated configurations remain eligible.', [/stops|blocks/, 'permits']],
+  ['repair ownership', ['Repairs (?:must )?return to (?:that|the same) author'],
+    'Repairs must return to the same author.', [/return to/, 'never return to']],
+  ['idle ownership', ['Missing or idle sessions (?:grant no|never grant) ownership transfer'],
+    'Missing or idle sessions never grant ownership transfer.', [/grant no|never grant/, 'grant']],
+  ['pinned dispatch revisions', ['Pin base and candidate before dispatch'],
+    'Pin base and candidate before dispatch.', [/before dispatch/, 'after dispatch']],
+  ['report identity', ['Reports use absolute private evidence paths', 'report.only head is the pinned candidate SHA'],
+    'Reports use absolute private evidence paths; report-only head is the pinned candidate SHA.', [/absolute private/, 'relative public']],
+  ['stale receipt evidence', ['stale or duplicate receipts remain evidence', 'deduplicated by runtime identity'],
+    'Stale or duplicate receipts remain evidence, deduplicated by runtime identity.', [/remain evidence/, 'complete work']],
+  ['delivery validation', ['Process the whole delivery before acknowledgment', 'advance only after checking sender, scope and artifacts'],
+    'Process the whole delivery before acknowledgment and advance only after checking sender, scope and artifacts.', [/before acknowledgment/, 'after acknowledgment']],
+  ['silence completion', ['Silence is not successful completion'],
+    'Silence is not successful completion.', [/is not/, 'is']],
+  ['unreconciled worktree', ['branch or worktree without a reconciled thread prevents proof of absence'],
+    'A branch or worktree without a reconciled thread prevents proof of absence.', [/prevents/, 'proves']],
+  ['silence duplicate', ['Never launch a duplicate writer based on silence'],
+    'Never launch a duplicate writer based on silence.', [/Never/, 'Always']],
+  ['unresolved launch', ['unresolved state preserves the attempt'],
+    'An unresolved state preserves the attempt.', [/preserves/, 'discards']],
+  ['unknown writer liveness', ['Unknown liveness holds replacement', 'reconcile the old writer before admitting another'],
+    'Unknown liveness holds replacement; reconcile the old writer before admitting another.', [/holds replacement/, 'permits replacement']],
+  ['uncertain watch deletion', ['uncertain delete preserves the hold and recorded ID'],
+    'An uncertain delete preserves the hold and recorded ID.', [/preserves/, 'clears']],
+  ['cleanup evidence priority', ['Automatic worktree deletion cannot replace evidence readback and salvage'],
+    'Automatic worktree deletion cannot replace evidence readback and salvage.', [/cannot replace/, 'replaces']],
+  ['safe deletion in briefs', ['(?:Put|Include).*Safe.deletion rule.*every worker brief'],
+    'Include the Safe-deletion rule in every worker brief.', [/every worker brief/, 'only author briefs']],
+  ['untracked retention', ['Untracked files never prove a worktree disposable'],
+    'Untracked files never prove a worktree disposable.', [/never prove/, 'prove']],
+  ['driver preset exclusion', ['current (?:chat/driver|driver).*no role row in any preset'],
+    'The current driver has no role row in any preset.', [/no role row/, 'a role row']],
+  ['named private evidence', ['Name the private <run>/evidence/<key>/ folder', 'brief and completion receipt'],
+    'Name the private <run>/evidence/<key>/ folder in the brief and completion receipt.', [/brief and completion receipt/, 'brief only']],
+  ['T3 settle evidence', ['T3 terminal run evidence.*before.*t3_thread_organize.*settle or archive', 'metadata.*not.*worktree removal'],
+    'Require T3 terminal run evidence before t3_thread_organize settle or archive; those metadata actions are not worktree removal.', [/before/, 'after']],
+];
+
+for (const [name, patterns, paraphrase, flip] of sentenceRules) {
+  test(`T3 sentence: ${name} rejects removal/inversion and accepts rewording`, () => {
+    const source = sentences(runtime());
+    const matching = source.filter((sentence) => matches(sentence, patterns));
+    expect(matching.length, `missing binding sentence: ${name}`).toBeGreaterThan(0);
+    expect(source.filter((sentence) => !matching.includes(sentence)).some((sentence) => matches(sentence, patterns))).toBe(false);
+    for (const sentence of [...matching, paraphrase]) {
+      const reversed = invert(sentence, flip);
+      expect(reversed, `no-op inversion: ${name}`).not.toBe(sentence);
+      expect(matches(reversed, patterns), `inverted sentence: ${name}`).toBe(false);
+    }
+    expect(matches(paraphrase, patterns), `paraphrase sentence: ${name}`).toBe(true);
+  });
+}
 
 for (const [name, patterns, paraphrase] of rules) {
   test(`T3 contract: ${name} rejects removal/inversion and accepts rewording`, () => {
@@ -127,7 +201,29 @@ for (const [name, patterns, paraphrase] of rules) {
   });
 }
 
-test('AC2 runtime recovery scenarios depend on removal-sensitive contracts', () => {
+const recoveryActions = {
+  'lost-launch-response': [
+    ['launch recovery outcomes', ['adopt.*one exact match', 'proven absence.*relaunch once|relaunch once.*proven absence', '(?:multiple|several).*incomplete.*hold']],
+    ['launch recovery inventory', ['keep.*reserved branch']],
+  ],
+  'silent-provisioning-failure': [
+    ['post-launch wait', ['(?:failed is|record) launch failure', 'activeRunId.*worktreePath.*(?:proves|is) started', 'still preparing.*hold.*next wake']],
+    ['failure classification', ['incomplete']],
+  ],
+  'writer-death-after-idle': [
+    ['idle writer watch', ['reconcile.*failed.*hold incomplete']],
+    ['replacement attempt', ['terminal failure', 'a<n\\+1>', 'failed.*branch.*salvage']],
+  ],
+  'stale-completion': [
+    ['stale completion', ['current attempt.*(?:candidate )?SHA', '(?:old|stale).*receipt.*evidence']],
+    ['status persistence', ['persist task_status.*before.*(?:thread reads|t3_thread_read)']],
+  ],
+  'child-question-resume': [
+    ['question resume', ['answer once.*t3_thread_send.*childThreadId', '(?:wait 600000ms|timeoutMs:600000)', 'latestTerminal.*newer than the question run']],
+  ],
+};
+
+test('AC2 runtime recovery expected actions are bound to rule text', () => {
   const scenarios = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json'));
   const expected = ['lost-launch-response', 'silent-provisioning-failure', 'writer-death-after-idle', 'stale-completion', 'child-question-resume'];
   expect(scenarios.cases.slice(0, expected.length).map(({ id }) => id)).toEqual(expected);
@@ -145,6 +241,19 @@ test('AC2 runtime recovery scenarios depend on removal-sensitive contracts', () 
       expect(source.map((block) => satisfies(block, patterns) ? invert(block) : block)
         .some((block) => satisfies(block, patterns))).toBe(false);
       expect(satisfies(paraphrase, patterns)).toBe(true);
+    }
+    for (const [name, actions] of recoveryActions[scenario.id]) {
+      expect(scenario.contracts).toContain(name);
+      const [, patterns] = rules.find(([id]) => id === name);
+      const instruction = blocks(runtime()).find((block) => satisfies(block, patterns));
+      expect(matches(scenario.expected.action, actions), `scenario action: ${scenario.id}`).toBe(true);
+      expect(matches(instruction, actions), `runtime action: ${scenario.id}`).toBe(true);
+      for (const action of actions) {
+        // Removing the action from either artifact invalidates this scenario.
+        const pattern = new RegExp(action, 'ig');
+        expect(matches(instruction.replace(pattern, ''), actions)).toBe(false);
+        expect(matches(scenario.expected.action.replace(pattern, ''), actions)).toBe(false);
+      }
     }
   }
 });

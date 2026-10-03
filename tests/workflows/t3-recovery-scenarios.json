@@ -11,7 +11,7 @@
       "id": "silent-provisioning-failure",
       "input": "Launch returned preparing and no notification; the 120000ms post-launch wait reports failed during worktree provisioning.",
       "contracts": ["SHA baseRef", "post-launch wait", "failure classification"],
-      "expected": { "action": "Record launch failure, never completed. A timeout with activeRunId and worktreePath proves started; still preparing holds until the next wake." }
+      "expected": { "action": "Record launch failure as incomplete, never completed. A timeout with activeRunId and worktreePath proves started; still preparing holds until the next wake." }
     },
     {
       "id": "writer-death-after-idle",
