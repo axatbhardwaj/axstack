@@ -48,10 +48,10 @@ test('tracking scenarios retain thirteen explicit decision boundaries', () => {
   }
 });
 
-test('execution binds one authoritative Orca Task and Dispatch', () => {
+test('execution binds the T3 driver thread and one authoritative dispatch attempt', () => {
   const implement = normalize(read('skills/axstack-implement/SKILL.md'));
   const runtime = normalize(read('skills/axstack/references/orca-runtime.md'));
-  expect(implement).toMatch(/driver-owned Orca Run[^.]*authoritative[^.]*Task\/Dispatch/i);
+  expect(implement).toMatch(/T3 driver thread[^.]*one authoritative[^.]*dispatch attempt/i);
   expect(runtime).toMatch(/exactly one Dispatch[^.]*write[^.]*candidate/i);
   expect(runtime).toMatch(/input_accepted[^.]*only[^.]*terminal/i);
   expect(runtime).toMatch(/turn_started[^.]*inspection/i);

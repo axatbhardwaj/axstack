@@ -425,7 +425,7 @@ const migrationPins = [
   ['skills/axstack/references/contracts.md', 'One T3 host/server owns a run.'],
   ['skills/axstack/references/contracts.md', "Every substitution requires the user's decision: configured alternatives are not defaults."],
   ['skills/axstack/references/contracts.md', 'Rejection, timeout, quota and auth failures hold affected work.'],
-  ['skills/axstack/references/routing.md', "Use an explicit model as given; for `model:null` without a class, use the provider's first listed model from saved capabilities and record its exact ID."],
+  ['skills/axstack/references/routing.md', "Use an explicit model as given; for `model:null` without a class, only grok and antigravity use the provider's first listed model from saved capabilities and record its exact ID."],
   ['skills/axstack/references/routing.md', 'Later installed or changed roles need an explicit user decision to enter the snapshot.'],
   ['skills/axstack/references/routing.md', 'Replacing a session needs an explicit user decision and revalidation.'],
   ['skills/axstack/references/run-record.md', 'Before changing `Driver` or a task `Owner`, verify that the prior driver is inactive against actual T3 thread and run state, or that an explicit accepted transfer permits reassignment.'],
@@ -450,8 +450,8 @@ for (const [path, sentence] of migrationPins) {
 }
 
 const migrationRules = [
-  ['skills/axstack/references/routing.md', [/resolv\w*/i, /modelClass/i, /saved capabilities/i, /--provider/i],
-    'Resolve each modelClass with --provider from saved capabilities.'],
+  ['skills/axstack/references/routing.md', [/resolv\w*/i, /Codex/i, /Claude/i, /class/i, /saved T3 capabilities/i, /--provider/i, /--capabilities/i],
+    'From saved T3 capabilities, resolve Codex and Claude classes with --provider and --capabilities.'],
   ['skills/axstack/references/ui-verification.md', [/verifier/i, /use\w*/i, /T3/i, /preview_\*/i],
     'The verifier uses preview_* from T3.'],
   ['skills/axstack/references/run-record.md', [/record/i, /driver threadId/i, /projectId/i, /scheduledTaskIds/i],
