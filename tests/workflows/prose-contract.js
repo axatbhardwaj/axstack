@@ -11,7 +11,7 @@ export const requires = (text, ...concepts) => sentences(text).some((sentence) =
 // A prohibition must state its negative concept explicitly. Mask only that
 // expected phrase, then apply the same denial guard to the rest of the sentence.
 export const prohibits = (text, prohibition, ...concepts) => sentences(text).some((sentence) =>
-  prohibition.test(sentence) && concepts.every((concept) => concept.test(sentence))
+  new RegExp(prohibition.source, prohibition.flags.replace(/[gy]/g, '')).test(sentence) && concepts.every((concept) => concept.test(sentence))
   && requires(sentence.replace(prohibition, ''), /^/));
 
 // Preserve the linked target: a positive load/read directive owns its links,
