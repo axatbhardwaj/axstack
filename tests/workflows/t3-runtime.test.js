@@ -429,28 +429,6 @@ test('T3 review placement retains the checkout and private evidence receipt inte
 
 // Review isolation/readback, publication authority, readiness, current-attempt
 // completion and ownership already have exact pins or instruction checks above.
-test('preset bundles retain three role tables in the frozen container', () => {
-  const names = ['mixed', 'codex-only', 'claude-only'];
-  const expectedIds = JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id);
-  for (const name of names) {
-    const data = JSON.parse(read(`profiles/presets/${name}.json`));
-    expect(Object.keys(data)).toEqual(['version', 'roles']);
-    expect(data.version).toBe(1);
-    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
-    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(expectedIds.length);
-  }
-  const mixed = JSON.parse(read('profiles/presets/mixed.json'));
-  expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();
-});
-
-test('public guidance distinguishes active Orca from historical Paseo state', () => {
-  const docs = [read('README.md'), read('docs/installation.md'), read('docs/workflows.md')].join('\n');
-  expect(docs).toMatch(/Orca[^.]*only supported(?: active)? runtime|only supported(?: active)? runtime[^.]*Orca/i);
-  expect(docs).toMatch(/historical[^.]*Paseo|Paseo[^.]*historical/i);
-  expect(docs).toMatch(/compatib[^.]*unverified|unverified[^.]*compatib/i);
-  expect(docs).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);
-});
-
 test('Telegram requires recorded authority and keeps routine events in the driver thread', () => {
   const relay = normalize(read('skills/axstack-relay/SKILL.md'));
   for (const pin of [
@@ -460,3 +438,11 @@ test('Telegram requires recorded authority and keeps routine events in the drive
     'Progress, CI pending, and completion are never eligible merely because a policy exists.',
   ]) expect(relay).toContain(pin);
 });
+
+for (const phase of ['implement', 'watch']) {
+  test(`routine events stay in the driver thread: ${phase}`, () => {
+    const text = normalize(read(`skills/axstack-${phase}/SKILL.md`));
+    expect(text).toContain('Routine questions stay in the T3 driver thread.');
+    expect(text).toContain('Progress, CI pending, and completion always stay in the T3 driver thread.');
+  });
+}

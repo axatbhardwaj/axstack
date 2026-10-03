@@ -482,3 +482,17 @@ test('T5a run record exposes native delegated and writer identities', () => {
   for (const field of ['taskId/childThreadId/childRunId', 'threadId/runId/worktree/branch/base SHA',
     'capabilities JSON path', 'scheduledTaskIds', 'T3 threads and runs']) expect(text).toContain(field);
 });
+
+test('preset bundles retain three role tables in the frozen container', () => {
+  const names = ['mixed', 'codex-only', 'claude-only'];
+  const expectedIds = readJson('profiles/presets/mixed.json').roles.map(({ id }) => id);
+  for (const name of names) {
+    const data = readJson(`profiles/presets/${name}.json`);
+    expect(Object.keys(data)).toEqual(['version', 'roles']);
+    expect(data.version).toBe(1);
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
+    expect(new Set(data.roles.map(({ id }) => id)).size).toBe(expectedIds.length);
+  }
+  const mixed = readJson('profiles/presets/mixed.json');
+  expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();
+});
