@@ -612,6 +612,16 @@ for (const rule of rules) {
   });
 }
 
+for (const [name, inversion] of [
+  ['claude effort', 'Claude effort must use option ID reasoningEffort.'],
+  ['grok effort', 'Grok effort must exclude reasoningEffort and use max.'],
+  ['reserved branch', 'Through recovery keep the reserved branch only until recovery begins.'],
+]) {
+  test(`T3 operand relation: ${name}`, () => {
+    expect(accepts(inversion, rules.find((rule) => rule.name === name))).toBe(false);
+  });
+}
+
 test('prohibits is independent of prior calls with a global prohibition', () => {
   const prohibition = /no glob|no parent-root deletion/gi;
   expect(prohibits('No glob appears here.', prohibition, /missing concept/)).toBe(false);
