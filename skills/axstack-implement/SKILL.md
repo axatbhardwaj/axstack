@@ -230,6 +230,9 @@ For each PR:
    to step 1.
    Merge-ready also requires a current diligence `PASS` at that head; diligence
    `FINDINGS` return to the same author within the review round.
+   Before merge-ready, treat a run-record `Learning` that contradicts a shipped
+   rule as a finding on the owning PR and hold merge-ready until the contradiction is resolved.
+   An unrelated run-record `Learning` leaves merge-ready eligibility unchanged.
    A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` increments
    `repairs` once and counts once toward the third-round hold.
 

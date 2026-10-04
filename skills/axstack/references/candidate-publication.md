@@ -17,7 +17,16 @@ protection; a mismatch holds publication. If the push outcome is ambiguous,
 inspect remote state before retrying.
 
 Before reviewer dispatch, read the remote ref back and confirm that it resolves
-to the candidate SHA; also pin the current base. Record:
+to the candidate SHA; also pin the current base.
+After every push, before post-push diligence or merge-ready, compare the PR body's
+stated head SHA with `Confirmed remote SHA` and record `PR body head SHA: <sha or none>`.
+Accept `none` for a PR body without a stated head SHA.
+Accept a stated full head SHA only when it equals `Confirmed remote SHA`.
+Accept a stated abbreviated head SHA only when it is a matching prefix of
+`Confirmed remote SHA` with at least 7 hexadecimal characters.
+Hold on a mismatched head SHA or an abbreviation shorter than 7 characters.
+Leave other SHAs in the PR body unchanged.
+Record:
 
 ```text
 Candidate: <sha>
@@ -25,6 +34,7 @@ Base: <sha>
 Remote ref: <branch>
 Expected-old remote SHA: <sha | absent>
 Confirmed remote SHA: <sha>
+PR body head SHA: <sha or none>
 PR: <url>
 CI: <run ID or URL and triggered/pending/completed status>
 ```

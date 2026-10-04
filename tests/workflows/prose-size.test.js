@@ -19,8 +19,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-correct-ste T1: +86 bytes for literal owned-scratch cleanup and whole-worktree scope.
   // 20261004-correct-ste T2: +1322 bytes for close-out acceptance and spec receipt revisions.
   // 20261004-correct-ste T2 repair1: +78 bytes for explicit hold, high-stakes exception, and archive receipt.
+  // 20261004-correct-ste T3: +1391 bytes for body-head checks, diligence logs, and Learning findings.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(280612);
+  expect(total).toBeLessThanOrEqual(282003);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
