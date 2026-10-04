@@ -546,8 +546,6 @@ test('structural: docs/workflows.md exists and references phase skills', () => {
   expect(existsSync(p), 'missing docs/workflows.md').toBeTruthy();
   const text = readFileSync(p, 'utf8');
   for (const name of EXPECTED_SKILLS) {
-    // 20261004-correct-ste T6: docs integration belongs to the dependent T7 PR.
-    if (name === 'axstack-correct') continue;
     expect(text.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
 });
