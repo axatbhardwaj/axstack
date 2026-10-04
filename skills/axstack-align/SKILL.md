@@ -26,7 +26,9 @@ Set the rung from researched facts; never ask the user to choose it. A change
 inside one module's existing interface, ownership, data flow, and failure
 guarantees is Rung 0: no design questions or sketch. Otherwise load the
 [design lens ladder](../axstack/references/design-lens.md) for Rung 1 or 2
-and settle only unresolved areas in its order within the existing budget. Carry a
+and settle only unresolved areas in its order within the existing budget.
+For unresolved Rung 1 or 2 design questions, load
+[Brainstorm](../axstack-brainstorm/SKILL.md) inline. Carry a
 Rung 1 or 2 sketch in the substantial spec's `Design` section or the returned
 small-change intent. A design question alone does not make small work
 substantial; apply routing's existing size reassessment rule.
@@ -65,9 +67,10 @@ substantial; apply routing's existing size reassessment rule.
 The current chat remains the driver under
 [Standing contracts](../axstack/references/contracts.md). For each new
 user round, the driver independently drafts the prioritized frontier and
-recommendations, except for an arena-grade question (below), where the driver
-writes the brief and rubric but drafts no recommendation until the candidates
-and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
+recommendations, except for brainstorm questions, where the driver frames the
+brief and rubric and assesses after the candidates and required judge rounds
+return. Reuse valid brainstorm receipts to replace the adviser consult for
+that question. For other questions, consult `axstack-advisor-astra` and
 `axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
@@ -87,10 +90,10 @@ the draft unchanged; it needs no new adviser pair. Changed draft text, a
 blocking finding, or a high-stakes decision requires fresh receipts on the new
 revision.
 
-## Arena for hard-to-reverse design choices
+## Use the brainstorm synthesis
 
-For an arena-grade question, load [Brainstorm](../axstack-brainstorm/SKILL.md)
-inline and use its synthesis in the next `Qn`. The user still decides.
+Present its recommendation and trade-off in the next `Qn` within the same
+question budget. The user still decides; reuse unchanged receipts.
 
 ## Bound the interview
 

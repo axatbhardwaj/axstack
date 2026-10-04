@@ -31,7 +31,7 @@ test('repairs: arena skips optional failures and holds required seats', () => {
   const align = read('skills/axstack-brainstorm/references/arena.md');
   expect(align).toMatch(/optional Grok or Antigravity candidate[^.]*malfunctions[^.]*absent/i);
   expect(align).toMatch(/required adviser, candidate, or judge[^.]*failed receipt holds[^.]*question/i);
-  expect(align).toMatch(/record the gap and ask[^.]*whether to proceed/i);
+  expect(align).toMatch(/record the gap[^.]*proposed question[^.]*caller[^.]*whether to proceed/i);
   expect(align).toMatch(/uncertain dispatch[^.]*reconcile natively[^.]*never treated as absent/i);
 });
 

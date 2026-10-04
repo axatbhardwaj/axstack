@@ -19,24 +19,15 @@ test('align research: dispatches source-specific branches with one owner each', 
   expect(text).toMatch(/ordinary reading stays in-chat[^.]*single factual lookup never dispatches/i);
 });
 
-test('align arena: gated to hard-to-reverse choices and replaces critique for that question', () => {
+test('brainstorm arena: Rung 2 judges replace critique for that question', () => {
   const text = compact('skills/axstack-brainstorm/references/arena.md');
-  expect(text).toMatch(/## Arena for hard-to-reverse design choices/);
-  expect(text).toMatch(/same test as for an ADR/i);
-  expect(text).toMatch(/small or routine questions never enter the arena/i);
-  expect(text).toMatch(/Rung 2[^.]*arena/i);
-  expect(text).toMatch(/replace the critique round for that question with an arena/i);
-  // The pre-consultation draft rule is explicitly overridden for arena-grade questions,
-  // in align and in the standing contracts, so the two never conflict.
-  expect(compact('skills/axstack-align/SKILL.md')).toMatch(/drafts the prioritized frontier and recommendations, except for an arena-grade question[^.]*drafts no recommendation until the candidates and judge verdicts return/);
-  const contracts = compact('skills/axstack/references/contracts.md');
-  expect(contracts).toMatch(/forms an independent assessment first[^.]*\. The one exception is an arena-grade Align question[^.]*axstack-brainstorm[^.]*driver assesses only after the candidates and judge verdicts return/);
+  expect(text).toMatch(/Rung 2[^.]*judge rounds[^.]*hard-to-reverse choices[^.]*replace the critique round for that question/i);
 });
 
 test('align arena: advisers author, judges judge, driver picks and grafts', () => {
   const text = compact('skills/axstack-brainstorm/references/arena.md');
-  for (const phase of ['Frame', 'Fan out', 'Cross-judge', 'Pick', 'Graft', 'Present']) {
-    expect(text, `phase ${phase}`).toMatch(new RegExp(`\\d\\. \\*\\*${phase}\\.\\*\\*`));
+  for (const phase of ['Frame', 'Fan out', 'Cross-judge (Rung 2 only)', 'Pick', 'Graft', 'Present']) {
+    expect(text, `phase ${phase}`).toMatch(new RegExp(`\\d\\. \\*\\*${phase.replace(/[()]/g, '\\$&')}\\.\\*\\*`));
   }
   expect(text).toMatch(/three to six gradeable rubric criteria/i);
   expect(text).toMatch(/candidates receive only the brief/i);

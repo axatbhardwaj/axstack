@@ -15,15 +15,15 @@ sketch through the scope identity.
   not reclassify work: Rung 1 can stay small. An unsettled material design
   question still makes routing reassess size.
 - **Rung 2 — arena.** A Rung 1 design that also meets the existing ADR test:
-  a meaningful, hard-to-reverse, non-obvious trade-off. Use Align's all-family
-  arena for that question.
+  a meaningful, hard-to-reverse, non-obvious trade-off. Use [Brainstorm](../../axstack-brainstorm/SKILL.md)
+  with its Rung 2 judge rounds for that question.
 
 There is no numeric threshold, file-count gate, or class-count gate.
 
 ## Questions in order
 
 Ask only unresolved areas in numbered `Qn` rounds of one to three. Give each a
-recommendation, reason, and trade-off; use Align's adviser critique. Design and
+recommendation, reason, and trade-off; use Align's inline brainstorm synthesis. Design and
 arena questions share its unchanged budget: 20 normally, a justified extension
 to 35, then opted-in refinement of at most five.
 

@@ -18,7 +18,7 @@ test('README leads with the workflow and groups linked skills by layer', () => {
     .not.toContain('axstack-improve');
 
   const linkedSkills = [...skills.matchAll(/\[axstack-[^\]]+\]\((skills\/[^)]+\/SKILL\.md)\)/g)];
-  expect(linkedSkills).toHaveLength(13);
+  expect(linkedSkills).toHaveLength(14);
   for (const [, path] of linkedSkills) expect(existsSync(`${root}/${path}`), path).toBe(true);
 });
 

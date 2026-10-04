@@ -14,7 +14,8 @@ coordination. You can start at the phase you need.
 
 | Layer | Skill | What it does |
 | --- | --- | --- |
-| Plan | [axstack-align](skills/axstack-align/SKILL.md) | Settle scope through questions, a design lens sketch, and a four-family arena for hard choices. |
+| Plan | [axstack-align](skills/axstack-align/SKILL.md) | Settle scope through questions, a design lens sketch, and inline brainstorm validation. |
+| Plan | [axstack-brainstorm](skills/axstack-brainstorm/SKILL.md) | Validate an approach with independent candidates; judges for hard choices. |
 | Plan | [axstack-spec](skills/axstack-spec/SKILL.md) | Write and approve an observable specification. |
 | Plan | [axstack-tickets](skills/axstack-tickets/SKILL.md) | Break approved scope into executable tasks. |
 | Build | [axstack-implement](skills/axstack-implement/SKILL.md) | Build with strict TDD and an author → review → repair loop. |
