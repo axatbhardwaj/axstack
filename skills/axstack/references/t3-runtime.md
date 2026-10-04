@@ -32,6 +32,9 @@ A `model:null` role lacking a class must use the first model listed for its
 provider in saved capabilities only for grok and antigravity (launch-by-agent-id
 providers); record the exact ID, rather than an unresolved provider default.
 Antigravity must hold when saved capabilities advertise zero models.
+For Antigravity, first-listed selection must use the first model ID ending in `-<effort>` because its model ID encodes effort.
+No matching effort suffix holds resolution for Antigravity.
+For Antigravity, pass no effort option; effort read-back uses the model ID suffix.
 For codex or claude, a role lacking both model and class is an intentional
 absence and must hold; never use a provider default for that role.
 
