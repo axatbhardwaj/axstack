@@ -65,7 +65,8 @@ step (3) for user routing: no substitution or same-provider review.
   off a classified repair (explain: how; debug: what's wrong).
 - Code quality/refactor discovery -> `axstack-improve`: rank bounded
   candidates with evidence; report only, no source edits.
-- Repeated mistakes needing evidence and stronger checks -> `axstack-correct`: user-invoked, report only.
+- Repeated mistakes need evidence and stronger checks -> `axstack-correct`:
+  user-invoked, report only.
 - Accepted worker/task/run completion or bounded backlog request -> driver invokes
   `axstack-cleanup` inline; never dispatch it.
 - Preparation completion, watch expiry, resume, or reconciliation -> the

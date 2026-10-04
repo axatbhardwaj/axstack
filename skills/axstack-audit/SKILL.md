@@ -185,7 +185,8 @@ For each candidate record:
 4. target instruction surfaces;
 5. any contradiction and uncertainty; and
 6. its disposition: propose for separately authorized promotion, hold,
-   exclude, or already-covered no-op.
+   exclude, already-covered no-op, or recurred (suggest axstack-correct;
+   audit does not run it).
 
 Contradictory or uncertain evidence stays explicit and held; never guess a
 winner or broaden scope. Promotion is a separate authorized change outside the

@@ -49,7 +49,7 @@ function checkRule(text, rule) {
 }
 
 function checkRewording(text, rule, rewording = rule[6]) {
-  const originals = text.split('\n').filter(acceptsRule(rule));
+  const originals = (text.match(/[^\n]+(?:\n[ \t]+[^\n]+)*/g) ?? []).filter(acceptsRule(rule));
   expect(originals).toHaveLength(1);
   // Replace the actual instruction in the full source string, without writes.
   const reworded = text.replace(originals[0], rewording);
@@ -91,5 +91,50 @@ for (const [name, rewordings] of naturalRewordings) {
       checkRewording(reworded, rule, rewording);
       checkRewording(reworded, rule);
     }
+  });
+}
+
+const record = () => readFileSync(`${root}/skills/axstack-audit/references/record.md`, 'utf8');
+const dispositionFields = [
+  ['skill', audit, /6\. its disposition:[\s\S]*?(?=\n\n)/],
+  ['record', record, /^Learning candidates:.*$/m],
+];
+const recurrenceOption = /\b(?:recurred|recurring)\s*\(([^)]+)\)/i;
+const suggestion = /suggest|recommend/i;
+const auditProhibition = /does not run|does not invoke|never runs|never invokes/i;
+
+function acceptsDisposition(field) {
+  const option = field.match(recurrenceOption)?.[1];
+  return !!option && requires(option, suggestion, /axstack-correct/i)
+    && prohibits(option, auditProhibition, /audit/i, /\bit\b/i);
+}
+
+function checkDisposition(text, fieldPattern) {
+  const field = text.match(fieldPattern)?.[0] ?? '';
+  expect(acceptsDisposition(field), 'disposition must represent recurrence safely').toBe(true);
+  const option = field.match(recurrenceOption)[0];
+  expect(acceptsDisposition(field.replace(option, '')), 'removal must be red').toBe(false);
+  expect(acceptsDisposition(field.replace(/recurred|recurring/gi, 'already-covered no-op')), 'classification inversion').toBe(false);
+  expect(acceptsDisposition(field.replace(new RegExp(suggestion.source, 'gi'), 'omit')), 'suggestion inversion').toBe(false);
+  expect(acceptsDisposition(field.replace(new RegExp(auditProhibition.source, 'gi'), 'runs')), 'invocation inversion').toBe(false);
+  return field;
+}
+
+function checkDispositionRewording(text, fieldPattern) {
+  const field = checkDisposition(text, fieldPattern);
+  const rewording = field.replace(recurrenceOption,
+    'recurring (recommend axstack-correct; audit never invokes it)');
+  const reworded = text.replace(field, rewording);
+  checkDisposition(reworded, fieldPattern);
+  return reworded;
+}
+
+for (const [name, source, fieldPattern] of dispositionFields) {
+  test(`correct integration: ${name} recurrence disposition`, () => checkDisposition(source(), fieldPattern));
+  test(`correct integration real-source rewording: ${name} recurrence disposition`, () => {
+    const reworded = checkDispositionRewording(source(), fieldPattern);
+    // Re-run substitution and probes when the source already uses this wording.
+    checkDispositionRewording(reworded, fieldPattern);
+    for (const sibling of rules.filter((rule) => rule[1] === source)) checkRule(reworded, sibling);
   });
 }
