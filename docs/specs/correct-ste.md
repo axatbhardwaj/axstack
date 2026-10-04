@@ -1,6 +1,6 @@
 # Spec: correct, STE-inspired writing, performance checklist, audit follow-ups
 
-Status: Draft rev 1 (2026-10-04), awaiting user approval. Store: this repo Markdown file.
+Status: Draft rev 2 (2026-10-04), awaiting user approval. Store: this repo Markdown file.
 Run: `20261004-correct-ste`. The private run record holds the adviser receipts, the
 brainstorm candidates and scores, and the proposal inventory.
 
@@ -15,28 +15,34 @@ The open auditor proposals that have a confirmed gap on `main` get fixed.
 
 | # | Decision |
 |---|---|
-| Q1 | Scope as listed below. Auditor proposals are built directly, not run through `axstack-correct`. A pilot of `axstack-correct` on raw history is optional and blocks nothing. |
-| Q2 | When packaged prose grows past the prose-size ceiling, each PR raises the ceiling by the exact amount and records the reason in the test comment. |
+| Q1 | Scope as listed below. Auditor proposals with a confirmed gap are built directly, not run through `axstack-correct`. A pilot of `axstack-correct` on raw history is optional and blocks nothing. The cleanup fix (C1) lands first. |
+| Q2 | When packaged prose grows past a prose-size ceiling, each PR raises that ceiling by the exact amount and records the reason in the test comment. |
 | A1 | `axstack-correct` is user-invoked only. Audit may suggest it and never runs it. No transcript reads, daemon, scheduler, database, or auto-run. |
-| A2 | Writing guidance is "STE-inspired", compact, and applies only to newly written or materially revised output. It never rewrites existing prose and never alters exact identifiers, quotes, or safety and prompt-byte contracts. |
+| A2 | Writing guidance is "STE-inspired", compact, and applies only to newly written or materially revised output, including new packaged prose. It never rewrites existing prose and never alters exact identifiers, quotes, or safety and prompt-byte contracts. |
 | A3 | The performance checklist applies only to performance claims. Audit already covers counts. |
-| B | Brainstorm (Rung 1, four candidates, no judges): a thin `axstack-correct` skill plus one audit clause. Grafts: recurrence `UNKNOWN` without pointers and `runtime: advisory` labels (Astra); distinct SHAs or PR numbers per occurrence and a check that each enforced rule's path exists (Grok). |
+| B | Brainstorm (Rung 1, four candidates, no judges): a thin `axstack-correct` skill plus one audit clause. Grafts: recurrence `UNKNOWN` without pointers and the `runtime: advisory` label, never "impossible to repeat" (Astra); one incident counts once however many records mention it, and distinct SHA or PR pointers are necessary but not sufficient (Grok, Astra); a path-existence test for each enforced rule (Grok). |
 
 ## Design (`axstack-correct`)
 
 ```text
-Usage: /axstack-correct ["<correction>"] [runs=<ids> | last=<N>]
-Shape: skills/axstack-correct/SKILL.md (compact) + one audit clause. Reads run records
-       (Decisions, deviations, Learnings, FAILED receipts, audit proposals), a bounded
-       git log window, and PR reviews named in those records. Writes a report only.
-Binding: user-invoked; a class needs >=2 occurrences with distinct SHA or PR pointers,
-         otherwise recurrence UNKNOWN and the class stays open; ladder = remove the copied
-         pattern > script or helper error that names the fix > brief or receipt template >
-         bun test > prose; each rule is labelled shipped or runtime; fixes go through a
-         small-change intent and axstack-implement; the "Enforced rules" table in the target
-         repo's AGENTS.md changes only in the PR that adds its check.
-Flow + failure: a runtime class gets only a test-level fix -> a later audit records it
-         again -> correct reports "enforcement failed" and relabels the row runtime.
+Usage: /axstack-correct ["<correction>"] [runs=<ids> | last=<N, default 10>]
+Shape: skills/axstack-correct/SKILL.md (about 1.5 KB) + one audit clause. Reads run
+       records (Decisions, deviations, Learnings, FAILED receipts, audit proposals), a
+       git log window bounded by those runs, and PR reviews named in them. Records the
+       selected runs and git bounds; reports inaccessible evidence. Writes a report only;
+       never edits, dispatches, or merges; reads no transcripts.
+Binding: user-invoked; a class needs >=2 distinct incidents, each with a pointer (run id +
+         file:line, SHA, or review URL); one incident echoed in several records counts once;
+         missing pointers -> recurrence UNKNOWN and the class stays open. Ladder: remove
+         the copied pattern > script or helper error that names the fix > brief or receipt
+         template > bun test > prose. Each rule is labelled `shipped` (a check fails in CI)
+         or `runtime: advisory` (only audit can observe it). Fixes go through a small-change
+         intent and axstack-implement. An `## Enforced rules` table in the target repo's
+         AGENTS.md changes only in the PR that adds its check; the PR that adds the first
+         row also adds a test that fails when a row's enforcement path disappears.
+Flow + failure: a `shipped` row's check did not stop recurrence -> a later run records the
+         mistake again -> correct reports `enforcement failed` and proposes relabelling the
+         row `runtime: advisory`; changing AGENTS.md stays a separately reviewed PR.
 We accept: one more compact skill for cross-run recurrence, which audit (one run) cannot see.
 Rejected: audit-only mode (breaks audit's one-run boundary); a skill that implements fixes
          itself (skips author, review, and human merge); an installer-managed rules block
@@ -48,34 +54,42 @@ Open: none.
 
 | # | Capability | Content |
 |---|---|---|
-| C1 | Cleanup command | `workspace-hygiene.md` and every brief template use `rm -r` on the validated literal path instead of `rm -rf --` (auditor B2). |
-| C2 | STE-inspired writing | One compact shared reference: one instruction per sentence, short sentences, active voice, condition before the step, defined terms, no slashes for "and or". Loaded by skills that write reports, PR bodies, briefs, and read-backs. |
+| C1 | Scratch cleanup command | `workspace-hygiene.md:17` uses `rm -r` on a validated literal owned path inside the evidence folder or TMPDIR, not `rm -rf --` (auditor B2). Worktrees are still removed only with `git worktree remove`; `evidence-archive.md` states that its "no shell recursive deletion" rule covers worktrees, not owned scratch. `tests/workflows/workspace-hygiene.test.js:121` changes in the same PR. |
+| C2 | STE-inspired writing | One compact reference: one instruction per sentence, short sentences, active voice, condition before the step, defined terms, no slashes for "and or". Linked once from `contracts.md` for all user-facing output (reports, PR bodies, briefs, read-backs). |
 | C3 | Performance checklist | One compact reference based on Gregg's seven questions (limiter, tuning, limits, errors, reproducibility, relevance, work happened). Loaded by debug, improve, and review only for performance claims. |
-| C4 | `axstack-correct` | The Design above. The audit clause: a rule that is already covered but recurred is never an "already-covered no-op"; audit records it as recurred and suggests `axstack-correct` (covers auditor A-P3). |
-| C5 | Audit follow-ups | (a) Close-out records one row per acceptance check with evidence or a user-accepted hold, plus the reason for each driver-elected repair (A-P2, B3). (b) `pr-digest.js` reports commit SHAs in a PR body that differ from the head (A-P5). (c) Diligence keeps full test output for any full-suite run and reports an unattributed failure as UNKNOWN, with no forced reruns (B1). (d) The spec checkpoint names the draft revision each adviser receipt covers (A-P1). |
+| C4 | `axstack-correct` | The Design above, plus routing entry, README, `docs/workflows.md`, and structural tests. The audit clause: a rule that is already covered but recurred is never an "already-covered no-op"; audit records it as recurred and suggests `axstack-correct` (source: audit Learning (a) of run `20261004-brainstorm-skill`). |
+| C5 | Audit follow-ups | (a) Close-out records one row per acceptance check with evidence or a user-accepted hold, plus the reason for each driver-elected repair; the table template lives in `run-record.md`, `lifecycle.md` gets one clause (A-P2, B3). (b) `candidate-publication.md` adds `PR body head SHA: <sha>` to the publication record; it must equal `Confirmed remote SHA` after every push before diligence or merge-ready, and a mismatch holds; other SHAs in a body are untouched (A-P5). (c) Diligence keeps full output of every full-suite run; an unattributed failure is UNKNOWN, never PASS, and the driver records its disposition; an observed failure still fails the suite (B1). (d) The spec checkpoint names the draft revision each adviser receipt covers; a receipt on an older revision with changed text holds approval (A-P1). (e) A run-record Learning that contradicts a shipped rule becomes a finding on the owning PR before merge-ready (A-P3). |
 | C6 | Pilot (optional) | After C4 merges, run `axstack-correct` on raw history and compare its classes with the auditor reports. Report only; blocks nothing. |
+
+Each accepted auditor proposal (C1, C5a-e) carries its auditor's regression scenario and holdout check into its PR, as the audit hook requires.
 
 ## Acceptance
 
-1. `/axstack-correct` is installed as a skill. Its text binds every line of the Design `Binding`. Prose-contract tests fail when a binding is removed or inverted and survive rewording.
+1. `skills/axstack-correct/SKILL.md` is installed and binds every Design `Binding` line plus the Shape safety lines (report only; never edits, dispatches, or merges; no transcripts; selected bounds recorded). Prose-contract tests fail on removal or inversion of each and survive rewording. Routing, README, and `docs/workflows.md` list it; structural tests count it.
 2. The audit skill states that a covered rule that recurred is not a no-op and suggests `axstack-correct` without running it. A test fails when this is removed or inverted.
-3. No packaged skill or reference prescribes `rm -rf`. A test fails if one reappears.
-4. The STE-inspired reference exists, is loaded by the skills that write reports, PR bodies, briefs, and read-backs, and keeps the exact-text exemptions.
-5. The performance checklist exists and is loaded by debug, improve, and review for performance claims only.
-6. Close-out in `lifecycle.md` requires the per-acceptance-check table with repair-election reasons.
-7. `pr-digest.js` flags a body SHA that differs from `headRefOid`. A bun test replays a recorded stale body and fails before the change.
-8. `diligence.md` requires full-suite output to be kept and allows UNKNOWN for an unattributed failure.
-9. The spec skill's checkpoint names the revision each adviser receipt covers.
-10. `bun test` is green with TMPDIR under `/tmp`. Each PR records any prose-size ceiling raise and its reason.
-11. Release `v0.23.0` is published and installed on desktop and VPS (release decision held for the user).
+3. `workspace-hygiene.md` prescribes `rm -r` on a validated literal owned scratch path. No packaged skill or reference prescribes `rm -rf`. `evidence-archive.md` scopes its rule to worktrees. Tests fail on regression of each.
+4. The STE-inspired reference exists, `contracts.md` links it once for user-facing output, and its text keeps the exact-text exemptions and prospective scope.
+5. The performance checklist exists and is linked from debug, improve, and review for performance claims only.
+6. `run-record.md` holds the close-out acceptance table template with repair-election reasons; `lifecycle.md` Close-out requires it.
+7. `candidate-publication.md` requires `PR body head SHA` to equal `Confirmed remote SHA` after every push, else hold. A test fails when the rule is removed or inverted.
+8. `diligence.md` requires full-suite output to be kept, reports an unattributed failure as UNKNOWN (never PASS), and requires the driver to record its disposition.
+9. The implement merge-ready step treats a run-record Learning that contradicts a shipped rule as a finding on the owning PR. A test fails when this is removed or inverted.
+10. The spec skill's checkpoint names the revision each adviser receipt covers and holds approval on a stale receipt with changed text.
+11. `bun test` is green with TMPDIR under `/tmp`. Each PR records any prose-size ceiling raise and its reason.
+12. A release is published and installed on desktop and VPS after the user's release decision; the version follows the existing minor rule (a `feat` lands).
+
+## Delivery order
+
+One linear `gh stack`, because each PR may touch the same prose-size ceiling line:
+C1 -> C5a + C5d -> C5b + C5c + C5e -> C2 -> C3 -> C4 skill and tests -> C4 audit clause, routing and docs -> release. Ceilings are recomputed above any repaired PR.
 
 ## Exclusions
 
-- Auditor A-P4 (probe classes up front): one occurrence; it stays a candidate for `axstack-correct`.
-- Auditor B4 (size-exception record exists in `pr-shape.md`) and B5 (one-off release renumber).
+- Auditor A-P4 (probe classes listed up front): one recorded incident and no rule gap; it stays an open candidate for `axstack-correct`. Excluding it never waives a newly evidenced defect.
+- Auditor B4 (a size-exception record already exists in `pr-shape.md`) and B5 (one-off release renumber).
 - Running `axstack-correct` on its own proposals as the build method; transcript reading; auto-run; linters; a full ASD-STE100 dictionary; explainer videos; `/recall`.
 - Rewriting existing skill prose for style.
-- Changes to the installer-managed instruction block or to user-owned global instruction files.
+- Changes to the installer-managed instruction block or to user-owned global instruction files (they are not Axstack's rules registry).
 
 ## Authority requested at approval
 
