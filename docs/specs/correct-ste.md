@@ -1,6 +1,6 @@
 # Spec: correct, STE-inspired writing, performance checklist, audit follow-ups
 
-Status: Draft rev 4 (2026-10-04), awaiting user approval. Store: this repo Markdown file.
+Status: Approved rev 4 (2026-10-04, user "approve"; content reviewed at ef9bd2b). Store: this repo Markdown file.
 Run: `20261004-correct-ste`. The private run record holds the adviser receipts, the
 brainstorm candidates and scores, and the proposal inventory.
 
