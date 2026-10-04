@@ -264,6 +264,9 @@ Each pass retires settled predecessor passes and reports the retained worktree
 count. Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
 follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
+
+A review-manager pass may retire a predecessor pass's local `t3code/*` branch with exact `git branch -D <branch>` only when ALL hold: the predecessor pass is settled and proven run/lane-owned by recorded identity, its descendants and evidence are settled, no worktree has the branch checked out, no remote counterpart exists, its tip equals the recorded tip, and its tip is an ancestor of the verified remote default branch. Otherwise hold; all other `git branch -d` rules remain unchanged.
+
 Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
