@@ -24,9 +24,9 @@ test('review-manager forced branch retirement requires every predecessor safegua
 });
 
 test('retirement contract detects removal and directional inversions', () => {
-  const text = source();
+  const text = source().replace(/\s+/g, ' ');
   expect(guarded(text)).toBe(true);
-  expect(guarded(text.replace(/[^\n]*git branch -D[^\n]*\n/, ''))).toBe(false);
+  expect(guarded(text.replace(/A review-manager pass may[^.]*git branch -D[^.]*\.[^.]*\./, ''))).toBe(false);
   for (const condition of conditions) expect(guarded(text.replace(condition, 'condition omitted'))).toBe(false);
   for (const [before, after] of [
     ['no worktree has the branch checked out', 'a worktree may have the branch checked out'],
