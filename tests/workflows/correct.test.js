@@ -16,8 +16,13 @@ const rules = [
     1, 'automatically', "Act only on the user's request."],
   ['report only', [/write|produce/i, /report only|only a report/i],
     1, 'report and fixes', 'Produce only a report.'],
-  ...['edit files', 'dispatch workers', 'merge', 'read transcripts'].map((action) => [
-    action, [new RegExp(action, 'i')], 0, 'Always', `Do not ${action}.`, /never|do not/i,
+  ...[
+    ['edit files', /\bedit\s+(?:(?:any|a|the)\s+)?files?\b/i],
+    ['dispatch workers', /\bdispatch\s+(?:(?:any|a|the)\s+)?workers?\b/i],
+    ['merge', /\bmerge\b/i],
+    ['read transcripts', /\bread\s+(?:(?:any|a|the)\s+)?transcripts?\b/i],
+  ].map(([action, concept]) => [
+    action, [concept], 0, 'Always', `Do not ${action}.`, /never|do not/i,
   ]),
   ['record sources', [/read|inspect/i, /run records/i, /Decisions/i, /deviations/i, /Learnings/i, /FAILED receipts/i, /audit proposals/i],
     0, 'Ignore', 'Inspect [run records](../axstack/references/run-record.md): Decisions, deviations, Learnings, FAILED receipts, audit proposals.'],
@@ -55,7 +60,7 @@ const rules = [
     5, 'outside', 'Update the Enforced rules table in AGENTS.md only in the PR that adds its check.'],
   ['first row adds disappearing-path check', [/first row/i, /PR/i, /add|include/i, /test/i, /fails/i, /row/i, /enforcement path/i, /disappears|vanishes/i],
     4, 'passes', "In the first row's PR, include a test that fails when any row's enforcement path vanishes."],
-  ['shipped row misses a later recorded recurrence: enforcement failed', [/shipped/i, /check/i, /missed|fails to stop/i, /later recorded recurrence/i, /report|record/i, /enforcement failed/i],
+  ['shipped row misses a later recorded recurrence: enforcement failed', [/shipped/i, /check/i, /\bmiss(?:ed|es)\b|fails to stop/i, /later recorded recurrence/i, /report|record/i, /enforcement failed/i],
     5, 'enforcement succeeded', 'When a shipped check fails to stop a later recorded recurrence, record enforcement failed.'],
   ['failed enforcement proposes advisory through separate review', [/failure/i, /propose/i, /relabelling|relabeling/i, /row/i, /runtime: advisory/i, /separately reviewed PR/i],
     4, 'shipped', 'For that failure, propose relabeling the row runtime: advisory in a separately reviewed PR.'],
@@ -80,16 +85,47 @@ function checkRule(text, rule) {
   if (!prohibition) expect(accepts(rewrite((clause) => `Do not ${clause}`)), 'negated directive').toBe(false);
 }
 
+function checkRewording(text, rule) {
+  const [, , , , rewording] = rule;
+  const originals = text.split('\n').filter(acceptsRule(rule));
+  expect(originals).toHaveLength(1);
+  // Substitute in the full real-file string; tests never write tracked files.
+  const reworded = text.replace(originals[0], rewording);
+  if (originals[0] !== rewording) expect(reworded).not.toBe(text);
+  for (const sibling of rules) checkRule(reworded, sibling);
+  return reworded;
+}
+
 for (const rule of rules) {
-  const [name, , , , rewording] = rule;
+  const [name] = rule;
   test(`correct: ${name}`, () => checkRule(guidance(), rule));
   test(`correct real-source rewording: ${name}`, () => {
+    const reworded = checkRewording(guidance(), rule);
+    // The same checks must pass when the source already uses the holdout wording.
+    checkRewording(reworded, rule);
+  });
+}
+
+const naturalRewordings = [
+  ['edit files', ['Never edit any file.', 'Do not edit a file.']],
+  ['dispatch workers', ['Do not dispatch any worker.']],
+  ['read transcripts', ['Never read any transcript.']],
+  ['shipped row misses a later recorded recurrence: enforcement failed', [
+    'When a shipped check misses a later recorded recurrence, record enforcement failed.',
+    'When a shipped check fails to stop a later recorded recurrence, record enforcement failed.',
+  ]],
+];
+
+for (const [name, rewordings] of naturalRewordings) {
+  test(`correct natural real-source rewording: ${name}`, () => {
     const text = guidance();
+    const rule = rules.find(([ruleName]) => ruleName === name);
     const originals = text.split('\n').filter(acceptsRule(rule));
     expect(originals).toHaveLength(1);
-    // Substitute in the full real-file string; tests never write tracked files.
-    const reworded = text.replace(originals[0], rewording);
-    expect(reworded).not.toBe(text);
-    for (const sibling of rules) checkRule(reworded, sibling);
+    for (const rewording of rewordings) {
+      const reworded = text.replace(originals[0], rewording);
+      for (const sibling of rules) checkRule(reworded, sibling);
+      checkRewording(reworded, rule);
+    }
   });
 }
