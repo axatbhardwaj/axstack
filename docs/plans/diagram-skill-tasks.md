@@ -17,7 +17,10 @@ Depends: none
 Capability: C1 Pinned archify provisioning
 Internal task: T1 installer archify provisioning -> axstack-author -> own worktree
 Theme: installer clones, records, checks, and releases one pinned external tool
-Size est: 600-900 lines (target band); commits near 200 lines
+Size est: 600-900 lines (target band); commits near 200 lines, split as pin+clone,
+  owners and uninstall, check and docs
+Note: T1 writes skills/axstack-diagram/archify.json before T2 adds the skill; acceptable
+  because release requires T1-T3 merged
 Acceptance: spec acceptance 1; acceptance 6 for AGENTS.md Interfaces exception and
   docs/installation.md; acceptance 7 (bun test green, TMPDIR under /tmp)
 Depends: T0
@@ -28,7 +31,11 @@ Capability: C2 axstack-diagram skill
 Internal task: T2 skill, references, ui-verification exception, smoke test -> axstack-author -> own worktree
 Theme: the diagram skill contract
 Size est: 400-700 lines (target band)
-Acceptance: spec acceptance 2; acceptance 4 smoke test (env-var discovery, skip reasons,
+Content: format routing, fidelity, finalize contract and holds, Q7 40-word card cap in
+  references/archify.md, Q8 one-way roles, D3 credits, D4 defaults (motion, exports,
+  share cards, brand marks off)
+Acceptance: spec acceptance 2; acceptance 4 smoke test (uses the five shipped examples
+  inside the pinned archify copy, archify/examples/; env-var discovery, skip reasons,
   sandbox/Chrome failure = skip, copy stays clean after a run); acceptance 6 for bundle
   discovery (16 skills) and the prose-size comment; acceptance 7
 Depends: T1
@@ -39,8 +46,11 @@ Capability: C3 Explain integration
 Internal task: T3 explain + visual-qa + README + docs/workflows.md -> axstack-author -> own worktree
 Theme: explain routes every diagram through axstack-diagram
 Size est: 200-400 lines (target band)
-Acceptance: spec acceptance 3; acceptance 6 for README (archify credit) and
-  docs/workflows.md; acceptance 7
+Acceptance: spec acceptance 3 (explain applies the T2 card cap as an exemption);
+  prose-contract test for visual-qa.md (artifact.sha256 binding, mandatory node-and-edge
+  review for archify output); acceptance 6 for README (archify credit) and
+  docs/workflows.md; acceptance 7; raises the prose-size ceiling by its own net bytes
+  with a recorded reason (every PR that adds skill Markdown does the same)
 Depends: T2
 ```
 
@@ -61,6 +71,8 @@ Capability: release
 Internal task: T5 chore(release) minor bump -> axstack-author -> own worktree; tag, publish, install by driver
 Theme: release and host install
 Size est: <50 lines
+Gates: approved-spec release authority recorded; the user merges the release PR and
+  approves the npm stage; host-mutation authority recorded for desktop and VPS
 Acceptance: spec acceptance 8 (published; desktop and VPS installed; `axstack check` shows the pin)
 Depends: T1, T2, T3 merged; T4 complete
 ```
