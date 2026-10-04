@@ -1,6 +1,6 @@
 # Spec: correct, STE-inspired writing, performance checklist, audit follow-ups
 
-Status: Draft rev 3 (2026-10-04), awaiting user approval. Store: this repo Markdown file.
+Status: Draft rev 4 (2026-10-04), awaiting user approval. Store: this repo Markdown file.
 Run: `20261004-correct-ste`. The private run record holds the adviser receipts, the
 brainstorm candidates and scores, and the proposal inventory.
 
@@ -32,11 +32,12 @@ Shape: skills/axstack-correct/SKILL.md (about 1.5 KB) + one audit clause. Reads 
        selected runs and git bounds; reports inaccessible evidence. Writes a report only;
        never edits, dispatches, or merges; reads no transcripts.
 Binding: user-invoked; a class needs >=2 distinct incidents, each with a pointer (run id +
-         file:line, SHA, or review URL); one incident echoed in several records counts once;
+         attempt or file:line, SHA, or PR or review URL); one incident echoed in several records counts once;
          missing pointers -> recurrence UNKNOWN and the class stays open. Ladder: remove
          the copied pattern > script or helper error that names the fix > brief or receipt
-         template > bun test > prose. Each rule is labelled `shipped` (a check fails in CI)
-         or `runtime: advisory` (only audit can observe it). Fixes go through a small-change
+         template > bun test > prose. Each rule is labelled `shipped` (a check fails in CI
+         on the mistake itself) or `runtime: advisory` (only audit can observe it); a
+         prose-contract test alone leaves a rule `runtime: advisory`. Fixes go through a small-change
          intent and axstack-implement. An `## Enforced rules` table in the target repo's
          AGENTS.md changes only in the PR that adds its check; the PR that adds the first
          row also adds a test that fails when a row's enforcement path disappears.
@@ -58,7 +59,7 @@ Open: none.
 | C2 | STE-inspired writing | One compact reference: one instruction per sentence, short sentences, active voice, condition before the step, defined terms, no slashes for "and or". Linked once from `contracts.md` for all user-facing output (reports, PR bodies, briefs, read-backs). |
 | C3 | Performance checklist | One compact reference based on Gregg's seven questions (limiter, tuning, limits, errors, reproducibility, relevance, work happened). Loaded by debug, improve, and review only for performance claims. |
 | C4 | `axstack-correct` | The Design above, plus routing entry, README, `docs/workflows.md`, and structural tests. The audit clause: a rule that is already covered but recurred is never an "already-covered no-op"; audit records it as recurred and suggests `axstack-correct` (source: audit Learning (a) of run `20261004-brainstorm-skill`). |
-| C5 | Audit follow-ups | (a) Close-out records one row per acceptance check with evidence or a user-accepted hold, plus the reason for each driver-elected repair; the table template lives in `run-record.md`, `lifecycle.md` gets one clause (A-P2, B3). (b) `candidate-publication.md` adds `PR body head SHA: <sha | none>` to the publication record. `none` (the body states no head SHA) passes. A stated head SHA, full or an abbreviation of at least 7 characters, must match `Confirmed remote SHA` after every push before diligence or merge-ready; a mismatch holds. Other SHAs in a body are untouched (A-P5). (c) Diligence keeps full output of every full-suite run; an unattributed failure is UNKNOWN, never PASS, and the driver records its disposition; an observed failure still fails the suite; no reruns are required (B1, as narrowed in Align). (d) The spec checkpoint names the draft revision each adviser receipt covers; a receipt on an older revision with changed text holds approval (A-P1). (e) A run-record Learning that contradicts a shipped rule becomes a finding on the owning PR before merge-ready (A-P3). |
+| C5 | Audit follow-ups | (a) Close-out records one row per acceptance check with evidence or a user-accepted hold, plus the reason for each driver-elected repair; the table template lives in `run-record.md`, `lifecycle.md` gets one clause (A-P2, B3). (b) `candidate-publication.md` adds `PR body head SHA: <sha or none>` to the publication record. `none` (the body states no head SHA) passes. A stated head SHA, full or an abbreviation of at least 7 characters, must match `Confirmed remote SHA` after every push before diligence or merge-ready; a mismatch holds. Other SHAs in a body are untouched (A-P5). (c) Diligence keeps full output of every full-suite run; an unattributed failure is UNKNOWN, never PASS, and the driver records its disposition; an observed failure still fails the suite; no reruns are required (B1, as narrowed in Align). (d) The spec checkpoint names the draft revision each adviser receipt covers; a receipt on an older revision with changed text holds approval (A-P1). (e) A run-record Learning that contradicts a shipped rule becomes a finding on the owning PR before merge-ready (A-P3). |
 | C6 | Pilot (optional) | After C4 merges, run `axstack-correct` on raw history and compare its classes with the auditor reports. Report only; blocks nothing. |
 
 Each accepted auditor proposal (C1, C5a-e) carries its auditor's regression scenario and holdout check into its PR, as the audit hook requires.
@@ -71,7 +72,7 @@ Each accepted auditor proposal (C1, C5a-e) carries its auditor's regression scen
 4. The STE-inspired reference exists, `contracts.md` links it once for user-facing output, and its text keeps the exact-text exemptions and prospective scope.
 5. The performance checklist exists and is linked from debug, improve, and review for performance claims only.
 6. `run-record.md` holds the close-out acceptance table template with repair-election reasons; `lifecycle.md` Close-out requires it.
-7. `candidate-publication.md` requires `PR body head SHA` to equal `Confirmed remote SHA` after every push, else hold. A test fails when the rule is removed or inverted.
+7. `candidate-publication.md` records `PR body head SHA` after every push: `none` passes; a stated full SHA or a prefix of at least 7 characters must match `Confirmed remote SHA`; a mismatch holds. Tests cover absent, matching full, matching abbreviated, and mismatched values, and fail when the rule is removed or inverted.
 8. `diligence.md` requires full-suite output to be kept, reports an unattributed failure as UNKNOWN (never PASS), and requires the driver to record its disposition.
 9. The implement merge-ready step treats a run-record Learning that contradicts a shipped rule as a finding on the owning PR. A test fails when this is removed or inverted.
 10. The spec skill's checkpoint names the revision each adviser receipt covers and holds approval on a stale receipt with changed text.
