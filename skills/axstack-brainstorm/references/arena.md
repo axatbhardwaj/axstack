@@ -30,9 +30,8 @@ hard-to-reverse choices; they replace the critique round for that question.
    each completed round. Agreement confirms the base. On disagreement, re-read
    the rationales and decide with a stated reason; never average verdicts or
    fabricate consensus.
-5. **Graft.** Walk the losing candidates once more for the one or two ideas
-   worth porting and fold them into the base by hand so the result stays
-   coherent under one mental model. Convergence on the same shape is a strong
+5. **Graft.** Revisit losing candidates once; graft one or two ideas by hand
+   into the coherent base under one mental model. Convergence on the same shape is a strong
    agreement signal: adopt the consensus shape, no graft. Wide divergence
    means the frame was under-specified: reframe and rerun once, never
    average.
@@ -40,9 +39,10 @@ hard-to-reverse choices; they replace the critique round for that question.
    trade-off, judge verdicts per round, and what was grafted or rejected.
    The user still decides; spec approval remains the one human checkpoint.
 
-Record the synthesis note (base, grafts and their source candidate, rejections,
-dropouts, judge verdicts per round) as `Decisions` rows in the
-[run record](../../axstack/references/run-record.md). Load
+Record the synthesis note (base, graft sources, rejections, dropouts, judge
+verdicts per round) as `Decisions` rows in the
+[caller's run record](../../axstack/references/run-record.md) when one exists,
+otherwise include it in the returned verdict. Load
 [T3 runtime](../../axstack/references/t3-runtime.md) immediately before the
 first candidate or judge dispatch. If an optional Grok or Antigravity candidate
 malfunctions (launch failure, trust/login prompt, or prompt block), fence it,

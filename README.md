@@ -37,7 +37,7 @@ implementation. Research, explanation, and peer review can start directly.
 
 | Failure mode | How Axstack responds |
 | --- | --- |
-| Wrong thing built | Align rounds clarify the request; a four-family arena compares approaches for hard choices. |
+| Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
 | Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
