@@ -21,7 +21,7 @@ Shape: <PRs within band / total PRs + rationale-band cohesion rationale + except
 Cost: <API dollars by model when measured, or UNKNOWN with reason>
 Judgment: <execution outcome vs procedural adherence vs measurement coverage>
 Proposals: <bounded hypothesized changes with regression-first plan, or none>
-Learning candidates: <each candidate's statement + scope + evidence/revision pointers + target instruction surfaces + contradiction/uncertainty + disposition; explicit already-covered no-op or none>
+Learning candidates: <each candidate's statement + scope + evidence/revision pointers + target instruction surfaces + contradiction/uncertainty + disposition; explicit already-covered no-op, recurred (suggest axstack-correct; audit does not run it), or none>
 Privacy: <local/private default; sanitized summary only when authorized>
 ```
 

@@ -23,6 +23,7 @@ coordination. You can start at the phase you need.
 | Verify | [axstack-review](skills/axstack-review/SKILL.md) | Review a PR or bounded codebase at an exact revision. |
 | Verify | [axstack-improve](skills/axstack-improve/SKILL.md) | Find evidenced codebase improvements without editing code. |
 | Verify | [axstack-audit](skills/axstack-audit/SKILL.md) | Measure a run's outcomes and evidence gaps. |
+| Verify | [axstack-correct](skills/axstack-correct/SKILL.md) | Report repeated mistakes and propose stronger checks when invoked by the user. |
 | Operate | [axstack-watch](skills/axstack-watch/SKILL.md) | Observe or maintain an existing PR within its authority. |
 | Operate | [axstack-cleanup](skills/axstack-cleanup/SKILL.md) | Retire eligible completed agent resources. |
 | Operate | [axstack-relay](skills/axstack-relay/SKILL.md) | Send an explicit message or authorized notification. |

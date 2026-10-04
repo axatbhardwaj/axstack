@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { loadedReferences, requires, sentences } from './prose-contract.js';
 
 const SEP = '/';
 
@@ -49,6 +49,7 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
   .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
+  'axstack-correct',
   'axstack-align',
   'axstack-brainstorm',
   'axstack-cleanup',
@@ -61,6 +62,7 @@ const EXPECTED_SKILLS = [
 
 // Standalone phases callable directly; each must explicitly load shared contracts.
 const STANDALONE_PHASES = [
+  'axstack-correct',
   'axstack-align',
   'axstack-brainstorm',
   'axstack-cleanup',
@@ -214,7 +216,7 @@ test('structural: installation records setup and the ordered rollback boundary',
   expect(installation).toMatch(/stays installed for one week after the VPS canary/i);
 });
 
-test('structural: shared root has no entry file and all six phase skills exist', () => {
+test('structural: shared root has no entry file and all expected phase skills exist', () => {
   expect(existsSync(join(skillsDir, 'axstack', 'SKILL.md'))).toBe(false);
   for (const name of EXPECTED_SKILLS) {
     const p = join(skillsDir, name, 'SKILL.md');
@@ -290,7 +292,9 @@ test('structural: standalone phases explicitly load shared references', () => {
   for (const name of STANDALONE_PHASES) {
     const text = readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
     expect(
-      text.includes('../axstack/references/'),
+      name === 'axstack-correct'
+        ? loadedReferences(text).includes('../axstack/references/contracts.md')
+        : text.includes('../axstack/references/'),
       `${name}: must explicitly load shared axstack reference(s)`,
     ).toBeTruthy();
   }

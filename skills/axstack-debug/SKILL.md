@@ -22,6 +22,8 @@ read it before phase 7 and before any fan-out.
 Redact secrets before showing any command, output, or artifact; build loops
 against environment variables so credentials never appear in what is shown.
 
+For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
+
 ## Phases
 
 Each phase has an observable completion criterion. Skip one only with a
