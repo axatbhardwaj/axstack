@@ -22,14 +22,15 @@ Stack: one linear `gh stack` on `main`, because each task may raise the same pro
 | C4 `axstack-correct` | T6, T7 | AC1, AC2, AC11, AC12 |
 | Release | T8 | AC13 |
 | C6 Pilot (optional) | T9 | none (report only) |
+| Planning artifacts | T0 | lands the approved spec and this map (bottom of the stack; not a spec capability) |
 
 ## Tasks
 
 ```text
 Spec: rev 4 @ 047caa4
-Capability: C1  Internal task: T0 spec + ticket map -> driver -> driver worktree (branch axstack/20261004-correct-ste/spec)
+Capability: planning  Internal task: T0 spec + ticket map -> driver -> driver worktree (branch axstack/20261004-correct-ste/spec)
 Theme: planning artifacts only (docs/specs/correct-ste.md, docs/plans/correct-ste-tasks.md)
-Size est: ~150 lines docs
+Size est: ~215 lines docs
 Acceptance: files match the approved revision; bun test green
 Depends: none
 ```
@@ -54,7 +55,7 @@ Depends: T1
 Capability: C5  Internal task: T3 PR-body head SHA, diligence logs, learning-vs-rule finding -> axstack-author -> own worktree
 Theme: publication and review evidence integrity
 Size est: S (~100-160)
-Acceptance: AC7 — candidate-publication.md records `PR body head SHA: <sha or none>` after every push; `none` passes; a full SHA or prefix >=7 chars must match `Confirmed remote SHA`; mismatch holds; tests cover `none`, matching full, matching abbreviated, mismatched. AC8 — diligence.md keeps full-suite output, reports an unattributed failure as UNKNOWN (never PASS), driver records its disposition, no reruns required. AC9 — implement merge-ready treats a run-record Learning that contradicts a shipped rule as a finding on the owning PR. Tests per AC11. Auditor A-P5, B1, A-P3 scenarios + holdouts.
+Acceptance: AC7 — candidate-publication.md records `PR body head SHA: <sha or none>` after every push; `none` passes; a full SHA or prefix >=7 chars must match `Confirmed remote SHA`; mismatch holds; the check runs after every push before diligence or merge-ready; other SHAs in a body are untouched; tests cover the no-head-SHA value (`none`, AC7 "absent"), matching full, matching abbreviated, mismatched. AC8 — diligence.md keeps full-suite output, reports an unattributed failure as UNKNOWN (never PASS), driver records its disposition, an observed failure still fails the suite, no reruns required. AC9 — implement merge-ready treats a run-record Learning that contradicts a shipped rule as a finding on the owning PR. Tests per AC11. Auditor A-P5, B1, A-P3 scenarios + holdouts.
 Depends: T2
 ```
 
@@ -78,7 +79,7 @@ Depends: T4
 Capability: C4  Internal task: T6 axstack-correct skill + tests -> axstack-author -> own worktree
 Theme: new report-only skill (Design sketch in spec)
 Size est: M (~150-220)
-Acceptance: AC1 — skills/axstack-correct/SKILL.md binds every Design Binding line and the Shape safety lines (report only; never edits, dispatches, merges; no transcripts; bounds recorded); tests for the four scenarios (duplicate incident counts once; missing pointer -> recurrence UNKNOWN; shipped row + recorded recurrence -> `enforcement failed`, proposes `runtime: advisory`, AGENTS.md unchanged; prose-contract test alone never certifies enforcement); structural test counts the skill. Named failure (Design Flow + failure) is the third scenario.
+Acceptance: AC1 — skills/axstack-correct/SKILL.md binds every Design Binding line and the Shape safety lines (report only; never edits, dispatches, merges; no transcripts; bounds recorded); tests for the four scenarios (duplicate incident counts once; missing pointer -> recurrence UNKNOWN; shipped row + recorded recurrence -> `enforcement failed`, proposes `runtime: advisory`, AGENTS.md unchanged; prose-contract test alone never certifies enforcement); skill-count tests updated in the same PR (tests/workflows/bundle-discovery.test.js:7-12, tests/workflows/run-record.test.js:145, tests/workflows/structural.test.js:51-71). Tests per AC11. Named failure (Design Flow + failure) is the third scenario.
 Depends: T5
 Split note: if the skill text plus tests exceed the band, routing/docs already sit in T7.
 ```
@@ -87,7 +88,7 @@ Split note: if the skill text plus tests exceed the band, routing/docs already s
 Capability: C4  Internal task: T7 audit clause + routing + docs -> axstack-author -> own worktree
 Theme: integrate axstack-correct
 Size est: S (~60-120)
-Acceptance: AC2 — axstack-audit states a covered rule that recurred is not an "already-covered no-op" and suggests axstack-correct without running it (test fails on removal or inversion). AC1 tail — routing.md direct route, README skill table, docs/workflows.md list axstack-correct.
+Acceptance: AC2 — axstack-audit states a covered rule that recurred is not an "already-covered no-op" and suggests axstack-correct without running it (test fails on removal or inversion). AC1 tail — routing.md direct route, README skill table (tests/workflows/readme-contract.test.js:21 updated), docs/workflows.md list axstack-correct. Tests per AC11.
 Depends: T6
 ```
 
@@ -95,7 +96,7 @@ Depends: T6
 Capability: Release  Internal task: T8 chore(release) -> axstack-author -> own worktree; tag/publish/install -> driver
 Theme: release
 Size est: XS (2 lines)
-Acceptance: AC13 — minor bump (feat lands) in package.json + tests/installer/package.test.js; release PR body diligence vs merged PRs; user merges or approves merge; tag; publish.yml success; user approves npm stage; install + verify on io and axat-vps.
+Acceptance: AC13 — after the user's release decision: minor bump (feat lands) in package.json + tests/installer/package.test.js; release PR body diligence vs merged PRs (required by candidate-publication.md, not an added scope); user merges or approves merge; tag; publish.yml success; user approves npm stage; install + verify on io and axat-vps.
 Depends: T1-T7 merged
 ```
 
