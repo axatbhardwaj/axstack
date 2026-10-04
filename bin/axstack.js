@@ -105,7 +105,7 @@ function parseArgs(argv) {
   }
   out.command = rest.shift();
   const wantsValue = new Set([
-    '--bundle', '--skills-dir', '--instructions', '--harness', '--preset', '--claude-settings',
+    '--bundle', '--skills-dir', '--tools-dir', '--instructions', '--harness', '--preset', '--claude-settings',
   ]);
   while (rest.length > 0) {
     const tok = rest.shift();
@@ -300,6 +300,7 @@ async function main() {
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
         preset: flags.preset,
+        toolsDir: flags['tools-dir'] ? expandHome(flags['tools-dir']) : undefined,
         instructionsPath,
         inheritedInstructions: legacyCodexManifest?.instructions,
         force: !!flags.force,

@@ -80,6 +80,13 @@ function normalizeManifest(parsed) {
     throw new Error('invalid ownership manifest: files must be an object of path hashes');
   }
   const rawClaudeSettings = parsed.claudeSettings ?? { path: null };
+  const archify = parsed.archify ?? null;
+  if (archify !== null && (typeof archify !== 'object' ||
+      typeof archify.path !== 'string' || !isAbsolute(archify.path) ||
+      !/^[a-f0-9]{40}$/.test(archify.sha) ||
+      !archify.path.endsWith(`/archify-${archify.sha}`))) {
+    throw new Error('invalid ownership manifest: archify must bind an absolute pinned copy');
+  }
   if (
     typeof rawClaudeSettings !== 'object' || rawClaudeSettings === null ||
     Array.isArray(rawClaudeSettings) ||
@@ -118,6 +125,7 @@ function normalizeManifest(parsed) {
       profiles: { path: null, preset: null, entries: { ...rawProfiles } },
       claudeSettings: { path: rawClaudeSettings.path },
       instructions,
+      ...(archify ? { archify } : {}),
     };
   }
   if (
@@ -137,6 +145,7 @@ function normalizeManifest(parsed) {
       },
       claudeSettings: { path: rawClaudeSettings.path },
       instructions,
+      ...(archify ? { archify } : {}),
     };
   }
   throw new Error('invalid ownership manifest: profiles must bind a config path to id hashes');

@@ -38,6 +38,7 @@ import {
   writeManifest,
 } from './manifest.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
+import { ARCHIFY_RECORD, provisionArchify } from './archify.js';
 import {
   applyInstructionPlan,
   findLegacyRoutingLines,
@@ -461,6 +462,7 @@ export async function installBundle({
   bundleDir,
   skillsDir,
   preset,
+  toolsDir = null,
   instructionsPath = null,
   inheritedInstructions = null,
   force = false,
@@ -479,6 +481,14 @@ export async function installBundle({
     ? await canonicalInstructionFile(instructionsPath)
     : null;
   assertOutsideHome(skillsRoot, { yes, kind: 'skills directory' });
+  const toolsPath = toolsDir ?? (homeDir() ? join(homeDir(), '.axstack', 'tools') : null);
+  if (!toolsPath) throw new Error('HOME is unavailable; pass --tools-dir explicitly');
+  await assertNoSymlinksBelow('/', resolve(toolsPath));
+  const toolsRoot = await canonicalTargetDir(toolsPath);
+  if (withinRoot(toolsRoot, skillsRoot) || withinRoot(skillsRoot, toolsRoot)) {
+    throw new Error('tools directory overlaps the skills root; refusing');
+  }
+  assertOutsideHome(toolsRoot, { yes, kind: 'tools directory' });
   if (instructionsFile) assertOutsideHome(instructionsFile, { yes, kind: 'instruction file' });
   const claudePlan = await planInstallClaudeSettings({ claude, skillsRoot });
   if (claudePlan.report.path) {
@@ -545,6 +555,11 @@ export async function installBundle({
   // manifest entry resolves its destination, current bytes, and pristine
   // flag through the same guard before Phase 2 mutates anything.
   const desired = [];
+  const archifyTarget = await readOwnedTarget(skillsRoot, ARCHIFY_RECORD);
+  if (archifyTarget.current !== null &&
+      hashContent(archifyTarget.current) !== ownedFiles[ARCHIFY_RECORD]) {
+    throw new Error('archify record is edited or unowned; refusing to replace it');
+  }
   for (const { rel, abs, content: inlineContent } of bundle.files) {
     const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
     const content = inlineContent ?? await readFile(abs);
@@ -562,6 +577,7 @@ export async function installBundle({
   }
 
   const bundleRels = new Set(bundle.files.map((file) => file.rel));
+  bundleRels.add(ARCHIFY_RECORD);
   const stalePlan = [];
   for (const rel of Object.keys(ownedFiles)) {
     if (bundleRels.has(rel)) continue;
@@ -591,8 +607,15 @@ export async function installBundle({
   const installedHashes = {};
   const claudeWritten = [];
   let instructionWritten = false;
+  let archify = null;
   log('plan complete');
   try {
+    archify = await provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log });
+    const archifyRecord = archify.record ?? prevManifest.archify ?? null;
+    if (archifyRecord) {
+      desired.push({ rel: ARCHIFY_RECORD, ...archifyTarget,
+        content: Buffer.from(JSON.stringify(archifyRecord, null, 2) + '\n') });
+    }
     if (instructionsFile) {
       await assertFileSnapshot(instructionsFile, existingInstructionsRaw);
     }
@@ -717,6 +740,7 @@ export async function installBundle({
         path: claudePlan.settingsPath ?? boundClaudeSettingsPath,
       },
       instructions: nextInstructions,
+      archify: archifyRecord,
     });
     if (legacyProfileNote || legacyInstructionNote) {
       summary.notes = [
@@ -751,6 +775,10 @@ export async function installBundle({
     // Restore failures are collected and reported: a swallowed restore would
     // leave ownership claims describing bytes that are not on disk.
     const rollbackErrors = [];
+    if (archify) {
+      try { await archify.rollback(); }
+      catch (restoreErr) { rollbackErrors.push(`archify: ${restoreErr.message}`); }
+    }
     for (const write of claudeWritten.reverse()) {
       try {
         if (write.before === null) await rm(write.path);

@@ -38,7 +38,7 @@ test('stale file edited after planning is preserved (fresh pre-delete read)', as
     supportFiles: { 'old-a.md': '# Old A\n', 'old-b.md': '# Old B\n' },
   });
   const skillsDir = join(root, 'skills');
-  await installBundle({ bundleDir: bundle, skillsDir, preset: 'mixed' });
+  await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir, preset: 'mixed' });
 
   rmSync(join(bundle, 'skills', 'axstack-demo', 'old-a.md'));
   rmSync(join(bundle, 'skills', 'axstack-demo', 'old-b.md'));
@@ -50,7 +50,7 @@ test('stale file edited after planning is preserved (fresh pre-delete read)', as
   // the edit lands after the planning snapshot but before old-b's decision.
   onFirstRm = () => writeFileSync(victimDest, edited);
   try {
-    const summary = await installBundle({ bundleDir: bundle, skillsDir, preset: 'mixed' });
+    const summary = await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir, preset: 'mixed' });
     expect(readFileSync(victimDest, 'utf8')).toBe(edited);
     expect(summary.removed).not.toContain(victimRel);
     expect(summary.stale).toContain(victimRel);
@@ -66,7 +66,7 @@ test('owned file edited after uninstall begins is preserved (fresh pre-delete re
     supportFiles: { 'helper.md': '# Helper\n' },
   });
   const skillsDir = join(root, 'skills');
-  await installBundle({ bundleDir: bundle, skillsDir, preset: 'mixed' });
+  await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir, preset: 'mixed' });
 
   // Manifest order is bundle-sorted, so axstack/roles.json deletes last: the
   // hook edits it inside the run's first rm, after planning but before its

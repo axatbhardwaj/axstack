@@ -31,10 +31,10 @@ function fixture() {
 
 describe('instruction transactions', () => {
   test('detects an instruction edit after planning and performs no partial write', async () => {
-    const { bundle, skills, instructions } = fixture();
+    const { root, bundle, skills, instructions } = fixture();
     writeFileSync(instructions, 'planned bytes');
     await expect(installBundle({
-      bundleDir: bundle,
+      bundleDir: bundle, toolsDir: join(root, 'tools'),
       skillsDir: skills,
       preset: 'mixed',
       instructionsPath: instructions,
@@ -47,12 +47,12 @@ describe('instruction transactions', () => {
   });
 
   test('manifest failure rolls an appended instruction file back byte-for-byte', async () => {
-    const { bundle, skills, instructions } = fixture();
+    const { root, bundle, skills, instructions } = fixture();
     writeFileSync(instructions, 'personal bytes');
     chmodSync(instructions, 0o600);
     mkdirSync(skills);
     writeFileSync(join(skills, '.axstack-manifest.json.tmp'), 'planted');
-    await expect(installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions })).rejects.toThrow(/temporary file already exists/i);
+    await expect(installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir: skills, preset: 'mixed', instructionsPath: instructions })).rejects.toThrow(/temporary file already exists/i);
     expect(readFileSync(instructions, 'utf8')).toBe('personal bytes');
     expect(lstatSync(instructions).mode & 0o777).toBe(0o600);
     expect(existsSync(join(skills, 'axstack-demo', 'SKILL.md'))).toBe(false);
@@ -60,10 +60,10 @@ describe('instruction transactions', () => {
 
   test('uninstall restores original bytes exactly and leaves the instruction file', async () => {
     for (const original of ['', 'no trailing newline', 'one trailing newline\n']) {
-      const { bundle, skills, instructions } = fixture();
+      const { root, bundle, skills, instructions } = fixture();
       writeFileSync(instructions, original);
       chmodSync(instructions, 0o600);
-      await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+      await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
       const summary = await uninstallBundle({ skillsDir: skills, instructionsPath: instructions });
       expect(summary.instructions.status).toBe('removed');
       expect(readFileSync(instructions, 'utf8')).toBe(original);
@@ -72,8 +72,8 @@ describe('instruction transactions', () => {
   });
 
   test('uninstall preserves an edited owned block and keeps its binding', async () => {
-    const { bundle, skills, instructions } = fixture();
-    await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+    const { root, bundle, skills, instructions } = fixture();
+    await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
     const edited = readFileSync(instructions, 'utf8').replace('engineering work', 'all work');
     writeFileSync(instructions, edited);
     const summary = await uninstallBundle({ skillsDir: skills, instructionsPath: instructions });
@@ -83,9 +83,9 @@ describe('instruction transactions', () => {
   });
 
   test('uninstall manifest failure restores every prior byte and file mode', async () => {
-    const { bundle, skills, instructions } = fixture();
+    const { root, bundle, skills, instructions } = fixture();
     writeFileSync(instructions, 'personal bytes');
-    await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+    await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
 
     const skill = join(skills, 'axstack-demo', 'SKILL.md');
     const roles = join(skills, 'axstack', 'roles.json');
@@ -111,8 +111,8 @@ describe('instruction transactions', () => {
   });
 
   test('uninstall detects a concurrent instruction edit before any removal', async () => {
-    const { bundle, skills, instructions } = fixture();
-    await installBundle({ bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
+    const { root, bundle, skills, instructions } = fixture();
+    await installBundle({ bundleDir: bundle, toolsDir: join(root, 'tools'), skillsDir: skills, preset: 'mixed', instructionsPath: instructions });
     const skill = join(skills, 'axstack-demo', 'SKILL.md');
     await expect(uninstallBundle({
       skillsDir: skills,

@@ -33,6 +33,7 @@ function installArgs(f, claude) {
   return {
     bundleDir: f.bundleDir,
     skillsDir: f.skillsDir,
+    toolsDir: join(f.root, 'tools'),
     preset: 'mixed',
     claude,
   };
