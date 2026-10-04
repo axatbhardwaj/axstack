@@ -9,19 +9,20 @@ const routing = () => readFileSync(`${root}/skills/axstack/references/routing.md
 // Declared prompt contracts, not proof of live compliance. Existing no-op
 // coverage does not distinguish recurrence or protect the suggestion boundary.
 const rules = [
-  ['covered recurrence is not a no-op', audit, /(?:never classify|do not treat) it as an already-covered no-op/i,
-    [/covered rule/i, /recurs|repeats/i, /already-covered no-op/i],
+  ['covered recurrence is not a no-op', audit,
+    /(?:never classify|do not treat) (?:it|(?:the|any|a|each|every|that) rule) as an already-covered no-op/i,
+    [/covered rule/i, /\b(?:recurs|recurred|repeats|repeated)\b/i, /already-covered no-op/i],
     0, 'classify it as an already-covered no-op', 'If a covered rule repeats, do not treat it as an already-covered no-op.'],
   ['record recurrence', audit, null, [/record|report/i, /recurrence/i, /as recurred/i],
     0, 'Ignore', 'Report that recurrence as recurred.'],
   ['suggest correct', audit, null, [/suggest|recommend/i, /axstack-correct/i, /recurrence/i],
     0, 'Omit', 'Recommend `axstack-correct` for the recurrence.'],
-  ['audit does not run correct', audit, /never run|do not invoke/i,
-    [/axstack-correct/i, /from audit|during audit/i],
+  ['audit does not run correct', audit, /\b(?:never runs?|do not invoke)\b/i,
+    [/axstack-correct/i, /\baudit\b/i],
     0, 'Run', 'Do not invoke `axstack-correct` during audit.'],
   ['direct correct route', routing, null,
-    [/repeated mistakes|recurring mistakes/i, /evidence/i, /stronger checks/i,
-      /axstack-correct/i, /user-invoked|invoked by the user/i, /report only|report-only/i],
+    [/(?:repeated|recurring|repeating) mistakes/i, /evidence/i, /stronger checks/i,
+      /axstack-correct/i, /user-invoked|invoked by (?:the|a) user/i, /report only|report-only/i],
     4, 'automatically invoked',
     '- Recurring mistakes needing evidence and stronger checks -> `axstack-correct`: invoked by the user, report-only.'],
 ];
@@ -47,15 +48,48 @@ function checkRule(text, rule) {
   }
 }
 
+function checkRewording(text, rule, rewording = rule[6]) {
+  const originals = text.split('\n').filter(acceptsRule(rule));
+  expect(originals).toHaveLength(1);
+  // Replace the actual instruction in the full source string, without writes.
+  const reworded = text.replace(originals[0], rewording);
+  for (const sibling of rules.filter((row) => row[1] === rule[1])) checkRule(reworded, sibling);
+  return reworded;
+}
+
 for (const rule of rules) {
-  const [name, source, , , , , rewording] = rule;
+  const [name, source] = rule;
   test(`correct integration: ${name}`, () => checkRule(source(), rule));
   test(`correct integration real-source rewording: ${name}`, () => {
-    const text = source();
-    const originals = text.split('\n').filter(acceptsRule(rule));
-    expect(originals).toHaveLength(1);
-    // Replace the actual instruction in the full source string, without writes.
-    const reworded = text.replace(originals[0], rewording);
-    for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
+    const reworded = checkRewording(source(), rule);
+    // Already-reworded source still satisfies the same contract.
+    checkRewording(reworded, rule);
+  });
+}
+
+const naturalRewordings = [
+  ['covered recurrence is not a no-op', [
+    'If any covered rule recurred, never classify the rule as an already-covered no-op.',
+    'If a covered rule repeated, do not treat it as an already-covered no-op.',
+  ]],
+  ['record recurrence', ['Record each recurrence as recurred.']],
+  ['suggest correct', ['Suggest `axstack-correct` for every recurrence.']],
+  ['audit does not run correct', [
+    'Never run the `axstack-correct` skill during audit.',
+    'Audit never runs `axstack-correct`.',
+  ]],
+  ['direct correct route', [
+    '- Repeating mistakes needing evidence and stronger checks -> `axstack-correct`: invoked by a user, report only.',
+  ]],
+];
+
+for (const [name, rewordings] of naturalRewordings) {
+  test(`correct integration natural real-source rewording: ${name}`, () => {
+    const rule = rules.find(([ruleName]) => ruleName === name);
+    for (const rewording of rewordings) {
+      const reworded = checkRewording(rule[1](), rule, rewording);
+      checkRewording(reworded, rule, rewording);
+      checkRewording(reworded, rule);
+    }
   });
 }
