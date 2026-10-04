@@ -49,6 +49,7 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
   .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
+  'axstack-correct',
   'axstack-align',
   'axstack-brainstorm',
   'axstack-cleanup',
@@ -61,6 +62,7 @@ const EXPECTED_SKILLS = [
 
 // Standalone phases callable directly; each must explicitly load shared contracts.
 const STANDALONE_PHASES = [
+  'axstack-correct',
   'axstack-align',
   'axstack-brainstorm',
   'axstack-cleanup',
@@ -214,7 +216,7 @@ test('structural: installation records setup and the ordered rollback boundary',
   expect(installation).toMatch(/stays installed for one week after the VPS canary/i);
 });
 
-test('structural: shared root has no entry file and all six phase skills exist', () => {
+test('structural: shared root has no entry file and all expected phase skills exist', () => {
   expect(existsSync(join(skillsDir, 'axstack', 'SKILL.md'))).toBe(false);
   for (const name of EXPECTED_SKILLS) {
     const p = join(skillsDir, name, 'SKILL.md');
@@ -542,6 +544,8 @@ test('structural: docs/workflows.md exists and references phase skills', () => {
   expect(existsSync(p), 'missing docs/workflows.md').toBeTruthy();
   const text = readFileSync(p, 'utf8');
   for (const name of EXPECTED_SKILLS) {
+    // 20261004-correct-ste T6: docs integration belongs to the dependent T7 PR.
+    if (name === 'axstack-correct') continue;
     expect(text.includes(name), `docs/workflows.md must reference ${name}`).toBeTruthy();
   }
 });

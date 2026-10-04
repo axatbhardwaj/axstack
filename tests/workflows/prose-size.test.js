@@ -23,8 +23,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-correct-ste T3 repair1: +151 bytes for the diligence UNKNOWN hold and recorded reason.
   // 20261004-correct-ste T4: +982 bytes for STE-inspired writing and its contracts link.
   // 20261004-correct-ste T5: +1673 bytes for performance questions and three conditional links.
+  // 20261004-correct-ste T6: +1813 bytes for the report-only recurrence skill and its safety contracts.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(284809);
+  expect(total).toBeLessThanOrEqual(286622);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
