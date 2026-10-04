@@ -230,6 +230,8 @@ For each PR:
    to step 1.
    Merge-ready also requires a current diligence `PASS` at that head; diligence
    `FINDINGS` return to the same author within the review round.
+   Diligence `UNKNOWN` records the PR as `held` with the reason in the run record
+   and blocks merge-ready pending the driver's recorded disposition.
    Before merge-ready, treat a run-record `Learning` that contradicts a shipped
    rule as a finding on the owning PR and hold merge-ready until the contradiction is resolved.
    An unrelated run-record `Learning` leaves merge-ready eligibility unchanged.
