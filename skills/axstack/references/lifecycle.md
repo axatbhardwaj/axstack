@@ -155,7 +155,7 @@ use `axstack-cleanup`, remove the run's own scheduled tasks under
 [Workspace hygiene](workspace-hygiene.md), and close selected external-tracker tickets;
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
-settlement receipt; compact record path; auditor decision plus settlement
+settlement receipt; compact record path; close-out acceptance table; auditor decision plus settlement
 receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; scheduled-task,
 release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step

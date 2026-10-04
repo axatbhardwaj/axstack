@@ -123,7 +123,7 @@ by the next owner:
 
 Use one row per acceptance check, including each clause of a compound check.
 Record in each row a passing evidence pointer or a user-accepted hold with its `Decisions` row.
-If an acceptance clause lacks passing evidence and a `Decisions` row with a user-accepted hold, hold close-out.
+If neither passing evidence nor a `Decisions` row with a user-accepted hold exists for an acceptance clause, hold close-out.
 A recorded user-accepted hold in `Decisions` satisfies that clause for close-out; keep the unmet result explicit.
 Record the reason for each driver-elected repair in `Decisions`.
 
