@@ -45,12 +45,13 @@ test('shared rules qualify only optional seats and preserve required holds', () 
 test('research and arena continue after optional dropout, with required seats held', () => {
   const research = read('skills/axstack-research/SKILL.md');
   const align = read('skills/axstack-align/SKILL.md');
+  const arena = read('skills/axstack-brainstorm/references/arena.md');
   expect(research).toMatch(/optional[^.]*absent[^.]*continue/i);
   expect(research).toMatch(/Required branches hold their affected work/i);
-  expect(align).toMatch(/optional[^.]*candidate[^.]*absent[^.]*continue/i);
-  expect(align).toMatch(/required adviser, candidate, or judge[^.]*holds/i);
+  expect(arena).toMatch(/optional[^.]*candidate[^.]*absent[^.]*continue/i);
+  expect(arena).toMatch(/required adviser, candidate, or judge[^.]*holds/i);
   expect(align).toMatch(/adviser[^.]*unavailable[^.]*hold/i);
-  for (const prose of [research, align]) {
+  for (const prose of [research, arena]) {
     expect(prose).toMatch(/launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
   }
 });

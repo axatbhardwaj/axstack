@@ -6,7 +6,7 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 const readJson = (path) => JSON.parse(read(path));
 
-// Structural checks for the arena round inside align: who authors, who judges,
+// Structural checks for the arena procedure owned by brainstorm: who authors, who judges,
 // how the pick and graft are bounded, and where the synthesis is recorded.
 
 test('align research: dispatches source-specific branches with one owner each', () => {
@@ -20,7 +20,7 @@ test('align research: dispatches source-specific branches with one owner each', 
 });
 
 test('align arena: gated to hard-to-reverse choices and replaces critique for that question', () => {
-  const text = compact('skills/axstack-align/SKILL.md');
+  const text = compact('skills/axstack-brainstorm/references/arena.md');
   expect(text).toMatch(/## Arena for hard-to-reverse design choices/);
   expect(text).toMatch(/same test as for an ADR/i);
   expect(text).toMatch(/small or routine questions never enter the arena/i);
@@ -28,13 +28,13 @@ test('align arena: gated to hard-to-reverse choices and replaces critique for th
   expect(text).toMatch(/replace the critique round for that question with an arena/i);
   // The pre-consultation draft rule is explicitly overridden for arena-grade questions,
   // in align and in the standing contracts, so the two never conflict.
-  expect(text).toMatch(/drafts the prioritized frontier and recommendations, except for an arena-grade question[^.]*drafts no recommendation until the candidates and judge verdicts return/);
+  expect(compact('skills/axstack-align/SKILL.md')).toMatch(/drafts the prioritized frontier and recommendations, except for an arena-grade question[^.]*drafts no recommendation until the candidates and judge verdicts return/);
   const contracts = compact('skills/axstack/references/contracts.md');
-  expect(contracts).toMatch(/forms an independent assessment first[^.]*\. The one exception is an arena-grade Align question[^.]*driver assesses only after the candidates and judge verdicts return/);
+  expect(contracts).toMatch(/forms an independent assessment first[^.]*\. The one exception is an arena-grade Align question[^.]*axstack-brainstorm[^.]*driver assesses only after the candidates and judge verdicts return/);
 });
 
 test('align arena: advisers author, judges judge, driver picks and grafts', () => {
-  const text = compact('skills/axstack-align/SKILL.md');
+  const text = compact('skills/axstack-brainstorm/references/arena.md');
   for (const phase of ['Frame', 'Fan out', 'Cross-judge', 'Pick', 'Graft', 'Present']) {
     expect(text, `phase ${phase}`).toMatch(new RegExp(`\\d\\. \\*\\*${phase}\\.\\*\\*`));
   }
@@ -45,7 +45,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   expect(text).toMatch(/the driver authors no candidate/i);
   expect(text).toMatch(/round 1[^.]*axstack-arena-judge-opus[^.]*score/i);
   expect(text).toMatch(/round 2[^.]*axstack-escalation-fable[^.]*axstack-arena-judge-astra[^.]*independently score/i);
-  expect(text).toMatch(/driver and the Opus judge disagree on the base[^.]*user rejects the round-1 synthesis/i);
+  expect(text).toMatch(/driver and the Opus judge disagree on the base[^.]*caller re-invokes with the user.s rejection of the round-1 synthesis/i);
   expect(text).toMatch(/same anonymized candidates and rubric/i);
   expect(text).toMatch(/after round-2 verdicts return[^.]*re-picks in step 4[^.]*re-presents in step 6/i);
   expect(text).toMatch(/anonymized[^.]*relabeled candidates[^.]*rubric/i);
@@ -58,7 +58,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
 });
 
 test('align arena: synthesis lands in Decisions rows and absent seats hold only that question', () => {
-  const text = compact('skills/axstack-align/SKILL.md');
+  const text = compact('skills/axstack-brainstorm/references/arena.md');
   expect(text).toMatch(/synthesis note[^.]*judge verdicts per round[^.]*`Decisions` rows/i);
   expect(text).toMatch(/optional Grok or Antigravity candidate[^.]*malfunctions[^.]*absent/i);
   expect(text).toMatch(/required adviser, candidate, or judge[^.]*unavailable[^.]*holds that question/i);
