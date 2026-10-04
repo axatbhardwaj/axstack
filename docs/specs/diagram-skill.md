@@ -1,6 +1,6 @@
 # Spec: `axstack-diagram` with a pinned archify viewer
 
-Status: Draft rev 2 (2026-10-04). Store: this repo Markdown file.
+Status: Draft rev 3 (2026-10-04). Store: this repo Markdown file.
 Run: `20261004-diagram-skill`. The private run record holds the research notes, the
 diligence report, and the adviser receipts.
 
@@ -40,9 +40,9 @@ drawn node and edge is backed by inspected source or is marked as planned or unk
 | Q3 | Raise only the aggregate prose-size ceiling by the net bytes added; no `routing.md` line. |
 | Q4 | Reuse upstream archify. The installer clones it at a pinned full SHA into a tools directory outside every skill root. This is an explicit exception to "self-contained, no runtime dependencies" for this one external tool only. Pin bumps happen only in a reviewed `chore` PR with a smoke run. |
 | Q5 | Support all five archify types: architecture, workflow, sequence, dataflow, lifecycle. |
-| Q6 | When the viewer is required and archify or Chrome is unavailable, hold and ask the user. No Mermaid substitute and no unverified HTML. A viewer whose receipt is not `status: "pass"` after two repair rounds is also held, never delivered. |
+| Q6 | When the viewer is required and archify or Chrome is unavailable, hold and ask the user. No Mermaid substitute and no unverified HTML. A viewer whose receipt is not `status: "pass"` after two repair rounds is also held; the user decides what happens to the remaining defects. |
 | Q7 | archify per-node detail cards are exempt from explain's 700-word cap. Each card has at most 40 words and cites its source. Node labels, headings, captions, and all non-card text still count. |
-| Q8 | One-way roles: explain owns evidence, claim labels, the word cap, dispatch, and delivery; `axstack-diagram` owns format and visual rules and never calls explain. Direct invocation of `axstack-diagram` keeps the fidelity rules and the rendered QA. |
+| Q8 | Driver-recorded from the original request (not a separate user answer). One-way roles: explain owns evidence, claim labels, the word cap, dispatch, and delivery; `axstack-diagram` owns format and visual rules and never calls explain. Direct invocation of `axstack-diagram` keeps the fidelity rules and the rendered QA. |
 | D1 | Rejected: vendoring archify (11 MB, non-commercial brand-mark licences, prose budget) and rebuilding it (a large owned renderer). |
 | D2 | Success is the `finalize` receipt `status: "pass"`, never the exit code. |
 | D3 | Rules are written in Axstack's own words with a one-line credit to archify, diagram-design, visual-explainer, Matt Pocock, and poteto. No upstream templates are copied. |
@@ -62,22 +62,33 @@ Shape: skills/axstack-diagram/SKILL.md (short router) + references/archify.md (I
        flag --tools-dir, test override AXSTACK_ARCHIFY_REPO) and writes the owned record
        skills/axstack-diagram/archify.json {path, sha}. The copy keeps an owners file
        <tools-dir>/archify-<sha>.owners.json listing each skills root that uses it.
-       `uninstall` drops its owner; it removes the copy only when no owner remains and
-       `git status --porcelain` is empty. A pin bump releases the old copy the same way.
-       `check` reports the record, the checked-out SHA, and Chrome (ARCHIFY_CHROME honoured).
+       `uninstall` drops its owner; it removes the copy only when no owner remains, HEAD
+       equals the recorded SHA, and `git status --porcelain --ignored` is empty; otherwise
+       it keeps the copy and reports why. A pin bump or a changed --tools-dir releases the old
+       copy the same way. The owners file decides removal; archify.json is a
+       manifest-owned file of the skills root.
+       --tools-dir is canonicalised and refused if it overlaps a skills root or passes a
+       symlink. The clone goes to a temporary sibling and is renamed into place; if a
+       later owner-file or manifest write fails, a copy created by this install is
+       removed and the owner file is restored.
+       `check` reports the record, the checked-out SHA, and Chrome (ARCHIFY_CHROME
+       honoured); a missing or mismatched archify exits non-zero, missing Chrome warns.
        An offline, git-less, or failed clone still installs the skills, prints
-       "archify: unavailable (<reason>)", and `check` exits non-zero for that gap.
+       "archify: unavailable (<reason>)", and exits 0.
 Binding: the skill reads archify.json and verifies `git -C <path> rev-parse HEAD` equals the
          recorded SHA; missing record, missing copy, mismatch, or missing Chrome -> hold and ask.
          Every call sets ARCHIFY_UPDATE_CHECK_DISABLED=1 and writes the IR, the HTML, and
-         the receipt only inside the dispatch's private evidence folder.
+         the receipt only inside the dispatch's private evidence folder (a run evidence
+         folder when invoked directly).
          Factual nodes and edges map to an inspected path at a recorded full revision
          (archify --repo-root pins); unsupported factual elements are dropped. Proposed or
-         unknown elements are allowed only when labelled: dashed style plus a legend entry.
+         unknown elements are allowed only when labelled: dashed node variant plus a
+         visible "planned" or "unknown" marker in the label or card, and a legend entry
+         where the type's schema allows one (not architecture or lifecycle).
          Uncommitted sources use explain's content hash, and their pins are marked unknown.
          The source map stays outside the reader view; the display shows the short SHA.
          About 9 core nodes signals a split, not a hard gate; 1-2 accent nodes; the viewer
-         opens dark unless the user names a theme.
+         opens dark unless the user names a theme. The HTML loads no network assets.
          The author runs `finalize --quality showcase --json` as a build gate. Pass means
          receipt status "pass", never the exit code. At most two repair rounds; then
          hold with the remaining defects. archify's own headless measurement never
@@ -100,16 +111,16 @@ Open: none.
 | # | Capability | Content |
 |---|---|---|
 | C1 | Pinned archify provisioning | The Design installer lines: pin constant, sparse clone, SHA check, owned `archify.json` record, owners file, guarded uninstall and pin bump, unavailable path, `check` output. The manifest gains the out-of-root owned copy without breaking older manifests. Home-guard and `--yes` rules apply to `--tools-dir`. AGENTS.md `Interfaces` records the archify exception. Tests use a local git fixture through `AXSTACK_ARCHIFY_REPO` and no network. `docs/installation.md` documents it. Commits stay near 200 lines. |
-| C2 | `axstack-diagram` skill | The Design `Shape` files, the Binding rules, Q8, and the credits. Bundle discovery lists the new skill; the prose-size aggregate ceiling rises by the net bytes. `ui-verification.md` states that archify `finalize` is an author build gate and never replaces the verifier's rendered pass. |
+| C2 | `axstack-diagram` skill | The Design `Shape` files, the Binding rules, Q8, and the credits. Bundle discovery lists the new skill; the prose-size aggregate ceiling rises by the net bytes. `ui-verification.md` gains one narrow exception: archify `finalize` is an author headless build gate with outputs in the evidence folder; it never replaces the verifier's rendered pass, and no other browser check moves to the author. |
 | C3 | Explain integration | `axstack-explain` routes every diagram through `axstack-diagram`: simple chat answers use its Mermaid rules inline with no agent; complex visuals are authored by `axstack-explainer` through the archify path. The Q7 card rule. `visual-qa.md` binds the verifier and the review to the receipt's `artifact.sha256` and makes the node-and-edge review mandatory for archify output. README and `docs/workflows.md` list the skill and credit archify. |
 
 ## Acceptance
 
-1. Installer tests, with a fixture repo and no network: install clones the pinned SHA, writes `archify.json`, and adds its owner; a second install is a no-op; a SHA mismatch fails clearly; two skills roots share one copy, and uninstalling one keeps it; the last uninstall removes an unmodified copy and keeps a modified one; a pin bump releases the old copy; an unreachable repo still installs the skills and reports `archify: unavailable`; `check` reports record, SHA, and Chrome and exits non-zero on a gap; home-guard refuses an unconfirmed home `--tools-dir`; older manifests still load.
-2. `skills/axstack-diagram/SKILL.md` and its two references exist. Prose-contract tests fail on removal or inversion of: format choice; record-and-SHA verification; hold on missing archify, mismatch, Chrome, or a non-pass receipt; `status: "pass"` as the only pass, with exit codes never trusted; `ARCHIFY_UPDATE_CHECK_DISABLED=1` on every call; outputs only in the evidence folder; factual nodes and edges need source pins, proposals and unknowns need labels; two repair rounds then hold; the ui-verifier pass including 390px mobile; the mandatory node-and-edge review; no call to explain; direct use keeps fidelity and QA. Tests survive rewording.
+1. Installer tests, with a fixture repo and no network: install clones the pinned SHA, writes `archify.json`, and adds its owner; a second install is a no-op; a SHA mismatch fails clearly; two skills roots share one copy, and uninstalling one keeps it; the last uninstall removes an unmodified copy and keeps a copy with tracked edits, untracked or ignored files, or a different HEAD; a pin bump releases the old copy; an unreachable repo still installs the skills, reports `archify: unavailable`, and exits 0; a failed owner-file write leaves no new copy and the old owner file intact; an overlapping or symlinked `--tools-dir` is refused; `check` exits non-zero for missing or mismatched archify and warns for missing Chrome; a changed `--tools-dir` releases the old copy; home-guard refuses an unconfirmed home `--tools-dir`; older manifests still load.
+2. `skills/axstack-diagram/SKILL.md` and its two references exist. Prose-contract tests fail on removal or inversion of: format choice; record-and-SHA verification; hold on missing archify, mismatch, Chrome, or a non-pass receipt; `status: "pass"` as the only pass, with exit codes never trusted; `ARCHIFY_UPDATE_CHECK_DISABLED=1` on every call; outputs only in the evidence folder; factual nodes and edges need source pins, proposals and unknowns need labels; two repair rounds then hold; the ui-verifier pass including 390px mobile; the mandatory node-and-edge review; the ui-verification exception stays limited to finalize; no network assets in the HTML; no call to explain; direct use keeps fidelity and QA. Tests survive rewording.
 3. Explain loads `axstack-diagram` for every diagram, keeps evidence labels and dispatch ownership, and applies Q7 (40-word cards exempt; labels and other text counted). Tests fail on removal or inversion.
-4. A smoke test runs `finalize` for one shipped example of each of the five types when the pinned copy (found through an env var) and Chrome exist; it skips with a stated reason otherwise, and a sandbox or Chrome failure is a skip, never a pass. A skipped smoke does not satisfy acceptance 5.
-5. One real explanation of this repository's installer flow is produced through explain -> `axstack-diagram` -> archify on the desktop host, with a `status: "pass"` receipt, a ui-verifier verdict (desktop, mobile, keyboard, search or focus, reach, theme), and a node-and-edge review. Findings are fixed or recorded with the user's decision.
+4. A smoke test runs `finalize` for one shipped example of each of the five types when the pinned copy (found through an env var) and Chrome exist; it skips with a stated reason otherwise, and a sandbox or Chrome failure is a skip, never a pass. Before release, a non-skipped run of all five types at the pin passes on the desktop host and its log is kept; a skipped run leaves this acceptance incomplete. Delegated viewer QA (acceptance 5) covers one diagram by design; the other types rely on this run.
+5. One real explanation of this repository's installer flow is produced through explain -> `axstack-diagram` -> archify on the desktop host, with the candidate installed into a 0700 `/tmp` skills root and `--tools-dir` (live home configuration untouched), with a `status: "pass"` receipt, a ui-verifier verdict (desktop, mobile, keyboard, search or focus, reach, theme), and a node-and-edge review. Findings are fixed or recorded with the user's decision.
 6. Bundle discovery lists 16 skills; the prose-size comment records the raise and its reason; README, `docs/workflows.md`, `docs/installation.md`, and AGENTS.md describe the skill, the tools directory, and the exception.
 7. `bun test` is green with TMPDIR under `/tmp`.
 8. A release is published and installed on desktop and VPS after the user's release decision; the version follows the minor rule (a `feat` lands). Each host's `axstack check` shows the archify pin.
