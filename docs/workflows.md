@@ -162,15 +162,17 @@ for explicit ownership transfer.
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
   consults Astra and Opus independently with the same bounded evidence and
   question. It synthesizes disagreements and reuses unchanged receipts. For a
-  hard-to-reverse design choice it runs an arena instead: Astra, Opus, Grok,
-  and Antigravity each author a candidate. `axstack-arena-judge-opus` scores
-  them in round 1; the driver compares its own pick with that verdict. If they
-  disagree on the base or the user rejects the round-1 synthesis,
-  `axstack-escalation-fable` and `axstack-arena-judge-astra` independently
-  score the same anonymized candidates and rubric in round 2. The driver
-  picks a base, grafts strong ideas, and records judge verdicts per round in
-  the `Decisions` rows without averaging. Fable escalation uses a fresh
-  session for round 2, high-stakes agreement, or the bounded trigger in
+  Rung 1 or 2 design question it loads `axstack-brainstorm` inline and reuses
+  its receipt instead of consulting twice; Align owns the interview.
+- `axstack-brainstorm` validates an approach standalone or inline in the driver,
+  report-only. Every invocation compares independent Astra, Opus, Grok and
+  Antigravity candidates, including premise and smallest-change/do-nothing
+  checks. The driver scores, picks and grafts; Rung 1 uses no judges. At Rung 2,
+  `axstack-arena-judge-opus` judges round 1; disagreement on the base or caller
+  re-invocation with the user's rejection triggers fresh Fable/Astra round 2.
+  It returns a verdict, sketch and proposed questions, with no interview,
+  prototype or execution approval. Required seats hold; optional dropouts are
+  fenced. Fable also serves the bounded triggers in
   [Standing contracts](../skills/axstack/references/contracts.md).
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
   user-approved revision baseline. Linear through the executor MCP is the

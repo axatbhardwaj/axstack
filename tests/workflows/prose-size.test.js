@@ -15,8 +15,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // driver acceptance recorded in run 20260930-test-slop-audit.
   // Driver acceptance in run 20261003-t3code-migration (T5b): restore the
   // 278,775-byte aggregate ceiling after retiring the legacy runtime reference.
+  // 20261004-brainstorm-skill: new skill, user-approved; minimal ceiling 279,126.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(278775);
+  expect(total).toBeLessThanOrEqual(279126);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

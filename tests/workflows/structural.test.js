@@ -50,6 +50,7 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
 
 const EXPECTED_SKILLS = [
   'axstack-align',
+  'axstack-brainstorm',
   'axstack-cleanup',
   'axstack-spec',
   'axstack-tickets',
@@ -61,6 +62,7 @@ const EXPECTED_SKILLS = [
 // Standalone phases callable directly; each must explicitly load shared contracts.
 const STANDALONE_PHASES = [
   'axstack-align',
+  'axstack-brainstorm',
   'axstack-cleanup',
   'axstack-spec',
   'axstack-tickets',
@@ -510,12 +512,12 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
 
 test('structural: Rung 2 adds every configured family without changing the ordinary adviser pair', () => {
   const align = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
-  const arena = align.slice(align.indexOf('## Arena for hard-to-reverse design choices'), align.indexOf('## Bound the interview'));
-  expect(arena).toMatch(/\. Rung 2 designs\s+alone enter the arena/i);
+  const arena = readFileSync(join(skillsDir, 'axstack-brainstorm', 'references/arena.md'), 'utf8');
+  expect(arena).toMatch(/only at Rung 2[^.]*judge rounds/i);
   for (const role of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity']) {
     expect(arena).toContain(role);
   }
-  expect(align.slice(0, align.indexOf('## Arena for hard-to-reverse design choices'))).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-opus[^.]*independently/i);
+  expect(align).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-opus[^.]*independently/i);
 });
 
 test('structural: align reads back understanding without a pre-spec agreement gate', () => {

@@ -26,7 +26,9 @@ Set the rung from researched facts; never ask the user to choose it. A change
 inside one module's existing interface, ownership, data flow, and failure
 guarantees is Rung 0: no design questions or sketch. Otherwise load the
 [design lens ladder](../axstack/references/design-lens.md) for Rung 1 or 2
-and settle only unresolved areas in its order within the existing budget. Carry a
+and settle only unresolved areas in its order within the existing budget.
+For unresolved Rung 1 or 2 design questions, load
+[Brainstorm](../axstack-brainstorm/SKILL.md) inline. Carry a
 Rung 1 or 2 sketch in the substantial spec's `Design` section or the returned
 small-change intent. A design question alone does not make small work
 substantial; apply routing's existing size reassessment rule.
@@ -65,9 +67,10 @@ substantial; apply routing's existing size reassessment rule.
 The current chat remains the driver under
 [Standing contracts](../axstack/references/contracts.md). For each new
 user round, the driver independently drafts the prioritized frontier and
-recommendations, except for an arena-grade question (below), where the driver
-writes the brief and rubric but drafts no recommendation until the candidates
-and judge verdicts return, so nothing anchors them. Then consult `axstack-advisor-astra` and
+recommendations, except for brainstorm questions, where the driver frames the
+brief and rubric and assesses after the candidates and required judge rounds
+return. Reuse valid brainstorm receipts to replace the adviser consult for
+that question. For other questions, consult `axstack-advisor-astra` and
 `axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
@@ -87,60 +90,10 @@ the draft unchanged; it needs no new adviser pair. Changed draft text, a
 blocking finding, or a high-stakes decision requires fresh receipts on the new
 revision.
 
-## Arena for hard-to-reverse design choices
+## Use the brainstorm synthesis
 
-Critique of one draft anchors every reader to that draft's shape. Rung 2 designs
-alone enter the arena: they meet the same test as for an ADR (a meaningful,
-hard-to-reverse, non-obvious trade-off: architecture, module boundaries, data
-model, migration strategy). Replace the critique round for that question with
-an arena. Small or routine questions never enter the arena.
-
-1. **Frame.** The driver writes the brief (the artifact, its constraints, the
-   settled decisions it must respect) and three to six gradeable rubric
-   criteria. Candidates receive only the brief; the rubric is for judging.
-2. **Fan out.** Produce one candidate per configured family independently from the same brief,
-   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-opus`,
-   `axstack-arena-candidate-grok`, and `axstack-arena-candidate-antigravity`.
-   Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
-3. **Cross-judge.** After every candidate completes, give round 1 judge
-   `axstack-arena-judge-opus` the anonymized, relabeled candidates and rubric to
-   score every candidate per criterion and recommend a base with a reason.
-   The driver compares its own pick with the Opus verdict. Only if the driver
-   and the Opus judge disagree on the base, or the user rejects the round-1
-   synthesis,
-   run round 2 with fresh sessions: `axstack-escalation-fable` and `axstack-arena-judge-astra`
-   independently score the same anonymized candidates and rubric. Judges never
-   author, never cross-read each other, and never average verdicts. After round-2
-   verdicts return, the driver re-picks in step 4 and re-presents in step 6.
-4. **Pick.** The driver reads every candidate end to end and scores per
-   criterion, not on holistic feel, then compares with the judge verdicts from
-   each completed round. Agreement confirms the base. On disagreement, re-read
-   the rationales and decide with a stated reason; never average verdicts or
-   fabricate consensus.
-5. **Graft.** Walk the losing candidates once more for the one or two ideas
-   worth porting and fold them into the base by hand so the result stays
-   coherent under one mental model. Convergence on the same shape is a strong
-   agreement signal: adopt the consensus shape, no graft. Wide divergence
-   means the frame was under-specified: reframe and rerun once, never
-   average.
-6. **Present.** The synthesized design is the recommendation in the next
-   `Qn`, with its trade-off, judge verdicts per round, and what was grafted or rejected.
-   The user still decides; spec approval remains the one human checkpoint.
-
-Record the synthesis note (base, grafts and their source candidate, rejections,
-dropouts, judge verdicts per round) as `Decisions` rows in the
-[run record](../axstack/references/run-record.md). Load
-[T3 runtime](../axstack/references/t3-runtime.md) immediately before the
-first candidate or judge dispatch. If an optional Grok or Antigravity candidate
-malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
-record `absent (<reason>)`, name it once in the next
-read-back, and continue with available candidates without relay or substitution.
-A required adviser, candidate, or judge unavailable at launch or returning a
-failed receipt holds that question without substitution; record the gap and ask
-whether to proceed. In mixed fan-out retain at least one Codex and one Claude
-seat, or hold the affected question.
-For an uncertain dispatch, reconcile natively; it is never treated as absent.
-Unaffected fact work and questions continue.
+Present its recommendation and trade-off in the next `Qn` within the same
+question budget. The user still decides; reuse unchanged receipts.
 
 ## Bound the interview
 

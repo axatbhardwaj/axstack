@@ -14,7 +14,8 @@ coordination. You can start at the phase you need.
 
 | Layer | Skill | What it does |
 | --- | --- | --- |
-| Plan | [axstack-align](skills/axstack-align/SKILL.md) | Settle scope through questions, a design lens sketch, and a four-family arena for hard choices. |
+| Plan | [axstack-align](skills/axstack-align/SKILL.md) | Settle scope through questions, a design lens sketch, and inline brainstorm validation. |
+| Plan | [axstack-brainstorm](skills/axstack-brainstorm/SKILL.md) | Validate an approach with independent candidates; judges for hard choices. |
 | Plan | [axstack-spec](skills/axstack-spec/SKILL.md) | Write and approve an observable specification. |
 | Plan | [axstack-tickets](skills/axstack-tickets/SKILL.md) | Break approved scope into executable tasks. |
 | Build | [axstack-implement](skills/axstack-implement/SKILL.md) | Build with strict TDD and an author → review → repair loop. |
@@ -36,7 +37,7 @@ implementation. Research, explanation, and peer review can start directly.
 
 | Failure mode | How Axstack responds |
 | --- | --- |
-| Wrong thing built | Align rounds clarify the request; a four-family arena compares approaches for hard choices. |
+| Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
 | Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
