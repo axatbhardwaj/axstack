@@ -220,9 +220,12 @@ reconciles their findings.
 
 The mixed checker and `axstack-research-web-google` have provider
 `antigravity`; mixed `axstack-research-x` has provider `grok`. All three use
-`model: null` with notes authorizing their agent-ID routes; T3 resolves the exact
-model from the first entry for that provider in saved capabilities. Empty
-Antigravity model catalogs hold. The single-provider presets configure the checker and keep
+`model: null` with notes authorizing their agent-ID routes; T3 resolves Grok's
+exact model from the first entry for that provider in saved capabilities.
+For Antigravity `model:null` roles, select the first listed model whose ID ends
+with `-<effort>` from saved capabilities and record its exact ID.
+Missing effort-suffix matches hold resolution for Antigravity, including empty
+model catalogs. The single-provider presets configure the checker and keep
 both cross-provider research routes as intentional absences. Their
 unavailable adviser and round-2 seat remain explicit same-provider
 `model: null` roles, which do not make installation unready;

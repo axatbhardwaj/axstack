@@ -45,7 +45,7 @@ function providerFrom(catalog, provider) {
   return instance;
 }
 
-function modelFrom(models, { provider, model: pin, class: modelClass, excluded }) {
+function modelFrom(models, { provider, model: pin, class: modelClass, excluded, effort }) {
   if (pin && pin !== 'null') {
     const model = models.find((model) => model.id === pin && !excluded.includes(model.id));
     if (!model) throw new Error(`missing requested model ${pin}`);
@@ -56,8 +56,9 @@ function modelFrom(models, { provider, model: pin, class: modelClass, excluded }
     if (['codex', 'claude'].includes(provider)) {
       throw new Error(`intentional absence for ${provider}: missing model and class`);
     }
-    // Launch-by-agent-ID providers bind the first listed ID; exclusions never select a substitute.
-    const model = models[0];
+    // Antigravity encodes effort in its ID; exclusions never select a substitute.
+    const model = provider === 'antigravity'
+      ? models.find((model) => model.id.endsWith(`-${effort}`)) : models[0];
     if (!model || excluded.includes(model.id)) throw new Error('missing first listed model');
     return model;
   }
@@ -88,14 +89,21 @@ try {
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
   const instance = providerFrom(catalog, provider);
   const model = modelFrom(instance.models, options);
-  const effortOptions = model.options.filter((option) => effortIds[provider]
-    ? option.id === effortIds[provider] : ['reasoningEffort', 'effort'].includes(option.id));
-  if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
-    || (provider === 'grok' && effort === 'max')) {
-    throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
+  let effortOption = null;
+  if (provider === 'antigravity') {
+    if (!model.id.endsWith(`-${effort}`)) {
+      throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
+    }
+  } else {
+    const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
+    if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
+      || (provider === 'grok' && effort === 'max')) {
+      throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
+    }
+    effortOption = { id: effortOptions[0].id, value: effort };
   }
   console.log(JSON.stringify({ provider, providerInstanceId: instance.providerInstanceId,
-    model: model.id, effortOption: { id: effortOptions[0].id, value: effort }, source: 'capabilities', path }));
+    model: model.id, effortOption, source: 'capabilities', path }));
 } catch (error) {
   console.error(`model capabilities resolution hold: ${error.message}`);
   process.exitCode = 1;

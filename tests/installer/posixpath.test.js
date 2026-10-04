@@ -38,6 +38,9 @@ describe('join', () => {
     expect(join('/a', 'b\\c')).toBe('/a/b\\c');
     expect(join('a\\b', 'c')).toBe('a\\b/c');
   });
+  test('consecutive leading parent segments stay above a relative root', () => {
+    expect(join('..', '..', 'a')).toBe('../../a');
+  });
   test('spaces, percent, and hash are ordinary characters', () => {
     expect(join('/a b', 'c%20d')).toBe('/a b/c%20d');
     expect(join('/a', '#hash')).toBe('/a/#hash');

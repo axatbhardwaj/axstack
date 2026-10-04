@@ -271,6 +271,15 @@ The orphan sweep covers the run record's repositories plus registered repositori
 `t3_thread_organize` settle/archive changes metadata only; exact guarded Git
 worktree removal remains separate. Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
+
+A review-manager pass may retire a predecessor pass's local `t3code/*` branch
+with exact `git branch -D <branch>` only when ALL hold: the predecessor pass is
+settled and proven run/lane-owned by recorded identity, its descendants and
+evidence are settled, no worktree has the branch checked out, no remote
+counterpart exists, its tip equals the recorded tip, and its tip is an ancestor
+of the verified remote default branch. Otherwise hold; all other `git branch -d`
+rules remain unchanged.
+
 Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule
 with `update_scheduled_task` using `enabled:false` and hold.
 Read back the disabled schedule with `list_scheduled_tasks`; uncertainty holds.
