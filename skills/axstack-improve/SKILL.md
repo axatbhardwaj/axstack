@@ -27,6 +27,8 @@ Sol pair that fails to launch is fenced, recorded `absent (<reason>)`, and
 named once in the next read-back, then skipped without relay or substitution.
 In mixed fan-out retain a Codex and a Claude seat or hold the affected work.
 
+For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
+
 ## 1. Bound discovery
 
 1. Start with the user's named subsystem or pain. Otherwise inspect recent

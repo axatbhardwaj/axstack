@@ -33,6 +33,8 @@ When the caller is a bounded review-manager PR job, load
 carry the required escalation field and every eligible peer PR takes a binding
 `APPROVE` or `REQUEST_CHANGES` verdict under the automation exception below.
 
+For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
+
 ## Codebase findings mode
 
 Use this manual mode for existing code at a pinned exact source revision and a
