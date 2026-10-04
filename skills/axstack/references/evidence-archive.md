@@ -118,6 +118,6 @@ After preservation and salvage checks, archive the exact eligible T3 thread
 with `t3_thread_organize`, then remove its exact recorded checkout path using
 `git worktree remove <path>` without force. Verify absence with
 `git worktree list --porcelain`; retire only eligible local-only branches with
-`git branch -d` under workspace hygiene. Never use shell recursive deletion or
+`git branch -d` under workspace hygiene. Never use shell recursive deletion to remove a whole worktree or
 treat archive success as ownership, settlement, liveness or cleanup proof.
 Failure or uncertainty preserves the resource.

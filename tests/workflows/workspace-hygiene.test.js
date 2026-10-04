@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
@@ -118,9 +118,16 @@ test('retained entry points preserve routing and safe-deletion links', () => {
 test('safe deletion contract limits shell targets and preserves prompt holds', () => {
   const safe = hygiene().split('## Safe deletion')[1]?.split('\n## ')[0] ?? '';
   expect(safe).toMatch(/literal absolute path|\$\{VAR:\?\}/i);
-  expect(safe).toContain('rm -rf -- "${EV:?}/mut"');
+  // Exact safety pin for the command, validation prerequisite, and literal target.
+  expect(safe).toContain('For validated owned scratch, use `rm -r /tmp/<dispatch-key>/scratch` on a literal absolute path inside the evidence folder, `TMPDIR`, or worktree.');
   expect(safe).toMatch(/own evidence folder.*TMPDIR.*worktree/is);
   expect(safe).toMatch(/bare `\$VAR`.*glob on a\s+variable.*`\/`.*`HOME`.*shared root/is);
   expect(safe).toMatch(/git clean -- <exact prefix>.*tool-native cleanup/is);
   expect(safe).toMatch(/safety prompt.*hold/is);
+});
+
+test('packaged instructions exclude the rejected force-recursive scratch command', () => {
+  for (const path of readdirSync(`${import.meta.dir}/../../skills`, { recursive: true })) {
+    if (path.endsWith('.md')) expect(read(`skills/${path}`), path).not.toMatch(/\brm\s+-rf\b/);
+  }
 });

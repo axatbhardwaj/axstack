@@ -14,7 +14,7 @@ Validate its real path, absence of symlinks and ownership before use and cleanup
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
 
 Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree.
-For example, `rm -rf -- "${EV:?}/mut"` requires a validated owned evidence path.
+For validated owned scratch, use `rm -r /tmp/<dispatch-key>/scratch` on a literal absolute path inside the evidence folder, `TMPDIR`, or worktree.
 Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target.
 Prefer `git clean -- <exact prefix>` or tool-native cleanup. A safety prompt that
 still appears is a hold; agents do not answer it.

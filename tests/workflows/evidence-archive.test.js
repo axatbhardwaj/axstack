@@ -13,6 +13,7 @@ import {
 } from 'node:fs';
 import { join, resolve } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot } from '../installer/helpers.js';
+import { prohibits, sentences } from './prose-contract.js';
 
 const SCRIPT = resolve(import.meta.dir, '../../skills/axstack/scripts/archive-evidence.js');
 const CONTRACT = resolve(import.meta.dir, '../../skills/axstack/references/evidence-archive.md');
@@ -467,4 +468,17 @@ test('T3 retirement archives metadata separately and removes only verified evide
   expect(contract).toMatch(/never replace[^.]*shell loop[^.]*broad deletion/i);
   expect(contract).toMatch(/git worktree remove <path>[^.]*without force/);
   expect(contract).toContain('git worktree list --porcelain');
+});
+
+test('shell recursive deletion prohibition is scoped to a whole worktree', () => {
+  const contract = readFileSync(CONTRACT, 'utf8');
+  const forbidden = /\b(?:never|do not) use\b/i;
+  const concepts = [/shell recursive deletion/i, /(?:remove|removing) a whole worktree/i];
+  const check = (text) => prohibits(text, forbidden, ...concepts);
+  const clauses = sentences(contract);
+  const matching = clauses.filter(check);
+  expect(check(contract)).toBe(true);
+  expect(check(clauses.filter((clause) => !matching.includes(clause)).join('. '))).toBe(false);
+  expect(check(clauses.map((clause) => matching.includes(clause) ? clause.replace(forbidden, 'Always use') : clause).join('. '))).toBe(false);
+  expect(check('Do not use shell recursive deletion for removing a whole worktree.')).toBe(true);
 });
