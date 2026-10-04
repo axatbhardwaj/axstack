@@ -2,6 +2,8 @@
 
 Apply these authority, scope, and model rules before consequential action.
 
+For user-facing output, follow [STE-inspired writing](ste-writing.md).
+
 ## Required lifecycle load
 
 Except for `axstack-audit` and `axstack-relay`, every independently called phase
