@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
@@ -77,23 +77,16 @@ function checkRule(text, rule) {
 for (const rule of rules) {
   const [name, source, , , , rewording] = rule;
   test(`STE-inspired writing: ${name}`, () => checkRule(source(), rule));
-  // Synchronous source writes restore even when a sibling assertion fails.
   test(`STE-inspired writing real-source rewording: ${name}`, () => {
-    const path = `${root}/${source === guidance ? referencePath : 'skills/axstack/references/contracts.md'}`;
-    const backup = readFileSync(path);
+    const text = source();
     // Keep raw Markdown links while matching normalized, possibly wrapped prose.
-    const original = backup.toString().replace(/\s+/g, ' ').split(/[.!?;]\s+/).find(acceptsRule(rule));
+    const original = text.replace(/\s+/g, ' ').split(/[.!?;]\s+/).find(acceptsRule(rule));
     expect(original, 'missing source instruction').toBeTruthy();
     const pattern = new RegExp(original.split(/\s+/).map((word) =>
       word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'));
-    expect(backup.toString()).toMatch(pattern);
-    try {
-      writeFileSync(path, backup.toString().replace(pattern, rewording.replace(/[.!?]$/, '')));
-      for (const sibling of rules.filter((row) => row[1] === source)) checkRule(source(), sibling);
-    } finally {
-      writeFileSync(path, backup);
-    }
-    expect(readFileSync(path).equals(backup), 'byte-for-byte restore').toBe(true);
+    expect(text).toMatch(pattern);
+    const reworded = text.replace(pattern, rewording.replace(/[.!?]$/, ''));
+    for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
   });
 }
 
