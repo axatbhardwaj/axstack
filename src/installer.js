@@ -38,7 +38,7 @@ import {
   writeManifest,
 } from './manifest.js';
 import { planInstallClaudeSettings, planUninstallClaudeSettings } from './claude-settings.js';
-import { ARCHIFY_RECORD, provisionArchify } from './archify.js';
+import { ARCHIFY_RECORD, planArchifyRelease, provisionArchify } from './archify.js';
 import {
   applyInstructionPlan,
   findLegacyRoutingLines,
@@ -204,6 +204,15 @@ export function assertOutsideHome(target, { yes = false, kind = 'target' } = {})
       `refusing to touch ${kind} inside your home (${target}) without explicit confirmation; re-run with --yes`,
     );
   }
+}
+
+async function guardArchifyRecord(record, skillsRoot, yes) {
+  if (!record) return;
+  await assertNoSymlinksBelow('/', record.path);
+  if (withinRoot(record.path, skillsRoot) || withinRoot(skillsRoot, dirname(record.path))) {
+    throw new Error('recorded archify tools directory overlaps the skills root; refusing');
+  }
+  assertOutsideHome(record.path, { yes, kind: 'archify copy' });
 }
 
 // Validate the bundle directory and return its payload. Throws before any
@@ -513,6 +522,7 @@ export async function installBundle({
     );
   }
   const ownedFiles = prevManifest.files ?? {};
+  await guardArchifyRecord(prevManifest.archify, skillsRoot, yes);
   const legacyProfiles = prevManifest.profiles;
   const legacyProfileNote = Object.keys(legacyProfiles?.entries ?? {}).length > 0
     ? 'legacy Paseo profile provenance retained inert; see legacy cleanup guidance in docs/installation.md'
@@ -608,6 +618,7 @@ export async function installBundle({
   const claudeWritten = [];
   let instructionWritten = false;
   let archify = null;
+  let archifyRelease = null;
   log('plan complete');
   try {
     archify = await provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log });
@@ -732,6 +743,11 @@ export async function installBundle({
       )
       : null;
 
+    if (prevManifest.archify && archifyRecord?.path !== prevManifest.archify.path) {
+      archifyRelease = await planArchifyRelease({
+        record: prevManifest.archify, skillsRoot, writeAtomic, log,
+      });
+    }
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
@@ -742,6 +758,7 @@ export async function installBundle({
       instructions: nextInstructions,
       archify: archifyRecord,
     });
+    if (archifyRelease) await archifyRelease.finish();
     if (legacyProfileNote || legacyInstructionNote) {
       summary.notes = [
         ...(summary.notes ?? []),
@@ -775,6 +792,10 @@ export async function installBundle({
     // Restore failures are collected and reported: a swallowed restore would
     // leave ownership claims describing bytes that are not on disk.
     const rollbackErrors = [];
+    if (archifyRelease) {
+      try { await archifyRelease.rollback(); }
+      catch (restoreErr) { rollbackErrors.push(`old archify owner: ${restoreErr.message}`); }
+    }
     if (archify) {
       try { await archify.rollback(); }
       catch (restoreErr) { rollbackErrors.push(`archify: ${restoreErr.message}`); }
@@ -840,6 +861,7 @@ export async function uninstallBundle({
     instructions: { path: null, hash: null },
   };
   const boundClaudeSettingsPath = manifest.claudeSettings?.path ?? null;
+  await guardArchifyRecord(manifest.archify, skillsRoot, yes);
   const claudePlan = await planUninstallClaudeSettings({
     claude,
     skillsRoot,
@@ -948,6 +970,7 @@ export async function uninstallBundle({
   const deletedFiles = [];
   const claudeWritten = [];
   let instructionWritten = false;
+  let archifyRelease = null;
   try {
     for (const rel of uninstallPlan) {
       const { dest, current, mode } = await readOwnedTarget(skillsRoot, rel);
@@ -986,6 +1009,11 @@ export async function uninstallBundle({
     }
     summary.claudeSettings = claudePlan.report;
 
+    const remainingArchify = ARCHIFY_RECORD in remainingFiles ? manifest.archify : null;
+    if (manifest.archify && !remainingArchify) {
+      archifyRelease = await planArchifyRelease({ record: manifest.archify, skillsRoot, writeAtomic, log });
+    }
+
     if (
       Object.keys(remainingFiles).length === 0 &&
       !hasLegacyProfiles &&
@@ -1003,11 +1031,17 @@ export async function uninstallBundle({
         profiles: legacyProfiles,
         claudeSettings: { path: remainingClaudeSettingsPath },
         instructions: remainingInstructions,
+        archify: remainingArchify,
       });
     }
+    if (archifyRelease) await archifyRelease.finish();
     return summary;
   } catch (err) {
     const rollbackErrors = [];
+    if (archifyRelease) {
+      try { await archifyRelease.rollback(); }
+      catch (restoreErr) { rollbackErrors.push(`archify owner: ${restoreErr.message}`); }
+    }
     for (const write of claudeWritten.reverse()) {
       try {
         if (write.before === null) await rm(write.path);

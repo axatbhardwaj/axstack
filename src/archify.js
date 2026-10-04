@@ -31,6 +31,35 @@ async function ownersSnapshot(path) {
   return { bytes, owners };
 }
 
+// Drop ownership transactionally; defer destructive cleanup until the skills
+// manifest commits. A failed manifest write can then restore the owner list.
+export async function planArchifyRelease({ record, skillsRoot, writeAtomic, log }) {
+  const ownersFile = `${record.path}.owners.json`;
+  const before = await ownersSnapshot(ownersFile);
+  const remaining = before.owners.filter((owner) => owner !== skillsRoot);
+  if (!before.owners.includes(skillsRoot)) {
+    return { rollback: async () => {}, finish: async () => log(`archify: kept ${record.path} (owner is absent)`) };
+  }
+  await writeAtomic(ownersFile, JSON.stringify(remaining) + '\n', { mode: 0o600 });
+  return {
+    rollback: () => writeAtomic(ownersFile, before.bytes),
+    finish: async () => {
+      try {
+        if (remaining.length) throw new Error('other skills roots still own this copy');
+        const st = await lstat(record.path);
+        if (!st.isDirectory() || st.isSymbolicLink()) throw new Error('copy is not a real directory');
+        if (archifyGit(record.path, 'rev-parse', 'HEAD') !== record.sha) throw new Error('HEAD differs from the recorded SHA');
+        if (archifyGit(record.path, 'status', '--porcelain', '--ignored')) throw new Error('copy has tracked, untracked, or ignored changes');
+        await rm(record.path, { recursive: true });
+        await rm(ownersFile);
+        log(`archify: removed ${record.path}`);
+      } catch (err) {
+        log(`archify: kept ${record.path} (${err.message})`);
+      }
+    },
+  };
+}
+
 // The caller includes this transaction in the skills/manifest rollback.
 export async function provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log }) {
   const record = { path: join(toolsRoot, `archify-${ARCHIFY_PIN.sha}`), sha: ARCHIFY_PIN.sha };
