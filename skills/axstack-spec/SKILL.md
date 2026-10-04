@@ -62,6 +62,11 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    session to return plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
+   Name the draft revision covered by each adviser receipt at the checkpoint.
+   If draft text changed and an adviser receipt covers an older revision, hold
+   approval until fresh receipts cover the presented revision.
+   A change confined to a `Decisions` row reuses adviser receipts only while
+   draft text, evidence, scope, and question remain unchanged.
    Before user approval, dispatch `axstack-diligence` under
    [Diligence](../axstack/references/diligence.md) to check the draft against
    the Align decisions for anything dropped, added, or softened.

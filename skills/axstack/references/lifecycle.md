@@ -143,6 +143,8 @@ nothing without tested independent review.
 
 ## Close-out
 
+Close-out requires the [close-out acceptance table](run-record.md#close-out-acceptance).
+
 PRs merge by forge state; close out: (1) settle every T3 worker run and archive eligible threads; (2) compact record with counts and denominators—user
 interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
 non-zero/requested, else `counts zero`. A base auditor preflight rejection

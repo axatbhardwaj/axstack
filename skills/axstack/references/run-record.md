@@ -119,6 +119,21 @@ by the next owner:
   evidence lives. Read it on resume before reconciling; append, never rewrite,
   and keep entries as short as the evidence pointer allows.
 
+## Close-out acceptance
+
+Use one row per acceptance check, including each clause of a compound check.
+Record in each row a passing evidence pointer or a user-accepted hold with its `Decisions` row.
+If an acceptance clause lacks passing evidence and a `Decisions` row with a user-accepted hold, hold close-out.
+A recorded user-accepted hold in `Decisions` satisfies that clause for close-out; keep the unmet result explicit.
+Record the reason for each driver-elected repair in `Decisions`.
+
+```markdown
+| Acceptance check | Result | Evidence or user-accepted hold | Repair election (Decisions row + reason, or none) |
+| --- | --- | --- | --- |
+| <check + clause> | passed | <SHA + check/log pointer> | <Decisions row + reason, or none> |
+| <check + unmet clause> | held (user accepted) | <Decisions row + user acceptance receipt> | <Decisions row + reason, or none> |
+```
+
 ## Privacy
 
 Record concise IDs, SHAs, URLs, status, timestamps, next actions, and evidence
