@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { loadedReferences, requires, sentences } from './prose-contract.js';
 
 const SEP = '/';
 
@@ -292,7 +292,9 @@ test('structural: standalone phases explicitly load shared references', () => {
   for (const name of STANDALONE_PHASES) {
     const text = readFileSync(join(skillsDir, name, 'SKILL.md'), 'utf8');
     expect(
-      text.includes('../axstack/references/'),
+      name === 'axstack-correct'
+        ? loadedReferences(text).includes('../axstack/references/contracts.md')
+        : text.includes('../axstack/references/'),
       `${name}: must explicitly load shared axstack reference(s)`,
     ).toBeTruthy();
   }

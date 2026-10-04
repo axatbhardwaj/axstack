@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Usage: /axstack-correct ["<correction>"] [runs=<ids> | last=<N, default 10>]
 
+Load [Standing contracts](../axstack/references/contracts.md) before acting.
+
 Run only at the user's request.
 Write a report only.
 Never edit files.

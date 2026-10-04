@@ -1,9 +1,10 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const path = `${import.meta.dir}/../../skills/axstack-correct/SKILL.md`;
 const guidance = () => existsSync(path) ? readFileSync(path, 'utf8') : '';
+const contracts = () => readFileSync(`${import.meta.dir}/../../skills/axstack/references/contracts.md`, 'utf8');
 
 test('correct: Design Usage accepts a correction and explicit or default run selection', () => {
   expect(guidance()).toContain('Usage: /axstack-correct ["<correction>"] [runs=<ids> | last=<N, default 10>]');
@@ -12,6 +13,8 @@ test('correct: Design Usage accepts a correction and explicit or default run sel
 // Prompt contracts only: these protect declared policy, not live agent conduct.
 // Each tuple names a regression, the accepted concept to flip, and a holdout.
 const rules = [
+  ['Standing contracts before acting', [/load|read|follow/i, /Standing contracts/i, /before acting|before action/i],
+    0, 'Ignore', 'Before acting, read [Standing contracts](../axstack/references/contracts.md).'],
   ['user invocation', [/run|act/i, /only/i, /user.*request/i],
     1, 'automatically', "Act only on the user's request."],
   ['report only', [/write|produce/i, /report only|only a report/i],
@@ -66,6 +69,15 @@ const rules = [
     4, 'shipped', 'For that failure, propose relabeling the row runtime: advisory in a separately reviewed PR.'],
 ];
 
+const lifecycleExemption = [
+  'report-only lifecycle exemption',
+  [/Except for|Other than|Excluding/i, /\baxstack-audit\b/i, /\baxstack-relay\b/i, /\baxstack-correct\b/i,
+    /every|all/i, /independently called phases?/i, /\bmust\b|required to/i,
+    /load|read/i, /follow|apply/i, /Shared lifecycle/i, /before acting|before action/i],
+  0, 'Including',
+  'Other than `axstack-audit`, `axstack-relay`, and `axstack-correct`, all independently called phases are required to read and apply [Shared lifecycle](lifecycle.md) before action.',
+];
+
 const acceptsRule = ([, concepts, , , , prohibition]) => (text) => prohibition
   ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
 
@@ -95,6 +107,27 @@ function checkRewording(text, rule) {
   for (const sibling of rules) checkRule(reworded, sibling);
   return reworded;
 }
+
+test('correct: Standing contracts load targets the shared contracts', () => {
+  expect(loadedReferences(guidance())).toContain('../axstack/references/contracts.md');
+});
+
+test('correct: user invocation has its frontmatter backstop', () => {
+  const frontmatter = guidance().match(/^---\n([\s\S]*?)\n---/);
+  expect(frontmatter?.[1]).toMatch(/^disable-model-invocation:\s*true\s*$/m);
+});
+
+test('correct: report-only lifecycle exemption', () => checkRule(contracts(), lifecycleExemption));
+test('correct real-source rewording: report-only lifecycle exemption', () => {
+  const text = contracts();
+  const accepts = acceptsRule(lifecycleExemption);
+  // The real directive wraps across lines; preserve its surrounding audit rules.
+  const originals = text.split(/\n\s*\n/).flatMap((block) =>
+    block.match(/[\s\S]*?(?:\.(?=\s|$)|$)/g) ?? []).filter(accepts);
+  expect(originals).toHaveLength(1);
+  const reworded = text.replace(originals[0], lifecycleExemption[4]);
+  checkRule(reworded, lifecycleExemption);
+});
 
 for (const rule of rules) {
   const [name] = rule;
