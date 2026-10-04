@@ -8,8 +8,10 @@ workflow database.
 Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
 T3 Code `0.0.46-nightly.20261003.2610` or newer. The driver is a T3 thread
 with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
-There are no runtime dependencies. Filesystem access uses Bun-backed `node:fs`
-and `node:fs/promises`; no other Node runtime contract is introduced.
+Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
+`node:fs` and `node:fs/promises`. The pinned archify tool is the sole external-tool
+exception: installation uses Git and the network, and Bun runs its Node-oriented
+code. This exception introduces no Node.js runtime requirement.
 
 ## T3 setup
 
@@ -45,7 +47,7 @@ and its configured home channel under recorded notification authority.
 ### Install
 
 ```text
-axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--tools-dir <dir>] [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
 ```
 
 - `--preset` is required. `codex` and `claude` are aliases for the canonical
@@ -56,6 +58,9 @@ axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-
 - `--skills-dir` is required unless a verified harness default resolves it.
   Codex defaults to the shared `~/.agents/skills` root; an explicit override
   remains authoritative and disables automatic legacy Codex-root retirement.
+- `--tools-dir` defaults to `~/.axstack/tools`. It must not overlap a skills
+  root or pass through a symlink. Home writes require `--yes`, including the
+  default tools directory.
 - `--instructions` selects the instruction file that receives Axstack's owned
   marker block. `--harness claude` defaults to `~/.claude/CLAUDE.md`;
   `--harness codex` defaults to `$CODEX_HOME/AGENTS.md` or `~/.codex/AGENTS.md`;
@@ -90,6 +95,16 @@ the settings sidecar preserves the value while any other install still owns it.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
   homes and fixtures only.
 
+Installation sparse-clones archify at the reviewed full SHA in `src/archify-pin.js`
+into `<tools-dir>/archify-<sha>`. It verifies HEAD before use and keeps the
+payload's licence and third-party notices. The manifest owns
+`<skills-dir>/axstack-diagram/archify.json`, which records `{path, sha}`.
+The adjacent `<tools-dir>/archify-<sha>.owners.json` lists its skills-root owners.
+Multiple roots share one copy. Repeat installs leave unchanged files untouched.
+An offline, Git-less, or failed clone still installs the skills, reports
+`archify: unavailable (<reason>)`, and exits 0. An existing SHA mismatch fails.
+Tests use a local repository through `AXSTACK_ARCHIFY_REPO` and never use the network.
+
 ## Role presets
 
 The selected bundle input is one of:
@@ -121,6 +136,13 @@ owned, missing, unowned, edited, or bound to a different path. Hand-written
 legacy routing outside the owned block is reported for manual migration and
 preserved byte for byte.
 
+With `--skills-dir` or `--harness`, check reports the archify record path, copy
+path, recorded SHA, and checked-out SHA. A missing record, missing copy, or SHA
+mismatch fails the check. Chrome absence prints a warning and does not fail it.
+`ARCHIFY_CHROME` selects the Chrome executable. Without it, check looks for
+common Chrome and Chromium executables on PATH. A check without a skills target
+probes host capabilities only.
+
 A successful check is not provider/model availability, effective permission,
 skill reload, task execution, mobile delivery, or end-to-end compatibility
 proof. Those require their own runtime receipts.
@@ -134,6 +156,15 @@ axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings 
 Uninstall removes only unchanged Axstack-owned files whose current bytes match
 the manifest. Edited, custom, unknown, and unrelated files survive. Directories
 are pruned only when empty, and the target root is never removed.
+
+Uninstall drops that skills root from archify's owners file. It removes the copy
+only when no owners remain, HEAD matches the recorded SHA, and
+`git status --porcelain --ignored` is empty. Otherwise it keeps the copy and
+reports why, even with `--force`. A pin bump or a changed `--tools-dir` releases
+the old copy through the same guard. Installation clones into a temporary sibling
+and renames it into place. A later owner or manifest write failure restores
+ownership and removes only a copy created by that installation. Older manifests
+without an archify record still load.
 
 ## Owned instruction block
 
@@ -323,8 +354,8 @@ need separate authority and verified backups.
 ## Examples
 
 ```sh
-axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
-axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
+axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --tools-dir /tmp/ax-tools --instructions /tmp/AGENTS.md
+axstack install --preset mixed --bundle ./bundle --skills-dir /tmp/ax-skills --tools-dir /tmp/ax-tools --instructions /tmp/AGENTS.md
 axstack check --bundle ./bundle --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
 axstack uninstall --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
 ```
