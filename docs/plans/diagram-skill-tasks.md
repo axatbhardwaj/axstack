@@ -8,7 +8,7 @@ Stack (one linear `gh stack`): T0 -> T1 -> T2 -> T3 -> T5. T4 runs after T3 and 
 Capability: C0 spec and map
 Internal task: T0 spec + this map -> driver -> driver worktree
 Theme: planning artifacts
-Size est: <150 lines
+Size est: about 240 lines (measured: spec 149 + map 91)
 Acceptance: approved spec and map land with the stack
 Depends: none
 ```
