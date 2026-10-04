@@ -18,6 +18,8 @@ and PR shape.
 Direct routes need no spec ceremony:
 
 - `axstack-research` answers one bounded source-backed question.
+- `axstack-correct` reports repeated mistakes and proposes stronger checks.
+  Only the user invokes it.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
   behavior; complex visuals receive exact-artifact QA where applicable.
 - `axstack-improve` returns a small ranked set of evidenced improvement

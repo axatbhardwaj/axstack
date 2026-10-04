@@ -25,8 +25,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-correct-ste T5: +1673 bytes for performance questions and three conditional links.
   // 20261004-correct-ste T6: +1813 bytes for the report-only recurrence skill and its safety contracts.
   // 20261004-correct-ste T6 repair2: +98 bytes for Standing contracts load and the report-only lifecycle exemption.
+  // 20261004-correct-ste T7: +333 bytes for the audit recurrence exception and direct route.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(286720);
+  expect(total).toBeLessThanOrEqual(287053);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
