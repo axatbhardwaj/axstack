@@ -21,6 +21,7 @@ export function archifyFixture() {
   writeFileSync(join(repo, 'archify', '.gitignore'), 'ignored.txt\n');
   mkdirSync(join(repo, 'outside'));
   writeFileSync(join(repo, 'outside', 'excluded.txt'), 'outside sparse payload\n');
+  writeFileSync(join(repo, 'README.md'), 'root file outside payload\n');
   git(repo, 'init', '-q');
   git(repo, 'add', '.');
   git(repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture');

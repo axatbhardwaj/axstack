@@ -11,6 +11,7 @@ test('install pins a sparse copy, owns its record, and converges without writes'
   expect(json(f.record)).toEqual({ path: f.copy, sha: f.sha });
   expect(git(f.copy, 'rev-parse', 'HEAD')).toBe(f.sha);
   expect(existsSync(join(f.copy, 'outside'))).toBe(false);
+  expect(existsSync(join(f.copy, 'README.md'))).toBe(false);
   expect(existsSync(join(f.copy, 'archify', 'LICENSE'))).toBe(true);
   expect(existsSync(join(f.copy, 'archify', 'THIRD_PARTY_NOTICES.md'))).toBe(true);
   expect(json(f.owners)).toEqual([f.skills]);

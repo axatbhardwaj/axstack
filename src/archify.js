@@ -17,6 +17,13 @@ export function archifyGit(path, ...args) {
   }
 }
 
+function verifySha(record, actual) {
+  if (actual === record.sha) return;
+  const error = new Error(`archify SHA mismatch: expected ${record.sha}, got ${actual}`);
+  error.code = 'ARCHIFY_SHA_MISMATCH';
+  throw error;
+}
+
 async function ownersSnapshot(path) {
   const st = await lstat(path).catch((err) => {
     if (err.code === 'ENOENT') return null;
@@ -28,7 +35,7 @@ async function ownersSnapshot(path) {
   if (!Array.isArray(owners) || owners.some((owner) => typeof owner !== 'string' || !owner.startsWith('/'))) {
     throw new Error(`invalid archify owners file: ${path}`);
   }
-  return { bytes, owners };
+  return { bytes, owners, mode: st ? st.mode & 0o777 : null };
 }
 
 // Drop ownership transactionally; defer destructive cleanup until the skills
@@ -40,9 +47,18 @@ export async function planArchifyRelease({ record, skillsRoot, writeAtomic, log 
   if (!before.owners.includes(skillsRoot)) {
     return { rollback: async () => {}, finish: async () => log(`archify: kept ${record.path} (owner is absent)`) };
   }
-  await writeAtomic(ownersFile, JSON.stringify(remaining) + '\n', { mode: 0o600 });
+  try {
+    await writeAtomic(ownersFile, JSON.stringify(remaining) + '\n', { mode: 0o600 });
+  } catch (err) {
+    const current = await readFile(ownersFile);
+    if (!current.equals(before.bytes)) {
+      try { await writeAtomic(ownersFile, before.bytes, { mode: before.mode }); }
+      catch (restoreErr) { err.message += ` (archify owner restore failed: ${restoreErr.message})`; }
+    }
+    throw err;
+  }
   return {
-    rollback: () => writeAtomic(ownersFile, before.bytes),
+    rollback: () => writeAtomic(ownersFile, before.bytes, { mode: before.mode }),
     finish: async () => {
       try {
         if (remaining.length) throw new Error('other skills roots still own this copy');
@@ -62,17 +78,28 @@ export async function planArchifyRelease({ record, skillsRoot, writeAtomic, log 
 
 // The caller includes this transaction in the skills/manifest rollback.
 export async function provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log }) {
+  if (!Bun.which('git')) {
+    log('archify: unavailable (git is not on PATH)');
+    return { record: null, rollback: async () => {} };
+  }
   const record = { path: join(toolsRoot, `archify-${ARCHIFY_PIN.sha}`), sha: ARCHIFY_PIN.sha };
   const ownersFile = `${record.path}.owners.json`;
   const before = await ownersSnapshot(ownersFile);
   let created = false;
   let ownersWritten = false;
   const rollback = async () => {
+    const errors = [];
     if (ownersWritten) {
-      if (before.bytes === null) await rm(ownersFile);
-      else await writeAtomic(ownersFile, before.bytes);
+      try {
+        if (before.bytes === null) await rm(ownersFile);
+        else await writeAtomic(ownersFile, before.bytes, { mode: before.mode });
+      } catch (err) { errors.push(`${ownersFile}: ${err.message}`); }
     }
-    if (created) await rm(record.path, { recursive: true });
+    if (created) {
+      try { await rm(record.path, { recursive: true }); }
+      catch (err) { errors.push(`${record.path}: ${err.message}`); }
+    }
+    if (errors.length) throw new Error(`incomplete archify rollback: ${errors.join('; ')}`);
   };
   const existing = await lstat(record.path).catch((err) => {
     if (err.code === 'ENOENT') return null;
@@ -83,21 +110,22 @@ export async function provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log
   }
   if (existing) {
     const actual = archifyGit(record.path, 'rev-parse', 'HEAD');
-    if (actual !== record.sha) throw new Error(`archify SHA mismatch: expected ${record.sha}, got ${actual}`);
+    verifySha(record, actual);
   } else {
     let temp = null;
     try {
       await mkdir(toolsRoot, { recursive: true });
       temp = await mkdtemp(join(toolsRoot, '.archify-'));
       archifyGit(null, 'clone', '--filter=blob:none', '--no-checkout', '--', Bun.env.AXSTACK_ARCHIFY_REPO || ARCHIFY_PIN.repo, temp);
-      archifyGit(temp, 'sparse-checkout', 'set', 'archify');
+      archifyGit(temp, 'sparse-checkout', 'set', '--no-cone', '/archify/');
       archifyGit(temp, 'checkout', '--detach', record.sha);
       const actual = archifyGit(temp, 'rev-parse', 'HEAD');
-      if (actual !== record.sha) throw new Error(`archify SHA mismatch: expected ${record.sha}, got ${actual}`);
+      verifySha(record, actual);
       await rename(temp, record.path);
       temp = null;
       created = true;
     } catch (err) {
+      if (err.code === 'ARCHIFY_SHA_MISMATCH') throw err;
       log(`archify: unavailable (${err.message.replace(/\s+/g, ' ').slice(0, 180)})`);
       return { record: null, rollback: async () => {} };
     } finally {
@@ -111,8 +139,9 @@ export async function provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log
     }
   } catch (err) {
     const current = await readFile(ownersFile).catch(() => null);
-    ownersWritten = current?.equals(before.bytes) !== true && !(current === null && before.bytes === null);
-    await rollback();
+    ownersWritten = before.bytes === null ? current !== null : current?.equals(before.bytes) !== true;
+    try { await rollback(); }
+    catch (restoreErr) { err.message += ` (${restoreErr.message})`; }
     throw err;
   }
   log(`archify: ${record.path} (${record.sha})`);

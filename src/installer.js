@@ -619,6 +619,13 @@ export async function installBundle({
   let instructionWritten = false;
   let archify = null;
   let archifyRelease = null;
+  const manifestFile = join(skillsRoot, '.axstack-manifest.json');
+  const manifestBefore = await readFile(manifestFile).catch((err) => {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  });
+  const manifestMode = manifestBefore === null ? null : (await stat(manifestFile)).mode & 0o777;
+  let manifestAttempted = false;
   log('plan complete');
   try {
     archify = await provisionArchify({ toolsRoot, skillsRoot, writeAtomic, log });
@@ -748,6 +755,7 @@ export async function installBundle({
         record: prevManifest.archify, skillsRoot, writeAtomic, log,
       });
     }
+    manifestAttempted = true;
     await writeManifest(skillsRoot, {
       version: MANIFEST_VERSION,
       files: installedHashes,
@@ -792,6 +800,18 @@ export async function installBundle({
     // Restore failures are collected and reported: a swallowed restore would
     // leave ownership claims describing bytes that are not on disk.
     const rollbackErrors = [];
+    if (manifestAttempted) {
+      try {
+        const current = await readFile(manifestFile).catch((readErr) => {
+          if (readErr.code === 'ENOENT') return null;
+          throw readErr;
+        });
+        if (manifestBefore === null && current !== null) await rm(manifestFile);
+        else if (manifestBefore !== null && current?.equals(manifestBefore) !== true) {
+          await writeAtomic(manifestFile, manifestBefore, { mode: manifestMode });
+        }
+      } catch (restoreErr) { rollbackErrors.push(`manifest: ${restoreErr.message}`); }
+    }
     if (archifyRelease) {
       try { await archifyRelease.rollback(); }
       catch (restoreErr) { rollbackErrors.push(`old archify owner: ${restoreErr.message}`); }

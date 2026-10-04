@@ -14,7 +14,7 @@ export const BUN_BIN = process.execPath;
 
 // Ordinary installer fixtures exercise the offline path. Archify cases pass
 // their own local repository explicitly; no test may clone a remote repo.
-Bun.env.AXSTACK_ARCHIFY_REPO = '/tmp/axstack-test-unavailable-repository';
+Bun.env.AXSTACK_ARCHIFY_REPO = join(makeTempRoot('axstack-offline-'), 'absent');
 
 export function tempDir() {
   return Bun.env.TMPDIR ?? '/tmp';
