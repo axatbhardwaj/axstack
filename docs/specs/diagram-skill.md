@@ -1,6 +1,6 @@
 # Spec: `axstack-diagram` with a pinned archify viewer
 
-Status: Draft rev 3 (2026-10-04). Store: this repo Markdown file.
+Status: Approved rev 3 (2026-10-04, user "proceed"; content reviewed at ccbda01). Store: this repo Markdown file.
 Run: `20261004-diagram-skill`. The private run record holds the research notes, the
 diligence report, and the adviser receipts.
 
