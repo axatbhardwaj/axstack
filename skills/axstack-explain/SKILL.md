@@ -51,6 +51,10 @@ immediately before an actual profile dispatch.
 
 ## 2. Choose proportional output
 
+Load [Diagram](../axstack-diagram/SKILL.md) for every diagram.
+Explain owns evidence gathering, claim labels, the 700-word cap, dispatch, and delivery.
+Diagram never calls explain.
+
 1. Keep the primary reader-facing explanation to a maximum of 700 words in
    chat, HTML, and every other requested format. Preserve in that primary view
    the answer or purpose, key rationale, meaningful alternatives, main data or
@@ -63,11 +67,17 @@ immediately before an actual profile dispatch.
    maximum. If the draft is longer, compress repetition first and move only
    supporting detail to a separate linked ticket or appendix. Essential answers
    must not be hidden behind links, and evidence must not be silently discarded.
+   Only archify node detail cards are exempt from the 700-word cap.
+   Each card has at most 40 words and cites its source, as defined in
+   [Archify](../axstack-diagram/references/archify.md).
+   Count node labels, headings, captions, and all non-card text.
 2. For a simple request, answer concisely in the current chat. Use a compact
    diagram when useful. This needs no mandatory agent or intermediate artifact.
+   For simple chat answers, never dispatch an agent when applying its Mermaid rules inline.
 3. For a complex visual, use the configured `axstack-explainer` role to create
-   self-contained HTML, or use the requested artifact format. An explicit user
-   theme wins; otherwise use the dark default.
+   self-contained HTML through the archify path by default.
+   For a complex visual, honor an explicitly requested artifact format.
+   An explicit user theme wins; otherwise use the dark default.
 4. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
@@ -77,8 +87,9 @@ immediately before an actual profile dispatch.
 1. Any HTML explanation requires the full [visual QA
    checklist](references/visual-qa.md): actual desktop and mobile rendering,
    interaction, accessibility, and reduced-motion checks where relevant.
-2. Use the configured independent `axstack-explainer-review` role when
-   warranted, bound to the exact artifact identity. Any byte change invalidates
+2. For archify output, require the configured independent `axstack-explainer-review`;
+   for other artifacts, use it when warranted. Bind it to the exact artifact identity.
+   Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet
    author xhigh and reviewer high sessions are allowed for explanations as
    session independence only. This exception never permits same-model code

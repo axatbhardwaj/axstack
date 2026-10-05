@@ -27,7 +27,7 @@ function fixture() {
 }
 
 function installOptions(bundle, skills, instructionsPath, extra = {}) {
-  return { bundleDir: bundle, skillsDir: skills, preset: 'mixed', instructionsPath, ...extra };
+  return { bundleDir: bundle, skillsDir: skills, toolsDir: join(bundle, '../tools'), preset: 'mixed', instructionsPath, ...extra };
 }
 
 describe('installer-owned instruction file', () => {

@@ -253,8 +253,14 @@ test('structural: skills stay self-contained (no absolute paths or upstream deps
       if (e.isDirectory()) walk(p);
       else if (e.isFile()) {
         const text = readFileSync(p, 'utf8');
+        // D3 permits this attribution link, not an upstream skill dependency.
+        // Strip only that link on the diagram credit line; keep every other
+        // byte in the guard, including any additional upstream reference.
+        const guarded = p === join(skillsDir, 'axstack-diagram', 'SKILL.md')
+          ? text.replace(/^(Ideas: .*?)\[poteto\]\(https:\/\/github\.com\/poteto\/how\)(.*; guidance uses Axstack's own words\.)$/m, '$1$2')
+          : text;
         for (const f of forbidden) {
-          expect(text.includes(f), `${p} contains forbidden reference: ${f}`).toBe(false);
+          expect(guarded.includes(f), `${p} contains forbidden reference: ${f}`).toBe(false);
         }
       }
     }

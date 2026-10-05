@@ -1,4 +1,8 @@
 // Host capability checks. Injected execution keeps tests off live runtimes.
+import { lstat, readFile } from 'node:fs/promises';
+import { join } from './posixpath.js';
+import { ARCHIFY_RECORD, archifyGit } from './archify.js';
+import { ARCHIFY_PIN } from './archify-pin.js';
 export const BUN_FLOOR = '1.3.14';
 export const T3_FLOOR = '0.0.46-nightly.20261003.2610';
 
@@ -105,4 +109,30 @@ export async function checkCapabilities(exec) {
   }
   const gaps = checks.filter((c) => !c.ok).map((c) => `missing ${c.label}`);
   return { checks, gaps, limitations: [...PROBE_LIMITATIONS] };
+}
+
+export async function checkArchify(skillsDir) {
+  const recordFile = join(skillsDir, ARCHIFY_RECORD);
+  const override = Bun.env.ARCHIFY_CHROME;
+  const chrome = override ? Bun.which(override) :
+    ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'chrome']
+      .map((name) => Bun.which(name)).find(Boolean);
+  let record = null;
+  let actual = null;
+  let reason = null;
+  try {
+    if ((await lstat(recordFile)).isSymbolicLink()) throw new Error('record is a symlink');
+    record = JSON.parse(await readFile(recordFile, 'utf8'));
+    if (!record || typeof record.path !== 'string' || !record.path.startsWith('/') ||
+        !/^[a-f0-9]{40}$/.test(record.sha)) throw new Error('invalid record');
+    const copy = await lstat(record.path);
+    if (!copy.isDirectory() || copy.isSymbolicLink()) throw new Error('copy is not a real directory');
+    actual = archifyGit(record.path, 'rev-parse', 'HEAD');
+    if (actual !== record.sha || record.sha !== ARCHIFY_PIN.sha) {
+      throw new Error(`SHA mismatch: recorded ${record.sha}, checked-out ${actual}, expected ${ARCHIFY_PIN.sha}`);
+    }
+  } catch (err) {
+    reason = err.code === 'ENOENT' ? 'missing record or copy' : err.message;
+  }
+  return { recordFile, record, actual, chrome: chrome ?? null, reason };
 }

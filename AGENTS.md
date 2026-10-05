@@ -51,6 +51,9 @@
 - Target Bun >=1.3.14 JavaScript with no runtime dependencies. Use only the
   narrow Bun-backed `node:fs` and `node:fs/promises` built-in exception; do not
   introduce a Node.js runtime contract.
+- Permit an installer network and Git step only for archify.
+  Run this Node-oriented tool with Bun.
+  Keep this exception limited to archify.
 - Keep installer surfaces in `src/`, `bin/`, `package.json`, and
   `tests/installer/`.
 - Keep workflow surfaces in `skills/`, `profiles/`, `tests/workflows/`,
