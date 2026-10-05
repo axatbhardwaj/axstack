@@ -15,17 +15,8 @@ Never substitute Mermaid or unverified HTML when the viewer is required.
 
 ## Author the IR
 
-Read `<path>/archify/schemas/<type>.schema.json` and its shared definitions.
-Read one matching shipped example in `<path>/archify/examples/`.
-Write your own IR with the schema's version and `diagram_type`.
-
-| Type | Use | Main collections |
-|---|---|---|
-| architecture | Components and boundaries | `components`, `connections`, `boundaries` |
-| workflow | Decisions and paths through lanes | `lanes`, `nodes`, `edges` |
-| sequence | Ordered messages between participants | `participants`, `messages` |
-| dataflow | Data movement through stages | `stages`, `nodes`, `flows` |
-| lifecycle | States and transitions | `lanes`, `states`, `transitions` |
+Read `<path>/archify/SKILL.md` and follow its named references for IR authoring and repair.
+Run the referenced archify commands with Bun.
 
 Set `meta.title` and a portable relative HTML filename in `meta.output`.
 Use `meta.quality_profile: "showcase"`.
@@ -39,7 +30,8 @@ Keep per-node source pins in each node's `sources` entries for inspected paths a
 Keep the private source map for relationships that have no source field.
 Keep proposed sources distinct from factual pins.
 Use [Fidelity](fidelity.md) for visible planned and unknown markers.
-Before relying on an extra dashed cue, run `bun <path>/archify/bin/archify.mjs validate <type> <ir.json> --json`.
+For a separate check, run `bun <path>/archify/bin/archify.mjs validate <type> <ir.json> --json --repo-root <repo>`.
+When sources are declared, require `--repo-root <repo>` on both `validate` and `finalize`.
 For sequence and dataflow, a schema-valid legend cue is `meta.legend.entries.dashed: {"label":"Planned or unknown"}`.
 
 Use one top-level `cards[]` entry with `{dot, title, items[]}` per key node as its node detail card.
@@ -53,6 +45,7 @@ Count node labels, headings, captions, and all non-card text.
 
 Write the IR, HTML, and receipt only inside the private evidence folder.
 For direct invocation, create a private run evidence folder first.
+Override archify's default `.archify/` folder with an evidence output path and `--out-dir <evidence dir>`.
 Run `bun <path>/archify/bin/archify.mjs finalize <type> <ir.json> <out.html> --quality showcase --json --out-dir <evidence dir> --repo-root <repo>`.
 This is the author's headless build gate.
 Read the saved receipt named by the JSON result's `evidence.receipt`.
@@ -61,9 +54,11 @@ Never trust exit codes as proof of a pass.
 When a receipt is missing or remains non-pass after two repair rounds, hold delivery and ask the user.
 If Chrome is missing, report "viewer not verified: Chrome missing".
 Chrome absence yields `status: "skipped"` and exit 2.
-For repairable defects, use the receipt's diagnostics and `supportedFixes`.
-For viewport or readability conflicts, prefer fewer nodes, merged lanes, and shorter sublabels before changing `meta.viewBox`.
-A `meta.viewBox` fix can trade one composition rule for another.
+Follow archify's receipt fixes and references for layout and composition repairs.
+After every repair edit, rerun the complete `finalize` command.
+Count one repair round as one complete `finalize` rerun after an edit.
+Validate runs never count as repair rounds.
+Do not require validate before finalize.
 Run at most two repair rounds, then hold with remaining defects for the user's decision.
 
 ## Rendered and source checks

@@ -29,8 +29,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-correct-ste T7 repair1: +121 bytes for both recurrence dispositions, net of the routing wrap.
   // 20261004-diagram-skill T2: +6613 bytes for the diagram router, fidelity, finalize, and limited UI exception.
   // 20261004-diagram-skill T2 repair1: +768 bytes for pinned cards, theme, claim labels, and composition repair guidance.
+  // 20261004-diagram-skill T2 repair2: -278 bytes by deferring authoring and layout repair to pinned archify references.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(294555);
+  expect(total).toBeLessThanOrEqual(294277);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
