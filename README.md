@@ -29,6 +29,9 @@ coordination. You can start at the phase you need.
 | Operate | [axstack-relay](skills/axstack-relay/SKILL.md) | Send an explicit message or authorized notification. |
 | Understand | [axstack-research](skills/axstack-research/SKILL.md) | Answer one bounded question with sources. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
+| Understand | [axstack-diagram](skills/axstack-diagram/SKILL.md) | Draw Mermaid diagrams or verified interactive archify viewers. |
+
+Interactive viewers use [archify](https://github.com/tt-a1i/archify) (MIT).
 
 Small, bounded changes can begin with your request or an existing issue;
 substantial work needs an approved spec and matching tickets before

@@ -22,6 +22,11 @@ Direct routes need no spec ceremony:
   Only the user invokes it.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
   behavior; complex visuals receive exact-artifact QA where applicable.
+- [axstack-diagram](../skills/axstack-diagram/SKILL.md) selects Mermaid for chat,
+  GitHub, and docs, or an interactive viewer for required complex visuals.
+  Explain loads it for every diagram. Viewers use
+  [archify](https://github.com/tt-a1i/archify) (MIT) with a pinned tool,
+  a passing finalize receipt, rendered QA, and node-and-edge source review.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code. Its test-audit lens marks every declaration
   in one owner boundary R/F/C/D, reports reviewed and eligible counts, and routes
