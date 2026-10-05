@@ -15,6 +15,7 @@ Never substitute Mermaid or unverified HTML when the viewer is required.
 
 ## Author the IR
 
+If the pinned archify procedure conflicts with this file, this file takes precedence.
 Read `<path>/archify/SKILL.md` and follow its named references for IR authoring and repair.
 Run the referenced archify commands with Bun.
 
@@ -22,7 +23,7 @@ Set `meta.title` and a portable relative HTML filename in `meta.output`.
 Use `meta.quality_profile: "showcase"`.
 Set `meta.animation: "none"`.
 Keep trace motion, exports, share cards, and brand marks off unless the user asks.
-Deliver and open the viewer with `?theme=dark` unless the user names a theme.
+Deliver the viewer with `?theme=dark` unless the user names a theme.
 Theme is viewer state rather than an IR field; without the query, localStorage and `prefers-color-scheme` determine it.
 Preserve explain's claim labels in `meta.subtitle` or the companion explanation.
 Set `meta.repository` to the inspected repository URL and full `revision`.
@@ -60,10 +61,13 @@ Count one repair round as one complete `finalize` rerun after an edit.
 Validate runs never count as repair rounds.
 Do not require validate before finalize.
 Run at most two repair rounds, then hold with remaining defects for the user's decision.
+Never use archify's extra evidence-based retry.
 
 ## Rendered and source checks
 
 Follow [UI verification](../../axstack/references/ui-verification.md) for dispatch.
+Keep `finalize` as the only author browser check.
+Delegate `visual-check`, browser opening, preview, and first-screen inspection to `axstack-ui-verifier`.
 Require `axstack-ui-verifier` checks of the receipt's `artifact.sha256` bytes on desktop, 390px mobile, keyboard, reduced motion, and the text alternative.
 Include theme, search or focus, and directional reach interactions.
 Require `axstack-ui-verifier` checks with the theme set explicitly.

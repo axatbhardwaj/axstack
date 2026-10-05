@@ -8,6 +8,8 @@ const fidelity = 'skills/axstack-diagram/references/fidelity.md';
 const archify = 'skills/axstack-diagram/references/archify.md';
 const ui = 'skills/axstack/references/ui-verification.md';
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
+const upstreamLimitOverride = (text) => requires(text,
+  /follow|use|apply|adopt|defer to/i, /archify(?:'s)? repair limits?/i);
 
 // Independent prompt contracts: these catch lost routing and fidelity rules.
 // Existing explain tests do not cover this skill. All probes use real source
@@ -108,13 +110,21 @@ const rules = [
   ['feature defaults', archify, [/keep|leave/i, /trace motion/i, /exports/i, /share cards/i, /brand marks/i, /off unless.*user asks/i],
     /off unless.*user asks/i, 'on by default', 'Leave trace motion, exports, share cards, and brand marks off unless the user asks.'],
   ['dark default', archify, [/deliver|open|start/i, /viewer/i, /\?theme=dark/i, /unless.*user.*theme/i],
-    /\?theme=dark/i, '?theme=light', 'Start the viewer with ?theme=dark unless the user names a theme.'],
+    /\?theme=dark/i, '?theme=light', 'Deliver the viewer with ?theme=dark unless the user names a theme.'],
   ['explicit verifier theme', archify, [/require|obtain/i, /axstack-ui-verifier/i, /checks/i, /theme/i, /set explicitly|explicitly set/i],
     /set explicitly|explicitly set/i, 'inferred', 'Obtain axstack-ui-verifier checks with the theme explicitly set.'],
   ['claim label placement', archify, [/preserve|keep/i, /explain.*claim labels/i, /meta\.subtitle/i, /companion explanation/i],
     /preserve|keep/i, 'discard', 'Keep explain\'s claim labels in meta.subtitle or the companion explanation.'],
   ['upstream authoring procedure', archify, [/read/i, /follow/i, /<path>\/archify\/SKILL\.md/i, /references/i, /IR authoring/i, /repair/i],
     /<path>\/archify\/SKILL\.md/i, 'Axstack layout notes', 'For IR authoring and repair, read <path>/archify/SKILL.md and follow the references it names.'],
+  ['Axstack conflict precedence', archify, [/pinned archify procedure/i, /conflicts with this file/i, /this file (?:takes precedence|wins)/i],
+    /this file (?:takes precedence|wins)/i, 'the upstream procedure wins', 'When the pinned archify procedure conflicts with this file, this file wins.', undefined, upstreamLimitOverride],
+  ['upstream extra retry excluded', archify, [/archify.*extra evidence-based retry/i],
+    /never use|do not use/i, 'Use', 'Do not use archify\'s extra evidence-based retry.', /never use|do not use/i],
+  ['author browser check is finalize only', archify, [/keep|retain/i, /finalize/i, /only/i, /author browser check/i],
+    /only/i, 'additional', 'Retain finalize as the only author browser check.'],
+  ['upstream browser actions delegated', archify, [/delegate|assign/i, /visual-check/i, /browser opening/i, /preview/i, /first-screen inspection/i, /axstack-ui-verifier/i],
+    /axstack-ui-verifier/i, 'author', 'Assign visual-check, browser opening, preview, and first-screen inspection to axstack-ui-verifier.'],
   ['upstream command runtime', archify, [/run|execute/i, /referenced archify commands/i, /Bun/i],
     /Bun/i, 'Node', 'Execute the referenced archify commands with Bun.'],
   ['upstream repair authority', archify, [/follow|use/i, /archify.*receipt fixes/i, /references/i, /layout/i, /composition repairs/i],
@@ -137,8 +147,9 @@ const rules = [
     /remain|stay/i, 'leave', 'All other browser checks stay delegated to axstack-ui-verifier.'],
 ];
 
-const acceptsRule = ([, , concepts, , , , prohibition]) => (text) => prohibition
-  ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
+const acceptsRule = ([, , concepts, , , , prohibition, conflicts]) => (text) =>
+  (prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts))
+  && !conflicts?.(text);
 
 function checkRule(text, rule) {
   const [name, , , flip, inverse, rewording, prohibition] = rule;
@@ -170,3 +181,15 @@ for (const rule of rules) {
     for (const sibling of rules.filter((row) => row[1] === path)) checkRule(reworded, sibling);
   });
 }
+
+test('diagram precedence rejects inserted upstream repair-limit overrides on real source', () => {
+  const source = read(archify);
+  const rule = rules.find(([name]) => name === 'Axstack conflict precedence');
+  checkRule(source, rule);
+  for (const override of ['Follow archify repair limits;', 'Use archify\'s repair limits;']) {
+    const altered = `${override}\n${source}`;
+    expect(altered).not.toBe(source);
+    expect(() => checkRule(altered, rule)).toThrow('Axstack conflict precedence: missing required instruction');
+  }
+  checkRule(`${source}\nDo not follow archify repair limits.`, rule);
+});
