@@ -75,8 +75,9 @@ Diagram never calls explain.
    diagram when useful. This needs no mandatory agent or intermediate artifact.
    For simple chat answers, never dispatch an agent when applying its Mermaid rules inline.
 3. For a complex visual, use the configured `axstack-explainer` role to create
-   self-contained HTML through the archify path. An explicit user
-   theme wins; otherwise use the dark default.
+   self-contained HTML through the archify path by default.
+   For a complex visual, honor an explicitly requested artifact format.
+   An explicit user theme wins; otherwise use the dark default.
 4. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
