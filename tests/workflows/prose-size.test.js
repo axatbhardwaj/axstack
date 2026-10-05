@@ -27,8 +27,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-correct-ste T6 repair2: +98 bytes for Standing contracts load and the report-only lifecycle exemption.
   // 20261004-correct-ste T7: +333 bytes for the audit recurrence exception and direct route.
   // 20261004-correct-ste T7 repair1: +121 bytes for both recurrence dispositions, net of the routing wrap.
+  // 20261004-diagram-skill T2: +6613 bytes for the diagram router, fidelity, finalize, and limited UI exception.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(287174);
+  expect(total).toBeLessThanOrEqual(293787);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

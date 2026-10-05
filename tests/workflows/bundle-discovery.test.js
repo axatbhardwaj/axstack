@@ -4,9 +4,9 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 const root = `${import.meta.dir}/../../skills`;
 const skills = readdirSync(root).filter((name) => existsSync(`${root}/${name}/SKILL.md`)).sort();
 
-test('skill catalog exposes fifteen owned entrypoints and keeps handoff runtime-owned', () => {
+test('skill catalog exposes sixteen owned entrypoints and keeps handoff runtime-owned', () => {
   expect(skills).toEqual([
-    'axstack-align', 'axstack-audit', 'axstack-brainstorm', 'axstack-cleanup', 'axstack-correct', 'axstack-debug', 'axstack-explain', 'axstack-implement',
+    'axstack-align', 'axstack-audit', 'axstack-brainstorm', 'axstack-cleanup', 'axstack-correct', 'axstack-debug', 'axstack-diagram', 'axstack-explain', 'axstack-implement',
     'axstack-improve', 'axstack-relay', 'axstack-research',
     'axstack-review', 'axstack-spec', 'axstack-tickets', 'axstack-watch',
   ]);
