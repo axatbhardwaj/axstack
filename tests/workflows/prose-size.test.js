@@ -68,6 +68,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-hermes-reply-inbox T1: +2028 measured aggregate bytes for inbox forwarding,
   // body-digest receipt matching and the packaged Hermes prompt; always-loaded unchanged.
   // A7 five-minute wake cadence: -5 measured aggregate bytes; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(330110);
+  // Hermes reply inbox repair1: +574 measured bytes for short plain-text/full-quote
+  // transport, gateway version and CLI-only discovery scope; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(330684);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });

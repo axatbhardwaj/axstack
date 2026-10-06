@@ -5,6 +5,8 @@ description: Save Telegram replies to tagged T3 relay messages in the local inbo
 
 # Save a reply
 
+Require gateway Hermes 0.21 or newer for full-quote forwarding.
+
 For a message beginning `[Replying to: "` whose quoted body ends with a
 `T3 reply: <env label> thread <driver threadId>` tag, pipe the entire message
 unchanged to stdin of `~/.hermes/scripts/axstack-reply`.
