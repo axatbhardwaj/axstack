@@ -8,11 +8,16 @@ const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${p
 const setup = sentences(read('skills/axstack/references/automations.md')).join('. ');
 const prompt = sentences(read('skills/axstack/references/pr-triage-nightly.md')).join('. ');
 const directive = (concepts) => (text) => requires(text, ...concepts);
-const forbidden = (concepts) => (text) => prohibits(text, /\b(?:never|do not)\b/i, ...concepts);
+const forbidden = (concepts) => (text) =>
+  prohibits(text, /\b(?:never|do not)\b/i, ...concepts) && !requires(text, ...concepts);
 
-// Each rule protects an E1–E3 contract missing from weekly-audit coverage.
+// Each rule protects a triage contract missing from weekly-audit coverage.
 // Probes replace actual source in memory; tests never write tracked files.
 const rules = [
+  ['read-only pass', prompt, directive,
+    [/\b(?:read-only|observation-only)\b/i, /\b(?:nightly|triage)\b/i, /\bpass\b/i],
+    'Run this nightly triage pass in observation-only mode.',
+    [[/\b(?:read-only|observation-only)\b/gi, 'writes and merges']]],
   ['one unbound nightly native schedule', setup, directive,
     [/\b(?:one|single)\b/i, /\bnative\b/i, /\bT3\b/, /schedule_task/,
       /\bunbound\b/i, /\bnightly\b/i, /\b02:00\b/, /\bhost time\b/i,
@@ -61,15 +66,15 @@ const rules = [
   ['stale threshold', prompt, directive,
     [/\b(?:flag|mark|report)\b/i, /\bstale\b/i, /\bPRs?\b/i, /\b(?:no activity|inactivity)\b/i, /\b7 days\b/i],
     'Mark PRs stale after 7 days of inactivity.',
-    [[/\b7 days\b/g, '30 days']]],
+    [[/\b7 days\b/g, '1 day'], [/\b7 days\b/g, '30 days']]],
   ['top three actions', prompt, directive,
     [/\breport\b/i, /\btop (?:three|3)\b/i, /\b(?:act on|action)\b/i],
     'Report the top 3 PRs to act on.',
     [[/\btop (?:three|3)\b/gi, 'bottom three']]],
   ['no readiness declaration', prompt, forbidden,
-    [/\bdeclare\b/i, /\bPR\b/, /\bmerge-ready\b/i],
+    [/\bdeclar(?:e|es)\b/i, /\bPR\b/, /\bmerge-ready\b/i],
     'Do not declare a PR merge-ready.',
-    [[/\b(?:never|do not)\b/gi, 'Always']]],
+    [[/\b(?:never|do not) declare\b/gi, 'Declares']]],
 ];
 
 for (const action of ['merge', 'post comments', 'change labels', 'push', 'send relay messages', 'dispatch work', 'launch threads']) {
@@ -89,3 +94,21 @@ test('nightly prompt and workflow setup link to the packaged operational guidanc
   expect(read('docs/workflows.md')).toContain('](../skills/axstack/references/pr-triage-nightly.md)');
   expect(read('docs/workflows.md')).toContain('](../skills/axstack/references/automations.md#nightly-pr-triage-setup)');
 });
+
+const mutations = [
+  ['writes and merges', /\bmerge(?:s|d|ing)?\b/i],
+  ['posts comments', /\bpost\w*\b.*\bcomments\b/i],
+  ['changes labels', /\bchang\w*\b.*\blabels\b/i],
+  ['pushes', /\bpush\w*\b/i],
+  ['sends relay messages', /\bsend\w*\b.*\brelay messages\b/i],
+  ['dispatches work', /\bdispatch\w*\b.*\bwork\b/i],
+  ['launches threads', /\blaunch\w*\b.*\bthreads\b/i],
+  ['declares a PR merge-ready', /\bdeclar\w*\b.*\bPR\b.*\bmerge-ready\b/i],
+];
+for (const [affirmative, concept] of mutations) {
+  test(`nightly triage rejects affirmative permission: this pass ${affirmative}`, () => {
+    const mutated = `${prompt}. This pass ${affirmative}.`;
+    expect(forbidden([concept])(prompt)).toBe(true);
+    expect(forbidden([concept])(mutated), affirmative).toBe(false);
+  });
+}
