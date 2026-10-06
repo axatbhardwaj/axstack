@@ -65,6 +65,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-rm-settle-lag T1: +902 measured aggregate bytes for guarded
   // any-pass metadata settlement at pass start, separate from owner retirement.
   // 20261006-docs-overhaul T2: +920 measured aggregate bytes and +284 always-loaded bytes for skill fixes F1-F3, S1-S7.
-  expect(total).toBeLessThanOrEqual(328087);
+  // 20261006-hermes-reply-inbox T1: +2028 measured aggregate bytes for inbox forwarding,
+  // body-digest receipt matching and the packaged Hermes prompt; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(330115);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });
