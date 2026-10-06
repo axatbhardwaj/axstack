@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync } from 'node:fs';
 
 const root = `${import.meta.dir}/../..`;
@@ -27,7 +28,7 @@ test('manual adopted repair reviews its local SHA before publication, while impl
 });
 
 test('current user guidance contains no scheduled own-PR repair path', () => {
-  for (const path of ['README.md', 'docs/installation.md', 'docs/workflows.md']) {
+  for (const path of publicDocPaths(root)) {
     const guidance = read(path);
     expect(guidance, path).not.toMatch(/watch.manager|watch lane|manager repairs|bounded PR job repairs|fast-forward `git push`/i);
   }

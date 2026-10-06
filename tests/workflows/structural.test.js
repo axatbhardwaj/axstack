@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
@@ -90,8 +91,7 @@ const RETIRED_REFERENCES = {
   ],
 };
 
-const activePaths = ['skills', 'src', 'bin', 'profiles', 'tests', 'README.md',
-  'docs/workflows.md', 'docs/installation.md', 'AGENTS.md', 'package.json'];
+const activePaths = ['skills', 'src', 'bin', 'profiles', 'tests', 'AGENTS.md', 'package.json'];
 
 function activeReferences(base) {
   const violations = [];
@@ -114,7 +114,7 @@ function activeReferences(base) {
     if (path === 'docs/installation.md') text = text.replace(/^## Rollback\n[\s\S]*?(?=^## |$(?![\s\S]))/m, '');
     if (RETIRED_REFERENCES.runtime.test(text)) violations.push(`${path}: content`);
   };
-  for (const path of activePaths) scan(path);
+  for (const path of [...activePaths, ...publicDocPaths(base)]) scan(path);
   return violations;
 }
 
@@ -131,7 +131,7 @@ test('structural: reference guard covers content, filenames, and narrow exemptio
   const retired = RETIRED_REFERENCES.runtime.source;
   try {
     for (const path of ['skills/probe.md', 'src/probe.js', 'bin/probe.js',
-      'profiles/probe.json', 'tests/probe.js', ...activePaths.slice(5)]) {
+      'profiles/probe.json', 'tests/probe.js', 'docs/new-guide.md', ...activePaths.slice(5), ...publicDocPaths(root)]) {
       put(path, `Route through ${retired.toUpperCase()}.`);
       expect(activeReferences(fixture), path).toEqual([`${path}: content`]);
       writeFileSync(join(fixture, path), 'T3');
@@ -315,8 +315,7 @@ test('structural: standalone phases explicitly load shared references', () => {
 test('structural: active PR parallelism has no fixed count', () => {
   const currentPolicyFiles = [
     ...skillMarkdownFiles,
-    join(root, 'README.md'),
-    join(root, 'docs', 'workflows.md'),
+    ...publicDocPaths(root).map((path) => join(root, path)),
   ];
   const fixedTwoCap = /two active PRs|default (limit|is) .*two/i;
   for (const p of currentPolicyFiles) {

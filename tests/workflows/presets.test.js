@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { loadedReferences, requires, sentences } from './prose-contract.js';
 
@@ -342,7 +343,7 @@ test('presets: all packaged Markdown pointers resolve', () => {
 
 test('presets: active guidance and tests contain no literal role count', () => {
   const files = [
-    'README.md', 'docs/installation.md', 'docs/workflows.md',
+    ...publicDocPaths(root),
     ...readdirSync(`${root}/skills`, { recursive: true })
       .filter((path) => path.endsWith('.md')).map((path) => `skills/${path}`),
     ...readdirSync(`${root}/tests/workflows`)

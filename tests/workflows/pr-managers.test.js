@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { requires } from './prose-contract.js';
 
@@ -40,8 +41,7 @@ test('current manager guidance has no numeric PR execution cap', () => {
     'skills/axstack/references/lifecycle.md',
     'skills/axstack/references/review-manager-prompt.md',
     'skills/axstack-watch/references/watch-runtime.md',
-    'README.md',
-    'docs/workflows.md',
+    ...publicDocPaths(root),
   ]) {
     expect(compact(path), path).not.toMatch(/(?:at most|maximum of|cap(?:ped)? (?:at|of)) (?:five|5|one|1) (?:executing |concurrent(?:ly)? |bounded )?(?:PR |actionable-event )?(?:jobs|tasks)/i);
   }
