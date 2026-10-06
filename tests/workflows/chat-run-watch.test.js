@@ -113,7 +113,7 @@ test('own PR watch never re-requests a human approver after repair', () => {
 
 test('authorized own PR maintenance loops through feedback, base movement, and readiness', () => {
   expect(watch()).toMatch(/authorized[^.]*own.PR maintenance[^.]*keep repairing[^.]*rebasing[^.]*base/i);
-  expect(watch()).toMatch(/re-run checks[^.]*every review comment and thread[^.]*human approval[^.]*required CI[^.]*green/i);
+  expect(watch()).toMatch(/re-run checks[^.]*comment holds above are cleared[^.]*human approval[^.]*required CI[^.]*green/i);
   expect(watch()).toMatch(/approval persists[^.]*fixes and rebases/i);
   expect(watch()).toMatch(/forge dismissed[^.]*hold and tell the user/i);
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
@@ -149,7 +149,7 @@ test('wake failure guards and human merge authority stay explicit', () => {
 });
 
 test('own-PR merge-ready requires a head rebased on the current base', () => {
-  expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*every review comment and thread[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
+  expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*comment holds above are cleared[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
 });
 
 

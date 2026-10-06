@@ -28,7 +28,7 @@ test('uncertain watch registration state holds new registrations until resolved'
 });
 
 test('merge card binds the evidence and never grants solo approval by relay', () => {
-  expect(sentence(watch, 'Post a merge card')).toMatch(/every term except human approval holds/i);
+  expect(sentence(watch, 'Post a merge card when')).toMatch(/every term except human approval holds/i);
   expect(sentence(watch, 'Bind it to the PR')).toMatch(/head and base SHA.*CI.*authored review and diligence.*SHAs.*human approvals and bot votes.*SHA and stale flag/i);
   expect(sentence(watch, 'In `solo` mode the card')).toMatch(/user-decision hold.*one relay/i);
   expect(sentence(watch, 'relay text never supplies')).toContain('approval');
@@ -58,7 +58,7 @@ test('CI requires complete successful base workflow jobs and no pending checks',
 });
 
 test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
-  expect(sentence(watch, 'Feedback and revision:')).toMatch(/not draft.*mergeable against the current base.*no unresolved review thread.*top-level blocking comment.*effective blocking review/i);
+  expect(sentence(watch, 'Feedback and revision:')).toMatch(/not draft.*mergeable against the current base.*no unresolved blocking agent-authored thread.*top-level blocking comment.*effective blocking review/i);
   expect(sentence(watch, 'Authored review `APPROVE`')).toMatch(/diligence.*`PASS`.*current head and base/i);
   expect(sentence(watch, 'No `Escalate to user`')).toMatch(/unsettled author Dispatch.*task, PR, dependency, run-wide, or serious-risk.*hold/i);
   expect(sentence(watch, 'Veto:')).toMatch(/no `do-not-merge` label.*no chat `hold`/i);

@@ -172,20 +172,30 @@ For each current head and base SHA, every merge-ready term must hold:
   workflows; an unknown or empty check set holds. A skipped required CI job
   holds. Checks from other apps may be neutral or skipped; none may be pending.
 - Feedback and revision: the PR is not draft and is mergeable against the
-  current base; no unresolved review thread, top-level blocking comment, or
+  current base; no unresolved blocking agent-authored thread, top-level blocking comment, or
   effective blocking review remains. Authored review `APPROVE` and diligence
   `PASS` are bound to the current head and base. No `Escalate to user`,
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk
-  hold affects this merge. Every review comment and thread must be addressed.
+  hold affects this merge. Apply the comment holds below.
   The current target base head must be an ancestor of the singleton head or
   bottom stack member head; unknown ancestry holds. A CI re-run does not restore
   this freshness after the base moves. Update the branch and refresh head-bound
   evidence instead.
 - Veto: no `do-not-merge` label and no chat `hold` applies.
 
+Only comments and threads whose IDs are recorded in an agent receipt count as agent-authored.
+Every other review thread, review body, or top-level comment from a human or a bot holds automatic merge.
+Post a merge card for these non-agent items until a human resolves or dismisses them.
+Clear GitHub-unresolvable review bodies and top-level comments only by the user's
+reply to that merge card naming the items.
+Agents never rate, resolve, or dismiss these non-agent items.
+An always-commenting review bot therefore blocks automatic merge until the user clears its threads.
+Agent-authored threads with only `low` findings can stay open.
+Apply any repository rule that requires conversation resolution.
+
 Under authorized own-PR maintenance, keep repairing and rebasing onto the base
 when it moves, then re-run checks, until the head is rebased on the current base,
-every review comment and thread is addressed, human approval still counts, and
+the comment holds above are cleared, human approval still counts, and
 required CI is green; only then record merge-ready. A human approval persists
 through fixes and rebases while the forge counts it: never re-request that
 approver's review. If the forge dismissed it or requires last-push approval,

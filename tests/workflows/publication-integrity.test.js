@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
@@ -106,24 +106,17 @@ function checkRule(text, rule) {
 for (const rule of rules) {
   const [name, source, , , , rewording] = rule;
   test(`publication integrity: ${name}`, () => checkRule(read(source), rule));
-  // Synchronous writes cannot interleave with other tests. Restore even on an
-  // assertion failure; check every rule on that file to preserve shared clauses.
+  // Substitute in memory; check sibling rules to preserve shared clauses.
   test(`publication integrity real-source rewording: ${name}`, () => {
-    const path = `${import.meta.dir}/../../${source}`;
-    const backup = readFileSync(path);
+    const originalSource = read(source);
     const original = sentences(read(source)).find(acceptsRule(rule));
     expect(original, 'missing source instruction').toBeTruthy();
     const pattern = new RegExp(original.split(/\s+/).map((word) =>
       word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'));
-    expect(backup.toString()).toMatch(pattern);
-    try {
-      writeFileSync(path, backup.toString().replace(pattern, rewording.replace(/[.!?]$/, '')));
-      const reworded = read(source);
-      for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
-    } finally {
-      writeFileSync(path, backup);
-    }
-    expect(readFileSync(path).equals(backup), 'byte-for-byte restore').toBe(true);
+    expect(originalSource).toMatch(pattern);
+    const reworded = originalSource.replace(pattern, rewording.replace(/[.!?]$/, ''));
+    for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
+    expect(read(source), 'source remains unchanged').toBe(originalSource);
   });
 }
 

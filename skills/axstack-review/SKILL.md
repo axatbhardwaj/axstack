@@ -35,6 +35,27 @@ carry the required escalation field and every eligible peer PR takes a binding
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 
+## Finding severity
+
+Rate every review and diligence finding as `high`, `medium`, or `low` under
+this shared rubric.
+
+- `high` = correctness, security, data-loss, or contract defect with real impact.
+- `medium` = material behaviour, test, or maintainability defect, a softened or
+  dropped obligation, or an evidence-integrity mismatch (SHAs, counts, missing red/green logs).
+- `low` = polish that does not change behaviour.
+
+The reviewer rates each finding.
+Round uncertain ratings up.
+Only diligence can raise a rating.
+Nobody can lower a rating.
+`medium` and `high` findings block `APPROVE`.
+Fix and re-review every `medium` or `high` finding.
+`low` findings do not block approval or merge.
+The owner records all low findings in one follow-up issue in the repository's
+tracker (GitHub Issues, or Linear for `defi-com`), linked from the PR.
+The follow-up issue never gates merge.
+
 ## Codebase findings mode
 
 Use this manual mode for existing code at a pinned exact source revision and a
@@ -382,7 +403,8 @@ Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
-Findings: <evidence + consequence each>
+Findings: <severity + evidence + consequence each>
+Agent-authored comment and thread IDs: <receipt-recorded IDs or none>
 Safety fact: <the one fact the change is safe because of> — <ladder step + proof | unproven>
 Escalate to user: <yes | no> — <criterion> — <reason>
 ```

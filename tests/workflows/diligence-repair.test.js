@@ -48,7 +48,7 @@ test('publication returns diligence FINDINGS to the same author before publishin
 });
 
 test('diligence FINDINGS are report-only and stay in the owning phase', () => {
-  expect(compact('skills/axstack/references/diligence.md')).toMatch(/`FINDINGS` identifies a mismatch for the driver to resolve at the owning phase; it does not edit the artifact or create another review round by itself\./);
+  expect(compact('skills/axstack/references/diligence.md')).toMatch(/`FINDINGS` identifies a medium or high mismatch for the driver to resolve at the owning phase; it does not edit the artifact or create another review round by itself\./);
 });
 
 test('peer publishing also requires its separate current diligence receipt', () => {
