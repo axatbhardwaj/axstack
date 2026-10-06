@@ -268,7 +268,10 @@ private or local artifacts. Write the local HTML copy under the established
 
 No manager, coordinator, or worker may merge, close, force-push, rebase,
 restack, broaden scope, or mutate a PR branch. Human merge remains the
-boundary.
+boundary for peer PRs.
+For own PRs, automatic merge is the default under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely);
+this manager never becomes that watch's merge actor.
 
 ## Exceptional decisions and notifications
 

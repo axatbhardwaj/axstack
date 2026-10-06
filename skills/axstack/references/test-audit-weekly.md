@@ -54,7 +54,8 @@ Keep one writer and private revision-bound receipts; workers never push.
 Obtain independent review using Implement's configured authored-review roles and
 verify the exact candidate's checks before publication. The driver uses
 `gh stack` and opens at most one test-audit PR per week after independent review;
-the human merges.
+for own PRs, automatic merge is the default under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 
 Notify only under the run's Notification policy: a decision park, merge-ready
 (within the run's milestone cap), or serious-risk hold; never progress or

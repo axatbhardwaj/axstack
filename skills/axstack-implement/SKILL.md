@@ -257,13 +257,20 @@ Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
 
-Merge-ready opens the merge boundary. Only the chat-run driver holding the
-approved ticket map is the merge actor for own PRs inside the approved ticket
-map (run-created or explicitly adopted into it) when they target an
-`integration` base. Apply `axstack-watch` §5's merge card and
-full predicate; an approval alone never grants merge authority. A peer PR or
-`deploying` base waits for the user to merge, in either approval mode. A
-manager, worker, reviewer, automation, or standalone watch must never merge.
+Merge-ready opens the merge boundary.
+For own PRs, automatic merge is the default under the
+[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The merge actor is the recorded owning watch thread (`axstack-owner` for
+standalone authorized maintenance), including small and adopted work.
+Missing or idle ownership follows lifecycle reconciliation and explicit transfer first.
+Apply `axstack-watch` §5's merge card and full predicate; an approval alone
+never grants merge authority.
+A peer PR or `deploying` base waits for the user to merge, in either approval mode.
+A manager, worker, reviewer, monitor, or nightly triage must never merge.
+Observation-only and peer watches never merge.
+Watch §5 owns provider provenance, approval carryover, eligible bases, every
+planned stack member's publication, exclusions, and card-reply exceptions.
+This policy grants no release, npm publish, or host install authority.
 Re-read every predicate term under watch §5 before merging. Confirm merge
 commits are allowed, `delete_branch_on_merge` is false, and the base has no
 merge queue; otherwise hold for the user. For a singleton, use

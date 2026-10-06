@@ -234,4 +234,8 @@ The boundary must provide no Axstack daemon, DB, lock or scheduler. Native T3
 schedules supply wakes; Axstack maintains prose records, not a runtime state
 engine. Private evidence requires explicit publication authority before sharing;
 receipts confer no merge, release, publication, model-substitution, host-mutation
-or expanded scope authority. Human merges by default.
+or expanded scope authority.
+For own PRs, automatic merge is the default under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The recorded owning watch thread merges; a missing or idle owner requires
+lifecycle reconciliation and explicit transfer first.

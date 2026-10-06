@@ -91,7 +91,10 @@ then rebase and revalidate children. Run-launched implementation PRs follow
 review. Explicitly adopted own PRs follow [Repair and
 publication](repair-publication.md): independent exact-local-SHA review precedes
 driver-owned `gh stack` publication and remote readback. The driver never
-self-reviews; the human merges. Observation alone grants no repair or
+self-reviews.
+For own PRs, automatic merge is the default under the
+[watch predicate](../SKILL.md#5-state-readiness-precisely).
+Observation alone grants no repair or
 public-reply authority.
 
 On new comments, failed checks, or base movement, repeat repair, the

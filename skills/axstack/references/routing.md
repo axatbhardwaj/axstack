@@ -102,8 +102,8 @@ reason in the run record, or in the brief for tiny direct work.
   issue plus explicit acceptance checks and exclusions, snapshots it once, and
   proceeds. No prior snapshot, spec, tickets, or second approval is required; do not route
   to `axstack-align` solely because the snapshot is not yet written. Strict TDD,
-  mode-specific review, model, risk, and human-merge
-  contracts still apply.
+  mode-specific review, model, risk, and merge-authority contracts still apply.
+  Own PRs default to automatic merge under watch §5 predicate.
 - **Unclear:** clarify via `axstack-align` or a bounded question, then
   classify small or substantial; it does not force substantial-work paperwork.
   [Design lens](design-lens.md) Rung 1 is Unclear; use `axstack-align`.

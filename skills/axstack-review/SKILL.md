@@ -13,7 +13,9 @@ Manual review keeps the user’s chat and workspace open.
 
 Produce evidence-bound findings for an exact revision using the review count
 and model routing required by its mode. Report within the requested authority;
-the human merges PRs unless separately authorized otherwise.
+for own PRs, automatic merge is the default under the
+[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+Reviewers never merge.
 
 When the current session is a fresh review-manager session, load
 [Native PR managers](../axstack/references/automations.md) and follow only its
@@ -455,7 +457,8 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.
 
-The human merges by default. Review approval never supplies merge authority.
+The recorded owning watch thread applies watch §5's guarded merge and card rules.
+Review approval alone never supplies merge authority. Peer PRs stay user-merged.
 
 ## Report-only scope
 

@@ -9,9 +9,9 @@ binding state and receipts to exact revisions.
 
 - Driver: current chat; owns scope, decisions, cross-PR dependencies,
   external-tracker mutations, integration.
-- Owner: driver owns loop PRs; `axstack-owner` only for standalone watch/review
-  without live driver. It may perform PR-scoped publication within user authority. Human
-  merge is default.
+- Owner: driver for loop PRs; `axstack-owner` for standalone watch/review without
+  a live driver. PR-scoped publication is within user authority.
+  Own PRs default to automatic merge under watch §5's predicate.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
 - Reviewers: peer = two configured roles with the same brief and isolated first
@@ -121,7 +121,7 @@ The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; the review automation has no task-owned
 deadline. Merge-ready requires applicable review receipt(s) and current diligence
 `PASS` at the exact head; CI/tests alone are insufficient. Merge-ready
-differs from merged; human merges.
+differs from merged.
 
 ## Review automation health
 
