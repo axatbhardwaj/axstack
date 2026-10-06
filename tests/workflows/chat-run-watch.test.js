@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { requires } from './prose-contract.js';
+import { requires, checkRule, sentences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
@@ -34,8 +34,14 @@ test('same-head feedback and checks are events while unchanged complete passes s
 
 test('chat-run wake uses the PR digest before deciding whether to act', () => {
   const text = runtime();
-  const invocation = text.match(/Each driver wake[\s\S]*?Exit 0/)?.[0] ?? '';
-  expect(text).toMatch(/(?:each|every) driver wake[^.]*first runs[^.]*pr-digest\.js/i);
+  const concepts = [/start of (?:each|every) driver wake/i, /follow Provider bindings/i,
+    /driver account re-selection/i, /then run the digest/i, /pr-digest\.js/i];
+  checkRule(sentences(text).join('. '), (source) => requires(source, ...concepts),
+    'At the start of every driver wake, follow Provider bindings for driver account re-selection, then run the digest using pr-digest.js.',
+    [[/start of (?:each|every) driver wake/i, 'end of selected wakes'],
+      [/follow Provider bindings/i, 'skip Provider bindings'],
+      [/then run the digest/i, 'then skip the digest']], concepts);
+  const invocation = text.match(/At the start of each driver wake[\s\S]*?Exit 0/)?.[0] ?? '';
   expect(invocation).toMatch(/once per repository/i);
   expect(invocation).toMatch(/installed[^.]*axstack[^.]*skill directory/i);
   expect(invocation).toMatch(/bun scripts\/pr-digest\.js --repo <owner\/name> --prs <[^>]*every watched member[^>]*in that repo> --watermark <[^>]*repository[^>]*private run.record path>/i);

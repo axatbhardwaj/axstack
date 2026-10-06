@@ -140,3 +140,21 @@ for (const [name, accepts, rewording, inversions] of duplicateRules) {
     checkRule(text, accepts, rewording, inversions);
   });
 }
+
+for (const [path, name, concepts, rewording, inversions] of [
+  ['automations.md', 'binding comparison follows recorded instance update',
+    [/each pass/i, /compares/i, /t3_thread_configuration/, /recorded binding/i,
+      /after any owner-only instance update/i, /Provider bindings/i, /before admission/i],
+    'After any owner-only instance update under Provider bindings, each pass compares t3_thread_configuration with the recorded binding before admission.',
+    [[/after any owner-only instance update/i, 'before any owner-only instance update']]],
+  ['review-manager-prompt.md', 'ownership precedes shared routing and admission checks',
+    [/reconcile lane ownership and duplicate status/i, /then follow Provider bindings/i,
+      /shared schedule recreation and recorded instance update/i, /before verifying/i,
+      /recorded axstack-owner binding/i, /before admission/i],
+    'Before verifying the recorded axstack-owner binding before admission, reconcile lane ownership and duplicate status, then follow Provider bindings for shared schedule recreation and recorded instance update.',
+    [[/reconcile lane ownership and duplicate status/i, 'ignore lane ownership and duplicate status'],
+      [/before verifying/i, 'after verifying']]],
+]) test(`manager account routing: ${name}`, () => {
+  const text = sentences(read(`skills/axstack/references/${path}`).replace(/`/g, '')).join('. ');
+  checkRule(text, (source) => requires(source, ...concepts), rewording, inversions, concepts);
+});

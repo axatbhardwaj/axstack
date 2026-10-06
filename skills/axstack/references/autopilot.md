@@ -127,6 +127,8 @@ Cancellation does not cancel a running author run by inference; let it
 report, then settle that exact attempt under lifecycle guards without new
 publication.
 
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
+
 Use the run's recorded Notification policy through `axstack-relay`.
 Decision holds, including spec and npm approval, are always eligible. Across
 implementation and release, merge-ready and merged notifications together are

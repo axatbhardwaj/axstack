@@ -273,6 +273,8 @@ matching catalog ID. Resume retains the recorded snapshot without re-resolution.
 Rejection, timeout, quota, and auth failures hold; outside bounded same-provider,
 same-model account selection among one driver's instances via `pick-instance.js`,
 no subscription inference, quota routing, or alternative-model retry applies.
+Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
+for driver account re-selection at turn boundaries and schedule rebinding.
 
 `modeId` and similar permission fields remain conservative declared intent.
 They do not prove effective T3 `runtimeMode`, sandboxing, or permission parity.

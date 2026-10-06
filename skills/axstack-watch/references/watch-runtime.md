@@ -33,7 +33,8 @@ The initiating T3 thread remains the sole driver and `progress.md` writer.
 Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:600000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
-driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding.
+driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding at creation.
+Follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding) before arming the watch and for schedule recreation on self-switch.
 One bound schedule serves both the run watch and the chat-run watch; never create a second watch.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 If the native schedule has a lifetime, the driver re-arms it at a wake.
@@ -48,7 +49,8 @@ A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime;
 add no daemon and no polling model between wakes.
 
-Each driver wake first runs the digest once per repository
+At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
+for driver account re-selection, then run the digest once per repository
 from the installed `axstack` skill directory:
 `bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's private run-record path>`.
 Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,

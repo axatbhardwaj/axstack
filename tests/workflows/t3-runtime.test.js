@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { sentences, requires, prohibits } from './prose-contract.js';
+import { sentences, requires, prohibits, checkRule, loadedReferences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const reference = () => read('skills/axstack/references/t3-runtime.md');
@@ -68,6 +68,34 @@ const rules = [
   ["exhausted sibling hold", [/\bexhausted account/i, /\bno eligible sibling/i, /\bhold/i], /\bno eligible sibling/i],
   ["selection error fallback", [/\bonly/i, /\berror exit 1/i, /\bfallback/i, /\bcanonical instance/i, /\bvalidat/i, /\bavailability/i]],
   ["selection ineligible hold", [/\bexit 2/i, /\bno eligible provider instances/i, /\bhold/i, /\bwithout fallback/i], /\bno eligible provider instances/i],
+  ["driver picker entry", [/\bdriver/i, /\bstarts/i, /\bresumes/i, /\brun/i, /\bstart of every run-watch wake/i, /\bruns/i, /scripts\/pick-instance.js --provider <its own provider> --json/]],
+  ["driver excluded switch", [/\bdriver/i, /\bown current instance is excluded/i, /\busage limit/i, /\beligible same-provider sibling/i, /\bswitch itself/i, /t3_thread_configure/, /\bchosen sibling instance/i, /\bsame provider, model and effort\/options/i]],
+  ["driver switch receipt", [/\bdriver/i, /\brecord/i, /\bfrom\/to instance/i, /\bpointer to saved picker JSON/i, /\bUTC time/i, /progress.md/]],
+  ["driver eligible stays", [/\bdriver/i, /\bown current instance is eligible/i, /\bstay/i, /\bdespite headroom differences/i]],
+  ["driver exit 2 hold", [/\bdriver/i, /\bexit 2/i, /\bno eligible sibling/i, /\bhold/i], /\bno eligible sibling/i],
+  ["driver exit 1 stays", [/\bdriver/i, /\berror exit 1/i, /\bkeep/i, /\bcurrent instance/i]],
+  ["driver switch boundary", [/\bdriver account re-selection/i, /\bconfigure only the calling thread/i, /\bonly at a turn boundary/i]],
+  ["dispatched failover exclusion", [/\bdispatched roles/i, /\bfail over mid-thread/i], /\bnever fail over/i],
+  ["paused turn limitation", [/\bturn already paused/i, /\busage limit/i, /\bself-recover/i], /\bcannot self-recover/i],
+  ["driver next turn recovery", [/\bnext wake or user message/i, /\bruns this check/i]],
+  ["schedule binding snapshot", [/\bT3 scheduled tasks/i, /\bretain/i, /\bcreation-time instanceId/i, /\bwakes/i, /\bfresh-thread passes/i, /\bregardless of the calling thread's current binding/i]],
+  ["driver routing requirement", [/\bdriver self-switching/i, /\brequired|mandatory/i, /v0\.25\.1/]],
+  ["watch picker before arming", [/\bdriver/i, /\barm/i, /\brun watch/i, /\bonly after picking its account/i, /pick-instance.js/, /\bbefore schedule_task/i]],
+  ["driver watch rebinding", [/\bdriver self-switch/i, /\bdelete and recreate/i, /\barmed bound run watch/i, /\bsame prompt, cadence and binding/i, /\bnew instance/i]],
+  ["scheduled pass picker entry", [/\bevery scheduled automation pass/i, /\bruns/i, /scripts\/pick-instance.js --provider <its own provider> --json/, /\bat pass start/i]],
+  ["scheduled pass excluded switch", [/\bscheduled pass/i, /\bown current instance is excluded/i, /\beligible same-provider sibling/i, /\bswitch itself/i, /t3_thread_configure/, /\bchosen sibling instance/i, /\bsame provider, model and effort\/options/i]],
+  ["automation schedule rebinding", [/\bscheduled pass self-switch/i, /\bin a review-manager lane/i, /\bonly the owner-of-record/i, /\bafter lane reconciliation and the duplicate check/i, /\bdelete and recreate/i, /\bits own schedule/i, /\bsame prompt, cadence and binding/i, /\bchosen instance/i]],
+  ["non-lane schedule rebinding", [/\bany other scheduled pass self-switch/i, /\bdelete and recreate its own schedule/i, /\bsame prompt, cadence and binding/i, /\bonly after list_scheduled_tasks confirms/i], /\bno replacement for that schedule on the chosen instance already exists/i],
+  ["non-lane existing replacement skip", [/\bany other scheduled pass/i, /\ba replacement for that schedule on the chosen instance already exists/i], /\bskip recreation/i],
+  ["schedule replacement readback", [/\beach schedule replacement/i, /\bread back/i, /\bold absence and new presence/i, /list_scheduled_tasks/]],
+  ["schedule replacement receipt", [/\beach schedule replacement/i, /\b(?:record|save)\s+(?:old\/new scheduledTaskId|UTC time)\b/i, /\bold\/new scheduledTaskId/i, /\bfrom\/to instance/i, /\bpicker JSON pointer/i, /\bUTC time/i, /\bprogress.md or durable activation\/continuity record/i]],
+  ["exhausted scheduled pass limitation", [/\bscheduled pass already running/i, /\bexhausted account/i, /\brecover/i], /\bcannot recover/i],
+  ["pre-exhaustion switching", [/\baccount switches/i, /\bmust happen before exhaustion/i, /\bpicker's near-limit cutoff/i]],
+  ["lane binding instance update", [/\breview-manager self-switch/i, /\bonly the owner-of-record/i, /\bupdate the recorded axstack-owner binding's instanceId/i, /\bchosen instance/i, /\bafter verifying unchanged provider\/model\/effort\/options/i, /t3_thread_configuration/, /\bpicker switch receipt/i, /\bbefore the admission binding comparison/i]],
+  ["binding read and save", [/\bread (?:its|the) current binding/i, /t3_thread_configuration/, /\bsave picker JSON in private run evidence/i]],
+  ["scheduled pass stay and exits", [/\bscheduled passes/i, /\bfollow the driver's eligibility and stay rules/i, /\ban eligible own instance stays/i, /\bexit 1 keeps the current instance/i, /\bexit 2 holds/i]],
+  ["schedule creation metadata", [/\bretain the recorded schedule's title and enabled state/i, /\buse a fresh stable creation clientRequestId/i]],
+  ["uncertain replacement hold", [/\ban uncertain replacement/i, /\bholds affected work/i, /\bpreserve its native receipts for reconciliation/i]],
   ["mode and options", [/\bmodeId/, /\bruntimeMode:full-access/, /\boptions:\[\{id,value\}\]/]],
   ["pinned model", [/\bpreset model/i, /\bused|use/i, /\bas given/i]],
   ["class resolution", [/\bmodelClass/, /\bresol(?:v|ution)/i, /\bnewest/i, /\bprovider/i, /gpt-<N>-<class>/, /\bclaude-<class>-<N>-<N>/]],
@@ -217,6 +245,34 @@ const rewordings = {
   "exhausted sibling hold": "With no eligible sibling, an exhausted account must hold.",
   "selection error fallback": "Only error exit 1 must permit fallback to the canonical instance after validating availability.",
   "selection ineligible hold": "Exit 2 means no eligible provider instances and must hold the work without fallback.",
+  "driver picker entry": "The driver runs scripts/pick-instance.js --provider <its own provider> --json at the start of every run-watch wake and when it resumes or starts a run.",
+  "driver excluded switch": "With an eligible same-provider sibling and its own current instance is excluded for a usage limit, the driver must switch itself through t3_thread_configure to the chosen sibling instance with the same provider, model and effort/options.",
+  "driver switch receipt": "In progress.md, the driver records UTC time, a pointer to saved picker JSON and from/to instance for the switch.",
+  "driver eligible stays": "Despite headroom differences, the driver must stay when its own current instance is eligible.",
+  "driver exit 2 hold": "With no eligible sibling on exit 2, the driver holds.",
+  "driver exit 1 stays": "On error exit 1, the driver keeps its current instance.",
+  "driver switch boundary": "Only at a turn boundary, driver account re-selection must configure only the calling thread.",
+  "dispatched failover exclusion": "Dispatched roles must never fail over mid-thread.",
+  "paused turn limitation": "A turn already paused for a usage limit cannot self-recover.",
+  "driver next turn recovery": "This rule applies because the next wake or user message runs this check.",
+  "schedule binding snapshot": "For wakes and fresh-thread passes, T3 scheduled tasks retain the creation-time instanceId regardless of the calling thread's current binding.",
+  "driver routing requirement": "As of v0.25.1, driver self-switching is mandatory.",
+  "watch picker before arming": "The driver must run pick-instance.js before schedule_task and arm its run watch only after picking its account.",
+  "driver watch rebinding": "Keeping the same prompt, cadence and binding on the new instance, a driver self-switch must delete and recreate its armed bound run watch.",
+  "scheduled pass picker entry": "At pass start, every scheduled automation pass runs scripts/pick-instance.js --provider <its own provider> --json.",
+  "scheduled pass excluded switch": "With an eligible same-provider sibling, a scheduled pass whose own current instance is excluded must switch itself through t3_thread_configure to the chosen sibling instance with the same provider, model and effort/options.",
+  "automation schedule rebinding": "After lane reconciliation and the duplicate check, only the owner-of-record must delete and recreate its own schedule on a scheduled pass self-switch in a review-manager lane, keeping the same prompt, cadence and binding on the chosen instance.",
+  "non-lane schedule rebinding": "On any other scheduled pass self-switch, delete and recreate its own schedule with the same prompt, cadence and binding only after list_scheduled_tasks confirms no replacement for that schedule on the chosen instance already exists.",
+  "non-lane existing replacement skip": "Any other scheduled pass must skip recreation when a replacement for that schedule on the chosen instance already exists.",
+  "schedule replacement readback": "Use list_scheduled_tasks to read back old absence and new presence for each schedule replacement.",
+  "schedule replacement receipt": "For each schedule replacement, save UTC time, picker JSON pointer, from/to instance and old/new scheduledTaskId in the progress.md or durable activation/continuity record.",
+  "exhausted scheduled pass limitation": "On an exhausted account, a scheduled pass already running cannot recover.",
+  "pre-exhaustion switching": "At the picker's near-limit cutoff, account switches must happen before exhaustion.",
+  "lane binding instance update": "Before the admission binding comparison, only the owner-of-record must update the recorded axstack-owner binding's instanceId to the chosen instance for a review-manager self-switch, after verifying unchanged provider/model/effort/options through t3_thread_configuration and attaching the picker switch receipt.",
+  "binding read and save": "Save picker JSON in private run evidence and read the current binding using t3_thread_configuration.",
+  "scheduled pass stay and exits": "Scheduled passes follow the driver's eligibility and stay rules: exit 2 holds, exit 1 keeps the current instance and an eligible own instance stays.",
+  "schedule creation metadata": "Use a fresh stable creation clientRequestId and retain the recorded schedule's title and enabled state.",
+  "uncertain replacement hold": "Preserve its native receipts for reconciliation while an uncertain replacement holds affected work.",
   "mode and options": "Use options:[{id,value}] and map modeId into runtimeMode:full-access.",
   "pinned model": "As given, the preset model is used.",
   "class resolution": "For each provider, modelClass resolves the newest catalog entry matching claude-<class>-<N>-<N> or gpt-<N>-<class>.",
@@ -354,6 +410,39 @@ const accepts = (text, [, concepts, prohibition]) => prohibition
   ? prohibits(text, prohibition, ...concepts)
   : requires(text, ...concepts);
 
+// Explicit flips cover the decision, trigger, identity and failure boundaries,
+// including each accepted editorial alternative, using full source in memory.
+const driverInversions = {
+  "driver picker entry": [[/\bruns/i, 'skips'], [/\bstarts/i, 'finishes'], [/\bresumes/i, 'ends'], [/\bstart of every run-watch wake/i, 'end of selected wakes'], [/its own provider/i, 'another provider']],
+  "driver excluded switch": [[/own current instance is excluded/i, 'own current instance is eligible'], [/eligible same-provider sibling/i, 'eligible other-provider sibling'], [/switch itself/i, 'switch another thread'], [/same provider, model and effort\/options/i, 'different provider, model and effort/options']],
+  "driver switch receipt": [[/\brecords?/i, 'omits'], [/from\/to instance/i, 'destination alone']],
+  "driver eligible stays": [[/\bstay\w*/i, 'switches'], [/own current instance is eligible/i, 'own current instance is excluded']],
+  "driver exit 2 hold": [[/\bholds?/i, 'continues'], [/exit 2/i, 'exit 1']],
+  "driver exit 1 stays": [[/\bkeeps?/i, 'replaces'], [/exit 1/i, 'exit 2']],
+  "driver switch boundary": [[/configure only the calling thread/i, 'configure another thread'], [/only at a turn boundary/i, 'during a turn']],
+  "dispatched failover exclusion": [[/never fail over/i, 'always fail over']],
+  "paused turn limitation": [[/cannot self-recover/i, 'can self-recover']],
+  "driver next turn recovery": [[/next wake or user message/i, 'paused turn'], [/runs this check/i, 'skips this check']],
+  "schedule binding snapshot": [[/\bretain/i, 'discard'], [/creation-time instanceId/i, 'latest instanceId']],
+  "driver routing requirement": [[/required|mandatory/i, 'optional']],
+  "watch picker before arming": [[/only after picking its account/i, 'before picking its account'], [/before schedule_task/i, 'after schedule_task']],
+  "driver watch rebinding": [[/delete and recreate/i, 'retain'], [/same prompt, cadence and binding/i, 'different prompt, cadence and binding'], [/new instance/i, 'old instance']],
+  "scheduled pass picker entry": [[/every scheduled automation pass/i, 'selected scheduled automation passes'], [/at pass start/i, 'at pass end'], [/its own provider/i, 'another provider']],
+  "scheduled pass excluded switch": [[/own current instance is excluded/i, 'own current instance is eligible'], [/eligible same-provider sibling/i, 'eligible other-provider sibling'], [/switch itself/i, 'switch another thread'], [/same provider, model and effort\/options/i, 'different provider, model and effort/options']],
+  "automation schedule rebinding": [[/delete and recreate/i, 'retain'], [/same prompt, cadence and binding/i, 'different prompt, cadence and binding'], [/chosen instance/i, 'old instance'], [/only the owner-of-record/i, 'any duplicate pass'], [/after lane reconciliation and the duplicate check/i, 'before lane reconciliation and the duplicate check'], [/in a review-manager lane/i, 'in every automation']],
+  "non-lane schedule rebinding": [[/delete and recreate its own schedule/i, 'retain its own schedule'], [/only after list_scheduled_tasks confirms/i, 'before list_scheduled_tasks confirms'], [/no replacement for that schedule on the chosen instance already exists/i, 'a replacement for that schedule on the chosen instance already exists'], [/same prompt, cadence and binding/i, 'different prompt, cadence and binding']],
+  "non-lane existing replacement skip": [[/skip recreation/i, 'recreate the schedule'], [/for that schedule/i, 'for another schedule'], [/chosen instance/i, 'another instance']],
+  "schedule replacement readback": [[/read back/i, 'guess'], [/old absence and new presence/i, 'old presence and new absence']],
+  "schedule replacement receipt": [[/\b(?:record|save)\b/i, 'omit'], [/old\/new scheduledTaskId/i, 'old scheduledTaskId alone']],
+  "exhausted scheduled pass limitation": [[/cannot recover/i, 'can recover']],
+  "pre-exhaustion switching": [[/must happen before exhaustion/i, 'must happen after exhaustion']],
+  "lane binding instance update": [[/only the owner-of-record/i, 'any duplicate pass'], [/update the recorded axstack-owner binding's instanceId/i, 'retain the recorded axstack-owner binding\'s instanceId'], [/unchanged provider\/model\/effort\/options/i, 'different provider/model/effort/options'], [/before the admission binding comparison/i, 'after the admission binding comparison']],
+  "binding read and save": [[/read (?:its|the) current binding/i, 'guess its current binding'], [/save picker JSON/i, 'discard picker JSON'], [/private run evidence/i, 'public output']],
+  "scheduled pass stay and exits": [[/an eligible own instance stays/i, 'an eligible own instance switches'], [/exit 1 keeps the current instance/i, 'exit 1 substitutes another instance'], [/exit 2 holds/i, 'exit 2 continues']],
+  "schedule creation metadata": [[/retain the recorded schedule's title and enabled state/i, 'replace the recorded schedule\'s title and enabled state'], [/fresh stable creation clientRequestId/i, 'reused unstable creation clientRequestId']],
+  "uncertain replacement hold": [[/holds affected work/i, 'continues affected work'], [/preserve its native receipts/i, 'discard its native receipts']],
+};
+
 // One generic token-negation inversion per sentence, with a scoped negation
 // for declarative instructions that have no directive or negative token.
 const negate = (text) => {
@@ -369,6 +458,11 @@ const negate = (text) => {
 for (const rule of rules) {
   const [name] = rule;
   test(`T3 instruction: ${name}`, () => {
+    if (driverInversions[name]) {
+      checkRule(sentences(runtime()).join('. '), (text) => accepts(text, rule),
+        rewordings[name], driverInversions[name], rule[1]);
+      return;
+    }
     const source = sentences(runtime());
     const matching = source.filter((sentence) => accepts(sentence, rule));
     expect(matching.length, name).toBeGreaterThan(0);
@@ -421,6 +515,25 @@ test('AC2 recovery actions match their rule paragraphs', () => {
       for (const pattern of concepts) {
         expect(pattern.test(scenario.expected.action), scenario.id + ': action').toBe(true);
         expect(pattern.test(paragraph), scenario.id + ': rule').toBe(true);
+      }
+    }
+  }
+});
+
+test('driver routing summaries load the canonical turn-boundary rule', () => {
+  for (const path of [
+    'skills/axstack/references/contracts.md', 'skills/axstack/references/routing.md',
+    'skills/axstack/references/autopilot.md', 'skills/axstack-watch/references/watch-runtime.md',
+    'docs/workflows.md', 'docs/installation.md',
+    'skills/axstack/references/automations.md', 'skills/axstack/references/review-manager-prompt.md',
+    'skills/axstack/references/pr-triage-nightly.md', 'skills/axstack/references/test-audit-weekly.md',
+  ]) {
+    const text = read(path);
+    expect(loadedReferences(text).some((link) => link.endsWith('t3-runtime.md#preflight-and-binding')), path).toBe(true);
+    // A blanket prohibition would override the linked driver exception.
+    for (const sentence of sentences(text)) {
+      if (/(?:never|no) mid-thread failover/i.test(sentence)) {
+        expect(/dispatched roles/i.test(sentence), path).toBe(true);
       }
     }
   }
