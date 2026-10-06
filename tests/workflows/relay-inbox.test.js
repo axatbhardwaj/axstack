@@ -6,7 +6,7 @@ const quoted = 'Decision: "ship"?\nT3 reply: dev-env thread driver-123';
 const message = (body = quoted, reply = 'Yes\n"quoted" \\ unicode ✓') => `[Replying to: "${body}"]\n\n${reply}`;
 const inbox = (home) => `${home}/.local/share/axstack/relay-inbox/dev-env/driver-123.jsonl`;
 function withHome(check) {
-  const home = mkdtempSync(`${process.env.TMPDIR}/relay-home-`);
+  const home = mkdtempSync(`${Bun.env.TMPDIR || '/tmp'}/relay-home-`);
   try { check(home); } finally { rmSync(home, { recursive: true, force: true }); }
 }
 const run = (home, input) => Bun.spawnSync(['bash', script], {
