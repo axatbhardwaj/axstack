@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, chmodSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, chmodSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack-relay/hermes/axstack-reply.sh`;
 const quoted = 'Decision: "ship"?\nT3 reply: dev-env thread driver-123';
@@ -9,8 +9,8 @@ function withHome(check) {
   const home = mkdtempSync(`${Bun.env.TMPDIR || '/tmp'}/relay-home-`);
   try { check(home); } finally { rmSync(home, { recursive: true, force: true }); }
 }
-const run = (home, input) => Bun.spawnSync(['bash', script], {
-  env: { ...process.env, HOME: home }, stdin: Buffer.from(input), stdout: 'pipe', stderr: 'pipe',
+const run = (home, input, env = {}) => Bun.spawnSync(['bash', script], {
+  env: { ...process.env, HOME: home, ...env }, stdin: Buffer.from(input), stdout: 'pipe', stderr: 'pipe',
 });
 
 test('Hermes reply appends private JSON with the quoted-body digest and inert reply text', () => withHome((home) => {
@@ -67,3 +67,23 @@ for (const thread of ['mcp:dfae8cbe-0a65-42bc-86bc-6fa6945e82d6', 'dfae8cbe-0a65
     expect(JSON.parse(readFileSync(inbox(home, thread), 'utf8')).threadId).toBe(thread);
   }));
 }
+
+test('Hermes reply rolls back a short write before the next append', () => withHome((home) => {
+  expect(run(home, message(quoted, 'first')).exitCode).toBe(0);
+  const before = readFileSync(inbox(home), 'utf8');
+  // Use Python's existing startup seam to simulate a real kernel short write.
+  // The script still runs through its shipped Bash/stdin interface.
+  writeFileSync(`${home}/sitecustomize.py`, `import os
+original_write = os.write
+def short_write(fd, data):
+    return original_write(fd, data[:len(data) // 2])
+os.write = short_write
+`);
+  const failed = run(home, message(quoted, 'partial'), { PYTHONPATH: home });
+  expect(failed.exitCode).not.toBe(0);
+  expect(failed.stdout.toString()).toBe('');
+  expect(readFileSync(inbox(home), 'utf8')).toBe(before);
+  expect(run(home, message(quoted, 'next')).exitCode).toBe(0);
+  expect(readFileSync(inbox(home), 'utf8').trim().split('\n').map(JSON.parse).map(({ reply }) => reply))
+    .toEqual(['first', 'next']);
+}));

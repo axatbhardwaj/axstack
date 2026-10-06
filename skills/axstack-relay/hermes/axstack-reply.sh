@@ -3,7 +3,7 @@
 set -eu
 umask 077
 exec python3 -c '
-import datetime, hashlib, json, os, re, sys
+import datetime, fcntl, hashlib, json, os, re, sys
 
 message = sys.stdin.read()
 match = re.fullmatch(r"\[Replying to: \"(.*?)\"\]\r?\n\r?\n(.*)", message, re.S)
@@ -34,8 +34,15 @@ fd = os.open(os.path.join(path, thread + ".jsonl"),
 try:
     os.fchmod(fd, 0o600)
     payload = (json.dumps(entry, ensure_ascii=False) + "\n").encode()
-    if os.write(fd, payload) != len(payload):
-        sys.exit("reply failed: incomplete append")
+    # Serialize append and rollback so a short write cannot poison the next line.
+    fcntl.flock(fd, fcntl.LOCK_EX)
+    start = os.lseek(fd, 0, os.SEEK_END)
+    try:
+        if os.write(fd, payload) != len(payload):
+            raise OSError("incomplete append")
+    except OSError:
+        os.ftruncate(fd, start)
+        raise
 finally:
     os.close(fd)
 print("Reply saved for T3 driver " + env + " thread " + thread)
