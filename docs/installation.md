@@ -84,6 +84,9 @@ An offline, Git-less, or failed clone still installs the skills, reports
 `archify: unavailable (<reason>)`, and exits 0. An existing SHA mismatch fails.
 `AXSTACK_ARCHIFY_REPO` is a test-only repository override; fixtures use a local repository without network access.
 
+See [Account selection environment](concepts.md#account-selection-environment)
+for the picker cache directory and test-only usage endpoint variables.
+
 ## Role presets
 
 The selected bundle input is one of:
