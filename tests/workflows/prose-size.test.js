@@ -33,8 +33,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261004-diagram-skill T2 repair3: +280 bytes for explicit Axstack precedence, retry exclusion, and browser delegation.
   // 20261004-diagram-skill T3: +962 bytes for explain routing, requested formats, card counting, and finalize-bound QA.
   // 20261006-review-lane-self-heal T1: +1381 measured bytes for bounded wedge recovery and terminal duplicate retirement.
+  // 20261006-review-lane-self-heal T1 repair1: +798 bytes for any-pass recovery, exact-run interrupts, wait semantics and canary.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(296900);
+  expect(total).toBeLessThanOrEqual(297698);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

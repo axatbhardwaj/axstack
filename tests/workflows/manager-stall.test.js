@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { requires, prohibits, sentences } from './prose-contract.js';
 
 const compact = (path) =>
   readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
@@ -44,52 +44,79 @@ for (const sentence of [
 
 // Recovery policy checks against real source; no tracked-file mutation or live-runtime claim.
 const recoveryRules = [
-  ['verified wedge', [/wedged owner/i, /non-terminal run/i, /more than 60 minutes/i,
-    /verified inactivity/i, /its thread/i, /all its runs/i, /delegated tasks/i,
+  ['verified wedge for any lane pass', [/wedged (?:lane )?pass/i, /owner/i, /successor/i,
+    /duplicate/i, /non-?terminal runs?/i, /(?:more than|over|longer than) 60 minutes/i,
+    /(?:verified|confirmed) (?:inactivity|absence of activity)/i, /thread/i, /all.*runs/i, /delegated tasks/i,
     /descendant threads/i, /free of `?user_takeover`?/i],
-    'A wedged owner is free of user_takeover and has a non-terminal run with verified inactivity for more than 60 minutes across all its runs, its thread, delegated tasks and descendant threads.',
-    [/more than 60 minutes/i, 'less than 60 minutes']],
-  ['single ordered successor', [/exactly one successor/i, /recovers/i, /wedged owner/i,
-    /earliest-started live pass after the wedge/i, /native run start ordering/i],
-    'Using native run start ordering, exactly one successor, the earliest-started live pass after the wedge, recovers a wedged owner.',
-    [/earliest-started/i, 'latest-started']],
-  ['uncertain ordering holds', [/missing or tied ordering evidence/i, /holds/i,
-    /admission/i, /recovery/i],
+    'Any wedged lane pass, whether duplicate, successor or owner, is free of user_takeover and has a non-terminal run with verified inactivity for over 60 minutes across its thread, all its runs, delegated tasks and descendant threads.',
+    [/(?:more than|over|longer than) 60 minutes/i, 'less than 60 minutes']],
+  ['live excludes wedged successors', [/live/i, /pass/i, /non-?terminal runs?/i],
+    'For election, live passes have non-terminal runs and are free of a wedge.',
+    [/(?:not wedged|free of (?:a )?wedge)/i, 'already wedged'], /(?:not wedged|free of (?:a )?wedge)/i],
+  ['single ordered successor', [/(?:exactly one|a single) successor/i, /recover/i,
+    /wedged owner/i, /interrupted takeover/i, /live pass/i,
+    /\b(?:earliest(?:-started)?|started first)\b/i, /after.*wedge/i,
+    /native/i, /run/i, /start/i, /order/i],
+    'A single successor recovers a wedged owner or resumes an interrupted takeover: the live pass that started first after the wedge, selected by native ordering of run starts.',
+    [/\b(?:earliest(?:-started)?|started first)\b/i, 'latest-started']],
+  ['uncertain ordering holds', [/missing/i, /tied/i, /ordering evidence/i,
+    /holds?/i, /admission/i, /recovery/i],
     'Missing or tied ordering evidence holds recovery and admission until selection is verifiable.',
-    [/holds/i, 'permits']],
-  ['interrupt before cancellation and takeover', [/successor/i,
-    /first interrupts[\s\S]*t3_thread_interrupt[\s\S]*stable[\s\S]*clientRequestId/i,
-    /then cancels stale delegated tasks[\s\S]*task_cancel/i,
-    /reads back terminal state[\s\S]*owner and every descendant[\s\S]*before[\s\S]*takeover[\s\S]*continuity[\s\S]*becoming owner/i],
-    'The successor first interrupts the wedged owner run via t3_thread_interrupt with a stable clientRequestId, then cancels stale delegated tasks via task_cancel and reads back terminal state for the owner and every descendant before documenting takeover in continuity and becoming owner.',
+    [/holds?/i, 'permits']],
+  ['exact-run tree interrupt before takeover', [/successor/i, /interrupt/i, /owner/i,
+    /(?:descendant|child) threads?/i, /^(?!.*task_cancel).*t3_thread_interrupt/, /exact.*\brunId\b/i,
+    /stable/i, /clientRequestId/, /(?:read.?back|reads? back|confirms?).*terminal/i,
+    /whole tree/i, /before.*takeover/i, /continuity/i, /(?:becoming owner|assuming ownership)/i],
+    'The successor interrupts the owner and its child threads via t3_thread_interrupt with each exact runId and stable clientRequestIds, then confirms terminal state for the whole tree before documenting takeover in continuity and assuming ownership.',
     [/before/i, 'after']],
-  ['reconcile before admission', [/before any admission/i, /successor/i, /reconciles/i,
-    /wedged owner/i, /in-flight jobs/i, /GitHub/i, /evidence/i],
-    'The successor reconciles the wedged owner in-flight jobs against evidence and GitHub before any admission.',
-    [/before any admission/i, 'after admission']],
-  ['publication readback serves event', [/only a verdict/i, /already published and read back/i,
-    /counts as served/i],
-    'Only a verdict already published and read back counts as served for the recovered event.',
-    [/published and read back/i, 'published without readback']],
+  ['resume interrupted takeover', [/successor.*wedg(?:e[sd]?|ing)/i,
+    /between.*interrupt.*takeover|after.*interrupt.*before.*takeover/i,
+    /next.*(?:elected|selected).*live pass/i, /resum.*recovery/i, /terminal.*read.?back/i,
+    /interrupted owner/i, /excluded.*potentially.live.owner hold/i],
+    'When a successor wedges between interrupt and takeover, the next selected live pass resumes recovery using terminal readback of the interrupted owner, which is excluded from the potentially-live-owner hold.',
+    [/excluded/i, 'protected']],
+  ['recover wedged non-owners', [/owner-of-record/i, /successor/i, /immediately|right after/i,
+    /takeover/i, /wedged.*non.owner|non.owner.*wedged/i, /duplicates/i, /successors/i,
+    /interrupt/i, /terminal.*read.?back|read.?back.*terminal/i, /then.*retir/i, /teardown/i],
+    'The owner-of-record, including a successor right after takeover, interrupts wedged non-owner passes such as duplicates and failed successors with the same exact-run procedure and terminal readback, then retires them under Finite-session teardown.',
+    [/then/i, 'instead first']],
+  ['reconcile before admission', [/before (?:any )?admission/i, /successor/i, /reconcil/i,
+    /owner/i, /in.flight jobs|unfinished (?:PR )?jobs/i, /GitHub/i, /evidence/i],
+    'The successor reconciles the previous owner in-flight jobs against evidence and GitHub before admission.',
+    [/before (?:any )?admission/i, 'after admission']],
+  ['publication readback serves event', [/only.*verdict/i, /published/i,
+    /read back|readback/i, /counts? as served/i],
+    'Only a published verdict confirmed by readback counts as served for the recovered event.',
+    [/read back|readback/i, 'submission attempt']],
   ['unserved recovery is eligible', [/otherwise/i, /event/i, /unserved/i,
-    /INCOMPLETE/, /re-eligible/i],
-    'Otherwise classify the event as INCOMPLETE and unserved, keeping it re-eligible.',
-    [/re-eligible/i, 'ineligible']],
+    /INCOMPLETE/, /re-eligible|eligible again/i],
+    'Otherwise classify the event as INCOMPLETE and unserved, keeping it eligible again.',
+    [/re-eligible|eligible again/i, 'ineligible']],
   ['failed recovery holds and notifies once', [/failed interrupt/i, /unverified terminal state/i,
-    /keeps/i, /existing hold/i, /one deduplicated notification/i],
-    'A failed interrupt or unverified terminal state keeps the existing hold and sends one deduplicated notification under the recorded Notification policy.',
-    [/keeps/i, 'releases']],
-  ['other unknown liveness holds', [/outside[\s\S]*wedged-owner recovery/i,
+    /keeps?|retains?/i, /existing hold/i, /(?:one|a single).*deduplicated notification/i],
+    'A failed interrupt or unverified terminal state retains the existing hold and sends a single deduplicated notification under the recorded Notification policy.',
+    [/keeps?|retains?/i, 'releases']],
+  ['other unknown liveness holds', [/outside/i, /wedg.*recover/i,
     /unknown liveness/i, /blocks/i, /admission/i, /shared-record writes/i,
     /takeover/i, /cleanup/i, /recent/i],
-    'Outside verified wedged-owner recovery, unknown liveness blocks takeover, cleanup, shared-record writes and admission, including recent activity.',
+    'Outside verified wedged-pass recovery, unknown liveness blocks takeover, cleanup, shared-record writes and admission, including recent activity.',
     [/blocks/i, 'permits']],
+  ['inactive whole-tree wait is a wedge', [/wait/i, /(?:more than|over|longer than) 60 minutes/i,
+    /verified inactivity/i, /whole.tree/i, /wedge/i],
+    'A wait showing verified inactivity for over 60 minutes in its whole tree is a wedge, not a running wait.',
+    [/not (?:a )?running wait/i, 'still a running wait'], /not (?:a )?running wait/i],
+  ['canary interrupts and retires a wedged predecessor', [/canary/i, /reconcil/i,
+    /killed/i, /predecessor/i, /wedged.pass recovery/i, /(?:exactly one|a single) successor/i,
+    /interrupt/i, /retir/i, /wedged predecessor/i],
+    'The canary demonstrates wedged-pass recovery and reconciles a killed predecessor: a single successor must interrupt and retire a wedged predecessor.',
+    [/interrupt/i, 'preserve']],
 ];
 
-for (const [name, concepts, rewording, [direction, inversion]] of recoveryRules) {
+for (const [name, concepts, rewording, [direction, inversion], prohibition] of recoveryRules) {
   test(`wedged manager recovery: ${name}`, () => {
     const text = compact('skills/axstack/references/automations.md');
-    const accepts = (source) => requires(source, ...concepts);
+    const accepts = (source) => prohibition
+      ? prohibits(source, prohibition, ...concepts) : requires(source, ...concepts);
     expect(accepts(text)).toBe(true);
     const targets = sentences(text).filter(accepts);
     expect(targets.length).toBeGreaterThan(0);
@@ -97,7 +124,8 @@ for (const [name, concepts, rewording, [direction, inversion]] of recoveryRules)
       source.replace(target, replacement(target)), text);
     expect(accepts(substitute(() => ''))).toBe(false);
     for (const concept of concepts) {
-      expect(accepts(substitute((target) => target.replace(concept, '')))).toBe(false);
+      const occurrences = new RegExp(concept.source, `${concept.flags}g`);
+      expect(accepts(substitute((target) => target.replace(occurrences, '')))).toBe(false);
     }
     expect(accepts(substitute((target) => target.replace(direction, inversion)))).toBe(false);
     expect(accepts(substitute(() => rewording))).toBe(true);

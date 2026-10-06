@@ -54,22 +54,29 @@ events and the unserved count. If a duplicate finds a stalled owner idle at its
 prompt with a final turn lacking a completion receipt for more than five
 minutes (nudged or not), record it in that private note and send one deduplicated
 notification under the recorded `Notification policy`.
-A **wedged owner** has a non-terminal run with more than 60 minutes of verified
-inactivity across its thread, all its runs, delegated tasks and descendant
-threads, and is free of `user_takeover`.
-Exactly one successor recovers a wedged owner: the earliest-started live pass
-after the wedge, selected by native run start ordering; missing or tied ordering
-evidence holds admission and recovery.
-The successor first interrupts the wedged owner's run with `t3_thread_interrupt`
-using a stable `clientRequestId`, then cancels stale delegated tasks with
-`task_cancel` and reads back terminal state for the owner and every descendant
+A **wedged lane pass**, whether owner, successor or duplicate, has a non-terminal
+run with more than 60 minutes of verified inactivity across its thread, all its
+runs, delegated tasks and descendant threads, and is free of `user_takeover`.
+A live pass has a non-terminal run and is not wedged.
+Exactly one successor recovers a wedged owner or resumes an interrupted takeover:
+the earliest-started live pass after the wedge, selected by native run start
+ordering; missing or tied ordering evidence holds admission and recovery.
+The successor interrupts the owner and its descendant threads with
+`t3_thread_interrupt`, naming each exact `runId` and a stable `clientRequestId`
+per run, and reads back terminal state for the whole tree
 before recording the takeover in continuity and becoming owner.
-Before any admission, the successor reconciles the wedged owner's in-flight
+If a successor wedges between interrupt and takeover, the next elected live pass
+resumes recovery from terminal readback of the interrupted owner, which is
+excluded from the potentially-live-owner hold.
+The owner-of-record, including a successor immediately after takeover, interrupts
+wedged non-owner passes (duplicates or failed successors) using the same exact-run
+procedure and terminal readback, then retires them under Finite-session teardown.
+Before any admission, the successor reconciles the previous owner's in-flight
 jobs from GitHub and evidence. Only a verdict already published and read back
 counts as served. Otherwise the event is unserved/`INCOMPLETE` and re-eligible.
 A failed interrupt or unverified terminal state keeps the existing hold plus
 one deduplicated notification under the recorded `Notification policy`.
-Outside the wedged-owner recovery above, unknown liveness blocks admission,
+Outside the wedged-pass recovery above, unknown liveness blocks admission,
 shared-record writes, takeover and cleanup, including when activity is recent.
 Preserve user-taken-over threads.
 This is prompt policy, not an atomic lock: the overlap canary must demonstrate
@@ -148,7 +155,9 @@ under [T3 runtime](t3-runtime.md). For a worker's own brief question, confirm th
 brief once.
 A second brief ask follows the five-minute stop rule, never an open-ended hold.
 An idle final turn without a valid completion
-receipt is incomplete, not successful. A started coordinator waiting on its
+receipt is incomplete, not successful. A wait with more than 60 minutes of
+verified inactivity across its whole tree is a wedge, not a running wait.
+A started coordinator waiting on its
 reviewers (a live reviewer task or running wait) is not idle and is never
 stopped for waiting. Reconcile terminal failure and all descendants before
 recording an event unserved and re-admissible.
@@ -276,9 +285,10 @@ or separate model gate.
 
 ## Finite-session teardown
 
-Only the owner-of-record pass retires settled predecessor passes and terminal
-duplicate passes (terminal run, no descendants, wrote only their own pass note),
-including duplicates started after the owner or immediately after successor takeover.
+Only the owner-of-record pass retires settled predecessor passes and qualifying
+terminal duplicates, including duplicates newer than the owner and immediately
+after successor takeover.
+Qualifying duplicates have a terminal run, no descendants and only their own pass note.
 Each pass reports the retained worktree count.
 Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
@@ -315,7 +325,8 @@ removal, not settled execution capacity. The next pass retires this settled pass
 
 The canary runs two overlapping `run_scheduled_task_now` passes and proves one
 admission owner per PR. The canary reviews or correctly no-ops one real PR event.
-The canary reconciles a killed predecessor.
+The canary reconciles a killed predecessor and demonstrates wedged-pass recovery:
+exactly one successor interrupts and retires a wedged predecessor.
 With a temporary limit equal to the current count, the canary disables the
 schedule and verifies that the following interval creates zero new pass worktrees.
 The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.
