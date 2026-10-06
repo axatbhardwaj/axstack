@@ -10,6 +10,62 @@ Axstack gives your current T3 thread a way to scope work, build it with tests, a
 review the exact result. T3 Code provides worktrees, agent threads, and visible
 coordination. You can start at the phase you need.
 
+## Why Axstack
+
+| Failure mode | How Axstack responds |
+| --- | --- |
+| Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
+| Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and mixed peer review uses two isolated Sol-high sessions at the exact revision. |
+| Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
+| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
+
+## Prerequisites
+
+Axstack supports only Linux hosts. You need Bun >=1.3.14, Git, the GitHub
+CLI (`gh`) with `gh stack`, and T3 Code `0.0.46-nightly.20261003.2610` or newer
+on PATH. The providers selected by your preset must be available inside T3.
+
+Choose one explicit preset (each contains all role IDs): [mixed](profiles/presets/mixed.json)
+(recommended), [codex-only](profiles/presets/codex-only.json), or
+[claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
+implementation review; single-provider presets have workflow limits and are
+not automatic cross-class or cross-provider fallbacks when a model is unavailable. See
+[workflow and routing details](docs/workflows.md).
+
+## Quick start
+
+Install the CLI and skills, then check your host. This example targets Codex:
+
+```sh
+bun add --global axstack
+export PATH="$HOME/.bun/bin:$PATH"
+axstack install --harness codex --preset mixed --yes
+axstack check --harness codex
+```
+
+Reload the harness's skills in T3 after installation. A green check verifies
+local capabilities and installed files; it does not prove live provider readiness,
+schedule activation or mobile delivery. See [installation](docs/installation.md)
+for other harnesses, custom paths, upgrades, conflicts and uninstalling.
+
+### First task
+
+Open your repository as a T3 project and start a driver thread.
+Codex invokes skills with `$skill`, and Claude uses `/skill`.
+For a small repair, send this request (replace `$` with `/` in Claude):
+
+```text
+$axstack-implement Fix the empty-state message in the existing list view within one PR, preserve list behavior, and verify the displayed result.
+```
+
+Small, bounded changes can begin with your request or an existing issue;
+substantial work needs an approved spec and matching tickets before
+implementation. Research, explanation, and peer review can start directly.
+The driver returns a candidate revision, test evidence and unverified boundaries.
+You make decisions at holds and substantial-spec approval.
+Follow [getting started](docs/getting-started.md) for the full first-task journey
+and [guides](docs/guides.md) for features, reviews, watches, debugging and releases.
+
 ## What you can do
 
 | Layer | Skill | What it does |
@@ -33,71 +89,6 @@ coordination. You can start at the phase you need.
 
 Interactive viewers use [archify](https://github.com/tt-a1i/archify) (MIT).
 
-Small, bounded changes can begin with your request or an existing issue;
-substantial work needs an approved spec and matching tickets before
-implementation. Research, explanation, and peer review can start directly.
-
-## Why Axstack
-
-| Failure mode | How Axstack responds |
-| --- | --- |
-| Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
-| Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and mixed peer review uses two isolated Sol-high sessions at the exact revision. |
-| Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
-| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
-
-## Quick start
-
-> [!NOTE]
-> You need Bun >=1.3.14, Git, the GitHub CLI (`gh`) with `gh stack`, and a
-> running T3 Code `0.0.46-nightly.20261003.2610` or newer.
-> The agents selected by your preset must also be available through T3.
-
-Install the CLI and skills. This example targets Codex:
-
-```sh
-bun add --global axstack
-axstack check --harness codex
-axstack install --harness codex --preset mixed --yes
-```
-
-Open a T3 thread and ask for the phase you need:
-
-```text
-$axstack-align Help me scope account recovery.
-$axstack-implement Build the task we agreed on.
-$axstack-review Review this pull request: <PR URL>
-$axstack-review Find issues in <paths> at <commit SHA>.
-$axstack-watch Monitor this PR without making changes: <PR URL>
-$axstack-watch Watch every PR raised by this chat until all merge or close
-```
-
-<details>
-<summary>Codex installation notes</summary>
-
-Codex skills default to the shared `~/.agents/skills` root. The owned
-`AGENTS.md` block stays under `$CODEX_HOME` (default `~/.codex`). A default
-install retires only unchanged manifest-owned legacy skills; `--skills-dir`
-sets an explicit target without automatic migration.
-
-</details>
-
-<details>
-<summary>Other harnesses</summary>
-
-Use `--harness claude`, `opencode`, or `antigravity` with `axstack check` and
-`axstack install`, or provide explicit skill and instruction paths. Installation
-adds an owned instruction block and preserves unrelated content. It does not
-enable schedules or prove that every configured model is available. T3 uses
-its managed Antigravity runtime with separate browser sign-in; the IDE/`agy`
-skill paths do not configure that runtime.
-
-</details>
-
-Follow [getting started](docs/getting-started.md) for installation through a first bounded task.
-See [installation](docs/installation.md) for source installs, custom paths,
-upgrades, conflicts, and uninstalling.
-
 ## How work stays controlled
 
 - The current T3 thread drives scope, coordination, and publication. Delegation uses
@@ -110,18 +101,6 @@ upgrades, conflicts, and uninstalling.
   unavailable models, and serious risks surface as holds. For own PRs, automatic
   merge is the default under the
   [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
-
-Choose one explicit preset (each contains all role IDs): [mixed](profiles/presets/mixed.json)
-(recommended), [codex-only](profiles/presets/codex-only.json), or
-[claude-only](profiles/presets/claude-only.json). Mixed supports cross-provider
-implementation review; single-provider presets have workflow limits and are
-not automatic cross-class or cross-provider fallbacks when a model is unavailable. See
-[workflow and routing details](docs/workflows.md).
-
-In `mixed` and `claude-only`, auditing, requirements/code/web research,
-execution exploration, and the optional monitor use the Claude Sonnet class at high effort.
-Auditing, code research, and execution exploration have independent Sol high
-pair seats in `mixed` and `codex-only`; `claude-only` records them as absent.
 
 ## Optional PR automation
 
@@ -149,11 +128,18 @@ Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions,
 
 ## Documentation
 
-- [Installation and configuration](docs/installation.md)
-- [Host operations](docs/host-operations.md)
-- [Workflows, review policy, and model routing](docs/workflows.md)
-- [PR scope and sizing](skills/axstack/references/pr-shape.md)
-- [Releases](https://github.com/axatbhardwaj/axstack/releases)
+| Page | Use it for |
+| --- | --- |
+| [Getting started](docs/getting-started.md) | Install, understand `check`, and run a first bounded task. |
+| [Concepts](docs/concepts.md) | Driver threads, phases, roles, presets, holds, evidence and account selection. |
+| [Guides](docs/guides.md) | Step-by-step journeys for features, fixes, reviews, watches, debugging and releases. |
+| [Workflows](docs/workflows.md) | Routing, review policy, merge boundaries, exclusions and accepted risks. |
+| [Installation](docs/installation.md) | CLI commands, harness paths, configuration, upgrades and troubleshooting. |
+| [Host operations](docs/host-operations.md) | Configure your host, provider runtimes, remote access and automations. |
+| [Skill writing](docs/skill-writing.md) | Contribute self-contained skills and contract tests. |
+
+See [PR scope and sizing](skills/axstack/references/pr-shape.md) for candidate
+shape and [Releases](https://github.com/axatbhardwaj/axstack/releases) for release history.
 
 ## License
 

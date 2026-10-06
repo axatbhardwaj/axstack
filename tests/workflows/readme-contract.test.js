@@ -1,15 +1,15 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
+import { relativeLinks } from './public-docs.js';
 
 const root = `${import.meta.dir}/../..`;
 const readme = readFileSync(`${root}/README.md`, 'utf8');
+const prose = readme.replace(/\s+/g, ' ');
 
-test('README leads with the workflow and groups linked skills by layer', () => {
-  const intro = readme.slice(0, readme.indexOf('## What you can do'));
-  expect(intro).toMatch(/align → spec → tickets → implement → review → watch/);
-
-  const skills = readme.slice(readme.indexOf('## What you can do'), readme.indexOf('## Why Axstack'));
+test('README shows the workflow and groups linked skills by layer', () => {
+  expect(readme.split(/^## /m)[0]).toMatch(/align → spec → tickets → implement → review → watch/);
+  const skills = readme.split('\n').filter((line) => /^\| (?:Plan|Build|Verify|Operate|Understand) \|/.test(line)).join('\n');
   for (const layer of ['Plan', 'Build', 'Verify', 'Operate', 'Understand']) {
     expect(skills).toContain(`| ${layer} |`);
   }
@@ -31,8 +31,7 @@ test('correct is discoverable in the README table and workflow direct routes', (
   expect(direct).toContain('`axstack-correct`');
 });
 
-test('README explains four failure modes and gives a compact first run', () => {
-  const why = readme.slice(readme.indexOf('## Why Axstack'), readme.indexOf('## Quick start'));
+test('README explains four failure modes', () => {
   const fixes = new Map([
     ['Wrong thing built', /align[^|]*arena/i],
     ['Nobody really reviewed it', /TDD[^|]*review[^|]*revision/i],
@@ -40,26 +39,62 @@ test('README explains four failure modes and gives a compact first run', () => {
     ['Agents left a mess', /T3[^|]*one writer[^|]*cleanup[^|]*watched own PRs merge/i],
   ]);
   for (const [failure, fix] of fixes) {
-    const row = why.split('\n').find((line) => line.startsWith(`| ${failure} |`));
+    const row = readme.split('\n').find((line) => line.startsWith(`| ${failure} |`));
     expect(row, `${failure} needs a fix`).toMatch(fix);
   }
-  expect(readme).toContain('> [!NOTE]');
-  expect(readme).toContain('<details>');
-  expect(readme).toContain('axstack check --harness codex');
-  expect(readme).toContain('axstack install --harness codex --preset mixed --yes');
 });
 
 test('README preserves preset and merge boundaries', () => {
-  const presets = readme.slice(readme.indexOf('Choose one explicit preset'), readme.indexOf('## Optional PR automation'));
-  expect(presets).toMatch(/single-provider presets[^.]*not automatic cross-class or cross-provider fallbacks when a model is unavailable/i);
-  const why = readme.slice(readme.indexOf('## Why Axstack'), readme.indexOf('## Quick start'));
-  checkRule(why, (text) => requires(text,
+  expect(readme).toMatch(/single-provider presets[^.]*not automatic cross-class or cross-provider fallbacks when a model is unavailable/i);
+  checkRule(prose, (text) => requires(text,
     /mixed/i, /authored review/i, /cross-provider/i, /peer review/i,
     /two isolated Sol[- ]high sessions/i),
   'In mixed, authored review is cross-provider and peer review uses two isolated Sol-high sessions to check the exact revision.',
   [[/authored review/i, 'peer review'], [/isolated/i, 'shared']]);
-  const automation = readme.slice(readme.indexOf('## Optional PR automation'), readme.indexOf('## Some notes'));
-  expect(automation).toMatch(/review automation never merges/i);
+  expect(readme).toMatch(/review automation never merges/i);
   expect(readme).toMatch(/automatic\s+merge is the default under the[\s\S]*watch predicate/i);
   expect(readme).toContain('[Releases](https://github.com/axatbhardwaj/axstack/releases)');
+});
+
+test('README links every target documentation page', () => {
+  for (const page of ['getting-started', 'concepts', 'guides', 'workflows', 'installation', 'host-operations', 'skill-writing']) {
+    const path = `docs/${page}.md`;
+    const linked = (text) => relativeLinks(text).some((href) => href.split('#')[0] === path);
+    expect(existsSync(`${root}/${path}`), path).toBe(true);
+    expect(linked(readme), path).toBe(true);
+    // Mutate the real README in memory, including repeated links to a page.
+    expect(linked(readme.replaceAll(path, 'docs/missing.md')), `${path}: removed target`).toBe(false);
+    expect(linked(readme.replaceAll(path, `${path}#section`)), `${path}: anchor variant`).toBe(true);
+    expect(linked(readme.replace(/\[[^\]]+\]\(/g, '[Read more](')), `${path}: renamed labels`).toBe(true);
+  }
+});
+
+test('README installs skills before checking them', () => {
+  const commands = readme.match(/```sh\n([\s\S]*?)```/)?.[1].trim().split('\n');
+  expect(commands).toEqual([
+    'bun add --global axstack',
+    'export PATH="$HOME/.bun/bin:$PATH"',
+    'axstack install --harness codex --preset mixed --yes',
+    'axstack check --harness codex',
+  ]);
+});
+
+test('README states Linux as the only supported host', () => {
+  const concepts = [/supports? only|only supported/i, /Linux/i, /host/i];
+  const accepts = (text) => sentences(text).some((unit) => requires(unit, ...concepts)
+    && !/\b(?:unless|except|plus|also)\b/i.test(unit));
+  checkRule(prose, accepts,
+    'Linux is the only supported host OS.',
+    [[/supports? only|only supported/i, 'supports'], [/Linux/i, 'macOS'], [/Linux/i, 'Linux plus macOS']], concepts);
+});
+
+test('README gives a bounded first task and both harness invocation forms', () => {
+  const task = [/\$axstack-implement/i, /one PR/i, /preserve/i, /verify/i];
+  checkRule(prose, (text) => requires(text, ...task),
+    '$axstack-implement Repair the empty-state message within one PR, preserve list behavior, and verify the displayed result.',
+    [[/one PR/i, 'unbounded PRs'], [/verify/i, 'skip checking']], task);
+  const invocation = [/Codex/i, /\$skill/i, /Claude/i, /\/skill/i];
+  checkRule(prose, (text) => requires(text, ...invocation),
+    'Invoke $skill with Codex and /skill with Claude.',
+    [[/Codex/i, 'Other'], [/Claude/i, 'Other']], invocation);
 });
