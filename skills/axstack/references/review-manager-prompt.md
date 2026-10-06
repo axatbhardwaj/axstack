@@ -9,10 +9,13 @@ which loads `../axstack/references/automations.md` relatively. Read that contrac
 and [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
 then follow [Provider bindings](t3-runtime.md#preflight-and-binding) for shared schedule
 recreation and recorded instance update before verifying the recorded `axstack-owner`
-binding before admission. Discover all eligible peer-review events and admit within measured host capacity.
+binding before admission. At pass start, every pass, including a duplicate,
+settles finished predecessor and duplicate pass threads under the Finite-session
+teardown guards before admission. Discover all eligible peer-review events and admit within measured host capacity.
 Use host-clone detached per-PR checkouts; preserve exact ownership and receipts.
-Retire settled predecessors, report retained worktree count, and disable the
-schedule and hold past its authorized limit. Save and read back continuity at
+Report retained worktree count, and disable the schedule and hold past its
+authorized limit. Only the owner retires settled predecessors and saves and
+reads back continuity at
 `~/.local/share/axstack/runs/review-manager/progress.md` using
 `run-record.md#review-manager-continuity-template`; settle descendants and end
 the finite turn. Stay quiet when unchanged. Never check out a PR branch here.

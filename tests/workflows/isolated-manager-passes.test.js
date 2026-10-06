@@ -127,10 +127,10 @@ const duplicateRules = [
     'Qualifying duplicates have a terminal run, zero descendants and only wrote their own pass note.',
     [[/terminal run/i, 'non-terminal run'], [/(?:no|zero) descendants/i, 'active descendants'],
       [/only.*own pass note/i, 'shared continuity writes']]],
-  ['retirement settles sidebar threads',
+  ['retirement requires settled sidebar threads',
     (text) => requires(text, /retir/i, /\b(?:settle[sd]?|archives?)\b[^()]*threads?/i, /duplicates?/i,
       /threads?/i, /t3_thread_organize/i, /before|ahead of/i, /guarded/i, /Git/i, /worktree removal/i),
-    'Retiring a duplicate archives its thread via t3_thread_organize (settle/archive is metadata only) ahead of separate guarded Git worktree removal.',
+    'Retirement requires duplicate threads already settled via t3_thread_organize (settle/archive is metadata only) ahead of separate guarded Git worktree removal.',
     [[/\bsettle[sd]?\b|\barchives?\b/i, 'leaves unsettled'], [/before|ahead of/i, 'after']]],
 ];
 for (const [name, accepts, rewording, inversions] of duplicateRules) {

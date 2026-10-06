@@ -70,8 +70,10 @@ The earlier pass wins only when ordering evidence exists.
 Missing ordering or ownership evidence holds admission and never guesses a winner.
 
 Once identified as a duplicate, the new pass does no PR work, makes no further
-shared-record write and touches no live or unsettled resource owned by the
-live manager. A duplicate pass admits nothing and runs read-only discovery
+shared-record write and touches no PR-job thread or descendant owned by the
+live manager. A duplicate's only mutation is pass-start settlement of eligible
+terminal lane pass threads under [Finite-session teardown](#finite-session-teardown).
+A duplicate pass admits nothing and runs read-only discovery
 into its own pass note in its private evidence folder, recording new eligible
 events and the unserved count. If a duplicate finds a stalled owner idle at its
 prompt with a final turn lacking a completion receipt for more than five
@@ -328,6 +330,16 @@ or separate model gate.
 
 ## Finite-session teardown
 
+After lane reconciliation at pass start, every pass, including a duplicate,
+uses `t3_thread_organize` to settle finished predecessor and duplicate lane pass
+threads as metadata only, before discovery or admission.
+Settle another lane pass thread only with terminal run evidence, no unsettled
+descendants, no recorded open hold naming it, no user takeover, and exclusion of
+the live owner and current pass.
+Leave held or stuck pass threads unsettled.
+Settlement is separate from owner-only worktree removal, branch deletion and
+continuity writes.
+
 Only the owner-of-record pass retires settled predecessor passes and qualifying
 terminal duplicates, including duplicates newer than the owner and immediately
 after successor takeover.
@@ -340,8 +352,8 @@ Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 The orphan sweep covers the run record's repositories plus registered repositories on this host.
-Retirement settles duplicate threads with `t3_thread_organize` (settle/archive
-changes metadata only) before separate guarded Git worktree removal.
+Retirement requires duplicate threads already settled with `t3_thread_organize`
+(settle/archive changes metadata only) before separate guarded Git worktree removal.
 Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
 
