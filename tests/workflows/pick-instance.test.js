@@ -190,3 +190,51 @@ test('429 uses expired per-account usage and preserves exhausted-account exclusi
   expect(result.data.instances[0]).toMatchObject({ score: 240, state: 'stale' });
   expect(result.data.instances[1]).toMatchObject({ score: null, state: 'excluded', stale: true });
 });
+
+test('corrupt cache cannot block a healthy usage request', async () => {
+  for (const cache of [null, { invalid: true }]) {
+    const f = fixture('codex', [{ id: 'healthy', body: codexUsage('pro', 30, 40) }]);
+    mkdirSync(`${f.home}/cache/axstack`, { recursive: true });
+    const key = JSON.stringify(['codex', `${f.home}/account-0`]);
+    writeFileSync(`${f.home}/cache/axstack/usage.json`, JSON.stringify(cache === null ? null : {
+      [key]: { updatedAt: Date.now(), utilization: 'invalid', tier: 'pro' },
+    }));
+    const result = await f.run();
+    expect(result.status).toBe(0);
+    expect(result.data.instances[0]).toMatchObject({ score: 240, state: 'fresh' });
+    expect(f.requests.length).toBe(1);
+  }
+});
+
+test('expired cache refreshes successfully and network failure retains the last usage', async () => {
+  const f = fixture('claude', [{ id: 'account', tier: 'default_claude_max_20x', body: claudeUsage(10, 40) }]);
+  expect((await f.run()).data.instances[0].score).toBe(240);
+  expireCache(f);
+  f.replies.set('account', { body: claudeUsage(80, 20) });
+  expect((await f.run()).data.instances[0]).toMatchObject({ score: 80, state: 'fresh' });
+  expect(f.requests.length).toBe(2);
+  expireCache(f);
+  servers.pop().stop(true);
+  const result = await f.run();
+  expect(result.status).toBe(0);
+  expect(result.data.instances[0]).toMatchObject({ score: 80, state: 'stale' });
+});
+
+test('Codex homePath fallback and tilde expansion reach the configured credentials', async () => {
+  const f = fixture('codex', [{ id: 'home-only', body: codexUsage('prolite', 20, 10) }]);
+  f.instances[0].config = { homePath: '~/account-0' };
+  writeFileSync(f.settings, JSON.stringify({ providerInstances: f.instances }));
+  const result = await f.run(['--settings', f.settings, '--json']);
+  expect(result.status).toBe(0);
+  expect(result.data.instances[0]).toMatchObject({ score: 80, state: 'fresh' });
+});
+
+test('unknown tiers cannot borrow weights from a different provider', async () => {
+  for (const provider of ['claude', 'codex']) {
+    const f = fixture(provider, [{ id: 'unknown-tier', tier: 'pro', body: provider === 'claude'
+      ? claudeUsage(20, 30) : codexUsage('default_claude_max_20x', 20, 30) }]);
+    const result = await f.run();
+    expect(result.status).toBe(0);
+    expect(result.data.instances[0].score).toBe(70);
+  }
+});

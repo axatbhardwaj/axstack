@@ -40,9 +40,14 @@ the revised scope and plan.
 
 Validate the configured provider and model at actual launch. If it is
 unavailable or exhausted, pause affected work, record the gap, and ask the
-user. Never infer a route from quota state or subscription entitlement. Every
+user. Only same-provider, same-model account selection among instances of one
+driver may use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding).
+An exhausted account with no eligible sibling still holds; this permits no
+mid-thread failover or provider/model substitution.
+Never infer any other route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives are not
 defaults. Rejection, timeout, quota and auth failures hold affected work.
+Substitution here means changing provider or model, excluding that account selection.
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
 or recovery; resolve models from the saved capabilities snapshot and verify
 requested and effective settings separately.

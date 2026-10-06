@@ -1,6 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const weights = { default_claude_max_20x: 4, default_claude_max_5x: 1, pro: 4, prolite: 1 };
+const weights = {
+  claude: { default_claude_max_20x: 4, default_claude_max_5x: 1 }, codex: { pro: 4, prolite: 1 },
+};
 const drivers = { claude: 'claudeAgent', codex: 'codex' };
 const home = process.env.HOME;
 const expandHome = (path) => path === '~' ? home : path.startsWith('~/') ? `${home}/${path.slice(2)}` : path;
@@ -9,6 +11,7 @@ const cacheDir = `${process.env.XDG_CACHE_HOME || `${home}/.cache`}/axstack`;
 const cachePath = `${cacheDir}/usage.json`;
 let cache;
 try { cache = readJson(cachePath); } catch { cache = {}; }
+if (!cache || typeof cache !== 'object' || Array.isArray(cache)) cache = {};
 
 function argumentsFrom(args) {
   const options = {};
@@ -49,6 +52,8 @@ async function account(instance, provider) {
     : process.env.AXSTACK_CODEX_USAGE_URL || 'https://chatgpt.com/backend-api/wham/usage';
   const key = JSON.stringify([provider, dir]);
   let value = cache[key];
+  if (!Number.isFinite(value?.updatedAt) || !(value.utilization === null || Number.isFinite(value.utilization))
+    || typeof value.limitReached !== 'boolean') value = undefined;
   let state = 'cached';
   if (!value || Date.now() - value.updatedAt >= 5 * 60 * 1000) {
     try {
@@ -77,7 +82,7 @@ async function account(instance, provider) {
   if (value.utilization >= 95 || value.limitReached) {
     return { instanceId: instance.id, score: null, state: 'excluded', stale, reason: 'usage limit' };
   }
-  const weight = Object.hasOwn(weights, value.tier) ? weights[value.tier] : 1;
+  const weight = Object.hasOwn(weights[provider], value.tier) ? weights[provider][value.tier] : 1;
   return { instanceId: instance.id, score: value.utilization === null ? weight : (100 - value.utilization) * weight,
     state: value.utilization === null ? 'unknown' : state, stale };
 }

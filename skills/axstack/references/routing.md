@@ -10,6 +10,9 @@ Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
 skills root, or an explicit user selection in the run record. Missing or contradictory sources are
 a setup gap: hold. Never infer from live profiles, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
+Only same-provider, same-model account selection among instances of one driver
+may use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding);
+provider/model substitution still requires the user's decision.
 
 At start, snapshot all role IDs from installed `skills/axstack/roles.json`,
 including provider/modelClass/model/mode/effort and intentional absences.
@@ -35,6 +38,8 @@ An unavailable provider, model, role, mode or effort holds that role with no sub
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Replacing a session needs an explicit user decision and revalidation.
 Timeout, quota, auth and rejection hold affected work.
+An exhausted account with no eligible sibling still holds; bounded account
+selection occurs before dispatch or launch, never as mid-thread failover.
 [Model discipline](contracts.md#model-discipline) governs optional seats,
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
 single-provider absence and mixed Codex+Claude fan-out.

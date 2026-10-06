@@ -16,8 +16,17 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Provider bindings must map codex→`codex`, claude→`claudeAgent`, grok→`grok`,
-antigravity→`antigravity`. Map `modeId` to `runtimeMode:full-access` and effort
+Canonical fallback bindings map codex→`codex`, claude→`claudeAgent`, grok→`grok`,
+antigravity→`antigravity`.
+At each dispatch or launch, claude and codex must bind to the instanceId printed
+by `scripts/pick-instance.js --provider <provider>`.
+On script failure, fall back to the canonical instance and validate availability.
+Record the chosen instanceId and a pointer to saved `--json` output in the dispatch record.
+Only same-provider, same-model account selection among instances of one driver
+is permitted, with provider, model, class and effort rules required to remain unchanged.
+An exhausted account with no eligible sibling must hold.
+This selects accounts before dispatch, never mid-thread failover.
+Map `modeId` to `runtimeMode:full-access` and effort
 to `options:[{id,value}]`. Stored permission intent is neither effective parity
 nor a security boundary.
 
@@ -27,6 +36,7 @@ A preset model must be used as given.
 codex `gpt-<N>-<class>`, claude `claude-<class>-<N>-<N>`. Use
 `scripts/resolve-models.js --provider` with the saved capabilities JSON path;
 a missing or malformed catalog holds resolution.
+Model catalog resolution retains the canonical instance IDs above.
 
 A `model:null` role lacking a class must use the first model listed for its
 provider in saved capabilities only for grok and antigravity (launch-by-agent-id
@@ -40,6 +50,8 @@ absence and must hold; never use a provider default for that role.
 
 An unavailable provider, model, role, mode or effort must hold that role with
 no substitution. Auth, quota, timeout and rejection do not select an alternative.
+Here alternative means a provider or model substitution, excluding the bounded
+same-provider, same-model account selection above.
 Intentional absent seats remain recorded absences; availability is runtime proof.
 
 Codex effort must use option ID `reasoningEffort`.
