@@ -13,7 +13,6 @@ test('installation reference covers CLI help flags and commands', () => {
   const doc = installation();
   for (const flag of new Set(help.stdout.toString().match(/--[a-z]+(?:-[a-z]+)*/g))) {
     expect(doc, flag).toContain(flag);
-    expect(doc.replaceAll(flag, ''), `${flag} omission`).not.toContain(flag);
   }
   for (const command of ['install', 'check', 'uninstall', '--help', '--version', '-h', '-V']) {
     expect(doc).toContain(`axstack ${command}`);
@@ -40,10 +39,16 @@ for (const [name, concepts, rewording] of [
 }
 
 for (const [name, concepts, rewording] of [
-  ['argument and validation errors', [/install/i, /exit\w* 1/i, /argument/i, /validation/i],
-    'Install exits 1 for argument or validation errors.'],
-  ['ownership and transaction failures', [/install/i, /exit\w* 1/i, /ownership/i, /transaction/i],
-    'Install exits 1 for ownership or transaction failures.'],
+  ['argument and validation errors', [/\binstall\b/i, /exit\w* 1/i, /argument/i, /validation/i,
+    /unknown command or flag/i, /missing flag value/i, /--profile/, /Claude settings flags/i,
+    /Bun below/i, /preset/i, /skills target/i, /tools path/i, /bundle or manifest/i,
+    /unsafe path or symlink/i, /overlapping/i, /home write/i, /--yes/],
+    'Install exits 1 for argument or validation errors: unknown command or flag, missing flag value, obsolete --profile, conflicting Claude settings flags, Bun below the floor, invalid preset, unresolved skills target or tools path, malformed bundle or manifest, unsafe path or symlink, overlapping roots, or refused home write without --yes.'],
+  ['ownership and transaction failures', [/\binstall\b/i, /exit\w* 1/i, /ownership/i, /transaction/i,
+    /unknown destination/i, /--force/, /instruction.path binding/i, /archify record/i,
+    /archify SHA mismatch/i, /settings\/sidecar conflict/i, /concurrent edit/i,
+    /filesystem failure/i, /failed recovery/i],
+    'Install exits 1 for ownership or transaction failures: unknown destination without --force, conflicting instruction-path binding, edited archify record, archify SHA mismatch, Claude settings/sidecar conflict, concurrent edit, filesystem failure, or failed recovery.'],
   ['instruction conflict', [/install/i, /exit\w* 1/i, /instruction/i, /conflict/i],
     'Install exits 1 for an instruction conflict.'],
   ['roles not ready', [/install/i, /exit\w* 1/i, /roles/i, /ready/i],
@@ -57,7 +62,7 @@ for (const [name, concepts, rewording] of [
     // Mask only the expected negative status, rather than ignoring all denials.
     const accepts = (text) => requires(text.replace(/roles are not ready/gi, 'roles are unready'),
       ...concepts.map((concept) => concept.source === 'ready' ? /ready|unready/i : concept));
-    checkRule(installation().replace(/\s+/g, ' '), accepts, rewording, [[/exit\w* 1/i, 'exits 0']]);
+    checkRule(installation().replace(/\s+/g, ' '), accepts, rewording, [[/exit\w* 1/i, 'exits 0']], concepts);
   });
 }
 

@@ -265,16 +265,17 @@ test('owned-support: current upgrade guidance preserves ownership and inert prov
   const section = doc.match(/^## Upgrading and legacy cleanup\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1];
   expect(section, 'installer legacy-cleanup pointer has a current owner').toBeDefined();
   const text = section.replace(/\s+/g, ' ');
-  for (const [concepts, rewording, direction, inversion] of [
-    [[/upgrade/i, /pristine/i, /retired/i, /copies/i, /\b(?:removes|deletes)\b/i, /--force/],
-      'An ordinary upgrade removes pristine retired skill copies without --force.', /\b(?:removes|deletes)\b/i, 'retains'],
+  for (const [concepts, rewording, inversions] of [
+    [[/upgrade/i, /pristine/i, /retired/i, /copies/i, /\b(?:removes|deletes)\b/i, /without `?--force/i],
+      'An ordinary upgrade removes pristine retired skill copies without --force.', [[/\b(?:removes|deletes)\b/i, 'retains'], [/without `?--force`?/i, 'only with --force']]],
     [[/edited/i, /missing/i, /copies/i, /retain\w*/i, /stale/i],
-      'Edited or already-missing retired copies retain their recorded stale entries.', /retain\w*/i, 'discard'],
+      'Edited or already-missing retired copies retain their recorded stale entries.', [[/retain\w*/i, 'discard']]],
+    [[/custom/i, /unknown/i, /assets/i, /preserv\w*|kept/i, /unless an explicit force install adopts a bundle destination/i],
+      'Custom and unknown assets are kept unless an explicit force install adopts a bundle destination.', [[/preserv\w*|kept/i, 'overwritten']]],
     [[/roles\.json/, /rewrit\w*/i, /one owned snapshot/i],
-      'Installation rewrites roles.json as one owned snapshot.', /rewrit\w*/i, 'ignores'],
+      'Installation rewrites roles.json as one owned snapshot.', [[/rewrit\w*/i, 'ignores']]],
   ]) {
-    checkRule(text, (source) => requires(source, ...concepts), rewording,
-      [[direction, inversion]], concepts);
+    checkRule(text, (source) => requires(source, ...concepts), rewording, inversions, concepts);
   }
   const concepts = [/profile/i, /provenance/i, /inert/i, /runtime/i, /configuration/i];
   checkRule(text, (source) => prohibits(source, /never authorizes/i, ...concepts),

@@ -13,34 +13,8 @@ Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
 exception: installation uses Git and the network, and Bun runs its Node-oriented
 code. This exception introduces no Node.js runtime requirement.
 
-## T3 setup
-
-Set `worktreeCleanup` to `off` for every Axstack project before dispatch;
-Axstack preserves author worktrees and salvages evidence before retirement.
-The driver reads back this setting via `t3_project_read` where exposed, or
-records the setup limitation.
-
-For remote and Android access on the existing tailnet, run:
-
-```sh
-t3 serve --tailscale-serve
-t3 pair
-```
-
-Run `t3 serve --tailscale-serve` as a VPS user service and pair the Android
-app with `t3 pair`. T3 Connect is outside this setup. Service installation,
-network access, and pairing require their own authorized host checks.
-
-Install Antigravity through T3 provider settings using its managed runtime,
-then complete the user's browser sign-in before its canary. T3 uses Google's
-Antigravity ACP agent (`agy_acp_server`); the IDE/`agy` CLI skill paths below
-are separate installer targets and do not configure this managed runtime.
-Antigravity roles receive self-contained briefs; its runtime does not read
-`~/.agents/skills`. A missing runtime, sign-in, or canary holds those roles.
-
-Grok CLI must be >=1.0.13 on desktop and VPS. T3 advertising Grok does not
-prove the CLI runs. Hermes relay remains unchanged: verify native `hermes send`
-and its configured home channel under recorded notification authority.
+For project setup, remote access, provider runtimes, and relay validation, see
+[Host operations](host-operations.md).
 
 ## Commands
 
@@ -208,8 +182,8 @@ The setup CLI uses exit 0 for successful commands and exit 1 for failures.
   concurrent edit, filesystem failure, or failed recovery.
 - Install exits 1 for an instruction conflict that was preserved. Resolve the
   reported block conflict manually before retrying.
-- Install exits 1 if the selected roles are not ready, including preserved edited role data
-  or unsupported role bindings. Inspect the reported readiness gaps.
+- Install exits 1 if the selected roles are not ready, including preserved edited
+  role data or unsupported role bindings. Inspect the reported readiness gaps.
 - Install exits 1 for a legacy retirement failure after a canonical Codex install;
   that canonical install can already be complete. Preserve the reported assets
   and resolve the retirement error before retrying.
@@ -442,21 +416,11 @@ survives.
 Prefer explicit paths and current upstream CLI guidance. Installing files does
 not prove that a running harness reloaded them.
 
-## Runtime preflight and schedules
+## Runtime preflight
 
-At an action boundary, load the packaged [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
-and save the actual `orchestrator_capabilities` JSON. Missing capability holds
-the affected operation. Provider/model routing, Linear documents through the
-executor MCP, and live schedule behavior need separate preflights.
-
-Installation creates no production schedule and adds no custom scheduler.
-Every verified own-PR publication arms or joins the driver's chat-run watch.
-Its bound T3 schedule resumes the driver every 10 minutes by default while open PRs stay watched.
-See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
-Missing schedule capability holds activation.
-The optional review manager uses an unbound 15-minute T3 schedule and requires
-its separate native canary before activation. Installed guidance does not prove
-live behavior. See [Review manager](../skills/axstack/references/automations.md).
+Installation creates no production schedule. Use [Host operations](host-operations.md#runtime-preflight-and-schedules)
+for activation and live checks; [Chat-run PR watch](workflows.md#chat-run-pr-watch)
+owns watch authority and stop conditions.
 
 ## Upgrading and legacy cleanup
 

@@ -195,22 +195,23 @@ test('structural: public guidance identifies T3 and qualifies runtime evidence',
   expect(docs.join('\n')).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);
 });
 
-test('structural: installation records current setup requirements', () => {
+test('structural: host operations records current setup requirements', () => {
   const installation = readFileSync(join(root, 'docs/installation.md'), 'utf8').replace(/\s+/g, ' ');
+  const host = readFileSync(join(root, 'docs/host-operations.md'), 'utf8').replace(/\s+/g, ' ');
   expect(installation).toContain('0.0.46-nightly.20261003.2610');
-  expect(installation).toContain('t3 serve --tailscale-serve');
-  expect(installation).toContain('t3 pair');
+  expect(host).toContain('t3 serve --tailscale-serve');
+  expect(host).toContain('t3 pair');
   for (const [concepts, holdout] of [
     [[/worktreeCleanup/, /off/, /Axstack project/i], 'For each Axstack project, worktreeCleanup must be off.'],
     [[/Antigravity/i, /T3/i, /managed runtime/i, /sign.in/i], 'Use the T3 managed runtime for Antigravity and complete browser sign-in.'],
     [[/Grok CLI/i, /(?:>=|≥)1\.0\.13/], 'Grok CLI must be >=1.0.13.'],
   ]) {
     const accepts = (text) => requires(text, ...concepts);
-    expect(accepts(installation)).toBe(true);
+    expect(accepts(host)).toBe(true);
     expect(accepts(holdout)).toBe(true);
     expect(accepts(`Do not follow this instruction: ${holdout}`)).toBe(false);
-    const matching = sentences(installation).filter(accepts);
-    expect(accepts(sentences(installation).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
+    const matching = sentences(host).filter(accepts);
+    expect(accepts(sentences(host).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
   }
 
 });

@@ -89,7 +89,7 @@ for (const [name, concepts, rewording, inversion, negative] of replyRules) {
       : requires(text.replace(/\bmay forward\b/gi, 'can forward'), ...required);
     checkRule(read(relayPath).replace(/\s+/g, ' '), accepts, rewording, [inversion], required);
     if (['equal authority', 'reply evidence', 'receipt origin', 'quoted identity', 'missing proof', 'worker markers', 'worker origin'].includes(name)) {
-      for (const path of ['docs/workflows.md', 'skills/axstack/references/automations.md']) {
+      for (const path of ['docs/host-operations.md', 'skills/axstack/references/automations.md']) {
         checkRule(read(path).replace(/\s+/g, ' '), accepts, rewording, [inversion], required);
       }
     }

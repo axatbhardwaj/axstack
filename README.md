@@ -127,12 +127,12 @@ pair seats in `mixed` and `codex-only`; `claude-only` records them as absent.
 Manual review works without a schedule.
 Every verified own-PR publication arms or joins the driver's chat-run watch,
 subject to explicit stop-after-publication or observation requests.
-Its bound T3 schedule wakes the driver every 10 minutes by default while open PRs stay watched.
+See [Host operations](docs/host-operations.md#chat-run-watch-activation) for wake activation and cadence.
 See [Chat-run PR watch](docs/workflows.md#chat-run-pr-watch) for the lifecycle and quiet cadence.
 
 An optional native T3 review manager runs finite peer-review passes every 15
 minutes; the review automation never merges for you. Activation needs live
-host validation. See [PR-manager setup and safety](skills/axstack/references/automations.md).
+host validation. See [PR-manager setup and safety](docs/host-operations.md#optional-native-peer-review-automation).
 
 
 ## Automatic merge boundaries
@@ -155,8 +155,7 @@ deploying-base, and peer PRs are user-merged, as are CI, manifest, merge-authori
 and non-`clean` revert changes. Test sources stay eligible. See watch §5 for all
 excluded files and guarded merge mechanics. User merges are bottom-up for a stack.
 This policy grants no release, npm publish,
-or host install authority. Preview authority covers only the preview unit and
-its `tailscale serve` route on the VPS.
+or host install authority. See [Preview authority and operations](docs/host-operations.md#private-pr-previews).
 
 Excluded: CLI proxy, account pooling, and IP routing; local CI contention handling
 is deferred. Quota-driven scheduling or model routing is excluded. Automatic
@@ -181,6 +180,7 @@ tests already do, so the added risk is small.
 ## Documentation
 
 - [Installation and configuration](docs/installation.md)
+- [Host operations](docs/host-operations.md)
 - [Workflows, review policy, and model routing](docs/workflows.md)
 - [PR scope and sizing](skills/axstack/references/pr-shape.md)
 - [Releases](https://github.com/axatbhardwaj/axstack/releases)
