@@ -1,7 +1,8 @@
 # Spec: default auto-merge, revert line, PR previews, and nightly PR triage
 
-Status: Draft rev 6 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
-rev 3 044ba9b, rev 4 6ad79d8, rev 5 b16f51a; all adviser blockers folded). Store: this repo Markdown file.
+Status: Draft rev 7 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
+rev 3 044ba9b, rev 4 6ad79d8, rev 5 b16f51a, rev 6 6643df3; all adviser blockers
+folded). D7 (merge after a card) is a driver default to confirm at approval. Store: this repo Markdown file.
 Run: `20261006-video-takeaways`. The private run record holds the Align decisions,
 the adviser receipts, and the host probe.
 
@@ -29,15 +30,15 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 | Q7 | Approval: in personal (`solo`) repositories, a cross-provider agent review (with diligence `PASS`) is enough. In company or collaborator (`team`) repositories, another person's PR review is the green light, on top of the existing agent review and diligence. |
 | Q7b | In `solo` repositories, automatic merge targets `main` and any other `integration` base, because every such PR is cross-reviewed (user confirmed). |
 | Q10 | When a PR is raised, a watch keeps it up to date until it merges or closes. The user never has to invoke watch by hand. |
-| Q11 | The driver keeps its PRs with an automatically armed watch (no separate per-PR session, no ownership hand-off). The user delegated the choice; the driver chose it for one owner and less machinery. |
+| Q11 | The driver keeps its PRs with an automatically armed watch (no separate per-PR session, no ownership hand-off). The user delegated the choice on context management and workflow; the driver chose it because one owner keeps holds, cards, and the record in one place, and each wake is a short check that adds little context. |
 | U1 | Review findings rated above low must be fixed before merge; low findings may stay open (user, Align round 3). |
 | D1 | Excluded: CLI-proxy account pooling and residential-IP routing. It exists to evade provider detection and limits. The supported alternative is signing in to the same accounts on each of the user's machines. |
 | D2 | Deferred (driver default, user did not decide): local CI contention handling. |
 | D3 | Adviser dissent recorded: both advisers preferred keeping the user's chat reply as `solo` approval. The user chose cross-provider review (Q7). |
 | D4 | Every PR of this run is merged by the user: this run's watch carries `Auto-merge: off`. |
 | D5 | This spec grants no release, npm publish, or host install authority. A later release run under `AGENTS.md` needs its own recorded authority. Preview authority covers only the preview unit and its `tailscale serve` route on the VPS. |
-| Q12 | After a merge card, the agent merges only own PRs on `integration` bases. Promotion, release, `deploying`-base, and other people's PRs are merged by the user on the forge (existing rule; driver default, user may change). |
-| D6 | All adviser blockers on revs 1, 2, 4, and 5 are accepted and folded in. Triage time, stale threshold, preview limits, and the authority-file list are driver defaults the user may change. |
+| D7 | **To confirm at approval (driver default, existing rule):** after a merge card, the agent merges only own PRs on `integration` bases. Promotion, release, `deploying`-base, and other people's PRs are merged by the user on the forge. |
+| D6 | All adviser blockers on revs 1, 2, 4, 5, and 6 are accepted and folded in. Triage time, stale threshold, preview resource limits, the quiet-watch cadence, and the authority-file list are driver defaults the user may change. |
 
 ## Acceptance criteria
 
@@ -97,9 +98,13 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
    for the user.
 7. A merge card is posted for every case in A2, A3, A5, and A6 that does not qualify.
    For an own PR on an `integration` base, the user's reply to the card authorizes
-   the merge actor to merge under the guarded path. Promotion, release,
-   `deploying`-base, and other people's PRs are merged by the user on the forge;
-   the card only reports readiness.
+   the merge actor to merge under the guarded path (D7), except:
+   - in `team` mode a reply never replaces A2's counted collaborator approval; it only
+     clears A3, A6, and C4 causes;
+   - PRs in A5's CI, manifest, merge-authority, or non-`clean` revert categories, and
+     every PR of this run (D4), are merged by the user on the forge.
+   Promotion, release, `deploying`-base, and other people's PRs are merged by the user
+   on the forge; the card only reports readiness.
 
 ### B. Revert line
 
@@ -199,9 +204,12 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
    and the run's release step is settled or not applicable, or the user cancels. A
    required PR closed without merging keeps its existing decision hold. The watch does
    not expire or wait for re-authorization while PRs remain open; if the native
-   schedule has a lifetime, the driver re-arms it at a wake. After 7 days with no
-   event on any watched PR, the wake cadence drops from 10 to 60 minutes and returns
-   to 10 on the next event. Stale PRs send no notification; the nightly triage (E)
+   schedule has a lifetime, the driver re-arms it at a wake. The wake also stays
+   armed while a required PR closed without merging awaits the user's decision. After
+   7 days with no event on any watched PR, and only while no launched work is
+   unsettled, the wake cadence drops from 10 to 60 minutes and returns to 10 on the
+   next event. Cadence changes and re-arming use `update_scheduled_task` on the
+   recorded schedule ID; a second wake is never created. Stale PRs send no notification; the nightly triage (E)
    reports them. Close-out runs after the watch ends, as today.
 5. Merge-card replies and `hold` go in the driver thread. The existing limit of two
    merge-ready/merged notifications per run is unchanged.
