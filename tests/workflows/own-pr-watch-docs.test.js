@@ -1,10 +1,11 @@
 import { expect, test } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8')
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
-const docs = ['README.md', 'docs/workflows.md', 'docs/installation.md'];
+const docs = publicDocPaths(`${import.meta.dir}/../..`);
 const rules = [
   ['publication', [/every|any/i, /Axstack phase/i, /own PR/i, /verified.*readback/i, /driver/i, /\b(?:arms?|starts?)\b.*(?:joins?|reuses?)\b/i, /chat-run watch/i],
     'After verified publication readback of an own PR from any Axstack phase, the driver arms or joins its chat-run watch.', [/\b(?:arms?|starts?)\b/i, 'abandons']],

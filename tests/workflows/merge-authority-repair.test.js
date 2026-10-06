@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { publicDocPaths } from './public-docs.js';
 import { readFileSync, readdirSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
@@ -6,14 +7,14 @@ const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const compact = (text) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 const watchPath = 'skills/axstack-watch/SKILL.md';
 const contracts = 'skills/axstack/references/contracts.md';
-const documented = [watchPath, 'README.md', 'docs/workflows.md'];
+const documented = [watchPath, ...publicDocPaths(`${import.meta.dir}/../..`)];
 const surfaces = [contracts, 'skills/axstack/references/autopilot.md',
   'skills/axstack/references/lifecycle.md', 'skills/axstack/references/routing.md',
   'skills/axstack/references/role-roster.md', 'skills/axstack/references/t3-runtime.md',
   'skills/axstack/references/automations.md', 'skills/axstack/references/test-audit-weekly.md',
   watchPath, 'skills/axstack-watch/references/watch-runtime.md',
   'skills/axstack-implement/SKILL.md', 'skills/axstack-review/SKILL.md',
-  'skills/axstack-audit/SKILL.md', 'AGENTS.md', 'docs/workflows.md', 'README.md'];
+  'skills/axstack-audit/SKILL.md', 'AGENTS.md', ...publicDocPaths(`${import.meta.dir}/../..`)];
 
 // Protect the shipped instruction boundary. Mutations stay in memory.
 for (const path of ['README.md', 'docs/workflows.md']) {
@@ -59,7 +60,7 @@ for (const [name, concepts, rewording, inversion, prohibition] of standing) {
     checkRule(compact(read(contracts)), accepts, rewording, [inversion], concepts);
   });
 }
-for (const path of [contracts, 'AGENTS.md', ...documented, 'skills/axstack-implement/SKILL.md',
+for (const path of [contracts, 'AGENTS.md', watchPath, 'README.md', 'docs/workflows.md', 'skills/axstack-implement/SKILL.md',
   'skills/axstack/references/autopilot.md', 'skills/axstack-review/SKILL.md',
   'skills/axstack/references/automations.md']) {
   test(`user merges stacks bottom-up: ${path}`, () => {

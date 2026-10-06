@@ -61,5 +61,5 @@
 - Keep installer surfaces in `src/`, `bin/`, `package.json`, and
   `tests/installer/`.
 - Keep workflow surfaces in `skills/`, `profiles/`, `tests/workflows/`,
-  `docs/workflows.md`, `docs/installation.md`, and `README.md`.
+  `docs/*.md`, and `README.md`.
 - Keep packaged skills self-contained with relative references.

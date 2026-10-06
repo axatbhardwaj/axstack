@@ -29,8 +29,7 @@
     "src/",
     "skills/",
     "profiles/",
-    "docs/installation.md",
-    "docs/workflows.md"
+    "docs/*.md"
   ],
   "scripts": {
     "test": "bun test",
