@@ -49,6 +49,13 @@ function fixture(provider, accounts) {
   return { home, settings, requests, replies, instances, run };
 }
 
+function expireCache(f) {
+  const path = `${f.home}/cache/axstack/usage.json`;
+  const data = JSON.parse(readFileSync(path, 'utf8'));
+  for (const entry of Object.values(data)) entry.updatedAt = Date.now() - 6 * 60 * 1000;
+  writeFileSync(path, JSON.stringify(data));
+}
+
 const claudeUsage = (five, seven) => ({ five_hour: { utilization: five }, seven_day: { utilization: seven } });
 const codexUsage = (plan, primary, secondary, reached = false) => ({ plan_type: plan,
   rate_limit: { limit_reached: reached, primary_window: { used_percent: primary },
@@ -87,4 +94,99 @@ test('Codex CLI uses shadow home, plan weights and worst window', async () => {
   expect(result.data.chosenInstanceId).toBe('pro');
   expect(result.data.instances.map(({ score }) => score)).toEqual([120, 100, 60]);
   expect(f.requests.map(({ headers }) => headers.get('chatgpt-account-id'))).toEqual(['pro', 'lite', 'unknown-plan']);
+});
+
+test('excludes any exhausted window or reached limit while preserving a below-threshold sibling', async () => {
+  for (const provider of ['claude', 'codex']) {
+    const f = fixture(provider, [
+      { id: 'short-exhausted', body: provider === 'claude' ? claudeUsage(95, 0) : codexUsage('pro', 95, 0) },
+      { id: 'long-exhausted', body: provider === 'claude' ? claudeUsage(0, 99) : codexUsage('pro', 0, 99) },
+      ...(provider === 'codex' ? [{ id: 'limit', body: codexUsage('pro', 0, 0, true) }] : []),
+      { id: 'eligible', body: provider === 'claude' ? claudeUsage(94, null) : codexUsage('prolite', 94, null) },
+    ]);
+    const result = await f.run();
+    expect(result.status).toBe(0);
+    expect(result.data.chosenInstanceId).toBe('eligible');
+    expect(result.data.instances.filter(({ state }) => state === 'excluded').length).toBe(provider === 'codex' ? 3 : 2);
+  }
+});
+
+test('missing credentials skip only that instance and leave a reason without exposing secrets', async () => {
+  for (const provider of ['claude', 'codex']) {
+    const f = fixture(provider, [
+      { id: 'missing', missing: true },
+      { id: 'eligible', body: provider === 'claude' ? claudeUsage(1, 1) : codexUsage('pro', 1, 1) },
+    ]);
+    const result = await f.run();
+    expect(result.status).toBe(0);
+    expect(result.data.chosenInstanceId).toBe('eligible');
+    expect(result.data.instances[0]).toMatchObject({ instanceId: 'missing', state: 'skipped', reason: 'missing credentials' });
+    expect(f.requests.map(({ id }) => id)).toEqual(['eligible']);
+  }
+});
+
+test('no eligible instance exits nonzero with a short reason and no chosen ID', async () => {
+  for (const accounts of [[], [{ missing: true }], [{ body: codexUsage('pro', 95, 0) }]]) {
+    const result = await fixture('codex', accounts).run();
+    expect(result.status).toBe(1);
+    expect(result.output).toBe('');
+    expect(result.error).toMatch(/no eligible provider instances/);
+  }
+});
+
+test('fresh per-account cache avoids requests and keeps credentials out of the cache', async () => {
+  const f = fixture('codex', [
+    { id: 'one', body: codexUsage('pro', 10, 40) },
+    { id: 'two', body: codexUsage('prolite', 10, 20) },
+  ]);
+  const first = await f.run();
+  expect(first.status).toBe(0);
+  const second = await f.run();
+  expect(second.status).toBe(0);
+  expect(second.data.chosenInstanceId).toBe('one');
+  expect(second.data.instances.map(({ score, state }) => ({ score, state }))).toEqual([
+    { score: 240, state: 'cached' }, { score: 80, state: 'cached' },
+  ]);
+  expect(f.requests.length).toBe(2);
+  expect(readFileSync(`${f.home}/cache/axstack/usage.json`, 'utf8')).not.toContain(token);
+});
+
+test('failed usage requests without cache rank by tier alone and mark uncertainty', async () => {
+  for (const status of [429, 503]) {
+    const f = fixture('claude', [
+      { id: 'max5', tier: 'default_claude_max_5x', status, body: { error: token } },
+      { id: 'max20', tier: 'default_claude_max_20x', status, body: { error: token } },
+    ]);
+    const result = await f.run();
+    expect(result.status).toBe(0);
+    expect(result.data.chosenInstanceId).toBe('max20');
+    expect(result.data.instances.map(({ score, state }) => ({ score, state }))).toEqual([
+      { score: 1, state: 'unknown' }, { score: 4, state: 'unknown' },
+    ]);
+  }
+  const f = fixture('codex', [{ id: 'unknown-plan', status: 429, body: { error: token } }]);
+  const result = await f.run();
+  expect(result.status).toBe(0);
+  expect(result.data.instances[0]).toMatchObject({ score: 1, state: 'unknown' });
+});
+
+test('429 uses expired per-account usage and preserves exhausted-account exclusion', async () => {
+  const f = fixture('codex', [
+    { id: 'available', status: 429, body: { error: token } },
+    { id: 'exhausted', status: 429, body: { error: token } },
+  ]);
+  mkdirSync(`${f.home}/cache/axstack`, { recursive: true });
+  writeFileSync(`${f.home}/cache/axstack/usage.json`, JSON.stringify({
+    [JSON.stringify(['codex', `${f.home}/account-0`])]: {
+      updatedAt: Date.now() - 360000, tier: 'pro', utilization: 40, limitReached: false,
+    },
+    [JSON.stringify(['codex', `${f.home}/account-1`])]: {
+      updatedAt: Date.now() - 360000, tier: 'pro', utilization: 95, limitReached: false,
+    },
+  }));
+  const result = await f.run();
+  expect(result.status).toBe(0);
+  expect(result.data.chosenInstanceId).toBe('available');
+  expect(result.data.instances[0]).toMatchObject({ score: 240, state: 'stale' });
+  expect(result.data.instances[1]).toMatchObject({ score: null, state: 'excluded', stale: true });
 });
