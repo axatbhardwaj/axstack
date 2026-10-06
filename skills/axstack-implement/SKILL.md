@@ -189,6 +189,10 @@ The author stops at that receipt and does not push. The driver reconciles it,
 uses `gh stack` to publish, confirms remote readback, and continues the loop
 without editing the candidate. No step grants merge authority.
 
+Every own PR description must contain exactly one `Revert` line.
+Follow [Revert line](../axstack/references/candidate-publication.md#revert-line)
+for its format and classification.
+
 ## 6. Loop until merge-ready
 
 Inputs are one snapshotted small-change intent or an approved spec and ticket

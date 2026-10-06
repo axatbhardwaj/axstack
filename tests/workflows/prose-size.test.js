@@ -36,8 +36,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-review-lane-self-heal T1 repair1: +798 bytes for any-pass recovery, exact-run interrupts, wait semantics and canary.
   // 20261006-review-lane-self-heal T1 repair2: +316 bytes for successor settlement before takeover and descendant protection.
   // 20261006-video-takeaways T1: +1951 measured bytes for shared severity, diligence verdicts, and comment holds.
+  // 20261006-video-takeaways T2: +1214 measured bytes for the revert definition, body policy, and authored review.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(299965);
+  expect(total).toBeLessThanOrEqual(301179);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

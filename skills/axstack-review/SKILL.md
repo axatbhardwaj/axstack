@@ -286,6 +286,12 @@ This section applies to peer and authored PR modes.
    inspect the named keepers. Removing a test without a named keeper or
    vacuity/obsolescence evidence is a finding. Peer mode remains report-only.
 
+   The authored reviewer checks the `Revert` line against the diff.
+   Follow [Revert line](../axstack/references/candidate-publication.md#revert-line)
+   for its format and classification.
+   Record the `Revert` line in the review receipt.
+   Rate a wrong or missing `Revert` line at least `medium` under [Finding severity](#finding-severity).
+
    Under angle 6, verify the recorded shape against the pinned head and base.
    A mismatch between the recorded and measured total is a finding. Apply the
    level matching the measured total. The rationale band requires only its
@@ -404,6 +410,7 @@ Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why>
 Findings: <severity + evidence + consequence each>
+Revert: <declared line + diff-based assessment in authored mode>
 Agent-authored comment and thread IDs: <receipt-recorded IDs or none>
 Safety fact: <the one fact the change is safe because of> — <ladder step + proof | unproven>
 Escalate to user: <yes | no> — <criterion> — <reason>

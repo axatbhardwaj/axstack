@@ -24,6 +24,11 @@ migrations that must change together to stay green and reviewable.
 This is not a folder restriction. Unrelated themes split even under the target.
 Smaller cohesive PRs are encouraged; no padding.
 
+## PR body
+
+Every own PR description must contain exactly one `Revert` line.
+Follow [Revert line](candidate-publication.md#revert-line) for its format and classification.
+
 ## Exception band
 The driver attempts a reasonable split first. If each tried split materially
 compromises atomicity, green state, or independent reviewability, or inseparable
