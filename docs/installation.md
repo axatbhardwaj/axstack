@@ -405,29 +405,23 @@ The optional review manager uses an unbound 15-minute T3 schedule and requires
 its separate native canary before activation. Installed guidance does not prove
 live behavior. See [Review manager](../skills/axstack/references/automations.md).
 
-## Historical migration
+## Upgrading and legacy cleanup
 
-Older releases installed Paseo profiles and used Paseo for execution. Those
-profile records are inert historical manifest provenance after upgrade: they
-do not trigger configuration reads, writes, path-binding refusal, readiness
-checks, uninstall mutation, runtime fallback, or timer cleanup. Preserve them
-for audit and report the explicit migration path.
+Run the ordinary install command again with the chosen preset. An ordinary
+upgrade removes pristine retired skill copies without `--force`, drops their
+manifest entries, and reports them as removed. Edited or already-missing
+retired copies retain their recorded stale entries. Custom and unknown assets
+remain preserved unless an explicit force install adopts a bundle destination.
+Installation rewrites `roles.json` as one owned snapshot; roles absent from the
+selected preset leave that snapshot when the destination is safe to update.
+Edited role data is preserved and reported as not ready rather than silently
+rewritten.
 
-The next ordinary upgrade without `--force` removes pristine retired
-`axstack-handoff` and `axstack-docs` copies directly: they are deleted,
-dropped from the manifest, and reported as removed, while retaining edited
-or already-missing retired copies of axstack-handoff and axstack-docs as
-recorded, preserved stale entries. The
-retired `axstack-driver` row leaves `roles.json` on the next install because
-that file is rewritten as one owned snapshot. A --force uninstall/install
-cycle remains only for discarding edited copies you have decided to abandon;
-edited, custom, and unknown assets otherwise survive. `axstack-explain`
-supersedes the old docs route. Full ownership transfer uses the T3 runtime
-contract and still requires explicit recipient acceptance.
-
-Do not mutate live historical configuration during development or migration
-tests. Host cutover, old-timer cleanup, release installation, and global cleanup
-need separate authority and verified backups.
+Inert legacy Paseo profile provenance never authorizes configuration
+reads or writes, path-binding refusal, readiness checks, uninstall mutation,
+runtime fallback, or timer cleanup. Preserve those manifest records for audit.
+Full ownership transfer follows the [T3 runtime contract](../skills/axstack/references/t3-runtime.md)
+and requires explicit recipient acceptance.
 
 ## Examples
 
@@ -440,18 +434,3 @@ axstack uninstall --skills-dir /tmp/ax-skills --instructions /tmp/AGENTS.md
 
 The second install should report no changes. These scratch examples do not
 activate T3 threads or schedules.
-
-## Rollback
-
-Use the recorded host-mutation authority and verified backups for these steps:
-
-1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.
-2. Restore the backed-up `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` global instructions on both hosts.
-3. Set the recorded T3 manager schedule to `enabled:false` and verify the disabled state.
-4. Delete every armed run watch by its recorded schedule ID and verify absence.
-5. Stop and disable the `t3 serve` user service on the VPS.
-6. Re-enable the Orca automation and verify its enabled state.
-
-Orca stays installed for one week after the VPS canary; keep its automation disabled,
-rather than deleting it, after the T3 canary passes. Do not uninstall it during
-that retention window.

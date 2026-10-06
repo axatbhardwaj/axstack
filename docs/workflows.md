@@ -484,14 +484,6 @@ without matching live receipts.
 End-to-end compatibility remains unverified for any route without matching
 runtime receipts; evidence from one route does not establish support for all roles.
 
-## Historical migration
-
-Older releases used Paseo for orchestration. Legacy profile ownership remains
-inert provenance and may be cleaned only through the explicit migration path;
-it never authorizes active configuration reads, writes, timer changes, or
-fallback. Release, installation, cutover, mobile pairing, and old-timer cleanup
-require separate authority.
-
 ## Runtime
 
 Bun >=1.3.14, with no runtime dependencies. Workflow checks use
