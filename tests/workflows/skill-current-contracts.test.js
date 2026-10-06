@@ -64,6 +64,11 @@ rule('S3: small delivery starts from intent read-back and uses Align only if unc
   [/Small:/i, /small.change intent read.back/i, /implement/i, /watch/i, /Align only when unclear/i],
   'Small: small-change intent read-back, implement, watch and guarded merge, with Align only when unclear.',
   [[/small.change intent read.back/i, 'mandatory spec approval'], [/Align only when unclear/i, 'Align for every small change']]);
+rule('S3: opted-in small-work Align refinement belongs to read-back', shared('autopilot'),
+  [/opted.in/i, /Align refinement/i, /part of|belongs to/i, /read.back/i],
+  'An opted-in Align refinement belongs to the small-change intent read-back.',
+  [[/opted.in/i, 'mandatory'], [/part of|belongs to/i, 'outside']],
+  (text) => text.match(/- Small:[\s\S]*?(?=\n- Substantial:)/)?.[0] ?? '');
 rule('S3: small intent read-back presents release and host authority', shared('autopilot'),
   [/small.change intent read.back/i, /Release/i, /host.mutation authority/i, /explicit hosts/i],
   'The small-change intent read-back names Release and host-mutation authority and explicit hosts.',
