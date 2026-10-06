@@ -288,11 +288,17 @@ completion always stay in the T3 driver thread.
 Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy. The relay normally delivers
-one-way through native `hermes send`: it checks CLI lookup and the configured target,
+through native `hermes send`: it checks CLI lookup and the configured target,
 binds the recipient, deduplicates on the run record, and records the returned
 `message_id`. PR-manager notifications point the user to GitHub or a durable
-user-owned conversation; Telegram delivery, replies, and silence grant no action
-authority. Delivery failure never clears the underlying hold.
+user-owned conversation. End every relay body with the reply tag in
+`axstack-relay`. Hermes may forward the user's
+Telegram reply to that thread using `t3_thread_send` in queue mode, marked as
+a forwarded user reply from Telegram. The driver treats a forwarded reply as
+user input with the same authority as a message the user types there, never more.
+Revalidate the current task, exact revision, and action boundaries before acting.
+Telegram delivery, raw replies, and silence grant no action authority.
+Delivery failure never clears the underlying hold.
 
 Healthy watch observations remain quiet. The optional `axstack-monitor` is a
 read-only observer for standalone watches and never sends.

@@ -305,7 +305,11 @@ chat. Send one deduplicated Telegram notification only when the recorded
 [axstack-relay](../../axstack-relay/SKILL.md) and telling the user where the
 durable decision is actionable.
 
-Telegram delivery, a Telegram reply, or silence never authorizes an action.
+Telegram delivery, a raw Telegram reply, or silence never authorizes an action.
+Hermes may forward the user's reply to the tagged T3 driver thread via
+`t3_thread_send` in queue mode, marked as a forwarded user reply from Telegram.
+The driver treats a forwarded reply as user input with the same authority as
+a message the user types there, never more.
 After a decision, revalidate the exact candidate, head, base, event, authority,
 and remote state before acting. A changed input makes the old decision stale
 and holds that action. There are no token files, Telegram decision interpreter,
