@@ -69,8 +69,8 @@
     },
     {
       "id": "owner-authored-candidate",
-      "input": { "preset": "mixed", "mode": "authored", "owner": "claude/claude-opus-5-5 medium", "actualWriter": "same owner session", "candidate": "SHA Q", "base": "SHA R" },
-      "expected": { "recordedAuthor": "owner session with claude/claude-opus-5-5 medium provenance", "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high"], "forbidden": ["treat owner as non-author", "owner self-review"] }
+      "input": { "preset": "mixed", "mode": "authored", "owner": "codex/gpt-6-sol high", "actualWriter": "same owner session", "candidate": "SHA Q", "base": "SHA R" },
+      "expected": { "recordedAuthor": "owner session with codex/gpt-6-sol high provenance", "reviewers": ["axstack-reviewer-secondary: claude/claude-opus-5-5 medium"], "forbidden": ["treat owner as non-author", "owner self-review"] }
     },
     {
       "id": "required-model-unavailable",

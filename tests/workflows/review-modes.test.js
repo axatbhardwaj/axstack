@@ -207,10 +207,28 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/Health is not a reviewer criterion/i);
 });
 
-test('review modes: peer fixture seats and models match the selected preset', () => {
+test('review modes: peer and owner fixtures match the selected preset', () => {
   const problems = [];
   for (const file of ['scenarios', 'owned-scenarios', 'review-modes-scenarios', 'routing-scenarios']) {
     for (const scenario of JSON.parse(read(`tests/workflows/${file}.json`)).cases) {
+      if (scenario.input.preset === 'mixed' && scenario.input.owner) {
+        const roles = JSON.parse(read('profiles/presets/mixed.json')).roles;
+        const owner = roles.find(({ id }) => id === 'axstack-owner');
+        const [provider, model, effort] = scenario.input.owner.split(/[\/ ]/);
+        expect([provider, deriveModelClass(model), effort], `${file}/${scenario.id}: owner`)
+          .toEqual([owner.provider, owner.modelClass, owner.thinkingOptionId]);
+        if (scenario.input.actualWriter === 'same owner session') {
+          expect(scenario.expected.recordedAuthor).toContain(scenario.input.owner);
+          const reviewer = roles.find(({ id }) => id === 'axstack-reviewer-secondary');
+          const actual = scenario.expected.reviewers.map((route) => {
+            const [id, provider, model, effort] = route.split(/[:/\s]+/);
+            return [id, provider, deriveModelClass(model), effort];
+          });
+          expect(actual).toEqual([
+            [reviewer.id, reviewer.provider, reviewer.modelClass, reviewer.thinkingOptionId],
+          ]);
+        }
+      }
       const input = JSON.stringify(scenario.input);
       const peer = scenario.input.mode === 'peer'
         || (!scenario.input.mode && /\bpeer (?:PR|review)\b/i.test(input));
