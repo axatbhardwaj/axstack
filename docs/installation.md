@@ -44,6 +44,11 @@ and its configured home channel under recorded notification authority.
 
 ## Commands
 
+`axstack --help` (alias `axstack -h`) prints usage; `axstack --version`
+(alias `axstack -V`) prints the package version. An empty invocation prints help.
+`--help` or `-h` also works after a command. `--profile` is obsolete and rejected;
+use `--preset` to select role data.
+
 ### Install
 
 ```text
@@ -90,8 +95,8 @@ the settings sidecar preserves the value while any other install still owns it.
 
 - `--claude-settings` and `--no-claude-settings` control the existing Claude
   Code subagent-default transaction. They do not configure T3 roles.
-- `--force` may replace an edited owned asset; it never adopts or removes
-  unrelated state.
+- Install with `--force` can replace edited owned assets and take ownership of
+  unknown files at bundle destinations. Other unrelated paths stay untouched.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
   homes and fixtures only.
 
@@ -103,7 +108,7 @@ The adjacent `<tools-dir>/archify-<sha>.owners.json` lists its skills-root owner
 Multiple roots share one copy. Repeat installs leave unchanged files untouched.
 An offline, Git-less, or failed clone still installs the skills, reports
 `archify: unavailable (<reason>)`, and exits 0. An existing SHA mismatch fails.
-Tests use a local repository through `AXSTACK_ARCHIFY_REPO` and never use the network.
+`AXSTACK_ARCHIFY_REPO` is a test-only repository override; fixtures use a local repository without network access.
 
 ## Role presets
 
@@ -127,10 +132,20 @@ role store and no T3 configuration merge.
 axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
 ```
 
-The check separates Bun/Git/`gh stack` availability, the `t3` executable and
-version floor, in-session MCP readiness, and bundle validity.
-The CLI labels in-session MCP readiness as "verified by driver preflight";
-the driver saves `orchestrator_capabilities` and follows its advertised schema.
+The capability report has five rows:
+
+| Row | What it checks |
+| --- | --- |
+| `bun` | Running Bun version is at least 1.3.14. |
+| `git` | `git --version` succeeds. |
+| `gh` | `gh --version` succeeds. |
+| `gh stack` | `gh stack --help` succeeds, rather than merely finding an extension name. |
+| `t3` | `t3 --version` succeeds and its output meets the T3 version floor. |
+
+`--bundle` additionally validates the bundle and reports its skill-file count
+and preset names; it does not compare every installed skill's bytes.
+MCP readiness is a separate driver preflight: save `orchestrator_capabilities`
+inside a T3 thread and follow its advertised schema.
 With an instruction target, it separately reports whether the marker block is
 owned, missing, unowned, edited, or bound to a different path. Hand-written
 legacy routing outside the owned block is reported for manual migration and
@@ -143,9 +158,9 @@ mismatch fails the check. Chrome absence prints a warning and does not fail it.
 common Chrome and Chromium executables on PATH. A check without a skills target
 probes host capabilities only.
 
-A successful check is not provider/model availability, effective permission,
-skill reload, task execution, mobile delivery, or end-to-end compatibility
-proof. Those require their own runtime receipts.
+Check does not prove MCP readiness, provider/model availability, schedule
+activation, or mobile delivery. Effective permission, skill reload, task
+execution, and end-to-end compatibility also require their own runtime receipts.
 
 ### Uninstall
 
@@ -153,8 +168,9 @@ proof. Those require their own runtime receipts.
 axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
 ```
 
-Uninstall removes only unchanged Axstack-owned files whose current bytes match
-the manifest. Edited, custom, unknown, and unrelated files survive. Directories
+By default, uninstall removes only unchanged Axstack-owned files whose current
+bytes match the manifest. Uninstall with `--force` can remove edited owned files.
+Custom, unknown, and unrelated files survive. Directories
 are pruned only when empty, and the target root is never removed.
 
 Uninstall drops that skills root from archify's owners file. It removes the copy
@@ -165,6 +181,55 @@ the old copy through the same guard. Installation clones into a temporary siblin
 and renames it into place. A later owner or manifest write failure restores
 ownership and removes only a copy created by that installation. Older manifests
 without an archify record still load.
+
+## Environment variables
+
+- `HOME` defines the absolute home boundary used for write confirmation and
+  default paths; tilde expansion requires a known absolute home.
+- `CODEX_HOME` selects the Codex configuration directory containing `AGENTS.md`
+  and the legacy skills manifest; it does not change the shared skill default.
+- `CLAUDE_CONFIG_DIR` selects the directory containing `settings.json` for
+  Claude settings management; `--claude-settings` overrides that file.
+- `ARCHIFY_CHROME` selects the Chrome executable used by the archify check.
+- `AXSTACK_ARCHIFY_REPO` is a test-only repository override for archify fixtures.
+
+## Exit codes and troubleshooting
+
+The setup CLI uses exit 0 for successful commands and exit 1 for failures.
+
+- Install exits 1 for argument or validation errors: an unknown command or flag,
+  missing flag value, obsolete `--profile`, conflicting Claude settings flags,
+  Bun below the floor, missing or invalid preset, unresolved skills target,
+  unavailable default tools path, malformed bundle or manifest, unsafe path or
+  symlink, overlapping skills/tools roots, or a refused home write without `--yes`.
+- Install exits 1 for ownership or transaction failures: an unknown destination
+  without `--force`, conflicting instruction-path binding, edited or unowned
+  archify record, existing archify SHA mismatch, Claude settings/sidecar conflict,
+  concurrent edit, filesystem failure, or failed recovery.
+- Install exits 1 for an instruction conflict that was preserved. Resolve the
+  reported block conflict manually before retrying.
+- Install exits 1 if the selected roles are not ready, including preserved edited role data
+  or unsupported role bindings. Inspect the reported readiness gaps.
+- Install exits 1 for a legacy retirement failure after a canonical Codex install;
+  that canonical install can already be complete. Preserve the reported assets
+  and resolve the retirement error before retrying.
+- Check exits 1 for any reported gap: a failed capability row, invalid archify
+  record/copy/SHA, non-owned instruction binding, or legacy routing outside the
+  owned block. Argument, bundle-validation, and filesystem errors also exit 1.
+- Uninstall exits 1 for argument, validation, ownership-binding, home-confirmation,
+  or transaction errors; preserved user edits are reported without failing.
+
+Install exits 0 for a clean or idempotent result, preserved edits to ordinary
+owned skills, or unavailable archify caused by an offline host, missing Git, or
+clone failure. Check exits 0 when there are no gaps; Chrome absence is a warning.
+Help and version exit 0 when the Bun floor is met.
+
+Start with the reported path and reason. Choose an explicit skills or tools path
+when a default cannot resolve. Use `--yes` only for intended home writes, and
+`--force` only after deciding to replace the specific asset. Back up edited files
+before changing ownership. An incomplete rollback reports manual recovery needs;
+repair those before retrying. If `check` is green but a role cannot run, perform
+its T3 capability, authentication, model, effort and permission preflight.
 
 ## Owned instruction block
 
@@ -267,8 +332,18 @@ if invoked, needs escalation Fable and Astra; a required seat that is unavailabl
 holds that round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
 the affected work. Codex and Claude class resolution reads the saved T3 capabilities catalog via
-`skills/axstack/scripts/resolve-models.js --provider`; missing or malformed
-catalogs hold. A preset model is used as given; class rows resolve to the newest
+the command below; missing or malformed catalogs hold.
+
+```text
+bun skills/axstack/scripts/resolve-models.js --provider <codex|claude|grok|antigravity> --capabilities <saved-json> <--class <class>|--model <id|null>> --effort <level> [--exclude <id>]
+```
+
+`--class` resolves a class; `--model` selects an exact ID or an explicitly
+configured null role. `--exclude` can repeat to omit recorded IDs; it grants
+no substitute-model authority. The resolver prints a JSON binding on exit 0
+and reports a resolution hold on exit 1.
+
+A preset model is used as given; class rows resolve to the newest
 matching catalog ID. Resume retains the recorded snapshot without re-resolution.
 Rejection, timeout, quota, and auth failures hold; outside bounded same-provider,
 same-model account selection among one driver's instances via `pick-instance.js`,
