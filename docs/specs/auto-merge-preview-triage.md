@@ -1,7 +1,7 @@
 # Spec: default auto-merge, revert line, PR previews, and nightly PR triage
 
-Status: Draft rev 5 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
-rev 3 044ba9b, rev 4 6ad79d8; all adviser blockers folded). Store: this repo Markdown file.
+Status: Draft rev 6 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
+rev 3 044ba9b, rev 4 6ad79d8, rev 5 b16f51a; all adviser blockers folded). Store: this repo Markdown file.
 Run: `20261006-video-takeaways`. The private run record holds the Align decisions,
 the adviser receipts, and the host probe.
 
@@ -36,7 +36,8 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 | D3 | Adviser dissent recorded: both advisers preferred keeping the user's chat reply as `solo` approval. The user chose cross-provider review (Q7). |
 | D4 | Every PR of this run is merged by the user: this run's watch carries `Auto-merge: off`. |
 | D5 | This spec grants no release, npm publish, or host install authority. A later release run under `AGENTS.md` needs its own recorded authority. Preview authority covers only the preview unit and its `tailscale serve` route on the VPS. |
-| D6 | All adviser blockers on rev 1 and rev 2 are accepted and folded in. Triage time, stale threshold, preview limits, and the authority-file list are driver defaults the user may change. |
+| Q12 | After a merge card, the agent merges only own PRs on `integration` bases. Promotion, release, `deploying`-base, and other people's PRs are merged by the user on the forge (existing rule; driver default, user may change). |
+| D6 | All adviser blockers on revs 1, 2, 4, and 5 are accepted and folded in. Triage time, stale threshold, preview limits, and the authority-file list are driver defaults the user may change. |
 
 ## Acceptance criteria
 
@@ -53,8 +54,9 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
    - `solo`: authored-review `APPROVE` plus diligence `PASS`, both bound to the
      current head and base. The reviewer's provider differs from every provider that
      authored or repaired commits in `merge-base..head`, from receipt-recorded
-     provenance. A rebase whose `git patch-id --stable` is unchanged adds no
-     provenance. Unknown or mixed provenance, and PRs the user wrote by hand, post a
+     provenance. A rebase or base-update merge whose `git patch-id --stable` of
+     `merge-base..head` is unchanged adds no provenance; this patch-id definition
+     is used for both modes. Unknown or mixed provenance, and PRs the user wrote by hand, post a
      merge card.
    - `team`: at least one counted collaborator approval as defined in watch §5, at
      the current head, plus the same authored review and diligence. Reviews carrying
@@ -70,7 +72,8 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
    eligible; each other member's base must be the next-lower member's branch at its
    reviewed head. Every member must meet every other term and exclusion. Reviewed
    members are never retargeted to become eligible. A stack merges only after every
-   member in its approved plan is published; until then it holds.
+   member in its approved plan (the ticket map's stack, or the adopted stack's
+   recorded members) is published; until then it holds.
    Approval mode and base classification are re-read immediately before each
    automated merge and at every watch resume, not only once per run.
 4. Every existing watch §5 term still holds: full CI set green, mergeable, not draft,
@@ -93,8 +96,10 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 6. A watch can be told `Auto-merge: off` for a run or PR; the merge card then waits
    for the user.
 7. A merge card is posted for every case in A2, A3, A5, and A6 that does not qualify.
-   The user's reply to a card authorizes the merge actor to merge under the guarded
-   path, as today.
+   For an own PR on an `integration` base, the user's reply to the card authorizes
+   the merge actor to merge under the guarded path. Promotion, release,
+   `deploying`-base, and other people's PRs are merged by the user on the forge;
+   the card only reports readiness.
 
 ### B. Revert line
 
@@ -125,7 +130,8 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 4. Only comments and threads whose IDs are recorded in an agent receipt count as
    agent-authored. Every other review thread, review body, or top-level comment,
    from a human or a bot, holds automatic merge and posts a merge card until a human
-   resolves or dismisses it. Agents never rate, resolve, or dismiss those. An
+   resolves or dismisses it. Items GitHub cannot resolve (review bodies, top-level
+   comments) are cleared by the user's reply to that merge card naming them. Agents never rate, resolve, or dismiss those. An
    always-commenting review bot therefore blocks auto-merge until the user clears
    its threads. Agent-authored threads with only `low` findings may stay open. A
    repository rule requiring conversation resolution still applies.
@@ -180,17 +186,23 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 1. Whenever any Axstack phase (implement, small change, debug repair, improve, or
    adopted-PR maintenance) publishes an own PR, the driver arms its chat-run watch in
    authorized maintenance mode after verified publication readback, or adds the PR to
-   the already-armed watch. No manual `axstack-watch` invocation is needed.
+   the already-armed watch. No manual `axstack-watch` invocation is needed. An explicit
+   stop-after-publication or observation-only request from the user still applies.
 2. The driver stays the single owner and sole run-record writer. There is no
    separate per-PR session and no ownership hand-off. Its bound run wake keeps
    reconciling launched threads, as today.
 3. The watch keeps each PR current: it routes rebases and review feedback to the PR's
-   author for repair, keeps CI green, and applies section A. It never writes
+   author for repair, keeps CI green, and applies section A. For an adopted PR whose author this run
+   did not launch, repairs follow the existing adoption rules (a new author attempt). It never writes
    candidate source itself; the one-writer rule is unchanged.
-4. The watch runs until every watched PR merges or closes, or the user cancels. It
-   does not expire or wait for re-authorization while PRs remain open. Stale PRs
-   send no notification; the nightly triage (E) reports them. Close-out runs after
-   the watch ends, as today.
+4. The watch runs until every watched PR merges or closes, launched work is settled,
+   and the run's release step is settled or not applicable, or the user cancels. A
+   required PR closed without merging keeps its existing decision hold. The watch does
+   not expire or wait for re-authorization while PRs remain open; if the native
+   schedule has a lifetime, the driver re-arms it at a wake. After 7 days with no
+   event on any watched PR, the wake cadence drops from 10 to 60 minutes and returns
+   to 10 on the next event. Stale PRs send no notification; the nightly triage (E)
+   reports them. Close-out runs after the watch ends, as today.
 5. Merge-card replies and `hold` go in the driver thread. The existing limit of two
    merge-ready/merged notifications per run is unchanged.
 
@@ -210,6 +222,8 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
   CI is green. Spec approval becomes the user's main checkpoint.
 - A head guard does not atomically guard base freshness; concurrent merges remain a
   small race, held by the post-merge push-failure rule.
+- A long-lived watch wakes the driver every 10 minutes (60 when quiet) until its PRs
+  land; that token cost is accepted for Q10.
 - Preview code runs under the same VPS user as the agents. Tests already do, so the
   added risk is small, but it is not isolated.
 
@@ -222,7 +236,7 @@ pairing: `skills/axstack/references/contracts.md`, `autopilot.md`, `lifecycle.md
 `ui-verification.md`; `skills/axstack-watch/SKILL.md` and references;
 `skills/axstack-implement/SKILL.md`; `skills/axstack-review/SKILL.md`;
 the watch-arming and expiry text in `autopilot.md`, `run-record.md`, and
-`skills/axstack-watch/references/`; the arming step in `axstack-debug` and `axstack-improve`;
+`skills/axstack-watch/references/`;
 `skills/axstack-audit/SKILL.md`; `skills/axstack-relay/SKILL.md`; a new preview
 reference and a new triage prompt reference; `AGENTS.md`, `docs/workflows.md`,
 `README.md`; and prose-contract tests under `tests/workflows/`.
