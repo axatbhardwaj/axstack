@@ -34,6 +34,10 @@ const rules = [
     'Separate independent themes at any size.', [/split|separate/i, 'combine']],
   ['no invented safe budget', [shape], [/universal safe LOC limit|universally safe line limit/i, /fixed token percentage|fixed percentage of tokens/i],
     'There is no universally safe line limit or fixed percentage of tokens.', [/no/i, 'a'], /no/i],
+  ['size needs no user approval', [shape, review, docs], [/size alone|size by itself/i, /user approval|user sign-off/i],
+    'Size by itself never needs user sign-off.', [/never/i, 'always'], /never/i],
+  ['review verifies recorded shape', [review], [/angle 6/i, /verify|check/i, /recorded (?:shape|size)/i, /head/i, /base/i],
+    'Under angle 6, check the recorded size against the pinned head and base.', [/verify|check/i, 'never verify']],
 ];
 
 for (const [name, paths, concepts, rewording, inversion, prohibition] of rules) {
