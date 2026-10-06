@@ -50,11 +50,12 @@ no dispatch preflight.
    sketch boundary as a split signal. Identify internal tasks, dependencies,
    PR ownership, and worktrees. For each task the driver records
    one theme and a coarse size estimate from the ownership, interface, and
-   dependency map. A task estimated in the exception band is assessed for a
-   split at mapping time and split where a green, atomic, reviewable split
-   exists. If the driver judges it inseparable, record the coarse planning
-   rationale with the task; actual measurement and exception evidence follow in
-   the implement receipt. Mapping time requires no actual SHAs or line counts.
+   dependency map. Plan coherent, independently reviewable tasks around those
+   boundaries. Treat size flags as informational only.
+   Size alone must never block review, reject a PR, require split attempts or
+   cohesion/exception rationale, or hold approval.
+   Actual measurement and bulk disclosure follow in the implement receipt.
+   Mapping time requires no actual SHAs or line counts.
    Every capability ends with the fields below and an explicit dependency list.
    Before accepting the map, dispatch `axstack-diligence` under
    [Diligence](../axstack/references/diligence.md) to confirm every spec
@@ -72,7 +73,7 @@ Spec: <approved revision>
 Capability: <Markdown ref, GitHub issue URL, or Linear issue URL> <title>
 Internal task: <task> -> <PR owner> -> <worktree>
 Theme: <one behavior or component>
-Size est: <coarse band estimate>
+Size est: <coarse size estimate>
 Acceptance: <checks from approved spec rev>
 Depends: <task IDs or none>
 ```

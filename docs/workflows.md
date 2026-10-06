@@ -265,9 +265,13 @@ one theme and a measured size under the shared
 For own PRs, automatic merge is the default under the
 [watch predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
 Review approval alone never grants merge authority.
-For the rationale band, the autonomous driver records a cohesion rationale. The exception band
-requires a reasonable split attempt and full exception record. These are
-autonomous driver choices; size alone never requires user approval.
+Treat size flags as informational only.
+Size alone must never block review, reject a PR, require split attempts or
+cohesion/exception rationale, or hold approval.
+Review the actual footprint, complexity, and required context, incrementally when needed.
+Approval requires sufficient review coverage.
+Report INCOMPLETE when required coverage is missing.
+Shape choices remain autonomous driver decisions; size alone never requires user approval.
 
 ## Explicit handoff
 
