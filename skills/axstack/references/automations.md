@@ -34,7 +34,7 @@ T3 sessions are exempt from Claude trust preflight.
 
 ## Session admission
 
-Perform guarded predecessor retirement in [Finite-session teardown](#finite-session-teardown).
+The owner-of-record performs guarded retirement in [Finite-session teardown](#finite-session-teardown).
 Lane identity requires exact thread/run identity, never a title or directory-name
 guess; never infer lane ownership from an empty local workspace.
 Reconcile saved state, current GitHub state, and native T3 threads, runs,
@@ -54,8 +54,36 @@ events and the unserved count. If a duplicate finds a stalled owner idle at its
 prompt with a final turn lacking a completion receipt for more than five
 minutes (nudged or not), record it in that private note and send one deduplicated
 notification under the recorded `Notification policy`.
-Unknown liveness blocks admission and shared-record writes; it does not
-permit takeover or cleanup. Preserve user-taken-over threads.
+A **wedged lane pass**, whether owner, successor or duplicate, has a non-terminal
+run with more than 60 minutes of verified inactivity across its thread, all its
+runs, delegated tasks and descendant threads, and is free of `user_takeover`.
+A user-taken-over descendant holds recovery and excludes its pass from the
+wedged category, and is never interrupted.
+A live pass has a non-terminal run and is not wedged.
+Exactly one successor recovers a wedged owner or resumes an interrupted takeover:
+the earliest-started live pass, selected by native run start
+ordering; missing or tied ordering evidence holds admission and recovery.
+The successor interrupts the owner and its descendant threads with
+`t3_thread_interrupt`, naming each exact `runId` and a stable `clientRequestId`
+per run, and reads back terminal state for the whole tree
+before recording the takeover in continuity and becoming owner.
+If a successor wedges between interrupt and takeover, the next elected live pass
+interrupts the wedged successor and its tree with `t3_thread_interrupt` at each
+exact `runId` using the same per-run procedure, and reads back terminal state for
+that whole tree before recording any takeover, then resumes recovery from terminal readback
+of the interrupted owner, which is
+excluded from the potentially-live-owner hold.
+The owner-of-record, including a successor immediately after takeover, interrupts
+wedged non-owner passes (duplicates or failed successors) using the same exact-run
+procedure and terminal readback, then retires them under Finite-session teardown.
+Before any admission, the successor reconciles the previous owner's in-flight
+jobs from GitHub and evidence. Only a verdict already published and read back
+counts as served. Otherwise the event is unserved/`INCOMPLETE` and re-eligible.
+A failed interrupt or unverified terminal state keeps the existing hold plus
+one deduplicated notification under the recorded `Notification policy`.
+Outside the wedged-pass recovery above, unknown liveness blocks admission,
+shared-record writes, takeover and cleanup, including when activity is recent.
+Preserve user-taken-over threads.
 This is prompt policy, not an atomic lock: the overlap canary must demonstrate
 one admission owner before activation. Count all unsettled PR jobs and descendants.
 
@@ -132,7 +160,9 @@ under [T3 runtime](t3-runtime.md). For a worker's own brief question, confirm th
 brief once.
 A second brief ask follows the five-minute stop rule, never an open-ended hold.
 An idle final turn without a valid completion
-receipt is incomplete, not successful. A started coordinator waiting on its
+receipt is incomplete, not successful. A wait with more than 60 minutes of
+verified inactivity across its whole tree is a wedge, not a running wait.
+A started coordinator waiting on its
 reviewers (a live reviewer task or running wait) is not idle and is never
 stopped for waiting. Reconcile terminal failure and all descendants before
 recording an event unserved and re-admissible.
@@ -260,16 +290,21 @@ or separate model gate.
 
 ## Finite-session teardown
 
-Each pass retires settled predecessor passes and reports the retained worktree
-count. Retirement requires terminal run evidence and settled descendants,
+Only the owner-of-record pass retires settled predecessor passes and qualifying
+terminal duplicates, including duplicates newer than the owner and immediately
+after successor takeover.
+Qualifying duplicates have a terminal run, no descendants and only their own pass note.
+Each pass reports the retained worktree count.
+Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
 follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
 Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 The orphan sweep covers the run record's repositories plus registered repositories on this host.
-`t3_thread_organize` settle/archive changes metadata only; exact guarded Git
-worktree removal remains separate. Unknown, active or user-taken-over threads,
+Retirement settles duplicate threads with `t3_thread_organize` (settle/archive
+changes metadata only) before separate guarded Git worktree removal.
+Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
 
 A review-manager pass may retire a predecessor pass's local `t3code/*` branch
@@ -295,7 +330,8 @@ removal, not settled execution capacity. The next pass retires this settled pass
 
 The canary runs two overlapping `run_scheduled_task_now` passes and proves one
 admission owner per PR. The canary reviews or correctly no-ops one real PR event.
-The canary reconciles a killed predecessor.
+The canary reconciles a killed predecessor and demonstrates wedged-pass recovery:
+exactly one successor interrupts and retires a wedged predecessor.
 With a temporary limit equal to the current count, the canary disables the
 schedule and verifies that the following interval creates zero new pass worktrees.
 The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.

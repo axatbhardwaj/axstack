@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { requires } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -55,7 +56,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
   expect(text).toMatch(/canary[^.]*two overlapping[^.]*run_scheduled_task_now[^.]*one admission owner/i);
-  expect(text).toMatch(/canary[^.]*reconciles a killed predecessor/i);
+  expect(requires(text, /canary/i, /reconcil/i, /killed/i, /predecessor/i)).toBe(true);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
@@ -66,7 +67,8 @@ test('manager sessions reconcile before admission in the dedicated workspace', (
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no further shared-record write/i);
   expect(text).toMatch(/duplicate[^.]*read-only discovery[^.]*own pass note/i);
-  expect(text).toMatch(/unknown liveness[^.]*does not authorize[^.]*duplicate|unknown liveness[^.]*blocks[^.]*admission/i);
+  expect(requires(text, /outside[\s\S]*wedged-pass recovery/i, /unknown liveness/i,
+    /blocks/i, /admission/i, /shared-record writes/i, /takeover/i, /cleanup/i)).toBe(true);
 });
 
 test('manager event identity survives same-head changes', () => {

@@ -74,7 +74,7 @@ for (const sentence of safety) {
   });
 }
 
-import { requires, sentences } from './prose-contract.js';
+import { requires, prohibits, sentences, checkRule } from './prose-contract.js';
 const rules = [
   ['lane', [/T3 project/i, /axstack-review-lane/, /VPS/, /existing/, /axatbhardwaj\/axstack/, /origin/, /main/],
     'On the VPS, the existing axatbhardwaj/axstack clone with origin and main must host T3 project axstack-review-lane.'],
@@ -92,11 +92,13 @@ const rules = [
     'With ordering evidence, the earlier pass must be the one that wins.'],
   ['inventory', [/discovery/i, /every page/i, /PRs/, /threads/i],
     'Discovery must read every page of threads and PRs.'],
-  ['growth', [/each pass/i, /retire/i, /settled predecessor/i, /report/i, /retained worktree count/i],
-    'Each pass must report the retained worktree count and retire settled predecessor passes.'],
+  ['growth', [/owner-of-record pass/i, /retire/i, /settled predecessor/i],
+    'The owner-of-record pass must retire settled predecessor passes.'],
+  ['growth report', [/each pass/i, /report/i, /retained worktree count/i],
+    'Each pass must report the retained worktree count.'],
   ['overlap canary', [/canary/i, /two overlapping/i, /run_scheduled_task_now/, /one admission owner/i],
     'The canary must demonstrate one admission owner with two overlapping run_scheduled_task_now passes.'],
-  ['killed predecessor canary', [/canary/i, /reconcil/i, /killed predecessor/i],
+  ['killed predecessor canary', [/canary/i, /reconcil/i, /killed/i, /predecessor/i],
     'A canary must reconcile a killed predecessor.'],
   ['limit canary', [/canary/i, /temporary limit/i, /current count/i, /disabl/i, /following interval/i],
     'With a temporary limit equal to current count, the canary must disable the schedule before the following interval.'],
@@ -108,5 +110,33 @@ for (const [name, concepts, holdout] of rules) {
     expect(requires(sentences(text).filter((sentence) => !requires(sentence, ...concepts)).join('. '), ...concepts)).toBe(false);
     expect(requires(holdout, ...concepts)).toBe(true);
     expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
+  });
+}
+
+const duplicateRules = [
+  ['owner retires terminal duplicates',
+    (text) => requires(text, /only.*owner-of-record pass/i, /retir/i,
+      /settled predecessor/i, /terminal duplicates/i, /including.*duplicates/i,
+      /newer than|started after/i, /owner/i, /immediately|right after/i, /successor takeover/i),
+    'Only the owner-of-record pass must retire settled predecessors and terminal duplicates, including duplicates that started after the owner and right after successor takeover.',
+    [[/only.*owner-of-record pass/i, 'any duplicate pass'],
+      [/including/i, 'excluding'], [/immediately|right after/i, 'only on a later pass']]],
+  ['terminal duplicate eligibility',
+    (text) => prohibits(text, /(?:no|zero) descendants/i, /qualifying duplicates|duplicates qualify/i,
+      /(?<!non-)\bterminal run/i, /\b(?:only|exclusively)\b/i, /own.*(?:pass )?note/i),
+    'Qualifying duplicates have a terminal run, zero descendants and only wrote their own pass note.',
+    [[/terminal run/i, 'non-terminal run'], [/(?:no|zero) descendants/i, 'active descendants'],
+      [/only.*own pass note/i, 'shared continuity writes']]],
+  ['retirement settles sidebar threads',
+    (text) => requires(text, /retir/i, /\b(?:settle[sd]?|archives?)\b[^()]*threads?/i, /duplicates?/i,
+      /threads?/i, /t3_thread_organize/i, /before|ahead of/i, /guarded/i, /Git/i, /worktree removal/i),
+    'Retiring a duplicate archives its thread via t3_thread_organize (settle/archive is metadata only) ahead of separate guarded Git worktree removal.',
+    [[/\bsettle[sd]?\b|\barchives?\b/i, 'leaves unsettled'], [/before|ahead of/i, 'after']]],
+];
+for (const [name, accepts, rewording, inversions] of duplicateRules) {
+  test(`terminal duplicate recovery: ${name}`, () => {
+    const text = compact('skills/axstack/references/automations.md')
+      .split('## Finite-session teardown')[1].split('## Activation canary')[0];
+    checkRule(text, accepts, rewording, inversions);
   });
 }

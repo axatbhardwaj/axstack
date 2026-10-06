@@ -41,8 +41,8 @@ test('scheduled passes sweep recorded repositories after predecessor cleanup', (
   expect(hygiene).toMatch(/Salvage an eligible dirty author first/i);
   expect(hygiene).toMatch(/phase-entry drivers[^.]*report in chat/i);
   expect(hygiene).toMatch(/silent when nothing was removed/i);
-  expect(manager).toMatch(/Each pass retires settled predecessor passes[\s\S]*?Then run the driver-start orphan sweep/i);
-  expect(manager).toMatch(/Session admission[\s\S]*?Perform guarded predecessor retirement[\s\S]*?before discovery or admission/i);
+  expect(manager).toMatch(/Only the owner-of-record pass retires settled predecessor passes[\s\S]*?Then run the driver-start orphan sweep/i);
+  expect(manager).toMatch(/Session admission[\s\S]*?owner-of-record performs guarded retirement[\s\S]*?before discovery or admission/i);
   expect(manager).toMatch(/sweep[^.]*silent when nothing was removed/i);
   expect(manager).toMatch(/sweep results[^.]*continuity[^.]*Open holds/i);
   expect(watch).toMatch(/read-only[^.]*axstack-monitor[^.]*reports[^.]*leftovers[^.]*never salvage or remove/i);
