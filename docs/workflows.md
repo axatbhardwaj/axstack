@@ -81,6 +81,19 @@ starts later for each repository the user names.
    the driver. Workers never push; the owning watch thread applies the
    [watch predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
 
+## Nightly PR-triage activation
+
+Use the packaged [nightly prompt](../skills/axstack/references/pr-triage-nightly.md)
+and [setup guidance](../skills/axstack/references/automations.md#nightly-pr-triage-setup).
+Read existing schedules before creating the single unbound native T3 schedule
+at 02:00 host time; reuse it instead of creating a duplicate.
+Keep the host timezone, schedule ID, prompt, and repository set in a durable
+activation record outside run records so Close-out preserves them.
+Each pass reports all own open PRs in its own T3 thread, with forge state or
+`UNKNOWN`, PRs inactive for 7 days, and the top three to act on.
+The pass stays read-only and never declares merge-ready.
+This delivery creates no live schedule; source tests do not prove activation.
+
 ## Role presets
 
 Installation requires one explicit canonical preset. The three bundle files

@@ -7,6 +7,25 @@ For optional weekly test audits, use the separate packaged
 [Weekly test-audit prompt](test-audit-weekly.md).
 The native canary below is also required before weekly activation.
 
+For nightly read-only PR reports, use the separate packaged
+[Nightly PR-triage prompt](pr-triage-nightly.md).
+
+## Nightly PR-triage setup
+
+Follow the weekly test-audit pattern for an unbound native schedule.
+Before creating a schedule, read existing schedules with `list_scheduled_tasks`.
+Reuse the existing triage schedule for the recorded repository set.
+Never create a duplicate triage schedule.
+Use one native T3 `schedule_task`, unbound, nightly at 02:00 host time, with
+`fixed_time`, `timeOfDay:"02:00"`, and `bindToCurrentThread:false`.
+Supply the packaged triage prompt and the durable activation record's location.
+Record the host timezone, schedule ID, prompt, and repository set in a durable
+activation record outside any run records, such as
+`~/.local/share/axstack/pr-triage/activation.md`.
+Preserve the activation record and schedule through Close-out.
+Each scheduled pass reports in its own T3 thread under the read-only prompt.
+Source checks do not prove live schedule delivery or report coverage.
+
 ## Topology and schedules
 
 The T3 project `axstack-review-lane` uses the VPS's existing

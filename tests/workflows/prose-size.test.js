@@ -42,8 +42,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // auto-merge-preview-triage T4 repair1: -65 measured bytes after consolidating arming and watch receipts.
   // auto-merge-preview-triage T5: +3232 measured bytes for the PR preview procedure and owner lifecycle links.
   // auto-merge-preview-triage T5 repair1: +96 measured bytes for owner, verifier, and later-release authority boundaries.
+  // auto-merge-preview-triage T6: +1957 measured bytes for nightly triage prompt and durable setup guidance.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(312717);
+  expect(total).toBeLessThanOrEqual(314674);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });
