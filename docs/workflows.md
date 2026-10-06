@@ -78,7 +78,8 @@ starts later for each repository the user names.
    derives one boundary from test-audit PR history, skips open PRs, overlap with
    live T3 thread/run and worktree ownership, unsafe baselines or empty candidate sets,
    and opens at most one independently reviewed test-only PR per week through
-   the driver. Workers never push; the human merges.
+   the driver. Workers never push; the owning watch thread applies the
+   [watch predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
 
 ## Role presets
 
@@ -226,8 +227,10 @@ One T3 host/server owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real
 dependencies, writer isolation, host capacity, and spending limits. Each PR has
 one theme and a measured size under the shared
-[PR-shape policy](../skills/axstack/references/pr-shape.md). The human merges
-by default; review approval never grants merge authority.
+[PR-shape policy](../skills/axstack/references/pr-shape.md).
+For own PRs, automatic merge is the default under the
+[watch predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
+Review approval alone never grants merge authority.
 For the rationale band, the autonomous driver records a cohesion rationale. The exception band
 requires a reasonable split attempt and full exception record. These are
 autonomous driver choices; size alone never requires user approval.
@@ -267,10 +270,12 @@ read-only observer for standalone watches and never sends.
 For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
 continues from Align through the eligible phase sequence in the same chat.
 The human approves substantial specs, release PRs, peer and deploying-base
-merges, and the npm stage. Only the chat-run driver holding the approved ticket
-map may merge its own eligible integration-base PRs under the full
-[watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely). Managers,
-workers, reviewers, automations, and standalone watches never merge. An open
+merges, and the npm stage. The recorded owning watch thread is the merge actor,
+including `axstack-owner` for standalone authorized maintenance and small or
+adopted work. Apply the full
+[watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
+Managers, workers, reviewers, monitors, and nightly triage never merge.
+Observation-only and peer watches never merge. An open
 hold pauses the run. Implement arms maintain-mode watch
 at its first published PR; release and install run only under recorded per-run
 authority, and Close-out follows their verified receipts.
@@ -291,8 +296,57 @@ its recorded ID and verify absence through `list_scheduled_tasks`; uncertain
 deletion preserves the hold. Settlement and run archive are separate driver
 steps. Implementation candidates are published and read back before independent
 authored review. Adopted own-PR maintenance receives independent exact-local-SHA
-review before driver publication and remote readback. The human merges by
-default. Installed instructions do not prove scheduled observation or driver wake.
+review before driver publication and remote readback. Watch §5 governs merges. Installed instructions do not prove scheduled observation or driver wake.
+
+
+## Automatic merge boundaries
+
+Solo approval is current-head-and-base cross-provider authored-review `APPROVE`
+plus diligence `PASS`. The reviewer differs from every receipt-recorded provider
+that authored or repaired `merge-base..head` commits. Team approval also needs a
+counted non-author collaborator review at the current head. Axstack automation
+votes never count. Unknown or mixed provenance and manually authored PRs need a
+merge card. New heads need fresh authored review, diligence, and CI. A collaborator
+approval carries over only across an unchanged stable patch-id rebase, recorded
+for both heads, while the forge still counts it.
+
+Team auto-merge targets only documented non-production `dev`; solo targets `main`
+or another documented `integration` base. Unknown classification means
+`deploying`. Re-read approval mode and classification before merging and on resume.
+For a stack, only the bottom base must qualify; every upper base is its next-lower
+branch at the reviewed head. Every planned member must be published and satisfy
+the remaining terms and exclusions. Never retarget reviewed members for eligibility.
+
+Merge cards report cases that fail approval, base, exclusion, or `Auto-merge: off`
+rules. On own integration-base PRs, a user card reply permits the guarded actor to
+merge, subject to watch §5's exceptions. In solo mode the reply clears C4, A3,
+or A6 causes; approval remains the cross-provider review plus diligence. In team mode it clears only A3, A6, and
+C4 causes and never replaces collaborator approval. CI and manifest changes,
+merge-authority text, non-`clean` revert PRs, and this run's PRs are user-merged on
+the forge. Promotion, release, deploying-base, and peer PRs are also user-merged.
+Test sources stay eligible; `.github/`, workflow-invoked paths, manifests and
+lockfiles, runner config, branch protection and rulesets, `CODEOWNERS`, and
+merge-authority text are excluded from auto-merge. Non-agent comments hold it
+until human clearance under C4. The revert gate reads the declaration starting
+with `Revert:` at line start; a quoted format inside a bullet is not a declaration.
+
+Every PR of `20261006-video-takeaways` is merged by the user; its watch records
+`Auto-merge: off`. This policy grants no release, npm publish, or host install
+authority. Preview authority covers only the preview unit and its `tailscale
+serve` route on the VPS.
+
+Excluded: CLI proxy, account pooling, and IP routing; local CI contention handling
+is deferred. Quota-driven scheduling or model routing is excluded. Automatic
+merge of promotion, release, deploying-base, and peer PRs is excluded. Previews
+outside the VPS, public previews, and production data are excluded. Nightly triage
+never sends relay messages.
+
+Accepted risks: two agents can miss the same defect while CI is green; spec
+approval is the user's main checkpoint. A head guard does not atomically guard
+base freshness; the concurrent-merge race is held by the post-merge push-failure
+rule. A watch waking every 10 minutes (60 when quiet) until PRs land has an accepted
+token cost. Preview code runs under the same VPS user as agents and is not isolated;
+tests already do, so the added risk is small.
 
 ## Optional native peer-review automation
 
@@ -331,7 +385,7 @@ cursor files, or historical runtime fallback.
 
 The review manager uses one short packaged prompt that loads the current
 relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
-exact-head review verdicts; the human merges. Manual adopted-PR maintenance
+exact-head review verdicts; peer PRs are merged by the user. Manual adopted-PR maintenance
 uses `axstack-watch` with local-SHA review before authorized publication.
 Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
 after the manager session ends, with an authorized deduplicated Telegram notification.

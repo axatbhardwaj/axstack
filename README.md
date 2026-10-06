@@ -44,7 +44,7 @@ implementation. Research, explanation, and peer review can start directly.
 | Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; with the mixed preset, cross-provider review checks the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
-| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and a human merges. |
+| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
 
 ## Quick start
 
@@ -106,7 +106,9 @@ upgrades, conflicts, and uninstalling.
 - Peer PRs receive two independent reviews. Authored changes receive a reviewer
   selected from the author's configured pairing. Reviews bind to exact revisions.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
-  unavailable models, and serious risks surface as holds. The human merges by default.
+  unavailable models, and serious risks surface as holds. For own PRs, automatic
+  merge is the default under the
+  [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
 
 Choose one explicit preset (each contains all role IDs): [mixed](profiles/presets/mixed.json)
 (recommended), [codex-only](profiles/presets/codex-only.json), or
@@ -132,11 +134,45 @@ An optional native T3 review manager runs finite peer-review passes every 15
 minutes; the review automation never merges for you. Activation needs live
 host validation. See [PR-manager setup and safety](skills/axstack/references/automations.md).
 
+
+## Automatic merge boundaries
+
+The recorded owning watch thread applies the full predicate in chat-run or
+standalone authorized maintenance, including small and adopted work. Solo mode
+uses current-head-and-base cross-provider review plus diligence; team mode also
+needs a counted collaborator approval. Team bases are documented non-production
+`dev`; solo bases are documented `integration` branches, including `main`.
+Unknown classification means `deploying`. Whole stacks wait for every planned
+member to be published and reviewed.
+
+Cards name missing approval, ineligible bases, exclusions, or `Auto-merge: off`.
+A solo reply clears C4, A3, or A6 causes; review plus diligence still supplies
+approval. Team replies never replace collaborator approval. Promotion, release,
+deploying-base, and peer PRs are user-merged, as are CI, manifest, merge-authority,
+and non-`clean` revert changes. Test sources stay eligible. See watch §5 for all
+excluded files and guarded merge mechanics. Every PR of `20261006-video-takeaways`
+is user-merged with `Auto-merge: off`. This policy grants no release, npm publish,
+or host install authority. Preview authority covers only the preview unit and
+its `tailscale serve` route on the VPS.
+
+Excluded: CLI proxy, account pooling, and IP routing; local CI contention handling
+is deferred. Quota-driven scheduling or model routing is excluded. Automatic
+merge of promotion, release, deploying-base, and peer PRs is excluded. Previews
+outside the VPS, public previews, and production data are excluded. Nightly triage
+never sends relay messages.
+
+Accepted risks: two agents can miss the same defect while CI is green; spec
+approval is the user's main checkpoint. A head guard does not atomically guard
+base freshness; the concurrent-merge race is held by the post-merge push-failure
+rule. A watch waking every 10 minutes (60 when quiet) until PRs land has an accepted
+token cost. Preview code runs under the same VPS user as agents and is not isolated;
+tests already do, so the added risk is small.
+
 ## Some notes
 
 - T3 Code is the only supported active runtime. Axstack adds no daemon or runtime
   database.
-- A human merges by default.
+- The recorded owning watch thread merges eligible own PRs; excluded PRs use a merge card.
 - This is an early project; expect the workflows to evolve.
 
 ## Documentation
