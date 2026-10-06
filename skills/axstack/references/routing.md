@@ -85,7 +85,14 @@ step (3) for user routing: no substitution or same-provider review.
 - Codebase review -> `axstack-review` codebase mode, report only.
 - A status question about an own open PR or stack ("check now", "what's left",
   "are we done", or "is it approved") -> `axstack-watch` observation-only
-  mode. Explicit "address", "patch", or "fix" grants authorized maintenance.
+  mode when it does not ask to watch.
+- A user request to watch, babysit, keep watching, maintain, address, patch, or fix
+  own PRs authored by the authenticated `gh api user` login or the user's agents
+  grants authorized maintenance by default.
+  Snapshot the maintenance intent once without extra approval.
+  Observation-only applies only to explicit observe-only requests, status
+  questions without a watch request, or peers' PRs.
+  Explicit observe-only includes "monitor only" or "do not change anything".
 - Chat-run PR watch -> `axstack-watch`: original driver; verified run PRs and
   explicit adoptions only.
 - Other own PR work -> `axstack-review` authored mode or `axstack-watch`

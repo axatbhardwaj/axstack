@@ -9,7 +9,8 @@ delegated tasks, messaging and native schedules.
 The driver must be a T3 thread, save `orchestrator_capabilities` JSON under
 the run record, and follow the advertised tool schema; discovery alone proves
 neither provider readiness nor successful execution. Missing capability holds
-the affected operation, without a substitute runtime.
+the affected operation, without a substitute runtime. Native PR watch absence
+uses the schedule fallback below.
 
 From installed `skills/axstack/roles.json`, the driver must snapshot the selected
 preset and stable role IDs, requested provider/model/class/mode/effort, resolved
@@ -223,6 +224,31 @@ inherits the driver model/workspace and adds no runtime of Axstack's own.
 Once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain
 delete preserves the hold and recorded ID.
+
+## Native PR links and watches
+
+After verified publication readback or adoption of an own PR, the driver calls
+`link_pull_request` with the full PR URL for every layer of a `gh stack`.
+Before finishing PR work, including watch end or Close-out, the driver calls
+`list_thread_pull_requests` and links every missing run PR.
+Never link unrelated PRs.
+
+For every watched own PR in chat-run or standalone adopted maintenance, when
+available the driver calls `watch_pull_request` for T3 wakes on check completion,
+new comments from others, or branch conflicts, then ends the turn.
+Never poll or keep a model active between native PR wake events.
+When T3 reports it stopped watching a PR, the next wake re-checks the PR and
+calls `watch_pull_request` again.
+This includes a stop after T3 could not read the PR for 15 minutes.
+Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
+
+If `watch_pull_request` is unavailable, fall back to the bound 10-minute schedule
+and `scripts/pr-digest.js` without a hold.
+Keep the schedule cadence unchanged while a native PR watch is active,
+including the existing 7-day quiet relaxation.
+The schedule still reconciles author and review tasks, readiness, and release.
+When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
+and keep its link.
 
 ## Evidence, prompts and authority
 

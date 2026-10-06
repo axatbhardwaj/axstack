@@ -217,7 +217,7 @@ test('recovery scenario does not interrupt the busy driver', () => {
 
 test('watch frontmatter and unchanged links keep their single-line form', () => {
   const text = readFileSync(`${import.meta.dir}/../../skills/axstack-watch/SKILL.md`, 'utf8');
-  expect(text).toContain('description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.\n');
+  expect(text).toContain('description: When babysitting an existing PR, use axstack-watch to maintain own PRs by default within bounded authority.\n');
   expect(text).toContain('On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.');
   expect(text).toContain("repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run\n");
   expect(text).not.toMatch(/\[[^\]]*\n[^\]]*\]\(/);

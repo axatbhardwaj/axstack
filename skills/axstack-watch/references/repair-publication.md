@@ -15,10 +15,9 @@ stale, or materially changed boundary holds the repair while read-only
 monitoring continues.
 
 Record the exact defect, allowed files and actions, current revision, feedback
-IDs, and actual author without expanding scope. If actual author information is
-unknown, mixed, or unsupported and cannot establish an eligible configured
-reviewer, report that exact gap and ask the user; do not assume an author from
-the importing owner or orchestrator.
+IDs, and actual author without expanding scope.
+Follow [Feedback routing](../SKILL.md#feedback-routing) to launch an adopted
+repair author and pair its reviewer.
 
 ## 2. Produce a reviewable candidate
 
