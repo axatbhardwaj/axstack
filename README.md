@@ -146,12 +146,15 @@ Unknown classification means `deploying`. Whole stacks wait for every planned
 member to be published and reviewed.
 
 Cards name missing approval, ineligible bases, exclusions, or `Auto-merge: off`.
-A solo reply clears C4, A3, or A6 causes; review plus diligence still supplies
-approval. Team replies never replace collaborator approval. Promotion, release,
+For own integration-base PRs, the card reply authorizes the guarded actor under
+watch §5's exceptions.
+In solo mode the user's merge-card reply authorizes the guarded merge of
+user-written PRs or PRs with unknown or mixed provenance.
+Team replies never replace collaborator approval. Promotion, release,
 deploying-base, and peer PRs are user-merged, as are CI, manifest, merge-authority,
 and non-`clean` revert changes. Test sources stay eligible. See watch §5 for all
-excluded files and guarded merge mechanics. Every PR of `20261006-video-takeaways`
-is user-merged with `Auto-merge: off`. This policy grants no release, npm publish,
+excluded files and guarded merge mechanics. User merges are bottom-up for a stack.
+This policy grants no release, npm publish,
 or host install authority. Preview authority covers only the preview unit and
 its `tailscale serve` route on the VPS.
 

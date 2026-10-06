@@ -266,6 +266,7 @@ Missing or idle ownership follows lifecycle reconciliation and explicit transfer
 Apply `axstack-watch` §5's merge card and full predicate; an approval alone
 never grants merge authority.
 A peer PR or `deploying` base waits for the user to merge, in either approval mode.
+User merges are bottom-up for a stack.
 A manager, worker, reviewer, monitor, or nightly triage must never merge.
 Observation-only and peer watches never merge.
 Watch §5 owns provider provenance, approval carryover, eligible bases, every

@@ -20,7 +20,7 @@
   [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
   The recorded owning watch thread merges; excluded PRs follow its card and
   user-merge rules. Standalone authorized maintenance, small, and adopted work
-  use the same predicate.
+  use the same predicate. User merges are bottom-up for a stack.
 
 ## Engineering
 

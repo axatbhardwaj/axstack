@@ -459,6 +459,7 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
 The recorded owning watch thread applies watch §5's guarded merge and card rules.
 Review approval alone never supplies merge authority. Peer PRs stay user-merged.
+User merges are bottom-up for a stack.
 
 ## Report-only scope
 

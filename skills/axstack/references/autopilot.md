@@ -54,6 +54,7 @@ Managers, workers, reviewers, monitors, and nightly triage never merge.
 Observation-only and peer watches never merge.
 Apply watch §5's approval, base, exclusions, and merge-card rules.
 A stack follows its guarded whole-stack rule.
+User merges are bottom-up for a stack.
 
 ## Implement into maintain watch
 

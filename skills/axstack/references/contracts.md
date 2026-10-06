@@ -103,18 +103,17 @@ gate.
 
 ## Authority
 
-- The driver owns scope, cross-PR coordination, integration, and selected
-  external-tracker mutations. Checker reports discrepancies only.
+- The driver owns scope, cross-PR coordination, integration, and every selected
+  external-tracker mutation. Checker reports discrepancies only.
 - One T3 host/server owns a run. No fixed active-PR count; fanout is dependency-
   and capacity-driven within host resource and spending limits. Reduce fanout for
   recorded rework, review backlog, or resource pressure. Queue conflicts and
-  dependencies; use `gh stack` for dependent PRs. Shape, split, fanout, and
+  dependencies; use `gh stack` for dependent PRs. Routine shape, split, fanout, and
   exception choices within approved scope are autonomous driver decisions; size alone never
   requires user approval.
 - Exactly one writer per candidate; one persistent accountable PR owner. Each PR has one theme and measured size under [PR shape](pr-shape.md). Report unknown capacity
   metrics; never a telemetry prerequisite or blocker. Parent changes invalidate
   affected child evidence; refresh it against the new parent.
-- Own PRs default to automatic merge under
-  [watch §5 predicate](../../axstack-watch/SKILL.md).
-  This grants no release, npm publish, or host install authority.
-  Preview authority: only the VPS preview unit and its `tailscale serve` route.
+- Own PRs default to automatic merge under [watch §5](../../axstack-watch/SKILL.md).
+  Review approval and reviewer votes alone never grant mutation or merge authority.
+  User merges are bottom-up for a stack.

@@ -319,19 +319,21 @@ the remaining terms and exclusions. Never retarget reviewed members for eligibil
 
 Merge cards report cases that fail approval, base, exclusion, or `Auto-merge: off`
 rules. On own integration-base PRs, a user card reply permits the guarded actor to
-merge, subject to watch §5's exceptions. In solo mode the reply clears C4, A3,
-or A6 causes; approval remains the cross-provider review plus diligence. In team mode it clears only A3, A6, and
-C4 causes and never replaces collaborator approval. CI and manifest changes,
-merge-authority text, non-`clean` revert PRs, and this run's PRs are user-merged on
+merge, subject to watch §5's exceptions.
+In solo mode the user's merge-card reply authorizes the guarded merge of
+user-written PRs or PRs with unknown or mixed provenance.
+In team mode it clears only an ineligible base, auto-merge turned off, and an open
+human or bot comment; it never replaces collaborator approval. CI and manifest changes,
+merge-authority text and non-`clean` revert PRs are user-merged on
 the forge. Promotion, release, deploying-base, and peer PRs are also user-merged.
 Test sources stay eligible; `.github/`, workflow-invoked paths, manifests and
 lockfiles, runner config, branch protection and rulesets, `CODEOWNERS`, and
 merge-authority text are excluded from auto-merge. Non-agent comments hold it
-until human clearance under C4. The revert gate reads the declaration starting
+until human clearance under the packaged comment rules. The revert gate reads the declaration starting
 with `Revert:` at line start; a quoted format inside a bullet is not a declaration.
 
-Every PR of `20261006-video-takeaways` is merged by the user; its watch records
-`Auto-merge: off`. This policy grants no release, npm publish, or host install
+User merges are bottom-up for a stack.
+This policy grants no release, npm publish, or host install
 authority. Preview authority covers only the preview unit and its `tailscale
 serve` route on the VPS.
 
