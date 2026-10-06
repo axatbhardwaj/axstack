@@ -1,12 +1,13 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
+import reviewReversals from './pr-preview-reversals.json';
 
 const preview = 'axstack/references/preview.md';
 // An absent guidance file means absent instructions, rather than an import error.
 const read = (path) => existsSync(`${import.meta.dir}/../../skills/${path}`)
   ? readFileSync(`${import.meta.dir}/../../skills/${path}`, 'utf8') : '';
-const text = () => read(preview).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+const text = (path = preview) => read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 
 // D1-D9 protect shipped prompt obligations. Existing watch and UI tests do not
 // cover preview authority or lifecycle. No test claims live host compliance.
@@ -15,7 +16,7 @@ const text = () => read(preview).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace
 const prohibition = /never|do not|does not/i;
 const rules = [
   ['D1 VPS host only', [/preview/i, /only when/i, /run.s T3 host/i, /VPS/i],
-    "Launch a preview only when the run's T3 host is the VPS."],
+    "Launch a preview only when the run's T3 host equals the VPS."],
   ['D1 other host records and continues', [/other host/i, /no preview: run host is not the VPS/i, /continue|proceed/i],
     'On every other host, log "no preview: run host is not the VPS" and proceed.', /no preview: run host is not the VPS/i],
   ['D2 owner decides each own PR', [/each|every/i, /own PR/i, /owner/i, /decid|assess|determin/i, /preview/i, /makes sense|appropriate/i],
@@ -23,7 +24,7 @@ const rules = [
   ['D2 requires base command and visible change', [/both/i, /runnable dev-server command/i, /base branch/i, /AGENTS.md/i, /or/i, /README/i, /user-visible change/i, /PR/i],
     "Demand both a user-visible change in the PR and a runnable dev-server command documented in the base branch's README or AGENTS.md."],
   ['D2 command comes from base', [/command/i, /only/i, /base/i],
-    'Obtain the command only from the base.'],
+    'Obtain the command only from the base branch.'],
   ['D2 never command from head', [/command/i, /PR head/i],
     'Do not obtain the command from the PR head.', prohibition],
   ['D2 absent requirement skips preview', [/either requirement/i, /missing/i, /no preview/i],
@@ -37,7 +38,7 @@ const rules = [
   ['D3 confirm listener after start', [/after start|after launch/i, /process/i, /(?:listens only on|binds only to) loopback/i],
     'After launch, verify the process binds only to loopback.'],
   ['D3 confirm serve target after start', [/after start|after launch/i, /tailscale serve/i, /target|endpoint/i, /127\.0\.0\.1:<port>/i],
-    'After launch, verify the tailscale serve endpoint is 127.0.0.1:<port>.'],
+    'After launch, verify the tailscale serve endpoint matches 127.0.0.1:<port>.'],
   ['D3 failed loopback checks tear down and record', [/either loopback check/i, /fails/i, /tear down|dismantle/i, /no preview: not loopback-only/i],
     'If either loopback check fails, dismantle the preview and log "no preview: not loopback-only".', /no preview: not loopback-only/i],
   ['D3 never Funnel', [/Tailscale Funnel/i],
@@ -83,6 +84,12 @@ const rules = [
     'The axstack-ui-verifier may use the preview URL.', undefined, /may use/gi],
   ['D9 preview never replaces UI verification', [/preview/i, /replace|substitut/i, /UI verification/i],
     'A preview does not substitute for UI verification.', prohibition],
+  ['tailnet stays private', [/tailnet/i, /user.s/i, /private Tailscale network/i],
+    "The tailnet means the user's private Tailscale network."],
+  ['preview owner exclusively runs procedure', [/only/i, /PR owner/i, /procedure/i, /private previews/i, /tailnet/i],
+    'Only the PR owner operates this procedure for private previews over the tailnet.'],
+  ['later release needs separate authority', [/later release run/i, /AGENTS.md/i, /own recorded authority/i],
+    'A later release run under AGENTS.md requires its own recorded authority.'],
 ];
 // Opposites preserve policy subjects while reversing the action or boundary.
 // These probes use neither 'not' nor 'never'; substitutions stay in memory.
@@ -121,15 +128,41 @@ const inversionProbes = {
   'D8 production secrets prohibited everywhere': [[/\b(?:use|bring) production secrets\b/i], 'Use production secrets for a preview in any repository.'],
   'D9 verifier can use URL': [[/\baxstack-ui-verifier`? can use\b/i], 'The axstack-ui-verifier loses permission to use the preview URL.'],
   'D9 preview never replaces UI verification': [[/\b(?:replaces|substitutes? for) UI verification\b/i], 'A preview replaces UI verification.'],
+  'tailnet stays private': [[/\btailnet (?:is|means) the user.s private Tailscale network\b/i], "The tailnet is the user's public Tailscale network."],
+  'preview owner exclusively runs procedure': [[/\bonly the PR owner (?:runs|operates) this procedure\b/i], 'The UI verifier replaces the PR owner and runs this procedure for private previews over the tailnet.'],
+  'later release needs separate authority': [[/\b(?:needs|requires) its own recorded authority\b/i], 'A later release run under AGENTS.md inherits authority from the preview.'],
 };
-const requiredConcepts = ([name, concepts]) => [...concepts, ...inversionProbes[name][0]];
+const boundaryConcepts = {
+  'D1 VPS host only': [/\bhost (?:is|equals) (?:the )?VPS\b/i],
+  'D2 command comes from base': [/\bcommand only from the base(?: branch)?\b/i],
+  'D2 never command from head': [/\bcommand from the PR head\b/i],
+  'D3 documented dev or test environment only': [/\b(?:use|choose) only repository-documented dev or test environment sources\b/i],
+  'D3 confirm serve target after start': [/\b(?:target|endpoint) (?:is|equals|matches) `?127\.0\.0\.1:<port>/i],
+  'D5 two per host': [/\b(?:at most two previews per host|previews to at most two per host)\b/i],
+  'D6 served revision distinct from PR head': [/\b(?:distinct|separate) from the PR head SHA\b/i],
+};
+// A listed exception in the same instruction invalidates its boundary even if
+// the correct sibling prohibition remains elsewhere in the shipped procedure.
+const contradictions = {
+  'D1 VPS host only': /\bVPS\s+or\b/i,
+  'D2 command comes from base': /\b(?:else|fallback|falling back)\b.*\bPR head\b/i,
+  'D2 never command from head': /\b(?:anywhere but|other than|except)\b/i,
+  'D3 documented dev or test environment only': /\bproduction\b/i,
+  'authority limited to unit and route': /\b(?:plus|also|including)\b.*\bhost configuration\b/i,
+  'D6 served revision distinct from PR head': /\b(?:equal|identical|same as)\b/i,
+  'D6 private PR descriptions only': /\bpublic repositories\b/i,
+};
+const requiredConcepts = ([name, concepts]) => [
+  ...concepts, ...inversionProbes[name][0], ...(boundaryConcepts[name] ?? []),
+];
 const accepts = (row) => (source) => {
-  const [, , , negative, permission] = row;
+  const [name, , , negative, permission] = row;
   const concepts = requiredConcepts(row);
   // Only the verifier permission treats 'may use' as equivalent to 'can use'.
   // Mandatory rules still reject optional wording; all rules reject negation.
   const normalized = permission ? source.replace(permission, 'can use') : source;
-  return negative ? prohibits(normalized, negative, ...concepts) : requires(normalized, ...concepts);
+  return sentences(normalized).some((sentence) => !contradictions[name]?.test(sentence)
+    && (negative ? prohibits(sentence, negative, ...concepts) : requires(sentence, ...concepts)));
 };
 
 for (const row of rules) {
@@ -164,6 +197,22 @@ for (const [name, opposite] of [
     expect(accepts(row)(inverted)).toBe(false);
   });
 }
+
+for (const { name, rule, to } of reviewReversals) {
+  test(`PR preview review reversal: ${name}`, () => {
+    const row = rules.find(([ruleName]) => ruleName === rule);
+    // The named owning rule must reject the reversal; a sibling cannot hide it.
+    checkRule(text(), accepts(row), row[2], [[/^.*$/, to]]);
+  });
+}
+
+test('preview UI verifier reads instead of runs the owner procedure', () => {
+  const concepts = [/before using/i, /PR preview URL/i, /UI verifier/i, /must (?:read|consult)/i, /PR previews/i];
+  checkRule(text('axstack/references/ui-verification.md'),
+    (source) => requires(source, ...concepts),
+    'Before using a PR preview URL, the UI verifier must consult PR previews.',
+    [[/must (?:read|consult)/i, 'must run']], concepts);
+});
 
 for (const [path, link] of [
   ['axstack/references/ui-verification.md', 'preview.md'],

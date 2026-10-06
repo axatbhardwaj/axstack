@@ -1,0 +1,72 @@
+[
+  {
+    "name": "serve-differs", "rule": "D3 confirm serve target after start",
+    "from": "After start, confirm the `tailscale serve` target is `127.0.0.1:<port>`.",
+    "to": "After start, confirm the `tailscale serve` target differs from `127.0.0.1:<port>`."
+  },
+  {
+    "name": "serve-public", "rule": "D3 confirm serve target after start",
+    "from": "After start, confirm the `tailscale serve` target is `127.0.0.1:<port>`.",
+    "to": "After start, confirm the `tailscale serve` target is a public address instead of `127.0.0.1:<port>`."
+  },
+  {
+    "name": "serve-other", "rule": "D3 confirm serve target after start",
+    "from": "After start, confirm the `tailscale serve` target is `127.0.0.1:<port>`.",
+    "to": "After start, confirm the `tailscale serve` target is anything other than `127.0.0.1:<port>`."
+  },
+  {
+    "name": "never-head-but", "rule": "D2 never command from head",
+    "from": "Never read the command from the PR head.",
+    "to": "Never read the command from anywhere but the PR head."
+  },
+  {
+    "name": "env-prod", "rule": "D3 documented dev or test environment only",
+    "from": "Use only repository-documented dev or test environment sources.",
+    "to": "Use only production environment sources instead of repository-documented dev or test environment sources."
+  },
+  {
+    "name": "vps-other-than", "rule": "D1 VPS host only",
+    "from": "Start a preview only when the run's T3 host is the VPS.",
+    "to": "Start a preview only when the run's T3 host is other than the VPS."
+  },
+  {
+    "name": "two-per-pr", "rule": "D5 two per host",
+    "from": "Run at most two previews per host.",
+    "to": "Run at most two previews per PR and any number per host."
+  },
+  {
+    "name": "distinct-equal", "rule": "D6 served revision distinct from PR head",
+    "from": "Label it as the served revision, distinct from the PR head SHA.",
+    "to": "Label it as the served revision, distinct from the PR head SHA in name only, always equal to it."
+  },
+  {
+    "name": "authority-expand", "rule": "authority limited to unit and route",
+    "from": "Preview authority covers only the preview unit and its `tailscale serve` route on the VPS.",
+    "to": "Preview authority covers only the preview unit and its `tailscale serve` route on the VPS, plus any host configuration it needs."
+  },
+  {
+    "name": "head-cmd-fallback", "rule": "D2 command comes from base",
+    "from": "Read the command only from the base.",
+    "to": "Read the command only from the base, else from the PR head."
+  },
+  {
+    "name": "secrets-fallback", "rule": "D3 documented dev or test environment only",
+    "from": "Use only repository-documented dev or test environment sources.",
+    "to": "Use only repository-documented dev or test environment sources, falling back to production secrets."
+  },
+  {
+    "name": "public-and-private", "rule": "D6 private PR descriptions only",
+    "from": "Put the Preview line and any \"preview queued\" note in the PR description only for private repositories.",
+    "to": "Put the Preview line and any \"preview queued\" note in the PR description for public repositories as well as only private repositories."
+  },
+  {
+    "name": "vps-or-desktop", "rule": "D1 VPS host only",
+    "from": "Start a preview only when the run's T3 host is the VPS.",
+    "to": "Start a preview only when the run's T3 host is the VPS or the desktop."
+  },
+  {
+    "name": "public-only", "rule": "tailnet stays private",
+    "from": "The tailnet is the user's private Tailscale network.",
+    "to": "The tailnet is the user's public Tailscale network."
+  }
+]

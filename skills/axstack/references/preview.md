@@ -1,9 +1,10 @@
 # PR previews
 
-The PR owner runs this procedure for private previews over the tailnet.
+Only the PR owner runs this procedure for private previews over the tailnet.
 The tailnet is the user's private Tailscale network.
 Preview authority covers only the preview unit and its `tailscale serve` route on the VPS.
 This procedure grants no release, npm publish, or host install authority.
+A later release run under `AGENTS.md` needs its own recorded authority.
 
 ## Decide
 
