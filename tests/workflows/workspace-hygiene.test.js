@@ -100,7 +100,7 @@ test('manager and watch sweep boundaries follow T3 hygiene', () => {
     expect(text).toContain('workspace-hygiene.md');
     expect(normalize(text)).toContain("The orphan sweep covers the run record's repositories plus registered repositories on this host.");
   }
-  expect(normalize(manager)).toMatch(/Once identified as a duplicate[^.]*no further shared-record write[^.]*no live or unsettled resource owned by the live manager/i);
+  expect(normalize(manager)).toMatch(/Once identified as a duplicate[^.]*no further shared-record write[^.]*no PR-job thread or descendant owned by the live manager/i);
 });
 
 test('retained entry points preserve routing and safe-deletion links', () => {

@@ -62,6 +62,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // lane-only gate and non-lane replacement inventory/skip rule.
   // 20261006-native-pr-watch T1: +2748 measured aggregate bytes and +436
   // always-loaded bytes for maintenance routing and canonical native PR tools.
-  expect(total).toBeLessThanOrEqual(326265);
+  // 20261006-rm-settle-lag T1: +902 measured aggregate bytes for guarded
+  // any-pass metadata settlement at pass start, separate from owner retirement.
+  expect(total).toBeLessThanOrEqual(327167);
   expect(alwaysLoaded).toBeLessThanOrEqual(25863);
 });

@@ -431,8 +431,12 @@ admits nothing, writes only its private discovery note, and notifies once about
 a stalled owner under the recorded policy.
 
 Capacity is measured across the host. Waiting events stay covered and occupy
-no execution slot after descendants settle. Each pass retires eligible settled
-predecessors through `axstack-cleanup` and records retained worktree count.
+no execution slot after descendants settle. After lane reconciliation at pass
+start, every pass, including a duplicate, settles finished lane pass threads
+under the [Finite-session teardown guards](../skills/axstack/references/automations.md#finite-session-teardown).
+Held or stuck passes stay unsettled. Only the owner retires eligible settled
+predecessors through `axstack-cleanup` and writes continuity; each pass records
+retained worktree count.
 Past the authorized storage limit (default 20 lane worktrees), disable the
 schedule with `enabled:false` and hold. The overlap, real-event, killed-predecessor,
 and storage-limit canaries must pass before activation.
