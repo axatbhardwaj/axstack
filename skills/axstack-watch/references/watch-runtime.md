@@ -2,6 +2,9 @@
 
 Read this before starting, resuming, or stopping automated PR observation.
 
+For each own PR, the owner must follow [PR previews](../../axstack/references/preview.md)
+when deciding on a preview, restarting it after a head change, or tearing it down.
+
 ## Standalone watch
 
 A standalone PR owner remains accountable through the default 24-hour window.

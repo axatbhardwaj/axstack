@@ -63,3 +63,6 @@ confirming the intended operation is absent.
 Publication ends with a remote receipt proving that the reviewed revision and
 exact replies landed once, or a recorded hold naming the unmatched input and
 next owner.
+
+After verified publication of an own PR, the owner must follow
+[PR previews](../../axstack/references/preview.md) to decide on or restart its preview.
