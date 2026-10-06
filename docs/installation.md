@@ -270,8 +270,9 @@ the affected work. Codex and Claude class resolution reads the saved T3 capabili
 `skills/axstack/scripts/resolve-models.js --provider`; missing or malformed
 catalogs hold. A preset model is used as given; class rows resolve to the newest
 matching catalog ID. Resume retains the recorded snapshot without re-resolution.
-Rejection, timeout, quota, and auth failures hold; no subscription inference,
-quota routing, or alternative-model retry applies.
+Rejection, timeout, quota, and auth failures hold; outside bounded same-provider,
+same-model account selection among one driver's instances via `pick-instance.js`,
+no subscription inference, quota routing, or alternative-model retry applies.
 
 `modeId` and similar permission fields remain conservative declared intent.
 They do not prove effective T3 `runtimeMode`, sandboxing, or permission parity.

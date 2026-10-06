@@ -15,6 +15,21 @@ The directly invoked phase loads the applicable shared references for routing,
 lifecycle, T3 runtime boundaries, role/model/risk contracts, the run record,
 and PR shape.
 
+Before each Claude or Codex dispatch/launch, run
+`bun skills/axstack/scripts/pick-instance.js --provider claude|codex`.
+It prints the enabled same-driver account with the most tier-weighted headroom,
+excluding reached limits or any window at ≥95% usage. Provider, model, class,
+and effort stay fixed. Save `--json` output in private dispatch evidence and
+record its pointer and chosen instanceId. Only error exit 1 permits canonical
+fallback after availability validation. Exit 2 (no eligible provider instances)
+holds the work without fallback. This permits no mid-thread failover.
+`--settings <path>` overrides `~/.t3/userdata/settings.json`.
+Usage is cached for five minutes in `${XDG_CACHE_HOME:-~/.cache}/axstack/usage.json`;
+failed requests use stale usage or a tier-only `unknown` score without cache.
+Codex's plan is unknown until a successful usage response, so its uncached
+failure weight is 1. `AXSTACK_CLAUDE_USAGE_URL` and `AXSTACK_CODEX_USAGE_URL`
+override endpoints for local fixtures; tests use loopback only.
+
 Direct routes need no spec ceremony:
 
 - `axstack-research` answers one bounded source-backed question.
@@ -145,8 +160,9 @@ in saved T3 capabilities. Empty Antigravity catalogs hold. Missing or
 unavailable roles hold only affected work. Requested model, effort, and
 permission values need actual T3 configuration read-back; stored `modeId` is
 neither permission parity nor a sandbox. Rejection, timeout, quota, and auth
-failures hold; no subscription inference, quota routing, or alternative retry
-applies.
+failures hold; outside bounded same-provider, same-model account selection among
+one driver's instances via `pick-instance.js`, no subscription inference, quota
+routing, or alternative retry applies.
 
 ## T3 runtime boundary
 
