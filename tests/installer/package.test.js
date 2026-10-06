@@ -20,6 +20,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join } from '../../src/posixpath.js';
+import { publicDocPaths, relativeLinks } from '../workflows/public-docs.js';
 import { BUN_BIN, makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 
 const ROOT = join(import.meta.dir, '../..');
@@ -48,6 +49,7 @@ function run(cmd, args, { cwd, env } = {}) {
   });
   return {
     exitCode: result.exitCode,
+    stdout: result.stdout.toString(),
     out: result.stdout.toString() + result.stderr.toString(),
   };
 }
@@ -65,16 +67,25 @@ function expectedMembers(pkgDir) {
   const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
   for (const pattern of pkg.files) {
     const base = join(pkgDir, pattern.replace(/\/$/, ''));
-    if (!existsSync(base)) continue; // absent on installer-only branches
-    if (statSync(base).isDirectory()) {
-      for (const f of walkFiles(base)) expected.add(`package/${f.slice(pkgDir.length + 1)}`);
-    } else {
-      expected.add(`package/${pattern}`);
-    }
+    const files = existsSync(base) && statSync(base).isDirectory()
+      ? walkFiles(base).map((file) => file.slice(pkgDir.length + 1))
+      : [...new Bun.Glob(pattern).scanSync({ cwd: pkgDir, onlyFiles: true, dot: true })];
+    if (!files.length) throw new Error(`package files entry matches no files: ${pattern}`);
+    for (const file of files) expected.add(`package/${file}`);
   }
   expected.add('package/package.json');
   for (const doc of AUTO_INCLUDED_DOCS) {
     if (existsSync(join(pkgDir, doc))) expected.add(`package/${doc}`);
+  }
+  for (const member of expected) {
+    const path = member.slice('package/'.length);
+    if (!path.endsWith('.md')) continue;
+    for (const href of relativeLinks(readFileSync(`${pkgDir}/${path}`, 'utf8'))) {
+      const target = new URL(href, `file://${pkgDir}/${path}`);
+      if (!target.pathname.endsWith('.md')) continue;
+      const rel = decodeURIComponent(target.pathname).slice(pkgDir.length + 1);
+      if (!expected.has(`package/${rel}`)) throw new Error(`${path}: linked doc is not shipped: ${href}`);
+    }
   }
   return expected;
 }
@@ -204,6 +215,51 @@ test('tarball members match the full source tree with no silent omissions', () =
   const expected = expectedMembers(ROOT);
   expect([...expected].filter((m) => !listing.includes(m))).toEqual([]);
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
+});
+
+test('package ships every public doc and excludes historical baselines', () => {
+  const members = expectedMembers(ROOT);
+  for (const path of publicDocPaths(ROOT)) expect(members.has(`package/${path}`), path).toBe(true);
+  expect([...members].some((path) => /^package\/docs\/(?:specs|plans)\//.test(path))).toBe(false);
+});
+
+test('package inventory expands globs without recursive doc inclusion or silent misses', () => {
+  const dir = makeTempRoot('docs-package-');
+  mkdirSync(`${dir}/docs/specs`, { recursive: true });
+  writeFileSync(`${dir}/docs/guide.md`, '# Guide');
+  writeFileSync(`${dir}/docs/specs/old.md`, '# Historical');
+  writeFileSync(`${dir}/package.json`, JSON.stringify({ files: ['docs/*.md'] }));
+  expect([...expectedMembers(dir)].sort()).toEqual(['package/docs/guide.md', 'package/package.json']);
+  writeFileSync(`${dir}/package.json`, JSON.stringify({ files: ['docs/missing-*.md'] }));
+  expect(() => expectedMembers(dir)).toThrow(/matches no files/);
+});
+
+test('package inventory rejects a linked document omitted from shipped files', () => {
+  const dir = makeTempRoot('docs-unshipped-');
+  mkdirSync(`${dir}/docs`, { recursive: true });
+  writeFileSync(`${dir}/README.md`, '[start](docs/start.md)');
+  writeFileSync(`${dir}/docs/start.md`, '[next](next.md#task)');
+  writeFileSync(`${dir}/docs/next.md`, '# Task');
+  writeFileSync(`${dir}/package.json`, JSON.stringify({ files: ['docs/start.md'] }));
+  expect(() => expectedMembers(dir)).toThrow(/linked doc is not shipped/);
+});
+
+test('Bun and npm dry runs ship linked docs without historical baselines', () => {
+  const bun = run(BUN_BIN, ['pm', 'pack', '--dry-run'], { cwd: ROOT });
+  expect(bun.exitCode, bun.out).toBe(0);
+  const bunFiles = [...bun.out.matchAll(/^packed \S+ (.+)$/gm)].map(([, path]) => path);
+  const npm = run('npm', ['pack', '--dry-run', '--json'], { cwd: ROOT });
+  expect(npm.exitCode, npm.out).toBe(0);
+  const packed = JSON.parse(npm.stdout);
+  // npm 12 keys results by package name; earlier npm versions return an array.
+  const npmFiles = (Array.isArray(packed) ? packed[0] : Object.values(packed)[0]).files
+    .map(({ path }) => path);
+  const docs = [...expectedMembers(ROOT)].filter((path) => path.endsWith('.md'))
+    .map((path) => path.slice('package/'.length));
+  for (const listing of [bunFiles, npmFiles]) {
+    for (const doc of docs) expect(listing, doc).toContain(doc);
+    expect(listing.some((path) => /^docs\/(?:specs|plans)\//.test(path))).toBe(false);
+  }
 });
 
 test('published manifest carries the metadata an npm page needs', () => {

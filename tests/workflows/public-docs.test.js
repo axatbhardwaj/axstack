@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { publicDocPaths, docLinkIssues } from './public-docs.js';
+import { checkRule, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 
@@ -66,4 +67,11 @@ test('link guard ignores examples in code and external URLs', () => {
     put('README.md', '# Start\n```md\n[example](gone.md)\n```\n`[example](gone.md)`\n[web](https://example.invalid/page#missing)\n[mail](mailto:user@example.invalid)');
     expect(docLinkIssues(dir)).toEqual([]);
   });
+});
+
+test('workflow editing surfaces include all public documentation pages', () => {
+  const concepts = [/keep/i, /workflow surfaces/i, /docs\/\*\.md/i];
+  checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
+    'Keep workflow surfaces in skills, profiles, tests/workflows, docs/*.md, and README.md.',
+    [[/Keep/i, 'Exclude']], concepts);
 });
