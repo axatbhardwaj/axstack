@@ -17,7 +17,7 @@ function fixture(provider, accounts) {
     return Response.json(reply?.body ?? {}, { status: reply?.status ?? 200 });
   } });
   servers.push(server);
-  const instances = accounts.map((account, index) => {
+  const instances = Object.fromEntries(accounts.map((account, index) => {
     const id = account.id ?? `${provider}-${index}`;
     const dir = account.defaultHome ? `${home}/.${provider}` : `${home}/account-${index}`;
     mkdirSync(dir, { recursive: true });
@@ -27,10 +27,11 @@ function fixture(provider, accounts) {
     if (!account.missing) writeFileSync(`${dir}/${provider === 'claude' ? '.credentials.json' : 'auth.json'}`,
       JSON.stringify(credentials));
     replies.set(id, { body: account.body, status: account.status });
-    return { id, driver: account.driver ?? (provider === 'claude' ? 'claudeAgent' : 'codex'),
-      enabled: account.enabled ?? true, config: account.defaultHome ? {} : provider === 'claude'
-        ? { homePath: dir } : { homePath: `${home}/wrong-home`, shadowHomePath: dir } };
-  });
+    return [id, { driver: account.driver ?? (provider === 'claude' ? 'claudeAgent' : 'codex'),
+      enabled: account.enabled ?? true, config: account.defaultHome
+        ? { homePath: '', ...(provider === 'codex' ? { shadowHomePath: '' } : {}) } : provider === 'claude'
+        ? { homePath: dir } : { homePath: `${home}/wrong-home`, shadowHomePath: dir } }];
+  }));
   mkdirSync(`${home}/.t3/userdata`, { recursive: true });
   const settings = `${home}/.t3/userdata/settings.json`;
   writeFileSync(settings, JSON.stringify({ providerInstances: instances }));
@@ -222,7 +223,7 @@ test('expired cache refreshes successfully and network failure retains the last 
 
 test('Codex homePath fallback and tilde expansion reach the configured credentials', async () => {
   const f = fixture('codex', [{ id: 'home-only', body: codexUsage('prolite', 20, 10) }]);
-  f.instances[0].config = { homePath: '~/account-0' };
+  f.instances['home-only'].config = { homePath: '~/account-0' };
   writeFileSync(f.settings, JSON.stringify({ providerInstances: f.instances }));
   const result = await f.run(['--settings', f.settings, '--json']);
   expect(result.status).toBe(0);

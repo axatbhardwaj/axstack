@@ -29,7 +29,7 @@ function argumentsFrom(args) {
   return options;
 }
 
-async function account(instance, provider) {
+async function account(instanceId, instance, provider) {
   const config = instance.config ?? {};
   const dir = expandHome((provider === 'claude' ? config.homePath : config.shadowHomePath || config.homePath)
     || `${home}/.${provider}`);
@@ -40,7 +40,7 @@ async function account(instance, provider) {
       : credentials.tokens?.access_token && credentials.tokens?.account_id;
     if (!valid) throw new Error();
   } catch {
-    return { instanceId: instance.id, score: null, state: 'skipped', reason: 'missing credentials' };
+    return { instanceId, score: null, state: 'skipped', reason: 'missing credentials' };
   }
   const headers = provider === 'claude'
     ? { authorization: `Bearer ${credentials.claudeAiOauth.accessToken}`,
@@ -80,10 +80,10 @@ async function account(instance, provider) {
   }
   const stale = state === 'stale';
   if (value.utilization >= 95 || value.limitReached) {
-    return { instanceId: instance.id, score: null, state: 'excluded', stale, reason: 'usage limit' };
+    return { instanceId, score: null, state: 'excluded', stale, reason: 'usage limit' };
   }
   const weight = Object.hasOwn(weights[provider], value.tier) ? weights[provider][value.tier] : 1;
-  return { instanceId: instance.id, score: value.utilization === null ? weight : (100 - value.utilization) * weight,
+  return { instanceId, score: value.utilization === null ? weight : (100 - value.utilization) * weight,
     state: value.utilization === null ? 'unknown' : state, stale };
 }
 
@@ -91,9 +91,9 @@ try {
   const options = argumentsFrom(process.argv.slice(2));
   const settings = readJson(expandHome(options.settings || `${home}/.t3/userdata/settings.json`));
   const instances = [];
-  for (const instance of settings.providerInstances.filter((instance) =>
+  for (const [instanceId, instance] of Object.entries(settings.providerInstances).filter(([, instance]) =>
     instance.enabled && instance.driver === drivers[options.provider])) {
-    instances.push(await account(instance, options.provider));
+    instances.push(await account(instanceId, instance, options.provider));
   }
   const chosen = instances.filter((instance) => instance.score !== null).sort((a, b) => b.score - a.score)[0];
   if (!chosen) throw new Error('no eligible provider instances');
