@@ -32,7 +32,6 @@ Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
 driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding.
 One bound schedule serves both the run watch and the chat-run watch; never create a second watch.
-Never create a second wake.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 If the native schedule has a lifetime, the driver re-arms it at a wake.
 Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.

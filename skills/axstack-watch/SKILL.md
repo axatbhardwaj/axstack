@@ -341,7 +341,8 @@ Owner: <profile + session> Worktree: <path>
 Scope: <approved rev, small-change intent, or maintenance snapshot>
 Capability: <issue + lifecycle state>
 CI/review: <current states + evidence refs>
-Watch: <chosen wake mechanism, native id or command, stop receipt + expiry>
+Watch: <chosen wake mechanism, native id or command, native schedule lifetime + re-arm receipts + stop receipt>
+Standalone watch: <shared expiry>
 Remaining: <next actions + owner>
 Resume: <known commands or verified refs needed to reconcile from this revision>
 ```

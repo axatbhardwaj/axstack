@@ -136,7 +136,7 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
 });
 
 test('installation and run record describe the selected wake', () => {
-  expect(installation()).toMatch(/chat-run[^.]*bound T3 schedule[^.]*10 minutes[^.]*default/i);
+  expect(installation()).toMatch(/bound T3 schedule[^.]*10 minutes[^.]*default/i);
   expect(installation()).toMatch(/missing schedule capability[^.]*holds activation/i);
   expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });

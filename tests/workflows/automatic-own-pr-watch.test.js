@@ -36,7 +36,7 @@ rule('manual invocation is unnecessary', autopilot,
   'Never require a manual axstack-watch invocation.', /never/i);
 rule('driver retains sole ownership and record', autopilot,
   [/driver/i, /single owner/i, /sole run-record writer/i],
-  'The driver stays the single owner and sole run-record writer.');
+  'The driver is the single owner and sole run-record writer.');
 rule('no per-PR session or hand-off', autopilot,
   [/per-PR session/i, /ownership hand-off/i],
   'Never create a per-PR session or an ownership hand-off.', /never/i);
@@ -56,24 +56,24 @@ rule('watch never writes source', runtime,
 rule('terminal stop waits for workers and release', runtime,
   [/wake/i, /only/i, /every watched PR/i, /merged or closed/i,
     /launched work is settled/i, /release step is settled or not applicable/i, /user cancels/i],
-  'Stop the wake only when every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or the user cancels.',
+  'The wake ends only when every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or the user cancels.',
   /not applicable/i);
 rule('closed required PR retains decision hold and wake', runtime,
   [/required PR/i, /closed without merging/i, /decision hold/i, /wake.*active|active.*wake/i, /user/i, /resolves scope/i, /cancels/i],
-  'A required PR closed without merging records a decision hold and the wake remains active until the user resolves scope or cancels.');
+  'A required PR closed without merging has a decision hold and an active wake until the user resolves scope or cancels.');
 rule('open PRs have no expiry or reauthorization', runtime,
   [/chat-run watch/i, /expire/i, /re-authorization/i, /PRs remain open/i],
   'The chat-run watch never expires or waits for re-authorization while PRs remain open.',
   /never/i);
 rule('quiet cadence waits seven days and settled work', runtime,
   [/7 days/i, /no event/i, /any watched PR/i, /only/i, /no unsettled launched work/i, /cadence/i, /10 to 60 minutes/i],
-  'After 7 days with no event on any watched PR, and only with no unsettled launched work, change the wake cadence from 10 to 60 minutes.', /no event|no unsettled launched work/gi);
+  'After 7 days with no event on any watched PR, and only with no unsettled launched work, the wake cadence goes from 10 to 60 minutes.', /no event|no unsettled launched work/gi);
 rule('next PR event restores ten minutes', runtime,
   [/next event/i, /watched PR/i, /cadence/i, /10 minutes/i],
-  'On the next event on a watched PR, restore the wake cadence to 10 minutes.');
+  'On the next event on a watched PR, the wake cadence becomes 10 minutes.');
 rule('resumed launched work restores ten minutes', runtime,
   [/launched work/i, /unsettled/i, /10.minute/i, /cadence/i],
-  'If launched work becomes unsettled, restore the 10-minute cadence.');
+  'While launched work is unsettled, the 10-minute cadence applies.');
 rule('native lifetime re-arms at a wake', runtime,
   [/native schedule/i, /lifetime/i, /driver/i, /re-arms?/i, /at a wake/i],
   'If the native schedule has a lifetime, the driver re-arms it at a wake.');
@@ -85,7 +85,7 @@ rule('second wake prohibited', runtime,
   'Never start a second watch.', /never/i);
 rule('watch lifetime is recorded', record,
   [/chat-run watch/i, /cadence/i, /last PR event/i, /schedule lifetime/i, /re-arm receipt/i],
-  'Record the chat-run watch cadence, last PR event, native schedule lifetime, and re-arm receipts.');
+  'The chat-run watch cadence, last PR event, native schedule lifetime, and re-arm receipts belong in the run record.');
 rule('cards and hold stay in driver thread', watch,
   [/merge-card replies/i, /`hold`|\bhold\b/i, /driver thread/i],
   'Merge-card replies and `hold` go in the driver thread.');
@@ -94,7 +94,7 @@ rule('stale PRs never notify', relay,
   'Never notify for stale PRs.', /never/i);
 rule('milestones retain shared cap', relay,
   [/two|2/i, /merge-ready/i, /merged/i, /notifications/i, /per run/i, /cap|limit|at most/i],
-  'Cap merge-ready and merged notifications together at two per run.');
+  'Limit merge-ready and merged notifications to at most two per run.');
 rule('Close-out follows watch end', watch,
   [/Close-out/i, /after|follows/i, /watch ends|end of the watch/i],
   'Close-out follows the end of the watch.');

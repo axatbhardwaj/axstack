@@ -59,17 +59,16 @@ User merges are bottom-up for a stack.
 ## Own PR publication into maintain watch
 
 When any Axstack phase publishes an own PR, after verified publication readback
-the driver arms or joins its chat-run watch in authorized maintain mode.
+the driver arms one chat-run watch in authorized maintain mode or joins the existing watch.
 This covers implement, small change, debug repair, improve, and adopted-PR maintenance.
 Explicit user stop-after-publication and observation-only requests prevail.
 Never require a manual `axstack-watch` invocation.
 The driver remains the single owner and sole run-record writer.
 Never create a per-PR session or an ownership hand-off.
-At the first PR, arm exactly one `axstack-watch` chat-run in authorized maintain mode.
 Read the [T3 runtime boundary](t3-runtime.md) and use its bound
-`schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId. Later run PRs join after verified
-publication readback; an explicitly adopted PR joins only with its maintenance
-snapshot. The original driver alone routes work; one author writes each
+`schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId.
+An explicitly adopted PR joins only with its maintenance snapshot.
+The original driver alone routes work; one author writes each
 candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
 merge-ready, watch §5 maintenance repairs feedback, rebases when the base moves,
 keeps CI green, and checks approvals without re-requesting human review.
@@ -81,7 +80,7 @@ or the user cancels.
 A required PR closed without merging is incomplete scope; it does not make the run release-eligible.
 Keep its decision hold and wake until the user resolves scope or cancels.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
-Follow [Chat-run watch](../../axstack-watch/SKILL.md#2-fix-the-operating-mode)
+Follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 for quiet cadence and native schedule re-arming.
 Run Close-out after the watch ends, subject to its existing acceptance conditions.
 

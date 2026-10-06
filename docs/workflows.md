@@ -276,22 +276,31 @@ adopted work. Apply the full
 [watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
 Managers, workers, reviewers, monitors, and nightly triage never merge.
 Observation-only and peer watches never merge. An open
-hold pauses the run. Implement arms maintain-mode watch
-at its first published PR; release and install run only under recorded per-run
-authority, and Close-out follows their verified receipts.
+hold pauses the run.
+After verified publication readback of every own PR from any Axstack phase,
+the driver arms or joins its chat-run watch in authorized maintain mode.
+Explicit stop-after-publication and observation-only requests still apply.
+Release and install run only under recorded per-run authority.
+Close-out follows their verified receipts and the watch's end.
 
 Use `axstack-watch` chat-run mode to watch every PR raised by this run,
 including later verified publications and PRs explicitly adopted by the driver.
-A bound T3 schedule resumes the driver thread every 10 minutes; record the
-schedule ID and expiry. Each wake reconciles all unsettled dispatch attempts
+A bound T3 schedule resumes the driver thread every 10 minutes by default.
+The run record holds the schedule ID and driver thread.
+Each wake reconciles all unsettled dispatch attempts
 and runs the own-PR maintenance loop: feedback, base movement, required CI,
 and approval. Delegated work follows the T3 runtime contract. There is no
 daemon or polling model between wakes. Independent PRs can repair in parallel
 with one writer per PR; a changed stack ancestor invalidates child evidence.
 An incomplete scan leaves readiness `UNKNOWN`.
 
-The watch lasts until all member PRs merge or close and release is settled or
-not applicable, the user cancels, or its wake expires. Delete the schedule by
+The chat-run watch never expires or waits for re-authorization while PRs remain open.
+The chat-run watch ends only when all watched PRs merge or close, launched work
+is settled, and release is settled or not applicable, or the user cancels.
+A required PR closed without merging keeps its decision hold and wake.
+Follow [Chat-run watch runtime](../skills/axstack-watch/references/watch-runtime.md#chat-run-watch)
+for native lifetime re-arming and quiet cadence changes on the recorded schedule ID.
+Delete the schedule by
 its recorded ID and verify absence through `list_scheduled_tasks`; uncertain
 deletion preserves the hold. Settlement and run archive are separate driver
 steps. Implementation candidates are published and read back before independent

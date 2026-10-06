@@ -404,7 +404,10 @@ test('T5a phase entry points load the T3 boundary and remove the old runtime', (
     const target = path.includes('/references/') ? 't3-runtime.md' : '../axstack/references/t3-runtime.md';
     expect(loadedReferences(text), path).toContain(target);
     const runtimeLinks = [...text.matchAll(/\]\(([^)]*-runtime\.md)(?:#[^)]*)?\)/g)].map((match) => match[1]);
-    expect(runtimeLinks.every((link) => link.endsWith('t3-runtime.md')), path).toBe(true);
+    // Autopilot also links directly to the shipped PR-watch cadence contract.
+    expect(runtimeLinks.every((link) => link.endsWith('t3-runtime.md')
+      || (path === 'skills/axstack/references/autopilot.md'
+        && link === '../../axstack-watch/references/watch-runtime.md')), path).toBe(true);
     expect(text, path).not.toMatch(/Readable sidebar/i);
   }
   for (const preset of presetNames) {

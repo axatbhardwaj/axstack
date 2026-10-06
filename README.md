@@ -124,11 +124,20 @@ pair seats in `mixed` and `codex-only`; `claude-only` records them as absent.
 
 ## Optional PR automation
 
-Manual review works without a schedule. Own open PRs in chat-run mode use a
-bound T3 schedule to resume the driver thread every 10 minutes. Each wake
-checks feedback, base, CI, and approval. Stop and verify deletion of the watch
-when all watched PRs merge or close and release is settled or not applicable, the user cancels,
-or it expires.
+Manual review works without a schedule.
+After verified publication readback of every own PR from any Axstack phase,
+the driver arms or joins its chat-run watch.
+Explicit stop-after-publication and observation-only requests still apply.
+A bound T3 schedule resumes the driver thread every 10 minutes by default.
+The run record holds the schedule ID and driver thread.
+Each wake checks feedback, base, CI, and approval.
+The chat-run watch never expires or waits for re-authorization while PRs remain open.
+The chat-run watch ends only when all watched PRs merge or close, launched work
+is settled, and release is settled or not applicable, or the user cancels.
+Delete its recorded schedule and verify absence.
+A required PR closed without merging keeps its decision hold and wake.
+Follow [Chat-run watch runtime](skills/axstack-watch/references/watch-runtime.md#chat-run-watch)
+for native lifetime re-arming and the quiet 60-minute cadence on the same schedule ID.
 
 An optional native T3 review manager runs finite peer-review passes every 15
 minutes; the review automation never merges for you. Activation needs live

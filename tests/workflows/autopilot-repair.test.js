@@ -25,8 +25,7 @@ function rule(name, source, anchor, pattern) {
 
 rule('spec advances to Tickets', () => read('skills/axstack-spec/SKILL.md'), 'In an eligible delivery run', /continue to Tickets in the same driver chat/);
 rule('Tickets advances to Implement', () => read('skills/axstack-tickets/SKILL.md'), 'With a complete map', /continues to Implement in the same driver chat/);
-rule('watch arms on first PR', autopilot, 'At the first PR', /first PR, arm exactly one `axstack-watch` chat-run in authorized maintain mode/);
-rule('later verified PR joins', autopilot, 'Later run PRs join', /verified publication readback/);
+// automatic-own-pr-watch.test.js owns every-phase readback/arming/joining.
 rule('maintain is default', watch, 'authorized maintain mode', /default for run-created PRs/);
 rule('implement Close-out waits for Release', implement, 'Run Close-out once only', /Release step is settled or not applicable/);
 rule('implement run done waits for Release', implement, 'The run is done only', /Release step is settled or not applicable/);
@@ -90,14 +89,14 @@ rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /s
 rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
 rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);
 rule('registry wake verifies package and version', autopilot, 'A wake verifies the registry', /expected package and version/);
-rule('adopted PR requires maintenance snapshot', autopilot, 'Later run PRs join', /explicitly adopted PR joins only with its maintenance snapshot/);
+rule('adopted PR requires maintenance snapshot', autopilot, 'An explicitly adopted PR joins', /only with its maintenance snapshot/);
 rule('healthy ticks stay quiet', autopilot, 'Healthy ticks stay quiet', /^Healthy ticks stay quiet\.$/);
 rule('relay deduplicates by purpose and revision', autopilot, 'Across implementation and release', /deduplicate by purpose and revision/);
 rule('milestone cap spans implementation and release', autopilot, 'Across implementation and release', /merge-ready and merged notifications together are capped at two per run/);
 rule('relay shares budget across implementation and release', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /deduplicate across implementation and release/);
 // Each verified publication arms or joins; the semantic contract owns that check.
 rule('Align continues small work to Implement', () => read('skills/axstack-align/SKILL.md'), 'Substantial work continues to', /small work continues from its small-change intent to Implement/);
-rule('workflow arms watch at first published PR', () => read('docs/workflows.md'), 'Implement arms maintain-mode watch', /first published PR/);
+// own-pr-watch-docs.test.js owns every-phase publication on all three public docs.
 
 test('run record requires a Release decision line', () => {
   expect(readFileSync(`${root}/skills/axstack/references/run-record.md`, 'utf8'))
