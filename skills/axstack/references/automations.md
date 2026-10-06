@@ -34,7 +34,7 @@ T3 sessions are exempt from Claude trust preflight.
 
 ## Session admission
 
-Perform guarded predecessor retirement in [Finite-session teardown](#finite-session-teardown).
+The owner-of-record performs guarded retirement in [Finite-session teardown](#finite-session-teardown).
 Lane identity requires exact thread/run identity, never a title or directory-name
 guess; never infer lane ownership from an empty local workspace.
 Reconcile saved state, current GitHub state, and native T3 threads, runs,
@@ -54,8 +54,24 @@ events and the unserved count. If a duplicate finds a stalled owner idle at its
 prompt with a final turn lacking a completion receipt for more than five
 minutes (nudged or not), record it in that private note and send one deduplicated
 notification under the recorded `Notification policy`.
-Unknown liveness blocks admission and shared-record writes; it does not
-permit takeover or cleanup. Preserve user-taken-over threads.
+A **wedged owner** has a non-terminal run with more than 60 minutes of verified
+inactivity across its thread, all its runs, delegated tasks and descendant
+threads, and is free of `user_takeover`.
+Exactly one successor recovers a wedged owner: the earliest-started live pass
+after the wedge, selected by native run start ordering; missing or tied ordering
+evidence holds admission and recovery.
+The successor first interrupts the wedged owner's run with `t3_thread_interrupt`
+using a stable `clientRequestId`, then cancels stale delegated tasks with
+`task_cancel` and reads back terminal state for the owner and every descendant
+before recording the takeover in continuity and becoming owner.
+Before any admission, the successor reconciles the wedged owner's in-flight
+jobs from GitHub and evidence. Only a verdict already published and read back
+counts as served. Otherwise the event is unserved/`INCOMPLETE` and re-eligible.
+A failed interrupt or unverified terminal state keeps the existing hold plus
+one deduplicated notification under the recorded `Notification policy`.
+Outside the wedged-owner recovery above, unknown liveness blocks admission,
+shared-record writes, takeover and cleanup, including when activity is recent.
+Preserve user-taken-over threads.
 This is prompt policy, not an atomic lock: the overlap canary must demonstrate
 one admission owner before activation. Count all unsettled PR jobs and descendants.
 
@@ -260,16 +276,20 @@ or separate model gate.
 
 ## Finite-session teardown
 
-Each pass retires settled predecessor passes and reports the retained worktree
-count. Retirement requires terminal run evidence and settled descendants,
+Only the owner-of-record pass retires settled predecessor passes and terminal
+duplicate passes (terminal run, no descendants, wrote only their own pass note),
+including duplicates started after the owner or immediately after successor takeover.
+Each pass reports the retained worktree count.
+Retirement requires terminal run evidence and settled descendants,
 durable continuity, evidence read-back and verified salvage where needed;
 follow [Workspace hygiene](workspace-hygiene.md) and [T3 runtime](t3-runtime.md).
 Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 The orphan sweep covers the run record's repositories plus registered repositories on this host.
-`t3_thread_organize` settle/archive changes metadata only; exact guarded Git
-worktree removal remains separate. Unknown, active or user-taken-over threads,
+Retirement settles duplicate threads with `t3_thread_organize` (settle/archive
+changes metadata only) before separate guarded Git worktree removal.
+Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
 
 A review-manager pass may retire a predecessor pass's local `t3code/*` branch

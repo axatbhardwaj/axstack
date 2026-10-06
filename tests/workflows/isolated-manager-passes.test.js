@@ -92,8 +92,10 @@ const rules = [
     'With ordering evidence, the earlier pass must be the one that wins.'],
   ['inventory', [/discovery/i, /every page/i, /PRs/, /threads/i],
     'Discovery must read every page of threads and PRs.'],
-  ['growth', [/each pass/i, /retire/i, /settled predecessor/i, /report/i, /retained worktree count/i],
-    'Each pass must report the retained worktree count and retire settled predecessor passes.'],
+  ['growth', [/owner-of-record pass/i, /retire/i, /settled predecessor/i],
+    'The owner-of-record pass must retire settled predecessor passes.'],
+  ['growth report', [/each pass/i, /report/i, /retained worktree count/i],
+    'Each pass must report the retained worktree count.'],
   ['overlap canary', [/canary/i, /two overlapping/i, /run_scheduled_task_now/, /one admission owner/i],
     'The canary must demonstrate one admission owner with two overlapping run_scheduled_task_now passes.'],
   ['killed predecessor canary', [/canary/i, /reconcil/i, /killed predecessor/i],
@@ -103,10 +105,53 @@ const rules = [
 ];
 for (const [name, concepts, holdout] of rules) {
   test(`T3 manager rule: ${name}`, () => {
-    const text = read('skills/axstack/references/automations.md');
+    // Duplicate eligibility below independently checks this required prohibition.
+    const text = read('skills/axstack/references/automations.md').replace(/no descendants/gi, '');
     expect(requires(text, ...concepts)).toBe(true);
     expect(requires(sentences(text).filter((sentence) => !requires(sentence, ...concepts)).join('. '), ...concepts)).toBe(false);
     expect(requires(holdout, ...concepts)).toBe(true);
     expect(requires(holdout.replace('must', 'must not'), ...concepts)).toBe(false);
+  });
+}
+
+const duplicateRules = [
+  ['owner retires terminal duplicates',
+    (text) => sentences(text).some((sentence) => /no descendants/i.test(sentence)
+      && requires(sentence.replace(/no descendants/i, ''), /only the owner-of-record pass/i,
+        /retires/i, /terminal duplicate passes/i, /(?<!non-)\bterminal run/i, /wrote only their own pass note/i,
+        /including duplicates started after the owner/i, /immediately after successor takeover/i)),
+    'Only the owner-of-record pass retires settled predecessor passes and terminal duplicate passes with a terminal run, no descendants, and that wrote only their own pass note, including duplicates started after the owner or immediately after successor takeover.',
+    [/only the owner-of-record pass/i, 'any duplicate pass']],
+  ['retirement settles sidebar threads',
+    (text) => requires(text, /retirement/i, /settles/i, /duplicate threads/i,
+      /t3_thread_organize/i, /before/i, /guarded Git worktree removal/i),
+    'Retirement settles duplicate threads via t3_thread_organize before the separate guarded Git worktree removal.',
+    [/settles/i, 'leaves unsettled']],
+];
+for (const [name, accepts, rewording, [direction, inversion]] of duplicateRules) {
+  test(`terminal duplicate recovery: ${name}`, () => {
+    const text = compact('skills/axstack/references/automations.md')
+      .split('## Finite-session teardown')[1].split('## Activation canary')[0];
+    expect(accepts(text)).toBe(true);
+    const targets = sentences(text).filter(accepts);
+    expect(targets.length).toBeGreaterThan(0);
+    const substitute = (replacement) => targets.reduce((source, target) =>
+      source.replace(target, replacement(target)), text);
+    expect(accepts(substitute(() => ''))).toBe(false);
+    expect(accepts(substitute((target) => target.replace(direction, inversion)))).toBe(false);
+    expect(accepts(substitute(() => rewording))).toBe(true);
+    expect(accepts(substitute(() => rewording.replace(direction, inversion)))).toBe(false);
+    if (name === 'owner retires terminal duplicates') {
+      for (const [condition, unsafe] of [
+        [/terminal run/i, 'non-terminal run'],
+        [/no descendants/i, 'active descendants'],
+        [/wrote only their own pass note/i, 'wrote shared continuity'],
+        [/including duplicates started after the owner/i, 'excluding duplicates started after the owner'],
+        [/immediately after successor takeover/i, 'only after a later pass'],
+      ]) {
+        expect(accepts(substitute((target) => target.replace(condition, unsafe)))).toBe(false);
+        expect(accepts(substitute(() => rewording.replace(condition, unsafe)))).toBe(false);
+      }
+    }
   });
 }
