@@ -74,7 +74,7 @@ for (const sentence of safety) {
   });
 }
 
-import { requires, prohibits, sentences } from './prose-contract.js';
+import { requires, prohibits, sentences, checkRule } from './prose-contract.js';
 const rules = [
   ['lane', [/T3 project/i, /axstack-review-lane/, /VPS/, /existing/, /axatbhardwaj\/axstack/, /origin/, /main/],
     'On the VPS, the existing axatbhardwaj/axstack clone with origin and main must host T3 project axstack-review-lane.'],
@@ -137,16 +137,6 @@ for (const [name, accepts, rewording, inversions] of duplicateRules) {
   test(`terminal duplicate recovery: ${name}`, () => {
     const text = compact('skills/axstack/references/automations.md')
       .split('## Finite-session teardown')[1].split('## Activation canary')[0];
-    expect(accepts(text)).toBe(true);
-    const targets = sentences(text).filter(accepts);
-    expect(targets.length).toBeGreaterThan(0);
-    const substitute = (replacement) => targets.reduce((source, target) =>
-      source.replace(target, replacement(target)), text);
-    expect(accepts(substitute(() => ''))).toBe(false);
-    expect(accepts(substitute(() => rewording))).toBe(true);
-    for (const [direction, inversion] of inversions) {
-      expect(accepts(substitute((target) => target.replace(direction, inversion)))).toBe(false);
-      expect(accepts(substitute(() => rewording.replace(direction, inversion)))).toBe(false);
-    }
+    checkRule(text, accepts, rewording, inversions);
   });
 }

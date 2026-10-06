@@ -57,16 +57,21 @@ notification under the recorded `Notification policy`.
 A **wedged lane pass**, whether owner, successor or duplicate, has a non-terminal
 run with more than 60 minutes of verified inactivity across its thread, all its
 runs, delegated tasks and descendant threads, and is free of `user_takeover`.
+A user-taken-over descendant holds recovery and excludes its pass from the
+wedged category, and is never interrupted.
 A live pass has a non-terminal run and is not wedged.
 Exactly one successor recovers a wedged owner or resumes an interrupted takeover:
-the earliest-started live pass after the wedge, selected by native run start
+the earliest-started live pass, selected by native run start
 ordering; missing or tied ordering evidence holds admission and recovery.
 The successor interrupts the owner and its descendant threads with
 `t3_thread_interrupt`, naming each exact `runId` and a stable `clientRequestId`
 per run, and reads back terminal state for the whole tree
 before recording the takeover in continuity and becoming owner.
 If a successor wedges between interrupt and takeover, the next elected live pass
-resumes recovery from terminal readback of the interrupted owner, which is
+interrupts the wedged successor and its tree with `t3_thread_interrupt` at each
+exact `runId` using the same per-run procedure, and reads back terminal state for
+that whole tree before recording any takeover, then resumes recovery from terminal readback
+of the interrupted owner, which is
 excluded from the potentially-live-owner hold.
 The owner-of-record, including a successor immediately after takeover, interrupts
 wedged non-owner passes (duplicates or failed successors) using the same exact-run
