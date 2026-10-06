@@ -126,13 +126,36 @@ test('missing credentials skip only that instance and leave a reason without exp
   }
 });
 
-test('no eligible instance exits nonzero with a short reason and no chosen ID', async () => {
-  for (const accounts of [[], [{ missing: true }], [{ body: codexUsage('pro', 95, 0) }]]) {
-    const result = await fixture('codex', accounts).run();
+test('no eligible instance uses the hold exit with a short reason and no chosen ID', async () => {
+  for (const accounts of [[], [{ missing: true }], [{ body: codexUsage('pro', 95, 0) }],
+    [{ enabled: false }], [{ driver: 'claudeAgent' }]]) {
+    for (const args of [[], ['--json']]) {
+      const result = await fixture('codex', accounts).run(args);
+      expect(result.status).toBe(2);
+      expect(result.output).toBe('');
+      expect(result.error).toBe('account selection hold: no eligible provider instances\n');
+    }
+  }
+});
+
+test('input/settings and unexpected errors use the error exit without claiming ineligibility', async () => {
+  const f = fixture('codex', [{ id: 'account', body: codexUsage('pro', 10, 20) }]);
+  const failed = (result) => {
     expect(result.status).toBe(1);
     expect(result.output).toBe('');
-    expect(result.error).toMatch(/no eligible provider instances/);
+    expect(result.error).toBe('account selection failed: invalid input/settings or unexpected error\n');
+  };
+  failed(await f.run(['--unexpected', token]));
+  failed(await f.run(['--settings', `${f.home}/missing-${token}`]));
+  for (const settings of [`{invalid-${token}`, '{}',
+    ...[null, [], 'invalid'].map((providerInstances) => JSON.stringify({ providerInstances }))]) {
+    writeFileSync(f.settings, settings);
+    failed(await f.run());
   }
+  f.instances.account.config = { homePath: 42 };
+  writeFileSync(f.settings, JSON.stringify({ providerInstances: f.instances }));
+  failed(await f.run());
+  expect(f.requests.length).toBe(0);
 });
 
 test('fresh per-account cache avoids requests and keeps credentials out of the cache', async () => {

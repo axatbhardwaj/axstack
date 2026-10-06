@@ -90,15 +90,21 @@ async function account(instanceId, instance, provider) {
 try {
   const options = argumentsFrom(process.argv.slice(2));
   const settings = readJson(expandHome(options.settings || `${home}/.t3/userdata/settings.json`));
+  if (!settings?.providerInstances || typeof settings.providerInstances !== 'object'
+    || Array.isArray(settings.providerInstances)) throw new Error();
   const instances = [];
   for (const [instanceId, instance] of Object.entries(settings.providerInstances).filter(([, instance]) =>
     instance.enabled && instance.driver === drivers[options.provider])) {
     instances.push(await account(instanceId, instance, options.provider));
   }
   const chosen = instances.filter((instance) => instance.score !== null).sort((a, b) => b.score - a.score)[0];
-  if (!chosen) throw new Error('no eligible provider instances');
-  console.log(options.json ? JSON.stringify({ chosenInstanceId: chosen.instanceId, instances }) : chosen.instanceId);
+  if (!chosen) {
+    console.error('account selection hold: no eligible provider instances');
+    process.exitCode = 2;
+  } else {
+    console.log(options.json ? JSON.stringify({ chosenInstanceId: chosen.instanceId, instances }) : chosen.instanceId);
+  }
 } catch {
-  console.error('account selection failed: no eligible provider instances or invalid input');
+  console.error('account selection failed: invalid input/settings or unexpected error');
   process.exitCode = 1;
 }

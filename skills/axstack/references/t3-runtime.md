@@ -20,7 +20,8 @@ Canonical fallback bindings map codex→`codex`, claude→`claudeAgent`, grok→
 antigravity→`antigravity`.
 At each dispatch or launch, claude and codex must bind to the instanceId printed
 by `scripts/pick-instance.js --provider <provider>`.
-On script failure, fall back to the canonical instance and validate availability.
+Only error exit 1 permits fallback to the canonical instance after validating availability.
+Exit 2 (no eligible provider instances) must hold the work without fallback.
 Record the chosen instanceId and a pointer to saved `--json` output in the dispatch record.
 Only same-provider, same-model account selection among instances of one driver
 is permitted, with provider, model, class and effort rules required to remain unchanged.
