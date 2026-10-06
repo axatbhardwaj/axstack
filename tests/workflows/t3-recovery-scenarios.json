@@ -15,7 +15,7 @@
     },
     {
       "id": "writer-death-after-idle",
-      "input": "A started writer dies without sending a receipt after the driver ends its turn; the bound 600000ms watch wakes the driver.",
+      "input": "A started writer dies without sending a receipt after the driver ends its turn; the bound 300000ms watch wakes the driver.",
       "contracts": ["idle writer watch", "failure classification", "replacement attempt"],
       "expected": { "action": "Reconcile the failed run and hold incomplete; replace only after terminal failure with a<n+1>, retaining the failed branch for salvage." }
     },
@@ -73,7 +73,7 @@
         "An uncertain delete preserves the hold and recorded schedule ID."
       ],
       "expected": {
-        "action": "Arm one schedule_task with bindToCurrentThread:true and everyMs:600000, record its ID, reconcile failed runs as incomplete, keep the same schedule armed while CI or release is pending, and never create a second watch; delete only after chat-run stop conditions with delete_scheduled_task for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
+        "action": "Arm one schedule_task with bindToCurrentThread:true and everyMs:300000, record its ID, reconcile failed runs as incomplete, keep the same schedule armed while CI or release is pending, and never create a second watch; delete only after chat-run stop conditions with delete_scheduled_task for that ID and list_scheduled_tasks to verify absence; uncertain deletion is a hold."
       }
     }
   ]

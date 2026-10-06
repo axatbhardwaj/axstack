@@ -67,6 +67,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-docs-overhaul T2: +920 measured aggregate bytes and +284 always-loaded bytes for skill fixes F1-F3, S1-S7.
   // 20261006-hermes-reply-inbox T1: +2028 measured aggregate bytes for inbox forwarding,
   // body-digest receipt matching and the packaged Hermes prompt; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(330115);
+  // A7 five-minute wake cadence: -5 measured aggregate bytes; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(330110);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });

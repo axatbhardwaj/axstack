@@ -61,8 +61,8 @@ rule('stopped native watches are rechecked and rearmed at the next wake', runtim
   'At the next wake after T3 reports it stopped watching a PR, the driver re-checks the PR and invokes watch_pull_request again.',
   [[/re-checks?/i, 'ignores'], [/\b(?:calls?|invokes?)\b/i, 'bypasses']]);
 rule('missing native watch falls back to schedule and digest without a hold', runtime,
-  [/watch_pull_request/i, /unavailable/i, /bound 10-minute schedule/i, /scripts\/pr-digest\.js/i],
-  'Without a hold, fall back to scripts/pr-digest.js and the bound 10-minute schedule whenever watch_pull_request is unavailable.',
+  [/watch_pull_request/i, /unavailable/i, /bound 5-minute schedule/i, /scripts\/pr-digest\.js/i],
+  'Without a hold, fall back to scripts/pr-digest.js and the bound 5-minute schedule whenever watch_pull_request is unavailable.',
   [[/fall back/i, 'refuse fallback'], [/without a hold/i, 'with a hold']]);
 rule('native events retain wake routing and readiness gates', runtime,
   [/native PR wake events/i, /watch §4/i, /unchanged §5 readiness predicate/i],

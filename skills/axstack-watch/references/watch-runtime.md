@@ -34,7 +34,7 @@ after verified readback, subject to the user's explicit publication boundary.
 
 The initiating T3 thread remains the sole driver and `progress.md` writer.
 Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
-`schedule_task` with `bindToCurrentThread:true`, `everyMs:600000`, a stable
+`schedule_task` with `bindToCurrentThread:true`, `everyMs:300000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
 driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding at creation.
 Follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding) before arming the watch and for schedule recreation on self-switch.
@@ -43,9 +43,9 @@ The chat-run watch never expires or waits for re-authorization while PRs remain 
 If the native schedule has a lifetime, the driver re-arms it at a wake.
 Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.
 After 7 days with no event on any watched PR, and only with no unsettled launched work,
-change the wake cadence from 10 to 60 minutes.
-On the next event on a watched PR, restore the wake cadence to 10 minutes.
-If launched work becomes unsettled, restore the 10-minute cadence.
+change the wake cadence from 5 to 60 minutes.
+On the next event on a watched PR, restore the wake cadence to 5 minutes.
+If launched work becomes unsettled, restore the 5-minute cadence.
 Read back each schedule update and record its receipt; an uncertain update holds affected work.
 Each wake reconciles all unsettled runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.

@@ -157,8 +157,8 @@ const documented = [
     'A head guard does not atomically guard base freshness.', [/does not/i, 'does'], /does not/i],
   ['race consequence', [/concurrent-merge race/i, /held/i, /post-merge push-failure/i],
     'The concurrent-merge race is held by the post-merge push-failure rule.', [/held/i, 'ignored']],
-  ['watch cost', [/watch/i, /10 minutes/i, /60 when quiet/i, /until PRs land/i, /accepted token cost/i],
-    'A watch wakes every 10 minutes (60 when quiet) until PRs land, with an accepted token cost.', [/accepted token cost/i, 'zero cost']],
+  ['watch cost', [/watch/i, /5 minutes/i, /60 when quiet/i, /until PRs land/i, /accepted token cost/i],
+    'A watch wakes every 5 minutes (60 when quiet) until PRs land, with an accepted token cost.', [/accepted token cost/i, 'zero cost']],
   ['shared preview user', [/preview code/i, /same VPS user/i, /agents/i, /isolated/i],
     'Preview code runs under the same VPS user as agents and is not isolated.', [/is not isolated/i, 'is isolated'], /is not isolated/i],
 ];

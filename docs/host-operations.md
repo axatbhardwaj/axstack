@@ -45,7 +45,7 @@ executor MCP, and live schedule behavior need separate preflights.
 
 Installation creates no production schedule and adds no custom scheduler.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
-Its bound T3 schedule resumes the driver every 10 minutes by default while open PRs stay watched.
+Its bound T3 schedule resumes the driver every 5 minutes by default while open PRs stay watched.
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
 Missing schedule capability holds activation.
 The optional review manager uses an unbound 15-minute T3 schedule and requires
@@ -83,7 +83,7 @@ Delivery failure never clears the underlying hold.
 
 ## Chat-run watch activation
 
-A bound T3 schedule resumes the driver thread every 10 minutes by default.
+A bound T3 schedule resumes the driver thread every 5 minutes by default.
 The run record holds the schedule ID and driver thread.
 Each wake reconciles all unsettled dispatch attempts
 and runs the own-PR maintenance loop: feedback, base movement, required CI,
