@@ -16,7 +16,11 @@
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
 - Use `gh stack` for dependent PRs. Workers do not push, submit, merge, publish,
-  or release; the human merges by default, bottom-up for a stack.
+  or release. For own PRs, automatic merge is the default under the
+  [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
+  The recorded owning watch thread merges; excluded PRs follow its card and
+  user-merge rules. Standalone authorized maintenance, small, and adopted work
+  use the same predicate. User merges are bottom-up for a stack.
 
 ## Engineering
 

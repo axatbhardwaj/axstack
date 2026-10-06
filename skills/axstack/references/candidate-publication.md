@@ -45,6 +45,16 @@ remote confirmation. Reviewers inspect a detached immutable checkout of the
 confirmed candidate SHA and pinned base, never only the movable branch name.
 Any author repair creates a new revision and repeats this boundary.
 
+## Revert line
+
+Every own PR description must contain exactly one `Revert` line:
+`Revert: clean` | `Revert: steps: <manual steps>` | `Revert: irreversible: <why>`.
+Use `clean` only when a single `git revert` of the merge commit restores the
+previous behaviour with CI green.
+A `clean` revert leaves no data, schema, config, external, or published effect behind.
+Otherwise use `steps` or `irreversible`.
+Classify every release PR as `irreversible`.
+
 ## Immutable checkout shape
 
 The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.

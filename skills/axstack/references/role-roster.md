@@ -2,6 +2,10 @@
 
 - Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
+  For own PRs, automatic merge is the default under the
+  [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+  Only the recorded owning watch thread merges, including `axstack-owner`
+  for authorized standalone maintenance. Other roles never acquire merge authority.
 - `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
 

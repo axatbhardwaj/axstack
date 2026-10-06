@@ -36,7 +36,7 @@ human approval)` as a decision hold eligible under the Notification policy.
 ## Phase sequence
 
 - Small: Align read-back, small-change intent, implement, watch in maintain
-  mode, human merge. An opted-in Align refinement is part
+  mode, merge under the watch §5 predicate. An opted-in Align refinement is part
   of read-back.
 - Substantial: Align, spec draft with advisers and diligence, human spec
   approval at gate 1, tickets with diligence, implement, watch in maintain mode,
@@ -45,30 +45,44 @@ human approval)` as a decision hold eligible under the Notification policy.
 
 Do not seek another phase-start instruction after a completed identity.
 Spec approval is always the human's decision. Audit self-improvement PRs follow
-the same merge predicate. Only the original chat-run driver with the approved
-ticket map may auto-merge PRs satisfying `axstack-implement` §6's approved
-ticket-map membership and `integration` base conditions. The user merges peer
-PRs and PRs into `deploying` bases. Managers, workers, reviewers, automations,
-and standalone watches never merge. A stack follows its guarded bottom-up rule.
+the same merge predicate.
+For own PRs, automatic merge is the default under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The recorded owning watch thread is the merge actor, including `axstack-owner`
+for authorized standalone maintenance and small or adopted work.
+Managers, workers, reviewers, monitors, and nightly triage never merge.
+Observation-only and peer watches never merge.
+Apply watch §5's approval, base, exclusions, and merge-card rules.
+A stack follows its guarded whole-stack rule.
+User merges are bottom-up for a stack.
 
-## Implement into maintain watch
+## Own PR publication into maintain watch
 
-When implement publishes the run's first PR, arm exactly one `axstack-watch`
-chat-run in authorized maintain mode. Read the [T3 runtime boundary](t3-runtime.md) and use its bound
-`schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId. Later run PRs join after verified
-publication readback; an explicitly adopted PR joins only with its maintenance
-snapshot. The original driver alone routes work; one author writes each
+When any Axstack phase publishes an own PR, after verified publication readback
+the driver arms one chat-run watch in authorized maintain mode or joins the existing watch.
+This covers implement, small change, debug repair, improve, and adopted-PR maintenance.
+Explicit user stop-after-publication and observation-only requests prevail.
+Never require a manual `axstack-watch` invocation.
+The driver remains the single owner and sole run-record writer.
+Never create a per-PR session or an ownership hand-off.
+Read the [T3 runtime boundary](t3-runtime.md) and use its bound
+`schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId.
+An explicitly adopted PR joins only with its maintenance snapshot.
+The original driver alone routes work; one author writes each
 candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
 merge-ready, watch §5 maintenance repairs feedback, rebases when the base moves,
 keeps CI green, and checks approvals without re-requesting human review.
 
-Maintain is the default mode for run-created PRs. End the chat-run watch when
-every watched PR is merged or closed and the run's release step is settled or
-not applicable, or when the user cancels. Expiry is a recorded stop with
-resumable state, never a silent renewal. A required PR closed without merging
-is incomplete scope; it does not make the run release-eligible. On wake expiry
-record `Autopilot: paused (wake expired; resume: user reauthorizes a wake)` and
-notify under the recorded Notification policy when user action is needed.
+Maintain is the default mode for run-created PRs.
+End the chat-run watch only when every watched PR is merged or closed,
+launched work is settled, and the run's release step is settled or not applicable,
+or the user cancels.
+A required PR closed without merging is incomplete scope; it does not make the run release-eligible.
+Keep its decision hold and wake until the user resolves scope or cancels.
+The chat-run watch never expires or waits for re-authorization while PRs remain open.
+Follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
+for quiet cadence and native schedule re-arming.
+Run Close-out after the watch ends, subject to its existing acceptance conditions.
 
 ## Release and install, when applicable
 

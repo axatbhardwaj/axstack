@@ -35,8 +35,16 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-review-lane-self-heal T1: +1381 measured bytes for bounded wedge recovery and terminal duplicate retirement.
   // 20261006-review-lane-self-heal T1 repair1: +798 bytes for any-pass recovery, exact-run interrupts, wait semantics and canary.
   // 20261006-review-lane-self-heal T1 repair2: +316 bytes for successor settlement before takeover and descendant protection.
+  // auto-merge-preview-triage T1: +1951 measured bytes for shared severity, diligence verdicts, and comment holds.
+  // auto-merge-preview-triage T2: +1214 measured bytes for the revert definition, body policy, and authored review.
+  // auto-merge-preview-triage T3: +6018 measured bytes for default merge authority, provenance, exclusions, and cards.
+  // auto-merge-preview-triage T4: +2257 measured bytes for every-phase watch arming, lifetime, cadence, and receipts.
+  // auto-merge-preview-triage T4 repair1: -65 measured bytes after consolidating arming and watch receipts.
+  // auto-merge-preview-triage T5: +3232 measured bytes for the PR preview procedure and owner lifecycle links.
+  // auto-merge-preview-triage T5 repair1: +96 measured bytes for owner, verifier, and later-release authority boundaries.
+  // auto-merge-preview-triage T6: +1957 measured bytes for nightly triage prompt and durable setup guidance.
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  expect(total).toBeLessThanOrEqual(298014);
+  expect(total).toBeLessThanOrEqual(314674);
   expect(alwaysLoaded).toBeLessThanOrEqual(24530);
 });

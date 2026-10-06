@@ -103,19 +103,17 @@ gate.
 
 ## Authority
 
-- The driver owns run scope, cross-PR coordination, integration, and every
-  selected external-tracker mutation. The checker reports discrepancies only.
-- One T3 host/server owns a run. There is no fixed active-PR count;
-  fanout is dependency- and capacity-driven within configured host resource and
-  spending limits. The driver reduces fanout when the run record shows rework,
-  review backlog, or resource pressure, queues conflicting or dependent work,
-  and uses `gh stack` for dependent PRs. Routine shape, split, fanout, and
-  exception choices are autonomous driver decisions within the approved scope;
-  size alone never requires user approval.
-- Exactly one writer per candidate acts at a time, with one persistent owner
-  accountable for each PR. Each PR carries one theme and a measured size under
-  [PR shape](pr-shape.md). Unknown capacity metrics are reported as unknown,
-  never as a telemetry prerequisite or blocker. Parent changes invalidate
-  affected child evidence, which must be refreshed against the new parent.
-- The human merges by default, bottom-up for a stack. Review approval and
-  reviewer votes never grant mutation or merge authority.
+- The driver owns scope, cross-PR coordination, integration, and every selected
+  external-tracker mutation. Checker reports discrepancies only.
+- One T3 host/server owns a run. No fixed active-PR count; fanout is dependency-
+  and capacity-driven within host resource and spending limits. Reduce fanout for
+  recorded rework, review backlog, or resource pressure. Queue conflicts and
+  dependencies; use `gh stack` for dependent PRs. Routine shape, split, fanout, and
+  exception choices within approved scope are autonomous driver decisions; size alone never
+  requires user approval.
+- Exactly one writer per candidate; one persistent accountable PR owner. Each PR has one theme and measured size under [PR shape](pr-shape.md). Report unknown capacity
+  metrics; never a telemetry prerequisite or blocker. Parent changes invalidate
+  affected child evidence; refresh it against the new parent.
+- Own PRs default to automatic merge under [watch §5](../../axstack-watch/SKILL.md).
+  Review approval and reviewer votes alone never grant mutation or merge authority.
+  User merges are bottom-up for a stack.

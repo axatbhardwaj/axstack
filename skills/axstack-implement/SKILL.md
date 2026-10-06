@@ -189,6 +189,10 @@ The author stops at that receipt and does not push. The driver reconciles it,
 uses `gh stack` to publish, confirms remote readback, and continues the loop
 without editing the candidate. No step grants merge authority.
 
+Every own PR description must contain exactly one `Revert` line.
+Follow [Revert line](../axstack/references/candidate-publication.md#revert-line)
+for its format and classification.
+
 ## 6. Loop until merge-ready
 
 Inputs are one snapshotted small-change intent or an approved spec and ticket
@@ -202,6 +206,8 @@ For each PR:
 
 1. Dispatch `axstack-author` under §§3-5 and consume its strict-TDD receipt.
 2. Publish through candidate-publication and read back the exact SHA.
+   For each own PR, the owner must follow [PR previews](../axstack/references/preview.md)
+   to decide whether a preview makes sense.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
    author provenance. State the author's actual provider and model from the
    T3 launch receipt in the review dispatch brief; a `Claude-Session`
@@ -239,9 +245,10 @@ For each PR:
    `repairs` once and counts once toward the third-round hold.
 
 The T3 run watch reconciles every unsettled dispatch attempt; the bounded
-forge check wait is the only other implementation wait. The eligible run arms
-one maintain-mode chat-run watch at its first published PR; that watch owns its
-bound 10-minute T3 schedule wake.
+forge check wait is the only other implementation wait.
+After verified readback of every own PR publication, the driver arms or joins
+its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopilot.md).
+That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`. Under the recorded Notification policy,
 `axstack-relay` sends only a serious risk immediately, a genuine blocked
@@ -253,13 +260,21 @@ Only the bounded categories—user-decision holds (including spec approval),
 serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy.
 
-Merge-ready opens the merge boundary. Only the chat-run driver holding the
-approved ticket map is the merge actor for own PRs inside the approved ticket
-map (run-created or explicitly adopted into it) when they target an
-`integration` base. Apply `axstack-watch` §5's merge card and
-full predicate; an approval alone never grants merge authority. A peer PR or
-`deploying` base waits for the user to merge, in either approval mode. A
-manager, worker, reviewer, automation, or standalone watch must never merge.
+Merge-ready opens the merge boundary.
+For own PRs, automatic merge is the default under the
+[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The merge actor is the recorded owning watch thread (`axstack-owner` for
+standalone authorized maintenance), including small and adopted work.
+Missing or idle ownership follows lifecycle reconciliation and explicit transfer first.
+Apply `axstack-watch` §5's merge card and full predicate; an approval alone
+never grants merge authority.
+A peer PR or `deploying` base waits for the user to merge, in either approval mode.
+User merges are bottom-up for a stack.
+A manager, worker, reviewer, monitor, or nightly triage must never merge.
+Observation-only and peer watches never merge.
+Watch §5 owns provider provenance, approval carryover, eligible bases, every
+planned stack member's publication, exclusions, and card-reply exceptions.
+This policy grants no release, npm publish, or host install authority.
 Re-read every predicate term under watch §5 before merging. Confirm merge
 commits are allowed, `delete_branch_on_merge` is false, and the base has no
 merge queue; otherwise hold for the user. For a singleton, use

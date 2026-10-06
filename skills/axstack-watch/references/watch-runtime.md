@@ -2,6 +2,9 @@
 
 Read this before starting, resuming, or stopping automated PR observation.
 
+For each own PR, the owner must follow [PR previews](../../axstack/references/preview.md)
+when deciding on a preview, restarting it after a head change, or tearing it down.
+
 ## Standalone watch
 
 A standalone PR owner remains accountable through the default 24-hour window.
@@ -22,14 +25,24 @@ is verified while watching, plus explicitly adopted PRs with accepted
 maintenance snapshots. An unrelated self-authored PR is outside this Run. Retain
 merged/closed members in the record; scan reopened members. Ambiguous membership
 or publication holds completion. Draft members stay watched but cannot be
-merge-ready. A PR raised after the watch stops needs a new invocation.
+merge-ready. An own PR published after the watch stops arms a new watch under
+[Autopilot](../../axstack/references/autopilot.md#own-pr-publication-into-maintain-watch)
+after verified readback, subject to the user's explicit publication boundary.
 
 The initiating T3 thread remains the sole driver and `progress.md` writer.
 Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:600000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
-driver thread, chosen mechanism and expiry; the watch inherits the driver binding.
+driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding.
 One bound schedule serves both the run watch and the chat-run watch; never create a second watch.
+The chat-run watch never expires or waits for re-authorization while PRs remain open.
+If the native schedule has a lifetime, the driver re-arms it at a wake.
+Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.
+After 7 days with no event on any watched PR, and only with no unsettled launched work,
+change the wake cadence from 10 to 60 minutes.
+On the next event on a watched PR, restore the wake cadence to 10 minutes.
+If launched work becomes unsettled, restore the 10-minute cadence.
+Read back each schedule update and record its receipt; an uncertain update holds affected work.
 Each wake reconciles all unsettled runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime;
@@ -81,7 +94,11 @@ merged milestones (at most two across implementation and release), or a
 serious-risk hold.
 Quiet ticks never notify.
 
-The driver alone routes repair. Re-read remote head/base and T3 ownership.
+The driver alone routes repair.
+The driver routes rebases and review feedback to the PR's author for repair.
+For an adopted PR whose author this run did not launch, use a new author attempt under the adoption rules.
+The watch never writes candidate source.
+Re-read remote head/base and T3 ownership.
 Independent PRs may repair in parallel in separate T3 writer worktrees within
 measured host capacity. Two issues on the same PR use one author and one
 candidate; never create competing writers. A stack parent change invalidates
@@ -91,7 +108,10 @@ then rebase and revalidate children. Run-launched implementation PRs follow
 review. Explicitly adopted own PRs follow [Repair and
 publication](repair-publication.md): independent exact-local-SHA review precedes
 driver-owned `gh stack` publication and remote readback. The driver never
-self-reviews; the human merges. Observation alone grants no repair or
+self-reviews.
+For own PRs, automatic merge is the default under the
+[watch predicate](../SKILL.md#5-state-readiness-precisely).
+Observation alone grants no repair or
 public-reply authority.
 
 On new comments, failed checks, or base movement, repeat repair, the
@@ -104,19 +124,19 @@ re-read all feedback and approvals at the current head before readiness.
 Re-reading approvals checks current state, not re-requesting review from a
 human who already approved.
 
-Stop the chosen wake only when every watched PR is merged or closed and the
-run's release step is settled or not applicable, the user cancels, or it
-expires. Without an Autopilot or Release record, the release step is not
+Stop the chosen wake only when every watched PR is merged or closed,
+launched work is settled, and the run's release step is settled or not applicable,
+or the user cancels. Without an Autopilot or Release record, the release step is not
 applicable to this watch. A required PR closed without merging records a
-decision hold and the wake remains active while unexpired until the user
-resolves scope, cancels, or the wake expires; the run is not release-eligible.
+decision hold and the wake remains active until the user resolves scope or cancels;
+the run is not release-eligible.
 Delete only the recorded watch with `delete_scheduled_task` and read back its absence with
 `list_scheduled_tasks`.
 An uncertain delete preserves the hold and recorded schedule ID.
 Re-read membership and confirm no ambiguous publication or unsettled pass;
 cancellation prevents new work but does not prove running workers exited.
-For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed
-and the release step is settled or not applicable, or until user cancellation or expiry.
+For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed,
+launched work is settled, and the release step is settled or not applicable, or until user cancellation.
 For a chat-run watch, defer the T3 runtime's "nothing remains unsettled" deletion until those chat-run stop conditions.
 The driver separately settles workers, preserves evidence, and archives the run;
 an unavailable driver leaves those steps pending. The standalone 24-hour expiry

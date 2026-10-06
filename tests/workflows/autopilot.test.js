@@ -23,10 +23,10 @@ test('small and substantial paths continue after their own authority gates', () 
   expect(skill('axstack-tickets')).toMatch(/autopilot/i);
 });
 
-test('first run PR arms maintain watch and later verified PRs join', () => {
+test('own PR publications enter maintain watch and share its bound wake', () => {
   const text = ref();
-  expect(text).toMatch(/first PR[\s\S]*exactly one[\s\S]*axstack-watch[\s\S]*maintain mode/i);
-  expect(text).toMatch(/later[\s\S]*PRs[\s\S]*readback/i);
+  expect(text).toMatch(/any Axstack phase[\s\S]*verified publication readback[\s\S]*arms one chat-run watch[\s\S]*maintain mode[\s\S]*joins/i);
+  expect(text).toMatch(/explicitly adopted PR joins only with its maintenance snapshot/i);
   expect(text).toMatch(/bound[\s\S]*schedule_task[\s\S]*everyMs:600000[\s\S]*scheduledTaskId/i);
   expect(text).toMatch(/until[\s\S]*merge.ready[\s\S]*implement §6 step 4[\s\S]*after[\s\S]*watch §5/i);
   expect(text).toMatch(/every watched PR[\s\S]*merged or closed[\s\S]*release step[\s\S]*settled or not applicable/i);

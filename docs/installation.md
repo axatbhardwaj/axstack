@@ -319,10 +319,10 @@ the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
 Installation creates no production schedule and adds no custom scheduler.
-Chat-run own-PR watch uses a bound T3 schedule every 10 minutes by default;
-record its ID, driver thread, and expiry. Missing schedule capability holds
-activation. Delete the schedule by its exact ID and verify absence with
-`list_scheduled_tasks` when the watch ends; uncertainty preserves the hold.
+Every verified own-PR publication arms or joins the driver's chat-run watch.
+Its bound T3 schedule resumes the driver every 10 minutes by default while open PRs stay watched.
+See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
+Missing schedule capability holds activation.
 The optional review manager uses an unbound 15-minute T3 schedule and requires
 its separate native canary before activation. Installed guidance does not prove
 live behavior. See [Review manager](../skills/axstack/references/automations.md).

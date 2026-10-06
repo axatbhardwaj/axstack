@@ -25,8 +25,7 @@ function rule(name, source, anchor, pattern) {
 
 rule('spec advances to Tickets', () => read('skills/axstack-spec/SKILL.md'), 'In an eligible delivery run', /continue to Tickets in the same driver chat/);
 rule('Tickets advances to Implement', () => read('skills/axstack-tickets/SKILL.md'), 'With a complete map', /continues to Implement in the same driver chat/);
-rule('watch arms on first PR', autopilot, 'When implement publishes', /first PR, arm exactly one `axstack-watch` chat-run in authorized maintain mode/);
-rule('later verified PR joins', autopilot, 'Later run PRs join', /verified publication readback/);
+// automatic-own-pr-watch.test.js owns every-phase readback/arming/joining.
 rule('maintain is default', watch, 'authorized maintain mode', /default for run-created PRs/);
 rule('implement Close-out waits for Release', implement, 'Run Close-out once only', /Release step is settled or not applicable/);
 rule('implement run done waits for Release', implement, 'The run is done only', /Release step is settled or not applicable/);
@@ -48,19 +47,18 @@ for (const item of ['tracker access', 'adviser or arena-seat availability', 'CI-
 }
 rule('silence cannot resume', autopilot, 'A user answer to the hold', /silence does not/);
 rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /human's decision/);
-rule('guarded merge actor', autopilot, 'Only the original chat-run driver with', /approved.*ticket map.*auto-merge.*integration/);
+rule('guarded merge actor', autopilot, 'The recorded owning watch thread', /merge actor.*axstack-owner.*standalone.*small or adopted/);
 rule('human approval is not re-requested', autopilot, 'After merge-ready', /without re-requesting human review/);
 rule('relay does not grant authority', autopilot, 'A relay message is only', /never authority to approve, merge, or publish/);
 rule('tag publish install authority', autopilot, 'Tagging, publishing, installation, and host mutation', /recorded per-run authority/);
 rule('hosts are not inferred', autopilot, 'Install hosts come only', /absent host list is a decision hold, not permission to infer hosts/);
 rule('cancellation settles with guards', autopilot, 'Cancel sets', /stops new actions.*guarded settlement/);
-rule('expiry never silently renews', autopilot, 'Expiry is a recorded stop', /never a silent renewal/);
+// Chat-run schedule renewal is covered by automatic-own-pr-watch.test.js; standalone expiry stays separate.
 rule('recordless watch treats release as not applicable', watch, 'Without an Autopilot or Release record', /release step is not applicable/);
 rule('recordless runtime treats release as not applicable', runtime, 'Without an Autopilot or Release record', /release step is not applicable/);
 rule('manual and scheduled resume coexist', implement, "driver resumes on the user's next message", /`\/axstack-watch`.*armed chat-run watch wake/);
 rule('implement diligence repairs before hold', autopilot, 'Diligence FINDINGS during implement', /repair route.*recorded hold/);
 rule('spec gate records paused state', autopilot, 'Awaiting human spec approval', /Autopilot: paused.*decision hold/);
-rule('wake expiry records paused state and notification', autopilot, 'On wake expiry', /Autopilot: paused.*Notification policy/);
 rule('missing hosts hold at Align or spec', autopilot, 'A missing install host list', /Align or spec time.*decision hold/);
 rule('running author survives cancellation until settlement', autopilot, 'Cancellation does not cancel', /running author run.*settle/);
 rule('Close-out records installed version', autopilot, 'Close-out last', /release and install receipts.*installed version/);
@@ -91,14 +89,14 @@ rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /s
 rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
 rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);
 rule('registry wake verifies package and version', autopilot, 'A wake verifies the registry', /expected package and version/);
-rule('adopted PR requires maintenance snapshot', autopilot, 'Later run PRs join', /explicitly adopted PR joins only with its maintenance snapshot/);
+rule('adopted PR requires maintenance snapshot', autopilot, 'An explicitly adopted PR joins', /only with its maintenance snapshot/);
 rule('healthy ticks stay quiet', autopilot, 'Healthy ticks stay quiet', /^Healthy ticks stay quiet\.$/);
 rule('relay deduplicates by purpose and revision', autopilot, 'Across implementation and release', /deduplicate by purpose and revision/);
 rule('milestone cap spans implementation and release', autopilot, 'Across implementation and release', /merge-ready and merged notifications together are capped at two per run/);
 rule('relay shares budget across implementation and release', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /deduplicate across implementation and release/);
-rule('implement arms watch at first published PR', implement, 'The eligible run arms', /first published PR/);
+// Each verified publication arms or joins; the semantic contract owns that check.
 rule('Align continues small work to Implement', () => read('skills/axstack-align/SKILL.md'), 'Substantial work continues to', /small work continues from its small-change intent to Implement/);
-rule('workflow arms watch at first published PR', () => read('docs/workflows.md'), 'Implement arms maintain-mode watch', /first published PR/);
+// own-pr-watch-docs.test.js owns every-phase publication on all three public docs.
 
 test('run record requires a Release decision line', () => {
   expect(readFileSync(`${root}/skills/axstack/references/run-record.md`, 'utf8'))
@@ -112,10 +110,10 @@ test('a scoped hold leaves independent authorized work available', () => {
 test('holdout: human approval and merge authority stay explicit', () => {
   expect(sentence(read('skills/axstack-spec/SKILL.md'), 'The driver owns the draft')).toMatch(/user approves it/);
   expect(sentence(autopilot(), 'Spec approval is always')).toMatch(/human's decision/);
-  expect(sentence(autopilot(), 'The user merges peer PRs')).toMatch(/deploying.*bases/);
+  expect(sentence(watch(), 'Promotion, release,')).toMatch(/deploying.*peer PRs.*user.*forge/);
   expect(sentence(read('AGENTS.md'), 'The human merges the release PR')).toMatch(/approves the npm stage; agents never run/);
   expect(sentence(autopilot(), 'Human npm stage approval')).toMatch(/agents never run `npm stage approve`/);
-  expect(sentence(watch(), 'A human approval persists')).toMatch(/never re-request/);
+  expect(sentence(watch(), 'Never re-request a collaborator')).toMatch(/approval still counts.*carryover rule/);
 });
 
 test('Tickets no longer directs an eligible run to stop', () => {

@@ -42,8 +42,10 @@ If the base auditor is unlaunchable (preflight rejection, no Dispatch started),
 record `auditor: UNKNOWN (unlaunchable)` with the attempted route and error as
 the archive receipt; archive the run. A launched auditor Dispatch must settle
 normally. There is no substitution for the base auditor.
-The user-chosen improvement mode is a tested, independently reviewed PR that a
-human merges.
+The user-chosen improvement mode is a tested, independently reviewed PR.
+For own PRs, automatic merge is the default under the
+[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The auditor never merges.
 
 Act as a non-author, read-only reader of the run. The assigned audit artifact is
 `audit.md`, the only writable output. Make no edits to product, skills,
@@ -151,7 +153,7 @@ Each proposal names:
 4. a regression scenario first, followed by an unchanged holdout evaluation;
 5. a cost and quality comparison when those values were measured; and
 6. the authorized delivery path: the auditor suggests, the driver arranges an
-   author and independent review, a reviewed PR is proposed, and a human merges.
+   author and independent review, a reviewed PR is proposed, and the owning watch thread applies watch §5, including its user-merge exclusions.
 
 Keep evaluation data, candidate changes, and validation separate. This is an
 original Axstack workflow with no outside dependency or extra framework to

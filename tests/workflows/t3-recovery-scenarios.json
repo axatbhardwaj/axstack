@@ -65,7 +65,7 @@
       "input": "A bound schedule wakes the idle driver after a writer dies without a receipt; later all runs settle while a PR stays open with CI pending, then all PRs merge but release is still pending; after release settles, the first deletion readback is uncertain.",
       "contracts": [
         "One bound schedule serves both the run watch and the chat-run watch; never create a second watch.",
-        "For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.",
+        "For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.",
         "For a chat-run watch, defer the T3 runtime's \"nothing remains unsettled\" deletion until those chat-run stop conditions.",
         "Each wake reconciles all unsettled runs before running the authorized maintenance loop.",
         "A failed run holds incomplete work even when its writer sent no receipt.",

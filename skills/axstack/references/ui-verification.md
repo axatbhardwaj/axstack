@@ -6,6 +6,8 @@ run's role snapshot. Give it the exact build, URL, or artifact and the private
 dispatch's evidence folder. The verifier is read-only: it never edits source.
 The PR writer remains the sole writer.
 
+Before using a PR preview URL, the UI verifier must read [PR previews](preview.md).
+
 The sole author browser exception is archify `finalize` as a headless build gate.
 Keep finalize outputs only in the private evidence folder.
 Never replace the verifier's rendered pass with finalize.
