@@ -1,7 +1,7 @@
 # Spec: default auto-merge, revert line, PR previews, and nightly PR triage
 
-Status: Draft rev 3 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605;
-all adviser blockers folded). Store: this repo Markdown file.
+Status: Draft rev 4 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
+rev 3 044ba9b; all adviser blockers folded). Store: this repo Markdown file.
 Run: `20261006-video-takeaways`. The private run record holds the Align decisions,
 the adviser receipts, and the host probe.
 
@@ -27,7 +27,8 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 | Q5 | Automatic merge is the default for `axstack-watch`, including standalone watches, with no per-run opt-in. |
 | Q6 | Previews: the agent decides per PR whether a preview makes sense. First candidates are `defi-com/monorepo` and `axatbhardwaj/portfolio-site`. The nightly PR triage is included. |
 | Q7 | Approval: in personal (`solo`) repositories, a cross-provider agent review is enough. In company or collaborator (`team`) repositories, another person's PR review is the green light. |
-| Q7b | **To confirm at approval:** in `solo` repositories, automatic merge targets any `integration` base (for Axstack, `main`; release is tag-triggered). This was the driver's reading of Q7; the user has not confirmed it. |
+| Q7b | In `solo` repositories, automatic merge targets `main` and any other `integration` base, because every such PR is cross-reviewed (user confirmed). |
+| Q10 | When a PR is raised, the driver spawns a separate watch session that keeps it up to date until it merges or closes. The user never has to invoke watch by hand. |
 | U1 | Review findings rated above low must be fixed before merge; low findings may stay open (user, Align round 3). |
 | D1 | Excluded: CLI-proxy account pooling and residential-IP routing. It exists to evade provider detection and limits. The supported alternative is signing in to the same accounts on each of the user's machines. |
 | D2 | Deferred (driver default, user did not decide): local CI contention handling. |
@@ -61,7 +62,7 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
      diligence, and CI are still required on the new head. Watch §5's existing
      persistence rule for a merge-ready statement is unchanged.
 3. Eligible base: `team` → only `dev`, and only when repository docs or workflows show
-   it is non-production. `solo` → any `integration` base (subject to Q7b).
+   it is non-production. `solo` → `main` or any other `integration` base (Q7b).
    Classification comes from docs and workflows, never the branch name alone; unknown
    means `deploying`. For a `gh stack`, only the bottom member's base must be
    eligible; each other member's base must be the next-lower member's branch at its
@@ -169,6 +170,30 @@ User decisions use the Align question numbers; `D` rows are driver decisions.
 3. It is read-only: no merges, comments, labels, pushes, relay messages, dispatched
    work, or launched threads.
 
+### F. Automatic watch session per PR
+
+1. When any Axstack phase publishes an own PR (or the bottom member of a new
+   `gh stack`), the driver, after verified publication readback, launches one new
+   standalone watch session for that PR or stack in authorized maintenance mode. No
+   manual `axstack-watch` invocation is needed. Later members of the same stack join
+   that stack's session.
+2. The session runs as `axstack-owner` in its own T3 thread. The user's standing
+   request (Q10) is the explicit transfer request: the driver hands over ownership
+   through the runtime-owned T3 transfer route, and ownership moves only after the
+   session's acceptance receipt names the PR, head, scope, and authority. Until then
+   the driver stays the owner. A failed or unconfirmed handover is a hold.
+3. The session keeps the PR current: rebases when the base moves, routes review
+   feedback to the PR's author for repair, keeps CI green, and applies section A.
+   It never writes candidate source itself; the one-writer rule is unchanged.
+4. The session ends when its PRs merge or close, or when the user cancels. It
+   replaces the standalone 24 h expiry for driver-spawned sessions; a PR with no
+   activity for 7 days pauses the session with one notification under the recorded
+   Notification policy, and the user resumes it.
+5. Exactly one watch session exists per PR or stack. Before launch, the driver
+   searches existing T3 threads by the exact dispatch key and never launches a
+   duplicate. The chat-run watch in the driver thread is replaced by this session for
+   run-created PRs.
+
 ## Exclusions
 
 - CLI proxy, account pooling, IP routing (D1).
@@ -196,6 +221,7 @@ pairing: `skills/axstack/references/contracts.md`, `autopilot.md`, `lifecycle.md
 `candidate-publication.md`, `pr-shape.md`, `test-audit-weekly.md`,
 `ui-verification.md`; `skills/axstack-watch/SKILL.md` and references;
 `skills/axstack-implement/SKILL.md`; `skills/axstack-review/SKILL.md`;
+the watch-arming text in `autopilot.md` and `skills/axstack-watch/references/`;
 `skills/axstack-audit/SKILL.md`; `skills/axstack-relay/SKILL.md`; a new preview
 reference and a new triage prompt reference; `AGENTS.md`, `docs/workflows.md`,
 `README.md`; and prose-contract tests under `tests/workflows/`.
