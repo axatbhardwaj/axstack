@@ -42,6 +42,29 @@ Driver account re-selection must configure only the calling thread and only at a
 A turn already paused by a usage limit cannot self-recover.
 The next wake or user message runs this check.
 
+Driver self-switching is required from v0.25.1.
+T3 scheduled tasks retain the creation-time instanceId for wakes and fresh-thread
+passes regardless of the calling thread's current binding.
+The driver must arm a run watch only after picking its account: `pick-instance.js` before `schedule_task`.
+On a driver self-switch, delete and recreate its armed bound run watch with the
+same prompt, cadence and binding on the new instance.
+
+Every scheduled automation pass runs `scripts/pick-instance.js --provider <its own provider> --json`
+at pass start, including fresh-thread review-manager passes.
+Scheduled passes follow the same eligibility, stay and exit rules above.
+If a scheduled pass's own current instance is `excluded` and an eligible same-provider sibling exists,
+it must switch itself via `t3_thread_configure` to the chosen sibling instance,
+keeping the same provider, model and effort/options.
+On a scheduled pass self-switch, delete and recreate its own schedule with the
+same prompt, cadence and binding on the chosen instance.
+For each schedule replacement, read back old absence and new presence using `list_scheduled_tasks`.
+For each schedule replacement, record old/new scheduledTaskId, from/to instance,
+picker JSON pointer and UTC time in the `progress.md` or durable activation/continuity record.
+Retain the recorded schedule's title and enabled state and use a fresh stable creation `clientRequestId`.
+An uncertain replacement holds affected work; preserve its native receipts for reconciliation.
+A scheduled pass already running on an exhausted account cannot recover.
+Account switches must happen before exhaustion at the picker's near-limit cutoff.
+
 Map `modeId` to `runtimeMode:full-access` and effort
 to `options:[{id,value}]`. Stored permission intent is neither effective parity
 nor a security boundary.

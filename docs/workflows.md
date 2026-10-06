@@ -24,7 +24,7 @@ record its pointer and chosen instanceId. Only error exit 1 permits canonical
 fallback after availability validation. Exit 2 (no eligible provider instances)
 holds the work without fallback. Dispatched roles never fail over mid-thread.
 Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for driver account re-selection at turn boundaries.
+for driver account re-selection at turn boundaries and schedule rebinding.
 `--settings <path>` overrides `~/.t3/userdata/settings.json`.
 Usage is cached for five minutes in `${XDG_CACHE_HOME:-~/.cache}/axstack/usage.json`;
 failed requests use stale usage or a tier-only `unknown` score without cache.
@@ -416,6 +416,8 @@ in a fresh finite worktree from `origin/main`, fetches first, and checks its
 binding. Continuity lives outside worktrees at
 `~/.local/share/axstack/runs/review-manager/progress.md`. Per-PR detached
 review checkouts come from existing host clones; a missing clone holds that job.
+At pass start, follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
+for account selection and schedule recreation.
 
 Every pass reconciles saved, GitHub, and native T3 state across the lane before
 admission and reads all discovery pages. Incomplete inventory or unknown

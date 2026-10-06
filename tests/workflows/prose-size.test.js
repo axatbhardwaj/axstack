@@ -54,6 +54,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261006-relay-reply-tag repair1: driver-authorized reply-origin proof; +1064 aggregate bytes.
   // 20261006-driver-self-routing T1: minimal +1497 aggregate and +143
   // always-loaded ceiling bytes for the canonical driver rule and short pointers.
-  expect(total).toBeLessThanOrEqual(319926);
+  // 20261006-driver-self-routing amendment 1: +2424 measured bytes for
+  // creation-time schedule bindings, recreation and scheduled-pass entry links.
+  expect(total).toBeLessThanOrEqual(322350);
   expect(alwaysLoaded).toBeLessThanOrEqual(25427);
 });

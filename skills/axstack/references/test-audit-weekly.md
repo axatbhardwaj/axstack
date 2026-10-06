@@ -1,5 +1,7 @@
 # Weekly test-audit prompt
 
+At pass start, follow [Provider bindings](t3-runtime.md#preflight-and-binding) for account selection and schedule recreation.
+
 You are a fresh finite weekly test-audit session in this repository's dedicated
 T3 project worktree. Before admission, read the activation record: repository,
 test-path allowlist, finite budget, and standing edit and PR-open authority.
