@@ -16,8 +16,8 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Canonical fallback bindings map codex→`codex`, claude→`claudeAgent`, grok→`grok`,
-antigravity→`antigravity`.
+Provider bindings must map grok→`grok` and antigravity→`antigravity`, with
+canonical error-exit fallbacks codex→`codex` and claude→`claudeAgent`.
 At each dispatch or launch, claude and codex must bind to the instanceId printed
 by `scripts/pick-instance.js --provider <provider>`.
 Only error exit 1 permits fallback to the canonical instance after validating availability.

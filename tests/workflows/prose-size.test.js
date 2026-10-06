@@ -46,10 +46,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // Historical main ceilings (before this PR):
   // Always-loaded baseline: 23,361 bytes; 5% ceiling: 24,530.
   // Driver acceptance recorded in run 20260930-workflow-bottleneck-audit.
-  // 20261006-account-routing rebase on 4bc1661: +1642 measured aggregate bytes
+  // 20261006-account-routing rebase on d292f90: +1679 measured aggregate bytes
   // and +754 always-loaded bytes for the accepted account-routing contract.
-  // Current ceilings: 314674 + 1642 = 316316; 24530 + 754 = 25284.
+  // Current ceilings: 314674 + 1679 = 316353; 24530 + 754 = 25284.
   // Preserve main history above and its 21-byte always-loaded headroom.
-  expect(total).toBeLessThanOrEqual(316316);
+  expect(total).toBeLessThanOrEqual(316353);
   expect(alwaysLoaded).toBeLessThanOrEqual(25284);
 });

@@ -160,8 +160,9 @@ in saved T3 capabilities. Empty Antigravity catalogs hold. Missing or
 unavailable roles hold only affected work. Requested model, effort, and
 permission values need actual T3 configuration read-back; stored `modeId` is
 neither permission parity nor a sandbox. Rejection, timeout, quota, and auth
-failures hold; no subscription inference, quota routing, or alternative retry
-applies.
+failures hold; outside bounded same-provider, same-model account selection among
+one driver's instances via `pick-instance.js`, no subscription inference, quota
+routing, or alternative retry applies.
 
 ## T3 runtime boundary
 
