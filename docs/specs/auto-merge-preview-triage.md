@@ -1,8 +1,7 @@
 # Spec: default auto-merge, revert line, PR previews, and nightly PR triage
 
-Status: Draft rev 7 — awaiting specification approval (rev 1 88a3e94, rev 2 0e3f605,
-rev 3 044ba9b, rev 4 6ad79d8, rev 5 b16f51a, rev 6 6643df3; all adviser blockers
-folded). D7 (merge after a card) is a driver default to confirm at approval. Store: this repo Markdown file.
+Status: Approved rev 7 (2026-10-06, user "sure perfect proceed"; content reviewed at cb21d0e;
+D7 confirmed). Store: this repo Markdown file.
 Run: `20261006-video-takeaways`. The private run record holds the Align decisions,
 the adviser receipts, and the host probe.
 
