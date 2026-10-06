@@ -44,6 +44,8 @@ its required checks complete. Review may run in parallel with CI only after the
 remote confirmation. Reviewers inspect a detached immutable checkout of the
 confirmed candidate SHA and pinned base, never only the movable branch name.
 Any author repair creates a new revision and repeats this boundary.
+After verified publication readback, follow
+[Native PR links and watches](t3-runtime.md#native-pr-links-and-watches).
 
 ## Revert line
 

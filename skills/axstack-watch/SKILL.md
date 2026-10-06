@@ -1,6 +1,6 @@
 ---
 name: axstack-watch
-description: When babysitting an existing PR, use axstack-watch to monitor or maintain it within bounded authority.
+description: When babysitting an existing PR, use axstack-watch to maintain own PRs by default within bounded authority.
 ---
 
 # Watch
@@ -37,20 +37,21 @@ live owner and watch; uncertain state holds new registrations until resolved.
 
 For an existing own PR, read the
 [proportional scope identities](../axstack/references/routing.md#proportional-scope-identity),
-verify writable ownership and user maintenance authority, then snapshot the
+apply its default maintenance rule and verify writable ownership, then snapshot the
 accepted maintenance intent once: authorized scope, actual head and base,
 current owner, actual author provenance, and watch state. Check authoring
 session evidence; the orchestrator identity is not author evidence, and never
 assume an author for an imported own PR. It needs no new spec, ticket, or repeated
-approval. Monitoring-only adoption grants no repair or reply authority.
+approval. Explicit observation-only adoption grants no repair or reply authority.
 
 Adoption is settled when the record names one persistent owner, one watch, the
-exact PR revision and base, and the applicable authority snapshot. If write
-authority is unverified, record the hold and continue read-only.
+exact PR revision and base, and the applicable authority snapshot. If writable
+access is unverified, record the hold and continue read-only; pushing stays held.
 
 ## 2. Fix the operating mode
 
-Choose one mode from the user's authority and record it before dispatch:
+Choose one mode under [Shared routing](../axstack/references/routing.md#direct-routes-no-spec-ceremony)
+and record it before dispatch:
 
 - **Chat-run watch:** authorized maintain mode is the default for run-created
   PRs. The initiating chat remains the only driver and record
@@ -63,7 +64,8 @@ Choose one mode from the user's authority and record it before dispatch:
   repair path, including obvious fixes after changed heads or feedback.
 - **Peer:** observe and report a colleague's PR. Peer mode never repairs.
 - **Authorized maintenance:** repair an adopted own PR only within the accepted
-  maintenance snapshot and publication authority.
+  maintenance snapshot and publication authority; own-PR watch requests use this
+  mode by default under Shared routing.
 
 Every later wake must be classifiable from this recorded mode without inferring
 new authority.
@@ -87,7 +89,8 @@ create no recursive teams, and the adoption watcher is never the writer.
 
 A standalone live watch has verified role and timer receipts, handshakes, watched scope,
 wake ownership, and a common expiry. A missing runtime capability is a setup gap,
-not a reason to invent a call or create a duplicate registration. Native
+subject to the [native PR watch fallback](../axstack/references/t3-runtime.md#native-pr-links-and-watches).
+Never invent a call or create a duplicate registration. Native
 wake-ups drive observation; never poll or keep a model active between events.
 
 ## 4. Route each wake
@@ -114,11 +117,14 @@ snapshot. Missing, stale, or materially changed identity holds repair routing
 while monitoring continues. Accepted fixes return to the same original author
 session only when the run itself launched that session and evidence allows,
 then receive refreshed review under the authored mode rule before publication.
-For an adopted own PR, the authored-review pairing follows the recorded
-actual provenance of its repair author, not the PR's historical author.
-Unknown, mixed, or unsupported author provenance
-that cannot establish the eligible configured reviewer is an exact gap to
-report to the user, not permission to invent a pairing or model fallback.
+If this run did not launch the original author, or historical provenance is
+unknown or mixed, launch a new configured `axstack-author` attempt under
+[Shared routing](../axstack/references/routing.md).
+For an adopted own PR, pair the authored reviewer from the recorded actual
+provenance of its repair author.
+Hold only when the repair author's own provenance cannot be established or
+an eligible configured reviewer is unavailable; report that exact gap.
+Historical provenance still follows §5's merge-card rule.
 
 A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
@@ -306,6 +312,9 @@ After any automated merge, a failing push run on the target base for that
 merge result is a run-wide hold on further automated merges until resolved.
 
 ## 6. End and preserve continuity
+
+Reconcile PR links and stop native PR watches under
+[T3 runtime](../axstack/references/t3-runtime.md#native-pr-links-and-watches).
 
 End a chat-run watch only after all members merged or closed, launched work is settled,
 and the run's release step is settled or not applicable, or user cancellation.

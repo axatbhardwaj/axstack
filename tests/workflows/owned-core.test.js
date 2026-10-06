@@ -392,7 +392,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   ).toBeTruthy();
   expect(lifecycle).toMatch(/Healthy unchanged passes are silent/i);
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*axstack-watch[^.]*observation-only/i);
-  expect(routing).toMatch(/explicit[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance/i);
+  expect(routing).toMatch(/user request[^.]*watch[^.]*babysit[^.]*maintain[^.]*address[^.]*patch[^.]*fix[^.]*authorized maintenance[^.]*by default/i);
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through T3[^.]*lifecycle close-out/i);

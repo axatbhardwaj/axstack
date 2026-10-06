@@ -60,6 +60,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // schedule/binding updates, explicit pass exit rules and forge-only triage scope.
   // 20261006-driver-self-routing repair 2: +404 measured bytes for the
   // lane-only gate and non-lane replacement inventory/skip rule.
-  expect(total).toBeLessThanOrEqual(323517);
-  expect(alwaysLoaded).toBeLessThanOrEqual(25427);
+  // 20261006-native-pr-watch T1: +2748 measured aggregate bytes and +436
+  // always-loaded bytes for maintenance routing and canonical native PR tools.
+  expect(total).toBeLessThanOrEqual(326265);
+  expect(alwaysLoaded).toBeLessThanOrEqual(25863);
 });

@@ -131,9 +131,10 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
 });
 
-test('review modes: status question cues route to observation-only watch', () => {
+test('review modes: status questions without a watch request route to observation-only', () => {
   const routing = compact('skills/axstack/references/routing.md');
   expect(routing).toMatch(/status question[^.]*own open PR or stack[^.]*"check now"[^.]*"what's left"[^.]*"are we done"[^.]*"is it approved"[^.]*axstack-watch[^.]*observation-only/i);
+  expect(routing).toMatch(/observation-only[^.]*only[^.]*explicit observe-only[^.]*status questions without a watch request[^.]*peers. PRs/i);
 });
 
 test('review modes: new runs discover one preset and snapshot all role states', () => {
