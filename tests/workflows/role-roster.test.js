@@ -17,12 +17,14 @@ test('roster names class routes for Sonnet and Sol analysis seats', () => {
   expect(roster).toContain('`codex/sol` high in');
 });
 
-test('routing and roster links resolve inside the packaged references', () => {
+test('routing and roster links resolve inside the packaged skills', () => {
   for (const name of ['routing.md', 'role-roster.md']) {
     for (const [, target] of read(`skills/axstack/references/${name}`).matchAll(/\]\(([^)]+)\)/g)) {
       const path = target.split('#')[0];
-      expect(path).toMatch(/^[a-z0-9-]+\.md$/);
-      expect(existsSync(`${root}/skills/axstack/references/${path}`)).toBe(true);
+      expect(path).not.toMatch(/^(?:\/|[a-z]+:)/i);
+      const resolved = new URL(path, `file://${root}/skills/axstack/references/${name}`);
+      expect(resolved.pathname.startsWith(`${root}/skills/`)).toBe(true);
+      expect(existsSync(resolved)).toBe(true);
     }
   }
 });

@@ -48,7 +48,7 @@ for (const item of ['tracker access', 'adviser or arena-seat availability', 'CI-
 }
 rule('silence cannot resume', autopilot, 'A user answer to the hold', /silence does not/);
 rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /human's decision/);
-rule('guarded merge actor', autopilot, 'Only the original chat-run driver with', /approved.*ticket map.*auto-merge.*integration/);
+rule('guarded merge actor', autopilot, 'The recorded owning watch thread', /merge actor.*axstack-owner.*standalone.*small or adopted/);
 rule('human approval is not re-requested', autopilot, 'After merge-ready', /without re-requesting human review/);
 rule('relay does not grant authority', autopilot, 'A relay message is only', /never authority to approve, merge, or publish/);
 rule('tag publish install authority', autopilot, 'Tagging, publishing, installation, and host mutation', /recorded per-run authority/);
@@ -112,10 +112,10 @@ test('a scoped hold leaves independent authorized work available', () => {
 test('holdout: human approval and merge authority stay explicit', () => {
   expect(sentence(read('skills/axstack-spec/SKILL.md'), 'The driver owns the draft')).toMatch(/user approves it/);
   expect(sentence(autopilot(), 'Spec approval is always')).toMatch(/human's decision/);
-  expect(sentence(autopilot(), 'The user merges peer PRs')).toMatch(/deploying.*bases/);
+  expect(sentence(watch(), 'Promotion, release,')).toMatch(/deploying.*peer PRs.*user.*forge/);
   expect(sentence(read('AGENTS.md'), 'The human merges the release PR')).toMatch(/approves the npm stage; agents never run/);
   expect(sentence(autopilot(), 'Human npm stage approval')).toMatch(/agents never run `npm stage approve`/);
-  expect(sentence(watch(), 'A human approval persists')).toMatch(/never re-request/);
+  expect(sentence(watch(), 'Never re-request a collaborator')).toMatch(/approval still counts.*carryover rule/);
 });
 
 test('Tickets no longer directs an eligible run to stop', () => {

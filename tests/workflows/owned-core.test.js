@@ -252,7 +252,7 @@ test('owned-core: shared 24h deadline covers open PRs; merge-ready distinct from
   ).toBeTruthy();
   expect(
     /human.*merg|merg.*human/i.test(text),
-    'human merge authority must be stated',
+    'user-merge exclusions must be stated',
   ).toBeTruthy();
 });
 

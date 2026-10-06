@@ -36,7 +36,7 @@ test('README explains four failure modes and gives a compact first run', () => {
     ['Wrong thing built', /align[^|]*arena/i],
     ['Nobody really reviewed it', /TDD[^|]*review[^|]*revision/i],
     ['Design rot', /design lens[^|]*Improve/i],
-    ['Agents left a mess', /T3[^|]*one writer[^|]*cleanup[^|]*human merges/i],
+    ['Agents left a mess', /T3[^|]*one writer[^|]*cleanup[^|]*watched own PRs merge/i],
   ]);
   for (const [failure, fix] of fixes) {
     const row = why.split('\n').find((line) => line.startsWith(`| ${failure} |`));
@@ -55,6 +55,6 @@ test('README preserves preset and merge boundaries', () => {
   expect(why).toMatch(/mixed[^|]*cross-provider review/i);
   const automation = readme.slice(readme.indexOf('## Optional PR automation'), readme.indexOf('## Some notes'));
   expect(automation).toMatch(/review automation never merges/i);
-  expect(readme).toMatch(/The human merges by default\./);
+  expect(readme).toMatch(/automatic\s+merge is the default under the[\s\S]*watch predicate/i);
   expect(readme).toContain('[Releases](https://github.com/axatbhardwaj/axstack/releases)');
 });

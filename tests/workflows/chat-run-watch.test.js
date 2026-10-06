@@ -105,7 +105,7 @@ test('chat-run driver keeps repairing each member through current-head readiness
 });
 
 test('own PR watch never re-requests a human approver after repair', () => {
-  expect(watch()).toMatch(/human approval[^.]*forge counts[^.]*never re-request[^.]*review/i);
+  expect(watch()).toMatch(/never re-request a collaborator's review[^.]*approval still counts[^.]*carryover rule/i);
   expect(watch()).toMatch(/forge dismissed[^.]*last-push approval[^.]*hold and tell[^.]*user[^.]*auto-requesting re-review/i);
   expect(watch()).toMatch(/initial review requests[^.]*before any human approval[^.]*allowed/i);
   expect(runtime()).toMatch(/re-read[^.]*approvals[^.]*state[^.]*not re-request/i);
@@ -113,8 +113,8 @@ test('own PR watch never re-requests a human approver after repair', () => {
 
 test('authorized own PR maintenance loops through feedback, base movement, and readiness', () => {
   expect(watch()).toMatch(/authorized[^.]*own.PR maintenance[^.]*keep repairing[^.]*rebasing[^.]*base/i);
-  expect(watch()).toMatch(/re-run checks[^.]*comment holds above are cleared[^.]*human approval[^.]*required CI[^.]*green/i);
-  expect(watch()).toMatch(/approval persists[^.]*fixes and rebases/i);
+  expect(watch()).toMatch(/re-run checks[^.]*comment holds above are cleared[^.]*approval term holds[^.]*required CI[^.]*green/i);
+  expect(watch()).toMatch(/approval carries over only[^.]*rebase[^.]*unchanged[^.]*patch-id[^.]*both heads[^.]*forge still counts/i);
   expect(watch()).toMatch(/forge dismissed[^.]*hold and tell the user/i);
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });
@@ -141,11 +141,11 @@ test('installation and run record describe the selected wake', () => {
   expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });
 
-test('wake failure guards and human merge authority stay explicit', () => {
+test('wake failure guards and owning watch merge authority stay explicit', () => {
   expect(runtime()).toMatch(/uncertain delete[^.]*hold/i);
   expect(runtime()).toMatch(/missing schedule capability[^.]*holds activation/i);
   expect(watch()).toMatch(/failed or uncertain schedule deletion[^.]*hold/i);
-  expect(watch()).toMatch(/human merges by default/i);
+  expect(watch()).toMatch(/automatic merge is the default for own PRs/i);
 });
 
 test('own-PR merge-ready requires a head rebased on the current base', () => {

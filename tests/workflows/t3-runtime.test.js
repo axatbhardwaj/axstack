@@ -12,7 +12,6 @@ const exactSentences = (text) => text.split(/\n\s*\n/)
 // Safety-critical sentences are exact-text contracts; deliberate wording changes
 // require a corresponding pin edit. Whitespace alone is irrelevant.
 const pins = [
-  ["human merge authority","Human merges by default."],
   ["driver ownership","The driver must be the sole run-record writer and enforce one writer per candidate; it never writes tracked candidate source or tests or repairs an author's source."],
   ["driver planning authority","The driver may write planning artifacts (spec, ticket map) in its own worktree when the selected store is repository Markdown."],
   ["repair ownership","Repairs return to that author."],

@@ -25,7 +25,7 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
   expect(loaded).toMatch(/`codex-only`[^.]*`claude-only`[^.]*hold[^.]*step \(3\)[^.]*no substitution/i);
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
   expect(loaded).toMatch(/merge-ready opens the merge boundary/i);
-  expect(loaded).toMatch(/chat-run driver holding the approved ticket map is the merge actor/i);
+  expect(loaded).toMatch(/merge actor is the recorded owning watch thread/i);
   expect(loaded).toMatch(/resumes[^.]*next message[^.]*`?\/axstack-watch`?/i);
   expect(loaded).toMatch(/resumes[^.]*armed chat-run watch wake/i);
   expect(loaded).toMatch(/done[^.]*every required PR[^.]*forge-merged[^.]*Close-out/i);
