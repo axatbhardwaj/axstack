@@ -51,6 +51,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // Current ceilings: 314674 + 1679 = 316353; 24530 + 754 = 25284.
   // Preserve main history above and its 21-byte always-loaded headroom.
   // 20261006-relay-reply-tag: user-approved two-way relay tag; +1012 aggregate bytes.
-  expect(total).toBeLessThanOrEqual(317365);
+  // 20261006-relay-reply-tag repair1: driver-authorized reply-origin proof; +1064 aggregate bytes.
+  expect(total).toBeLessThanOrEqual(318429);
   expect(alwaysLoaded).toBeLessThanOrEqual(25284);
 });
