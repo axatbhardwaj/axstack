@@ -446,7 +446,7 @@ test('owned-core: docs cover owned skills and role presets without upstream clai
     expect(workflows.includes(preset), `docs/workflows.md must name ${preset}`).toBeTruthy();
   }
   expect(workflows).toMatch(/axstack-reviewer-primary/);
-  expect(workflows).toMatch(/axstack-reviewer-secondary/);
+  expect(workflows).toMatch(/axstack-reviewer-peer/);
   expect(workflows).toMatch(/active runs?[^.]*snapshot/i);
   expect(workflows).toMatch(/structural checks[^.]*not[^.]*agent behavior/i);
   const install = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');

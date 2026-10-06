@@ -13,6 +13,7 @@ const roleIds = [
   'axstack-author',
   'axstack-reviewer-primary',
   'axstack-reviewer-secondary',
+  'axstack-reviewer-peer',
   'axstack-diligence',
   'axstack-checker',
   'axstack-research-requirements',
@@ -49,8 +50,8 @@ const expected = {
   mixed: [
     c('astra', 'high'),
     a('opus', 'xhigh'),
-    a('opus', 'medium'), c('sol', 'high'),
-    c('sol', 'high'), a('opus', 'medium'),
+    c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'high'), a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'),
     ag(null, 'low'), a('sonnet', 'high'),
     a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), ag(null, 'high'),
@@ -69,7 +70,7 @@ const expected = {
     c('astra', 'high'),
     c(null, 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'high'), c('luna', 'xhigh'),
+    c('sol', 'high'), c('luna', 'xhigh'), c('luna', 'xhigh'),
     c('sol', 'high'),
     c('luna', 'low'), c('astra', 'medium'),
     c('sol', 'high'), c('sol', 'high'), c('sol', 'low'), c(null, 'high'),
@@ -90,6 +91,7 @@ const expected = {
     a('opus', 'medium'),
     a('opus', 'medium'),
     a('opus', 'medium'),
+    a('sonnet', 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
@@ -505,4 +507,11 @@ test('preset bundles retain three role tables in the frozen container', () => {
   }
   const mixed = readJson('profiles/presets/mixed.json');
   expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();
+});
+
+test('presets: mixed owner independently uses Sol high with full access', () => {
+  const owner = readJson('profiles/presets/mixed.json').roles.find(({ id }) => id === 'axstack-owner');
+  expect(owner).toMatchObject({
+    provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high', modeId: 'full-access',
+  });
 });

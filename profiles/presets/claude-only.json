@@ -52,7 +52,16 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Secondary reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet high. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "modelClass": "sonnet"
+    },
+    {
+      "id": "axstack-reviewer-peer",
+      "name": "Axstack reviewer (peer)",
+      "provider": "claude",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Second reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet high. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {

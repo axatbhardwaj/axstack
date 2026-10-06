@@ -1,5 +1,7 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
+import { deriveModelClass } from '../../src/roles.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -36,11 +38,21 @@ test('review modes: raw scenario contracts cover the amendments', () => {
 
 // The remaining checks are shipped prompt-policy structure, not proof that a
 // future agent will follow the prompts.
-test('review modes: peer keeps exactly two configured role reviewers with isolated same briefs', () => {
-  const review = compact('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/peer[\s\S]*exactly two[\s\S]*axstack-reviewer-primary[\s\S]*axstack-reviewer-secondary/i);
-  expect(review).toMatch(/peer[\s\S]*identical|peer[\s\S]*same instantiated brief/i);
-  expect(review).toMatch(/first-pass[^.]*isolation|no first-pass cross-read/i);
+test('review modes: peer dispatch requires the primary and peer seats', () => {
+  const raw = read('skills/axstack-review/SKILL.md');
+  const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
+  checkRule(peer, (text) => requires(text,
+    /peer/i, /exactly two/i, /axstack-reviewer-primary/, /axstack-reviewer-peer/),
+  'Peer mode requires exactly two reviewers: axstack-reviewer-primary and axstack-reviewer-peer.',
+  [[/axstack-reviewer-peer/, 'axstack-reviewer-secondary'], [/exactly two/i, 'exactly one']]);
+});
+
+test('review modes: mixed same-model peer independence requires isolated sessions', () => {
+  checkRule(read('skills/axstack-review/SKILL.md'), (text) => requires(text,
+    /mixed/i, /(?:share a model|same model)/i, /independence/i,
+    /separate sessions/i, /identical brief/i, /isolated first pass/i),
+  'Mixed peer reviewers use the same model, with independence requiring separate sessions, the identical brief and an isolated first pass.',
+  [[/separate sessions/i, 'shared sessions'], [/isolated first pass/i, 'shared first pass']]);
 });
 
 test('review modes: authored routing follows actual author provenance', () => {
@@ -151,14 +163,14 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
+    mixed: [['codex', 'sol', 'high'], ['codex', 'sol', 'high']],
     'codex-only': [['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
     'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
     const byId = Object.fromEntries(profiles.map((profile) => [profile.id, profile]));
-    for (const [index, id] of ['axstack-reviewer-primary', 'axstack-reviewer-secondary'].entries()) {
+    for (const [index, id] of ['axstack-reviewer-primary', 'axstack-reviewer-peer'].entries()) {
       expect([byId[id].provider, byId[id].modelClass, byId[id].thinkingOptionId]).toEqual(pair[index]);
       expect(byId[id].notes).toMatch(/peer|authored/i);
     }
@@ -193,4 +205,51 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/security concern[^.]*permanent on-chain state change[^.]*architectural change in approach/i);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/Health is not a reviewer criterion/i);
+});
+
+test('review modes: peer and owner fixtures match the selected preset', () => {
+  const problems = [];
+  for (const file of ['scenarios', 'owned-scenarios', 'review-modes-scenarios', 'routing-scenarios']) {
+    for (const scenario of JSON.parse(read(`tests/workflows/${file}.json`)).cases) {
+      if (scenario.input.preset === 'mixed' && scenario.input.owner) {
+        const roles = JSON.parse(read('profiles/presets/mixed.json')).roles;
+        const owner = roles.find(({ id }) => id === 'axstack-owner');
+        const [provider, model, effort] = scenario.input.owner.split(/[\/ ]/);
+        expect([provider, deriveModelClass(model), effort], `${file}/${scenario.id}: owner`)
+          .toEqual([owner.provider, owner.modelClass, owner.thinkingOptionId]);
+        if (scenario.input.actualWriter === 'same owner session') {
+          expect(scenario.expected.recordedAuthor).toContain(scenario.input.owner);
+          const reviewer = roles.find(({ id }) => id === 'axstack-reviewer-secondary');
+          const actual = scenario.expected.reviewers.map((route) => {
+            const [id, provider, model, effort] = route.split(/[:/\s]+/);
+            return [id, provider, deriveModelClass(model), effort];
+          });
+          expect(actual).toEqual([
+            [reviewer.id, reviewer.provider, reviewer.modelClass, reviewer.thinkingOptionId],
+          ]);
+        }
+      }
+      const input = JSON.stringify(scenario.input);
+      const peer = scenario.input.mode === 'peer'
+        || (!scenario.input.mode && /\bpeer (?:PR|review)\b/i.test(input));
+      if (!peer) continue;
+      const preset = scenario.input.preset ?? 'mixed';
+      const roles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
+      const text = JSON.stringify(scenario);
+      const context = `${file}/${scenario.id}`;
+      for (const [, seat] of text.matchAll(/(?:axstack-)?reviewer-(primary|peer|secondary)\b/gi)) {
+        if (!['primary', 'peer'].includes(seat.toLowerCase())) problems.push(`${context}: invalid peer seat ${seat}`);
+      }
+      for (const [, seat, provider, model, effort] of text.matchAll(
+        /(?:axstack-)?reviewer-(primary|peer)(?:[=:]|\s+runs)\s*(codex|claude)\/([a-z0-9.-]+)(?:\s+(high|medium|xhigh))?/gi,
+      )) {
+        const role = roles.find(({ id }) => id === `axstack-reviewer-${seat.toLowerCase()}`);
+        if (provider !== role.provider || deriveModelClass(model) !== role.modelClass
+          || (effort && effort !== role.thinkingOptionId)) {
+          problems.push(`${context}: ${seat} route contradicts ${preset}`);
+        }
+      }
+    }
+  }
+  expect(problems).toEqual([]);
 });

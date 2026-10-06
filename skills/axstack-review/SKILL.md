@@ -220,10 +220,9 @@ This section applies to peer and authored PR modes.
    private per-dispatch artifacts. Each reviewer uses a separate driver-made disposable detached checkout;
    preserve its private evidence before removal.
    - **Peer:** exactly two independent final reviewers,
-     `axstack-reviewer-primary` and `axstack-reviewer-secondary`, materialized
-     from the routing snapshot. Send both the identical six-angle brief with no
-     first-pass cross-read: neither reads the other's initial findings or
-     creates children.
+     `axstack-reviewer-primary` and `axstack-reviewer-peer` from the routing snapshot.
+     Send both the identical six-angle brief, with no first-pass cross-read or children.
+     Mixed peer reviewers share a model, with independence from separate sessions, the identical brief and an isolated first pass.
    - **Authored:** exactly one eligible independent reviewer from this complete
      mapping:
 
@@ -245,10 +244,9 @@ This section applies to peer and authored PR modes.
      reviewer covers the complete brief alone. No author or owner session may
      review, even if its role or provider label changes.
 
-   Mixed preset review is cross-provider. Single-provider review uses the
-   configured different models and is not cross-provider independence. The
-   claude-only Sonnet explanation author/reviewer exception is session
-   independence only: separate `axstack-explainer` at high and
+   Mixed authored review is cross-provider. Single-provider review uses different
+   models, not cross-provider independence. The claude-only Sonnet explanation
+   exception is session independence only: separate `axstack-explainer` and
    `axstack-explainer-review` at high. It never permits same-model code review.
 
    For the existing high-stakes Opus high author / Sol high checkpoint route,

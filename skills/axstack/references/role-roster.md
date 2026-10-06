@@ -6,7 +6,7 @@
   [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
   Only the recorded owning watch thread merges, including `axstack-owner`
   for authorized standalone maintenance. Other roles never acquire merge authority.
-- `axstack-reviewer-primary` and `axstack-reviewer-secondary` are the ordered
+- `axstack-reviewer-primary` and `axstack-reviewer-peer` are the ordered
   peer pair. Peer review uses both; authored review uses this table:
 
   | Preset | Author class | Reviewer (class/effort) |
