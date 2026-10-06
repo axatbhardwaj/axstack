@@ -12,11 +12,11 @@ if not match:
 quoted, reply = match.groups()
 body = quoted.rstrip()
 tags = re.findall(r"^T3 reply:.*$", body, re.M)
-tag = re.fullmatch(r"T3 reply: ([A-Za-z0-9._-]+) thread ([A-Za-z0-9._-]+)", tags[0]) if len(tags) == 1 else None
+tag = re.fullmatch(r"T3 reply: ([A-Za-z0-9._-]+) thread ([A-Za-z0-9:._-]+)", tags[0]) if len(tags) == 1 else None
 if not tag or body.splitlines()[-1] != tags[0]:
     sys.exit("reply rejected: expected exactly one final reply tag")
 env, thread = tag.groups()
-if env in (".", "..") or thread in (".", ".."):
+if env in (".", "..") or thread.startswith(".") or ".." in thread:
     sys.exit("reply rejected: unsafe identity")
 entry = dict(receivedAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),
              env=env, threadId=thread, quotedSha256=hashlib.sha256(body.encode()).hexdigest(),

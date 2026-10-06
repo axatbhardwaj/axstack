@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, chmodSync } fr
 const script = `${import.meta.dir}/../../skills/axstack-relay/hermes/axstack-reply.sh`;
 const quoted = 'Decision: "ship"?\nT3 reply: dev-env thread driver-123';
 const message = (body = quoted, reply = 'Yes\n"quoted" \\ unicode ✓') => `[Replying to: "${body}"]\n\n${reply}`;
-const inbox = (home) => `${home}/.local/share/axstack/relay-inbox/dev-env/driver-123.jsonl`;
+const inbox = (home, thread = 'driver-123') => `${home}/.local/share/axstack/relay-inbox/dev-env/${thread}.jsonl`;
 function withHome(check) {
   const home = mkdtempSync(`${Bun.env.TMPDIR || '/tmp'}/relay-home-`);
   try { check(home); } finally { rmSync(home, { recursive: true, force: true }); }
@@ -45,6 +45,11 @@ for (const [label, input] of [
   ['two tags', message(`${quoted}\nT3 reply: dev-env thread other`)],
   ['unsafe env', message('T3 reply: ../escape thread driver-123')],
   ['unsafe thread', message('T3 reply: dev-env thread ../escape')],
+  ['dot thread', message('T3 reply: dev-env thread ..')],
+  ['leading dot thread', message('T3 reply: dev-env thread .hidden')],
+  ['embedded traversal thread', message('T3 reply: dev-env thread mcp:../escape')],
+  ['double-dot thread', message('T3 reply: dev-env thread safe..escape')],
+  ['slash thread', message('T3 reply: dev-env thread uuid/escape')],
   ['dot env', message('T3 reply: .. thread driver-123')],
   ['tag only in reply', message('ordinary body', quoted)],
   ['nonfinal tag', message(`${quoted}\nchanged body`)],
@@ -52,5 +57,13 @@ for (const [label, input] of [
   test(`Hermes reply rejects ${label} without writing`, () => withHome((home) => {
     expect(run(home, input).exitCode).not.toBe(0);
     expect(existsSync(`${home}/.local/share/axstack`)).toBe(false);
+  }));
+}
+
+for (const thread of ['mcp:dfae8cbe-0a65-42bc-86bc-6fa6945e82d6', 'dfae8cbe-0a65-42bc-86bc-6fa6945e82d6']) {
+  test(`Hermes reply routes real thread ID ${thread}`, () => withHome((home) => {
+    const result = run(home, message(`Decision\nT3 reply: dev-env thread ${thread}`, 'yes'));
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(readFileSync(inbox(home, thread), 'utf8')).threadId).toBe(thread);
   }));
 }
