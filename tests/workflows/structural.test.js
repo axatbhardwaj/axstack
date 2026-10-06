@@ -329,7 +329,7 @@ test('structural: active PR parallelism has no fixed count', () => {
   expect(contracts).toMatch(/exactly one writer per candidate/i);
 });
 
-test('structural: shared PR-shape reference is complete and sole source of bands', () => {
+test('structural: shared PR-shape reference preserves measurement and coherent themes', () => {
   const p = join(skillsDir, 'axstack', 'references', 'pr-shape.md');
   const shape = readFileSync(p, 'utf8');
   expect(shape).toContain('git diff -M --numstat $(git merge-base <base> <head>)..<head>');
@@ -341,14 +341,11 @@ test('structural: shared PR-shape reference is complete and sole source of bands
   expect(shape).toMatch(/moves.*-M|-M.*moves/i);
   expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
   for (const bucket of ['generated', 'lockfile', 'formatter-only']) expect(shape).toContain(bucket);
-  expect(shape).toMatch(/full total[^.]*controls? the (band|level)/i);
   expect(shape).toMatch(/reproducible recorded command/i);
-  expect(shape).toMatch(/never\s+automatically subtract|never.*shift.*bands/i);
+  expect(shape).toMatch(/never\s+automatically subtract/i);
   expect(shape).toMatch(/silent exclusion[^.]*forbidden/i);
-  for (const band of ['≤2000', '2001–2500', '>2500']) expect(shape).toContain(band);
   expect(shape).toMatch(/one (behavior|component)[^.]*callers[^.]*tests[^.]*types[^.]*docs[^.]*migrations/i);
   expect(shape).toMatch(/not a folder restriction/i);
-  expect(shape).toMatch(/unrelated themes[^.]*split[^.]*under the target/i);
   expect(shape).toMatch(/smaller\s+cohesive\s+PRs[^.]*encouraged/i);
   expect(shape).toMatch(/no padding/i);
 
@@ -356,41 +353,11 @@ test('structural: shared PR-shape reference is complete and sole source of bands
     ...skillMarkdownFiles.filter((file) => file !== p),
     join(root, 'README.md'),
     join(root, 'docs', 'workflows.md'),
-    join(root, 'docs', 'specs', 'v1.md'),
-    join(root, 'docs', 'plans', 'v1.md'),
   ];
   for (const file of productionPolicyFiles) {
-    expect(readFileSync(file, 'utf8'), `${file} duplicates numeric PR-shape bands`)
+    expect(readFileSync(file, 'utf8'), `${file} retains obsolete PR-shape bands`)
       .not.toMatch(/≤2000|2001[–-]2500|>2500/);
   }
-});
-
-test('structural: shape levels require matching autonomous evidence and review', () => {
-  const shape = readFileSync(join(skillsDir, 'axstack', 'references', 'pr-shape.md'), 'utf8');
-  expect(shape).toMatch(/2001–2500[^.]*only[^.]*recorded cohesion rationale/i);
-  expect(shape).toMatch(/>2500[^.]*full exception record/i);
-  expect(shape).toMatch(/reasonable split/i);
-  expect(shape).toMatch(/full total[^.]*bulk buckets[^.]*head[^.]*base/i);
-  expect(shape).toMatch(/mandatory record[^.]*bulk buckets[^.]*reproducible command/i);
-  expect(shape).toMatch(/split attempts[^.]*atomicity[^.]*green[^.]*reviewability/i);
-  expect(shape).toMatch(/inseparable[^.]*reproducible bulk[^.]*dominates/i);
-  expect(shape).toMatch(/size alone[^.]*never[^.]*user approval/i);
-  expect(shape).toMatch(/already written[^.]*deadlines[^.]*rebase pain[^.]*not reasons/i);
-  expect(shape).not.toMatch(/over-band/i);
-
-  const review = readFileSync(join(skillsDir, 'axstack-review', 'SKILL.md'), 'utf8');
-  expect(review).toMatch(/angle 6[^.]*recorded shape|recorded shape[^.]*angle 6/i);
-  expect(review).toMatch(/mismatch[^.]*measured total[^.]*finding/i);
-  expect(review).toMatch(/missing rationale[^.]*blocks approval/i);
-  expect(review).toMatch(/judgment[^.]*measurement[^.]*split\s+failure[^.]*not[^.]*number/i);
-  expect(review).toMatch(/bulk buckets[^.]*reproducible command/i);
-  expect(review).toMatch(/weak rationale[^.]*author[^.]*(split|rework)/i);
-  expect(review).toMatch(/rationale band[^.]*only[^.]*cohesion rationale/i);
-  expect(review).toMatch(/exception\s+band[^.]*full\s+exception\s+record/i);
-  expect(review).toMatch(/level[^.]*matching[^.]*measured total/i);
-  expect(review).toMatch(/weak rationale[^.]*fix loop[^.]*never\s+(to\s+)?the\s+user/i);
-  expect(review).not.toMatch(/over-band/i);
-  expect(review).not.toMatch(/^\s*7\.\s/m);
 });
 
 test('structural: PR-shape callers carry planning, delivery, and audit evidence', () => {
@@ -416,19 +383,11 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/Theme:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/Size est:\s*<[^>]+>/);
   expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
-  expect(callers.tickets).toMatch(/exception band[^.]*assessed\s+for\s+a\s+split[^.]*mapping/i);
-  expect(callers.tickets).toMatch(/split\s+where[^.]*green[^.]*atomic[^.]*reviewable/i);
-  expect(callers.tickets).toMatch(/inseparable[^.]*coarse\s+planning\s+rationale[^.]*task/i);
-  expect(callers.tickets).toMatch(/actual\s+measurement[^.]*exception\s+evidence[^.]*implement\s+receipt/i);
   expect(callers.tickets).toMatch(/mapping\s+time[^.]*no actual SHAs or line counts/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
   expect(callers.implement).toMatch(/reviewed parent changes[^.]*hold reliance[^.]*stale child evidence[^.]*child merge readiness/i);
   expect(callers.implement).toMatch(/rebase[^.]*new parent revision[^.]*re-run[^.]*affected checks[^.]*remeasure shape/i);
   expect(callers.implement).toMatch(/size\s+growth alone[^.]*not an automatic hold/i);
-  expect(callers.audit).toMatch(/PRs within band\s*\/\s*total PRs/i);
-  expect(callers.audit).toMatch(/rationale\s+band[^.]*cohesion\s+rationale/i);
-  expect(callers.audit).toMatch(/exception\s+band[^.]*full\s+driver exception\s+record/i);
-  expect(callers.audit).toMatch(/level[^.]*matching[^.]*measured total/i);
   expect(callers.audit).not.toMatch(/over-band/i);
   expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
   expect(callers.audit).not.toMatch(/user[- ]exception|user receipt/i);
@@ -444,8 +403,6 @@ test('structural: public docs carry the current autonomous PR-shape policy', () 
     expect(text.includes('pr-shape.md'), `${name} must link PR-shape policy`).toBeTruthy();
     expect(text, `${name} must state autonomous driver shape decisions`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
     expect(text, `${name} must state size alone does not require user approval`).toMatch(/size alone[^.]*never[^.]*user approval/i);
-    expect(text, `${name} must distinguish rationale-band evidence`).toMatch(/rationale\s+band[^.]*cohesion\s+rationale/i);
-    expect(text, `${name} must distinguish exception-band evidence`).toMatch(/exception\s+band[^.]*full\s+exception\s+record/i);
   }
   expect(spec).toMatch(/Amendment \(2026-09-14\)/);
   expect(spec).toMatch(/dependency- and capacity-driven/i);

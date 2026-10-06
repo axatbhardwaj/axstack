@@ -293,17 +293,15 @@ This section applies to peer and authored PR modes.
    Rate a wrong or missing `Revert` line at least `medium` under [Finding severity](#finding-severity).
 
    Under angle 6, verify the recorded shape against the pinned head and base.
-   A mismatch between the recorded and measured total is a finding. Apply the
-   level matching the measured total. The rationale band requires only its
-   recorded cohesion rationale, not a split-attempt record. For the exception
-   band, verify the full exception record: total, bulk buckets with their
-   reproducible command, measured head/base, split attempts tried, and why each
-   fails on atomicity, green state, or reviewability. Missing rationale is a
-   validated angle 6 finding that blocks approval like any other. Reviewer
-   judgment is bounded to verifying the measurement and whether the stated split
-   failure is real, not the number itself. A weak rationale returns to the
-   author as a split or rework request through the normal fix loop, never to the
-   user. Routine shape decisions remain autonomous driver decisions; size alone
+   A mismatch between the recorded and measured total is a finding.
+   Verify full totals and bulk buckets with their reproducible command.
+   Treat size flags as informational only.
+   Size alone must never block review, reject a PR, require split attempts or
+   cohesion/exception rationale, or hold approval.
+   Review the actual footprint, complexity, and required context, incrementally when needed.
+   Approval requires sufficient review coverage.
+   Report INCOMPLETE when required coverage is missing.
+   Routine shape decisions remain autonomous driver decisions; size alone
    never requires user approval. Escalate only when that work exposes an
    existing material-scope, security, downtime,
    data-loss, major-design-risk, or unavailable-model hold.

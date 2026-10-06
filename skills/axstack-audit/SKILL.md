@@ -117,10 +117,10 @@ counts with denominators plus the evidence behind the count:
 - Rework cycles with causes.
 - Avoidable user interventions where records support the call, and no call where they do not.
 - Parallelizable tasks identified versus dispatched, judged with dependency and writer isolation.
-- PRs within band / total PRs using the actual denominator. Apply the level
-  matching the measured total. For the rationale band, record cohesion
-  rationale presence; for the exception band, record the full driver exception
-  record. Record `UNKNOWN` when a receipt lacks the measurement.
+- PRs with an informational size flag / total PRs using the actual denominator.
+  Record full totals, bulk buckets with reproducible commands, and measured head/base.
+  Treat size flags as informational only.
+  Record `UNKNOWN` when a receipt lacks the measurement.
   This is evidence, not a score to game. Audit treats routine shape choices as
   autonomous driver decisions; size alone never requires user approval.
 - API-dollar cost by model when provider receipts are available, UNKNOWN otherwise.
