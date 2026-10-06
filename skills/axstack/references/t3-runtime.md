@@ -56,9 +56,13 @@ exit 1 keeps the current instance and exit 2 holds.
 If a scheduled pass's own current instance is `excluded` and an eligible same-provider sibling exists,
 it must switch itself via `t3_thread_configure` to the chosen sibling instance,
 keeping the same provider, model and effort/options.
-On a scheduled pass self-switch, only the owner-of-record, after lane reconciliation
+On a scheduled pass self-switch in a review-manager lane, only the owner-of-record, after lane reconciliation
 and the duplicate check, must delete and recreate its own schedule with the same
 prompt, cadence and binding on the chosen instance.
+On any other scheduled pass self-switch, delete and recreate its own schedule with
+the same prompt, cadence and binding on the chosen instance only after `list_scheduled_tasks`
+confirms no replacement for that schedule on the chosen instance already exists.
+If a replacement for that schedule on the chosen instance already exists, any other scheduled pass must skip recreation.
 For a review-manager self-switch, only the owner-of-record must update the recorded
 `axstack-owner` binding's instanceId to the chosen instance after verifying unchanged
 provider/model/effort/options with `t3_thread_configuration` and attaching the picker

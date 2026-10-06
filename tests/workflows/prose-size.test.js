@@ -58,6 +58,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // creation-time schedule bindings, recreation and scheduled-pass entry links.
   // 20261006-driver-self-routing repair 1: +763 measured bytes for owner-only
   // schedule/binding updates, explicit pass exit rules and forge-only triage scope.
-  expect(total).toBeLessThanOrEqual(323113);
+  // 20261006-driver-self-routing repair 2: +404 measured bytes for the
+  // lane-only gate and non-lane replacement inventory/skip rule.
+  expect(total).toBeLessThanOrEqual(323517);
   expect(alwaysLoaded).toBeLessThanOrEqual(25427);
 });
