@@ -243,9 +243,10 @@ For each PR:
    `repairs` once and counts once toward the third-round hold.
 
 The T3 run watch reconciles every unsettled dispatch attempt; the bounded
-forge check wait is the only other implementation wait. The eligible run arms
-one maintain-mode chat-run watch at its first published PR; that watch owns its
-bound 10-minute T3 schedule wake.
+forge check wait is the only other implementation wait.
+After verified readback of every own PR publication, the driver arms or joins
+its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopilot.md).
+That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`. Under the recorded Notification policy,
 `axstack-relay` sends only a serious risk immediately, a genuine blocked

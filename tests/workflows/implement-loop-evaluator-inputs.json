@@ -75,8 +75,8 @@
       "input": {"invocation": "Authorized engineering delivery", "request": "Determine release authority", "run_state": "At Align or spec time AGENTS.md names an existing tag-triggered publish workflow, but no explicit install host targets exist. State the immediate recorded hold and whether hosts may be inferred."}
     },
     {
-      "id": "autopilot-wake-expiry", "title": "Wake expiry is a stop",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Maintain an open PR", "run_state": "The chat-run wake expires with an open PR and no new human decision. Name the paused Autopilot state, notification policy, resumable condition, and whether the wake renews automatically."}
+      "id": "autopilot-wake-expiry", "title": "Native lifetime renews the same wake",
+      "input": {"invocation": "Authorized engineering delivery", "request": "Maintain an open PR", "run_state": "The native chat-run schedule has a lifetime with an open PR and no new human decision. Name the same recorded schedule ID, update_scheduled_task re-arm at a wake, ongoing watch authority, and quiet notification policy."}
     },
     {
       "id": "autopilot-closed-unmerged-pr", "title": "Closed required PR blocks release",

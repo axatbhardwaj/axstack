@@ -307,22 +307,25 @@ merge result is a run-wide hold on further automated merges until resolved.
 
 ## 6. End and preserve continuity
 
-End a chat-run watch after all members merged or closed and the run's release
-step is settled or not applicable, user cancellation, or the recorded wake
-expires. Without an Autopilot or Release record, the release step is not
+End a chat-run watch only after all members merged or closed, launched work is settled,
+and the run's release step is settled or not applicable, or user cancellation.
+Without an Autopilot or Release record, the release step is not
 applicable to this watch. A required PR closed without merging records a
-decision hold and the wake remains active while unexpired until the user
-resolves scope, cancels, or the wake expires. Stop the chosen wake and verify
+decision hold and the wake remains active until the user resolves scope or cancels.
+Stop the chosen wake and verify
 its stop receipt; a failed or uncertain schedule deletion is a hold.
 Delete only the recorded schedule and verify absence with `list_scheduled_tasks` under
 [Watch runtime](references/watch-runtime.md#chat-run-watch).
+
+Run Close-out after the watch ends, subject to its existing acceptance conditions.
+Keep merge-card replies and `hold` in the driver thread.
 
 End a standalone watch early when all required PRs merge, at cancellation, or
 at its shared default 24 h deadline. In every case, stop all owned
 registrations and verify their receipts.
 
 At every end condition, leave the compact state below in the private run record
-and report it in the current chat, even when work remains. Expiry grants neither
+and report it in the current chat, even when work remains. Standalone expiry grants neither
 silent renewal nor ownership-transfer authority.
 
 Transfer ownership through the runtime-owned T3 transfer route only when the

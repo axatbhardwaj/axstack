@@ -122,14 +122,14 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
 test('own open PRs wake the original T3 driver every ten minutes', () => {
   expect(watch()).toMatch(/own open PRs[^.]*every 10 minutes by default/i);
   expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:600000`');
-  expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*expiry/i);
+  expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
   expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
 });
 
-test('chosen wake stops at merge, cancellation, or expiry and docs describe the default', () => {
-  expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*user cancels[^.]*expires/i);
-  expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*cancellation[^.]*expires/i);
+test('chat-run wake waits for settled work and release; docs describe the default', () => {
+  expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*user cancels/i);
+  expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
   expect(docs()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
   expect(readme()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
@@ -159,7 +159,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   expect(scenario).toBeDefined();
   expect(scenario.contracts).toEqual([
     'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
-    'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+    'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
     'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
     'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
     'A failed run holds incomplete work even when its writer sent no receipt.',
@@ -182,7 +182,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
 
 for (const sentence of [
   'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
-  'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed and the release step is settled or not applicable, or until user cancellation or expiry.',
+  'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
   'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
   'Wake only the exact live original driver.',
   'A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.',

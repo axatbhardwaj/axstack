@@ -97,7 +97,9 @@ send, or watch can be looked up before any retry.
 Resume from compact pointers to commands or evidence, not copied transcripts.
 For chat-run watch, record the bound T3 schedule and scheduledTaskId,
 member PR publication/adoption receipts, exact driver threadId/runId, observation/report
-IDs, disposition, wake and stop receipts in this same record. The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named threads/runs, revisions, PR state, watches, and deliveries before
+IDs, disposition, wake and stop receipts in this same record.
+Record the chat-run watch cadence, last PR event, native schedule lifetime, and re-arm receipts.
+The driver alone writes it; a later same-Run publication joins the membership only after remote readback. Reconcile named threads/runs, revisions, PR state, watches, and deliveries before
 creating or redelivering anything. Outside the bounded driver-start orphan
 sweep, touch only this run; no unscoped global sweep, runtime database, or
 scheduler follows from the record.
@@ -185,6 +187,7 @@ Source base: <exact revision or source identity>
 IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>
 Runtime: <host + T3 version + installed Axstack SHA + capabilities JSON path>
 Schedules: <scheduledTaskIds of every watch and manager schedule>
+Watch: <member publication/adoption receipts + cadence + last PR event + native lifetime + update/re-arm/stop receipts>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>
 Evidence: <check/review/submission/audit receipt pointers>
 Pending: <launch/acceptance/external receipts + scheduledTaskIds + runIds + deadline>

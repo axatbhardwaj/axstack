@@ -56,10 +56,17 @@ Apply watch §5's approval, base, exclusions, and merge-card rules.
 A stack follows its guarded whole-stack rule.
 User merges are bottom-up for a stack.
 
-## Implement into maintain watch
+## Own PR publication into maintain watch
 
-When implement publishes the run's first PR, arm exactly one `axstack-watch`
-chat-run in authorized maintain mode. Read the [T3 runtime boundary](t3-runtime.md) and use its bound
+When any Axstack phase publishes an own PR, after verified publication readback
+the driver arms or joins its chat-run watch in authorized maintain mode.
+This covers implement, small change, debug repair, improve, and adopted-PR maintenance.
+Explicit user stop-after-publication and observation-only requests prevail.
+Never require a manual `axstack-watch` invocation.
+The driver remains the single owner and sole run-record writer.
+Never create a per-PR session or an ownership hand-off.
+At the first PR, arm exactly one `axstack-watch` chat-run in authorized maintain mode.
+Read the [T3 runtime boundary](t3-runtime.md) and use its bound
 `schedule_task` wake (`everyMs:600000`), recording the scheduledTaskId. Later run PRs join after verified
 publication readback; an explicitly adopted PR joins only with its maintenance
 snapshot. The original driver alone routes work; one author writes each
@@ -67,13 +74,16 @@ candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
 merge-ready, watch §5 maintenance repairs feedback, rebases when the base moves,
 keeps CI green, and checks approvals without re-requesting human review.
 
-Maintain is the default mode for run-created PRs. End the chat-run watch when
-every watched PR is merged or closed and the run's release step is settled or
-not applicable, or when the user cancels. Expiry is a recorded stop with
-resumable state, never a silent renewal. A required PR closed without merging
-is incomplete scope; it does not make the run release-eligible. On wake expiry
-record `Autopilot: paused (wake expired; resume: user reauthorizes a wake)` and
-notify under the recorded Notification policy when user action is needed.
+Maintain is the default mode for run-created PRs.
+End the chat-run watch only when every watched PR is merged or closed,
+launched work is settled, and the run's release step is settled or not applicable,
+or the user cancels.
+A required PR closed without merging is incomplete scope; it does not make the run release-eligible.
+Keep its decision hold and wake until the user resolves scope or cancels.
+The chat-run watch never expires or waits for re-authorization while PRs remain open.
+Follow [Chat-run watch](../../axstack-watch/SKILL.md#2-fix-the-operating-mode)
+for quiet cadence and native schedule re-arming.
+Run Close-out after the watch ends, subject to its existing acceptance conditions.
 
 ## Release and install, when applicable
 
