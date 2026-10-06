@@ -1,6 +1,6 @@
 # Spec: default auto-merge, revert line, PR previews, and nightly PR triage
 
-Status: Draft rev 1 — awaiting specification approval. Store: this repo Markdown file.
+Status: Draft rev 2 — awaiting specification approval (rev 1 at 88a3e94; adviser blockers folded). Store: this repo Markdown file.
 Run: `20261006-video-takeaways`. The private run record holds the Align decisions,
 the adviser receipts, and the host probe.
 
@@ -27,39 +27,55 @@ preview link, and a nightly job reports what needs attention.
 | D1 | Excluded: CLI-proxy account pooling and residential-IP routing. It exists to evade provider detection and limits. The supported alternative is signing in to the same accounts on each of the user's machines. |
 | D2 | Excluded: local CI contention handling (queueing local test runs). |
 | D3 | Adviser dissent recorded: both advisers preferred keeping the user's chat reply as `solo` approval. The user chose cross-provider review (Q7). |
-| D4 | The PR that implements this change is merged by the user, not by itself. |
+| D4 | Every PR of this run is merged by the user, not by itself. |
+| D5 | Release: not authorized by this spec. It grants no release, npm publish, or host install authority. A later release run under `AGENTS.md` takes effect only with its own recorded authority. Preview authority covers only the preview unit and its `tailscale serve` route on the VPS. |
+| D6 | Adviser blockers on rev 1 (Astra 4, Opus 8) are all accepted and folded into A, C, D, E, and the change surface. |
 
 ## Acceptance criteria
 
 ### A. Default automatic merge (`axstack-watch` §5, `axstack-implement` §6, contracts Authority, Autopilot, `AGENTS.md`)
 
-1. An own PR under any authorized watch (chat-run or standalone) is merged by the single
-   recorded merge actor when every term below holds. The merge actor is the chat-run
-   driver, or the standalone watch owner when no live driver owns the PR. Workers,
-   reviewers, monitors, and managers never merge.
+1. Automatic merge applies only to own PRs under a chat-run watch or an authorized
+   maintenance watch, including small and adopted work. Observation-only and peer
+   watches never merge. The merge actor is the recorded owning thread of that watch.
+   A missing or idle owner never transfers merge authority; the existing reconcile
+   and explicit-transfer rules in `lifecycle.md` apply first. Workers, reviewers,
+   monitors, managers, and the nightly triage never merge.
 2. Approval term by approval mode:
    - `solo`: authored-review `APPROVE` from a reviewer whose provider differs from the
      author's provider, plus diligence `PASS`, both bound to the current head and base.
      No user chat reply is needed.
    - `team`: at least one counted collaborator approval as defined in watch §5 today,
-     at the current head. An approval carries over only across a rebase whose patch-id
-     is unchanged; any content change needs a fresh approval.
+     at the current head, plus the same authored review and diligence. An approval
+     carries over only across a rebase whose `git patch-id --stable` of the PR diff is
+     unchanged, recorded for both heads, and only while the forge still counts it
+     (no dismissal, no last-push-approval rule). Fresh authored review, diligence,
+     and CI are still required on the new head.
 3. Eligible base: `team` → only a base named `dev` that repository docs or workflows
-   show as non-production. `solo` → any `integration` base. Base classification still
-   comes from docs and workflows, never the branch name alone; unknown means `deploying`.
+   show as non-production. `solo` → any `integration` base. Classification comes from
+   docs and workflows, never the branch name alone; unknown means `deploying`. For a
+   stack, every member's own base and the stack's final target must each be eligible,
+   and every member must meet every term and exclusion.
 4. Every existing watch §5 term still holds: full CI set green, mergeable, not draft,
    head/base binding, ancestry freshness, no `do-not-merge` label or chat `hold`, no
    active hold, guarded singleton merge, whole-stack-only `gh stack` merge, post-merge
    push-failure hold. `--admin` and rule bypass are never used.
-5. Never auto-merged (merge card to the user instead): PRs authored by anyone other
-   than the user or the user's agents; promotion PRs (`dev`→`staging`, `staging`→`prod`)
-   and any `deploying` or unknown base; release PRs; PRs that change CI workflow files,
-   branch-protection or ruleset config, CODEOWNERS, or Axstack's merge-authority text;
-   PRs whose revert line is not `clean` (section B).
+5. Never auto-merged (merge card to the user instead):
+   - PRs authored by anyone other than the user or the user's agents;
+   - promotion PRs (`dev`→`staging`, `staging`→`prod`) and any `deploying` or unknown base;
+   - release PRs;
+   - PRs that change anything under `.github/`, any script or config a CI workflow
+     runs, branch-protection or ruleset config, `CODEOWNERS`, `profiles/presets/*.json`,
+     or Axstack merge-authority text (`contracts.md`, `autopilot.md`, `lifecycle.md`,
+     `t3-runtime.md`, `axstack-watch`, `axstack-implement`, `axstack-review`,
+     `diligence.md`, `AGENTS.md`);
+   - PRs whose revert line is not `clean` (section B);
+   - PRs with any unresolved human or bot review thread or top-level blocking comment
+     (section C4).
 6. A watch can be told `Auto-merge: off` for a run or PR; the merge card then waits
    for the user as today.
-7. The only change from today for a merge card is that it is posted only for the
-   cases in A5 and A6, and for anything A2 or A3 does not cover.
+7. A merge card is posted for every case in A5 and A6 and for any base or approval
+   that A2 and A3 do not cover. Its user reply rule is unchanged.
 
 ### B. Revert line
 
@@ -69,52 +85,64 @@ preview link, and a nightly job reports what needs attention.
    behaviour with CI green and no data, schema, config, external, or published effect
    left behind. Otherwise `steps` or `irreversible` applies. Release PRs are
    `irreversible`.
-3. The authored reviewer checks the line against the diff; a wrong or missing line
-   is a finding rated at least medium.
+3. The authored reviewer checks the line against the diff and records it in the review
+   receipt; a wrong or missing line is a finding rated at least medium.
 
 ### C. Review severity
 
-1. Each review finding is rated `high`, `medium`, or `low` on one shared rubric:
-   `high` = correctness, security, data-loss, or contract defect with real impact;
-   `medium` = material behaviour, test, or maintainability defect; `low` = polish
-   that does not change behaviour.
+1. Each review and diligence finding is rated `high`, `medium`, or `low` on one shared
+   rubric: `high` = correctness, security, data-loss, or contract defect with real
+   impact; `medium` = material behaviour, test, or maintainability defect, or a
+   softened or dropped obligation; `low` = polish that does not change behaviour.
 2. The reviewer rates; an uncertain rating rounds up; only diligence may raise a
    rating; nobody lowers one.
-3. `medium` and `high` block `APPROVE` and must be fixed and re-reviewed. `low`
-   findings do not block; the owner records them in one follow-up issue linked
-   from the PR.
-4. The "every review thread addressed" term becomes "no unresolved finding above
-   low and no effective blocking review". Agents never resolve or rate threads
-   opened by humans; a repository rule that requires conversation resolution
+3. `medium` and `high` block `APPROVE` and must be fixed and re-reviewed. Diligence
+   returns `FINDINGS` for any `medium` or `high` mismatch and `PASS` with the low
+   items listed when only `low` mismatches remain; `UNKNOWN` is unchanged. `low`
+   findings do not block; the owner records them in one follow-up issue in the
+   repository's tracker (GitHub Issues, or Linear for `defi-com`) linked from the PR.
+4. Agents never rate, resolve, or dismiss threads or comments opened by humans or
+   bots. Any unresolved human or bot thread or top-level blocking comment holds
+   automatic merge and posts a merge card. Agent-opened threads with only `low`
+   findings may stay open. A repository rule that requires conversation resolution
    still applies.
 
 ### D. PR previews
 
-1. For each own PR, the owner decides whether a preview makes sense: the repository
+1. A preview runs only when the run's T3 host is the VPS. On any other host the
+   owner records "no preview: run host is not the VPS" and continues.
+2. For each own PR, the owner decides whether a preview makes sense: the repository
    documents a runnable dev-server command (in `AGENTS.md` or its README) and the PR
-   changes something user-visible. If either is missing, no preview, and the PR says
-   nothing about one.
-2. The preview runs on the VPS from the PR head as a time-limited systemd user unit
-   with CPU and memory caps. It listens on loopback only and is exposed with
-   `tailscale serve` on one port per preview. Tailscale Funnel is never used.
-3. At most two previews run per host. The URL and the served head SHA are written
-   in the PR description and the run record.
-4. The preview stops when the PR merges or closes, when the watch ends, or when its
-   time limit expires. A changed head restarts it on the new head.
-5. Company repositories use only dev or test environment values; production secrets
-   are never used for a preview.
-6. UI verification (`axstack-ui-verifier`) may use the preview URL; the preview
-   does not replace it.
+   changes something user-visible. If either is missing, there is no preview.
+3. The owner starts the preview from an isolated checkout of the PR head as a systemd
+   user unit with `RuntimeMaxSec=4h`, `MemoryMax=2G`, and `CPUQuota=200%`. It listens
+   on loopback only and is exposed with `tailscale serve` on one port per preview.
+   Tailscale Funnel is never used. Unrelated host services are never touched.
+4. At most two previews run per host; a third waits until a slot frees and the PR
+   says "preview queued".
+5. The URL and the served head SHA are recorded in the run record and the driver
+   thread. They go in the PR description only for private repositories.
+6. Teardown removes both the unit and its `tailscale serve` route, and reads back that
+   neither remains. It runs when the PR merges or closes, when the watch ends, or when
+   the unit's time limit stops it (an `ExecStopPost` step removes the route). A
+   changed head restarts the preview on the new head. A failed teardown is a hold
+   with a recorded receipt.
+7. Every preview uses only dev or test environment values; production secrets are
+   never used, in any repository.
+8. UI verification (`axstack-ui-verifier`) may use the preview URL; the preview does
+   not replace it.
 
 ### E. Nightly PR triage
 
-1. One native T3 `schedule_task` runs nightly per configured repository set. It reads
-   all open PRs authored by the user and reports, in one message to the driver
-   thread: merge-ready, blocked (with the blocking term), stale (no activity for
-   7 days), and the top three to act on.
-2. It is read-only: no merges, comments, labels, or pushes.
-3. It sends a relay message only under the recorded Notification policy, at most
-   once per night.
+1. One unbound native T3 `schedule_task` (`bindToCurrentThread:false`), following the
+   weekly test-audit pattern, runs nightly at 02:00 Asia/Kolkata over a recorded
+   repository set. Its schedule ID, prompt, and repository set are recorded once;
+   setup reads existing schedules first and never creates a duplicate.
+2. Each run reads all open PRs authored by the user and reports in its own T3 thread:
+   per PR the forge state (CI, reviews, mergeable, unresolved threads) or `UNKNOWN`,
+   stale PRs (no activity for 7 days), and the top three to act on. It never
+   declares a PR merge-ready.
+3. It is read-only: no merges, comments, labels, pushes, or relay messages.
 
 ## Exclusions
 
@@ -124,6 +152,7 @@ preview link, and a nightly job reports what needs attention.
 - Automatic merge of other people's PRs, even when watched.
 - Previews on any host other than the VPS, public previews, or production data.
 - Quota-driven scheduling or model routing.
+- Relay messages from the nightly triage.
 
 ## Risks accepted
 
@@ -136,8 +165,11 @@ preview link, and a nightly job reports what needs attention.
 
 ## Change surface
 
-`skills/axstack/references/contracts.md`, `skills/axstack/references/autopilot.md`,
-`skills/axstack-watch/SKILL.md` and references, `skills/axstack-implement/SKILL.md`,
-`skills/axstack-review/SKILL.md`, `skills/axstack/references/ui-verification.md`,
-a new preview reference, `AGENTS.md`, `docs/workflows.md`, `README.md`, and
-prose-contract tests under `tests/workflows/`.
+Every file that states the human-merge default or the merge predicate:
+`skills/axstack/references/contracts.md`, `autopilot.md`, `lifecycle.md`,
+`t3-runtime.md`, `diligence.md`, `candidate-publication.md`, `pr-shape.md`,
+`test-audit-weekly.md`, `ui-verification.md`; `skills/axstack-watch/SKILL.md` and
+references; `skills/axstack-implement/SKILL.md`; `skills/axstack-review/SKILL.md`;
+`skills/axstack-audit/SKILL.md`; `skills/axstack-relay/SKILL.md`; a new preview
+reference and a new triage prompt reference; `AGENTS.md`, `docs/workflows.md`,
+`README.md`; and prose-contract tests under `tests/workflows/`.
