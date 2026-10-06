@@ -357,6 +357,59 @@ Requested provider/model/effort, input acceptance, effective session settings,
 and completed behavior are separate evidence classes. Follow the runtime
 reference for provider option IDs and configuration read-back.
 
+## Packaged driver helpers
+
+These Bun scripts support the driver; they do not create a workflow runtime.
+Run them from the bundle root, or replace the relative script path with its
+installed shared-root path. The [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
+owns model/account authority; [Cleanup](../skills/axstack-cleanup/SKILL.md)
+owns evidence retirement authority.
+
+### Account picker
+
+```text
+bun skills/axstack/scripts/pick-instance.js --provider <claude|codex> [--settings <t3-settings-json>] [--json]
+```
+
+`--settings` overrides the default `~/.t3/userdata/settings.json`; `--json`
+prints the selected instance and scored inventory rather than only its ID.
+The picker uses exit 0 for an eligible selection, exit 1 for invalid input/settings
+or an unexpected failure, and exit 2 when no eligible provider instance remains.
+Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
+for dispatch fallback, driver stay rules, and holds; selection alone grants no
+provider or model substitution authority.
+
+### PR digest
+
+```text
+bun skills/axstack/scripts/pr-digest.js --repo <owner/name> --prs <1,2> --watermark <private-json>
+bun skills/axstack/scripts/pr-digest.js --input <saved-graphql-json> --watermark <private-json>
+```
+
+Use `--repo` and `--prs` for live GitHub reads, or `--input` for a saved response.
+`--watermark` reads the prior per-repository JSON; a missing file starts an empty
+baseline. The digest uses exit 0 for unchanged data, exit 10 for deltas with a
+printed new watermark, and exit 2 for incomplete reads or invalid input.
+It never writes the watermark; save only the printed watermark after disposition.
+An incomplete read leaves readiness unknown.
+
+### Evidence archive
+
+```text
+bun skills/axstack/scripts/archive-evidence.js --source-root <absolute-dir> --archive-root <absolute-private-dir> --repo <owner/name> <--pr <number>|--run <id> --task <id>> --head <full-sha> --dispatch <id> --file <relative-path> [--file <relative-path>] [--operation <archive|retire>] [--manifest-hash <sha256>]
+```
+
+Choose either `--pr` or both `--run` and `--task`; `--file` repeats for each exact
+evidence path. `--head` is a full lowercase commit SHA. The absolute source and
+archive roots must be disjoint, real paths; the archive uses private 0700
+directories and 0600 files. The default `--operation archive` writes, verifies,
+and reports a content-addressed receipt. `--operation retire` requires the exact
+`--manifest-hash` from that verified receipt, verifies the source Git HEAD and
+classifies its dirt, then removes only matching untracked evidence files.
+The helper uses exit 0 for verified completion and exit 1 for invalid input or
+failed verification/mutation. Partial retirement reports the removed and pending
+paths; preserve the verified archive and reconcile before retrying.
+
 ## Claude Code subagent default
 
 The preserved Claude-settings feature manages only

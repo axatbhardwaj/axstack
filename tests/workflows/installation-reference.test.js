@@ -92,3 +92,17 @@ for (const [name, concepts, rewording] of [
       rewording, [[direction, 'cannot']], [...concepts, direction]);
   });
 }
+
+for (const [name, script, flags, exits] of [
+  ['Account picker', 'pick-instance.js', ['--provider', '--settings', '--json'], [0, 1, 2]],
+  ['PR digest', 'pr-digest.js', ['--repo', '--prs', '--input', '--watermark'], [0, 10, 2]],
+  ['Evidence archive', 'archive-evidence.js', ['--source-root', '--archive-root', '--repo', '--pr', '--run', '--task', '--head', '--dispatch', '--file', '--operation', '--manifest-hash'], [0, 1]],
+]) {
+  test(`installation packaged helper interface: ${name}`, () => {
+    const section = installation().match(new RegExp(`^### ${name}\\n([\\s\\S]*?)(?=^#{2,3} |$(?![\\s\\S]))`, 'm'))?.[1];
+    expect(section, `${name} documentation`).toBeDefined();
+    expect(section).toContain(script);
+    for (const flag of flags) expect(section, `${name} ${flag}`).toContain(flag);
+    for (const code of exits) expect(section, `${name} exit ${code}`).toMatch(new RegExp(`exit ${code}\\b`));
+  });
+}
