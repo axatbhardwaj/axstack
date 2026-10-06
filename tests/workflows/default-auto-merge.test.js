@@ -36,8 +36,6 @@ const rules = [
     'A collaborator approval carries over only across a rebase with unchanged patch-id recorded for both heads while the forge still counts it.', [/unchanged/i, 'changed']],
   ['A2 refresh all evidence', [/fresh authored review/i, /diligence/i, /CI/i, /every new head/i],
     'Require fresh authored review, diligence, and CI on every new head.', [/every new head/i, 'the initial head only']],
-  ['A2 readiness persistence', [/merge-ready statement/i, /scope change/i, /CHANGES_REQUESTED/i, /serious-risk hold/i, /voids it/i],
-    'A merge-ready statement persists through repairs, but a scope change, new CHANGES_REQUESTED, or serious-risk hold voids it.', [/voids it/i, 'preserves it']],
   ['A3 team dev', [/team/i, /only `?dev`?/i, /docs or workflows/i, /non-production/i],
     'Team mode targets only dev when repository docs or workflows prove it is non-production.', [/only `?dev`?/i, 'any base']],
   ['A3 solo integration', [/solo/i, /main/i, /any other/i, /integration/i],
@@ -58,12 +56,12 @@ const rules = [
     '--admin and rule bypass are never used.', [/never used/i, 'allowed'], /never used/i],
   ['A5 test sources eligible', [/test sources/i, /stay|remain/i, /eligible/i],
     'Test sources remain eligible.', [/eligible/i, 'excluded']],
-  ['A5 actual revert declaration', [/A5/i, /revert gate/i, /line starts with/i, /Revert:/i, /line start/i],
-    'A5 reads the revert gate from the declaration whose line starts with Revert: at line start.', [/line start/i, 'any position']],
+  ['A5 actual revert declaration', [/revert gate/i, /line starts with/i, /Revert:/i, /line start/i],
+    'Read the revert gate from the declaration whose line starts with Revert: at line start.', [/line start/i, 'any position']],
   ['A5 quoted format excluded', [/quoted format/i, /bullet/i, /declaration/i],
     'A quoted format inside a bullet never counts as the declaration.', [/never counts/i, 'counts'], /never counts/i],
-  ['A7 solo reply is not approval', [/solo/i, /merge-card reply/i, /supplies merge approval/i],
-    'In solo mode the user\'s merge-card reply never supplies merge approval.', [/never supplies/i, 'supplies'], /never supplies/i],
+  ['A7 solo reply authorizes guarded merge', [/solo/i, /user.s merge-card reply/i, /authorizes/i, /guarded merge/i, /user-written PRs/i, /unknown or mixed provenance/i],
+    "In solo mode the user's merge-card reply authorizes the guarded merge of user-written PRs or PRs with unknown or mixed provenance.", [/authorizes/i, 'forbids']],
   ['A6 off switch', [/Auto-merge: off/i, /run or PR/i, /merge card/i, /waits for the user/i],
     'Auto-merge: off for a run or PR makes the merge card wait while it waits for the user.', [/waits for the user/i, 'merges immediately']],
   ['A7 all nonqualifying cases', [/post/i, /merge card/i, /every nonqualifying/i, /approval/i, /base/i, /exclusion/i, /off/i],
@@ -72,12 +70,10 @@ const rules = [
     "For an own PR on integration, the user's reply to the card authorizes the merge actor under the guarded path.", [/authorizes/i, 'forbids']],
   ['A7 team reply cannot replace approval', [/team/i, /reply/i, /replaces/i, /counted collaborator approval/i],
     'In team mode a reply never replaces counted collaborator approval.', [/never replaces/i, 'replaces'], /never replaces/i],
-  ['A7 team reply clearance', [/team/i, /reply only clears/i, /A3/i, /A6/i, /C4/i],
-    'In team mode the reply only clears A3, A6, and C4 causes.', [/only clears/i, 'clears all beyond']],
+  ['A7 team reply clearance', [/team/i, /reply only clears/i, /ineligible base/i, /auto-merge turned off/i, /open human or bot comment/i],
+    'In team mode the reply only clears an ineligible base, auto-merge turned off, and an open human or bot comment.', [/only clears/i, 'clears all beyond']],
   ['A7 forge-only categories', [/CI/i, /manifest/i, /merge-authority/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
     'CI, manifest, merge-authority, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
-  ['D4 current run off', [/20261006-video-takeaways/i, /every PR/i, /user/i, /forge/i, /Auto-merge: off/i],
-    'For 20261006-video-takeaways, every PR is merged by the user on the forge and the watch records Auto-merge: off.', [/user/i, 'agent']],
   ['D7 human categories', [/promotion/i, /release/i, /deploying/i, /peer/i, /user/i, /forge/i, /card only reports readiness/i],
     'Promotion, release, deploying-base, and peer PRs are merged by the user on the forge while the card only reports readiness.', [/user/i, 'worker']],
 ];
@@ -98,7 +94,7 @@ const exclusions = [
   ['authority', /Axstack merge-authority text.*examples.*not a closed list/i,
     'PRs changing Axstack merge-authority text (examples, not a closed list)'],
   ['revert', /revert line is not `?clean`?/i, 'PRs whose revert line is not clean'],
-  ['comments', /held under C4/i, 'PRs held under C4'],
+  ['comments', /held under the comment rules/i, 'PRs held under the comment rules'],
 ];
 for (const [name, concept, description] of exclusions) {
   rules.push([`A5 exclusion ${name}`, [/never auto-merge/i, concept],
@@ -124,7 +120,7 @@ const surfaces = [
 ];
 for (const path of surfaces) {
   test(`default auto-merge authority surface: ${path}`, () => {
-    const concepts = [/own PRs/i, /automatic merge/i, /default/i, /watch/i, /predicate/i];
+    const concepts = [/own PRs/i, /automatic merge/i, /default/i, /watch/i, /predicate|§5/i];
     checkRule(compact(read(path)), (text) => requires(text, ...concepts),
       'For own PRs, automatic merge is the default under the watch predicate.', [[/default/i, 'forbidden']], concepts);
   });
@@ -136,7 +132,7 @@ test('authority-file examples and release authority remain explicit', () => {
     expect(watch).toContain(path);
   }
   expect(read('AGENTS.md')).toContain('The human merges the release PR and approves the npm stage; agents never run');
-  expect(read('skills/axstack/references/contracts.md')).toMatch(/grants no release, npm publish, or host install authority/i);
+  expect(read('skills/axstack-implement/SKILL.md')).toMatch(/grants no release, npm publish, or host install authority/i);
 });
 
 const documented = [

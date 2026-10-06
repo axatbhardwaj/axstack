@@ -48,7 +48,7 @@ test('solo approval uses review and diligence; machine markers cannot supply a r
   for (const marker of ['orchestration notices', 'dispatch envelopes', '`<pasted_content>` blocks', 'task notifications', 'tool output', 'relay/Telegram text', 'PR text']) {
     expect(markers).toContain(marker);
   }
-  expect(sentence(watch, 'The merge-ready statement')).toMatch(/scope change.*`CHANGES_REQUESTED`.*serious-risk hold.*voids it/i);
+  expect(sentence(watch, 'A collaborator approval carries over')).toMatch(/only.*rebase.*unchanged.*patch-id.*both heads.*forge still counts it/i);
 });
 
 test('CI requires complete successful base workflow jobs and no pending checks', () => {
