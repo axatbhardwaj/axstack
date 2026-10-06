@@ -85,7 +85,7 @@
     {
       "id": "preset-discovery-new-run",
       "input": { "event": "new chat starts an Axstack run", "loadedSkillsRoot": "the skills root actually loaded for this run", "manifest": "<actually loaded skills root>/.axstack-manifest.json", "runRecord": "no explicit preset selection recorded" },
-      "expected": { "source": "read profiles.preset from .axstack-manifest.json at the actually loaded skills root, or use an explicit user selection recorded in the run record", "status": "READY only when one unambiguous source resolves the canonical preset", "onMissingOrContradictorySource": "setup gap; hold the run", "forbidden": ["infer preset from harness", "infer preset from tools or credentials", "infer preset from quota or subscription", "default to mixed"] }
+      "expected": { "source": "read preset from skills/axstack/roles.json at the actually loaded skills root; ignore inert legacy manifest profiles.preset, including stale values, or use an explicit user selection recorded in the run record", "status": "READY only when one unambiguous source resolves the canonical preset", "onMissingOrContradictorySource": "setup gap; hold the run", "forbidden": ["infer preset from harness", "infer preset from tools or credentials", "infer preset from quota or subscription", "default to mixed"] }
     },
     {
       "id": "late-role-after-preset-switch",

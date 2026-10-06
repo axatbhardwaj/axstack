@@ -91,7 +91,7 @@ Diagram never calls explain.
    for other artifacts, use it when warranted. Bind it to the exact artifact identity.
    Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet
-   author xhigh and reviewer high sessions are allowed for explanations as
+   author high and reviewer high sessions are allowed for explanations as
    session independence only. This exception never permits same-model code
    review or a cross-provider-independence claim.
 3. Report source, tests, rendered observations, independent review, and

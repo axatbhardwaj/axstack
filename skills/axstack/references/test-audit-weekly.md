@@ -53,6 +53,8 @@ or edit line-caps. Report test-only production seams without changing them.
 After restoring mutations, verify every non-test path byte-identical to the base;
 coverage, where reported, is a per-file guard and never deletion proof alone.
 Keep one writer and private revision-bound receipts; workers never push.
+The weekly test audit is a named exception to Implement's publish-then-review
+order: it requires review-before-publication.
 Obtain independent review using Implement's configured authored-review roles and
 verify the exact candidate's checks before publication. The driver uses
 `gh stack` and opens at most one test-audit PR per week after independent review;

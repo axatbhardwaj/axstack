@@ -65,7 +65,7 @@ rule('Close-out records installed version', autopilot, 'Close-out last', /releas
 rule('closed-unmerged watch holds and continues wake', watch, 'A required PR closed without merging', /decision hold.*wake remains active/);
 rule('closed-unmerged runtime holds and continues wake', runtime, 'A required PR closed without merging', /decision hold.*wake remains active/);
 
-rule('silence cannot grant release authority', autopilot, 'The small-work Align read-back names', /silence cannot fill a missing authority or target/);
+rule('silence cannot grant release authority', autopilot, 'The small-change intent read-back names', /silence cannot fill a missing authority or target/);
 rule('relay never sends policy-enabled progress', () => read('skills/axstack-relay/SKILL.md'), 'Progress, CI pending, and completion are never eligible', /merely because a policy exists/);
 rule('implement verifies forge state on wake', implement, "driver resumes on the user's next message", /verify merge state through the forge on wake/);
 rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms that merge', /tag and wait for the staged publish/);
@@ -85,7 +85,7 @@ rule('watch routine events always stay in T3', watch, 'Progress, CI pending, and
 rule('workflow relay remains bounded', () => read('docs/workflows.md'), 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('watch relay remains bounded', watch, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
-rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /spec for human approval at gate 1.*small work Align read-back/);
+rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /spec for human approval at gate 1.*small-change intent read-back/);
 rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
 rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);
 rule('registry wake verifies package and version', autopilot, 'A wake verifies the registry', /expected package and version/);

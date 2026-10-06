@@ -55,7 +55,9 @@ add no daemon and no polling model between wakes.
 At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
 for driver account re-selection, then run the digest once per repository
 from the installed `axstack` skill directory:
-`bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's private run-record path>`.
+`bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's per-repository JSON watermark file path>`.
+Use a per-repository JSON file in the private run directory for the watermark,
+separate from `progress.md` (for example, `pr-digest-owner-repo.json`).
 Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,
 end the turn with no text or notification. Exit 10 supplies deltas
 to reconcile with current PR and local state; the driver saves only the printed

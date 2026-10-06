@@ -14,6 +14,7 @@ Decisions: <escalation trigger + evidence pointers + outcome changed yes/no, or 
 Debug: <rung reached + loop command + fix attempts + adviser and investigator receipts + isolation evidence | n/a>
 TDD: <applicable evidence path: normal real red-green | accepted structure-preserving old revision green before edits + same checks new revision green | F-repair base-green/removal-inversion-red/rewording-green evidence; absent proof: noncompliance | unavailable records: UNKNOWN with reason>
 Review: <exact-rev independent review status + unresolved findings>
+Simplification: <applicability determinations evidenced / total candidate diffs, complete simplification receipts / total candidates, applied, not-applicable, or UNKNOWN with reason + evidence>
 Rework: <cycles + causes>
 Interventions: <avoidable user interventions, or unsupported by records>
 Parallelism: <identified vs dispatched + dependency/writer isolation>

@@ -17,7 +17,7 @@ test('eligible delivery advances on completed identity and scopes recorded holds
 
 test('small and substantial paths continue after their own authority gates', () => {
   const text = ref();
-  expect(text).toMatch(/small[\s\S]*Align read.back[\s\S]*small.change intent[\s\S]*implement[\s\S]*watch/i);
+  expect(text).toMatch(/small[\s\S]*small.change intent read.back[\s\S]*Align only when unclear[\s\S]*implement[\s\S]*watch/i);
   expect(text).toMatch(/substantial[\s\S]*Align[\s\S]*spec draft[\s\S]*human spec approval[\s\S]*tickets[\s\S]*implement/i);
   expect(skill('axstack-align')).not.toMatch(/The user invokes\s+`axstack-implement` to execute/);
   expect(skill('axstack-tickets')).toMatch(/autopilot/i);
