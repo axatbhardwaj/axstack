@@ -272,6 +272,9 @@ test('owned-support: current upgrade guidance preserves ownership and inert prov
       'Edited or already-missing retired copies retain their recorded stale entries.', [[/retain\w*/i, 'discard']]],
     [[/custom/i, /unknown/i, /assets/i, /preserv\w*|kept/i, /unless an explicit force install adopts a bundle destination/i],
       'Custom and unknown assets are kept unless an explicit force install adopts a bundle destination.', [[/preserv\w*|kept/i, 'overwritten']]],
+    [[/discard/i, /edited retired copies/i, /uninstall/i, /--force/, /chosen skills root/i, /then reinstall/i],
+      'For the chosen skills root, discard edited retired copies with uninstall --force, then reinstall.',
+      [[/then reinstall/i, 'before reinstalling']]],
     [[/roles\.json/, /rewrit\w*/i, /one owned snapshot/i],
       'Installation rewrites roles.json as one owned snapshot.', [[/rewrit\w*/i, 'ignores']]],
   ]) {

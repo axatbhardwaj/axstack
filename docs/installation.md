@@ -110,7 +110,7 @@ The capability report has five rows:
 
 | Row | What it checks |
 | --- | --- |
-| `bun` | Running Bun version is at least 1.3.14. |
+| `bun` | The `bun` row reports the already-validated running version, because Bun below 1.3.14 exits 1 before any row is printed. |
 | `git` | `git --version` succeeds. |
 | `gh` | `gh --version` succeeds. |
 | `gh stack` | `gh stack --help` succeeds, rather than merely finding an extension name. |
@@ -170,6 +170,8 @@ without an archify record still load.
 ## Exit codes and troubleshooting
 
 The setup CLI uses exit 0 for successful commands and exit 1 for failures.
+For every command (install, check, uninstall, help and version), Bun below
+1.3.14 exits 1 before argument parsing or any capability report.
 
 - Install exits 1 for argument or validation errors: an unknown command or flag,
   missing flag value, obsolete `--profile`, conflicting Claude settings flags,
@@ -189,14 +191,15 @@ The setup CLI uses exit 0 for successful commands and exit 1 for failures.
   and resolve the retirement error before retrying.
 - Check exits 1 for any reported gap: a failed capability row, invalid archify
   record/copy/SHA, non-owned instruction binding, or legacy routing outside the
-  owned block. Argument, bundle-validation, and filesystem errors also exit 1.
+  owned block. Check exits 1 for argument, bundle-validation, and filesystem errors.
 - Uninstall exits 1 for argument, validation, ownership-binding, home-confirmation,
   or transaction errors; preserved user edits are reported without failing.
 
 Install exits 0 for a clean or idempotent result, preserved edits to ordinary
 owned skills, or unavailable archify caused by an offline host, missing Git, or
-clone failure. Check exits 0 when there are no gaps; Chrome absence is a warning.
-Help and version exit 0 when the Bun floor is met.
+clone failure. Check exits 0 when there are no gaps, and Chrome absence is a warning.
+Uninstall exits 0 on completion, including preserved user edits and retained
+archify copies. Help and version exit 0 when the Bun floor is met.
 
 Start with the reported path and reason. Choose an explicit skills or tools path
 when a default cannot resolve. Use `--yes` only for intended home writes, and
@@ -433,6 +436,11 @@ Installation rewrites `roles.json` as one owned snapshot; roles absent from the
 selected preset leave that snapshot when the destination is safe to update.
 Edited role data is preserved and reported as not ready rather than silently
 rewritten.
+
+To deliberately discard edited retired copies, back up other edited owned assets,
+run `axstack uninstall --skills-dir <dir> --force` for the chosen skills root,
+then reinstall with the ordinary install command. Force uninstall also removes
+other edited owned assets in that root.
 
 Inert legacy Paseo profile provenance never authorizes configuration
 reads or writes, path-binding refusal, readiness checks, uninstall mutation,

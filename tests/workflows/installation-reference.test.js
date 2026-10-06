@@ -38,7 +38,7 @@ for (const [name, concepts, rewording] of [
   });
 }
 
-for (const [name, concepts, rewording] of [
+for (const [name, concepts, rewording, code = 1] of [
   ['argument and validation errors', [/\binstall\b/i, /exit\w* 1/i, /argument/i, /validation/i,
     /unknown command or flag/i, /missing flag value/i, /--profile/, /Claude settings flags/i,
     /Bun below/i, /preset/i, /skills target/i, /tools path/i, /bundle or manifest/i,
@@ -55,20 +55,42 @@ for (const [name, concepts, rewording] of [
     'Install exits 1 if the selected roles are not ready.'],
   ['legacy retirement failure', [/install/i, /exit\w* 1/i, /legacy/i, /retirement/i, /fail\w*|failure/i],
     'Install exits 1 for a legacy retirement failure.'],
-  ['check gaps', [/check/i, /exit\w* 1/i, /any/i, /gap/i],
-    'Check exits 1 for any reported gap.'],
+  ['check gaps', [/check/i, /exit\w* 1/i, /any/i, /gap/i, /failed capability row/i,
+    /archify record\/copy\/SHA/i, /non.owned instruction binding/i, /legacy routing/i, /owned block/i],
+    'Check exits 1 for any reported gap: a failed capability row, invalid archify record/copy/SHA, non-owned instruction binding, or legacy routing outside the owned block.'],
+  ['check input failures', [/check/i, /argument/i, /bundle.validation/i, /filesystem/i, /errors/i, /exit\w* 1/i],
+    'Check exits 1 for argument, bundle-validation, and filesystem errors.'],
+  ['uninstall failures', [/uninstall/i, /exit\w* 1/i, /argument/i, /validation/i,
+    /ownership.binding/i, /home.confirmation/i, /transaction/i, /errors/i],
+    'Uninstall exits 1 for argument, validation, ownership-binding, home-confirmation, or transaction errors.'],
+  ['install success and tolerated failures', [/\binstall\b/i, /exit\w* 0/i, /clean/i, /idempotent/i,
+    /preserved edits/i, /ordinary owned skills/i, /unavailable archify/i, /offline host/i, /missing Git/i, /clone failure/i],
+    'Install exits 0 for a clean or idempotent result, preserved edits to ordinary owned skills, or unavailable archify caused by an offline host, missing Git, or clone failure.', 0],
+  ['check success and Chrome warning', [/check/i, /exit\w* 0/i, /no gaps|zero gaps/i, /Chrome absence/i, /warning/i],
+    'Check exits 0 when there are zero gaps, and Chrome absence is a warning.', 0],
+  ['uninstall success and preservation', [/uninstall/i, /exit\w* 0/i, /completion/i, /preserved user edits/i, /retained archify copies/i],
+    'Uninstall exits 0 on completion, including preserved user edits and retained archify copies.', 0],
+  ['help and version success', [/help/i, /version/i, /exit\w* 0/i, /Bun floor/i, /met/i],
+    'Help and version exit 0 when the Bun floor is met.', 0],
+  ['Bun floor before every command', [/every command/i, /\binstall\b/i, /\bcheck\b/i, /\buninstall\b/i,
+    /help/i, /version/i, /Bun below/i, /exit\w* 1/i, /before argument parsing/i, /capability report/i],
+    'For every command (install, check, uninstall, help and version), Bun below the floor exits 1 before argument parsing or any capability report.'],
 ]) {
   test(`installation exit codes: ${name}`, () => {
     // Mask only the expected negative status, rather than ignoring all denials.
-    const accepts = (text) => requires(text.replace(/roles are not ready/gi, 'roles are unready'),
+    const accepts = (text) => requires(text.replace(/roles are not ready/gi, 'roles are unready').replace(/\bno gaps\b/gi, 'zero gaps'),
       ...concepts.map((concept) => concept.source === 'ready' ? /ready|unready/i : concept));
-    checkRule(installation().replace(/\s+/g, ' '), accepts, rewording, [[/exit\w* 1/i, 'exits 0']], concepts);
+    checkRule(installation().replace(/\s+/g, ' '), accepts, rewording, [[new RegExp(`exit\\w* ${code}`, 'i'), `exits ${1 - code}`]], concepts);
   });
 }
 
 test('installation check explains actual rows and separates driver MCP preflight', () => {
   const doc = installation();
   for (const label of ['bun', 'git', 'gh', 'gh stack', 't3']) expect(doc).toContain(`\`${label}\``);
+  const bunRow = [/bun row/i, /already.validated/i, /running version/i, /Bun below/i, /exit\w* 1/i, /before any row/i];
+  checkRule(doc.replace(/`/g, '').replace(/\s+/g, ' '), (text) => requires(text, ...bunRow),
+    'The bun row shows the already-validated running version because Bun below the floor exits 1 before any row is printed.',
+    [[/before any row/i, 'after any row']], bunRow);
   const concepts = [/check/i, /MCP readiness/i, /provider/i, /schedule activation/i, /mobile delivery/i];
   const accepts = (text) => prohibits(text, /does not prove/i, ...concepts);
   checkRule(doc.replace(/\s+/g, ' '), accepts,

@@ -81,7 +81,7 @@ const RETIRED_REFERENCES = {
   runtime: /orca/i,
   predecessor: /paseo/i,
   legacyConstant: /^export const LEGACY_ROUTING_PATTERN = [^\n]+;$/m,
-  history: /rollback[^\n]*v?0\.20\.31|Orca|Historical migration|Paseo[^.]*cutover|retired.skill migration/i,
+  history: /^[ \t]*#{1,6}[ \t]+rollback\b|^[ \t]*rollback[ \t]*\r?\n[ \t]*[-=]+[ \t]*$|0\.20\.31|Orca|Historical[ \t-]+migration|Paseo[^.]*cutover|retired.skill migration/im,
   installerFixtures: [
     'expect(block).not.toMatch(/model|opus|claude|codex|orca/i);',
     "const legacy = 'Route all reviewers and writers through Orca orchestration.';",
@@ -167,7 +167,11 @@ test('structural: public docs exclude removed history narratives', () => {
     const text = readFileSync(join(root, path), 'utf8');
     expect(text, path).not.toMatch(RETIRED_REFERENCES.history);
     for (const narrative of ['Rollback to v0.20.31', 'Historical migration',
-      `${RETIRED_REFERENCES.predecessor.source} cutover`, 'retired-skill migration']) {
+      `${RETIRED_REFERENCES.predecessor.source} cutover`, 'retired-skill migration',
+      '## Rollback', 'Rollback\n--------',
+      '## Rollback\n\n1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
+      'Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
+      '## Historical   migration']) {
       expect(`${text}\n${narrative}`, path).toMatch(RETIRED_REFERENCES.history);
     }
     expect(`${text}\nUpgrading and legacy cleanup`, path).not.toMatch(RETIRED_REFERENCES.history);
