@@ -94,6 +94,7 @@ skill paths do not configure that runtime.
 
 </details>
 
+Follow [getting started](docs/getting-started.md) for installation through a first bounded task.
 See [installation](docs/installation.md) for source installs, custom paths,
 upgrades, conflicts, and uninstalling.
 
@@ -137,38 +138,7 @@ host validation. See [PR-manager setup and safety](docs/host-operations.md#optio
 
 ## Automatic merge boundaries
 
-The recorded owning watch thread applies the full predicate in chat-run or
-standalone authorized maintenance, including small and adopted work. Solo mode
-uses current-head-and-base cross-provider review plus diligence; team mode also
-needs a counted collaborator approval. Team bases are documented non-production
-`dev`; solo bases are documented `integration` branches, including `main`.
-Unknown classification means `deploying`. Whole stacks wait for every planned
-member to be published and reviewed.
-
-Cards name missing approval, ineligible bases, exclusions, or `Auto-merge: off`.
-For own integration-base PRs, the card reply authorizes the guarded actor under
-watch §5's exceptions.
-In solo mode the user's merge-card reply authorizes the guarded merge of
-user-written PRs or PRs with unknown or mixed provenance.
-Team replies never replace collaborator approval. Promotion, release,
-deploying-base, and peer PRs are user-merged, as are CI, manifest, merge-authority,
-and non-`clean` revert changes. Test sources stay eligible. See watch §5 for all
-excluded files and guarded merge mechanics. User merges are bottom-up for a stack.
-This policy grants no release, npm publish,
-or host install authority. See [Preview authority and operations](docs/host-operations.md#private-pr-previews).
-
-Excluded: CLI proxy, account pooling, and IP routing; local CI contention handling
-is deferred. Quota-driven scheduling or model routing is excluded. Automatic
-merge of promotion, release, deploying-base, and peer PRs is excluded. Previews
-outside the VPS, public previews, and production data are excluded. Nightly triage
-never sends relay messages.
-
-Accepted risks: two agents can miss the same defect while CI is green; spec
-approval is the user's main checkpoint. A head guard does not atomically guard
-base freshness; the concurrent-merge race is held by the post-merge push-failure
-rule. A watch waking every 10 minutes (60 when quiet) until PRs land has an accepted
-token cost. Preview code runs under the same VPS user as agents and is not isolated;
-tests already do, so the added risk is small.
+Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions, account-selection carve-out and accepted risks](docs/workflows.md#automatic-merge-boundaries).
 
 ## Some notes
 

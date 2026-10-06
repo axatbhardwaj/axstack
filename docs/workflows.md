@@ -15,22 +15,10 @@ The directly invoked phase loads the applicable shared references for routing,
 lifecycle, T3 runtime boundaries, role/model/risk contracts, the run record,
 and PR shape.
 
-Before each Claude or Codex dispatch/launch, run
-`bun skills/axstack/scripts/pick-instance.js --provider claude|codex`.
-It prints the enabled same-driver account with the most tier-weighted headroom,
-excluding reached limits or any window at ≥95% usage. Provider, model, class,
-and effort stay fixed. Save `--json` output in private dispatch evidence and
-record its pointer and chosen instanceId. Only error exit 1 permits canonical
-fallback after availability validation. Exit 2 (no eligible provider instances)
-holds the work without fallback. Dispatched roles never fail over mid-thread.
-Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for driver account re-selection at turn boundaries and schedule rebinding.
-`--settings <path>` overrides `~/.t3/userdata/settings.json`.
-Usage is cached for five minutes in `${XDG_CACHE_HOME:-~/.cache}/axstack/usage.json`;
-failed requests use stale usage or a tier-only `unknown` score without cache.
-Codex's plan is unknown until a successful usage response, so its uncached
-failure weight is 1. `AXSTACK_CLAUDE_USAGE_URL` and `AXSTACK_CODEX_USAGE_URL`
-override endpoints for local fixtures; tests use loopback only.
+For the picker score, account eligibility, dispatch exits and driver stay rule,
+see [Account selection](concepts.md#account-selection). Follow
+[Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
+immediately before dispatch or account re-selection.
 
 Direct routes need no spec ceremony:
 
@@ -141,7 +129,7 @@ The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 from the installed shared root `skills/axstack/` and records the whole table for
 a new run. Per role it records class, exact ID, source, and time. Codex and
 Claude classes resolve to the newest matching ID from the saved T3 capabilities
-catalog using `skills/axstack/scripts/resolve-models.js --provider`; missing or
+catalog using `skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort>`; missing or
 malformed catalogs hold. Active runs and resume reuse their snapshot after
 later installation changes without re-resolution.
 
@@ -374,8 +362,10 @@ User merges are bottom-up for a stack.
 This policy grants no release, npm publish, or host install
 authority. See [Preview authority and operations](host-operations.md#private-pr-previews).
 
-Excluded: CLI proxy, account pooling, and IP routing; local CI contention handling
-is deferred. Quota-driven scheduling or model routing is excluded. Automatic
+Excluded: CLI proxy, account pooling behind a proxy or shared session, and IP
+routing; local CI contention handling is deferred. Quota-driven scheduling or
+model routing (provider/model substitution) is excluded. Per-dispatch selection
+among the user's own same-provider, same-model accounts is permitted. Automatic
 merge of promotion, release, deploying-base, and peer PRs is excluded. Previews
 outside the VPS, public previews, and production data are excluded. Nightly triage
 never sends relay messages.
