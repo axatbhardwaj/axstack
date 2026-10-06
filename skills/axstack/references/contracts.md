@@ -42,8 +42,8 @@ Validate the configured provider and model at actual launch. If it is
 unavailable or exhausted, pause affected work, record the gap, and ask the
 user. Only same-provider, same-model account selection among instances of one
 driver may use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding).
-An exhausted account with no eligible sibling still holds; this permits no
-mid-thread failover or provider/model substitution.
+An exhausted account with no eligible sibling still holds; dispatched roles never fail over mid-thread.
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection at turn boundaries.
 Never infer any other route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives are not
 defaults. Rejection, timeout, quota and auth failures hold affected work.

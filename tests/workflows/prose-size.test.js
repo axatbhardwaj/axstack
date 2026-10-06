@@ -52,6 +52,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // Preserve main history above and its 21-byte always-loaded headroom.
   // 20261006-relay-reply-tag: user-approved two-way relay tag; +1012 aggregate bytes.
   // 20261006-relay-reply-tag repair1: driver-authorized reply-origin proof; +1064 aggregate bytes.
-  expect(total).toBeLessThanOrEqual(318429);
-  expect(alwaysLoaded).toBeLessThanOrEqual(25284);
+  // 20261006-driver-self-routing T1: minimal +1497 aggregate and +143
+  // always-loaded ceiling bytes for the canonical driver rule and short pointers.
+  expect(total).toBeLessThanOrEqual(319926);
+  expect(alwaysLoaded).toBeLessThanOrEqual(25427);
 });

@@ -22,7 +22,9 @@ excluding reached limits or any window at ≥95% usage. Provider, model, class,
 and effort stay fixed. Save `--json` output in private dispatch evidence and
 record its pointer and chosen instanceId. Only error exit 1 permits canonical
 fallback after availability validation. Exit 2 (no eligible provider instances)
-holds the work without fallback. This permits no mid-thread failover.
+holds the work without fallback. Dispatched roles never fail over mid-thread.
+Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
+for driver account re-selection at turn boundaries.
 `--settings <path>` overrides `~/.t3/userdata/settings.json`.
 Usage is cached for five minutes in `${XDG_CACHE_HOME:-~/.cache}/axstack/usage.json`;
 failed requests use stale usage or a tier-only `unknown` score without cache.

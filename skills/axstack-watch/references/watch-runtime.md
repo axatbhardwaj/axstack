@@ -48,7 +48,8 @@ A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime;
 add no daemon and no polling model between wakes.
 
-Each driver wake first runs the digest once per repository
+At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
+for driver account re-selection, then run the digest once per repository
 from the installed `axstack` skill directory:
 `bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's private run-record path>`.
 Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,

@@ -38,8 +38,8 @@ An unavailable provider, model, role, mode or effort holds that role with no sub
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Replacing a session needs an explicit user decision and revalidation.
 Timeout, quota, auth and rejection hold affected work.
-An exhausted account with no eligible sibling still holds; bounded account
-selection occurs before dispatch or launch, never as mid-thread failover.
+An exhausted account with no eligible sibling still holds; dispatched roles never fail over mid-thread.
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection at turn boundaries.
 [Model discipline](contracts.md#model-discipline) governs optional seats,
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
 single-provider absence and mixed Codex+Claude fan-out.

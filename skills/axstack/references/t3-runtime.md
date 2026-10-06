@@ -20,13 +20,28 @@ Provider bindings must map grok→`grok` and antigravity→`antigravity`, with
 canonical error-exit fallbacks codex→`codex` and claude→`claudeAgent`.
 At each dispatch or launch, claude and codex must bind to the instanceId printed
 by `scripts/pick-instance.js --provider <provider>`.
-Only error exit 1 permits fallback to the canonical instance after validating availability.
+For dispatched roles, only error exit 1 permits fallback to the canonical instance after validating availability.
 Exit 2 (no eligible provider instances) must hold the work without fallback.
 Record the chosen instanceId and a pointer to saved `--json` output in the dispatch record.
 Only same-provider, same-model account selection among instances of one driver
 is permitted, with provider, model, class and effort rules required to remain unchanged.
 An exhausted account with no eligible sibling must hold.
-This selects accounts before dispatch, never mid-thread failover.
+Dispatched roles never fail over mid-thread.
+
+When the driver starts or resumes a run and at the start of every run-watch wake,
+it runs `scripts/pick-instance.js --provider <its own provider> --json`.
+Read its current binding with `t3_thread_configuration` and save picker JSON in private run evidence.
+If the driver's own current instance is `excluded` for a usage limit and an eligible
+same-provider sibling exists, it must switch itself via `t3_thread_configure` to the
+chosen sibling instance, keeping the same provider, model and effort/options, then continue.
+The driver must record from/to instance, a pointer to saved picker JSON and UTC time in `progress.md`.
+If the driver's own current instance is eligible, it must stay despite headroom differences.
+On exit 2 (no eligible sibling), the driver must hold under the existing rule.
+On error exit 1, the driver must keep its current instance.
+Driver account re-selection must configure only the calling thread and only at a turn boundary.
+A turn already paused by a usage limit cannot self-recover.
+The next wake or user message runs this check.
+
 Map `modeId` to `runtimeMode:full-access` and effort
 to `options:[{id,value}]`. Stored permission intent is neither effective parity
 nor a security boundary.

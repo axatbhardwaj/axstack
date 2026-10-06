@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { sentences, requires, prohibits } from './prose-contract.js';
+import { sentences, requires, prohibits, checkRule, loadedReferences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const reference = () => read('skills/axstack/references/t3-runtime.md');
@@ -68,6 +68,16 @@ const rules = [
   ["exhausted sibling hold", [/\bexhausted account/i, /\bno eligible sibling/i, /\bhold/i], /\bno eligible sibling/i],
   ["selection error fallback", [/\bonly/i, /\berror exit 1/i, /\bfallback/i, /\bcanonical instance/i, /\bvalidat/i, /\bavailability/i]],
   ["selection ineligible hold", [/\bexit 2/i, /\bno eligible provider instances/i, /\bhold/i, /\bwithout fallback/i], /\bno eligible provider instances/i],
+  ["driver picker entry", [/\bdriver/i, /\bstarts/i, /\bresumes/i, /\brun/i, /\bstart of every run-watch wake/i, /\bruns/i, /scripts\/pick-instance.js --provider <its own provider> --json/]],
+  ["driver excluded switch", [/\bdriver/i, /\bown current instance is excluded/i, /\busage limit/i, /\beligible same-provider sibling/i, /\bswitch itself/i, /t3_thread_configure/, /\bchosen sibling instance/i, /\bsame provider, model and effort\/options/i]],
+  ["driver switch receipt", [/\bdriver/i, /\brecord/i, /\bfrom\/to instance/i, /\bpointer to saved picker JSON/i, /\bUTC time/i, /progress.md/]],
+  ["driver eligible stays", [/\bdriver/i, /\bown current instance is eligible/i, /\bstay/i, /\bdespite headroom differences/i]],
+  ["driver exit 2 hold", [/\bdriver/i, /\bexit 2/i, /\bno eligible sibling/i, /\bhold/i], /\bno eligible sibling/i],
+  ["driver exit 1 stays", [/\bdriver/i, /\berror exit 1/i, /\bkeep/i, /\bcurrent instance/i]],
+  ["driver switch boundary", [/\bdriver account re-selection/i, /\bconfigure only the calling thread/i, /\bonly at a turn boundary/i]],
+  ["dispatched failover exclusion", [/\bdispatched roles/i, /\bfail over mid-thread/i], /\bnever fail over/i],
+  ["paused turn limitation", [/\bturn already paused/i, /\busage limit/i, /\bself-recover/i], /\bcannot self-recover/i],
+  ["driver next turn recovery", [/\bnext wake or user message/i, /\bruns this check/i]],
   ["mode and options", [/\bmodeId/, /\bruntimeMode:full-access/, /\boptions:\[\{id,value\}\]/]],
   ["pinned model", [/\bpreset model/i, /\bused|use/i, /\bas given/i]],
   ["class resolution", [/\bmodelClass/, /\bresol(?:v|ution)/i, /\bnewest/i, /\bprovider/i, /gpt-<N>-<class>/, /\bclaude-<class>-<N>-<N>/]],
@@ -217,6 +227,16 @@ const rewordings = {
   "exhausted sibling hold": "With no eligible sibling, an exhausted account must hold.",
   "selection error fallback": "Only error exit 1 must permit fallback to the canonical instance after validating availability.",
   "selection ineligible hold": "Exit 2 means no eligible provider instances and must hold the work without fallback.",
+  "driver picker entry": "The driver runs scripts/pick-instance.js --provider <its own provider> --json at the start of every run-watch wake and when it resumes or starts a run.",
+  "driver excluded switch": "With an eligible same-provider sibling and its own current instance is excluded for a usage limit, the driver must switch itself through t3_thread_configure to the chosen sibling instance with the same provider, model and effort/options.",
+  "driver switch receipt": "In progress.md, the driver records UTC time, a pointer to saved picker JSON and from/to instance for the switch.",
+  "driver eligible stays": "Despite headroom differences, the driver must stay when its own current instance is eligible.",
+  "driver exit 2 hold": "With no eligible sibling on exit 2, the driver holds.",
+  "driver exit 1 stays": "On error exit 1, the driver keeps its current instance.",
+  "driver switch boundary": "Only at a turn boundary, driver account re-selection must configure only the calling thread.",
+  "dispatched failover exclusion": "Dispatched roles must never fail over mid-thread.",
+  "paused turn limitation": "A turn already paused for a usage limit cannot self-recover.",
+  "driver next turn recovery": "This rule applies because the next wake or user message runs this check.",
   "mode and options": "Use options:[{id,value}] and map modeId into runtimeMode:full-access.",
   "pinned model": "As given, the preset model is used.",
   "class resolution": "For each provider, modelClass resolves the newest catalog entry matching claude-<class>-<N>-<N> or gpt-<N>-<class>.",
@@ -354,6 +374,21 @@ const accepts = (text, [, concepts, prohibition]) => prohibition
   ? prohibits(text, prohibition, ...concepts)
   : requires(text, ...concepts);
 
+// Explicit flips cover the decision, trigger, identity and failure boundaries,
+// including each accepted editorial alternative, using full source in memory.
+const driverInversions = {
+  "driver picker entry": [[/\bruns/i, 'skips'], [/\bstarts/i, 'finishes'], [/\bresumes/i, 'ends'], [/\bstart of every run-watch wake/i, 'end of selected wakes'], [/its own provider/i, 'another provider']],
+  "driver excluded switch": [[/own current instance is excluded/i, 'own current instance is eligible'], [/eligible same-provider sibling/i, 'eligible other-provider sibling'], [/switch itself/i, 'switch another thread'], [/same provider, model and effort\/options/i, 'different provider, model and effort/options']],
+  "driver switch receipt": [[/\brecords?/i, 'omits'], [/from\/to instance/i, 'destination alone']],
+  "driver eligible stays": [[/\bstay\w*/i, 'switches'], [/own current instance is eligible/i, 'own current instance is excluded']],
+  "driver exit 2 hold": [[/\bholds?/i, 'continues'], [/exit 2/i, 'exit 1']],
+  "driver exit 1 stays": [[/\bkeeps?/i, 'replaces'], [/exit 1/i, 'exit 2']],
+  "driver switch boundary": [[/configure only the calling thread/i, 'configure another thread'], [/only at a turn boundary/i, 'during a turn']],
+  "dispatched failover exclusion": [[/never fail over/i, 'always fail over']],
+  "paused turn limitation": [[/cannot self-recover/i, 'can self-recover']],
+  "driver next turn recovery": [[/next wake or user message/i, 'paused turn'], [/runs this check/i, 'skips this check']],
+};
+
 // One generic token-negation inversion per sentence, with a scoped negation
 // for declarative instructions that have no directive or negative token.
 const negate = (text) => {
@@ -369,6 +404,11 @@ const negate = (text) => {
 for (const rule of rules) {
   const [name] = rule;
   test(`T3 instruction: ${name}`, () => {
+    if (driverInversions[name]) {
+      checkRule(sentences(runtime()).join('. '), (text) => accepts(text, rule),
+        rewordings[name], driverInversions[name], rule[1]);
+      return;
+    }
     const source = sentences(runtime());
     const matching = source.filter((sentence) => accepts(sentence, rule));
     expect(matching.length, name).toBeGreaterThan(0);
@@ -421,6 +461,23 @@ test('AC2 recovery actions match their rule paragraphs', () => {
       for (const pattern of concepts) {
         expect(pattern.test(scenario.expected.action), scenario.id + ': action').toBe(true);
         expect(pattern.test(paragraph), scenario.id + ': rule').toBe(true);
+      }
+    }
+  }
+});
+
+test('driver routing summaries load the canonical turn-boundary rule', () => {
+  for (const path of [
+    'skills/axstack/references/contracts.md', 'skills/axstack/references/routing.md',
+    'skills/axstack/references/autopilot.md', 'skills/axstack-watch/references/watch-runtime.md',
+    'docs/workflows.md', 'docs/installation.md',
+  ]) {
+    const text = read(path);
+    expect(loadedReferences(text).some((link) => link.endsWith('t3-runtime.md#preflight-and-binding')), path).toBe(true);
+    // A blanket prohibition would override the linked driver exception.
+    for (const sentence of sentences(text)) {
+      if (/(?:never|no) mid-thread failover/i.test(sentence)) {
+        expect(/dispatched roles/i.test(sentence), path).toBe(true);
       }
     }
   }
