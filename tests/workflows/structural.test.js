@@ -81,7 +81,7 @@ const RETIRED_REFERENCES = {
   runtime: /orca/i,
   predecessor: /paseo/i,
   legacyConstant: /^export const LEGACY_ROUTING_PATTERN = [^\n]+;$/m,
-  rollbackAutomation: '6. Re-enable the Orca automation and verify its enabled state.',
+  history: /^[ \t]*#{1,6}[ \t]+rollback\b|^[ \t]*rollback[ \t]*\r?\n[ \t]*[-=]+[ \t]*$|0\.20\.31|Orca|Historical[ \t-]+migration|Paseo[^.]*cutover|retired.skill migration/im,
   installerFixtures: [
     'expect(block).not.toMatch(/model|opus|claude|codex|orca/i);',
     "const legacy = 'Route all reviewers and writers through Orca orchestration.';",
@@ -111,7 +111,6 @@ function activeReferences(base) {
     if (path === 'tests/workflows/structural.test.js') {
       text = text.replace(/^const RETIRED_REFERENCES = \{[\s\S]*?^\};/m, '');
     }
-    if (path === 'docs/installation.md') text = text.replace(/^## Rollback\n[\s\S]*?(?=^## |$(?![\s\S]))/m, '');
     if (RETIRED_REFERENCES.runtime.test(text)) violations.push(`${path}: content`);
   };
   for (const path of [...activePaths, ...publicDocPaths(base)]) scan(path);
@@ -148,6 +147,8 @@ test('structural: reference guard covers content, filenames, and narrow exemptio
     put('docs/installation.md', `# Installation\nT3\n## Rollback\nReinstall ${retired}.\n## Examples\nT3`);
     put(`docs/specs/${retired}.md`, retired);
     put(`docs/plans/${retired}.md`, retired);
+    expect(activeReferences(fixture)).toEqual(['docs/installation.md: content']);
+    put('docs/installation.md', '# Installation\nT3');
     expect(activeReferences(fixture)).toEqual([]);
     for (const path of ['src/instructions.js', 'tests/installer/instructions.test.js',
       'tests/workflows/structural.test.js', 'docs/installation.md']) {
@@ -158,6 +159,22 @@ test('structural: reference guard covers content, filenames, and narrow exemptio
     }
   } finally {
     rmSync(fixture, { recursive: true });
+  }
+});
+
+test('structural: public docs exclude removed history narratives', () => {
+  for (const path of publicDocPaths(root)) {
+    const text = readFileSync(join(root, path), 'utf8');
+    expect(text, path).not.toMatch(RETIRED_REFERENCES.history);
+    for (const narrative of ['Rollback to v0.20.31', 'Historical migration',
+      `${RETIRED_REFERENCES.predecessor.source} cutover`, 'retired-skill migration',
+      '## Rollback', 'Rollback\n--------',
+      '## Rollback\n\n1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
+      'Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
+      '## Historical   migration']) {
+      expect(`${text}\n${narrative}`, path).toMatch(RETIRED_REFERENCES.history);
+    }
+    expect(`${text}\nUpgrading and legacy cleanup`, path).not.toMatch(RETIRED_REFERENCES.history);
   }
 });
 
@@ -178,42 +195,29 @@ test('structural: public guidance identifies T3 and qualifies runtime evidence',
   }
   expect(activeRuntime('The only supported active runtime is T3 Code.')).toBe(true);
   expect(activeRuntime('T3 Code is not the only supported active runtime.')).toBe(false);
-  expect(docs.join('\n')).toMatch(/historical[^.]*Paseo|Paseo[^.]*historical/i);
   expect(docs.join('\n')).toMatch(/compatib[^.]*unverified|unverified[^.]*compatib/i);
   expect(docs.join('\n')).toMatch(/mobile[^.]*unverified|unverified[^.]*mobile/i);
 });
 
-test('structural: installation records setup and the ordered rollback boundary', () => {
+test('structural: host operations records current setup requirements', () => {
   const installation = readFileSync(join(root, 'docs/installation.md'), 'utf8').replace(/\s+/g, ' ');
+  const host = readFileSync(join(root, 'docs/host-operations.md'), 'utf8').replace(/\s+/g, ' ');
   expect(installation).toContain('0.0.46-nightly.20261003.2610');
-  expect(installation).toContain('t3 serve --tailscale-serve');
-  expect(installation).toContain('t3 pair');
+  expect(host).toContain('t3 serve --tailscale-serve');
+  expect(host).toContain('t3 pair');
   for (const [concepts, holdout] of [
     [[/worktreeCleanup/, /off/, /Axstack project/i], 'For each Axstack project, worktreeCleanup must be off.'],
     [[/Antigravity/i, /T3/i, /managed runtime/i, /sign.in/i], 'Use the T3 managed runtime for Antigravity and complete browser sign-in.'],
     [[/Grok CLI/i, /(?:>=|≥)1\.0\.13/], 'Grok CLI must be >=1.0.13.'],
   ]) {
     const accepts = (text) => requires(text, ...concepts);
-    expect(accepts(installation)).toBe(true);
+    expect(accepts(host)).toBe(true);
     expect(accepts(holdout)).toBe(true);
     expect(accepts(`Do not follow this instruction: ${holdout}`)).toBe(false);
-    const matching = sentences(installation).filter(accepts);
-    expect(accepts(sentences(installation).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
+    const matching = sentences(host).filter(accepts);
+    expect(accepts(sentences(host).filter((sentence) => !matching.includes(sentence)).join('. '))).toBe(false);
   }
-  let previous = -1;
-  for (const pin of [
-    '1. Reinstall `axstack@0.20.31` (v0.20.31) on desktop and VPS.',
-    '2. Restore the backed-up `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` global instructions on both hosts.',
-    '3. Set the recorded T3 manager schedule to `enabled:false` and verify the disabled state.',
-    '4. Delete every armed run watch by its recorded schedule ID and verify absence.',
-    '5. Stop and disable the `t3 serve` user service on the VPS.',
-    RETIRED_REFERENCES.rollbackAutomation,
-  ]) {
-    const position = installation.indexOf(pin);
-    expect(position, pin).toBeGreaterThan(previous);
-    previous = position;
-  }
-  expect(installation).toMatch(/stays installed for one week after the VPS canary/i);
+
 });
 
 test('structural: shared root has no entry file and all expected phase skills exist', () => {

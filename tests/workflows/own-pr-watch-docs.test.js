@@ -21,11 +21,12 @@ const rules = [
 // Public docs must carry the same obligations as packaged guidance. Mutation
 // checks below operate on real-source sentences in memory, never tracked files.
 for (const [name, concepts, rewording, inversion, negative] of rules) {
-  test(`own-PR watch docs: docs/workflows.md: ${name}`, () => {
+  const path = name === 'recorded identity' ? 'docs/host-operations.md' : 'docs/workflows.md';
+  test(`own-PR watch docs: ${path}: ${name}`, () => {
     const required = negative?.source === 'never' ? concepts : [...concepts, inversion[0]];
     const accepts = negative ? (text) => prohibits(text, negative, ...required)
       : (text) => requires(text, ...required);
-    checkRule(read('docs/workflows.md'), accepts, rewording, [inversion], required);
+    checkRule(read(path), accepts, rewording, [inversion], required);
   });
 }
 

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync } from 'node:fs';
-import { loadedReferences } from './prose-contract.js';
+import { checkRule, prohibits, requires, loadedReferences } from './prose-contract.js';
 
 // NOTE: structural checks only. They verify packaging, frontmatter, and
 // relative-reference integrity of the owned support skills — not
@@ -258,15 +258,32 @@ test('owned-support: every HTML explanation triggers full exact-artifact QA', ()
   expect(/public[\s\S]{0,240}(private|privacy|credential|identifier)/i.test(text), 'public artifacts must protect private data').toBeTruthy();
 });
 
-test('owned-support: role retirement and stale-upgrade migration are explicit', () => {
+test('owned-support: current upgrade guidance preserves ownership and inert provenance', () => {
   const profiles = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'));
   expect(profiles.roles.some(({ id }) => id === 'axstack-docs'), 'retired prose role must be absent').toBe(false);
-  const docs = readFileSync(join(root, 'docs', 'installation.md'), 'utf8') + '\n' +
-    readFileSync(join(root, 'docs', 'workflows.md'), 'utf8');
-  expect(docs).toMatch(/ordinary[^.]*upgrade[^.]*retain[^.]*axstack-docs/i);
-  expect(docs).toMatch(/uninstall[^.]*install/i);
-  expect(docs).toMatch(/edited|custom|unknown/i);
-  expect(docs).toMatch(/without `--force`|no[^.]*--force/i);
+  const doc = readFileSync(join(root, 'docs', 'installation.md'), 'utf8');
+  const section = doc.match(/^## Upgrading and legacy cleanup\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1];
+  expect(section, 'installer legacy-cleanup pointer has a current owner').toBeDefined();
+  const text = section.replace(/\s+/g, ' ');
+  for (const [concepts, rewording, inversions] of [
+    [[/upgrade/i, /pristine/i, /retired/i, /copies/i, /\b(?:removes|deletes)\b/i, /without `?--force/i],
+      'An ordinary upgrade removes pristine retired skill copies without --force.', [[/\b(?:removes|deletes)\b/i, 'retains'], [/without `?--force`?/i, 'only with --force']]],
+    [[/edited/i, /missing/i, /copies/i, /retain\w*/i, /stale/i],
+      'Edited or already-missing retired copies retain their recorded stale entries.', [[/retain\w*/i, 'discard']]],
+    [[/custom/i, /unknown/i, /assets/i, /preserv\w*|kept/i, /unless an explicit force install adopts a bundle destination/i],
+      'Custom and unknown assets are kept unless an explicit force install adopts a bundle destination.', [[/preserv\w*|kept/i, 'overwritten']]],
+    [[/discard/i, /edited retired copies/i, /uninstall/i, /--force/, /chosen skills root/i, /then reinstall/i],
+      'For the chosen skills root, discard edited retired copies with uninstall --force, then reinstall.',
+      [[/then reinstall/i, 'before reinstalling']]],
+    [[/roles\.json/, /rewrit\w*/i, /one owned snapshot/i],
+      'Installation rewrites roles.json as one owned snapshot.', [[/rewrit\w*/i, 'ignores']]],
+  ]) {
+    checkRule(text, (source) => requires(source, ...concepts), rewording, inversions, concepts);
+  }
+  const concepts = [/profile/i, /provenance/i, /inert/i, /runtime/i, /configuration/i];
+  checkRule(text, (source) => prohibits(source, /never authorizes/i, ...concepts),
+    'Inert legacy profile provenance never authorizes runtime fallback or configuration mutation.',
+    [[/never authorizes/i, 'authorizes']], concepts);
 });
 
 test('owned-support: handoff is explicit, compact, and non-destructive', () => {

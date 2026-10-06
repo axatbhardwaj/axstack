@@ -8,7 +8,7 @@ const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
 const roster = () => read('skills/axstack/references/role-roster.md');
 const docs = () => read('docs/workflows.md');
 const readme = () => read('README.md');
-const installation = () => read('docs/installation.md');
+const host = () => read('docs/host-operations.md');
 const runRecord = () => read('skills/axstack/references/run-record.md');
 const autopilot = () => read('skills/axstack/references/autopilot.md');
 
@@ -137,13 +137,19 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
   expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*user cancels/i);
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
-  expect(docs()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
-  expect(readme()).toMatch(/bound T3 schedule[^.]*10 minutes/i);
+  const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i, /every 10 minutes/i, /default/i];
+  const cadence = (text) => requires(text, ...concepts);
+  checkRule(host(), cadence,
+    'By default, a bound T3 schedule resumes the driver thread every 10 minutes.',
+    [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores']], concepts);
+  expect(readme()).toContain('docs/host-operations.md#chat-run-watch-activation');
 });
 
-test('installation and run record describe the selected wake', () => {
-  expect(installation()).toMatch(/bound T3 schedule[^.]*10 minutes[^.]*default/i);
-  expect(installation()).toMatch(/missing schedule capability[^.]*holds activation/i);
+test('host operations and run record describe the selected wake', () => {
+  const concepts = [/schedule capability/i, /missing/i, /\b(?:holds?|held)\b/i, /activation/i];
+  checkRule(host(), (text) => requires(text, ...concepts),
+    'When schedule capability is missing, activation must be held.',
+    [[/\b(?:holds?|held)\b/i, 'allows']], concepts);
   expect(runRecord()).toMatch(/chat-run watch[^.]*bound T3 schedule[^.]*scheduledTaskId/i);
 });
 
