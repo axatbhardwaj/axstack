@@ -40,7 +40,7 @@
         "scope": "linked issue, PR description, and repository requirements"
       },
       "expected": {
-        "reviewers": ["axstack-reviewer-primary", "axstack-reviewer-secondary"],
+        "reviewers": ["axstack-reviewer-primary", "axstack-reviewer-peer"],
         "coverage": "each gets the identical six-angle brief and performs its first pass in isolation"
       }
     },

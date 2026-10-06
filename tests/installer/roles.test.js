@@ -540,3 +540,26 @@ test('readiness rejects a null model on a non-intentional row such as an investi
     'axstack-debug-investigator-1 requires a configured model',
   ]);
 });
+
+test('installed presets expose the peer seat without changing authored routes', () => {
+  for (const [preset, peer] of [
+    ['mixed', { provider: 'codex', modelClass: 'sol', modeId: 'full-access', thinkingOptionId: 'high' }],
+    ['codex-only', { provider: 'codex', modelClass: 'luna', modeId: 'full-access', thinkingOptionId: 'xhigh' }],
+    ['claude-only', { provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions', thinkingOptionId: 'high' }],
+  ]) {
+    const home = makeTempRoot('axstack-peer-install-');
+    const skillsDir = join(home, 'installed');
+    runCli(`${root}/bin/axstack.js`, [
+      'install', '--bundle', root, '--preset', preset, '--skills-dir', skillsDir,
+      '--no-claude-settings', '--yes',
+    ], { env: { HOME: home } });
+    const bytes = readFileSync(join(skillsDir, 'axstack', 'roles.json'));
+    const { roles } = JSON.parse(bytes);
+    expect(roles.find(({ id }) => id === 'axstack-reviewer-peer')).toMatchObject(peer);
+    if (preset === 'mixed') {
+      expect(roles.find(({ id }) => id === 'axstack-owner')).toMatchObject(peer);
+    }
+    const bundled = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`)).roles;
+    expect(assessInstalledRoleSnapshot(bytes, preset, bundled)).toEqual({ ready: true, gaps: [] });
+  }
+});
