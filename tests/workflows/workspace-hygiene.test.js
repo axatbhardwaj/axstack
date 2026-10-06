@@ -1,10 +1,77 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
 const hygiene = () => read('skills/axstack/references/workspace-hygiene.md');
+// Independent settlement decisions: accepting completion changes visibility,
+// while retention, failures and repair ownership keep their existing meaning.
+const completionRules = [
+  {
+    name: 'accepted completion settles launched writers and delegated tasks',
+    concepts: [/after/i, /driver/i, /\baccept(?:s|ed)\b/i, /completion/i, /launched writer/i, /delegated task/i, /terminal run evidence/i, /plus/i, /verified receipt/i, /candidate check/i, /\bsettles?\b/i, /t3_thread_organize/i, /metadata only/i],
+    rewording: 'The driver settles the matching thread with t3_thread_organize as metadata only after it accepts completion of a launched writer or delegated task using terminal run evidence plus a verified receipt or candidate check.',
+    inversions: [[/after/i, 'before'], [/accept(?:s|ed)/i, 'rejects'], [/plus/i, 'instead of'], [/metadata only/i, 'destructive cleanup']],
+    contradiction: 'and settle before acceptance',
+    forbidden: /before.*accept|without.*(?:terminal|verified)|destructive/i,
+  },
+  {
+    name: 'settling preserves thread and worktree resources',
+    concepts: [/settling/i, /\bremoves?\b/i, /\barchives?\b/i, /\babandons?\b/i, /thread/i, /worktree/i],
+    prohibition: /never/i,
+    rewording: 'Settling never removes, archives or abandons a worktree or thread.',
+    inversions: [[/never/i, 'always']],
+    contradiction: 'and remove the worktree',
+    forbidden: /and (?:remove|archive|abandon)\b/i,
+  },
+  {
+    name: 'author resources remain unarchived through merge or closure',
+    concepts: [/keep|retain/i, /author/i, /thread/i, /worktree/i, /unarchived/i, /until/i, /PR/i, /merges/i, /closes/i, /repairs/i, /same author/i],
+    rewording: 'Retain the author thread and worktree unarchived until the PR closes or merges, returning repairs to the same author.',
+    inversions: [[/unarchived/i, 'archived'], [/until/i, 'only before'], [/same author/i, 'another author']],
+    contradiction: 'and archive the author thread',
+    forbidden: /(?:archive|remove|abandon) the author/i,
+  },
+  {
+    name: 'unaccepted or held completion remains visible',
+    concepts: [/threads/i, /unaccepted completion/i, /FAILED or QUESTION markers/i, /held/i, /failed/i, /interrupted/i, /needing the user/i, /stay|remain/i, /\bunsettled\b/i, /visible/i],
+    rewording: 'Threads needing the user, with interrupted, failed or held runs, FAILED or QUESTION markers, or unaccepted completion remain visible and unsettled.',
+    inversions: [[/\bunsettled\b/i, 'settled'], [/visible/i, 'hidden'], [/unaccepted completion/i, 'accepted completion']],
+    contradiction: 'and settle these threads',
+    forbidden: /settle these threads/i,
+  },
+  {
+    name: 'repair turns automatically restore visibility',
+    concepts: [/repair turn/i, /automatically/i, /un-settles|unsettles/i, /thread/i, /visible/i, /working/i],
+    rewording: 'A repair turn automatically unsettles the thread, making it visible while working.',
+    inversions: [[/un-settles|unsettles/i, 'settles'], [/automatically/i, 'manually'], [/visible/i, 'hidden']],
+    contradiction: 'and keep the working thread hidden',
+    forbidden: /keep.*hidden/i,
+  },
+  {
+    name: 'driver settles again after accepted repair completion',
+    concepts: [/driver/i, /\bsettles?\b/i, /thread/i, /again/i, /after/i, /next accepted repair completion/i],
+    rewording: 'After the next accepted repair completion, the driver settles the thread again.',
+    inversions: [[/after/i, 'before'], [/accepted/i, 'unaccepted'], [/\bsettles?\b/i, 'unsettles']],
+    contradiction: 'and leave it unsettled',
+    forbidden: /leave.*unsettled/i,
+  },
+];
+for (const rule of completionRules) test(`hygiene completion: ${rule.name}`, () => {
+  const text = normalize(hygiene().split('## Settlement')[1]?.split('\n## ')[0] ?? '');
+  const accepts = (source) => sentences(source).some((clause) =>
+    !/unless|except/i.test(clause) && !rule.forbidden.test(clause)
+    && (rule.prohibition
+      ? prohibits(clause, rule.prohibition, ...rule.concepts)
+      : requires(clause, ...rule.concepts)));
+  checkRule(text, accepts, rule.rewording, rule.inversions, rule.concepts);
+  for (const clause of sentences(text).filter(accepts)) {
+    for (const escape of ['unless convenient', 'except during repairs', rule.contradiction]) {
+      expect(accepts(text.replace(clause, `${clause} ${escape}`))).toBe(false);
+    }
+  }
+});
 const scenarios = JSON.parse(read('tests/workflows/workspace-hygiene-scenarios.json')).cases;
 test('hygiene scenarios retain twenty distinct safety boundaries', () => {
   expect(scenarios).toHaveLength(20);

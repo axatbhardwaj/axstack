@@ -6,7 +6,7 @@
       "id": "author-retained-while-open",
       "input": "An author has completed its run but its PR remains open.",
       "expected": "Retain the author worktree for repairs.",
-      "contract": "Keep the author worktree and thread until the PR merges or closes."
+      "contract": "Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author."
     },
     {
       "id": "cleanup-order",

@@ -254,8 +254,10 @@ for explicit ownership transfer.
   read back private evidence, salvage dirty or ignored non-cache content,
   archive the exact eligible thread, then remove its exact worktree without
   force and delete only eligible local branches. T3 metadata actions do not
-  remove worktrees. Authors remain until their PR merges or closes; the current
-  pass, unsettled descendants, and user-taken-over threads remain protected.
+  remove worktrees. Accepted writer or delegated completion settles thread
+  metadata only. Author threads and worktrees remain retained and unarchived
+  until their PR merges or closes; the current pass, unsettled descendants,
+  and user-taken-over threads remain protected.
 
 One T3 host/server owns a run, one persistent owner owns each PR, and one
 writer owns each candidate. Fanout has no fixed PR count; it follows real

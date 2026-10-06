@@ -48,7 +48,7 @@
       "id": "cleanup-unmerged-or-ignored-content",
       "input": "A completed author has an open PR, while a settled non-author checkout contains ignored non-cache source.",
       "contracts": [
-        "Keep the author worktree and thread until the PR merges or closes.",
+        "Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author.",
         "Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches.",
         "Before removal of an eligible non-author worktree with uncommitted or unpublished content, create a salvage ref, run `git add -A`, commit on that ref, write a `git bundle` into the private run folder, and run `git bundle verify`.",
         "Record the bundle path, bundle SHA-256, and salvage commit SHA in the receipt before removing the worktree.",
