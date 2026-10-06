@@ -139,9 +139,9 @@ Record the reason for each driver-elected repair in `Decisions`.
 ## Privacy
 
 Record concise IDs, SHAs, URLs, status, timestamps, next actions, and evidence
-references. Include no tokens, transcripts, full worker output, credentials,
-private prompts, or machine-specific paths beyond the private record's own
-resolved location. Publication of a sanitized summary needs separate
+references. Private records include the checkout, evidence and worktree paths
+that the schema requires. Include no tokens, transcripts, full worker output,
+credentials or private prompts. Publication of a sanitized summary needs separate
 authority.
 
 ## Review-manager continuity template
@@ -181,7 +181,7 @@ Routing: <preset + source + snapshot ref>
 Notification policy: <none | transport/target label/host/instructions path>
 Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>)
 Next: <owner; last receipt time; next action; hold or none>
-PR digest watermarks: <repo -> absolute path inside this private run record> | none
+PR digest watermarks: <repo -> absolute path of its per-repository JSON file inside the private run directory> | none
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
 IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>

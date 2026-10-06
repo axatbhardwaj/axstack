@@ -84,7 +84,8 @@ A preset model must be used as given.
 
 `modelClass` must resolve to the newest matching catalog ID for that provider:
 codex `gpt-<N>-<class>`, claude `claude-<class>-<N>-<N>`. Use
-`scripts/resolve-models.js --provider` with the saved capabilities JSON path;
+`scripts/resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort>`
+with the saved capabilities JSON path;
 a missing or malformed catalog holds resolution.
 Model catalog resolution retains the canonical instance IDs above.
 
@@ -130,7 +131,7 @@ configuration; unrelated configurations remain eligible.
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
 | Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
-| Author and repairs, code-arena writers | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
+| Author and repairs | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
 The driver must be the sole run-record writer and enforce one writer per

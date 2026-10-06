@@ -5,10 +5,12 @@ Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 
 ## Role routing
 
-Presets: `mixed`, `codex-only`, `claude-only`. For new runs, use
-`profiles.preset` from `.axstack-manifest.json` at the actually loaded
-skills root, or an explicit user selection in the run record. Missing or contradictory sources are
-a setup gap: hold. Never infer from live profiles, harness,
+Presets: `mixed`, `codex-only`, `claude-only`. For new runs, read the `preset`
+from installed `skills/axstack/roles.json` at the actually loaded skills root,
+or use an explicit user selection in the run record. The legacy manifest
+`profiles.preset` is inert and ignored, including stale values. A stale
+manifest value does not create a contradiction. Missing or contradictory installed
+preset / explicit user selection: setup gap, hold. Never infer from live profiles, harness,
 tools, credentials, quota, subscription, or default to `mixed`.
 Only same-provider, same-model account selection among instances of one driver
 may use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding);
@@ -23,7 +25,7 @@ For each role record class, resolved exact ID, source (`capabilities`), and time
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
 or recovery; use its permitted-write role split, completion checks and run watch.
 Resolve Codex and Claude classes with
-`skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path>`
+`skills/axstack/scripts/resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort>`
 using saved T3 capabilities JSON; missing or malformed capabilities holds.
 Claude exact IDs come from capabilities, replacing transcript read-back.
 Use an explicit model as given; for `model:null` without a class, grok uses the
@@ -118,7 +120,8 @@ reason in the run record, or in the brief for tiny direct work.
   Own PRs default to automatic merge under watch §5 predicate.
 - **Unclear:** clarify via `axstack-align` or a bounded question, then
   classify small or substantial; it does not force substantial-work paperwork.
-  [Design lens](design-lens.md) Rung 1 is Unclear; use `axstack-align`.
+  Only an unsettled material Rung 1 design question is Unclear; use `axstack-align`
+  ([Design lens](design-lens.md)).
 
 Reassess size when growth adds an additional PR, a new execution dependency
 that materially expands scope, an unsettled material design question, or a

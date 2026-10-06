@@ -20,7 +20,7 @@ test('design lens: factual ladder and proportionate routing', () => {
   expect(lens).toMatch(/might be small[^.]*not a reason to skip/i);
   expect(lens).toMatch(/Rung 1[^.]*stay small/i);
   expect(lens).toMatch(/unsettled material design question[^.]*reassess size/i);
-  expect(text('skills/axstack/references/routing.md')).toMatch(/Unclear:[\s\S]*?Rung 1[^.]*axstack-align/i);
+  expect(text('skills/axstack/references/routing.md')).toMatch(/Only an unsettled material Rung 1 design question[^.]*Unclear[\s\S]*?axstack-align/i);
 });
 
 test('design lens: installed roles cannot silently enter an active snapshot', () => {

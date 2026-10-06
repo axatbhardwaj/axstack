@@ -139,8 +139,8 @@ test('review modes: status questions without a watch request route to observatio
 
 test('review modes: new runs discover one preset and snapshot all role states', () => {
   const routing = compact('skills/axstack/references/routing.md');
-  expect(routing).toMatch(/\.axstack-manifest\.json/i);
-  expect(routing).toMatch(/profiles\.preset/i);
+  expect(routing).toMatch(/skills\/axstack\/roles\.json/i);
+  expect(routing).toMatch(/read the `preset`/i);
   expect(routing).toMatch(/actually loaded[^.]*skills root|skills root[^.]*actually loaded/i);
   expect(routing).toMatch(/explicit user selection[^.]*run record|run record[^.]*explicit user selection/i);
   expect(routing).toMatch(/missing or contradictory[^.]*setup gap[^.]*hold|setup gap[^.]*missing or contradictory[^.]*hold/i);

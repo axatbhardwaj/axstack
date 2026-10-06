@@ -64,6 +64,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // always-loaded bytes for maintenance routing and canonical native PR tools.
   // 20261006-rm-settle-lag T1: +902 measured aggregate bytes for guarded
   // any-pass metadata settlement at pass start, separate from owner retirement.
-  expect(total).toBeLessThanOrEqual(327167);
-  expect(alwaysLoaded).toBeLessThanOrEqual(25863);
+  // 20261006-docs-overhaul T2: +920 measured aggregate bytes and +284 always-loaded bytes for skill fixes F1-F3, S1-S7.
+  expect(total).toBeLessThanOrEqual(328087);
+  expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });

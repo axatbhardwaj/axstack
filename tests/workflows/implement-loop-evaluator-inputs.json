@@ -40,7 +40,7 @@
     },
     {
       "id": "autopilot-small-path", "title": "Small delivery advances",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Complete the small work", "run_state": "Align read-back and a small-change intent are complete with no open hold. State the next phases and who merges."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Complete the small work", "run_state": "The small-change intent read-back (including Release and host authority) is complete with no open hold. State the next phases and who merges."}
     },
     {
       "id": "autopilot-substantial-gate-one", "title": "Substantial gate one",

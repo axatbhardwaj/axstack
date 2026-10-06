@@ -35,9 +35,9 @@ human approval)` as a decision hold eligible under the Notification policy.
 
 ## Phase sequence
 
-- Small: Align read-back, small-change intent, implement, watch in maintain
-  mode, merge under the watch §5 predicate. An opted-in Align refinement is part
-  of read-back.
+- Small: small-change intent read-back, with Align only when unclear, then
+  implement, watch in maintain mode, merge under the watch §5 predicate.
+  An opted-in Align refinement is part of read-back.
 - Substantial: Align, spec draft with advisers and diligence, human spec
   approval at gate 1, tickets with diligence, implement, watch in maintain mode,
   merge-ready, merge under the watch §5 predicate. An opted-in Align refinement
@@ -96,10 +96,11 @@ noted. Install hosts come only from explicit targets; an absent host list is a
 decision hold, not permission to infer hosts. A missing install host list at
 Align or spec time is a decision hold before release authority is presented.
 
-Show the `Release:` line in the spec for human approval at gate 1, or the small
-work Align read-back. Copy that decision to `Authority:` in the run record.
+Show the `Release:` line in the spec for human approval at gate 1, or the
+small-change intent read-back. Copy that decision to `Authority:` in the run
+record.
 This authority is per run and never carries over to another run or repository.
-The small-work Align read-back names the existing Release and host-mutation
+The small-change intent read-back names the existing Release and host-mutation
 authority and explicit hosts; silence cannot fill a missing authority or target.
 
 After all required feature PRs merge, open one release PR. Default to a patch
