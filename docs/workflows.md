@@ -33,7 +33,7 @@ Direct routes need no spec ceremony:
   authorized, proven cleanup to Implement as structure-preserving work through
   independent review.
 - Manual `axstack-review` can inspect existing code at an exact revision within
-  a named scope. Both configured peer reviewers inspect six lenses independently;
+  a named scope. Both configured codebase reviewers inspect six lenses independently;
   the driver reports validated defects and risks, improvement opportunities,
   unverified leads, and `COMPLETE` or `INCOMPLETE` coverage. This report does
   not approve a PR or publish findings.
@@ -131,7 +131,9 @@ later installation changes without re-resolution.
 Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset. The mixed peer coordinator and review-lane binding
-`axstack-owner` uses Sol high and never reviews.
+`axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
+is used in the authored mapping and, alongside `axstack-reviewer-primary`,
+in codebase findings mode.
 
 The unavailable adviser in each single-provider preset stays explicitly
 `model: null` within that provider's bounds. Installer readiness accepts that

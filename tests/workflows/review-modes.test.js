@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, requires } from './prose-contract.js';
+import { deriveModelClass } from '../../src/roles.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -204,4 +205,33 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/security concern[^.]*permanent on-chain state change[^.]*architectural change in approach/i);
   expect(compact('skills/axstack-review/SKILL.md')).toMatch(/Health is not a reviewer criterion/i);
+});
+
+test('review modes: peer fixture seats and models match the selected preset', () => {
+  const problems = [];
+  for (const file of ['scenarios', 'owned-scenarios', 'review-modes-scenarios', 'routing-scenarios']) {
+    for (const scenario of JSON.parse(read(`tests/workflows/${file}.json`)).cases) {
+      const input = JSON.stringify(scenario.input);
+      const peer = scenario.input.mode === 'peer'
+        || (!scenario.input.mode && /\bpeer (?:PR|review)\b/i.test(input));
+      if (!peer) continue;
+      const preset = scenario.input.preset ?? 'mixed';
+      const roles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
+      const text = JSON.stringify(scenario);
+      const context = `${file}/${scenario.id}`;
+      for (const [, seat] of text.matchAll(/(?:axstack-)?reviewer-(primary|peer|secondary)\b/gi)) {
+        if (!['primary', 'peer'].includes(seat.toLowerCase())) problems.push(`${context}: invalid peer seat ${seat}`);
+      }
+      for (const [, seat, provider, model, effort] of text.matchAll(
+        /(?:axstack-)?reviewer-(primary|peer)(?:[=:]|\s+runs)\s*(codex|claude)\/([a-z0-9.-]+)(?:\s+(high|medium|xhigh))?/gi,
+      )) {
+        const role = roles.find(({ id }) => id === `axstack-reviewer-${seat.toLowerCase()}`);
+        if (provider !== role.provider || deriveModelClass(model) !== role.modelClass
+          || (effort && effort !== role.thinkingOptionId)) {
+          problems.push(`${context}: ${seat} route contradicts ${preset}`);
+        }
+      }
+    }
+  }
+  expect(problems).toEqual([]);
 });

@@ -508,3 +508,10 @@ test('preset bundles retain three role tables in the frozen container', () => {
   const mixed = readJson('profiles/presets/mixed.json');
   expect(mixed.roles.find(({ id }) => id === 'axstack-checker').model).toBeNull();
 });
+
+test('presets: mixed owner independently uses Sol high with full access', () => {
+  const owner = readJson('profiles/presets/mixed.json').roles.find(({ id }) => id === 'axstack-owner');
+  expect(owner).toMatchObject({
+    provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high', modeId: 'full-access',
+  });
+});

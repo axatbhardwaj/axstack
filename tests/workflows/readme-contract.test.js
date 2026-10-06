@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const readme = readFileSync(`${root}/README.md`, 'utf8');
@@ -52,7 +53,11 @@ test('README preserves preset and merge boundaries', () => {
   const presets = readme.slice(readme.indexOf('Choose one explicit preset'), readme.indexOf('## Optional PR automation'));
   expect(presets).toMatch(/single-provider presets[^.]*not automatic cross-class or cross-provider fallbacks when a model is unavailable/i);
   const why = readme.slice(readme.indexOf('## Why Axstack'), readme.indexOf('## Quick start'));
-  expect(why).toMatch(/mixed[^|]*cross-provider review/i);
+  checkRule(why, (text) => requires(text,
+    /mixed/i, /authored review/i, /cross-provider/i, /peer review/i,
+    /two isolated Sol[- ]high sessions/i),
+  'In mixed, authored review is cross-provider and peer review uses two isolated Sol-high sessions to check the exact revision.',
+  [[/authored review/i, 'peer review'], [/isolated/i, 'shared']]);
   const automation = readme.slice(readme.indexOf('## Optional PR automation'), readme.indexOf('## Some notes'));
   expect(automation).toMatch(/review automation never merges/i);
   expect(readme).toMatch(/automatic\s+merge is the default under the[\s\S]*watch predicate/i);

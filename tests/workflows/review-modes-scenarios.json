@@ -127,7 +127,7 @@
         "caller": "Reusable review manager's bounded PR coordinator",
         "actual_author": "colleague who review-requested self",
         "candidate": "SHA Q on current base R",
-        "receipts": "reviewer-primary receipt current for SHA Q; reviewer-secondary unavailable, or the two receipts disagree materially"
+        "receipts": "reviewer-primary receipt current for SHA Q; reviewer-peer unavailable, or the two receipts disagree materially"
       },
       "expected": {
         "status": "INCOMPLETE",
