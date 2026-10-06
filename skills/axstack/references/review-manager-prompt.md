@@ -13,7 +13,7 @@ binding before admission. At pass start, every pass, including a duplicate,
 settles finished predecessor and duplicate pass threads under the Finite-session
 teardown guards before admission. Discover all eligible peer-review events and admit within measured host capacity.
 Use host-clone detached per-PR checkouts; preserve exact ownership and receipts.
-Report retained worktree count, and disable the schedule and hold past its
+Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves and
 reads back continuity at
 `~/.local/share/axstack/runs/review-manager/progress.md` using

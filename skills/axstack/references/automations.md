@@ -352,7 +352,7 @@ Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 The orphan sweep covers the run record's repositories plus registered repositories on this host.
-Retirement requires duplicate threads already settled with `t3_thread_organize`
+Retirement settles remaining duplicate threads with `t3_thread_organize`
 (settle/archive changes metadata only) before separate guarded Git worktree removal.
 Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
