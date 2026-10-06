@@ -8,7 +8,7 @@ For optional weekly test audits, use the separate packaged
 The native canary below is also required before weekly activation.
 
 At every scheduled pass start, follow [Provider bindings](t3-runtime.md#preflight-and-binding)
-for account selection and schedule recreation; keep the chosen instance binding in the durable schedule record.
+for account selection and schedule ownership.
 
 For nightly read-only PR reports, use the separate packaged
 [Nightly PR-triage prompt](pr-triage-nightly.md).
@@ -46,7 +46,8 @@ Configure the lane thread via `t3_thread_configure` with the `axstack-owner`
 binding and verify its read-back. Then `schedule_task` uses the packaged prompt,
 `everyMs:900000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
 Record the schedule ID, project, lane binding and pass thread/run identities.
-Each pass compares its own `t3_thread_configuration` with the recorded binding.
+Each pass compares its own `t3_thread_configuration` with the recorded binding
+after any owner-only instance update under [Provider bindings](t3-runtime.md#preflight-and-binding), before admission.
 A binding mismatch holds admission.
 Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispatch,
 completion and cleanup boundaries; a manager never checks out a PR branch in

@@ -51,17 +51,23 @@ same prompt, cadence and binding on the new instance.
 
 Every scheduled automation pass runs `scripts/pick-instance.js --provider <its own provider> --json`
 at pass start, including fresh-thread review-manager passes.
-Scheduled passes follow the same eligibility, stay and exit rules above.
+Scheduled passes follow the driver's eligibility and stay rules: an eligible own instance stays,
+exit 1 keeps the current instance and exit 2 holds.
 If a scheduled pass's own current instance is `excluded` and an eligible same-provider sibling exists,
 it must switch itself via `t3_thread_configure` to the chosen sibling instance,
 keeping the same provider, model and effort/options.
-On a scheduled pass self-switch, delete and recreate its own schedule with the
-same prompt, cadence and binding on the chosen instance.
+On a scheduled pass self-switch, only the owner-of-record, after lane reconciliation
+and the duplicate check, must delete and recreate its own schedule with the same
+prompt, cadence and binding on the chosen instance.
+For a review-manager self-switch, only the owner-of-record must update the recorded
+`axstack-owner` binding's instanceId to the chosen instance after verifying unchanged
+provider/model/effort/options with `t3_thread_configuration` and attaching the picker
+switch receipt, before the admission binding comparison.
 For each schedule replacement, read back old absence and new presence using `list_scheduled_tasks`.
 For each schedule replacement, record old/new scheduledTaskId, from/to instance,
 picker JSON pointer and UTC time in the `progress.md` or durable activation/continuity record.
 Retain the recorded schedule's title and enabled state and use a fresh stable creation `clientRequestId`.
-An uncertain replacement holds affected work; preserve its native receipts for reconciliation.
+An uncertain replacement holds affected work: preserve its native receipts for reconciliation.
 A scheduled pass already running on an exhausted account cannot recover.
 Account switches must happen before exhaustion at the picker's near-limit cutoff.
 

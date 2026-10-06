@@ -56,6 +56,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // always-loaded ceiling bytes for the canonical driver rule and short pointers.
   // 20261006-driver-self-routing amendment 1: +2424 measured bytes for
   // creation-time schedule bindings, recreation and scheduled-pass entry links.
-  expect(total).toBeLessThanOrEqual(322350);
+  // 20261006-driver-self-routing repair 1: +763 measured bytes for owner-only
+  // schedule/binding updates, explicit pass exit rules and forge-only triage scope.
+  expect(total).toBeLessThanOrEqual(323113);
   expect(alwaysLoaded).toBeLessThanOrEqual(25427);
 });

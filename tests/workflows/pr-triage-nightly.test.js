@@ -16,6 +16,11 @@ const forbidden = (concepts) => (text) =>
 // Each rule protects a triage contract missing from weekly-audit coverage.
 // Probes replace actual source in memory; tests never write tracked files.
 const rules = [
+  ['read-only forge scope allows own schedule replacement', prompt, directive,
+    [/\bread-only applies to the forge/i, /\bown schedule replacement follows Provider bindings/i],
+    'Own schedule replacement follows Provider bindings while read-only applies to the forge.',
+    [[/read-only applies to the forge/i, 'read-only applies to the schedule'],
+      [/own schedule replacement follows Provider bindings/i, 'own schedule replacement ignores Provider bindings']]],
   ['read-only pass', prompt, directive,
     [/\b(?:read-only|observation-only)\b/i, /\b(?:nightly|triage)\b/i, /\bpass\b/i],
     'Run this nightly triage pass in observation-only mode.',
