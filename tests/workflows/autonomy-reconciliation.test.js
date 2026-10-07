@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, requires, sentences } from './prose-contract.js';
 
@@ -8,26 +8,55 @@ const record = 'axstack-audit/references/record.md';
 const read = (path) => readFileSync(`${import.meta.dir}/../../skills/${path}`, 'utf8')
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 
-// Independent weakening probes: prefix and suffix placements preserve the
-// obligation's concepts. The corpus is separate from the acceptance guard.
-const softenerProbes = [
-  [/^/, 'Optionally '], [/^/, 'Ideally, '], [/^/, 'Preferably, '], [/^/, 'Usually, '],
-  [/[.!?]?$/, ' when convenient'], [/[.!?]?$/, ' where practical'],
-  [/[.!?]?$/, ' when time permits'],
+// Finite concrete corpus shares the guard's target families, but is authored
+// as phrases rather than extracted/generated from its regex. No all-English claim.
+const commonHedges = [
+  'if possible', 'where possible', 'when possible', 'as possible',
+  'if feasible', 'where feasible', 'when feasible', 'as feasible',
+  'if practical', 'where practical', 'when practical', 'as practical',
+  'if appropriate', 'where appropriate', 'when appropriate', 'as appropriate',
+  'if needed', 'where needed', 'when needed', 'as needed',
+  'if convenient', 'where convenient', 'when convenient', 'as convenient',
+  'if time permits', 'where time permits', 'when time permits', 'as time permits',
+  'generally', 'typically', 'normally', 'usually', 'ideally', 'preferably', 'optionally',
+  'in most cases', 'often', 'sometimes', 'ordinarily', 'in principle',
+  "at the driver's discretion", 'at the driver’s discretion', 'at driver discretion',
+  'if desired', 'where desired', 'when desired', 'as desired',
+  'if time allows', 'where time allows', 'when time allows', 'as time allows', 'time permitting',
+];
+const softenerProbes = commonHedges.flatMap((hedge) => [
+  [/^/, `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
+]);
+
+// Conditional/frequency families soften these mandatory instruction sentences;
+// factual adjectives (possible work, needed evidence) and "if present" do not.
+const weakeningPatterns = [
+  /\b(?:unless|except)\b/i,
+  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|in most cases|in principle)\b/i,
+  /\b(?:if|where|when|as) (?:possible|feasible|practical|appropriate|needed|convenient|desired|time (?:permits|allows))\b/i,
+  /\b(?:at (?:the )?driver(?:['’]s)? discretion|time permitting)\b/i,
+  /\b(?:on the first wake only|only on the first wake)\b/i,
+  /\bno unconsumed terminal receipts?(?: that (?:is|are))? older than\b/i,
 ];
 
 // Independent instruction boundaries missing from the old digest-only silence
 // check. These real-source mutations prove semantic sensitivity, not native T3.
-function rule(name, path, concepts, rewording, inversions, mask = /$^/) {
+function rule(name, path, concepts, rewording, inversions, mask = /$^/, contexts = []) {
   test(`autonomy reconciliation: ${name}`, () => {
+    const source = read(path);
     const required = [...concepts, ...inversions.map(([direction]) => direction)];
     const accepts = (text) => sentences(text).some((sentence) =>
       required.every((concept) => concept.test(sentence))
-      && !/\b(?:unless|except|optionally|ideally|preferably|usually|when (?:convenient|time permits)|where practical)\b/i.test(sentence)
+      && !weakeningPatterns.some((pattern) => pattern.test(sentence))
       && requires(sentence.replace(mask, ''), /^/));
-    checkRule(read(path), accepts, rewording,
+    checkRule(source, accepts, rewording,
       [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient'],
         ...softenerProbes], required);
+    for (const context of contexts) {
+      const reworded = sentences(source).filter(accepts)
+        .reduce((text, target) => text.replace(target, context), source);
+      expect(accepts(reworded)).toBe(true);
+    }
   });
 }
 
@@ -35,13 +64,20 @@ rule('local reconciliation precedes silence even with unchanged forge', watch,
   [/local receipts/i, /actionable work/i, /silence/i, /forge digest/i],
   'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence.',
   [[/\b(?:reconcile|check)\b/i, 'ignore'], [/\bbefore\b/i, 'after'],
-    [/even when/i, 'unless'], [/forge digest is unchanged/i, 'forge digest has changed']]);
+    [/even when/i, 'unless'], [/forge digest is unchanged/i, 'forge digest has changed'],
+    [/\b(?:reconcile|check)\b/i, (action) => `${action}, if possible,`]], undefined, [
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including possible questions and feasible next actions.',
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including evidence needed for practical evaluation.',
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including appropriate coverage checks.',
+  ]);
 rule('completion advances in the same turn under existing safeguards', watch,
   [/completed work/i, /existing acceptance/i, /settlement\/readback/i, /authorized unblocked next action/i],
   'Handle completed work under existing acceptance and settlement/readback, then advance every authorized unblocked next action in the same turn without another phase-start approval.',
   [[/\b(?:process|handle)\b/i, 'ignore'], [/\bthen advance\b/i, 'then defer'],
     [/\bevery\b/i, 'selected'], [/same turn/i, 'next wake'], [/without another/i, 'only after another'],
-    [/without another/i, 'usually without another'], [/same turn/i, 'same turn when convenient']]);
+    [/without another/i, 'usually without another'], [/same turn/i, 'same turn when convenient'],
+    [/same turn/i, 'same turn, if feasible,'], [/same turn/i, 'same turn, where practical,'],
+    [/same turn/i, 'same turn, when appropriate,'], [/same turn/i, 'same turn, as needed,']]);
 rule('quiet automatic waits require reconciled positive health and no pending work', watch,
   [/automatic unchanged scheduled wake/i, /end the turn/i, /no text or notification/i,
     /local reconciliation/i, /nothing reportable/i, /active work.*(?:when|if) present.*positively known/i,
@@ -50,13 +86,16 @@ rule('quiet automatic waits require reconciled positive health and no pending wo
   'On an automatic unchanged scheduled wake, end the turn with no text or notification only after local reconciliation confirms nothing reportable: active work if present is positively known, no unconsumed terminal receipt, no pending local action, no new question or permission request, and no unresolved failure or liveness/coverage uncertainty.',
   [[/only after/i, 'even before'], [/positively known/i, 'presumed'],
     [/(?:when|if) present/i, 'whether present or absent'],
-    [/no pending local action/i, 'pending local action allowed']],
+    [/no pending local action/i, 'pending local action allowed'],
+    [/no unconsumed terminal receipt/i, 'no unconsumed terminal receipt older than a day']],
   /no text or notification|no unconsumed terminal receipt|no pending local action|no new question or permission request|no unresolved failure or liveness\/coverage uncertainty/gi);
 rule('settled worker-free waits retain silence under the same checks', watch,
   [/settled worker-free waits/i, /CI/i, /external review/i, /human step/i,
     /reconciliation and reportability checks/i],
   'Settled worker-free waits on CI, external review, or a human step remain quiet under the same reconciliation and reportability checks.',
-  [[/\b(?:stay silent|remain quiet)\b/i, 'emit waiting messages'], [/\bsame\b/i, 'relaxed']]);
+  [[/\b(?:stay silent|remain quiet)\b/i, 'emit waiting messages'], [/\bsame\b/i, 'relaxed'],
+    [/reconciliation and reportability checks/i, 'reconciliation and reportability checks on the first wake only'],
+    [/settled worker-free waits/i, 'settled worker-free waits only on the first wake']]);
 rule('healthy active workers alone do not force output', watch,
   [/healthy running workers/i, /alone/i, /never/i, /force/i, /message or notification/i],
   'Healthy running workers alone never force a message or notification.',
@@ -72,7 +111,8 @@ rule('failed held and unknown work stays incomplete and unhealthy', watch,
 rule('new holds report once with resume condition', watch,
   [/new or materially changed hold or unknown/i, /driver thread/i, /once/i, /resume condition/i],
   'Report each new or materially changed hold or unknown in the driver thread once with its resume condition.',
-  [[/\breport\b/i, 'ignore'], [/\beach\b/i, 'selected'], [/\bonce\b/i, 'repeatedly']]);
+  [[/\breport\b/i, 'ignore'], [/\beach\b/i, 'selected'], [/\bonce\b/i, 'repeatedly'],
+    [/\breport\b/i, 'Report, where possible,'], [/\bonce\b/i, 'once as appropriate']]);
 rule('unchanged holds stay quiet and appear in requested status', watch,
   [/unchanged holds/i, /no automatic repeat/i, /requested status/i],
   'Unchanged holds receive no automatic repeat, and requested status answers name them.',
