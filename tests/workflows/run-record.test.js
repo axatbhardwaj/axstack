@@ -138,6 +138,7 @@ test('run-record stays prose-only; the evidence helper has no runtime control', 
     `${root}/skills/axstack/scripts/pick-instance.js`,
     `${root}/skills/axstack/scripts/pr-digest.js`,
     `${root}/skills/axstack/scripts/resolve-models.js`,
+    `${root}/skills/axstack/scripts/sync-default.js`,
   ].sort());
   expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
 });
