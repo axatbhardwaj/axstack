@@ -1,10 +1,10 @@
 # Spec: borrowed skills — perf loop, audit environment lens, proof standards
 
-Status: Approved rev 3 (2026-10-07, user "okay now this is settled"; reviewed at 47e66b9). Store: this repo Markdown file.
+Status: Approved rev 5 (2026-10-07, user "approved"; reviewed at 716a673). Rev 3 approved 2026-10-07 @ 47e66b9; rev 4-5 add capability D. Store: this repo Markdown file.
 Run: `20261007-borrow-skills`. The private run record holds the Align decisions
 and adviser receipts.
 
-Release: not authorized this run.
+Release: standing authority (run `20261007-autonomy`, AQ1): after merge, release and reinstall on `io` and the VPS; npm stage approval stays human.
 
 ## Goal
 
@@ -17,7 +17,7 @@ phase boundaries.
 
 | # | Decision |
 |---|---|
-| Q1 | Adopt three items: a measured performance loop, an environment lens in audit, and proof standards in UI verification. Defer the verification-skill generator. |
+| Q1 | Adopt three items: a measured performance loop, an environment lens in audit, and proof standards in UI verification. (Rev 4: the verification-skill deferral is lifted by Q5-Q8.) |
 | Q2 | Matt Pocock's `retro` becomes an optional environment lens in `axstack-audit` §5, not a new skill and not part of `axstack-correct`. |
 | Q3 | One shared reference, `skills/axstack/references/perf-loop.md`, loaded by `axstack-debug`, `axstack-improve` and `axstack-implement`. |
 | Q4 | Add a thin `axstack-perf` skill ("user-invoked" superseded by D3) as the named entry point. It loads `perf-loop.md` and routes; it owns no separate workflow. |
@@ -25,6 +25,10 @@ phase boundaries.
 | D2 | Rejected from pstack: parallel per-hypothesis writers (breaks one writer per candidate) and mandatory minimum iteration counts. |
 | D3 | `axstack-perf` stays model-invocable so routing can send "make X faster" to it (rev 1 made it user-only; both an adviser and diligence flagged the conflict). |
 | D4 | Performance work keeps strict TDD: a regression keeps its real red-to-green evidence; an optimization without new behavior uses the structure-preserving path (same checks green before and after) plus the measured delta; new behavior inside an optimization (for example cache invalidation) still needs a failing check first. |
+| Q5 | One `axstack-verify` skill with `create` and `maintain` modes, delivered through `axstack-implement` with one writer and one PR. |
+| Q6 | Generated skill lives in `.agents/skills/verify-<app>/` (Codex) with a committed relative symlink `.claude/skills/verify-<app>` (Claude Code); frontmatter uses only `name` and `description`. |
+| Q7 | Present verify skills are used for affected behavior; absent ones are suggested only, on the receipt's `Unverified:` line. |
+| Q8 | Author writes skill, helpers and symlink; browser driving stays with `axstack-ui-verifier`; no product or build fixes; private evidence; isolated launch. |
 | D5 | Rejected experiments and the baseline/post/delta numbers live in the run record and the implement receipt, not a new file. The phase `axstack-perf` routes to owns scope; target, noise criterion and budget become its acceptance checks. |
 
 ## Acceptance criteria
@@ -100,7 +104,7 @@ phase boundaries.
    effects; verify dry-run claims by observing what they skip; keep evidence
    after cleanup.
 
-### All
+### All (A-D)
 
 11. Each behavior change has a prose-contract test under `tests/workflows/`
     that fails when the instruction is removed or inverted and survives
@@ -110,11 +114,60 @@ phase boundaries.
 12. Each borrowed idea credits its source with a pinned URL and license where
     text is paraphrased.
 
+### D. Verification skill
+
+13. `skills/axstack-verify/SKILL.md` exists, is model-invocable, and has two
+    modes. Requests to verify one behavior route to an existing `verify-<app>`
+    skill or `axstack-ui-verifier`, not to `create`.
+14. `create` reads the repository (surface, run, drive, observe, isolate),
+    reuses existing harnesses, and writes `.agents/skills/verify-<app>/`
+    (SKILL.md with Launch, Doctor, Drive, Evidence, Cleanup, Helpers; a
+    `features/` map with an index and the top 3-5 user features) plus the
+    relative symlink `.claude/skills/verify-<app>`. Helpers are executable and
+    their invocation is in the skill body. Only `name` and `description`
+    frontmatter keys are used.
+15. `create` acceptance for the generated skill's content is one executed
+    end-to-end proof: launch, doctor, drive one mapped feature, capture
+    evidence, clean up, and confirm the evidence survives cleanup. This bounded
+    exception is recorded on the implement §5 `TDD:` line. It does not waive
+    AC11 prose-contract red/green tests for `axstack-verify` itself, nor
+    red/green tests for helper scripts that contain logic. The author drives
+    only non-browser surfaces; browser drives go to `axstack-ui-verifier`
+    through `ui-verification.md` with the feature file path in the brief.
+    Discovery and relative-helper execution are checked in both Claude Code
+    and Codex.
+16. `maintain` checks index hygiene, reads each feature from source, drives
+    every mapped feature live with doctor-before-drive, and classifies each gap
+    as doc drift (fix the map), harness gap (fix the recipe) or product
+    regression (report to the driver, which routes it to `axstack-debug`;
+    never fix in docs). Omitted entry points and unreachable prerequisites
+    are reported separately from passes; incomplete mapped coverage cannot be
+    `clean`. Outcome is `clean`, `changed` (one PR) or `blocked`. No parallel
+    source wave, no schedule. Both modes doctor before each drive, retry once
+    after a drift fix, clean up after failed attempts, and keep evidence that
+    survives cleanup.
+17. Safety: never edit product code or fix the build (a failing build is
+    reported and held); evidence goes to the private evidence folder; launches
+    use an owned 0700 TMPDIR outside HOME for data, home and port bookkeeping,
+    listen on loopback only, use no production secrets, and clean up by
+    literal path. For a peer PR, the Launch recipe and helpers are read from
+    the base revision and executed against the pinned candidate; evidence
+    names the served SHA, and an unavailable candidate run is reported
+    unverified. `create` preserves existing skills and resolves name
+    collisions explicitly.
+18. Integration: `axstack-implement` §5 and `ui-verification.md` use a
+    present `verify-<app>` skill for affected behavior; a PR that changes a
+    mapped feature updates its feature file in the same PR; a missing skill
+    adds "suggest `axstack-verify create`" to the receipt's `Unverified:` line
+    and nothing is generated automatically. A broken or stale recipe reports
+    the gap and never waives existing acceptance obligations. Browser recipes
+    stay tool-neutral for the verifier.
+19. `axstack-verify` is listed in the bundle, structural and README contracts,
+    `routing.md` and `docs/workflows.md`; pstack create/maintain are credited
+    with pinned URLs (MIT).
+
 ## Exclusions
 
-- Verification-skill generator and maintainer (pstack
-  `create-verification-skill`, `maintain-verification-skill`). Revisit when at
-  least two audited runs rediscover launch steps or leave proof `UNKNOWN`.
 - Matt Pocock `git-guardrails-claude-code` hook (live config, programmatic gate).
 - pstack `eval` blinding rules (later).
 - Already covered: `benchmark-checklist` (`performance-checklist.md`),
@@ -125,11 +178,10 @@ phase boundaries.
   `test-value`, `docs/skill-writing.md`, pstack `explain-the-number` and
   `encode-lessons-in-structure`, `iterate_plan`, `local_review`,
   `founder_mode`, `ralph_*`.
-- No release, npm publish or host install.
 
 ## Design
 
-Rung 1: adds a skill and widens audit's proposal interface. No new runtime,
+Rung 1: adds two skills (`axstack-perf`, `axstack-verify`) and widens audit's proposal interface. No new runtime,
 role, schedule or state.
 
 ```text
@@ -144,7 +196,7 @@ Binding: the routing, the loop steps in A1, the per-phase roles in A4, and the
 Flow + failure: freeze -> baseline -> mantra hypothesis -> one change ->
          measure; if the harness cannot detect a change, hold and report the
          target unmet.
-We accept: one more skill entry for a named, typeable perf command.
+We accept: two more skill entries for typeable perf and verify commands.
 Rejected: perf as a new phase with its own writer (breaks one writer per
          candidate); retro as a new skill (duplicates audit).
 Open: none.

@@ -1,6 +1,6 @@
 # Ticket map: borrowed skills — perf loop, audit environment lens, proof standards
 
-Spec: `docs/specs/borrowed-skills.md` approved rev 3 @ `47e66b9`.
+Spec: `docs/specs/borrowed-skills.md` approved rev 5 @ `716a673` (rev 3 @ `47e66b9` for T0-T4).
 Store: repository Markdown (this file). Run: `20261007-borrow-skills`.
 Stack: one linear `gh stack` on `main`, because each task may raise the same
 `prose-size.test.js` ceilings. Each task is one PR. Authors work in their own
@@ -23,6 +23,7 @@ T3 worktrees; the driver publishes. Own PRs merge under the watch predicate.
 | CA Performance loop | T1, T2 | AC1-AC6, AC11, AC12 |
 | CB Audit environment lens | T3 | AC7-AC9, AC11, AC12 |
 | CC Proof standards | T4 | AC10, AC11, AC12 |
+| CD Verification skill | T5, T6 | AC13-AC19, AC11, AC12 |
 
 ## Tasks
 
@@ -67,10 +68,51 @@ Theme: four proof standards in ui-verification.md
 Size est: small
 Acceptance: AC10; AC11; AC12
 Depends: T3
+
+Spec: rev 5 @ 716a673
+Capability: CD Verification skill
+Internal task: T5 axstack-verify skill (create mode) + registration -> axstack-author -> own worktree
+Theme: model-invocable verification skill with create mode, routing guard and listings
+Size est: medium
+Acceptance: AC13 (model-invocable, two modes, single-behavior requests route to an
+  existing verify-<app> skill or ui-verification.md delegation); AC14 (create:
+  repository reading, harness reuse, .agents/skills/verify-<app>/ layout with
+  Launch/Doctor/Drive/Evidence/Cleanup/Helpers and features/ map with an index and
+  the top 3-5 user features, after reading surface, run, drive, observe and isolate;
+  relative
+  .claude/skills symlink, executable documented helpers, name+description
+  frontmatter only); AC15 (one executed e2e proof: launch, doctor, drive one mapped
+  feature, capture evidence, clean up, confirm evidence survives; a bounded exception recorded on
+  the TDD line, AC11 tests for axstack-verify itself and red/green for helper logic
+  still required, author drives non-browser only, browser via ui-verification.md
+  with feature file path, discovery + relative-helper checks in Claude Code and
+  Codex); AC17 safety (no product/build fixes, private evidence, owned 0700 TMPDIR
+  outside HOME, loopback, no production secrets, literal cleanup, peer PR recipe
+  from base run on candidate with served SHA, preserve existing skills and resolve
+  collisions); AC16 create-mode half (doctor before each drive, retry once after a
+  drift fix, clean up after failed attempts, evidence survives cleanup); AC19 (listings, pinned pstack credit, MIT); AC11; AC12
+Depends: T4
+
+Capability: CD Verification skill
+Internal task: T6 maintain mode + stack integration -> axstack-author -> own worktree
+Theme: maintain mode and use-when-present integration in implement and ui-verification
+Size est: medium
+Acceptance: AC16 (index hygiene, source read per feature, live drive of every
+  mapped feature with doctor-before-drive, drift/harness/regression
+  classification, regressions to the driver then axstack-debug and never fixed in
+  docs, omitted entry
+  points and unreachable prerequisites reported separately, incomplete coverage
+  never clean, clean/changed (one PR)/blocked outcomes, no parallel wave, no schedule,
+  retry once after a drift fix, cleanup after failed attempts, surviving
+  evidence); AC18 (implement §5 and ui-verification.md use a present skill for
+  affected behavior, mapped-feature changes update the feature file in the same
+  PR, missing skill -> Unverified line suggestion only, broken recipe never waives
+  acceptance, tool-neutral browser recipes); AC11; AC12
+Depends: T5
 ```
 
 T0 (driver, planning artifacts): the spec and this map, at the bottom of the
 stack.
 
-Excluded per spec: verification-skill generator, git-guardrails hook, eval
-blinding, already-covered items, release.
+Excluded per spec: git-guardrails hook, eval blinding, already-covered items.
+Release: standing authority (run `20261007-autonomy`, AQ1) after all PRs merge.
