@@ -82,6 +82,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // accepted structure-preserving scope and Implement-only change steps.
   // 20261007-borrow-skills T2: +687 measured aggregate bytes (644 for the thin
   // perf router, 43 for its direct route); +43 always-loaded routing bytes.
-  expect(total).toBeLessThanOrEqual(335450);
+  // 20261007-borrow-skills T3: +1098 measured aggregate bytes for the optional
+  // audit environment lens and pinned MIT attribution; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(336548);
   expect(alwaysLoaded).toBeLessThanOrEqual(26190);
 });
