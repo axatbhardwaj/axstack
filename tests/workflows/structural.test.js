@@ -50,6 +50,7 @@ const skillMarkdownFiles = readdirSync(skillsDir, { recursive: true })
   .map((p) => join(skillsDir, p));
 
 const EXPECTED_SKILLS = [
+  'axstack-verify',
   'axstack-perf',
   'axstack-correct',
   'axstack-align',
