@@ -24,6 +24,14 @@ returns a verdict with evidence paths and names checks it could not run.
 Keep the verdict tied to the exact artifact or revision; changed bytes need a
 fresh rendered pass.
 
+Use a present `verify-<app>` skill for affected behavior.
+If a PR changes a mapped feature, its author updates the feature file in the same PR.
+For a missing skill, add "suggest `axstack-verify create`" to the receipt's `Unverified:` line.
+Never generate a verification skill automatically.
+For a broken or stale recipe, report the gap.
+Never let a broken or stale recipe waive existing acceptance obligations.
+Keep browser recipes tool-neutral for the verifier.
+
 ## Proof standards
 
 Drive the real user path.
