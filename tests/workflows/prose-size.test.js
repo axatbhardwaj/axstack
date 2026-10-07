@@ -90,6 +90,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // +543 contracts) for denial scope and verified reversible repair; +543 always-loaded.
   // 20261007-borrow-skills T5: +5070 measured aggregate bytes (4989 create
   // skill + 81 routing); +81 always-loaded routing bytes.
-  expect(total).toBeLessThanOrEqual(343756);
+  // 20261007-borrow-skills T5 repair1: +83 measured aggregate bytes for
+  // fully qualified feature index and per-feature paths; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(343839);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

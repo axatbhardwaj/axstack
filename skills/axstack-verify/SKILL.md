@@ -49,8 +49,8 @@ Name the app, surface and invocation conditions in the description.
 - Cleanup: stop only processes started by this run and remove owned scratch.
 - Helpers: explain each helper's purpose and working directory.
 
-Write `features/README.md` as an index of the top 3-5 user features.
-Link one file per feature from the index.
+Write `.agents/skills/verify-<app>/features/README.md` as an index of the top 3-5 user features.
+Write per-feature files in `.agents/skills/verify-<app>/features/` and link them from the index.
 Give each feature file its entry points, prerequisites, drive steps and observable proof.
 Record gotchas and uncovered surfaces in the map.
 Commit a relative symlink from `.claude/skills/verify-<app>` to `.agents/skills/verify-<app>`.
