@@ -260,9 +260,15 @@ test('structural: skills stay self-contained (no absolute paths or upstream deps
         // D3 permits this attribution link, not an upstream skill dependency.
         // Strip only that link on the diagram credit line; keep every other
         // byte in the guard, including any additional upstream reference.
-        const guarded = p === join(skillsDir, 'axstack-diagram', 'SKILL.md')
+        let guarded = p === join(skillsDir, 'axstack-diagram', 'SKILL.md')
           ? text.replace(/^(Ideas: .*?)\[poteto\]\(https:\/\/github\.com\/poteto\/how\)(.*; guidance uses Axstack's own words\.)$/m, '$1$2')
           : text;
+        // AC12 requires this pinned credit; preserve the upstream-dependency guard elsewhere.
+        if (p === join(skillsDir, 'axstack', 'references', 'perf-loop.md')) {
+          const credit = "Ideas paraphrased from pstack's perf-issue and hillclimb\n"
+            + '[playbooks](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/poteto-mode/playbooks/) (MIT).';
+          guarded = guarded.replace(credit, 'Pinned pstack credit (MIT).');
+        }
         for (const f of forbidden) {
           expect(guarded.includes(f), `${p} contains forbidden reference: ${f}`).toBe(false);
         }

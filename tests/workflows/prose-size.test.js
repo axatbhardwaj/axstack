@@ -76,6 +76,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // bytes for consistent owning-watch actor pointers and approval/base record fields.
   // 20261007-auto-merge-scope T1 repair1: +145 measured aggregate bytes for the
   // closed manifest exclusion, release publication boundary and wording fixes.
-  expect(total).toBeLessThanOrEqual(331867);
+  // 20261007-borrow-skills T1: +2753 measured aggregate bytes for the shared
+  // performance loop and three conditional phase directives; always-loaded unchanged.
+  // 20261007-borrow-skills T1 repair1: +143 measured aggregate bytes for
+  // accepted structure-preserving scope and Implement-only change steps.
+  expect(total).toBeLessThanOrEqual(334763);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });
