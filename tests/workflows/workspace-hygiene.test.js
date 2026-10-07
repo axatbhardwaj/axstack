@@ -10,11 +10,28 @@ const hygiene = () => read('skills/axstack/references/workspace-hygiene.md');
 const completionRules = [
   {
     name: 'accepted completion settles launched writers and delegated tasks',
-    concepts: [/after/i, /driver/i, /\baccept(?:s|ed)\b/i, /completion/i, /launched writer/i, /delegated task/i, /terminal run evidence/i, /plus/i, /verified receipt/i, /candidate check/i, /\bsettles?\b/i, /t3_thread_organize/i, /metadata only/i],
-    rewording: 'The driver settles the matching thread with t3_thread_organize as metadata only after it accepts completion of a launched writer or delegated task using terminal run evidence plus a verified receipt or candidate check.',
-    inversions: [[/after/i, 'before'], [/accept(?:s|ed)/i, 'rejects'], [/plus/i, 'instead of'], [/metadata only/i, 'destructive cleanup']],
+    concepts: [/after/i, /driver/i, /\baccept(?:s|ed)\b/i, /completion/i, /launched writer/i, /\bauthor\b/i, /\brepair\b/i, /delegated task/i, /terminal run evidence/i, /plus/i, /verified receipt/i, /candidate check/i, /same driver turn/i, /\bsettles?\b/i, /t3_thread_organize/i, /action: settle/i, /metadata only/i],
+    rewording: 'In the same driver turn after it accepts completion of a launched writer (author or repair) or delegated task using terminal run evidence plus a verified receipt or candidate check, the driver settles the matching thread with t3_thread_organize using action: settle as metadata only.',
+    inversions: [[/after/i, 'before'], [/accept(?:s|ed)/i, 'rejects'], [/plus/i, 'instead of'], [/same driver turn/i, 'later driver turn'], [/action: settle/i, 'action: archive'], [/metadata only/i, 'destructive cleanup']],
     contradiction: 'and settle before acceptance',
     forbidden: /before.*accept|without.*(?:terminal|verified)|destructive/i,
+  },
+  {
+    name: 'settlement reads back writers and delegated child threads',
+    concepts: [/driver/i, /reads? back|verifies?/i, /settled.*true/i, /t3_thread_read/i, /writer thread/i, /launched writers/i, /childThreadId/i, /delegated tasks/i],
+    rewording: 'With t3_thread_read the driver verifies settled: true on the childThreadId for delegated tasks and on the writer thread for launched writers.',
+    inversions: [[/reads? back|verifies?/i, 'ignores'], [/settled.*true/i, 'settled: false'], [/childThreadId/i, 'driverThreadId'], [/writer thread/i, 'driver thread']],
+    contradiction: 'and accept settled: false',
+    forbidden: /accept settled.*false/i,
+  },
+  {
+    name: 'failed settle readback holds only dispatch advancement without repair',
+    concepts: [/missing or failed/i, /settle readback/i, /author repair/i, /holds?/i, /only that dispatch.s next advancement/i, /publication/i, /review routing/i, /merge-ready/i, /until resolved/i],
+    prohibition: /never triggers/i,
+    rewording: "A missing or failed settle readback never triggers author repair, while until resolved it holds only that dispatch's next advancement (publication, review routing, merge-ready).",
+    inversions: [[/never triggers/i, 'always triggers'], [/holds?/i, 'releases'], [/only that dispatch.s next advancement/i, 'every dispatch advancement'], [/until resolved/i, 'even after resolution']],
+    contradiction: 'and require author repair',
+    forbidden: /require author repair/i,
   },
   {
     name: 'settling preserves thread and worktree resources',

@@ -130,6 +130,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-issue-340 A1: +278 measured aggregate bytes (+192 Implement,
   // +86 performance loop) for the loop definition and unmarked optimization route;
   // preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(360282);
+  // 20261007-accept-settle A1: +388 measured aggregate bytes for same-turn
+  // accepted-completion settlement and dispatch-scoped readback holds; preserve 44-byte headroom.
+  expect(total).toBeLessThanOrEqual(360670);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });
