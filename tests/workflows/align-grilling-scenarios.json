@@ -40,7 +40,7 @@
       "expected": [
         "Ask no more questions in the initial pass",
         "Read back the four unresolved blockers without presenting the work as ready",
-        "Offer deeper refinement for a named area with a finite budget of at most five",
+        "Return the partial handoff with no mandatory deeper-refinement offer",
         "Do not ask further interview or refinement questions unless the user opts in",
         "Do not suppress required spec approval or model-availability clarification"
       ]

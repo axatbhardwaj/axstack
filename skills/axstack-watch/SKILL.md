@@ -251,6 +251,7 @@ Never auto-merge PRs changing lockfiles.
 Never auto-merge PRs changing test-runner config.
 Never auto-merge PRs changing branch-protection or ruleset config.
 Never auto-merge PRs changing `CODEOWNERS`.
+Never auto-merge PRs changing `AGENTS.md`.
 Test sources stay eligible.
 Axstack skill and merge-rule text are eligible under the watch predicate.
 Changes to package.json limited to `version` and `files` are eligible under
@@ -280,7 +281,7 @@ In `team` mode the reply only clears an ineligible base, auto-merge turned off,
 and an open human or bot comment.
 PRs in the CI, package.json beyond `version` and `files`, lockfile, test-runner,
 branch-protection and ruleset,
-`CODEOWNERS`, or non-`clean` revert categories are merged by the user on the forge.
+`CODEOWNERS`, `AGENTS.md`, or non-`clean` revert categories are merged by the user on the forge.
 Promotion, `deploying`-base, unknown-base, and peer PRs are merged by the user on the
 forge, and the card only reports readiness.
 User merges are bottom-up for a stack.

@@ -119,7 +119,13 @@ Align or spec time is a decision hold before release authority is presented.
 Show the `Release:` line in the spec for human approval at gate 1, or the
 small-change intent read-back. Copy that decision to `Authority:` in the run
 record.
-This authority is per run and never carries over to another run or repository.
+AGENTS.md can grant standing release and install authority with a trigger and
+named hosts.
+When a run matches that trigger, copy the standing authority into its `Release:`
+line and `Authority:` without a per-run question.
+Standing authority applies only to that repository.
+Without matching standing authority, obtain explicit per-run release and install
+authority before those actions.
 The small-change intent read-back names the existing Release and host-mutation
 authority and explicit hosts; silence cannot fill a missing authority or target.
 
@@ -136,7 +142,7 @@ installed version.
 An existing version or tag, failed publish, pending approval, uncertain
 registry result, missing host access, or failed install verification is a
 resumable hold, never success. Tagging, publishing, installation, and host
-mutation require the recorded per-run authority and their existing checks.
+mutation require the run's recorded authority and their existing checks.
 
 ## Resume, cancel, and notify
 
@@ -149,6 +155,11 @@ stops new actions, and ends the watch under watch §6 with guarded settlement.
 Cancellation does not cancel a running author run by inference; let it
 report, then settle that exact attempt under lifecycle guards without new
 publication.
+
+On every resume, apply standing merge delegation under watch §5.
+Never narrow standing merge delegation without a user instruction.
+Explicit user restrictions, including `Auto-merge: off`, chat holds, and user
+instructions, always win.
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
 

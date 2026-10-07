@@ -42,8 +42,11 @@ One bound schedule serves both the run watch and the chat-run watch; never creat
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 If the native schedule has a lifetime, the driver re-arms it at a wake.
 Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.
-After 7 days with no event on any watched PR, and only with no unsettled launched work,
-change the wake cadence from 5 to 60 minutes.
+When the run waits only on a user decision or a human-only step, including a
+user merge, with no unsettled worker and no PR needing watch events, change
+the run watch cadence to 60 minutes at once.
+When work restarts, restore the normal 5-minute cadence.
+Keep native PR watches.
 On the next event on a watched PR, restore the wake cadence to 5 minutes.
 If launched work becomes unsettled, restore the 5-minute cadence.
 Read back each schedule update and record its receipt; an uncertain update holds affected work.

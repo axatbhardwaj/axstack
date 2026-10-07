@@ -155,6 +155,10 @@ original form and record both; normalization is never an identity substitute.
 
 `baseRef` must always be a commit SHA, never a branch name; T3 renames its
 `t3code/*` branches. Pin base and candidate before dispatch.
+Fetch the pinned base commit into the launch repository before a writer launch.
+Before a writer launch, verify locally that the pinned base SHA resolves to a
+commit with that exact SHA.
+If fetch or verification fails, hold that launch.
 
 Workers must finish with exactly one final marker: `AXSTACK-DONE key=… head=…
 report=…`, `AXSTACK-FAILED key=… head=… report=…`, or `AXSTACK-QUESTION key=… q=…`.
@@ -175,6 +179,9 @@ incomplete even when native status says completed.
 Launched writer completion must require terminal `t3_thread_wait` on that run,
 then candidate checks: non-empty diff, clean tree and named red/green logs.
 A receipt message alone counts only as progress; it can precede terminal state.
+
+When a completion arrives, process it in the same driver turn after the required
+terminal checks, delegated `hasPendingChildRuns:false`, and writer candidate checks.
 
 Completion must match the current attempt key and candidate SHA. An older
 attempt never completes a newer one; stale or duplicate receipts remain
@@ -250,8 +257,11 @@ Route native PR wake events through watch §4 and the unchanged §5 readiness pr
 
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
-Keep the schedule cadence unchanged while a native PR watch is active,
-including the existing 7-day quiet relaxation.
+When the run waits only on a user decision or a human-only step, including a
+user merge, with no unsettled worker and no PR needing watch events, change
+the run watch cadence to 60 minutes at once.
+When work restarts, restore the normal 5-minute cadence.
+Keep native PR watches.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.

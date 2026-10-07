@@ -40,6 +40,11 @@ Preparation completion/watch expiry writes a record. Ordinary resume
 reconciles it, keeps the current owner, and launches no native handoff.
 Only an explicit user request to transfer ownership enters this branch.
 
+A forked thread starts as an observer.
+Before resuming inherited work, the forked thread reconciles the live original
+driver and writers.
+Apply the ownership rules below before any dispatch or write.
+
 1. Reconcile the [Run record](run-record.md) with T3 threads, runs, Git revisions,
    forge state, pending receipts and scheduled-task expiries; live owners and
    current attempt identities beat stale state.

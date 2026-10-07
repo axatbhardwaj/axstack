@@ -13,6 +13,9 @@ Before use, commands must scope `TMPDIR` to an owned 0700 directory under the sy
 Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
 
+Run each cleanup as a single command.
+Never use `rm -f` or chain cleanup commands.
+
 Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree.
 For validated owned scratch, use `rm -r /tmp/<dispatch-key>/scratch` on a literal absolute path inside the evidence folder, `TMPDIR`, or worktree.
 Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target.

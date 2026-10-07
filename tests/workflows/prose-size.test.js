@@ -110,6 +110,17 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // preserve borrowed-skills comments and its 26190-byte always-loaded ceiling.
   // 20261007-explain-t3-inline-html T3 rebase2: 353899 measured bytes + 44 headroom;
   // retain all dated comments and main's 26814-byte always-loaded ceiling.
-  expect(total).toBeLessThanOrEqual(353943);
-  expect(alwaysLoaded).toBeLessThanOrEqual(26814);
+  // 20261007-autonomy A2: +879 measured aggregate bytes (+546 Autopilot,
+  // +277 Spec, +56 Watch) for standing release and merge carry-forward; always-loaded unchanged.
+  // 20261007-autonomy A2 repair1: -2 measured aggregate bytes for
+  // run-record authority wording; always-loaded unchanged.
+  // 20261007-autonomy A3: +1250 measured aggregate bytes (+558 Align,
+  // +386 Spec, +145 watch runtime, +161 T3 runtime); always-loaded unchanged.
+  // 20261007-autonomy A3 repair1: +477 measured aggregate bytes (+234 Align,
+  // +243 Spec) for default fresh receipts and the bounded delta exception.
+  // 20261007-autonomy A4: +1154 measured aggregate bytes (+323 Relay,
+  // +201 lifecycle, +403 T3 runtime, +143 publication, +84 hygiene);
+  // +201 always-loaded bytes. Preserve the inherited 44-byte aggregate headroom.
+  expect(total).toBeLessThanOrEqual(357701);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });
