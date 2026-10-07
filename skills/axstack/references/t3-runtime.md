@@ -6,6 +6,18 @@ delegated tasks, messaging and native schedules.
 
 ## Preflight and binding
 
+At every run start, resume and run-watch wake, the driver must run
+`axstack --version` and record the installed Axstack version and check time
+in the run record.
+When this run lacks a reference read or the installed version differs from
+the version recorded at the last reference read, the driver must re-read
+the installed phase SKILL.md and every shared reference it will use before any
+dispatch, receipt consumption, settlement or merge.
+After re-reading, the driver must record the installed version and reference
+read time in the run record.
+The driver must never rely on an in-context copy from an earlier run or an
+older installed version.
+
 The driver must be a T3 thread, save `orchestrator_capabilities` JSON under
 the run record, and follow the advertised tool schema; discovery alone proves
 neither provider readiness nor successful execution. Missing capability holds
