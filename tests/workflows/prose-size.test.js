@@ -94,6 +94,22 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // fully qualified feature index and per-feature paths; always-loaded unchanged.
   // 20261007-borrow-skills T6: +3507 measured aggregate bytes (2579 maintain
   // skill + 464 implement + 464 UI integration); always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(347346);
+  // 20261007-explain-t3-inline-html T1: +3886 measured aggregate bytes for
+  // inline page routing and checks; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T1 repair1: +80 measured aggregate bytes
+  // for visual QA on requested artifacts; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T2: +1527 measured aggregate bytes for
+  // preview exceptions, page verification and dispatch publication limits; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T2 rebase2: +92 measured aggregate bytes
+  // for explicit verifier proof scope on candidate checks and inline pages; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T2 repair1: +316 measured aggregate bytes for
+  // dispatched non-publishing preview self-checks; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T3: +696 measured aggregate bytes for
+  // spec readback identity, diagram routing and role notes; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T3 rebase1: 343009 measured bytes + 44 headroom;
+  // preserve borrowed-skills comments and its 26190-byte always-loaded ceiling.
+  // 20261007-explain-t3-inline-html T3 rebase2: 353899 measured bytes + 44 headroom;
+  // retain all dated comments and main's 26814-byte always-loaded ceiling.
+  expect(total).toBeLessThanOrEqual(353943);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

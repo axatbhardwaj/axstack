@@ -87,9 +87,10 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Operate | [axstack-relay](skills/axstack-relay/SKILL.md) | Send an explicit message or authorized notification. |
 | Understand | [axstack-research](skills/axstack-research/SKILL.md) | Answer one bounded question with sources. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
-| Understand | [axstack-diagram](skills/axstack-diagram/SKILL.md) | Draw Mermaid diagrams or verified interactive archify viewers. |
+| Understand | [axstack-diagram](skills/axstack-diagram/SKILL.md) | Draw SVG/CSS in inline pages, Mermaid for chat/GitHub/docs, or requested archify viewers. |
 
-Interactive viewers use [archify](https://github.com/tt-a1i/archify) (MIT).
+Explanations default to checked inline T3 pages above a short reply.
+Use [archify](https://github.com/tt-a1i/archify) (MIT) only on an explicit viewer request.
 
 ## How work stays controlled
 

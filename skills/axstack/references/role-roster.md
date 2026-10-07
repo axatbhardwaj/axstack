@@ -21,10 +21,13 @@
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
-- `axstack-explainer`/`axstack-explainer-review`: explain/review.
+- `axstack-explainer` authors archify only on an explicit viewer request.
+- `axstack-explainer-review` reviews consequential or complex claims, archify
+  output, or on request.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for every PR
   review round and bounded research, spec, ticket, receipt, and release claims.
-- `axstack-ui-verifier`: [UI checks](ui-verification.md).
+- `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)
+  for every interactive page, bound to the exact bytes and SHA-256.
 - `axstack-auditor`/`axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
   `axstack-explore-execution`/`axstack-monitor`:

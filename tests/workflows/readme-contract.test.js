@@ -134,3 +134,21 @@ test('README gives a bounded first task and both harness invocation forms', () =
     'Invoke $skill with Codex and /skill with Claude.',
     [[/Codex/i, 'Other'], [/Claude/i, 'Other']], invocation);
 });
+
+// User docs are a separate discovery surface from the skills and role notes.
+for (const path of ['README.md', 'docs/workflows.md', 'docs/getting-started.md', 'docs/installation.md']) {
+  test(`explain docs: ${path}: pages by default`, () => {
+    const text = sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. ');
+    const page = [/explain|explanations/i, /default/i, /inline T3 pages?/i];
+    checkRule(text, (source) => requires(source, ...page),
+      'Explanations default to inline T3 pages.',
+      [[/default/i, 'sometimes route'], [/inline T3 pages?/i, 'archify viewers']], page);
+  });
+  test(`explain docs: ${path}: viewers by request`, () => {
+    const text = sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. ');
+    const viewer = [/use(?:s|d)?/i, /archify/i, /only/i, /explicit viewer request/i];
+    checkRule(text, (source) => requires(source, ...viewer),
+      'Use archify only on an explicit viewer request.',
+      [[/only/i, 'also without a request'], [/explicit viewer request/i, 'complex visuals']], viewer);
+  });
+}

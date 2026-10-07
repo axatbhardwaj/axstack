@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { loadedReferences, requires, sentences } from './prose-contract.js';
+import { checkRule, loadedReferences, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
@@ -161,8 +161,11 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
 
 test('UI verification routes rendered checks to the read-only verifier', () => {
   const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
-  expect(rule).toMatch(/every Playwright, browser, or rendered-UI check/i);
-  expect(rule).toMatch(/delegate_task[\s\S]*axstack-ui-verifier/i);
+  // The shared routing boundary must retain delegation outside all three exceptions.
+  checkRule(sentences(rule).join('. '), (text) => requires(text, /every Playwright, browser, or rendered-UI check/i,
+    /outside.*three named author exceptions/i, /async.*delegate_task/i, /axstack-ui-verifier/i),
+    'Outside the three named author exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.',
+    [[/outside/i, 'including'], [/three named author exceptions/i, 'all author checks']]);
   expect(rule).toMatch(/read-only/i);
   expect(rule).toMatch(/dispatch.s evidence folder/i);
   expect(rule).toMatch(/desktop[\s\S]*mobile[\s\S]*reduced-motion/i);
@@ -516,3 +519,30 @@ test('presets: mixed owner independently uses Sol high with full access', () => 
     provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high', modeId: 'full-access',
   });
 });
+
+// Runtime snapshots copy these notes from the presets. The role matrix checks
+// cannot catch stale author/reviewer/verifier responsibilities in that prompt.
+const explanationRoles = [
+  ['axstack-explainer', [/authors? archify/i, /only/i, /explicit viewer request/i],
+    'The explainer authors archify only on an explicit viewer request.',
+    [[/only/i, 'also without a request'], [/authors? archify/i, 'authors every inline page']]],
+  ['axstack-explainer-review', [/\breviews?\b/i, /consequential or complex claims/i, /archify output/i, /on request/i],
+    'Review consequential or complex claims, archify output, or on request.',
+    [[/\breviews?\b/i, 'ignore'], [/consequential or complex claims/i, 'simple claims']]],
+  ['axstack-ui-verifier', [/owns|performs/i, /inline page/i, /interaction pass/i,
+    /every interactive page/i, /exact bytes/i, /SHA-256/i],
+    'The verifier performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256.',
+    [[/owns|performs/i, 'skips'], [/every interactive page/i, 'some interactive pages']]],
+];
+for (const [id, concepts, rewording, inversions] of explanationRoles) {
+  for (const preset of presetNames) {
+    test(`explanation role contract: ${preset}: ${id}`, () => {
+      const notes = readJson(`profiles/presets/${preset}.json`).roles.find((role) => role.id === id).notes;
+      checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
+    });
+  }
+  test(`explanation role contract: roster: ${id}`, () => {
+    const roster = sentences(readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8')).join('. ');
+    checkRule(roster, (text) => requires(text, new RegExp(id), ...concepts), `${id}: ${rewording}`, inversions, concepts);
+  });
+}

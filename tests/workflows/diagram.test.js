@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule as checkSemanticRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const router = 'skills/axstack-diagram/SKILL.md';
@@ -15,10 +15,16 @@ const upstreamLimitOverride = (text) => requires(text,
 // Existing explain tests do not cover this skill. All probes use real source
 // in memory; no test writes tracked files or adds a production test hook.
 const rules = [
-  ['required viewer', router, [/explicit viewer request/i, /complex-visual path/i, /archify HTML/i, /use|choose/i],
-    /archify HTML/i, 'Mermaid', 'Choose archify HTML for an explicit viewer request or the complex-visual path.'],
-  ['portable destination', router, [/otherwise/i, /chat/i, /GitHub/i, /docs/i, /Mermaid/i, /use|choose/i],
-    /Mermaid/i, 'archify HTML', 'Otherwise choose Mermaid for chat, GitHub, or docs.'],
+  ['required viewer', router, [/explicit viewer request/i, /only/i, /archify HTML/i, /use|choose/i],
+    /only/i, 'also without a request', 'Choose archify HTML only on an explicit viewer request.'],
+  ['viewer author', router, [/viewer/i, /axstack-explainer/i, /author/i],
+    /axstack-explainer/i, 'driver', 'The axstack-explainer authors the viewer.'],
+  ['portable destination', router, [/chat fallback/i, /GitHub/i, /docs/i, /Mermaid/i, /use|choose/i],
+    /Mermaid/i, 'archify HTML', 'Choose Mermaid for chat fallback, GitHub, and docs.'],
+  ['inline page diagrams', router, [/inline pages/i, /inline SVG/i, /CSS/i, /use|choose/i],
+    /inline SVG/i, 'remote image', 'Choose inline SVG or CSS inside inline pages.'],
+  ['no Mermaid in pages', router, [/Mermaid/i, /inline pages/i],
+    /never use|do not use/i, 'Use', 'Do not use Mermaid in inline pages.', /never use|do not use/i],
   ['Mermaid accessibility', router, [/Mermaid/i, /accTitle/i, /accDescr/i, /include|supply/i],
     /include|supply/i, 'omit', 'Supply accTitle and accDescr in each Mermaid view.'],
   ['Mermaid theme', router, [/Mermaid/i, /theme init/i],
@@ -137,14 +143,44 @@ const rules = [
     /do not require|never require/i, 'Always require', 'Never require validate before finalize.', /do not require|never require/i],
   ['finalize every repair', archify, [/after every repair edit/i, /rerun|execute/i, /complete/i, /finalize/i],
     /finalize/i, 'validate', 'After every repair edit, execute the complete finalize command.'],
-  ['finalize exception is singular', ui, [/sole|only/i, /author browser exception/i, /archify.*finalize/i, /headless build gate/i],
-    /sole|only/i, 'one', 'The only author browser exception is archify finalize as a headless build gate.'],
+  ['finalize remains a named exception', ui, [/first/i, /named author browser exception/i, /archify.*finalize/i, /headless build gate/i],
+    /first/i, 'sole', 'The first named author browser exception is archify finalize as a headless build gate.'],
+  ['driver previews are the second exception', ui, [/second/i, /named author browser exception/i, /driver.*two.*html_preview/i, /728px dark/i, /360px light/i],
+    /second/i, 'sole', 'The second named author browser exception is the driver running two html_preview checks at 728px dark and 360px light.'],
+  ['preview gates', ui, [/require|check/i, /layout/i, /theme/i, /zero console errors/i, /empty.*missingImages/i, /height/i, /network/i, /word count/i],
+    /require|check/i, 'waive', 'Check layout, theme, zero console errors, empty missingImages, height, network, and word count.'],
+  ['static scan exact bytes', ui, [/scan/i, /exact bytes/i, /every page/i, /remote src/i, /srcset/i, /href.*loaded resources/i, /@import/i, /url\(\)/i, /fetch/i, /XHR/i, /WebSocket/i, /EventSource/i, /meta refresh/i],
+    /every page/i, 'some pages', 'For every page, scan the exact bytes for remote src, srcset, href on loaded resources, @import, url(), fetch, XHR, WebSocket, EventSource, and meta refresh.'],
+  ['scan rejects resource loading except local fragments', ui, [/reject/i, /scan matches/i, /except/i, /local url\(#id\)/i],
+    /reject/i, 'accept', 'Reject scan matches except local url(#id) references.'],
+  ['previews never replace verifier', ui, [/html_preview/i, /replace/i, /verifier.*interaction pass/i],
+    /never replace|do not replace/i, 'Replace', 'Do not replace the verifier interaction pass with html_preview.', /never replace|do not replace/i],
   ['finalize evidence boundary', ui, [/finalize/i, /outputs/i, /only/i, /private evidence folder/i],
     /only/i, 'also outside', 'Keep finalize outputs only in the private evidence folder.'],
   ['finalize never replaces verifier', ui, [/finalize/i, /replace/i, /verifier.*rendered pass/i],
     /never replace|do not replace/i, 'Replace', 'Do not replace the verifier\'s rendered pass with finalize.', /never replace|do not replace/i],
-  ['other browser checks stay delegated', ui, [/other browser checks/i, /remain|stay/i, /delegated/i, /axstack-ui-verifier/i],
-    /remain|stay/i, 'leave', 'All other browser checks stay delegated to axstack-ui-verifier.'],
+  ['other browser checks stay delegated', ui, [/other browser checks/i, /outside.*three named exceptions/i, /remain|stay/i, /delegated/i, /axstack-ui-verifier/i],
+    /remain|stay/i, 'leave', 'All other browser checks outside the three named exceptions stay delegated to axstack-ui-verifier.'],
+  ['dispatched preview self-check exception', ui, [/third/i, /named author browser exception/i, /permits|allows/i, /dispatched roles/i, /html_preview/i, /non-publishing self-check/i],
+    /non-publishing self-check/i, 'publishing check', 'The third named author browser exception allows dispatched roles to use html_preview for a non-publishing self-check.'],
+  ['dispatched self-check never replaces required passes', ui, [/dispatched-role self-checks/i, /replace/i, /driver.*two previews/i, /axstack-ui-verifier.*pass/i],
+    /never replace|do not replace/i, 'Replace', 'Do not replace the driver two previews or axstack-ui-verifier pass with dispatched-role self-checks.', /never replace|do not replace/i],
+  ['dispatched self-check never publishes', ui, [/dispatched roles/i, /html_render/i],
+    /never call|do not call/i, 'Always call', 'Dispatched roles do not call html_render.', /never call|do not call/i],
+  ['interactive page pass', ui, [/every interactive page/i, /require|obtain/i, /real-browser/i, /axstack-ui-verifier/i, /interaction pass/i],
+    /every interactive page/i, 'some interactive pages', 'For every interactive page, obtain a real-browser axstack-ui-verifier interaction pass.'],
+  ['page brief exact bytes', ui, [/give|include/i, /evidence path/i, /SHA-256/i, /exact bytes/i, /verifier brief/i],
+    /exact bytes/i, 'similar bytes', 'Include the evidence path and SHA-256 of the exact bytes in the verifier brief.'],
+  ['page loopback', ui, [/verifier/i, /serve|host/i, /exact bytes/i, /loopback/i],
+    /loopback/i, 'public hosting', 'The verifier hosts the exact bytes on loopback.'],
+  ['page preview opening', ui, [/open|load/i, /preview_open/i, /open:false/i],
+    /open:false/i, 'open:true', 'Load the page with preview_open using open:false.'],
+  ['page interactions and accessibility', ui, [/check|verify/i, /clicks/i, /keyboard/i, /focus order/i, /screen-reader names/i, /expanded states/i, /reduced motion/i],
+    /check|verify/i, 'waive', 'Verify clicks, keyboard, focus order, screen-reader names, expanded states, and reduced motion.'],
+  ['page resource entries empty', ui, [/require|check/i, /performance.*getEntriesByType.*resource/i, /\bempty\b/i],
+    /\bempty\b/i, 'nonempty', "Check that performance.getEntriesByType('resource') is empty."],
+  ['page without candidate checkout exception', ui, [/page without a candidate/i, /detached-checkout rule/i, /appl(?:y|ies)/i],
+    /does not apply|never applies/i, 'always applies', 'The detached-checkout rule never applies to a page without a candidate.', /does not apply|never applies/i],
 ];
 
 const acceptsRule = ([, , concepts, , , , prohibition, conflicts]) => (text) =>
@@ -192,4 +228,14 @@ test('diagram precedence rejects inserted upstream repair-limit overrides on rea
     expect(() => checkRule(altered, rule)).toThrow('Axstack conflict precedence: missing required instruction');
   }
   checkRule(`${source}\nDo not follow archify repair limits.`, rule);
+});
+
+// Discovery must agree with the body; explain's tests cannot protect this entrypoint.
+test('diagram discovery routes pages, portable diagrams, and explicitly requested viewers', () => {
+  const description = read(router).match(/^description: (.*)$/m)?.[1] ?? '';
+  const concepts = [/inline SVG.*CSS/i, /pages/i, /Mermaid/i, /chat/i, /GitHub/i, /docs/i,
+    /archify/i, /only/i, /explicit viewer request/i];
+  checkSemanticRule(description, (text) => requires(text, ...concepts),
+    'Use axstack-diagram for inline SVG or CSS in pages, Mermaid in chat, GitHub, and docs, or archify only on an explicit viewer request.',
+    [[/only/i, 'also without a request'], [/inline SVG/i, 'remote images']], concepts);
 });

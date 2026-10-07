@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path handling below is local (import.meta.dir), not node:.
@@ -475,4 +476,33 @@ test('owned-core: docs and readme document harnesses and T3 dispatch', () => {
 
   const readme = readFileSync(join(root, 'README.md'), 'utf8').replace(/\s+/g, ' ');
   expect(readme).toContain('Delegation uses visible T3 orchestration via the `t3-code` MCP; harness-native subagent tools are forbidden.');
+});
+
+// D12: the checkpoint is a revision-bound approval surface, not a new store.
+// Existing spec checks cover advisers and stores, not the inline readback.
+test('owned-core: T3 spec checkpoint publishes the readback under Explain rules', () => {
+  const text = skill('axstack-spec').split('4. **')[1]?.split('5. **')[0] ?? '';
+  const concepts = [/T3 thread/i, /driver/i, /publish/i, /spec readback/i,
+    /inline page/i, /follow/i, /Explain/i, /Inline pages/i];
+  checkRule(sentences(text).join('. '), (source) => requires(source, ...concepts),
+    'In a T3 thread, the driver publishes the spec readback as an inline page and follows Explain and Inline pages.',
+    [[/publish/i, 'omit'], [/driver/i, 'worker']], concepts);
+  const source = readFileSync(join(skillsDir, 'axstack-spec', 'SKILL.md'), 'utf8');
+  expect(source).toContain('../axstack-explain/SKILL.md');
+  expect(source).toContain('../axstack-explain/references/inline-pages.md');
+});
+
+test('owned-core: spec readback displays the exact authoritative revision identity', () => {
+  const text = skill('axstack-spec');
+  const concepts = [/readback page/i, /show|display/i, /revision ID/i, /SHA-256/i, /store path/i];
+  checkRule(sentences(text).join('. '), (source) => requires(source, ...concepts),
+    'Display the revision ID, SHA-256, and store path in the readback page.',
+    [[/show|display/i, 'hide'], [/SHA-256/i, 'title']], concepts);
+});
+
+test('owned-core: spec approval binds to the revision rather than the page', () => {
+  const concepts = [/approval/i, /bind/i, /that revision/i, /page/i];
+  checkRule(skill('axstack-spec'), (source) => prohibits(source, /not to (?:the )?page/i, ...concepts),
+    'Bind approval to that revision, not to the page.',
+    [[/not to (?:the )?page/i, 'also to the page'], [/that revision/i, 'any revision']], concepts);
 });
