@@ -121,6 +121,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-autonomy A4: +1154 measured aggregate bytes (+323 Relay,
   // +201 lifecycle, +403 T3 runtime, +143 publication, +84 hygiene);
   // +201 always-loaded bytes. Preserve the inherited 44-byte aggregate headroom.
-  expect(total).toBeLessThanOrEqual(357701);
+  // 20261007-author-thread-settle A1: +1163 measured aggregate bytes
+  // (+987 T3 runtime, +176 hygiene) for author PR links and settlement readbacks;
+  // always-loaded unchanged. Preserve the inherited 44-byte aggregate headroom.
+  expect(total).toBeLessThanOrEqual(358864);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });

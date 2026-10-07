@@ -38,6 +38,8 @@ or launched run completion under the runtime contract before settlement.
 After the driver accepts a launched writer's or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, it settles the matching thread with `t3_thread_organize` as metadata only.
 Settling never removes, archives or abandons the thread or worktree.
 Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author.
+On forge-confirmed merge or closure, follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
+for same-turn author settlement and its required readback.
 A repair turn automatically un-settles the thread, making it visible while working.
 The driver settles the thread again after the next accepted repair completion.
 Threads with unaccepted completion, FAILED or QUESTION markers, held, failed or interrupted runs, or anything needing the user stay unsettled and visible.
