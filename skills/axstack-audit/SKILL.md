@@ -150,7 +150,7 @@ Each proposal names:
 
 1. the observed failure or inefficiency;
 2. the hypothesized root cause, with evidence and counterevidence;
-3. one bounded hypothesized skill change;
+3. one bounded hypothesized skill or environment change;
 4. a regression scenario first, followed by an unchanged holdout evaluation;
 5. a cost and quality comparison when those values were measured; and
 6. the authorized delivery path: the auditor suggests, the driver arranges an
@@ -159,6 +159,22 @@ Each proposal names:
 Keep evaluation data, candidate changes, and validation separate. This is an
 original Axstack workflow with no outside dependency or extra framework to
 install.
+
+The environment lens is optional for bounded proposals.
+Consider navigation pointers, automated checks, coding-standard placement for review, steering-file bloat and no-op instructions, tool economy, and information access.
+For steering-file trims, follow section 6's AGENTS.md and CLAUDE.md parity rule.
+Route repeated mistakes to axstack-correct as section 6 proposals.
+
+Before proposing a new check, report whether an existing check is unwired or broken.
+For a mechanical rule, prefer a deterministic check over a prose rule.
+
+For this lens, read only the evidence section 2 permits plus read-only AGENTS.md and CLAUDE.md, CI configuration and package scripts at the audited revision.
+Read no transcripts for the environment lens.
+For a finding without a pointer, report UNKNOWN.
+The environment lens makes no automatic edit.
+For the environment lens, keep the existing delivery path in field 6.
+
+Environment ideas paraphrased from Matt Pocock's [retro](https://github.com/mattpocock/skills/blob/6fd947921b935b7e1e69293a200400f0fdd5c15f/skills/engineering/retro/SKILL.md) (MIT).
 
 Omit any proposal that is not testable, does not preserve unchanged
 expectations, or would grant the auditor implementation or activation
