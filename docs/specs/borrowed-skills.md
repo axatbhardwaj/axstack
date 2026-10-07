@@ -1,6 +1,6 @@
 # Spec: borrowed skills — perf loop, audit environment lens, proof standards
 
-Status: Draft rev 3 (2026-10-07). Store: this repo Markdown file.
+Status: Approved rev 3 (2026-10-07, user "okay now this is settled"; reviewed at 47e66b9). Store: this repo Markdown file.
 Run: `20261007-borrow-skills`. The private run record holds the Align decisions
 and adviser receipts.
 
