@@ -76,6 +76,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Plan | [axstack-tickets](skills/axstack-tickets/SKILL.md) | Break approved scope into executable tasks. |
 | Build | [axstack-implement](skills/axstack-implement/SKILL.md) | Build with strict TDD and an author → review → repair loop. |
 | Build | [axstack-debug](skills/axstack-debug/SKILL.md) | Diagnose a bug with a failing check and hand off a bounded repair. |
+| Build | [axstack-perf](skills/axstack-perf/SKILL.md) | Route measured performance work to Debug, Improve, or Implement. |
 | Verify | [axstack-review](skills/axstack-review/SKILL.md) | Review a PR or bounded codebase at an exact revision. |
 | Verify | [axstack-improve](skills/axstack-improve/SKILL.md) | Find evidenced codebase improvements without editing code. |
 | Verify | [axstack-audit](skills/axstack-audit/SKILL.md) | Measure a run's outcomes and evidence gaps. |

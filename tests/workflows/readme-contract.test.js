@@ -19,7 +19,7 @@ test('README shows the workflow and groups linked skills by layer', () => {
     .not.toContain('axstack-improve');
 
   const linkedSkills = [...skills.matchAll(/\[axstack-[^\]]+\]\((skills\/[^)]+\/SKILL\.md)\)/g)];
-  expect(linkedSkills).toHaveLength(16);
+  expect(linkedSkills).toHaveLength(17);
   for (const [, path] of linkedSkills) expect(existsSync(`${root}/${path}`), path).toBe(true);
 });
 
@@ -29,6 +29,14 @@ test('correct is discoverable in the README table and workflow direct routes', (
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   const direct = workflows.slice(workflows.indexOf('Direct routes need'), workflows.indexOf('Small, clear'));
   expect(direct).toContain('`axstack-correct`');
+});
+
+test('perf is discoverable as a routed skill in README and workflows', () => {
+  const row = readme.split('\n').find((line) => line.includes('[axstack-perf]'));
+  expect(row).toMatch(/^\| Build \| \[axstack-perf\]\(skills\/axstack-perf\/SKILL\.md\)/);
+  const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
+  const direct = workflows.slice(workflows.indexOf('Direct routes need'), workflows.indexOf('Small, clear'));
+  expect(direct).toContain('[axstack-perf](../skills/axstack-perf/SKILL.md)');
 });
 
 test('README explains four failure modes', () => {
