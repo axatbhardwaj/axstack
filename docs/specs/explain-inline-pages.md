@@ -1,6 +1,6 @@
 # Spec: explain answers with inline T3 pages
 
-Status: Draft rev 4 (2026-10-07). Store: this repo Markdown file.
+Status: Approved rev 4 (2026-10-07, user "proceed"; content reviewed at f300a7e, sha256 a7c3736f…7b9c). Store: this repo Markdown file.
 Run: `20261007-explain-t3-inline-html`. The private run record holds the Align
 decisions, adviser receipts, and host evidence.
 Baseline: `2975fd5`.
