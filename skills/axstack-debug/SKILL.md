@@ -24,6 +24,12 @@ against environment variables so credentials never appear in what is shown.
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 
+For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
+For a performance regression, freeze the workload, command and environment before the baseline.
+For a performance regression, rank hypotheses in mantra order.
+For a performance regression, hand off the repair to `axstack-implement` with real red-to-green evidence.
+For performance work, hand off without committing.
+
 ## Phases
 
 Each phase has an observable completion criterion. Skip one only with a

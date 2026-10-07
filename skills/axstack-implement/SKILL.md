@@ -86,6 +86,11 @@ Size alone never requires user approval.
 
 ## 3. Establish test-first evidence
 
+For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
+For performance work, run the change loop.
+For an optimization without new behavior, use the structure-preserving path with the same checks green before and after plus the measured delta.
+For performance work with new behavior, run a failing check first.
+
 Use the normal behavior path unless the accepted improvement scope is
 explicitly marked **structure-preserving**, or the accepted scope explicitly
 authorizes **F repairs**. The author never chooses those exceptions.

@@ -29,6 +29,10 @@ In mixed fan-out retain a Codex and a Claude seat or hold the affected work.
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 
+For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
+For performance work, discovery remains report-only.
+For performance work, rank candidates in mantra order.
+
 ## 1. Bound discovery
 
 1. Start with the user's named subsystem or pain. Otherwise inspect recent
