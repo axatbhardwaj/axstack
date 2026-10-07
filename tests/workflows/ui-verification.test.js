@@ -9,6 +9,8 @@ const credit = 'https://github.com/cursor/plugins/blob/d0ef80d86795816da932a1534
 // binding, not user paths, observed effects, dry-run skips or surviving cleanup.
 // Mutate real-source sentences in memory; no production test hook or file writes.
 const rules = [
+  ['verifier candidate and page proof scope', [/apply|use/i, /standards/i, /verifier/i, /candidate checks/i, /inline-page interaction pass/i],
+    [/apply|use/gi, 'waive'], 'Use these standards for verifier candidate checks and the inline-page interaction pass.'],
   ['real user path', [/drive|exercise/i, /real user path/i],
     [/real user path/gi, 'internal setter path'], 'Exercise the real user path.'],
   ['action, state and effects', [/capture|record/i, /action/i, /resulting state|outcome/i, /side effects/i],

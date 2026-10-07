@@ -44,11 +44,40 @@ for (const [name, sentence] of pins) {
 for (const [path, sentence] of [
   ...pins.filter(([name]) => ['temporary evidence guard', 'temporary path validation'].includes(name))
     .map(([, sentence]) => ['skills/axstack/references/workspace-hygiene.md', sentence]),
-  ...['skills/axstack-explain/references/visual-qa.md', 'skills/axstack/references/ui-verification.md']
-    .map((path) => [path, 'Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.']),
+  ['skills/axstack-explain/references/visual-qa.md', 'Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.'],
   ['skills/axstack/references/run-record.md', 'Each dispatch row must record the provider/model echo, configuration read-back, and post-completion HEAD/porcelain check result.'],
 ]) test(`T3 gate safety in ${path}: ${sentence}`, () => {
   expect(exactSentences(read(path))).toContain(sentence);
+});
+
+// Candidate isolation stays mandatory; standalone pages have a different artifact boundary.
+test('T3 UI candidate checks retain delegated checkout and private outputs', () => {
+  const ui = sentences(read('skills/axstack/references/ui-verification.md')).join('. ');
+  checkRule(ui, (text) => requires(text, /candidate.*browser and visual checks/i,
+    /must|shall/i, /delegated.*axstack-ui-verifier/i, /own detached checkout/i),
+    'Candidate browser and visual checks shall run in the delegated axstack-ui-verifier in its own detached checkout.',
+    [[/candidate/i, 'standalone page'], [/own detached checkout/i, 'driver worktree']]);
+  checkRule(ui, (text) => prohibits(text, /never the driver worktree/i,
+    /outputs/i, /private evidence folder/i),
+    'Outputs belong in the private evidence folder, never the driver worktree.',
+    [[/never the driver worktree/i, 'also the driver worktree']]);
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text,
+    /UI verifier/i, /candidate checks/i, /page without a candidate/i, /UI verification/i),
+    'The UI verifier checkout row covers candidate checks, while a page without a candidate follows UI verification.',
+    [[/candidate checks/i, 'all pages']]);
+});
+
+// Publication belongs to the driver; preview permission does not grant it.
+test('T3 dispatch briefs prohibit worker html_render and allow html_preview', () => {
+  const text = sentences(runtime()).join('. ');
+  checkRule(text, (source) => prohibits(source, /never call|do not call/i,
+    /every dispatch brief/i, /must|shall/i, /state|say/i, /dispatched roles/i, /html_render/i),
+    'Every dispatch brief shall say that dispatched roles do not call html_render.',
+    [[/never call|do not call/i, 'always call'], [/every dispatch brief/i, 'some dispatch briefs']]);
+  checkRule(text, (source) => prohibits(source, /may (?:call|use)/i,
+    /dispatched roles/i, /html_preview/i),
+    'Dispatched roles may use html_preview.',
+    [[/may (?:call|use)/i, 'must never call']]);
 });
 
 // Every other instruction uses sentence-scoped concepts and the shared denial

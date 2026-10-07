@@ -130,9 +130,12 @@ configuration; unrelated configurations remain eligible.
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
+
+The UI verifier checkout row applies to candidate checks, while a page without
+a candidate follows [UI verification](ui-verification.md).
 
 The driver must be the sole run-record writer and enforce one writer per
 candidate; it never writes tracked candidate source or tests or repairs an author's source.
@@ -143,6 +146,8 @@ The current chat/driver has no role row in any preset.
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.
 Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
+Every dispatch brief must state that dispatched roles never call `html_render`.
+Dispatched roles may call `html_preview`.
 
 The branch must be `axstack/<run>/<role>/<task>-a<n>`; lowercase each segment
 and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its

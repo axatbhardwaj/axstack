@@ -98,6 +98,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // inline page routing and checks; always-loaded unchanged.
   // 20261007-explain-t3-inline-html T1 repair1: +80 measured aggregate bytes
   // for visual QA on requested artifacts; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(351312);
+  // 20261007-explain-t3-inline-html T2: +1527 measured aggregate bytes for
+  // preview exceptions, page verification and dispatch publication limits; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T2 rebase2: +92 measured aggregate bytes
+  // for explicit verifier proof scope on candidate checks and inline pages; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(352931);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });
