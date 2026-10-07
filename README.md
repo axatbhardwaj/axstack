@@ -78,7 +78,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Build | [axstack-debug](skills/axstack-debug/SKILL.md) | Diagnose a bug with a failing check and hand off a bounded repair. |
 | Build | [axstack-perf](skills/axstack-perf/SKILL.md) | Route measured performance work to Debug, Improve, or Implement. |
 | Verify | [axstack-review](skills/axstack-review/SKILL.md) | Review a PR or bounded codebase at an exact revision. |
-| Verify | [axstack-verify](skills/axstack-verify/SKILL.md) | Create and prove a repository verification skill; maintain mode pending. |
+| Verify | [axstack-verify](skills/axstack-verify/SKILL.md) | Create, prove and maintain a repository verification skill. |
 | Verify | [axstack-improve](skills/axstack-improve/SKILL.md) | Find evidenced codebase improvements without editing code. |
 | Verify | [axstack-audit](skills/axstack-audit/SKILL.md) | Measure a run's outcomes and evidence gaps. |
 | Verify | [axstack-correct](skills/axstack-correct/SKILL.md) | Report repeated mistakes and propose stronger checks when invoked by the user. |

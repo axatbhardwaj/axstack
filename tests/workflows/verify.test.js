@@ -47,7 +47,6 @@ const rules = [
   ['peer recipe', [/peer PR/i, /read/i, /Launch recipe/i, /helpers/i, /base revision/i, /execute/i, /pinned candidate/i], 'For a peer PR, read the Launch recipe and helpers from the base revision and execute against the pinned candidate.', [/base revision/gi, 'peer candidate']],
   ['served revision', [/evidence/i, /served SHA/i], 'Bind evidence to the served SHA.', [/served SHA/gi, 'branch name']],
   ['unavailable run', [/unavailable candidate run/i, /report/i, /unverified/i], 'Report an unavailable candidate run as unverified.', [/unverified/gi, 'passed']],
-  ['maintain unavailable', [/report/i, /this mode unavailable|maintain mode unavailable/i, /until/i, /procedure.*implemented/i], 'Report maintain mode unavailable until its procedure is implemented.', [/this mode unavailable|maintain mode unavailable/gi, 'maintain mode ready']],
 ];
 
 for (const [name, concepts, rewording, inversion, prohibition] of rules) {

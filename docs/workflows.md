@@ -23,7 +23,7 @@ immediately before dispatch or account re-selection.
 Direct routes need no spec ceremony:
 
 - [axstack-verify](../skills/axstack-verify/SKILL.md) routes verification-skill
-  creation through Implement; maintain mode follows in the next delivery task.
+  creation and maintenance through Implement.
   A single-behavior check uses an existing `verify-<app>` skill or UI verification
   delegation. Creation keeps Implement's scope identity requirements.
 - [axstack-perf](../skills/axstack-perf/SKILL.md) routes performance work to

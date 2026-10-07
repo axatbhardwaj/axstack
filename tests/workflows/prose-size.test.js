@@ -92,6 +92,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // skill + 81 routing); +81 always-loaded routing bytes.
   // 20261007-borrow-skills T5 repair1: +83 measured aggregate bytes for
   // fully qualified feature index and per-feature paths; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(343839);
+  // 20261007-borrow-skills T6: +3507 measured aggregate bytes (2579 maintain
+  // skill + 464 implement + 464 UI integration); always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(347346);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

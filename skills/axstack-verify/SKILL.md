@@ -10,7 +10,7 @@ Usage: `/axstack-verify create` or `/axstack-verify maintain`
 Route single-behavior requests to an existing `verify-<app>` skill or
 [UI verification](../axstack/references/ui-verification.md) delegation.
 Never use create for single-behavior requests.
-Deliver create through `axstack-implement` with one writer and one PR.
+Deliver create and maintain through `axstack-implement` with one writer and one PR.
 The driver owns scope and dispatch under Implement's standing contracts.
 
 ## Create
@@ -95,8 +95,57 @@ The exception covers the generated content's executed proof only.
 
 ## Maintain
 
-Maintain mode is reserved for the next delivery task.
-Report this mode unavailable until its procedure is implemented.
+Locate the existing `verify-<app>` skill and its feature map.
+Edit only the verification skill's own directory.
+Never edit product code or fix the build.
+Never launch a parallel source wave.
+Never schedule maintain runs.
+Follow [attempt isolation](#isolate-every-attempt) for both modes.
+For a failing build, report it and hold live driving.
+
+### Reconcile the map
+
+Check index hygiene against `.agents/skills/verify-<app>/features/README.md` and sibling files for missing, extra, duplicate and dead entries.
+Read each mapped feature from source and record entry points with citations.
+Report omitted entry points with source paths separately from passes.
+Classify each gap as doc drift, harness gap or product regression:
+
+- Doc drift: the map differs from intended source behavior.
+  For doc drift, fix the map.
+- Harness gap: working behavior cannot be driven by the recipe.
+  For a harness gap, fix the recipe.
+- Product regression: the app fails its intended behavior.
+  For a product regression, report it to the driver, which routes it to `axstack-debug`.
+  Never fix a product regression in docs.
+
+### Prove the map
+
+Drive every mapped feature live even when source looks clean.
+Use the skill's Launch recipe for an isolated instance.
+Run doctor before each drive.
+The author drives only non-browser surfaces.
+Delegate browser drives through
+[UI verification](../axstack/references/ui-verification.md) to `axstack-ui-verifier`
+with the feature file path in the brief.
+Capture actions, resulting states and side effects under its proof standards.
+Report unreachable prerequisites with attempted routes separately from passes.
+Fix a missing prerequisite in the map as doc drift.
+Clean up after every failed attempt.
+Retry once after a drift fix.
+If the retry fails, report `blocked` and hold acceptance.
+Re-drive each corrected recipe live before returning it.
+Keep helpers executable with their invocation documented in the skill body.
+After the final drive, clean up owned resources.
+Confirm evidence survives each cleanup in the private evidence folder.
+
+### Return the outcome
+
+Report `clean` only when every mapped feature has source and live coverage with successful drives and zero corrections.
+Report `changed` for one PR of proven corrections.
+Report `blocked` when coverage cannot finish or corrections cannot ship safely.
+Never report incomplete mapped coverage as `clean`.
+Return the feature coverage, gaps, proof commands, evidence paths and cleanup confirmation in the implementation receipt.
 
 Ideas paraphrased from pstack's
-[create-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/create-verification-skill/SKILL.md) (MIT).
+[create-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/create-verification-skill/SKILL.md) (MIT) and
+[maintain-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/maintain-verification-skill/SKILL.md) (MIT).

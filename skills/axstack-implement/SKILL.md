@@ -172,6 +172,14 @@ evidence through [UI verification](../axstack/references/ui-verification.md)
 when relevant. Name every unavailable OS, harness, credential, or other
 boundary instead of implying coverage.
 
+Use a present `verify-<app>` skill for affected behavior.
+If a PR changes a mapped feature, its author updates the feature file in the same PR.
+For a missing skill, add "suggest `axstack-verify create`" to the receipt's `Unverified:` line.
+Never generate a verification skill automatically.
+For a broken or stale recipe, report the gap.
+Never let a broken or stale recipe waive existing acceptance obligations.
+Keep browser recipes tool-neutral for the verifier.
+
 After the last change, pin the exact candidate revision and return this compact
 implementation receipt to the driver:
 
