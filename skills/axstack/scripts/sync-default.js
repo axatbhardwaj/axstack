@@ -73,7 +73,13 @@ export function commit(path, originalBytes, nextBytes) {
   if (from === to) return 'unchanged';
   const lock = `${path}.axstack-default-sync.lock`;
   try { fs.mkdirSync(lock, { mode: 0o700 }); }
-  catch (error) { if (error.code === 'EEXIST') return 'locked'; throw error; }
+  catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    if (Date.now() - fs.lstatSync(lock).mtimeMs <= 60000) return 'locked';
+    fs.rmdirSync(lock);
+    try { fs.mkdirSync(lock, { mode: 0o700 }); }
+    catch (retryError) { if (retryError.code === 'EEXIST') return 'locked'; throw retryError; }
+  }
   let temp;
   let fd;
   try {

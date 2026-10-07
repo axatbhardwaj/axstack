@@ -43,7 +43,10 @@ and save the actual `orchestrator_capabilities` JSON. Missing capability holds
 the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
-Installation creates no production schedule and adds no custom scheduler.
+Installation creates no production schedule and never enables a timer.
+Axstack allows one opt-in systemd user timer `axstack-default-sync` as the
+scheduler exception: it runs a stateless script that rewrites only T3
+`defaultModelSelection.instanceId`, has no workflow state and launches no agent.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -153,8 +156,9 @@ user-taken-over threads, uncertain publication, and unknown liveness hold
 retirement. No broad scratch deletion or forced worktree removal applies.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
 Requested peer reviews cover any accessible repository. T3 owns schedules,
-threads, runs, and delegated tasks; Axstack adds no queue engine, scheduler,
-cursor files, or historical runtime fallback.
+threads, runs, and delegated tasks; Axstack adds no queue engine, cursor files,
+or historical runtime fallback. The only scheduler exception is the opt-in
+systemd user timer described in [New-chat default sync](#new-chat-default-sync).
 
 ## Review automation
 
@@ -220,7 +224,7 @@ Disable with `systemctl --user disable --now axstack-default-sync.timer` and
 stop any active one-shot with `systemctl --user stop axstack-default-sync.service`.
 For rollback, then restore the saved default instance through T3 Settings.
 The exclusive sibling directory lock `<settings>.axstack-default-sync.lock`
-prevents overlapping commits; contention prints unchanged/locked. A forcibly
-killed writer can leave the lock behind: after stopping the service and verifying
-no manual sync process is running, remove that exact empty directory with
-`rmdir <settings>.axstack-default-sync.lock`, then retry the dry-run.
+prevents overlapping commits; fresh-lock contention prints unchanged/locked.
+A lock older than sixty seconds is treated as stale: the script removes that
+exact empty directory and retries acquisition once, recovering on a later tick
+from a killed writer. If the retry finds a fresh lock, it still prints locked.

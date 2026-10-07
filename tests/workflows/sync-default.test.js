@@ -208,6 +208,19 @@ test('an overlapping commit is skipped while the exclusive lock is held', () => 
   expect(readFileSync(f.settings, 'utf8')).toBe(original);
 });
 
+test('commit recovers a lock older than sixty seconds and writes the requested instance', () => {
+  const f = fixture();
+  const original = readFileSync(f.settings, 'utf8');
+  const next = original.replace('"instanceId": "claudeAgent"', '"instanceId": "claudeAlt"');
+  const lock = `${f.settings}.axstack-default-sync.lock`;
+  mkdirSync(lock);
+  const stale = new Date(Date.now() - 61000);
+  fs.utimesSync(lock, stale, stale);
+  expect(commit(f.settings, original, next)).toBe('updated');
+  expect(readFileSync(f.settings, 'utf8')).toBe(next);
+  expect(fs.existsSync(lock)).toBe(false);
+});
+
 test('commit preserves mode, fsyncs before rename, and reads the replaced settings back', () => {
   const f = fixture();
   fs.chmodSync(f.settings, 0o640);
