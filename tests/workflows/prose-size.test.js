@@ -116,6 +116,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // run-record authority wording; always-loaded unchanged.
   // 20261007-autonomy A3: +1250 measured aggregate bytes (+558 Align,
   // +386 Spec, +145 watch runtime, +161 T3 runtime); always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(356070);
+  // 20261007-autonomy A3 repair1: +477 measured aggregate bytes (+234 Align,
+  // +243 Spec) for default fresh receipts and the bounded delta exception.
+  expect(total).toBeLessThanOrEqual(356547);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

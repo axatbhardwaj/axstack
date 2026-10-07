@@ -19,6 +19,17 @@ function rule(name, source, concepts, rewording, inversions, negative) {
 
 for (const name of ['axstack-align', 'axstack-spec']) {
   const source = () => read(name);
+  rule(`${name} changed draft text defaults to fresh receipts`, source,
+    [/by default/i, /changed draft text|edited draft wording/i,
+      /fresh receipts|new receipts/i, /new revision|updated revision/i],
+    'By default, edited draft wording needs new receipts on the updated revision.',
+    [[/\b(?:requires|needs)\b/i, 'forgoes'], [/\bby default\b/i, 'Only when claimed material']]);
+  rule(`${name} delta confirmation is the only changed-text exception`, source,
+    [/only exception/i, /default/i, /each configured adviser seat/i,
+      /confirms/i, /driver.s meaning-preservation claim/i],
+    "The only exception to this default is delta confirmation, available only after each configured adviser seat confirms the driver's meaning-preservation claim.",
+    [[/\bonly exception\b/i, 'optional exception'],
+      [/\bonly after\b/i, 'before'], [/\beach configured adviser seat\b/i, 'one adviser seat']]);
   rule(`${name} each seat confirms a meaning-preserving delta`, source,
     [/driver claims/i, /edit/i, /preserves/i, /criterion/i, /scope/i, /decision/i,
       /instruction meaning/i, /each configured adviser seat/i, /on the delta/i,

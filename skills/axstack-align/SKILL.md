@@ -90,6 +90,9 @@ hold Align; safe fact work may continue without substitution.
 
 An optional adviser note may be deferred or rejected in a `Decisions` row with
 the draft unchanged; it needs no new adviser pair.
+By default, changed draft text requires fresh receipts on the new revision.
+The only exception to this default is delta confirmation, available only after
+each configured adviser seat confirms the driver's meaning-preservation claim.
 If the driver claims an edit preserves criterion, scope, decision and
 instruction meaning, each configured adviser seat confirms that claim on the
 delta, naming its prior receipt, the delta and the new revision.
