@@ -76,9 +76,11 @@ and [settlement/readback](../../axstack/references/workspace-hygiene.md),
 then advance every authorized unblocked next action in the same turn without
 another phase-start approval.
 On an automatic unchanged scheduled wake, end the turn with no text or notification
-only after local reconciliation confirms a healthy wait: positively known active
-work, no unconsumed terminal receipt, no pending local action in `Next:`, no new
-question or permission request, and no unresolved failure or liveness/coverage uncertainty.
+only after local reconciliation confirms nothing reportable: active work, when
+present, is positively known, no unconsumed terminal receipt, no pending local action
+in `Next:`, no new question or permission request, and no unresolved failure or liveness/coverage uncertainty.
+Settled worker-free waits on CI, external review, or a human step stay silent
+under the same reconciliation and reportability checks.
 Healthy running workers alone never force a message or notification.
 Answer requested status even during a healthy wait.
 Keep failed, held, or unknown work incomplete, never label it healthy.

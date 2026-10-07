@@ -142,6 +142,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-autonomy-369 T1: +3465 measured aggregate bytes (+1058 watch
   // runtime, +156 audit skill, +2251 audit schema) for reconciled quiet waits
   // and three measurements; preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(365402);
+  // 20261007-autonomy-369 T1 repair1: +156 measured watch-runtime bytes
+  // for settled worker-free silence; preserve 44-byte headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(365558);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

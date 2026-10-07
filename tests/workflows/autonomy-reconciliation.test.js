@@ -8,6 +8,14 @@ const record = 'axstack-audit/references/record.md';
 const read = (path) => readFileSync(`${import.meta.dir}/../../skills/${path}`, 'utf8')
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 
+// Independent weakening probes: prefix and suffix placements preserve the
+// obligation's concepts. The corpus is separate from the acceptance guard.
+const softenerProbes = [
+  [/^/, 'Optionally '], [/^/, 'Ideally, '], [/^/, 'Preferably, '], [/^/, 'Usually, '],
+  [/[.!?]?$/, ' when convenient'], [/[.!?]?$/, ' where practical'],
+  [/[.!?]?$/, ' when time permits'],
+];
+
 // Independent instruction boundaries missing from the old digest-only silence
 // check. These real-source mutations prove semantic sensitivity, not native T3.
 function rule(name, path, concepts, rewording, inversions, mask = /$^/) {
@@ -15,10 +23,11 @@ function rule(name, path, concepts, rewording, inversions, mask = /$^/) {
     const required = [...concepts, ...inversions.map(([direction]) => direction)];
     const accepts = (text) => sentences(text).some((sentence) =>
       required.every((concept) => concept.test(sentence))
-      && !/\b(?:unless|except)\b/i.test(sentence)
+      && !/\b(?:unless|except|optionally|ideally|preferably|usually|when (?:convenient|time permits)|where practical)\b/i.test(sentence)
       && requires(sentence.replace(mask, ''), /^/));
     checkRule(read(path), accepts, rewording,
-      [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient']], required);
+      [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient'],
+        ...softenerProbes], required);
   });
 }
 
@@ -31,16 +40,23 @@ rule('completion advances in the same turn under existing safeguards', watch,
   [/completed work/i, /existing acceptance/i, /settlement\/readback/i, /authorized unblocked next action/i],
   'Handle completed work under existing acceptance and settlement/readback, then advance every authorized unblocked next action in the same turn without another phase-start approval.',
   [[/\b(?:process|handle)\b/i, 'ignore'], [/\bthen advance\b/i, 'then defer'],
-    [/\bevery\b/i, 'selected'], [/same turn/i, 'next wake'], [/without another/i, 'only after another']]);
+    [/\bevery\b/i, 'selected'], [/same turn/i, 'next wake'], [/without another/i, 'only after another'],
+    [/without another/i, 'usually without another'], [/same turn/i, 'same turn when convenient']]);
 rule('quiet automatic waits require reconciled positive health and no pending work', watch,
   [/automatic unchanged scheduled wake/i, /end the turn/i, /no text or notification/i,
-    /local reconciliation/i, /healthy wait/i, /positively known active work/i,
+    /local reconciliation/i, /nothing reportable/i, /active work.*(?:when|if) present.*positively known/i,
     /no unconsumed terminal receipt/i, /no pending local action/i,
     /no new question or permission request/i, /no unresolved failure or liveness\/coverage uncertainty/i],
-  'On an automatic unchanged scheduled wake, end the turn with no text or notification only after local reconciliation confirms a healthy wait with positively known active work, no unconsumed terminal receipt, no pending local action, no new question or permission request, and no unresolved failure or liveness/coverage uncertainty.',
+  'On an automatic unchanged scheduled wake, end the turn with no text or notification only after local reconciliation confirms nothing reportable: active work if present is positively known, no unconsumed terminal receipt, no pending local action, no new question or permission request, and no unresolved failure or liveness/coverage uncertainty.',
   [[/only after/i, 'even before'], [/positively known/i, 'presumed'],
+    [/(?:when|if) present/i, 'whether present or absent'],
     [/no pending local action/i, 'pending local action allowed']],
   /no text or notification|no unconsumed terminal receipt|no pending local action|no new question or permission request|no unresolved failure or liveness\/coverage uncertainty/gi);
+rule('settled worker-free waits retain silence under the same checks', watch,
+  [/settled worker-free waits/i, /CI/i, /external review/i, /human step/i,
+    /reconciliation and reportability checks/i],
+  'Settled worker-free waits on CI, external review, or a human step remain quiet under the same reconciliation and reportability checks.',
+  [[/\b(?:stay silent|remain quiet)\b/i, 'emit waiting messages'], [/\bsame\b/i, 'relaxed']]);
 rule('healthy active workers alone do not force output', watch,
   [/healthy running workers/i, /alone/i, /never/i, /force/i, /message or notification/i],
   'Healthy running workers alone never force a message or notification.',
