@@ -43,7 +43,10 @@ and save the actual `orchestrator_capabilities` JSON. Missing capability holds
 the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
-Installation creates no production schedule and adds no custom scheduler.
+Installation creates no production schedule and never enables a timer.
+Axstack allows one opt-in systemd user timer `axstack-default-sync` as the
+scheduler exception: it runs a stateless script that rewrites only T3
+`defaultModelSelection.instanceId`, has no workflow state and launches no agent.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -153,8 +156,9 @@ user-taken-over threads, uncertain publication, and unknown liveness hold
 retirement. No broad scratch deletion or forced worktree removal applies.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
 Requested peer reviews cover any accessible repository. T3 owns schedules,
-threads, runs, and delegated tasks; Axstack adds no queue engine, scheduler,
-cursor files, or historical runtime fallback.
+threads, runs, and delegated tasks; Axstack adds no queue engine, cursor files,
+or historical runtime fallback. The only scheduler exception is the opt-in
+systemd user timer described in [New-chat default sync](#new-chat-default-sync).
 
 ## Review automation
 
@@ -171,3 +175,56 @@ These documents and their source-contract tests define expected decisions.
 Scenario fixtures are behavioral-evaluation inputs, not model-evaluation
 results, and neither form is live proof; activation still requires the native
 canary described by the operational contract.
+
+## New-chat default sync
+
+This opt-in stateless script rewrites only `defaultModelSelection.instanceId`
+in `~/.t3/userdata/settings.json`. It compares enabled accounts of the current
+Claude/Codex driver, without plan weights; it keeps the model, project overrides
+and every other settings byte. It never creates a missing default or refreshes
+OAuth tokens. Unknown usage or a missing reset clock holds the default, unless
+an excluded/unauthorized current account can escape to a known eligible sibling.
+The shared usage cache expires after five minutes; sync refuses stale usage for
+comparison. Any session/weekly window at 95% or a reached limit is excluded.
+
+Preview the decision and save the current instance ID for rollback:
+
+```sh
+bun ~/.agents/skills/axstack/scripts/sync-default.js --dry-run
+```
+
+Exit 0 prints one token-free JSON decision line; dry-run reports the proposed
+change without writing. `--settings <path>` selects a fixture or alternate file.
+`AXSTACK_SYNC_DEFAULT=0` is a no-op. Exit 1 reports malformed settings or a failed
+write. A sibling temp file preserves the settings mode and is fsynced before
+rename. The script checks original bytes immediately before rename and verifies
+bytes afterward. The accepted sub-ms race with an in-app T3 write can still lose
+that edit; a read-back mismatch is logged as an error rather than overwritten.
+
+After recording host-mutation authority, copy the shipped units and enable:
+
+```sh
+mkdir -p ~/.config/systemd/user
+cp ~/.agents/skills/axstack/systemd/axstack-default-sync.service ~/.config/systemd/user/axstack-default-sync.service
+cp ~/.agents/skills/axstack/systemd/axstack-default-sync.timer ~/.config/systemd/user/axstack-default-sync.timer
+systemctl --user daemon-reload
+systemctl --user enable --now axstack-default-sync.timer
+systemctl --user list-timers axstack-default-sync.timer
+journalctl --user -u axstack-default-sync.service
+```
+
+The first tick is about one minute after user-manager startup, then every ten
+minutes. `Persistent=true` is shipped; this monotonic timer does not replay
+missed calendar ticks. For a different skills root or Bun path, override
+`ExecStart`/`Environment` with `systemctl --user edit axstack-default-sync.service`.
+Operation after logout requires an authorized user-manager/linger setup.
+Installation never activates these units.
+
+Disable with `systemctl --user disable --now axstack-default-sync.timer` and
+stop any active one-shot with `systemctl --user stop axstack-default-sync.service`.
+For rollback, then restore the saved default instance through T3 Settings.
+The exclusive sibling directory lock `<settings>.axstack-default-sync.lock`
+prevents overlapping commits; fresh-lock contention prints unchanged/locked.
+A lock older than sixty seconds is treated as stale: the script removes that
+exact empty directory and retries acquisition once, recovering on a later tick
+from a killed writer. If the retry finds a fresh lock, it still prints locked.

@@ -66,7 +66,7 @@ test('picker environment is documented and linked from installation', () => {
     ['AXSTACK_CODEX_USAGE_URL', [/AXSTACK_CODEX_USAGE_URL/, /is/i, /test-only/i, /endpoint override/i],
       'AXSTACK_CODEX_USAGE_URL is a test-only endpoint override.'],
   ]) {
-    expect(picker, variable).toContain(variable);
+    expect(read('skills/axstack/scripts/account-usage.js'), variable).toContain(variable);
     checkRule(concepts(), (text) => requires(text, ...terms), rewording,
       [[/selects|\bis\b/i, 'does not select']], terms);
   }

@@ -133,12 +133,14 @@ test('run-record stays prose-only; the evidence helper has no runtime control', 
   expect(runtimeFiles.filter((path) => /run-record|progress-ledger|progress\.md/i.test(path))).toEqual([]);
   const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')).sort();
   expect(skillScripts).toEqual([
+    `${root}/skills/axstack/scripts/account-usage.js`,
     `${root}/skills/axstack/scripts/archive-evidence.js`,
     `${root}/skills/axstack/scripts/pick-instance.js`,
     `${root}/skills/axstack/scripts/pr-digest.js`,
     `${root}/skills/axstack/scripts/resolve-models.js`,
+    `${root}/skills/axstack/scripts/sync-default.js`,
   ].sort());
-  expect(readFileSync(skillScripts[0], 'utf8')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
+  expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
 });
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {

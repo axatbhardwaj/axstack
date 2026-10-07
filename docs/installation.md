@@ -88,6 +88,17 @@ An offline, Git-less, or failed clone still installs the skills, reports
 See [Account selection environment](concepts.md#account-selection-environment)
 for the picker cache directory and test-only usage endpoint variables.
 
+## Packaged scripts
+
+Run these with Bun from the installed `<skills-dir>/axstack/scripts/` directory:
+`resolve-models.js` (model IDs), `pick-instance.js` (dispatch account),
+`pr-digest.js` (PR discovery), `archive-evidence.js` (evidence archive), and
+`sync-default.js [--settings <path>] [--dry-run]` (New-chat account default).
+`account-usage.js` shares usage retrieval and the five-minute cache between
+picker and sync. The opt-in systemd user unit files ship in `axstack/systemd/`;
+installation copies them as assets and never enables the timer.
+See [Host operations](host-operations.md#new-chat-default-sync) for activation.
+
 ## Role presets
 
 The selected bundle input is one of:

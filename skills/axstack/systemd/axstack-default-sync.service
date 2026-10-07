@@ -1,0 +1,8 @@
+[Unit]
+Description=Keep the T3 New-chat default on the most abundant account
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+ExecStart=/usr/bin/env bun %h/.agents/skills/axstack/scripts/sync-default.js
