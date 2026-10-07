@@ -1,6 +1,6 @@
 # Spec: borrowed skills — perf loop, audit environment lens, proof standards
 
-Status: Draft rev 2 (2026-10-07). Store: this repo Markdown file.
+Status: Draft rev 3 (2026-10-07). Store: this repo Markdown file.
 Run: `20261007-borrow-skills`. The private run record holds the Align decisions
 and adviser receipts.
 
@@ -20,7 +20,7 @@ phase boundaries.
 | Q1 | Adopt three items: a measured performance loop, an environment lens in audit, and proof standards in UI verification. Defer the verification-skill generator. |
 | Q2 | Matt Pocock's `retro` becomes an optional environment lens in `axstack-audit` §5, not a new skill and not part of `axstack-correct`. |
 | Q3 | One shared reference, `skills/axstack/references/perf-loop.md`, loaded by `axstack-debug`, `axstack-improve` and `axstack-implement`. |
-| Q4 | Add a thin user-invoked `axstack-perf` skill as the named entry point. It loads `perf-loop.md` and routes; it owns no separate workflow. |
+| Q4 | Add a thin `axstack-perf` skill ("user-invoked" superseded by D3) as the named entry point. It loads `perf-loop.md` and routes; it owns no separate workflow. |
 | D1 | Accepted adviser points: frozen workload and harness sensitivity, target plus noise criterion plus finite attempt budget, rejected experiments recorded, unwired or broken guardrails checked before new checks are proposed, no transcript reading in audit. |
 | D2 | Rejected from pstack: parallel per-hypothesis writers (breaks one writer per candidate) and mandatory minimum iteration counts. |
 | D3 | `axstack-perf` stays model-invocable so routing can send "make X faster" to it (rev 1 made it user-only; both an adviser and diligence flagged the conflict). |
@@ -69,21 +69,25 @@ phase boundaries.
      optimization route.
 5. `axstack-perf` appears in the bundle, structural and README contracts,
    `routing.md` (a "make X faster" request routes to it) and
-   `docs/workflows.md`, matching how other user-invoked skills are listed.
+   `docs/workflows.md`, matching how other routed (model-invocable) skills are listed.
+
+6. Usage line: `/axstack-perf make the deploy step faster; target -30%`
+   routes to the matching phase with target, noise criterion and budget
+   recorded as acceptance checks.
 
 ### B. Audit environment lens
 
-6. `axstack-audit` §5 adds an optional environment lens, and §5 field 3
+7. `axstack-audit` §5 adds an optional environment lens, and §5 field 3
    becomes "one bounded hypothesized skill or environment change" with the
    other fields unchanged. Environment targets: navigation pointers,
    automated checks, coding-standard placement for review, steering-file
    bloat and no-op instructions, tool economy, and information access.
    Steering-file trims follow audit §6's AGENTS.md/CLAUDE.md parity rule;
    repeated mistakes stay with `axstack-correct`.
-7. Before proposing a new check, the auditor reports whether an existing check
+8. Before proposing a new check, the auditor reports whether an existing check
    is unwired or broken. A mechanical rule prefers a deterministic check over a
    prose rule.
-8. The lens reads the evidence audit already permits plus these read-only
+9. The lens reads the evidence audit already permits plus these read-only
    inputs at the audited revision: `AGENTS.md`/`CLAUDE.md`, CI configuration
    and package scripts. It reads no transcripts. A finding without a pointer
    is `UNKNOWN`. The lens makes no automatic edit and keeps the existing
@@ -91,22 +95,19 @@ phase boundaries.
 
 ### C. Proof standards
 
-9. `skills/axstack/references/ui-verification.md` adds proof standards: drive
+10. `skills/axstack/references/ui-verification.md` adds proof standards: drive
    the real user path; capture the action, the resulting state and side
    effects; verify dry-run claims by observing what they skip; keep evidence
    after cleanup.
 
 ### All
 
-10. Each behavior change has a prose-contract test under `tests/workflows/`
+11. Each behavior change has a prose-contract test under `tests/workflows/`
     that fails when the instruction is removed or inverted and survives
     rewording; full `bun test` passes. These tests prove the prose, not a
     runtime saving. `prose-size.test.js` ceilings rise only by the measured
     bytes added.
-12. Usage line: `/axstack-perf make the deploy step faster; target -30%`
-    routes to the matching phase with target, noise criterion and budget
-    recorded as acceptance checks.
-11. Each borrowed idea credits its source with a pinned URL and license where
+12. Each borrowed idea credits its source with a pinned URL and license where
     text is paraphrased.
 
 ## Exclusions
