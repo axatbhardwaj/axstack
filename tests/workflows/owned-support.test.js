@@ -86,12 +86,7 @@ test('owned-support: frontmatter name matches directory with description', () =>
   }
 });
 
-test('owned-support: explain advertises the approved intent exactly', () => {
-  const text = readSkill('axstack-explain');
-  expect(text).toContain(
-    'description: When understanding a system, change, or implementation gap, use axstack-explain to show how it works and what exists, is missing, or remains unverified.',
-  );
-});
+// Explain discovery and intent are semantic contracts in explain-diagram.test.js.
 
 test('owned-support: independently callable via shared references', () => {
   for (const name of OWNED) {
@@ -179,20 +174,14 @@ test('owned-support: research is source-first with verified boundaries', () => {
   expect(/data preset|confirm.*launch|availability.*launch/i.test(text), 'routes are data presets; live availability per shared launch').toBeTruthy();
 });
 
-test('owned-support: explain scales from direct answers to verified visuals', () => {
+test('owned-support: explain preserves evidence and publication boundaries', () => {
   const text = readSkill('axstack-explain');
   const lower = text.toLowerCase();
   for (const profile of ['axstack-explainer', 'axstack-explainer-review']) {
     expect(text.includes(profile), `explain must list route ${profile}`).toBeTruthy();
   }
-  expect(/simple[^.]*current chat|current chat[^.]*simple/i.test(text), 'simple explanations must stay in the current chat').toBeTruthy();
-  expect(/no mandatory agent|without.*agent|needs no.*agent/i.test(text), 'simple explanations must not require an agent').toBeTruthy();
-  expect(/compact diagram|diagram.*useful/i.test(text), 'simple output may use a compact diagram when useful').toBeTruthy();
-  expect(/self-contained html|requested artifact/i.test(text), 'visual must be self-contained HTML or the requested artifact').toBeTruthy();
-  expect(/explicit[\s\S]*theme|theme[\s\S]*explicit/i.test(text), 'explicit user theme must win').toBeTruthy();
-  expect(/dark/i.test(text), 'dark default theme must be stated').toBeTruthy();
-  expect(/desktop/i.test(text) && /mobile/i.test(text), 'visual QA must cover desktop and mobile rendering').toBeTruthy();
-  expect(/accessibility|reduced-motion|reduced motion/i.test(text), 'visual QA must cover interaction/accessibility/reduced-motion').toBeTruthy();
+  // Output routing and theme semantics live in explain-diagram.test.js.
+  // This support check retains the shared evidence boundaries.
   expect(/missing|unavailable/i.test(text), 'unavailable browser evidence must be reported, not fabricated').toBeTruthy();
   expect(/invalidate|exact artifact/i.test(text), 'changed artifact must invalidate affected review').toBeTruthy();
   expect(/publish/i.test(text), 'local output vs publish authority must be distinct').toBeTruthy();
@@ -250,11 +239,8 @@ test('owned-support: explain traces behavior without silently starting delivery'
   expect(/supersed[^.]*axstack-docs/i.test(text), 'new route must supersede a stale axstack-docs install').toBeTruthy();
 });
 
-test('owned-support: every HTML explanation triggers full exact-artifact QA', () => {
+test('owned-support: public explanation protects private evidence', () => {
   const text = readSkill('axstack-explain');
-  expect(/(?:any|every|the moment|when)[^.]*html[^.]*visual QA|html[^.]*full[^.]*visual QA/i.test(text), 'HTML must trigger full visual QA').toBeTruthy();
-  expect(/desktop/i.test(text) && /mobile/i.test(text), 'HTML QA must cover desktop and mobile').toBeTruthy();
-  expect(/interaction/i.test(text) && /accessibility/i.test(text) && /reduced-motion|reduced motion/i.test(text), 'HTML QA must cover interaction, accessibility, and reduced motion').toBeTruthy();
   expect(/public[\s\S]{0,240}(private|privacy|credential|identifier)/i.test(text), 'public artifacts must protect private data').toBeTruthy();
 });
 

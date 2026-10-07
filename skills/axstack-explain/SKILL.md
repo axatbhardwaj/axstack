@@ -1,6 +1,6 @@
 ---
 name: axstack-explain
-description: When understanding a system, change, or implementation gap, use axstack-explain to show how it works and what exists, is missing, or remains unverified.
+description: When the user asks how, why, explain, or show, says they do not understand, a spec is being finalized, or you judge they need to understand something, use axstack-explain to show how it works and what exists, is missing, or remains unverified.
 ---
 
 # Explain
@@ -71,24 +71,27 @@ Diagram never calls explain.
    Each card has at most 40 words and cites its source, as defined in
    [Archify](../axstack-diagram/references/archify.md).
    Count node labels, headings, captions, and all non-card text.
-2. For a simple request, answer concisely in the current chat. Use a compact
-   diagram when useful. This needs no mandatory agent or intermediate artifact.
-   For simple chat answers, never dispatch an agent when applying its Mermaid rules inline.
-3. For a complex visual, use the configured `axstack-explainer` role to create
-   self-contained HTML through the archify path by default.
-   For a complex visual, honor an explicitly requested artifact format.
-   An explicit user theme wins; otherwise use the dark default.
+2. Use chat only for an explicit chat request, an answer without a Q2 trigger,
+   or inline-page fallback. Q2 triggers are the conditions in the description.
+   Use a compact diagram when useful.
+   For chat answers, never dispatch an agent when applying its Mermaid rules inline.
+3. For a Q2 trigger, create an inline page by default.
+   Honor an explicitly requested artifact format.
+   Use archify only on an explicit viewer request, through the configured
+   `axstack-explainer`. The reply adds only what the page omits.
 4. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
 
 ## 3. Verify and deliver
 
-1. Any HTML explanation requires the full [visual QA
-   checklist](references/visual-qa.md): actual desktop and mobile rendering,
-   interaction, accessibility, and reduced-motion checks where relevant.
-2. For archify output, require the configured independent `axstack-explainer-review`;
-   for other artifacts, use it when warranted. Bind it to the exact artifact identity.
+1. For inline pages, follow [Inline pages](references/inline-pages.md).
+   For archify, follow [Visual QA](references/visual-qa.md).
+2. Require independent `axstack-explainer-review` for consequential or complex
+   claims, archify output, or on request.
+   Consequential claims include gap or missing-claim reports, blast-radius
+   safety facts, and spec readbacks.
+   Bind it to the exact artifact identity.
    Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet
    author high and reviewer high sessions are allowed for explanations as
