@@ -114,6 +114,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // +277 Spec, +56 Watch) for standing release and merge carry-forward; always-loaded unchanged.
   // 20261007-autonomy A2 repair1: -2 measured aggregate bytes for
   // run-record authority wording; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(354820);
+  // 20261007-autonomy A3: +1250 measured aggregate bytes (+558 Align,
+  // +386 Spec, +145 watch runtime, +161 T3 runtime); always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(356070);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

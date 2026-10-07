@@ -89,11 +89,20 @@ rule('open PRs have no expiry or reauthorization', runtime,
   [/chat-run watch/i, /expire/i, /re-authorization/i, /PRs remain open/i],
   'The chat-run watch never expires or waits for re-authorization while PRs remain open.',
   [/never/i, 'always'], /never/i);
-rule('quiet cadence waits seven days and settled work', runtime,
-  [/7 days/i, /no event/i, /any watched PR/i, /only/i, /no unsettled launched work/i,
-    /cadence/i, /\b(?:change|goes|switch)\b/i],
-  'After 7 days with no event on any watched PR, and only with no unsettled launched work, the wake cadence goes from 5 to 60 minutes.',
-  [/5 to 60 minutes/i, '60 to 5 minutes'], /no event|no unsettled launched work/gi);
+for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
+  rule(`human-only wait slows at once (${path})`, path,
+    [/only/i, /user decision/i, /human-only step/i, /user merge/i,
+      /no unsettled (?:launched work|worker)/i, /no PR needing watch events/i,
+      /cadence/i, /at once|immediately/i],
+    'When the run waits only on a user decision or a human-only step, including a user merge, with no unsettled worker and no PR needing watch events, immediately change the run watch cadence to 60 minutes.',
+    [/\b60 minutes\b/i, '5 minutes'], /no unsettled (?:launched work|worker)|no PR needing watch events/gi);
+  rule(`work restart restores normal cadence (${path})`, path,
+    [/work restarts|work resumes/i, /cadence/i],
+    'When work resumes, restore the normal 5-minute cadence.',
+    [/\b(?:normal 5-minute|5-minute normal)\b/i, 'slow 60-minute']);
+  rule(`native PR watches stay (${path})`, path, [/native PR watches/i],
+    'Retain native PR watches.', [/\b(?:keep|retain)\b/i, 'remove']);
+}
 rule('next PR event restores five minutes', runtime,
   [/next event/i, /watched PR/i, /cadence/i,
     /\b(?:restore|return|reset)\b[^.]*\b5 minutes\b|\bcadence (?:becomes|returns to|is reset to) 5 minutes\b/i],
@@ -104,6 +113,10 @@ rule('resumed launched work restores five minutes', runtime,
     /\b(?:restore|resume|return)\b[^.]*\b5-minute cadence\b|\b5-minute cadence (?:applies|resumes|returns)\b/i],
   'While launched work is unsettled, the 5-minute cadence applies.',
   [/5-minute/i, '60-minute']);
+rule('healthy unchanged complete passes stay quiet', runtime,
+  [/healthy/i, /unchanged/i, /complete pass/i, /notification/i],
+  'A healthy unchanged complete pass emits no notification.',
+  [/\bno\b/i, 'a'], /\bno\b/i);
 rule('native lifetime re-arms at a wake', runtime,
   [/native schedule/i, /lifetime/i, /driver/i, /at a wake/i],
   'If the native schedule has a lifetime, the driver re-arms it at a wake.',

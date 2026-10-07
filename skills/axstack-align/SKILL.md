@@ -52,7 +52,10 @@ substantial; apply routing's existing size reassessment rule.
    scenarios without using a fixed questionnaire or padding the interview. An
    empty ready frontier means completion only when no material choice remains;
    otherwise report the blocking research and continue safe fact work.
-3. **Ask a focused round.** Present one to three independent questions; present
+3. **Ask a focused round.** Ask only unresolved, consequential preferences or
+   authority. Apply preferences fixed by user instructions, `AGENTS.md`, or a
+   prior decision within its scope, and list them as defaulted in the read-back.
+   Defaults never grant authority. Present one to three independent questions; present
    one alone when it is complex or governs dependent branches. Number questions
    cumulatively as `Q1`, `Q2`, and so on. Recommend a choice for each with a
    short reason and trade-off, then wait for the user's answers and recompute
@@ -86,9 +89,13 @@ and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
 hold Align; safe fact work may continue without substitution.
 
 An optional adviser note may be deferred or rejected in a `Decisions` row with
-the draft unchanged; it needs no new adviser pair. Changed draft text, a
-blocking finding, or a high-stakes decision requires fresh receipts on the new
-revision.
+the draft unchanged; it needs no new adviser pair.
+If the driver claims an edit preserves criterion, scope, decision and
+instruction meaning, each configured adviser seat confirms that claim on the
+delta, naming its prior receipt, the delta and the new revision.
+If a seat disagrees, a blocking finding exists, a high-stakes decision arises,
+or meaning changes, obtain full fresh review on the new revision.
+An unavailable adviser seat holds the affected phase.
 
 ## Use the brainstorm synthesis
 
@@ -105,8 +112,9 @@ remaining budget for the highest-value branches and never exceed 35 questions
 in the initial pass. Stop earlier as soon as no unresolved material choice
 remains; 20 is not a quota.
 
-At completion or the 35-question cap, read back the result and ask whether the
-user wants deeper refinement. Ask no further interview or refinement questions
+At completion or the 35-question cap, read back the result.
+Never make a deeper-refinement offer a completion requirement.
+Ask no further interview or refinement questions
 without opt-in; this does not replace required spec approval or a clarification
 prompt when a configured model is unavailable. An opted-in refinement names
 one area and a separate finite budget of at most five questions; it preserves

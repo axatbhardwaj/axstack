@@ -58,9 +58,13 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    substitution. A reviewable draft covers the agreed outcome, acceptance
    criteria, exclusions, and both adviser receipts or the reported hold.
    An optional adviser note may be deferred or rejected in a `Decisions` row
-   with the draft unchanged; it needs no new adviser pair. Changed draft text,
-   a blocking finding, or a high-stakes decision requires fresh receipts on
-   the new revision.
+   with the draft unchanged; it needs no new adviser pair.
+   If the driver claims an edit preserves criterion, scope, decision and
+   instruction meaning, each configured adviser seat confirms that claim on
+   the delta, naming its prior receipt, the delta and the new revision.
+   If a seat disagrees, a blocking finding exists, a high-stakes decision arises,
+   or meaning changes, obtain full fresh review on the new revision.
+   An unavailable adviser seat holds the affected phase.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
    require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`
@@ -74,7 +78,8 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    Approval binds to that revision, not to the page.
    Name the draft revision covered by each adviser receipt at the checkpoint.
    If draft text changed and an adviser receipt covers an older revision, hold
-   approval until fresh receipts cover the presented revision.
+   approval until fresh receipts cover the presented revision, using delta
+   confirmations only under step 3's meaning-preserving rule.
    Except for high-stakes decisions, a change confined to a `Decisions` row
    reuses adviser receipts only while draft text, evidence, scope, and question
    remain unchanged.

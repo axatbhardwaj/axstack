@@ -24,7 +24,7 @@ test('optional adviser notes are dispositioned without changing the draft', () =
     const skill = prose(path);
     expect(skill).toMatch(/optional adviser note[^.]*deferred or rejected[^.]*`Decisions` row[^.]*draft unchanged/i);
     expect(skill).toMatch(/optional adviser note[^.]*no new adviser pair/i);
-    expect(skill).toMatch(/changed draft text[^.]*blocking finding[^.]*high-stakes decision[^.]*fresh receipts[^.]*new revision/i);
+    // Changed-text review and meaning-preserving deltas: autonomy-planning.test.js.
   }
 });
 

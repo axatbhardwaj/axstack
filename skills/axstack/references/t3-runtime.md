@@ -250,8 +250,11 @@ Route native PR wake events through watch §4 and the unchanged §5 readiness pr
 
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
-Keep the schedule cadence unchanged while a native PR watch is active,
-including the existing 7-day quiet relaxation.
+When the run waits only on a user decision or a human-only step, including a
+user merge, with no unsettled worker and no PR needing watch events, change
+the run watch cadence to 60 minutes at once.
+When work restarts, restore the normal 5-minute cadence.
+Keep native PR watches.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.
