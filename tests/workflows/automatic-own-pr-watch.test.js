@@ -15,8 +15,8 @@ const reviewInversions = {
   'explicit user publication boundary wins': 'Explicit user stop-after-publication and observation-only requests are overridden by the watch.',
   'driver retains sole ownership and record': 'The driver hands off its role as single owner and sole run-record writer.',
   'cards and hold stay in driver thread': 'Move merge-card replies and `hold` out of the driver thread.',
-  'next PR event restores ten minutes': 'On the next event on a watched PR, keep the wake cadence at 60 minutes instead of 10 minutes.',
-  'resumed launched work restores ten minutes': 'If launched work becomes unsettled, drop the 10-minute cadence.',
+  'next PR event restores five minutes': 'On the next event on a watched PR, keep the wake cadence at 60 minutes instead of 5 minutes.',
+  'resumed launched work restores five minutes': 'If launched work becomes unsettled, drop the 5-minute cadence.',
   'repairs stay with the author': "The driver takes rebases and review feedback from the PR's author and does the repair itself.",
 };
 
@@ -92,18 +92,18 @@ rule('open PRs have no expiry or reauthorization', runtime,
 rule('quiet cadence waits seven days and settled work', runtime,
   [/7 days/i, /no event/i, /any watched PR/i, /only/i, /no unsettled launched work/i,
     /cadence/i, /\b(?:change|goes|switch)\b/i],
-  'After 7 days with no event on any watched PR, and only with no unsettled launched work, the wake cadence goes from 10 to 60 minutes.',
-  [/10 to 60 minutes/i, '60 to 10 minutes'], /no event|no unsettled launched work/gi);
-rule('next PR event restores ten minutes', runtime,
+  'After 7 days with no event on any watched PR, and only with no unsettled launched work, the wake cadence goes from 5 to 60 minutes.',
+  [/5 to 60 minutes/i, '60 to 5 minutes'], /no event|no unsettled launched work/gi);
+rule('next PR event restores five minutes', runtime,
   [/next event/i, /watched PR/i, /cadence/i,
-    /\b(?:restore|return|reset)\b[^.]*\b10 minutes\b|\bcadence (?:becomes|returns to|is reset to) 10 minutes\b/i],
-  'On the next event on a watched PR, the wake cadence becomes 10 minutes.',
-  [/10 minutes/i, '60 minutes']);
-rule('resumed launched work restores ten minutes', runtime,
+    /\b(?:restore|return|reset)\b[^.]*\b5 minutes\b|\bcadence (?:becomes|returns to|is reset to) 5 minutes\b/i],
+  'On the next event on a watched PR, the wake cadence becomes 5 minutes.',
+  [/5 minutes/i, '60 minutes']);
+rule('resumed launched work restores five minutes', runtime,
   [/launched work/i, /unsettled/i, /cadence/i,
-    /\b(?:restore|resume|return)\b[^.]*\b10-minute cadence\b|\b10-minute cadence (?:applies|resumes|returns)\b/i],
-  'While launched work is unsettled, the 10-minute cadence applies.',
-  [/10-minute/i, '60-minute']);
+    /\b(?:restore|resume|return)\b[^.]*\b5-minute cadence\b|\b5-minute cadence (?:applies|resumes|returns)\b/i],
+  'While launched work is unsettled, the 5-minute cadence applies.',
+  [/5-minute/i, '60-minute']);
 rule('native lifetime re-arms at a wake', runtime,
   [/native schedule/i, /lifetime/i, /driver/i, /at a wake/i],
   'If the native schedule has a lifetime, the driver re-arms it at a wake.',

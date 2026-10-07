@@ -217,7 +217,7 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true`, `everyMs:600000` is armed and
+`schedule_task` with `bindToCurrentThread:true`, `everyMs:300000` is armed and
 its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
@@ -243,7 +243,7 @@ calls `watch_pull_request` again.
 This includes a stop after T3 could not read the PR for 15 minutes.
 Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
 
-If `watch_pull_request` is unavailable, fall back to the bound 10-minute schedule
+If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
 Keep the schedule cadence unchanged while a native PR watch is active,
 including the existing 7-day quiet relaxation.

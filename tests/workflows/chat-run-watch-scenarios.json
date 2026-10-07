@@ -49,8 +49,8 @@
     },
     {
       "id": "t3-bound-driver-wake",
-      "input": "The original T3 driver owns two open PRs and a recorded bound 600000ms schedule; one required check fails and a thread remains unresolved.",
-      "expected": "The bound T3 schedule resumes the original driver every ten minutes; each wake reconciles unsettled runs and runs the authorized maintenance loop. Delete only its recorded ID and list_scheduled_tasks to verify absence after completion."
+      "input": "The original T3 driver owns two open PRs and a recorded bound 300000ms schedule; one required check fails and a thread remains unresolved.",
+      "expected": "The bound T3 schedule resumes the original driver every five minutes; each wake reconciles unsettled runs and runs the authorized maintenance loop. Delete only its recorded ID and list_scheduled_tasks to verify absence after completion."
     },
     {
       "id": "t3-watch-deletion-hold",

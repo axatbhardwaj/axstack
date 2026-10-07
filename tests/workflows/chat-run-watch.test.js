@@ -125,9 +125,9 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });
 
-test('own open PRs wake the original T3 driver every ten minutes', () => {
-  expect(watch()).toMatch(/own open PRs[^.]*every 10 minutes by default/i);
-  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:600000`');
+test('own open PRs wake the original T3 driver every five minutes', () => {
+  expect(watch()).toMatch(/own open PRs[^.]*every 5 minutes by default/i);
+  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:300000`');
   expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
   expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
@@ -137,10 +137,10 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
   expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*user cancels/i);
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
-  const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i, /every 10 minutes/i, /default/i];
+  const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i, /every 5 minutes/i, /default/i];
   const cadence = (text) => requires(text, ...concepts);
   checkRule(host(), cadence,
-    'By default, a bound T3 schedule resumes the driver thread every 10 minutes.',
+    'By default, a bound T3 schedule resumes the driver thread every 5 minutes.',
     [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores']], concepts);
   expect(readme()).toContain('docs/host-operations.md#chat-run-watch-activation');
 });
@@ -185,7 +185,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   expect(scenario.expected.action).toContain('keep the same schedule armed while CI or release is pending');
   expect(scenario.expected.action).toContain('never create a second watch');
   expect(scenario.expected.action).toContain('delete only after chat-run stop conditions');
-  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:600000',
+  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:300000',
     'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
     expect(scenario.expected.action).toContain(concept);
     expect(scenario.expected.action.replaceAll(concept, '')).not.toContain(concept);
