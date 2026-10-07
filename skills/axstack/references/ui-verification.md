@@ -23,3 +23,13 @@ mobile layouts, and reduced-motion behavior where relevant. The verifier
 returns a verdict with evidence paths and names checks it could not run.
 Keep the verdict tied to the exact artifact or revision; changed bytes need a
 fresh rendered pass.
+
+## Proof standards
+
+Drive the real user path.
+Capture the action, the resulting state and its side effects.
+For a dry-run claim, verify what it skips by observing files, network calls or Git refs.
+Keep evidence in the private evidence folder after cleanup.
+
+Ideas paraphrased from pstack's
+[create-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/create-verification-skill/SKILL.md) (MIT).
