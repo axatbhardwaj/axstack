@@ -64,7 +64,7 @@
     },
     {
       "id": "autopilot-release-path", "title": "Release through human gates and install",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Complete the applicable release", "run_state": "All feature PRs merged and two install hosts were named. Walk the release PR, human merge, tag, staged publish, human npm approval, registry wake, install, and close-out with the installed version."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Complete the applicable release", "run_state": "All feature PRs merged and two install hosts were named. The version-only release PR has a clean revert and meets the watch predicate. Walk the release PR, owning-watch merge, tag, staged publish, human npm approval, registry wake, install, and close-out with the installed version."}
     },
     {
       "id": "autopilot-release-not-applicable", "title": "Partial release predicate",

@@ -47,8 +47,8 @@
 - Cut a release with `chore(release): vX.Y.Z`, run the tag-triggered
   `.github/workflows/publish.yml`, then reinstall and verify it on desktop and
   VPS only under release and host-mutation authority recorded for that run.
-  The human merges the release PR and approves the npm stage; agents never run
-  `npm stage approve`.
+  Merge the release PR under the watch predicate. The human approves the npm
+  stage; agents never run `npm stage approve`.
 
 ## Interfaces
 

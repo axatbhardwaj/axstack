@@ -47,6 +47,9 @@ Any author repair creates a new revision and repeats this boundary.
 After verified publication readback, follow
 [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches).
 
+The recorded owning watch thread merges under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+
 ## Revert line
 
 Every own PR description must contain exactly one `Revert` line:
@@ -55,7 +58,9 @@ Use `clean` only when a single `git revert` of the merge commit restores the
 previous behaviour with CI green.
 A `clean` revert leaves no data, schema, config, external, or published effect behind.
 Otherwise use `steps` or `irreversible`.
-Classify every release PR as `irreversible`.
+Classify a release PR using the same revert criteria.
+Merging a release PR publishes nothing. The later tag/publish is the irreversible
+step, subject to recorded release authority and human npm stage approval.
 
 ## Immutable checkout shape
 

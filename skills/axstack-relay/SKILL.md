@@ -39,6 +39,10 @@ Choose the applicable message type:
   because a policy exists. They never become proactive relay messages merely
   because the run is waiting.
 
+The recorded owning watch thread merges under the
+[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+A relayed merge card never grants merge authority.
+
 Verify the transport, execution host, and intended recipient from the user's
 request, trusted caller context, or an existing private notification policy.
 Use the configured destination only when its binding to the intended user is

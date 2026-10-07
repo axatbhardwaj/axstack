@@ -244,18 +244,18 @@ Reviewed members are never retargeted to become eligible.
 Never auto-merge PRs authored by anyone other than the user or the user's agents.
 Never auto-merge promotion PRs (`dev` to `staging`, `staging` to `prod`).
 Never auto-merge PRs with a `deploying` or unknown base.
-Never auto-merge release PRs.
 Never auto-merge PRs changing anything under `.github/`.
 Never auto-merge PRs changing a file a workflow step invokes by path.
-Never auto-merge PRs changing the package manifest or lockfile.
+Never auto-merge PRs changing package.json beyond `version` and `files`.
+Never auto-merge PRs changing lockfiles.
 Never auto-merge PRs changing test-runner config.
 Never auto-merge PRs changing branch-protection or ruleset config.
 Never auto-merge PRs changing `CODEOWNERS`.
 Test sources stay eligible.
-Never auto-merge PRs changing Axstack merge-authority text (examples, not a closed
-list): `contracts.md`, `autopilot.md`, `lifecycle.md`, `routing.md`, `role-roster.md`,
-`t3-runtime.md`, `diligence.md`, `profiles/presets/*.json`, `axstack-watch`,
-`axstack-implement`, `axstack-review`, and `AGENTS.md`.
+Axstack skill and merge-rule text are eligible under the watch predicate.
+Changes to package.json limited to `version` and `files` are eligible under
+the watch predicate.
+Release PRs are eligible under the watch predicate.
 Never auto-merge PRs whose revert line is not `clean`.
 Read the revert gate from the declaration whose line starts with `Revert:`
 at line start in the PR description.
@@ -278,9 +278,10 @@ user-written PRs or PRs with unknown or mixed provenance.
 In `team` mode a reply never replaces counted collaborator approval.
 In `team` mode the reply only clears an ineligible base, auto-merge turned off,
 and an open human or bot comment.
-PRs in the CI, manifest, merge-authority, or non-`clean` revert categories are
-merged by the user on the forge.
-Promotion, release, `deploying`-base, and peer PRs are merged by the user on the
+PRs in the CI, package.json beyond `version` and `files`, lockfile, test-runner,
+branch-protection and ruleset,
+`CODEOWNERS`, or non-`clean` revert categories are merged by the user on the forge.
+Promotion, `deploying`-base, unknown-base, and peer PRs are merged by the user on the
 forge, and the card only reports readiness.
 User merges are bottom-up for a stack.
 

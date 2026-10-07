@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
@@ -38,7 +39,7 @@ rule('runtime notification allowlist and budget', runtime, 'The driver records o
 rule('relay policy exception', () => read('skills/axstack-relay/SKILL.md'), 'merge-ready, merged, and completion stay in the driver conversation', /unless the recorded Notification policy names it/);
 rule('relay shared milestone budget', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name', /at most two merge-ready\/merged milestones per run/);
 rule('relay categories remain bounded', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /user-decision holds.*at most two merge-ready\/merged milestones/);
-rule('AGENTS human npm gate', () => read('AGENTS.md'), 'The human merges the release PR', /approves the npm stage; agents never run/);
+// default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
 rule('scoped hold blocks dependants', autopilot, 'A task, PR, resource, or operation hold', /blocks only its dependants; continue independent authorized work/);
@@ -72,7 +73,12 @@ rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms 
 rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
 rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
 rule('explicit stop after Align is honored', () => read('skills/axstack-align/SKILL.md'), 'an explicit stop-after-Align request', /ends here/);
-rule('workflow human gate remains human', () => read('docs/workflows.md'), 'The human approves substantial specs', /release PRs, peer and deploying-base merges, and the npm stage/);
+test('workflow human gate remains human', () => {
+  const concepts = [/human/i, /approves/i, /substantial specs/i, /peer/i, /deploying-base merges/i, /npm stage/i];
+  checkRule(read('docs/workflows.md'), (text) => requires(text, ...concepts),
+    'The human approves substantial specs, peer and deploying-base merges, and the npm stage.',
+    [[/human/i, 'agent']], concepts);
+});
 rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);
 rule('routing substantial work advances', () => read('skills/axstack/references/routing.md'), 'Preparation: substantial work', /handoff path above, then continues under autopilot when eligible/);
 rule('workflow notifications have only bounded categories', () => read('docs/workflows.md'), 'An applicable `Notification policy`', /only for a user-decision hold.*serious-risk hold.*at most two merge-ready\/merged milestones per run/);
@@ -110,9 +116,7 @@ test('a scoped hold leaves independent authorized work available', () => {
 test('holdout: human approval and merge authority stay explicit', () => {
   expect(sentence(read('skills/axstack-spec/SKILL.md'), 'The driver owns the draft')).toMatch(/user approves it/);
   expect(sentence(autopilot(), 'Spec approval is always')).toMatch(/human's decision/);
-  expect(sentence(watch(), 'Promotion, release,')).toMatch(/deploying.*peer PRs.*user.*forge/);
-  expect(sentence(read('AGENTS.md'), 'The human merges the release PR')).toMatch(/approves the npm stage; agents never run/);
-  expect(sentence(autopilot(), 'Human npm stage approval')).toMatch(/agents never run `npm stage approve`/);
+  // default-auto-merge.test.js owns forge-only categories and both human npm gates.
   expect(sentence(watch(), 'Never re-request a collaborator')).toMatch(/approval still counts.*carryover rule/);
 });
 

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { publicDocPaths } from './public-docs.js';
-import { checkRule, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const compact = (text) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
@@ -73,10 +73,10 @@ const rules = [
     'In team mode a reply never replaces counted collaborator approval.', [/never replaces/i, 'replaces'], /never replaces/i],
   ['A7 team reply clearance', [/team/i, /reply only clears/i, /ineligible base/i, /auto-merge turned off/i, /open human or bot comment/i],
     'In team mode the reply only clears an ineligible base, auto-merge turned off, and an open human or bot comment.', [/only clears/i, 'clears all beyond']],
-  ['A7 forge-only categories', [/CI/i, /manifest/i, /merge-authority/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
-    'CI, manifest, merge-authority, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
-  ['D7 human categories', [/promotion/i, /release/i, /deploying/i, /peer/i, /user/i, /forge/i, /card only reports readiness/i],
-    'Promotion, release, deploying-base, and peer PRs are merged by the user on the forge while the card only reports readiness.', [/user/i, 'worker']],
+  ['A7 forge-only categories', [/CI/i, /package\.json/i, /beyond|outside|other than/i, /version/i, /files/i, /lockfile/i, /test-runner/i, /branch-protection/i, /ruleset/i, /CODEOWNERS/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
+    'CI, package.json beyond version and files, lockfile, test-runner, branch-protection and ruleset, CODEOWNERS, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
+  ['D7 human categories', [/promotion/i, /deploying/i, /unknown-base/i, /peer/i, /user/i, /forge/i, /card only reports readiness/i],
+    'Promotion, deploying-base, unknown-base, and peer PRs are merged by the user on the forge while the card only reports readiness.', [/user/i, 'worker']],
 ];
 
 // A5 categories are independently removable: a broad list-presence check misses omissions.
@@ -85,15 +85,13 @@ const exclusions = [
     "PRs authored by anyone other than the user or the user's agents"],
   ['promotion', /promotion PRs.*dev.*staging.*prod/i, 'promotion PRs (dev to staging, staging to prod)'],
   ['deploying', /`?deploying`? or unknown base/i, 'PRs with a deploying or unknown base'],
-  ['release', /release PRs/i, 'release PRs'],
   ['github', /anything under `?\.github\/`?/i, 'PRs changing anything under .github/'],
   ['workflow path', /file a workflow step invokes by path/i, 'PRs changing a file a workflow step invokes by path'],
-  ['manifest', /package manifest or lockfile/i, 'PRs changing the package manifest or lockfile'],
+  ['manifest outside allowed fields', /package\.json.*(?:beyond|outside|other than).*version.*files/i, 'PRs changing package.json beyond version and files'],
+  ['lockfiles', /lockfiles/i, 'PRs changing lockfiles'],
   ['runner', /test-runner config/i, 'PRs changing test-runner config'],
   ['protection', /branch-protection or ruleset config/i, 'PRs changing branch-protection or ruleset config'],
   ['owners', /CODEOWNERS/i, 'PRs changing CODEOWNERS'],
-  ['authority', /Axstack merge-authority text.*examples.*not a closed list/i,
-    'PRs changing Axstack merge-authority text (examples, not a closed list)'],
   ['revert', /revert line is not `?clean`?/i, 'PRs whose revert line is not clean'],
   ['comments', /held under the comment rules/i, 'PRs held under the comment rules'],
 ];
@@ -127,12 +125,7 @@ for (const path of surfaces) {
   });
 }
 
-test('authority-file examples and release authority remain explicit', () => {
-  for (const path of ['contracts.md', 'autopilot.md', 'lifecycle.md', 'routing.md', 'role-roster.md',
-    't3-runtime.md', 'diligence.md', 'profiles/presets/*.json', 'axstack-watch', 'axstack-implement', 'axstack-review', 'AGENTS.md']) {
-    expect(watch).toContain(path);
-  }
-  expect(read('AGENTS.md')).toContain('The human merges the release PR and approves the npm stage; agents never run');
+test('merge eligibility grants no publish or host install authority', () => {
   expect(read('skills/axstack-implement/SKILL.md')).toMatch(/grants no release, npm publish, or host install authority/i);
 });
 
@@ -143,8 +136,8 @@ const documented = [
     'Local CI contention handling remains deferred.', [/deferred/i, 'implemented']],
   ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /provider\/model substitution/i, /excluded/i],
     'Quota-driven scheduling or model routing (provider/model substitution) remains excluded.', [/excluded/i, 'permitted']],
-  ['excluded automatic merge categories', [/automatic merge/i, /promotion/i, /release/i, /deploying-base/i, /peer/i, /excluded/i],
-    'Automatic merge of promotion, release, deploying-base, and peer PRs remains excluded.', [/excluded/i, 'permitted']],
+  ['excluded automatic merge categories', [/automatic merge/i, /promotion/i, /deploying-base/i, /unknown-base/i, /peer/i, /excluded/i],
+    'Automatic merge of promotion, deploying-base, unknown-base, and peer PRs remains excluded.', [/excluded/i, 'permitted']],
   ['excluded previews', [/previews/i, /outside the VPS/i, /public previews/i, /production data/i, /excluded/i],
     'Previews outside the VPS, public previews, and production data remain excluded.', [/excluded/i, 'permitted']],
   ['triage relay boundary', [/nightly triage/i, /sends? relay messages/i],
@@ -201,3 +194,78 @@ test('workflows is the single public home for exclusions and accepted risks', ()
   expect(summary.split('\n')).toHaveLength(1);
   expect(summary).toContain('](docs/workflows.md#automatic-merge-boundaries)');
 });
+
+// Exercise the policy at its shipped watch and public-doc boundaries. These
+// checks reject contradictory exclusions as well as missing eligibility text.
+const eligibility = [
+  ['skill text', [/Axstack skill and merge-rule text/i, /eligible/i],
+    'Axstack skill and merge-rule text are eligible under the watch predicate.'],
+  ['manifest carve-out', [/package\.json/i, /limited to/i, /version/i, /files/i, /eligible/i],
+    'Changes to package.json limited to version and files are eligible under the watch predicate.'],
+  ['release', [/release PRs/i, /eligible/i],
+    'Release PRs are eligible under the watch predicate.'],
+];
+for (const path of ['skills/axstack-watch/SKILL.md', 'docs/workflows.md']) {
+  for (const [name, concepts, rewording] of eligibility) {
+    test(`merge eligibility: ${name} in ${path}`, () => {
+      const accepts = (text) => requires(text, ...concepts)
+        && !sentences(text).some((unit) =>
+          (concepts.slice(0, -1).every((concept) => concept.test(unit))
+            && /never auto-merge|ineligible|excluded|user.merge|human merge/i.test(unit))
+          || /(?:package manifest|manifest changes).*(?:never auto-merge|excluded|user.merge)|never auto-merge.*package manifest/i.test(unit));
+      const source = compact(read(path));
+      checkRule(source, accepts, rewording, [[/eligible/i, 'ineligible']], concepts);
+      const target = sentences(source).find((unit) => requires(unit, ...concepts));
+      expect(target).toBeDefined();
+      for (const suffix of [' except when checks pass', ' unless the user asks']) {
+        expect(accepts(source.replace(target, target.replace(/eligible/i, `ineligible${suffix}`)))).toBe(false);
+      }
+      const subject = name === 'skill text' ? 'Axstack skill and merge-rule text'
+        : name === 'manifest carve-out' ? 'package.json changes limited to version and files' : 'Release PRs';
+      expect(accepts(`${source}. Never auto-merge ${subject}.`)).toBe(false);
+    });
+  }
+}
+
+for (const path of ['AGENTS.md', 'skills/axstack/references/autopilot.md']) {
+  test(`release merge follows watch predicate: ${path}`, () => {
+    const concepts = [/release PR/i, /merge/i, /under/i, /watch/i, /predicate|§5/i];
+    const accepts = (text) => requires(text, ...concepts)
+      && !/human merges the release PR|waits for human merge/i.test(text);
+    checkRule(compact(read(path)), accepts,
+      'Merge the release PR under the watch predicate.', [[/under/i, 'without']], concepts);
+    expect(accepts(`${compact(read(path))}. The human merges the release PR.`)).toBe(false);
+  });
+  test(`human owns npm stage approval: ${path}`, () => {
+    const concepts = [/human/i, /approv/i, /npm stage/i];
+    checkRule(compact(read(path)), (text) => requires(text, ...concepts),
+      'Human approval of the npm stage remains required.', [[/human/i, 'agent']], concepts);
+    const prohibition = /never run/i;
+    checkRule(compact(read(path)), (text) => prohibits(text, prohibition, /agents/i, /npm stage approve/i),
+      'Agents never run npm stage approve.', [[/never run/i, 'run']], [/agents/i, /npm stage approve/i]);
+  });
+}
+
+// A closed field boundary catches scripts/install hooks and overrides, unlike
+// the previous dependency-only exclusion. This checks shipped instructions,
+// not a test-only merge classifier or live forge behavior.
+for (const path of ['skills/axstack-watch/SKILL.md', 'docs/workflows.md']) {
+  test(`manifest excludes scripts and overrides but permits only version/files: ${path}`, () => {
+    const concepts = [/package\.json/i, /beyond|outside|other than/i, /version/i, /files/i];
+    const direction = /never auto-merge|user-merged on the forge/i;
+    const accepts = (text) => sentences(text).some((unit) =>
+      concepts.every((concept) => concept.test(unit)) && direction.test(unit)
+      && !/\bunless|\bexcept/i.test(unit));
+    const source = compact(read(path));
+    checkRule(source, accepts,
+      'Never auto-merge PRs changing package.json outside version and files.',
+      [[/beyond|outside|other than/i, 'limited to'], [direction, 'Auto-merge']], concepts);
+    const owner = sentences(source).find(accepts);
+    for (const field of ['scripts', 'overrides']) {
+      // Injecting either exception into the owning instruction must fail.
+      expect(accepts(source.replace(owner, `${owner} except ${field}-only changes`)), field).toBe(false);
+    }
+    const limited = [/package\.json/i, /limited to/i, /version/i, /files/i, /eligible/i];
+    expect(requires(source, ...limited)).toBe(true);
+  });
+}

@@ -293,8 +293,8 @@ read-only observer for standalone watches and never sends.
 
 For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
 continues from Align through the eligible phase sequence in the same chat.
-The human approves substantial specs, release PRs, peer and deploying-base
-merges, and the npm stage. The recorded owning watch thread is the merge actor,
+The human approves substantial specs, peer and deploying-base merges, and the
+npm stage. The recorded owning watch thread is the merge actor,
 including `axstack-owner` for standalone authorized maintenance and small or
 adopted work. Apply the full
 [watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
@@ -349,12 +349,19 @@ merge, subject to watch §5's exceptions.
 In solo mode the user's merge-card reply authorizes the guarded merge of
 user-written PRs or PRs with unknown or mixed provenance.
 In team mode it clears only an ineligible base, auto-merge turned off, and an open
-human or bot comment; it never replaces collaborator approval. CI and manifest changes,
-merge-authority text and non-`clean` revert PRs are user-merged on
-the forge. Promotion, release, deploying-base, and peer PRs are also user-merged.
-Test sources stay eligible; `.github/`, workflow-invoked paths, manifests and
-lockfiles, runner config, branch protection and rulesets, `CODEOWNERS`, and
-merge-authority text are excluded from auto-merge. Non-agent comments hold it
+human or bot comment; it never replaces collaborator approval.
+PRs changing `.github/`, files a workflow step invokes by path, package.json
+beyond `version` and `files`, lockfiles, test-runner config, branch-protection or
+ruleset config, or `CODEOWNERS` are user-merged on the forge.
+PRs with a non-`clean` revert line are also user-merged on the forge.
+Promotion, deploying-base, unknown-base, and peer PRs are also user-merged.
+These categories are excluded from auto-merge.
+Test sources stay eligible. Axstack skill and merge-rule text are eligible
+under the watch predicate. Changes to package.json limited to `version` and
+`files` are eligible under the watch predicate. Release PRs are eligible
+under the watch predicate. Npm publication still requires human stage approval;
+agents never run `npm stage approve`.
+Non-agent comments hold auto-merge
 until human clearance under the packaged comment rules. The revert gate reads the declaration starting
 with `Revert:` at line start; a quoted format inside a bullet is not a declaration.
 
@@ -366,7 +373,7 @@ Excluded: CLI proxy, account pooling behind a proxy or shared session, and IP
 routing; local CI contention handling is deferred. Quota-driven scheduling or
 model routing (provider/model substitution) is excluded. Per-dispatch selection
 among the user's own same-provider, same-model accounts is permitted. Automatic
-merge of promotion, release, deploying-base, and peer PRs is excluded. Previews
+merge of promotion, deploying-base, unknown-base, and peer PRs is excluded. Previews
 outside the VPS, public previews, and production data are excluded. Nightly triage
 never sends relay messages.
 
