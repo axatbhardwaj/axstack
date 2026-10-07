@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh the T3 New-chat account default every ten minutes
+
+[Timer]
+OnStartupSec=1min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=axstack-default-sync.service
+
+[Install]
+WantedBy=timers.target

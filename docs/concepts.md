@@ -103,6 +103,8 @@ and effort remain fixed. Dispatched roles never fail over mid-thread.
 See [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
 for schedule rebinding and the [policy carve-out](workflows.md#automatic-merge-boundaries).
 
+The opt-in `sync-default.js` keeps the New-chat default on the same-provider account with the highest elapsed-minus-used pace, switching at a ten-point lead or when the current account is excluded; it preserves the model and project overrides.
+
 ## Account selection environment
 
 `XDG_CACHE_HOME` selects the cache directory; the default is `~/.cache`.

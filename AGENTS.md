@@ -15,6 +15,9 @@
   Let the installer generate the installed `skills/axstack/roles.json` snapshot.
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
+  Exception: allow one opt-in systemd user timer `axstack-default-sync` running
+  a stateless script that rewrites only T3 `defaultModelSelection.instanceId`.
+  The timer has no workflow state. The script launches no agent.
 - Use `gh stack` for dependent PRs. Workers do not push, submit, merge, publish,
   or release. For own PRs, automatic merge is the default under the
   [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
