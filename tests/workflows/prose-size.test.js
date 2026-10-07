@@ -112,6 +112,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // retain all dated comments and main's 26814-byte always-loaded ceiling.
   // 20261007-autonomy A2: +879 measured aggregate bytes (+546 Autopilot,
   // +277 Spec, +56 Watch) for standing release and merge carry-forward; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(354822);
+  // 20261007-autonomy A2 repair1: -2 measured aggregate bytes for
+  // run-record authority wording; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(354820);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

@@ -51,7 +51,7 @@ rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /
 rule('guarded merge actor', autopilot, 'The recorded owning watch thread', /merge actor.*axstack-owner.*standalone.*small or adopted/);
 rule('human approval is not re-requested', autopilot, 'After merge-ready', /without re-requesting human review/);
 rule('relay does not grant authority', autopilot, 'A relay message is only', /never authority to approve, merge, or publish/);
-rule('tag publish install authority', autopilot, 'Tagging, publishing, installation, and host mutation', /recorded per-run authority/);
+// autopilot-authority.test.js owns recorded authority for tag, publish, and install.
 rule('hosts are not inferred', autopilot, 'Install hosts come only', /absent host list is a decision hold, not permission to infer hosts/);
 rule('cancellation settles with guards', autopilot, 'Cancel sets', /stops new actions.*guarded settlement/);
 // Chat-run schedule renewal is covered by automatic-own-pr-watch.test.js; standalone expiry stays separate.

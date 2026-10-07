@@ -313,7 +313,8 @@ hold pauses the run.
 After verified publication readback of every own PR from any Axstack phase,
 the driver arms or joins its chat-run watch in authorized maintain mode.
 Explicit stop-after-publication and observation-only requests still apply.
-Release and install run only under recorded per-run authority.
+Release and install require recorded authority: standing authority from AGENTS.md
+copied into the run's `Release:` and `Authority:`, or explicit per-run authority.
 Close-out follows their verified receipts and the watch's end.
 
 Use `axstack-watch` chat-run mode to watch every PR raised by this run,
@@ -361,7 +362,7 @@ In team mode it clears only an ineligible base, auto-merge turned off, and an op
 human or bot comment; it never replaces collaborator approval.
 PRs changing `.github/`, files a workflow step invokes by path, package.json
 beyond `version` and `files`, lockfiles, test-runner config, branch-protection or
-ruleset config, or `CODEOWNERS` are user-merged on the forge.
+ruleset config, `CODEOWNERS`, or `AGENTS.md` are user-merged on the forge.
 PRs with a non-`clean` revert line are also user-merged on the forge.
 Promotion, deploying-base, unknown-base, and peer PRs are also user-merged.
 These categories are excluded from auto-merge.

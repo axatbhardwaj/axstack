@@ -130,6 +130,15 @@ test('merge eligibility grants no publish or host install authority', () => {
   expect(read('skills/axstack-implement/SKILL.md')).toMatch(/grants no release, npm publish, or host install authority/i);
 });
 
+test('public merge boundary requires user forge merges for AGENTS changes', () => {
+  const concepts = [/PRs changing/i, /AGENTS\.md/i, /user-merged on the forge/i];
+  const accepts = (text) => sentences(text).some((unit) =>
+    !/\bunless|\bexcept/i.test(unit) && requires(unit, ...concepts));
+  checkRule(compact(read('docs/workflows.md')), accepts,
+    'PRs changing AGENTS.md are user-merged on the forge under the merge boundary.',
+    [[/user-merged on the forge/i, 'auto-merged by agents'], [/\.?$/, ' unless checks pass']], concepts);
+});
+
 const documented = [
   ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
     'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],

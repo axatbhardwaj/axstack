@@ -142,7 +142,7 @@ installed version.
 An existing version or tag, failed publish, pending approval, uncertain
 registry result, missing host access, or failed install verification is a
 resumable hold, never success. Tagging, publishing, installation, and host
-mutation require the recorded per-run authority and their existing checks.
+mutation require the run's recorded authority and their existing checks.
 
 ## Resume, cancel, and notify
 

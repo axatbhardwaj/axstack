@@ -60,3 +60,14 @@ rule('publish, tag, and install failures retain release holds', autopilot,
     /missing host access/i, /failed install verification/i, /resumable hold/i],
   'An existing version or tag, failed publish, pending approval, uncertain registry result, missing host access, or failed install verification retains a resumable hold, never success.',
   [[/resumable hold/i, 'success'], [/never success/i, 'success']], /never success/i);
+
+rule('public release authority includes standing grants copied into the run', 'docs/workflows.md',
+  [/release and install/i, /require/i, /recorded authority/i, /standing authority/i, /from AGENTS\.md/i,
+    /copied into the run/i, /Release:/i, /Authority:/i, /or explicit per-run authority/i],
+  "Recorded authority is required for release and install: standing authority from AGENTS.md copied into the run's Authority: and Release:, or explicit per-run authority.",
+  [[/require/i, 'skip'], [/standing authority/i, 'unrecorded authority'],
+    [/copied into the run/i, 'omitted from the run'], [/or explicit per-run authority/i, 'only explicit per-run authority']]);
+rule('release actions accept the run recorded authority and keep existing checks', autopilot,
+  [/tagging/i, /publishing/i, /installation/i, /host mutation/i, /require/i, /run.s recorded authority/i, /existing checks/i],
+  "The run's recorded authority and existing checks are required for tagging, publishing, installation, and host mutation.",
+  [[/require/i, 'skip'], [/run.s recorded authority/i, 'recorded per-run authority']]);
