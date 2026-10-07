@@ -31,6 +31,11 @@ rule('unready reply route names the T3 action route', relay,
   [/reply-route readiness fails/i, /T3 driver thread/i, /action route/i, /message/i],
   'When reply-route readiness fails, identify the T3 driver thread as the action route in the message.',
   [[/\b(?:name|identify)\b/i, 'omit'], [/\bT3 driver thread\b/i, 'Telegram reply']]);
+rule('fallback send requires the thread action route', relay,
+  [/action uses that thread/i, /Telegram reply/i],
+  'Only when the action uses that thread instead of a Telegram reply, deliver it.',
+  [[/\b(?:send|deliver) it\b/i, 'Ignore it'], [/\bonly when\b/i, 'even unless'],
+    [/\binstead of\b/i, 'together with']]);
 
 rule('a fork starts as an observer', lifecycle, [/forked thread/i, /starts? as/i],
   'A forked thread starts as a read-only observer.',
@@ -41,6 +46,11 @@ rule('a fork reconciles live owners before inherited work', lifecycle,
   'Before resuming inherited work, a forked thread checks the live original driver and writers.',
   [[/\b(?:reconciles?|checks?)\b/i, 'ignores'], [/\bbefore\b/i, 'after'],
     [/\blive original driver\b/i, 'copied driver record']]);
+rule('fork dispatch and writes follow ownership rules', lifecycle,
+  [/ownership rules below/i, /dispatch or write/i],
+  'Use the ownership rules below before any dispatch or write.',
+  [[/\b(?:apply|use)\b/i, 'ignore'], [/\bbefore any\b/i, 'after every'],
+    [/\bdispatch or write\b/i, 'dispatch and write']]);
 
 rule('completion is processed in the same turn with existing safeguards', runtime,
   [/completion arrives/i, /same driver turn/i, /after/i, /required terminal checks/i,
@@ -58,6 +68,11 @@ rule('pinned base is verified locally before a writer launch', runtime,
   'Before a writer launch, check locally that the pinned base SHA resolves to a commit with that exact SHA.',
   [[/\b(?:verify|check)\b/i, 'ignore'], [/\bbefore\b/i, 'after'],
     [/\blocally\b/i, 'remotely'], [/\bexact SHA\b/i, 'branch tip']]);
+rule('failed fetch or verification holds the launch', runtime,
+  [/fetch or verification/i, /that launch/i],
+  'When fetch or verification fails, block that launch.',
+  [[/\b(?:hold|block)\b/i, 'continue'], [/\bfails\b/i, 'succeeds'],
+    [/\bfetch or verification\b/i, 'fetch and verification']]);
 
 rule('PR body counts and base are refreshed before review', publication,
   [/before/i, /reviewer dispatch/i, /PR body/i, /counts/i, /base/i,
