@@ -1,6 +1,6 @@
 # UI verification
 
-Every Playwright, browser, or rendered-UI check outside the two named author
+Every Playwright, browser, or rendered-UI check outside the three named author
 exceptions, including a "confirm it in the browser" step, goes through async
 `delegate_task` to `axstack-ui-verifier` from the run's role snapshot. Give it the exact build, URL, or artifact and the private
 dispatch's evidence folder. The verifier is read-only: it never edits source.
@@ -21,7 +21,12 @@ Require correct layout, theme, zero console errors, empty `missingImages`,
 height, network, and word count.
 Never replace the verifier's interaction pass with `html_preview`.
 Follow [Inline pages](../../axstack-explain/references/inline-pages.md) for the page checks.
-All other browser checks outside the two named exceptions remain delegated to `axstack-ui-verifier`.
+
+The third named author browser exception permits dispatched roles to use
+`html_preview` as a non-publishing self-check.
+Dispatched-role self-checks never replace the driver's two previews or the `axstack-ui-verifier` pass.
+Dispatched roles never call `html_render`.
+All other browser checks outside the three named exceptions remain delegated to `axstack-ui-verifier`.
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.

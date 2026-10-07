@@ -161,11 +161,11 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
 
 test('UI verification routes rendered checks to the read-only verifier', () => {
   const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
-  // The shared routing boundary must retain delegation outside both exceptions.
+  // The shared routing boundary must retain delegation outside all three exceptions.
   checkRule(sentences(rule).join('. '), (text) => requires(text, /every Playwright, browser, or rendered-UI check/i,
-    /outside.*two named author exceptions/i, /async.*delegate_task/i, /axstack-ui-verifier/i),
-    'Outside the two named author exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.',
-    [[/outside/i, 'including'], [/two named author exceptions/i, 'all author checks']]);
+    /outside.*three named author exceptions/i, /async.*delegate_task/i, /axstack-ui-verifier/i),
+    'Outside the three named author exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.',
+    [[/outside/i, 'including'], [/three named author exceptions/i, 'all author checks']]);
   expect(rule).toMatch(/read-only/i);
   expect(rule).toMatch(/dispatch.s evidence folder/i);
   expect(rule).toMatch(/desktop[\s\S]*mobile[\s\S]*reduced-motion/i);

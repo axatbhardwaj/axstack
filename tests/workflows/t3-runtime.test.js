@@ -75,9 +75,9 @@ test('T3 dispatch briefs prohibit worker html_render and allow html_preview', ()
     'Every dispatch brief shall say that dispatched roles do not call html_render.',
     [[/never call|do not call/i, 'always call'], [/every dispatch brief/i, 'some dispatch briefs']]);
   checkRule(text, (source) => prohibits(source, /may (?:call|use)/i,
-    /dispatched roles/i, /html_preview/i),
-    'Dispatched roles may use html_preview.',
-    [[/may (?:call|use)/i, 'must never call']]);
+    /dispatched roles/i, /html_preview/i, /within.*UI verification/i),
+    'Dispatched roles may use html_preview within UI verification.',
+    [[/may (?:call|use)/i, 'must never call'], [/within.*UI verification/i, 'without limits']]);
 });
 
 // Every other instruction uses sentence-scoped concepts and the shared denial

@@ -102,6 +102,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // preview exceptions, page verification and dispatch publication limits; always-loaded unchanged.
   // 20261007-explain-t3-inline-html T2 rebase2: +92 measured aggregate bytes
   // for explicit verifier proof scope on candidate checks and inline pages; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(352931);
+  // 20261007-explain-t3-inline-html T2 repair1: +316 measured aggregate bytes for
+  // dispatched non-publishing preview self-checks; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(353247);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });
