@@ -77,6 +77,12 @@ Complete every step before sending.
 Discovery is complete only when authorization, routing, lookup, and the target
 listing all pass.
 
+Before a reply-dependent send, verify the reply route: gateway forwarding to
+`axstack-reply`, the bound inbox path, and the driver's read access.
+If reply-route readiness fails, name this run's T3 driver thread as the action route
+in the message.
+Send it only when the action uses that thread instead of a Telegram reply.
+
 ## Preserve identity and authority
 
 Keep every relay body in plain text.

@@ -18,6 +18,8 @@ inspect remote state before retrying.
 
 Before reviewer dispatch, read the remote ref back and confirm that it resolves
 to the candidate SHA; also pin the current base.
+Before reviewer dispatch, refresh the PR body counts and base from the confirmed
+candidate SHA and current base under [PR shape](pr-shape.md).
 After every push, before post-push diligence or merge-ready, compare the PR body's
 stated head SHA with `Confirmed remote SHA` and record `PR body head SHA: <sha or none>`.
 Accept `none` for a PR body without a stated head SHA.

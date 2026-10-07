@@ -155,6 +155,10 @@ original form and record both; normalization is never an identity substitute.
 
 `baseRef` must always be a commit SHA, never a branch name; T3 renames its
 `t3code/*` branches. Pin base and candidate before dispatch.
+Fetch the pinned base commit into the launch repository before a writer launch.
+Before a writer launch, verify locally that the pinned base SHA resolves to a
+commit with that exact SHA.
+If fetch or verification fails, hold that launch.
 
 Workers must finish with exactly one final marker: `AXSTACK-DONE key=… head=…
 report=…`, `AXSTACK-FAILED key=… head=… report=…`, or `AXSTACK-QUESTION key=… q=…`.
@@ -175,6 +179,9 @@ incomplete even when native status says completed.
 Launched writer completion must require terminal `t3_thread_wait` on that run,
 then candidate checks: non-empty diff, clean tree and named red/green logs.
 A receipt message alone counts only as progress; it can precede terminal state.
+
+When a completion arrives, process it in the same driver turn after the required
+terminal checks, delegated `hasPendingChildRuns:false`, and writer candidate checks.
 
 Completion must match the current attempt key and candidate SHA. An older
 attempt never completes a newer one; stale or duplicate receipts remain

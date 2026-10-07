@@ -118,6 +118,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // +386 Spec, +145 watch runtime, +161 T3 runtime); always-loaded unchanged.
   // 20261007-autonomy A3 repair1: +477 measured aggregate bytes (+234 Align,
   // +243 Spec) for default fresh receipts and the bounded delta exception.
-  expect(total).toBeLessThanOrEqual(356547);
-  expect(alwaysLoaded).toBeLessThanOrEqual(26814);
+  // 20261007-autonomy A4: +1154 measured aggregate bytes (+323 Relay,
+  // +201 lifecycle, +403 T3 runtime, +143 publication, +84 hygiene);
+  // +201 always-loaded bytes. Preserve the inherited 44-byte aggregate headroom.
+  expect(total).toBeLessThanOrEqual(357701);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });
