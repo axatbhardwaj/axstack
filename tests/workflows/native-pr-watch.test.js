@@ -72,3 +72,28 @@ rule('merge, close and teardown unwatch while retaining links', runtime,
   [/PR merges or closes/i, /watch is torn down/i, /unwatch_pull_request/i],
   'Keep its link and call unwatch_pull_request when a PR merges or closes or its watch is torn down.',
   [[/\bcall\b/i, 'bypass'], [/keep its link/i, 'remove its link']]);
+
+rule('published stack layers link to the author thread with readback', runtime,
+  [/after verified publication readback/i, /own PR/i, /every layer/i, /gh stack/i,
+    /driver/i, /t3_thread_update/i, /action: link_pull_request/i,
+    /threadId`? set to the author thread/i, /list_thread_pull_requests/i, /same author thread/i],
+  'For every layer of a gh stack, after verified publication readback of an own PR, the driver invokes t3_thread_update with action: link_pull_request and threadId set to the author thread, then verifies the PR link via list_thread_pull_requests for that same author thread.',
+  [[/\b(?:calls?|invokes?)\b/i, 'bypasses'], [/then (?:reads? back|verifies?)/i, 'then skips']]);
+rule('failed author-link readback holds only its PR and retries the link', runtime,
+  [/missing or failed/i, /author-link readback/i, /only that PR.s merge-ready/i,
+    /retrying the link/i, /author repair/i],
+  "A missing or failed author-link readback never triggers author repair: it holds only that PR's merge-ready and requires retrying the link.",
+  [[/never triggers/i, 'always triggers'], [/\bholds?\b/i, 'releases'],
+    [/requires retrying/i, 'forbids retrying']], /never triggers/i);
+rule('forge merge or close settles the author thread in the same turn with readback', runtime,
+  [/forge confirms/i, /run PR merged or closed/i, /same driver turn/i, /driver/i,
+    /author thread/i, /t3_thread_organize/i, /action: settle/i,
+    /t3_thread_read/i, /settled.*true/i, /for that thread/i],
+  'In the same driver turn when the forge confirms a run PR merged or closed, the driver settles its author thread via t3_thread_organize with action: settle and verifies settled: true via t3_thread_read for that thread.',
+  [[/driver settles?/i, 'driver unsettles'], [/\b(?:reads? back|verifies?)\b/i, 'ignores']]);
+rule('missing settlement readback holds watch end and Close-out only for its thread', runtime,
+  [/missing or failed/i, /settle readback/i, /watch end/i, /Close-out/i,
+    /only.*that author thread/i, /until resolved/i],
+  'Until resolved, a missing or failed settle readback holds watch end and Close-out only for that author thread.',
+  [[/\bholds?\b/i, 'releases'], [/only for that author thread/i, 'for every run thread'],
+    [/until resolved/i, 'even after resolution']]);
