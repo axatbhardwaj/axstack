@@ -132,6 +132,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // preserve 44-byte headroom; always-loaded unchanged.
   // 20261007-accept-settle A1: +388 measured aggregate bytes for same-turn
   // accepted-completion settlement and dispatch-scoped readback holds; preserve 44-byte headroom.
-  expect(total).toBeLessThanOrEqual(360670);
+  // 20261007-fresh-refs A1: +791 measured bytes for driver reference freshness;
+  // preserve 44-byte aggregate headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(361461);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });

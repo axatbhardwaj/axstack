@@ -20,6 +20,42 @@ function rule(name, path, concepts, rewording, inversions, negative) {
   });
 }
 
+// Freshness is a driver instruction contract, not live reload/compliance proof.
+rule('driver checks and records installed version at every entry', runtime,
+  [/driver/i, /every run start/i, /resume/i, /run-watch wake/i,
+    /axstack --version/i, /installed Axstack version/i, /check time/i, /run record/i],
+  'At every run start, resume and run-watch wake, the driver shall execute axstack --version and save the installed Axstack version and check time in the run record.',
+  [[/must|shall/i, 'may'], [/\b(?:run|execute) `?axstack/i, 'skip axstack'],
+    [/\b(?:record|save) the installed/i, 'discard the installed'],
+    [/every run start/i, 'selected run starts']]);
+rule('missing or changed read reloads all used installed guidance before acting', runtime,
+  [/this run lacks a reference read/i, /or the installed version differs/i,
+    /version recorded at the last reference read/i, /driver/i,
+    /re-read|reload/i, /installed phase SKILL\.md/i, /every shared reference it will use/i,
+    /before any dispatch/i, /receipt consumption/i, /settlement/i, /merge/i],
+  'When this run lacks a reference read or the installed version differs from the version recorded at the last reference read, the driver shall reload the installed phase SKILL.md and every shared reference it will use before any dispatch, receipt consumption, settlement or merge.',
+  [[/must|shall/i, 'may'], [/\blacks\b/i, 'has'], [/\bdiffers\b/i, 'matches'],
+    [/\bor the installed/i, 'and the installed'], [/re-read|reload/i, 'skip'],
+    [/every shared reference it will use/i, 'selected shared references'],
+    [/before any dispatch/i, 'after all dispatch']]);
+rule('reference reread records version and read time', runtime,
+  [/after re-reading|after reloading/i, /driver/i, /installed version/i,
+    /reference read time/i, /run record/i],
+  'After reloading, the driver shall save the installed version and reference read time in the run record.',
+  [[/must|shall/i, 'may'], [/\b(?:record|save) the installed/i, 'discard the installed'],
+    [/after re-reading|after reloading/i, 'before reloading']]);
+rule('driver rejects context copies from earlier runs or older versions', runtime,
+  [/driver/i, /in-context copy/i, /earlier run/i, /older installed version/i],
+  'The driver shall never trust an in-context copy from an earlier run or an older installed version.',
+  [[/must|shall/i, 'may'], [/never/i, 'always'],
+    [/rely on|trust/i, 'discard'], [/earlier run/i, 'current run'],
+    [/older installed version/i, 'current installed version']], /never (?:rely on|trust)/i);
+rule('run record keeps installed version and last reference read time',
+  'axstack/references/run-record.md',
+  [/installed Axstack SHA/i, /installed Axstack version/i, /last reference read time/i],
+  'Save installed Axstack SHA, installed Axstack version and last reference read time in the run record.',
+  [[/\b(?:record|save) (?:driver|installed)/i, 'discard installed']]);
+
 rule('own-PR watch requests grant maintenance by default', routing,
   [/user request/i, /watch/i, /babysit/i, /keep watching/i, /maintain/i,
     /own PRs/i, /authenticated/i, /gh api user/i, /login/i, /user.s agents/i, /authorized maintenance/i],

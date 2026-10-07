@@ -43,8 +43,9 @@ or a receipt pointer containing both; a role label alone is insufficient.
 The recorded owning watch thread merges under the
 [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 
-Read the [T3 runtime boundary](t3-runtime.md) for native identity and receipt checks.
+Read the [T3 runtime boundary](t3-runtime.md) for native identity, reference freshness and receipt checks.
 Record driver threadId, projectId, host, T3 version, installed Axstack SHA,
+installed Axstack version and last reference read time,
 capabilities JSON path and scheduledTaskIds for every watch and manager schedule.
 Per dispatch record key, mechanism, requested target and read-back,
 taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA,
@@ -190,7 +191,7 @@ PR digest watermarks: <repo -> absolute path of its per-repository JSON file ins
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
 IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>
-Runtime: <host + T3 version + installed Axstack SHA + capabilities JSON path>
+Runtime: <host + T3 version + installed Axstack SHA + installed Axstack version/check time + last reference read time + capabilities JSON path>
 Schedules: <scheduledTaskIds of every watch and manager schedule>
 Watch: <member publication/adoption receipts + cadence + last PR event + native lifetime + update/re-arm/stop receipts>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>
