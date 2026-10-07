@@ -88,7 +88,7 @@ Size alone never requires user approval.
 
 For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
 For performance work, run the change loop.
-For an optimization without new behavior, use the structure-preserving path with the same checks green before and after plus the measured delta.
+For an accepted optimization scope without new behavior explicitly marked structure-preserving, use the structure-preserving path with the same checks green before and after plus the measured delta.
 For performance work with new behavior, run a failing check first.
 
 Use the normal behavior path unless the accepted improvement scope is

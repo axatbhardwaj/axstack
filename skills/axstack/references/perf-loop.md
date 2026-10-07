@@ -1,6 +1,7 @@
 # Performance loop
 
 Keep one writer per candidate.
+The change steps (revert, commit and implement receipt) run only in `axstack-implement`.
 
 Follow this ordered loop:
 
