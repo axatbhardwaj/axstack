@@ -17,6 +17,7 @@ Review: <exact-rev independent review status + unresolved findings>
 Simplification: <applicability determinations evidenced / total candidate diffs, complete simplification receipts / total candidates, applied, not-applicable, or UNKNOWN with reason + evidence>
 Rework: <cycles + causes>
 Interventions: <avoidable user interventions, or unsupported by records>
+Autonomy: <wake messages / eligible wakes; accepted pending / accepted completions; action lag; separate cases, intervals, coverage and evidence below>
 Parallelism: <identified vs dispatched + dependency/writer isolation>
 Shape: <PRs with an informational size flag / total PRs; full totals + bulk buckets with reproducible commands + measured head/base; UNKNOWN when measurement is missing>
 Cost: <API dollars by model when measured, or UNKNOWN with reason>
@@ -25,6 +26,40 @@ Proposals: <bounded hypothesized changes with regression-first plan, or none>
 Learning candidates: <each candidate's statement + scope + evidence/revision pointers + target instruction surfaces + contradiction/uncertainty + disposition; explicit already-covered no-op, recurred (suggest axstack-correct; audit does not run it), or none>
 Privacy: <local/private default; sanitized summary only when authorized>
 ```
+
+## Autonomy measurements
+
+Use existing run receipts and native readbacks, with identities and observation
+times; add no telemetry or runtime.
+Use `accepted_at` for acceptance, `settlement_readback_at` for native readback,
+and `observed_at` for the observation time.
+Count automatic driver text and relay as
+`automatic_unchanged_wake_messages` / `eligible_unchanged_wakes` over reconciled
+healthy unchanged scheduled wakes, with `requested_status_answers` separate.
+Count messages individually, including multiple messages from one wake; identify
+eligible wakes using [Watch runtime](../../axstack-watch/references/watch-runtime.md).
+
+Count `accepted_pending_settlement` / `accepted_completions` from matching accepted
+completions at the observation time, using `settled:false` for pending and
+reporting `completed_unconsumed` and `protected_completions` separately.
+Deduplicate by dispatch key, accepted terminal run and candidate head or report
+source identity; unconsumed completions are outside the accepted denominator.
+Protected cases retain their accepted/unaccepted classification and are not
+counted as settlement violations merely for remaining unsettled.
+Missing settlement readbacks are unknown, not pending or settled.
+
+Measure authorized-ready-to-action lag from `ready_at` to `action_at`, excluding
+only `hold_intervals` supported by evidence.
+`ready_at` is when prerequisites and authority are verified; `action_at` is the
+observed action, not a recorded intent. Hold intervals carry `start_at`, `end_at`
+(or open) and evidence pointers; subtract their union within the measured interval.
+Report `observed_intervals` individually and `open_intervals` through the
+observation time without inventing `action_at`.
+For each autonomy measurement, report `coverage` and UNKNOWN with the reason for
+missing denominators or timestamps, separating native, replay and source evidence.
+Coverage states evidenced items / eligible items, including open intervals;
+unknown eligibility leaves the denominator UNKNOWN. No performance target or
+production improvement is inferred from source checks.
 
 Treat size flags as informational only.
 

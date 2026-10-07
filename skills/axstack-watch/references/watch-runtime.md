@@ -69,8 +69,22 @@ from the installed `axstack` skill directory:
 `bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's per-repository JSON watermark file path>`.
 Use a per-repository JSON file in the private run directory for the watermark,
 separate from `progress.md` (for example, `pr-digest-owner-repo.json`).
-Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,
-end the turn with no text or notification. Exit 10 supplies deltas
+Exit 0 means unchanged forge state: reconcile local receipts and actionable work
+before deciding on silence, even when the forge digest is unchanged.
+Process completed work under existing [acceptance](../../axstack/references/t3-runtime.md#consume-completion-without-advancing-stale-work)
+and [settlement/readback](../../axstack/references/workspace-hygiene.md),
+then advance every authorized unblocked next action in the same turn without
+another phase-start approval.
+On an automatic unchanged scheduled wake, end the turn with no text or notification
+only after local reconciliation confirms a healthy wait: positively known active
+work, no unconsumed terminal receipt, no pending local action in `Next:`, no new
+question or permission request, and no unresolved failure or liveness/coverage uncertainty.
+Healthy running workers alone never force a message or notification.
+Answer requested status even during a healthy wait.
+Keep failed, held, or unknown work incomplete, never label it healthy.
+Report each new or materially changed hold or unknown in the driver thread once with its resume condition.
+Unchanged holds receive no automatic repeat, and requested status answers name them.
+Exit 10 supplies deltas
 to reconcile with current PR and local state; the driver saves only the printed
 `watermark` field as JSON after disposition. Exit 2 means incomplete coverage:
 readiness is `UNKNOWN`, so hold affected decisions and reconcile the API or
