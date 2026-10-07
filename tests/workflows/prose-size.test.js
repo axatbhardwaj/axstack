@@ -70,6 +70,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // A7 five-minute wake cadence: -5 measured aggregate bytes; always-loaded unchanged.
   // Hermes reply inbox repair1: +574 measured bytes for short plain-text/full-quote
   // transport, gateway version and CLI-only discovery scope; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(330684);
+  // 20261007-auto-merge-scope T1: +81 measured aggregate bytes for narrowed
+  // exclusions and release merge eligibility; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(330765);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });

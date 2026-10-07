@@ -106,9 +106,10 @@ authority and explicit hosts; silence cannot fill a missing authority or target.
 After all required feature PRs merge, open one release PR. Default to a patch
 version, or minor if a `feat` commit landed since the last tag. This normal run
 PR gets authored review and diligence of its body against merged PRs, reaches
-merge-ready, then waits for human merge. Once the forge confirms that merge,
+merge-ready, then merge the release PR under the watch §5 predicate. Once the
+forge confirms that merge,
 tag and wait for the staged publish. Human npm stage approval is a decision
-hold: agents never run `npm stage approve`. A wake verifies the registry reports
+hold. Agents never run `npm stage approve`. A wake verifies the registry reports
 the expected package and version. Install on the named hosts, verify version
 and roles, then run Close-out last with release and install receipts and the
 installed version.

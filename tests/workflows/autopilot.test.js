@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const ref = () => read('skills/axstack/references/autopilot.md');
@@ -38,7 +39,11 @@ test('release authority is per run and release closes after install', () => {
   expect(text).toMatch(/partial match[\s\S]*not applicable/i);
   expect(text).toMatch(/absent host list[\s\S]*hold/i);
   expect(text).toMatch(/Authority:[\s\S]*per run[\s\S]*never carries over/i);
-  expect(text).toMatch(/release PR[\s\S]*authored review[\s\S]*diligence[\s\S]*human merge/i);
+  // Merge eligibility is kept by default-auto-merge.test.js.
+  const review = [/normal run PR/i, /authored review/i, /diligence/i, /body/i, /merged PRs/i];
+  checkRule(text, (source) => requires(source, ...review),
+    'This normal run PR receives authored review and diligence of its body against merged PRs.',
+    [[/authored review/i, 'owner review']], review);
   expect(text).toMatch(/tag[\s\S]*staged publish[\s\S]*human npm stage approval[\s\S]*registry[\s\S]*install[\s\S]*Close.out last/i);
   expect(text).toMatch(/never run `npm stage approve`/i);
   expect(text).toMatch(/closed without merging[\s\S]*incomplete scope/i);

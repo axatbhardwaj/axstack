@@ -55,7 +55,8 @@ Use `clean` only when a single `git revert` of the merge commit restores the
 previous behaviour with CI green.
 A `clean` revert leaves no data, schema, config, external, or published effect behind.
 Otherwise use `steps` or `irreversible`.
-Classify every release PR as `irreversible`.
+Classify a release PR using the same revert criteria, with published effects
+remaining irreversible.
 
 ## Immutable checkout shape
 
