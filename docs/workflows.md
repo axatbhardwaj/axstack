@@ -351,13 +351,14 @@ user-written PRs or PRs with unknown or mixed provenance.
 In team mode it clears only an ineligible base, auto-merge turned off, and an open
 human or bot comment; it never replaces collaborator approval.
 PRs changing `.github/`, files a workflow step invokes by path, package.json
-dependencies or lockfiles, test-runner config, branch-protection or ruleset config,
+beyond `version` and `files`, lockfiles, test-runner config, branch-protection or
+ruleset config,
 `CODEOWNERS`, or a non-`clean` revert are user-merged on the forge.
 Promotion, deploying-base, unknown-base, and peer PRs are also user-merged.
 These categories are excluded from auto-merge.
-Test sources stay eligible. Axstack skill and merge-rule text remain eligible
+Test sources stay eligible. Axstack skill and merge-rule text are eligible
 under the watch predicate. Changes to package.json limited to `version` and
-`files` remain eligible under the watch predicate. Release PRs remain eligible
+`files` are eligible under the watch predicate. Release PRs are eligible
 under the watch predicate. Npm publication still requires human stage approval;
 agents never run `npm stage approve`.
 Non-agent comments hold auto-merge

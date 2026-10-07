@@ -58,8 +58,9 @@ Use `clean` only when a single `git revert` of the merge commit restores the
 previous behaviour with CI green.
 A `clean` revert leaves no data, schema, config, external, or published effect behind.
 Otherwise use `steps` or `irreversible`.
-Classify a release PR using the same revert criteria, with published effects
-remaining irreversible.
+Classify a release PR using the same revert criteria.
+Merging a release PR publishes nothing. The later tag/publish is the irreversible
+step, subject to recorded release authority and human npm stage approval.
 
 ## Immutable checkout shape
 

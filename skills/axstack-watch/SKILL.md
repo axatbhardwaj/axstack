@@ -246,16 +246,16 @@ Never auto-merge promotion PRs (`dev` to `staging`, `staging` to `prod`).
 Never auto-merge PRs with a `deploying` or unknown base.
 Never auto-merge PRs changing anything under `.github/`.
 Never auto-merge PRs changing a file a workflow step invokes by path.
-Never auto-merge PRs with package.json dependency changes.
+Never auto-merge PRs changing package.json beyond `version` and `files`.
 Never auto-merge PRs changing lockfiles.
 Never auto-merge PRs changing test-runner config.
 Never auto-merge PRs changing branch-protection or ruleset config.
 Never auto-merge PRs changing `CODEOWNERS`.
 Test sources stay eligible.
-Axstack skill and merge-rule text remain eligible under the watch predicate.
-Changes to package.json limited to `version` and `files` remain eligible under
+Axstack skill and merge-rule text are eligible under the watch predicate.
+Changes to package.json limited to `version` and `files` are eligible under
 the watch predicate.
-Release PRs remain eligible under the watch predicate.
+Release PRs are eligible under the watch predicate.
 Never auto-merge PRs whose revert line is not `clean`.
 Read the revert gate from the declaration whose line starts with `Revert:`
 at line start in the PR description.
@@ -278,7 +278,8 @@ user-written PRs or PRs with unknown or mixed provenance.
 In `team` mode a reply never replaces counted collaborator approval.
 In `team` mode the reply only clears an ineligible base, auto-merge turned off,
 and an open human or bot comment.
-PRs in the CI, dependency and lockfile, test-runner, branch-protection and ruleset,
+PRs in the CI, package.json beyond `version` and `files`, lockfile, test-runner,
+branch-protection and ruleset,
 `CODEOWNERS`, or non-`clean` revert categories are merged by the user on the forge.
 Promotion, `deploying`-base, unknown-base, and peer PRs are merged by the user on the
 forge, and the card only reports readiness.
