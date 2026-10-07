@@ -47,6 +47,9 @@ Any author repair creates a new revision and repeats this boundary.
 After verified publication readback, follow
 [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches).
 
+The recorded owning watch thread merges under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+
 ## Revert line
 
 Every own PR description must contain exactly one `Revert` line:

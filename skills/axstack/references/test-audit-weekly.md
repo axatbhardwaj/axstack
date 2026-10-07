@@ -61,6 +61,9 @@ verify the exact candidate's checks before publication. The driver uses
 for own PRs, automatic merge is the default under the
 [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 
+The recorded owning watch thread merges under the same watch predicate.
+Workers never merge.
+
 Notify only under the run's Notification policy: a decision park, merge-ready
 (within the run's milestone cap), or serious-risk hold; never progress or
 heartbeats. Keep routine reports in the T3 driver thread, including skipped or empty passes.

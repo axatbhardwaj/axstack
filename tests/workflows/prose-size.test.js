@@ -72,6 +72,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // transport, gateway version and CLI-only discovery scope; always-loaded unchanged.
   // 20261007-auto-merge-scope T1: +81 measured aggregate bytes for narrowed
   // exclusions and release merge eligibility; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(330765);
+  // 20261007-auto-merge-scope T1 scope addendum: +957 measured aggregate
+  // bytes for consistent owning-watch actor pointers and approval/base record fields.
+  expect(total).toBeLessThanOrEqual(331722);
   expect(alwaysLoaded).toBeLessThanOrEqual(26147);
 });

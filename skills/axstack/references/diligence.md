@@ -7,6 +7,10 @@ It is read-only, never authors or edits, and returns `PASS`, `FINDINGS`, or `UNK
 with locations, observed evidence, and limits. A stale or missing receipt is
 not a pass. Keep its first pass independent of other reviewers and workers.
 
+The recorded owning watch thread merges under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+Diligence never merges.
+
 Load [Finding severity](../../axstack-review/SKILL.md#finding-severity) for the shared rubric.
 Diligence returns `FINDINGS` for any `medium` or `high` mismatch.
 Diligence returns `PASS` with the low items listed when only low mismatches remain.

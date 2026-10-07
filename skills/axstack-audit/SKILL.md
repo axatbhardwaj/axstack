@@ -45,6 +45,7 @@ normally. There is no substitution for the base auditor.
 The user-chosen improvement mode is a tested, independently reviewed PR.
 For own PRs, automatic merge is the default under the
 [watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The recorded owning watch thread merges under the same watch predicate.
 The auditor never merges.
 
 Act as a non-author, read-only reader of the run. The assigned audit artifact is

@@ -15,6 +15,7 @@ Produce evidence-bound findings for an exact revision using the review count
 and model routing required by its mode. Report within the requested authority;
 for own PRs, automatic merge is the default under the
 [watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+The recorded owning watch thread merges under the same watch predicate.
 Reviewers never merge.
 
 When the current session is a fresh review-manager session, load
