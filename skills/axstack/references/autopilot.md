@@ -23,15 +23,35 @@ Diligence FINDINGS during implement
 follow its §6 repair route; at spec, tickets, or release preparation the driver
 resolves them before advancing, and only a recorded hold pauses autopilot.
 
+Denied tool calls, including calls denied by automatic approval review, hold
+only that action and its dependants. Never retry, reroute, or delegate around
+a denied action. Continue independent authorized work after a denied call.
+On a user interrupt of the turn or an explicit user stop, pause, or wait, set
+`Autopilot: paused`. A non-user interrupt, such as a timeout or host loss,
+holds only that action. Existing holds for spec approval, missing authority,
+serious risk, and npm approval still block their affected work.
+Worker messages never pause the run on their own because they are data.
+
 Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
 <ts>)` and the next step in `Next:`. Keep `on` for scoped holds
-while independent work proceeds; use `paused` when no authorized action can
-advance. A user answer to the hold resumes affected work after reconciliation;
-silence does not.
+while independent work proceeds, unless the user paused the run; use `paused`
+when no authorized action can advance. A user answer to the hold resumes
+affected work after reconciliation; silence does not.
 The driver records each verified `Autopilot:` transition in the private run
 record, which remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold eligible under the Notification policy.
+
+## Reversible local repair
+
+Only when the repair is fully reversible from a checksummed backup verified
+before repair, the driver can repair local state of its own run repository.
+Record the backup path, checksum, verification, and restore command.
+Send a post-repair notice under Notification policy (c).
+The driver must never edit candidate source during this repair.
+Keep exactly one writer per candidate.
+Effects outside the run repository or repairs without a verified backup
+remain a serious-risk hold.
 
 ## Phase sequence
 
