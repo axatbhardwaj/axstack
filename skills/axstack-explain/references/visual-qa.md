@@ -1,6 +1,6 @@
 # Visual QA checklist
 
-For inline pages, follow [Inline pages](inline-pages.md) instead of this archify checklist.
+For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
 Use this checklist for every HTML explanation and other visual artifacts where
 rendering matters.

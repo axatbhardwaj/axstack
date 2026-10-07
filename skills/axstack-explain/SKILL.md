@@ -86,7 +86,8 @@ Diagram never calls explain.
 ## 3. Verify and deliver
 
 1. For inline pages, follow [Inline pages](references/inline-pages.md).
-   For archify, follow [Visual QA](references/visual-qa.md).
+   For archify and every other explicitly requested HTML or visual artifact
+   outside inline T3 pages, follow [Visual QA](references/visual-qa.md).
 2. Require independent `axstack-explainer-review` for consequential or complex
    claims, archify output, or on request.
    Consequential claims include gap or missing-claim reports, blast-radius

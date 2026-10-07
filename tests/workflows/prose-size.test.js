@@ -96,6 +96,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // skill + 464 implement + 464 UI integration); always-loaded unchanged.
   // 20261007-explain-t3-inline-html T1: +3886 measured aggregate bytes for
   // inline page routing and checks; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(351232);
+  // 20261007-explain-t3-inline-html T1 repair1: +80 measured aggregate bytes
+  // for visual QA on requested artifacts; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(351312);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });
