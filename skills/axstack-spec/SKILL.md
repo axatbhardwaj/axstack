@@ -14,6 +14,11 @@ For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` fold
 Produce one user-approved specification whose exact revision can govern
 ticketing and execution.
 
+Never add a driver-invented spec decision that makes the user merge PRs outside
+[watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely)'s user-merge categories.
+Explicit user restrictions, including `Auto-merge: off`, chat holds, and user
+instructions, always win.
+
 Before specification work, load [Standing contracts](../axstack/references/contracts.md).
 Follow its required path through [Shared lifecycle](../axstack/references/lifecycle.md)
 and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.

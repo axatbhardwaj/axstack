@@ -33,12 +33,12 @@ test('own PR publications enter maintain watch and share its bound wake', () => 
   expect(text).toMatch(/every watched PR[\s\S]*merged or closed[\s\S]*release step[\s\S]*settled or not applicable/i);
 });
 
-test('release authority is per run and release closes after install', () => {
+test('release records authority and closes after install', () => {
   const text = ref();
   expect(text).toMatch(/Release:[\s\S]*AGENTS\.md[\s\S]*tag.triggered workflow[\s\S]*named install hosts/i);
   expect(text).toMatch(/partial match[\s\S]*not applicable/i);
   expect(text).toMatch(/absent host list[\s\S]*hold/i);
-  expect(text).toMatch(/Authority:[\s\S]*per run[\s\S]*never carries over/i);
+  // autopilot-authority.test.js owns standing authority and its run record.
   // Merge eligibility is kept by default-auto-merge.test.js.
   const review = [/normal run PR/i, /authored review/i, /diligence/i, /body/i, /merged PRs/i];
   checkRule(text, (source) => requires(source, ...review),

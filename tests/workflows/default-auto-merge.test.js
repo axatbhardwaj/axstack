@@ -73,8 +73,8 @@ const rules = [
     'In team mode a reply never replaces counted collaborator approval.', [/never replaces/i, 'replaces'], /never replaces/i],
   ['A7 team reply clearance', [/team/i, /reply only clears/i, /ineligible base/i, /auto-merge turned off/i, /open human or bot comment/i],
     'In team mode the reply only clears an ineligible base, auto-merge turned off, and an open human or bot comment.', [/only clears/i, 'clears all beyond']],
-  ['A7 forge-only categories', [/CI/i, /package\.json/i, /beyond|outside|other than/i, /version/i, /files/i, /lockfile/i, /test-runner/i, /branch-protection/i, /ruleset/i, /CODEOWNERS/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
-    'CI, package.json beyond version and files, lockfile, test-runner, branch-protection and ruleset, CODEOWNERS, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
+  ['A7 forge-only categories', [/CI/i, /package\.json/i, /beyond|outside|other than/i, /version/i, /files/i, /lockfile/i, /test-runner/i, /branch-protection/i, /ruleset/i, /CODEOWNERS/i, /AGENTS\.md/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
+    'CI, package.json beyond version and files, lockfile, test-runner, branch-protection and ruleset, CODEOWNERS, AGENTS.md, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
   ['D7 human categories', [/promotion/i, /deploying/i, /unknown-base/i, /peer/i, /user/i, /forge/i, /card only reports readiness/i],
     'Promotion, deploying-base, unknown-base, and peer PRs are merged by the user on the forge while the card only reports readiness.', [/user/i, 'worker']],
 ];
@@ -92,6 +92,7 @@ const exclusions = [
   ['runner', /test-runner config/i, 'PRs changing test-runner config'],
   ['protection', /branch-protection or ruleset config/i, 'PRs changing branch-protection or ruleset config'],
   ['owners', /CODEOWNERS/i, 'PRs changing CODEOWNERS'],
+  ['standing authority', /AGENTS\.md/i, 'PRs changing AGENTS.md'],
   ['revert', /revert line is not `?clean`?/i, 'PRs whose revert line is not clean'],
   ['comments', /held under the comment rules/i, 'PRs held under the comment rules'],
 ];
