@@ -246,6 +246,22 @@ Before finishing PR work, including watch end or Close-out, the driver calls
 `list_thread_pull_requests` and links every missing run PR.
 Never link unrelated PRs.
 
+After verified publication readback of an own PR, for every layer of a `gh stack`,
+the driver also calls `t3_thread_update` with `action: link_pull_request`,
+`pullRequest` containing its number, repository and full PR URL, and `threadId`
+set to the author thread, then reads back the PR link with
+`list_thread_pull_requests` for that same author thread.
+A missing or failed author-link readback never triggers author repair: it holds
+only that PR's merge-ready and requires retrying the link.
+
+When the forge confirms a run PR merged or closed, in the same driver turn the
+driver settles its author thread with `t3_thread_organize` using `action: settle`
+and reads back `settled: true` with `t3_thread_read` for that thread.
+Apply the existing [Settlement](workspace-hygiene.md#settlement) guards:
+terminal run evidence is required and user-taken-over threads stay untouched.
+A missing or failed settle readback holds watch end and Close-out only for
+that author thread until resolved.
+
 For every watched own PR in chat-run or standalone adopted maintenance, when
 available the driver calls `watch_pull_request` for T3 wakes on check completion,
 new comments from others, or branch conflicts, then ends the turn.
