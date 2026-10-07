@@ -86,6 +86,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // audit environment lens and pinned MIT attribution; always-loaded unchanged.
   // 20261007-borrow-skills T4: +456 measured aggregate bytes for UI proof
   // standards and pinned MIT attribution; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(337004);
-  expect(alwaysLoaded).toBeLessThanOrEqual(26190);
+  // 20261007-autonomy A1: +1682 measured aggregate bytes (+1139 Autopilot,
+  // +543 contracts) for denial scope and verified reversible repair; +543 always-loaded.
+  expect(total).toBeLessThanOrEqual(338686);
+  expect(alwaysLoaded).toBeLessThanOrEqual(26733);
 });

@@ -106,6 +106,16 @@ the evidence, likely impact, options, and needed user decision. Disagreement
 or silence is not permission. This remains a prompt contract, not a runtime
 gate.
 
+For local repository-state recovery, this exception applies.
+Only when the repair is fully reversible from a checksummed backup verified
+before repair, the driver can repair local state of its own run repository.
+Record the backup path, checksum, verification, and restore command.
+Send a post-repair notice under Notification policy (c).
+The driver must never edit candidate source during this repair.
+Keep exactly one writer per candidate.
+Effects outside the run repository or repairs without a verified backup
+remain a serious-risk hold.
+
 ## Authority
 
 - The driver owns scope, cross-PR coordination, integration, and every selected
