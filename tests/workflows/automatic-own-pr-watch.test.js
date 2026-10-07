@@ -15,8 +15,8 @@ const reviewInversions = {
   'explicit user publication boundary wins': 'Explicit user stop-after-publication and observation-only requests are overridden by the watch.',
   'driver retains sole ownership and record': 'The driver hands off its role as single owner and sole run-record writer.',
   'cards and hold stay in driver thread': 'Move merge-card replies and `hold` out of the driver thread.',
-  'next PR event restores five minutes': 'On the next event on a watched PR, keep the wake cadence at 60 minutes instead of 5 minutes.',
-  'resumed launched work restores five minutes': 'If launched work becomes unsettled, drop the 5-minute cadence.',
+  'next PR event re-evaluates cadence': 'On the next event on a watched PR, ignore the fallback conditions and retain the wake cadence.',
+  'unsettled work or release restores five minutes': 'If launched work or the release step becomes unsettled, drop the 5-minute cadence.',
   'repairs stay with the author': "The driver takes rebases and review feedback from the PR's author and does the repair itself.",
 };
 
@@ -103,16 +103,42 @@ for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
   rule(`native PR watches stay (${path})`, path, [/native PR watches/i],
     'Retain native PR watches.', [/\b(?:keep|retain)\b/i, 'remove']);
 }
-rule('next PR event restores five minutes', runtime,
-  [/next event/i, /watched PR/i, /cadence/i,
-    /\b(?:restore|return|reset)\b[^.]*\b5 minutes\b|\bcadence (?:becomes|returns to|is reset to) 5 minutes\b/i],
-  'On the next event on a watched PR, the wake cadence becomes 5 minutes.',
-  [/5 minutes/i, '60 minutes']);
-rule('resumed launched work restores five minutes', runtime,
-  [/launched work/i, /unsettled/i, /cadence/i,
+rule('next PR event re-evaluates cadence', runtime,
+  [/next event/i, /watched PR/i, /cadence/i, /fallback conditions/i, /same turn/i],
+  'On the next event on a watched PR, re-evaluate the wake cadence against the fallback conditions in the same turn.',
+  [/re-evaluate|reassess/i, 'ignore']);
+rule('unsettled work or release restores five minutes', runtime,
+  [/launched work or the release step/i, /unsettled/i, /cadence/i, /everyMs:300000/i,
     /\b(?:restore|resume|return)\b[^.]*\b5-minute cadence\b|\b5-minute cadence (?:applies|resumes|returns)\b/i],
-  'While launched work is unsettled, the 5-minute cadence applies.',
+  'While launched work or the release step is unsettled, the 5-minute cadence applies (everyMs:300000).',
   [/5-minute/i, '60-minute']);
+
+// Cadence eligibility and recovery are owned here; native-pr-watch covers the
+// dropped-watch wake's immediate recheck/rearm ordering at the tool boundary.
+for (const [name, concepts, rewording, inversions] of [
+  ['armed native watches permit only a settled 30-minute fallback',
+    [/only while/i, /every open watched PR/i, /\barmed native `?watch_pull_request`?/i,
+      /all launched work is settled/i, /release step is settled or inapplicable/i,
+      /bound chat-run schedule/i, /30-minute fallback/i, /everyMs:1800000/i, /\b(?:use|set)\b/i],
+    'Only while every open watched PR has an armed native watch_pull_request, all launched work is settled, and the release step is settled or inapplicable, set the bound chat-run schedule to a 30-minute fallback (everyMs:1800000).',
+    [[/only while/i, 'even unless'], [/every open watched PR/i, 'some open watched PRs'],
+      [/armed native/i, 'unarmed native'], [/all launched work is settled/i, 'all launched work is unsettled'],
+      [/release step is settled or inapplicable/i, 'release step is unsettled'],
+      [/30-minute/i, '5-minute'], [/everyMs:1800000/i, 'everyMs:300000'], [/\b(?:use|set)\b/i, 'avoid']]],
+  ['unavailable, unarmed or failed native rearm restores five minutes',
+    [/native `?watch_pull_request`?/i, /unavailable/i, /unarmed for any open member/i,
+      /re-arming fails/i, /bound chat-run schedule/i, /5 minutes/i, /everyMs:300000/i, /restore|reset/i],
+    'If native watch_pull_request is unavailable or unarmed for any open member, or re-arming fails, reset the bound chat-run schedule to 5 minutes (everyMs:300000).',
+    [[/unavailable/i, 'available'], [/unarmed for any open member/i, 'armed for every open member'],
+      [/re-arming fails/i, 're-arming succeeds'], [/5 minutes/i, '30 minutes'],
+      [/everyMs:300000/i, 'everyMs:1800000'], [/restore|reset/i, 'retain']]],
+]) {
+  test(`automatic own-PR watch: ${name}`, () => {
+    const accepts = (text) => sentences(text).some((unit) =>
+      requires(unit, ...concepts) && !/\bunless\b|\bexcept\b/i.test(unit));
+    checkRule(read(runtime), accepts, rewording, inversions, concepts);
+  });
+}
 rule('healthy unchanged complete passes stay quiet', runtime,
   [/healthy/i, /unchanged/i, /complete pass/i, /notification/i],
   'A healthy unchanged complete pass emits no notification.',

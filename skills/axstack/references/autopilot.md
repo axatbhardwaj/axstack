@@ -89,6 +89,8 @@ Read the [T3 runtime boundary](t3-runtime.md) and use its bound
 `schedule_task` wake (`everyMs:300000`), recording the scheduledTaskId.
 Follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
 alongside that bound schedule.
+Apply [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
+cadence conditions before ending the turn.
 An explicitly adopted PR joins only with its maintenance snapshot.
 The original driver alone routes work; one author writes each
 candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After

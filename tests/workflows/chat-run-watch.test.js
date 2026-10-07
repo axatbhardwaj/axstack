@@ -125,8 +125,13 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
   expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
 });
 
-test('own open PRs wake the original T3 driver every five minutes', () => {
-  expect(watch()).toMatch(/own open PRs[^.]*every 5 minutes by default/i);
+test('own open PRs use the original T3 driver with the runtime fallback cadence', () => {
+  const concepts = [/own open PRs/i, /chat-run mode/i, /30-minute fallback/i,
+    /when eligible/i, /Chat-run watch runtime/i, /\buse\b/i];
+  checkRule(sentences(watch()).join('. '), (text) => requires(text, ...concepts),
+    'For own open PRs in chat-run mode, use the 30-minute fallback when eligible under Chat-run watch runtime.',
+    [[/30-minute/i, '5-minute'], [/when eligible/i, 'regardless of eligibility'],
+      [/\buse\b/i, 'avoid']], concepts);
   expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:300000`');
   expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
@@ -137,11 +142,14 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
   expect(runtime()).toMatch(/stop[^.]*chosen wake[^.]*every watched PR[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*user cancels/i);
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
-  const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i, /every 5 minutes/i, /default/i];
+  const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i,
+    /30-minute fallback/i, /native PR watches are armed/i, /work and release are settled/i];
   const cadence = (text) => requires(text, ...concepts);
   checkRule(host(), cadence,
-    'By default, a bound T3 schedule resumes the driver thread every 5 minutes.',
-    [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores']], concepts);
+    'A bound T3 schedule wakes the driver thread on a 30-minute fallback while native PR watches are armed and work and release are settled.',
+    [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores'],
+      [/30-minute/i, '5-minute'], [/watches are armed/i, 'watches are unarmed'],
+      [/work and release are settled/i, 'work and release are unsettled']], concepts);
   expect(readme()).toContain('docs/host-operations.md#chat-run-watch-activation');
 });
 

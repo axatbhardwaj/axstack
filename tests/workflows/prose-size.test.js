@@ -121,6 +121,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-autonomy A4: +1154 measured aggregate bytes (+323 Relay,
   // +201 lifecycle, +403 T3 runtime, +143 publication, +84 hygiene);
   // +201 always-loaded bytes. Preserve the inherited 44-byte aggregate headroom.
-  expect(total).toBeLessThanOrEqual(357701);
+  // 20261007-watch-fallback-cadence T1: +1140 measured aggregate bytes for
+  // settled native-watch fallback, same-turn re-arm and cadence pointers;
+  // preserve 44-byte aggregate headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(358841);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });

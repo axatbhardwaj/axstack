@@ -33,7 +33,7 @@ merge-ready. An own PR published after the watch stops arms a new watch under
 after verified readback, subject to the user's explicit publication boundary.
 
 The initiating T3 thread remains the sole driver and `progress.md` writer.
-Use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
+Initially use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:300000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
 driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding at creation.
@@ -47,8 +47,16 @@ user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
 When work restarts, restore the normal 5-minute cadence.
 Keep native PR watches.
-On the next event on a watched PR, restore the wake cadence to 5 minutes.
-If launched work becomes unsettled, restore the 5-minute cadence.
+Only while every open watched PR has an armed native `watch_pull_request`, all
+launched work is settled, and the release step is settled or inapplicable, use
+the bound chat-run schedule as a 30-minute fallback (`everyMs:1800000`).
+If native `watch_pull_request` is unavailable or unarmed for any open member,
+or re-arming fails, restore the bound chat-run schedule to 5 minutes (`everyMs:300000`).
+On the next event on a watched PR, re-evaluate the wake cadence against the
+fallback conditions in the same turn.
+If launched work or the release step becomes unsettled, restore the 5-minute cadence (`everyMs:300000`).
+Apply these conditions before ending each driver turn, including after initial
+arming or a work restart; the 60-minute human-only wait rule above still applies.
 Read back each schedule update and record its receipt; an uncertain update holds affected work.
 Each wake reconciles all unsettled runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
