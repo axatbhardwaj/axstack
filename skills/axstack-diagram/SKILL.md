@@ -1,6 +1,6 @@
 ---
 name: axstack-diagram
-description: When an explanation needs a diagram, use axstack-diagram to choose Mermaid or a pinned archify viewer with source fidelity and rendered QA.
+description: When an explanation needs a diagram, use axstack-diagram for inline SVG or CSS in pages, Mermaid in chat, GitHub, and docs, or archify only on an explicit viewer request.
 ---
 
 # Diagram
@@ -9,9 +9,11 @@ Usage: `/axstack-diagram <question + destination>` or load this skill from expla
 Load [Standing contracts](../axstack/references/contracts.md) before acting.
 Follow [Fidelity](references/fidelity.md) for every format.
 
-Use archify HTML for an explicit viewer request or explain's complex-visual path.
-For the viewer, follow [Archify](references/archify.md).
-Otherwise use Mermaid for chat, GitHub, or docs.
+Use archify HTML only on an explicit viewer request.
+The configured `axstack-explainer` authors the viewer; follow [Archify](references/archify.md).
+Use inline SVG or CSS inside inline pages.
+Never use Mermaid in inline pages.
+Use Mermaid for chat fallback, GitHub, and docs.
 Include `accTitle` and `accDescr` in each Mermaid view.
 Never use theme init in Mermaid.
 Split large Mermaid diagrams into views.

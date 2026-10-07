@@ -142,7 +142,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Complex visual explanation author: traces systems, changes, and implementation gaps in requested artifacts and verifies rendered behavior where applicable. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Archify viewer author: authors archify only on an explicit viewer request, with source fidelity. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -151,7 +151,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Independent visual explanation reviewer: checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Independent explanation reviewer: reviews consequential or complex claims, archify output, or on request. Checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -160,7 +160,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Read-only UI verifier: uses T3 preview_* tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Never edits source. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Read-only UI verifier: uses T3 preview_* tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256. Never edits source. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {

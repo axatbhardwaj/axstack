@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule as checkSemanticRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const router = 'skills/axstack-diagram/SKILL.md';
@@ -15,10 +15,16 @@ const upstreamLimitOverride = (text) => requires(text,
 // Existing explain tests do not cover this skill. All probes use real source
 // in memory; no test writes tracked files or adds a production test hook.
 const rules = [
-  ['required viewer', router, [/explicit viewer request/i, /complex-visual path/i, /archify HTML/i, /use|choose/i],
-    /archify HTML/i, 'Mermaid', 'Choose archify HTML for an explicit viewer request or the complex-visual path.'],
-  ['portable destination', router, [/otherwise/i, /chat/i, /GitHub/i, /docs/i, /Mermaid/i, /use|choose/i],
-    /Mermaid/i, 'archify HTML', 'Otherwise choose Mermaid for chat, GitHub, or docs.'],
+  ['required viewer', router, [/explicit viewer request/i, /only/i, /archify HTML/i, /use|choose/i],
+    /only/i, 'also without a request', 'Choose archify HTML only on an explicit viewer request.'],
+  ['viewer author', router, [/viewer/i, /axstack-explainer/i, /author/i],
+    /axstack-explainer/i, 'driver', 'The axstack-explainer authors the viewer.'],
+  ['portable destination', router, [/chat fallback/i, /GitHub/i, /docs/i, /Mermaid/i, /use|choose/i],
+    /Mermaid/i, 'archify HTML', 'Choose Mermaid for chat fallback, GitHub, and docs.'],
+  ['inline page diagrams', router, [/inline pages/i, /inline SVG/i, /CSS/i, /use|choose/i],
+    /inline SVG/i, 'remote image', 'Choose inline SVG or CSS inside inline pages.'],
+  ['no Mermaid in pages', router, [/Mermaid/i, /inline pages/i],
+    /never use|do not use/i, 'Use', 'Do not use Mermaid in inline pages.', /never use|do not use/i],
   ['Mermaid accessibility', router, [/Mermaid/i, /accTitle/i, /accDescr/i, /include|supply/i],
     /include|supply/i, 'omit', 'Supply accTitle and accDescr in each Mermaid view.'],
   ['Mermaid theme', router, [/Mermaid/i, /theme init/i],
@@ -222,4 +228,14 @@ test('diagram precedence rejects inserted upstream repair-limit overrides on rea
     expect(() => checkRule(altered, rule)).toThrow('Axstack conflict precedence: missing required instruction');
   }
   checkRule(`${source}\nDo not follow archify repair limits.`, rule);
+});
+
+// Discovery must agree with the body; explain's tests cannot protect this entrypoint.
+test('diagram discovery routes pages, portable diagrams, and explicitly requested viewers', () => {
+  const description = read(router).match(/^description: (.*)$/m)?.[1] ?? '';
+  const concepts = [/inline SVG.*CSS/i, /pages/i, /Mermaid/i, /chat/i, /GitHub/i, /docs/i,
+    /archify/i, /only/i, /explicit viewer request/i];
+  checkSemanticRule(description, (text) => requires(text, ...concepts),
+    'Use axstack-diagram for inline SVG or CSS in pages, Mermaid in chat, GitHub, and docs, or archify only on an explicit viewer request.',
+    [[/only/i, 'also without a request'], [/inline SVG/i, 'remote images']], concepts);
 });

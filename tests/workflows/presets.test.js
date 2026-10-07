@@ -519,3 +519,30 @@ test('presets: mixed owner independently uses Sol high with full access', () => 
     provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high', modeId: 'full-access',
   });
 });
+
+// Runtime snapshots copy these notes from the presets. The role matrix checks
+// cannot catch stale author/reviewer/verifier responsibilities in that prompt.
+const explanationRoles = [
+  ['axstack-explainer', [/authors? archify/i, /only/i, /explicit viewer request/i],
+    'The explainer authors archify only on an explicit viewer request.',
+    [[/only/i, 'also without a request'], [/authors? archify/i, 'authors every inline page']]],
+  ['axstack-explainer-review', [/\breviews?\b/i, /consequential or complex claims/i, /archify output/i, /on request/i],
+    'Review consequential or complex claims, archify output, or on request.',
+    [[/\breviews?\b/i, 'ignore'], [/consequential or complex claims/i, 'simple claims']]],
+  ['axstack-ui-verifier', [/owns|performs/i, /inline page/i, /interaction pass/i,
+    /every interactive page/i, /exact bytes/i, /SHA-256/i],
+    'The verifier performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256.',
+    [[/owns|performs/i, 'skips'], [/every interactive page/i, 'some interactive pages']]],
+];
+for (const [id, concepts, rewording, inversions] of explanationRoles) {
+  for (const preset of presetNames) {
+    test(`explanation role contract: ${preset}: ${id}`, () => {
+      const notes = readJson(`profiles/presets/${preset}.json`).roles.find((role) => role.id === id).notes;
+      checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
+    });
+  }
+  test(`explanation role contract: roster: ${id}`, () => {
+    const roster = sentences(readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8')).join('. ');
+    checkRule(roster, (text) => requires(text, new RegExp(id), ...concepts), `${id}: ${rewording}`, inversions, concepts);
+  });
+}

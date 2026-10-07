@@ -74,6 +74,7 @@ the settings sidecar preserves the value while any other install still owns it.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
   homes and fixtures only.
 
+Explanations default to inline T3 pages; use archify only on an explicit viewer request.
 Installation sparse-clones archify at the reviewed full SHA in `src/archify-pin.js`
 into `<tools-dir>/archify-<sha>`. It verifies HEAD before use and keeps the
 payload's licence and third-party notices. The manifest owns

@@ -62,6 +62,11 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    session to return plain AGREE. Present one
    reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
+   In a T3 thread, the driver also publishes the spec readback as an inline page and
+   follows [Explain](../axstack-explain/SKILL.md) and
+   [Inline pages](../axstack-explain/references/inline-pages.md) for its checks and delivery.
+   The readback page shows the revision ID, SHA-256, and store path.
+   Approval binds to that revision, not to the page.
    Name the draft revision covered by each adviser receipt at the checkpoint.
    If draft text changed and an adviser receipt covers an older revision, hold
    approval until fresh receipts cover the presented revision.

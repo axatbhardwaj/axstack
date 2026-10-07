@@ -104,6 +104,12 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // for explicit verifier proof scope on candidate checks and inline pages; always-loaded unchanged.
   // 20261007-explain-t3-inline-html T2 repair1: +316 measured aggregate bytes for
   // dispatched non-publishing preview self-checks; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(353247);
+  // 20261007-explain-t3-inline-html T3: +696 measured aggregate bytes for
+  // spec readback identity, diagram routing and role notes; always-loaded unchanged.
+  // 20261007-explain-t3-inline-html T3 rebase1: 343009 measured bytes + 44 headroom;
+  // preserve borrowed-skills comments and its 26190-byte always-loaded ceiling.
+  // 20261007-explain-t3-inline-html T3 rebase2: 353899 measured bytes + 44 headroom;
+  // retain all dated comments and main's 26814-byte always-loaded ceiling.
+  expect(total).toBeLessThanOrEqual(353943);
   expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

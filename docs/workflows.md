@@ -32,12 +32,15 @@ Direct routes need no spec ceremony:
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
   Only the user invokes it.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
-  behavior; complex visuals receive exact-artifact QA where applicable.
-- [axstack-diagram](../skills/axstack-diagram/SKILL.md) selects Mermaid for chat,
-  GitHub, and docs, or an interactive viewer for required complex visuals.
-  Explain loads it for every diagram. Viewers use
-  [archify](https://github.com/tt-a1i/archify) (MIT) with a pinned tool,
-  a passing finalize receipt, rendered QA, and node-and-edge source review.
+  behavior. Explanations default to checked inline T3 pages above a short reply.
+  Consequential or complex claims, archify output, or a user request require
+  independent explanation review; interactive pages receive a verifier pass.
+- [axstack-diagram](../skills/axstack-diagram/SKILL.md) selects inline SVG or CSS
+  inside pages and Mermaid for chat fallback, GitHub, and docs.
+  Explain loads it for every diagram. Use
+  [archify](https://github.com/tt-a1i/archify) (MIT) only on an explicit viewer request,
+  authored by `axstack-explainer`, with a pinned tool, a passing finalize receipt,
+  rendered QA, and node-and-edge source review.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code. Its test-audit lens marks every declaration
   in one owner boundary R/F/C/D, reports reviewed and eligible counts, and routes
