@@ -127,6 +127,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-watch-fallback-cadence T1 repair1 on 9a259dc6: +1140 measured
   // aggregate bytes for settled native-watch fallback, same-turn re-arm and
   // cadence pointers; preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(360004);
+  // 20261007-issue-340 A1: +278 measured aggregate bytes (+192 Implement,
+  // +86 performance loop) for the loop definition and unmarked optimization route;
+  // preserve 44-byte headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(360282);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });
