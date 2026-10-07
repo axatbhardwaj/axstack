@@ -47,6 +47,26 @@ test('verify is discoverable in README and workflow routes', () => {
   expect(direct).toContain('[axstack-verify](../skills/axstack-verify/SKILL.md)');
 });
 
+// Public listings must describe both shipped modes. Discovery alone misses a
+// linked skill whose description still defers maintain to a later delivery.
+for (const path of ['README.md', 'docs/workflows.md']) {
+  test(`${path} describes verification creation and maintenance as available`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8');
+    const entry = path === 'README.md'
+      ? text.split('\n').find((line) => line.includes('[axstack-verify]')) ?? ''
+      : text.match(/(?:^|\n)- \[axstack-verify\][\s\S]*?(?=\n- |\n\n|$)/)?.[0] ?? '';
+    const concepts = [/axstack-verify/i, /creat(?:e|ion)/i, /maintain|maintenance/i, /verification[- ]skill/i];
+    const accepts = (source) => requires(source, ...concepts)
+      && !/\b(?:pending|unavailable|deferred|next delivery)\b/i.test(source);
+    checkRule(sentences(entry).join('. '), accepts,
+      'axstack-verify handles verification-skill creation and maintenance.',
+      [[/maintain|maintenance/gi, 'omit upkeep'], [/creat(?:e|ion)/gi, 'skip setup'],
+        [/maintain|maintenance/gi, 'maintain mode pending'],
+        [/maintain|maintenance/gi, 'maintain mode follows in the next delivery task'],
+        [/^/, 'Do not ']], concepts);
+  });
+}
+
 test('README explains four failure modes', () => {
   const fixes = new Map([
     ['Wrong thing built', /align[^|]*arena/i],
