@@ -4,7 +4,13 @@ import { prohibits, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
-const clausesOf = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
+const clausesOf = (text) => text
+  .split(/\n\s*\n|\n(?=\s*(?:[-*]|\d+\.)\s)/)
+  .flatMap((block) => block
+    .replace(/^\s*\d+\.\s+\*\*.*\*\*\n/, '')
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?;])\s+/))
+  .map((clause) => clause.trim()).filter(Boolean);
 const loop = () => read('skills/axstack/references/perf-loop.md');
 const phase = (name) => () => read(`skills/axstack-${name}/SKILL.md`);
 const debug = phase('debug'), improve = phase('improve'), implement = phase('implement');
@@ -31,12 +37,16 @@ const rules = [
     [/report.only/gi, 'source-editing'], 'For performance work, discovery stays report-only.'],
   ['discovery ranking', improve, [/performance work/i, /rank|order/i, /candidates/i, /mantra order/i],
     [/mantra order/gi, 'arbitrary order'], 'For performance work, order candidates in mantra order.'],
-  ['implementation loop', implement, [/performance work/i, /run|execute/i, /change loop/i],
-    [/run|execute/gi, 'skip'], 'For performance work, execute the change loop.'],
+  ['implementation loop', implement, [/performance work/i, /run|execute/i, /change loop/i, /defined|described/i, /Performance loop/i],
+    [/run|execute/gi, 'skip'], `For performance work, execute the change loop described in ${link}.`],
   ['optimization route', implement, [/accepted/i, /optimization scope/i, /explicitly (?:marked|tagged)/i, /without new behavior/i, /structure.preserving/i, /same checks/i, /green/i, /before and after/i, /measured delta/i],
     [/explicitly (?:marked|tagged)/gi, 'author-inferred'], 'For an accepted optimization scope without new behavior explicitly tagged structure-preserving, use the structure-preserving path with the same checks green before and after plus the measured delta.'],
   ['new behavior route', implement, [/performance work/i, /new behavior/i, /failing check/i, /first|before/i],
     [/first|before/gi, 'afterward'], 'For performance work that adds new behavior, run a failing check first.'],
+  ['unmarked optimization route', implement, [/optimization/i, /not explicitly (?:marked|tagged) structure.preserving/i, /normal behavior path/i, /real/i, /red.to.green/i],
+    [/normal behavior path/gi, 'structure-preserving path'], 'For an optimization not explicitly tagged structure-preserving, follow the normal behavior path with real red-to-green evidence.', /not explicitly (?:marked|tagged) structure.preserving/i],
+  ['change loop definition', loop, [/change loop/i, /\b(?:is|means)\b/i, /ordered steps/i, /(?:in|from) this reference/i, /run|execute/i, /axstack-implement/i],
+    [/ordered steps/gi, 'unordered suggestions'], 'The change loop means the ordered steps from this reference, executed by axstack-implement.'],
   ['one writer', loop, [/keep|retain/i, /one writer/i, /per candidate/i],
     [/one writer/gi, 'parallel writers'], 'Retain one writer per candidate.'],
   ['change phase boundary', loop, [/change steps/i, /revert/i, /commit/i, /implement receipt/i, /only/i, /axstack-implement/i],
@@ -89,7 +99,7 @@ for (const row of rules) {
     const check = accepts(row);
     const matches = clauses.filter(check);
     expect(matches, 'missing or ambiguous required instruction').toHaveLength(1);
-    const substitute = (replacement) => clauses.map((clause) => clause === matches[0] ? replacement : clause).join('\n');
+    const substitute = (replacement) => clauses.map((clause) => clause === matches[0] ? replacement : clause).join('\n\n');
     expect(check(substitute('')), 'removal').toBe(false);
     for (const concept of concepts) {
       expect(check(substitute(matches[0].replace(new RegExp(concept.source, 'gi'), ''))), 'qualifier removal').toBe(false);
@@ -100,6 +110,19 @@ for (const row of rules) {
     for (const sibling of rules.filter((item) => item[1] === source)) expect(accepts(sibling)(rewritten), sibling[0]).toBe(true);
     expect(rewording).toMatch(direction);
     expect(check(substitute(rewording.replace(direction, inverse))), 'reworded inversion').toBe(false);
+  });
+}
+
+for (const name of ['implement conditional load', 'noise gate']) {
+  test(`performance loop: rewrapped ${name} retains its meaning`, () => {
+    const row = rules.find((item) => item[0] === name);
+    const source = row[1]();
+    const clause = clausesOf(source).find(accepts(row));
+    expect(clause).toBeDefined();
+    const split = clause.indexOf(' ', Math.floor(clause.length / 2));
+    expect(split).toBeGreaterThan(0);
+    const wrapped = source.replace(clause, `${clause.slice(0, split)}\n  ${clause.slice(split + 1)}`);
+    expect(accepts(row)(wrapped), name).toBe(true);
   });
 }
 
@@ -120,7 +143,7 @@ test('performance loop: ordered steps and cheapest-first mantras', () => {
 
 test('performance loop: packaged load targets and pinned attribution', () => {
   for (const source of [debug, improve, implement]) {
-    const directive = source().split('\n').find((line) => line.includes(link));
+    const directive = clausesOf(source()).find((clause) => clause.includes(link));
     expect(directive).toBeDefined();
     expect(requires(directive, /only/i, /performance work/i, /load|read|consult/i)).toBe(true);
   }

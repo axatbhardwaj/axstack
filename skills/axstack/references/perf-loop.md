@@ -1,9 +1,10 @@
 # Performance loop
 
+The change loop is the ordered steps in this reference, run by `axstack-implement`.
 Keep one writer per candidate.
 The change steps (revert, commit and implement receipt) run only in `axstack-implement`.
 
-Follow this ordered loop:
+Follow these ordered steps:
 
 1. **Freeze and prove sensitivity.**
    Freeze the workload, command and environment before the baseline.
