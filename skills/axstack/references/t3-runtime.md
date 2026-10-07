@@ -266,18 +266,21 @@ For every watched own PR in chat-run or standalone adopted maintenance, when
 available the driver calls `watch_pull_request` for T3 wakes on check completion,
 new comments from others, or branch conflicts, then ends the turn.
 Never poll or keep a model active between native PR wake events.
-When T3 reports it stopped watching a PR, the next wake re-checks the PR and
-calls `watch_pull_request` again.
+A T3 "stopped watching" notice is itself a driver wake: in that same turn,
+re-check the PR and call `watch_pull_request` again.
 This includes a stop after T3 could not read the PR for 15 minutes.
 Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
 
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
+If re-arming fails, restore the bound 5-minute schedule.
 When the run waits only on a user decision or a human-only step, including a
 user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
 When work restarts, restore the normal 5-minute cadence.
 Keep native PR watches.
+For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
+for 30-minute fallback eligibility, 5-minute recovery, and schedule update read-back.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.

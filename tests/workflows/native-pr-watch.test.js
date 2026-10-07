@@ -56,10 +56,12 @@ rule('native watch arms event wakes and ends the turn', runtime,
     /new comments from others/i, /branch conflicts/i],
   'When available, for every watched own PR in chat-run or standalone adopted maintenance, the driver invokes watch_pull_request and ends the turn so T3 wakes on check completion, new comments from others, or branch conflicts.',
   [[/\b(?:calls?|invokes?)\b/i, 'bypasses'], [/ends? the turn/i, 'keeps the turn running']]);
-rule('stopped native watches are rechecked and rearmed at the next wake', runtime,
-  [/T3/i, /stopped watching/i, /next wake/i, /PR/i, /watch_pull_request/i, /again/i],
-  'At the next wake after T3 reports it stopped watching a PR, the driver re-checks the PR and invokes watch_pull_request again.',
-  [[/re-checks?/i, 'ignores'], [/\b(?:calls?|invokes?)\b/i, 'bypasses']]);
+rule('stopped native watch notice is a wake with same-turn recheck and rearm', runtime,
+  [/T3/i, /stopped watching/i, /notice/i, /itself a driver wake/i,
+    /same turn/i, /PR/i, /watch_pull_request/i, /again/i],
+  'A T3 stopped watching notice is itself a driver wake: during that same turn, re-check the PR and invoke watch_pull_request again.',
+  [[/same turn/i, 'next wake'], [/re-checks?/i, 'ignores'],
+    [/\b(?:call|invoke)s?\b/i, 'bypasses'], [/itself a driver wake/i, 'only data for a later wake']]);
 rule('missing native watch falls back to schedule and digest without a hold', runtime,
   [/watch_pull_request/i, /unavailable/i, /bound 5-minute schedule/i, /scripts\/pr-digest\.js/i],
   'Without a hold, fall back to scripts/pr-digest.js and the bound 5-minute schedule whenever watch_pull_request is unavailable.',

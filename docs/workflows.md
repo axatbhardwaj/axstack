@@ -390,8 +390,8 @@ never sends relay messages.
 Accepted risks: two agents can miss the same defect while CI is green; spec
 approval is the user's main checkpoint. A head guard does not atomically guard
 base freshness; the concurrent-merge race is held by the post-merge push-failure
-rule. A watch waking every 5 minutes (60 when quiet) until PRs land has an accepted
-token cost. Preview code runs under the same VPS user as agents and is not isolated;
+rule. A watch with a 30-minute fallback, 5-minute recovery, and 60-minute human wait
+until PRs land has an accepted token cost. Preview code runs under the same VPS user as agents and is not isolated;
 tests already do, so the added risk is small.
 
 ## Optional native peer-review automation
