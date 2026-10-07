@@ -17,7 +17,7 @@ const surfaces = [contracts, 'skills/axstack/references/autopilot.md',
   'skills/axstack-audit/SKILL.md', 'AGENTS.md', ...publicDocPaths(`${import.meta.dir}/../..`)];
 
 // Protect the shipped instruction boundary. Mutations stay in memory.
-for (const path of ['README.md', 'docs/workflows.md']) {
+for (const path of ['docs/workflows.md']) {
   test(`solo card reply authorizes guarded integration merge: ${path}`, () => {
     const concepts = [/solo/i, /user.s merge-card reply/i, /authorizes/i, /guarded merge/i,
       /user-written PRs/i, /unknown or mixed provenance/i];
@@ -60,7 +60,7 @@ for (const [name, concepts, rewording, inversion, prohibition] of standing) {
     checkRule(compact(read(contracts)), accepts, rewording, [inversion], concepts);
   });
 }
-for (const path of [contracts, 'AGENTS.md', watchPath, 'README.md', 'docs/workflows.md', 'skills/axstack-implement/SKILL.md',
+for (const path of [contracts, 'AGENTS.md', watchPath, 'docs/workflows.md', 'skills/axstack-implement/SKILL.md',
   'skills/axstack/references/autopilot.md', 'skills/axstack-review/SKILL.md',
   'skills/axstack/references/automations.md']) {
   test(`user merges stacks bottom-up: ${path}`, () => {

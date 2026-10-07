@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { publicDocPaths } from './public-docs.js';
 import { checkRule, requires, sentences } from './prose-contract.js';
 
 const compact = (text) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
@@ -136,12 +137,12 @@ test('authority-file examples and release authority remain explicit', () => {
 });
 
 const documented = [
-  ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /IP routing/i],
-    'CLI proxy, account pooling, and IP routing are excluded.', [/excluded/i, 'authorized']],
+  ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
+    'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],
   ['deferred contention', [/local CI contention/i, /deferred/i],
     'Local CI contention handling remains deferred.', [/deferred/i, 'implemented']],
-  ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /excluded/i],
-    'Quota-driven scheduling or model routing remains excluded.', [/excluded/i, 'permitted']],
+  ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /provider\/model substitution/i, /excluded/i],
+    'Quota-driven scheduling or model routing (provider/model substitution) remains excluded.', [/excluded/i, 'permitted']],
   ['excluded automatic merge categories', [/automatic merge/i, /promotion/i, /release/i, /deploying-base/i, /peer/i, /excluded/i],
     'Automatic merge of promotion, release, deploying-base, and peer PRs remains excluded.', [/excluded/i, 'permitted']],
   ['excluded previews', [/previews/i, /outside the VPS/i, /public previews/i, /production data/i, /excluded/i],
@@ -161,10 +162,42 @@ const documented = [
   ['shared preview user', [/preview code/i, /same VPS user/i, /agents/i, /isolated/i],
     'Preview code runs under the same VPS user as agents and is not isolated.', [/is not isolated/i, 'is isolated'], /is not isolated/i],
 ];
-for (const path of ['docs/workflows.md', 'README.md']) {
-  for (const [name, concepts, rewording, inversion, prohibition] of documented) {
-    test(`documented boundary: ${name} in ${path}`, () => {
-      checkRule(compact(read(path)), acceptsRule(concepts, prohibition), rewording, [inversion], concepts);
-    });
-  }
+for (const [name, concepts, rewording, inversion, prohibition] of documented) {
+  test(`documented boundary: ${name} in docs/workflows.md`, () => {
+    checkRule(compact(read('docs/workflows.md')), acceptsRule(concepts, prohibition), rewording, [inversion], concepts);
+  });
 }
+
+test('documentation permits only own same-provider same-model account selection', () => {
+  const concepts = [/per-dispatch/i, /selection/i, /user.s own/i, /same-provider/i, /same-model/i, /permitted/i];
+  checkRule(compact(read('docs/workflows.md')), (text) => sentences(text).some((unit) => requires(unit, ...concepts) && !/\bunless|\bexcept/i.test(unit)),
+    "Per-dispatch selection among the user's own same-provider, same-model accounts is permitted.",
+    [[/permitted/i, 'forbidden']], concepts);
+});
+
+test('workflows is the single public home for exclusions and accepted risks', () => {
+  for (const path of publicDocPaths(`${import.meta.dir}/../..`).filter((path) => path !== 'docs/workflows.md')) {
+    const source = compact(read(path));
+    for (const [name, concepts, rewording] of documented) {
+      const duplicates = (text) => sentences(text).some((unit) => concepts.every((concept) => concept.test(unit)));
+      expect(duplicates(source), `${path}: ${name}`).toBe(false);
+      expect(duplicates(`${source} ${rewording}`), `${path}: injected ${name}`).toBe(true);
+    }
+    const canonical = compact(read('docs/workflows.md'));
+    for (const terms of [
+      [/solo/i, /approval/i, /authored.review/i, /diligence/i, /PASS/i],
+      [/team/i, /auto.merge/i, /non-production/i, /dev/i],
+      [/collaborator approval/i, /carries over only/i, /patch-id/i],
+      [/solo/i, /merge-card reply/i, /authorizes/i, /guarded merge/i],
+    ]) {
+      const duplicates = (text) => sentences(text).some((unit) => terms.every((term) => term.test(unit)));
+      const policy = sentences(canonical).find((unit) => terms.every((term) => term.test(unit)));
+      expect(policy).toBeDefined();
+      expect(duplicates(source), path).toBe(false);
+      expect(duplicates(`${source}. ${policy}`), `${path}: injected merge boundary`).toBe(true);
+    }
+  }
+  const summary = read('README.md').split('## Automatic merge boundaries')[1].split('## Some notes')[0].trim();
+  expect(summary.split('\n')).toHaveLength(1);
+  expect(summary).toContain('](docs/workflows.md#automatic-merge-boundaries)');
+});
