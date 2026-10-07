@@ -77,16 +77,20 @@ Size est: medium
 Acceptance: AC13 (model-invocable, two modes, single-behavior requests route to an
   existing verify-<app> skill or ui-verification.md delegation); AC14 (create:
   repository reading, harness reuse, .agents/skills/verify-<app>/ layout with
-  Launch/Doctor/Drive/Evidence/Cleanup/Helpers and features/ map, relative
+  Launch/Doctor/Drive/Evidence/Cleanup/Helpers and features/ map with an index and
+  the top 3-5 user features, after reading surface, run, drive, observe and isolate;
+  relative
   .claude/skills symlink, executable documented helpers, name+description
-  frontmatter only); AC15 (one executed e2e proof as bounded exception recorded on
+  frontmatter only); AC15 (one executed e2e proof: launch, doctor, drive one mapped
+  feature, capture evidence, clean up, confirm evidence survives; a bounded exception recorded on
   the TDD line, AC11 tests for axstack-verify itself and red/green for helper logic
   still required, author drives non-browser only, browser via ui-verification.md
   with feature file path, discovery + relative-helper checks in Claude Code and
   Codex); AC17 safety (no product/build fixes, private evidence, owned 0700 TMPDIR
   outside HOME, loopback, no production secrets, literal cleanup, peer PR recipe
   from base run on candidate with served SHA, preserve existing skills and resolve
-  collisions); AC19 (listings, pinned pstack credit, MIT); AC11; AC12
+  collisions); AC16 create-mode half (doctor before each drive, retry once after a
+  drift fix, clean up after failed attempts, evidence survives cleanup); AC19 (listings, pinned pstack credit, MIT); AC11; AC12
 Depends: T4
 
 Capability: CD Verification skill
@@ -95,9 +99,10 @@ Theme: maintain mode and use-when-present integration in implement and ui-verifi
 Size est: medium
 Acceptance: AC16 (index hygiene, source read per feature, live drive of every
   mapped feature with doctor-before-drive, drift/harness/regression
-  classification, regressions to the driver then axstack-debug, omitted entry
+  classification, regressions to the driver then axstack-debug and never fixed in
+  docs, omitted entry
   points and unreachable prerequisites reported separately, incomplete coverage
-  never clean, clean/changed/blocked outcomes, no parallel wave, no schedule,
+  never clean, clean/changed (one PR)/blocked outcomes, no parallel wave, no schedule,
   retry once after a drift fix, cleanup after failed attempts, surviving
   evidence); AC18 (implement §5 and ui-verification.md use a present skill for
   affected behavior, mapped-feature changes update the feature file in the same
