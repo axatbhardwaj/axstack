@@ -35,7 +35,9 @@ Cleanup order is: settled descendants -> evidence readback -> salvage dirty or i
 Require terminal run evidence before `t3_thread_organize` settle or archive.
 These metadata actions do not remove worktrees. Accept matching delegated task
 or launched run completion under the runtime contract before settlement.
-After the driver accepts a launched writer's or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, it settles the matching thread with `t3_thread_organize` as metadata only.
+After the driver accepts a launched writer's (author or repair) or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, in the same driver turn it settles the matching thread with `t3_thread_organize` using `action: settle` as metadata only.
+The driver reads back `settled: true` with `t3_thread_read` on the writer thread for launched writers and on the `childThreadId` for delegated tasks.
+A missing or failed settle readback never triggers author repair: it holds only that dispatch's next advancement (publication, review routing, merge-ready) until resolved.
 Settling never removes, archives or abandons the thread or worktree.
 Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author.
 On forge-confirmed merge or closure, follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
