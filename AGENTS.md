@@ -45,10 +45,11 @@
 - Treat `docs/specs/` and `docs/plans/` as historical baselines, not standing
   instructions for the current task.
 - Standing release and install authority: when a run changes shipped skills or
-  `src/`, release and reinstall on `io` (desktop) and `vps` (SSH alias).
+  `src/`, release and reinstall on `io` (desktop), `iobook` (laptop, SSH alias)
+  and `vps` (SSH alias).
   A docs-only run does not release.
 - Cut a release with `chore(release): vX.Y.Z`, run the tag-triggered
-  `.github/workflows/publish.yml`, then reinstall and verify it on desktop and
+  `.github/workflows/publish.yml`, then reinstall and verify it on io, iobook and
   VPS only under release and host-mutation authority recorded for that run.
   Merge the release PR under the watch predicate. The human approves the npm
   stage; agents never run `npm stage approve`.

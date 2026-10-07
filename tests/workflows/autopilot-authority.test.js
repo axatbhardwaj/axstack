@@ -27,12 +27,13 @@ rule('standing release authority stays within its repository', autopilot,
   [/standing authority/i, /applies only/i, /that repository/i],
   'Standing authority applies only within that repository.',
   [[/applies only/i, 'applies broadly'], [/that repository/i, 'every repository']]);
-rule('this repository releases shipped skill or src changes on io and vps', 'AGENTS.md',
+rule('this repository releases shipped skill or src changes on io, iobook and vps', 'AGENTS.md',
   [/when a run changes/i, /shipped skills/i, /or `?src\/`?/i, /release and reinstall/i,
-    /on `?io`?/i, /desktop/i, /`?vps`?/i, /SSH alias/i],
-  'On io (desktop) and vps (SSH alias), release and reinstall when a run changes shipped skills or src/.',
+    /on `?io`?\b/i, /desktop/i, /\biobook\b/i, /laptop/i, /`?vps`?/i, /SSH alias/i],
+  'On io (desktop), iobook (laptop, SSH alias) and vps (SSH alias), release and reinstall when a run changes shipped skills or src/.',
   [[/release and reinstall/i, 'skip release and reinstall'], [/when a run changes/i, 'when a run preserves'],
-    [/or `?src\/`?/i, 'and src/'], [/on `?io`?/i, 'on a guessed host']]);
+    [/or `?src\/`?/i, 'and src/'], [/on `?io`?\b/i, 'on a guessed host'],
+    [/\biobook\b/i, 'a guessed host'], [/laptop/i, 'unknown device']]);
 rule('docs-only runs do not release', 'AGENTS.md',
   [/docs-only run/i, /release/i],
   'A docs-only run does not trigger a release.', [[/does not/i, 'does']], /does not/i);
