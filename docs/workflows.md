@@ -352,8 +352,8 @@ In team mode it clears only an ineligible base, auto-merge turned off, and an op
 human or bot comment; it never replaces collaborator approval.
 PRs changing `.github/`, files a workflow step invokes by path, package.json
 beyond `version` and `files`, lockfiles, test-runner config, branch-protection or
-ruleset config,
-`CODEOWNERS`, or a non-`clean` revert are user-merged on the forge.
+ruleset config, or `CODEOWNERS` are user-merged on the forge.
+PRs with a non-`clean` revert line are also user-merged on the forge.
 Promotion, deploying-base, unknown-base, and peer PRs are also user-merged.
 These categories are excluded from auto-merge.
 Test sources stay eligible. Axstack skill and merge-rule text are eligible

@@ -40,6 +40,9 @@ The driver is the sole record writer. Workers send concise receipts; they do
 not edit `progress.md`. This is a prompt contract, not a lock or runtime
 coordination mechanism. Each task names the actual owner session and worktree,
 or a receipt pointer containing both; a role label alone is insufficient.
+The recorded owning watch thread merges under the
+[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
+
 Read the [T3 runtime boundary](t3-runtime.md) for native identity and receipt checks.
 Record driver threadId, projectId, host, T3 version, installed Axstack SHA,
 capabilities JSON path and scheduledTaskIds for every watch and manager schedule.
@@ -169,9 +172,6 @@ in the adjacent history file, not below this template.
 ```
 
 ## Compact template
-
-The recorded owning watch thread merges under the
-[watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 
 ```text
 Run: <UTCdate>-<slug>[-<collision suffix>]
