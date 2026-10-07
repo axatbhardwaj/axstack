@@ -22,6 +22,8 @@ immediately before dispatch or account re-selection.
 
 Direct routes need no spec ceremony:
 
+- [axstack-perf](../skills/axstack-perf/SKILL.md) routes performance work to
+  Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
   Only the user invokes it.
