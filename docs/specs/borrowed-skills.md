@@ -1,6 +1,6 @@
 # Spec: borrowed skills — perf loop, audit environment lens, proof standards
 
-Status: Draft rev 1 (2026-10-07). Store: this repo Markdown file.
+Status: Draft rev 2 (2026-10-07). Store: this repo Markdown file.
 Run: `20261007-borrow-skills`. The private run record holds the Align decisions
 and adviser receipts.
 
@@ -23,6 +23,9 @@ phase boundaries.
 | Q4 | Add a thin user-invoked `axstack-perf` skill as the named entry point. It loads `perf-loop.md` and routes; it owns no separate workflow. |
 | D1 | Accepted adviser points: frozen workload and harness sensitivity, target plus noise criterion plus finite attempt budget, rejected experiments recorded, unwired or broken guardrails checked before new checks are proposed, no transcript reading in audit. |
 | D2 | Rejected from pstack: parallel per-hypothesis writers (breaks one writer per candidate) and mandatory minimum iteration counts. |
+| D3 | `axstack-perf` stays model-invocable so routing can send "make X faster" to it (rev 1 made it user-only; both an adviser and diligence flagged the conflict). |
+| D4 | Performance work keeps strict TDD: a regression keeps its real red-to-green evidence; an optimization without new behavior uses the structure-preserving path (same checks green before and after) plus the measured delta; new behavior inside an optimization (for example cache invalidation) still needs a failing check first. |
+| D5 | Rejected experiments and the baseline/post/delta numbers live in the run record and the implement receipt, not a new file. The phase `axstack-perf` routes to owns scope; target, noise criterion and budget become its acceptance checks. |
 
 ## Acceptance criteria
 
@@ -38,38 +41,53 @@ phase boundaries.
      do it again; do it less; do it later; do it when they're not looking; do
      it concurrently; do it cheaper; stop when an earlier mantra meets the
      target;
-   - verify one change at a time; behavior checks are green before and after
-     each change; record each rejected experiment with its number;
+   - verify one change at a time; unchanged correctness checks stay green;
+     keep a change only when its gain exceeds the noise criterion; revert a
+     rejected experiment before the next one and record it with its number;
    - one commit per accepted win; a changed harness invalidates earlier
-     comparisons;
+     comparisons; a harness that cannot detect a change holds the loop;
+   - stop at the target or when the budget is spent;
    - report baseline, post-change number, delta and artifact path; report an
      unmet target as unmet.
 2. `perf-loop.md` keeps one writer per candidate and names no parallel writers.
-3. `skills/axstack-perf/SKILL.md` exists, is user-invoked
-   (`disable-model-invocation: true`), loads `perf-loop.md`, and routes:
+3. `skills/axstack-perf/SKILL.md` exists, is model-invocable, loads
+   `perf-loop.md`, and routes:
    a regression to `axstack-debug`, optimization discovery to
    `axstack-improve`, an accepted change to `axstack-implement`. It defines no
    additional workflow, role or runtime.
 4. `axstack-debug`, `axstack-improve` and `axstack-implement` each load
-   `perf-loop.md` only for performance work. `axstack-improve` stays
-   report-only and ranks performance candidates in mantra order.
+   `perf-loop.md` only for performance work, with these roles:
+   - `axstack-debug`: freeze, baseline and mantra-ordered hypotheses for a
+     regression; hands off without committing; the repair keeps real
+     red-to-green evidence.
+   - `axstack-improve`: report-only; ranks performance candidates in mantra
+     order.
+   - `axstack-implement`: runs the change loop. An optimization without new
+     behavior uses the structure-preserving path (same checks green before
+     and after) plus the measured delta; new behavior needs a failing check
+     first. Prose-contract tests cover both the regression and the
+     optimization route.
 5. `axstack-perf` appears in the bundle, structural and README contracts,
    `routing.md` (a "make X faster" request routes to it) and
    `docs/workflows.md`, matching how other user-invoked skills are listed.
 
 ### B. Audit environment lens
 
-6. `axstack-audit` §5 adds an optional environment lens. A proposal may target
-   the environment, not only a skill: navigation pointers, automated checks,
-   coding-standard placement for review, steering-file bloat and no-op
-   instructions, tool economy, and information access.
+6. `axstack-audit` §5 adds an optional environment lens, and §5 field 3
+   becomes "one bounded hypothesized skill or environment change" with the
+   other fields unchanged. Environment targets: navigation pointers,
+   automated checks, coding-standard placement for review, steering-file
+   bloat and no-op instructions, tool economy, and information access.
+   Steering-file trims follow audit §6's AGENTS.md/CLAUDE.md parity rule;
+   repeated mistakes stay with `axstack-correct`.
 7. Before proposing a new check, the auditor reports whether an existing check
    is unwired or broken. A mechanical rule prefers a deterministic check over a
    prose rule.
-8. The lens reads only the evidence audit already permits (no transcripts). A
-   finding without a run-record or evidence pointer is `UNKNOWN`. The lens
-   makes no automatic edit and keeps the existing proposal fields and delivery
-   path.
+8. The lens reads the evidence audit already permits plus these read-only
+   inputs at the audited revision: `AGENTS.md`/`CLAUDE.md`, CI configuration
+   and package scripts. It reads no transcripts. A finding without a pointer
+   is `UNKNOWN`. The lens makes no automatic edit and keeps the existing
+   delivery path.
 
 ### C. Proof standards
 
@@ -82,7 +100,12 @@ phase boundaries.
 
 10. Each behavior change has a prose-contract test under `tests/workflows/`
     that fails when the instruction is removed or inverted and survives
-    rewording; full `bun test` passes.
+    rewording; full `bun test` passes. These tests prove the prose, not a
+    runtime saving. `prose-size.test.js` ceilings rise only by the measured
+    bytes added.
+12. Usage line: `/axstack-perf make the deploy step faster; target -30%`
+    routes to the matching phase with target, noise criterion and budget
+    recorded as acceptance checks.
 11. Each borrowed idea credits its source with a pinned URL and license where
     text is paraphrased.
 
@@ -98,11 +121,30 @@ phase boundaries.
   `triage` (`pr-triage-nightly.md`), `validate_plan` (diligence plus
   implement evidence), `research_codebase` (`axstack-explain`), handoff and
   resume (run record), `wayfinder` (align plus tickets), `reflect`,
-  `test-value`, `iterate_plan`, `local_review`, `founder_mode`, `ralph_*`.
+  `test-value`, `docs/skill-writing.md`, pstack `explain-the-number` and
+  `encode-lessons-in-structure`, `iterate_plan`, `local_review`,
+  `founder_mode`, `ralph_*`.
 - No release, npm publish or host install.
 
 ## Design
 
-Rung 1. No new runtime, role, schedule or state. `axstack-perf` is a router
-over existing phases; `perf-loop.md` is shared prose. Usage:
-`/axstack-perf make the deploy step faster; target -30%`.
+Rung 1: adds a skill and widens audit's proposal interface. No new runtime,
+role, schedule or state.
+
+```text
+Usage: /axstack-perf make the deploy step faster; target -30%
+Shape: axstack-perf -> loads perf-loop.md -> regression: axstack-debug
+                                           -> discovery:  axstack-improve
+                                           -> change:     axstack-implement
+       debug/improve/implement -> load perf-loop.md for performance work only
+       axstack-audit §5 field 3 -> skill or environment change
+Binding: the routing, the loop steps in A1, the per-phase roles in A4, and the
+         audit field change; the arrow layout is illustrative.
+Flow + failure: freeze -> baseline -> mantra hypothesis -> one change ->
+         measure; if the harness cannot detect a change, hold and report the
+         target unmet.
+We accept: one more skill entry for a named, typeable perf command.
+Rejected: perf as a new phase with its own writer (breaks one writer per
+         candidate); retro as a new skill (duplicates audit).
+Open: none.
+```
