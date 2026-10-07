@@ -59,6 +59,7 @@ step (3) for user routing: no substitution or same-provider review.
 
 ## Direct routes (no spec ceremony)
 
+- Route requests to create or maintain a verification skill to `axstack-verify`.
 - Route "make X faster" to `axstack-perf`.
 - Validate an approach -> `axstack-brainstorm`: inline, report-only independent
   candidates; light arena always, judges only at Rung 2; return to the caller.

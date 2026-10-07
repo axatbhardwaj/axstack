@@ -88,6 +88,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // standards and pinned MIT attribution; always-loaded unchanged.
   // 20261007-autonomy A1: +1682 measured aggregate bytes (+1139 Autopilot,
   // +543 contracts) for denial scope and verified reversible repair; +543 always-loaded.
-  expect(total).toBeLessThanOrEqual(338686);
-  expect(alwaysLoaded).toBeLessThanOrEqual(26733);
+  // 20261007-borrow-skills T5: +5070 measured aggregate bytes (4989 create
+  // skill + 81 routing); +81 always-loaded routing bytes.
+  // 20261007-borrow-skills T5 repair1: +83 measured aggregate bytes for
+  // fully qualified feature index and per-feature paths; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(343839);
+  expect(alwaysLoaded).toBeLessThanOrEqual(26814);
 });

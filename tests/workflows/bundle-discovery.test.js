@@ -4,11 +4,11 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 const root = `${import.meta.dir}/../../skills`;
 const skills = readdirSync(root).filter((name) => existsSync(`${root}/${name}/SKILL.md`)).sort();
 
-test('skill catalog exposes seventeen owned entrypoints and keeps handoff runtime-owned', () => {
+test('skill catalog exposes eighteen owned entrypoints and keeps handoff runtime-owned', () => {
   expect(skills).toEqual([
     'axstack-align', 'axstack-audit', 'axstack-brainstorm', 'axstack-cleanup', 'axstack-correct', 'axstack-debug', 'axstack-diagram', 'axstack-explain', 'axstack-implement',
     'axstack-improve', 'axstack-perf', 'axstack-relay', 'axstack-research',
-    'axstack-review', 'axstack-spec', 'axstack-tickets', 'axstack-watch',
+    'axstack-review', 'axstack-spec', 'axstack-tickets', 'axstack-verify', 'axstack-watch',
   ]);
   expect(existsSync(`${root}/axstack-handoff`)).toBe(false);
   expect(existsSync(`${root}/paseo-handoff`)).toBe(false);
