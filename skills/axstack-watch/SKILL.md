@@ -133,12 +133,16 @@ the current revision, and a recorded hold or next owner where work remains.
 Under a recorded `Notification policy`, the owner may use the optional
 [axstack-relay](../axstack-relay/SKILL.md) only for a serious risk immediately,
 a genuine blocked operation needing user intervention after bounded safe
-recovery, or decision holds and capped milestones named by the recorded policy.
+recovery, or user-decision holds (including spec approval).
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
-Only the bounded categories—user-decision holds (including spec approval),
-serious-risk holds, and at most two merge-ready/merged milestones per run—may
-be relayed under the recorded Notification policy.
+Relay eligibility is limited to user-decision holds, serious-risk holds, the
+60-minute blocked ping and capped peer PR milestones under the Notification policy.
+Under the recorded Notification policy, `verification not proven` is a
+user-decision hold. The 60-minute blocked ping is a notification-only category
+under the Notification policy. Never send routine merge-ready or merged relays
+for own PRs. Notifications for peer PRs are unchanged, including at most two
+merge-ready/merged milestones per run, deduplicated across implementation and release.
 The standalone monitor never sends; the chat-run schedule resumes the driver. Deduplicate
 authorized notifications;
 absent policy or failed relay uses the current T3 driver thread and leaves
@@ -159,9 +163,12 @@ Observation-only and peer watches never merge.
 Workers, reviewers, monitors, managers, and the nightly triage never merge.
 A current diligence `PASS` at the exact head is required before any merge-ready statement.
 
-Record approval mode from the collaborator readback: `solo` only when it lists
-the user alone with write, maintain, or admin permission; otherwise, or when
-unknown, `team`.
+Record approval mode from the collaborator readback.
+A repository is personal (`solo`) only when it is outside `defi-com` and a
+complete collaborator readback lists the user alone with write, maintain, or
+admin permission. A `defi-com` repository, an extra writer, or an incomplete or
+failed readback classes as work (`team`).
+Every other repository is work (`team`).
 Base classification uses repository docs and workflows, never the branch name
 alone, and unknown means `deploying`.
 A base is `integration` only when repository docs or workflows show it does not
@@ -201,22 +208,27 @@ For each current head and base SHA, every merge-ready term must hold:
 - Feedback and revision: the PR is not draft and is mergeable against the
   current base; no unresolved blocking agent-authored thread, top-level blocking comment, or
   effective blocking review remains. Authored review `APPROVE` and diligence
-  `PASS` are bound to the current head and base. No `Escalate to user`,
+  `PASS` are bound to the current head and base. No `Escalate to user`
+  (apart from the settled verification cause below),
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk
   hold affects this merge. Apply the comment holds below.
   The current target base head must be an ancestor of the singleton head or
   bottom stack member head; unknown ancestry holds. A CI re-run does not restore
   this freshness after the base moves. Update the branch and refresh head-bound
   evidence instead.
+- Proven verification: apply every receipt and acceptance term below, or its
+  head-and-base-bound user acceptance, while every other gate still holds.
 - Veto: no `do-not-merge` label and no chat `hold` applies.
 
 Only comments and threads whose IDs are recorded in an agent receipt count as agent-authored.
-Every other review thread, review body, or top-level comment from a human or a bot holds automatic merge.
-Post a merge card for these non-agent items until a human resolves or dismisses them.
-Clear GitHub-unresolvable review bodies and top-level comments only by the user's
-reply to that merge card naming the items.
-Agents never rate, resolve, or dismiss these non-agent items.
-An always-commenting review bot therefore blocks automatic merge until the user clears its threads.
+The authored reviewer rates each non-agent review thread, review body, or
+top-level comment from a human or a bot at the current head as `above low`,
+`low`, `addressed` or `uncertain`. Re-rate every non-agent item at each new head.
+Reviewer-rated `low` or `addressed` items do not hold automatic merge.
+An `above low`, unrated or `uncertain` item holds automatic merge.
+Human `CHANGES_REQUESTED` holds automatic merge until resolved.
+A comment arriving after the receipt triggers a fresh review dispatch for rating
+as gap closing. Agents never resolve or dismiss non-agent items.
 Agent-authored threads with only `low` findings can stay open.
 Apply any repository rule that requires conversation resolution.
 
@@ -230,62 +242,115 @@ If the forge dismissed it or requires last-push approval, hold and tell the user
 without auto-requesting re-review.
 Initial review requests before any human approval remain allowed.
 
-### Automatic merge eligibility and cards
+### Proven verification
 
-Team mode targets only `dev` when repository docs or workflows prove it is
-non-production.
-Solo mode targets `main` or any other `integration` base.
+Proven verification is required for every own PR. Use the authored receipt:
+
+- Verification requires `Verdict: APPROVE`, `Coverage: COMPLETE`, and
+  `Escalate to user: no`.
+- Verification requires a `Safety fact` about the change that is not `unproven`.
+- Verification requires diligence `PASS` at the exact head and base.
+- Verification requires `Final-head check: <command> -> <log path>` for a check
+  the reviewer ran at the final head, with its log kept in the run's evidence folder.
+- Each acceptance check requires passing evidence from the ticket or spec
+  criteria, or the PR body for adopted and ticketless PRs.
+  Earlier-head red-to-green evidence in the PR's patch lineage counts only when
+  the reviewer records that it still applies to the final change.
+  An applicable `verify-<app>` passing result is required for the changed behavior.
+- Verification requires no limitation tagged `changed-behavior: unproven`.
+  The reviewer tags every limitation leaving changed behavior unexercised or
+  unverified, in whatever words, `changed-behavior: unproven`.
+  Other limitations do not hold.
+- When the PR removes or weakens a check, test-runner setting or ruleset that
+  gates its own merge, verification requires the reviewer ran the base's checks
+  against the head.
+
+The driver first closes a verification gap itself: run the check, re-dispatch
+review, or return the work to the author. Only a gap the driver cannot close
+becomes a `verification not proven` card bound to head and base.
+The card names what is unproven, why, and the action that would settle it.
+The user's reply in the driver thread or on the forge clears only that
+verification cause. Record `user-accepted unproven: <item>`, never as a pass.
+Treat the accepted item as settled for this head and base and merge when every
+other gate and hold permits it. A reply never waives `APPROVE`, diligence `PASS`
+or green CI. A new head or base voids the acceptance.
+Settle an `Escalate to user` for the user-accepted verification cause at its
+accepted head and base while other escalation holds still apply.
+In a work repository a reply never replaces counted collaborator approval.
+
+### Escalation
+
+Personal PRs merge when the gates pass and verification is proven or
+user-accepted at this head and base. Personal PRs on any base, including
+promotion, `deploying` and unknown bases, are eligible under the watch predicate.
+Work PRs merge when the gates pass, verification is proven or user-accepted,
+and a counted collaborator approval exists, on an `integration` base.
+Work promotion PRs and `deploying` or unknown bases are merged by the user on
+the forge. The existing serious-risk hold applies at once to both personal and
+work PRs.
+Personal and work PRs remain eligible whatever files they change, including
+`.github/`, workflow-invoked files, package.json, lockfiles, test-runner config,
+branch-protection or ruleset config, `CODEOWNERS`, `AGENTS.md`, and non-clean
+revert lines such as `Revert: steps`.
+
 For a `gh stack`, only the bottom member's base must be eligible.
 Each other member's base must be the next-lower member's branch at its reviewed head.
-Every member must meet every other term and exclusion.
+Every member must meet every other term.
 A stack holds until every member of its approved plan (the ticket map or the
 adopted stack's recorded members) is published.
 Reviewed members are never retargeted to become eligible.
 
 Never auto-merge PRs authored by anyone other than the user or the user's agents.
-Never auto-merge promotion PRs (`dev` to `staging`, `staging` to `prod`).
-Never auto-merge PRs with a `deploying` or unknown base.
-Never auto-merge PRs changing anything under `.github/`.
-Never auto-merge PRs changing a file a workflow step invokes by path.
-Never auto-merge PRs changing package.json beyond `version` and `files`.
-Never auto-merge PRs changing lockfiles.
-Never auto-merge PRs changing test-runner config.
-Never auto-merge PRs changing branch-protection or ruleset config.
-Never auto-merge PRs changing `CODEOWNERS`.
-Never auto-merge PRs changing `AGENTS.md`.
 Test sources stay eligible.
 Axstack skill and merge-rule text are eligible under the watch predicate.
-Changes to package.json limited to `version` and `files` are eligible under
-the watch predicate.
+Changes to package.json are eligible under the watch predicate.
 Release PRs are eligible under the watch predicate.
-Never auto-merge PRs whose revert line is not `clean`.
 Read the revert gate from the declaration whose line starts with `Revert:`
 at line start in the PR description.
 A quoted format inside a bullet never counts as the declaration.
-Never auto-merge PRs held under the comment rules above.
 `--admin` and rule bypass are never used.
 `Auto-merge: off` for a run or PR makes the merge card wait, and it waits for the user.
 
-Post a merge card for every nonqualifying approval, base, exclusion, or off case.
+Post a merge card for every nonqualifying approval, base, verification, or off case.
 Bind it to the PR head and base SHA; list CI, authored review and diligence at
 those SHAs, counted collaborator approvals and bot votes with each vote's SHA
 and stale flag, and the causes holding this merge.
-A card that needs the user's decision is a decision hold under the recorded
-Notification policy with one deduplicated relay; relay text never supplies approval.
+A card that needs the user's decision (work promotion or work deploying/unknown base,
+`Auto-merge: off`, provenance, or an unclosable verification gap) is a decision
+hold under the recorded Notification policy with one deduplicated relay;
+relay text never supplies approval. Person-wait cards follow the clock below.
 A changed head or base requires a refreshed card.
 For an own PR on an `integration` base, the user's reply to the card authorizes
 the merge actor to merge under the guarded path, subject to the exceptions below.
 In `solo` mode the user's merge-card reply authorizes the guarded merge of
 user-written PRs or PRs with unknown or mixed provenance.
 In `team` mode a reply never replaces counted collaborator approval.
-In `team` mode the reply only clears an ineligible base, auto-merge turned off,
-and an open human or bot comment.
-PRs in the CI, package.json beyond `version` and `files`, lockfile, test-runner,
-branch-protection and ruleset,
-`CODEOWNERS`, `AGENTS.md`, or non-`clean` revert categories are merged by the user on the forge.
-Promotion, `deploying`-base, unknown-base, and peer PRs are merged by the user on the
-forge, and the card only reports readiness.
+A reply can clear auto-merge turned off; verification acceptance follows the
+head-and-base-bound rule above. It never clears an ineligible work base or a
+comment rating hold. Peer PRs are merged by the user on the forge,
+and the card only reports readiness.
+Work promotion, deploying-base and unknown-base cards only report readiness.
 User merges are bottom-up for a stack.
+
+### Blocked on a person
+
+A PR is ready-except-human when every term other than collaborator approval,
+human `CHANGES_REQUESTED` and open findings from a person holds.
+Each blocker has a key: `approval:<PR>`, `changes:<review id>` or
+`comment:<comment id>`. A missing approval's clock starts at the first observed
+ready-except-human time, including no review requested.
+Other clocks start at the later of that ready-except-human time and the item's
+forge time. A `comment:` clock starts only once the reviewer rates the item
+`above low`. An unrated or uncertain item waits on the reviewer and does not
+count as ready-except-human.
+A clock resets when the PR stops being ready-except-human or its patch-id
+changes. A same-patch-id rebase keeps the clock.
+Each key is sent at most once, even when readiness is lost and regained or the
+patch changes. After 60 minutes, send one relay per key, including simultaneous
+blockers and a new key.
+Send `<repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>; ready at <sha7>.`
+The check runs on existing watch wakes with no new schedule.
+The ping is a notification only: when the blocker clears, the PR merges with no reply.
 
 Immediately before each automated merge, re-read every term from the forge.
 Confirm merge commits are allowed, `delete_branch_on_merge` is false, and the

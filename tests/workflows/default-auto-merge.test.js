@@ -37,10 +37,6 @@ const rules = [
     'A collaborator approval carries over only across a rebase with unchanged patch-id recorded for both heads while the forge still counts it.', [/unchanged/i, 'changed']],
   ['A2 refresh all evidence', [/fresh authored review/i, /diligence/i, /CI/i, /every new head/i],
     'Require fresh authored review, diligence, and CI on every new head.', [/every new head/i, 'the initial head only']],
-  ['A3 team dev', [/team/i, /only `?dev`?/i, /docs or workflows/i, /non-production/i],
-    'Team mode targets only dev when repository docs or workflows prove it is non-production.', [/only `?dev`?/i, 'any base']],
-  ['A3 solo integration', [/solo/i, /main/i, /any other/i, /integration/i],
-    'Solo mode targets main or any other integration base.', [/integration/i, 'deploying']],
   ['A3 classify conservatively', [/classification/i, /docs and workflows/i, /branch name alone/i, /unknown means/i, /deploying/i],
     'Base classification uses docs and workflows, never the branch name alone, and unknown means deploying.', [/unknown means/i, 'unknown excludes'], /never the branch name alone/i],
   ['A3 re-read classification', [/re-read/i, /approval mode and base classification/i, /immediately before each automated merge/i, /every watch resume/i],
@@ -49,8 +45,8 @@ const rules = [
     "For a stack, only the bottom member's base must be eligible.", [/only the bottom member.s base/i, 'no base']],
   ['A3 stack parent head', [/each other member.s base/i, /next-lower member.s branch/i, /reviewed head/i],
     "Each other member's base must be the next-lower member's branch at its reviewed head.", [/reviewed head/i, 'any old head']],
-  ['A3 every member', [/every member/i, /every other term and exclusion/i],
-    'Every member must meet every other term and exclusion.', [/every member/i, 'the top alone']],
+  ['A3 every member', [/every member/i, /every other term/i],
+    'Every member must meet every other term.', [/every member/i, 'the top alone']],
   ['A3 planned publication', [/stack/i, /holds until every/i, /approved plan/i, /ticket map/i, /adopted stack.s recorded members/i, /published/i],
     "A stack holds until every member of its approved plan (ticket map or adopted stack's recorded members) is published.", [/holds until every/i, 'merges before any']],
   ['A4 no bypass', [/--admin/i, /rule bypass/i, /used/i],
@@ -65,41 +61,19 @@ const rules = [
     "In solo mode the user's merge-card reply authorizes the guarded merge of user-written PRs or PRs with unknown or mixed provenance.", [/authorizes/i, 'forbids']],
   ['A6 off switch', [/Auto-merge: off/i, /run or PR/i, /merge card/i, /waits for the user/i],
     'Auto-merge: off for a run or PR makes the merge card wait while it waits for the user.', [/waits for the user/i, 'merges immediately']],
-  ['A7 all nonqualifying cases', [/post/i, /merge card/i, /every nonqualifying/i, /approval/i, /base/i, /exclusion/i, /off/i],
-    'Post a merge card for every nonqualifying approval, base, exclusion, or off case.', [/every nonqualifying/i, 'selected']],
+  ['A7 all nonqualifying cases', [/post/i, /merge card/i, /every nonqualifying/i, /approval/i, /base/i, /verification/i, /off/i],
+    'Post a merge card for every nonqualifying approval, base, verification, or off case.', [/every nonqualifying/i, 'selected']],
   ['A7 guarded reply', [/own PR/i, /integration/i, /user.s reply/i, /card/i, /authorizes/i, /merge actor/i, /guarded path/i],
     "For an own PR on integration, the user's reply to the card authorizes the merge actor under the guarded path.", [/authorizes/i, 'forbids']],
+  ['D7 peer forge merge', [/peer PRs/i, /merged by the user on the forge/i, /card only reports readiness/i],
+    'Peer PRs are merged by the user on the forge while the card only reports readiness.', [/user on the forge/i, 'watch owner']],
   ['A7 team reply cannot replace approval', [/team/i, /reply/i, /replaces/i, /counted collaborator approval/i],
     'In team mode a reply never replaces counted collaborator approval.', [/never replaces/i, 'replaces'], /never replaces/i],
-  ['A7 team reply clearance', [/team/i, /reply only clears/i, /ineligible base/i, /auto-merge turned off/i, /open human or bot comment/i],
-    'In team mode the reply only clears an ineligible base, auto-merge turned off, and an open human or bot comment.', [/only clears/i, 'clears all beyond']],
-  ['A7 forge-only categories', [/CI/i, /package\.json/i, /beyond|outside|other than/i, /version/i, /files/i, /lockfile/i, /test-runner/i, /branch-protection/i, /ruleset/i, /CODEOWNERS/i, /AGENTS\.md/i, /non-`?clean`? revert/i, /merged by the user on the forge/i],
-    'CI, package.json beyond version and files, lockfile, test-runner, branch-protection and ruleset, CODEOWNERS, AGENTS.md, and non-clean revert categories are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
-  ['D7 human categories', [/promotion/i, /deploying/i, /unknown-base/i, /peer/i, /user/i, /forge/i, /card only reports readiness/i],
-    'Promotion, deploying-base, unknown-base, and peer PRs are merged by the user on the forge while the card only reports readiness.', [/user/i, 'worker']],
 ];
 
-// A5 categories are independently removable: a broad list-presence check misses omissions.
-const exclusions = [
-  ['peer authors', /authored by anyone other than the user or the user.s agents/i,
-    "PRs authored by anyone other than the user or the user's agents"],
-  ['promotion', /promotion PRs.*dev.*staging.*prod/i, 'promotion PRs (dev to staging, staging to prod)'],
-  ['deploying', /`?deploying`? or unknown base/i, 'PRs with a deploying or unknown base'],
-  ['github', /anything under `?\.github\/`?/i, 'PRs changing anything under .github/'],
-  ['workflow path', /file a workflow step invokes by path/i, 'PRs changing a file a workflow step invokes by path'],
-  ['manifest outside allowed fields', /package\.json.*(?:beyond|outside|other than).*version.*files/i, 'PRs changing package.json beyond version and files'],
-  ['lockfiles', /lockfiles/i, 'PRs changing lockfiles'],
-  ['runner', /test-runner config/i, 'PRs changing test-runner config'],
-  ['protection', /branch-protection or ruleset config/i, 'PRs changing branch-protection or ruleset config'],
-  ['owners', /CODEOWNERS/i, 'PRs changing CODEOWNERS'],
-  ['standing authority', /AGENTS\.md/i, 'PRs changing AGENTS.md'],
-  ['revert', /revert line is not `?clean`?/i, 'PRs whose revert line is not clean'],
-  ['comments', /held under the comment rules/i, 'PRs held under the comment rules'],
-];
-for (const [name, concept, description] of exclusions) {
-  rules.push([`A5 exclusion ${name}`, [/never auto-merge/i, concept],
-    `Never auto-merge ${description}.`, [/never auto-merge/i, 'Auto-merge'], /never auto-merge/i]);
-}
+// Peer author exclusion remains unchanged (AC10).
+rules.push(['A5 exclusion peer authors', [/never auto-merge/i, /authored by anyone other than the user or the user.s agents/i],
+  "Never auto-merge PRs authored by anyone other than the user or the user's agents.", [/never auto-merge/i, 'Auto-merge'], /never auto-merge/i]);
 const acceptsRule = (concepts, prohibition) => (text) => sentences(text).some((unit) =>
   concepts.every((concept) => concept.test(unit))
   && (prohibition ? prohibition.test(unit) : requires(unit, ...concepts)));
@@ -130,15 +104,6 @@ test('merge eligibility grants no publish or host install authority', () => {
   expect(read('skills/axstack-implement/SKILL.md')).toMatch(/grants no release, npm publish, or host install authority/i);
 });
 
-test('public merge boundary requires user forge merges for AGENTS changes', () => {
-  const concepts = [/PRs changing/i, /AGENTS\.md/i, /user-merged on the forge/i];
-  const accepts = (text) => sentences(text).some((unit) =>
-    !/\bunless|\bexcept/i.test(unit) && requires(unit, ...concepts));
-  checkRule(compact(read('docs/workflows.md')), accepts,
-    'PRs changing AGENTS.md are user-merged on the forge under the merge boundary.',
-    [[/user-merged on the forge/i, 'auto-merged by agents'], [/\.?$/, ' unless checks pass']], concepts);
-});
-
 const documented = [
   ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
     'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],
@@ -146,8 +111,8 @@ const documented = [
     'Local CI contention handling remains deferred.', [/deferred/i, 'implemented']],
   ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /provider\/model substitution/i, /excluded/i],
     'Quota-driven scheduling or model routing (provider/model substitution) remains excluded.', [/excluded/i, 'permitted']],
-  ['excluded automatic merge categories', [/automatic merge/i, /promotion/i, /deploying-base/i, /unknown-base/i, /peer/i, /excluded/i],
-    'Automatic merge of promotion, deploying-base, unknown-base, and peer PRs remains excluded.', [/excluded/i, 'permitted']],
+  ['excluded automatic merge categories', [/automatic merge/i, /work/i, /promotion/i, /deploying-base/i, /unknown-base/i, /excluded/i],
+    'Automatic merge of work promotion, deploying-base and unknown-base PRs remains excluded.', [/excluded/i, 'permitted']],
   ['excluded previews', [/previews/i, /outside the VPS/i, /public previews/i, /production data/i, /excluded/i],
     'Previews outside the VPS, public previews, and production data remain excluded.', [/excluded/i, 'permitted']],
   ['triage relay boundary', [/nightly triage/i, /sends? relay messages/i],
@@ -189,7 +154,7 @@ test('workflows is the single public home for exclusions and accepted risks', ()
     const canonical = compact(read('docs/workflows.md'));
     for (const terms of [
       [/solo/i, /approval/i, /authored.review/i, /diligence/i, /PASS/i],
-      [/team/i, /auto.merge/i, /non-production/i, /dev/i],
+      [/work/i, /merge/i, /counted collaborator approval/i, /integration/i],
       [/collaborator approval/i, /carries over only/i, /patch-id/i],
       [/solo/i, /merge-card reply/i, /authorizes/i, /guarded merge/i],
     ]) {
@@ -210,8 +175,8 @@ test('workflows is the single public home for exclusions and accepted risks', ()
 const eligibility = [
   ['skill text', [/Axstack skill and merge-rule text/i, /eligible/i],
     'Axstack skill and merge-rule text are eligible under the watch predicate.'],
-  ['manifest carve-out', [/package\.json/i, /limited to/i, /version/i, /files/i, /eligible/i],
-    'Changes to package.json limited to version and files are eligible under the watch predicate.'],
+  ['manifest', [/package\.json/i, /eligible/i],
+    'Changes to package.json are eligible under the watch predicate.'],
   ['release', [/release PRs/i, /eligible/i],
     'Release PRs are eligible under the watch predicate.'],
 ];
@@ -231,7 +196,7 @@ for (const path of ['skills/axstack-watch/SKILL.md', 'docs/workflows.md']) {
         expect(accepts(source.replace(target, target.replace(/eligible/i, `ineligible${suffix}`)))).toBe(false);
       }
       const subject = name === 'skill text' ? 'Axstack skill and merge-rule text'
-        : name === 'manifest carve-out' ? 'package.json changes limited to version and files' : 'Release PRs';
+        : name === 'manifest' ? 'package.json changes' : 'Release PRs';
       expect(accepts(`${source}. Never auto-merge ${subject}.`)).toBe(false);
     });
   }
@@ -253,29 +218,5 @@ for (const path of ['AGENTS.md', 'skills/axstack/references/autopilot.md']) {
     const prohibition = /never run/i;
     checkRule(compact(read(path)), (text) => prohibits(text, prohibition, /agents/i, /npm stage approve/i),
       'Agents never run npm stage approve.', [[/never run/i, 'run']], [/agents/i, /npm stage approve/i]);
-  });
-}
-
-// A closed field boundary catches scripts/install hooks and overrides, unlike
-// the previous dependency-only exclusion. This checks shipped instructions,
-// not a test-only merge classifier or live forge behavior.
-for (const path of ['skills/axstack-watch/SKILL.md', 'docs/workflows.md']) {
-  test(`manifest excludes scripts and overrides but permits only version/files: ${path}`, () => {
-    const concepts = [/package\.json/i, /beyond|outside|other than/i, /version/i, /files/i];
-    const direction = /never auto-merge|user-merged on the forge/i;
-    const accepts = (text) => sentences(text).some((unit) =>
-      concepts.every((concept) => concept.test(unit)) && direction.test(unit)
-      && !/\bunless|\bexcept/i.test(unit));
-    const source = compact(read(path));
-    checkRule(source, accepts,
-      'Never auto-merge PRs changing package.json outside version and files.',
-      [[/beyond|outside|other than/i, 'limited to'], [direction, 'Auto-merge']], concepts);
-    const owner = sentences(source).find(accepts);
-    for (const field of ['scripts', 'overrides']) {
-      // Injecting either exception into the owning instruction must fail.
-      expect(accepts(source.replace(owner, `${owner} except ${field}-only changes`)), field).toBe(false);
-    }
-    const limited = [/package\.json/i, /limited to/i, /version/i, /files/i, /eligible/i];
-    expect(requires(source, ...limited)).toBe(true);
   });
 }

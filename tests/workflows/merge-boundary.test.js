@@ -18,7 +18,6 @@ function sentence(text, anchor) {
 }
 
 test('approval mode and deploy class use conservative evidence on every resume and merge', () => {
-  expect(sentence(watch, 'Record approval mode from')).toMatch(/`solo` only when.*user alone.*write, maintain, or admin.*unknown, `team`/i);
   expect(sentence(watch, 'A base is `integration`')).toMatch(/docs or workflows.*does not deploy to production/i);
   expect(sentence(watch, 'Base classification uses')).toMatch(/docs and workflows.*never the branch name alone.*unknown means `deploying`/i);
   expect(sentence(watch, 'Re-read approval mode')).toMatch(/immediately before each automated merge.*every watch resume/i);
@@ -29,7 +28,6 @@ test('uncertain watch registration state holds new registrations until resolved'
 });
 
 test('merge card binds the evidence and relay never supplies approval', () => {
-  expect(sentence(watch, 'Post a merge card for every')).toMatch(/nonqualifying approval, base, exclusion, or off case/i);
   expect(sentence(watch, 'Bind it to the PR')).toMatch(/head and base SHA.*CI.*authored review and diligence.*SHAs.*collaborator approvals and bot votes.*SHA and stale flag/i);
   expect(sentence(watch, 'A card that needs')).toMatch(/decision hold.*one deduplicated relay/i);
   expect(sentence(watch, 'relay text never supplies')).toContain('approval');
