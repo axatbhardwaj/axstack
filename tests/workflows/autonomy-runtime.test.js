@@ -23,9 +23,8 @@ function rule(name, path, concepts, rewording, inversions, negative) {
 }
 
 rule('reply route is verified before a reply-dependent send', relay,
-  [/before/i, /reply-dependent send/i, /reply route/i, /gateway forwarding/i,
-    /axstack-reply/i, /bound inbox path/i, /driver.*read access/i],
-  'Before a reply-dependent send, check the reply route for gateway forwarding to axstack-reply, the bound inbox path, and the driver’s read access.',
+  [/before/i, /reply-dependent send/i, /reply.route/i, /Hermes 0\.21/i, /registry entry/i, /Decisions topic/i, /home DM/i, /busy_input_mode/i, /queue/i, /hermes mcp test/i],
+  'Before a reply-dependent send, check reply-route readiness: Hermes 0.21 or newer, a registry entry for the Decisions topic listed in the verified home DM, effective busy_input_mode queue, and passing hermes mcp test.',
   [[/\b(?:verify|check)\b/i, 'ignore'], [/\bbefore\b/i, 'after']]);
 rule('unready reply route names the T3 action route', relay,
   [/reply-route readiness fails/i, /T3 driver thread/i, /action route/i, /message/i],
