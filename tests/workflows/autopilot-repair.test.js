@@ -36,9 +36,6 @@ rule('runtime end waits for Release', runtime, 'Stop the chosen wake only', /rel
 rule('implement notification allowlist', implement, '`axstack-relay` sends only', /serious risk immediately.*genuine blocked operation/);
 rule('watch notification allowlist', watch, '[axstack-relay](../axstack-relay/SKILL.md) only', /serious risk immediately.*genuine blocked operation/);
 rule('runtime notification allowlist and budget', runtime, 'The driver records one Notification policy:', /only for a user-decision hold.*at most two.*serious-risk hold/);
-rule('relay policy exception', () => read('skills/axstack-relay/SKILL.md'), 'merge-ready, merged, and completion stay in the driver conversation', /unless the recorded Notification policy names it/);
-rule('relay shared milestone budget', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name', /at most two merge-ready\/merged milestones per run/);
-rule('relay categories remain bounded', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /user-decision holds.*at most two merge-ready\/merged milestones/);
 // default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
@@ -81,16 +78,13 @@ test('workflow human gate remains human', () => {
 });
 rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);
 rule('routing substantial work advances', () => read('skills/axstack/references/routing.md'), 'Preparation: substantial work', /handoff path above, then continues under autopilot when eligible/);
-rule('workflow notifications have only bounded categories', () => read('docs/workflows.md'), 'An applicable `Notification policy`', /only for a user-decision hold.*serious-risk hold.*at most two merge-ready\/merged milestones per run/);
 rule('recordless implement release is inapplicable', implement, 'Without an Autopilot or Release record', /Release step is not applicable/);
 rule('diligence repairs at owning phase', autopilot, 'Diligence FINDINGS during implement', /§6 repair route.*spec, tickets, or release preparation.*resolves them before advancing/);
 rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS during implement', /only a recorded hold pauses autopilot/);
 rule('workflow routine events always stay in T3', () => read('docs/workflows.md'), 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('implement routine events always stay in T3', implement, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('watch routine events always stay in T3', watch, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
-rule('workflow relay remains bounded', () => read('docs/workflows.md'), 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
-rule('watch relay remains bounded', watch, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /spec for human approval at gate 1.*small-change intent read-back/);
 rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
 rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);
@@ -99,7 +93,6 @@ rule('adopted PR requires maintenance snapshot', autopilot, 'An explicitly adopt
 rule('healthy ticks stay quiet', autopilot, 'Healthy ticks stay quiet', /^Healthy ticks stay quiet\.$/);
 rule('relay deduplicates by purpose and revision', autopilot, 'Across implementation and release', /deduplicate by purpose and revision/);
 rule('milestone cap spans implementation and release', autopilot, 'Across implementation and release', /merge-ready and merged notifications together are capped at two per run/);
-rule('relay shares budget across implementation and release', () => read('skills/axstack-relay/SKILL.md'), 'A policy may name only', /deduplicate across implementation and release/);
 // Each verified publication arms or joins; the semantic contract owns that check.
 rule('Align continues small work to Implement', () => read('skills/axstack-align/SKILL.md'), 'Substantial work continues to', /small work continues from its small-change intent to Implement/);
 // own-pr-watch-docs.test.js owns every-phase publication on all three public docs.

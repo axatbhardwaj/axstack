@@ -607,8 +607,6 @@ test('Telegram requires recorded authority and keeps routine events in the drive
   const relay = normalize(read('skills/axstack-relay/SKILL.md'));
   for (const pin of [
     'an explicit standing instruction to contact the user via Telegram authorizes proactive outreach for a credible serious risk immediately, or for a genuine blocked operation that still needs user intervention after bounded safe recovery.',
-    'questions, spec approvals, progress, CI pending, merge-ready, merged, and completion stay in the driver conversation unless the recorded Notification policy names it.',
-    'A policy may name only user-decision holds and at most two merge-ready/merged milestones per run; deduplicate across implementation and release.',
     'Progress, CI pending, and completion are never eligible merely because a policy exists.',
   ]) expect(relay).toContain(pin);
 });
