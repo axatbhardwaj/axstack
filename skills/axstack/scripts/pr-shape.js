@@ -77,14 +77,17 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
   try {
     if (argv.includes('--help')) { io.stdout(help); return 0; }
     const options = optionsFrom(argv);
-    if (run(command('rev-parse', '--git-dir')).code) throw new Error('run this helper from a Git checkout');
+    const root = run(command('rev-parse', '--show-toplevel'));
+    if (root.code) throw new Error('run this helper from a Git checkout');
+    const repo = root.stdout.replace(/\n$/, '');
+    const gitCommand = (...args) => command('-C', repo, ...args);
     const resolve = (flag) => {
-      const result = run(command('rev-parse', '--verify', '--end-of-options', `${options[flag]}^{commit}`));
+      const result = run(gitCommand('rev-parse', '--verify', '--end-of-options', `${options[flag]}^{commit}`));
       if (result.code) throw new Error(`unresolved ${flag}; pass ${flag} <existing-commit-or-branch>`);
       return result.stdout.trim();
     };
-    const inputs = { baseRef: options['--base'], headRef: options['--head'], base: resolve('--base'), head: resolve('--head') };
-    const mergeCommand = command('merge-base', inputs.base, inputs.head);
+    const inputs = { repo, baseRef: options['--base'], headRef: options['--head'], base: resolve('--base'), head: resolve('--head') };
+    const mergeCommand = gitCommand('merge-base', inputs.base, inputs.head);
     const merge = run(mergeCommand);
     if (merge.code) {
       const unknown = { status: 'unknown', evidence: { commands: [mergeCommand], reason: merge.stderr.trim() || 'no common ancestor' } };
@@ -93,15 +96,15 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       return 2;
     }
     const mergeBase = merge.stdout.trim();
-    const diffCommand = command('diff', '-M', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
+    const diffCommand = gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
     const diff = run(diffCommand);
     if (diff.code) throw new Error(`diff unavailable; verify --base and --head refer to readable commits: ${diff.stderr.trim()}`);
     const rows = numstat(diff.stdout);
-    const attrCommand = command('check-attr', `--source=${inputs.head}`, '--stdin', '-z', 'linguist-generated');
+    const attrCommand = gitCommand('check-attr', `--source=${inputs.head}`, '--stdin', '-z', 'linguist-generated');
     const attrEvidence = { commands: [diffCommand, attrCommand], environment: { GIT_ATTR_NOSYSTEM: '1' },
       stdin: 'feed check-attr the NUL-separated destination paths from the full numstat records',
       select: 'destination paths whose head linguist-generated value is set or true; never filter diff pathspecs' };
-    const infoPath = run(command('rev-parse', '--git-path', 'info/attributes')).stdout.trim();
+    const infoPath = run(gitCommand('rev-parse', '--path-format=absolute', '--git-path', 'info/attributes')).stdout.replace(/\n$/, '');
     // Git still reads info/attributes with --source; do not claim these are committed facts.
     const attrs = existsSync(infoPath) ? null : run(attrCommand, rows.map((row) => row.path).join('\0') + (rows.length ? '\0' : ''));
     let generated;

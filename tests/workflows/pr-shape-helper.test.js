@@ -113,6 +113,16 @@ test('help advertises every flag, a complete example, fixed buckets and read-onl
   }
 });
 
+test('a nested caller measures the same repository paths despite diff.relative configuration', () => {
+  const { repo } = fixture();
+  git(repo, 'config', 'diff.relative', 'true');
+  const result = invoke(`${repo}/nested`, ['--base', 'parent', '--head', 'HEAD']);
+  expect(result.code, result.stderr).toBe(0);
+  expect(result.data.totals).toMatchObject({ files: 15, renames: 1, binaries: 1 });
+  expect(result.data.buckets.lockfiles).toMatchObject({ files: 3, additions: 4 });
+  expect(result.data.buckets.generated).toMatchObject({ files: 3, additions: 6 });
+});
+
 test.each([[], ['--base'], ['--base', 'main'], ['--head', 'HEAD'],
   ['--base', 'main', '--head'], ['--base', 'main', '--head', 'HEAD', '--unknown'],
   ['--base', 'main', '--base', 'main', '--head', 'HEAD'],
@@ -143,7 +153,7 @@ test('unrelated histories retain every measurement as unknown rather than invent
   expect(result.data.inputs).toMatchObject({ base, head });
   for (const term of [result.data.mergeBase, result.data.totals, result.data.buckets?.lockfiles, result.data.buckets?.generated]) {
     expect(term?.status).toBe('unknown');
-    expect(term.evidence.commands).toContainEqual(['git', '--no-optional-locks', '-c', 'core.attributesFile=/dev/null', 'merge-base', base, head]);
+    expect(term.evidence.commands[0].slice(-3)).toEqual(['merge-base', base, head]);
     expect(term.evidence.reason).toMatch(/no common ancestor/);
     expect(term).not.toHaveProperty('additions');
   }
