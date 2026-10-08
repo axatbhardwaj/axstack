@@ -410,6 +410,23 @@ test('stale report staging files cannot block a later static report', () => {
   }
 });
 
+test('failed report replacement removes only its own staging file', () => {
+  const repo = fixture(complete);
+  const out = `${repo}/.git/axstack/readiness/blocked.json`;
+  const folder = out.slice(0, -5);
+  mkdirSync(out, { recursive: true });
+  mkdirSync(folder);
+  writeFileSync(`${out}/keep`, 'existing directory content');
+  writeFileSync(`${folder}/.report.json`, 'unrelated stage');
+  const result = assess(repo, [], { out });
+  expect(result.code).toBe(1);
+  expect(result.error).toContain('Readiness error:');
+  expect(result.report).toBeNull();
+  expect(readFileSync(`${out}/keep`, 'utf8')).toBe('existing directory content');
+  expect(readFileSync(`${folder}/.report.json`, 'utf8')).toBe('unrelated stage');
+  expect(readdirSync(folder)).toEqual(['.report.json']);
+});
+
 test('readable effective rules prove required checks after legacy protection permission gaps', () => {
   const repo = fixture(complete);
   git(repo, 'remote', 'add', 'origin', 'https://github.com/example/readiness.git');

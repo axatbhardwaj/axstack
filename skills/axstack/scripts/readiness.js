@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
 
 const scriptVersion = '1.0.0';
 const criteriaVersion = 1;
@@ -302,7 +302,11 @@ function writeReport(paths, report) {
   mkdirSync(paths.evidence, { recursive: true, mode: 0o700 });
   const staged = `${paths.evidence}/.${crypto.randomUUID()}.report.json`;
   writeFileSync(staged, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-  renameSync(staged, paths.out);
+  try { renameSync(staged, paths.out); }
+  catch (error) {
+    unlinkSync(staged);
+    throw error;
+  }
 }
 
 function compareBaseline(report, path) {
