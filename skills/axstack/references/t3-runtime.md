@@ -91,7 +91,10 @@ Account switches must happen before exhaustion at the picker's near-limit cutoff
 For plan generation, run
 `scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
-The `--picker` JSON must come from `scripts/pick-instance.js --provider <role provider> --json`.
+For claude/codex, the `--picker` JSON must come from saved
+`scripts/pick-instance.js --provider <role provider> --json` output.
+For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
+pass `{"chosenInstanceId":"<canonical instance>"}`.
 For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
 with the same plan inputs and saved `t3_thread_configuration` read-back.
 
@@ -101,7 +104,8 @@ A preset model must be used as given.
 
 A missing or malformed catalog holds resolution.
 
-Record the exact ID, rather than an unresolved provider default.
+For a null-model grok or antigravity role, record the exact model ID from the plan,
+rather than an unresolved provider default.
 Antigravity must hold when saved capabilities advertise zero models.
 No matching effort suffix holds resolution for Antigravity.
 For codex or claude, a role lacking both model and class is an intentional

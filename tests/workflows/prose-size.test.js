@@ -142,6 +142,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cli-lessons A1b: -544 measured aggregate bytes for dispatch-plan
   // pointers replacing runtime mechanics; retire 44-byte headroom, ceiling 361349.
   // Always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(361349);
+  // 20261008-cli-lessons A1b repair1: +226 measured bytes for scoped picker
+  // inputs and the null-role ID antecedent; 361575 is 318 below base 0484b12.
+  // Exact measured ceiling; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(361575);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

@@ -17,9 +17,9 @@ const rules = [
     'Fact and plan helpers dispatch-plan, pr-shape and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON, emit to stdout or a caller-given path, and retain no state between calls.',
     [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']]],
   ['writer boundaries', (text) => requires(text, /writer helpers/i, /run-init/, /readiness --run/,
-    /every side effect/i, /--help/, /write only those paths/i),
-    'Writer helpers run-init and readiness --run must list every side effect in --help and write only those paths.',
-    [[/write only those paths/i, 'write any paths'], [/every side effect/i, 'selected side effects']]],
+    /every side effect/i, /--help/, /write only (?:those|disclosed) paths/i),
+    'Writer helpers run-init and readiness --run must list every side effect in --help and write only disclosed paths.',
+    [[/write only (?:those|disclosed) paths/i, 'write any paths'], [/every side effect/i, 'selected side effects']]],
   ['term evidence', (text) => requires(text, /all new helpers/i, /report each term/i,
     /pass/, /fail/, /unknown/, /n\/a/, /evidence/i),
     'All new helpers report each term with evidence as n/a, unknown, fail or pass.',
@@ -35,8 +35,8 @@ const rules = [
   ['action exclusions', (text) => prohibits(text, /never/i, /helpers/i,
     /merge/, /dispatch/, /notify/, /schedule/, /retry/, /pick the next phase/i),
     'Helpers never pick the next phase, retry, schedule, notify, dispatch or merge.', [[/never/i, 'always']]],
-  ['help interface', (text) => requires(text, /each new helper/i, /supports --help/i, /lists (?:all|its) flags/i),
-    'Each new helper supports --help, which lists all flags.', [[/supports --help/i, 'omits help']]],
+  ['help interface', (text) => requires(text, /(?:each|every) new helper/i, /(?:supports|provides) --help/i, /(?:lists|enumerates) (?:all|its) flags/i),
+    'Every new helper provides --help, which enumerates all flags.', [[/(?:supports|provides) --help/i, 'omits help']]],
 ];
 
 for (const [name, accepts, rewording, inversions] of rules) {
