@@ -68,6 +68,23 @@ assertion. Only explicitly authorized, proven C/D batches route to
 `axstack-implement` as explicitly structure-preserving work: same-check green
 before/after, through its normal independent review. Discovery remains report-only.
 
+### Readiness lens
+
+For repository readiness, run from this skill directory:
+```sh
+bun ../axstack/scripts/readiness.js --repo <repo> --rev <rev> --out <git-common-dir>/axstack/readiness/<UTC>-<rev>.json --baseline <previous-report.json>
+```
+Outputs criterion evidence, revision, pillar counts and the full JSON report path.
+
+Pass the previous report explicitly as `--baseline`; omit it for the first report.
+Return ranked gaps. Route testing and dev-environment gaps to `axstack-verify`;
+route others to `axstack-implement`, one PR per coherent repair.
+Escalate `needs admin` gaps to the user. Never repair without authority.
+
+Use `--run` only for repositories the user owns or authorizes; record this
+authority in the run record. It is not a sandbox: repository code can read
+on-disk credentials and write outside scratch. Flags live in `--help`.
+
 ## 2. Return decision evidence
 
 Produce a small ranked candidate set. For each candidate include:
