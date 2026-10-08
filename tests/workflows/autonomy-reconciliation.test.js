@@ -28,14 +28,49 @@ const softenerProbes = commonHedges.flatMap((hedge) => [
   [/^/, `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
 ]);
 
-// Conditional/frequency families soften these mandatory instruction sentences;
-// factual adjectives (possible work, needed evidence) and "if present" do not.
+// R3 holdouts come from the two independent reviews and concrete family variants,
+// not from the checker. Retain the original corpus above as a separate boundary.
+const familyHoldouts = [
+  'whenever possible', 'wherever possible', 'if at all possible',
+  'when it is convenient', "when it's convenient", 'if it is practical',
+  'where practicable', 'if necessary', 'as necessary', 'where necessary', 'when necessary',
+  'if applicable', 'where applicable', 'as applicable', 'when applicable',
+  'if reasonable', 'where reasonable', 'if warranted', 'if useful', 'if helpful',
+  'if available', 'when relevant', 'if safe', 'if it makes sense',
+  'when resources allow', 'whenever convenient', 'as far as practical',
+  'to the extent possible', 'to the extent practical', 'to the degree possible',
+  'insofar as feasible', 'provided time is available', 'assuming capacity permits',
+  'subject to available time', 'time allowing', 'as time and resources permit',
+  'on a best-effort basis', 'on a best effort basis', 'with reasonable effort',
+  'try to', 'aim to', 'attempt to', 'strive to', 'seek to', 'endeavor to',
+  'trying to', 'tried to', 'aims to', 'attempted to', 'striving to', 'seeks to', 'endeavour to',
+  'strove to', 'striven to', 'sought to', 'on best-effort basis',
+  'on a best-efforts basis', 'with best efforts', 'making a reasonable effort to',
+  'in general', 'as a rule', 'for the most part', 'mostly', 'mainly', 'by default',
+  'at its discretion', "at the agent's discretion", "at the owner's discretion",
+  'at your discretion', 'as the driver sees fit', 'if the driver chooses',
+  'at the owner’s sole discretion', 'at their sole discretion',
+  'make an effort to', 'make a reasonable effort to',
+  'most of the time', 'in the majority of cases', 'in the usual case',
+  'only for the first wake', 'only on the initial wake', 'only once per run',
+];
+const familyProbes = familyHoldouts.flatMap((hedge) => [
+  [/^/, hedge.endsWith(' to') ? `${hedge} ` : `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
+]);
+
+// Finite scope-introducer boundary, independent of the hedge's adjective.
+// These declared factual uses preserve the established conditions/classifications;
+// they are not learned from the source under test. Added listed introducers fail.
+// "only when authorized" belongs to the schema template joined by the splitter.
+const factualScopes = /\b(?:when the forge digest is unchanged|(?:when|if) present|when prerequisites and authority are verified|as (?:incomplete|healthy|automatic_unchanged_wake_messages|settlement violations)|only when authorized)\b/gi;
+const addedScope = /\b(?:if|when(?:ever)?|where(?:ver)?|as|to the (?:extent|degree)|insofar|provided|providing|assuming|subject to)\b/i;
 const weakeningPatterns = [
   /\b(?:unless|except)\b/i,
-  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|in most cases|in principle)\b/i,
-  /\b(?:if|where|when|as) (?:possible|feasible|practical|appropriate|needed|convenient|desired|time (?:permits|allows))\b/i,
-  /\b(?:at (?:the )?driver(?:['’]s)? discretion|time permitting)\b/i,
-  /\b(?:on the first wake only|only on the first wake)\b/i,
+  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|mostly|mainly|in (?:most|the majority of) cases|most of the time|in the usual case|in principle|in general|for the most part|by default)\b/i,
+  /\b(?:tr(?:y|ies|ied|ying)|aim(?:s|ed|ing)?|attempt(?:s|ed|ing)?|striv(?:e|es|ed|ing|en)|strove|seek(?:s|ing)?|sought|endeavou?r(?:s|ed|ing)?) to\b/i,
+  /\b(?:on (?:a )?best[- ]efforts? basis|with (?:reasonable|best) efforts?|mak(?:e|es|ing) (?:an? )?(?:(?:reasonable|best) )?efforts? to|time (?:permitting|allowing))\b/i,
+  /\bat(?: [\w'’]+){0,4} discretion\b/i,
+  /\b(?:only (?:on|for) the (?:first|initial) wake|on the first wake only|only once per run)\b/i,
   /\bno unconsumed terminal receipts?(?: that (?:is|are))? older than\b/i,
 ];
 
@@ -47,11 +82,12 @@ function rule(name, path, concepts, rewording, inversions, mask = /$^/, contexts
     const required = [...concepts, ...inversions.map(([direction]) => direction)];
     const accepts = (text) => sentences(text).some((sentence) =>
       required.every((concept) => concept.test(sentence))
+      && !addedScope.test(sentence.replace(/`/g, '').replace(factualScopes, ''))
       && !weakeningPatterns.some((pattern) => pattern.test(sentence))
       && requires(sentence.replace(mask, ''), /^/));
     checkRule(source, accepts, rewording,
       [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient'],
-        ...softenerProbes], required);
+        ...softenerProbes, ...familyProbes], required);
     for (const context of contexts) {
       const reworded = sentences(source).filter(accepts)
         .reduce((text, target) => text.replace(target, context), source);
@@ -69,6 +105,9 @@ rule('local reconciliation precedes silence even with unchanged forge', watch,
     'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including possible questions and feasible next actions.',
     'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including evidence needed for practical evaluation.',
     'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including appropriate coverage checks.',
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including necessary evidence and applicable checks.',
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including the attempt count and a record of driver discretion.',
+    'Even when the forge digest is unchanged, check local receipts and actionable work before deciding on silence, including best-effort measurement labels.',
   ]);
 rule('completion advances in the same turn under existing safeguards', watch,
   [/completed work/i, /existing acceptance/i, /settlement\/readback/i, /authorized unblocked next action/i],
@@ -77,7 +116,11 @@ rule('completion advances in the same turn under existing safeguards', watch,
     [/\bevery\b/i, 'selected'], [/same turn/i, 'next wake'], [/without another/i, 'only after another'],
     [/without another/i, 'usually without another'], [/same turn/i, 'same turn when convenient'],
     [/same turn/i, 'same turn, if feasible,'], [/same turn/i, 'same turn, where practical,'],
-    [/same turn/i, 'same turn, when appropriate,'], [/same turn/i, 'same turn, as needed,']]);
+    [/same turn/i, 'same turn, when appropriate,'], [/same turn/i, 'same turn, as needed,'],
+    [/same turn/i, 'same turn, whenever practical,'],
+    [/same turn/i, 'same turn, if necessary,'],
+    [/same turn/i, 'same turn, at the agent’s discretion,'],
+    [/same turn/i, 'same turn, on a best-effort basis,']]);
 rule('quiet automatic waits require reconciled positive health and no pending work', watch,
   [/automatic unchanged scheduled wake/i, /end the turn/i, /no text or notification/i,
     /local reconciliation/i, /nothing reportable/i, /active work.*(?:when|if) present.*positively known/i,
