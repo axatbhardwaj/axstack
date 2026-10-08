@@ -72,3 +72,70 @@ test('resolver holds map exit 1 to exit 2 and preserve stderr byte for byte', ()
   expect(result.output).toBe('');
   expect(result.error).toBe(direct.stderr.toString());
 });
+
+const configuration = () => ({ modelSelection: { instanceId: 'codexAlt', model: 'gpt-6.1-sol',
+  options: [{ id: 'reasoningEffort', value: 'high' }] }, runtimeMode: 'full-access' });
+
+test('verification matches T3 read-back for either dispatch kind and normalizes option maps', () => {
+  const f = setup();
+  for (const kind of ['launch', 'task']) {
+    for (const options of [[{ id: 'reasoningEffort', value: 'high' }], { reasoningEffort: 'high' }]) {
+      const data = configuration(); data.modelSelection.options = options;
+      const result = f.run('axstack-author', kind, data);
+      expect(result).toEqual({ status: 0, output: 'MATCH\n', error: '' });
+    }
+  }
+});
+
+for (const [field, change] of [
+  ['instance', (data) => { data.modelSelection.instanceId = 'codex'; }],
+  ['provider', (data) => { data.modelSelection.provider = 'grok'; }],
+  ['model', (data) => { data.modelSelection.model = 'gpt-6-sol'; }],
+  ['options', (data) => { data.modelSelection.options[0].value = 'low'; }],
+  ['options', (data) => { data.modelSelection.options = [{ id: 'effort', value: 'high' }]; }],
+  ['options', (data) => { data.modelSelection.options = []; }],
+  ['options', (data) => { data.modelSelection.options.push({ id: 'reasoningEffort', value: 'high' }); }],
+  ['runtimeMode', (data) => { data.runtimeMode = 'approval-required'; }],
+]) {
+  test(`verification holds and names a mismatched ${field} (${change})`, () => {
+    const data = configuration(); change(data);
+    const result = setup().run('axstack-author', 'launch', data);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain(field);
+    expect(result.output).toContain('fail');
+    expect(result.output).not.toContain('MATCH');
+  });
+}
+
+for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) {
+  test(`verification holds unknown when ${field} read-back is missing`, () => {
+    const data = configuration();
+    if (field === 'runtimeMode') delete data.runtimeMode;
+    else delete data.modelSelection[field];
+    const result = setup().run('axstack-author', 'task', data);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain(field);
+    expect(result.output).toContain('unknown');
+  });
+}
+
+test('verification prints every mismatch with expected and observed evidence', () => {
+  const result = setup().run('axstack-author', 'launch', {
+    modelSelection: { instanceId: 'wrong', model: 'wrong', options: [] }, runtimeMode: 'auto',
+  });
+  expect(result.status).toBe(2);
+  for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) expect(result.output).toContain(field);
+  expect(result.output).toContain('gpt-6.1-sol');
+  expect(result.output).toContain('wrong');
+});
+
+test('Antigravity verifies effort through its model suffix with no effort option', () => {
+  const f = setup(); f.picker.chosenInstanceId = 'antigravity';
+  const data = { modelSelection: { instanceId: 'antigravity', model: 'gemini-3.8-flash-low', options: [] },
+    runtimeMode: 'full-access' };
+  expect(f.run('axstack-checker', 'launch', data).output).toBe('MATCH\n');
+  data.modelSelection.model = 'gemini-3.8-flash-high';
+  const result = f.run('axstack-checker', 'launch', data);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('model');
+});

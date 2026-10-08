@@ -21,6 +21,36 @@ function argumentsFrom(args) {
 
 const readJSON = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
+function normalizedOptions(options) {
+  const entries = Array.isArray(options) ? options.map((option) => [option?.id, option?.value])
+    : options && typeof options === 'object' ? Object.entries(options) : null;
+  if (!entries || entries.some(([id, value]) => typeof id !== 'string' || !id.trim()
+    || !['string', 'boolean'].includes(typeof value))
+    || new Set(entries.map(([id]) => id)).size !== entries.length) return null;
+  return JSON.stringify(entries.sort(([left], [right]) => left.localeCompare(right)));
+}
+
+function verify(configuration, instanceId, provider, model, options) {
+  const mismatches = [];
+  const selection = configuration?.modelSelection;
+  const compare = (field, expected, observed, equal = expected === observed) => {
+    if (!equal) mismatches.push(`${field}: ${observed == null ? 'unknown' : 'fail'}; `
+      + `expected ${JSON.stringify(expected)}; observed ${JSON.stringify(observed) ?? 'missing'}`);
+  };
+  // T3 may omit the legacy provider field: the exact instance ID is its binding.
+  if (selection?.provider != null) {
+    compare('provider', provider, selection.provider,
+      (selection.provider === 'claude' ? 'claudeAgent' : selection.provider) === provider);
+  }
+  compare('instanceId', instanceId, selection?.instanceId);
+  compare('model', model, selection?.model);
+  compare('options', options, selection?.options,
+    normalizedOptions(options) === normalizedOptions(selection?.options));
+  compare('runtimeMode', 'full-access', configuration?.runtimeMode);
+  console.log(mismatches.length ? mismatches.join('\n') : 'MATCH');
+  return mismatches.length ? 2 : 0;
+}
+
 function main() {
   const args = argumentsFrom(process.argv.slice(2));
   const role = readJSON(args['--roles']).roles.find((role) => role.id === args['--role']);
@@ -32,9 +62,13 @@ function main() {
     '--effort', role.thinkingOptionId, ...modelArgs], { stdout: 'pipe', stderr: 'pipe' });
   if (resolved.stderr.length) process.stderr.write(resolved.stderr);
   if (resolved.exitCode !== 0) return resolved.exitCode === 1 ? 2 : 1;
-  const { model, effortOption } = JSON.parse(resolved.stdout.toString());
+  const { model, effortOption, providerInstanceId } = JSON.parse(resolved.stdout.toString());
+  const options = effortOption ? [effortOption] : [];
+  if (args['--verify']) {
+    return verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
+  }
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: picker.chosenInstanceId,
-    model, options: effortOption ? [effortOption] : [] };
+    model, options };
   console.log(JSON.stringify({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection,
     runtimeMode: 'full-access' }));
   return 0;
