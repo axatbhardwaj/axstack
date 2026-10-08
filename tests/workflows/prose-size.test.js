@@ -146,6 +146,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // for settled worker-free silence; preserve 44-byte headroom; always-loaded unchanged.
   // 20261007-autonomy-369 T1 quiet-reminder repair: +1132 measured watch-runtime
   // bytes for bounded ordinary completion; preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(366690);
+  // 20261007-autonomy-369 T2: +3821 measured hygiene bytes for the approved
+  // settlement decision and completion-bound allowance; preserve 44-byte
+  // aggregate headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(370511);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

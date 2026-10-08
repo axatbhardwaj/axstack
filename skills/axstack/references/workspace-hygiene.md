@@ -36,6 +36,8 @@ Require terminal run evidence before `t3_thread_organize` settle or archive.
 These metadata actions do not remove worktrees. Accept matching delegated task
 or launched run completion under the runtime contract before settlement.
 After the driver accepts a launched writer's (author or repair) or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, in the same driver turn it settles the matching thread with `t3_thread_organize` using `action: settle` as metadata only.
+Apply the [Settlement decision](#settlement-decision) before any settlement call,
+including an accepted repair's settlement.
 The driver reads back `settled: true` with `t3_thread_read` on the writer thread for launched writers and on the `childThreadId` for delegated tasks.
 A missing or failed settle readback never triggers author repair: it holds only that dispatch's next advancement (publication, review routing, merge-ready) until resolved.
 Settling never removes, archives or abandons the thread or worktree.
@@ -52,6 +54,59 @@ At final settlement include run-owned worktrees in other repositories of the
 same project and report each remaining resource as a hold with its reason. Recorded
 projectId, threadId/runId, delegated taskId/childThreadId/childRunId, attempt key,
 checkout path and revision decide ownership. Idle alone never proves exit.
+
+### Settlement decision
+
+Re-read native state and all [Settlement](#settlement) guards before deciding,
+even with an unchanged forge digest. Acceptance, terminal evidence, ownership,
+protected states and evidence preservation remain prerequisites, not retry
+exceptions. This procedure grants no failed-writer resume or replacement route.
+
+- Adopt `settled: true` without a settle call, second acceptance or duplicate downstream dispatch.
+  Advance each still-unperformed authorized next action in the same turn.
+- Permit the first settle call only with `settled: false` and positive evidence
+  that settlement was never issued for this matching accepted completion.
+  Missing logs and an interrupted pending intent never prove never-issued settlement.
+  Normal uninterrupted driver control flow can witness never-issued settlement,
+  but after interruption native never-issued proof remains UNKNOWN unless established.
+  Reconcile an earlier settle that succeeded, errored, timed out or lost its reply before another call.
+  A `settled: false` snapshot, timeout or absence of a request ID never prove
+  non-application or that a prior request cannot later apply.
+- Allow only one additional `t3_thread_organize` `action: settle` execution,
+  only after explicit transport failure or lost response for that settlement.
+  Connection reset/closed connection, MCP transport-unavailable, timeout with
+  unknown application, or interruption with an evidenced issued call and no
+  response qualify for investigation, not safety proof.
+  Retry only after fresh shared settlement eligibility checks and either
+  definitive native non-application evidence or native-verified idempotent
+  settlement for the same unchanged accepted completion.
+  The prior request must be finished or proven unable to affect a later/current run before retry.
+  Unresolved in-flight state or unavailable native safety proof requires a hold with read-only reconciliation.
+  Denial, refusal, permission, trust, hook, auth, model, quota and explicit user stops
+  are never transient settlement errors. Preserve approved same-provider account
+  selection separately under [T3 preflight](t3-runtime.md#preflight-and-binding).
+
+The allowance identity is the original dispatch key plus accepted terminal run ID
+and candidate head or report-only source identity, bound to its thread.
+Persist the consumed allowance in the run record before the additional call.
+The first call never consumes the additional-call allowance.
+Wakes, compaction, request-ID changes, replacement attempts, cleanup re-invocation
+and ambiguous interruption never reset the allowance for the same completion.
+A genuinely new accepted repair/replacement completion has its own identity and
+allowance without fabricating a completion to bypass a hold.
+Merge/close settlement reuses the last accepted completion's existing allowance.
+
+A second failed or ambiguous execution holds that dispatch's advancement.
+A second failed or ambiguous execution never causes source repair.
+Record the operation, consumed allowance, reason and resume condition under
+[Settlement receipts](run-record.md#settlement-receipts).
+Report a new or materially changed hold once in the driver thread and answer
+requested status with the hold. Unchanged holds are never repeated automatically.
+Resume only when fresh native evidence establishes settlement succeeded and
+guards remain valid, or the user resolves a decision within existing authority.
+Relay remains limited to existing decision/serious-risk categories and deduplication,
+not every metadata hold. Existing repair rounds, debug attempts and lost-launch
+limits remain separate and preserved across resumes and replacements.
 
 Read back the durable receipt and evidence manifest before removing source copies or the worktree; missing or differing readback holds removal.
 Evidence already outside the checkout needs no copy; read back its receipt and
