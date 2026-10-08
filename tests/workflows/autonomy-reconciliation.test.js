@@ -77,6 +77,27 @@ const frequencyScopeProbes = frequencyScopeHoldouts.flatMap((hedge) => [
   [/^/, `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
 ]);
 
+// The accepted R5 termination grid is declared independently of the guard.
+// Exercise every combination, including members already covered by prior probes.
+const gridQuantifiers = [
+  'some', 'many', 'several', 'certain', 'rare', 'most', 'various', 'numerous',
+  'a few', 'a number of', 'particular', 'special', 'the majority of',
+];
+const gridNouns = ['cases', 'situations', 'instances', 'scenarios', 'circumstances'];
+const boundedGridHoldouts = [
+  ...gridQuantifiers.flatMap((quantifier) => gridNouns.map((noun) => `in ${quantifier} ${noun}`)),
+  ...['usual', 'normal', 'ordinary'].flatMap((course) =>
+    ['', 'the '].map((article) => `in ${article}${course} course`)),
+  'now and then', 'now and again', 'on occasion', 'on occasions',
+  'except in emergencies', 'excepting emergencies',
+  'save in exceptional cases', 'save for exceptional cases',
+  'apart from exceptional cases', 'aside from exceptional cases',
+  'periodically', 'routinely', 'for the typical run',
+];
+const boundedGridProbes = boundedGridHoldouts.flatMap((hedge) => [
+  [/^/, `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
+]);
+
 // Finite scope-introducer boundary, independent of the hedge's adjective.
 // These declared factual uses preserve the established conditions/classifications;
 // they are not learned from the source under test. Added listed introducers fail.
@@ -84,8 +105,8 @@ const frequencyScopeProbes = frequencyScopeHoldouts.flatMap((hedge) => [
 const factualScopes = /\b(?:when the forge digest is unchanged|(?:when|if) present|when prerequisites and authority are verified|as (?:incomplete|healthy|automatic_unchanged_wake_messages|settlement violations)|only when authorized)\b/gi;
 const addedScope = /\b(?:if|when(?:ever)?|where(?:ver)?|as|to the (?:extent|degree)|insofar|provided|providing|assuming|subject to)\b/i;
 const weakeningPatterns = [
-  /\b(?:unless|except(?:ions?)?|barring|save in)\b/i,
-  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|mostly|mainly|frequently|occasionally|commonly|regularly|at times|on occasion|from time to time|now and then|most times|in (?:some|many|certain|rare|most|the majority of) (?:cases|situations|instances|scenarios)|in (?:the )?(?:normal|ordinary) course|most of the time|in the usual case|in principle|in general|for the most part|by default|by and large|on the whole|depending on|case[- ]by[- ]case|should the need arise|within reason|to a reasonable (?:degree|extent))\b/i,
+  /\b(?:unless|except(?:ions?|ing)?|barring|save (?:in|for)|(?:apart|aside) from)\b/i,
+  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|mostly|mainly|frequently|occasionally|commonly|regularly|periodically|routinely|at times|on occasions?|from time to time|now and (?:then|again)|most times|in (?:some|many|several|certain|rare|most|various|numerous|a few|a number of|particular|special|the majority of) (?:cases|situations|instances|scenarios|circumstances)|in (?:the )?(?:usual|normal|ordinary) course|most of the time|in the usual case|for the typical run|in principle|in general|for the most part|by default|by and large|on the whole|depending on|case[- ]by[- ]case|should the need arise|within reason|to a reasonable (?:degree|extent))\b/i,
   /\b(?:tr(?:y|ies|ied|ying)|aim(?:s|ed|ing)?|attempt(?:s|ed|ing)?|striv(?:e|es|ed|ing|en)|strove|seek(?:s|ing)?|sought|endeavou?r(?:s|ed|ing)?) to\b/i,
   /\b(?:on (?:a )?best[- ]efforts? basis|with (?:reasonable|best) efforts?|mak(?:e|es|ing) (?:an? )?(?:(?:reasonable|best) )?efforts? to|time (?:permitting|allowing))\b/i,
   /\bat(?: [\w'’]+){0,4} discretion\b/i,
@@ -106,7 +127,7 @@ function rule(name, path, concepts, rewording, inversions, mask = /$^/, contexts
       && requires(sentence.replace(mask, ''), /^/));
     checkRule(source, accepts, rewording,
       [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient'],
-        ...softenerProbes, ...familyProbes, ...frequencyScopeProbes], required);
+        ...softenerProbes, ...familyProbes, ...frequencyScopeProbes, ...boundedGridProbes], required);
     for (const context of contexts) {
       const reworded = sentences(source).filter(accepts)
         .reduce((text, target) => text.replace(target, context), source);
