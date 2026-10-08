@@ -43,7 +43,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Primary reviewer in the ordered mixed peer pair: Sol high followed by Sol high. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
+      "notes": "Primary reviewer in the ordered mixed peer pair: Sol high followed by Opus low. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
       "modelClass": "sol"
     },
     {
@@ -58,11 +58,11 @@
     {
       "id": "axstack-reviewer-peer",
       "name": "Axstack reviewer (peer)",
-      "provider": "codex",
-      "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Second reviewer in the ordered mixed peer pair: Sol high followed by Sol high. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
-      "modelClass": "sol"
+      "provider": "claude",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "low",
+      "notes": "Second reviewer in the ordered mixed peer pair: Sol high followed by Opus low. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "modelClass": "opus"
     },
     {
       "id": "axstack-diligence",

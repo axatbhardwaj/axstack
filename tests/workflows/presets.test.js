@@ -52,7 +52,7 @@ const expected = {
     c('astra', 'high'),
     a('opus', 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'high'), a('opus', 'medium'), c('sol', 'high'),
+    c('sol', 'high'), a('opus', 'medium'), a('opus', 'low'),
     a('sonnet', 'high'),
     ag(null, 'low'), a('sonnet', 'high'),
     a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), ag(null, 'high'),

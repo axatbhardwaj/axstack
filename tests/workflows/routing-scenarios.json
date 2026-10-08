@@ -50,7 +50,7 @@
     {
       "id": "mixed-peer",
       "input": { "preset": "mixed", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA I", "base": "SHA J" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high", "axstack-reviewer-peer: codex/gpt-6-sol high"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "separate-session independence"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: codex/gpt-6-sol high", "axstack-reviewer-peer: claude/claude-opus-5-5 low"], "rules": ["identical complete briefs", "isolated first passes", "neither reviewer is author or owner", "separate-session independence"] }
     },
     {
       "id": "codex-peer",

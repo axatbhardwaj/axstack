@@ -223,7 +223,8 @@ This section applies to peer and authored PR modes.
    - **Peer:** exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-peer` from the routing snapshot.
      Send both the identical six-angle brief, with no first-pass cross-read or children.
-     Mixed peer reviewers share a model, with independence from separate sessions, the identical brief and an isolated first pass.
+     The mixed peer pair is cross-provider (Sol high + Opus low), with independence
+     still from separate sessions, the identical brief and an isolated first pass.
    - **Authored:** exactly one eligible independent reviewer from this complete
      mapping:
 

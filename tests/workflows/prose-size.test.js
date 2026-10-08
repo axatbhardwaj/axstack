@@ -137,6 +137,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-haiku-adoption A1: +186 measured bytes for the pinned Haiku role
   // guidance; preserve 44-byte headroom; always-loaded unchanged.
   // 20261008-cross-provider-default: +182 always-loaded and +182 aggregate bytes for the accepted New-chat default-sync model-discipline exception.
-  expect(total).toBeLessThanOrEqual(361829);
+  // 20261008-peer-opus-low A1: +108 aggregate bytes for the cross-provider
+  // mixed peer pair; preserve 44-byte headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(361937);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
