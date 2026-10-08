@@ -124,8 +124,11 @@ role.
 | `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high (Sol absent) |
 
 In `mixed` and `claude-only`, `axstack-auditor`, `axstack-research-requirements`,
-`axstack-research-code`, `axstack-research-web`, `axstack-explore-execution`,
-and `axstack-monitor` use the Claude Sonnet class at high effort. `codex-only` keeps its Codex
+`axstack-research-code`, `axstack-research-web`, and `axstack-explore-execution`
+use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
+`axstack-monitor` adopt Haiku 5.5 high, with class `haiku` and exact pin
+`claude-haiku-5-5`. Missing that ID or high effort in saved T3 capabilities
+holds those roles without substitution. `codex-only` keeps its Codex
 assignments for those roles. Mixed web-google and X retain their source-specific
 Antigravity and Grok routes.
 The new `-sol` auditor, research-code, and explore-execution seats use Sol high

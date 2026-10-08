@@ -30,8 +30,11 @@
   for every interactive page, bound to the exact bytes and SHA-256.
 - `axstack-auditor`/`axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
-  `axstack-explore-execution`/`axstack-monitor`:
+  `axstack-explore-execution`:
   `claude/sonnet` high in mixed/claude-only.
+- `axstack-explore-codebase`/`axstack-monitor`: `claude/haiku` high in
+  mixed/claude-only, pinned to `claude-haiku-5-5`. Missing that exact model
+  or high effort holds these roles without substitution.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
   internal reports to its Run and original driver.
 - Sol pairs `axstack-auditor-sol`/`axstack-research-code-sol`/

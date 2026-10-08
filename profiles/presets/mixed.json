@@ -169,8 +169,9 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Codebase mapper: explores repository structure and interfaces for research and handoff context. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
-      "modelClass": "sonnet"
+      "notes": "Haiku 5.5 high codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "modelClass": "haiku",
+      "model": "claude-haiku-5-5"
     },
     {
       "id": "axstack-explore-execution",
@@ -196,8 +197,9 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Optional Sonnet high independent read-only observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
-      "modelClass": "sonnet"
+      "notes": "Optional independent read-only Haiku 5.5 high observer for a standalone PR watch. Reads GitHub, feedback, and checks, persists event IDs, and wakes the owner only for a new actionable event. Never sends, authors, reviews, replies, or acts as either reusable PR manager. Healthy snapshots stay quiet. Chat-run mode: one same-host native read-only observer per Run; fresh finite passes report precise deltas internally to the original Run/driver and may disable/read back only their own automation at verified stop. No repair, dispatch, public notification, or replacement coordinator. Effective scheduled model/effort and wake require live proof. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "modelClass": "haiku",
+      "model": "claude-haiku-5-5"
     },
     {
       "id": "axstack-auditor",

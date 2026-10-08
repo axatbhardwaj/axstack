@@ -56,16 +56,22 @@ describe('explicit preset selection', () => {
     expect(snapshot.preset).toBe('mixed');
   });
 
-  test('installed mixed and Claude-only snapshots route selected research and monitor seats to Sonnet high', () => {
+  test('installed mixed and Claude-only snapshots adopt pinned Haiku 5.5 high for mapping and monitoring', () => {
     for (const preset of ['mixed', 'claude-only']) {
-      const home = makeTempRoot(`axstack-sonnet-${preset}-`);
+      const home = makeTempRoot(`axstack-haiku-${preset}-`);
       const skillsDir = join(home, 'installed');
       runCli([
         'install', '--preset', preset, '--bundle', join(import.meta.dir, '..', '..'),
         '--skills-dir', skillsDir, '--no-claude-settings', '--yes',
       ], { env: { HOME: home } });
       const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
-      for (const id of ['axstack-research-requirements', 'axstack-research-web', 'axstack-monitor']) {
+      for (const id of ['axstack-explore-codebase', 'axstack-monitor']) {
+        expect(roles.find((role) => role.id === id)).toMatchObject({
+          provider: 'claude', model: 'claude-haiku-5-5', modelClass: 'haiku',
+          modeId: 'bypassPermissions', thinkingOptionId: 'high',
+        });
+      }
+      for (const id of ['axstack-research-requirements', 'axstack-research-web']) {
         expect(roles.find((role) => role.id === id)).toMatchObject({
           provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high',
         });
