@@ -10,10 +10,10 @@ Capability: docs/plans/relay-decision-cards.md#c1 "Decision cards replace the re
 Internal task: T1 -> launched writer (axstack-author) -> branch axstack/20261008-relay-cards/t1-cards, stacked on the spec PR
 Theme: the relay reply path (driver card contract, packaged Hermes reply skill, and their tests)
 Size est: medium (prose contract and test rewrite across about 8 files)
-Acceptance: spec criteria 1-13 (the criterion 13 case list verbatim) and Decisions D1-D12 at rev 8.
+Acceptance: spec criteria 1-13 (the criterion 13 case list verbatim) and Decisions Q1-Q2 and D1-D12 at rev 8.
 - AC1-AC3, AC6-AC11 and D2-D8, D10, D11: `skills/axstack-relay/SKILL.md`
   (card layout, readiness, four ordered checks, confirmation flow, receipts,
-  decision responses, single-line rule, label rules with no inference,
+  decision responses, single-line rule, label rules with no inference, Q2 via AC8/AC11,
   Decisions-topic routing `telegram:<chat_id>:<thread_id>` as routing, not authority).
 - AC4, AC5, D1, D9, D12 (startup-merge behaviour): packaged Hermes skill
   `skills/axstack-relay/hermes/hermes-skill.md` rewritten in place as forward-only;
@@ -27,8 +27,8 @@ Acceptance: spec criteria 1-13 (the criterion 13 case list verbatim) and Decisio
   Decisions topic, optional aliases; never authority) documented in `docs/host-operations.md`.
 - Open item 2: deferred; the fixed first line stays authoritative. Recorded as an open
   item in `docs/host-operations.md`.
-- AC13: tests in `tests/workflows/` cover the criterion 13 case list, fail on removal or
-  inversion, and survive rewording.
+- AC13: tests in `tests/workflows/` cover criteria 1-11, including the criterion 13 case
+  list verbatim, and fail when an instruction is removed or inverted.
 Depends: spec PR
 
 ## C2 Release and host switch (driver)
@@ -51,6 +51,7 @@ Depends: C1
 ## Exclusions (from the spec, untouched by this map)
 
 - Native tap buttons, card editing in place, Mini Apps, a separate bot, a dashboard, any database or daemon.
-- Hosts without `hermes` (iobox, io) keep the T3 thread fallback.
+- Hosts without `hermes` (iobox, io) keep the T3 thread fallback; the registry covers only the gateway host's environment.
+- Q1: Stage 2 (tap buttons) is out of scope.
 - The legacy `axstack-decide` Hermes skill and its gateway drop-in.
 - Merge and npm-stage authority are unchanged.
