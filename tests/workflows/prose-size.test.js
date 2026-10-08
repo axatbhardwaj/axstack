@@ -145,6 +145,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cli-lessons A1b repair1: +226 measured bytes for scoped picker
   // inputs and the null-role ID antecedent; 361575 is 318 below base 0484b12.
   // Exact measured ceiling; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(361575);
+  // 20261008-cli-lessons A2: -506 measured bytes for run-init replacing
+  // path derivation; exact measured ceiling; always-loaded unchanged.
+  // 20261008-cli-lessons A2 repair1: +95 bytes restores the shared resume
+  // location and makes the invocation skill-relative; 411 below base f43327c.
+  expect(total).toBeLessThanOrEqual(361164);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

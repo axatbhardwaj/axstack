@@ -18,24 +18,28 @@ test('run-record: shared reference exists and lifecycle links to it', () => {
   expect(read('skills/axstack/references/lifecycle.md')).toContain('[Run record](run-record.md)');
 });
 
-test('run-record: path, identity, fallback, and archive stay local and stable', () => {
+test('run-record: initialization pointer, ownership, fallback and archive stay local', () => {
   const text = read('skills/axstack/references/run-record.md');
-  const command = 'git rev-parse --path-format=absolute --git-common-dir';
-  expect(text).toContain(`<${command}>/axstack/runs/<id>/progress.md`);
-  expect(text.match(new RegExp(command, 'g'))?.length ?? 0).toBeGreaterThanOrEqual(1);
-  expect(text).toMatch(/without[\s\S]*?path-format=absolute[\s\S]*?relative `\.git`[\s\S]*?ambiguous[\s\S]*?worktrees[\s\S]*?current working\s+directory/i);
-  expect(text).toMatch(/main checkout[\s\S]*linked worktrees|linked worktrees[\s\S]*main checkout/i);
-  expect(text).toMatch(/never[^.]*tracked tree/i);
-  expect(text).toMatch(/<UTCdate>-<slug>/i);
-  expect(text).toMatch(/UTCdate[^.]*YYYYMMDD[^.]*20260913-local-progress/i);
+  expect(text).toMatch(/^bun scripts\/run-init\.js --slug [a-z0-9-]+$/m);
+  const output = text.match(/^(?:Prints|Returns|Emits)\b[^\n]*/m)?.[0] ?? '';
+  expect(output).toMatch(/JSON.*record.*evidence.*scratch/i);
+  expect(output).not.toMatch(/\b(?:no|not|never|without)\b/i);
   expect(text).toMatch(/driver[^.]*chooses[^.]*slug/i);
-  expect(text).toMatch(/slug[^.]*lowercase letters[^.]*digits[^.]*hyphens[^.]*only/i);
   expect(text).toMatch(/never[^.]*raw request text/i);
-  expect(text).toMatch(/no[^.]*separators[^.]*path segments[^.]*inside `?axstack\/runs\/?`?/i);
-  expect(text).toMatch(/collision[^.]*suffix/i);
   expect(text).toMatch(/non-Git[^.]*private host state/i);
   expect(text).toMatch(/Archived[^.]*status/i);
   expect(text).toMatch(/never[^.]*move[^.]*delete|nothing[^.]*moved[^.]*deleted/i);
+});
+
+test('run-record: resume location names shared Git metadata and excludes tracking', () => {
+  const text = read('skills/axstack/references/run-record.md');
+  const location = text.split('## Location and identity')[1]?.split('\n## ')[0] ?? '';
+  const statement = location.split(/\.\s+/).find((sentence) =>
+    sentence.includes('<git-common-dir>/axstack/runs/<id>/progress.md')) ?? '';
+  expect(statement).toContain('git rev-parse --path-format=absolute --git-common-dir');
+  expect(statement).toMatch(/shared across\s+worktrees|worktrees\s+share/i);
+  expect(statement).not.toMatch(/(?:not|never)\s+(?:live|reside|stored|shared)/i);
+  expect(statement).toMatch(/never\s+(?:tracked|enters? the tracked tree)|(?:remain|stay)\s+untracked/i);
 });
 
 test('run-record: compact template carries required run and task fields', () => {
@@ -125,7 +129,7 @@ test('run-record: use is proportional and content stays compact and private', ()
   expect(text).toMatch(/copied|backed up/i);
 });
 
-test('run-record stays prose-only; the evidence helper has no runtime control', () => {
+test('run-record helpers stay in packaged skills; evidence archival has no runtime control', () => {
   const runtimeFiles = [
     ...filesBelow(`${root}/src`),
     ...filesBelow(`${root}/bin`),
@@ -140,6 +144,7 @@ test('run-record stays prose-only; the evidence helper has no runtime control', 
     `${root}/skills/axstack/scripts/pr-digest.js`,
     `${root}/skills/axstack/scripts/readiness.js`,
     `${root}/skills/axstack/scripts/resolve-models.js`,
+    `${root}/skills/axstack/scripts/run-init.js`,
     `${root}/skills/axstack/scripts/sync-default.js`,
   ].sort());
   expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
