@@ -139,6 +139,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cross-provider-default: +182 always-loaded and +182 aggregate bytes for the accepted New-chat default-sync model-discipline exception.
   // 20261008-peer-opus-low A1: +108 aggregate bytes for the cross-provider
   // mixed peer pair; preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(361937);
+  // 20261008-cli-lessons A1b: -544 measured aggregate bytes for dispatch-plan
+  // pointers replacing runtime mechanics; retire 44-byte headroom, ceiling 361349.
+  // Always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(361349);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

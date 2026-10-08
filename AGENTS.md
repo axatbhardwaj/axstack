@@ -28,6 +28,21 @@
 ## Engineering
 
 - Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
+- Only the new helpers `dispatch-plan`, `pr-shape`, `readiness` and `run-init`
+  follow this rule; the existing six scripts retain their behavior.
+  Fact and plan helpers (`dispatch-plan`, `pr-shape`, `readiness` without `--run`)
+  use explicit inputs, read-only `git`/`gh` or saved T3 JSON, output to stdout
+  or a caller-given path, and keep no state between calls.
+  Writer helpers (`run-init`, `readiness --run`) disclose every side effect in
+  `--help` and write only those paths. All new helpers report each term as
+  `pass`, `fail`, `unknown` or `n/a` with evidence. API, pagination and
+  permission gaps are `unknown`. Helpers can add holds but never grant
+  authority or an aggregate verdict; summaries are counts only.
+  Only agents call these helpers within their own turn; helpers never merge,
+  dispatch, notify, schedule, retry or pick the next phase.
+  Each new helper supports `--help`, which lists its flags.
+  New helper exit codes: 0 ok (including failed criteria), 1 error,
+  2 hold or incomplete, 10 regression (readiness only).
 - Use strict TDD for behavior changes: run a meaningful check red before the
   implementation, then record green evidence. Do not count missing modules or
   unrelated setup failures as behavioral red.

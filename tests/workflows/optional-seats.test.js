@@ -74,12 +74,8 @@ test('runtime holds preserve intentional absences and shared optional-seat excep
   expect(read('skills/axstack/references/routing.md')).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
 });
 
-test('null-model role binds a catalog ID while intentional single-provider seats remain absent', () => {
-  const runtime = read('skills/axstack/references/t3-runtime.md');
-  expect(runtime).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
-  expect(runtime).toContain('For codex or claude, a role lacking both model and class is an intentional absence and must hold; never use a provider default for that role.');
-});
-
+// Catalog binding for null roles is exercised in resolve-models.test.js
+// (model:null without class); intentional-absence policy stays checked below.
 test('Codex and Claude missing model and class explicitly hold as intentional absences', () => {
   const concepts = [/Codex/i, /Claude/i, /neither|missing|lacking/i, /model/i, /class/i, /intentional/i, /absen/i, /hold/i];
   for (const path of ['t3-runtime.md', 'routing.md']) {
