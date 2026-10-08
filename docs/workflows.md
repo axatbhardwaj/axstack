@@ -193,6 +193,16 @@ send their marker to the driver, which also verifies terminal `t3_thread_wait`,
 a clean tree, non-empty diff, and red/green logs. An older attempt never
 completes a newer one. Questions remain incomplete until the resumed run settles.
 
+Lost delegated replies follow the runtime reference's
+[discovery and verification sequence](../skills/axstack/references/t3-runtime.md#lost-delegated-replies-discovery-and-verification).
+Persist the successful reply's task ID immediately. Thread inventories and
+context transfers identify candidate threads; they cannot supply a task ID.
+A completion notification containing the actual task ID permits native status
+verification before child reads and acceptance. Missing identity holds that
+dispatch without resend or relaunch while independent authorized work continues
+through native wakes. Notification delivery and silent end-turn control remain
+unproved; these instructions do not establish native acceptance.
+
 Trust, permission, authentication, and provider safety prompts are holds;
 never answer trust or permission prompts for a worker. Unknown liveness,
 silence, or a missing status never proves exit or authorizes a second writer.

@@ -4,7 +4,7 @@ import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const hygiene = 'workspace-hygiene.md';
 const read = (file) => readFileSync(`${import.meta.dir}/../../skills/axstack/references/${file}`, 'utf8')
-  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/`/g, '').replace(/\s+/g, ' ');
 
 // S evidence only: a finite instruction corpus, not an all-English parser or
 // native nonapplication/idempotency/in-flight/never-issued proof. Mutate actual
@@ -175,6 +175,73 @@ rule('hold intervals are evidenced and incomplete times remain unknown',
   [/hold_intervals/i, /start_at/i, /end_at/i, /evidence/i, /missing times/i, /UNKNOWN/i, /open intervals/i],
   'Keep evidence for hold_intervals with start_at and end_at, preserving open intervals and missing times as UNKNOWN.',
   [[/UNKNOWN/i, 'zero elapsed'], [/open intervals/i, 'invented endpoints']], undefined, record);
+
+// Existing-tool recovery contracts, using the same finite actual-source probes.
+// These checks protect instructions; they neither call T3 nor prove native ACs.
+rule('successful delegated reply immediately preserves task identity',
+  [/persist/i, /taskId/i, /immediately/i, /successful/i, /delegate_task/i, /response/i],
+  'Immediately persist taskId from the successful delegate_task response.',
+  [[/immediately/i, 'eventually'], [/persist/i, 'skip']], undefined, runtime);
+rule('delegated discovery exhausts native cursor pages and exact identity filters',
+  [/t3_thread_list/i, /projectId/i, /includeSubagents/i, /titleContains/i, /nextCursor/i, /null/i,
+    /whole-title equality/i, /parentThreadId/i, /role/i, /attempt/i],
+  'Use t3_thread_list with projectId, includeSubagents and titleContains, following nextCursor to null and filtering by whole-title equality, parentThreadId, role and attempt.',
+  [[/nextCursor/i, 'first page'], [/whole-title equality/i, 'substring similarity']], undefined, runtime);
+rule('context transfers prove thread candidates only',
+  [/t3_thread_transfers/i, /only/i, /thread-identity evidence/i],
+  'Read t3_thread_transfers only for thread-identity evidence.',
+  [[/only/i, 'also'], [/thread-identity evidence/i, 'task identity']], undefined, runtime);
+rule('task IDs cannot be fabricated from other native identities',
+  [/synthesize/i, /taskId/i, /threadId/i, /transfer ID/i],
+  'Do not synthesize taskId from a transfer ID or threadId.',
+  [[/do not|never/i, 'Always']], /do not synthesize|never synthesize/i, runtime);
+rule('completion notification supplies candidate identity only',
+  [/completion notification/i, /containing taskId/i, /only/i, /candidate identity/i],
+  'A completion notification containing taskId supplies only a candidate identity.',
+  [[/only/i, 'automatically'], [/candidate identity/i, 'accepted completion']], undefined, runtime);
+rule('notification task status is verified against bound request and attempt',
+  [/task_status/i, /exact taskId/i, /cross-check/i, /childThreadId/i, /childRunId/i,
+    /latestTerminalRunId/i, /providerInstanceId/i, /recorded request/i, /scope/i, /attempt/i, /before adoption/i],
+  'Before adoption, call task_status on the exact taskId and cross-check childThreadId, childRunId, latestTerminalRunId and providerInstanceId against recorded request, scope and attempt.',
+  [[/before adoption/i, 'after adoption'], [/exact taskId/i, 'guessed taskId'], [/cross-check/i, 'skip']], undefined, runtime);
+rule('unknown task identity forbids delegated child reads',
+  [/taskId is unknown/i, /t3_thread_read/i, /delegated child/i],
+  'While taskId is unknown, do not call t3_thread_read on a delegated child.',
+  [[/do not call|never call/i, 'Always call']], /do not call|never call/i, runtime);
+rule('unknown task discovery metadata cannot accept a delegated result',
+  [/taskId is unknown/i, /t3_thread_list/i, /t3_thread_transfers/i, /t3_thread_configuration/i,
+    /only/i, /thread candidates/i, /without acknowledging or accepting/i],
+  'While taskId is unknown, inspect t3_thread_configuration, t3_thread_transfers and t3_thread_list only as thread candidates without acknowledging or accepting delegated completion.',
+  [[/only/i, 'also'], [/without acknowledging or accepting/i, 'while acknowledging and accepting']], undefined, runtime);
+rule('native child state follows persisted status and precedes acceptance',
+  [/after persisting/i, /task_status essentials/i, /t3_thread_read/i, /native thread\/run state/i,
+    /completion checks/i, /before accepting/i],
+  'After persisting task_status essentials, read native thread/run state with t3_thread_read and apply the completion checks before accepting.',
+  [[/after persisting/i, 'before persisting'], [/before accepting/i, 'after accepting']], undefined, runtime);
+rule('notification delivery and durable message exposure remain uncertain',
+  [/assume/i, /notification delivery/i, /durable thread-message availability/i],
+  'Do not assume notification delivery or durable thread-message availability.',
+  [[/do not assume|never assume/i, 'Always assume']], /do not assume|never assume/i, runtime);
+rule('missing task identity holds only its dispatch without retry',
+  [/missing taskId/i, /only/i, /affected dispatch/i, /no resend or relaunch/i],
+  'Missing taskId holds only the affected dispatch with no resend or relaunch.',
+  [[/only/i, 'all work beyond'], [/no resend or relaunch/i, 'automatic resend and relaunch']], /no resend or relaunch/i, runtime);
+rule('localized hold preserves independent work and native wake reconciliation',
+  [/continue/i, /independent authorized work/i, /reconcile/i, /held dispatch/i, /next native wake/i],
+  'Continue independent authorized work and reconcile the held dispatch at the next native wake.',
+  [[/continue/i, 'skip'], [/next native wake/i, 'next user decision']], undefined, runtime);
+rule('recovery waits use native watches notifications and required bound schedules',
+  [/native PR watch/i, /completion notifications/i, /required bound run schedule/i, /event-driven/i],
+  'Use the native PR watch, completion notifications and required bound run schedule for event-driven reconciliation.',
+  [[/event-driven/i, 'model-polled'], [/required bound run schedule/i, 'optional unbound timer']], undefined, runtime);
+rule('existing calls cannot prove silent end or reprompt suppression',
+  [/existing tool calls/i, /never prove/i, /silent-end-turn control/i, /Claude reprompt suppression/i],
+  'Existing tool calls never prove silent-end-turn control or Claude reprompt suppression.',
+  [[/never prove/i, 'prove']], /never prove/i, runtime);
+rule('missing silent mechanism preserves failed or unverified acceptance',
+  [/schema lacks/i, /supported silent mechanism/i, /retain/i, /AC1/i, /failed\/unverified/i, /report/i],
+  'If the schema lacks a supported silent mechanism, retain AC1 as failed/unverified and report that limitation.',
+  [[/retain/i, 'skip'], [/failed\/unverified/i, 'passed']], undefined, runtime);
 
 test('settlement decision and receipt links resolve to their owning references', () => {
   const raw = (file) => readFileSync(`${import.meta.dir}/../../skills/axstack/references/${file}`, 'utf8');

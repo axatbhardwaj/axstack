@@ -219,6 +219,59 @@ For a lost delegated-launch response, reconcile the recorded request and fully
 paginated exact-title/project/parent/role/attempt evidence before adoption.
 Adopt one exact matching task only after native task identity and configuration
 are verified, otherwise hold with read-only reconciliation.
+
+### Lost delegated replies: discovery and verification
+
+Persist `taskId` immediately from a successful `delegate_task` response,
+alongside its child/run IDs and the recorded request, scope and attempt.
+If that reply is missing, use this sequence with the advertised schemas:
+
+1. Use `t3_thread_list` with recorded `projectId`, `includeSubagents:true` and
+   `titleContains:<key>`, following `nextCursor` to null and filtering by
+   whole-title equality, `parentThreadId`, role and attempt.
+   Omit status/settled filters, retain every page and record inventory gaps.
+   Archived threads can be absent from list results; zero candidates never
+   proves absence. Several candidates or conflicting bindings hold adoption.
+2. Read `t3_thread_transfers` on the recorded parent only for thread-identity
+   evidence. Its source/target thread IDs can identify additional candidates,
+   including ones missing from list results, but its transfer ID is not a task ID.
+   Never synthesize `taskId` from `threadId` or a transfer ID.
+   While `taskId` is unknown, inspect `t3_thread_list`, `t3_thread_transfers`
+   and `t3_thread_configuration` only as thread candidates without acknowledging
+   or accepting delegated completion.
+3. A T3 completion notification containing `taskId` supplies only a candidate
+   identity. For that notification, call `task_status` on the exact `taskId`
+   and cross-check returned `childThreadId`, `childRunId`, `latestTerminalRunId`
+   and `providerInstanceId` against the recorded request, scope and attempt
+   before adoption. Preserve the status essentials under the completion rule
+   above, including the returned AXSTACK marker. A notification alone never
+   accepts completion. Never assume notification delivery or durable
+   thread-message availability.
+4. While `taskId` is unknown, never call `t3_thread_read` on a delegated child.
+   That read can acknowledge an untruncated terminal assistant result, and the
+   advertised schema has no state-only child view or task lookup by request/thread.
+   Record this narrow contradiction if discovery would require such a read;
+   do not bypass status-before-read or invent a lookup API.
+   After persisting `task_status` essentials, use `t3_thread_read` for native
+   thread/run state and apply all completion checks above before accepting.
+   Verify the exact title, project, parent, bound run and effective configuration
+   against the recorded attempt; paginate timeline/item text when needed.
+   Native delivery acknowledgment does not itself accept workflow completion.
+5. Missing `taskId` holds only the affected dispatch with no resend or relaunch.
+   Record the missing identity once, with resume condition: an actual task ID
+   followed by verified native status/configuration and matching completion.
+   Continue independent authorized work and reconcile the held dispatch at the
+   next native wake. Missing identity alone does not require a run-wide user decision.
+
+Use the owned native PR watch, completion notifications and required bound run
+schedule for event-driven reconciliation under the existing watch rules below.
+Never keep a model polling or post unchanged progress; requested status is answered.
+Existing tool calls never prove silent-end-turn control or Claude reprompt suppression.
+If the advertised schema lacks a supported silent mechanism, retain AC1 as
+failed/unverified and report that limitation; the existing quiet policy still applies.
+
+### Lost queued sends and writer launches
+
 For a lost queued-send response, reconcile the exact target thread,
 message/request receipt and resulting run evidence.
 A matching thread title alone never proves delivery.

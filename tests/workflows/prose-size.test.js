@@ -152,6 +152,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-autonomy-369 T2 receipts: +2974 measured bytes (+1421 runtime,
   // +1553 run record) for reconciliation links and compact receipt fields;
   // preserve 44-byte aggregate headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(373485);
+  // 20261007-autonomy-369 T2 tools-r1: +3492 measured runtime bytes for
+  // schema-grounded lost-reply steps; preserve 44-byte headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(376977);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
