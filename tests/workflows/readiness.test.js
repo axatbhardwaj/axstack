@@ -109,8 +109,33 @@ test('configured failures include loose TypeScript, wrong docs linkage and track
   status(report, 'style.strict', 'fail');
   status(report, 'docs.claude', 'fail');
   status(report, 'security.secrets', 'fail');
-  expect(criterion(report, 'security.secrets').evidence.join(' ')).toContain('.env.example');
+  expect(criterion(report, 'security.secrets').evidence.join(' ')).not.toContain('.env.example');
   expect(criterion(report, 'security.secrets').evidence.join(' ')).toContain('key.pem');
+});
+
+test('secret-file readiness ignores PEM fixture strings and conventional env templates', () => {
+  const repo = fixture({
+    ...complete, 'tests/keys.test.js': 'const fixture = "-----BEGIN PRIVATE KEY-----";',
+    '.env.example': 'EXAMPLE=', 'docs/.env.sample': 'SAMPLE=', 'config/.env.template': 'TEMPLATE=',
+    '.environment': 'ordinary file',
+  });
+  const before = assess(repo);
+  expect(before.code).toBe(0);
+  status(before.report, 'security.secrets', 'pass');
+  put(repo, '.env.local', 'SECRET=value');
+  git(repo, 'add', '.');
+  git(repo, 'commit', '-qm', 'tracked local secrets');
+  const after = assess(repo).report;
+  status(after, 'security.secrets', 'fail');
+  expect(criterion(after, 'security.secrets').evidence).toEqual([`git show ${after.header.revision}:.env.local`]);
+});
+
+test('secret-file readiness rejects env files and private-key names without reading contents', () => {
+  const names = ['.env', '.env.production', 'nested/.env.example.local', 'id_rsa', 'id_ed25519', 'id_ecdsa', 'key.pem', 'key.key', 'key.p12', 'nested/key.pfx'];
+  const repo = fixture({ ...complete, ...Object.fromEntries(names.map((name) => [name, 'opaque fixture'])) });
+  const { report } = assess(repo);
+  status(report, 'security.secrets', 'fail');
+  expect(criterion(report, 'security.secrets').evidence).toEqual(names.sort().map((name) => `git show ${report.header.revision}:${name}`));
 });
 
 test('executed criteria apply presence, prose and lockfile precedence without running commands', () => {
