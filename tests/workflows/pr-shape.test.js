@@ -14,6 +14,9 @@ const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8')
 // Independent instruction contracts: the prior band checks enforced approval
 // gates. These protect informational sizing and coverage without simulating agents.
 const rules = [
+  ['total counts every added and deleted line from helper output', [shape],
+    [/total\s*(?:=|is|as|equals)\s*additions\s*(?:\+|plus)\s*deletions/i, /all files|every file/i, /JSON|helper(?:'s)? output/i],
+    'The helper output defines total as additions plus deletions across every file.', [/\+|\bplus\b/i, 'minus']],
   ['threshold is informational', [shape], [/above|over/i, /2,?500/, /changed lines|changed LOC/i, /informational only|advisory only/i],
     'Totals over 2,500 changed LOC are advisory only.', [/informational only|advisory only/i, 'an approval gate']],
   ['flags are informational', [review, tickets, audit, record, docs], [/size flags/i, /informational only|advisory only/i],

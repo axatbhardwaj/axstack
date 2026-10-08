@@ -150,7 +150,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cli-lessons A2 repair1: +95 bytes restores the shared resume
   // location and makes the invocation skill-relative; 411 below base f43327c.
   // 20261008-cli-lessons A3: -1 byte for the pr-shape invocation/output
-  // contract replacing measurement mechanics; exact total, all policies retained.
-  expect(total).toBeLessThanOrEqual(361163);
+  // contract replacing measurement mechanics; exact total.
+  // 20261008-cli-lessons A3 repair1: -5 bytes restores the total definition
+  // in the output contract and shortens equivalent branch examples; exact total.
+  expect(total).toBeLessThanOrEqual(361158);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

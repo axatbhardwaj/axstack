@@ -348,6 +348,7 @@ test('structural: shared PR-shape reference preserves measurement and coherent t
   expect(shape).toMatch(/stacked child[^.]*parent branch/i);
   expect(shape).toMatch(/root PR[^.]*actual target branch/i);
   expect(shape).toMatch(/main[^.]*example/i);
+  expect(shape).toMatch(/total\s*(?:=|is|as|equals)\s*additions\s*(?:\+|plus)\s*deletions[^.]*(?:all files|every file)/i);
   expect(shape).toMatch(/moves.*-M|-M.*moves/i);
   expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
   for (const bucket of ['generated', 'lockfile', 'formatter-only']) expect(shape).toContain(bucket);

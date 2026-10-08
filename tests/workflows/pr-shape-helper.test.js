@@ -123,6 +123,29 @@ test('a nested caller measures the same repository paths despite diff.relative c
   expect(result.data.buckets.generated).toMatchObject({ files: 3, additions: 6 });
 });
 
+test('local info attributes hold only the generated bucket without inventing zero counts', () => {
+  const { repo, base, head } = fixture();
+  const info = `${repo}/.git/info/attributes`;
+  writeFileSync(info, '* linguist-generated\n');
+  const status = git(repo, 'status', '--porcelain', '--ignored');
+  const index = readFileSync(`${repo}/.git/index`);
+  const result = invoke(`${repo}/nested`, ['--base', 'parent', '--head', 'HEAD']);
+  expect(result.code, result.stderr).toBe(2);
+  expect(result.data.inputs).toMatchObject({ base, head });
+  expect(result.data.totals).toMatchObject({ status: 'pass', files: 15, renames: 1, binaries: 1 });
+  expect(result.data.buckets.lockfiles).toMatchObject({ status: 'pass', files: 3, additions: 4 });
+  expect(result.data.buckets.generated).toMatchObject({ status: 'unknown', evidence: {
+    reason: `local attribute override exists: ${info}`,
+  } });
+  for (const metric of ['files', 'additions', 'deletions', 'renames', 'binaries']) {
+    expect(result.data.buckets.generated).not.toHaveProperty(metric);
+  }
+  expect(readFileSync(info, 'utf8')).toBe('* linguist-generated\n');
+  expect(git(repo, 'status', '--porcelain', '--ignored')).toBe(status);
+  expect(readFileSync(`${repo}/.git/index`)).toEqual(index);
+  expect(git(repo, 'rev-parse', 'HEAD')).toBe(head);
+});
+
 test.each([[], ['--base'], ['--base', 'main'], ['--head', 'HEAD'],
   ['--base', 'main', '--head'], ['--base', 'main', '--head', 'HEAD', '--unknown'],
   ['--base', 'main', '--base', 'main', '--head', 'HEAD'],
