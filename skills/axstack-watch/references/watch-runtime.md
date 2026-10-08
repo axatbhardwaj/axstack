@@ -86,6 +86,24 @@ Answer requested status even during a healthy wait.
 Keep failed, held, or unknown work incomplete, never label it healthy.
 Report each new or materially changed hold or unknown in the driver thread once with its resume condition.
 Unchanged holds receive no automatic repeat, and requested status answers name them.
+
+Use ordinary text-free completion for this reconciled quiet wake.
+If the runtime continues solely with an automatic no-output META reminder and
+no new substantive input or evidence, treat that reminder as neither a user
+request nor a requested status question.
+Only in that reminder-only continuation, use the still-valid local reconciliation
+for a second ordinary text-free finish without intervening tools.
+Do not add dummy tools, text, sentinels, or hidden output to obtain silence.
+Any actual new user request, including status or stop, higher-priority instruction,
+safety refusal, permission/trust/hook/auth/model/quota prompt, terminal work, or
+new uncertainty follows the existing request, action, and hold guards.
+Never suppress or hide emitted text, and any emitted text counts.
+Native text-free completion is not supported by every harness: unsupported
+completion remains an evidenced limitation or hold.
+If a second ordinary finish does not stop and only automatic reminders persist,
+record unsupported completion as an evidenced limitation or hold under existing
+reporting rules rather than cycling tools or finishes.
+
 Exit 10 supplies deltas
 to reconcile with current PR and local state; the driver saves only the printed
 `watermark` field as JSON after disposition. Exit 2 means incomplete coverage:
