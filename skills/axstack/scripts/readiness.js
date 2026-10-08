@@ -5,19 +5,24 @@ const scriptVersion = '1.0.0';
 const criteriaVersion = 1;
 
 function git(repo, ...args) {
-  const argv = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-C', repo, ...args];
+  const argv = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false', '-C', repo, ...args];
   const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin: 'ignore' });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim());
   return result.stdout.toString();
 }
 
-function normalizeOrigin(origin) {
+function normalizeOrigin(origin, repo) {
   if (!origin) return '';
   const scp = /^(?:[^@/]+@)?([^/:]+):(.+)$/.exec(origin);
-  const url = new URL(scp && !origin.includes('://') ? `ssh://${scp[1]}/${scp[2]}` : origin);
+  let address = origin;
+  if (!origin.includes('://')) {
+    address = scp ? `ssh://${scp[1]}/${scp[2]}` : `file://${absolute(origin.startsWith('/') ? origin : `${repo}/${origin}`).split('/').map(encodeURIComponent).join('/')}`;
+  }
+  const url = new URL(address);
   let path = url.pathname.replace(/\/+$/, '').replace(/\.git$/, '');
   if (url.hostname.toLowerCase() === 'github.com') path = path.toLowerCase();
-  return `https://${url.host.toLowerCase()}${path}`;
+  const host = url.hostname.toLowerCase() === 'github.com' ? 'github.com' : url.host.toLowerCase();
+  return `${url.protocol === 'file:' ? 'file' : 'https'}://${host}${path}`;
 }
 
 function snapshot(repo, revision) {
@@ -28,6 +33,7 @@ function snapshot(repo, revision) {
   }));
   const cache = new Map();
   return {
+    revision,
     paths: [...entries.keys()],
     has: (path) => entries.get(path)?.type === 'blob',
     mode: (path) => entries.get(path)?.mode,
@@ -65,11 +71,15 @@ function packageManager(files) {
   return { name, paths: paths.filter(files.has) };
 }
 
-function declaredCommands(files, pkg, manager, set) {
+function declaredCommands(files, pkg, manager, set, invalidPackage) {
   const prose = files.paths.filter((path) => /\.md$/i.test(path)).map((path) => files.read(path)).join('\n');
   for (const [id, names] of [['env.build', ['build']], ['testing.test', ['test']], ['testing.lint-typecheck', ['lint', 'typecheck']]]) {
+    if (invalidPackage) {
+      set(id, 'unknown', [`git show ${files.revision}:package.json`], 'invalid package.json');
+      continue;
+    }
     const present = names.filter((name) => typeof pkg.scripts?.[name] === 'string' && pkg.scripts[name].trim());
-    const evidence = present.map((name) => `git show: package.json scripts.${name}`);
+    const evidence = present.map((name) => `git show ${files.revision}:package.json: scripts.${name}`);
     if (!present.length) {
       const mentioned = names.some((name) => new RegExp(`\\b(?:bun|npm|pnpm|yarn)\\s+(?:run\\s+)?${name}\\b`).test(prose));
       if (mentioned) set(id, 'unknown', ['committed Markdown declares a command without a package.json script'], 'prose-declared; not run');
@@ -86,7 +96,11 @@ function assess(repo, revision) {
   const has = (pattern) => files.paths.filter((path) => files.has(path) && pattern.test(path));
   const js = files.has('package.json') || has(/\.[cm]?[jt]sx?$/).length > 0;
   let pkg = {};
-  try { pkg = JSON.parse(files.read('package.json') || '{}'); } catch { /* Config evidence remains available. */ }
+  let invalidPackage = false;
+  try {
+    pkg = JSON.parse(files.read('package.json') || '{}');
+    if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) throw new Error('invalid package.json');
+  } catch { pkg = {}; invalidPackage = true; }
   const criteria = definitions.map(([id, pillar, kind = 'configured']) => ({ id, pillar, kind, status: 'unknown', evidence: [`git ls-tree -r ${revision}`], reason: js ? 'not run' : 'unsupported stack' }));
   const set = (id, status, evidence, reason = '') => Object.assign(criteria.find((item) => item.id === id), { status, evidence, reason });
   const configured = (id, matches) => set(id, matches.length ? 'pass' : 'fail', matches.length ? matches.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no matching configuration`], matches.length ? '' : 'missing configuration');
@@ -104,33 +118,40 @@ function assess(repo, revision) {
       set('style.strict', jsonc(files.read('tsconfig.json') || '{}').compilerOptions?.strict === true ? 'pass' : 'fail', [`git show ${revision}:tsconfig.json`], '');
     } catch { set('style.strict', 'unknown', [`git show ${revision}:tsconfig.json`], 'invalid tsconfig'); }
   }
-  configured('style.pre-commit', has(/(^|\/)(\.pre-commit-config\.ya?ml|lefthook\.ya?ml|\.lefthook\.ya?ml|\.husky\/[^/]+)$/).concat(pkg['lint-staged'] || pkg.husky ? ['package.json'] : []));
+  configured('style.pre-commit', has(/(^|\/)(\.pre-commit-config\.ya?ml|lefthook\.ya?ml|\.lefthook\.ya?ml|\.husky\/pre-commit)$/).concat(pkg.husky?.hooks?.['pre-commit'] ? ['package.json'] : []));
   configured('env.lockfile', has(/^(bun\.lockb?|package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$/));
   const manager = packageManager(files);
-  declaredCommands(files, pkg, manager, set);
-  configured('env.toolchain', has(/^(\.tool-versions|mise\.toml|\.mise\.toml|\.nvmrc|\.devcontainer\/(devcontainer\.json|[^/]+\/devcontainer\.json))$/).concat(pkg.engines && Object.keys(pkg.engines).length ? ['package.json'] : []));
-  configured('testing.files', has(/(^|\/)(__tests__\/.*|[^/]+\.(test|spec)\.[cm]?[jt]sx?)$/));
+  declaredCommands(files, pkg, manager, set, invalidPackage);
+  configured('env.toolchain', has(/^(\.tool-versions|mise\.toml|\.mise\.toml|\.nvmrc|\.devcontainer\.json|\.devcontainer\/(devcontainer\.json|[^/]+\/devcontainer\.json))$/).concat(pkg.engines && Object.keys(pkg.engines).length ? ['package.json'] : []));
+  configured('testing.files', has(/(^|\/)((tests?|__tests__)\/.*\.[cm]?[jt]sx?|[^/]+\.(test|spec)\.[cm]?[jt]sx?)$/));
   configured('testing.verify-skill', has(/^\.agents\/skills\/verify-[^/]+\/SKILL\.md$/));
   const workflows = has(/^\.github\/workflows\/[^/]+\.ya?ml$/);
   let prTests = false;
+  let prCandidate = false;
   let invalid = false;
+  const codeql = [];
   for (const path of workflows) {
     try {
       const workflow = Bun.YAML.parse(files.read(path));
       const trigger = workflow?.on;
       const pr = trigger === 'pull_request' || (Array.isArray(trigger) ? trigger.includes('pull_request') : trigger && Object.hasOwn(trigger, 'pull_request'));
-      const runs = Object.values(workflow?.jobs ?? {}).flatMap((job) => job?.steps ?? []).map((step) => step?.run).filter((run) => typeof run === 'string');
-      if (pr && runs.some((run) => /(?:^|[\n;&|]\s*|\s)(?:bun|npm|pnpm|yarn)\s+(?:run\s+)?test(?:\s|$)/.test(run))) prTests = true;
+      const steps = Object.values(workflow?.jobs ?? {}).flatMap((job) => job?.steps ?? []);
+      const runs = steps.map((step) => step?.run).filter((run) => typeof run === 'string');
+      if (steps.some((step) => typeof step?.uses === 'string' && /^github\/codeql-action\//.test(step.uses))) codeql.push(path);
+      const invokes = (run, name) => new RegExp(`(?:^|[\\n;&|])\\s*${name}\\s+(?:run\\s+)?test(?:\\s|[;&|]|$)`).test(run);
+      if (pr && runs.some((run) => invokes(run, '(?:bun|npm|pnpm|yarn)'))) prCandidate = true;
+      if (pr && manager.name && runs.some((run) => invokes(run, manager.name))) prTests = true;
     } catch { invalid = true; }
   }
-  set('security.pr-tests', prTests ? 'pass' : invalid ? 'unknown' : 'fail', workflows.length ? workflows.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no workflows`], invalid && !prTests ? 'invalid workflow YAML' : prTests ? '' : 'missing pull_request test step');
-  configured('security.updates', has(/(^|\/)(\.github\/(dependabot\.ya?ml|codeql\/[^/]+\.ya?ml)|(?:\.?)renovaterc(?:\.json5?)?|renovate\.json5?)$/).concat(workflows.filter((path) => /github\/codeql-action\//.test(files.read(path)))));
+  const workflowReason = prTests ? '' : invalid ? 'invalid workflow YAML' : prCandidate && manager.reason ? manager.reason : 'missing pull_request test step';
+  set('security.pr-tests', prTests ? 'pass' : invalid || (prCandidate && manager.reason) ? 'unknown' : 'fail', workflows.length ? workflows.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no workflows`], workflowReason);
+  configured('security.updates', has(/(^|\/)(\.github\/(dependabot\.ya?ml|codeql\/[^/]+\.ya?ml)|(?:\.?)renovaterc(?:\.json5?)?|renovate\.json5?)$/).concat(codeql));
   const secrets = has(/(^|\/)(\.env[^/]*|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.key)$/).concat(files.paths.filter((path) => files.has(path) && /-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/.test(files.read(path))));
   set('security.secrets', secrets.length ? 'fail' : 'pass', secrets.length ? [...new Set(secrets)].map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no tracked env or private keys`], secrets.length ? 'tracked env or private keys' : '');
   return criteria;
 }
 
-function pillars(criteria) {
+export function summarizePillars(criteria) {
   const result = {};
   for (const item of criteria) {
     const pillar = result[item.pillar] ??= { passes: 0, total: 0, unknown: 0, na: 0 };
@@ -188,21 +209,29 @@ function forgeStatus(origin) {
   }
 }
 
+function dirty(repo) {
+  // Status normally invokes clean/process filters. Observe raw source bytes instead.
+  const keys = git(repo, 'config', '--null', '--list').split('\0').map((entry) => entry.split('\n')[0]).filter((key) => /^filter\..*\.(clean|process)$/.test(key));
+  const overrides = keys.flatMap((key) => ['-c', `${key}=`, '-c', `${key.replace(/\.(clean|process)$/, '.required')}=false`]);
+  return git(repo, ...overrides, 'status', '--porcelain', '--untracked-files=all').length > 0;
+}
+
 function report(args) {
   const repo = args['--repo'];
   const revision = git(repo, 'rev-parse', '--verify', '--end-of-options', `${args['--rev'] ?? 'HEAD'}^{commit}`).trim();
-  let origin = '';
-  try { origin = normalizeOrigin(git(repo, 'remote', 'get-url', 'origin').trim()); } catch { /* No origin. */ }
+  let rawOrigin = '';
+  try { rawOrigin = git(repo, 'remote', 'get-url', 'origin').trim(); } catch { /* No origin. */ }
+  const origin = normalizeOrigin(rawOrigin, repo);
   const header = {
     repoIdentity: { roots: git(repo, 'rev-list', '--max-parents=0', revision).trim().split('\n').sort(), origin },
-    revision, dirty: git(repo, 'status', '--porcelain', '--untracked-files=all').length > 0,
+    revision, dirty: dirty(repo),
     observedAt: new Date().toISOString(), ghObservedAt: new Date().toISOString(), scriptVersion, criteriaVersion,
   };
   const criteria = assess(repo, revision);
   header.ghObservedAt = new Date().toISOString();
   const settings = criteria.find((item) => item.id === 'security.status-checks');
   if (settings.reason !== 'unsupported stack') Object.assign(settings, forgeStatus(origin));
-  return { header, criteria, pillars: pillars(criteria) };
+  return { header, criteria, pillars: summarizePillars(criteria) };
 }
 
 function absolute(path) {
@@ -272,29 +301,36 @@ const help = `Usage: bun readiness.js --repo <path> [--rev <ref>] [--baseline <r
 Static assessment of committed JavaScript/TypeScript repository files.
 Flags: --repo, --rev (default HEAD), --baseline, --out, --help.
 Writes only --out and its evidence folder under <git-common-dir>/axstack/readiness/.
-Repository commands are not executed. GH selects the read-only gh executable.`;
+--out must end in .json; symlinks are rejected. Its evidence folder omits that suffix.
+Repository commands are not executed. GH selects the read-only gh executable.
+Dirty observation disables Git filters and filesystem-monitor hooks.
+Exit codes: 0 report (including failed criteria), 1 error, 2 comparison unavailable, 10 regression.`;
 
-try {
-  if (process.argv.slice(2).includes('--help')) {
+function main(argv) {
+  if (argv.includes('--help')) {
     console.log(help);
-  } else {
-    const args = {};
-    const argv = process.argv.slice(2);
-    for (let i = 0; i < argv.length; i += 2) {
-      if (!['--repo', '--rev', '--baseline', '--out'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
-        throw new Error(`invalid argument: ${argv[i]}`);
-      }
-      args[argv[i]] = argv[i + 1];
-    }
-    if (!args['--repo'] || !args['--out']) throw new Error('expected --repo and --out');
-    const paths = outputPaths(args);
-    const result = report(args);
-    const code = compareBaseline(result, args['--baseline']);
-    writeReport(paths, result);
-    console.log(JSON.stringify(result));
-    process.exitCode = code;
+    return 0;
   }
-} catch (error) {
-  console.error(`Readiness error: ${error.message}`);
-  process.exitCode = 1;
+  const args = {};
+  for (let i = 0; i < argv.length; i += 2) {
+    if (!['--repo', '--rev', '--baseline', '--out'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
+      throw new Error(`invalid argument: ${argv[i]}`);
+    }
+    args[argv[i]] = argv[i + 1];
+  }
+  if (!args['--repo'] || !args['--out']) throw new Error('expected --repo and --out');
+  const paths = outputPaths(args);
+  const result = report(args);
+  const code = compareBaseline(result, args['--baseline']);
+  writeReport(paths, result);
+  console.log(JSON.stringify(result));
+  return code;
+}
+
+if (import.meta.main) {
+  try { process.exitCode = main(process.argv.slice(2)); }
+  catch (error) {
+    console.error(`Readiness error: ${error.message}`);
+    process.exitCode = 1;
+  }
 }

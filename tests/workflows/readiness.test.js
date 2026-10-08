@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync } from 'node:fs';
+import { summarizePillars } from '../../skills/axstack/scripts/readiness.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
@@ -336,4 +337,87 @@ test('linked worktrees use the common git directory and assess the selected revi
   status(result.report, 'docs.agents', 'pass');
   expect(result.report.header.revision).toBe(revision);
   expect({ common: manifest(repo), linked: manifest(linked) }).toEqual(before);
+});
+
+test('workflow configuration requires the selected package manager and an invocation, not printed prose', () => {
+  for (const run of ['echo bun test', 'npm test', '# bun test', 'echo "bun test"']) {
+    const report = assess(fixture({ ...complete, '.github/workflows/test.yml': `on: [pull_request]\njobs:\n  tests:\n    steps:\n      - run: ${JSON.stringify(run)}\n` })).report;
+    status(report, 'security.pr-tests', 'fail', 'missing pull_request test step');
+  }
+});
+
+test('malformed committed package declarations report uncertainty rather than missing scripts', () => {
+  const report = assess(fixture({ ...complete, 'package.json': '{ broken JSON' })).report;
+  for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) status(report, id, 'unknown', 'invalid package.json');
+});
+
+test('alternate config locations and ordinary test directories are recognized', () => {
+  const report = assess(fixture({ 'src/main.js': 'export const main = 1;', '.devcontainer.json': '{}', 'test/unit.js': 'test("example", () => {});' })).report;
+  status(report, 'env.toolchain', 'pass');
+  status(report, 'testing.files', 'pass');
+});
+
+test('origin normalization preserves local origin identity and normalizes SSH ports without exposing credentials', () => {
+  const repo = fixture(complete);
+  git(repo, 'remote', 'add', 'origin', 'ssh://git@github.com:22/Example/Readiness.git/');
+  const baseline = assess(repo, [], { out: `${repo}/.git/axstack/readiness/origin.json` });
+  expect(baseline.report.header.repoIdentity.origin).toBe('https://github.com/example/readiness');
+  git(repo, 'remote', 'set-url', 'origin', 'https://user:password@github.com/Example/Readiness.git');
+  const same = assess(repo, ['--baseline', baseline.out]);
+  expect(same.code).toBe(0);
+  expect(same.report.header.repoIdentity.origin).not.toContain('password');
+  git(repo, 'remote', 'set-url', 'origin', `${root}/local-source.git`);
+  const changed = assess(repo, ['--baseline', baseline.out]);
+  expect(changed.code).toBe(2);
+  expect(changed.report.header.repoIdentity.origin).toBe(`file://${root}/local-source`);
+});
+
+test('pillar fractions exclude n/a, retain unknown counts and render all-n/a as 0/0', () => {
+  const pillars = summarizePillars([
+    { pillar: 'Style', status: 'pass' }, { pillar: 'Style', status: 'unknown' }, { pillar: 'Style', status: 'n/a' },
+    { pillar: 'Build/Env', status: 'n/a' }, { pillar: 'Build/Env', status: 'n/a' },
+  ]);
+  expect(pillars).toEqual({
+    Style: { passes: 1, total: 2, unknown: 1, na: 1, fraction: '1/2' },
+    'Build/Env': { passes: 0, total: 0, unknown: 0, na: 2, fraction: '0/0' },
+  });
+});
+
+test('unrelated hooks and printed CodeQL references do not imply configured protection', () => {
+  const repo = fixture({
+    'package.json': { 'lint-staged': { '*.js': 'eslint' } }, 'bun.lock': '{}',
+    '.husky/pre-push': 'bun test',
+    '.github/workflows/print.yml': 'on: [push]\njobs:\n  echo:\n    steps:\n      - run: echo github/codeql-action/init@v3\n',
+  });
+  let report = assess(repo).report;
+  status(report, 'style.pre-commit', 'fail');
+  status(report, 'security.updates', 'fail');
+  put(repo, '.husky/pre-commit', 'bun lint');
+  put(repo, '.github/workflows/scan.yml', 'on: [push]\njobs:\n  scan:\n    steps:\n      - uses: github/codeql-action/init@v3\n');
+  git(repo, 'add', '.');
+  git(repo, 'commit', '-qm', 'configure hooks and scanning');
+  report = assess(repo).report;
+  status(report, 'style.pre-commit', 'pass');
+  status(report, 'security.updates', 'pass');
+});
+
+test('dirty observation cannot execute repository-configured filters or filesystem monitor hooks', () => {
+  const repo = fixture({ ...complete, '.gitattributes': 'src/index.ts filter=fixture\n' });
+  const marker = `${repo}/OBSERVATION_HOOK_RAN`;
+  const hook = `${root}/observation-hook`;
+  writeFileSync(hook, `#!/usr/bin/env bun
+import { writeFileSync } from 'node:fs';
+writeFileSync(${JSON.stringify(marker)}, 'ran');
+console.log(await Bun.stdin.text());
+`, { mode: 0o700 });
+  git(repo, 'config', 'filter.fixture.clean', hook);
+  git(repo, 'config', 'filter.fixture.required', 'true');
+  git(repo, 'config', 'core.fsmonitor', hook);
+  put(repo, 'src/index.ts', 'export const n: number = 2;');
+  const before = manifest(repo);
+  const result = assess(repo);
+  expect(result.code).toBe(0);
+  expect(result.report.header.dirty).toBe(true);
+  expect(() => readFileSync(marker)).toThrow();
+  expect(manifest(repo)).toEqual(before);
 });
