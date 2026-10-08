@@ -175,7 +175,7 @@ function assess(repo, revision) {
   const workflowReason = prTests ? '' : invalid ? 'invalid workflow YAML' : prCandidate && manager.reason ? manager.reason : 'missing pull_request test step';
   set('security.pr-tests', prTests ? 'pass' : invalid || (prCandidate && manager.reason) ? 'unknown' : 'fail', workflows.length ? workflows.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no workflows`], workflowReason);
   configured('security.updates', has(/(^|\/)(\.github\/(dependabot\.ya?ml|codeql\/[^/]+\.ya?ml)|(?:\.?)renovaterc(?:\.json5?)?|renovate\.json5?)$/).concat(codeql));
-  const secrets = has(/(^|\/)(\.env(?:\.[^/]*)?|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(pem|key|p12|pfx))$/).filter((path) => !/(^|\/)\.env\.(example|sample|template)$/.test(path));
+  const secrets = has(/(^|\/)(\.env[^/]*|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(pem|key|p12|pfx))$/).filter((path) => !/(^|\/)\.env\.(example|sample|template)$/.test(path));
   set('security.secrets', secrets.length ? 'fail' : 'pass', secrets.length ? [...new Set(secrets)].map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no tracked env or private keys`], secrets.length ? 'tracked env or private keys' : '');
   return criteria;
 }

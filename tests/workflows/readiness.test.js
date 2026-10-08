@@ -117,7 +117,6 @@ test('secret-file readiness ignores PEM fixture strings and conventional env tem
   const repo = fixture({
     ...complete, 'tests/keys.test.js': 'const fixture = "-----BEGIN PRIVATE KEY-----";',
     '.env.example': 'EXAMPLE=', 'docs/.env.sample': 'SAMPLE=', 'config/.env.template': 'TEMPLATE=',
-    '.environment': 'ordinary file',
   });
   const before = assess(repo);
   expect(before.code).toBe(0);
@@ -128,6 +127,13 @@ test('secret-file readiness ignores PEM fixture strings and conventional env tem
   const after = assess(repo).report;
   status(after, 'security.secrets', 'fail');
   expect(criterion(after, 'security.secrets').evidence).toEqual([`git show ${after.header.revision}:.env.local`]);
+});
+
+test.each(['.envrc', 'config/.env-local', 'nested/.env_prod', '.environment'])('secret-file readiness rejects every .env prefix: %s', (name) => {
+  const { code, report } = assess(fixture({ ...complete, [name]: 'opaque fixture' }));
+  expect(code).toBe(0);
+  status(report, 'security.secrets', 'fail');
+  expect(criterion(report, 'security.secrets').evidence).toEqual([`git show ${report.header.revision}:${name}`]);
 });
 
 test('secret-file readiness rejects env files and private-key names without reading contents', () => {
