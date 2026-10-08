@@ -83,7 +83,7 @@ test('committed configured criteria and header ignore staged, untracked and igno
   }
   expect(result.report.header).toMatchObject({
     repoIdentity: { roots: [revision], origin: 'https://github.com/example/readiness' }, revision, dirty: true,
-    scriptVersion: '1.0.0', criteriaVersion: 1,
+    scriptVersion: '1.1.0', criteriaVersion: 1,
   });
   for (const field of ['observedAt', 'ghObservedAt']) expect(Number.isNaN(Date.parse(result.report.header[field]))).toBe(false);
 });

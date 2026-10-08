@@ -2,7 +2,7 @@
 import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
 import { executeDeclared } from './readiness-run.js';
 
-const scriptVersion = '1.0.0';
+const scriptVersion = '1.1.0';
 const criteriaVersion = 1;
 
 function gitOutput(repo, args, stdin = 'ignore') {
@@ -121,8 +121,8 @@ function declaredCommands(files, pkg, manager, set, invalidPackage) {
   }
 }
 
-function assess(repo, revision) {
-  const files = snapshot(repo, revision);
+function assess(files) {
+  const revision = files.revision;
   const has = (pattern) => files.paths.filter((path) => files.has(path) && pattern.test(path));
   const js = files.has('package.json') || has(/\.[cm]?[jt]sx?$/).length > 0;
   let pkg = {};
@@ -250,19 +250,22 @@ function dirty(repo) {
 
 async function report(args, paths) {
   const repo = args['--repo'];
-  const revision = git(repo, 'rev-parse', '--verify', '--end-of-options', `${args['--rev'] ?? 'HEAD'}^{commit}`).trim();
+  let revision;
+  try { revision = git(repo, 'rev-parse', '--verify', '--end-of-options', `${args['--rev'] ?? 'HEAD'}^{commit}`).trim(); }
+  catch (error) { throw new Error(`${error.message}; pass --rev <existing commit or ref>`); }
   let rawOrigin = '';
   try { rawOrigin = git(repo, 'remote', 'get-url', 'origin').trim(); } catch { /* No origin. */ }
   const origin = normalizeOrigin(rawOrigin, repo);
   const header = {
+    inputs: { repo: realpathSync(repo), rev: args['--rev'] ?? 'HEAD', baseline: args['--baseline'] ?? null, run: Boolean(args['--run']) },
     repoIdentity: { roots: git(repo, 'rev-list', '--max-parents=0', revision).trim().split('\n').sort(), origin },
     revision, dirty: dirty(repo),
     observedAt: new Date().toISOString(), ghObservedAt: new Date().toISOString(), scriptVersion, criteriaVersion,
   };
-  const criteria = assess(repo, revision);
+  const files = snapshot(repo, revision);
+  const criteria = assess(files);
   let execution;
   if (args['--run']) {
-    const files = snapshot(repo, revision);
     let pkg = {};
     try { pkg = JSON.parse(files.read('package.json') || '{}'); } catch { /* Static criteria already record invalid JSON. */ }
     execution = await executeDeclared(repo, revision, paths, criteria, packageManager(files), pkg, {
@@ -299,7 +302,9 @@ function rejectSymlinks(path) {
 }
 
 function outputPaths(args) {
-  const common = realpathSync(git(args['--repo'], 'rev-parse', '--path-format=absolute', '--git-common-dir').trim());
+  let common;
+  try { common = realpathSync(git(args['--repo'], 'rev-parse', '--path-format=absolute', '--git-common-dir').trim()); }
+  catch (error) { throw new Error(`${error.message}; pass --repo <existing Git checkout>`); }
   const out = absolute(args['--out']);
   if (!args['--out'].endsWith('.json')) throw new Error('--out must end in .json');
   if (!out.startsWith(`${common}/axstack/readiness/`)) throw new Error('--out must be under <git-common-dir>/axstack/readiness/');
@@ -365,33 +370,34 @@ Exit codes: 0 report (including failed criteria), 1 error, 2 incomplete, 10 regr
 
 export async function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
   try {
-  if (argv.includes('--help')) {
-    io.stdout(`${help}\n`);
-    return 0;
-  }
-  const args = {};
-  for (let i = 0; i < argv.length; i += 2) {
-    if (argv[i] === '--run' && !args['--run']) { args['--run'] = true; i--; continue; }
-    if (!['--repo', '--rev', '--baseline', '--out', '--timeout-ms', '--log-bytes'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
-      throw new Error(`invalid argument: ${argv[i]}; use --help for flags and an example`);
+    if (argv.includes('--help')) {
+      io.stdout(`${help}\n`);
+      return 0;
     }
-    args[argv[i]] = argv[i + 1];
-  }
-  if (!args['--repo'] || !args['--out']) throw new Error('missing inputs; pass --repo <path> and --out <git-common-dir>/axstack/readiness/<name>.json');
-  for (const flag of ['--timeout-ms', '--log-bytes']) {
-    if (args[flag] && (!/^\d+$/.test(args[flag]) || !Number.isSafeInteger(Number(args[flag])) || Number(args[flag]) < 1 || Number(args[flag]) > 2147483647)) throw new Error(`invalid ${flag}; pass a positive integer up to 2147483647`);
-  }
-  const paths = outputPaths(args);
-  const result = await report(args, paths);
-  const code = compareBaseline(result, args['--baseline'], io);
-  writeReport(paths, result);
-  const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
-  io.stdout(`${JSON.stringify(args['--run'] ? {
-    revision: result.header.revision, inputs: { repo: args['--repo'], rev: args['--rev'] ?? 'HEAD', baseline: args['--baseline'] ?? null, run: true },
-    reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands.length,
-    omittedLogBytes: result.commands.reduce((total, step) => total + step.omittedBytes, 0),
-  } : result)}\n`);
-  return code || (result.executionError ? 2 : 0);
+    const args = {};
+    for (let i = 0; i < argv.length; i++) {
+      const flag = argv[i];
+      if (flag === '--run' && !args[flag]) { args[flag] = true; continue; }
+      if (!['--repo', '--rev', '--baseline', '--out', '--timeout-ms', '--log-bytes'].includes(flag) || !argv[i + 1] || args[flag]) {
+        throw new Error(`invalid argument: ${flag}; use --help for flags and an example`);
+      }
+      args[flag] = argv[++i];
+    }
+    if (!args['--repo'] || !args['--out']) throw new Error('missing inputs; pass --repo <path> and --out <git-common-dir>/axstack/readiness/<name>.json');
+    for (const flag of ['--timeout-ms', '--log-bytes']) {
+      if (args[flag] && (!/^\d+$/.test(args[flag]) || !Number.isSafeInteger(Number(args[flag])) || Number(args[flag]) < 1 || Number(args[flag]) > 2147483647)) throw new Error(`invalid ${flag}; pass a positive integer up to 2147483647`);
+    }
+    const paths = outputPaths(args);
+    const result = await report(args, paths);
+    const code = compareBaseline(result, args['--baseline'], io);
+    writeReport(paths, result);
+    const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
+    io.stdout(`${JSON.stringify(args['--run'] ? {
+      revision: result.header.revision, inputs: result.header.inputs, network: result.header.network, executionError: result.executionError,
+      reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands.length,
+      omittedLogBytes: result.commands.reduce((total, step) => total + step.omittedBytes, 0),
+    } : result)}\n`);
+    return code || (result.executionError ? 2 : 0);
   } catch (error) {
     io.stderr(`Readiness error: ${error.message}\n`);
     return 1;

@@ -398,3 +398,23 @@ const p = Bun.spawn([${JSON.stringify(Bun.which('git'))}, ...argv], { stdin: 'in
     expect(argv).toContain('core.hooksPath=/dev/null');
   }
 });
+
+test('in-process main names report inputs and sends baseline gaps and actionable input errors through io', async () => {
+  const repo = fixture({});
+  const out = `${repo}/.git/axstack/readiness/in-process.json`;
+  const baseline = `${root}/missing-baseline.json`;
+  let stdout = '', stderr = '';
+  const io = { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } };
+  expect(await main(['--repo', repo, '--rev', 'HEAD', '--out', out, '--baseline', baseline], io)).toBe(2);
+  const report = JSON.parse(readFileSync(out, 'utf8'));
+  expect(report.header.inputs).toEqual({ repo, rev: 'HEAD', baseline, run: false });
+  expect(report.header.scriptVersion).toBe('1.1.0');
+  expect(JSON.parse(stdout)).toEqual(report);
+  expect(stderr).toContain('comparison unavailable');
+  stdout = ''; stderr = '';
+  expect(await main(['--repo', repo, '--rev', 'missing-ref', '--out', out], io)).toBe(1);
+  expect(stderr).toContain('pass --rev');
+  stderr = '';
+  expect(await main(['--repo', root, '--out', out], io)).toBe(1);
+  expect(stderr).toContain('pass --repo');
+});
