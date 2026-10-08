@@ -38,26 +38,27 @@ the revised scope and plan.
 
 ## Model discipline
 
-Validate provider/model at launch; unavailable or exhausted:
+Validate the configured provider and model at actual launch; unavailable or exhausted:
 pause affected work, record the gap, and ask the user.
-Only same-provider, same-model accounts within one driver use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding).
+Only same-provider, same-model accounts of one driver may use headroom.
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for these selections
+and driver re-selection at turn boundaries.
 An exhausted account with no eligible sibling still holds; dispatched roles never fail over mid-thread.
-Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection at turn boundaries.
-Never infer routing from quota or entitlement. Every substitution requires the user's decision: configured alternatives are not defaults.
+Never infer any other route from quota state or subscription entitlement. Every substitution requires the user's decision: configured alternatives are not defaults.
 Rejection, timeout, quota and auth failures hold affected work.
 Substitution changes provider/model, excluding account picks.
 Exception: opt-in default sync can change only the New-chat default within the user-configured pool.
 Running threads, dispatched roles, schedules and roles.json keep existing rules.
 Read [T3 runtime](t3-runtime.md) before dispatch, receipt consumption or recovery;
-resolve from saved capabilities; verify requested/effective settings.
+resolve from saved capabilities; verify requested and effective settings separately.
 Optional seats follow [Role roster](role-roster.md); required seats,
 including resolved `model: null`, hold without substitution except base auditor
 preflight rejection under [Close-out](lifecycle.md#close-out).
 
 ## Driver and adviser split
 
-The current T3 thread is the driver, whatever model runs it; there is no driver
-profile. Record the driver's provider and model in the run record.
+The current T3 thread is the driver regardless of model; no driver profile exists.
+Record its provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
 consults `axstack-advisor-astra` and `axstack-advisor-opus` independently with

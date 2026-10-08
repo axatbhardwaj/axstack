@@ -33,3 +33,28 @@ test('model discipline confines pooled sync to the New-chat default', () => {
     'Running threads, dispatched roles, schedules and roles.json retain existing rules.',
     [[unchanged, 'discard existing rules']], [...boundaries, unchanged]);
 });
+
+const modelRules = [
+  ['configured binding at actual launch',
+    [/\b(?:validate|check)\b/i, /\b(?:configured|specified)\b/i, /provider/i, /model/i, /\b(?:actual|real)\b/i, /\blaunch\b/i],
+    'Check the specified provider and model at real launch.', /\b(?:validate|check)\b/i, 'Skip validation'],
+  ['separate requested and effective settings checks',
+    [/\b(?:verify|check)\b/i, /requested/i, /effective/i, /settings/i, /\b(?:separately|independently)\b/i],
+    'Check requested and effective settings independently.', /\b(?:verify|check)\b/i, 'Skip verification'],
+];
+for (const [name, concepts, rewording, direction, inversion] of modelRules) {
+  test(`model discipline preserves ${name}`, () => {
+    const doc = readFileSync(`${root}/skills/axstack/references/contracts.md`, 'utf8').replace(/\s+/g, ' ');
+    checkRule(doc, (text) => requires(text, ...concepts), rewording,
+      [[direction, inversion]], concepts);
+  });
+}
+
+test('model discipline forbids only other quota-derived routes', () => {
+  const doc = readFileSync(`${root}/skills/axstack/references/contracts.md`, 'utf8').replace(/\s+/g, ' ');
+  const prohibition = /never infer|do not derive/i;
+  const concepts = [/\bother\b/i, /\b(?:route|routing)\b/i, /quota(?: state)?/i, /(?:subscription )?entitlement/i];
+  checkRule(doc, (text) => prohibits(text, prohibition, ...concepts),
+    'Do not derive any other routing from quota state or subscription entitlement.',
+    [[prohibition, 'Always infer']], [...concepts, prohibition]);
+});
