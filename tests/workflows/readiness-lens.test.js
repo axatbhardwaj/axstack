@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const path = `${import.meta.dir}/../../skills/axstack-improve/SKILL.md`;
@@ -47,6 +47,11 @@ const rules = [
     /repositories/i, /the user owns or authorizes/i),
     'Execute --run only for repositories the user owns or authorizes.',
     [[/(?:use|execute) --run only/i, 'Use --run freely']], [/owns/i, /authorizes/i]],
+  ['execution authority record', (s) => requires(s,
+    /\b(?:record|document) (?:this |execution )?authority/i, /in the run record/i),
+    'Document execution authority in the run record.',
+    [[/\b(?:record|document) (?:this |execution )?authority/i, 'Do not record authority']],
+    [/authority/i, /run record/i]],
   ['sandbox boundary', (s) => prohibits(s, /(?:not a sandbox|does not provide sandboxing)/i),
     'Execution does not provide sandboxing.',
     [[/(?:not a sandbox|does not provide sandboxing)/i, 'provides sandboxing']]],
@@ -66,16 +71,65 @@ for (const [name, accepts, rewording, inversions, concepts] of rules) {
   });
 }
 
-test('readiness lens supplies one literal invocation, output contract and help pointer', () => {
+test('readiness lens supplies one literal invocation and help pointer', () => {
   const source = readFileSync(path, 'utf8').split(/### Readiness lens\b/i)[1]?.split(/\n## /)[0] ?? '';
   expect(Buffer.byteLength(`### Readiness lens${source}`)).toBeLessThanOrEqual(1000);
   const invocations = [...source.matchAll(/```sh\n([^`]+)\n```/g)];
   expect(invocations).toHaveLength(1);
   expect(invocations[0][1]).toMatch(/^bun \.\.\/axstack\/scripts\/readiness\.js /);
-  checkRule(lens(), (s) => requires(s, /(?:outputs|prints)/i, /criterion evidence/i,
-    /revision/i, /pillar counts/i, /(?:full JSON report path|path to the full JSON report)/i),
-    'Prints the revision, criterion evidence, pillar counts and path to the full JSON report.',
-    [[/(?:outputs|prints)/i, 'hides']]);
   checkRule(lens(), (s) => requires(s, /(?:flags|options)/i, /(?:live|documented) in --help/i),
     'Options are documented in --help.', [[/--help/, 'this prose']]);
+});
+
+test('readiness lens output contract agrees with the real CLI in both modes', () => {
+  const repo = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-lens-`);
+  const git = (...args) => {
+    const result = Bun.spawnSync(['git', '-c', 'core.hooksPath=/dev/null', '-C', repo, ...args], {
+      stdout: 'pipe', stderr: 'pipe',
+    });
+    expect(result.exitCode, result.stderr.toString()).toBe(0);
+    return result.stdout.toString().trim();
+  };
+  try {
+    git('init', '-q');
+    git('config', 'user.email', 'fixture@example.test');
+    git('config', 'user.name', 'Fixture');
+    writeFileSync(`${repo}/AGENTS.md`, 'Fixture instructions');
+    // No lockfile: assess the output interface without an install or network.
+    writeFileSync(`${repo}/package.json`, JSON.stringify({ scripts: { test: 'bun test' } }));
+    git('add', '.');
+    git('commit', '-qm', 'output fixture');
+    const revision = git('rev-parse', 'HEAD');
+    for (const run of [false, true]) {
+      const out = `${repo}/.git/axstack/readiness/${run ? 'run' : 'static'}.json`;
+      const result = Bun.spawnSync([process.execPath,
+        `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`,
+        '--repo', repo, '--out', out, ...(run ? ['--run'] : [])], {
+        stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', timeout: 10000,
+      });
+      expect(result.exitCode, result.stderr.toString()).toBe(0);
+      const stdout = JSON.parse(result.stdout.toString());
+      const report = JSON.parse(readFileSync(out, 'utf8'));
+      expect(report.header.revision).toBe(revision);
+      expect(report.criteria.find(({ id }) => id === 'docs.agents')).toMatchObject({
+        status: 'pass', evidence: expect.arrayContaining([expect.stringContaining('AGENTS.md')]),
+      });
+      if (run) {
+        expect(stdout).toMatchObject({ revision, reportPath: out, pillars: report.pillars,
+          omittedCriteria: report.criteria.length });
+        expect(Object.values(stdout.counts).reduce((a, b) => a + b, 0)).toBe(report.criteria.length);
+        expect(stdout).not.toHaveProperty('criteria');
+      } else {
+        expect(stdout).toEqual(report);
+        expect(stdout).not.toHaveProperty('reportPath');
+      }
+    }
+    checkRule(lens(), (s) => requires(s, /(?:static|by default)/i,
+      /(?:prints|outputs)/i, /full report/i),
+      'By default outputs the full report.', [[/full report/i, 'only a path']]);
+    checkRule(lens(), (s) => requires(s, /--run/, /(?:prints|outputs)/i,
+      /revision/i, /counts/i, /report path/i, /evidence/i, /saved report/i),
+      '--run outputs counts, report path and revision, with evidence in the saved report.',
+      [[/saved report/i, 'stdout']]);
+  } finally { rmSync(repo, { recursive: true }); }
 });

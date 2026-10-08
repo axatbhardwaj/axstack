@@ -74,7 +74,7 @@ For repository readiness, run from this skill directory:
 ```sh
 bun ../axstack/scripts/readiness.js --repo <repo> --rev <rev> --out <git-common-dir>/axstack/readiness/<UTC>-<rev>.json --baseline <previous-report.json>
 ```
-Outputs criterion evidence, revision, pillar counts and the full JSON report path.
+Static prints the full report; `--run` prints revision, counts and report path, with evidence in the saved report.
 
 Pass the previous report explicitly as `--baseline`; omit it for the first report.
 Return ranked gaps. Route testing and dev-environment gaps to `axstack-verify`;
