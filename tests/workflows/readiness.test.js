@@ -1,5 +1,5 @@
-import { afterAll, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
@@ -106,4 +106,75 @@ test('configured failures include loose TypeScript, wrong docs linkage and track
   status(report, 'security.secrets', 'fail');
   expect(criterion(report, 'security.secrets').evidence.join(' ')).toContain('.env.example');
   expect(criterion(report, 'security.secrets').evidence.join(' ')).toContain('key.pem');
+});
+
+test('executed criteria apply presence, prose and lockfile precedence without running commands', () => {
+  const repo = fixture({ ...complete, 'package.json': { scripts: { test: 'touch SHOULD_NOT_EXIST' } } });
+  let report = assess(repo).report;
+  status(report, 'env.build', 'n/a', 'missing build script');
+  status(report, 'testing.test', 'unknown', 'not run');
+  status(report, 'testing.lint-typecheck', 'fail', 'missing lint and typecheck scripts');
+  expect(() => readFileSync(`${repo}/SHOULD_NOT_EXIST`)).toThrow();
+
+  const noLock = fixture({ 'package.json': { scripts: { build: 'echo build', test: 'echo test', lint: 'echo lint' } } });
+  report = assess(noLock).report;
+  for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) status(report, id, 'unknown', 'no lockfile');
+  const ambiguous = fixture({ ...complete, 'package-lock.json': '{}' });
+  report = assess(ambiguous).report;
+  for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) status(report, id, 'unknown', 'ambiguous lockfile');
+  const missing = assess(fixture({ 'package.json': {} })).report;
+  status(missing, 'env.build', 'n/a', 'missing build script');
+  status(missing, 'testing.test', 'fail', 'missing test script');
+
+  const prose = assess(fixture({ 'package.json': {}, 'AGENTS.md': 'Use npm run build and npm test. Use npm run typecheck.' })).report;
+  for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) status(prose, id, 'unknown', 'prose-declared; not run');
+  const classic = assess(fixture({ ...complete, 'bun.lock': '', 'yarn.lock': '# yarn lockfile v1' })).report;
+  status(classic, 'testing.test', 'unknown', 'ambiguous lockfile');
+  const onlyClassic = assess(fixture({ 'package.json': { scripts: { test: 'echo test' } }, 'yarn.lock': '# yarn lockfile v1' })).report;
+  status(onlyClassic, 'testing.test', 'unknown', 'unsupported package manager');
+});
+
+test('committed symlinks and YAML event mappings work, invalid YAML remains unknown', () => {
+  const repo = fixture({ ...complete, '.github/workflows/test.yml': 'on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: |\n          echo preparing\n          bun test\n' });
+  git(repo, 'rm', 'CLAUDE.md');
+  symlinkSync('AGENTS.md', `${repo}/CLAUDE.md`);
+  git(repo, 'add', 'CLAUDE.md');
+  git(repo, 'commit', '-qm', 'symlink');
+  let report = assess(repo).report;
+  status(report, 'docs.claude', 'pass');
+  status(report, 'security.pr-tests', 'pass');
+  put(repo, '.github/workflows/test.yml', 'on: [pull_request\n');
+  git(repo, 'add', '.');
+  git(repo, 'commit', '-qm', 'invalid YAML');
+  report = assess(repo).report;
+  status(report, 'security.pr-tests', 'unknown', 'invalid workflow YAML');
+  const wrong = assess(fixture({ ...complete, '.github/workflows/test.yml': 'on: [push]\njobs:\n  test:\n    steps:\n      - run: bun test\n' })).report;
+  status(wrong, 'security.pr-tests', 'fail');
+});
+
+test('header roots are sorted across unrelated histories and origin is empty when absent', () => {
+  const repo = fixture({ 'package.json': {} });
+  const first = git(repo, 'rev-parse', 'HEAD');
+  git(repo, 'checkout', '--orphan', 'other');
+  git(repo, 'commit', '-qam', 'second root');
+  const second = git(repo, 'rev-parse', 'HEAD');
+  git(repo, 'checkout', 'main');
+  git(repo, 'merge', '--allow-unrelated-histories', '--no-edit', 'other');
+  const { report } = assess(repo);
+  expect(report.header.repoIdentity).toEqual({ roots: [first, second].sort(), origin: '' });
+  expect(report.pillars.Style).toMatchObject({ passes: 0, total: 3, na: 1, fraction: '0/3' });
+  const jsOnly = assess(fixture({ 'src/main.js': 'export const main = 1;' })).report;
+  status(jsOnly, 'testing.test', 'fail', 'missing test script');
+});
+
+test('help describes flags and static writes; invalid CLI and revisions fail', () => {
+  const result = Bun.spawnSync(['bun', script, '--help'], { stdout: 'pipe' });
+  expect(result.exitCode).toBe(0);
+  for (const flag of ['--repo', '--rev', '--baseline', '--out', '--help']) expect(result.stdout.toString()).toContain(flag);
+  expect(result.stdout.toString()).not.toContain('--run');
+  const repo = fixture({ 'package.json': {} });
+  expect(assess(repo, ['--run']).code).toBe(1);
+  expect(assess(repo, ['--rev', 'no-such-revision']).code).toBe(1);
+  const outside = Bun.spawnSync(['bun', script, '--repo', root, '--out', `${root}/bad.json`], { stdout: 'pipe', stderr: 'pipe' });
+  expect(outside.exitCode).toBe(1);
 });

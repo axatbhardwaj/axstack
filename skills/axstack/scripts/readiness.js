@@ -53,6 +53,34 @@ const definitions = [
   ['security.pr-tests', 'Governance/Security'], ['security.status-checks', 'Governance/Security'], ['security.updates', 'Governance/Security'], ['security.secrets', 'Governance/Security'],
 ];
 
+function packageManager(files) {
+  const locks = [
+    ['bun', ['bun.lock', 'bun.lockb']], ['npm', ['package-lock.json', 'npm-shrinkwrap.json']],
+    ['pnpm', ['pnpm-lock.yaml']], ['yarn', ['yarn.lock']],
+  ].filter(([, names]) => names.some(files.has));
+  if (!locks.length) return { reason: 'no lockfile' };
+  if (locks.length > 1) return { reason: 'ambiguous lockfile' };
+  const [name, paths] = locks[0];
+  if (name === 'yarn' && !/^__metadata:/m.test(files.read('yarn.lock'))) return { reason: 'unsupported package manager' };
+  return { name, paths: paths.filter(files.has) };
+}
+
+function declaredCommands(files, pkg, manager, set) {
+  const prose = files.paths.filter((path) => /\.md$/i.test(path)).map((path) => files.read(path)).join('\n');
+  for (const [id, names] of [['env.build', ['build']], ['testing.test', ['test']], ['testing.lint-typecheck', ['lint', 'typecheck']]]) {
+    const present = names.filter((name) => typeof pkg.scripts?.[name] === 'string' && pkg.scripts[name].trim());
+    const evidence = present.map((name) => `git show: package.json scripts.${name}`);
+    if (!present.length) {
+      const mentioned = names.some((name) => new RegExp(`\\b(?:bun|npm|pnpm|yarn)\\s+(?:run\\s+)?${name}\\b`).test(prose));
+      if (mentioned) set(id, 'unknown', ['committed Markdown declares a command without a package.json script'], 'prose-declared; not run');
+      else set(id, id === 'env.build' ? 'n/a' : 'fail', ['committed package.json script declarations'], `missing ${names.join(' and ')} script${names.length > 1 ? 's' : ''}`);
+      continue;
+    }
+    if (manager.reason) set(id, 'unknown', evidence.concat(['committed lockfile selection']), manager.reason);
+    else set(id, 'unknown', evidence.concat(manager.paths, present.map((name) => `${manager.name} run ${name} (not executed)`)), 'not run');
+  }
+}
+
 function assess(repo, revision) {
   const files = snapshot(repo, revision);
   const has = (pattern) => files.paths.filter((path) => files.has(path) && pattern.test(path));
@@ -78,6 +106,8 @@ function assess(repo, revision) {
   }
   configured('style.pre-commit', has(/(^|\/)(\.pre-commit-config\.ya?ml|lefthook\.ya?ml|\.lefthook\.ya?ml|\.husky\/[^/]+)$/).concat(pkg['lint-staged'] || pkg.husky ? ['package.json'] : []));
   configured('env.lockfile', has(/^(bun\.lockb?|package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$/));
+  const manager = packageManager(files);
+  declaredCommands(files, pkg, manager, set);
   configured('env.toolchain', has(/^(\.tool-versions|mise\.toml|\.mise\.toml|\.nvmrc|\.devcontainer\/(devcontainer\.json|[^/]+\/devcontainer\.json))$/).concat(pkg.engines && Object.keys(pkg.engines).length ? ['package.json'] : []));
   configured('testing.files', has(/(^|\/)(__tests__\/.*|[^/]+\.(test|spec)\.[cm]?[jt]sx?)$/));
   configured('testing.verify-skill', has(/^\.agents\/skills\/verify-[^/]+\/SKILL\.md$/));
