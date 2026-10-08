@@ -13,6 +13,7 @@ Reads the Compact template in the adjacent references/run-record.md.
 Creates an owned 0700 scratch directory named axstack-<run-id>-<random>
 under the system temp directory (TMPDIR, otherwise /tmp), never under $HOME.
 Leaves these paths for the caller to manage; never selects an existing run.
+If scratch creation fails, the new empty run directory remains for caller cleanup.
 Prints paths and revision/inputs as JSON, with per-term status and evidence.
 Exit codes: 0 ok, 1 input, Git or filesystem error; see --help to correct inputs.
 `;
@@ -57,6 +58,7 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
     const source = realpathSync(`${import.meta.dir}/../references/run-record.md`);
     const template = readFileSync(source, 'utf8').match(/^## Compact template\r?\n[\s\S]*?^```text\r?\n([\s\S]*?)^```/m)?.[1];
     if (!template) throw new Error('compact template missing; restore references/run-record.md');
+    if (!process.env.HOME) throw new Error('HOME is unset; set HOME to your home directory before running run-init');
     const temp = realpathSync(process.env.TMPDIR || '/tmp');
     const home = realpathSync(process.env.HOME);
     if (temp === home || temp.startsWith(`${home === '/' ? '' : home}/`)) {

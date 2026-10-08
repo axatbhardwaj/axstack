@@ -20,17 +20,26 @@ test('run-record: shared reference exists and lifecycle links to it', () => {
 
 test('run-record: initialization pointer, ownership, fallback and archive stay local', () => {
   const text = read('skills/axstack/references/run-record.md');
-  expect(text).toMatch(/bun (?:skills\/axstack\/)?scripts\/run-init\.js --slug [a-z0-9-]+/);
+  expect(text).toMatch(/^bun scripts\/run-init\.js --slug [a-z0-9-]+$/m);
   const output = text.match(/^(?:Prints|Returns|Emits)\b[^\n]*/m)?.[0] ?? '';
   expect(output).toMatch(/JSON.*record.*evidence.*scratch/i);
   expect(output).not.toMatch(/\b(?:no|not|never|without)\b/i);
-  expect(text).toMatch(/shared across\s+worktrees/i);
-  expect(text).toMatch(/never[^.]*tracked tree/i);
   expect(text).toMatch(/driver[^.]*chooses[^.]*slug/i);
   expect(text).toMatch(/never[^.]*raw request text/i);
   expect(text).toMatch(/non-Git[^.]*private host state/i);
   expect(text).toMatch(/Archived[^.]*status/i);
   expect(text).toMatch(/never[^.]*move[^.]*delete|nothing[^.]*moved[^.]*deleted/i);
+});
+
+test('run-record: resume location names shared Git metadata and excludes tracking', () => {
+  const text = read('skills/axstack/references/run-record.md');
+  const location = text.split('## Location and identity')[1]?.split('\n## ')[0] ?? '';
+  const statement = location.split(/\.\s+/).find((sentence) =>
+    sentence.includes('<git-common-dir>/axstack/runs/<id>/progress.md')) ?? '';
+  expect(statement).toContain('git rev-parse --path-format=absolute --git-common-dir');
+  expect(statement).toMatch(/shared across\s+worktrees|worktrees\s+share/i);
+  expect(statement).not.toMatch(/(?:not|never)\s+(?:live|reside|stored|shared)/i);
+  expect(statement).toMatch(/never\s+(?:tracked|enters? the tracked tree)|(?:remain|stay)\s+untracked/i);
 });
 
 test('run-record: compact template carries required run and task fields', () => {

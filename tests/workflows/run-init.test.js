@@ -30,7 +30,10 @@ function invoke(repo, argv, env = {}) {
   let stdout = '', stderr = '';
   try {
     process.chdir(repo);
-    Object.assign(process.env, { TMPDIR: root, ...env });
+    for (const [key, value] of Object.entries({ TMPDIR: root, ...env })) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
     const code = main(argv, { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
     return { code, stdout, stderr, data: stdout.startsWith('{') ? JSON.parse(stdout) : null };
   } finally {
@@ -147,6 +150,29 @@ test('outside Git and a home-contained or symlinked temp directory fail before w
     expect(result.stderr).toMatch(/outside.*HOME/);
     expect(existsSync(`${repo}/.git/axstack`)).toBe(false);
   }
+});
+
+test('unset HOME produces actionable guidance before any writes', () => {
+  const repo = fixture();
+  const before = readdirSync(root).sort();
+  const result = invoke(repo, ['--slug', 'unset-home'], { HOME: undefined });
+  expect(result.code).toBe(1);
+  expect(result.stderr).toMatch(/HOME.*set HOME/i);
+  expect(result.stdout).toBe('');
+  expect(existsSync(`${repo}/.git/axstack`)).toBe(false);
+  expect(readdirSync(root).sort()).toEqual(before);
+});
+
+test('help discloses the empty run directory retained after scratch creation fails', () => {
+  const repo = fixture();
+  const tempFile = `${repo}/temp-file`;
+  writeFileSync(tempFile, 'not a directory');
+  const result = invoke(repo, ['--slug', 'scratch-error', '--date', '20261008'], { TMPDIR: tempFile });
+  expect(result.code).toBe(1);
+  expect(readdirSync(`${repo}/.git/axstack/runs/20261008-scratch-error`)).toEqual([]);
+  const help = invoke(repo, ['--help']);
+  expect(help.code).toBe(0);
+  expect(help.stdout).toMatch(/scratch creation fail[^\n]*empty run directory remains/i);
 });
 
 test('CLI reads the adjacent compact block as its single template source', () => {

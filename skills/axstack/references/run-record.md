@@ -10,12 +10,13 @@ scope-identity exemption.
 In a Git repository, initialize with:
 
 ```sh
-bun skills/axstack/scripts/run-init.js --slug local-progress
+bun scripts/run-init.js --slug local-progress
 ```
 Prints JSON paths for a new shared private run record, evidence and owned scratch, plus revision/inputs.
 
-The driver chooses the slug, never raw request text. The record is shared across
-worktrees and never enters the tracked tree. For non-Git work, use private host state
+Records live at `<git-common-dir>/axstack/runs/<id>/progress.md` (common dir via `git rev-parse --path-format=absolute --git-common-dir`), shared across worktrees and never tracked.
+
+The driver chooses the slug, never raw request text. For non-Git work, use private host state
 instead of the working directory.
 
 On resume, discover existing runs and match both repository and scope;
