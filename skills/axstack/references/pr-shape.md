@@ -1,14 +1,15 @@
 # PR shape
 
 ## Measure
-Measure the full PR from its actual PR base with:
+Actual PR base:
 ```sh
-git diff -M --numstat $(git merge-base <base> <head>)..<head>
+bun scripts/pr-shape.js --base <base> --head <head>
 ```
+JSON: SHAs, merge-base, total = additions + deletions over all files, renames, binaries, buckets and commands.
 
-A stacked child uses its parent branch; a root PR uses its actual target branch.
-`main` is only an example; repositories may target `develop` or a release branch.
-Total additions + deletions over all files. Disclose moves detected by `-M`;
+Use a stacked child's parent branch or a root PR's actual target branch.
+`main` is an example, as are `develop` and release branches.
+Disclose moves detected by `-M`;
 report binaries by count and purpose, never estimated lines. Disclose generated,
 lockfile, and formatter-only bulk buckets alongside the total.
 
