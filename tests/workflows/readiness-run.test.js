@@ -83,61 +83,80 @@ function liveFixturePid(pid) {
   catch { return false; }
 }
 
+// The same deadline covers clone/checkout and runtime startup on slow CI runners.
+const escapedTimeoutMs = 5000;
+const escapedDurationBoundMs = escapedTimeoutMs + 200 + 500; // Drain grace + scheduling margin.
+
 function escapedFixture(mode) {
   const childFile = `escaped-${crypto.randomUUID()}.js`;
+  const readyFile = `${root}/${childFile}.ready`; // Survives removal of the command's cwd.
   const repo = fixture({ test: 'bun escape.js', ...(mode === 'postinstall' && { postinstall: 'bun escape.js' }) }, {
-    [childFile]: `import { readFileSync } from 'node:fs';
+    [childFile]: `import { readFileSync, writeFileSync, writeSync, renameSync } from 'node:fs';
 const status = readFileSync('/proc/self/status', 'utf8');
-console.log(JSON.stringify({ escapedPid: Number(/^Pid:\\s+(\\d+)/m.exec(status)[1]), sid: Number(/^NSsid:\\s+(\\d+)/m.exec(status)[1]) }));
-setTimeout(() => {}, 2500);`,
-    'escape.js': `Bun.spawn([${JSON.stringify(bun)}, ${JSON.stringify(childFile)}], { detached: true, stdin: 'ignore', stdout: 'inherit', stderr: 'inherit' });
-${mode === 'exit' ? 'await Bun.sleep(80); process.exit(0);' : 'setTimeout(() => {}, 3000);'}`,
+const identity = { escapedPid: Number(/^Pid:\\s+(\\d+)/m.exec(status)[1]), sid: Number(/^NSsid:\\s+(\\d+)/m.exec(status)[1]) };
+setTimeout(() => {}, 15000);
+writeSync(1, JSON.stringify(identity) + String.fromCharCode(10));
+writeFileSync(${JSON.stringify(`${readyFile}.tmp`)}, JSON.stringify(identity), { mode: 0o600 });
+renameSync(${JSON.stringify(`${readyFile}.tmp`)}, ${JSON.stringify(readyFile)});`,
+    'escape.js': `import { existsSync } from 'node:fs';
+Bun.spawn([${JSON.stringify(bun)}, ${JSON.stringify(childFile)}], { detached: true, stdin: 'ignore', stdout: 'inherit', stderr: 'inherit' });
+while (!existsSync(${JSON.stringify(readyFile)})) await Bun.sleep(10);
+${mode === 'exit' ? 'process.exit(0);' : 'setTimeout(() => {}, 15000);'}`,
   });
-  return { repo, childFile };
+  return { repo, childFile, readyFile };
 }
 
 function escapedObservation(report, kind) {
   const step = report.commands.find((entry) => entry.kind === kind);
+  expect(step).toBeDefined();
   const observed = readFileSync(step.logPath, 'utf8').trim().split('\n').map((line) => { try { return JSON.parse(line); } catch { return {}; } }).find((entry) => entry.escapedPid);
+  expect(observed).toBeDefined();
   expect(observed.escapedPid).toBe(observed.sid); // The writer really escaped the original process group.
   return { step, pid: observed.escapedPid };
 }
 
-function stopFixture(pid, childFile) {
+function stopFixture(pid, childFile, readyFile) {
+  // Cleanup still has an identity if an assertion fails before the log is parsed.
+  if (!pid) {
+    try { pid = JSON.parse(readFileSync(readyFile, 'utf8')).escapedPid; } catch { /* Child never became ready. */ }
+  }
   if (pid && liveFixturePid(pid) && readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes(childFile)) process.kill(pid, 'SIGKILL');
 }
 
 test.each(['timeout', 'exit', 'postinstall'])('escaped pipe writer cannot delay %s cleanup when namespaces are unavailable', (mode) => {
-  const { repo, childFile } = escapedFixture(mode);
+  const { repo, childFile, readyFile } = escapedFixture(mode);
   const bin = mkdtempSync(`${root}/no-namespace-`);
   writeFileSync(`${bin}/unshare`, `#!${bun}\nprocess.exit(1);`, { mode: 0o700 });
   let pid;
   try {
-    const result = assess(repo, ['--run', '--timeout-ms', '400'], { PATH: `${bin}:${shims}:${process.env.PATH}` });
+    const result = assess(repo, ['--run', '--timeout-ms', String(escapedTimeoutMs)], { PATH: `${bin}:${shims}:${process.env.PATH}` });
+    expect(result.report?.executionError).toBeUndefined();
     expect(result.code).toBe(0);
     const observed = escapedObservation(result.report, mode === 'postinstall' ? 'install' : 'script');
     pid = observed.pid;
-    expect(observed.step.durationMs).toBeLessThan(1100);
+    expect(observed.step.durationMs).toBeLessThan(escapedDurationBoundMs);
+    expect(liveFixturePid(pid)).toBe(true); // Return before the escaped writer closes its pipes.
     expect(observed.step.timedOut).toBe(mode !== 'exit');
     expect(observed.step.logIncomplete).toBe(true);
     expect(result.report.header.descendants).toBe('not contained');
     expect(JSON.parse(result.stdout).incompleteLogs).toBe(1);
     expect(item(result.report, 'testing.test')).toMatchObject(mode === 'postinstall' ? { status: 'unknown', reason: 'install failed' } : mode === 'exit' ? { status: 'pass' } : { status: 'fail', reason: 'timeout' });
     expect(() => lstatSync(result.report.header.scratch)).toThrow();
-  } finally { stopFixture(pid, childFile); }
-});
+  } finally { stopFixture(pid, childFile, readyFile); }
+}, 30000); // Includes setup; the command deadline and duration assertion bound cleanup.
 
 test.skipIf(!pidIsolation).each(['timeout', 'exit', 'postinstall'])('PID containment kills escaped descendants after %s and covers every started step', (mode) => {
-  const { repo, childFile } = escapedFixture(mode);
+  const { repo, childFile, readyFile } = escapedFixture(mode);
   let pid;
   try {
-    const result = assess(repo, ['--run', '--timeout-ms', '400']);
+    const result = assess(repo, ['--run', '--timeout-ms', String(escapedTimeoutMs)]);
+    expect(result.report?.executionError).toBeUndefined();
     expect(result.code).toBe(0);
     const observed = escapedObservation(result.report, mode === 'postinstall' ? 'install' : 'script');
     pid = observed.pid;
     expect(liveFixturePid(pid)).toBe(false);
     expect(result.report.header.descendants).toBe('contained');
-    expect(observed.step.durationMs).toBeLessThan(1100);
+    expect(observed.step.durationMs).toBeLessThan(escapedDurationBoundMs);
     expect(observed.step.timedOut).toBe(mode !== 'exit');
     expect(() => lstatSync(result.report.header.scratch)).toThrow();
     for (const step of result.report.commands) {
@@ -145,8 +164,8 @@ test.skipIf(!pidIsolation).each(['timeout', 'exit', 'postinstall'])('PID contain
       expect(step.spawnArgv).toContain('--fork');
       expect(step.spawnArgv).toContain('--kill-child');
     }
-  } finally { stopFixture(pid, childFile); }
-});
+  } finally { stopFixture(pid, childFile, readyFile); }
+}, 30000);
 
 test.skipIf(!pnpmExecutable)('pnpm disables only declared-name pre/post hooks and retains install lifecycle scripts', () => {
   const repo = fixture({}, {
@@ -458,7 +477,7 @@ test('linked checkout clones across devices without hardlinks and source hooks s
 });
 
 test.each([['SIGINT', false], ['SIGTERM', false], ['SIGINT', true], ['SIGTERM', true]])('%s cleans escaped pipe writers (namespaces unavailable: %s)', async (signal, unavailable) => {
-  const { repo, childFile } = escapedFixture('timeout');
+  const { repo, childFile, readyFile } = escapedFixture('timeout');
   const out = `${repo}/.git/axstack/readiness/interrupted.json`;
   const bin = mkdtempSync(`${root}/signal-namespace-`);
   if (unavailable) writeFileSync(`${bin}/unshare`, `#!${bun}\nprocess.exit(1);`, { mode: 0o700 });
@@ -493,7 +512,7 @@ test.each([['SIGINT', false], ['SIGTERM', false], ['SIGINT', true], ['SIGTERM', 
     expect(report.header.descendants).toBe(pidIsolation && !unavailable ? 'contained' : 'not contained');
   } finally {
     child.kill();
-    stopFixture(pid, childFile);
+    stopFixture(pid, childFile, readyFile);
     if (scratch?.startsWith(`${root}/`)) rmSync(`${scratch}`, { recursive: true, force: true });
   }
 });
