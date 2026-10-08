@@ -16,7 +16,7 @@ function killGroup(proc) {
   catch (error) { if (error.code !== 'ESRCH') throw error; }
 }
 
-async function runCommand(commands, paths, kind, argv, cwd, env, limits, spawnArgv = argv) {
+async function runCommand(commands, paths, kind, argv, cwd, env, limits, state, spawnArgv = argv) {
   const started = performance.now();
   const step = { kind, argv, spawnArgv, exitCode: null, durationMs: 0, logPath: `${paths.evidence}/${crypto.randomUUID()}-${kind}.log`, timedOut: false, logBytes: 0, omittedBytes: 0 };
   step.receiptPath = `${step.logPath.slice(0, -4)}.json`;
@@ -35,18 +35,19 @@ async function runCommand(commands, paths, kind, argv, cwd, env, limits, spawnAr
   }
   try {
     proc = Bun.spawn(spawnArgv, { cwd, env, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', detached: true });
+    state.active = proc;
     timer = setTimeout(() => { step.timedOut = true; killGroup(proc); }, limits.timeoutMs);
-    const stdout = drain(proc.stdout);
-    const stderr = drain(proc.stderr);
-    try { step.exitCode = await proc.exited; }
-    finally { killGroup(proc); }
-    await Promise.all([stdout, stderr]);
+    await Promise.all([
+      drain(proc.stdout), drain(proc.stderr),
+      proc.exited.then((code) => { step.exitCode = code; killGroup(proc); }),
+    ]);
   } catch (error) {
     step.error = error.message;
     log(new TextEncoder().encode(error.message));
   } finally {
     clearTimeout(timer);
     if (proc) killGroup(proc);
+    state.active = null;
     closeSync(fd);
     step.durationMs = Math.round(performance.now() - started);
     writeFileSync(step.receiptPath, `${JSON.stringify(step, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
@@ -61,6 +62,12 @@ export async function executeDeclared(repo, revision, paths, criteria, manager, 
   if (!pending.length) return result;
   mkdirSync(paths.evidence, { recursive: true, mode: 0o700 });
   let scratch;
+  const state = { active: null, signal: null };
+  const interrupt = (signal) => { state.signal = signal; if (state.active) killGroup(state.active); };
+  const sigint = () => interrupt('SIGINT');
+  const sigterm = () => interrupt('SIGTERM');
+  process.on('SIGINT', sigint);
+  process.on('SIGTERM', sigterm);
   try {
     const home = realpathSync(process.env.HOME || '/root');
     let temp = realpathSync(process.env.TMPDIR || '/tmp');
@@ -72,7 +79,12 @@ export async function executeDeclared(repo, revision, paths, criteria, manager, 
     result.scratch = scratch;
     const env = { PATH: process.env.PATH || '/usr/bin:/bin', LANG: process.env.LANG || 'C.UTF-8', CI: '1', HOME: scratch, TMPDIR: scratch };
     const cwd = `${scratch}/repo`;
-    const run = (kind, argv, directory = cwd, spawnArgv = argv) => runCommand(commands, paths, kind, argv, directory, env, limits, spawnArgv);
+    const run = async (kind, argv, directory = cwd, spawnArgv = argv) => {
+      if (state.signal) throw new Error(`interrupted by ${state.signal}`);
+      const step = await runCommand(commands, paths, kind, argv, directory, env, limits, state, spawnArgv);
+      if (state.signal) throw new Error(`interrupted by ${state.signal}; see ${step.logPath}`);
+      return step;
+    };
     const git = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false'];
     const clone = await run('clone', [...git, 'clone', '--no-hardlinks', '--no-checkout', '--', realpathSync(repo), cwd], scratch);
     if (clone.exitCode !== 0 || clone.timedOut) throw new Error(`clone failed; see ${clone.logPath}`);
@@ -103,6 +115,8 @@ export async function executeDeclared(repo, revision, paths, criteria, manager, 
     result.error = error.message;
     for (const [id] of pending) Object.assign(criteria.find((item) => item.id === id), { status: 'unknown', reason: 'execution unavailable', evidence: [error.message] });
   } finally {
+    process.off('SIGINT', sigint);
+    process.off('SIGTERM', sigterm);
     if (scratch) {
       try { rmSync(scratch, { recursive: true }); }
       catch (error) { result.error = `scratch removal failed: ${scratch}: ${error.message}`; }
