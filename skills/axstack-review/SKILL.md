@@ -386,6 +386,13 @@ Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Mode: <peer | authored> Actual author: <provider/model from T3 launch receipt + session | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Angles: <all six; identical brief for peer reviewers>
+Authored receipt requirements:
+  Report Coverage: COMPLETE | INCOMPLETE with covered angles, acceptance and executable evidence.
+  Tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven.
+  Record Final-head check: <command> -> <log path> for a check the reviewer ran at the final head; keep the log in the run's evidence folder.
+  Record a Safety fact: about the change itself rather than the review process.
+  Rate each non-agent comment at the current head above low | low | addressed | uncertain.
+  Re-rate each non-agent comment at every new head.
 Escalate to user: yes | no — <criterion> — <reason>
 ```
 
@@ -407,12 +414,14 @@ Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <cand
 Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
-Coverage: <angles + acceptance + executable evidence checked>
-Limitations: <unverified boundaries + why>
+Coverage: COMPLETE | INCOMPLETE — <angles + acceptance + executable evidence checked>
+Limitations: <unverified boundaries + why; tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven>
+Final-head check: <command> -> <log path> — <check the reviewer ran at the final head; log kept in the run's evidence folder>
 Findings: <severity + evidence + consequence each>
 Revert: <declared line + diff-based assessment in authored mode>
 Agent-authored comment and thread IDs: <receipt-recorded IDs or none>
-Safety fact: <the one fact the change is safe because of> — <ladder step + proof | unproven>
+Non-agent comments: <each comment ID at the current head: above low | low | addressed | uncertain; re-rate each non-agent comment at every new head; none if absent>
+Safety fact: <the one fact the change itself is safe because of, rather than the review process> — <ladder step + proof | unproven>
 Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 

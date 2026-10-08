@@ -163,6 +163,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-relay-cards T1 repair1: +289 measured aggregate bytes for
   // config-read readiness, install-only /busy, missing-quote guidance and
   // held-ack resolution; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(370926);
+  // 20261008-cli-lessons M1: +1092 measured bytes for authored receipt evidence;
+  // exact measured ceiling; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(372018);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
