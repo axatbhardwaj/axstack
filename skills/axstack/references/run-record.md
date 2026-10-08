@@ -108,6 +108,30 @@ creating or redelivering anything. Outside the bounded driver-start orphan
 sweep, touch only this run; no unscoped global sweep, runtime database, or
 scheduler follows from the record.
 
+## Settlement receipts
+
+Follow the sole [Settlement decision](workspace-hygiene.md#settlement-decision)
+owner, using compact fields or evidence pointers on the existing dispatch row.
+Record `settlement_identity`, `settlement_intent`, `settlement_result`,
+`additional_settle_consumed` and `safety_proof`.
+Identity binds the original dispatch key, thread, accepted terminal run and
+candidate head or report-only source identity. Intent points to pending-call
+evidence, result to the native result/readback, and safety proof to native
+non-application/idempotency and prior-request finished/harmless evidence.
+Persist first-call intent before the first call and the consumed allowance
+before the additional call. Preserve consumption and unresolved pointers on
+resume, compaction, replacement and merge/close under the decision owner's rules.
+Recorded intent or allowance consumption never proves native action or success.
+Record each hold's affected dependency, reason, resume condition and last
+reported evidence so an unchanged hold stays quiet and requested status is answered.
+
+Use `accepted_at` for acceptance, `settlement_readback_at` for native readback,
+`ready_at` for authorized readiness, `action_at` for verified action and
+`observed_at` for observation time, matching the [audit fields](../../axstack-audit/references/record.md#autonomy-measurements).
+Keep `hold_intervals` with `start_at`, `end_at` and evidence, preserving open
+intervals and missing times as UNKNOWN. These are receipt pointers, not a
+fingerprint database or status engine.
+
 ## Decision trail and learnings
 
 Two fields make the record reviewable by a human who stepped away and usable

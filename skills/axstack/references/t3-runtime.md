@@ -210,6 +210,25 @@ including untracked entries. Any change is a hold before advancing that work.
 
 ## Launch recovery, repairs and questions
 
+Before any settlement call, follow the [Settlement decision](workspace-hygiene.md#settlement-decision)
+in workspace hygiene, even with an unchanged forge digest. Reconcile native
+thread/run/attempt and accepted candidate or report identity against recorded
+intent/result and consumed allowance before repeating anything.
+
+For a lost delegated-launch response, reconcile the recorded request and fully
+paginated exact-title/project/parent/role/attempt evidence before adoption.
+Adopt one exact matching task only after native task identity and configuration
+are verified, otherwise hold with read-only reconciliation.
+For a lost queued-send response, reconcile the exact target thread,
+message/request receipt and resulting run evidence.
+A matching thread title alone never proves delivery.
+Adopt a proven delivered effect, otherwise hold with read-only reconciliation.
+Lost delegated-launch or queued-send replies never grant new launch or send retry authority.
+The existing writer proven-absence relaunch below stays separate, as do repair
+rounds, debug attempts and lost-launch limits. Denial/refusal and permission,
+trust, hook, auth, model, quota and user-stop holds retain the existing
+[authority boundary](#evidence-prompts-and-authority) and preflight account rules.
+
 For a lost launch response the driver must use fully paginated `t3_thread_list`
 with `titleContains=<key>`, filtered to exact whole-title equality, plus
 `git worktree list`. Keep the reserved branch through recovery. A branch or
@@ -271,6 +290,8 @@ driver settles its author thread with `t3_thread_organize` using `action: settle
 and reads back `settled: true` with `t3_thread_read` for that thread.
 Apply the existing [Settlement](workspace-hygiene.md#settlement) guards:
 terminal run evidence is required and user-taken-over threads stay untouched.
+At merge/close apply the [Settlement decision](workspace-hygiene.md#settlement-decision)
+using the last accepted completion's existing allowance.
 A missing or failed settle readback holds watch end and Close-out only for
 that author thread until resolved.
 

@@ -10,11 +10,11 @@ const read = (file) => readFileSync(`${import.meta.dir}/../../skills/axstack/ref
 // native nonapplication/idempotency/in-flight/never-issued proof. Mutate actual
 // source in memory; the three qualifiers below are concrete bounded holdouts.
 const hedges = /\b(?:if possible|when convenient|generally)\b/i;
-function rule(name, concepts, rewording, inversions, negative) {
+function rule(name, concepts, rewording, inversions, negative, file = hygiene) {
   const accepts = (text) => sentences(text).some((sentence) => !hedges.test(sentence)
     && (negative ? prohibits(sentence, negative, ...concepts) : requires(sentence, ...concepts)));
   test(`settlement: ${name}`, () => {
-    const source = read(hygiene);
+    const source = read(file);
     checkRule(source, accepts, rewording, inversions, concepts);
     const targets = sentences(source).filter(accepts);
     for (const qualifier of ['if possible', 'when convenient', 'generally']) {
@@ -118,3 +118,69 @@ rule('protected failures remain excluded from transport recovery',
   [/denial/i, /refusal/i, /permission/i, /trust/i, /hook/i, /auth/i, /model/i, /quota/i, /explicit user stops/i, /never transient/i],
   'Denial, refusal, permission, trust, hook, auth, model, quota and explicit user stops are never transient settlement errors.',
   [[/never transient/i, 'transient']], /never transient/i);
+
+const runtime = 't3-runtime.md';
+const record = 'run-record.md';
+rule('runtime consults sole decision owner before settlement on every digest',
+  [/before/i, /settlement call/i, /follow/i, /Settlement decision/i, /workspace hygiene/i, /even/i, /unchanged forge digest/i],
+  'Even with an unchanged forge digest, before any settlement call follow the Settlement decision in workspace hygiene.',
+  [[/before/i, 'after'], [/follow/i, 'skip'], [/even/i, 'except']], undefined, runtime);
+rule('lost delegated launch reconciles a fully identified request',
+  [/lost delegated-launch response/i, /reconcile/i, /recorded request/i, /fully paginated/i,
+    /exact-title\/project\/parent\/role\/attempt evidence/i, /before adoption/i],
+  'Before adoption on a lost delegated-launch response, reconcile the recorded request and fully paginated exact-title/project/parent/role/attempt evidence.',
+  [[/fully paginated/i, 'first-page'], [/before adoption/i, 'after adoption']], undefined, runtime);
+rule('lost task adoption requires native identity and configuration',
+  [/adopt one exact matching task/i, /only after/i, /native task identity and configuration/i, /verified/i,
+    /otherwise hold/i, /read-only reconciliation/i],
+  'Only after native task identity and configuration are verified, adopt one exact matching task, otherwise hold with read-only reconciliation.',
+  [[/only after/i, 'even before'], [/identity and configuration/i, 'identity or configuration'], [/otherwise hold/i, 'otherwise retry']], undefined, runtime);
+rule('lost queued send reconciles exact target and native message/run effect',
+  [/lost queued-send response/i, /reconcile/i, /exact target thread/i, /message\/request receipt/i, /resulting run evidence/i],
+  'For a lost queued-send response, reconcile resulting run evidence, the message/request receipt and the exact target thread.',
+  [[/reconcile/i, 'skip'], [/exact target thread/i, 'similar thread title']], undefined, runtime);
+rule('title alone is insufficient delivery proof',
+  [/matching thread title alone/i, /never proves delivery/i],
+  'A matching thread title alone never proves delivery.',
+  [[/never proves delivery/i, 'proves delivery']], /never proves delivery/i, runtime);
+rule('proven send effects are adopted otherwise held',
+  [/adopt/i, /proven delivered effect/i, /otherwise hold/i, /read-only reconciliation/i],
+  'Adopt a proven delivered effect, otherwise hold with read-only reconciliation.',
+  [[/proven delivered effect/i, 'assumed delivered effect'], [/otherwise hold/i, 'otherwise resend']], undefined, runtime);
+rule('lost replies grant no new launch or send retries',
+  [/lost delegated-launch or queued-send replies/i, /never grant/i, /new launch or send retry authority/i],
+  'Lost delegated-launch or queued-send replies never grant new launch or send retry authority.',
+  [[/never grant/i, 'grant']], /never grant/i, runtime);
+rule('merge-close uses settlement procedure and original allowance',
+  [/merge\/close/i, /apply/i, /Settlement decision/i, /last accepted completion/i, /existing allowance/i],
+  'At merge/close apply the Settlement decision using the existing allowance of the last accepted completion.',
+  [[/apply/i, 'skip'], [/last accepted completion/i, 'new synthetic completion']], undefined, runtime);
+rule('durable settlement fields carry intent result consumption and safety evidence',
+  [/record/i, /settlement_identity/i, /settlement_intent/i, /settlement_result/i, /additional_settle_consumed/i, /safety_proof/i],
+  'Record settlement_identity, additional_settle_consumed, safety_proof, settlement_intent and settlement_result as compact fields or evidence pointers.',
+  [[/record/i, 'skip']], undefined, record);
+rule('intent and allowance are persisted before their respective calls',
+  [/persist/i, /first-call intent/i, /before the first call/i, /consumed allowance/i, /before the additional call/i],
+  'Persist the consumed allowance before the additional call and the first-call intent before the first call.',
+  [[/before the first call/i, 'after the first call'], [/before the additional call/i, 'after the additional call']], undefined, record);
+rule('intent and consumption are not native success',
+  [/recorded intent or allowance consumption/i, /never proves/i, /native action or success/i],
+  'Recorded intent or allowance consumption never proves native action or success.',
+  [[/never proves/i, 'proves']], /never proves/i, record);
+rule('time fields keep T1 audit meanings',
+  [/accepted_at/i, /acceptance/i, /settlement_readback_at/i, /native readback/i, /ready_at/i, /authorized readiness/i, /action_at/i, /verified action/i, /observed_at/i, /observation time/i],
+  'Record observed_at for observation time, ready_at for authorized readiness, action_at for verified action, accepted_at for acceptance and settlement_readback_at for native readback.',
+  [[/native readback/i, 'recorded intent'], [/verified action/i, 'proposed action']], undefined, record);
+rule('hold intervals are evidenced and incomplete times remain unknown',
+  [/hold_intervals/i, /start_at/i, /end_at/i, /evidence/i, /missing times/i, /UNKNOWN/i, /open intervals/i],
+  'Keep evidence for hold_intervals with start_at and end_at, preserving open intervals and missing times as UNKNOWN.',
+  [[/UNKNOWN/i, 'zero elapsed'], [/open intervals/i, 'invented endpoints']], undefined, record);
+
+test('settlement decision and receipt links resolve to their owning references', () => {
+  const raw = (file) => readFileSync(`${import.meta.dir}/../../skills/axstack/references/${file}`, 'utf8');
+  expect(raw(runtime)).toContain('(workspace-hygiene.md#settlement-decision)');
+  expect(raw(hygiene)).toContain('(run-record.md#settlement-receipts)');
+  expect(raw(record)).toContain('(workspace-hygiene.md#settlement-decision)');
+  expect(raw(hygiene)).toMatch(/^### Settlement decision$/m);
+  expect(raw(record)).toMatch(/^## Settlement receipts$/m);
+});

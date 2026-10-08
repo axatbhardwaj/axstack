@@ -149,6 +149,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261007-autonomy-369 T2: +3821 measured hygiene bytes for the approved
   // settlement decision and completion-bound allowance; preserve 44-byte
   // aggregate headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(370511);
+  // 20261007-autonomy-369 T2 receipts: +2974 measured bytes (+1421 runtime,
+  // +1553 run record) for reconciliation links and compact receipt fields;
+  // preserve 44-byte aggregate headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(373485);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
