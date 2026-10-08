@@ -165,6 +165,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // held-ack resolution; always-loaded unchanged.
   // 20261008-cli-lessons M1: +1092 measured bytes for authored receipt evidence;
   // exact measured ceiling; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(372018);
+  // 20261008-cli-lessons M2: +4737 measured bytes for merge escalation;
+  // exact measured ceiling; always-loaded unchanged.
+  // M2 rebase onto 9de3f2a: exact measured aggregate 367868; retain all history.
+  expect(total).toBeLessThanOrEqual(376755);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
