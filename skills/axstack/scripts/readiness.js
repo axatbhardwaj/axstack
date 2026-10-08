@@ -82,8 +82,8 @@ function declaredCommands(files, pkg, manager, set, invalidPackage) {
     const evidence = present.map((name) => `git show ${files.revision}:package.json: scripts.${name}`);
     if (!present.length) {
       const mentioned = names.some((name) => new RegExp(`\\b(?:bun|npm|pnpm|yarn)\\s+(?:run\\s+)?${name}\\b`).test(prose));
-      if (mentioned) set(id, 'unknown', ['committed Markdown declares a command without a package.json script'], 'prose-declared; not run');
-      else set(id, id === 'env.build' ? 'n/a' : 'fail', ['committed package.json script declarations'], `missing ${names.join(' and ')} script${names.length > 1 ? 's' : ''}`);
+      const reason = `missing ${names.join(' and ')} script${names.length > 1 ? 's' : ''}${mentioned ? '; prose-declared; not run' : ''}`;
+      set(id, id === 'env.build' ? 'n/a' : 'fail', ['committed package.json script declarations'], reason);
       continue;
     }
     if (manager.reason) set(id, 'unknown', evidence.concat(['committed lockfile selection']), manager.reason);

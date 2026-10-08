@@ -157,7 +157,9 @@ test('executed criteria apply presence, prose and lockfile precedence without ru
   status(missing, 'testing.test', 'fail', 'missing test script');
 
   const prose = assess(fixture({ 'package.json': {}, 'AGENTS.md': 'Use npm run build and npm test. Use npm run typecheck.' })).report;
-  for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) status(prose, id, 'unknown', 'prose-declared; not run');
+  status(prose, 'env.build', 'n/a', 'missing build script; prose-declared; not run');
+  status(prose, 'testing.test', 'fail', 'missing test script; prose-declared; not run');
+  status(prose, 'testing.lint-typecheck', 'fail', 'missing lint and typecheck scripts; prose-declared; not run');
   const classic = assess(fixture({ ...complete, 'bun.lock': '', 'yarn.lock': '# yarn lockfile v1' })).report;
   status(classic, 'testing.test', 'unknown', 'ambiguous lockfile');
   const onlyClassic = assess(fixture({ 'package.json': { scripts: { test: 'echo test' } }, 'yarn.lock': '# yarn lockfile v1' })).report;
