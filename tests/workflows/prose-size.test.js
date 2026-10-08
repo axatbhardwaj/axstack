@@ -154,6 +154,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // preserve 44-byte aggregate headroom; always-loaded unchanged.
   // 20261007-autonomy-369 T2 tools-r1: +3492 measured runtime bytes for
   // schema-grounded lost-reply steps; preserve 44-byte headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(376977);
+  // 20261007-autonomy-369 T2 title-r1: +870 measured runtime bytes for
+  // title-fit preflight, notification capture and acceptance ordering; preserve 44-byte headroom.
+  expect(total).toBeLessThanOrEqual(377847);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

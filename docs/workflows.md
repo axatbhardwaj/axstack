@@ -202,6 +202,10 @@ verification before child reads and acceptance. Missing identity holds that
 dispatch without resend or relaunch while independent authorized work continues
 through native wakes. Notification delivery and silent end-turn control remain
 unproved; these instructions do not establish native acceptance.
+Choose a short unique task segment before dispatch to fit the full key within
+the currently observed 72-character title bound, then verify the exact stored
+title. Capture received notification prompt text/task ID before status reads;
+`accepted_at` follows completed identity checks, never status persistence alone.
 
 Trust, permission, authentication, and provider safety prompts are holds;
 never answer trust or permission prompts for a worker. Unknown liveness,

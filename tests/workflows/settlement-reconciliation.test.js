@@ -243,6 +243,42 @@ rule('missing silent mechanism preserves failed or unverified acceptance',
   'If the schema lacks a supported silent mechanism, retain AC1 as failed/unverified and report that limitation.',
   [[/retain/i, 'skip'], [/failed\/unverified/i, 'passed']], undefined, runtime);
 
+rule('title preflight fits the full identity by choosing only a short task segment',
+  [/before launch/i, /short unique task segment/i, /complete ASCII dispatch key/i, /72 characters/i,
+    /preserving run, role and attempt/i],
+  'Before launch, select a short unique task segment to fit the complete ASCII dispatch key within 72 characters, preserving run, role and attempt.',
+  [[/before launch/i, 'after launch'], [/preserving run, role and attempt/i, 'shortening run, role and attempt']], undefined, runtime);
+rule('observed title bound is not a universal guarantee',
+  [/72/i, /current observed compatibility bound/i, /not a universal provider guarantee/i],
+  'Use 72 characters as the current observed compatibility bound, not a universal provider guarantee.',
+  [[/not a universal provider guarantee/i, 'a universal provider guarantee']], /not a universal provider guarantee/i, runtime);
+rule('unrepresentable keys and title mismatches hold without a duplicate launch',
+  [/fixed components cannot fit/i, /stored title differs/i, /hold/i, /affected dispatch\/adoption/i,
+    /reconcile/i, /without a duplicate launch/i],
+  'If fixed components cannot fit or the stored title differs, hold affected dispatch/adoption and reconcile without a duplicate launch.',
+  [[/hold/i, 'retry'], [/without a duplicate launch/i, 'with a duplicate launch']], undefined, runtime);
+rule('key truncation hashing and retroactive rename cannot prove identity',
+  [/truncate/i, /hash-collapse/i, /full key/i, /retroactive rename/i, /identity proof/i],
+  'Do not truncate or hash-collapse the full key or use retroactive rename as identity proof.',
+  [[/do not|never/i, 'Always']], /do not|never/i, runtime);
+rule('stored exact full title is verified before recovery relies on it',
+  [/verify/i, /stored whole-title equality/i, /recorded full key/i, /before relying/i, /whole-title recovery/i],
+  'Before relying on whole-title recovery, verify stored whole-title equality against the recorded full key.',
+  [[/before relying/i, 'after relying'], [/whole-title equality/i, 'title prefix similarity']], undefined, runtime);
+rule('received task notification prompt and ID are persisted before status read',
+  [/received/i, /taskId-bearing completion notification/i, /persist/i, /delivered prompt text/i,
+    /actual taskId/i, /private evidence/i, /before task_status/i],
+  'For a received taskId-bearing completion notification, persist delivered prompt text and actual taskId in private evidence before task_status.',
+  [[/persist/i, 'skip'], [/before task_status/i, 'after task_status']], undefined, runtime);
+rule('acceptance timestamp follows all identity and completion checks',
+  [/record/i, /accepted_at/i, /only after/i, /all required identity and completion checks pass/i],
+  'Record accepted_at only after all required identity and completion checks pass.',
+  [[/only after/i, 'even before'], [/all required/i, 'some suggested']], undefined, runtime);
+rule('status persistence cannot be acceptance',
+  [/task_status persistence/i, /never counts as acceptance/i],
+  'Task_status persistence never counts as acceptance.',
+  [[/never counts/i, 'counts']], /never counts as acceptance/i, runtime);
+
 test('settlement decision and receipt links resolve to their owning references', () => {
   const raw = (file) => readFileSync(`${import.meta.dir}/../../skills/axstack/references/${file}`, 'utf8');
   expect(raw(runtime)).toContain('(workspace-hygiene.md#settlement-decision)');

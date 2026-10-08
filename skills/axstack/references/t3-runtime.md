@@ -157,6 +157,15 @@ The current chat/driver has no role row in any preset.
 
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.
+Before launch, choose a short unique task segment so the complete ASCII dispatch
+key fits within 72 characters, preserving run, role and attempt.
+The 72-character limit is a current observed compatibility bound, not a universal
+provider guarantee. Never truncate or hash-collapse the full key or use
+retroactive rename as identity proof.
+If fixed components cannot fit or the stored title differs, hold affected
+dispatch/adoption and reconcile without a duplicate launch.
+Verify stored whole-title equality against the recorded full key before relying
+on whole-title recovery.
 Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
 Every dispatch brief must state that dispatched roles never call `html_render`.
 Dispatched roles may call `html_preview` within [UI verification](ui-verification.md).
@@ -199,6 +208,8 @@ Completion must match the current attempt key and candidate SHA. An older
 attempt never completes a newer one; stale or duplicate receipts remain
 evidence, deduplicated by runtime identity. Process the whole delivery before
 acknowledgment and advance only after checking sender, scope and artifacts.
+Record `accepted_at` only after all required identity and completion checks pass.
+`task_status` persistence never counts as acceptance.
 
 `task_status` failed, a run failed or interrupted, a preparing thread error,
 or `AXSTACK-FAILED` must each produce an incomplete outcome with preserved
@@ -240,7 +251,9 @@ If that reply is missing, use this sequence with the advertised schemas:
    and `t3_thread_configuration` only as thread candidates without acknowledging
    or accepting delegated completion.
 3. A T3 completion notification containing `taskId` supplies only a candidate
-   identity. For that notification, call `task_status` on the exact `taskId`
+   identity. For a received taskId-bearing completion notification, persist its
+   delivered prompt text and actual `taskId` in private evidence before `task_status`.
+   For that notification, call `task_status` on the exact `taskId`
    and cross-check returned `childThreadId`, `childRunId`, `latestTerminalRunId`
    and `providerInstanceId` against the recorded request, scope and attempt
    before adoption. Preserve the status essentials under the completion rule
