@@ -272,6 +272,7 @@ async function report(args, paths) {
       timeoutMs: Number(args['--timeout-ms'] ?? 120000), logBytes: Number(args['--log-bytes'] ?? 1048576),
     });
     header.network = execution.network;
+    header.descendants = execution.descendants;
     header.scratch = execution.scratch;
   }
   header.ghObservedAt = new Date().toISOString();
@@ -357,11 +358,19 @@ Writes only --out and its evidence folder under <git-common-dir>/axstack/readine
 --out must end in .json; symlinks are rejected. Its evidence folder omits that suffix.
 --run also creates an owned 0700 scratch clone outside HOME in TMPDIR (fallback /tmp),
 installs dependencies there and runs declared build/test/lint/typecheck scripts.
+Bun and npm also run implicit pre/post scripts for those declared names.
+pnpm disables declared-name pre/post hooks with --config.enable-pre-post-scripts=false;
+Yarn Berry has no implicit declared-name hooks. Install lifecycle scripts still run.
 Removes scratch afterwards; capped logs and argv/exit/duration JSON receipts are
 written in the evidence folder next to --out. Every command gets closed stdin,
 the PATH/LANG/CI/HOME/TMPDIR allowlist, its own timeout and process-group cleanup.
 Only the frozen install permits network when unshare -rn plus loopback-up probe
 succeeds; otherwise the header says network: not isolated. Limits apply to all steps.
+Each step uses a probed PID namespace with --kill-child when available; otherwise
+the header says descendants: not contained and escaped processes may survive.
+200 ms drain grace after exit or timeout bounds pipe waits; incomplete logs are recorded.
+SIGINT and SIGTERM terminate the active group and clean scratch before returning.
+SIGKILL cannot trigger cleanup; scratch and active processes may remain.
 Repository code can write outside scratch; --run is not a sandbox.
 Without --run no repository commands execute. GH selects the read-only gh executable.
 Dirty observation disables Git filters and filesystem-monitor hooks.
@@ -393,9 +402,10 @@ export async function main(argv, io = { stdout: (text) => process.stdout.write(t
     writeReport(paths, result);
     const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
     io.stdout(`${JSON.stringify(args['--run'] ? {
-      revision: result.header.revision, inputs: result.header.inputs, network: result.header.network, executionError: result.executionError,
+      revision: result.header.revision, inputs: result.header.inputs, network: result.header.network, descendants: result.header.descendants, executionError: result.executionError,
       reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands.length,
       omittedLogBytes: result.commands.reduce((total, step) => total + step.omittedBytes, 0),
+      incompleteLogs: result.commands.filter((step) => step.logIncomplete).length,
     } : result)}\n`);
     return code || (result.executionError ? 2 : 0);
   } catch (error) {

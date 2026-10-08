@@ -14,11 +14,23 @@ try {
   isolation = { available: probe.exitCode === 0, reason: probe.stderr.toString().trim() };
 } catch (error) { isolation.reason = error.message; }
 if (!isolation.available) console.error(`SKIP localhost/outbound fixture and isolation wrapper: ${isolation.reason}`);
+let pidIsolation = false;
+try { pidIsolation = Bun.spawnSync(['unshare', '-r', '--pid', '--fork', '--kill-child', '/bin/true'], { stdin: 'ignore', stdout: 'ignore', stderr: 'ignore' }).exitCode === 0; }
+catch { /* No unshare. */ }
+if (!pidIsolation) console.error('SKIP escaped-process containment fixtures: PID namespace probe unavailable');
+let pnpmExecutable;
+try {
+  const cache = `${process.env.COREPACK_HOME ?? `${process.env.HOME}/.cache/node/corepack`}/v1/pnpm`;
+  const versions = readdirSync(cache).sort();
+  pnpmExecutable = `${cache}/${versions.at(-1)}/bin/pnpm.cjs`;
+  if (!lstatSync(pnpmExecutable).isFile()) pnpmExecutable = undefined;
+} catch { /* No offline cached pnpm. */ }
+if (!pnpmExecutable) console.error('SKIP real pnpm pre/post fixture: no offline cached executable');
 // Local executables run fixture code directly; no install contacts a registry.
 const manager = `#!${bun}
 import { readFileSync } from 'node:fs';
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-const args = process.argv.slice(2);
+const args = process.argv.slice(2).filter((arg) => !arg.startsWith('--config.'));
 const install = ['install', 'ci'].includes(args[0]);
 console.log(JSON.stringify({ argv: args, env: process.env, stdin: await Bun.stdin.text(), cwd: process.cwd() }));
 const name = install ? 'postinstall' : args[1];
@@ -65,6 +77,107 @@ function assess(repo, extra = [], env = {}) {
   return { code: response.exitCode, stderr: response.stderr.toString(), stdout: response.stdout.toString(), report, out };
 }
 const item = (report, id) => report.criteria.find((entry) => entry.id === id);
+
+function liveFixturePid(pid) {
+  try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
+  catch { return false; }
+}
+
+function escapedFixture(mode) {
+  const childFile = `escaped-${crypto.randomUUID()}.js`;
+  const repo = fixture({ test: 'bun escape.js', ...(mode === 'postinstall' && { postinstall: 'bun escape.js' }) }, {
+    [childFile]: `import { readFileSync } from 'node:fs';
+const status = readFileSync('/proc/self/status', 'utf8');
+console.log(JSON.stringify({ escapedPid: Number(/^Pid:\\s+(\\d+)/m.exec(status)[1]), sid: Number(/^NSsid:\\s+(\\d+)/m.exec(status)[1]) }));
+setTimeout(() => {}, 2500);`,
+    'escape.js': `Bun.spawn([${JSON.stringify(bun)}, ${JSON.stringify(childFile)}], { detached: true, stdin: 'ignore', stdout: 'inherit', stderr: 'inherit' });
+${mode === 'exit' ? 'await Bun.sleep(80); process.exit(0);' : 'setTimeout(() => {}, 3000);'}`,
+  });
+  return { repo, childFile };
+}
+
+function escapedObservation(report, kind) {
+  const step = report.commands.find((entry) => entry.kind === kind);
+  const observed = readFileSync(step.logPath, 'utf8').trim().split('\n').map((line) => { try { return JSON.parse(line); } catch { return {}; } }).find((entry) => entry.escapedPid);
+  expect(observed.escapedPid).toBe(observed.sid); // The writer really escaped the original process group.
+  return { step, pid: observed.escapedPid };
+}
+
+function stopFixture(pid, childFile) {
+  if (pid && liveFixturePid(pid) && readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes(childFile)) process.kill(pid, 'SIGKILL');
+}
+
+test.each(['timeout', 'exit', 'postinstall'])('escaped pipe writer cannot delay %s cleanup when namespaces are unavailable', (mode) => {
+  const { repo, childFile } = escapedFixture(mode);
+  const bin = mkdtempSync(`${root}/no-namespace-`);
+  writeFileSync(`${bin}/unshare`, `#!${bun}\nprocess.exit(1);`, { mode: 0o700 });
+  let pid;
+  try {
+    const result = assess(repo, ['--run', '--timeout-ms', '400'], { PATH: `${bin}:${shims}:${process.env.PATH}` });
+    expect(result.code).toBe(0);
+    const observed = escapedObservation(result.report, mode === 'postinstall' ? 'install' : 'script');
+    pid = observed.pid;
+    expect(observed.step.durationMs).toBeLessThan(1100);
+    expect(observed.step.timedOut).toBe(mode !== 'exit');
+    expect(observed.step.logIncomplete).toBe(true);
+    expect(result.report.header.descendants).toBe('not contained');
+    expect(JSON.parse(result.stdout).incompleteLogs).toBe(1);
+    expect(item(result.report, 'testing.test')).toMatchObject(mode === 'postinstall' ? { status: 'unknown', reason: 'install failed' } : mode === 'exit' ? { status: 'pass' } : { status: 'fail', reason: 'timeout' });
+    expect(() => lstatSync(result.report.header.scratch)).toThrow();
+  } finally { stopFixture(pid, childFile); }
+});
+
+test.skipIf(!pidIsolation).each(['timeout', 'exit', 'postinstall'])('PID containment kills escaped descendants after %s and covers every started step', (mode) => {
+  const { repo, childFile } = escapedFixture(mode);
+  let pid;
+  try {
+    const result = assess(repo, ['--run', '--timeout-ms', '400']);
+    expect(result.code).toBe(0);
+    const observed = escapedObservation(result.report, mode === 'postinstall' ? 'install' : 'script');
+    pid = observed.pid;
+    expect(liveFixturePid(pid)).toBe(false);
+    expect(result.report.header.descendants).toBe('contained');
+    expect(observed.step.durationMs).toBeLessThan(1100);
+    expect(observed.step.timedOut).toBe(mode !== 'exit');
+    expect(() => lstatSync(result.report.header.scratch)).toThrow();
+    for (const step of result.report.commands) {
+      expect(step.spawnArgv).toContain('--pid');
+      expect(step.spawnArgv).toContain('--fork');
+      expect(step.spawnArgv).toContain('--kill-child');
+    }
+  } finally { stopFixture(pid, childFile); }
+});
+
+test.skipIf(!pnpmExecutable)('pnpm disables only declared-name pre/post hooks and retains install lifecycle scripts', () => {
+  const repo = fixture({}, {
+    'package.json': { name: 'prepost-fixture', version: '1.0.0', scripts: { pretest: `${bun} -e 'process.exit(55)'`, test: `${bun} -e 'console.log("declared test ran")'`, posttest: `${bun} -e 'process.exit(56)'`, postinstall: `${bun} -e 'console.log("install lifecycle ran")'` } },
+    'pnpm-workspace.yaml': 'packages: []\noffline: true\nupdateNotifier: false\nenablePrePostScripts: true\n',
+  });
+  const home = mkdtempSync(`${root}/pnpm-home-`);
+  const lock = Bun.spawnSync([pnpmExecutable, 'install', '--lockfile-only', '--offline', '--ignore-scripts'], { cwd: repo, env: { ...process.env, HOME: home, TMPDIR: root, COREPACK_ENABLE_NETWORK: '0' }, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+  expect(lock.exitCode).toBe(0);
+  command(repo, ['rm', 'bun.lock']);
+  command(repo, ['add', '.']);
+  command(repo, ['commit', '-qm', 'offline pnpm lock']);
+  const bin = mkdtempSync(`${root}/pnpm-bin-`);
+  symlinkSync(pnpmExecutable, `${bin}/pnpm`);
+  const result = assess(repo, ['--run'], { PATH: `${bin}:${process.env.PATH}` });
+  expect(result.code).toBe(0);
+  expect(item(result.report, 'testing.test').status).toBe('pass');
+  expect(readFileSync(result.report.commands.find((step) => step.kind === 'install').logPath, 'utf8')).toContain('install lifecycle ran');
+  expect(readFileSync(result.report.commands.find((step) => step.kind === 'script').logPath, 'utf8')).toContain('declared test ran');
+});
+
+test('help discloses implicit hooks, drain grace, containment fallback and hard-kill cleanup limits', async () => {
+  let help = '';
+  expect(await main(['--help'], { stdout: (text) => { help += text; }, stderr: () => {} })).toBe(0);
+  expect(help).toMatch(/(?:Bun.*npm|npm.*Bun).*pre\/post/i);
+  expect(help).toMatch(/pnpm.*(?:disable|opt.out).*pre\/post/i);
+  expect(help).toMatch(/SIGINT.*SIGTERM.*clean/i);
+  expect(help).toMatch(/SIGKILL.*cannot.*clean/i);
+  expect(help).toMatch(/200\s*ms.*(?:drain|grace)/i);
+  expect(help).toMatch(/descendants: not contained/);
+});
 
 function manifest(repo, relative = '') {
   const files = {};
@@ -147,8 +260,12 @@ test('install and scripts receive only the allowlist, closed stdin and private s
 });
 
 test.each(['test', 'postinstall'])('%s timeout kills the process group and removes scratch', (name) => {
-  const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
-    'hang.js': `const child = Bun.spawn([${JSON.stringify(bun)}, '-e', 'setTimeout(() => {}, 2000)'], { stdout: 'ignore', stderr: 'ignore' }); console.log(JSON.stringify({ pids: [process.pid, child.pid] })); await child.exited;`,
+const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
+    'hang-child.js': `import { readFileSync, writeFileSync } from 'node:fs'; writeFileSync(process.env.HOME + '/child.pid', /^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]); setTimeout(() => {}, 2000);`,
+    'hang.js': `import { readFileSync } from 'node:fs';
+const child = Bun.spawn([${JSON.stringify(bun)}, 'hang-child.js'], { stdout: 'ignore', stderr: 'ignore' });
+await Bun.sleep(40);
+console.log(JSON.stringify({ pids: [Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]), Number(readFileSync(process.env.HOME + '/child.pid', 'utf8'))] })); await child.exited;`,
   });
   const result = assess(repo, ['--run', '--timeout-ms', '300']);
   expect(result.code).toBe(0);
@@ -196,7 +313,8 @@ test.skipIf(!isolation.available)('a successful one-time isolation probe wraps s
   expect(result.report.commands.filter((step) => step.kind === 'network-probe')).toHaveLength(1);
   for (const step of result.report.commands.filter((step) => step.kind === 'script')) expect(step.spawnArgv[0]).toBe(Bun.which('unshare'));
   const install = result.report.commands.find((step) => step.kind === 'install');
-  expect(install.spawnArgv).toEqual(install.argv);
+  expect(install.spawnArgv).not.toContain('-rn');
+  expect(install.spawnArgv.slice(-install.argv.length)).toEqual(install.argv);
 });
 
 test.skipIf(!isolation.available)('isolated scripts can serve localhost while outbound connections fail', () => {
@@ -269,7 +387,7 @@ test.each([
   const result = assess(repo, ['--run']);
   expect(result.code).toBe(0);
   expect(result.report.commands.find((step) => step.kind === 'install').argv).toEqual([name, ...flags]);
-  expect(result.report.commands.find((step) => step.kind === 'script').argv).toEqual([name, 'run', 'test']);
+  expect(result.report.commands.find((step) => step.kind === 'script').argv).toEqual(name === 'pnpm' ? [name, '--config.enable-pre-post-scripts=false', 'run', 'test'] : [name, 'run', 'test']);
   expect(item(result.report, 'testing.test').status).toBe('pass');
 });
 
@@ -339,11 +457,13 @@ test('linked checkout clones across devices without hardlinks and source hooks s
   } finally { rmSync(`${cross}`, { recursive: true }); }
 });
 
-test('SIGTERM removes scratch and terminates active repository code before returning incomplete', async () => {
-  const repo = fixture({ test: 'bun hold.js' }, { 'hold.js': 'console.log(JSON.stringify({ pid: process.pid })); setTimeout(() => {}, 2000);' });
+test.each([['SIGINT', false], ['SIGTERM', false], ['SIGINT', true], ['SIGTERM', true]])('%s cleans escaped pipe writers (namespaces unavailable: %s)', async (signal, unavailable) => {
+  const { repo, childFile } = escapedFixture('timeout');
   const out = `${repo}/.git/axstack/readiness/interrupted.json`;
+  const bin = mkdtempSync(`${root}/signal-namespace-`);
+  if (unavailable) writeFileSync(`${bin}/unshare`, `#!${bun}\nprocess.exit(1);`, { mode: 0o700 });
   const child = Bun.spawn([bun, script, '--repo', repo, '--out', out, '--run'], {
-    env: { ...process.env, PATH: `${shims}:${process.env.PATH}`, TMPDIR: root }, stdin: 'ignore', stdout: 'ignore', stderr: 'ignore',
+    env: { ...process.env, PATH: `${bin}:${shims}:${process.env.PATH}`, TMPDIR: root }, stdin: 'ignore', stdout: 'ignore', stderr: 'ignore',
   });
   let scratch, pid;
   try {
@@ -354,23 +474,26 @@ test('SIGTERM removes scratch and terminates active repository code before retur
       try { logs = readdirSync(out.slice(0, -5)).filter((name) => name.endsWith('-script.log')); } catch { /* Still cloning. */ }
       for (const name of logs) {
         for (const line of readFileSync(`${out.slice(0, -5)}/${name}`, 'utf8').trim().split('\n')) {
-          try { const observed = JSON.parse(line); scratch ??= observed.env?.HOME; pid ??= observed.pid; } catch { /* Partial line. */ }
+          try { const observed = JSON.parse(line); scratch ??= observed.env?.HOME; pid ??= observed.escapedPid; } catch { /* Partial line. */ }
         }
       }
     }
     expect(pid).toBeNumber();
-    child.kill('SIGTERM');
+    const started = performance.now();
+    child.kill(signal);
     const code = await child.exited;
+    expect(performance.now() - started).toBeLessThan(1000);
     expect(() => lstatSync(scratch)).toThrow();
     expect(code).toBe(2);
     let alive = false;
     try { alive = !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); } catch { /* Reaped. */ }
-    expect(alive).toBe(false);
+    if (pidIsolation && !unavailable) expect(alive).toBe(false);
     const report = JSON.parse(readFileSync(out, 'utf8'));
-    expect(report.executionError).toContain('SIGTERM');
+    expect(report.executionError).toContain(signal);
+    expect(report.header.descendants).toBe(pidIsolation && !unavailable ? 'contained' : 'not contained');
   } finally {
     child.kill();
-    if (pid) { try { process.kill(pid, 'SIGKILL'); } catch { /* Already terminated. */ } }
+    stopFixture(pid, childFile);
     if (scratch?.startsWith(`${root}/`)) rmSync(`${scratch}`, { recursive: true, force: true });
   }
 });
@@ -389,9 +512,10 @@ const p = Bun.spawn([${JSON.stringify(Bun.which('git'))}, ...argv], { stdin: 'in
   expect(result.code).toBe(2);
   expect(item(result.report, 'testing.test')).toMatchObject({ status: 'unknown', reason: 'execution unavailable' });
   expect(result.report.executionError).toContain('clone failed');
-  expect(result.report.commands).toHaveLength(1);
-  expect(result.report.commands[0].exitCode).toBe(9);
-  expect(JSON.parse(readFileSync(result.report.commands[0].receiptPath, 'utf8'))).toEqual(result.report.commands[0]);
+  const clones = result.report.commands.filter((step) => step.kind === 'clone');
+  expect(clones).toHaveLength(1);
+  expect(clones[0].exitCode).toBe(9);
+  expect(JSON.parse(readFileSync(clones[0].receiptPath, 'utf8'))).toEqual(clones[0]);
   expect(() => lstatSync(result.report.header.scratch)).toThrow();
   for (const argv of readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse)) {
     expect(argv).toContain('--no-optional-locks');
