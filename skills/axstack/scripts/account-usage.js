@@ -33,8 +33,9 @@ export async function accountUsage(instanceId, instance, provider) {
     const valid = provider === 'claude' ? credentials.claudeAiOauth?.accessToken
       : credentials.tokens?.access_token && credentials.tokens?.account_id;
     if (!valid) throw new Error();
-  } catch {
-    return { instanceId, state: 'skipped', reason: 'missing credentials' };
+  } catch (error) {
+    return { instanceId, state: 'skipped', reason: 'missing credentials',
+      credentialsAbsent: error.code === 'ENOENT' };
   }
   const headers = provider === 'claude'
     ? { authorization: `Bearer ${credentials.claudeAiOauth.accessToken}`,

@@ -26,8 +26,9 @@ function fixture(accounts = [{ id: 'claudeAgent', body: weekly(66, 62), tier: 'd
   const instances = Object.fromEntries(accounts.map((account, i) => {
     const dir = `${home}/account-${i}`;
     mkdirSync(dir);
-    if (!account.missing) writeFileSync(`${dir}/${driver === 'codex' ? 'auth.json' : '.credentials.json'}`,
-      JSON.stringify(driver === 'codex' ? { tokens: { access_token: `${token}-${account.id}`, account_id: account.id } }
+    const accountDriver = account.driver ?? driver;
+    if (!account.missing) writeFileSync(`${dir}/${accountDriver === 'codex' ? 'auth.json' : '.credentials.json'}`,
+      JSON.stringify(accountDriver === 'codex' ? { tokens: { access_token: `${token}-${account.id}`, account_id: account.id } }
         : { claudeAiOauth: { accessToken: `${token}-${account.id}`, rateLimitTier: account.tier } }));
     return [account.id, { driver: account.driver ?? driver, enabled: account.enabled ?? true, config: { homePath: dir } }];
   }));
@@ -38,7 +39,7 @@ function fixture(accounts = [{ id: 'claudeAgent', body: weekly(66, 62), tier: 'd
   writeFileSync(settings, JSON.stringify(data, null, 2) + '\n');
   async function run(args = [], env = {}) {
     const child = Bun.spawn(['bun', script, '--settings', settings, ...args], {
-      env: { ...process.env, HOME: home, XDG_CACHE_HOME: `${home}/cache`, AXSTACK_SYNC_DEFAULT: '1',
+      env: { ...process.env, HOME: home, XDG_CACHE_HOME: `${home}/cache`, AXSTACK_SYNC_DEFAULT: '1', AXSTACK_SYNC_POOL: '',
         AXSTACK_CLAUDE_USAGE_URL: server.url.href, AXSTACK_CODEX_USAGE_URL: server.url.href, ...env },
       stdout: 'pipe', stderr: 'pipe',
     });
@@ -104,7 +105,7 @@ test('any exhausted window switches without margin; both exhausted stay unchange
 });
 
 test('unknown API, missing reset clock and expired cache hold a comparable pair', async () => {
-  for (const uncertain of [{ status: 503 }, { status: 401 }, { status: 403 }, { missing: true }, { body: { five_hour: { utilization: 10 }, seven_day: { utilization: 20 } } }]) {
+  for (const uncertain of [{ status: 503 }, { status: 401 }, { status: 403 }, { body: { five_hour: { utilization: 10 }, seven_day: { utilization: 20 } } }]) {
     const f = fixture([{ id: 'current', body: weekly(66, 62) }, { id: 'other', ...uncertain }, { id: 'leader', body: weekly(30, 43) }]);
     const before = readFileSync(f.settings);
     expect((await f.run()).data).toMatchObject({ action: 'unchanged', reason: 'unknown' });
@@ -256,4 +257,128 @@ test('write failure keeps original bytes and releases the lock; a post-rename mi
   });
   try { expect(() => commit(f.settings, original, next)).toThrow('read-back mismatch'); }
   finally { mismatch.mockRestore(); }
+});
+
+const pool = 'claudeAgent=claude-opus-5-5,codex=gpt-6.1-sol:xhigh';
+const codexWeekly = (used, hours = 60) => codex(10, { used_percent: used,
+  limit_window_seconds: 604800, reset_after_seconds: hours * 3600 });
+
+test('Usage env pool dry-run chooses the other driver and prints its full selection', async () => {
+  const f = fixture([{ id: 'current', body: weekly(66, 62) },
+    { id: 'sol', driver: 'codex', body: codexWeekly(30, 43) },
+    { id: 'disabled', driver: 'codex', enabled: false, body: codexWeekly(0, 1) }]);
+  const before = readFileSync(f.settings);
+  const result = await f.run(['--dry-run'], { AXSTACK_SYNC_POOL: pool });
+  expect(result.status).toBe(0);
+  expect(result.data).toMatchObject({ action: 'updated', to: 'sol', selection: {
+    instanceId: 'sol', model: 'gpt-6.1-sol', options: [{ id: 'reasoningEffort', value: 'xhigh' }] } });
+  expect(result.output.trim().split('\n')).toHaveLength(1);
+  expect(result.error).toBe('');
+  expect(f.requests).toEqual(['current', 'sol']);
+  expect(readFileSync(f.settings)).toEqual(before);
+});
+
+test('pooled writes replace the full root selection and preserve every surrounding byte', async () => {
+  for (const driver of ['codex', 'claudeAgent']) {
+    const f = fixture([{ id: 'current', body: weekly(66, 62) },
+      { id: 'winner', driver, body: driver === 'codex' ? codexWeekly(30, 43) : weekly(30, 43) }]);
+    const before = readFileSync(f.settings, 'utf8');
+    const selection = driver === 'codex'
+      ? { instanceId: 'winner', model: 'gpt-6.1-sol', options: [{ id: 'reasoningEffort', value: 'xhigh' }] }
+      : { instanceId: 'winner', model: 'claude-opus-5-5' };
+    expect((await f.run([], { AXSTACK_SYNC_POOL: pool })).data).toMatchObject({ action: 'updated', selection });
+    const originalSelection = JSON.stringify(f.data.defaultModelSelection, null, 2).replaceAll('\n', '\n  ');
+    expect(readFileSync(f.settings, 'utf8')).toBe(before.replace(originalSelection, JSON.stringify(selection)));
+  }
+  const f = fixture();
+  const selection = { instanceId: 'claudeAlt', model: 'claude-opus-5-5', options: [{ id: 'effort', value: 'high' }] };
+  f.data.defaultModelSelection = { ...selection, instanceId: 'claudeAgent' };
+  writeFileSync(f.settings, JSON.stringify(f.data, null, 2));
+  const before = readFileSync(f.settings, 'utf8');
+  expect((await f.run([], { AXSTACK_SYNC_POOL: 'claudeAgent=claude-opus-5-5:high' })).status).toBe(0);
+  expect(readFileSync(f.settings, 'utf8')).toBe(before.replace('"instanceId": "claudeAgent"', '"instanceId": "claudeAlt"'));
+});
+
+test('commit accepts only the decided root selection and rejects changes elsewhere', () => {
+  const f = fixture();
+  const original = readFileSync(f.settings, 'utf8');
+  const selection = { instanceId: 'claudeAlt', model: 'pool-model' };
+  const next = { ...f.data, defaultModelSelection: selection };
+  expect(() => commit(f.settings, original, JSON.stringify({ ...next, planModelSelection: selection }), selection)).toThrow();
+  expect(() => commit(f.settings, original, JSON.stringify({ ...next,
+    defaultModelSelection: { ...selection, options: [] } }), selection)).toThrow();
+  expect(readFileSync(f.settings, 'utf8')).toBe(original);
+  expect(commit(f.settings, original, JSON.stringify(next), selection)).toBe('updated');
+  expect(JSON.parse(readFileSync(f.settings, 'utf8'))).toEqual(next);
+});
+
+test('non-current absent credentials are excluded but malformed or unreadable credentials hold in both modes', async () => {
+  for (const poolValue of ['', pool]) {
+    for (const failure of ['absent', 'malformed', 'unreadable']) {
+      const f = fixture([{ id: 'current', body: weekly(66, 62) },
+        { id: 'other', missing: true }, { id: 'winner', body: weekly(30, 43) }]);
+      const path = `${f.home}/account-1/.credentials.json`;
+      if (failure === 'malformed') writeFileSync(path, '{invalid');
+      if (failure === 'unreadable') mkdirSync(path);
+      const before = readFileSync(f.settings);
+      const result = await f.run([], { AXSTACK_SYNC_POOL: poolValue });
+      expect(result.data).toMatchObject(failure === 'absent'
+        ? { action: 'updated', to: 'winner' } : { action: 'unchanged', reason: 'unknown' });
+      expect(result.data.instances.find((entry) => entry.instanceId === 'other').state)
+        .toBe(failure === 'absent' ? 'excluded' : 'unknown');
+      if (failure !== 'absent') expect(readFileSync(f.settings)).toEqual(before);
+    }
+  }
+});
+
+test('pooled short Codex windows are unknown while weekly primary clocks qualify', async () => {
+  for (const seconds of [18000, 604800]) {
+    const f = fixture([{ id: 'current', body: weekly(66, 62) }, { id: 'sol', driver: 'codex', body: {
+      rate_limit: { primary_window: { used_percent: 20, limit_window_seconds: seconds,
+        reset_after_seconds: seconds / 4 } } } }]);
+    const before = readFileSync(f.settings);
+    const result = await f.run(['--dry-run'], { AXSTACK_SYNC_POOL: pool });
+    expect(result.data).toMatchObject(seconds < 604800
+      ? { action: 'unchanged', reason: 'unknown' } : { action: 'updated', to: 'sol' });
+    expect(readFileSync(f.settings)).toEqual(before);
+  }
+});
+
+test('pooled short-window exhaustion still allows current escape across drivers', async () => {
+  for (const body of [codex(95), codex(10, null, true)]) {
+    const f = fixture([{ id: 'current', body },
+      { id: 'opus', driver: 'claudeAgent', body: weekly(90, 60) }], 'codex');
+    expect((await f.run(['--dry-run'], { AXSTACK_SYNC_POOL: pool })).data)
+      .toMatchObject({ action: 'updated', reason: 'current-excluded', to: 'opus',
+        selection: { instanceId: 'opus', model: 'claude-opus-5-5' } });
+  }
+});
+
+test('pooled manual picks persist on margin or unknown, excluded current escapes across drivers', async () => {
+  for (const scenario of ['margin', 'unknown', 'exhausted', 'unauthorized', 'skipped']) {
+    const f = fixture([{ id: 'current', body: weekly(scenario === 'exhausted' ? 95 : 60, 60),
+      ...(scenario === 'unauthorized' && { status: 401 }), ...(scenario === 'skipped' && { missing: true }) },
+    { id: 'sol', driver: 'codex', body: codexWeekly(55) },
+    ...(scenario === 'unknown' || scenario === 'exhausted' ? [{ id: 'unknown', status: 503 }] : [])]);
+    const before = readFileSync(f.settings);
+    const result = await f.run([], { AXSTACK_SYNC_POOL: pool });
+    expect(result.data).toMatchObject(['margin', 'unknown'].includes(scenario)
+      ? { action: 'unchanged', reason: scenario } : { action: 'updated', reason: 'current-excluded', to: 'sol' });
+    if (['margin', 'unknown'].includes(scenario)) expect(readFileSync(f.settings)).toEqual(before);
+  }
+});
+
+test('pool outside current driver is unmanaged and invalid pools fail without requests or writes', async () => {
+  const f = fixture();
+  const before = readFileSync(f.settings);
+  expect((await f.run([], { AXSTACK_SYNC_POOL: 'codex=gpt-6.1-sol:xhigh' })).data)
+    .toMatchObject({ action: 'unchanged', reason: 'unmanaged' });
+  for (const value of ['grok=model', 'claudeAgent=', 'codex=sol,codex=astra', 'codex=sol:extra-high',
+    'codex=sol:HIGH', 'codex=sol:', 'codex=sol,', 'constructor=sol']) {
+    expect((await f.run([], { AXSTACK_SYNC_POOL: value })).status).toBe(1);
+  }
+  expect(f.requests).toEqual([]);
+  expect(readFileSync(f.settings)).toEqual(before);
+  expect((await f.run(['--dry-run'], { AXSTACK_SYNC_POOL: 'claudeAgent=opus:future' })).data.selection)
+    .toEqual({ instanceId: 'claudeAlt', model: 'opus', options: [{ id: 'effort', value: 'future' }] });
 });

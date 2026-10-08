@@ -46,7 +46,7 @@ executor MCP, and live schedule behavior need separate preflights.
 Installation creates no production schedule and never enables a timer.
 Axstack allows one opt-in systemd user timer `axstack-default-sync` as the
 scheduler exception: it runs a stateless script that rewrites only T3
-`defaultModelSelection.instanceId`, has no workflow state and launches no agent.
+`defaultModelSelection`, has no workflow state and launches no agent.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -178,30 +178,34 @@ canary described by the operational contract.
 
 ## New-chat default sync
 
-This opt-in stateless script rewrites only `defaultModelSelection.instanceId`
-in `~/.t3/userdata/settings.json`. It compares enabled accounts of the current
-Claude/Codex driver, without plan weights; it keeps the model, project overrides
-and every other settings byte. It never creates a missing default or refreshes
-OAuth tokens. Unknown usage or a missing reset clock holds the default, unless
-an excluded/unauthorized current account can escape to a known eligible sibling.
-The shared usage cache expires after five minutes; sync refuses stale usage for
-comparison. Any session/weekly window at 95% or a reached limit is excluded.
-
-Preview the decision and save the current instance ID for rollback:
+This opt-in script changes only root `defaultModelSelection` in
+`~/.t3/userdata/settings.json`. Without a pool it changes only the instance
+among enabled accounts of the current Claude/Codex driver.
+`AXSTACK_SYNC_POOL` compares drivers by weekly clocks (>=604800s), without
+plan weights. Rotation needs a ten-point elapsed-minus-used pace lead;
+excluded/unauthorized/skipped current accounts can escape to known candidates.
+Any window at 95% or a reached limit excludes. Non-current absent credentials
+exclude; malformed/unreadable credentials and unknown/stale usage hold.
+Cache expires after five minutes. Missing defaults stay untouched; OAuth tokens
+are never refreshed. Each host's pool uses only enabled, credentialed drivers:
 
 ```sh
-bun ~/.agents/skills/axstack/scripts/sync-default.js --dry-run
+AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6.1-sol:xhigh \
+  bun ~/.agents/skills/axstack/scripts/sync-default.js --dry-run
 ```
 
-Exit 0 prints one token-free JSON decision line; dry-run reports the proposed
-change without writing. `--settings <path>` selects a fixture or alternate file.
-`AXSTACK_SYNC_DEFAULT=0` is a no-op. Exit 1 reports malformed settings or a failed
-write. A sibling temp file preserves the settings mode and is fsynced before
-rename. The script checks original bytes immediately before rename and verifies
-bytes afterward. The accepted sub-ms race with an in-app T3 write can still lose
-that edit; a read-back mismatch is logged as an error rather than overwritten.
+Exit 0 prints one token-free JSON decision with proposed selection; dry-run
+never writes. `--settings <path>` selects another file. Pool entries are
+`driver=model[:effort]`: Claude `effort` or Codex `reasoningEffort` options;
+omitted effort omits options. Rotation writes the full pool selection,
+overwriting manual model/effort picks only then. Pin with `AXSTACK_SYNC_DEFAULT=0`
+or a default driver outside the pool. Exit 1 means invalid pool/settings or write
+failure. Save the full selection for rollback. Other bytes stay intact.
+A fsynced sibling preserves mode; original bytes are checked before rename and
+read back afterward. The accepted sub-ms T3 write race can lose an edit;
+read-back mismatch is an error.
 
-After recording host-mutation authority, copy the shipped units and enable:
+Under host-mutation authority, install and enable:
 
 ```sh
 mkdir -p ~/.config/systemd/user
@@ -213,18 +217,21 @@ systemctl --user list-timers axstack-default-sync.timer
 journalctl --user -u axstack-default-sync.service
 ```
 
-The first tick is about one minute after user-manager startup, then every ten
-minutes. `Persistent=true` is shipped; this monotonic timer does not replay
-missed calendar ticks. For a different skills root or Bun path, override
-`ExecStart`/`Environment` with `systemctl --user edit axstack-default-sync.service`.
-Operation after logout requires an authorized user-manager/linger setup.
-Installation never activates these units.
+The timer starts about one minute after user-manager startup, then every ten
+minutes. Its monotonic `Persistent=true` timer never replays calendar ticks.
+Override Bun/skills paths via `ExecStart`/`Environment` in
+`systemctl --user edit axstack-default-sync.service`. Add the per-host pool:
+
+```ini
+[Service]
+Environment=AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6.1-sol:xhigh
+```
+
+Reload after edits. Logout needs authorized linger; installation never activates units.
 
 Disable with `systemctl --user disable --now axstack-default-sync.timer` and
 stop any active one-shot with `systemctl --user stop axstack-default-sync.service`.
-For rollback, then restore the saved default instance through T3 Settings.
-The exclusive sibling directory lock `<settings>.axstack-default-sync.lock`
-prevents overlapping commits; fresh-lock contention prints unchanged/locked.
-A lock older than sixty seconds is treated as stale: the script removes that
-exact empty directory and retries acquisition once, recovering on a later tick
-from a killed writer. If the retry finds a fresh lock, it still prints locked.
+Rollback: remove the pool drop-in, reload, and restore the full selection in T3 Settings.
+The sibling `<settings>.axstack-default-sync.lock` directory prevents overlap
+(unchanged/locked). Empty locks older than sixty seconds are removed and retried
+once; fresh contention reports locked.

@@ -48,6 +48,8 @@ Never infer any other route from quota state or subscription entitlement. Every
 substitution requires the user's decision: configured alternatives are not
 defaults. Rejection, timeout, quota and auth failures hold affected work.
 Substitution here means changing provider or model, excluding that account selection.
+Exception: opt-in default sync can change only the New-chat default within the user-configured pool.
+Running threads, dispatched roles, schedules and roles.json keep existing rules.
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
 or recovery; resolve models from the saved capabilities snapshot and verify
 requested and effective settings separately.
