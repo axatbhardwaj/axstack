@@ -7,25 +7,16 @@ scope-identity exemption.
 
 ## Location and identity
 
-In a Git repository, store the record at:
+In a Git repository, initialize with:
 
-```text
-<git rev-parse --path-format=absolute --git-common-dir>/axstack/runs/<id>/progress.md
+```sh
+bun skills/axstack/scripts/run-init.js --slug local-progress
 ```
+Prints JSON paths for a new shared private run record, evidence and owned scratch, plus revision/inputs.
 
-`git rev-parse --path-format=absolute --git-common-dir` resolves the main
-repository's `.git` directory for the main checkout and linked worktrees.
-Without `--path-format=absolute`, the main checkout returns a relative `.git`,
-making the persisted path ambiguous across worktrees and the current working
-directory. The record is shared across those worktrees and never enters the
-tracked tree.
-
-Use `<UTCdate>-<slug>`, where UTCdate is `YYYYMMDD`, for example
-`20260913-local-progress`. The driver chooses the slug using lowercase letters,
-digits, and hyphens only, never raw request text. It has no separators
-or path segments, so it stays inside `axstack/runs/`; add a collision-safe
-suffix when needed. For non-Git work, use private host state instead of the
-working directory.
+The driver chooses the slug, never raw request text. The record is shared across
+worktrees and never enters the tracked tree. For non-Git work, use private host state
+instead of the working directory.
 
 On resume, discover existing runs and match both repository and scope;
 never blindly select the latest. Git metadata is not pushed, but it can be
