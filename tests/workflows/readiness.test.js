@@ -209,9 +209,9 @@ test('help describes flags and static writes; invalid CLI and revisions fail', (
   const result = Bun.spawnSync(['bun', script, '--help'], { stdout: 'pipe' });
   expect(result.exitCode).toBe(0);
   for (const flag of ['--repo', '--rev', '--baseline', '--out', '--help']) expect(result.stdout.toString()).toContain(flag);
-  expect(result.stdout.toString()).not.toContain('--run');
+  expect(result.stdout.toString()).toContain('--run');
   const repo = fixture({ 'package.json': {} });
-  expect(assess(repo, ['--run']).code).toBe(1);
+  expect(assess(repo, ['--unknown']).code).toBe(1);
   expect(assess(repo, ['--rev', 'no-such-revision']).code).toBe(1);
   const outside = Bun.spawnSync(['bun', script, '--repo', root, '--out', `${root}/bad.json`], { stdout: 'pipe', stderr: 'pipe' });
   expect(outside.exitCode).toBe(1);

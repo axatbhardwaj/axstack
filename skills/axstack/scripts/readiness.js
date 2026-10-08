@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
+import { executeDeclared } from './readiness-run.js';
 
 const scriptVersion = '1.0.0';
 const criteriaVersion = 1;
@@ -247,7 +248,7 @@ function dirty(repo) {
   return git(repo, ...overrides, 'status', '--porcelain', '--untracked-files=all').length > 0;
 }
 
-function report(args) {
+async function report(args, paths) {
   const repo = args['--repo'];
   const revision = git(repo, 'rev-parse', '--verify', '--end-of-options', `${args['--rev'] ?? 'HEAD'}^{commit}`).trim();
   let rawOrigin = '';
@@ -259,10 +260,21 @@ function report(args) {
     observedAt: new Date().toISOString(), ghObservedAt: new Date().toISOString(), scriptVersion, criteriaVersion,
   };
   const criteria = assess(repo, revision);
+  let execution;
+  if (args['--run']) {
+    const files = snapshot(repo, revision);
+    let pkg = {};
+    try { pkg = JSON.parse(files.read('package.json') || '{}'); } catch { /* Static criteria already record invalid JSON. */ }
+    execution = await executeDeclared(repo, revision, paths, criteria, packageManager(files), pkg, {
+      timeoutMs: Number(args['--timeout-ms'] ?? 120000), logBytes: Number(args['--log-bytes'] ?? 1048576),
+    });
+    header.network = execution.network;
+    header.scratch = execution.scratch;
+  }
   header.ghObservedAt = new Date().toISOString();
   const settings = criteria.find((item) => item.id === 'security.status-checks');
   if (settings.reason !== 'unsupported stack') Object.assign(settings, forgeStatus(origin));
-  return { header, criteria, pillars: summarizePillars(criteria) };
+  return { header, criteria, pillars: summarizePillars(criteria), ...(execution && { commands: execution.commands, executionError: execution.error }) };
 }
 
 function absolute(path) {
@@ -309,7 +321,7 @@ function writeReport(paths, report) {
   }
 }
 
-function compareBaseline(report, path) {
+function compareBaseline(report, path, io) {
   if (!path) return 0;
   try {
     const before = JSON.parse(readFileSync(path, 'utf8'));
@@ -323,49 +335,69 @@ function compareBaseline(report, path) {
     const changes = [...new Set([...previous.keys(), ...current.keys()])].sort().filter((id) => previous.get(id) !== current.get(id)).map((id) => ({ id, before: previous.get(id) ?? null, after: current.get(id) ?? null }));
     const regressions = changes.filter((item) => item.before === 'pass' && item.after === 'fail').map((item) => item.id);
     report.comparison = { changes, regressions };
-    if (regressions.length) console.error(`Readiness regressions: ${regressions.join(', ')}`);
+    if (regressions.length) io.stderr(`Readiness regressions: ${regressions.join(', ')}\n`);
     return regressions.length ? 10 : 0;
   } catch (error) {
     report.comparisonUnavailable = `comparison unavailable: ${error.message}`;
-    console.error(report.comparisonUnavailable);
+    io.stderr(`${report.comparisonUnavailable}\n`);
     return 2;
   }
 }
 
-const help = `Usage: bun readiness.js --repo <path> [--rev <ref>] [--baseline <report.json>] --out <path>
-Static assessment of committed JavaScript/TypeScript repository files.
-Flags: --repo, --rev (default HEAD), --baseline, --out, --help.
+const help = `Usage: bun readiness.js --repo <path> [--rev <ref>] [--baseline <report.json>] [--run] --out <path>
+Assessment of committed JavaScript/TypeScript repository files.
+Flags: --repo, --rev (default HEAD), --baseline, --run, --out, --help,
+--timeout-ms (positive integer; default 120000), --log-bytes (positive integer; default 1048576).
 Writes only --out and its evidence folder under <git-common-dir>/axstack/readiness/.
 --out must end in .json; symlinks are rejected. Its evidence folder omits that suffix.
-Repository commands are not executed. GH selects the read-only gh executable.
+--run also creates an owned 0700 scratch clone outside HOME in TMPDIR (fallback /tmp),
+installs dependencies there and runs declared build/test/lint/typecheck scripts.
+Removes scratch afterwards; capped logs and argv/exit/duration JSON receipts are
+written in the evidence folder next to --out. Every command gets closed stdin,
+the PATH/LANG/CI/HOME/TMPDIR allowlist, its own timeout and process-group cleanup.
+Only the frozen install permits network when unshare -rn plus loopback-up probe
+succeeds; otherwise the header says network: not isolated. Limits apply to all steps.
+Repository code can write outside scratch; --run is not a sandbox.
+Without --run no repository commands execute. GH selects the read-only gh executable.
 Dirty observation disables Git filters and filesystem-monitor hooks.
-Exit codes: 0 report (including failed criteria), 1 error, 2 comparison unavailable, 10 regression.`;
+Example: bun readiness.js --repo /repo --run --out /repo/.git/axstack/readiness/check.json
+Exit codes: 0 report (including failed criteria), 1 error, 2 incomplete, 10 regression.`;
 
-function main(argv) {
+export async function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
+  try {
   if (argv.includes('--help')) {
-    console.log(help);
+    io.stdout(`${help}\n`);
     return 0;
   }
   const args = {};
   for (let i = 0; i < argv.length; i += 2) {
-    if (!['--repo', '--rev', '--baseline', '--out'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
-      throw new Error(`invalid argument: ${argv[i]}`);
+    if (argv[i] === '--run' && !args['--run']) { args['--run'] = true; i--; continue; }
+    if (!['--repo', '--rev', '--baseline', '--out', '--timeout-ms', '--log-bytes'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
+      throw new Error(`invalid argument: ${argv[i]}; use --help for flags and an example`);
     }
     args[argv[i]] = argv[i + 1];
   }
-  if (!args['--repo'] || !args['--out']) throw new Error('expected --repo and --out');
+  if (!args['--repo'] || !args['--out']) throw new Error('missing inputs; pass --repo <path> and --out <git-common-dir>/axstack/readiness/<name>.json');
+  for (const flag of ['--timeout-ms', '--log-bytes']) {
+    if (args[flag] && (!/^\d+$/.test(args[flag]) || !Number.isSafeInteger(Number(args[flag])) || Number(args[flag]) < 1 || Number(args[flag]) > 2147483647)) throw new Error(`invalid ${flag}; pass a positive integer up to 2147483647`);
+  }
   const paths = outputPaths(args);
-  const result = report(args);
-  const code = compareBaseline(result, args['--baseline']);
+  const result = await report(args, paths);
+  const code = compareBaseline(result, args['--baseline'], io);
   writeReport(paths, result);
-  console.log(JSON.stringify(result));
-  return code;
+  const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
+  io.stdout(`${JSON.stringify(args['--run'] ? {
+    revision: result.header.revision, inputs: { repo: args['--repo'], rev: args['--rev'] ?? 'HEAD', baseline: args['--baseline'] ?? null, run: true },
+    reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands.length,
+    omittedLogBytes: result.commands.reduce((total, step) => total + step.omittedBytes, 0),
+  } : result)}\n`);
+  return code || (result.executionError ? 2 : 0);
+  } catch (error) {
+    io.stderr(`Readiness error: ${error.message}\n`);
+    return 1;
+  }
 }
 
 if (import.meta.main) {
-  try { process.exitCode = main(process.argv.slice(2)); }
-  catch (error) {
-    console.error(`Readiness error: ${error.message}`);
-    process.exitCode = 1;
-  }
+  process.exitCode = await main(process.argv.slice(2));
 }
