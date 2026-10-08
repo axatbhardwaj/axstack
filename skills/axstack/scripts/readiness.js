@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync } from 'node:fs';
 
 const scriptVersion = '1.0.0';
 const criteriaVersion = 1;
@@ -205,6 +205,69 @@ function report(args) {
   return { header, criteria, pillars: pillars(criteria) };
 }
 
+function absolute(path) {
+  const parts = [];
+  for (const part of (path.startsWith('/') ? path : `${process.cwd()}/${path}`).split('/')) {
+    if (part === '..') parts.pop();
+    else if (part && part !== '.') parts.push(part);
+  }
+  return `/${parts.join('/')}`;
+}
+
+function rejectSymlinks(path) {
+  let current = path.startsWith('/') ? '' : process.cwd();
+  for (const part of path.split('/').filter(Boolean)) {
+    current += `/${part}`;
+    try {
+      if (lstatSync(current).isSymbolicLink()) throw new Error(`--out symlink rejected: ${current}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+}
+
+function outputPaths(args) {
+  const common = realpathSync(git(args['--repo'], 'rev-parse', '--path-format=absolute', '--git-common-dir').trim());
+  const out = absolute(args['--out']);
+  if (!args['--out'].endsWith('.json')) throw new Error('--out must end in .json');
+  if (!out.startsWith(`${common}/axstack/readiness/`)) throw new Error('--out must be under <git-common-dir>/axstack/readiness/');
+  rejectSymlinks(args['--out']);
+  const evidence = out.slice(0, -5);
+  rejectSymlinks(evidence);
+  return { out, evidence };
+}
+
+function writeReport(paths, report) {
+  // Stage inside the allowed evidence folder; replacing the inode also avoids hardlink writes.
+  mkdirSync(paths.evidence, { recursive: true, mode: 0o700 });
+  const staged = `${paths.evidence}/.report.json`;
+  writeFileSync(staged, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+  renameSync(staged, paths.out);
+}
+
+function compareBaseline(report, path) {
+  if (!path) return 0;
+  try {
+    const before = JSON.parse(readFileSync(path, 'utf8'));
+    if (before.header?.criteriaVersion !== report.header.criteriaVersion) throw new Error('criteria version mismatch');
+    const identity = before.header?.repoIdentity;
+    if (!identity || identity.origin !== report.header.repoIdentity.origin || JSON.stringify(identity.roots) !== JSON.stringify(report.header.repoIdentity.roots)) throw new Error('foreign repository');
+    if (!Array.isArray(before.criteria) || before.criteria.some((item) => !item || typeof item.id !== 'string' || !['pass', 'fail', 'unknown', 'n/a'].includes(item.status))) throw new Error('invalid baseline criteria');
+    const previous = new Map(before.criteria.map((item) => [item.id, item.status]));
+    if (previous.size !== before.criteria.length) throw new Error('duplicate baseline criterion');
+    const current = new Map(report.criteria.map((item) => [item.id, item.status]));
+    const changes = [...new Set([...previous.keys(), ...current.keys()])].sort().filter((id) => previous.get(id) !== current.get(id)).map((id) => ({ id, before: previous.get(id) ?? null, after: current.get(id) ?? null }));
+    const regressions = changes.filter((item) => item.before === 'pass' && item.after === 'fail').map((item) => item.id);
+    report.comparison = { changes, regressions };
+    if (regressions.length) console.error(`Readiness regressions: ${regressions.join(', ')}`);
+    return regressions.length ? 10 : 0;
+  } catch (error) {
+    report.comparisonUnavailable = `comparison unavailable: ${error.message}`;
+    console.error(report.comparisonUnavailable);
+    return 2;
+  }
+}
+
 const help = `Usage: bun readiness.js --repo <path> [--rev <ref>] [--baseline <report.json>] --out <path>
 Static assessment of committed JavaScript/TypeScript repository files.
 Flags: --repo, --rev (default HEAD), --baseline, --out, --help.
@@ -224,7 +287,12 @@ try {
       args[argv[i]] = argv[i + 1];
     }
     if (!args['--repo'] || !args['--out']) throw new Error('expected --repo and --out');
-    console.log(JSON.stringify(report(args)));
+    const paths = outputPaths(args);
+    const result = report(args);
+    const code = compareBaseline(result, args['--baseline']);
+    writeReport(paths, result);
+    console.log(JSON.stringify(result));
+    process.exitCode = code;
   }
 } catch (error) {
   console.error(`Readiness error: ${error.message}`);

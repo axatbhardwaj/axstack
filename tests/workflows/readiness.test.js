@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
@@ -214,4 +214,126 @@ test('forge reads distinguish protection, effective rules, permissions and missi
   status(denied, 'security.status-checks', 'unknown', 'gh settings unavailable');
   const missingOrigin = assess(fixture(complete)).report;
   status(missingOrigin, 'security.status-checks', 'unknown', 'no GitHub origin');
+});
+
+test('out rejects outside paths, wrong suffixes and symlinks in report, ancestors or evidence folder', () => {
+  const repo = fixture(complete);
+  const dir = `${repo}/.git/axstack/readiness`;
+  mkdirSync(dir, { recursive: true });
+  for (const out of [`${repo}/report.json`, `${dir}-other/report.json`, `${dir}/report.txt`, `${dir}/../../escape.json`]) {
+    expect(assess(repo, [], { out }).code).toBe(1);
+    expect(() => readFileSync(out)).toThrow();
+  }
+  const target = `${repo}/AGENTS.md`;
+  symlinkSync(target, `${dir}/link.json`);
+  expect(assess(repo, [], { out: `${dir}/link.json` }).code).toBe(1);
+  expect(readFileSync(target, 'utf8')).toBe(complete['AGENTS.md']);
+  symlinkSync(root, `${dir}/parent`);
+  expect(assess(repo, [], { out: `${dir}/parent/report.json` }).code).toBe(1);
+  expect(assess(repo, [], { out: `${dir}/parent/../report.json` }).code).toBe(1);
+  symlinkSync(root, `${dir}/evidence`);
+  expect(assess(repo, [], { out: `${dir}/evidence.json` }).code).toBe(1);
+  const result = assess(repo, [], { out: `${dir}/safe.json` });
+  expect(result.code).toBe(0);
+  expect(JSON.parse(readFileSync(result.out, 'utf8'))).toEqual(result.report);
+});
+
+test('baseline compares same identity and version, names regressions, and preserves reports on incomplete comparison', () => {
+  const repo = fixture(complete);
+  const baseline = assess(repo, [], { out: `${repo}/.git/axstack/readiness/baseline.json` });
+  expect(baseline.code).toBe(0);
+  expect(JSON.parse(readFileSync(baseline.out, 'utf8'))).toEqual(baseline.report);
+  git(repo, 'rm', 'AGENTS.md');
+  git(repo, 'commit', '-qm', 'remove agent guidance');
+  let result = assess(repo, ['--baseline', baseline.out]);
+  expect(result.code).toBe(10);
+  expect(result.report.comparison.regressions).toEqual(['docs.agents']);
+  expect(result.error).toContain('docs.agents');
+  expect(result.report.comparison.changes).toContainEqual({ id: 'docs.agents', before: 'pass', after: 'fail' });
+
+  put(repo, 'AGENTS.md', complete['AGENTS.md']);
+  put(repo, 'tsconfig.json', '{ invalid');
+  git(repo, 'add', '.');
+  git(repo, 'commit', '-qm', 'invalid config');
+  result = assess(repo, ['--baseline', baseline.out]);
+  expect(result.code).toBe(0);
+  expect(result.report.comparison.regressions).toEqual([]);
+  expect(result.report.comparison.changes).toContainEqual({ id: 'style.strict', before: 'pass', after: 'unknown' });
+
+  const foreign = assess(fixture({ ...complete, 'README.md': 'Foreign repository' }));
+  const versioned = `${root}/other-version.json`;
+  put(root, 'other-version.json', { ...baseline.report, header: { ...baseline.report.header, criteriaVersion: 2 } });
+  put(root, 'invalid-report.json', { header: baseline.report.header, criteria: 'invalid' });
+  for (const path of [`${root}/missing.json`, root, foreign.out, versioned, `${root}/invalid-report.json`]) {
+    result = assess(repo, ['--baseline', path]);
+    expect(result.code).toBe(2);
+    expect(result.error).toContain('comparison unavailable');
+    expect(result.report.comparison).toBeUndefined();
+    expect(result.report.comparisonUnavailable).toContain('comparison unavailable');
+    expect(JSON.parse(readFileSync(result.out, 'utf8'))).toEqual(result.report);
+  }
+  const extended = { ...baseline.report, criteria: baseline.report.criteria.filter((item) => item.id !== 'docs.claude').concat({ id: 'removed', status: 'pass' }) };
+  put(root, 'extended.json', extended);
+  result = assess(repo, ['--baseline', `${root}/extended.json`]);
+  expect(result.code).toBe(0);
+  expect(result.report.comparison.changes).toContainEqual({ id: 'removed', before: 'pass', after: null });
+  expect(result.report.comparison.changes).toContainEqual({ id: 'docs.claude', before: null, after: 'pass' });
+});
+
+function manifest(repo, relative = '') {
+  const result = {};
+  for (const name of readdirSync(`${repo}/${relative}`).sort()) {
+    const path = relative ? `${relative}/${name}` : name;
+    if (path === '.git/axstack/readiness') continue;
+    const stat = lstatSync(`${repo}/${path}`);
+    if (stat.isDirectory()) Object.assign(result, manifest(repo, path));
+    else result[path] = stat.isSymbolicLink() ? readlinkSync(`${repo}/${path}`) : new Bun.CryptoHasher('sha256').update(readFileSync(`${repo}/${path}`)).digest('hex');
+  }
+  return result;
+}
+
+test('static runs preserve source HEAD, index, status and tracked/untracked/ignored bytes with optional locks disabled', () => {
+  const repo = fixture({ ...complete, '.gitignore': 'ignored/\n' });
+  const old = git(repo, 'rev-parse', 'HEAD');
+  put(repo, 'AGENTS.md', 'staged guidance');
+  git(repo, 'add', 'AGENTS.md');
+  put(repo, 'README.md', 'unstaged changes');
+  put(repo, 'untracked.md', 'untracked');
+  put(repo, 'ignored/data.txt', 'ignored bytes');
+  symlinkSync('README.md', `${repo}/untracked-link`);
+  const before = { status: git(repo, 'status', '--porcelain', '--ignored'), head: git(repo, 'rev-parse', 'HEAD'), files: manifest(repo) };
+  const shims = `${root}/shims`;
+  mkdirSync(shims);
+  const realGit = Bun.which('git');
+  const log = `${root}/git-calls.jsonl`;
+  writeFileSync(`${shims}/git`, `#!/usr/bin/env bun
+import { appendFileSync } from 'node:fs';
+appendFileSync(process.env.READINESS_GIT_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');
+const result = Bun.spawnSync([${JSON.stringify(realGit)}, ...process.argv.slice(2)], { stdin: 'ignore', stdout: 'inherit', stderr: 'inherit' });
+process.exit(result.exitCode);
+`, { mode: 0o700 });
+  const result = assess(repo, ['--rev', old], { env: { PATH: `${shims}:${process.env.PATH}`, READINESS_GIT_LOG: log } });
+  expect(result.code).toBe(0);
+  expect(result.report.header).toMatchObject({ revision: old, dirty: true });
+  status(result.report, 'docs.agents', 'pass');
+  const after = { status: git(repo, 'status', '--porcelain', '--ignored'), head: git(repo, 'rev-parse', 'HEAD'), files: manifest(repo) };
+  expect(after).toEqual(before);
+  for (const argv of readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse)) expect(argv).toContain('--no-optional-locks');
+  expect(JSON.parse(readFileSync(result.out, 'utf8'))).toEqual(result.report);
+  expect(lstatSync(result.out.slice(0, -5)).isDirectory()).toBe(true);
+});
+
+test('linked worktrees use the common git directory and assess the selected revision', () => {
+  const repo = fixture(complete);
+  const revision = git(repo, 'rev-parse', 'HEAD');
+  const linked = `${root}/linked`;
+  git(repo, 'worktree', 'add', '-b', 'linked', linked);
+  git(linked, 'rm', 'AGENTS.md');
+  git(linked, 'commit', '-qm', 'remove guidance on linked branch');
+  const before = { common: manifest(repo), linked: manifest(linked) };
+  const result = assess(linked, ['--rev', revision], { out: `${repo}/.git/axstack/readiness/linked.json` });
+  expect(result.code).toBe(0);
+  status(result.report, 'docs.agents', 'pass');
+  expect(result.report.header.revision).toBe(revision);
+  expect({ common: manifest(repo), linked: manifest(linked) }).toEqual(before);
 });
