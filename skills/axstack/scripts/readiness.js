@@ -143,6 +143,51 @@ function pillars(criteria) {
   return result;
 }
 
+function forgeStatus(origin) {
+  const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/.exec(origin);
+  const evidence = [];
+  const result = (status, reason) => ({ status, reason, evidence: evidence.length ? evidence : ['origin remote'] });
+  if (!match) return result('unknown', 'no GitHub origin');
+  function api(endpoint) {
+    const argv = [process.env.GH || 'gh', 'api', '--hostname', 'github.com', '--method', 'GET', '--paginate', '--slurp', endpoint];
+    evidence.push(`gh api --method GET --paginate --slurp ${endpoint}`);
+    const response = Bun.spawnSync(argv, { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+    if (response.exitCode !== 0) throw new Error(response.stderr.toString().trim());
+    const pages = JSON.parse(response.stdout.toString());
+    if (!Array.isArray(pages) || !pages.length) throw new Error('incomplete gh response');
+    return pages;
+  }
+  try {
+    const metadata = api(`repos/${match[1]}`);
+    if (metadata.length !== 1 || typeof metadata[0]?.default_branch !== 'string' || !metadata[0].default_branch) throw new Error('missing default branch');
+    const branch = encodeURIComponent(metadata[0].default_branch);
+    try {
+      const protection = api(`repos/${match[1]}/branches/${branch}/protection`);
+      if (protection.length !== 1 || !protection[0] || Array.isArray(protection[0])) throw new Error('incomplete protection response');
+      const required = protection[0].required_status_checks;
+      const checks = [...(required?.contexts ?? []), ...(required?.checks ?? []).map((check) => check.context)];
+      if (checks.some((name) => typeof name === 'string' && name.length)) {
+        evidence.push(`default branch ${metadata[0].default_branch}: required checks ${checks.join(', ')}`);
+        return result('pass', '');
+      }
+    } catch (error) {
+      if (!/Branch not protected.*(?:404)|(?:404).*Branch not protected/i.test(error.message)) throw error;
+      evidence.push('default branch has no legacy protection');
+    }
+    const pages = api(`repos/${match[1]}/rules/branches/${branch}?per_page=100`);
+    if (pages.some((page) => !Array.isArray(page))) throw new Error('incomplete branch rules response');
+    const required = pages.flat().filter((rule) => rule?.type === 'required_status_checks').flatMap((rule) => rule.parameters?.required_status_checks ?? []);
+    if (required.some((check) => typeof check?.context === 'string' && check.context.length)) {
+      evidence.push(`default branch ${metadata[0].default_branch}: active rules require ${required.map((check) => check.context).join(', ')}`);
+      return result('pass', '');
+    }
+    return result('fail', 'needs admin');
+  } catch (error) {
+    evidence.push(error.message);
+    return result('unknown', 'gh settings unavailable');
+  }
+}
+
 function report(args) {
   const repo = args['--repo'];
   const revision = git(repo, 'rev-parse', '--verify', '--end-of-options', `${args['--rev'] ?? 'HEAD'}^{commit}`).trim();
@@ -154,6 +199,9 @@ function report(args) {
     observedAt: new Date().toISOString(), ghObservedAt: new Date().toISOString(), scriptVersion, criteriaVersion,
   };
   const criteria = assess(repo, revision);
+  header.ghObservedAt = new Date().toISOString();
+  const settings = criteria.find((item) => item.id === 'security.status-checks');
+  if (settings.reason !== 'unsupported stack') Object.assign(settings, forgeStatus(origin));
   return { header, criteria, pillars: pillars(criteria) };
 }
 

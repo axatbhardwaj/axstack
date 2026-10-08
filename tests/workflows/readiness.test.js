@@ -5,7 +5,11 @@ const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
 const fakeGh = `${root}/gh`;
 writeFileSync(fakeGh, `#!/usr/bin/env bun
-console.error('fixture: permission denied'); process.exit(1);
+import { appendFileSync } from 'node:fs';
+if (process.env.GH_LOG) appendFileSync(process.env.GH_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');
+const response = JSON.parse(process.env.GH_FIXTURE ?? '{}')[process.argv.at(-1)];
+if (!response || response.error) { console.error(response?.error ?? 'fixture: permission denied'); process.exit(1); }
+console.log(JSON.stringify(response.pages ?? [response.data]));
 `, { mode: 0o700 });
 
 function command(cwd, argv) {
@@ -177,4 +181,37 @@ test('help describes flags and static writes; invalid CLI and revisions fail', (
   expect(assess(repo, ['--rev', 'no-such-revision']).code).toBe(1);
   const outside = Bun.spawnSync(['bun', script, '--repo', root, '--out', `${root}/bad.json`], { stdout: 'pipe', stderr: 'pipe' });
   expect(outside.exitCode).toBe(1);
+});
+
+test('forge reads distinguish protection, effective rules, permissions and missing administration', () => {
+  const repo = fixture(complete);
+  git(repo, 'remote', 'add', 'origin', 'https://github.com/example/readiness.git');
+  const metadata = { 'repos/example/readiness': { data: { default_branch: 'release/main' } } };
+  const protection = 'repos/example/readiness/branches/release%2Fmain/protection';
+  const rules = 'repos/example/readiness/rules/branches/release%2Fmain?per_page=100';
+  const cases = [
+    [{ [protection]: { data: { required_status_checks: { contexts: ['test'] } } } }, 'pass', ''],
+    [{ [protection]: { data: { required_status_checks: null } }, [rules]: { pages: [[], [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'ci' }] } }]] } }, 'pass', ''],
+    [{ [protection]: { error: 'gh: Branch not protected (HTTP 404)' }, [rules]: { data: [] } }, 'fail', 'needs admin'],
+    [{ [protection]: { data: { required_status_checks: { contexts: [], checks: [] } } }, [rules]: { data: [] } }, 'fail', 'needs admin'],
+    [{ [protection]: { error: 'gh: Resource not accessible (HTTP 403)' } }, 'unknown', 'gh settings unavailable'],
+    [{ [protection]: { error: 'gh: Not Found (HTTP 404)' } }, 'unknown', 'gh settings unavailable'],
+    [{ [protection]: { data: { required_status_checks: null } }, [rules]: { error: 'gh: permission denied' } }, 'unknown', 'gh settings unavailable'],
+  ];
+  const log = `${root}/gh-calls.jsonl`;
+  for (const [responses, expected, reason] of cases) {
+    const { report, code } = assess(repo, [], { env: { GH_FIXTURE: JSON.stringify({ ...metadata, ...responses }), GH_LOG: log } });
+    expect(code).toBe(0);
+    status(report, 'security.status-checks', expected, reason);
+    expect(Date.parse(report.header.ghObservedAt)).toBeGreaterThanOrEqual(Date.parse(report.header.observedAt));
+  }
+  for (const call of readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse)) {
+    expect(call).toContain('--paginate');
+    expect(call).toContain('--slurp');
+    expect(call).toContain('GET');
+  }
+  const denied = assess(repo).report;
+  status(denied, 'security.status-checks', 'unknown', 'gh settings unavailable');
+  const missingOrigin = assess(fixture(complete)).report;
+  status(missingOrigin, 'security.status-checks', 'unknown', 'no GitHub origin');
 });
