@@ -153,6 +153,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // contract replacing measurement mechanics; exact total.
   // 20261008-cli-lessons A3 repair1: -5 bytes restores the total definition
   // in the output contract and shortens equivalent branch examples; exact total.
-  expect(total).toBeLessThanOrEqual(361158);
+  // 20261008-cli-lessons B1c: +849 measured bytes for the Readiness lens;
+  // exact aggregate delta; always-loaded unchanged.
+  // 20261008-cli-lessons B1c repair1: +32 bytes corrects the two-mode
+  // output contract; exact measured ceiling; lens delta +881.
+  expect(total).toBeLessThanOrEqual(362039);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
