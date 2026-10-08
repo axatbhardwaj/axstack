@@ -7,7 +7,8 @@
   Only the recorded owning watch thread merges, including `axstack-owner`
   for authorized standalone maintenance. Other roles never acquire merge authority.
 - `axstack-reviewer-primary` and `axstack-reviewer-peer` are the ordered
-  peer pair. Peer review uses both; authored review uses this table:
+  peer pair. In `mixed`, the cross-provider pair is Sol high followed by Opus low.
+  Peer review uses both; authored review uses this table:
 
   | Preset | Author class | Reviewer (class/effort) |
   | --- | --- | --- |

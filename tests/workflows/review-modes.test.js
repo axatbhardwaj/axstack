@@ -47,12 +47,18 @@ test('review modes: peer dispatch requires the primary and peer seats', () => {
   [[/axstack-reviewer-peer/, 'axstack-reviewer-secondary'], [/exactly two/i, 'exactly one']]);
 });
 
-test('review modes: mixed same-model peer independence requires isolated sessions', () => {
-  checkRule(read('skills/axstack-review/SKILL.md'), (text) => requires(text,
-    /mixed/i, /(?:share a model|same model)/i, /independence/i,
+test('review modes: mixed cross-provider peer independence requires isolated sessions', () => {
+  const raw = read('skills/axstack-review/SKILL.md');
+  const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
+  checkRule(peer, (text) => requires(text,
+    /mixed/i, /cross-provider/i, /Sol[- ]high/i, /Opus[- ]low/i, /independence/i,
     /separate sessions/i, /identical brief/i, /isolated first pass/i),
-  'Mixed peer reviewers use the same model, with independence requiring separate sessions, the identical brief and an isolated first pass.',
-  [[/separate sessions/i, 'shared sessions'], [/isolated first pass/i, 'shared first pass']]);
+  'The mixed cross-provider peer pair uses Sol-high and Opus-low, with independence requiring separate sessions, the identical brief and an isolated first pass.',
+  [[/cross-provider/i, 'same-provider'], [/Sol[- ]high/i, 'Sol low'],
+    [/Opus[- ]low/i, 'Opus high'], [/separate sessions/i, 'shared sessions'],
+    [/identical brief/i, 'different briefs'], [/isolated first pass/i, 'shared first pass']],
+  [/cross-provider/i, /Sol[- ]high/i, /Opus[- ]low/i, /separate sessions/i,
+    /identical brief/i, /isolated first pass/i]);
 });
 
 test('review modes: authored routing follows actual author provenance', () => {
@@ -164,7 +170,7 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'sol', 'high'], ['codex', 'sol', 'high']],
+    mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'low']],
     'codex-only': [['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
     'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   };
@@ -242,7 +248,7 @@ test('review modes: peer and owner fixtures match the selected preset', () => {
         if (!['primary', 'peer'].includes(seat.toLowerCase())) problems.push(`${context}: invalid peer seat ${seat}`);
       }
       for (const [, seat, provider, model, effort] of text.matchAll(
-        /(?:axstack-)?reviewer-(primary|peer)(?:[=:]|\s+runs)\s*(codex|claude)\/([a-z0-9.-]+)(?:\s+(high|medium|xhigh))?/gi,
+        /(?:axstack-)?reviewer-(primary|peer)(?:[=:]|\s+runs)\s*(codex|claude)\/([a-z0-9.-]+)(?:\s+(high|medium|xhigh|low))?/gi,
       )) {
         const role = roles.find(({ id }) => id === `axstack-reviewer-${seat.toLowerCase()}`);
         if (provider !== role.provider || deriveModelClass(model) !== role.modelClass

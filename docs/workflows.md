@@ -119,7 +119,7 @@ role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Sol high | Astra high / Opus xhigh | Sonnet high + Sol high |
+| `mixed` | Sol high | Sol high; Opus low | Astra high / Opus xhigh | Sonnet high + Sol high |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
 | `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high (Sol absent) |
 
@@ -147,7 +147,8 @@ later installation changes without re-resolution.
 
 Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
-selected preset. The mixed peer coordinator and review-lane binding
+selected preset. The mixed cross-provider peer pair is Sol high followed by
+Opus low. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
 is used in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.

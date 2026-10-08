@@ -15,7 +15,7 @@ coordination. You can start at the phase you need.
 | Failure mode | How Axstack responds |
 | --- | --- |
 | Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
-| Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and mixed peer review uses two isolated Sol-high sessions at the exact revision. |
+| Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and mixed peer review pairs Sol high with Opus low in isolated sessions at the exact revision. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
 | Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
 

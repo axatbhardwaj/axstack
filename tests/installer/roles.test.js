@@ -543,7 +543,7 @@ test('readiness rejects a null model on a non-intentional row such as an investi
 
 test('installed presets expose the peer seat without changing authored routes', () => {
   for (const [preset, peer] of [
-    ['mixed', { provider: 'codex', modelClass: 'sol', modeId: 'full-access', thinkingOptionId: 'high' }],
+    ['mixed', { provider: 'claude', modelClass: 'opus', modeId: 'bypassPermissions', thinkingOptionId: 'low' }],
     ['codex-only', { provider: 'codex', modelClass: 'luna', modeId: 'full-access', thinkingOptionId: 'xhigh' }],
     ['claude-only', { provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions', thinkingOptionId: 'high' }],
   ]) {
@@ -557,7 +557,9 @@ test('installed presets expose the peer seat without changing authored routes', 
     const { roles } = JSON.parse(bytes);
     expect(roles.find(({ id }) => id === 'axstack-reviewer-peer')).toMatchObject(peer);
     if (preset === 'mixed') {
-      expect(roles.find(({ id }) => id === 'axstack-owner')).toMatchObject(peer);
+      expect(roles.find(({ id }) => id === 'axstack-owner')).toMatchObject({
+        provider: 'codex', modelClass: 'sol', modeId: 'full-access', thinkingOptionId: 'high',
+      });
     }
     const bundled = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`)).roles;
     expect(assessInstalledRoleSnapshot(bytes, preset, bundled)).toEqual({ ready: true, gaps: [] });

@@ -27,13 +27,21 @@ rule('standing release authority stays within its repository', autopilot,
   [/standing authority/i, /applies only/i, /that repository/i],
   'Standing authority applies only within that repository.',
   [[/applies only/i, 'applies broadly'], [/that repository/i, 'every repository']]);
-rule('this repository releases shipped skill or src changes on io, iobook and vps', 'AGENTS.md',
+rule('this repository releases shipped skill or src changes on io, iobook, iobox and vps', 'AGENTS.md',
   [/when a run changes/i, /shipped skills/i, /or `?src\/`?/i, /release and reinstall/i,
-    /on `?io`?\b/i, /desktop/i, /\biobook\b/i, /laptop/i, /`?vps`?/i, /SSH alias/i],
-  'On io (desktop), iobook (laptop, SSH alias) and vps (SSH alias), release and reinstall when a run changes shipped skills or src/.',
+    /on `?io`?\b/i, /desktop/i, /\biobook\b/i, /laptop/i, /\biobox\b/i,
+    /agent box/i, /SSH as `?xzat@iobox`?/i, /`?vps`?/i, /SSH alias/i],
+  'On io (desktop), iobook (laptop, SSH alias), iobox (agent box, SSH as xzat@iobox) and vps (SSH alias), release and reinstall when a run changes shipped skills or src/.',
   [[/release and reinstall/i, 'skip release and reinstall'], [/when a run changes/i, 'when a run preserves'],
     [/or `?src\/`?/i, 'and src/'], [/on `?io`?\b/i, 'on a guessed host'],
-    [/\biobook\b/i, 'a guessed host'], [/laptop/i, 'unknown device']]);
+    [/\biobook\b/i, 'a guessed host'], [/laptop/i, 'unknown device'],
+    [/\biobox\b/gi, 'a guessed host'], [/SSH as `?xzat@iobox`?/i, 'SSH with a guessed user']]);
+rule('release verification covers io, iobook, iobox and vps under recorded authority', 'AGENTS.md',
+  [/reinstall and verify/i, /\bio\b/i, /\biobook\b/i, /\biobox\b/i, /\bvps\b/i,
+    /only under/i, /release and host-mutation authority/i, /recorded for that run/i],
+  'On io, iobook, iobox and VPS, reinstall and verify only under release and host-mutation authority recorded for that run.',
+  [[/reinstall and verify/i, 'skip reinstall and verify'], [/\biobox\b/i, 'a guessed host'],
+    [/only under/i, 'without authority']]);
 rule('docs-only runs do not release', 'AGENTS.md',
   [/docs-only run/i, /release/i],
   'A docs-only run does not trigger a release.', [[/does not/i, 'does']], /does not/i);
