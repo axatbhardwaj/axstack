@@ -337,7 +337,7 @@ test('static runs preserve source HEAD, index, status and tracked/untracked/igno
   writeFileSync(`${shims}/git`, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
 appendFileSync(process.env.READINESS_GIT_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');
-const result = Bun.spawnSync([${JSON.stringify(realGit)}, ...process.argv.slice(2)], { stdin: 'ignore', stdout: 'inherit', stderr: 'inherit' });
+const result = Bun.spawnSync([${JSON.stringify(realGit)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
 process.exit(result.exitCode);
 `, { mode: 0o700 });
   const result = assess(repo, ['--rev', old], { env: { PATH: `${shims}:${process.env.PATH}`, READINESS_GIT_LOG: log } });
@@ -496,4 +496,33 @@ console.log(await Bun.stdin.text());
   expect(result.report.header.dirty).toBe(true);
   expect(() => readFileSync(marker)).toThrow();
   expect(manifest(repo)).toEqual(before);
+});
+
+test('committed text reads are batched and binary files cannot declare prose commands', () => {
+  const docs = Object.fromEntries(Array.from({ length: 40 }, (_, index) => [`docs/note-${index}.md`, `Ordinary note ${index}`]));
+  const repo = fixture({ ...complete, ...docs, 'package.json': {}, 'docs/odd\nfilename.md': 'Ordinary note with an unusual filename' });
+  put(repo, 'docs/binary.md', 'placeholder');
+  put(repo, 'assets/data.bin', 'placeholder');
+  const binary = new Uint8Array([0, ...new TextEncoder().encode('npm test and npm run build')]);
+  writeFileSync(`${repo}/docs/binary.md`, binary);
+  writeFileSync(`${repo}/assets/data.bin`, new Uint8Array(1024 * 1024));
+  git(repo, 'add', '.');
+  git(repo, 'commit', '-qm', 'binary fixtures');
+  const shim = `${root}/batch-git`;
+  mkdirSync(shim);
+  const log = `${root}/batch-git-calls.jsonl`;
+  writeFileSync(`${shim}/git`, `#!/usr/bin/env bun
+import { appendFileSync } from 'node:fs';
+appendFileSync(process.env.READINESS_GIT_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');
+const result = Bun.spawnSync([${JSON.stringify(Bun.which('git'))}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
+process.exit(result.exitCode);
+`, { mode: 0o700 });
+  const { code, report } = assess(repo, [], { env: { PATH: `${shim}:${process.env.PATH}`, READINESS_GIT_LOG: log } });
+  expect(code).toBe(0);
+  status(report, 'docs.claude', 'pass');
+  status(report, 'security.pr-tests', 'pass');
+  status(report, 'testing.test', 'fail', 'missing test script');
+  const reads = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse).filter((argv) => argv.includes('cat-file'));
+  expect(reads).toHaveLength(1);
+  expect(reads[0]).toContain('--batch');
 });

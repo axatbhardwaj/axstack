@@ -4,11 +4,37 @@ import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, rename
 const scriptVersion = '1.0.0';
 const criteriaVersion = 1;
 
-function git(repo, ...args) {
+function gitOutput(repo, args, stdin = 'ignore') {
   const argv = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false', '-C', repo, ...args];
-  const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin: 'ignore' });
+  const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim());
-  return result.stdout.toString();
+  return result.stdout;
+}
+
+function git(repo, ...args) {
+  return gitOutput(repo, args).toString();
+}
+
+function readTextBlobs(repo, ids) {
+  const unique = [...new Set(ids)];
+  const text = new Map();
+  if (!unique.length) return text;
+  const data = gitOutput(repo, ['cat-file', '--batch'], new TextEncoder().encode(`${unique.join('\n')}\n`));
+  let offset = 0;
+  for (const oid of unique) {
+    const end = data.indexOf(10, offset);
+    const header = end < 0 ? null : /^([0-9a-f]+) blob (\d+)$/.exec(data.subarray(offset, end).toString());
+    const size = Number(header?.[2]);
+    const start = end + 1;
+    if (header?.[1] !== oid || !Number.isSafeInteger(size) || size < 0 || data[start + size] !== 10) throw new Error('incomplete git blob response');
+    const blob = data.subarray(start, start + size);
+    offset = start + size + 1;
+    if (blob.includes(0)) continue;
+    try { text.set(oid, new TextDecoder('utf-8', { fatal: true }).decode(blob)); }
+    catch { /* Binary content is not configuration or prose. */ }
+  }
+  if (offset !== data.length) throw new Error('unexpected git blob response');
+  return text;
 }
 
 function normalizeOrigin(origin, repo) {
@@ -31,7 +57,10 @@ function snapshot(repo, revision) {
     const [mode, type, oid] = entry.slice(0, tab).split(' ');
     return [entry.slice(tab + 1), { mode, type, oid }];
   }));
-  const cache = new Map();
+  const ids = [...entries].filter(([path, entry]) => entry.type === 'blob' && (
+    /\.md$/i.test(path) || ['package.json', 'tsconfig.json', 'yarn.lock'].includes(path) || /^\.github\/workflows\/[^/]+\.ya?ml$/.test(path)
+  )).map(([, entry]) => entry.oid);
+  let text;
   return {
     revision,
     paths: [...entries.keys()],
@@ -39,8 +68,8 @@ function snapshot(repo, revision) {
     mode: (path) => entries.get(path)?.mode,
     read(path) {
       if (entries.get(path)?.type !== 'blob') return '';
-      if (!cache.has(path)) cache.set(path, git(repo, 'cat-file', 'blob', entries.get(path).oid));
-      return cache.get(path);
+      text ??= readTextBlobs(repo, ids);
+      return text.get(entries.get(path).oid) ?? '';
     },
   };
 }
