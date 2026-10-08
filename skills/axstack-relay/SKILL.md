@@ -42,7 +42,10 @@ Choose the applicable message type:
 - **Blocked on a person:** follow watch §5's 60-minute clocks and once-per-key
   rule; a blocked ping requests no reply and creates no decision hold.
 
-Relay eligibility is limited to user-decision holds, serious-risk holds, the
+Decision responses must remain separate from proactive Notification policy
+categories.
+
+Proactive relay eligibility is limited to user-decision holds, serious-risk holds, the
 60-minute blocked ping and capped peer PR milestones under the Notification policy.
 Under the recorded Notification policy, `verification not proven` is a
 user-decision hold. The 60-minute blocked ping is a notification-only category
@@ -130,6 +133,14 @@ Exclude chat IDs, credentials, and Telegram targets from the reply tag.
 If either identity is unknown or mismatched, hold the send.
 
 ## Decision cards and receipts
+
+For `verification not proven` and unresolved-rating decision holds, the driver
+must follow Relay's decision-card procedure,
+binding the sent run receipt and each option's scope to the exact PR head and base.
+For a verification decision, a forwarded choice must pass Relay's four reply checks
+and acknowledgement-before-action rule before settling only its bound cause.
+A changed PR head or base must supersede its open verification decision card,
+reissuing only if a decision is still needed.
 
 Each card must carry exactly one decision.
 The card ID must be `<run id>/<n>`, never reused in the driver thread.
@@ -259,6 +270,8 @@ The driver must send one acknowledgement per forwarded reply before any side
 effect, and one outcome per decided card.
 An explain answer, confirmation card or fresh superseding card must serve as
 that reply's acknowledgement.
+For own PRs, the driver must send the required decision outcome as resolution
+of the bound cause, rather than a routine merge-ready or merged milestone.
 An outcome that is itself merge-ready or merged must count as that milestone
 and be sent once.
 Queued, acknowledged and done are distinct: Hermes confirms only queueing,

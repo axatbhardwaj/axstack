@@ -280,6 +280,15 @@ The driver first closes a verification gap itself: run the check, re-dispatch
 review, or return the work to the author. Only a gap the driver cannot close
 becomes a `verification not proven` card bound to head and base.
 The card names what is unproven, why, and the action that would settle it.
+
+For `verification not proven` and unresolved-rating decision holds, the driver
+must follow [Relay](../axstack-relay/SKILL.md)'s decision-card procedure,
+binding the sent run receipt and each option's scope to the exact PR head and base.
+For a verification decision, a forwarded choice must pass [Relay](../axstack-relay/SKILL.md)'s four reply checks
+and acknowledgement-before-action rule before settling only its bound cause.
+A changed PR head or base must supersede its open verification decision card,
+reissuing only if a decision is still needed.
+
 The user's reply in the driver thread or on the forge clears only that
 verification cause. Record `user-accepted unproven: <item>`, never as a pass.
 Treat the accepted item as settled for this head and base and merge when every

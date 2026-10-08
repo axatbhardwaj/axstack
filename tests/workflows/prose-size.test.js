@@ -171,6 +171,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // M2 repair1: +2473 measured bytes for driver policy parity and bounded
   // uncertain-rating decisions; exact aggregate, always-loaded unchanged.
   // M2 rebase onto 67283e5c: exact measured aggregate 379228; keep relay-card history.
-  expect(total).toBeLessThanOrEqual(379228);
+  // M2 relay-card reconciliation: exact measured aggregate 380527; both protocols retained.
+  // M2 reconciliation simplification: exact final aggregate 380526; no headroom.
+  expect(total).toBeLessThanOrEqual(380526);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

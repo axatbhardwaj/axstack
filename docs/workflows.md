@@ -294,7 +294,7 @@ user-decision hold (including spec or npm approval and a genuine blocker after
 bounded safe recovery) or a serious-risk hold immediately.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and
 completion always stay in the T3 driver thread.
-Relay eligibility is limited to user-decision holds, serious-risk holds, the
+Proactive relay eligibility is limited to user-decision holds, serious-risk holds, the
 60-minute blocked ping and capped peer PR milestones under the Notification policy.
 Under the recorded Notification policy, `verification not proven` is a
 user-decision hold. The 60-minute blocked ping is a notification-only category
@@ -304,12 +304,16 @@ merge-ready/merged milestones per run, deduplicated across implementation and re
 See [Relay operations](host-operations.md#notifications-and-relay) for native
 delivery, deduplication, and verified reply handling.
 
+Decision responses must remain separate from proactive Notification policy
+categories.
 Decision responses must be authorized by the user's own reply, outside the
 two-milestone cap and needing no Notification policy entry. Send one
 acknowledgement per forwarded reply before any side effect and one outcome
 per decided card. An explain answer, confirmation card or fresh superseding
 card serves as that reply's acknowledgement. Identical repeat replies get T3-only
 acknowledgement; different later choices get "already decided as N" in Telegram.
+For own PRs, the driver must send the required decision outcome as resolution
+of the bound cause, rather than a routine merge-ready or merged milestone.
 An outcome that is itself merge-ready or merged counts as that milestone and
 is sent once. Queued, acknowledged and done are distinct.
 
@@ -412,6 +416,15 @@ The driver first closes a verification gap itself: run the check, re-dispatch
 review, or return the work to the author. Only a gap the driver cannot close
 becomes a `verification not proven` card bound to head and base.
 The card names what is unproven, why, and the action that would settle it.
+
+For `verification not proven` and unresolved-rating decision holds, the driver
+must follow [Relay](../skills/axstack-relay/SKILL.md)'s decision-card procedure,
+binding the sent run receipt and each option's scope to the exact PR head and base.
+For a verification decision, a forwarded choice must pass [Relay](../skills/axstack-relay/SKILL.md)'s four reply checks
+and acknowledgement-before-action rule before settling only its bound cause.
+A changed PR head or base must supersede its open verification decision card,
+reissuing only if a decision is still needed.
+
 The user's reply in the driver thread or on the forge clears only that
 verification cause. Record `user-accepted unproven: <item>`, never as a pass.
 Treat the accepted item as settled for this head and base and merge when every

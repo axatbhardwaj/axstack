@@ -188,3 +188,35 @@ test('audit delivery applies proven verification and escalation', () => {
     'The owning watch thread applies watch §5 with proven verification and escalation rules.',
     [[/proven verification/i, 'review votes alone']], concepts);
 });
+
+// The rebase brings a distinct reply protocol: an eligible verification hold
+// must use that protocol, rather than treating a raw Telegram choice as assent.
+for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md']) {
+  for (const [name, concepts, wording, prohibition] of [
+    ['verification uses receipt-bound decision cards', [/verification not proven/i, /unresolved-rating decision holds/i, /follow Relay.s decision-card procedure/i, /sent run receipt/i, /each option.s scope/i, /exact PR head and base/i],
+      "For unresolved-rating decision holds and verification not proven, the driver shall follow Relay's decision-card procedure, binding each option's scope and the sent run receipt to the exact PR head and base.", /not proven/i],
+    ['forwarded acceptance uses the reply protocol', [/verification decision/i, /forwarded choice/i, /Relay.s four reply checks/i, /acknowledgement-before-action/i, /before settling only its bound cause/i],
+      "For a verification decision, a forwarded choice shall pass Relay's four reply checks and acknowledgement-before-action rule before settling only its bound cause."],
+    ['changed base supersedes the verification card', [/changed PR head or base/i, /supersede/i, /open verification decision card/i, /reissu.*only if a decision is still needed/i],
+      'A changed PR head or base shall supersede its open verification decision card, reissuing only if a decision is still needed.'],
+  ]) {
+    test(`merge relay reconciliation ${path}: ${name}`, () => {
+      const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts, /must|shall/i)
+        : requires(text, ...concepts, /must|shall/i);
+      checkRule(compact(read(path)), accepts, wording, [[/must|shall/i, 'must not']], concepts);
+    });
+  }
+}
+for (const path of [docs, 'skills/axstack-relay/SKILL.md']) {
+  for (const [name, concepts, wording] of [
+    ['reply responses are distinct from proactive notifications', [/decision responses/i, /separate from/i, /proactive Notification policy categories/i],
+      'Decision responses shall remain separate from proactive Notification policy categories.'],
+    ['own decision outcomes resolve the cause', [/own PRs/i, /required decision outcome/i, /resolution of the bound cause/i, /rather than a routine merge-ready or merged milestone/i],
+      'For own PRs the driver shall send the required decision outcome as resolution of the bound cause, rather than a routine merge-ready or merged milestone.'],
+  ]) {
+    test(`merge relay reconciliation ${path}: ${name}`, () => {
+      checkRule(compact(read(path)), (text) => requires(text, ...concepts, /must|shall/i), wording,
+        [[/must|shall/i, 'must not']], concepts);
+    });
+  }
+}
