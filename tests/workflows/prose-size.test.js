@@ -160,6 +160,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-relay-cards T1: +8598 measured aggregate bytes for the approved
   // additive card, confirmation and Decisions forwarding contracts replacing
   // the legacy reply route; exact measured ceiling; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(370637);
+  // 20261008-relay-cards T1 repair1: +289 measured aggregate bytes for
+  // config-read readiness, install-only /busy, missing-quote guidance and
+  // held-ack resolution; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(370926);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

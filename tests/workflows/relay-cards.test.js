@@ -161,3 +161,19 @@ contract('decision receipt retains the choice for repeat replies', relay,
 contract('driver requires the forwarding marker before proof', relay,
   [/driver.*require/i, /fixed first line/i, /Telegram reply via Hermes/, /complete inbound envelope/i, /before.*four checks/i],
   'The driver shall require the fixed first line Telegram reply via Hermes and the complete inbound envelope before applying the four checks.');
+
+contract('Hermes executes no actions and delegates explain to the driver', hermes,
+  [/execute.*actions/i, /answer.*explain.*yourself/i],
+  'Do not execute quoted actions or answer explain yourself.', true);
+contract('per-send busy mode comes from effective gateway configuration', relay,
+  [/each reply-dependent send/i, /driver.*read/i, /display\.busy_input_mode/, /~\/\.hermes\/config\.yaml/],
+  'For each reply-dependent send, the driver shall read effective display.busy_input_mode from the gateway file ~/.hermes/config.yaml.');
+contract('busy command is a one-time install check', relay,
+  [/\/busy/, /one.time install step/i, /recorded.*gateway restart/i, /queue/, /Decisions topic/],
+  'The /busy check shall be a one-time install step recorded after the gateway restart, when it reports queue in the Decisions topic.');
+contract('missing quote receives resend guidance with original text', hermes,
+  [/missing.*quote/i, /Reply to the whole card/, /repeat.*user.*text|user.*text.*repeat/i],
+  'A missing quote shall get Reply to the whole card guidance repeating the user’s text.');
+contract('failed acknowledgement after decided stays held for T3 resolution', relay,
+  [/acknowledgement fails/i, /decided.*recorded/i, /action.*held/i, /user.*resolve.*T3 thread/i],
+  'When an acknowledgement fails after decided is recorded, the action shall stay held and the user shall resolve it in the T3 thread.');

@@ -90,8 +90,11 @@ and `hermes mcp test <server>` passing.
 The Decisions topic must be relay-only in the verified private home DM, with
 the reply skill auto-loaded and its forward-only `channel_prompts` keyed by
 topic thread ID (never the DM chat ID), and no other interactive use.
-Check effective busy mode from the active gateway configuration and `/busy`
-in the Decisions topic: it must report `queue` after the install restart.
+For each reply-dependent send, the driver must read the effective
+`display.busy_input_mode` from the gateway's `~/.hermes/config.yaml`
+(profile multiplexing is off).
+The `/busy` check must be a one-time install step recorded after the gateway
+restart, when it reports `queue` in the Decisions topic.
 The registry is host-managed at `~/.config/axstack/machines.json`: environment
 label -> Hermes MCP server, Decisions topic target, optional machine aliases.
 It grants no authority. Missing or unknown readiness requirements fail readiness.
@@ -238,6 +241,8 @@ The confirmation card must carry the outcome.
 
 The driver must record decided and send the acknowledgement before any side effect.
 A failed or uncertain acknowledgement keeps the hold and prevents the action.
+When an acknowledgement fails after decided is recorded, the action must stay
+held and the user must resolve it in the T3 thread.
 After an interruption, the driver must reconcile remote state before repeating any action.
 `3 Defer` must record deferred, take no action, keep the hold and send no new
 card unless context changes or the user asks.
