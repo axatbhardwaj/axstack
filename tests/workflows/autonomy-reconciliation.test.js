@@ -58,6 +58,25 @@ const familyProbes = familyHoldouts.flatMap((hedge) => [
   [/^/, hedge.endsWith(' to') ? `${hedge} ` : `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
 ]);
 
+// R4 concrete M1 union from both reports; prior probe identities stay intact.
+const frequencyScopeHoldouts = [
+  'frequently', 'occasionally', 'commonly', 'regularly',
+  'at times', 'on occasion', 'from time to time', 'now and then', 'most times',
+  'in some cases', 'in many cases', 'in certain cases', 'in rare cases', 'in most cases',
+  'in some situations', 'in many situations', 'in certain situations', 'in rare situations', 'in most situations',
+  'in some instances', 'in many instances', 'in certain instances', 'in rare instances', 'in most instances',
+  'in some scenarios', 'in many scenarios', 'in certain scenarios', 'in rare scenarios', 'in most scenarios',
+  'in normal course', 'in ordinary course', 'in the normal course', 'in the ordinary course',
+  'by and large', 'on the whole',
+  'with few exceptions', 'barring exceptions', 'with rare exceptions', 'save in exceptional cases',
+  'depending on circumstances', 'depending on the situation',
+  'case by case', 'case-by-case', 'on a case-by-case basis',
+  'should the need arise', 'within reason', 'to a reasonable degree', 'to a reasonable extent',
+];
+const frequencyScopeProbes = frequencyScopeHoldouts.flatMap((hedge) => [
+  [/^/, `${hedge}, `], [/[.!?]?$/, ` ${hedge}`],
+]);
+
 // Finite scope-introducer boundary, independent of the hedge's adjective.
 // These declared factual uses preserve the established conditions/classifications;
 // they are not learned from the source under test. Added listed introducers fail.
@@ -65,8 +84,8 @@ const familyProbes = familyHoldouts.flatMap((hedge) => [
 const factualScopes = /\b(?:when the forge digest is unchanged|(?:when|if) present|when prerequisites and authority are verified|as (?:incomplete|healthy|automatic_unchanged_wake_messages|settlement violations)|only when authorized)\b/gi;
 const addedScope = /\b(?:if|when(?:ever)?|where(?:ver)?|as|to the (?:extent|degree)|insofar|provided|providing|assuming|subject to)\b/i;
 const weakeningPatterns = [
-  /\b(?:unless|except)\b/i,
-  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|mostly|mainly|in (?:most|the majority of) cases|most of the time|in the usual case|in principle|in general|for the most part|by default)\b/i,
+  /\b(?:unless|except(?:ions?)?|barring|save in)\b/i,
+  /\b(?:generally|typically|normally|usually|ideally|preferably|optionally|often|sometimes|ordinarily|mostly|mainly|frequently|occasionally|commonly|regularly|at times|on occasion|from time to time|now and then|most times|in (?:some|many|certain|rare|most|the majority of) (?:cases|situations|instances|scenarios)|in (?:the )?(?:normal|ordinary) course|most of the time|in the usual case|in principle|in general|for the most part|by default|by and large|on the whole|depending on|case[- ]by[- ]case|should the need arise|within reason|to a reasonable (?:degree|extent))\b/i,
   /\b(?:tr(?:y|ies|ied|ying)|aim(?:s|ed|ing)?|attempt(?:s|ed|ing)?|striv(?:e|es|ed|ing|en)|strove|seek(?:s|ing)?|sought|endeavou?r(?:s|ed|ing)?) to\b/i,
   /\b(?:on (?:a )?best[- ]efforts? basis|with (?:reasonable|best) efforts?|mak(?:e|es|ing) (?:an? )?(?:(?:reasonable|best) )?efforts? to|time (?:permitting|allowing))\b/i,
   /\bat(?: [\w'’]+){0,4} discretion\b/i,
@@ -87,7 +106,7 @@ function rule(name, path, concepts, rewording, inversions, mask = /$^/, contexts
       && requires(sentence.replace(mask, ''), /^/));
     checkRule(source, accepts, rewording,
       [...inversions, [/[.!?]?$/, ' unless convenient'], [/[.!?]?$/, ' except when inconvenient'],
-        ...softenerProbes, ...familyProbes], required);
+        ...softenerProbes, ...familyProbes, ...frequencyScopeProbes], required);
     for (const context of contexts) {
       const reworded = sentences(source).filter(accepts)
         .reduce((text, target) => text.replace(target, context), source);
