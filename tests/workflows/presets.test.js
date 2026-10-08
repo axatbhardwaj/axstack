@@ -59,8 +59,8 @@ const expected = {
     g(null, 'high'),
     a('sonnet', 'high'), c('luna', 'xhigh'),
     a('sonnet', 'high'),
-    a('sonnet', 'high'), a('sonnet', 'high'), c('sol', 'high'),
-    a('sonnet', 'high'),
+    a('haiku', 'high'), a('sonnet', 'high'), c('sol', 'high'),
+    a('haiku', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
@@ -105,10 +105,10 @@ const expected = {
     a('sonnet', 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
-    a('sonnet', 'high'),
+    a('haiku', 'high'),
     a('sonnet', 'high'),
     a(null, 'high'),
-    a('sonnet', 'high'),
+    a('haiku', 'high'),
     a('sonnet', 'high'),
     a(null, 'high'),
     a('opus', 'medium'),
@@ -141,7 +141,8 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
       [provider, modelClass ?? model, modeId, thinkingOptionId])).toEqual(expected[preset]);
     for (const profile of data.roles) {
       expect(Object.keys(profile)).toEqual(profile.modelClass
-        ? ['id', 'name', 'provider', 'modeId', 'thinkingOptionId', 'notes', 'modelClass']
+        ? ['id', 'name', 'provider', 'modeId', 'thinkingOptionId', 'notes', 'modelClass',
+          ...(Object.hasOwn(profile, 'model') ? ['model'] : [])]
         : ['id', 'name', 'provider', 'model', 'modeId', 'thinkingOptionId', 'notes']);
       expect(profile.name).toBeTruthy();
       expect(profile.notes).toBeTruthy();
@@ -153,7 +154,7 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
   for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     for (const role of roles.filter(({ provider, modelClass }) => provider === 'claude' && modelClass)) {
-      expect(role.notes, `${preset}: ${role.id}`).toContain('T3 resolves Claude classes from saved capabilities; a Claude rejection holds');
+      expect(role.notes, `${preset}: ${role.id}`).toMatch(/T3 (?:resolves Claude classes|uses the exact claude-haiku-5-5 pin) from saved capabilities; a Claude rejection holds/);
       expect(role.notes).not.toContain('Codex rejection');
     }
   }

@@ -299,7 +299,11 @@ the user explicitly changes it and accepts the resulting evidence invalidation.
 
 The `mixed` and `claude-only` presets assign `axstack-auditor`,
 `axstack-research-requirements`, `axstack-research-code`, `axstack-research-web`,
-`axstack-explore-execution`, and `axstack-monitor` to the Claude Sonnet class at high effort.
+`axstack-explore-execution` to the Claude Sonnet class at high effort.
+`axstack-explore-codebase` and `axstack-monitor` adopt Haiku 5.5 high with
+`modelClass: haiku` and the exact `model: claude-haiku-5-5` pin.
+Activation requires that exact ID and high effort in saved T3 capabilities;
+missing either holds these roles without substitution, including Haiku 4.5.
 The `codex-only` assignments for these roles are unchanged.
 The three `-sol` pair seats for auditor, research-code, and explore-execution
 use Sol high in `mixed` and `codex-only`; `claude-only` records intentional

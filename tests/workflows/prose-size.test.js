@@ -134,6 +134,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // accepted-completion settlement and dispatch-scoped readback holds; preserve 44-byte headroom.
   // 20261007-fresh-refs A1: +791 measured bytes for driver reference freshness;
   // preserve 44-byte aggregate headroom; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(361461);
+  // 20261008-haiku-adoption A1: +186 measured bytes for the pinned Haiku role
+  // guidance; preserve 44-byte headroom; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(361647);
   expect(alwaysLoaded).toBeLessThanOrEqual(27015);
 });

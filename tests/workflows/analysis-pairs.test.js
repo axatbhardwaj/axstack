@@ -33,12 +33,12 @@ test('analysis pairs: code and execution research retain both paired routes', ()
 test('analysis pairs: routing and declared scenarios cover presence and absence', () => {
   const routing = compact('skills/axstack/references/routing.md');
   const roster = compact('skills/axstack/references/role-roster.md');
-  const sonnet = roster.split('- `axstack-ui-verifier`')[1]?.split('- Sol pairs ')[0];
+  const sonnet = roster.split('- `axstack-ui-verifier`')[1]?.split('- `axstack-explore-codebase`')[0];
   const pairs = roster.split('- Sol pairs ')[1]?.split('- `axstack-debug-investigator')[0];
   expect(sonnet).toBeTruthy();
   for (const role of [
     'axstack-auditor', 'axstack-research-requirements', 'axstack-research-code',
-    'axstack-research-web', 'axstack-explore-execution', 'axstack-monitor',
+    'axstack-research-web', 'axstack-explore-execution',
   ]) expect(sonnet).toContain(role);
   expect(sonnet).toContain('claude/sonnet');
   expect(pairs).toBeTruthy();
