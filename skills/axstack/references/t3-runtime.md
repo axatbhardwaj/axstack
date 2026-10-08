@@ -88,26 +88,26 @@ An uncertain replacement holds affected work: preserve its native receipts for r
 A scheduled pass already running on an exhausted account cannot recover.
 Account switches must happen before exhaustion at the picker's near-limit cutoff.
 
-Map `modeId` to `runtimeMode:full-access` and effort
-to `options:[{id,value}]`. Stored permission intent is neither effective parity
-nor a security boundary.
+For plan generation, run
+`scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
+using the recorded role snapshot and saved capabilities.
+For claude/codex, the `--picker` JSON must come from saved
+`scripts/pick-instance.js --provider <role provider> --json` output.
+For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
+pass `{"chosenInstanceId":"<canonical instance>"}`.
+For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
+with the same plan inputs and saved `t3_thread_configuration` read-back.
+
+Stored permission intent is neither effective parity nor a security boundary.
 
 A preset model must be used as given.
 
-`modelClass` must resolve to the newest matching catalog ID for that provider:
-codex `gpt-<N>-<class>`, claude `claude-<class>-<N>-<N>`. Use
-`scripts/resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort>`
-with the saved capabilities JSON path;
-a missing or malformed catalog holds resolution.
-Model catalog resolution retains the canonical instance IDs above.
+A missing or malformed catalog holds resolution.
 
-A `model:null` role lacking a class must use the first model listed for its
-provider in saved capabilities only for grok and antigravity (launch-by-agent-id
-providers); record the exact ID, rather than an unresolved provider default.
+For a null-model grok or antigravity role, record the exact model ID from the plan,
+rather than an unresolved provider default.
 Antigravity must hold when saved capabilities advertise zero models.
-For Antigravity, first-listed selection must use the first model ID ending in `-<effort>` because its model ID encodes effort.
 No matching effort suffix holds resolution for Antigravity.
-For Antigravity, pass no effort option; effort read-back uses the model ID suffix.
 For codex or claude, a role lacking both model and class is an intentional
 absence and must hold; never use a provider default for that role.
 
@@ -117,14 +117,10 @@ Here alternative means a provider or model substitution, excluding the bounded
 same-provider, same-model account selection above.
 Intentional absent seats remain recorded absences; availability is runtime proof.
 
-Codex effort must use option ID `reasoningEffort`.
-
-Claude effort must use option ID `effort`.
-
-Grok effort must use `reasoningEffort` and exclude `max`; its CLI requires ≥1.0.13.
+Grok's CLI requires ≥1.0.13.
 Advertising Grok alone does not prove that its CLI runs.
 
-OpenCode effort must use `variant` (no OpenCode role enters this migration).
+No OpenCode role enters this migration.
 
 The dispatch echo must match the requested provider and model; verify options
 and `runtimeMode` by `t3_thread_configuration` read-back. Record requested and

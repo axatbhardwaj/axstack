@@ -41,13 +41,13 @@ rule('F3: missing or conflicting active preset sources still hold', shared('rout
   'Missing or contradictory installed preset and explicit user selection sources are a setup gap: hold.',
   [[/hold/i, 'proceed'], [/missing or contradictory/i, 'consistent']]);
 
-for (const path of [shared('routing'), shared('t3-runtime')]) {
-  rule(`S1: resolver invocation includes model selection and effort in ${path}`, path,
-    [/resolve-models\.js/i, /--provider\s+<provider>/i, /--capabilities\s+<path>/i,
-      /--class\s+<class>\s*\|\s*--model\s+<model>/i, /--effort\s+<effort>/i],
-    'Resolve with resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort> using saved capabilities.',
-    [[/--effort/i, '--verbosity'], [/--class/i, '--category'], [/--model/i, '--label']]);
-}
+// Runtime dispatch now consumes the recorded role through dispatch-plan; its
+// pointer is checked in t3-runtime.test.js and resolver inputs at the CLI boundary.
+rule('S1: resolver invocation includes model selection and effort in routing', shared('routing'),
+  [/resolve-models\.js/i, /--provider\s+<provider>/i, /--capabilities\s+<path>/i,
+    /--class\s+<class>\s*\|\s*--model\s+<model>/i, /--effort\s+<effort>/i],
+  'Resolve with resolve-models.js --provider <provider> --capabilities <path> (--class <class> | --model <model>) --effort <effort> using saved capabilities.',
+  [[/--effort/i, '--verbosity'], [/--class/i, '--category'], [/--model/i, '--label']]);
 
 rule('S2: digest uses a separate repository JSON watermark',
   'skills/axstack-watch/references/watch-runtime.md', [/watermark/i, /per.repository/i,

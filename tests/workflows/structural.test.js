@@ -463,7 +463,7 @@ test('structural: runtime reference treats installed role snapshot as authoritat
   expect(text).toContain('Bundled presets are setup inputs.');
   const normalized = text.replace(/\s+/g, ' ');
   expect(normalized).toContain("Resume preserves that snapshot with no re-resolution; changes require the user's explicit decision.");
-  expect(normalized).toContain('A `model:null` role lacking a class must use the first model listed for its provider in saved capabilities only for grok and antigravity (launch-by-agent-id providers); record the exact ID, rather than an unresolved provider default.');
+  expect(requires(text, /plan generation/i, /scripts\/dispatch-plan\.js/, /recorded role snapshot/i, /saved capabilities/i)).toBe(true);
   expect(normalized).toContain('An unavailable provider, model, role, mode or effort must hold that role with no substitution.');
 });
 
