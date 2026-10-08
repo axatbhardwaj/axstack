@@ -2,55 +2,86 @@ import * as fs from 'node:fs';
 import { accountUsage, expandHome } from './account-usage.js';
 
 const drivers = { claudeAgent: 'claude', codex: 'codex' };
-const candidates = (settings) => Object.entries(settings.providerInstances).filter(([, instance]) =>
-  instance.enabled && instance.driver === settings.providerInstances[settings.defaultModelSelection.instanceId]?.driver);
+function parsePool(value) {
+  if (!value) return null;
+  const pool = {};
+  for (const entry of value.split(',')) {
+    const match = /^(claudeAgent|codex)=([^:,=\s]+)(?::([a-z]+))?$/.exec(entry);
+    if (!match || Object.hasOwn(pool, match[1])) throw new Error('invalid pool');
+    const [, driver, model, effort] = match;
+    pool[driver] = { model, ...(effort && { options: [
+      { id: driver === 'codex' ? 'reasoningEffort' : 'effort', value: effort },
+    ] }) };
+  }
+  return pool;
+}
+const candidates = (settings, pool) => Object.entries(settings.providerInstances ?? {}).filter(([, instance]) =>
+  instance.enabled && Object.hasOwn(pool, instance.driver));
 
-export function decide(settings, usage, now) {
+export function decide(settings, usage, now, pool = null) {
   const from = settings.defaultModelSelection?.instanceId ?? null;
   const result = { action: 'unchanged', reason: 'unmanaged', from, to: from, instances: [] };
   const driver = settings.providerInstances?.[from]?.driver;
-  if (!Object.hasOwn(drivers, driver)) return result;
-  result.instances = candidates(settings).map(([instanceId]) => {
+  const pooled = pool !== null;
+  pool ??= { [driver]: null };
+  if (!Object.hasOwn(drivers, driver) || !Object.hasOwn(pool, driver)) return result;
+  const updated = (best, reason) => ({ ...result, action: 'updated', reason, to: best.instanceId,
+    selection: pooled ? { instanceId: best.instanceId, ...pool[settings.providerInstances[best.instanceId].driver] }
+      : { ...settings.defaultModelSelection, instanceId: best.instanceId } });
+  result.instances = candidates(settings, pool).map(([instanceId, instance]) => {
     const account = usage.find((entry) => entry.instanceId === instanceId);
-    const window = driver === 'claudeAgent' ? account?.windows?.[1]
+    const window = instance.driver === 'claudeAgent' ? account?.windows?.[1]
       : account?.windows?.[1] ?? account?.windows?.[0];
-    const excluded = account?.utilization >= 95 || account?.limitReached
+    const excluded = account?.utilization >= 95 || account?.limitReached || account?.credentialsAbsent
       || (instanceId === from && (account?.unauthorized || account?.state === 'skipped'));
     const known = account && ['fresh', 'cached'].includes(account.state)
       && Number.isFinite(account.updatedAt) && now - account.updatedAt < 300000
       && Number.isFinite(window?.used) && Number.isFinite(window?.seconds) && window.seconds > 0
-      && Number.isFinite(window?.resetAt) && window.resetAt > now;
+      && Number.isFinite(window?.resetAt) && window.resetAt > now
+      && (!pooled || window.seconds >= 604800);
     return { instanceId, state: excluded ? 'excluded' : known ? 'eligible' : 'unknown',
       pace: known ? 100 * (1 - (window.resetAt - now) / (window.seconds * 1000)) - window.used : null };
   });
   const current = result.instances.find((entry) => entry.instanceId === from);
   const best = result.instances.filter((entry) => entry.state === 'eligible').sort((a, b) => b.pace - a.pace)[0];
   const excluded = !current || current.state === 'excluded';
-  if (excluded && best) return { ...result, action: 'updated', reason: 'current-excluded', to: best.instanceId };
+  if (excluded && best) return updated(best, 'current-excluded');
   if (result.instances.some((entry) => entry.state === 'unknown')) return { ...result, reason: 'unknown' };
   if (!best) return { ...result, reason: 'no-eligible' };
   if (best.instanceId !== from && best.pace - current.pace >= 10) {
-    return { ...result, action: 'updated', reason: 'pace', to: best.instanceId };
+    return updated(best, 'pace');
   }
   return { ...result, reason: 'margin' };
 }
 
-// Locate only the root selection's instance string, leaving every other byte intact.
-function selectionBytes(original, instanceId) {
+// Preserve the instance-only edit when the rest of the selection is already identical.
+function selectionBytes(original, selection) {
+  const previous = JSON.parse(original).defaultModelSelection;
+  const instanceOnly = deepEqual({ ...previous, instanceId: selection.instanceId }, selection);
+  let start;
   const tokens = [...original.matchAll(/"(?:\\.|[^"\\])*"|[{}\[\]:,]|[^\s{}\[\]:,]+/g)];
   let depth = 0;
   let selectionDepth = 0;
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i][0];
     if (depth === 1 && token.startsWith('"') && JSON.parse(token) === 'defaultModelSelection'
-      && tokens[i + 1]?.[0] === ':' && tokens[i + 2]?.[0] === '{') selectionDepth = depth + 1;
-    if (selectionDepth && depth === selectionDepth && token.startsWith('"') && JSON.parse(token) === 'instanceId'
+      && tokens[i + 1]?.[0] === ':' && tokens[i + 2]?.[0] === '{') {
+      selectionDepth = depth + 1;
+      start = tokens[i + 2].index;
+    }
+    if (instanceOnly && selectionDepth && depth === selectionDepth && token.startsWith('"') && JSON.parse(token) === 'instanceId'
       && tokens[i + 1]?.[0] === ':') {
       const value = tokens[i + 2];
-      return original.slice(0, value.index) + JSON.stringify(instanceId) + original.slice(value.index + value[0].length);
+      return original.slice(0, value.index) + JSON.stringify(selection.instanceId) + original.slice(value.index + value[0].length);
     }
     if (token === '{' || token === '[') depth++;
-    if (token === '}' || token === ']') { if (depth === selectionDepth) selectionDepth = 0; depth--; }
+    if (token === '}' || token === ']') {
+      if (depth === selectionDepth) {
+        if (!instanceOnly) return original.slice(0, start) + JSON.stringify(selection) + original.slice(tokens[i].index + 1);
+        selectionDepth = 0;
+      }
+      depth--;
+    }
   }
   throw new Error('missing instance string');
 }
@@ -62,15 +93,18 @@ function deepEqual(a, b) {
   return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && deepEqual(a[key], b[key]));
 }
 
-export function commit(path, originalBytes, nextBytes) {
+export function commit(path, originalBytes, nextBytes, selection) {
   const original = JSON.parse(originalBytes);
   const next = JSON.parse(nextBytes);
   const from = original.defaultModelSelection?.instanceId;
   const to = next.defaultModelSelection?.instanceId;
   if (typeof from !== 'string' || typeof to !== 'string') throw new Error('invalid instance string');
-  original.defaultModelSelection.instanceId = to;
-  if (!deepEqual(original, next)) throw new Error('refusing non-instanceId change');
-  if (from === to) return 'unchanged';
+  selection ??= { ...original.defaultModelSelection, instanceId: to };
+  if (!deepEqual(next.defaultModelSelection, selection)) throw new Error('refusing undecided selection');
+  const unchanged = deepEqual(original.defaultModelSelection, selection);
+  original.defaultModelSelection = selection;
+  if (!deepEqual(original, next)) throw new Error('refusing change outside defaultModelSelection');
+  if (unchanged) return 'unchanged';
   const lock = `${path}.axstack-default-sync.lock`;
   try { fs.mkdirSync(lock, { mode: 0o700 }); }
   catch (error) {
@@ -131,12 +165,16 @@ async function main() {
     || (Object.hasOwn(settings, 'providerInstances') && (!settings.providerInstances
       || typeof settings.providerInstances !== 'object' || Array.isArray(settings.providerInstances)))) throw new Error('invalid settings');
   const driver = settings.providerInstances?.[settings.defaultModelSelection?.instanceId]?.driver;
-  const provider = Object.hasOwn(drivers, driver) ? drivers[driver] : null;
+  const pool = parsePool(process.env.AXSTACK_SYNC_POOL);
   const usage = [];
-  if (provider) for (const [id, instance] of candidates(settings)) usage.push(await accountUsage(id, instance, provider));
-  let decision = decide(settings, usage, Date.now());
+  if (Object.hasOwn(drivers, driver) && (!pool || Object.hasOwn(pool, driver))) {
+    for (const [id, instance] of candidates(settings, pool ?? { [driver]: null })) {
+      usage.push(await accountUsage(id, instance, drivers[instance.driver]));
+    }
+  }
+  let decision = decide(settings, usage, Date.now(), pool);
   if (decision.action === 'updated' && !dryRun) {
-    const reason = commit(path, original, selectionBytes(original, decision.to));
+    const reason = commit(path, original, selectionBytes(original, decision.selection), decision.selection);
     if (reason !== 'updated') decision = { ...decision, action: 'unchanged', reason, to: decision.from };
   }
   console.log(JSON.stringify(decision));
