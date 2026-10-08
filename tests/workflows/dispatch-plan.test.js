@@ -87,7 +87,7 @@ test('verification matches T3 read-back for either dispatch kind and normalizes 
   }
 });
 
-for (const [field, change] of [
+for (const [index, [field, change]] of [
   ['instance', (data) => { data.modelSelection.instanceId = 'codex'; }],
   ['provider', (data) => { data.modelSelection.provider = 'grok'; }],
   ['model', (data) => { data.modelSelection.model = 'gpt-6-sol'; }],
@@ -96,8 +96,8 @@ for (const [field, change] of [
   ['options', (data) => { data.modelSelection.options = []; }],
   ['options', (data) => { data.modelSelection.options.push({ id: 'reasoningEffort', value: 'high' }); }],
   ['runtimeMode', (data) => { data.runtimeMode = 'approval-required'; }],
-]) {
-  test(`verification holds and names a mismatched ${field} (${change})`, () => {
+].entries()) {
+  test(`verification holds and names a mismatched ${field} (case ${index + 1})`, () => {
     const data = configuration(); change(data);
     const result = setup().run('axstack-author', 'launch', data);
     expect(result.status).toBe(2);
@@ -138,4 +138,74 @@ test('Antigravity verifies effort through its model suffix with no effort option
   const result = f.run('axstack-checker', 'launch', data);
   expect(result.status).toBe(2);
   expect(result.output).toContain('model');
+});
+
+test('--help lists every flag, exit meaning and read-only side effect contract', () => {
+  const result = invoke(['--help']);
+  expect(result.status).toBe(0);
+  for (const flag of ['--role', '--roles', '--capabilities', '--picker', '--kind', '--verify', '--help']) {
+    expect(result.output).toContain(flag);
+  }
+  expect(result.output).toMatch(/0.*ok.*1.*error.*2.*hold/i);
+  expect(result.output).toMatch(/read.only/i);
+});
+
+for (const [index, [field, change]] of [
+  ['role', (f) => { f.roles.roles = []; }],
+  ['role', (f) => { f.roles.roles.push(f.roles.roles[0]); }],
+  ['mode', (f) => { f.roles.roles[0].modeId = 'unavailable'; }],
+  ['mode', (f) => { delete f.roles.roles[0].modeId; }],
+  ['mode', (f) => { f.roles.roles[0].modeId = 'bypassPermissions'; }],
+  ['effort', (f) => { delete f.roles.roles[0].thinkingOptionId; }],
+  ['model', (f) => { delete f.roles.roles[0].modelClass; }],
+  ['instance', (f) => { f.picker.chosenInstanceId = null; }],
+  ['instance', (f) => { f.picker.chosenInstanceId = 'grok'; }],
+].entries()) {
+  test(`unavailable ${field} holds without emitting a dispatch (case ${index + 1})`, () => {
+    const f = setup(); change(f);
+    const result = f.run();
+    expect(result.status).toBe(2);
+    expect(result.output).toBe('');
+    expect(result.error).toContain(field);
+  });
+}
+
+test('a catalog-advertised sibling must have the same provider and model/effort', () => {
+  for (const change of [
+    (p) => { p.driverKind = 'grok'; },
+    (p) => { p.models = []; },
+    (p) => { p.models[0].options[0].options = [{ id: 'low' }]; },
+  ]) {
+    const f = setup();
+    const sibling = structuredClone(f.capabilities.providers[0]);
+    sibling.providerInstanceId = 'codexAlt'; change(sibling);
+    f.capabilities.providers.push(sibling);
+    const result = f.run();
+    expect(result.status).toBe(2);
+    expect(result.output).toBe('');
+    expect(result.error).toMatch(/provider|model|effort/);
+  }
+});
+
+test('CLI usage and unreadable JSON are errors rather than holds', () => {
+  for (const args of [[], ['--unknown', 'value'], ['--role'], ['--role', 'a', '--role', 'b']]) {
+    const result = invoke(args);
+    expect(result.status).toBe(1);
+    expect(result.output).toBe('');
+    expect(result.error).toMatch(/argument|expected/);
+  }
+  const f = setup();
+  const args = ['--role', 'axstack-author', '--roles', `${f.dir}/missing.json`,
+    '--capabilities', f.save('capabilities', catalog), '--picker', f.save('picker', fixture.picker), '--kind', 'launch'];
+  expect(invoke(args).status).toBe(1);
+  args[3] = f.save('roles', f.roles); args[9] = 'other';
+  expect(invoke(args).status).toBe(1);
+});
+
+test('malformed capabilities holds with the resolver diagnostic preserved', () => {
+  const f = setup(); f.capabilities.providers = null;
+  const result = f.run();
+  expect(result.status).toBe(2);
+  expect(result.output).toBe('');
+  expect(result.error).toBe('model capabilities resolution hold: malformed capabilities providers\n');
 });
