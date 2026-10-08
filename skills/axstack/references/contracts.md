@@ -38,22 +38,21 @@ the revised scope and plan.
 
 ## Model discipline
 
-Validate the configured provider and model at actual launch. If it is
-unavailable or exhausted, pause affected work, record the gap, and ask the
-user. Only same-provider, same-model account selection among instances of one
-driver may use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding).
+Validate provider/model at launch; unavailable or exhausted:
+pause affected work, record the gap, and ask the user.
+Only same-provider, same-model accounts within one driver use headroom under [Provider bindings](t3-runtime.md#preflight-and-binding).
 An exhausted account with no eligible sibling still holds; dispatched roles never fail over mid-thread.
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection at turn boundaries.
-Never infer any other route from quota state or subscription entitlement. Every
-substitution requires the user's decision: configured alternatives are not
-defaults. Rejection, timeout, quota and auth failures hold affected work.
-Substitution here means changing provider or model, excluding that account selection.
-Read the [T3 runtime boundary](t3-runtime.md) before dispatch, receipt consumption
-or recovery; resolve models from the saved capabilities snapshot and verify
-requested and effective settings separately.
-Optional seats follow [Role roster](role-roster.md), while required seats,
-including resolved `model: null` bindings, hold without substitution except that a base auditor
-preflight rejection follows [Close-out](lifecycle.md#close-out).
+Never infer routing from quota or entitlement. Every substitution requires the user's decision: configured alternatives are not defaults.
+Rejection, timeout, quota and auth failures hold affected work.
+Substitution changes provider/model, excluding account picks.
+Exception: opt-in default sync can change only the New-chat default within the user-configured pool.
+Running threads, dispatched roles, schedules and roles.json keep existing rules.
+Read [T3 runtime](t3-runtime.md) before dispatch, receipt consumption or recovery;
+resolve from saved capabilities; verify requested/effective settings.
+Optional seats follow [Role roster](role-roster.md); required seats,
+including resolved `model: null`, hold without substitution except base auditor
+preflight rejection under [Close-out](lifecycle.md#close-out).
 
 ## Driver and adviser split
 

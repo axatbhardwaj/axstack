@@ -93,7 +93,7 @@ for the picker cache directory and test-only usage endpoint variables.
 Run these with Bun from the installed `<skills-dir>/axstack/scripts/` directory:
 `resolve-models.js` (model IDs), `pick-instance.js` (dispatch account),
 `pr-digest.js` (PR discovery), `archive-evidence.js` (evidence archive), and
-`sync-default.js [--settings <path>] [--dry-run]` (New-chat account default).
+`sync-default.js [--settings <path>] [--dry-run]` (New-chat default; `AXSTACK_SYNC_POOL` opts into cross-driver rotation).
 `account-usage.js` shares usage retrieval and the five-minute cache between
 picker and sync. The opt-in systemd user unit files ship in `axstack/systemd/`;
 installation copies them as assets and never enables the timer.
