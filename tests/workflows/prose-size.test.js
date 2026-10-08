@@ -157,6 +157,12 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // exact aggregate delta; always-loaded unchanged.
   // 20261008-cli-lessons B1c repair1: +32 bytes corrects the two-mode
   // output contract; exact measured ceiling; lens delta +881.
-  expect(total).toBeLessThanOrEqual(362039);
+  // 20261008-relay-cards T1: +8598 measured aggregate bytes for the approved
+  // additive card, confirmation and Decisions forwarding contracts replacing
+  // the legacy reply route; exact measured ceiling; always-loaded unchanged.
+  // 20261008-relay-cards T1 repair1: +289 measured aggregate bytes for
+  // config-read readiness, install-only /busy, missing-quote guidance and
+  // held-ack resolution; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(370926);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

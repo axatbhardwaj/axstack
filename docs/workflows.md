@@ -299,6 +299,23 @@ serious-risk holds, and at most two merge-ready/merged milestones per run—may
 be relayed under the recorded Notification policy. See [Relay operations](host-operations.md#notifications-and-relay) for native
 delivery, deduplication, and verified reply handling.
 
+Decision responses must be authorized by the user's own reply, outside the
+two-milestone cap and needing no Notification policy entry. Send one
+acknowledgement per forwarded reply before any side effect and one outcome
+per decided card. An explain answer, confirmation card or fresh superseding
+card serves as that reply's acknowledgement. Identical repeat replies get T3-only
+acknowledgement; different later choices get "already decided as N" in Telegram.
+An outcome that is itself merge-ready or merged counts as that milestone and
+is sent once. Queued, acknowledged and done are distinct.
+
+Only the run's driver sends reply-dependent cards to the verified private
+home DM's relay-only Decisions topic. It checks proof, card state, context
+and normalized choice in order, resolves choices from the sent receipt and
+keeps human-only actions manual. Reply with 1, 2, optional 3 Defer, explain or
+single-line free text. Destructive, production and fleet-wide decisions need
+a separate confirmation card bound to the action and revision. An unready
+reply route keeps the options and tag but directs action to the T3 driver thread.
+
 Healthy watch observations remain quiet. The optional `axstack-monitor` is a
 read-only observer for standalone watches and never sends.
 
