@@ -138,8 +138,8 @@ function assess(repo, revision) {
       const steps = Object.values(workflow?.jobs ?? {}).flatMap((job) => job?.steps ?? []);
       const runs = steps.map((step) => step?.run).filter((run) => typeof run === 'string');
       if (steps.some((step) => typeof step?.uses === 'string' && /^github\/codeql-action\//.test(step.uses))) codeql.push(path);
-      const invokes = (run, name) => new RegExp(`(?:^|[\\n;&|])\\s*${name}\\s+(?:run\\s+)?test(?:\\s|[;&|]|$)`).test(run);
-      if (pr && runs.some((run) => invokes(run, '(?:bun|npm|pnpm|yarn)'))) prCandidate = true;
+      const invokes = (run, name) => new RegExp(`(?:^|[\\n;&|])\\s*${name}\\s+${name === 'bun' ? 'run\\s+' : '(?:run\\s+)?'}test(?:\\s|[;&|]|$)`).test(run);
+      if (pr && runs.some((run) => ['bun', 'npm', 'pnpm', 'yarn'].some((name) => invokes(run, name)))) prCandidate = true;
       if (pr && manager.name && runs.some((run) => invokes(run, manager.name))) prTests = true;
     } catch { invalid = true; }
   }
@@ -182,6 +182,7 @@ function forgeStatus(origin) {
     const metadata = api(`repos/${match[1]}`);
     if (metadata.length !== 1 || typeof metadata[0]?.default_branch !== 'string' || !metadata[0].default_branch) throw new Error('missing default branch');
     const branch = encodeURIComponent(metadata[0].default_branch);
+    let protectionGap = false;
     try {
       const protection = api(`repos/${match[1]}/branches/${branch}/protection`);
       if (protection.length !== 1 || !protection[0] || Array.isArray(protection[0])) throw new Error('incomplete protection response');
@@ -192,8 +193,9 @@ function forgeStatus(origin) {
         return result('pass', '');
       }
     } catch (error) {
-      if (!/Branch not protected.*(?:404)|(?:404).*Branch not protected/i.test(error.message)) throw error;
-      evidence.push('default branch has no legacy protection');
+      if (!/\bHTTP (403|404)\b/.test(error.message)) throw error;
+      protectionGap = !/Branch not protected.*(?:404)|(?:404).*Branch not protected/i.test(error.message);
+      evidence.push(error.message);
     }
     const pages = api(`repos/${match[1]}/rules/branches/${branch}?per_page=100`);
     if (pages.some((page) => !Array.isArray(page))) throw new Error('incomplete branch rules response');
@@ -202,7 +204,7 @@ function forgeStatus(origin) {
       evidence.push(`default branch ${metadata[0].default_branch}: active rules require ${required.map((check) => check.context).join(', ')}`);
       return result('pass', '');
     }
-    return result('fail', 'needs admin');
+    return result(protectionGap ? 'unknown' : 'fail', protectionGap ? 'gh settings unavailable' : 'needs admin');
   } catch (error) {
     evidence.push(error.message);
     return result('unknown', 'gh settings unavailable');
@@ -269,7 +271,7 @@ function outputPaths(args) {
 function writeReport(paths, report) {
   // Stage inside the allowed evidence folder; replacing the inode also avoids hardlink writes.
   mkdirSync(paths.evidence, { recursive: true, mode: 0o700 });
-  const staged = `${paths.evidence}/.report.json`;
+  const staged = `${paths.evidence}/.${crypto.randomUUID()}.report.json`;
   writeFileSync(staged, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
   renameSync(staged, paths.out);
 }

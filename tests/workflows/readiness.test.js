@@ -167,7 +167,7 @@ test('executed criteria apply presence, prose and lockfile precedence without ru
 });
 
 test('committed symlinks and YAML event mappings work, invalid YAML remains unknown', () => {
-  const repo = fixture({ ...complete, '.github/workflows/test.yml': 'on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: |\n          echo preparing\n          bun test\n' });
+  const repo = fixture({ ...complete, '.github/workflows/test.yml': 'on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: |\n          echo preparing\n          bun run test\n' });
   git(repo, 'rm', 'CLAUDE.md');
   symlinkSync('AGENTS.md', `${repo}/CLAUDE.md`);
   git(repo, 'add', 'CLAUDE.md');
@@ -366,10 +366,59 @@ test('linked worktrees use the common git directory and assess the selected revi
   expect({ common: manifest(repo), linked: manifest(linked) }).toEqual(before);
 });
 
-test('workflow configuration requires the selected package manager and an invocation, not printed prose', () => {
-  for (const run of ['echo bun test', 'npm test', '# bun test', 'echo "bun test"']) {
+test('workflow configuration requires the selected package manager test script, not a built-in runner or printed prose', () => {
+  for (const run of ['bun test', 'echo bun test', 'npm test', '# bun test', 'echo "bun test"']) {
     const report = assess(fixture({ ...complete, '.github/workflows/test.yml': `on: [pull_request]\njobs:\n  tests:\n    steps:\n      - run: ${JSON.stringify(run)}\n` })).report;
     status(report, 'security.pr-tests', 'fail', 'missing pull_request test step');
+  }
+});
+
+test('workflow test script forms are recognized for each supported package manager', () => {
+  const { 'bun.lock': unused, ...base } = complete;
+  for (const [lock, contents, commands] of [
+    ['bun.lock', '{}', ['bun run test']],
+    ['package-lock.json', '{}', ['npm test', 'npm run test']],
+    ['pnpm-lock.yaml', '{}', ['pnpm test', 'pnpm run test']],
+    ['yarn.lock', '__metadata:\n  version: 8', ['yarn test', 'yarn run test']],
+  ]) {
+    for (const run of commands) {
+      const repo = fixture({ ...base, [lock]: contents, '.github/workflows/test.yml': `on: [pull_request]\njobs:\n  tests:\n    steps:\n      - run: ${run}\n` });
+      const { report, code } = assess(repo);
+      expect(code).toBe(0);
+      status(report, 'security.pr-tests', 'pass');
+    }
+  }
+});
+
+test('stale report staging files cannot block a later static report', () => {
+  const repo = fixture(complete);
+  const folder = `${repo}/.git/axstack/readiness/report`;
+  mkdirSync(folder, { recursive: true });
+  writeFileSync(`${folder}/.report.json`, 'stale stage');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const result = assess(repo);
+    expect(result.code).toBe(0);
+    expect(JSON.parse(readFileSync(result.out, 'utf8'))).toEqual(result.report);
+    expect(readFileSync(`${folder}/.report.json`, 'utf8')).toBe('stale stage');
+    expect(readdirSync(folder)).toEqual(['.report.json']);
+  }
+});
+
+test('readable effective rules prove required checks after legacy protection permission gaps', () => {
+  const repo = fixture(complete);
+  git(repo, 'remote', 'add', 'origin', 'https://github.com/example/readiness.git');
+  const metadata = { 'repos/example/readiness': { data: { default_branch: 'main' } } };
+  const protection = 'repos/example/readiness/branches/main/protection';
+  const rules = 'repos/example/readiness/rules/branches/main?per_page=100';
+  const required = [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'ci' }] } }];
+  for (const code of [403, 404]) {
+    for (const [data, expected, reason] of [[required, 'pass', ''], [[], 'unknown', 'gh settings unavailable']]) {
+      const responses = { ...metadata, [protection]: { error: `gh: unavailable (HTTP ${code})` }, [rules]: { data } };
+      const log = `${root}/fallback-${code}-${expected}.jsonl`;
+      const { report } = assess(repo, [], { env: { GH_FIXTURE: JSON.stringify(responses), GH_LOG: log } });
+      status(report, 'security.status-checks', expected, reason);
+      expect(readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse).some((argv) => argv.at(-1) === rules)).toBe(true);
+    }
   }
 });
 
