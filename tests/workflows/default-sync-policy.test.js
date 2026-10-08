@@ -35,6 +35,12 @@ test('model discipline confines pooled sync to the New-chat default', () => {
 });
 
 const modelRules = [
+  ['driver account re-selection scope',
+    [/\b(?:follow|consult)\b/i, /Provider bindings/i, /\bdriver\b/i, /\baccount\b/i, /re-selection/i, /turn boundaries/i],
+    'Consult Provider bindings for driver account re-selection at turn boundaries.', /\b(?:follow|consult)\b/i, 'Skip the binding'],
+  ['substitution excludes only that account selection',
+    [/substitution/i, /chang(?:e|es|ing)/i, /provider/i, /model/i, /excluding/i, /\b(?:that|those)\b/i, /\baccount\b/i, /\b(?:selection|picks?)\b/i],
+    'Substitution means a provider or model change, excluding those account picks.', /excluding/i, 'including'],
   ['configured binding at actual launch',
     [/\b(?:validate|check)\b/i, /\b(?:configured|specified)\b/i, /provider/i, /model/i, /\b(?:actual|real)\b/i, /\blaunch\b/i],
     'Check the specified provider and model at real launch.', /\b(?:validate|check)\b/i, 'Skip validation'],
@@ -44,7 +50,8 @@ const modelRules = [
 ];
 for (const [name, concepts, rewording, direction, inversion] of modelRules) {
   test(`model discipline preserves ${name}`, () => {
-    const doc = readFileSync(`${root}/skills/axstack/references/contracts.md`, 'utf8').replace(/\s+/g, ' ');
+    const doc = readFileSync(`${root}/skills/axstack/references/contracts.md`, 'utf8')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
     checkRule(doc, (text) => requires(text, ...concepts), rewording,
       [[direction, inversion]], concepts);
   });
