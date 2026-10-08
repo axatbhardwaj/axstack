@@ -1,14 +1,17 @@
-import { expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { afterEach, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/dispatch-plan.js`;
 const resolver = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.js`;
 const fixture = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/dispatch-plan.json`, 'utf8'));
 const catalog = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/t3-capabilities.json`, 'utf8'));
 catalog.providers.find((p) => p.driverKind === 'antigravity').models = fixture.antigravityModels;
+const roots = [];
+afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true }); });
 
 function setup() {
   const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/dispatch-plan-`);
+  roots.push(dir);
   const roles = { version: fixture.version, preset: fixture.preset, roles: structuredClone(fixture.roles) };
   const capabilities = structuredClone(catalog);
   const picker = structuredClone(fixture.picker);
@@ -177,9 +180,8 @@ test('a catalog-advertised sibling must have the same provider and model/effort'
     (p) => { p.models[0].options[0].options = [{ id: 'low' }]; },
   ]) {
     const f = setup();
-    const sibling = structuredClone(f.capabilities.providers[0]);
-    sibling.providerInstanceId = 'codexAlt'; change(sibling);
-    f.capabilities.providers.push(sibling);
+    const sibling = f.capabilities.providers.find((p) => p.providerInstanceId === 'codexAlt');
+    change(sibling);
     const result = f.run();
     expect(result.status).toBe(2);
     expect(result.output).toBe('');
@@ -208,4 +210,41 @@ test('malformed capabilities holds with the resolver diagnostic preserved', () =
   expect(result.status).toBe(2);
   expect(result.output).toBe('');
   expect(result.error).toBe('model capabilities resolution hold: malformed capabilities providers\n');
+});
+
+for (const instanceId of ['claudeAgent', 'codexx', 'codexAlt']) {
+  for (const kind of ['launch', 'task']) {
+    for (const verifying of [false, true]) {
+      test(`unadvertised ${instanceId} holds for ${kind}${verifying ? ' verification' : ' planning'}`, () => {
+        const f = setup();
+        // Keep only the canonical Codex catalog, as in the reviewer's saved subset.
+        f.capabilities.providers = f.capabilities.providers.filter((p) => p.providerInstanceId === 'codex');
+        f.picker.chosenInstanceId = instanceId;
+        const data = configuration(); data.modelSelection.instanceId = instanceId;
+        const result = f.run('axstack-author', kind, verifying ? data : undefined);
+        expect(result.status).toBe(2);
+        expect(result.output).toBe('');
+        expect(result.error).toContain('instance');
+        expect(result.error).toContain(instanceId);
+      });
+    }
+  }
+}
+
+test('--help also succeeds when combined with other flags', () => {
+  const expected = invoke(['--help']);
+  for (const args of [['--help', '--role', 'axstack-author'], ['--role', 'axstack-author', '--help']]) {
+    expect(invoke(args)).toEqual(expected);
+  }
+});
+
+test('the test runner removes each fixture directory after its test', () => {
+  const f = setup();
+  const nestedRoot = `${f.dir}/nested-tests`;
+  mkdirSync(nestedRoot);
+  const result = Bun.spawnSync([process.execPath, 'test', import.meta.path, '-t', 'a recorded exact model pin'], {
+    env: { ...process.env, TMPDIR: nestedRoot }, stdout: 'pipe', stderr: 'pipe',
+  });
+  expect(result.exitCode).toBe(0);
+  expect(readdirSync(nestedRoot)).toEqual([]);
 });

@@ -73,7 +73,7 @@ function verify(configuration, instanceId, provider, model, options) {
 }
 
 function main() {
-  if (process.argv.slice(2).length === 1 && process.argv[2] === '--help') {
+  if (process.argv.slice(2).includes('--help')) {
     process.stdout.write(help);
     return 0;
   }
@@ -105,17 +105,15 @@ function main() {
   const { model, effortOption, providerInstanceId } = JSON.parse(resolved.stdout.toString());
   const chosen = readJSON(args['--capabilities']).providers
     .filter((provider) => provider.providerInstanceId === picker.chosenInstanceId);
-  if (chosen.length > 1 || (chosen.length === 1 && chosen[0].driverKind !== providerInstanceId)
+  if (chosen.length !== 1 || chosen[0].driverKind !== providerInstanceId
     || (['grok', 'antigravity'].includes(role.provider) && picker.chosenInstanceId !== providerInstanceId)) {
     hold(`picker instance ${picker.chosenInstanceId} does not bind provider ${role.provider}`);
   }
-  if (chosen.length === 1) {
-    const selectedModel = chosen[0].models?.find((entry) => entry.id === model);
-    if (!selectedModel) hold(`model ${model} unavailable on instance ${picker.chosenInstanceId}`);
-    if (effortOption && !selectedModel.options?.some((option) => option.id === effortOption.id
-      && option.options?.some((value) => value.id === effortOption.value))) {
-      hold(`effort ${effortOption.value} unavailable on instance ${picker.chosenInstanceId}`);
-    }
+  const selectedModel = chosen[0].models?.find((entry) => entry.id === model);
+  if (!selectedModel) hold(`model ${model} unavailable on instance ${picker.chosenInstanceId}`);
+  if (effortOption && !selectedModel.options?.some((option) => option.id === effortOption.id
+    && option.options?.some((value) => value.id === effortOption.value))) {
+    hold(`effort ${effortOption.value} unavailable on instance ${picker.chosenInstanceId}`);
   }
   const options = effortOption ? [effortOption] : [];
   if (args['--verify']) {
