@@ -343,12 +343,11 @@ test('structural: active PR parallelism has no fixed count', () => {
 test('structural: shared PR-shape reference preserves measurement and coherent themes', () => {
   const p = join(skillsDir, 'axstack', 'references', 'pr-shape.md');
   const shape = readFileSync(p, 'utf8');
-  expect(shape).toContain('git diff -M --numstat $(git merge-base <base> <head>)..<head>');
+  expect(shape).toContain('bun scripts/pr-shape.js --base <base> --head <head>');
   expect(shape).toMatch(/actual PR base/i);
   expect(shape).toMatch(/stacked child[^.]*parent branch/i);
   expect(shape).toMatch(/root PR[^.]*actual target branch/i);
   expect(shape).toMatch(/main[^.]*example/i);
-  expect(shape).toMatch(/additions\s*\+\s*deletions/i);
   expect(shape).toMatch(/moves.*-M|-M.*moves/i);
   expect(shape).toMatch(/binar[^.]*count[^.]*purpose/i);
   for (const bucket of ['generated', 'lockfile', 'formatter-only']) expect(shape).toContain(bucket);

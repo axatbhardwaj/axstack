@@ -142,6 +142,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     `${root}/skills/axstack/scripts/dispatch-plan.js`,
     `${root}/skills/axstack/scripts/pick-instance.js`,
     `${root}/skills/axstack/scripts/pr-digest.js`,
+    `${root}/skills/axstack/scripts/pr-shape.js`,
     `${root}/skills/axstack/scripts/readiness-run.js`,
     `${root}/skills/axstack/scripts/readiness.js`,
     `${root}/skills/axstack/scripts/resolve-models.js`,
