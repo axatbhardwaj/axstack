@@ -1,6 +1,6 @@
 {
   "name": "axstack",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "description": "Axstack installer and setup CLI: installs owned chat skills and role data, configures supported harness settings, and checks T3 Code capabilities.",
   "keywords": [
     "claude-code",
