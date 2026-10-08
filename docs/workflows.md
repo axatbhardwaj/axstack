@@ -426,10 +426,20 @@ The authored reviewer rates each non-agent review thread, review body, or
 top-level comment from a human or a bot at the current head as `above low`,
 `low`, `addressed` or `uncertain`. Re-rate every non-agent item at each new head.
 Reviewer-rated `low` or `addressed` items do not hold automatic merge.
-An `above low`, unrated or `uncertain` item holds automatic merge.
+An `above low`, unrated or `uncertain` item holds automatic merge, subject to
+the specific unrated/uncertain acceptance below.
 Human `CHANGES_REQUESTED` holds automatic merge until resolved.
 A comment arriving after the receipt triggers a fresh review dispatch for rating
-as gap closing. Agents never resolve or dismiss non-agent items.
+as gap closing.
+An item still unrated or uncertain after one fresh rating dispatch posts a
+`verification not proven: comment:<id> rating` decision card bound to head and base.
+The rating card names the comment, why it remains unrated or uncertain, and the
+decision needed from the user. The user's reply settles only that item's rating
+at the accepted head and base while every other gate and hold applies.
+Record `user-accepted unproven: comment:<id> rating`, never as a pass.
+A user-accepted unrated or uncertain item does not hold automatic merge at its
+accepted head and base. A new head or base voids the rating acceptance.
+Agents never resolve or dismiss non-agent items.
 Agent-authored threads with only `low` findings can stay open.
 Apply any repository rule that requires conversation resolution.
 
@@ -460,7 +470,7 @@ Test sources stay eligible.
 Axstack skill and merge-rule text are eligible under the watch predicate.
 Changes to package.json are eligible under the watch predicate.
 Release PRs are eligible under the watch predicate.
-Read the revert gate from the declaration whose line starts with `Revert:`
+Read the rollback declaration whose line starts with `Revert:`
 at line start in the PR description.
 A quoted format inside a bullet never counts as the declaration.
 `--admin` and rule bypass are never used.
@@ -482,7 +492,8 @@ user-written PRs or PRs with unknown or mixed provenance.
 In `team` mode a reply never replaces counted collaborator approval.
 A reply can clear auto-merge turned off; verification acceptance follows the
 head-and-base-bound rule above. It never clears an ineligible work base or a
-comment rating hold. Peer PRs are merged by the user on the forge,
+reviewer-rated `above low` finding. Unrated/uncertain acceptance follows only
+the named rating card above. Peer PRs are merged by the user on the forge,
 and the card only reports readiness.
 Work promotion, deploying-base and unknown-base cards only report readiness.
 User merges are bottom-up for a stack.
@@ -496,8 +507,8 @@ Each blocker has a key: `approval:<PR>`, `changes:<review id>` or
 ready-except-human time, including no review requested.
 Other clocks start at the later of that ready-except-human time and the item's
 forge time. A `comment:` clock starts only once the reviewer rates the item
-`above low`. An unrated or uncertain item waits on the reviewer and does not
-count as ready-except-human.
+`above low`. Before the decision-card path, an unrated or uncertain item waits
+on the reviewer and does not count as ready-except-human.
 A clock resets when the PR stops being ready-except-human or its patch-id
 changes. A same-patch-id rebase keeps the clock.
 Each key is sent at most once, even when readiness is lost and regained or the

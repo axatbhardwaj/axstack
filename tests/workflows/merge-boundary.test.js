@@ -66,7 +66,6 @@ test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
 test('small and standalone maintenance share the guarded watch authority', () => {
   expect(sentence(autopilot, '- Small:')).toMatch(/small-change intent.*watch.*predicate/i);
   expect(sentence(implement, 'The merge actor is')).toMatch(/recorded owning watch thread.*axstack-owner.*standalone.*small and adopted/i);
-  expect(sentence(implement, 'A peer PR or')).toMatch(/`deploying` base.*user to merge/i);
   expect(sentence(autopilot, 'The recorded owning watch thread')).toMatch(/merge actor.*axstack-owner.*standalone.*small or adopted/i);
   expect(sentence(implement, 'A manager, worker')).toMatch(/reviewer.*monitor.*nightly triage.*never merge/i);
   expect(sentence(autopilot, 'Managers, workers')).toMatch(/reviewers.*monitors.*nightly triage never merge/i);

@@ -168,6 +168,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cli-lessons M2: +4737 measured bytes for merge escalation;
   // exact measured ceiling; always-loaded unchanged.
   // M2 rebase onto 9de3f2a: exact measured aggregate 367868; retain all history.
-  expect(total).toBeLessThanOrEqual(376755);
+  // M2 repair1: +2473 measured bytes for driver policy parity and bounded
+  // uncertain-rating decisions; exact aggregate, always-loaded unchanged.
+  // M2 rebase onto 67283e5c: exact measured aggregate 379228; keep relay-card history.
+  expect(total).toBeLessThanOrEqual(379228);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

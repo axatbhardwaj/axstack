@@ -53,8 +53,8 @@ const rules = [
     '--admin and rule bypass are never used.', [/never used/i, 'allowed'], /never used/i],
   ['A5 test sources eligible', [/test sources/i, /stay|remain/i, /eligible/i],
     'Test sources remain eligible.', [/eligible/i, 'excluded']],
-  ['A5 actual revert declaration', [/revert gate/i, /line starts with/i, /Revert:/i, /line start/i],
-    'Read the revert gate from the declaration whose line starts with Revert: at line start.', [/line start/i, 'any position']],
+  ['A5 rollback declaration', [/rollback declaration/i, /line starts with/i, /Revert:/i, /line start\b/i],
+    'At line start, read the rollback declaration whose line starts with Revert: in the PR body.', [/line start\b/i, 'any position']],
   ['A5 quoted format excluded', [/quoted format/i, /bullet/i, /declaration/i],
     'A quoted format inside a bullet never counts as the declaration.', [/never counts/i, 'counts'], /never counts/i],
   ['A7 solo reply authorizes guarded merge', [/solo/i, /user.s merge-card reply/i, /authorizes/i, /guarded merge/i, /user-written PRs/i, /unknown or mixed provenance/i],
@@ -105,6 +105,8 @@ test('merge eligibility grants no publish or host install authority', () => {
 });
 
 const documented = [
+  ['excluded peer merges', [/automatic merge/i, /peer PRs/i, /excluded/i],
+    'Peer PRs are excluded from automatic merge.', [/excluded/i, 'permitted']],
   ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
     'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],
   ['deferred contention', [/local CI contention/i, /deferred/i],

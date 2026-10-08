@@ -33,9 +33,34 @@ rule('implement run done waits for Release', implement, 'The run is done only', 
 rule('watch Close-out waits for Release', watch, 'When every required PR is merged', /Release step is settled or not applicable/);
 rule('watch end waits for Release', watch, 'End a chat-run watch', /release step is settled or not applicable/);
 rule('runtime end waits for Release', runtime, 'Stop the chosen wake only', /release step is settled or not applicable/);
-rule('implement notification allowlist', implement, '`axstack-relay` sends only', /serious risk immediately.*genuine blocked operation/);
-rule('watch notification allowlist', watch, '[axstack-relay](../axstack-relay/SKILL.md) only', /serious risk immediately.*genuine blocked operation/);
-rule('runtime notification allowlist and budget', runtime, 'The driver records one Notification policy:', /only for a user-decision hold.*at most two.*serious-risk hold/);
+// The bounded categories include a notification-only wait ping; peer caps
+// remain protected at each caller and at the canonical notification boundary.
+for (const [name, source] of [
+  ['implement relay remains bounded', implement],
+  ['runtime notification allowlist and budget', runtime],
+]) {
+  test(name, () => {
+    const concepts = [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i,
+      /60-minute blocked ping/i, /capped peer PR milestones/i, /Notification policy/i];
+    checkRule(source(), (text) => requires(text, ...concepts),
+      'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the 60-minute blocked ping, serious-risk holds and user-decision holds.',
+      [[/limited to/i, 'unrestricted beyond']], concepts);
+  });
+}
+test('implement notification allowlist', () => {
+  const concepts = [/axstack-relay/i, /follows the categories below/i, /serious risks? relay(?:ed)? immediately/i,
+    /genuine blocked operations/i, /user intervention/i, /bounded safe recovery/i];
+  checkRule(implement().replace(/;(?= serious risks)/, ','), (text) => requires(text, ...concepts),
+    'axstack-relay follows the categories below, with serious risks relayed immediately and genuine blocked operations needing user intervention relayed after bounded safe recovery.',
+    [[/bounded safe recovery/i, 'no recovery']], concepts);
+});
+test('watch notification allowlist', () => {
+  const concepts = [/owner/i, /axstack-relay/i, /user-decision holds/i, /serious-risk holds/i,
+    /60-minute blocked ping/i, /capped peer PR milestones/i, /Notification policy/i];
+  checkRule(watch().replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'), (text) => requires(text, ...concepts),
+    'Under a Notification policy the owner uses axstack-relay for user-decision holds, serious-risk holds, the 60-minute blocked ping and capped peer PR milestones.',
+    [[/60-minute blocked ping/i, 'routine progress']], concepts);
+});
 // default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
@@ -84,7 +109,6 @@ rule('diligence pauses only for recorded hold', autopilot, 'Diligence FINDINGS d
 rule('workflow routine events always stay in T3', () => read('docs/workflows.md'), 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('implement routine events always stay in T3', implement, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
 rule('watch routine events always stay in T3', watch, 'Progress, CI pending, and completion', /always stay in the T3 driver thread/);
-rule('implement relay remains bounded', implement, 'Only the bounded categories', /user-decision holds.*serious-risk holds.*at most two merge-ready\/merged milestones.*recorded Notification policy/);
 rule('Release line appears at gate 1', autopilot, 'Show the `Release:` line', /spec for human approval at gate 1.*small-change intent read-back/);
 rule('release applicability is decided once', autopilot, 'Detect applicability once', /Align or spec time/);
 rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor if a `feat` commit landed since the last tag/);

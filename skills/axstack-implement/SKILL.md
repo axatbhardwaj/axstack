@@ -264,15 +264,19 @@ After verified readback of every own PR publication, the driver arms or joins
 its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopilot.md).
 That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
-With settled threads, end a turn only when every required PR is `merge-ready` or `held`. Under the recorded Notification policy,
-`axstack-relay` sends only a serious risk immediately, a genuine blocked
-operation needing user intervention after bounded safe recovery, or the
-decision holds and capped milestones named by the recorded Notification policy.
+With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
+Under the recorded Notification policy, `axstack-relay` follows the categories
+below; serious risks relay immediately and genuine blocked operations needing
+user intervention relay after bounded safe recovery.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
-Only the bounded categories—user-decision holds (including spec approval),
-serious-risk holds, and at most two merge-ready/merged milestones per run—may
-be relayed under the recorded Notification policy.
+Relay eligibility is limited to user-decision holds, serious-risk holds, the
+60-minute blocked ping and capped peer PR milestones under the Notification policy.
+Under the recorded Notification policy, `verification not proven` is a
+user-decision hold. The 60-minute blocked ping is a notification-only category
+under the Notification policy. Never send routine merge-ready or merged relays
+for own PRs. Notifications for peer PRs are unchanged, including at most two
+merge-ready/merged milestones per run, deduplicated across implementation and release.
 
 Merge-ready opens the merge boundary.
 For own PRs, automatic merge is the default under the
@@ -282,12 +286,14 @@ standalone authorized maintenance), including small and adopted work.
 Missing or idle ownership follows lifecycle reconciliation and explicit transfer first.
 Apply `axstack-watch` §5's merge card and full predicate; an approval alone
 never grants merge authority.
-A peer PR or `deploying` base waits for the user to merge, in either approval mode.
+Personal own PRs, including `deploying` bases, follow automatic merge under
+watch §5. Work promotion PRs and `deploying` or unknown bases are merged by the
+user on the forge. Peer PRs are merged by the user on the forge.
 User merges are bottom-up for a stack.
 A manager, worker, reviewer, monitor, or nightly triage must never merge.
 Observation-only and peer watches never merge.
 Watch §5 owns provider provenance, approval carryover, eligible bases, every
-planned stack member's publication, exclusions, and card-reply exceptions.
+planned stack member's publication, proven verification, escalation, and card-reply exceptions.
 This policy grants no release, npm publish, or host install authority.
 Re-read every predicate term under watch §5 before merging. Confirm merge
 commits are allowed, `delete_branch_on_merge` is false, and the base has no

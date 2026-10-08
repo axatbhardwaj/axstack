@@ -82,6 +82,18 @@ const rules = [
     'Until resolved, human CHANGES_REQUESTED holds automatic merge.', [/holds automatic merge/i, 'permits automatic merge']],
   ['late comment fresh dispatch', [/comment.*after.*receipt/i, /fresh review dispatch/i, /rating/i, /gap closing/i],
     'For rating as gap closing, a comment received after the receipt triggers a fresh review dispatch.', [/fresh review dispatch/i, 'immediate blocked ping']],
+  ['unresolved rating escalates after one dispatch', [/unrated or uncertain/i, /after one fresh rating dispatch/i, /verification not proven/i, /comment:<id> rating/i, /decision card/i, /head and base/i],
+    'After one fresh rating dispatch an item still unrated or uncertain posts a verification not proven: comment:<id> rating decision card bound to head and base.', [/one fresh rating dispatch/i, 'unlimited rating retries'], /not proven/i],
+  ['rating card names the decision', [/rating card/i, /names the comment/i, /why/i, /unrated or uncertain/i, /decision needed/i, /user/i],
+    'The rating card names the comment and the decision needed from the user, explaining why it is unrated or uncertain.', [/names the comment/i, 'omits the comment']],
+  ['rating reply settles only the named item', [/user.s reply/i, /settles only/i, /that item.s rating/i, /accepted head and base/i, /every other gate and hold/i],
+    "At the accepted head and base the user's reply settles only that item's rating while every other gate and hold applies.", [/settles only/i, 'settles all holds beyond']],
+  ['rating acceptance is not a pass', [/user-accepted unproven: comment:<id> rating/i, /never as a pass/i],
+    'Save user-accepted unproven: comment:<id> rating in the record, never as a pass.', [/never as a pass/i, 'as a pass'], /never as a pass/i],
+  ['rating acceptance expires', [/new head or base/i, /voids/i, /rating acceptance/i],
+    'The rating acceptance is what a new head or base voids.', [/voids/i, 'keeps']],
+  ['accepted unresolved rating releases only its hold', [/user-accepted unrated or uncertain/i, /hold automatic merge/i, /accepted head and base/i],
+    'At the accepted head and base a user-accepted unrated or uncertain item does not hold automatic merge.', [/does not hold/i, 'holds'], /does not hold/i],
   ['agents cannot resolve or dismiss', [/agents/i, /resolve or dismiss/i, /non-agent items/i],
     'Agents never resolve or dismiss items that are non-agent items.', [/never/i, 'can'], /never/i],
   ['ready except human definition', [/ready-except-human/i, /every term other than/i, /collaborator approval/i, /human.*CHANGES_REQUESTED/i, /open findings from a person/i, /holds/i],
@@ -143,7 +155,8 @@ const notificationRules = [
   ['peer notifications unchanged', [/notifications for peer PRs/i, /unchanged/i, /at most two/i, /merge-ready.*merged/i, /per run/i],
     'Notifications for peer PRs keep an unchanged cap of at most two merge-ready/merged milestones per run.', [/unchanged/i, 'stopped']],
 ];
-for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md']) {
+for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md', 'skills/axstack-implement/SKILL.md',
+  'skills/axstack-watch/references/watch-runtime.md', 'skills/axstack/references/autopilot.md']) {
   const source = path === watch ? read(path).split('## 4. Route each wake')[1].split('## 5.')[0] : read(path);
   for (const [name, concepts, rewording, inversion, prohibition] of notificationRules) {
     test(`notification scope ${path}: ${name}`, () => {
@@ -152,3 +165,26 @@ for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md']) {
     });
   }
 }
+
+// These caller summaries must agree with the canonical predicate; a pointer
+// alone must not coexist with a narrower instruction in the same surface.
+for (const path of ['skills/axstack-implement/SKILL.md', 'skills/axstack/references/autopilot.md']) {
+  for (const [name, concepts, rewording, inversion] of [
+    ['personal deploying merges', [/personal own PRs/i, /deploying bases/i, /automatic merge/i, /watch.*§5/i],
+      'Personal own PRs on deploying bases follow automatic merge under watch §5.', [/automatic merge/i, 'user forge merge']],
+    ['work base user merges', [/work/i, /promotion PRs/i, /deploying or unknown bases/i, /merged by the user on the forge/i],
+      'In work repositories promotion PRs and deploying or unknown bases are merged by the user on the forge.', [/user on the forge/i, 'watch owner']],
+    ['peer user merges', [/peer PRs/i, /merged by the user on the forge/i],
+      'Merged by the user on the forge are peer PRs.', [/user on the forge/i, 'watch owner']],
+  ]) {
+    test(`driver merge summary ${path}: ${name}`, () => {
+      checkRule(compact(read(path)), (text) => requires(text, ...concepts), rewording, [inversion], concepts);
+    });
+  }
+}
+test('audit delivery applies proven verification and escalation', () => {
+  const concepts = [/owning watch thread/i, /applies watch §5/i, /proven verification/i, /escalation rules/i];
+  checkRule(compact(read('skills/axstack-audit/SKILL.md')), (text) => requires(text, ...concepts),
+    'The owning watch thread applies watch §5 with proven verification and escalation rules.',
+    [[/proven verification/i, 'review votes alone']], concepts);
+});
