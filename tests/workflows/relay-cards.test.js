@@ -157,3 +157,7 @@ test('active relay surfaces have retired the legacy inbox contract', () => {
 contract('decision receipt retains the choice for repeat replies', relay,
   [/record.*normalized choice/i, /decided.*deferred/i, /receipt/i],
   'The driver shall record the normalized choice alongside decided or deferred in the card receipt.');
+
+contract('driver requires the forwarding marker before proof', relay,
+  [/driver.*require/i, /fixed first line/i, /Telegram reply via Hermes/, /complete inbound envelope/i, /before.*four checks/i],
+  'The driver shall require the fixed first line Telegram reply via Hermes and the complete inbound envelope before applying the four checks.');

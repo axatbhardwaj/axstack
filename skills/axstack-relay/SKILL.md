@@ -179,6 +179,10 @@ Before acting on a forwarded reply or other user decision, revalidate the
 current task, exact revision, and action boundaries.
 Do not act on a reply naming an unknown or mismatched thread/run.
 
+The driver must require the fixed first line `Telegram reply via Hermes` and
+the complete inbound envelope before applying the four checks. Missing either
+is rejected as a proof failure, changes no receipt and grants no authority.
+
 Run these four checks in order, stopping at the first failure:
 
 1. **Proof** must require the quote's Card line and final tag to match a
