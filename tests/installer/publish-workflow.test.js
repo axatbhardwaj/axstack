@@ -20,8 +20,9 @@ const parsed = () => {
   return { ...doc, on: doc.on ?? doc[true] };
 };
 
-const CHECKOUT = 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262';
-const SETUP_BUN = 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6';
+// Dependabot may advance the SHA; action identities and full-length pins stay fixed.
+const CHECKOUT = expect.stringMatching(/^actions\/checkout@[0-9a-f]{40}$/);
+const SETUP_BUN = expect.stringMatching(/^oven-sh\/setup-bun@[0-9a-f]{40}$/);
 
 const TAG_GUARD = `set -eu
 tag="\${GITHUB_REF_NAME#v}"
