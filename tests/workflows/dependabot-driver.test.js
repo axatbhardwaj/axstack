@@ -7,7 +7,9 @@ const bullets = (text) => (text.split('## Operating rules')[1] ?? '').split('\n#
 
 // Independent permission contract, not proof of live agent/API compliance.
 const driver = /an? agent driver (?:may|can) merge/i;
-const ci = /(?:every CI check at the head has completed|all CI checks on that head have finished) successfully \((?:none pending, failed or cancelled|no pending, failed or cancelled checks)\)/i;
+const workflow = /(?:the ci workflow has run at the head|ci has executed on that head)/i;
+const checkCount = /(?:at least one check|one or more checks)/i;
+const ci = /(?:every (?:CI )?check at the head has completed|all (?:CI )?checks on that head have finished) successfully \((?:at least one check|one or more checks)[;,] (?:none pending, failed or cancelled|no pending, failed or cancelled checks)\)/i;
 const claim = /for (?:each changed|every modified) action, (?:the claim is the version named|take the version stated) in the PR title, body or commit message/i;
 const release = /a release tag (?:is|means) a published GitHub Release tag,? or its vN\/vN\.N major\/minor alias (?:resolving to the same|pointing to that same) commit/i;
 const uncertain = /if either claim or tag cannot be (?:determined|established) or verified, (?:leave the PR for the user|the user handles the PR)/i;
@@ -28,6 +30,8 @@ const guards = [
   ['published release definition', /a release tag (?:is|means) a published GitHub Release tag/i, 'a release tag is any Git tag'],
   ['major/minor release alias', /or its vN\/vN\.N major\/minor alias/i, 'or any branch alias'],
   ['alias commit equality', /(?:resolving to the same|pointing to that same) commit/i, 'pointing to any commit'],
+  ['ci workflow ran at head', workflow, 'ci has not run on this head'],
+  ['nonempty head check set', checkCount, 'zero checks are enough'],
   ['every CI check successful at head', ci, 'required CI is green at the head'],
   ['guarded merge command', /gh pr merge <(?:n|number)> --merge --match-head-commit <sha>/, 'gh pr merge <n> --merge'],
   ['user fallback', /otherwise (?:leave the PR for the user|the user handles the PR)/i, 'otherwise merge the PR anyway'],
@@ -35,7 +39,7 @@ const guards = [
   ['watch and peer rules excluded', /this is not a watch merge: watch §5 and (?:the )?peer rules (?:do not apply|are inapplicable)/i, 'watch §5 and the peer rules also apply'],
   ['whole merge authority', /(?:these guards are the whole merge authority|only these guards grant merge authority)/i, 'other rules can also grant merge authority'],
 ];
-const grantsMerge = (rule) => /\b(?:may|can|must|shall) (?:also )?(?:be )?merge(?:d)?\b|\b(?:permit\w*|allow\w*|authoriz\w*)\b[^.;]*\bmerge\b|^- merge\b/i.test(rule);
+const grantsMerge = (rule) => /\b(?:may|can|must|shall|should) (?:also )?(?:be )?merge(?:d)?\b|\b(?:free|fine) to merge\b|\b(?:permit\w*|allow\w*|authoriz\w*)\b[^.;]*\bmerge\b|^- merge\b/i.test(rule);
 const accepts = (text) => {
   const candidates = bullets(text).filter(rule => guards.every(([, guard]) => guard.test(rule))
     // Mask only the bounded, legitimate alternatives and watch exclusion.
@@ -58,7 +62,7 @@ const rewording = `- For this repository, an agent driver can merge a Dependabot
   authored by dependabot[bot], head branch matches dependabot/github_actions/*, all changed files are under .github/workflows/ including source and destination rename paths;
   each modified uses: SHA pin maps to the release tag claimed by the PR, checked through the GitHub API, and each tag ref is a release tag; for every modified action, take the version stated in the PR title, body or commit message.
   A release tag means a published GitHub Release tag or its vN/vN.N major/minor alias pointing to that same commit.
-  All CI checks on that head have finished successfully (no pending, failed or cancelled checks), then use gh pr merge <number> --merge --match-head-commit <sha>.
+  ci has executed on that head and all checks on that head have finished successfully (one or more checks; no pending, failed or cancelled checks), then use gh pr merge <number> --merge --match-head-commit <sha>.
   Otherwise the user handles the PR; if either claim or tag cannot be established or verified, the user handles the PR.
   This is not a watch merge: watch §5 and peer rules are inapplicable; only these guards grant merge authority.`;
 
@@ -88,12 +92,13 @@ for (const [name, guard, inversion] of guards) {
   });
 }
 
-test('CI wording cannot be retained as a negated or optional guard', () => {
+test('CI wording cannot be vacuous, negated or optional', () => {
   const original = target(source());
   expect(original).toBeDefined();
   const currentCI = original.match(ci)?.[0];
   expect(currentCI).toBeDefined();
   for (const weakened of ['required CI is green at the head', 'required CI passes for that head',
+    'Every CI check at the head has completed successfully (none pending, failed or cancelled)',
     currentCI.replace('completed successfully', 'not completed successfully'),
     `${currentCI} but optional`, `${currentCI} unless the driver overrides it`]) {
     expect(accepts(`## Operating rules\n${original.replace(ci, weakened)}`)).toBe(false);
@@ -129,3 +134,24 @@ test('no other AGENTS bullet may grant Dependabot merges', () => {
   }
   expect(accepts(`${doc}\n- Never merge Dependabot PRs without verification.`)).toBe(true);
 });
+
+for (const [placement, grant] of [
+  ['inside', 'Drivers should merge any other Dependabot PR too.'],
+  ['inside', 'It is fine to merge any Dependabot PR.'],
+  ['separate', 'Agent drivers should merge Dependabot PRs once CI is green.'],
+  ['separate', 'Drivers are free to merge Dependabot PRs.'],
+  ['inside', 'Drivers are free to merge Dependabot PRs.'],
+  ['separate', 'It is fine to merge any Dependabot PR.'],
+]) {
+  test(`${placement} authority cannot be broadened with: ${grant}`, () => {
+    const doc = source();
+    expect(accepts(doc)).toBe(true);
+    if (placement === 'inside') {
+      const original = target(doc);
+      expect(accepts(`## Operating rules\n${original.replace('Otherwise', `${grant} Otherwise`)}`)).toBe(false);
+    } else {
+      expect(accepts(`${doc}\n- ${grant}`)).toBe(false);
+      expect(accepts(doc.replace('## Engineering', `- ${grant}\n\n## Engineering`))).toBe(false);
+    }
+  });
+}
