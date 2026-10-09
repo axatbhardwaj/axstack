@@ -21,6 +21,7 @@ No daemon, port, test account or production credential is needed.
 REPO=$(git rev-parse --show-toplevel)
 SKILL=$(realpath "$REPO/.agents/skills/verify-axstack")
 BUN=$(realpath "$(command -v bun)")
+NODE_DIR=$(dirname "$(command -v node)")
 # Replace both literal paths for this run; never reuse another run's scratch.
 TMPDIR=/tmp/axstack-verify-local
 EVIDENCE=/absolute/private/evidence/verify-axstack
@@ -31,17 +32,18 @@ test "$(realpath "$TMPDIR")" = /tmp/axstack-verify-local
 test "$(stat -c '%a:%u' "$TMPDIR")" = "700:$(id -u)"
 mkdir -m 700 "$TMPDIR/home"
 test -d "$EVIDENCE"
-unshare -n -- env -i PATH="$(dirname "$BUN"):/usr/bin:/bin" \
+unshare -n -- env -i PATH="$(dirname "$BUN"):$NODE_DIR:/usr/sbin:/usr/bin:/bin" \
   HOME="$TMPDIR/home" TMPDIR="$TMPDIR" REPO="$REPO" SKILL="$SKILL" \
   EVIDENCE="$EVIDENCE" HOST_NET="$HOST_NET" bash --noprofile --norc
 ```
 
 Inside that offline shell, initialize these handles. The fresh network
-namespace has no external interfaces; failure of `unshare` holds driving.
+namespace has only loopback; failure of `unshare` holds driving.
 Readiness is an exited command plus observed files, not a listening service.
 
 ```bash
 set -euo pipefail
+ip link set lo up
 cd "$REPO"
 REV=$(git rev-parse HEAD)
 SCRIPTS="$REPO/skills/axstack/scripts"
@@ -83,8 +85,24 @@ Execute all steps in each selected feature file, including its assertions:
 3. [Create run records and inspect repositories](features/reports.md).
 4. [Inspect the package payload](features/package.md).
 
-Run the full suite after changes with `setpriv --bounding-set=-dac_override,-dac_read_search bun test`
-in the offline shell; save stdout/stderr and the exit status under Evidence.
+The full suite needs Node for its existing npm staging probe, `ip` for
+loopback fixtures, and an already cached **npm@12.0.2** package including its
+bundled dependencies. Copy that package into this run's Bunx cache; never
+download it or point cache writes at live HOME. If unavailable, hold the full
+suite as unverified. Substitute its absolute source path below:
+
+```bash
+NPM_SOURCE=/absolute/offline/npm-12.0.2
+bun -e 'const p = await Bun.file(process.argv[1] + "/package.json").json(); if (p.name !== "npm" || p.version !== "12.0.2") throw Error("need cached npm@12.0.2");' "$NPM_SOURCE"
+BUNX_CACHE="$TMPDIR/bunx-$(id -u)-npm@12.0.2"
+mkdir -p "$BUNX_CACHE/node_modules/.bin"
+cp -R "$NPM_SOURCE" "$BUNX_CACHE/node_modules/npm"
+ln -s ../npm/bin/npm-cli.js "$BUNX_CACHE/node_modules/.bin/npm"
+setpriv --bounding-set=-dac_override,-dac_read_search bun test \
+  > "$EVIDENCE/full-suite.log" 2>&1
+```
+
+Save the exit status under Evidence even on failure.
 The clean environment unsets `CLAUDE_CONFIG_DIR`. Keep TMPDIR outside HOME:
 installer fixtures reject home-based scratch. Do not weaken permission tests
 by retaining root's DAC override capabilities.
