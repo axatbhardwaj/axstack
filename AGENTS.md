@@ -26,9 +26,11 @@
   use the same predicate. User merges are bottom-up for a stack.
 - In this repository, an agent driver may merge a Dependabot GitHub Actions PR only when all hold:
   author is `dependabot[bot]`, branch is `dependabot/github_actions/*`, and only `.github/workflows/` files change (including old and new rename paths);
-  every changed `uses:` SHA pin resolves to the release tag the PR claims, verified via the GitHub API, and every tag ref is a release tag;
-  required CI is green at the head; merge with `gh pr merge <n> --merge --match-head-commit <sha>`.
-  Otherwise leave the PR for the user.
+  every changed `uses:` SHA pin resolves to the release tag the PR claims, verified via the GitHub API, and every tag ref is a release tag; for each changed action, the claim is the version named in the PR title, body or commit message.
+  A release tag is a published GitHub Release tag, or its `vN`/`vN.N` major/minor alias resolving to the same commit.
+  Every CI check at the head has completed successfully (none pending, failed or cancelled); merge with `gh pr merge <n> --merge --match-head-commit <sha>`.
+  Otherwise leave the PR for the user. If either claim or tag cannot be determined or verified, leave the PR for the user.
+  This is not a watch merge: watch §5 and the peer rules do not apply; these guards are the whole merge authority.
 
 ## Engineering
 
