@@ -20,7 +20,7 @@ git -C "$TMPDIR/reports-repo" -c user.name=Fixture \
   --slug verify-fixture --date 20261008) > "$EVIDENCE/run-init.json"
 (cd "$TMPDIR/reports-repo"; bun "$SCRIPTS/pr-shape.js" \
   --base "$BASE" --head HEAD) > "$EVIDENCE/shape.json"
-bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/run-init.json").json(); const s = await Bun.file(e + "/shape.json").json(); if (r.terms.some(t => t.status !== "pass") || !(await Bun.file(r.recordPath).text()).includes("Run: " + r.runId) || s.total.additions !== 1 || s.total.deletions !== 0) throw Error("fixture report mismatch"); await Bun.write(e + "/fixture-progress.md", await Bun.file(r.recordPath).text());'
+bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/run-init.json").json(); const s = await Bun.file(e + "/shape.json").json(); if (r.terms.some(t => t.status !== "pass") || !(await Bun.file(r.recordPath).text()).includes("Run: " + r.runId) || s.totals.additions !== 1 || s.totals.deletions !== 0) throw Error("fixture report mismatch"); await Bun.write(e + "/fixture-progress.md", await Bun.file(r.recordPath).text());'
 ```
 
 Outputs: run-init returns owned paths, template record and per-term facts;
