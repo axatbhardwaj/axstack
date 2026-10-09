@@ -181,3 +181,81 @@ test('unrelated histories retain every measurement as unknown rather than invent
     expect(term).not.toHaveProperty('additions');
   }
 });
+
+// Local Git characterization only: forge retargeting is a separate boundary.
+test('three-layer chains and siblings preserve commit identity through parent/base merges and retarget shape', () => {
+  const repo = mkdtempSync(`${root}/chain-`);
+  git(repo, 'init', '-q', '-b', 'main');
+  git(repo, 'config', 'user.name', 'Fixture');
+  git(repo, 'config', 'user.email', 'fixture@example.test');
+  writeFileSync(`${repo}/root.txt`, 'root\n');
+  const base = commit(repo, 'base');
+  git(repo, 'checkout', '-qb', 'parent');
+  writeFileSync(`${repo}/parent.txt`, 'parent\n');
+  const parent = commit(repo, 'parent');
+  git(repo, 'checkout', '-qb', 'child');
+  writeFileSync(`${repo}/child.txt`, 'child\n');
+  const child = commit(repo, 'child');
+  git(repo, 'checkout', '-qb', 'grandchild');
+  writeFileSync(`${repo}/grandchild.txt`, 'grandchild\n');
+  const grandchild = commit(repo, 'grandchild');
+  git(repo, 'checkout', '-qb', 'sibling', parent);
+  writeFileSync(`${repo}/sibling.txt`, 'sibling\n');
+  const sibling = commit(repo, 'sibling');
+  const identities = [parent, child, grandchild, sibling].map((sha) => git(repo, 'cat-file', 'commit', sha));
+  const ancestor = (older, newer) => Bun.spawnSync(['git', 'merge-base', '--is-ancestor', older, newer],
+    { cwd: repo, stdout: 'pipe', stderr: 'pipe' }).exitCode === 0;
+
+  git(repo, 'checkout', '-q', 'parent');
+  writeFileSync(`${repo}/fix.txt`, 'parent fix\n');
+  const fixed = commit(repo, 'parent fix after child review');
+  expect(ancestor(fixed, child)).toBe(false);
+  git(repo, 'checkout', '-q', 'child');
+  git(repo, 'merge', '--no-ff', '-qm', 'refresh parent', 'parent');
+  const refreshed = git(repo, 'rev-parse', 'HEAD');
+  expect(ancestor(child, refreshed)).toBe(true);
+  expect(ancestor(fixed, refreshed)).toBe(true);
+  expect(ancestor(fixed, grandchild)).toBe(false);
+  expect(ancestor(fixed, sibling)).toBe(false);
+  const beforeRetarget = invoke(repo, ['--base', 'parent', '--head', 'child']).data;
+  expect(beforeRetarget.totals).toMatchObject({ additions: 1, deletions: 0, files: 1 });
+
+  git(repo, 'checkout', '-q', 'main');
+  git(repo, 'merge', '--no-ff', '-qm', 'integrate parent', 'parent');
+  const integrated = git(repo, 'rev-parse', 'HEAD');
+  expect(ancestor(fixed, integrated)).toBe(true);
+  // Original parent commits alone do not contain the integration merge commit.
+  expect(ancestor(integrated, refreshed)).toBe(false);
+  const afterRetarget = invoke(repo, ['--base', 'main', '--head', 'child']).data;
+  expect(afterRetarget.inputs.head).toBe(refreshed);
+  expect(afterRetarget.inputs.base).toBe(integrated);
+  expect(afterRetarget.inputs.base).not.toBe(beforeRetarget.inputs.base);
+  expect(afterRetarget.totals).toEqual(beforeRetarget.totals);
+  // A retarget changes evidence identity despite unchanged head and patch shape.
+  expect(git(repo, 'rev-parse', 'grandchild')).toBe(grandchild);
+  expect(git(repo, 'rev-parse', 'sibling')).toBe(sibling);
+  git(repo, 'checkout', '-q', 'child');
+  git(repo, 'merge', '--no-ff', '-qm', 'enter integration tip', 'main');
+  expect(ancestor(integrated, 'child')).toBe(true);
+  expect(invoke(repo, ['--base', 'main', '--head', 'child']).data.mergeBase.value).toBe(integrated);
+
+  git(repo, 'checkout', '-q', 'main');
+  writeFileSync(`${repo}/other.txt`, 'other integration\n');
+  const currentTip = commit(repo, 'integration advanced');
+  expect(ancestor(currentTip, 'child')).toBe(false);
+  git(repo, 'checkout', '-q', 'sibling');
+  git(repo, 'merge', '--no-ff', '-qm', 'batch parent and integration changes', 'main');
+  expect(ancestor(currentTip, 'sibling')).toBe(true);
+  expect(ancestor(sibling, 'sibling')).toBe(true);
+  expect(invoke(repo, ['--base', 'main', '--head', 'sibling']).data.totals).toMatchObject({ files: 1, additions: 1 });
+  git(repo, 'checkout', '-q', 'grandchild');
+  git(repo, 'merge', '--no-ff', '-qm', 'refresh direct parent when ready', 'child');
+  expect(ancestor(grandchild, 'grandchild')).toBe(true);
+  expect(invoke(repo, ['--base', 'child', '--head', 'grandchild']).data.totals).toMatchObject({ files: 1, additions: 1 });
+  expect([parent, child, grandchild, sibling].map((sha) => git(repo, 'cat-file', 'commit', sha))).toEqual(identities);
+
+  git(repo, 'checkout', '-qb', 'external-squash', base);
+  git(repo, 'merge', '--squash', 'parent');
+  commit(repo, 'external squash loses reviewed parent identity');
+  expect(ancestor(fixed, 'external-squash')).toBe(false);
+});
