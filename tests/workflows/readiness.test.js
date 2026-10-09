@@ -8,9 +8,11 @@ const fakeGh = `${root}/gh`;
 writeFileSync(fakeGh, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
 if (process.env.GH_LOG) appendFileSync(process.env.GH_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');
+if (process.argv.includes('--slurp')) { console.error('unknown flag: --slurp'); process.exit(1); }
 const response = JSON.parse(process.env.GH_FIXTURE ?? '{}')[process.argv.at(-1)];
 if (!response || response.error) { console.error(response?.error ?? 'fixture: permission denied'); process.exit(1); }
-console.log(JSON.stringify(response.pages ?? [response.data]));
+const pages = response.pages ?? [response.data];
+console.log(response.raw ?? pages.map((page) => JSON.stringify(page)).join('\\n'));
 `, { mode: 0o700 });
 
 function command(cwd, argv) {
@@ -241,7 +243,7 @@ test('forge reads distinguish protection, effective rules, permissions and missi
   }
   for (const call of readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse)) {
     expect(call).toContain('--paginate');
-    expect(call).toContain('--slurp');
+    expect(call).not.toContain('--slurp');
     expect(call).toContain('GET');
   }
   const denied = assess(repo).report;
@@ -374,8 +376,8 @@ test('linked worktrees use the common git directory and assess the selected revi
   expect({ common: manifest(repo), linked: manifest(linked) }).toEqual(before);
 });
 
-test('workflow configuration requires the selected package manager test script, not a built-in runner or printed prose', () => {
-  for (const run of ['bun test', 'echo bun test', 'npm test', '# bun test', 'echo "bun test"']) {
+test('workflow configuration requires the selected package manager test command, not printed prose', () => {
+  for (const run of ['echo bun test', 'npm test', '# bun test', 'echo "bun test"']) {
     const report = assess(fixture({ ...complete, '.github/workflows/test.yml': `on: [pull_request]\njobs:\n  tests:\n    steps:\n      - run: ${JSON.stringify(run)}\n` })).report;
     status(report, 'security.pr-tests', 'fail', 'missing pull_request test step');
   }
@@ -384,7 +386,7 @@ test('workflow configuration requires the selected package manager test script, 
 test('workflow test script forms are recognized for each supported package manager', () => {
   const { 'bun.lock': unused, ...base } = complete;
   for (const [lock, contents, commands] of [
-    ['bun.lock', '{}', ['bun run test']],
+    ['bun.lock', '{}', ['bun test', 'bun run test']],
     ['package-lock.json', '{}', ['npm test', 'npm run test']],
     ['pnpm-lock.yaml', '{}', ['pnpm test', 'pnpm run test']],
     ['yarn.lock', '__metadata:\n  version: 8', ['yarn test', 'yarn run test']],
@@ -575,5 +577,63 @@ test('output-path input errors explain the replacement argument', () => {
     const result = assess(repo, [], { out });
     expect(result.code).toBe(1);
     expect(result.error).toContain('pass --out');
+  }
+});
+
+test('dependency-free repositories select declared managers without changing lockfile readiness', () => {
+  for (const [declaration, manager] of [
+    [{ packageManager: 'bun@1.3.14' }, 'bun'], [{ packageManager: 'npm@11.0.0', engines: { bun: '>=1.3.14' } }, 'npm'],
+    [{ packageManager: 'pnpm@10.0.0' }, 'pnpm'], [{ packageManager: 'yarn@4.0.0' }, 'yarn'],
+    [{ engines: { bun: '>=1.3.14' }, dependencies: {}, devDependencies: {} }, 'bun'],
+  ]) {
+    const repo = fixture({ 'package.json': { ...declaration, scripts: { build: 'echo build', test: 'echo test', lint: 'echo lint' } } });
+    const { code, report } = assess(repo);
+    expect(code).toBe(0);
+    status(report, 'env.lockfile', 'fail');
+    for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) {
+      status(report, id, 'unknown', 'not run');
+      expect(criterion(report, id).evidence.join(' ')).toContain(`${manager} run`);
+      expect(criterion(report, id).evidence.join(' ')).toContain('package.json');
+    }
+  }
+});
+
+test('dependency declarations prevent the lockfile-free manager fallback', () => {
+  for (const field of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies']) {
+    const dependencies = field.includes('bundle') ? ['example'] : { example: '*' };
+    const report = assess(fixture({ 'package.json': { packageManager: 'bun@1.3.14', engines: { bun: '>=1.3.14' }, [field]: dependencies, scripts: { test: 'echo test' } } })).report;
+    status(report, 'testing.test', 'unknown', 'no lockfile');
+  }
+  const ambiguous = assess(fixture({ ...complete, 'package-lock.json': '{}', 'package.json': { packageManager: 'bun@1.3.14', scripts: { test: 'echo test' } } })).report;
+  status(ambiguous, 'testing.test', 'unknown', 'ambiguous lockfile');
+  for (const packageManager of ['bun', 'unknown@1.0.0']) {
+    const report = assess(fixture({ 'package.json': { packageManager, scripts: { test: 'echo test' } } })).report;
+    status(report, 'testing.test', 'unknown', 'no lockfile');
+  }
+});
+
+test('legacy gh pagination reads concatenated JSON and preserves real API or pagination gaps', () => {
+  const repo = fixture(complete);
+  git(repo, 'remote', 'add', 'origin', 'https://github.com/example/readiness.git');
+  const metadata = { 'repos/example/readiness': { data: { default_branch: 'main' } } };
+  const protection = 'repos/example/readiness/branches/main/protection';
+  const rules = 'repos/example/readiness/rules/branches/main?per_page=100';
+  const required = { type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'ci } [ "quoted" \\ path' }] } };
+  for (const [response, expected, reason] of [
+    [{ pages: [[], [required]] }, 'pass', ''],
+    [{ data: [] }, 'fail', 'needs admin'],
+    [{ raw: '[]\n[{' }, 'unknown', 'gh settings unavailable'],
+    [{ raw: '[]\ninvalid' }, 'unknown', 'gh settings unavailable'],
+    [{ raw: '' }, 'unknown', 'gh settings unavailable'],
+    [{ data: {} }, 'unknown', 'gh settings unavailable'],
+    [{ error: 'gh: pagination failed (HTTP 403)' }, 'unknown', 'gh settings unavailable'],
+  ]) {
+    const responses = { ...metadata, [protection]: { data: { required_status_checks: null } }, [rules]: response };
+    const { code, report } = assess(repo, [], { env: { GH_FIXTURE: JSON.stringify(responses) } });
+    expect(code).toBe(0);
+    status(report, 'security.status-checks', expected, reason);
+    const evidence = criterion(report, 'security.status-checks').evidence.join(' ');
+    expect(evidence).not.toContain('--slurp');
+    if (expected === 'unknown') expect(criterion(report, 'security.status-checks').evidence.length).toBeGreaterThan(3);
   }
 });

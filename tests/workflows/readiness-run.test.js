@@ -561,3 +561,17 @@ test('in-process main names report inputs and sends baseline gaps and actionable
   expect(await main(['--repo', root, '--out', out], io)).toBe(1);
   expect(stderr).toContain('pass --repo');
 });
+
+test('run executes dependency-free scripts using packageManager or engines without a lockfile', () => {
+  for (const [declaration, manager] of [[{ packageManager: 'npm@11.0.0', engines: { bun: '>=1.3.14' } }, 'npm'], [{ engines: { bun: '>=1.3.14' } }, 'bun']]) {
+    const scripts = { build: 'bun fixture.js build', test: 'bun fixture.js test', lint: 'bun fixture.js lint' };
+    const repo = fixture(scripts, { 'package.json': { ...declaration, scripts } });
+    command(repo, ['rm', 'bun.lock']);
+    command(repo, ['commit', '-qm', 'dependency-free repository']);
+    const { code, report } = assess(repo, ['--run']);
+    expect(code).toBe(0);
+    expect(item(report, 'env.lockfile').status).toBe('fail');
+    for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) expect(item(report, id).status).toBe('pass');
+    expect(report.commands.filter((step) => step.kind === 'script').map((step) => step.argv)).toEqual(['build', 'test', 'lint'].map((name) => [manager, 'run', name]));
+  }
+});
