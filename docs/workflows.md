@@ -119,11 +119,11 @@ role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Opus low | Astra high / Opus xhigh | Sonnet high + Sol high |
+| `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Haiku xhigh + Sol high |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
 | `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high (Sol absent) |
 
-In `mixed` and `claude-only`, `axstack-auditor`, `axstack-research-requirements`,
+In `mixed` and `claude-only`, `axstack-research-requirements`,
 `axstack-research-code`, `axstack-research-web`, and `axstack-explore-execution`
 use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
 `axstack-monitor` adopt Haiku 5.5 high, with class `haiku` and exact pin
@@ -131,6 +131,9 @@ use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
 holds those roles without substitution. `codex-only` keeps its Codex
 assignments for those roles. Mixed web-google and X retain their source-specific
 Antigravity and Grok routes.
+The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
+missing that ID or xhigh effort holds without substitution. The mixed
+`axstack-explainer-review` uses Sol medium; `axstack-explainer` stays Sonnet high.
 The new `-sol` auditor, research-code, and explore-execution seats use Sol high
 in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.
 Dispatch the base and Sol seats independently on the same brief, then reconcile
@@ -148,7 +151,7 @@ later installation changes without re-resolution.
 Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset. The mixed cross-provider peer pair is Sol high followed by
-Opus low. The mixed peer coordinator and review-lane binding
+Opus medium. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
 is used in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.

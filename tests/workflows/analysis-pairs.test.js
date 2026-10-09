@@ -37,7 +37,7 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
   const pairs = roster.split('- Sol pairs ')[1]?.split('- `axstack-debug-investigator')[0];
   expect(sonnet).toBeTruthy();
   for (const role of [
-    'axstack-auditor', 'axstack-research-requirements', 'axstack-research-code',
+    'axstack-research-requirements', 'axstack-research-code',
     'axstack-research-web', 'axstack-explore-execution',
   ]) expect(sonnet).toContain(role);
   expect(sonnet).toContain('claude/sonnet');

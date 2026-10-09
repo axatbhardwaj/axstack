@@ -142,8 +142,8 @@ test('single-provider readiness accepts only the intentionally unavailable advis
 
 test('authored pairing accepts all four class routes and newer exact author IDs', () => {
   for (const [preset, author, primary, secondary] of [
-    ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
-    ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
+    ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
+    ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
     ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
     ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   ]) {
@@ -164,7 +164,7 @@ test('authored pairing rejects author IDs without a class and wrong reviewer cla
   const rows = [
     role('axstack-author', 'gpt-5.6-terra'),
     { ...role('axstack-reviewer-primary', null), modelClass: 'sol', thinkingOptionId: 'high' },
-    { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium' },
+    { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' },
   ];
   for (const model of ['gpt-5.6-terra', 'unknown']) {
     rows[0].model = model;
@@ -172,9 +172,9 @@ test('authored pairing rejects author IDs without a class and wrong reviewer cla
   }
   rows[0].model = 'gpt-5.6-sol';
   rows[2] = { ...rows[2], provider: 'codex', modelClass: 'luna' };
-  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/medium'))).toBe(true);
-  rows[2] = { ...rows[2], provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' };
-  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/medium'))).toBe(true);
+  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/high'))).toBe(true);
+  rows[2] = { ...rows[2], provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium' };
+  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/high'))).toBe(true);
 });
 
 test('reviewer distinctness compares resolved IDs or unresolved classes', () => {
@@ -263,11 +263,13 @@ test('installed presets route analysis roles to the selected provider', () => {
     const byId = Object.fromEntries(roles.map((entry) => [entry.id, entry]));
     for (const id of analysisIds) {
       const actual = byId[id];
+      const mixedAuditor = preset === 'mixed' && id === 'axstack-auditor';
       const codexOnlyRoute = id === 'axstack-auditor'
         ? ['codex', 'luna', 'xhigh']
         : ['codex', 'sol', 'high'];
       expect([actual.provider, actual.modelClass ?? actual.model, actual.thinkingOptionId], `${preset}: ${id}`)
-        .toEqual(route ?? codexOnlyRoute);
+        .toEqual(mixedAuditor ? ['claude', 'haiku', 'xhigh'] : route ?? codexOnlyRoute);
+      if (mixedAuditor) expect(actual.model).toBe('claude-haiku-5-5');
     }
     if (preset === 'mixed') {
       expect(byId['axstack-research-web-google'].provider).toBe('antigravity');
@@ -508,7 +510,7 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
     { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'medium' },
+    { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'high' },
     { ...role('axstack-escalation-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
   ];
   expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
@@ -543,7 +545,7 @@ test('readiness rejects a null model on a non-intentional row such as an investi
 
 test('installed presets expose the peer seat without changing authored routes', () => {
   for (const [preset, peer] of [
-    ['mixed', { provider: 'claude', modelClass: 'opus', modeId: 'bypassPermissions', thinkingOptionId: 'low' }],
+    ['mixed', { provider: 'claude', modelClass: 'opus', modeId: 'bypassPermissions', thinkingOptionId: 'medium' }],
     ['codex-only', { provider: 'codex', modelClass: 'luna', modeId: 'full-access', thinkingOptionId: 'xhigh' }],
     ['claude-only', { provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions', thinkingOptionId: 'high' }],
   ]) {

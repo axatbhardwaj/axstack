@@ -52,16 +52,16 @@ const expected = {
     c('astra', 'high'),
     a('opus', 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'high'), a('opus', 'medium'), a('opus', 'low'),
+    c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
     ag(null, 'low'), a('sonnet', 'high'),
     a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), ag(null, 'high'),
     g(null, 'high'),
-    a('sonnet', 'high'), c('luna', 'xhigh'),
+    a('sonnet', 'high'), c('sol', 'medium'),
     a('sonnet', 'high'),
     a('haiku', 'high'), a('sonnet', 'high'), c('sol', 'high'),
     a('haiku', 'high'),
-    a('sonnet', 'high'), c('sol', 'high'),
+    a('haiku', 'xhigh'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
     c('astra', 'xhigh'), a('fable', 'xhigh'), a('opus', 'xhigh'),
@@ -241,25 +241,29 @@ test('presets: auditor route agrees with audit skill and workflow table', () => 
   for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const auditor = roles.find(({ id }) => id === 'axstack-auditor');
-    const sonnet = preset !== 'codex-only';
-    expect(auditor).toMatchObject(sonnet
-      ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high' }
-      : { provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh' });
+    expect(auditor).toMatchObject(preset === 'mixed'
+      ? { provider: 'claude', modelClass: 'haiku', model: 'claude-haiku-5-5', thinkingOptionId: 'xhigh' }
+      : preset === 'claude-only'
+        ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high' }
+        : { provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh' });
     expect(workflows).toContain(`| \`${preset}\` |`);
     expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`)))
-      .toEndWith(sonnet
-        ? (preset === 'mixed' ? '| Sonnet high + Sol high |' : '| Sonnet high (Sol absent) |')
-        : '| Luna xhigh + Sol high |');
+      .toEndWith(preset === 'mixed' ? '| Haiku xhigh + Sol high |'
+        : preset === 'claude-only' ? '| Sonnet high (Sol absent) |' : '| Luna xhigh + Sol high |');
   }
-  expect(audit.replace(/\s+/g, ' ')).toContain('`axstack-auditor` profile (claude/sonnet high in mixed/claude-only; codex/luna xhigh in codex-only)');
+  checkRule(sentences(audit).join('. '), (text) => requires(text,
+    /axstack-auditor.*profile/i, /claude\/haiku xhigh in mixed/i,
+    /claude\/sonnet high in claude-only/i, /codex\/luna xhigh in codex-only/i),
+  'The axstack-auditor profile uses claude/haiku xhigh in mixed, claude/sonnet high in claude-only, and codex/luna xhigh in codex-only.',
+  [[/haiku xhigh/i, 'haiku high'], [/haiku/i, 'sonnet']]);
 });
 
-test('presets: Codex explainer reviewer uses supported Luna effort', () => {
-  for (const preset of ['mixed', 'codex-only']) {
+test('presets: Codex explainer reviewer uses the selected class and effort', () => {
+  for (const [preset, modelClass, effort] of [['mixed', 'sol', 'medium'], ['codex-only', 'luna', 'xhigh']]) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
     expect(reviewer).toMatchObject({
-      provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh',
+      provider: 'codex', modelClass, thinkingOptionId: effort,
     });
   }
 });
