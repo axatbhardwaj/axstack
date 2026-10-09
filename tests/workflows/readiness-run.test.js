@@ -552,7 +552,7 @@ test('in-process main names report inputs and sends baseline gaps and actionable
   const report = JSON.parse(readFileSync(out, 'utf8'));
   expect(report.header.inputs).toEqual({ repo, rev: 'HEAD', baseline, run: false });
   expect(report.header.scriptVersion).toBe('1.1.0');
-  expect(JSON.parse(stdout)).toEqual(report);
+  expect(JSON.parse(stdout)).toMatchObject({ revision: report.header.revision, inputs: report.header.inputs, reportPath: out, omittedCriteria: 17 });
   expect(stderr).toContain('comparison unavailable');
   stdout = ''; stderr = '';
   expect(await main(['--repo', repo, '--rev', 'missing-ref', '--out', out], io)).toBe(1);

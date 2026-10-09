@@ -50,7 +50,7 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
       expect(result.error).toBe('');
       const selection = kind === 'launch' ? { instanceId: instance, model, options }
         : { providerInstanceId: instance, model, options };
-      expect(JSON.parse(result.output)).toEqual({ [kind === 'launch' ? 'modelSelection' : 'target']: selection,
+      expect(JSON.parse(result.output)).toMatchObject({ [kind === 'launch' ? 'modelSelection' : 'target']: selection,
         runtimeMode: 'full-access' });
     }
   }
@@ -85,7 +85,9 @@ test('verification matches T3 read-back for either dispatch kind and normalizes 
     for (const options of [[{ id: 'reasoningEffort', value: 'high' }], { reasoningEffort: 'high' }]) {
       const data = configuration(); data.modelSelection.options = options;
       const result = f.run('axstack-author', kind, data);
-      expect(result).toEqual({ status: 0, output: 'MATCH\n', error: '' });
+      expect(result.status).toBe(0);
+      expect(result.output).toContain('MATCH\n');
+      expect(result.error).toBe('');
     }
   }
 });
@@ -136,7 +138,7 @@ test('Antigravity verifies effort through its model suffix with no effort option
   const f = setup(); f.picker.chosenInstanceId = 'antigravity';
   const data = { modelSelection: { instanceId: 'antigravity', model: 'gemini-3.8-flash-low', options: [] },
     runtimeMode: 'full-access' };
-  expect(f.run('axstack-checker', 'launch', data).output).toBe('MATCH\n');
+  expect(f.run('axstack-checker', 'launch', data).output).toContain('MATCH\n');
   data.modelSelection.model = 'gemini-3.8-flash-high';
   const result = f.run('axstack-checker', 'launch', data);
   expect(result.status).toBe(2);
@@ -247,4 +249,58 @@ test('the test runner removes each fixture directory after its test', () => {
   });
   expect(result.exitCode).toBe(0);
   expect(readdirSync(nestedRoot)).toEqual([]);
+});
+
+const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
+  '--capabilities', f.save('capabilities', f.capabilities), '--picker', f.save('picker', f.picker), '--kind', 'launch'];
+
+test('CLI example includes every required input', () => {
+  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role .* --roles .* --capabilities .* --picker .* --kind launch/);
+});
+
+test('usage/input errors tell the caller how to recover', () => {
+  for (const args of [[], ['--kind', 'other'], planArgs(setup()).map((value) => value.endsWith('/roles.json') ? '/missing.json' : value)]) {
+    const result = invoke(args);
+    expect(result.status).toBe(1);
+    expect(result.error).toMatch(/pass|use --help/);
+  }
+});
+
+test('plan and verification name every supplied input path', () => {
+  const f = setup(), args = planArgs(f);
+  expect(JSON.parse(invoke(args).output).inputs).toEqual({ role: 'axstack-author', roles: args[3], capabilities: args[5], picker: args[7], kind: 'launch' });
+  const path = f.save('configuration', configuration());
+  expect(invoke([...args, '--verify', path]).output).toContain(path);
+});
+
+test('large verification uses a caller-given artifact and explicit omitted counts', () => {
+  const f = setup(), args = planArgs(f), data = configuration();
+  data.modelSelection.model = 'wrong'.repeat(2000);
+  const verify = f.save('configuration', data), out = `${f.dir}/full.json`;
+  const missingOut = invoke([...args, '--verify', verify]);
+  expect(missingOut.status).toBe(1);
+  expect(missingOut.error).toContain('pass --out');
+  const result = invoke([...args, '--verify', verify, '--out', out]);
+  expect(result.status).toBe(2);
+  const summary = JSON.parse(result.output), full = JSON.parse(readFileSync(out, 'utf8'));
+  expect(summary.reportPath).toBe(out);
+  expect(summary.omittedMismatches).toBe(1);
+  expect(summary.omittedPayloadFields).toBe(1);
+  expect(full.mismatches[0]).toContain(data.modelSelection.model);
+  expect(result.output.length).toBeLessThan(2000);
+});
+
+test('main accepts argv and captures plan, verification and errors through io in process', async () => {
+  const module = await import(script);
+  expect(module.main).toBeFunction();
+  const f = setup(), args = planArgs(f);
+  let output = '', error = '';
+  const io = { stdout: (text) => { output += text; }, stderr: (text) => { error += text; } };
+  expect(module.main(args, io)).toBe(0);
+  expect(JSON.parse(output).modelSelection.instanceId).toBe('codexAlt');
+  output = '';
+  expect(module.main([...args, '--verify', f.save('configuration', configuration())], io)).toBe(0);
+  expect(output).toContain('MATCH');
+  expect(module.main([], io)).toBe(1);
+  expect(error).toContain('pass');
 });
