@@ -140,14 +140,22 @@ for (const path of [watch, docs]) {
 }
 
 const notificationRules = [
-  ['bounded categories', [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i, /60-minute blocked ping/i, /capped peer PR milestones/i, /Notification policy/i],
-    'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the 60-minute blocked ping, serious-risk holds and user-decision holds.', [/limited to/i, 'unrestricted beyond']],
+  ['bounded categories', [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i, /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i],
+    'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the unresolved-rating notice, the 60-minute blocked ping, serious-risk holds and user-decision holds.', [/limited to/i, 'unrestricted beyond']],
   ['peer budget across phases', [/peer PRs/i, /deduplicate/i, /implementation and release/i],
     'For peer PRs deduplicate across implementation and release.', [/deduplicate/i, 'duplicate']],
   ['verification decision hold', [/verification not proven/i, /user-decision hold/i, /Notification policy/i],
     'Verification not proven is a user-decision hold under the Notification policy.', [/user-decision hold/i, 'routine progress'], /not proven/i],
   ['blocked notification only', [/60-minute blocked ping/i, /notification-only category/i, /Notification policy/i],
     'Under the Notification policy, the 60-minute blocked ping belongs to a notification-only category.', [/notification-only category/i, 'user-decision hold']],
+  ['unresolved rating notification only', [/unresolved-rating notice/i, /notification-only category/i, /Notification policy/i],
+    'Under the Notification policy, the unresolved-rating notice belongs to a notification-only category.', [/notification-only category/i, 'user-decision hold']],
+  ['unresolved rating deduplication', [/unresolved-rating notice/i, /deduplicated/i, /per comment and head/i],
+    'Per comment and head, the unresolved-rating notice is deduplicated.', [/per comment and head/i, 'per wake']],
+  ['unresolved rating has no reply authority', [/unresolved-rating notice/i, /reply authority/i],
+    'The unresolved-rating notice grants no reply authority.', [/no reply authority/i, 'reply authority'], /no reply authority/i],
+  ['unresolved rating preserves hold', [/unresolved-rating notice/i, /clears the hold/i],
+    'The unresolved-rating notice never clears the hold.', [/never clears/i, 'clears'], /never clears/i],
   ['own milestones stop', [/routine/i, /merge-ready/i, /merged/i, /relays/i, /own PRs/i],
     'For own PRs never send routine merged or merge-ready relays.', [/never send/i, 'send'], /never send/i],
   ['peer notifications unchanged', [/notifications for peer PRs/i, /unchanged/i, /at most two/i, /merge-ready.*merged/i, /per run/i],
@@ -163,6 +171,14 @@ for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md', 'skills/axstac
     });
   }
 }
+
+test('relay identifies the report-only unresolved-rating notice', () => {
+  const concepts = [/unresolved-rating notice/i, /relay/i, /report-only comment-rating card/i,
+    /still unrated or uncertain/i, /after one fresh rating dispatch/i, /head and base/i, /comment/i, /settling action/i];
+  checkRule(compact(read('skills/axstack-relay/SKILL.md')), (text) => requires(text, ...concepts),
+    'For an item still unrated or uncertain after one fresh rating dispatch relay the unresolved-rating notice as a report-only comment-rating card naming the comment and settling action, bound to head and base.',
+    [[/after one fresh rating dispatch/i, 'before any rating dispatch']], concepts);
+});
 
 // These caller summaries must agree with the canonical predicate; a pointer
 // alone must not coexist with a narrower instruction in the same surface.
