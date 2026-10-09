@@ -580,11 +580,10 @@ test('output-path input errors explain the replacement argument', () => {
   }
 });
 
-test('dependency-free repositories select declared managers without changing lockfile readiness', () => {
-  for (const [declaration, manager] of [
-    [{ packageManager: 'bun@1.3.14' }, 'bun'], [{ packageManager: 'npm@11.0.0', engines: { bun: '>=1.3.14' } }, 'npm'],
-    [{ packageManager: 'pnpm@10.0.0' }, 'pnpm'], [{ packageManager: 'yarn@4.0.0' }, 'yarn'],
-    [{ engines: { bun: '>=1.3.14' }, dependencies: {}, devDependencies: {} }, 'bun'],
+test('dependency-free repositories select Bun without changing lockfile readiness', () => {
+  for (const declaration of [
+    { packageManager: 'bun@1.3.14' },
+    { engines: { bun: '>=1.3.14' }, dependencies: {}, devDependencies: {}, workspaces: [] },
   ]) {
     const repo = fixture({ 'package.json': { ...declaration, scripts: { build: 'echo build', test: 'echo test', lint: 'echo lint' } } });
     const { code, report } = assess(repo);
@@ -592,7 +591,7 @@ test('dependency-free repositories select declared managers without changing loc
     status(report, 'env.lockfile', 'fail');
     for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) {
       status(report, id, 'unknown', 'not run');
-      expect(criterion(report, id).evidence.join(' ')).toContain(`${manager} run`);
+      expect(criterion(report, id).evidence.join(' ')).toContain('bun run');
       expect(criterion(report, id).evidence.join(' ')).toContain('package.json');
     }
   }
@@ -606,8 +605,8 @@ test('dependency declarations prevent the lockfile-free manager fallback', () =>
   }
   const ambiguous = assess(fixture({ ...complete, 'package-lock.json': '{}', 'package.json': { packageManager: 'bun@1.3.14', scripts: { test: 'echo test' } } })).report;
   status(ambiguous, 'testing.test', 'unknown', 'ambiguous lockfile');
-  for (const packageManager of ['bun', 'unknown@1.0.0']) {
-    const report = assess(fixture({ 'package.json': { packageManager, scripts: { test: 'echo test' } } })).report;
+  for (const packageManager of ['bun', 'unknown@1.0.0', '', null]) {
+    const report = assess(fixture({ 'package.json': { packageManager, engines: { bun: '>=1.3.14' }, scripts: { test: 'echo test' } } })).report;
     status(report, 'testing.test', 'unknown', 'no lockfile');
   }
 });

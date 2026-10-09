@@ -95,11 +95,10 @@ function packageManager(files, pkg) {
     ['pnpm', ['pnpm-lock.yaml']], ['yarn', ['yarn.lock']],
   ].filter(([, names]) => names.some(files.has));
   if (!locks.length) {
-    const dependencyFields = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies'];
-    if (dependencyFields.every((field) => !pkg?.[field] || Object.keys(pkg[field]).length === 0)) {
-      const declared = typeof pkg?.packageManager === 'string' && /^(bun|npm|pnpm|yarn)@[^@\s]+$/.exec(pkg.packageManager);
-      if (declared) return { name: declared[1], paths: ['package.json: packageManager'] };
-      if (typeof pkg?.engines?.bun === 'string' && pkg.engines.bun.trim()) return { name: 'bun', paths: ['package.json: engines.bun'] };
+    const dependencyFields = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies', 'workspaces'];
+    if (!files.has('pnpm-workspace.yaml') && dependencyFields.every((field) => !pkg?.[field] || Object.keys(pkg[field]).length === 0)) {
+      if (typeof pkg?.packageManager === 'string' && /^bun@[^@\s]+$/.test(pkg.packageManager)) return { name: 'bun', paths: ['package.json: packageManager'] };
+      if (pkg?.packageManager === undefined && typeof pkg?.engines?.bun === 'string' && pkg.engines.bun.trim()) return { name: 'bun', paths: ['package.json: engines.bun'] };
     }
     return { reason: 'no lockfile' };
   }

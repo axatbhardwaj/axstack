@@ -571,16 +571,47 @@ test('in-process main names report inputs and sends baseline gaps and actionable
   expect(stderr).toContain('pass --repo');
 });
 
-test('run executes dependency-free scripts using packageManager or engines without a lockfile', () => {
-  for (const [declaration, manager] of [[{ packageManager: 'npm@11.0.0', engines: { bun: '>=1.3.14' } }, 'npm'], [{ engines: { bun: '>=1.3.14' } }, 'bun']]) {
+test('run executes dependency-free Bun scripts without a lockfile', () => {
+  const bin = mkdtempSync(`${root}/real-bun-`);
+  symlinkSync(bun, `${bin}/bun`);
+  for (const declaration of [{ packageManager: 'bun@1.3.14' }, { engines: { bun: '>=1.3.14' } }]) {
     const scripts = { build: 'bun fixture.js build', test: 'bun fixture.js test', lint: 'bun fixture.js lint' };
     const repo = fixture(scripts, { 'package.json': { ...declaration, scripts } });
     command(repo, ['rm', 'bun.lock']);
     command(repo, ['commit', '-qm', 'dependency-free repository']);
-    const { code, report } = assess(repo, ['--run']);
+    const { code, report } = assess(repo, ['--run'], { PATH: `${bin}:${process.env.PATH}` });
     expect(code).toBe(0);
     expect(item(report, 'env.lockfile').status).toBe('fail');
     for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) expect(item(report, id).status).toBe('pass');
-    expect(report.commands.filter((step) => step.kind === 'script').map((step) => step.argv)).toEqual(['build', 'test', 'lint'].map((name) => [manager, 'run', name]));
+    expect(report.commands.filter((step) => step.kind === 'script').map((step) => step.argv)).toEqual(['build', 'test', 'lint'].map((name) => ['bun', 'run', name]));
+  }
+});
+
+test.each(['npm@11.0.0', 'pnpm@10.0.0', 'yarn@4.0.0', 'yarn@1.22.22'])('non-Bun declarations (%s) keep no lockfile even when engines allows Bun', (packageManager) => {
+  const repo = fixture(undefined, { 'package.json': { packageManager, engines: { bun: '>=1.3.14' }, scripts: { build: 'bun fixture.js build', test: 'bun fixture.js test', lint: 'bun fixture.js lint' } } });
+  command(repo, ['rm', 'bun.lock']);
+  command(repo, ['commit', '-qm', 'no lockfile']);
+  for (const extra of [[], ['--run']]) {
+    const { code, report } = assess(repo, extra);
+    expect(code).toBe(0);
+    for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) expect(item(report, id)).toMatchObject({ status: 'unknown', reason: 'no lockfile' });
+    expect(report.commands ?? []).toHaveLength(0);
+  }
+});
+
+test.each([
+  ['array', { 'package.json': { workspaces: ['pkgs/*'], engines: { bun: '>=1.3.14' }, scripts: { test: 'bun fixture.js test' } } }],
+  ['packages object', { 'package.json': { workspaces: { packages: ['pkgs/*'] }, packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } } }],
+  ['pnpm file', { 'package.json': { packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } }, 'pnpm-workspace.yaml': 'packages: ["pkgs/*"]' }],
+])('workspace declarations (%s) block lockfile-free installs', (name, files) => {
+  const repo = fixture(undefined, { ...files, 'pkgs/a/package.json': { name: 'a', dependencies: { 'is-number': '7.0.0' } } });
+  command(repo, ['rm', 'bun.lock']);
+  command(repo, ['commit', '-qm', 'lockfile-free workspace']);
+  for (const extra of [[], ['--run']]) {
+    const { code, report } = assess(repo, extra);
+    expect(code).toBe(0);
+    expect(item(report, 'testing.test')).toMatchObject({ status: 'unknown', reason: 'no lockfile' });
+    expect(item(report, 'env.lockfile').status).toBe('fail');
+    expect(report.commands ?? []).toHaveLength(0);
   }
 });
