@@ -112,7 +112,8 @@ deduplication and driver-thread fallback. Quiet ticks never notify.
 
 The driver alone routes repair.
 The driver routes base updates and review feedback to the PR's author for repair.
-Adopted authors this run did not launch use a new author attempt under the
+For an adopted PR whose author this run did not launch, use a new author attempt
+under the
 [adoption rules](../SKILL.md#feedback-routing). The watch never writes candidate
 source. Re-read remote head/base and T3 ownership. Independent PRs may repair in
 parallel within capacity; two issues on the same PR use one author and candidate.

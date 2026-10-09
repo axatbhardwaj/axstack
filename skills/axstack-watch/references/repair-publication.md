@@ -19,9 +19,10 @@ The author commits the smallest in-scope repair and exact public reply bodies,
 keyed to feedback IDs and candidate revision, in the owned worktree. Obtain an
 independent review of the exact local candidate SHA in an isolated detached
 checkout against the pinned base, including replies, before publication.
-Nothing is pushed for review. Code and replies require the one complete eligible
-non-author/non-owner review under `axstack-review`, all six angles, applicable
-acceptance and affected boundaries. Material findings or urgent holds block
+Nothing is pushed for review. The current authored review receipt covers code/replies, all six angles,
+applicable acceptance and affected boundaries under the authored review rule in
+`axstack-review`; exactly one complete eligible non-author/non-owner reviewer is
+required. Material findings or urgent holds block
 publication. Serious risk preserves candidate/context and the durable hold;
 only an authorized deduplicated notification sends. Publication waits for the
 user's decision at that durable location and exact-input revalidation.

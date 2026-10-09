@@ -1,10 +1,7 @@
 # Ordinary PR chains
 
-## Routing
-
-Record ordinary-chain or legacy-native-stack identity and direct dependencies
-in the run record.
-New work defaults to ordinary PRs/chains. Unknown or mixed identity holds
+Record ordinary-chain or legacy-native-stack identity and direct dependencies.
+Ordinary PRs/chains are the default. Unknown or mixed identity holds
 affected operations. Use `gh stack` only for legacy-native-stack operations,
 probe `gh stack --help` first. Preserve publication, linear-history, full-stack
 merge, pinning and no-retarget rules under
@@ -25,7 +22,7 @@ an open parent branch. A ready parent can merge before child publication or
 readiness for independently deliverable approved scope. Apply watch §5, including
 personal/work eligibility and user-only categories. The latest integration tip
 must enter child history before
-its merge, even when original parent commits are ancestors.
+its merge.
 
 After confirmed parent merge, verify the reviewed head equals actual head and
 is reachable from the integration result. Mismatch: serious-risk hold.
