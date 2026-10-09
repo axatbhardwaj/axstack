@@ -74,7 +74,7 @@ test('manager sessions reconcile before admission in the dedicated workspace', (
 test('manager event identity survives same-head changes', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/unchanged exact head[^.]*new event identity[^.]*actionable/i);
-  expect(text).toMatch(/unchanged exact head and (?:unchanged|same) event[^.]*no job/i);
+  expect(text).toMatch(/unchanged exact head, base branch identity, base SHA and event[^.]*no job/i);
   expect(text).toMatch(/review ID[^.]*body digest/i);
 });
 

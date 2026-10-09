@@ -396,9 +396,13 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/coarse[^.]*ownership[^.]*interface[^.]*dependenc/i);
   expect(callers.tickets).toMatch(/mapping\s+time[^.]*no actual SHAs or line counts/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
-  expect(callers.implement).toMatch(/reviewed parent changes[^.]*hold reliance[^.]*stale child evidence[^.]*child merge readiness/i);
-  expect(callers.implement).toMatch(/rebase[^.]*new parent revision[^.]*re-run[^.]*affected checks[^.]*remeasure shape/i);
-  expect(callers.implement).toMatch(/size\s+growth alone[^.]*not an automatic hold/i);
+  expect(callers.implement).toContain('[PR chains](../axstack/references/pr-chain.md)');
+  const chain = readFileSync(join(skillsDir, 'axstack/references/pr-chain.md'), 'utf8');
+  expect(chain).toMatch(/Immediately\s+invalidate affected child readiness/i);
+  expect(chain).toMatch(/merge the parent\s+or base[^.]*owned child preserving existing commits/i);
+  expect(chain).toMatch(/Refresh next ready children[^.]*as needed[^.]*batching ancestor changes/i);
+  expect(chain).toMatch(/Re-run affected checks[^.]*remeasure shape[^.]*new base/i);
+  expect(chain).toMatch(/size\s+growth alone[^.]*not an automatic hold/i);
   expect(callers.audit).not.toMatch(/over-band/i);
   expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
   expect(callers.audit).not.toMatch(/user[- ]exception|user receipt/i);

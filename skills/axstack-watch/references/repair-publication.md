@@ -6,62 +6,42 @@ and peer modes stop with a report before this branch.
 ## 1. Confirm the repair boundary
 
 Re-read the accepted maintenance snapshot, writable ownership, publication
-authority, remote head and base, and current feedback. Route an accepted fix to
-the original author session only when the run itself launched that session and
-evidence permits. Record the repair author's actual provenance before
-selecting the reviewer, because the authored-review pairing follows the actual
-provenance of the repair, never the PR's historical author. A missing,
-stale, or materially changed boundary holds the repair while read-only
-monitoring continues.
-
-Record the exact defect, allowed files and actions, current revision, feedback
-IDs, and actual author without expanding scope.
-Follow [Feedback routing](../SKILL.md#feedback-routing) to launch an adopted
-repair author and pair its reviewer.
+authority, remote head/base and feedback. A missing, stale or materially changed
+boundary holds repair while read-only monitoring continues. Return fixes to the
+original author only if this run launched it and evidence permits. Otherwise
+follow [Feedback routing](../SKILL.md#feedback-routing) for a new adopted author.
+Record defect, allowed files/actions, revision, feedback IDs and actual repair
+provenance; pair review from that provenance, never historical authorship.
 
 ## 2. Produce a reviewable candidate
 
-The author prepares the smallest in-scope repair and the exact public reply
-bodies, each keyed to its feedback ID and bound to the candidate revision.
-The candidate is committed locally in the owned worktree. Obtain an
+The author commits the smallest in-scope repair and exact public reply bodies,
+keyed to feedback IDs and candidate revision, in the owned worktree. Obtain an
 independent review of the exact local candidate SHA in an isolated detached
-checkout against the pinned base, including the exact reply bodies, before
-publication; nothing is pushed for review. Both code and
-reply bodies receive the one complete eligible non-author/non-owner review
-required by the authored review rule in `axstack-review`.
-
-Publication stays held until the current authored review receipt covers the
-exact new revision and base, all six angles, applicable acceptance, the reply
-body identities, and every affected boundary, with no unresolved material
-finding or urgent hold. A serious-risk escalation preserves the local candidate
-and exact context, records the hold in the run record and a durable GitHub or
-user-owned conversation, and sends only an authorized deduplicated notification.
-Publication remains held until the user decides at that durable location and
-all exact inputs are revalidated.
+checkout against the pinned base, including replies, before publication.
+Nothing is pushed for review. Code and replies require the one complete eligible
+non-author/non-owner review under `axstack-review`, all six angles, applicable
+acceptance and affected boundaries. Material findings or urgent holds block
+publication. Serious risk preserves candidate/context and the durable hold;
+only an authorized deduplicated notification sends. Publication waits for the
+user's decision at that durable location and exact-input revalidation.
 
 ## 3. Revalidate immediately before publication
 
-Confirm fresh remote head and base, feedback freshness, reply body identity,
-and the exact revision covered by the mode-required review receipt. Before a history
-rewrite, confirm the expected-old SHA; a mismatch holds publication.
-
-All publication inputs must still match their reviewed values at the final
-readback.
+Confirm fresh remote head/base, feedback, reply body identity and the exact reviewed
+revision/base. Before a history rewrite, confirm the expected-old SHA; a mismatch
+holds publication. Every input must match its reviewed value at final readback.
 
 ## 4. Publish idempotently
 
-After the local review and final remote revalidation, publish through `gh stack`
-for the adopted PR only, preserving unrelated stack entries.
-Bind the operation to the exact reviewed revision, then verify the submission
-receipt and remote state.
-
-If the send outcome is unknown, inspect remote IDs, bodies, and actor before any
-retry. Remain blocked while the outcome is ambiguous; retry only after
-confirming the intended operation is absent.
-
-Publication ends with a remote receipt proving that the reviewed revision and
-exact replies landed once, or a recorded hold naming the unmatched input and
-next owner.
-
-After verified publication of an own PR, the owner must follow
-[PR previews](../../axstack/references/preview.md) to decide on or restart its preview.
+After local review and remote revalidation, publish through
+[Candidate publication](../../axstack/references/candidate-publication.md)
+for the adopted PR only, preserving unrelated stack entries. Follow
+[PR chains](../../axstack/references/pr-chain.md) for scoped push and base-bound
+evidence; legacy native stacks use `gh stack`.
+Verify a remote receipt proving the reviewed revision and exact replies landed
+once. Unknown send outcome requires lookup of remote IDs, bodies and actor
+before retry; retry only after proving absence. Remain blocked while publication is ambiguous
+with unmatched input and next owner recorded.
+After verified publication, follow
+[PR previews](../../axstack/references/preview.md) to decide on or restart a preview.

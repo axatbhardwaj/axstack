@@ -17,7 +17,7 @@ const reviewInversions = {
   'cards and hold stay in driver thread': 'Move merge-card replies and `hold` out of the driver thread.',
   'next PR event re-evaluates cadence': 'On the next event on a watched PR, ignore the fallback conditions and retain the wake cadence.',
   'unsettled work or release restores five minutes': 'If launched work or the release step becomes unsettled, drop the 5-minute cadence.',
-  'repairs stay with the author': "The driver takes rebases and review feedback from the PR's author and does the repair itself.",
+  'repairs stay with the author': "The driver takes base updates and review feedback from the PR's author and does the repair itself.",
 };
 
 // Declared prompt obligations, not live T3 behavior. Every positive rule binds
@@ -65,8 +65,8 @@ rule('implementation uses shared publication rule', implement,
   'After verified readback of each own PR publication, the driver starts or joins the watch under Autopilot.',
   [/\b(?:arms?|starts?)\b/i, 'abandons']);
 rule('repairs stay with the author', runtime,
-  [/driver/i, /rebases/i, /review feedback/i, /repair/i, /\b(?:routes?|sends?|assigns?|passes?)\b/i],
-  "The driver sends review feedback and rebases to the PR's author for repair.",
+  [/driver/i, /base updates/i, /review feedback/i, /repair/i, /\b(?:routes?|sends?|assigns?|passes?)\b/i],
+  "The driver sends review feedback and base updates to the PR's author for repair.",
   [/\bto (?:the )?PR.s author\b/i, "away from the PR's author"]);
 rule('adopted repairs start a new author attempt', runtime,
   [/adopted PR/i, /author/i, /run did not launch/i, /new author attempt/i, /adoption rules/i],

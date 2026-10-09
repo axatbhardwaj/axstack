@@ -182,6 +182,7 @@ Deploying bases: <base -> integration | deploying; docs/workflow evidence>
 PR digest watermarks: <repo -> absolute path of its per-repository JSON file inside the private run directory> | none
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
+PR membership: <PR -> ordinary-chain | legacy-native-stack; direct dependencies incl unpublished; active authors; head/base branch/base SHA>
 IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>
 Runtime: <host + T3 version + installed Axstack SHA + installed Axstack version/check time + last reference read time + capabilities JSON path>
 Schedules: <scheduledTaskIds of every watch and manager schedule>

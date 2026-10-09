@@ -182,6 +182,9 @@ deploy to production.
 Re-read approval mode and base classification immediately before each automated
 merge and at every watch resume.
 
+Follow [PR chains](../axstack/references/pr-chain.md) for membership, dependencies,
+retargeting and retirement. Bind readiness to PR, head, base branch identity
+and base SHA, including an unchanged head after retargeting.
 For each current head and base SHA, every merge-ready term must hold:
 
 - Approval: in `solo` mode, authored-review `APPROVE` plus diligence `PASS`, both
@@ -200,7 +203,7 @@ For each current head and base SHA, every merge-ready term must hold:
   Reviews carrying an Axstack automation marker never count.
   A later `CHANGES_REQUESTED` blocks until resolved; a stale or dismissed
   approval does not count.
-  A collaborator approval carries over only across a rebase with unchanged
+  A collaborator approval carries over only across a rebase, base-update merge or base-only retarget with unchanged
   patch-id recorded for both heads while the forge still counts it.
   Require fresh authored review, diligence, and CI on every new head.
   Text carrying a visible machine marker never counts as a user reply:
@@ -219,7 +222,7 @@ For each current head and base SHA, every merge-ready term must hold:
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk
   hold affects this merge. Apply the comment holds below.
   The current target base head must be an ancestor of the singleton head or
-  bottom stack member head; unknown ancestry holds. A CI re-run does not restore
+  ordinary chain root head or legacy bottom stack member head; unknown ancestry holds. A CI re-run does not restore
   this freshness after the base moves. Update the branch and refresh head-bound
   evidence instead.
 - Proven verification: apply every receipt and acceptance term below, or its
@@ -248,8 +251,9 @@ Agents never resolve or dismiss non-agent items.
 Agent-authored threads with only `low` findings can stay open.
 Apply any repository rule that requires conversation resolution.
 
-Under authorized own-PR maintenance, keep repairing and rebasing onto the base
-when it moves, then re-run checks, until the head is rebased on the current base,
+Under authorized own-PR maintenance, keep repairing and merging the base
+when it moves for ordinary PRs (legacy native stacks retain rebasing), then
+re-run checks, until the head contains the current base,
 the comment holds above are cleared, the approval term holds, and required CI is
 green; only then record merge-ready.
 Never re-request a collaborator's review while its approval still counts under
@@ -317,12 +321,12 @@ Personal and work PRs remain eligible whatever files they change, including
 branch-protection or ruleset config, `CODEOWNERS`, `AGENTS.md`, and non-clean
 revert lines such as `Revert: steps`.
 
-For a `gh stack`, only the bottom member's base must be eligible.
+For a legacy native `gh stack`, only the bottom member's base must be eligible.
 Each other member's base must be the next-lower member's branch at its reviewed head.
 Every member must meet every other term.
-A stack holds until every member of its approved plan (the ticket map or the
+A legacy native stack holds until every member of its approved plan (the ticket map or the
 adopted stack's recorded members) is published.
-Reviewed members are never retargeted to become eligible.
+Reviewed legacy native-stack members are never retargeted to become eligible.
 
 Never auto-merge PRs authored by anyone other than the user or the user's agents.
 Test sources stay eligible.
@@ -381,9 +385,14 @@ Immediately before each automated merge, re-read every term from the forge.
 Confirm merge commits are allowed, `delete_branch_on_merge` is false, and the
 base has no merge queue; otherwise hold for the user. For a singleton PR, use
 `gh pr merge <n> --merge --match-head-commit <sha>`; add `--delete-branch` only
-when no open PR uses its branch as base. A failed head guard or uncertain merge
+when no open PR uses its branch as base and PR chains retirement proves no
+unpublished dependency, active author or unknown consumer. For an ordinary
+chain root use `gh pr merge <n> --merge --match-head-commit <sha>` without
+branch deletion until retirement is proven. After merge, verify actual head
+equals reviewed head and is an ancestor of the integration result before
+retargeting direct children under PR chains. A failed head guard or uncertain merge
 result holds for fresh reconciliation. If the target base moves after final
-readback, the singleton head guard or stack top `sha` decides whether the merge
+readback, the singleton/ordinary-root head guard or legacy stack top `sha` decides whether the merge
 proceeds; the push run on the merge result decides any further-merge hold.
 
 For a native `gh stack`, automate only a whole-stack merge: the top is the

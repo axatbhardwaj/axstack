@@ -28,7 +28,9 @@ Before reviewing, load [Standing contracts](../axstack/references/contracts.md),
 then [Lifecycle and receipts](../axstack/references/lifecycle.md) so its required
 audit edge remains active. Load [Shared routing](../axstack/references/routing.md)
 to select the mode and scope identity. For PR modes, apply the shared
-[PR-shape policy](../axstack/references/pr-shape.md). For an owned implementation candidate,
+[PR-shape policy](../axstack/references/pr-shape.md) and
+[PR chains](../axstack/references/pr-chain.md) for PR/head/base-branch/base-SHA
+evidence identity. For an owned implementation candidate,
 load and verify the
 [candidate-publication boundary](../axstack/references/candidate-publication.md).
 When the caller is a bounded review-manager PR job, load

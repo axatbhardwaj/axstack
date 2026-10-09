@@ -12,7 +12,7 @@ Invoke `$axstack-spec Write the agreed specification.` to record observable
 acceptance, exclusions and a revision for your approval. After approval,
 `$axstack-tickets Map the approved work into tasks.` prepares the dependency map.
 `$axstack-implement Build the approved tasks.` carries it through authors,
-exact-revision review and repairs. The driver publishes through `gh stack`
+exact-revision review and repairs. The driver publishes through scoped Git push and `gh pr create/edit`
 and records each candidate and its evidence.
 
 ## Small fix

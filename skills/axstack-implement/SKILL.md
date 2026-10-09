@@ -27,6 +27,7 @@ edge into the lifecycle (including its audit hook), then apply shared routing:
 - [Shared routing](../axstack/references/routing.md)
 - [PR-shape policy](../axstack/references/pr-shape.md)
 - [Candidate publication](../axstack/references/candidate-publication.md)
+- [PR chains](../axstack/references/pr-chain.md)
 
 Independently confirm the applicable
 [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):
@@ -73,13 +74,9 @@ never edits concurrently. Only an explicit accepted transfer changes ownership;
 ordinary resume reconciles the same sessions and record.
 
 Fanout follows dependencies and capacity within configured limits. Queue
-conflicts and dependent work; use `gh stack`, starting each child from its
-reviewed parent. When the reviewed parent changes, hold reliance on
-stale child evidence and child merge readiness; rebase onto the new parent revision,
-re-run affected checks, and remeasure shape against it.
-Size growth alone is not an automatic hold.
-A parent need not wait for an
-independently reviewed child. Dispatch only when ownership, worktree, dependency
+conflicts; PR chains owns reviewed-parent branching, immediate child evidence
+invalidation, lazy merge updates and legacy rebasing. A parent need not wait
+for an independently reviewed child. Dispatch only when ownership, worktree, dependency
 revisions, writer exclusivity, and capacity agree with live state. Shape, split,
 fanout, and exceptions are autonomous driver decisions within the approved scope.
 Size alone never requires user approval.
@@ -195,12 +192,12 @@ Simplification: <applied | not-applicable> — evidence: <diff locations and che
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>
 Unverified: <boundaries + reasons>
-Next: <owner reconciles receipt, uses gh stack to push exact revision, confirms
+Next: <owner reconciles receipt, uses candidate-publication to push exact revision, confirms
 remote readback, then routes it to axstack-review>
 ```
 
 The author stops at that receipt and does not push. The driver reconciles it,
-uses `gh stack` to publish, confirms remote readback, and continues the loop
+uses candidate-publication to publish, confirms remote readback, and continues the loop
 without editing the candidate. No step grants merge authority.
 
 Every own PR description must contain exactly one `Revert` line.
@@ -211,8 +208,8 @@ for its format and classification.
 
 Inputs are one snapshotted small-change intent or an approved spec and ticket
 map. The unit is that accepted task/PR map: run independent PRs in parallel
-within the fanout rule; run a dependent `gh stack` bottom-up, each child from
-its reviewed parent. The driver is owner, sole record writer, dispatcher,
+within the fanout rule; run an ordinary dependent PR chain root-first under PR chains, each child
+from its reviewed parent; preexisting native stacks retain their legacy path. The driver is owner, sole record writer, dispatcher,
 publisher, and wait-holder for every loop PR it creates. Resume preserves an
 existing live owner absent an accepted transfer.
 
@@ -246,8 +243,8 @@ For each PR:
    findings to the same author for a new revision, increments `repairs`, and
    returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
    risk, or the third review round with `REQUEST_CHANGES` and/or diligence
-   `FINDINGS` on one PR records `held`. A changed parent sends its child back
-   to step 1.
+   `FINDINGS` on one PR records `held`. A changed parent immediately invalidates affected child readiness; refresh
+   the next ready children as needed under PR chains before step 1.
    Merge-ready also requires a current diligence `PASS` at that head; diligence
    `FINDINGS` return to the same author within the review round.
    Diligence `UNKNOWN` records the PR as `held` with the reason in the run record
@@ -265,53 +262,24 @@ its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopil
 That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
-Under the recorded Notification policy, `axstack-relay` follows the categories
-below; serious risks relay immediately and genuine blocked operations needing
-user intervention relay after bounded safe recovery.
-Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
-in the T3 driver thread.
-Relay eligibility is limited to user-decision holds, serious-risk holds, the
-60-minute blocked ping, unresolved-rating notice and capped peer PR milestones
-under the Notification policy.
-Under the recorded Notification policy, `verification not proven` is a
-user-decision hold. The 60-minute blocked ping is a notification-only category
-under the Notification policy. The unresolved-rating notice is a notification-only
-category under the Notification policy, deduplicated per comment and head.
-The unresolved-rating notice grants no reply authority.
-The unresolved-rating notice never clears the hold.
-Never send routine merge-ready or merged relays
-for own PRs. Notifications for peer PRs are unchanged, including at most two
-merge-ready/merged milestones per run, deduplicated across implementation and release.
+Follow [Watch notifications](../axstack-watch/SKILL.md#4-route-each-wake)
+under the recorded Notification policy, retaining its relay categories,
+deduplication and driver-thread fallback. Serious risks relay immediately.
 
-Merge-ready opens the merge boundary.
-For own PRs, automatic merge is the default under the
-[watch predicate](../axstack-watch/SKILL.md#5-state-readiness-precisely).
+Merge-ready opens the merge boundary. Own PRs default to automatic merge under
+[watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely).
 The merge actor is the recorded owning watch thread (`axstack-owner` for
 standalone authorized maintenance), including small and adopted work.
-Missing or idle ownership follows lifecycle reconciliation and explicit transfer first.
 Apply `axstack-watch` §5's merge card and full predicate; an approval alone
-never grants merge authority.
-Personal own PRs, including `deploying` bases, follow automatic merge under
-watch §5. Work promotion PRs and `deploying` or unknown bases are merged by the
-user on the forge. Peer PRs are merged by the user on the forge.
-User merges are bottom-up for a stack.
+never grants merge authority. Re-read every predicate term under watch §5
+before merging; follow its guarded ordinary-root/singleton or legacy-native
+merge path and PR chains retarget/retirement proof.
+Personal own PRs, including `deploying` bases, follow automatic merge under watch §5.
+Work promotion PRs and `deploying` or unknown bases are merged by the user on the forge.
+Peer PRs are merged by the user on the forge. User merges are bottom-up for a stack.
 A manager, worker, reviewer, monitor, or nightly triage must never merge.
-Observation-only and peer watches never merge.
-Watch §5 owns provider provenance, approval carryover, eligible bases, every
-planned stack member's publication, proven verification, escalation, and card-reply exceptions.
 This policy grants no release, npm publish, or host install authority.
-Re-read every predicate term under watch §5 before merging. Confirm merge
-commits are allowed, `delete_branch_on_merge` is false, and the base has no
-merge queue; otherwise hold for the user. For a singleton, use
-`gh pr merge <n> --merge --match-head-commit <sha>` and add `--delete-branch`
-only when no open PR uses its branch as base. For a native `gh stack`, merge
-only the whole stack through `merge-async`: pass the top reviewed head as `sha`,
-`merge_method: merge`, and `merge_action: direct_merge`, then poll its UUID.
-Reconcile HTTP 200 or 409 against the intended request, verify every merged
-member's actual head equals its reviewed head and is an ancestor of the merge
-result, and hold unknown or failed outcomes; watch §5 owns the detailed rule.
-Never retarget, delete a stack branch, or rebase a reviewed stack member for
-merging. A failing push run on the target base after an automated merge holds
+A failing push run on the target base after an automated merge holds
 further automated merges run-wide. The driver resumes on the user's next
 message, `/axstack-watch`,
 or the armed chat-run watch wake; verify merge state through the forge on wake.

@@ -1,13 +1,18 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
 const autopilot = () => read('skills/axstack/references/autopilot.md');
-const implement = () => read('skills/axstack-implement/SKILL.md');
+const inheritedNotifications = (path, target) => {
+  const own = read(path);
+  expect(loadedReferences(own)).toContain(target);
+  return own + read('skills/axstack-watch/SKILL.md');
+};
+const implement = () => inheritedNotifications('skills/axstack-implement/SKILL.md', '../axstack-watch/SKILL.md#4-route-each-wake');
 const watch = () => read('skills/axstack-watch/SKILL.md');
-const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
+const runtime = () => inheritedNotifications('skills/axstack-watch/references/watch-runtime.md', '../SKILL.md#4-route-each-wake');
 
 // Bound each assertion to the sentence containing its decision. This is
 // contract-text evidence, not a model or live-runtime result.
@@ -47,11 +52,12 @@ for (const [name, source] of [
       [[/limited to/i, 'unrestricted beyond']], concepts);
   });
 }
-test('implement notification allowlist', () => {
-  const concepts = [/axstack-relay/i, /follows the categories below/i, /serious risks? relay(?:ed)? immediately/i,
-    /genuine blocked operations/i, /user intervention/i, /bounded safe recovery/i];
-  checkRule(implement().replace(/;(?= serious risks)/, ','), (text) => requires(text, ...concepts),
-    'axstack-relay follows the categories below, with serious risks relayed immediately and genuine blocked operations needing user intervention relayed after bounded safe recovery.',
+test('implement retains immediate risk relay and bounded recovery through Watch', () => {
+  const source = implement();
+  const concepts = [/serious risks? relay immediately/i, /genuine blocked operations/i,
+    /user intervention/i, /bounded safe recovery/i];
+  checkRule(source.replace(/;(?= genuine blocked)/, ','), (text) => requires(text, ...concepts),
+    'Serious risks relay immediately, with genuine blocked operations needing user intervention relayed after bounded safe recovery.',
     [[/bounded safe recovery/i, 'no recovery']], concepts);
 });
 test('watch notification allowlist', () => {

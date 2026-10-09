@@ -107,36 +107,20 @@ an uncertain wake. Wake only the exact live original driver.
 A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.
 
 The driver records one Notification policy for `axstack-relay` Telegram home.
-Relay eligibility is limited to user-decision holds, serious-risk holds, the
-60-minute blocked ping, unresolved-rating notice and capped peer PR milestones
-under the Notification policy.
-Under the recorded Notification policy, `verification not proven` is a
-user-decision hold. The 60-minute blocked ping is a notification-only category
-under the Notification policy. The unresolved-rating notice is a notification-only
-category under the Notification policy, deduplicated per comment and head.
-The unresolved-rating notice grants no reply authority.
-The unresolved-rating notice never clears the hold.
-Never send routine merge-ready or merged relays
-for own PRs. Notifications for peer PRs are unchanged, including at most two
-merge-ready/merged milestones per run, deduplicated across implementation and release.
-Quiet ticks never notify.
+Follow [Watch notifications](../SKILL.md#4-route-each-wake) for categories,
+deduplication and driver-thread fallback. Quiet ticks never notify.
 
 The driver alone routes repair.
-The driver routes rebases and review feedback to the PR's author for repair.
-For an adopted PR whose author this run did not launch, use a new author attempt under the
-[adoption rules](../SKILL.md#feedback-routing).
-The watch never writes candidate source.
-Re-read remote head/base and T3 ownership.
-Independent PRs may repair in parallel in separate T3 writer worktrees within
-measured host capacity. Two issues on the same PR use one author and one
-candidate; never create competing writers. A stack parent change invalidates
-child evidence and merge readiness; repair the lowest affected ancestor first,
-then rebase and revalidate children. Run-launched implementation PRs follow
-`axstack-implement`: driver publishes and reads back before independent authored
-review. Explicitly adopted own PRs follow [Repair and
-publication](repair-publication.md): independent exact-local-SHA review precedes
-driver-owned `gh stack` publication and remote readback. The driver never
-self-reviews.
+The driver routes base updates and review feedback to the PR's author for repair.
+Adopted authors this run did not launch use a new author attempt under the
+[adoption rules](../SKILL.md#feedback-routing). The watch never writes candidate
+source. Re-read remote head/base and T3 ownership. Independent PRs may repair in
+parallel within capacity; two issues on the same PR use one author and candidate.
+Follow [PR chains](../../axstack/references/pr-chain.md) for invalidation and
+updates. Run-launched PRs follow `axstack-implement`: publication/readback before
+independent review. Adopted PRs follow [Repair and publication](repair-publication.md):
+independent exact-local-SHA review precedes scoped publication/readback.
+The driver never self-reviews.
 For own PRs, automatic merge is the default under the
 [watch predicate](../SKILL.md#5-state-readiness-precisely).
 Observation alone grants no repair or
@@ -145,8 +129,8 @@ public-reply authority.
 On new comments, failed checks, or base movement, repeat repair, the
 mode-specific publication and independent review steps above, current-head
 checks, and the full readiness decision for each member until every merge-ready
-predicate is satisfied or a concrete hold is recorded. Rebase the root PR against an advanced
-base, re-run checks, address actionable comments, and revalidate stacked descendants after
+predicate is satisfied or a concrete hold is recorded. Merge the advanced base
+into an ordinary root PR, re-run checks, address actionable comments, and revalidate affected descendants as needed after
 ancestor changes. Never assume historical approvals or threads have cleared;
 re-read all feedback and approvals at the current head before readiness.
 Re-reading approvals checks current state, not re-requesting review from a

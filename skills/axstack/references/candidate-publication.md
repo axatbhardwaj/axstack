@@ -11,7 +11,11 @@ Before publication, dispatch `axstack-diligence` under
 folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
 `FINDINGS` with the same author before publishing.
 
-Publish the existing commits through `gh stack`. Prefer a fast-forward push.
+Follow [PR chains](pr-chain.md) for recorded membership and base-bound evidence.
+For ordinary PRs, use `git push origin HEAD:refs/heads/<owned branch>` and
+`gh pr create` or `gh pr edit` with the actual parent or integration base.
+Never use routine force push for ordinary PRs. Publish existing legacy native
+stack commits through `gh stack`, preserving unrelated entries.
 Before a history rewrite, confirm the expected-old remote SHA and use lease
 protection; a mismatch holds publication. If the push outcome is ambiguous,
 inspect remote state before retrying.
@@ -32,6 +36,7 @@ Record:
 
 ```text
 Candidate: <sha>
+Base branch: <branch>
 Base: <sha>
 Remote ref: <branch>
 Expected-old remote SHA: <sha | absent>
@@ -67,18 +72,16 @@ step, subject to recorded release authority and human npm stage approval.
 ## Immutable checkout shape
 
 The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.
-Follow [T3 runtime](t3-runtime.md) for async `delegate_task` and exact attempt
-identity. The checkout is disposable, made from the existing repository; never
-register a duplicate repository or replace it with a movable branch checkout.
+Follow [T3 runtime](t3-runtime.md) for async `delegate_task` and exact attempts.
+Use the existing repository; never register a duplicate or use a movable branch.
 Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.
-Snapshot driver HEAD and full status, including untracked entries, before dispatch.
+Snapshot driver HEAD and full status (including untracked) before dispatch.
 After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.
-Each peer reviewer has a separate checkout and evidence folder with no first-pass
-cross-read. Later review gets a fresh checkout.
+Peer reviewers have separate checkouts/evidence without first-pass cross-read.
+Later review gets a fresh checkout.
 Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force.
-Verify Git worktree absence under [Workspace hygiene](workspace-hygiene.md);
-reviewer retirement preserves the separate author candidate until merge or closure.
-Release checks use the same driver-made SHA-pinned detached-checkout procedure.
+Verify absence under [Workspace hygiene](workspace-hygiene.md); retain the author
+candidate until merge/closure. Release checks use the same pinned procedure.
 
 For a release PR, dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the release PR body

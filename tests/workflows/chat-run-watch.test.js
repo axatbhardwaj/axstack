@@ -69,7 +69,8 @@ test('observer reports internally; only original driver routes repairs and write
   expect(text).toMatch(/driver[^.]*alone[^.]*repair/i);
   expect(text).toMatch(/independent PRs[^.]*parallel/i);
   expect(text).toMatch(/same PR[^.]*one author/i);
-  expect(text).toMatch(/parent[^.]*invalidates[^.]*child evidence/i);
+  expect(runtime()).toContain('pr-chain.md');
+  expect(read('skills/axstack/references/pr-chain.md')).toMatch(/Immediately\s+invalidate affected child readiness/i);
 });
 
 test('chat-run cancellation and terminal state stop only owned automation after readback', () => {
@@ -103,9 +104,9 @@ test('chat-run driver keeps repairing each member through current-head readiness
   const text = runtime();
   expect(text).toMatch(/repeat repair[^.]*mode-specific publication and independent review[^.]*current-head checks[^.]*full readiness/i);
   expect(text).toMatch(/until[^.]*merge-ready predicate[^.]*concrete hold/i);
-  expect(text).toMatch(/rebase[^.]*root[^.]*advanced base/i);
+  expect(text).toMatch(/Merge the advanced base[^.]*ordinary root PR/i);
   expect(text).toMatch(/actionable comments/i);
-  expect(text).toMatch(/revalidat[^.]*stacked descendants/i);
+  expect(text).toMatch(/revalidat[^.]*affected descendants as needed/i);
   expect(text).toMatch(/historical approvals[^.]*threads[^.]*cleared/i);
 });
 
@@ -117,11 +118,11 @@ test('own PR watch never re-requests a human approver after repair', () => {
 });
 
 test('authorized own PR maintenance loops through feedback, base movement, and readiness', () => {
-  expect(watch()).toMatch(/authorized[^.]*own.PR maintenance[^.]*keep repairing[^.]*rebasing[^.]*base/i);
+  expect(watch()).toMatch(/authorized[^.]*own.PR maintenance[^.]*keep repairing[^.]*merging the base[^.]*ordinary PRs[^.]*legacy native stacks retain rebasing/i);
   expect(watch()).toMatch(/re-run checks[^.]*comment holds above are cleared[^.]*approval term holds[^.]*required CI[^.]*green/i);
   expect(watch()).toMatch(/approval carries over only[^.]*rebase[^.]*unchanged[^.]*patch-id[^.]*both heads[^.]*forge still counts/i);
   expect(watch()).toMatch(/forge dismissed[^.]*hold and tell the user/i);
-  expect(runtime()).toMatch(/rebase[^.]*root[^.]*advanced base[^.]*re-run checks/i);
+  expect(runtime()).toMatch(/Merge the advanced base[^.]*ordinary root PR[^.]*re-run checks/i);
 });
 
 test('own open PRs use the original T3 driver with the runtime fallback cadence', () => {
@@ -167,7 +168,7 @@ test('wake failure guards and owning watch merge authority stay explicit', () =>
   expect(watch()).toMatch(/automatic merge is the default for own PRs/i);
 });
 
-test('own-PR merge-ready requires a head rebased on the current base', () => {
+test('own-PR merge-ready requires a head containing the current base', () => {
   expect(watch()).toMatch(/until[^.]*head[^.]*current base[^.]*comment holds above are cleared[^.]*required[^.]*CI[^.]*green[^.]*merge-ready/i);
 });
 
