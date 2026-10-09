@@ -156,6 +156,8 @@ bun run typecheck
 git config core.hooksPath .husky
 ```
 
+The hook is opt-in per clone via `git config core.hooksPath .husky` and requires
+`bun install`. Without dev tools it prints a setup hint and skips the checks.
 The hook runs lint and typecheck only. Biome formatting is optional for editors
 or manual use; commits do not enforce formatting. TypeScript checks JavaScript
 in `src/` and `bin/` without emitting files. All tooling is development-only and

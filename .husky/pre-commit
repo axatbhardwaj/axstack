@@ -1,4 +1,8 @@
 #!/bin/sh
 set -eu
+if [ ! -x node_modules/.bin/biome ] || [ ! -x node_modules/.bin/tsc ]; then
+  echo 'axstack pre-commit: dev tools not installed; run `bun install` to enable lint/typecheck; skipping'
+  exit 0
+fi
 bun run lint
 bun run typecheck
