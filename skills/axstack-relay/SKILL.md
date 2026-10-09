@@ -155,20 +155,35 @@ reissuing only if a decision is still needed.
 Each card must carry exactly one decision.
 The card ID must be `<run id>/<n>`, never reused in the driver thread.
 The only sender of reply-dependent cards must be the run's driver.
+
+Decision cards and explain answers must use short paragraphs with blank lines
+between thoughts for reading on a phone.
+Decision cards and explain answers must use ordinary words and briefly define
+necessary technical terms.
+Each decision card must explain what is happening and why the choice matters.
+Each numbered option must state the concrete action, scope, expected outcome
+and material trade-off.
+Any recommendation must include a brief evidence-supported reason.
+A recommendation must leave the choice to the user.
+
 Use plain ASCII for the card layout below, as one message:
 
 ```text
 <project> - <decision title>
 Card <run id>/<n>[, confirms card <run id>/<m>]
+
 Context: <what we were doing, one line>
 Decision: <the question>
+
+1 <action> - <scope; outcome; trade-off>
+2 <action> - <scope; outcome; trade-off>
+3 Defer (optional)
+
 Driver environment: <value | not supplied>
 Execution machine: <value | not supplied>
 Affected targets: <values | not supplied>
 Revision: <repo#PR @ full SHA | spec rev N sha256 | none>
-1 <action> - <scope>
-2 <action> - <scope>
-3 Defer (optional)
+
 Reply 1, 2, 3 or explain. Open T3: <link | not available>
 T3 reply: <env label> thread <driver threadId>
 ```
@@ -249,6 +264,13 @@ Run these four checks in order, stopping at the first failure:
    An invalid choice must leave the card open with no action.
    Free text is user input, not a numbered option, and gets the same authority
    revalidation and confirmation checks before it can authorize an action.
+
+Explain answers must directly address the reader's confusion.
+Explain answers must expand meaningful context and each option's consequences.
+Explain answers must give a justified recommendation when evidence supports it.
+Explain answers must state material risks and unknown facts plainly.
+Never merely restate IDs or SHAs in an explain answer.
+The same one-message size and final reply tag rules apply to explain answers.
 
 ## Confirm, acknowledge and act
 
