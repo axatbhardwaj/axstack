@@ -89,12 +89,19 @@ const definitions = [
   ['security.pr-tests', 'Governance/Security'], ['security.status-checks', 'Governance/Security'], ['security.updates', 'Governance/Security'], ['security.secrets', 'Governance/Security'],
 ];
 
-function packageManager(files) {
+function packageManager(files, pkg) {
   const locks = [
     ['bun', ['bun.lock', 'bun.lockb']], ['npm', ['package-lock.json', 'npm-shrinkwrap.json']],
     ['pnpm', ['pnpm-lock.yaml']], ['yarn', ['yarn.lock']],
   ].filter(([, names]) => names.some(files.has));
-  if (!locks.length) return { reason: 'no lockfile' };
+  if (!locks.length) {
+    const dependencyFields = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies', 'workspaces'];
+    if (!files.has('pnpm-workspace.yaml') && dependencyFields.every((field) => !pkg?.[field] || Object.keys(pkg[field]).length === 0)) {
+      if (typeof pkg?.packageManager === 'string' && /^bun@[^@\s]+$/.test(pkg.packageManager)) return { name: 'bun', paths: ['package.json: packageManager'] };
+      if (pkg?.packageManager === undefined && typeof pkg?.engines?.bun === 'string' && pkg.engines.bun.trim()) return { name: 'bun', paths: ['package.json: engines.bun'] };
+    }
+    return { reason: 'no lockfile' };
+  }
   if (locks.length > 1) return { reason: 'ambiguous lockfile' };
   const [name, paths] = locks[0];
   if (name === 'yarn' && !/^__metadata:/m.test(files.read('yarn.lock'))) return { reason: 'unsupported package manager' };
@@ -150,7 +157,7 @@ function assess(files) {
   }
   configured('style.pre-commit', has(/(^|\/)(\.pre-commit-config\.ya?ml|lefthook\.ya?ml|\.lefthook\.ya?ml|\.husky\/pre-commit)$/).concat(pkg.husky?.hooks?.['pre-commit'] ? ['package.json'] : []));
   configured('env.lockfile', has(/^(bun\.lockb?|package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$/));
-  const manager = packageManager(files);
+  const manager = packageManager(files, pkg);
   declaredCommands(files, pkg, manager, set, invalidPackage);
   configured('env.toolchain', has(/^(\.tool-versions|mise\.toml|\.mise\.toml|\.nvmrc|\.devcontainer\.json|\.devcontainer\/(devcontainer\.json|[^/]+\/devcontainer\.json))$/).concat(pkg.engines && Object.keys(pkg.engines).length ? ['package.json'] : []));
   configured('testing.files', has(/(^|\/)((tests?|__tests__)\/.*\.[cm]?[jt]sx?|[^/]+\.(test|spec)\.[cm]?[jt]sx?)$/));
@@ -168,7 +175,7 @@ function assess(files) {
       const steps = Object.values(workflow?.jobs ?? {}).flatMap((job) => job?.steps ?? []);
       const runs = steps.map((step) => step?.run).filter((run) => typeof run === 'string');
       if (steps.some((step) => typeof step?.uses === 'string' && /^github\/codeql-action\//.test(step.uses))) codeql.push(path);
-      const invokes = (run, name) => new RegExp(`(?:^|[\\n;&|])\\s*${name}\\s+${name === 'bun' ? 'run\\s+' : '(?:run\\s+)?'}test(?:\\s|[;&|]|$)`).test(run);
+      const invokes = (run, name) => new RegExp(`(?:^|[\\n;&|])\\s*${name}\\s+(?:run\\s+)?test(?:\\s|[;&|]|$)`).test(run);
       if (pr && runs.some((run) => ['bun', 'npm', 'pnpm', 'yarn'].some((name) => invokes(run, name)))) prCandidate = true;
       if (pr && manager.name && runs.some((run) => invokes(run, manager.name))) prTests = true;
     } catch { invalid = true; }
@@ -194,19 +201,43 @@ export function summarizePillars(criteria) {
   return result;
 }
 
+function parsePages(text) {
+  const pages = [];
+  let start = -1, depth = 0, quoted = false, escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (start < 0) {
+      if (/\s/.test(char)) continue;
+      if (char !== '{' && char !== '[') throw new Error('invalid gh page');
+      start = i;
+    }
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') quoted = false;
+    } else if (char === '"') quoted = true;
+    else if (char === '{' || char === '[') depth++;
+    else if (char === '}' || char === ']') depth--;
+    if (depth === 0) {
+      pages.push(JSON.parse(text.slice(start, i + 1)));
+      start = -1;
+    }
+  }
+  if (start >= 0 || !pages.length) throw new Error('incomplete gh response');
+  return pages;
+}
+
 function forgeStatus(origin) {
   const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/.exec(origin);
   const evidence = [];
   const result = (status, reason) => ({ status, reason, evidence: evidence.length ? evidence : ['origin remote'] });
   if (!match) return result('unknown', 'no GitHub origin');
   function api(endpoint) {
-    const argv = [process.env.GH || 'gh', 'api', '--hostname', 'github.com', '--method', 'GET', '--paginate', '--slurp', endpoint];
-    evidence.push(`gh api --method GET --paginate --slurp ${endpoint}`);
+    const argv = [process.env.GH || 'gh', 'api', '--hostname', 'github.com', '--method', 'GET', '--paginate', endpoint];
+    evidence.push(`gh api --method GET --paginate ${endpoint}`);
     const response = Bun.spawnSync(argv, { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
     if (response.exitCode !== 0) throw new Error(response.stderr.toString().trim());
-    const pages = JSON.parse(response.stdout.toString());
-    if (!Array.isArray(pages) || !pages.length) throw new Error('incomplete gh response');
-    return pages;
+    return parsePages(response.stdout.toString());
   }
   try {
     const metadata = api(`repos/${match[1]}`);
@@ -268,7 +299,7 @@ async function report(args, paths) {
   if (args['--run']) {
     let pkg = {};
     try { pkg = JSON.parse(files.read('package.json') || '{}'); } catch { /* Static criteria already record invalid JSON. */ }
-    execution = await executeDeclared(repo, revision, paths, criteria, packageManager(files), pkg, {
+    execution = await executeDeclared(repo, revision, paths, criteria, packageManager(files, pkg), pkg, {
       timeoutMs: Number(args['--timeout-ms'] ?? 120000), logBytes: Number(args['--log-bytes'] ?? 1048576),
     });
     header.network = execution.network;

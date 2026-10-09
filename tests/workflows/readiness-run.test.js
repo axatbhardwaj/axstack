@@ -118,7 +118,7 @@ function escapedObservation(report, kind) {
 function stopFixture(pid, childFile, readyFile) {
   // Cleanup still has an identity if an assertion fails before the log is parsed.
   if (!pid) {
-    try { pid = JSON.parse(readFileSync(readyFile, 'utf8')).escapedPid; } catch { /* Child never became ready. */ }
+    try { const ready = JSON.parse(readFileSync(readyFile, 'utf8')); pid = ready.pid ?? ready.escapedPid; } catch { /* Child never became ready. */ }
   }
   if (pid && liveFixturePid(pid) && readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes(childFile)) process.kill(pid, 'SIGKILL');
 }
@@ -279,27 +279,36 @@ test('install and scripts receive only the allowlist, closed stdin and private s
 });
 
 test.each(['test', 'postinstall'])('%s timeout kills the process group and removes scratch', (name) => {
-const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
-    'hang-child.js': `import { readFileSync, writeFileSync } from 'node:fs'; writeFileSync(process.env.HOME + '/child.pid', /^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]); setTimeout(() => {}, 2000);`,
-    'hang.js': `import { readFileSync } from 'node:fs';
-const child = Bun.spawn([${JSON.stringify(bun)}, 'hang-child.js'], { stdout: 'ignore', stderr: 'ignore' });
-await Bun.sleep(40);
-console.log(JSON.stringify({ pids: [Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]), Number(readFileSync(process.env.HOME + '/child.pid', 'utf8'))] })); await child.exited;`,
+  const timeoutMs = 5000;
+  const childFile = `hang-child-${crypto.randomUUID()}.js`;
+  const readyFile = `${root}/${childFile}.ready`;
+  const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
+    [childFile]: `import { readFileSync, writeFileSync, renameSync } from 'node:fs';
+setTimeout(() => {}, 15000);
+const pid = Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]);
+writeFileSync(${JSON.stringify(`${readyFile}.tmp`)}, JSON.stringify({ pid }));
+renameSync(${JSON.stringify(`${readyFile}.tmp`)}, ${JSON.stringify(readyFile)});`,
+    'hang.js': `import { existsSync, readFileSync } from 'node:fs';
+const child = Bun.spawn([${JSON.stringify(bun)}, ${JSON.stringify(childFile)}], { stdout: 'ignore', stderr: 'ignore' });
+while (!existsSync(${JSON.stringify(readyFile)})) await Bun.sleep(10);
+console.log(JSON.stringify({ pids: [Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]), JSON.parse(readFileSync(${JSON.stringify(readyFile)}, 'utf8')).pid] })); await child.exited;`,
   });
-  const result = assess(repo, ['--run', '--timeout-ms', '300']);
-  expect(result.code).toBe(0);
-  expect(item(result.report, 'testing.test')).toMatchObject(name === 'test' ? { status: 'fail', reason: 'timeout' } : { status: 'unknown', reason: 'install failed' });
-  const step = result.report.commands.find((entry) => entry.kind === (name === 'test' ? 'script' : 'install'));
-  expect(step.timedOut).toBe(true);
-  expect(step.durationMs).toBeLessThan(1600);
-  const pids = readFileSync(step.logPath, 'utf8').trim().split('\n').map(JSON.parse).find((entry) => entry.pids).pids;
-  for (const pid of pids) {
-    let alive = false;
-    try { alive = !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); } catch { /* Reaped. */ }
-    expect(alive).toBe(false);
-  }
-  expect(() => lstatSync(result.report.header.scratch)).toThrow();
-});
+  try {
+    const result = assess(repo, ['--run', '--timeout-ms', String(timeoutMs)]);
+    expect(result.code).toBe(0);
+    expect(item(result.report, 'testing.test')).toMatchObject(name === 'test' ? { status: 'fail', reason: 'timeout' } : { status: 'unknown', reason: 'install failed' });
+    const step = result.report.commands.find((entry) => entry.kind === (name === 'test' ? 'script' : 'install'));
+    expect(step.timedOut).toBe(true);
+    expect(step.durationMs).toBeLessThan(timeoutMs + 200 + 500); // Drain grace + scheduling margin.
+    const pids = readFileSync(step.logPath, 'utf8').trim().split('\n').map(JSON.parse).find((entry) => entry.pids).pids;
+    for (const pid of pids) {
+      let alive = false;
+      try { alive = !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); } catch { /* Reaped. */ }
+      expect(alive).toBe(false);
+    }
+    expect(() => lstatSync(result.report.header.scratch)).toThrow();
+  } finally { stopFixture(undefined, childFile, readyFile); }
+}, 30000);
 
 test('capped stdout and stderr logs count omitted bytes without blocking noisy scripts', () => {
   const repo = fixture({ test: 'bun noisy.js' }, {
@@ -560,4 +569,49 @@ test('in-process main names report inputs and sends baseline gaps and actionable
   stderr = '';
   expect(await main(['--repo', root, '--out', out], io)).toBe(1);
   expect(stderr).toContain('pass --repo');
+});
+
+test('run executes dependency-free Bun scripts without a lockfile', () => {
+  const bin = mkdtempSync(`${root}/real-bun-`);
+  symlinkSync(bun, `${bin}/bun`);
+  for (const declaration of [{ packageManager: 'bun@1.3.14' }, { engines: { bun: '>=1.3.14' } }]) {
+    const scripts = { build: 'bun fixture.js build', test: 'bun fixture.js test', lint: 'bun fixture.js lint' };
+    const repo = fixture(scripts, { 'package.json': { ...declaration, scripts } });
+    command(repo, ['rm', 'bun.lock']);
+    command(repo, ['commit', '-qm', 'dependency-free repository']);
+    const { code, report } = assess(repo, ['--run'], { PATH: `${bin}:${process.env.PATH}` });
+    expect(code).toBe(0);
+    expect(item(report, 'env.lockfile').status).toBe('fail');
+    for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) expect(item(report, id).status).toBe('pass');
+    expect(report.commands.filter((step) => step.kind === 'script').map((step) => step.argv)).toEqual(['build', 'test', 'lint'].map((name) => ['bun', 'run', name]));
+  }
+});
+
+test.each(['npm@11.0.0', 'pnpm@10.0.0', 'yarn@4.0.0', 'yarn@1.22.22'])('non-Bun declarations (%s) keep no lockfile even when engines allows Bun', (packageManager) => {
+  const repo = fixture(undefined, { 'package.json': { packageManager, engines: { bun: '>=1.3.14' }, scripts: { build: 'bun fixture.js build', test: 'bun fixture.js test', lint: 'bun fixture.js lint' } } });
+  command(repo, ['rm', 'bun.lock']);
+  command(repo, ['commit', '-qm', 'no lockfile']);
+  for (const extra of [[], ['--run']]) {
+    const { code, report } = assess(repo, extra);
+    expect(code).toBe(0);
+    for (const id of ['env.build', 'testing.test', 'testing.lint-typecheck']) expect(item(report, id)).toMatchObject({ status: 'unknown', reason: 'no lockfile' });
+    expect(report.commands ?? []).toHaveLength(0);
+  }
+});
+
+test.each([
+  ['array', { 'package.json': { workspaces: ['pkgs/*'], engines: { bun: '>=1.3.14' }, scripts: { test: 'bun fixture.js test' } } }],
+  ['packages object', { 'package.json': { workspaces: { packages: ['pkgs/*'] }, packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } } }],
+  ['pnpm file', { 'package.json': { packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } }, 'pnpm-workspace.yaml': 'packages: ["pkgs/*"]' }],
+])('workspace declarations (%s) block lockfile-free installs', (name, files) => {
+  const repo = fixture(undefined, { ...files, 'pkgs/a/package.json': { name: 'a', dependencies: { 'is-number': '7.0.0' } } });
+  command(repo, ['rm', 'bun.lock']);
+  command(repo, ['commit', '-qm', 'lockfile-free workspace']);
+  for (const extra of [[], ['--run']]) {
+    const { code, report } = assess(repo, extra);
+    expect(code).toBe(0);
+    expect(item(report, 'testing.test')).toMatchObject({ status: 'unknown', reason: 'no lockfile' });
+    expect(item(report, 'env.lockfile').status).toBe('fail');
+    expect(report.commands ?? []).toHaveLength(0);
+  }
 });
