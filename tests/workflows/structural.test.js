@@ -397,12 +397,8 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   expect(callers.tickets).toMatch(/mapping\s+time[^.]*no actual SHAs or line counts/i);
   expect(callers.implement).toContain('Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>');
   expect(callers.implement).toContain('[PR chains](../axstack/references/pr-chain.md)');
-  const chain = readFileSync(join(skillsDir, 'axstack/references/pr-chain.md'), 'utf8');
-  expect(chain).toMatch(/Immediately\s+invalidate affected child readiness/i);
-  expect(chain).toMatch(/merge the parent\s+or base[^.]*owned child preserving existing commits/i);
-  expect(chain).toMatch(/Refresh next ready children[^.]*as needed[^.]*batching ancestor changes/i);
-  expect(chain).toMatch(/Re-run affected checks[^.]*remeasure shape[^.]*new base/i);
-  expect(chain).toMatch(/size\s+growth alone[^.]*not an automatic hold/i);
+  // Child refresh, commit preservation and shape guards are mutation-checked
+  // at their owning PR-chain boundary in pr-chain.test.js.
   expect(callers.audit).not.toMatch(/over-band/i);
   expect(callers.audit).toMatch(/UNKNOWN[^.]*receipt lacks the measurement/i);
   expect(callers.audit).not.toMatch(/user[- ]exception|user receipt/i);

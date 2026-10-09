@@ -2,10 +2,12 @@
 
 Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness}.js`;
 fixtures: `tests/workflows/{run-init,readiness,pr-shape-helper}.test.js`.
-Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`; local history
-fixtures cover three layers, siblings, merge-preserved commit identity, retarget
-shape and current-tip ancestry. These prove local Git behavior, not live forge
-retargeting or agent compliance.
+Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`;
+contract checks exercise ancestor-first repair and genuine paraphrases with removal/
+inversion negatives; local history fixtures cover three layers, siblings,
+merge-preserved commit identity, retarget shape and current-tip ancestry.
+These checks prove shipped instruction contracts and local Git behavior, not live
+forge retargeting or agent compliance.
 Prerequisites: Launch; a new local Git fixture, never the driver's run namespace.
 Run-init writes only its fixture Git common directory and owned scratch.
 
@@ -63,6 +65,7 @@ clone is bookkeeping, not an archival source bundle.
 
 ```bash
 doctor > "$EVIDENCE/chains-doctor.log" 2>&1
-bun test tests/workflows/pr-chain.test.js tests/workflows/pr-shape-helper.test.js \
+bun test tests/workflows/pr-chain.test.js tests/workflows/chat-run-watch.test.js \
+  tests/workflows/structural.test.js tests/workflows/pr-shape-helper.test.js \
   > "$EVIDENCE/chains-suite.log" 2>&1
 ```
