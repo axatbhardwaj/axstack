@@ -147,6 +147,22 @@ Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions,
 See [PR scope and sizing](skills/axstack/references/pr-shape.md) for candidate
 shape and [Releases](https://github.com/axatbhardwaj/axstack/releases) for release history.
 
+## Development
+
+```sh
+bun install --frozen-lockfile
+bun run lint
+bun run typecheck
+git config core.hooksPath .husky
+```
+
+The hook runs lint and typecheck only. Biome formatting is optional for editors
+or manual use; commits do not enforce formatting. TypeScript checks JavaScript
+in `src/` and `bin/` without emitting files. All tooling is development-only and
+is excluded from packed assets by `package.json.files`.
+Regenerate `bun.lock` with the minimum Bun version in `package.json.engines`
+(currently 1.3.14); newer Bun versions can write an incompatible lockfile format.
+
 ## License
 
 [MIT](LICENSE) © 2026 Axat Bhardwaj.

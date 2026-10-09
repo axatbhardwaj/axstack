@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "types": ["bun"],
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "include": ["src/**/*.js", "bin/**/*.js"]
+}

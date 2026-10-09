@@ -32,8 +32,15 @@
     "docs/*.md"
   ],
   "scripts": {
+    "lint": "biome lint . --error-on-warnings",
+    "typecheck": "bun node_modules/typescript/bin/tsc --noEmit --project jsconfig.json",
     "test": "bun test",
     "test:all": "bun test"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/bun": "1.4.2",
+    "typescript": "7.0.2"
+  }
 }

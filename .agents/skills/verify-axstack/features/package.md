@@ -5,6 +5,11 @@ Entry points: `package.json.files`, `bin/axstack.js`, packaged `skills/` and
 `tests/workflows/prose-size.test.js`. Prerequisites: Launch, Bun >=1.3.14.
 No install, publish, registry request or archive write is intended.
 
+For dependency-lock changes, verify frozen install and this dry run on both the
+minimum Bun in `package.json.engines` and the authoring Bun. Confirm frozen
+install leaves the lock byte-unchanged; `tests/installer/tooling.test.js` guards
+the minimum runtime's supported lockfile format.
+
 ```bash
 doctor > "$EVIDENCE/package-doctor.log" 2>&1
 find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \

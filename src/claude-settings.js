@@ -184,7 +184,7 @@ export async function planUninstallClaudeSettings({ claude, skillsRoot, boundPat
   }
 
   const owned = sidecar.keys[CLAUDE_SETTING_PATH];
-  if (!owned || !owned.owners.includes(skillsRoot)) {
+  if (!owned?.owners.includes(skillsRoot)) {
     return {
       report: { status: 'skipped', reason: 'this skills directory does not own the Claude setting' },
       writes: [],

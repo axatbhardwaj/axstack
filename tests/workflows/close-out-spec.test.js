@@ -85,7 +85,7 @@ test('close-out acceptance template keeps evidence, accepted holds, and repair r
   expect(template, 'missing table template').toBeTruthy();
   const cells = template.trim().split('\n').map((row) => row.split('|').slice(1, -1));
   const headers = [[/acceptance/i, /check|clause|criterion/i], [/result|outcome/i], [/evidence|proof/i, /hold/i], [/repair/i, /reason|why|rationale/i]];
-  headers.forEach((concepts, index) => expect(concepts.every((concept) => concept.test(cells[0][index]))).toBe(true));
+  headers.forEach((concepts, index) => { expect(concepts.every((concept) => concept.test(cells[0][index]))).toBe(true); });
   for (const row of cells.slice(2)) expect(row).toHaveLength(cells[0].length);
   expect(cells.slice(2).some((row) => /\b(?:passed|met)\b/i.test(row[1]) && /SHA/i.test(row[2]) && /check|log/i.test(row[2]))).toBe(true);
   expect(cells.slice(2).some((row) => /held|unmet/i.test(row[1]) && /user.*(?:accept|approv)/i.test(row[1]) && /Decisions/i.test(row[2]) && /user/i.test(row[2]) && /receipt/i.test(row[2]))).toBe(true);

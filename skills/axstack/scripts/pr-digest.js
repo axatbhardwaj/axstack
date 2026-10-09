@@ -54,7 +54,7 @@ function fetchCurrent(args) {
 }
 
 function nodes(connection, field) {
-  if (!connection || connection.pageInfo?.hasNextPage !== false || !Array.isArray(connection.nodes)) {
+  if (connection?.pageInfo?.hasNextPage !== false || !Array.isArray(connection.nodes)) {
     throw new Error(`incomplete ${field} connection`);
   }
   return connection.nodes;

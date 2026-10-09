@@ -603,7 +603,7 @@ test.each([
   ['array', { 'package.json': { workspaces: ['pkgs/*'], engines: { bun: '>=1.3.14' }, scripts: { test: 'bun fixture.js test' } } }],
   ['packages object', { 'package.json': { workspaces: { packages: ['pkgs/*'] }, packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } } }],
   ['pnpm file', { 'package.json': { packageManager: 'bun@1.3.14', scripts: { test: 'bun fixture.js test' } }, 'pnpm-workspace.yaml': 'packages: ["pkgs/*"]' }],
-])('workspace declarations (%s) block lockfile-free installs', (name, files) => {
+])('workspace declarations (%s) block lockfile-free installs', (_name, files) => {
   const repo = fixture(undefined, { ...files, 'pkgs/a/package.json': { name: 'a', dependencies: { 'is-number': '7.0.0' } } });
   command(repo, ['rm', 'bun.lock']);
   command(repo, ['commit', '-qm', 'lockfile-free workspace']);

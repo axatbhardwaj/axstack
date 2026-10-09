@@ -84,8 +84,8 @@ for (const rule of completionRules) test(`hygiene completion: ${rule.name}`, () 
       : requires(clause, ...rule.concepts)));
   checkRule(text, accepts, rule.rewording, rule.inversions, rule.concepts);
   for (const clause of sentences(text).filter(accepts)) {
-    for (const escape of ['unless convenient', 'except during repairs', rule.contradiction]) {
-      expect(accepts(text.replace(clause, `${clause} ${escape}`))).toBe(false);
+    for (const qualification of ['unless convenient', 'except during repairs', rule.contradiction]) {
+      expect(accepts(text.replace(clause, `${clause} ${qualification}`))).toBe(false);
     }
   }
 });

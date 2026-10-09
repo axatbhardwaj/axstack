@@ -235,7 +235,7 @@ test('commit preserves mode, fsyncs before rename, and reads the replaced settin
     spyOn(fs, 'renameSync').mockImplementation((a, b) => { events.push('rename'); return realRename(a, b); }),
     spyOn(fs, 'readFileSync').mockImplementation((...args) => { if (args[0] === f.settings) events.push('read'); return realRead(...args); })];
   try { expect(commit(f.settings, original, next)).toBe('updated'); }
-  finally { spies.forEach((spy) => spy.mockRestore()); }
+  finally { spies.forEach((spy) => { spy.mockRestore(); }); }
   expect(events).toEqual(['fsync', 'read', 'rename', 'read']);
   expect(statSync(f.settings).mode & 0o777).toBe(0o640);
   expect(readFileSync(f.settings, 'utf8')).toBe(next);

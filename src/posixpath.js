@@ -65,7 +65,8 @@ export function resolveFrom(cwd, ...paths) {
 }
 
 export function resolve(...paths) {
-  return resolveFrom(Bun.cwd, ...paths);
+  // Bun.cwd is a runtime string missing from the current Bun declarations.
+  return resolveFrom(/** @type {typeof Bun & {cwd: string}} */ (Bun).cwd, ...paths);
 }
 
 export function relative(from, to) {

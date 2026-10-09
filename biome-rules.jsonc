@@ -1,0 +1,12 @@
+{
+  // noAssignInExpressions is disabled only for readiness.js in biome.json:
+  // preserve the #412 implementation; defer its accumulator cleanup to a follow-up.
+  "linter": {
+    "rules": {
+      "suspicious": {
+        // noTemplateCurlyInString: tests assert literal GitHub expressions and prompt markers.
+        "noTemplateCurlyInString": "off"
+      }
+    }
+  }
+}
