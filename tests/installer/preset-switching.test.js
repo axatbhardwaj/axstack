@@ -14,7 +14,7 @@ const PRESETS = {
   mixed: [
     p('axstack-author', 'codex', 'gpt-6-sol'),
     p('axstack-reviewer-primary', 'codex', 'gpt-6-sol'),
-    p('axstack-reviewer-secondary', 'claude', 'claude-opus-5-5'),
+    p('axstack-reviewer-secondary', 'claude', 'claude-opus-5-5', 'high'),
     p('axstack-checker', 'antigravity', null, 'low'),
   ],
   'claude-only': [

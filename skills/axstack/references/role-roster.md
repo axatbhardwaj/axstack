@@ -7,12 +7,12 @@
   Only the recorded owning watch thread merges, including `axstack-owner`
   for authorized standalone maintenance. Other roles never acquire merge authority.
 - `axstack-reviewer-primary` and `axstack-reviewer-peer` are the ordered
-  peer pair. In `mixed`, the cross-provider pair is Sol high followed by Opus low.
+  peer pair. In `mixed`, the cross-provider pair is Sol high followed by Opus medium.
   Peer review uses both; authored review uses this table:
 
   | Preset | Author class | Reviewer (class/effort) |
   | --- | --- | --- |
-  | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |
+  | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
@@ -24,15 +24,18 @@
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors archify only on an explicit viewer request.
 - `axstack-explainer-review` reviews consequential or complex claims, archify
-  output, or on request.
+  output, or on request; `codex/sol` medium in mixed.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for every PR
   review round and bounded research, spec, ticket, receipt, and release claims.
 - `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)
   for every interactive page, bound to the exact bytes and SHA-256.
-- `axstack-auditor`/`axstack-research-requirements`/
+- `axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
   `axstack-explore-execution`:
   `claude/sonnet` high in mixed/claude-only.
+- `axstack-auditor`: `claude/haiku` xhigh in mixed, pinned to
+  `claude-haiku-5-5`. Missing that exact model or xhigh effort holds without
+  substitution. `claude/sonnet` high in claude-only; `codex/luna` xhigh in codex-only.
 - `axstack-explore-codebase`/`axstack-monitor`: `claude/haiku` high in
   mixed/claude-only, pinned to `claude-haiku-5-5`. Missing that exact model
   or high effort holds these roles without substitution.
@@ -41,7 +44,7 @@
 - Sol pairs `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
   mixed/codex-only; intentionally absent in claude-only. Dispatch each
-  independently from its Sonnet seat on the same bounded brief without
+  independently from its base seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.
   Record intentional absence and continue with Sonnet alone.
 - Optional seats: `axstack-arena-candidate-grok`,

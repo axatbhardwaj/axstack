@@ -29,6 +29,13 @@ test -f "$HOME/.agents/skills/axstack/roles.json"
 cp "$HOME/.agents/skills/.axstack-manifest.json" "$EVIDENCE/install-manifest.json"
 cp "$HOME/.agents/skills/axstack/roles.json" "$EVIDENCE/installed-roles.json"
 cp "$HOME/AGENTS.md" "$EVIDENCE/installed-instructions.md"
+bun -e 'const { roles } = await Bun.file(process.env.EVIDENCE + "/installed-roles.json").json();
+const by = Object.fromEntries(roles.map(r => [r.id, r]));
+for (const [id, modelClass, effort] of [
+  ["axstack-reviewer-peer", "opus", "medium"], ["axstack-reviewer-secondary", "opus", "high"],
+  ["axstack-auditor", "haiku", "xhigh"], ["axstack-explainer-review", "sol", "medium"],
+]) if (by[id].modelClass !== modelClass || by[id].thinkingOptionId !== effort) throw Error(id);
+if (by["axstack-auditor"].model !== "claude-haiku-5-5") throw Error("auditor pin");'
 ```
 
 Proof: version matches the package; install creates owned skills, preset and

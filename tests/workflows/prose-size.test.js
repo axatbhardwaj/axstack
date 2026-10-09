@@ -177,6 +177,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-cli-lessons F1: unresolved-rating relay eligibility; exact aggregate 382015.
   // R1 repair1: disclose plan input metadata and large-output artifacts; exact aggregate 380614.
   // R1 rebase onto c04d2e5: retain both histories; exact rebased aggregate 382167.
-  expect(total).toBeLessThanOrEqual(382167);
+  // 20261009-model-utilization T1: +258 measured bytes for the mixed
+  // auditor pin and effort, explainer review and updated reviewer routing; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(382425);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
