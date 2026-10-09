@@ -18,7 +18,8 @@ Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabil
 
 Read-only inputs: reads supplied JSON, spawns adjacent resolve-models.js, writes stdout/stderr.
 Writes only the caller's --out path when supplied; no retained state.
-Results name input paths. Output over 4096 bytes requires --out; smaller results print inline.
+Results name input paths. Plan output over 4096 bytes requires --out.
+Large verification retains its exit code, prints mismatches and advises --out on stderr.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
@@ -90,7 +91,10 @@ function plan(argv, io) {
     const inline = result.mismatches
       ? `${JSON.stringify({ inputs })}\n${result.mismatches.join('\n') || 'MATCH'}\n` : `${JSON.stringify(full)}\n`;
     if (!args['--out']) {
-      if (new TextEncoder().encode(inline).length > 4096) throw new Error('large output; pass --out <report.json> to save full JSON');
+      if (new TextEncoder().encode(inline).length > 4096) {
+        if (!result.mismatches) throw new Error('large output; pass --out <report.json> to save full JSON');
+        io.stderr('Large verification output; pass --out <path>.json for the full list\n');
+      }
       io.stdout(inline);
       return;
     }

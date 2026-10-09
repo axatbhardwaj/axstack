@@ -50,7 +50,9 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
       expect(result.error).toBe('');
       const selection = kind === 'launch' ? { instanceId: instance, model, options }
         : { providerInstanceId: instance, model, options };
-      expect(JSON.parse(result.output)).toMatchObject({ [kind === 'launch' ? 'modelSelection' : 'target']: selection,
+      expect(JSON.parse(result.output)).toEqual({ inputs: { role, kind, roles: `${f.dir}/roles.json`,
+        capabilities: `${f.dir}/capabilities.json`, picker: `${f.dir}/picker.json` },
+        [kind === 'launch' ? 'modelSelection' : 'target']: selection,
         runtimeMode: 'full-access' });
     }
   }
@@ -138,7 +140,9 @@ test('Antigravity verifies effort through its model suffix with no effort option
   const f = setup(); f.picker.chosenInstanceId = 'antigravity';
   const data = { modelSelection: { instanceId: 'antigravity', model: 'gemini-3.8-flash-low', options: [] },
     runtimeMode: 'full-access' };
-  expect(f.run('axstack-checker', 'launch', data).output).toContain('MATCH\n');
+  const matched = f.run('axstack-checker', 'launch', data);
+  expect(matched.status).toBe(0);
+  expect(matched.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
   data.modelSelection.model = 'gemini-3.8-flash-high';
   const result = f.run('axstack-checker', 'launch', data);
   expect(result.status).toBe(2);
@@ -278,8 +282,9 @@ test('large verification uses a caller-given artifact and explicit omitted count
   data.modelSelection.model = 'wrong'.repeat(2000);
   const verify = f.save('configuration', data), out = `${f.dir}/full.json`;
   const missingOut = invoke([...args, '--verify', verify]);
-  expect(missingOut.status).toBe(1);
-  expect(missingOut.error).toContain('pass --out');
+  expect(missingOut.status).toBe(2);
+  expect(missingOut.output).toContain(data.modelSelection.model);
+  expect(missingOut.error).toContain('pass --out <path>.json for the full list');
   const result = invoke([...args, '--verify', verify, '--out', out]);
   expect(result.status).toBe(2);
   const summary = JSON.parse(result.output), full = JSON.parse(readFileSync(out, 'utf8'));
