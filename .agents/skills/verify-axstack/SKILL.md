@@ -26,19 +26,25 @@ NODE_DIR=$(dirname "$(command -v node)")
 TMPDIR=/tmp/axstack-verify-local
 EVIDENCE=/absolute/private/evidence/verify-axstack
 HOST_NET=$(readlink /proc/self/ns/net)
+HOST_UID=$(id -u)
 mkdir -m 700 /tmp/axstack-verify-local
 test ! -L "$TMPDIR"
 test "$(realpath "$TMPDIR")" = /tmp/axstack-verify-local
 test "$(stat -c '%a:%u' "$TMPDIR")" = "700:$(id -u)"
 mkdir -m 700 "$TMPDIR/home"
 test -d "$EVIDENCE"
-unshare -n -- env -i PATH="$(dirname "$BUN"):$NODE_DIR:/usr/sbin:/usr/bin:/bin" \
+unshare --user --map-root-user --net -- env -i PATH="$(dirname "$BUN"):$NODE_DIR:/usr/sbin:/usr/bin:/bin" \
   HOME="$TMPDIR/home" TMPDIR="$TMPDIR" REPO="$REPO" SKILL="$SKILL" \
-  EVIDENCE="$EVIDENCE" HOST_NET="$HOST_NET" bash --noprofile --norc
+  EVIDENCE="$EVIDENCE" HOST_NET="$HOST_NET" HOST_UID="$HOST_UID" bash --noprofile --norc
 ```
 
 Inside that offline shell, initialize these handles. The fresh network
 namespace has only loopback; failure of `unshare` holds driving.
+Rootless user mapping presents the host owner (for example uid1000) as inner
+uid0, never host root. Validate ownership against `id -u` in each namespace: the
+outer scratch check uses host uid, Doctor uses inner uid. Record both IDs and
+network namespace identities. The full suite drops DAC override/read-search
+capabilities even inside this user namespace.
 Readiness is an exited command plus observed files, not a listening service.
 
 ```bash
@@ -52,6 +58,7 @@ export AXSTACK_ARCHIFY_REPO="$TMPDIR/absent-archify"
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 printf '%s\n' "$REV" > "$EVIDENCE/revision.txt"
 printf '%s\n' "shell PID=$$; no background services" > "$EVIDENCE/processes.txt"
+printf '%s\n' "host uid=$HOST_UID; inner uid=$(id -u); host net=$HOST_NET; inner net=$(readlink /proc/self/ns/net)" > "$EVIDENCE/namespaces.log"
 ```
 
 ## Doctor

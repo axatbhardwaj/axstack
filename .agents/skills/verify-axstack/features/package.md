@@ -20,6 +20,7 @@ find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
 cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
 rg 'bin/axstack.js|skills/axstack/scripts/dispatch-plan.js|profiles/presets/mixed.json' \
   "$EVIDENCE/pack.log"
+rg 'skills/axstack/references/pr-chain.md' "$EVIDENCE/pack.log"
 if rg '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
   echo 'repository verification skill unexpectedly packaged' >&2
   exit 1
