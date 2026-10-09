@@ -17,15 +17,13 @@ const CHECK_LABELS = {
   bun: 'bun >= 1.3.14 runtime',
   git: 'git CLI',
   gh: 'gh CLI',
-  'gh-stack': 'gh stack extension',
   't3-binary': `T3 Code CLI >= ${T3_FLOOR}`,
 };
 
-// Run the extension command itself, not a substring in an extension listing.
+// Ordinary PRs need Git and gh; legacy native-stack operations probe separately.
 export const PROBE_COMMANDS = {
   git: ['git', ['--version']],
   gh: ['gh', ['--version']],
-  'gh-stack': ['gh', ['stack', '--help']],
   't3-binary': ['t3', ['--version']],
 };
 
@@ -86,7 +84,7 @@ export async function runRealCheck(name) {
 }
 
 export async function checkCapabilities(exec) {
-  const names = ['bun', 'git', 'gh', 'gh-stack', 't3-binary'];
+  const names = ['bun', 'git', 'gh', 't3-binary'];
   const checks = [];
   for (const name of names) {
     let result;

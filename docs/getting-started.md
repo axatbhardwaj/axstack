@@ -6,7 +6,7 @@ For the mental model, read [concepts](concepts.md); for other journeys, use
 
 ## Prepare your host
 
-You need Bun >=1.3.14, Git, the GitHub CLI with its `gh stack` extension, and
+You need Bun >=1.3.14, Git, the GitHub CLI, and
 T3 Code `0.0.46-nightly.20261003.2610` or newer. These executables must be on PATH.
 The providers required by your chosen preset must be available inside T3.
 See [installation](installation.md) for harness paths and
@@ -28,17 +28,17 @@ and fetches the pinned archify tool for explicit viewer requests. Reload the har
 installation. Use the [installation reference](installation.md) for other
 harnesses, source installs or conflicts.
 
-A successful check exits 0. Its five capability rows mean:
+A successful check exits 0. Its four capability rows mean:
 
 | Row | Meaning |
 | --- | --- |
 | `bun` | The running Bun version meets the floor. |
 | `git` | Git's version command succeeds. |
 | `gh` | The GitHub CLI's version command succeeds. |
-| `gh stack` | The extension's actual help command succeeds. |
 | `t3` | T3's version command succeeds and meets the floor. |
 
-With this harness target, check also validates the archify record/copy/SHA and
+The `gh stack` extension is needed only for preexisting native stacks; ordinary
+PRs/chains use Git and `gh pr`. With this harness target, check also validates the archify record/copy/SHA and
 reports the owned instruction binding. Missing Chrome is a warning. Any reported
 gap exits 1; follow [troubleshooting](installation.md#exit-codes-and-troubleshooting) before
 starting a task.

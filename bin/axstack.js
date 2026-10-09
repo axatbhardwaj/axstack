@@ -51,7 +51,7 @@ Usage:
 Commands:
   install    Validate a skill bundle, then copy owned skills and selected role
              data and record ownership hashes.
-  check      Probe Bun, Git, gh stack, and the T3 Code version floor.
+  check      Probe Bun, Git, gh, and the T3 Code version floor.
              Driver preflight verifies MCP readiness inside a T3 thread.
   uninstall  Remove only unchanged Axstack-owned assets. User edits survive.
 

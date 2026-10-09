@@ -1,4 +1,4 @@
-// Capability checks use injected command execution; report gh stack and
+// Capability checks use injected command execution; report Git, gh and
 // T3 binary gaps and state the in-thread preflight boundary.
 // Spawn-boundary tests pin the Bun semantics runRealCheck depends on:
 // missing binaries throw, nonzero exits report codes, timeouts kill.
@@ -30,7 +30,7 @@ function fakeExec(overrides = {}) {
 
 test('all tools present reports ok with probe-limit disclaimer', async () => {
   const report = await checkCapabilities(fakeExec());
-  expect(report.checks.map((check) => check.name)).toEqual(['bun', 'git', 'gh', 'gh-stack', 't3-binary']);
+  expect(report.checks.map((check) => check.name)).toEqual(['bun', 'git', 'gh', 't3-binary']);
   expect(report.gaps).toEqual([]);
   expect(report.limitations.join(' ')).toMatch(/T3.*MCP.*provider auth.*models.*effort.*verified by driver preflight.*T3 thread/i);
   expect(report.limitations.join(' ')).toMatch(/quotas/i);
@@ -86,10 +86,15 @@ for (const [name, accepts] of Object.entries(limitationRules)) {
   });
 }
 
-test('missing gh stack extension is reported as a gap', async () => {
-  const report = await checkCapabilities(fakeExec({ 'gh-stack': { ok: false, stdout: '' } }));
-  expect(report.gaps.some((g) => /stack/i.test(g))).toBe(true);
-  expect(report.checks.find((c) => c.name === 'gh-stack').ok).toBe(false);
+test('ordinary capability checks neither require nor invoke gh-stack', async () => {
+  const calls = [];
+  const report = await checkCapabilities(async (name) => {
+    calls.push(name);
+    if (name === 'gh-stack') throw Error('extension unavailable');
+    return fakeExec()(name);
+  });
+  expect(calls).toEqual(['bun', 'git', 'gh', 't3-binary']);
+  expect(report.gaps).toEqual([]);
 });
 
 test('missing T3 is a capability gap', async () => {
@@ -174,7 +179,7 @@ echo 't3 v0.0.46-nightly.20261003.2610'`);
   expect(r.out).toContain('0.0.46-nightly.20261003.2610');
   expect(readFileSync(log, 'utf8')).toContain('t3 --version');
   expect(r.out).toContain(`v${Bun.version}`);
-  expect(readFileSync(log, 'utf8')).toContain('gh stack --help');
+  expect(readFileSync(log, 'utf8')).not.toContain('gh stack');
 });
 
 describe('Bun runtime floor', () => {

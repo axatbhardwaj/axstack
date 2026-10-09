@@ -5,7 +5,7 @@ checks host capabilities. T3 Code is the only supported active runtime. The CLI
 does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
 workflow database.
 
-Requirements: Bun >=1.3.14, Git, `gh`, the `gh stack` extension, and a running
+Requirements: Bun >=1.3.14, Git, `gh`, and a running
 T3 Code `0.0.46-nightly.20261003.2610` or newer. The driver is a T3 thread
 with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
 Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
@@ -121,14 +121,14 @@ role store and no T3 configuration merge.
 axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
 ```
 
-The capability report has five rows:
+The capability report has four rows; `gh stack` is required only for preexisting
+legacy native-stack operations, which probe `gh stack --help` separately:
 
 | Row | What it checks |
 | --- | --- |
 | `bun` | The `bun` row reports the already-validated running version, because Bun below 1.3.14 exits 1 before any row is printed. |
 | `git` | `git --version` succeeds. |
 | `gh` | `gh --version` succeeds. |
-| `gh stack` | `gh stack --help` succeeds, rather than merely finding an extension name. |
 | `t3` | `t3 --version` succeeds and its output meets the T3 version floor. |
 
 `--bundle` additionally validates the bundle and reports its skill-file count
