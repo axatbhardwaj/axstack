@@ -24,6 +24,11 @@
   The recorded owning watch thread merges; excluded PRs follow its card and
   user-merge rules. Standalone authorized maintenance, small, and adopted work
   use the same predicate. User merges are bottom-up for a stack.
+- In this repository, an agent driver may merge a Dependabot GitHub Actions PR only when all hold:
+  author is `dependabot[bot]`, branch is `dependabot/github_actions/*`, and only `.github/workflows/` files change (including old and new rename paths);
+  every changed `uses:` SHA pin resolves to the release tag the PR claims, verified via the GitHub API, and every tag ref is a release tag;
+  required CI is green at the head; merge with `gh pr merge <n> --merge --match-head-commit <sha>`.
+  Otherwise leave the PR for the user.
 
 ## Engineering
 
