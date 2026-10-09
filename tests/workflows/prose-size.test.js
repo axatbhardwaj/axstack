@@ -163,6 +163,17 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261008-relay-cards T1 repair1: +289 measured aggregate bytes for
   // config-read readiness, install-only /busy, missing-quote guidance and
   // held-ack resolution; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(370926);
+  // 20261008-cli-lessons M1: +1092 measured bytes for authored receipt evidence;
+  // exact measured ceiling; always-loaded unchanged.
+  // 20261008-cli-lessons M2: +4737 measured bytes for merge escalation;
+  // exact measured ceiling; always-loaded unchanged.
+  // M2 rebase onto 9de3f2a: exact measured aggregate 367868; retain all history.
+  // M2 repair1: +2473 measured bytes for driver policy parity and bounded
+  // uncertain-rating decisions; exact aggregate, always-loaded unchanged.
+  // M2 rebase onto 67283e5c: exact measured aggregate 379228; keep relay-card history.
+  // M2 relay-card reconciliation: exact measured aggregate 380527; both protocols retained.
+  // M2 reconciliation simplification: exact final aggregate 380526; no headroom.
+  // M2 repair2: report-only comment-rating notifications; exact measured aggregate 380462.
+  expect(total).toBeLessThanOrEqual(380462);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

@@ -72,7 +72,10 @@ The recorded owning watch thread is the merge actor, including `axstack-owner`
 for authorized standalone maintenance and small or adopted work.
 Managers, workers, reviewers, monitors, and nightly triage never merge.
 Observation-only and peer watches never merge.
-Apply watch §5's approval, base, exclusions, and merge-card rules.
+Apply watch §5's approval, base, proven-verification, escalation, and merge-card rules.
+Personal own PRs, including `deploying` bases, follow automatic merge under
+watch §5. Work promotion PRs and `deploying` or unknown bases are merged by the
+user on the forge. Peer PRs are merged by the user on the forge.
 A stack follows its guarded whole-stack rule.
 User merges are bottom-up for a stack.
 
@@ -166,8 +169,15 @@ instructions, always win.
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
 
 Use the run's recorded Notification policy through `axstack-relay`.
-Decision holds, including spec and npm approval, are always eligible. Across
-implementation and release, merge-ready and merged notifications together are
-capped at two per run; deduplicate by purpose and revision. Healthy ticks stay
+Decision holds, including spec and npm approval, are always eligible.
+Relay eligibility is limited to user-decision holds, serious-risk holds, the
+60-minute blocked ping and capped peer PR milestones under the Notification policy.
+Under the recorded Notification policy, `verification not proven` is a
+user-decision hold. The 60-minute blocked ping is a notification-only category
+under the Notification policy. Never send routine merge-ready or merged relays
+for own PRs. Notifications for peer PRs are unchanged, including at most two
+merge-ready/merged milestones per run, deduplicated across implementation and release.
+Across implementation and release, peer PR merge-ready and merged notifications
+together are capped at two per run; deduplicate by purpose and revision. Healthy ticks stay
 quiet. A failed or uncertain delivery preserves the underlying hold. A relay
 message is only a notification, never authority to approve, merge, or publish.

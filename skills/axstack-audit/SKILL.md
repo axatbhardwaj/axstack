@@ -154,7 +154,7 @@ Each proposal names:
 4. a regression scenario first, followed by an unchanged holdout evaluation;
 5. a cost and quality comparison when those values were measured; and
 6. the authorized delivery path: the auditor suggests, the driver arranges an
-   author and independent review, a reviewed PR is proposed, and the owning watch thread applies watch §5, including its user-merge exclusions.
+   author and independent review, a reviewed PR is proposed, and the owning watch thread applies watch §5, including proven verification and escalation rules.
 
 Keep evaluation data, candidate changes, and validation separate. This is an
 original Axstack workflow with no outside dependency or extra framework to

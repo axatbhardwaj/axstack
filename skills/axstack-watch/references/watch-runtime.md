@@ -106,10 +106,14 @@ Reconcile prior tasks, thread/run identities, receipts and GitHub before retryin
 an uncertain wake. Wake only the exact live original driver.
 A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.
 
-The driver records one Notification policy: `axstack-relay` Telegram home only
-for a user-decision hold (including spec and npm approval), merge-ready or
-merged milestones (at most two across implementation and release), or a
-serious-risk hold.
+The driver records one Notification policy for `axstack-relay` Telegram home.
+Relay eligibility is limited to user-decision holds, serious-risk holds, the
+60-minute blocked ping and capped peer PR milestones under the Notification policy.
+Under the recorded Notification policy, `verification not proven` is a
+user-decision hold. The 60-minute blocked ping is a notification-only category
+under the Notification policy. Never send routine merge-ready or merged relays
+for own PRs. Notifications for peer PRs are unchanged, including at most two
+merge-ready/merged milestones per run, deduplicated across implementation and release.
 Quiet ticks never notify.
 
 The driver alone routes repair.
