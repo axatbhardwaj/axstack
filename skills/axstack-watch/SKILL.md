@@ -132,16 +132,21 @@ the current revision, and a recorded hold or next owner where work remains.
 
 Under a recorded `Notification policy`, the owner uses
 [axstack-relay](../axstack-relay/SKILL.md) for user-decision holds, serious-risk
-holds, the 60-minute blocked ping and capped peer PR milestones.
+holds, the 60-minute blocked ping, unresolved-rating notice and capped peer PR milestones.
 Serious risks relay immediately; genuine blocked operations needing user
 intervention relay after bounded safe recovery.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
 Relay eligibility is limited to user-decision holds, serious-risk holds, the
-60-minute blocked ping and capped peer PR milestones under the Notification policy.
+60-minute blocked ping, unresolved-rating notice and capped peer PR milestones
+under the Notification policy.
 Under the recorded Notification policy, `verification not proven` is a
 user-decision hold. The 60-minute blocked ping is a notification-only category
-under the Notification policy. Never send routine merge-ready or merged relays
+under the Notification policy. The unresolved-rating notice is a notification-only
+category under the Notification policy, deduplicated per comment and head.
+The unresolved-rating notice grants no reply authority.
+The unresolved-rating notice never clears the hold.
+Never send routine merge-ready or merged relays
 for own PRs. Notifications for peer PRs are unchanged, including at most two
 merge-ready/merged milestones per run, deduplicated across implementation and release.
 The standalone monitor never sends; the chat-run schedule resumes the driver. Deduplicate

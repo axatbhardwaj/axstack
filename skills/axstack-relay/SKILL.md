@@ -41,15 +41,23 @@ Choose the applicable message type:
   exists. They never become proactive relay messages merely because the run is waiting.
 - **Blocked on a person:** follow watch §5's 60-minute clocks and once-per-key
   rule; a blocked ping requests no reply and creates no decision hold.
+- **Unresolved-rating notice:** relay watch §5's report-only comment-rating card
+  for an item still unrated or uncertain after one fresh rating dispatch, bound
+  to head and base, naming the comment and settling action.
 
 Decision responses must remain separate from proactive Notification policy
 categories.
 
 Proactive relay eligibility is limited to user-decision holds, serious-risk holds, the
-60-minute blocked ping and capped peer PR milestones under the Notification policy.
+60-minute blocked ping, unresolved-rating notice and capped peer PR milestones
+under the Notification policy.
 Under the recorded Notification policy, `verification not proven` is a
 user-decision hold. The 60-minute blocked ping is a notification-only category
-under the Notification policy. Never send routine merge-ready or merged relays
+under the Notification policy. The unresolved-rating notice is a notification-only
+category under the Notification policy, deduplicated per comment and head.
+The unresolved-rating notice grants no reply authority.
+The unresolved-rating notice never clears the hold.
+Never send routine merge-ready or merged relays
 for own PRs. Notifications for peer PRs are unchanged, including at most two
 merge-ready/merged milestones per run, deduplicated across implementation and release.
 
