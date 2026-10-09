@@ -96,7 +96,7 @@ test('card wire format has context, options, a final tag and the agreed size', (
   expect(layout).toContain('Context: <what we were doing, one line>');
   expect(layout).toContain('Decision: <the question>');
   expect(layout.filter((line) => /^[12] /.test(line))).toHaveLength(2);
-  expect(layout).toContain('3 Defer (optional)');
+  expect(layout.find((line) => line.startsWith('3 Defer'))).toMatch(/^3 Defer - .+ \(optional\)$/);
   expect(layout.at(-1)).toBe('T3 reply: <env label> thread <driver threadId>');
   expect(source).toMatch(/under 1,000 characters including the tag/);
 });

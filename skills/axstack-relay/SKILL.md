@@ -163,6 +163,7 @@ necessary technical terms.
 Each decision card must explain what is happening and why the choice matters.
 Each numbered option must state the concrete action, scope, expected outcome
 and material trade-off.
+Defer and Cancel must describe the withheld action and what remains unresolved.
 Any recommendation must include a brief evidence-supported reason.
 A recommendation must leave the choice to the user.
 
@@ -177,7 +178,7 @@ Decision: <the question>
 
 1 <action> - <scope; outcome; trade-off>
 2 <action> - <scope; outcome; trade-off>
-3 Defer (optional)
+3 Defer - <deferred action and scope; outcome; trade-off> (optional)
 
 Driver environment: <value | not supplied>
 Execution machine: <value | not supplied>
@@ -279,6 +280,13 @@ a destructive, production or fleet-wide action must first get a confirmation car
 A confirmation card must have its own ID, name the card it confirms
 (`confirms card`), bind the exact action, execution machine, affected targets
 and revision, and offer `1 Confirm` and `2 Cancel`.
+Use the same detail fields for confirmation option rows:
+
+```text
+1 Confirm - <bound action and scope; outcome; trade-off>
+2 Cancel - <withheld action and scope; outcome; trade-off>
+```
+
 Sending a confirmation must record the original card decided, pending
 confirmation with no authority.
 The driver must allow only a verified `1` on the open confirmation to authorize

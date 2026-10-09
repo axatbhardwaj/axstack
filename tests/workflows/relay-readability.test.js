@@ -15,6 +15,8 @@ const rules = [
     'Each decision card shall describe what is happening and why the choice matters.'],
   ['option consequences', [/each numbered option/i, /concrete action/i, /scope/i, /outcome/i, /material trade.off/i],
     'Each numbered option shall give its concrete action, scope, expected outcome and material trade-off.'],
+  ['withheld consequences', [/Defer.*Cancel/i, /withheld action/i, /what remains unresolved/i],
+    'Defer and Cancel shall describe the withheld action and what remains unresolved.'],
   ['recommendation reason', [/recommendation/i, /brief/i, /evidence.supported reason/i],
     'Any recommendation shall include a brief evidence-supported reason.'],
   ['user choice', [/recommendation/i, /leave.*choice.*user/i],
@@ -43,6 +45,24 @@ test('relay readability: explain cannot merely restate revision identifiers', ()
   checkRule(read().replace(/\s+/g, ' '), (text) => prohibits(text, negative, ...concepts),
     'Never only repeat IDs or SHAs in an explain answer.', [[negative, 'Always']], concepts);
 });
+
+for (const label of ['3 Defer', '1 Confirm', '2 Cancel']) {
+  test(`relay readability: ${label} example carries action and consequences`, () => {
+    const rows = [...read().matchAll(/```text\n([\s\S]*?)\n```/g)]
+      .flatMap((match) => match[1].split('\n'));
+    const row = rows.find((line) => line.startsWith(`${label} - `)) ?? '';
+    const concepts = [new RegExp(`^${label}`), /action/i, /scope/i,
+      /outcome|expected result/i, /trade.off|material compromise/i];
+    // Treat a template row as one thought; optional inclusion of Defer does
+    // not make its detail fields optional when that choice is offered.
+    checkRule(row.replace(/;/g, ','),
+      (text) => requires(text.replace(/\(optional\)/g, ''), ...concepts),
+      `${label} - <bound action and scope, expected result, material compromise>`,
+      [[/action/i, 'skip action'], [/scope/i, 'skip scope'],
+        [/outcome|expected result/i, 'skip outcome'],
+        [/trade.off|material compromise/i, 'skip trade-off']], concepts);
+  });
+}
 
 test('relay readability: card groups technical rows after context and numbered choices', () => {
   const layout = read().match(/```text\n([\s\S]*?)\n```/)[1].split('\n');
