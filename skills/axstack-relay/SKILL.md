@@ -134,8 +134,10 @@ If either identity is unknown or mismatched, hold the send.
 
 ## Decision cards and receipts
 
-For `verification not proven` and unresolved-rating decision holds, the driver
-must follow Relay's decision-card procedure,
+Report-only comment-rating cards never use the reply-dependent decision-card
+procedure or offer user acceptance. A user reply never clears a comment rating hold.
+
+For `verification not proven`, the driver must follow Relay's decision-card procedure,
 binding the sent run receipt and each option's scope to the exact PR head and base.
 For a verification decision, a forwarded choice must pass Relay's four reply checks
 and acknowledgement-before-action rule before settling only its bound cause.

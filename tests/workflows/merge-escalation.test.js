@@ -82,18 +82,16 @@ const rules = [
     'Until resolved, human CHANGES_REQUESTED holds automatic merge.', [/holds automatic merge/i, 'permits automatic merge']],
   ['late comment fresh dispatch', [/comment.*after.*receipt/i, /fresh review dispatch/i, /rating/i, /gap closing/i],
     'For rating as gap closing, a comment received after the receipt triggers a fresh review dispatch.', [/fresh review dispatch/i, 'immediate blocked ping']],
-  ['unresolved rating escalates after one dispatch', [/unrated or uncertain/i, /after one fresh rating dispatch/i, /verification not proven/i, /comment:<id> rating/i, /decision card/i, /head and base/i],
-    'After one fresh rating dispatch an item still unrated or uncertain posts a verification not proven: comment:<id> rating decision card bound to head and base.', [/one fresh rating dispatch/i, 'unlimited rating retries'], /not proven/i],
-  ['rating card names the decision', [/rating card/i, /names the comment/i, /why/i, /unrated or uncertain/i, /decision needed/i, /user/i],
-    'The rating card names the comment and the decision needed from the user, explaining why it is unrated or uncertain.', [/names the comment/i, 'omits the comment']],
-  ['rating reply settles only the named item', [/user.s reply/i, /settles only/i, /that item.s rating/i, /accepted head and base/i, /every other gate and hold/i],
-    "At the accepted head and base the user's reply settles only that item's rating while every other gate and hold applies.", [/settles only/i, 'settles all holds beyond']],
-  ['rating acceptance is not a pass', [/user-accepted unproven: comment:<id> rating/i, /never as a pass/i],
-    'Save user-accepted unproven: comment:<id> rating in the record, never as a pass.', [/never as a pass/i, 'as a pass'], /never as a pass/i],
-  ['rating acceptance expires', [/new head or base/i, /voids/i, /rating acceptance/i],
-    'The rating acceptance is what a new head or base voids.', [/voids/i, 'keeps']],
-  ['accepted unresolved rating releases only its hold', [/user-accepted unrated or uncertain/i, /hold automatic merge/i, /accepted head and base/i],
-    'At the accepted head and base a user-accepted unrated or uncertain item does not hold automatic merge.', [/does not hold/i, 'holds'], /does not hold/i],
+  ['unresolved rating reports and keeps holding', [/unrated or uncertain/i, /after one fresh rating dispatch/i, /keeps holding the merge/i, /report-only decision-style card/i, /head and base/i],
+    'After one fresh rating dispatch an item still unrated or uncertain keeps holding the merge and posts a report-only decision-style card bound to head and base.', [/keeps holding the merge/i, 'permits the merge']],
+  ['rating card names settling actions', [/rating card/i, /names the comment/i, /why/i, /unrated or uncertain/i, /action that settles it/i, /re-rating by the reviewer/i, /commenter resolving or replying/i, /author addressing it/i],
+    'The rating card names the comment, why it is unrated or uncertain, and the action that settles it: re-rating by the reviewer, the commenter resolving or replying, or the author addressing it.', [/names the comment/i, 'omits the comment']],
+  ['rating notification deduplicates by comment and head', [/report-only rating card/i, /notification of an unsettled rating/i, /deduplicated per comment and head/i],
+    'A report-only rating card is a notification of an unsettled rating, deduplicated per comment and head.', [/deduplicated per comment and head/i, 'repeated on each wake']],
+  ['rating card offers no acceptance', [/report-only rating card/i, /offers a user-acceptance path/i],
+    'A report-only rating card never offers a user-acceptance path.', [/never offers/i, 'offers'], /never offers/i],
+  ['reply cannot clear a comment rating hold', [/user reply/i, /comment rating hold/i],
+    'A comment rating hold is one that a user reply never clears.', [/never clears/i, 'clears'], /never clears/i],
   ['agents cannot resolve or dismiss', [/agents/i, /resolve or dismiss/i, /non-agent items/i],
     'Agents never resolve or dismiss items that are non-agent items.', [/never/i, 'can'], /never/i],
   ['ready except human definition', [/ready-except-human/i, /every term other than/i, /collaborator approval/i, /human.*CHANGES_REQUESTED/i, /open findings from a person/i, /holds/i],
@@ -193,8 +191,8 @@ test('audit delivery applies proven verification and escalation', () => {
 // must use that protocol, rather than treating a raw Telegram choice as assent.
 for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md']) {
   for (const [name, concepts, wording, prohibition] of [
-    ['verification uses receipt-bound decision cards', [/verification not proven/i, /unresolved-rating decision holds/i, /follow Relay.s decision-card procedure/i, /sent run receipt/i, /each option.s scope/i, /exact PR head and base/i],
-      "For unresolved-rating decision holds and verification not proven, the driver shall follow Relay's decision-card procedure, binding each option's scope and the sent run receipt to the exact PR head and base.", /not proven/i],
+    ['verification uses receipt-bound decision cards', [/verification not proven/i, /follow Relay.s decision-card procedure/i, /sent run receipt/i, /each option.s scope/i, /exact PR head and base/i],
+      "For verification not proven, the driver shall follow Relay's decision-card procedure, binding each option's scope and the sent run receipt to the exact PR head and base.", /not proven/i],
     ['forwarded acceptance uses the reply protocol', [/verification decision/i, /forwarded choice/i, /Relay.s four reply checks/i, /acknowledgement-before-action/i, /before settling only its bound cause/i],
       "For a verification decision, a forwarded choice shall pass Relay's four reply checks and acknowledgement-before-action rule before settling only its bound cause."],
     ['changed base supersedes the verification card', [/changed PR head or base/i, /supersede/i, /open verification decision card/i, /reissu.*only if a decision is still needed/i],
@@ -219,4 +217,16 @@ for (const path of [docs, 'skills/axstack-relay/SKILL.md']) {
         [[/must|shall/i, 'must not']], concepts);
     });
   }
+}
+
+for (const [name, concepts, wording, inversion, prohibition] of [
+  ['rating report has no reply-dependent authority', [/report-only comment-rating cards/i, /reply-dependent decision-card procedure/i, /user acceptance/i],
+    'Report-only comment-rating cards never use the reply-dependent decision-card procedure or offer user acceptance.', [/never use/i, 'use'], /never use/i],
+  ['relay reply cannot clear a comment rating hold', [/user reply/i, /comment rating hold/i],
+    'A comment rating hold is one that a user reply never clears.', [/never clears/i, 'clears'], /never clears/i],
+]) {
+  test(`merge relay reconciliation: ${name}`, () => {
+    checkRule(compact(read('skills/axstack-relay/SKILL.md')), (text) => prohibits(text, prohibition, ...concepts),
+      wording, [inversion], concepts);
+  });
 }
