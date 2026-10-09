@@ -118,7 +118,7 @@ function escapedObservation(report, kind) {
 function stopFixture(pid, childFile, readyFile) {
   // Cleanup still has an identity if an assertion fails before the log is parsed.
   if (!pid) {
-    try { pid = JSON.parse(readFileSync(readyFile, 'utf8')).escapedPid; } catch { /* Child never became ready. */ }
+    try { const ready = JSON.parse(readFileSync(readyFile, 'utf8')); pid = ready.pid ?? ready.escapedPid; } catch { /* Child never became ready. */ }
   }
   if (pid && liveFixturePid(pid) && readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes(childFile)) process.kill(pid, 'SIGKILL');
 }
@@ -279,27 +279,36 @@ test('install and scripts receive only the allowlist, closed stdin and private s
 });
 
 test.each(['test', 'postinstall'])('%s timeout kills the process group and removes scratch', (name) => {
-const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
-    'hang-child.js': `import { readFileSync, writeFileSync } from 'node:fs'; writeFileSync(process.env.HOME + '/child.pid', /^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]); setTimeout(() => {}, 2000);`,
-    'hang.js': `import { readFileSync } from 'node:fs';
-const child = Bun.spawn([${JSON.stringify(bun)}, 'hang-child.js'], { stdout: 'ignore', stderr: 'ignore' });
-await Bun.sleep(40);
-console.log(JSON.stringify({ pids: [Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]), Number(readFileSync(process.env.HOME + '/child.pid', 'utf8'))] })); await child.exited;`,
+  const timeoutMs = 5000;
+  const childFile = `hang-child-${crypto.randomUUID()}.js`;
+  const readyFile = `${root}/${childFile}.ready`;
+  const repo = fixture({ test: 'bun hang.js', ...(name === 'postinstall' && { postinstall: 'bun hang.js' }) }, {
+    [childFile]: `import { readFileSync, writeFileSync, renameSync } from 'node:fs';
+setTimeout(() => {}, 15000);
+const pid = Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]);
+writeFileSync(${JSON.stringify(`${readyFile}.tmp`)}, JSON.stringify({ pid }));
+renameSync(${JSON.stringify(`${readyFile}.tmp`)}, ${JSON.stringify(readyFile)});`,
+    'hang.js': `import { existsSync, readFileSync } from 'node:fs';
+const child = Bun.spawn([${JSON.stringify(bun)}, ${JSON.stringify(childFile)}], { stdout: 'ignore', stderr: 'ignore' });
+while (!existsSync(${JSON.stringify(readyFile)})) await Bun.sleep(10);
+console.log(JSON.stringify({ pids: [Number(/^Pid:\\s+(\\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))[1]), JSON.parse(readFileSync(${JSON.stringify(readyFile)}, 'utf8')).pid] })); await child.exited;`,
   });
-  const result = assess(repo, ['--run', '--timeout-ms', '300']);
-  expect(result.code).toBe(0);
-  expect(item(result.report, 'testing.test')).toMatchObject(name === 'test' ? { status: 'fail', reason: 'timeout' } : { status: 'unknown', reason: 'install failed' });
-  const step = result.report.commands.find((entry) => entry.kind === (name === 'test' ? 'script' : 'install'));
-  expect(step.timedOut).toBe(true);
-  expect(step.durationMs).toBeLessThan(1600);
-  const pids = readFileSync(step.logPath, 'utf8').trim().split('\n').map(JSON.parse).find((entry) => entry.pids).pids;
-  for (const pid of pids) {
-    let alive = false;
-    try { alive = !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); } catch { /* Reaped. */ }
-    expect(alive).toBe(false);
-  }
-  expect(() => lstatSync(result.report.header.scratch)).toThrow();
-});
+  try {
+    const result = assess(repo, ['--run', '--timeout-ms', String(timeoutMs)]);
+    expect(result.code).toBe(0);
+    expect(item(result.report, 'testing.test')).toMatchObject(name === 'test' ? { status: 'fail', reason: 'timeout' } : { status: 'unknown', reason: 'install failed' });
+    const step = result.report.commands.find((entry) => entry.kind === (name === 'test' ? 'script' : 'install'));
+    expect(step.timedOut).toBe(true);
+    expect(step.durationMs).toBeLessThan(timeoutMs + 200 + 500); // Drain grace + scheduling margin.
+    const pids = readFileSync(step.logPath, 'utf8').trim().split('\n').map(JSON.parse).find((entry) => entry.pids).pids;
+    for (const pid of pids) {
+      let alive = false;
+      try { alive = !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); } catch { /* Reaped. */ }
+      expect(alive).toBe(false);
+    }
+    expect(() => lstatSync(result.report.header.scratch)).toThrow();
+  } finally { stopFixture(undefined, childFile, readyFile); }
+}, 30000);
 
 test('capped stdout and stderr logs count omitted bytes without blocking noisy scripts', () => {
   const repo = fixture({ test: 'bun noisy.js' }, {
