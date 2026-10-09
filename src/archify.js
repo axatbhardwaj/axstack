@@ -19,6 +19,7 @@ export function archifyGit(path, ...args) {
 
 function verifySha(record, actual) {
   if (actual === record.sha) return;
+  /** @type {Error & {code?: string}} */
   const error = new Error(`archify SHA mismatch: expected ${record.sha}, got ${actual}`);
   error.code = 'ARCHIFY_SHA_MISMATCH';
   throw error;
@@ -31,7 +32,8 @@ async function ownersSnapshot(path) {
   });
   if (st && (!st.isFile() || st.isSymbolicLink())) throw new Error(`unsafe archify owners file: ${path}`);
   const bytes = st ? await readFile(path) : null;
-  const owners = bytes ? JSON.parse(bytes) : [];
+  // JSON.parse coerces its argument to a string; preserve the existing Buffer coercion.
+  const owners = bytes ? /** @type {(text: {toString(): string}) => unknown} */ (JSON.parse)(bytes) : [];
   if (!Array.isArray(owners) || owners.some((owner) => typeof owner !== 'string' || !owner.startsWith('/'))) {
     throw new Error(`invalid archify owners file: ${path}`);
   }

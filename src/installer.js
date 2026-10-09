@@ -179,7 +179,7 @@ function homeDir() {
   // aliased HOME) compare equal to canonicalized targets; an unresolvable
   // HOME also yields null and fails closed rather than bypassing the guard.
   const home = Bun.env.HOME;
-  if (!home || !home.startsWith('/')) return null;
+  if (!home?.startsWith('/')) return null;
   try {
     return realpathSync(home);
   } catch {
@@ -238,7 +238,7 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
   if (skillsStat.isSymbolicLink() || !skillsStat.isDirectory()) {
     throw new Error('bundle skills/ must be a real directory, not a symlink');
   }
-  let entries = await readdir(skillsRoot, { withFileTypes: true });
+  const entries = await readdir(skillsRoot, { withFileTypes: true });
   // Symlinked (or non-directory) top-level skill entries must be rejected,
   // not silently skipped: Dirent.isDirectory() is false for symlinks.
   for (const entry of entries) {
@@ -380,6 +380,11 @@ async function walkSkills(dir, skillsRoot, out) {
 // never followed or truncated. After the rename, existing permissions are
 // preserved; new files take an explicit `mode` (e.g. 0600 for configs) or
 // the umask default. Guards pre-existing entries, not active races.
+/**
+ * @param {string} dest
+ * @param {string | Uint8Array} bytes
+ * @param {{mode?: number}} [options]
+ */
 export async function writeAtomic(dest, bytes, { mode } = {}) {
   await mkdir(dirname(dest), { recursive: true });
   let existingMode = null;
@@ -408,6 +413,7 @@ export async function writeAtomic(dest, bytes, { mode } = {}) {
   }
 }
 
+/** @param {Pick<InstallerOptions, 'skillsDir' | 'instructionsPath'>} [options] */
 export async function checkInstructionBinding({ skillsDir, instructionsPath } = {}) {
   if (!skillsDir) throw new Error('instruction check requires --skills-dir <dir> or --harness <name>');
   if (!instructionsPath) throw new Error('instruction check requires --instructions <file> or a supported harness');
@@ -467,6 +473,21 @@ async function assertFileSnapshot(dest, expected) {
   }
 }
 
+/**
+ * @typedef {{available: boolean, settingsPath?: string, skip?: boolean, reason?: string}} ClaudeOption
+ * @typedef {Object} InstallerOptions
+ * @property {string} [skillsDir]
+ * @property {string} [instructionsPath]
+ * @property {boolean} [force]
+ * @property {boolean} [yes]
+ * @property {ClaudeOption} [claude]
+ * @property {(message: string) => void} [log]
+ */
+
+/**
+ * @param {InstallerOptions & {bundleDir?: string, preset?: string, toolsDir?: string,
+ *   inheritedInstructions?: {path: string, hash: string}}} [options]
+ */
 export async function installBundle({
   bundleDir,
   skillsDir,
@@ -857,6 +878,7 @@ export async function installBundle({
   }
 }
 
+/** @param {InstallerOptions} [options] */
 export async function uninstallBundle({
   skillsDir,
   instructionsPath = null,
@@ -1110,6 +1132,10 @@ export async function uninstallBundle({
 // is present and byte-for-byte verified. This deliberately handles skill
 // payloads only: instruction files, Claude settings, and historical profile
 // ownership may belong to another harness and remain bound to the old manifest.
+/**
+ * @param {{canonicalSkillsDir?: string, legacySkillsDir?: string, yes?: boolean,
+ *   acceptedInstructionTransfer?: {path: string, legacyHash: string, canonicalHash: string}}} [options]
+ */
 export async function retireLegacySkills({
   canonicalSkillsDir,
   legacySkillsDir,

@@ -52,7 +52,7 @@ describe('instruction CLI routing', () => {
       ['opencode', '.config/opencode/skills', '.config/opencode/AGENTS.md'],
       ['antigravity', '.gemini/config/skills', '.gemini/GEMINI.md'],
     ];
-    for (const [harness, skills, instructions] of cases) {
+    for (const [harness, _skills, instructions] of cases) {
       const { root, bundle } = fixture();
       const installed = runCli(CLI, [
         'install', '--preset', 'mixed', '--bundle', bundle, '--harness', harness, '--no-claude-settings', '--yes',

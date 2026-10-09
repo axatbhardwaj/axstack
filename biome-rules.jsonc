@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "includes": ["tests/**"],
+      "linter": { "rules": { "suspicious": {
+        // noTemplateCurlyInString: tests assert literal GitHub expressions and prompt markers.
+        "noTemplateCurlyInString": "off"
+      } } }
+    },
+    {
+      "includes": ["skills/axstack/scripts/readiness.js"],
+      // noAssignInExpressions: preserve #412; defer accumulator cleanup to a follow-up.
+      "linter": { "rules": { "suspicious": { "noAssignInExpressions": "off" } } }
+    }
+  ]
+}

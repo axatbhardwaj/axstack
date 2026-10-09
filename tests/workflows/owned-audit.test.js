@@ -200,7 +200,6 @@ test('owned-audit: proposals follow the bounded validation loop', () => {
 
 test('owned-audit: prohibitions and privacy guard the loop', () => {
   const text = readAudit();
-  const lower = text.toLowerCase();
   expect(/no self-edit/i.test(text), 'no self-edit').toBeTruthy();
   expect(/no changing acceptance|preserve the accepted\s+criteria and metrics after failures/i.test(text), 'no changing acceptance/metrics after failures').toBeTruthy();
   expect(/no external transmission of raw traces|keep raw traces and run artifacts local\s+and private/i.test(text), 'no external transmission of raw traces').toBeTruthy();

@@ -59,7 +59,7 @@ test('blast-radius: explain and routing expose the direct "what could this break
 
 test('explain: "show me your work" reconstructs the decision trail from the record', () => {
   const explain = compact('skills/axstack-explain/SKILL.md');
-  const step = explain.match(/6\. For "show me your work"[^]*?rather than inventing one\./)?.[0];
+  const step = explain.match(/6\. For "show me your work"[\s\S]*?rather than inventing one\./)?.[0];
   expect(step, 'show-me-your-work step must be one bounded instruction').toBeTruthy();
   expect(step).toMatch(/reconstruct the decision trail rather than re-describing the diff/);
   // The record is read first, then the named evidence sources, in that order.

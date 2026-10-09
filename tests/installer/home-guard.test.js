@@ -2,7 +2,7 @@
 // closed before any mutation unless --yes supplies explicit confirmation.
 // Temp fixtures only; the real HOME is never touched.
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli as runBunCli, writeFixtureBundle } from './helpers.js';
 

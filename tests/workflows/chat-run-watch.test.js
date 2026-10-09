@@ -6,7 +6,6 @@ const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').
 const watch = () => read('skills/axstack-watch/SKILL.md');
 const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
 const roster = () => read('skills/axstack/references/role-roster.md');
-const docs = () => read('docs/workflows.md');
 const readme = () => read('README.md');
 const host = () => read('docs/host-operations.md');
 const runRecord = () => read('skills/axstack/references/run-record.md');

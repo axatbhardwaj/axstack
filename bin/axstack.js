@@ -26,7 +26,7 @@ function homeDir() {
   // Tilde expansion needs a known absolute home; with HOME missing, empty,
   // or relative the destination is unknown, so refuse even with --yes.
   const home = Bun.env.HOME;
-  if (!home || !home.startsWith('/')) {
+  if (!home?.startsWith('/')) {
     throw new Error('HOME is missing, empty, or not absolute; pass explicit paths instead of ~');
   }
   return home;
@@ -298,6 +298,13 @@ async function main() {
       const legacyCodexManifest = legacyCodexDir
         ? await readLegacySkillsManifest(legacyCodexDir)
         : null;
+      /**
+       * @type {Awaited<ReturnType<typeof installBundle>> & {
+       *   legacyCodex?: {removed: string[], preserved: string[], missing: string[], skipped?: boolean,
+       *     held?: boolean, failed?: boolean, failure?: boolean, reason?: string},
+       *   addedRoleIds?: string[], removedRoleIds?: string[], changedRoleModels?: string[], notes?: string[]
+       * }}
+       */
       const summary = await installBundle({
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
