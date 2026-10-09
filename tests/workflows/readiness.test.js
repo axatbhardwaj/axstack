@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync } from 'node:fs';
-import { summarizePillars } from '../../skills/axstack/scripts/readiness.js';
+import { main, summarizePillars } from '../../skills/axstack/scripts/readiness.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
@@ -41,7 +41,7 @@ function assess(repo, extra = [], options = {}) {
     env: { ...process.env, GH: fakeGh, ...options.env }, stdout: 'pipe', stderr: 'pipe',
   });
   const output = result.stdout.toString();
-  return { code: result.exitCode, error: result.stderr.toString(), report: output ? JSON.parse(output) : null, out };
+  return { code: result.exitCode, error: result.stderr.toString(), report: output ? JSON.parse(readFileSync(out, 'utf8')) : null, out };
 }
 function criterion(report, id) {
   return report.criteria.find((item) => item.id === id);
@@ -260,7 +260,9 @@ test('out rejects outside paths, wrong suffixes and symlinks in report, ancestor
   }
   const target = `${repo}/AGENTS.md`;
   symlinkSync(target, `${dir}/link.json`);
-  expect(assess(repo, [], { out: `${dir}/link.json` }).code).toBe(1);
+  const linked = assess(repo, [], { out: `${dir}/link.json` });
+  expect(linked.code).toBe(1);
+  expect(linked.error).toContain('pass --out');
   expect(readFileSync(target, 'utf8')).toBe(complete['AGENTS.md']);
   symlinkSync(root, `${dir}/parent`);
   expect(assess(repo, [], { out: `${dir}/parent/report.json` }).code).toBe(1);
@@ -548,4 +550,30 @@ process.exit(result.exitCode);
   const reads = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse).filter((argv) => argv.includes('cat-file'));
   expect(reads).toHaveLength(1);
   expect(reads[0]).toContain('--batch');
+});
+
+test('static CLI summarizes arbitrarily large evidence without silently omitting it', async () => {
+  const repo = fixture({ 'package.json': {}, ...Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`keys/${i}.pem`, 'fixture'])) });
+  const out = `${repo}/.git/axstack/readiness/large.json`;
+  let output = '';
+  expect(await main(['--repo', repo, '--out', out], { stdout: (text) => { output += text; }, stderr: () => {} })).toBe(0);
+  const summary = JSON.parse(output), full = JSON.parse(readFileSync(out, 'utf8'));
+  expect(summary.reportPath).toBe(out);
+  expect(summary.revision).toBe(git(repo, 'rev-parse', 'HEAD'));
+  expect(summary.inputs).toEqual(full.header.inputs);
+  expect(summary.omittedCriteria).toBe(17);
+  expect(summary.omittedCommands).toBe(0);
+  expect(summary.omittedLogBytes).toBe(0);
+  expect(summary.criteria).toBeUndefined();
+  expect(criterion(full, 'security.secrets').evidence).toHaveLength(100);
+  expect(output.length).toBeLessThan(2000);
+});
+
+test('output-path input errors explain the replacement argument', () => {
+  const repo = fixture({});
+  for (const out of [`${repo}/bad.json`, `${repo}/.git/axstack/readiness/bad.txt`]) {
+    const result = assess(repo, [], { out });
+    expect(result.code).toBe(1);
+    expect(result.error).toContain('pass --out');
+  }
 });

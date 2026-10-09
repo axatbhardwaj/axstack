@@ -91,6 +91,7 @@ Account switches must happen before exhaustion at the picker's near-limit cutoff
 For plan generation, run
 `scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
+Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
 For claude/codex, the `--picker` JSON must come from saved
 `scripts/pick-instance.js --provider <role provider> --json` output.
 For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,

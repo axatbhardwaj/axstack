@@ -175,6 +175,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // M2 reconciliation simplification: exact final aggregate 380526; no headroom.
   // M2 repair2: report-only comment-rating notifications; exact measured aggregate 380462.
   // 20261008-cli-lessons F1: unresolved-rating relay eligibility; exact aggregate 382015.
-  expect(total).toBeLessThanOrEqual(382015);
+  // R1 repair1: disclose plan input metadata and large-output artifacts; exact aggregate 380614.
+  // R1 rebase onto c04d2e5: retain both histories; exact rebased aggregate 382167.
+  expect(total).toBeLessThanOrEqual(382167);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

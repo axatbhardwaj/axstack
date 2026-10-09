@@ -295,7 +295,7 @@ function rejectSymlinks(path) {
   for (const part of path.split('/').filter(Boolean)) {
     current += `/${part}`;
     try {
-      if (lstatSync(current).isSymbolicLink()) throw new Error(`--out symlink rejected: ${current}`);
+      if (lstatSync(current).isSymbolicLink()) throw new Error(`--out symlink rejected: ${current}; pass --out <path without symlinks>`);
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
@@ -307,8 +307,8 @@ function outputPaths(args) {
   try { common = realpathSync(git(args['--repo'], 'rev-parse', '--path-format=absolute', '--git-common-dir').trim()); }
   catch (error) { throw new Error(`${error.message}; pass --repo <existing Git checkout>`); }
   const out = absolute(args['--out']);
-  if (!args['--out'].endsWith('.json')) throw new Error('--out must end in .json');
-  if (!out.startsWith(`${common}/axstack/readiness/`)) throw new Error('--out must be under <git-common-dir>/axstack/readiness/');
+  if (!args['--out'].endsWith('.json')) throw new Error('--out must end in .json; pass --out <git-common-dir>/axstack/readiness/<name>.json');
+  if (!out.startsWith(`${common}/axstack/readiness/`)) throw new Error('--out must be under <git-common-dir>/axstack/readiness/; pass --out <git-common-dir>/axstack/readiness/<name>.json');
   rejectSymlinks(args['--out']);
   const evidence = out.slice(0, -5);
   rejectSymlinks(evidence);
@@ -354,6 +354,7 @@ const help = `Usage: bun readiness.js --repo <path> [--rev <ref>] [--baseline <r
 Assessment of committed JavaScript/TypeScript repository files.
 Flags: --repo, --rev (default HEAD), --baseline, --run, --out, --help,
 --timeout-ms (positive integer; default 120000), --log-bytes (positive integer; default 1048576).
+Prints revision, inputs, counts, full JSON path and omitted criterion/command/log counts.
 Writes only --out and its evidence folder under <git-common-dir>/axstack/readiness/.
 --out must end in .json; symlinks are rejected. Its evidence folder omits that suffix.
 --run also creates an owned 0700 scratch clone outside HOME in TMPDIR (fallback /tmp),
@@ -401,12 +402,12 @@ export async function main(argv, io = { stdout: (text) => process.stdout.write(t
     const code = compareBaseline(result, args['--baseline'], io);
     writeReport(paths, result);
     const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
-    io.stdout(`${JSON.stringify(args['--run'] ? {
+    io.stdout(`${JSON.stringify({
       revision: result.header.revision, inputs: result.header.inputs, network: result.header.network, descendants: result.header.descendants, executionError: result.executionError,
-      reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands.length,
-      omittedLogBytes: result.commands.reduce((total, step) => total + step.omittedBytes, 0),
-      incompleteLogs: result.commands.filter((step) => step.logIncomplete).length,
-    } : result)}\n`);
+      reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands?.length ?? 0,
+      omittedLogBytes: (result.commands ?? []).reduce((total, step) => total + step.omittedBytes, 0),
+      incompleteLogs: (result.commands ?? []).filter((step) => step.logIncomplete).length,
+    })}\n`);
     return code || (result.executionError ? 2 : 0);
   } catch (error) {
     io.stderr(`Readiness error: ${error.message}\n`);

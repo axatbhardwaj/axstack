@@ -114,22 +114,14 @@ test('readiness lens output contract agrees with the real CLI in both modes', ()
       expect(report.criteria.find(({ id }) => id === 'docs.agents')).toMatchObject({
         status: 'pass', evidence: expect.arrayContaining([expect.stringContaining('AGENTS.md')]),
       });
-      if (run) {
-        expect(stdout).toMatchObject({ revision, reportPath: out, pillars: report.pillars,
-          omittedCriteria: report.criteria.length });
-        expect(Object.values(stdout.counts).reduce((a, b) => a + b, 0)).toBe(report.criteria.length);
-        expect(stdout).not.toHaveProperty('criteria');
-      } else {
-        expect(stdout).toEqual(report);
-        expect(stdout).not.toHaveProperty('reportPath');
-      }
+      expect(stdout).toMatchObject({ revision, reportPath: out, pillars: report.pillars,
+        omittedCriteria: report.criteria.length });
+      expect(Object.values(stdout.counts).reduce((a, b) => a + b, 0)).toBe(report.criteria.length);
+      expect(stdout).not.toHaveProperty('criteria');
     }
-    checkRule(lens(), (s) => requires(s, /(?:static|by default)/i,
-      /(?:prints|outputs)/i, /full report/i),
-      'By default outputs the full report.', [[/full report/i, 'only a path']]);
-    checkRule(lens(), (s) => requires(s, /--run/, /(?:prints|outputs)/i,
-      /revision/i, /counts/i, /report path/i, /evidence/i, /saved report/i),
-      '--run outputs counts, report path and revision, with evidence in the saved report.',
-      [[/saved report/i, 'stdout']]);
+    checkRule(lens(), (s) => requires(s, /(?:both modes|static and --run)/i,
+      /(?:prints?|outputs?)/i, /revision/i, /counts/i, /report path/i, /evidence/i, /saved report/i),
+      'Static and --run output counts, report path and revision, with evidence in the saved report.',
+      [[/saved report/i, 'stdout']], [/revision/i, /report path/i, /counts/i]);
   } finally { rmSync(repo, { recursive: true }); }
 });

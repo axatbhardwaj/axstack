@@ -1,10 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
-const flags = ['--role', '--roles', '--capabilities', '--picker', '--kind', '--verify'];
+const flags = ['--role', '--roles', '--capabilities', '--picker', '--kind', '--verify', '--out'];
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
   --capabilities <saved.json> --picker <picker.json> --kind task|launch
-  [--verify <configuration.json>]
+  [--verify <configuration.json>] [--out <report.json>]
+Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind launch
 
 --role          Role ID from the supplied snapshot
 --roles         Installed-style roles.json (version 1, roles array)
@@ -12,9 +13,13 @@ const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
 --picker        Saved picker JSON; uses chosenInstanceId
 --kind          task emits target; launch emits modelSelection
 --verify        Compare t3_thread_configuration JSON; print MATCH or each mismatch
+--out           Write full JSON here and print input/path/omitted-count summary
 --help          Show all flags and exit codes
 
-Read-only: reads supplied JSON, spawns adjacent resolve-models.js, writes stdout/stderr.
+Read-only inputs: reads supplied JSON, spawns adjacent resolve-models.js, writes stdout/stderr.
+Writes only the caller's --out path when supplied; no retained state.
+Results name input paths. Plan output over 4096 bytes requires --out.
+Large verification retains its exit code, prints mismatches and advises --out on stderr.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
@@ -27,20 +32,23 @@ function argumentsFrom(args) {
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
-    if (!flags.includes(flag)) throw new Error(`unexpected argument ${flag}`);
+    if (!flags.includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = args[i + 1];
-    if (!nonempty(value) || value.startsWith('--')) throw new Error(`expected value after ${flag}`);
-    if (flag in options) throw new Error(`duplicate argument ${flag}`);
+    if (!nonempty(value) || value.startsWith('--')) throw new Error(`expected value after ${flag}; pass ${flag} <value>`);
+    if (flag in options) throw new Error(`duplicate argument ${flag}; pass it once`);
     options[flag] = value;
   }
-  for (const flag of flags.filter((flag) => flag !== '--verify')) {
-    if (!options[flag]) throw new Error(`expected ${flag}`);
+  for (const flag of flags.filter((flag) => !['--verify', '--out'].includes(flag))) {
+    if (!options[flag]) throw new Error(`expected ${flag}; pass ${flag} <value>`);
   }
-  if (!['task', 'launch'].includes(options['--kind'])) throw new Error('expected --kind task|launch');
+  if (!['task', 'launch'].includes(options['--kind'])) throw new Error('expected --kind task|launch; pass --kind task or --kind launch');
   return options;
 }
 
-const readJSON = (path) => JSON.parse(readFileSync(path, 'utf8'));
+function readJSON(path) {
+  try { return JSON.parse(readFileSync(path, 'utf8')); }
+  catch (error) { throw new Error(`${error.message}; pass a readable, valid JSON file: ${path}`); }
+}
 
 function normalizedOptions(options) {
   const entries = Array.isArray(options) ? options.map((option) => [option?.id, option?.value])
@@ -68,19 +76,36 @@ function verify(configuration, instanceId, provider, model, options) {
   compare('options', options, selection?.options,
     normalizedOptions(options) === normalizedOptions(selection?.options));
   compare('runtimeMode', 'full-access', configuration?.runtimeMode);
-  console.log(mismatches.length ? mismatches.join('\n') : 'MATCH');
-  return mismatches.length ? 2 : 0;
+  return mismatches;
 }
 
-function main() {
-  if (process.argv.slice(2).includes('--help')) {
-    process.stdout.write(help);
+function plan(argv, io) {
+  if (argv.includes('--help')) {
+    io.stdout(help);
     return 0;
   }
-  const args = argumentsFrom(process.argv.slice(2));
+  const args = argumentsFrom(argv);
+  const inputs = Object.fromEntries(Object.entries(args).filter(([flag]) => flag !== '--out').map(([flag, value]) => [flag.slice(2), value]));
+  const emit = (result) => {
+    const full = { inputs, ...result };
+    const inline = result.mismatches
+      ? `${JSON.stringify({ inputs })}\n${result.mismatches.join('\n') || 'MATCH'}\n` : `${JSON.stringify(full)}\n`;
+    if (!args['--out']) {
+      if (new TextEncoder().encode(inline).length > 4096) {
+        if (!result.mismatches) throw new Error('large output; pass --out <report.json> to save full JSON');
+        io.stderr('Large verification output; pass --out <path>.json for the full list\n');
+      }
+      io.stdout(inline);
+      return;
+    }
+    try { writeFileSync(args['--out'], `${JSON.stringify(full, null, 2)}\n`); }
+    catch (error) { throw new Error(`${error.message}; pass --out <writable report.json path>`); }
+    io.stdout(`${JSON.stringify({ inputs, reportPath: args['--out'],
+      omittedPayloadFields: Object.keys(result).length, omittedMismatches: result.mismatches?.length ?? 0 })}\n`);
+  };
   const snapshot = readJSON(args['--roles']);
   if (snapshot?.version !== 1 || !Array.isArray(snapshot.roles)) {
-    throw new Error('roles snapshot must have version 1 and a roles array');
+    throw new Error('roles snapshot must have version 1 and a roles array; pass --roles <valid roles.json>');
   }
   const roles = snapshot.roles.filter((role) => role?.id === args['--role']);
   if (roles.length !== 1) hold(`role ${args['--role']} unavailable or ambiguous`);
@@ -100,7 +125,7 @@ function main() {
   const resolved = Bun.spawnSync([process.execPath, `${import.meta.dir}/resolve-models.js`,
     '--provider', role.provider, '--capabilities', args['--capabilities'],
     '--effort', role.thinkingOptionId, ...modelArgs], { stdout: 'pipe', stderr: 'pipe' });
-  if (resolved.stderr.length) process.stderr.write(resolved.stderr);
+  if (resolved.stderr.length) io.stderr(resolved.stderr.toString());
   if (resolved.exitCode !== 0) return resolved.exitCode === 1 ? 2 : 1;
   const { model, effortOption, providerInstanceId } = JSON.parse(resolved.stdout.toString());
   const chosen = readJSON(args['--capabilities']).providers
@@ -117,18 +142,22 @@ function main() {
   }
   const options = effortOption ? [effortOption] : [];
   if (args['--verify']) {
-    return verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
+    const mismatches = verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
+    emit({ mismatches });
+    return mismatches.length ? 2 : 0;
   }
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: picker.chosenInstanceId,
     model, options };
-  console.log(JSON.stringify({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection,
-    runtimeMode: 'full-access' }));
+  emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access' });
   return 0;
 }
 
-try {
-  process.exitCode = main();
-} catch (error) {
-  console.error(`dispatch-plan ${error.exitCode === 2 ? 'hold' : 'error'}: ${error.message}`);
-  process.exitCode = error.exitCode ?? 1;
+export function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
+  try { return plan(argv, io); }
+  catch (error) {
+    io.stderr(`dispatch-plan ${error.exitCode === 2 ? 'hold' : 'error'}: ${error.message}\n`);
+    return error.exitCode ?? 1;
+  }
 }
+
+if (import.meta.main) process.exitCode = main(process.argv.slice(2));
