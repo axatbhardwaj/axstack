@@ -43,7 +43,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Primary reviewer in the ordered mixed peer pair: Sol high followed by Opus low. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
+      "notes": "Primary reviewer in the ordered mixed peer pair: Sol high followed by Opus medium. Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated.",
       "modelClass": "sol"
     },
     {
@@ -51,7 +51,7 @@
       "name": "Axstack reviewer (secondary)",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "medium",
+      "thinkingOptionId": "high",
       "notes": "Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
@@ -60,8 +60,8 @@
       "name": "Axstack reviewer (peer)",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "low",
-      "notes": "Second reviewer in the ordered mixed peer pair: Sol high followed by Opus low. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Second reviewer in the ordered mixed peer pair: Sol high followed by Opus medium. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -150,9 +150,9 @@
       "name": "Axstack explainer reviewer",
       "provider": "codex",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
-      "notes": "Independent explanation reviewer: reviews consequential or complex claims, archify output, or on request. Checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
-      "modelClass": "luna"
+      "thinkingOptionId": "medium",
+      "notes": "Independent Sol medium explanation reviewer: reviews consequential or complex claims, archify output, or on request. Checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-ui-verifier",
@@ -206,9 +206,10 @@
       "name": "Axstack auditor",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
-      "modelClass": "sonnet"
+      "thinkingOptionId": "xhigh",
+      "notes": "Haiku 5.5 xhigh read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or xhigh effort holds without substitution.",
+      "modelClass": "haiku",
+      "model": "claude-haiku-5-5"
     },
     {
       "id": "axstack-auditor-sol",

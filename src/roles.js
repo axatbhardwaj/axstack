@@ -18,7 +18,7 @@ export function deriveModelClass(model) {
 
 const AUTHORED_ROUTES = Object.freeze({
   mixed: {
-    'codex/sol': ['axstack-reviewer-secondary', 'claude/opus', 'medium'],
+    'codex/sol': ['axstack-reviewer-secondary', 'claude/opus', 'high'],
     'claude/opus': ['axstack-reviewer-primary', 'codex/sol', 'high'],
   },
   'codex-only': {

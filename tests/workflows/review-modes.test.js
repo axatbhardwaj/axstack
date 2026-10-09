@@ -51,13 +51,13 @@ test('review modes: mixed cross-provider peer independence requires isolated ses
   const raw = read('skills/axstack-review/SKILL.md');
   const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
   checkRule(peer, (text) => requires(text,
-    /mixed/i, /cross-provider/i, /Sol[- ]high/i, /Opus[- ]low/i, /independence/i,
+    /mixed/i, /cross-provider/i, /Sol[- ]high/i, /Opus[- ]medium/i, /independence/i,
     /separate sessions/i, /identical brief/i, /isolated first pass/i),
-  'The mixed cross-provider peer pair uses Sol-high and Opus-low, with independence requiring separate sessions, the identical brief and an isolated first pass.',
+  'The mixed cross-provider peer pair uses Sol-high and Opus-medium, with independence requiring separate sessions, the identical brief and an isolated first pass.',
   [[/cross-provider/i, 'same-provider'], [/Sol[- ]high/i, 'Sol low'],
-    [/Opus[- ]low/i, 'Opus high'], [/separate sessions/i, 'shared sessions'],
+    [/Opus[- ]medium/i, 'Opus high'], [/separate sessions/i, 'shared sessions'],
     [/identical brief/i, 'different briefs'], [/isolated first pass/i, 'shared first pass']],
-  [/cross-provider/i, /Sol[- ]high/i, /Opus[- ]low/i, /separate sessions/i,
+  [/cross-provider/i, /Sol[- ]high/i, /Opus[- ]medium/i, /separate sessions/i,
     /identical brief/i, /isolated first pass/i]);
 });
 
@@ -80,7 +80,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   expect(review).toMatch(/never[^.]*derive[^.]*reverse pairing[^.]*slot position/i);
   expect(review).not.toMatch(/matches the configured primary reviewer's model[^.]*reviewer-secondary/i);
   const rows = [
-    '| `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` medium) |',
+    '| `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |',
     '| `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |',
     '| `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |',
     '| `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |',
@@ -170,7 +170,7 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {
   const pairs = {
-    mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'low']],
+    mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
     'codex-only': [['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
     'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   };
