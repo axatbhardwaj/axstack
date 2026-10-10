@@ -40,6 +40,15 @@ if (by["axstack-auditor"].model !== "claude-haiku-5-5") throw Error("auditor pin
 
 Proof: version matches the package; install creates owned skills, preset and
 instruction block; repeat is idempotent; check observes bundle and owned
-instructions. Review the complete check log and exit: missing `gh stack`, T3
+instructions. Review the complete check log and exit: missing Git, gh, T3
 or offline archify are explicit environment gaps, not a successful host check.
 Gotcha: installation alone cannot prove harness discovery or model readiness.
+Ordinary check must never invoke or require `gh stack`; legacy native-stack
+operations probe it separately. Verify that boundary with the controlled
+toolchain tests:
+
+```bash
+doctor > "$EVIDENCE/capabilities-doctor.log" 2>&1
+bun test tests/installer/capabilities.test.js tests/installer/r2.test.js \
+  > "$EVIDENCE/capabilities-suite.log" 2>&1
+```

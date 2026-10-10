@@ -18,7 +18,8 @@
   Exception: allow one opt-in systemd user timer `axstack-default-sync` running
   a stateless script that rewrites only T3 `defaultModelSelection`.
   The timer has no workflow state. The script launches no agent.
-- Use `gh stack` for dependent PRs. Workers do not push, submit, merge, publish,
+- Use ordinary PR chains under [PR chains](skills/axstack/references/pr-chain.md);
+  preexisting native stacks retain `gh stack`. Workers do not push, submit, merge, publish,
   or release. For own PRs, automatic merge is the default under the
   [watch predicate](skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
   The recorded owning watch thread merges; excluded PRs follow its card and

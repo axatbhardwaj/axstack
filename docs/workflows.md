@@ -234,7 +234,7 @@ for explicit ownership transfer.
 - `axstack-implement` uses strict behavioral RED, GREEN, then refactor. The
   narrow accepted structure-preserving route uses old-green and the same check
   new-green. One author writes and returns a local receipt without pushing. The
-  owner reconciles it, publishes the unchanged commits through `gh stack`, and
+  owner reconciles it, publishes the unchanged commits through scoped Git push and `gh pr create/edit`, and
   confirms the remote SHA before review. Local green and CI green remain
   separate evidence. Authors apply the shared
   [test-value gate](../skills/axstack/references/test-value.md) to each new or
@@ -250,7 +250,7 @@ for explicit ownership transfer.
   authorized-maintenance scope. A changed head or comment is an event, not
   repair authority. Within an implementation run, fixes return to the original
   author and follow its publish-before-review loop. Manual adopted-PR repair
-  reviews the exact local SHA and reply bodies before `gh stack` publication
+  reviews the exact local SHA and reply bodies before scoped Git push and `gh pr create/edit` publication
   and remote readback.
 - `axstack-audit` separates execution outcome, procedure, and measurement
   coverage with evidenced denominators; it proposes but never self-edits.
@@ -388,7 +388,8 @@ that authored or repaired `merge-base..head` commits. Team approval also needs a
 counted non-author collaborator review at the current head. Axstack automation
 votes never count. Unknown or mixed provenance and manually authored PRs need a
 merge card. New heads need fresh authored review, diligence, and CI. A collaborator
-approval carries over only across an unchanged stable patch-id rebase, recorded
+approval carries over only across an unchanged stable patch-id rebase, base-update
+merge or base-only retarget, recorded
 for both heads, while the forge still counts it.
 
 Base classification uses repository docs and workflows, never the branch name
@@ -478,12 +479,35 @@ Personal and work PRs remain eligible whatever files they change, including
 branch-protection or ruleset config, `CODEOWNERS`, `AGENTS.md`, and non-clean
 revert lines such as `Revert: steps`.
 
-For a `gh stack`, only the bottom member's base must be eligible.
+For a legacy native `gh stack`, only the bottom member's base must be eligible.
 Each other member's base must be the next-lower member's branch at its reviewed head.
 Every member must meet every other term.
-A stack holds until every member of its approved plan (the ticket map or the
+A legacy native stack holds until every member of its approved plan (the ticket map or the
 adopted stack's recorded members) is published.
-Reviewed members are never retargeted to become eligible.
+Reviewed legacy native-stack members are never retargeted to become eligible.
+
+New work uses ordinary PRs/chains under [PR chains](../skills/axstack/references/pr-chain.md).
+Record chain/native identity and direct dependencies; unknown or mixed routing
+holds affected operations. Children start from reviewed parents and merge
+parent/base updates without rewriting existing commits. Immediately invalidate
+affected child readiness, then refresh next ready children as needed, batching
+ancestor changes. A ready parent with independently deliverable approved scope
+can integrate before its children are published or ready. Only ready roots
+merge into integration targets; children never merge into open parent branches.
+
+Each root uses `gh pr merge <n> --merge --match-head-commit <sha>` under the full
+watch predicate, with merge commits enabled, no merge queue and auto-delete off.
+After confirmed parent merge, prove actual head equals reviewed head and is an
+ancestor of the integration result; reread direct child head/old base, change
+only base and read back unchanged head/new base. Unknown outcomes require lookup
+before retry; rewritten, squash/rebase or closed-unmerged parents hold dependents.
+The latest integration tip must enter child history before its merge. Retargeting
+or a base update requires fresh applicable review, diligence, shape, CI and
+approval evaluation bound to PR/head/base branch/base SHA. Branch retirement
+checks unpublished dependencies, active authors and complete open-PR inventory;
+unknown consumers hold deletion, not independent parent integration. Existing
+native stacks retain their full-stack, linear-history and no-retarget path.
+Singleton eligibility and user-only categories are unchanged.
 
 Never auto-merge PRs authored by anyone other than the user or the user's agents.
 Test sources stay eligible.

@@ -1,67 +1,52 @@
 # Repair and publication
 
-Read this only for authorized maintenance of an adopted own PR. Observation-only
-and peer modes stop with a report before this branch.
+For authorized maintenance of an adopted own PR only. Observation-only and peer
+modes stop at a report.
 
-## 1. Confirm the repair boundary
+## 1. Repair boundary
 
-Re-read the accepted maintenance snapshot, writable ownership, publication
-authority, remote head and base, and current feedback. Route an accepted fix to
-the original author session only when the run itself launched that session and
-evidence permits. Record the repair author's actual provenance before
-selecting the reviewer, because the authored-review pairing follows the actual
-provenance of the repair, never the PR's historical author. A missing,
-stale, or materially changed boundary holds the repair while read-only
-monitoring continues.
+Re-read accepted maintenance snapshot, writable ownership, publication authority,
+remote head/base and feedback. Missing, stale or materially changed boundaries
+hold repair; continue read-only monitoring. Return fixes to the original author
+only if this run launched it and evidence permits; otherwise follow
+[Feedback routing](../SKILL.md#feedback-routing) for a new adopted author.
+Record defect, allowed files/actions, revision, feedback IDs and actual repair
+provenance; pair review from that provenance, never historical authorship.
 
-Record the exact defect, allowed files and actions, current revision, feedback
-IDs, and actual author without expanding scope.
-Follow [Feedback routing](../SKILL.md#feedback-routing) to launch an adopted
-repair author and pair its reviewer.
+## 2. Reviewable candidate
 
-## 2. Produce a reviewable candidate
-
-The author prepares the smallest in-scope repair and the exact public reply
-bodies, each keyed to its feedback ID and bound to the candidate revision.
-The candidate is committed locally in the owned worktree. Obtain an
-independent review of the exact local candidate SHA in an isolated detached
-checkout against the pinned base, including the exact reply bodies, before
-publication; nothing is pushed for review. Both code and
-reply bodies receive the one complete eligible non-author/non-owner review
-required by the authored review rule in `axstack-review`.
-
-Publication stays held until the current authored review receipt covers the
-exact new revision and base, all six angles, applicable acceptance, the reply
-body identities, and every affected boundary, with no unresolved material
-finding or urgent hold. A serious-risk escalation preserves the local candidate
-and exact context, records the hold in the run record and a durable GitHub or
-user-owned conversation, and sends only an authorized deduplicated notification.
-Publication remains held until the user decides at that durable location and
-all exact inputs are revalidated.
+The author commits the smallest in-scope repair and exact public reply bodies in
+the owned worktree, keyed to feedback IDs and candidate revision. Obtain
+independent review of the exact local candidate SHA and replies in an isolated
+detached checkout against the pinned base before publication.
+Nothing is pushed for review. Publication is held until the current authored review receipt covers
+the exact new revision and base, code/replies, all six angles, applicable acceptance,
+affected boundaries and exact reply identities with no unresolved material finding or urgent hold.
+The authored review rule in `axstack-review` requires exactly one complete
+eligible non-author/non-owner reviewer.
+Record a serious-risk hold in both the run record and a durable GitHub or user-owned
+conversation, preserving candidate/exact context;
+only an authorized deduplicated notification sends. Publication waits for the
+user's decision at that durable location and exact-input revalidation.
 
 ## 3. Revalidate immediately before publication
 
-Confirm fresh remote head and base, feedback freshness, reply body identity,
-and the exact revision covered by the mode-required review receipt. Before a history
-rewrite, confirm the expected-old SHA; a mismatch holds publication.
-
-All publication inputs must still match their reviewed values at the final
-readback.
+At final readback, confirm every input matches its reviewed value: fresh remote
+head/base, feedback, reply body identity and exact revision/base. Before a history
+rewrite, confirm expected-old SHA; a mismatch holds publication.
 
 ## 4. Publish idempotently
 
-After the local review and final remote revalidation, publish through `gh stack`
-for the adopted PR only, preserving unrelated stack entries.
-Bind the operation to the exact reviewed revision, then verify the submission
-receipt and remote state.
-
-If the send outcome is unknown, inspect remote IDs, bodies, and actor before any
-retry. Remain blocked while the outcome is ambiguous; retry only after
-confirming the intended operation is absent.
-
-Publication ends with a remote receipt proving that the reviewed revision and
-exact replies landed once, or a recorded hold naming the unmatched input and
-next owner.
-
-After verified publication of an own PR, the owner must follow
-[PR previews](../../axstack/references/preview.md) to decide on or restart its preview.
+After local review and remote revalidation, publish through
+[Candidate publication](../../axstack/references/candidate-publication.md)
+for the adopted PR only, preserving unrelated entries. Follow
+[PR chains](../../axstack/references/pr-chain.md) for scoped push and base-bound
+evidence; legacy native stacks use `gh stack`.
+Bind every publication operation to the exact reviewed revision, then verify the
+submission receipt and remote state.
+Unknown or ambiguous publication stays blocked; retry only after lookup of
+remote IDs, bodies and actor proves absence.
+Publication ends with either a receipt proving reviewed revision and exact replies
+landed once or a recorded hold naming unmatched input and next owner.
+After verified publication, follow
+[PR previews](../../axstack/references/preview.md) to decide on or restart a preview.

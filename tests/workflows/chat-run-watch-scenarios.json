@@ -9,8 +9,8 @@
     },
     {
       "id": "same-head-delta",
-      "input": "A has unchanged head/base but a new failed check attempt, edited review body, and dismissed approval.",
-      "expected": "Report distinct identities and body digest changes to R; driver observes current state before disposition."
+      "input": "A has an unchanged head but its base branch changes from parent to integration after confirmed merge; old green head checks remain. A new failed check attempt, edited review body and dismissed approval also arrive.",
+      "expected": "Report PR/head/base-branch/base-SHA identity and body digest changes to R; invalidate old-base evidence despite unchanged head and green checks. Obtain fresh applicable review, diligence, shape, CI coverage and conservative forge-counted stable-patch approval evaluation."
     },
     {
       "id": "quiet-and-incomplete",
@@ -24,8 +24,8 @@
     },
     {
       "id": "stack-and-publication-order",
-      "input": "A is a run-created parent of B and gets a new commit; adopted own PR E needs a fix.",
-      "expected": "Invalidate B evidence and repair lowest ancestor first. Driver publishes/readbacks A before independent authored review; E receives exact-local-SHA independent review before driver gh stack publication/readback."
+      "input": "Ordinary chain A -> B -> C has sibling D based on A and unpublished child U with an active author. Independently deliverable A is ready, B is unpublished, and A gets a new commit; adopted own PR E needs a fix. After A integrates, the retarget response for D is ambiguous and the open-PR inventory is incomplete.",
+      "expected": "Invalidate B evidence and repair lowest ancestor first. A can merge before child publication/readiness under its own predicate. After confirmed actual-head/ancestry proof, retarget direct B/D only with old-head/base and unchanged-head/new-base readback; C stays based on B. Look up D before retry; unknown U consumers and inventory hold branch deletion, not independent A integration. Before B/D merge, integrate the latest integration tip and refresh base-bound evidence. For recorded ordinary-chain A/B, invalidate B immediately, refresh next ready children as needed by parent merge, batching ancestor changes. Driver publishes/readbacks A before independent authored review; E receives exact-local-SHA independent review before scoped Git/gh pr publication/readback; legacy native stacks retain gh stack."
     },
     {
       "id": "recovery-and-stop",
@@ -34,8 +34,8 @@
     },
     {
       "id": "repair-loop-until-ready",
-      "input": "Root PR A was repaired and republished at H2, but its Axstack authored-review receipt applies to H1. A new actionable comment arrives at H2, main advances, and PR B is stacked on A. After A is repaired again, another failed check appears at its next head.",
-      "expected": "Driver sends each A repair to its same author, rebases A on the advanced base, republishes and obtains independent authored review at each new head, then revalidates B after A changes. Re-read comments, checks, threads, and approvals at the current head; the H1 authored-review receipt does not carry over. Repeat the repair and readiness decision after the failed check until both PRs satisfy the full merge-ready predicate or each remaining PR has a concrete hold."
+      "input": "Root PR A was repaired and republished at H2, but its Axstack authored-review receipt applies to H1. A new actionable comment arrives at H2, main advances, and ordinary-chain PR B depends on A. After A is repaired again, another failed check appears at its next head.",
+      "expected": "Driver sends each A repair to its same author, merges the advanced base into A without rewriting existing commits, republishes and obtains independent authored review at each new head, then refreshes B when next ready after invalidating its readiness immediately. Re-read comments, checks, threads, and approvals at the current head; the H1 authored-review receipt does not carry over. Repeat the repair and readiness decision after the failed check until both PRs satisfy the full merge-ready predicate or each remaining PR has a concrete hold."
     },
     {
       "id": "human-approval-survives-repair",
@@ -44,8 +44,8 @@
     },
     {
       "id": "maintenance-loop-until-ready",
-      "input": "An authorized own PR has an approved human team member, unresolved review threads and failing CI. The author fixes feedback, the base advances twice, and CI initially fails again after a rebase; the forge keeps the human approval throughout.",
-      "expected": "Keep routing repairs to the owned author, address every comment and thread, rebase on each base move and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready and apply the owning-watch merge predicate and exclusions without re-requesting that approval."
+      "input": "An authorized own PR has an approved human team member, unresolved review threads and failing CI. The author fixes feedback, the base advances twice, and CI initially fails again after a base-update merge; the forge keeps the human approval throughout.",
+      "expected": "Keep routing repairs to the owned author, address every comment and thread, merge batched base moves into the owned branch and re-run checks. Continue until required CI is green, all feedback is addressed, and the forge still counts at least one human team member approval. Then record merge-ready and apply the owning-watch merge predicate and exclusions without re-requesting that approval."
     },
     {
       "id": "t3-bound-driver-wake",

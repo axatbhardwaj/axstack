@@ -47,7 +47,7 @@ test('manifest-write failure keeps pre-run state and reports the failure', () =>
   expect(readFileSync(join(skillsDir, 'axstack-demo', 'SKILL.md'), 'utf8')).toBe(before);
 });
 
-test('gh-stack probe requires the real gh stack command', () => {
+test('ordinary check omits gh-stack when its command is unavailable', () => {
   const root = makeTempRoot();
   const fakeBin = join(root, 'bin');
   mkdirSync(fakeBin, { recursive: true });
@@ -55,7 +55,8 @@ test('gh-stack probe requires the real gh stack command', () => {
   writeFileSync(gh, '#!/bin/sh\n[ "$1" = "--version" ] && exit 0\nexit 1\n');
   chmodSync(gh, 0o755);
   const result = runCli(['check'], { expectFail: true, env: { PATH: fakeBin } });
-  expect(result.out).toMatch(/MISSING.*gh stack extension/);
+  expect(result.out).not.toMatch(/gh stack extension/);
+  expect(result.out).toMatch(/MISSING.*git/);
 });
 
 test('option values beginning with -- fail before mutation', () => {

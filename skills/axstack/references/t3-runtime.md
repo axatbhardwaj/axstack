@@ -250,12 +250,12 @@ delete preserves the hold and recorded ID.
 ## Native PR links and watches
 
 After verified publication readback or adoption of an own PR, the driver calls
-`link_pull_request` with the full PR URL for every layer of a `gh stack`.
+`link_pull_request` with the full PR URL for every layer of an ordinary-chain or legacy `gh stack`.
 Before finishing PR work, including watch end or Close-out, the driver calls
 `list_thread_pull_requests` and links every missing run PR.
 Never link unrelated PRs.
 
-After verified publication readback of an own PR, for every layer of a `gh stack`,
+After verified publication readback of an own PR, for every layer of an ordinary-chain or legacy `gh stack`,
 the driver also calls `t3_thread_update` with `action: link_pull_request`,
 `pullRequest` containing its number, repository and full PR URL, and `threadId`
 set to the author thread, then reads back the PR link with

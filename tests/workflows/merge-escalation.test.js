@@ -1,6 +1,6 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const compact = (text) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/`/g, '').replace(/;(?= ready at)/g, ',').replace(/\s+/g, ' ');
@@ -163,7 +163,16 @@ const notificationRules = [
 ];
 for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md', 'skills/axstack-implement/SKILL.md',
   'skills/axstack-watch/references/watch-runtime.md', 'skills/axstack/references/autopilot.md']) {
-  const source = path === watch ? read(path).split('## 4. Route each wake')[1].split('## 5.')[0] : read(path);
+  const shared = {
+    'skills/axstack-implement/SKILL.md': '../axstack-watch/SKILL.md#4-route-each-wake',
+    'skills/axstack/references/autopilot.md': '../../axstack-watch/SKILL.md#4-route-each-wake',
+    'skills/axstack-watch/references/watch-runtime.md': '../SKILL.md#4-route-each-wake',
+  };
+  const own = read(path);
+  // Consolidated entry points must positively load the canonical notification policy.
+  if (shared[path]) expect(loadedReferences(own)).toContain(shared[path]);
+  const source = path === watch || shared[path]
+    ? read(watch).split('## 4. Route each wake')[1].split('## 5.')[0] : own;
   for (const [name, concepts, rewording, inversion, prohibition] of notificationRules) {
     test(`notification scope ${path}: ${name}`, () => {
       const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);

@@ -210,10 +210,12 @@ through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a general
 cache. Preserve evidence and any temporary path with uncertain ownership or
 containment.
 
-An unchanged exact head and unchanged event identity creates no job; an
+An unchanged exact head, base branch identity, base SHA and event identity
+creates no job; an
 unchanged exact head with a new event identity remains actionable. Event
 identity includes the applicable review ID and body digest, request identity, or other current GitHub event
-receipt. Dedupe from current GitHub state,
+receipt. A base-only retarget or base update is a new evidence identity under
+[PR chains](pr-chain.md). Dedupe from current GitHub state,
 native T3 task and thread/run state, and the existing compact run record; do
 not create machine cursor files or a queue engine. Record enough to resume: PR,
 head, base, event identity, mode, owner and worker receipts, verdict,
