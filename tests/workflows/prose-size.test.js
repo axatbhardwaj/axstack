@@ -179,6 +179,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // R1 rebase onto c04d2e5: retain both histories; exact rebased aggregate 382167.
   // 20261009-model-utilization T1: +258 measured bytes for the mixed
   // auditor pin and effort, explainer review and updated reviewer routing; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(382425);
+  // 20261009-relay-readability A1: +992 measured bytes for phone-readable
+  // cards and explain authoring; exact aggregate; always-loaded unchanged.
+  // 20261009-relay-readability A1 repair1: +317 measured bytes for Defer
+  // and confirmation option details; exact aggregate; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(383734);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

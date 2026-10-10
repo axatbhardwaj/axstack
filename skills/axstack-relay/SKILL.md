@@ -155,20 +155,36 @@ reissuing only if a decision is still needed.
 Each card must carry exactly one decision.
 The card ID must be `<run id>/<n>`, never reused in the driver thread.
 The only sender of reply-dependent cards must be the run's driver.
+
+Decision cards and explain answers must use short paragraphs with blank lines
+between thoughts for reading on a phone.
+Decision cards and explain answers must use ordinary words and briefly define
+necessary technical terms.
+Each decision card must explain what is happening and why the choice matters.
+Each numbered option must state the concrete action, scope, expected outcome
+and material trade-off.
+Defer and Cancel must describe the withheld action and what remains unresolved.
+Any recommendation must include a brief evidence-supported reason.
+A recommendation must leave the choice to the user.
+
 Use plain ASCII for the card layout below, as one message:
 
 ```text
 <project> - <decision title>
 Card <run id>/<n>[, confirms card <run id>/<m>]
+
 Context: <what we were doing, one line>
 Decision: <the question>
+
+1 <action> - <scope; outcome; trade-off>
+2 <action> - <scope; outcome; trade-off>
+3 Defer - <deferred action and scope; outcome; trade-off> (optional)
+
 Driver environment: <value | not supplied>
 Execution machine: <value | not supplied>
 Affected targets: <values | not supplied>
 Revision: <repo#PR @ full SHA | spec rev N sha256 | none>
-1 <action> - <scope>
-2 <action> - <scope>
-3 Defer (optional)
+
 Reply 1, 2, 3 or explain. Open T3: <link | not available>
 T3 reply: <env label> thread <driver threadId>
 ```
@@ -250,6 +266,13 @@ Run these four checks in order, stopping at the first failure:
    Free text is user input, not a numbered option, and gets the same authority
    revalidation and confirmation checks before it can authorize an action.
 
+Explain answers must directly address the reader's confusion.
+Explain answers must expand meaningful context and each option's consequences.
+Explain answers must give a justified recommendation when evidence supports it.
+Explain answers must state material risks and unknown facts plainly.
+Never merely restate IDs or SHAs in an explain answer.
+The same one-message size and final reply tag rules apply to explain answers.
+
 ## Confirm, acknowledge and act
 
 Any forwarded reply, including free text and `(confirm)` options, authorizing
@@ -257,6 +280,13 @@ a destructive, production or fleet-wide action must first get a confirmation car
 A confirmation card must have its own ID, name the card it confirms
 (`confirms card`), bind the exact action, execution machine, affected targets
 and revision, and offer `1 Confirm` and `2 Cancel`.
+Use the same detail fields for confirmation option rows:
+
+```text
+1 Confirm - <bound action and scope; outcome; trade-off>
+2 Cancel - <withheld action and scope; outcome; trade-off>
+```
+
 Sending a confirmation must record the original card decided, pending
 confirmation with no authority.
 The driver must allow only a verified `1` on the open confirmation to authorize
