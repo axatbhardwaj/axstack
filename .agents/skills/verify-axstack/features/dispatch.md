@@ -17,11 +17,14 @@ bun "$SCRIPTS/dispatch-plan.js" --role axstack-author --roles "$ROLES" \
 bun "$SCRIPTS/dispatch-plan.js" --role axstack-author --roles "$ROLES" \
   --capabilities "$CAPS" --picker "$TMPDIR/picker.json" --kind launch \
   --verify "$EVIDENCE/plan.json" > "$EVIDENCE/plan-verify.log"
-rg '^MATCH$' "$EVIDENCE/plan-verify.log"
-bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); const m = await Bun.file(process.env.EVIDENCE + "/model.json").json(); if (m.model !== "gpt-6.1-sol" || p.modelSelection.instanceId !== "codexAlt" || p.modelSelection.model !== m.model || p.runtimeMode !== "full-access") throw Error("fixture binding mismatch");'
+test "$(tail -n 1 "$EVIDENCE/plan-verify.log")" = MATCH
+bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); const m = await Bun.file(process.env.EVIDENCE + "/model.json").json(); const s = await Bun.file(process.env.EVIDENCE + "/plan.log").json(); if (m.model !== "gpt-6.1-sol" || p.modelSelection.instanceId !== "codexAlt" || p.modelSelection.model !== m.model || p.runtimeMode !== "full-access" || s.reportPath !== process.env.EVIDENCE + "/plan.json" || s.omittedPayloadFields !== 2 || s.modelSelection !== undefined) throw Error("fixture binding or saved-payload summary mismatch");'
 ```
 
 Proof: resolution outputs the fixture Sol model; the launch plan binds its
-alternate instance and full-access mode; readback prints MATCH. Input paths
-remain in the complete JSON. These fixture results grant no live dispatch
-authority. Missing models or mismatched readback must hold, not substitute.
+alternate instance and full-access mode; MATCH is the readback's last line.
+With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
+An omitted provider label is reported as unknown while the exact instance,
+model, options and mode remain checked. Input paths remain in the complete JSON.
+These fixture results grant no live dispatch authority. Missing models or
+mismatched readback must hold, not substitute.

@@ -12,14 +12,16 @@ Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabil
 --capabilities  Saved orchestrator_capabilities JSON; reuse the run's saved snapshot
 --picker        Saved picker JSON; uses chosenInstanceId
 --kind          task emits target; launch emits modelSelection
---verify        Compare t3_thread_configuration JSON; print MATCH or each mismatch
---out           Write full JSON here and print input/path/omitted-count summary
+--verify        Compare t3_thread_configuration JSON; print evidence then MATCH or each mismatch
+--out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
 --help          Show all flags and exit codes
 
 Read-only inputs: reads supplied JSON, spawns adjacent resolve-models.js, writes stdout/stderr.
 Writes only the caller's --out path when supplied; no retained state.
 Results name input paths. Plan output over 4096 bytes requires --out.
 Large verification retains its exit code, prints mismatches and advises --out on stderr.
+An unwritable --out still prints verification mismatches and retains exit 2.
+An omitted provider label is unknown; exact instance/model/options/mode checks still apply.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
@@ -76,7 +78,10 @@ function verify(configuration, instanceId, provider, model, options) {
   compare('options', options, selection?.options,
     normalizedOptions(options) === normalizedOptions(selection?.options));
   compare('runtimeMode', 'full-access', configuration?.runtimeMode);
-  return mismatches;
+  return { mismatches, ...(selection?.provider == null ? {
+    providerEvidence: `provider: unknown; expected ${JSON.stringify(provider)}; observed missing; `
+      + 'provider binding checked via instanceId and saved capabilities',
+  } : {}) };
 }
 
 function plan(argv, io) {
@@ -89,17 +94,24 @@ function plan(argv, io) {
   const emit = (result) => {
     const full = { inputs, ...result };
     const inline = result.mismatches
-      ? `${JSON.stringify({ inputs })}\n${result.mismatches.join('\n') || 'MATCH'}\n` : `${JSON.stringify(full)}\n`;
+      ? `${[JSON.stringify({ inputs }), result.providerEvidence, result.mismatches.join('\n') || 'MATCH'].filter(Boolean).join('\n')}\n`
+      : `${JSON.stringify(full)}\n`;
     if (!args['--out']) {
       if (new TextEncoder().encode(inline).length > 4096) {
         if (!result.mismatches) throw new Error('large output; pass --out <report.json> to save full JSON');
-        io.stderr('Large verification output; pass --out <path>.json for the full list\n');
+        io.stderr('Large verification output; pass --out <path>.json for a saved JSON copy\n');
       }
       io.stdout(inline);
       return;
     }
     try { writeFileSync(args['--out'], `${JSON.stringify(full, null, 2)}\n`); }
-    catch (error) { throw new Error(`${error.message}; pass --out <writable report.json path>`); }
+    catch (error) {
+      const message = `${error.message}; pass --out <writable report.json path>`;
+      if (!result.mismatches?.length) throw new Error(message);
+      io.stderr(`dispatch-plan hold: ${message}\n`);
+      io.stdout(inline);
+      return;
+    }
     io.stdout(`${JSON.stringify({ inputs, reportPath: args['--out'],
       omittedPayloadFields: Object.keys(result).length, omittedMismatches: result.mismatches?.length ?? 0 })}\n`);
   };
@@ -134,7 +146,10 @@ function plan(argv, io) {
     || (['grok', 'antigravity'].includes(role.provider) && picker.chosenInstanceId !== providerInstanceId)) {
     hold(`picker instance ${picker.chosenInstanceId} does not bind provider ${role.provider}`);
   }
-  const selectedModel = chosen[0].models?.find((entry) => entry.id === model);
+  if (!Array.isArray(chosen[0].models)) {
+    hold(`malformed models on instance ${picker.chosenInstanceId}; expected an array; observed ${JSON.stringify(chosen[0].models) ?? 'missing'}`);
+  }
+  const selectedModel = chosen[0].models.find((entry) => entry.id === model);
   if (!selectedModel) hold(`model ${model} unavailable on instance ${picker.chosenInstanceId}`);
   if (effortOption && !selectedModel.options?.some((option) => option.id === effortOption.id
     && option.options?.some((value) => value.id === effortOption.value))) {
@@ -142,9 +157,9 @@ function plan(argv, io) {
   }
   const options = effortOption ? [effortOption] : [];
   if (args['--verify']) {
-    const mismatches = verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
-    emit({ mismatches });
-    return mismatches.length ? 2 : 0;
+    const verification = verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
+    emit(verification);
+    return verification.mismatches.length ? 2 : 0;
   }
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: picker.chosenInstanceId,
     model, options };
