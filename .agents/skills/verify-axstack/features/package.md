@@ -2,7 +2,8 @@
 
 Entry points: `package.json.files`, `bin/axstack.js`, packaged `skills/` and
 `profiles/`; existing checks: `tests/installer/package.test.js` and
-`tests/workflows/prose-size.test.js`. Prerequisites: Launch, Bun >=1.3.14.
+`tests/workflows/prose-size.test.js`. Prerequisites: Launch, Bun >=1.3.14,
+Linux with Bash and POSIX grep.
 The built-in package keeper is deterministic and needs no npm or network.
 No install, publish, registry request or archive write is intended.
 
@@ -22,7 +23,7 @@ cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
 for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   profiles/presets/mixed.json skills/axstack/references/candidate-publication.md \
   skills/axstack/references/preview.md; do
-  rg -F " $MEMBER" "$EVIDENCE/pack.log"
+  grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
 if rg '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
   echo 'repository verification skill unexpectedly packaged' >&2

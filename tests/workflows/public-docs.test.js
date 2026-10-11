@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { publicDocPaths, docLinkIssues } from './public-docs.js';
 import { checkRule, requires } from './prose-contract.js';
 
@@ -95,10 +95,15 @@ test('package recipe requires every entry point and both current publication ref
     'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
     'skills/axstack/references/preview.md'];
   fixture((dir, put) => {
+    // The automated recipe boundary needs only Linux/POSIX shell tools.
+    put('bin/rg', '#!/bin/sh\nexit 73\n');
+    chmodSync(`${dir}/bin/rg`, 0o755);
+    const env = { ...Bun.env, PATH: `${dir}/bin:${Bun.env.PATH ?? ''}`, EVIDENCE: dir };
+    expect(Bun.spawnSync([`${dir}/bin/rg`], { env }).exitCode).toBe(73);
     const check = (listing) => {
       put('pack.log', listing.map((path) => `packed 100B ${path}`).join('\n'));
       return Bun.spawnSync(['/bin/bash', '-e', '-c', assertions],
-        { env: { ...Bun.env, EVIDENCE: dir }, stdout: 'pipe', stderr: 'pipe' }).exitCode;
+        { env, stdout: 'pipe', stderr: 'pipe' }).exitCode;
     };
     expect(check(members)).toBe(0);
     for (const missing of members) {
