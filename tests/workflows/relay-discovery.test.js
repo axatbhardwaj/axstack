@@ -135,6 +135,25 @@ test('manager decisions outlive the finite pass through durable ownership', () =
     (text) => requires(text, ...concepts),
     'Decisions outliving a finite manager pass retain their receipt and hold in durable continuity, with a GitHub user action route or explicit ownership transfer.',
     [[/retain/i, 'discard']], concepts);
+
+  const text = read('skills/axstack/references/automations.md').split('## Finite-session teardown')[1];
+  const closedReply = [/repl(?:y|ies) to (?:a )?closed pass(?:es)?/i, /holds?/i];
+  const noClear = /never (?:clears?|releases?)/i;
+  checkRule(text, (source) => prohibits(source, noClear, ...closedReply),
+    'Replies to closed passes never release holds.',
+    [[noClear, 'always clears'], [/closed pass(?:es)?/i, 'open passes']], closedReply);
+
+  // The closed-reply prohibition and successor decision share a sentence.
+  // Isolate the successor clause so neither independent guard masks the other.
+  const successor = [/\bsuccessor\b/i, /reissues? a card/i, /only after/i,
+    /reconcil(?:ing|es)/i, /retained receipt/i, /current authority/i, /\band\b/i];
+  const acceptsSuccessor = (source) => source.split(/,\s+and (?=(?:a|the) successor\b)/i)
+    .some((clause) => requires(clause, ...successor));
+  checkRule(text, acceptsSuccessor,
+    'A successor reissues a card only after it reconciles current authority and the retained receipt.',
+    [[/only after/i, 'before'], [/reconcil(?:ing|es)/i, 'ignoring'],
+      [/retained receipt/i, 'discarded receipt'], [/current authority/i, 'expired authority'],
+      [/\band\b/i, 'or']], successor);
 });
 
 function privateTransportLeak(text) {
