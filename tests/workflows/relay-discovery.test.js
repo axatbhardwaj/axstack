@@ -52,6 +52,8 @@ const replyRules = [
     "Obtain the environment label from `t3_environment_read` and bind `threadId` to the caller run's T3 driver thread.", [/T3 driver thread/i, 'T3 worker thread']],
   ['tag privacy', [/exclude|omit/i, /chat IDs/i, /credentials/i, /Telegram targets/i, /reply tag/i],
     'Omit chat IDs, credentials, and Telegram targets from the reply tag.', [/exclude|omit/i, 'Include']],
+  ['send identity hold', [/either identity/i, /unknown/i, /mismatched/i, /hold the send/i],
+    'If either identity is mismatched or unknown, hold the send.', [/hold the send/i, 'send anyway']],
   ['plain body', [/every relay body/i, /plain text/i],
     'Use plain text for every relay body.', [/plain text/i, 'formatted text']],
   ['no formatting', [/Markdown or MarkdownV2 formatting/i, /relay bodies/i],
@@ -111,6 +113,28 @@ test('relay discovery: policy reachability is conditional from review and watch'
     expect(text, `${path}: generic policy field`).toContain('Notification policy');
   }
   expect(read('skills/axstack/references/run-record.md')).toContain('Notification policy:');
+});
+
+test('relay send separately holds unknown and mismatched identity', () => {
+  const concepts = [/either identity/i, /unknown/i, /mismatched/i, /hold the send/i];
+  checkRule(read(relayPath).replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
+    'If either identity is mismatched or unknown, hold the send.',
+    [[/unknown/i, 'known'], [/mismatched/i, 'matched']], concepts);
+});
+
+test('relay proof discloses privileged worker forgery limits', () => {
+  const concepts = [/privileged worker/i, /copy/i, /valid receipt/i, /forge/i, /message/i, /proof/i, /authentication boundary/i];
+  checkRule(read(relayPath).replace(/\s+/g, ' '), (text) => prohibits(text, /not an authentication boundary/i, ...concepts),
+    'A privileged worker can copy a valid receipt and forge a message, so reply proof is not an authentication boundary.',
+    [[/not an authentication boundary/i, 'an authentication boundary']], concepts);
+});
+
+test('manager decisions outlive the finite pass through durable ownership', () => {
+  const concepts = [/decisions outliving/i, /finite manager pass/i, /retain/i, /durable continuity/i, /receipt/i, /hold/i, /GitHub/i, /user action route/i, /explicit ownership transfer/i];
+  checkRule(read('skills/axstack/references/automations.md').replace(/\s+/g, ' '),
+    (text) => requires(text, ...concepts),
+    'Decisions outliving a finite manager pass retain their receipt and hold in durable continuity, with a GitHub user action route or explicit ownership transfer.',
+    [[/retain/i, 'discard']], concepts);
 });
 
 function privateTransportLeak(text) {

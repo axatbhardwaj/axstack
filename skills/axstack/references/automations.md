@@ -71,7 +71,7 @@ Missing ordering or ownership evidence holds admission and never guesses a winne
 
 Once identified as a duplicate, the new pass does no PR work, makes no further
 shared-record write and touches no PR-job thread or descendant owned by the
-live manager. A duplicate's only mutation is pass-start settlement of eligible
+live manager. Besides its private pass note and authorized notification, a duplicate's only shared mutation is pass-start settlement of eligible
 terminal lane pass threads under [Finite-session teardown](#finite-session-teardown).
 A duplicate pass admits nothing and runs read-only discovery
 into its own pass note in its private evidence folder, recording new eligible
@@ -330,13 +330,16 @@ decision interpreter; the driver maps card replies in its prose checks.
 
 ## Finite-session teardown
 
+Decisions outliving a finite manager pass retain their receipt and hold in durable continuity, with a GitHub user action route or explicit ownership transfer.
+Use the T3 action route for such decisions; a reply to a closed pass never clears a hold, and a successor reissues a card only after reconciling the retained receipt and current authority.
+
 After lane reconciliation at pass start, every pass, including a duplicate,
 uses `t3_thread_organize` to settle finished predecessor and duplicate lane pass
 threads as metadata only, before discovery or admission.
 Settle another lane pass thread only with terminal run evidence, no unsettled
-descendants, no recorded open hold naming it, no user takeover, and exclusion of
+descendants, zero open holds naming it, recorded or directly observed, no user takeover, and exclusion of
 the live owner and current pass.
-Leave held or stuck pass threads unsettled.
+Keep held passes, wedged passes and stalled owners unsettled and visible.
 Settlement is separate from owner-only worktree removal, branch deletion and
 continuity writes.
 
@@ -352,7 +355,7 @@ Then run the driver-start orphan sweep under Workspace hygiene; the sweep is
 silent when nothing was removed. Record sweep results and holds in continuity's
 Open holds table.
 The orphan sweep covers the run record's repositories plus registered repositories on this host.
-Retirement settles remaining duplicate threads with `t3_thread_organize`
+Retirement settles remaining predecessor, duplicate and failed-successor pass threads with `t3_thread_organize`
 (settle/archive changes metadata only) before separate guarded Git worktree removal.
 Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.

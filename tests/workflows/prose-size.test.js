@@ -183,6 +183,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // cards and explain authoring; exact aggregate; always-loaded unchanged.
   // 20261009-relay-readability A1 repair1: +317 measured bytes for Defer
   // and confirmation option details; exact aggregate; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(383734);
+  // 20261011-backlog-completion B1: +2830 measured aggregate bytes for
+  // current-run settlement, guarded cancellation, durable decisions and merge
+  // evidence discipline; always-loaded unchanged. Exact ceiling, no headroom.
+  expect(total).toBeLessThanOrEqual(386564);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
