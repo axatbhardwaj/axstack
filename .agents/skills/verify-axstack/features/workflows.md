@@ -2,6 +2,8 @@
 
 Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,relay-discovery,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
+C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
+`explain-diagram`, `diagram` and `ui-verification` in `tests/workflows/`.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 
@@ -17,6 +19,12 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/autopilot-repair.test.js \
   tests/workflows/dependabot-driver.test.js \
   tests/workflows/analysis-pairs.test.js \
+  tests/workflows/public-docs.test.js \
+  tests/workflows/readme-contract.test.js \
+  tests/workflows/skill-current-contracts.test.js \
+  tests/workflows/explain-diagram.test.js \
+  tests/workflows/diagram.test.js \
+  tests/workflows/ui-verification.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/workflows.log" 2>&1 || STATUS=$?
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
 test "$STATUS" -eq 0

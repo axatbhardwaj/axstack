@@ -170,3 +170,11 @@ for (const path of ['README.md', 'docs/workflows.md', 'docs/getting-started.md',
       [[/only/i, 'also without a request'], [/explicit viewer request/i, 'complex visuals']], viewer);
   });
 }
+
+for (const path of ['docs/getting-started.md', 'docs/installation.md']) {
+  test(`${path} names the Linux-only host prerequisite`, () => {
+    checkRule(sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. '),
+      (source) => requires(source, /Linux/i, /only supported/i, /host/i),
+      'Linux is the only supported host OS.', [[/only supported/i, 'additional']]);
+  });
+}

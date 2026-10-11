@@ -85,3 +85,24 @@ test('an unmatched inline-code delimiter cannot hide later document links', () =
     expect(docLinkIssues(dir)).toEqual(['README.md: missing gone.md']);
   });
 });
+
+
+test('package recipe requires every entry point and both current publication references', () => {
+  const recipe = readFileSync(`${root}/.agents/skills/verify-axstack/features/package.md`, 'utf8');
+  const assertions = recipe.match(/cmp "\$EVIDENCE\/archives-before.txt" "\$EVIDENCE\/archives-after.txt"\n([\s\S]*?)\nif rg/)?.[1];
+  expect(assertions).toBeTruthy();
+  const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
+    'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
+    'skills/axstack/references/preview.md'];
+  fixture((dir, put) => {
+    const check = (listing) => {
+      put('pack.log', listing.map((path) => `packed 100B ${path}`).join('\n'));
+      return Bun.spawnSync(['/bin/bash', '-e', '-c', assertions],
+        { env: { ...Bun.env, EVIDENCE: dir }, stdout: 'pipe', stderr: 'pipe' }).exitCode;
+    };
+    expect(check(members)).toBe(0);
+    for (const missing of members) {
+      expect(check(members.filter((path) => path !== missing)), missing).toBe(1);
+    }
+  });
+});

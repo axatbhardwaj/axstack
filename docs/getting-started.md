@@ -1,5 +1,7 @@
 # Getting started
 
+Linux is the only supported host OS.
+
 Install Axstack, check your host, then ask for one bounded task in T3 Code.
 For the mental model, read [concepts](concepts.md); for other journeys, use
 [guides](guides.md).
@@ -24,8 +26,8 @@ axstack check --harness codex
 ```
 
 Installation writes owned skills and instructions, preserving unrelated content,
-and fetches the pinned archify tool for explicit viewer requests. Reload the harness's skills in T3 after
-installation. Use the [installation reference](installation.md) for other
+and fetches the pinned archify tool for explicit viewer requests. Reload the
+harness's skills in T3 after installation. Use the [installation reference](installation.md) for other
 harnesses, source installs or conflicts.
 
 A successful check exits 0. Its five capability rows mean:

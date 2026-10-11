@@ -19,15 +19,19 @@ find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
 find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
   > "$EVIDENCE/archives-after.txt"
 cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
-rg 'bin/axstack.js|skills/axstack/scripts/dispatch-plan.js|profiles/presets/mixed.json' \
-  "$EVIDENCE/pack.log"
+for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
+  profiles/presets/mixed.json skills/axstack/references/candidate-publication.md \
+  skills/axstack/references/preview.md; do
+  rg -F " $MEMBER" "$EVIDENCE/pack.log"
+done
 if rg '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
   echo 'repository verification skill unexpectedly packaged' >&2
   exit 1
 fi
 ```
 
-Proof: complete pack listing contains CLI, helpers and presets, excludes the
+Proof: complete pack listing independently contains CLI, helpers, presets and
+both current publication references (`candidate-publication.md`, `preview.md`), excludes the
 repository verification skill and Claude symlink, and creates no new tarball.
 Review the full inventory for accidental data before any publication.
 Prose-size scans only `skills/`; preserve its exact ceiling and all comments.
@@ -43,7 +47,8 @@ to make this optional check pass. Retain its complete JSON and actual exit.
 
 ```bash
 doctor > "$EVIDENCE/npm-package-doctor.log" 2>&1
-test -x "$NPM_BIN" # caller-declared absolute npm executable
+[[ "$NPM_BIN" = /* ]] # caller-declared absolute npm executable
+test -x "$NPM_BIN"
 "$NPM_BIN" --version > "$EVIDENCE/npm-version.log"
 NPM_STATUS=0
 (cd "$REPO"; "$NPM_BIN" pack --dry-run --json) \
