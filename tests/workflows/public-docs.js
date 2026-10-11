@@ -24,7 +24,7 @@ function withoutFences(text) {
 }
 
 export function relativeLinks(text) {
-  const source = withoutFences(text).replace(/(`+)[\s\S]*?\1/g, '');
+  const source = withoutFences(text).replace(/(`+)(?!`)[^\n]*?\1(?!`)/g, '');
   const hrefs = [];
   const references = new Map();
   const label = (value) => value.trim().replace(/\s+/g, ' ').toLowerCase();

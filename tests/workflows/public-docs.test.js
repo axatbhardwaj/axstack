@@ -75,3 +75,13 @@ test('workflow editing surfaces include all public documentation pages', () => {
     'Keep workflow surfaces in skills, profiles, tests/workflows, docs/*.md, and README.md.',
     [[/Keep/i, 'Exclude']], concepts);
 });
+
+
+test('an unmatched inline-code delimiter cannot hide later document links', () => {
+  fixture((dir, put) => {
+    put('README.md', '# Start\nAn unmatched ` delimiter\n[missing](gone.md)\n`valid example`');
+    expect(docLinkIssues(dir)).toEqual(['README.md: missing gone.md']);
+    put('README.md', '# Start\n``[example](gone.md)``\n[missing](gone.md)');
+    expect(docLinkIssues(dir)).toEqual(['README.md: missing gone.md']);
+  });
+});

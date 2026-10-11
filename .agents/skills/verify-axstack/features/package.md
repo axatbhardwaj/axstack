@@ -3,6 +3,7 @@
 Entry points: `package.json.files`, `bin/axstack.js`, packaged `skills/` and
 `profiles/`; existing checks: `tests/installer/package.test.js` and
 `tests/workflows/prose-size.test.js`. Prerequisites: Launch, Bun >=1.3.14.
+The built-in package keeper is deterministic and needs no npm or network.
 No install, publish, registry request or archive write is intended.
 
 For dependency-lock changes, verify frozen install and this dry run on both the
@@ -31,3 +32,31 @@ repository verification skill and Claude symlink, and creates no new tarball.
 Review the full inventory for accidental data before any publication.
 Prose-size scans only `skills/`; preserve its exact ceiling and all comments.
 Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
+
+
+## Optional npm comparison
+
+This comparison additionally requires npm; Bun alone cannot execute it.
+Use a declared absolute npm executable (prefer the cached npm@12.0.2 used by
+staging), a private HOME/cache, and the offline Launch shell. Never install npm
+to make this optional check pass. Retain its complete JSON and actual exit.
+
+```bash
+doctor > "$EVIDENCE/npm-package-doctor.log" 2>&1
+test -x "$NPM_BIN" # caller-declared absolute npm executable
+"$NPM_BIN" --version > "$EVIDENCE/npm-version.log"
+NPM_STATUS=0
+(cd "$REPO"; "$NPM_BIN" pack --dry-run --json) \
+  > "$EVIDENCE/npm-pack.json" 2> "$EVIDENCE/npm-pack.stderr" || NPM_STATUS=$?
+printf '%s\n' "$NPM_STATUS" > "$EVIDENCE/npm-pack-exit.txt"
+test "$NPM_STATUS" -eq 0
+bun -e 'const result = await Bun.file(process.env.EVIDENCE + "/npm-pack.json").json();
+const packed = Array.isArray(result) ? result[0] : Object.values(result)[0];
+const files = new Set(packed.files.map(({path}) => path));
+const bun = await Bun.file(process.env.EVIDENCE + "/pack.log").text();
+for (const [,path] of bun.matchAll(/^packed \S+ (.+)$/gm))
+  if (!files.has(path)) throw Error("npm omitted " + path);'
+```
+
+This verifies selected package files, never registry publication. The npm JSON
+shape differs by npm version; capture the version with the comparison.
