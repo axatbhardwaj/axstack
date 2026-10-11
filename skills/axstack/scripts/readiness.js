@@ -67,6 +67,12 @@ function snapshot(repo, revision) {
     paths: [...entries.keys()],
     has: (path) => entries.get(path)?.type === 'blob',
     mode: (path) => entries.get(path)?.mode,
+    readKeys(paths) {
+      try {
+        const blobs = readTextBlobs(repo, paths.map((path) => entries.get(path).oid));
+        return new Map(paths.filter((path) => /^100/.test(entries.get(path).mode)).map((path) => [path, blobs.get(entries.get(path).oid)]));
+      } catch { return new Map(); } // Unavailable blobs cannot prove key absence.
+    },
     read(path) {
       if (entries.get(path)?.type !== 'blob') return '';
       text ??= readTextBlobs(repo, ids);
@@ -79,6 +85,19 @@ function snapshot(repo, revision) {
 function jsonc(text) {
   const stripped = text.replace(/"(?:\\.|[^"\\])*"|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g, (token) => token.startsWith('"') ? token : '');
   return JSON.parse(stripped.replace(/"(?:\\.|[^"\\])*"|,\s*(?=[}\]])/g, (token) => token.startsWith('"') ? token : ''));
+}
+
+function pemStatus(text) {
+  if (typeof text !== 'string') return 'unknown';
+  if (/-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/.test(text)) return 'fail';
+  let blocks = 0, valid = true;
+  const remainder = text.replace(/-----BEGIN (CERTIFICATE|PUBLIC KEY|RSA PUBLIC KEY)-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END \1-----/g, (_, _label, body) => {
+    blocks++;
+    const encoded = body.replace(/[\r\n]/g, '');
+    if (!encoded || Buffer.from(encoded, 'base64').toString('base64') !== encoded) valid = false;
+    return '';
+  });
+  return blocks && valid && !remainder.trim() ? 'pass' : 'unknown';
 }
 
 const definitions = [
@@ -183,8 +202,15 @@ function assess(files) {
   const workflowReason = prTests ? '' : invalid ? 'invalid workflow YAML' : prCandidate && manager.reason ? manager.reason : 'missing pull_request test step';
   set('security.pr-tests', prTests ? 'pass' : invalid || (prCandidate && manager.reason) ? 'unknown' : 'fail', workflows.length ? workflows.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no workflows`], workflowReason);
   configured('security.updates', has(/(^|\/)(\.github\/(dependabot\.ya?ml|codeql\/[^/]+\.ya?ml)|(?:\.?)renovaterc(?:\.json5?)?|renovate\.json5?)$/).concat(codeql));
-  const secrets = has(/(^|\/)(\.env[^/]*|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(pem|key|p12|pfx))$/).filter((path) => !/(^|\/)\.env\.(example|sample|template)$/.test(path));
-  set('security.secrets', secrets.length ? 'fail' : 'pass', secrets.length ? [...new Set(secrets)].map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no tracked env or private keys`], secrets.length ? 'tracked env or private keys' : '');
+  const candidates = has(/(^|\/)(\.env[^/]*|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(pem|key|p12|pfx))$/).filter((path) => !/(^|\/)\.env\.(example|sample|template)$/.test(path));
+  const keys = candidates.filter((path) => /\.(pem|key)$/.test(path) && !/(^|\/)\.env/.test(path));
+  const contents = files.readKeys(keys);
+  const classifications = candidates.map((path) => [path, keys.includes(path) ? pemStatus(contents.get(path)) : 'fail']);
+  const secrets = classifications.filter(([, status]) => status === 'fail').map(([path]) => path);
+  const unknown = classifications.filter(([, status]) => status === 'unknown').map(([path]) => path);
+  const keyStatus = secrets.length ? 'fail' : unknown.length ? 'unknown' : 'pass';
+  const evidence = candidates.length ? candidates.map((path) => `git show ${revision}:${path}`) : [`git ls-tree -r ${revision}: no tracked env or private keys`];
+  set('security.secrets', keyStatus, evidence, [secrets.length ? 'tracked env or private keys' : '', unknown.length ? 'key contents unavailable or unrecognized' : ''].filter(Boolean).join('; '));
   return criteria;
 }
 
@@ -438,6 +464,7 @@ export async function main(argv, io = { stdout: (text) => process.stdout.write(t
       reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands?.length ?? 0,
       omittedLogBytes: (result.commands ?? []).reduce((total, step) => total + step.omittedBytes, 0),
       incompleteLogs: (result.commands ?? []).filter((step) => step.logIncomplete).length,
+      ...(args['--run'] && { logIncomplete: (result.commands ?? []).some((step) => step.logIncomplete) }),
     })}\n`);
     return code || (result.executionError ? 2 : 0);
   } catch (error) {
