@@ -251,7 +251,7 @@ test('run preserves presence and lockfile precedence and never executes prose-on
 test('install and scripts receive only the allowlist, closed stdin and private scratch; source bytes stay unchanged', () => {
   const repo = fixture({ test: 'bun fixture.js test', postinstall: 'bun fixture.js postinstall' }, {
     '.gitignore': 'ignored/\n',
-    'fixture.js': `import { statSync } from 'node:fs'; console.log(JSON.stringify({ env: process.env, stdin: await Bun.stdin.text(), mode: statSync(process.env.HOME).mode & 0o777, uid: statSync(process.env.HOME).uid }));`,
+    'fixture.js': `import { statSync } from 'node:fs'; console.log(JSON.stringify({ env: process.env, stdin: await Bun.stdin.text(), mode: statSync(process.env.HOME).mode & 0o777, uid: statSync(process.env.HOME).uid, processUid: process.getuid() }));`,
   });
   put(repo, 'package.json', { scripts: {} });
   command(repo, ['add', 'package.json']);
@@ -274,7 +274,11 @@ test('install and scripts receive only the allowlist, closed stdin and private s
       expect(() => lstatSync(observed.env.HOME)).toThrow();
     }
     expect(observations.at(-1).mode).toBe(0o700);
-    expect(observations.at(-1).uid).toBe(process.getuid());
+    // Installs use containment only; scripts also use the network user namespace.
+    const mapped = result.report.header.descendants === 'contained'
+      || (step.kind === 'script' && result.report.header.network === 'isolated');
+    expect(observations.at(-1).processUid).toBe(mapped ? 0 : process.getuid());
+    expect(observations.at(-1).uid).toBe(observations.at(-1).processUid);
   }
 });
 

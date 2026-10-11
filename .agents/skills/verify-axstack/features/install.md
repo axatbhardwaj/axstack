@@ -2,19 +2,20 @@
 
 Entry points: `bin/axstack.js` (`--version`, `install`, `check`),
 `src/installer.js`, `src/capabilities.js`; harness: `tests/installer/helpers.js`.
-Prerequisites: Launch's offline shell and temporary HOME; explicit `mixed`
-preset. Archify's upstream is deliberately an absent local path. No network
-clone, live HOME write or production authentication is allowed.
+Prerequisites: Launch's offline shell and temporary HOME; explicit selected
+preset (default `mixed` below). Archify's upstream is deliberately an absent
+local path. No network clone, live HOME write or production authentication is allowed.
 
 ```bash
 doctor > "$EVIDENCE/install-doctor.log" 2>&1
+export PRESET=mixed # Select mixed, codex-only or claude-only for this run.
 bun "$REPO/bin/axstack.js" --version > "$EVIDENCE/version.log"
 bun -e 'const p = await Bun.file("package.json").json(); const v = await Bun.file(process.env.EVIDENCE + "/version.log").text(); if (v.trim() !== "axstack " + p.version) throw Error(v);'
-bun "$REPO/bin/axstack.js" install --preset mixed --bundle "$REPO" \
+bun "$REPO/bin/axstack.js" install --preset "$PRESET" --bundle "$REPO" \
   --skills-dir "$HOME/.agents/skills" --tools-dir "$TMPDIR/tools" \
   --instructions "$HOME/AGENTS.md" --no-claude-settings --yes \
   > "$EVIDENCE/install.log" 2>&1
-bun "$REPO/bin/axstack.js" install --preset mixed --bundle "$REPO" \
+bun "$REPO/bin/axstack.js" install --preset "$PRESET" --bundle "$REPO" \
   --skills-dir "$HOME/.agents/skills" --tools-dir "$TMPDIR/tools" \
   --instructions "$HOME/AGENTS.md" --no-claude-settings --yes \
   > "$EVIDENCE/install-repeat.log" 2>&1
@@ -29,17 +30,16 @@ test -f "$HOME/.agents/skills/axstack/roles.json"
 cp "$HOME/.agents/skills/.axstack-manifest.json" "$EVIDENCE/install-manifest.json"
 cp "$HOME/.agents/skills/axstack/roles.json" "$EVIDENCE/installed-roles.json"
 cp "$HOME/AGENTS.md" "$EVIDENCE/installed-instructions.md"
-bun -e 'const { roles } = await Bun.file(process.env.EVIDENCE + "/installed-roles.json").json();
-const by = Object.fromEntries(roles.map(r => [r.id, r]));
-for (const [id, modelClass, effort] of [
-  ["axstack-reviewer-peer", "opus", "medium"], ["axstack-reviewer-secondary", "opus", "high"],
-  ["axstack-auditor", "haiku", "xhigh"], ["axstack-explainer-review", "sol", "medium"],
-]) if (by[id].modelClass !== modelClass || by[id].thinkingOptionId !== effort) throw Error(id);
-if (by["axstack-auditor"].model !== "claude-haiku-5-5") throw Error("auditor pin");'
+bun -e 'const installed = await Bun.file(process.env.EVIDENCE + "/installed-roles.json").json();
+const selected = await Bun.file(process.env.REPO + "/profiles/presets/" + process.env.PRESET + ".json").json();
+if (installed.version !== 1 || installed.preset !== process.env.PRESET ||
+    JSON.stringify(installed.roles) !== JSON.stringify(selected.roles))
+  throw Error("installed roles differ from selected preset");'
 ```
 
 Proof: version matches the package; install creates owned skills, preset and
-instruction block; repeat is idempotent; check observes bundle and owned
+instruction block; installed role count, IDs and complete records match the
+selected preset; repeat is idempotent; check observes bundle and owned
 instructions. Review the complete check log and exit: missing `gh stack`, T3
 or offline archify are explicit environment gaps, not a successful host check.
 Gotcha: installation alone cannot prove harness discovery or model readiness.
