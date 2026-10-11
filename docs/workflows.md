@@ -134,6 +134,7 @@ Antigravity and Grok routes.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
 `axstack-explainer-review` uses Sol medium; `axstack-explainer` stays Sonnet high.
+In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at high effort.
 The new `-sol` auditor, research-code, and explore-execution seats use Sol high
 in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.
 Dispatch the base and Sol seats independently on the same brief, then reconcile
@@ -259,7 +260,12 @@ for explicit ownership transfer.
   archive the exact eligible thread, then remove its exact worktree without
   force and delete only eligible local branches. T3 metadata actions do not
   remove worktrees. Accepted writer or delegated completion settles thread
-  metadata only. Author threads and worktrees remain retained and unarchived
+  metadata only after receipt acceptance, which is distinct from T3 sidebar
+  settlement. Every writer follow-up, including rebase, base update, conflict,
+  body and receipt changes, follows same-turn settlement and readback under
+  [Settlement](../skills/axstack/references/workspace-hygiene.md#settlement).
+  Fresh native run inventory gates zero-unsettled and cadence claims; incomplete
+  inventory is UNKNOWN. Author threads and worktrees remain retained and unarchived
   until their PR merges or closes; the current pass, unsettled descendants,
   and user-taken-over threads remain protected.
 

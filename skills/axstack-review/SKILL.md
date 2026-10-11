@@ -283,6 +283,7 @@ This section applies to peer and authored PR modes.
       where measurement is useful. Never invent a metric or demand an
       abstraction merely to satisfy a principle.
 
+   Before claiming a test is missing from CI inspect the complete file and actual CI step result.
    Under the existing angles, check added, changed, and removed test hunks
    against [Test value](../axstack/references/test-value.md). For removed tests,
    inspect the named keepers. Removing a test without a named keeper or

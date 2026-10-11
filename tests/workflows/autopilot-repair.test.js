@@ -41,9 +41,9 @@ for (const [name, source] of [
 ]) {
   test(name, () => {
     const concepts = [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i,
-      /60-minute blocked ping/i, /capped peer PR milestones/i, /Notification policy/i];
+      /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i];
     checkRule(source(), (text) => requires(text, ...concepts),
-      'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the 60-minute blocked ping, serious-risk holds and user-decision holds.',
+      'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the unresolved-rating notice, the 60-minute blocked ping, serious-risk holds and user-decision holds.',
       [[/limited to/i, 'unrestricted beyond']], concepts);
   });
 }
@@ -56,10 +56,10 @@ test('implement notification allowlist', () => {
 });
 test('watch notification allowlist', () => {
   const concepts = [/owner/i, /axstack-relay/i, /user-decision holds/i, /serious-risk holds/i,
-    /60-minute blocked ping/i, /capped peer PR milestones/i, /Notification policy/i];
+    /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i];
   checkRule(watch().replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'), (text) => requires(text, ...concepts),
-    'Under a Notification policy the owner uses axstack-relay for user-decision holds, serious-risk holds, the 60-minute blocked ping and capped peer PR milestones.',
-    [[/60-minute blocked ping/i, 'routine progress']], concepts);
+    'Under a Notification policy the owner uses axstack-relay for user-decision holds, serious-risk holds, the unresolved-rating notice, the 60-minute blocked ping and capped peer PR milestones.',
+    [[/60-minute blocked ping/i, 'routine progress'], [/unresolved-rating notice/i, 'routine progress']], concepts);
 });
 // default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);

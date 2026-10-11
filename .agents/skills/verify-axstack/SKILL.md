@@ -84,6 +84,7 @@ Execute all steps in each selected feature file, including its assertions:
 2. [Resolve a model and plan a dispatch](features/dispatch.md).
 3. [Create run records and inspect repositories](features/reports.md).
 4. [Inspect the package payload](features/package.md).
+5. [Inspect workflow instruction contracts](features/workflows.md).
 
 The full suite needs Node for its existing npm staging probe, `ip` for
 loopback fixtures, and an already cached **npm@12.0.2** package including its

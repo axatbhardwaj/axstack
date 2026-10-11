@@ -44,6 +44,15 @@ On forge-confirmed merge or closure, follow [Native PR links and watches](t3-run
 for same-turn author settlement and its required readback.
 A repair turn automatically un-settles the thread, making it visible while working.
 The driver settles the thread again after the next accepted repair completion.
+Every writer follow-up, including rebase, base update, conflict, body and receipt changes, counts as repair for same-turn settlement and readback.
+Immediately before settlement require native state proving the accepted run is current and the latest overall run.
+Before settlement verify zero active, pending or queued work and zero unsettled descendants.
+After settlement verify exact thread/run identity, current activity and protection state; a mismatch or missing readback holds only that dispatch's next advancement.
+These checks are best effort, not atomic; never issue a compensating unsettle.
+Successful receipt acceptance is distinct from T3 sidebar settlement metadata.
+Cancellation disposition is separate from successful acceptance and requires native terminal cancellation, exact attempt identity, a driver reason and preservation pointers.
+Cancellation disposition requires zero live or queued work, zero unsettled descendants, zero user takeover, zero unanswered questions, zero QUESTION or FAILED markers and zero serious-risk holds.
+Never cancel solely to make a thread eligible for settlement.
 Threads with unaccepted completion, FAILED or QUESTION markers, held, failed or interrupted runs, or anything needing the user stay unsettled and visible.
 Retain a user-taken-over T3 thread and never send cleanup commands to it, including `t3_thread_organize` settle or archive.
 Never remove the current driver, current pass, an active or unknown thread, an unsettled descendant, or a resource with ambiguous ownership.
@@ -52,6 +61,8 @@ At final settlement include run-owned worktrees in other repositories of the
 same project and report each remaining resource as a hold with its reason. Recorded
 projectId, threadId/runId, delegated taskId/childThreadId/childRunId, attempt key,
 checkout path and revision decide ownership. Idle alone never proves exit.
+Before any zero-unsettled claim, cadence relaxation, handback or Close-out, read a fresh fully paginated native inventory of run-owned writers, delegated children and known orphans, including already-settled threads with unconsumed results.
+Incomplete inventory or unknown ownership records UNKNOWN and holds only the affected claim or transition.
 
 Read back the durable receipt and evidence manifest before removing source copies or the worktree; missing or differing readback holds removal.
 Evidence already outside the checkout needs no copy; read back its receipt and
