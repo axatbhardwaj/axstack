@@ -330,8 +330,8 @@ test('large verification uses a caller-given artifact and explicit omitted count
 
 test('plans exceeding 4096 bytes require --out and keep stdout empty on error', () => {
   const f = setup();
-  // Multibyte role IDs exercise the byte limit while staying below 4096 characters.
-  const role = 'é'.repeat(1850);
+  // The role alone is 4400 UTF-8 bytes, so crossing the byte limit never relies on temp paths.
+  const role = 'é'.repeat(2200);
   f.roles.roles[0].id = role;
   const args = planArgs(f); args[1] = role;
   const out = `${f.dir}/plan.json`;
