@@ -148,6 +148,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     `${root}/skills/axstack/scripts/resolve-models.js`,
     `${root}/skills/axstack/scripts/run-init.js`,
     `${root}/skills/axstack/scripts/sync-default.js`,
+    `${root}/skills/axstack/scripts/test-repository.js`,
   ].sort());
   expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
 });

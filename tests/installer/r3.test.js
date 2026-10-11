@@ -91,6 +91,9 @@ test('package test script runs the Bun suite without bare directory discovery', 
   const pkg = JSON.parse(
     readFileSync(join(import.meta.dir, '../../package.json'), 'utf8'),
   );
-  expect(pkg.scripts.test).toMatch(/bun test/);
-  expect(/(^|\s)node --test tests\/?(\s|$)/.test(pkg.scripts.test)).toBe(false);
+  // Real selection/runtime proof lives in repository-test-runner.test.js.
+  for (const name of ['test', 'test:all']) {
+    expect(pkg.scripts[name]).toMatch(/^bun\s+/);
+    expect(/(^|\s)node --test tests\/?(\s|$)/.test(pkg.scripts[name])).toBe(false);
+  }
 });

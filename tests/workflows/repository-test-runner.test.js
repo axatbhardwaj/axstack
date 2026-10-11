@@ -32,6 +32,7 @@ for (const name of ['test', 'test:all']) {
     const cwd = fixture(`import { expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 test('permission denial', () => {
+  console.log('BUN_TEST_RUNTIME=' + process.versions.bun);
   mkdirSync('locked'); writeFileSync('locked/file', 'private'); chmodSync('locked', 0o555);
   try { expect(() => unlinkSync('locked/file')).toThrow(); }
   finally { chmodSync('locked', 0o700); }
@@ -39,6 +40,7 @@ test('permission denial', () => {
 test('excluded failure', () => { throw Error('selection was lost'); });`);
     const result = run(cwd, name, ['fixture.test.js', '--test-name-pattern', 'permission denial']);
     expect(result.output).toContain('1 pass');
+    expect(result.output).toContain(`BUN_TEST_RUNTIME=${Bun.version}`);
     expect(result.output).not.toContain('(fail)');
     expect(result.code).toBe(0);
   });

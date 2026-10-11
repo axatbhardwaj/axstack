@@ -274,8 +274,9 @@ test('install and scripts receive only the allowlist, closed stdin and private s
       expect(() => lstatSync(observed.env.HOME)).toThrow();
     }
     expect(observations.at(-1).mode).toBe(0o700);
-    // unshare -r maps the invoking user to UID 0 inside each contained/isolated command.
-    const mapped = result.report.header.descendants === 'contained' || result.report.header.network === 'isolated';
+    // Installs use containment only; scripts also use the network user namespace.
+    const mapped = result.report.header.descendants === 'contained'
+      || (step.kind === 'script' && result.report.header.network === 'isolated');
     expect(observations.at(-1).processUid).toBe(mapped ? 0 : process.getuid());
     expect(observations.at(-1).uid).toBe(observations.at(-1).processUid);
   }
