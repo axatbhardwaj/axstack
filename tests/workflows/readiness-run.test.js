@@ -139,7 +139,9 @@ test.each(['timeout', 'exit', 'postinstall'])('escaped pipe writer cannot delay 
     expect(observed.step.timedOut).toBe(mode !== 'exit');
     expect(observed.step.logIncomplete).toBe(true);
     expect(result.report.header.descendants).toBe('not contained');
-    expect(JSON.parse(result.stdout).incompleteLogs).toBe(1);
+    const summary = JSON.parse(result.stdout);
+    expect(summary.incompleteLogs).toBe(1);
+    expect(summary.logIncomplete).toBe(true);
     expect(item(result.report, 'testing.test')).toMatchObject(mode === 'postinstall' ? { status: 'unknown', reason: 'install failed' } : mode === 'exit' ? { status: 'pass' } : { status: 'fail', reason: 'timeout' });
     expect(() => lstatSync(result.report.header.scratch)).toThrow();
   } finally { stopFixture(pid, childFile, readyFile); }
@@ -393,6 +395,8 @@ test('run CLI returns concise revision/input/count summary and command receipts 
   expect(summary.omittedCommands).toBe(result.report.commands.length);
   expect(summary.counts.pass + summary.counts.fail + summary.counts.unknown + summary.counts['n/a']).toBe(17);
   expect(summary.criteria).toBeUndefined();
+  expect(summary.incompleteLogs).toBe(0);
+  expect(summary.logIncomplete).toBe(false);
   for (const step of result.report.commands) {
     expect(step.receiptPath.startsWith(`${result.out.slice(0, -5)}/`)).toBe(true);
     expect(JSON.parse(readFileSync(step.receiptPath, 'utf8'))).toEqual(step);
