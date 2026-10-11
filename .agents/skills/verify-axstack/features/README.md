@@ -9,6 +9,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 | Resolve saved models and prepare dispatch | [Model/dispatch plans](dispatch.md) | Resolved model, bound instance, MATCH readback |
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |
+| Inspect workflow instruction contracts | [Workflow contracts](workflows.md) | Semantic removal/inversion and rewording checks; bounded source proof |
 
 Gotchas: scratch must be outside HOME; install uses temporary HOME and an absent
 local archify upstream; fixture catalogs prove no live model availability.

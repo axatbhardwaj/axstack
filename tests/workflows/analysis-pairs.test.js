@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -77,6 +77,30 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
   expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);
   expect(improve).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
+});
+
+test('primary auditor roster follows each preset policy', () => {
+  const roster = read('skills/axstack/references/role-roster.md');
+  const bullet = roster.match(/^- `axstack-auditor`:([\s\S]*?)(?=^- )/m)?.[0];
+  expect(bullet).toBeTruthy();
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const auditor = JSON.parse(read(`profiles/presets/${preset}.json`)).roles
+      .find(({ id }) => id === 'axstack-auditor');
+    const route = `${auditor.provider}/${auditor.modelClass}`;
+    const concepts = [new RegExp(route), new RegExp(auditor.thinkingOptionId), new RegExp(`in ${preset}`)];
+    checkRule(sentences(bullet).join('. '), (text) => requires(text, ...concepts),
+      `The primary auditor uses ${route} at ${auditor.thinkingOptionId} effort in ${preset}.`,
+      [[new RegExp(route), 'unavailable/model']], concepts);
+  }
+});
+
+test('claude-only prose names its actual primary auditor class', () => {
+  const auditor = JSON.parse(read('profiles/presets/claude-only.json')).roles
+    .find(({ id }) => id === 'axstack-auditor');
+  const concepts = [/claude-only/i, /axstack-auditor/i, new RegExp(`Claude ${auditor.modelClass}`, 'i'), new RegExp(auditor.thinkingOptionId)];
+  checkRule(sentences(read('docs/workflows.md')).join('. '), (text) => requires(text, ...concepts),
+    `In claude-only, axstack-auditor uses the Claude ${auditor.modelClass} class at ${auditor.thinkingOptionId} effort.`,
+    [[new RegExp(auditor.modelClass, 'i'), 'other-class']], concepts);
 });
 
 test('analysis pairs: routing preserves original ownership and direct-route duties', () => {

@@ -58,7 +58,7 @@
 - Run tests with `bun:test`. Keep installer tests under `tests/installer/` and
   workflow tests under `tests/workflows/`; prose-contract tests may read skill
   Markdown directly.
-- Run full `bun test` with `TMPDIR` set to an owned 0700 directory outside
+- Use `bun run test <paths>` for targeted checks and `bun run test:all` for the full suite, with `TMPDIR` set to an owned 0700 directory outside
   `$HOME`; installer fixtures refuse home paths.
 - A prose-contract test of a semantic instruction must fail when the instruction
   is removed or inverted and survive rewording; exact-text safety, exact prompt-byte,
