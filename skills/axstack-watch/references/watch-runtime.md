@@ -50,6 +50,10 @@ Keep native PR watches.
 Only while every open watched PR has an armed native `watch_pull_request`, all
 launched work is settled, and the release step is settled or inapplicable, use
 the bound chat-run schedule as a 30-minute fallback (`everyMs:1800000`).
+Because delegated tasks deliver native completion wakes, unsettled delegated
+tasks alone keep the 30-minute fallback eligible.
+A resumed `AXSTACK-QUESTION` child run lacks a native completion wake, so it
+keeps the 5-minute cadence (`everyMs:300000`) until its result is accepted.
 If native `watch_pull_request` is unavailable or unarmed for any open member,
 or re-arming fails, restore the bound chat-run schedule to 5 minutes (`everyMs:300000`).
 On the next event on a watched PR, re-evaluate the wake cadence against the

@@ -242,6 +242,11 @@ With an unsettled launched thread, the driver turn must end only while a bound
 its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
+T3 queues a scheduled wake even while the driver is busy, so copies pile up.
+At the start of each run-watch wake, the driver must cancel every other queued
+copy of its own run-watch prompt with `t3_queue_list` and `t3_queue_cancel`,
+keeping every other queued message, including user and worker messages.
+One wake reconciles all those copies.
 
 Once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain
