@@ -613,7 +613,9 @@ test('Telegram requires recorded authority and keeps routine events in the drive
 
 for (const phase of ['implement', 'watch']) {
   test(`routine events stay in the driver thread: ${phase}`, () => {
-    const text = normalize(read(`skills/axstack-${phase}/SKILL.md`));
+    const own = read(`skills/axstack-${phase}/SKILL.md`);
+    if (phase === 'implement') expect(loadedReferences(own)).toContain('../axstack-watch/SKILL.md#4-route-each-wake');
+    const text = normalize(phase === 'implement' ? own + read('skills/axstack-watch/SKILL.md') : own);
     expect(text).toContain('Routine questions stay in the T3 driver thread.');
     expect(text).toContain('Progress, CI pending, and completion always stay in the T3 driver thread.');
   });

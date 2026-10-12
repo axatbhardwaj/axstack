@@ -1,25 +1,27 @@
 # Candidate publication
 
-This is the author-to-review boundary for an owned candidate. The author stops
-after returning its revision-bound implementation receipt and does not push.
-Within recorded PR-scoped publication authority, the owner reconciles that
-receipt against the actual local candidate SHA and base. The owner does not edit
-the author's candidate; required code changes return to the author.
+For an owned candidate, the author returns its revision-bound implementation
+receipt and stops without pushing. Under recorded PR-scoped publication authority,
+the owner reconciles author receipt with actual local candidate SHA/base. The owner
+does not edit the candidate; code changes return to its author.
 
 Before publication, dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the author receipt against its evidence
 folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
 `FINDINGS` with the same author before publishing.
 
-Publish the existing commits through `gh stack`. Prefer a fast-forward push.
-Before a history rewrite, confirm the expected-old remote SHA and use lease
-protection; a mismatch holds publication. If the push outcome is ambiguous,
+Follow [PR chains](pr-chain.md) for recorded membership and base-bound evidence.
+For ordinary PRs, use `git push origin HEAD:refs/heads/<owned branch>` and
+`gh pr create` or `gh pr edit` with the actual parent or integration base.
+Never use routine force push for ordinary PRs. For legacy native `gh stack`,
+prefer a fast-forward push of existing commits, preserving unrelated entries.
+Before a history rewrite, confirm expected-old remote SHA and use a narrowly
+justified lease; a mismatch holds publication. If push outcome is ambiguous,
 inspect remote state before retrying.
 
-Before reviewer dispatch, read the remote ref back and confirm that it resolves
-to the candidate SHA; also pin the current base.
-Before reviewer dispatch, refresh the PR body counts and base from the confirmed
-candidate SHA and current base under [PR shape](pr-shape.md).
+Before reviewer dispatch, read the remote ref back, confirm its SHA equals candidate SHA, pin
+current base and refresh PR body counts and base from confirmed candidate SHA
+and that base under [PR shape](pr-shape.md).
 After every push, before post-push diligence or merge-ready, compare the PR body's
 stated head SHA with `Confirmed remote SHA` and record `PR body head SHA: <sha or none>`.
 Accept `none` for a PR body without a stated head SHA.
@@ -32,6 +34,7 @@ Record:
 
 ```text
 Candidate: <sha>
+Base branch: <branch>
 Base: <sha>
 Remote ref: <branch>
 Expected-old remote SHA: <sha | absent>
@@ -41,11 +44,8 @@ PR: <url>
 CI: <run ID or URL and triggered/pending/completed status>
 ```
 
-Local green is not CI green: immediately after publication CI is pending until
-its required checks complete. Review may run in parallel with CI only after the
-remote confirmation. Reviewers inspect a detached immutable checkout of the
-confirmed candidate SHA and pinned base, never only the movable branch name.
-Any author repair creates a new revision and repeats this boundary.
+Local green is not CI green: CI is pending after publication until required checks complete. Review may run alongside CI only after remote confirmation. Follow [Immutable checkout shape](#immutable-checkout-shape) for review.
+Author repairs create new revisions and repeat this boundary.
 After verified publication readback, follow
 [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches).
 
@@ -67,18 +67,17 @@ step, subject to recorded release authority and human npm stage approval.
 ## Immutable checkout shape
 
 The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.
-Follow [T3 runtime](t3-runtime.md) for async `delegate_task` and exact attempt
-identity. The checkout is disposable, made from the existing repository; never
-register a duplicate repository or replace it with a movable branch checkout.
+Follow [T3 runtime](t3-runtime.md) for async `delegate_task`.
+Bind disposable checkout to exact attempt identity.
+Use the existing repository; never register a duplicate or use a movable branch.
 Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.
-Snapshot driver HEAD and full status, including untracked entries, before dispatch.
+Snapshot driver HEAD and full status (including untracked) before dispatch.
 After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.
-Each peer reviewer has a separate checkout and evidence folder with no first-pass
-cross-read. Later review gets a fresh checkout.
+Peer reviewers have separate checkouts/evidence without first-pass cross-read.
+Later review gets a fresh checkout.
 Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force.
-Verify Git worktree absence under [Workspace hygiene](workspace-hygiene.md);
-reviewer retirement preserves the separate author candidate until merge or closure.
-Release checks use the same driver-made SHA-pinned detached-checkout procedure.
+Verify absence under [Workspace hygiene](workspace-hygiene.md); retain the author
+candidate until merge/closure. Release checks use same driver-made SHA-pinned detached-checkout procedure.
 
 For a release PR, dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the release PR body

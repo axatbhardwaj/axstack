@@ -130,7 +130,9 @@ test('owned-core: owner publishes and confirms the candidate before review', () 
   const review = skill('axstack-review');
 
   expect(implement).toMatch(/owner[^.]*reconcil[^.]*receipt/i);
-  expect(implement).toMatch(/gh stack[^.]*push|push[^.]*gh stack/i);
+  expect(implement).toContain("candidate-publication");
+  expect(publication).toMatch(/git push origin HEAD:refs\/heads\//);
+  expect(publication).toMatch(/gh pr create[\s\S]*gh pr edit/);
   expect(implement).toMatch(/remote[^.]*readback[^.]*review/i);
   expect(publication).toMatch(/local[^.]*green[^.]*CI[^.]*pending/i);
   expect(publication).toMatch(/owner[^.]*does not edit[^.]*candidate/i);

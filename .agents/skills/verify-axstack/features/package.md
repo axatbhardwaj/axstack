@@ -1,8 +1,9 @@
 # Inspect the package payload
 
 Entry points: `package.json.files`, `bin/axstack.js`, packaged `skills/` and
-`profiles/`; existing checks: `tests/installer/package.test.js` and
-`tests/workflows/prose-size.test.js`. Prerequisites: Launch, Bun >=1.3.14,
+`profiles/`, including candidate-publication and watch repair-publication;
+checks: `tests/installer/package.test.js`, `tests/workflows/prose-size.test.js`
+and `tests/workflows/publication-repair.test.js`. Prerequisites: Launch, Bun >=1.3.14,
 Linux with Bash and POSIX grep.
 The built-in package keeper is deterministic and needs no npm or network.
 No install, publish, registry request or archive write is intended.
@@ -22,7 +23,8 @@ find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
 cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
 for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   profiles/presets/mixed.json skills/axstack/references/candidate-publication.md \
-  skills/axstack/references/preview.md; do
+  skills/axstack/references/preview.md skills/axstack/references/pr-chain.md \
+  skills/axstack-watch/references/repair-publication.md; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
 if rg '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
@@ -36,6 +38,17 @@ both current publication references (`candidate-publication.md`, `preview.md`), 
 repository verification skill and Claude symlink, and creates no new tarball.
 Review the full inventory for accidental data before any publication.
 Prose-size scans only `skills/`; preserve its exact ceiling and all comments.
+For publication instruction changes, check semantic removal/inversion and
+equivalent rewording, retained checkout guards and the current prose budget:
+
+```bash
+doctor > "$EVIDENCE/publication-doctor.log" 2>&1
+bun run test tests/workflows/publication-repair.test.js \
+  tests/workflows/publication-integrity.test.js tests/workflows/review-checkout.test.js \
+  tests/workflows/prose-size.test.js > "$EVIDENCE/publication-suite.log" 2>&1
+```
+
+These checks prove packaged instruction contracts, not live publication.
 Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
 
 

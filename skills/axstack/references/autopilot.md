@@ -97,7 +97,8 @@ cadence conditions before ending the turn.
 An explicitly adopted PR joins only with its maintenance snapshot.
 The original driver alone routes work; one author writes each
 candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
-merge-ready, watch §5 maintenance repairs feedback, rebases when the base moves,
+merge-ready, watch §5 maintenance repairs feedback, updates the base under
+[PR chains](pr-chain.md),
 keeps CI green, and checks approvals without re-requesting human review.
 
 Maintain is the default mode for run-created PRs.
@@ -168,20 +169,9 @@ instructions, always win.
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
 
-Use the run's recorded Notification policy through `axstack-relay`.
-Decision holds, including spec and npm approval, are always eligible.
-Relay eligibility is limited to user-decision holds, serious-risk holds, the
-60-minute blocked ping, unresolved-rating notice and capped peer PR milestones
-under the Notification policy.
-Under the recorded Notification policy, `verification not proven` is a
-user-decision hold. The 60-minute blocked ping is a notification-only category
-under the Notification policy. The unresolved-rating notice is a notification-only
-category under the Notification policy, deduplicated per comment and head.
-The unresolved-rating notice grants no reply authority.
-The unresolved-rating notice never clears the hold.
-Never send routine merge-ready or merged relays
-for own PRs. Notifications for peer PRs are unchanged, including at most two
-merge-ready/merged milestones per run, deduplicated across implementation and release.
+Follow [Watch notifications](../../axstack-watch/SKILL.md#4-route-each-wake)
+under the recorded Notification policy. Decision holds, including spec and npm
+approval, are always eligible.
 Across implementation and release, peer PR merge-ready and merged notifications
 together are capped at two per run; deduplicate by purpose and revision. Healthy ticks stay
 quiet. A failed or uncertain delivery preserves the underlying hold. A relay

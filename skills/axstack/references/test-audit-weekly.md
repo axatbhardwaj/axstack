@@ -57,7 +57,7 @@ The weekly test audit is a named exception to Implement's publish-then-review
 order: it requires review-before-publication.
 Obtain independent review using Implement's configured authored-review roles and
 verify the exact candidate's checks before publication. The driver uses
-`gh stack` and opens at most one test-audit PR per week after independent review;
+[Candidate publication](candidate-publication.md) and opens at most one test-audit PR per week after independent review;
 for own PRs, automatic merge is the default under the
 [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 

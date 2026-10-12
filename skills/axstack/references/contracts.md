@@ -125,12 +125,11 @@ remain a serious-risk hold.
 - One T3 host/server owns a run. No fixed active-PR count; fanout is dependency-
   and capacity-driven within host resource and spending limits. Reduce fanout for
   recorded rework, review backlog, or resource pressure. Queue conflicts and
-  dependencies; use `gh stack` for dependent PRs. Routine shape, split, fanout, and
+  dependencies; follow [PR chains](pr-chain.md). Routine shape, split, fanout, and
   exception choices within approved scope are autonomous driver decisions; size alone never
   requires user approval.
 - Exactly one writer per candidate; one persistent accountable PR owner. Each PR has one theme and measured size under [PR shape](pr-shape.md). Report unknown capacity
-  metrics; never a telemetry prerequisite or blocker. Parent changes invalidate
-  affected child evidence; refresh it against the new parent.
+  metrics; never a telemetry prerequisite or blocker. PR chains owns child evidence invalidation and refresh.
 - Own PRs default to automatic merge under [watch §5](../../axstack-watch/SKILL.md).
   Review approval and reviewer votes alone never grant mutation or merge authority.
   User merges are bottom-up for a stack.

@@ -93,7 +93,8 @@ test('package recipe requires every entry point and both current publication ref
   expect(assertions).toBeTruthy();
   const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
     'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
-    'skills/axstack/references/preview.md'];
+    'skills/axstack/references/preview.md', 'skills/axstack/references/pr-chain.md',
+    'skills/axstack-watch/references/repair-publication.md'];
   fixture((dir, put) => {
     // The automated recipe boundary needs only Linux/POSIX shell tools.
     put('bin/rg', '#!/bin/sh\nexit 73\n');

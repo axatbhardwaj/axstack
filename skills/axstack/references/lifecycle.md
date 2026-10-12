@@ -24,7 +24,7 @@ binding state and receipts to exact revisions.
 
 Prefer parallel independent bounded work; no redundant workers. Fanout is dependency- and
 capacity-driven within host/spending limits. [PR shape](pr-shape.md) covers
-theme/size; queue dependencies through `gh stack`.
+theme/size; queue dependencies under [PR chains](pr-chain.md).
 
 ## Ownership
 
@@ -70,7 +70,7 @@ Store receipt references, not raw output, in the [Run record](run-record.md).
   role; reuse on resume.
 - Acceptance receipt: sender/recipient, accepted scope/authority, timestamp,
   and ownership session receipt.
-- Review receipt: mode, provenance, reviewer, SHA/base,
+- Review receipt: mode, provenance, reviewer, PR/head/base branch/base SHA,
   verdict (`APPROVE | REQUEST_CHANGES | INCOMPLETE`), coverage, limitations and
   findings. Changed code needs a new receipt. Codebase: revision/scope,
   `COMPLETE | INCOMPLETE` coverage, no PR verdict.

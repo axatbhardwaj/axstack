@@ -22,7 +22,7 @@ coordination. You can start at the phase you need.
 ## Prerequisites
 
 Axstack supports only Linux hosts. You need Bun >=1.3.14, Git, the GitHub
-CLI (`gh`) with `gh stack`, and T3 Code `0.0.46-nightly.20261003.2610` or newer
+CLI (`gh`), and T3 Code `0.0.46-nightly.20261003.2610` or newer
 on PATH. The providers selected by your preset must be available inside T3.
 
 Choose one explicit preset (each contains all role IDs): [mixed](profiles/presets/mixed.json)

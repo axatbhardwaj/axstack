@@ -19,7 +19,7 @@ test('active guidance offers one scheduled review manager and manual own-PR watc
 test('manual adopted repair reviews its local SHA before publication, while implementation publishes first', () => {
   const repair = read('skills/axstack-watch/references/repair-publication.md');
   const localReview = repair.indexOf('independent review of the exact local candidate SHA');
-  const publish = repair.indexOf('publish through `gh stack`');
+  const publish = repair.indexOf('publish through');
   expect(localReview).toBeGreaterThan(-1);
   expect(publish).toBeGreaterThan(localReview);
   const ordinary = read('skills/axstack/references/candidate-publication.md');
@@ -33,7 +33,7 @@ test('current user guidance contains no scheduled own-PR repair path', () => {
     expect(guidance, path).not.toMatch(/watch.manager|watch lane|manager repairs|bounded PR job repairs|fast-forward `git push`/i);
   }
   const workflows = read('docs/workflows.md');
-  expect(workflows).toMatch(/Manual adopted-PR repair[^.]*local SHA[^.]*`gh stack` publication/i);
+  expect(workflows).toMatch(/Manual adopted-PR repair[^.]*local SHA[^.]*scoped Git push[^.]*gh pr create\/edit[^.]*publication/i);
 });
 
 test('manual watch keeps a concrete fallback when relay is unavailable', () => {

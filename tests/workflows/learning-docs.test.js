@@ -75,7 +75,7 @@ test('picker environment is documented and linked from installation', () => {
 
 test('getting started explains check rows and its live evidence limits', () => {
   const doc = read('docs/getting-started.md');
-  for (const row of ['bun', 'git', 'gh', 'gh stack', 't3']) expect(doc).toContain(`| \`${row}\` |`);
+  for (const row of ['bun', 'git', 'gh', 't3']) expect(doc).toContain(`| \`${row}\` |`);
   const terms = [/check/i, /live provider readiness/i, /schedule activation/i, /mobile delivery/i];
   checkRule(compact(doc), (text) => prohibits(text, /does not prove/i, ...terms),
     'Check does not prove live provider readiness, schedule activation or mobile delivery.',
