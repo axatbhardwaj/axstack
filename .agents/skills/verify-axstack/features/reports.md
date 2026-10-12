@@ -1,7 +1,7 @@
 # Create run records and inspect repositories
 
 Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness}.js`;
-fixtures: `tests/workflows/{run-init,readiness,pr-shape-helper}.test.js`.
+fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper}.test.js`.
 Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`;
 contract checks exercise ancestor-first repair and genuine paraphrases with removal/
 inversion negatives; local history fixtures cover three layers, siblings,
@@ -10,6 +10,29 @@ These checks prove shipped instruction contracts and local Git behavior, not liv
 forge retargeting or agent compliance.
 Prerequisites: Launch; a new local Git fixture, never the driver's run namespace.
 Run-init writes only its fixture Git common directory and owned scratch.
+
+Run the readiness CLI fixtures in the offline shell. These use real PEM
+certificate and key bytes. The escaped-writer fixtures stop their exact child
+process in cleanup, including when an assertion fails.
+
+```bash
+doctor > "$EVIDENCE/reports-tests-doctor.log" 2>&1
+REPORT_STATUS=0
+bun run test tests/workflows/readiness.test.js tests/workflows/readiness-run.test.js \
+  > "$EVIDENCE/reports-tests.log" 2>&1 || REPORT_STATUS=$?
+printf '%s\n' "$REPORT_STATUS" > "$EVIDENCE/reports-tests-exit.txt"
+test "$REPORT_STATUS" -eq 0
+```
+
+Proof: complete public certificate/public-key PEM blocks in `.pem` and `.key`
+files pass the content heuristic. Private-key markers and tracked env paths
+fail. Unavailable, opaque, binary or malformed PEM evidence stays unknown.
+This checks PEM envelopes and encoding, not cryptographic validity. Other key
+formats remain conservative path checks. Reports contain paths, not key bytes.
+Without PID containment, an escaped writer can leave `logIncomplete: true`
+in concise `--run` stdout. The full report keeps each command's flag and the
+summary keeps its existing `incompleteLogs` count. Status and descendant
+containment facts remain unchanged.
 
 ```bash
 doctor > "$EVIDENCE/reports-doctor.log" 2>&1
@@ -65,7 +88,7 @@ clone is bookkeeping, not an archival source bundle.
 
 ```bash
 doctor > "$EVIDENCE/chains-doctor.log" 2>&1
-bun test tests/workflows/pr-chain.test.js tests/workflows/chat-run-watch.test.js \
+bun run test tests/workflows/pr-chain.test.js tests/workflows/chat-run-watch.test.js \
   tests/workflows/structural.test.js tests/workflows/pr-shape-helper.test.js \
   > "$EVIDENCE/chains-suite.log" 2>&1
 ```

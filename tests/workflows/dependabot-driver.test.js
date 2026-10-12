@@ -49,7 +49,9 @@ const accepts = (text) => {
   if (candidates.length !== 1) return false;
   return !text.replace(/^#{1,6} .*$/gm, '').split(/\n(?=-\s)/).some(block => {
     const rule = block.replace(/`/g, '').replace(/\s+/g, ' ').trim();
-    return rule !== candidates[0] && /dependabot/i.test(rule) && grantsMerge(rule);
+    // Outside the bounded rule, any Dependabot merge mention is a second
+    // authority surface; enumerating English grant verbs misses indirect grants.
+    return rule !== candidates[0] && /dependabot/i.test(rule) && /\bmerg\w*/i.test(rule);
   });
 };
 const target = (text) => bullets(text).find(rule => /dependabot\/github_actions\//.test(rule));
@@ -132,7 +134,8 @@ test('no other AGENTS bullet may grant Dependabot merges', () => {
     expect(accepts(`${doc}\n${extra}`), extra).toBe(false);
     expect(accepts(doc.replace('## Engineering', `${extra}\n\n## Engineering`)), extra).toBe(false);
   }
-  expect(accepts(`${doc}\n- Never merge Dependabot PRs without verification.`)).toBe(true);
+  expect(accepts(`${doc}\n- Never merge Dependabot PRs without verification.`)).toBe(false);
+  expect(accepts(`${doc}\n- Dependabot supplies dependency update metadata.`)).toBe(true);
 });
 
 for (const [placement, grant] of [
@@ -142,6 +145,9 @@ for (const [placement, grant] of [
   ['separate', 'Drivers are free to merge Dependabot PRs.'],
   ['inside', 'Drivers are free to merge Dependabot PRs.'],
   ['separate', 'It is fine to merge any Dependabot PR.'],
+  ['separate', 'Drivers ought to merge Dependabot PRs.'],
+  ['separate', 'Drivers are encouraged to merge Dependabot PRs.'],
+  ['separate', 'Merging Dependabot PRs is OK.'],
 ]) {
   test(`${placement} authority cannot be broadened with: ${grant}`, () => {
     const doc = source();

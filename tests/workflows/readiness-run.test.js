@@ -139,7 +139,9 @@ test.each(['timeout', 'exit', 'postinstall'])('escaped pipe writer cannot delay 
     expect(observed.step.timedOut).toBe(mode !== 'exit');
     expect(observed.step.logIncomplete).toBe(true);
     expect(result.report.header.descendants).toBe('not contained');
-    expect(JSON.parse(result.stdout).incompleteLogs).toBe(1);
+    const summary = JSON.parse(result.stdout);
+    expect(summary.incompleteLogs).toBe(1);
+    expect(summary.logIncomplete).toBe(true);
     expect(item(result.report, 'testing.test')).toMatchObject(mode === 'postinstall' ? { status: 'unknown', reason: 'install failed' } : mode === 'exit' ? { status: 'pass' } : { status: 'fail', reason: 'timeout' });
     expect(() => lstatSync(result.report.header.scratch)).toThrow();
   } finally { stopFixture(pid, childFile, readyFile); }
@@ -251,7 +253,7 @@ test('run preserves presence and lockfile precedence and never executes prose-on
 test('install and scripts receive only the allowlist, closed stdin and private scratch; source bytes stay unchanged', () => {
   const repo = fixture({ test: 'bun fixture.js test', postinstall: 'bun fixture.js postinstall' }, {
     '.gitignore': 'ignored/\n',
-    'fixture.js': `import { statSync } from 'node:fs'; console.log(JSON.stringify({ env: process.env, stdin: await Bun.stdin.text(), mode: statSync(process.env.HOME).mode & 0o777, uid: statSync(process.env.HOME).uid }));`,
+    'fixture.js': `import { statSync } from 'node:fs'; console.log(JSON.stringify({ env: process.env, stdin: await Bun.stdin.text(), mode: statSync(process.env.HOME).mode & 0o777, uid: statSync(process.env.HOME).uid, processUid: process.getuid() }));`,
   });
   put(repo, 'package.json', { scripts: {} });
   command(repo, ['add', 'package.json']);
@@ -274,7 +276,11 @@ test('install and scripts receive only the allowlist, closed stdin and private s
       expect(() => lstatSync(observed.env.HOME)).toThrow();
     }
     expect(observations.at(-1).mode).toBe(0o700);
-    expect(observations.at(-1).uid).toBe(process.getuid());
+    // Installs use containment only; scripts also use the network user namespace.
+    const mapped = result.report.header.descendants === 'contained'
+      || (step.kind === 'script' && result.report.header.network === 'isolated');
+    expect(observations.at(-1).processUid).toBe(mapped ? 0 : process.getuid());
+    expect(observations.at(-1).uid).toBe(observations.at(-1).processUid);
   }
 });
 
@@ -389,6 +395,8 @@ test('run CLI returns concise revision/input/count summary and command receipts 
   expect(summary.omittedCommands).toBe(result.report.commands.length);
   expect(summary.counts.pass + summary.counts.fail + summary.counts.unknown + summary.counts['n/a']).toBe(17);
   expect(summary.criteria).toBeUndefined();
+  expect(summary.incompleteLogs).toBe(0);
+  expect(summary.logIncomplete).toBe(false);
   for (const step of result.report.commands) {
     expect(step.receiptPath.startsWith(`${result.out.slice(0, -5)}/`)).toBe(true);
     expect(JSON.parse(readFileSync(step.receiptPath, 'utf8'))).toEqual(step);

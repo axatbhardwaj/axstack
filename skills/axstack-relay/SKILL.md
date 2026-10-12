@@ -139,6 +139,7 @@ the caller run's T3 driver thread, even for worker sends.
 Keep the tag short and machine-parsable.
 Exclude chat IDs, credentials, and Telegram targets from the reply tag.
 If either identity is unknown or mismatched, hold the send.
+Reply proof is not an authentication boundary: a privileged worker can copy a valid receipt and forge a message.
 
 ## Decision cards and receipts
 

@@ -88,10 +88,27 @@ test('verification matches T3 read-back for either dispatch kind and normalizes 
       const data = configuration(); data.modelSelection.options = options;
       const result = f.run('axstack-author', kind, data);
       expect(result.status).toBe(0);
-      expect(result.output).toContain('MATCH\n');
+      expect(result.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
+      expect(result.output).toContain('provider: unknown');
       expect(result.error).toBe('');
     }
   }
+});
+
+test('verification records the omitted provider label without changing the instance binding', () => {
+  const f = setup(), args = planArgs(f), out = `${f.dir}/verification.json`;
+  const result = invoke([...args, '--verify', f.save('configuration', configuration()), '--out', out]);
+  expect(result.status).toBe(0);
+  const full = JSON.parse(readFileSync(out, 'utf8'));
+  expect(full.providerEvidence).toContain('provider: unknown');
+  expect(full.providerEvidence).toContain('codex');
+  expect(full.providerEvidence).toContain('instanceId');
+  expect(full.mismatches).toEqual([]);
+  const data = configuration(); data.modelSelection.provider = 'codex';
+  const labeled = f.run('axstack-author', 'launch', data);
+  expect(labeled.status).toBe(0);
+  expect(labeled.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
+  expect(labeled.output).not.toContain('provider: unknown');
 });
 
 for (const [index, [field, change]] of [
@@ -195,6 +212,22 @@ test('a catalog-advertised sibling must have the same provider and model/effort'
   }
 });
 
+test('malformed selected sibling models produce a named hold with instance evidence', () => {
+  for (const models of [{}, 'models', false, null]) {
+    const f = setup();
+    f.capabilities.providers.find((p) => p.providerInstanceId === 'codexAlt').models = models;
+    for (const kind of ['launch', 'task']) {
+      const result = f.run('axstack-author', kind);
+      expect(result.status).toBe(2);
+      expect(result.output).toBe('');
+      expect(result.error).toContain('dispatch-plan hold:');
+      expect(result.error).toContain('models');
+      expect(result.error).toContain('codexAlt');
+      expect(result.error).not.toContain('TypeError');
+    }
+  }
+});
+
 test('CLI usage and unreadable JSON are errors rather than holds', () => {
   for (const args of [[], ['--unknown', 'value'], ['--role'], ['--role', 'a', '--role', 'b']]) {
     const result = invoke(args);
@@ -284,15 +317,61 @@ test('large verification uses a caller-given artifact and explicit omitted count
   const missingOut = invoke([...args, '--verify', verify]);
   expect(missingOut.status).toBe(2);
   expect(missingOut.output).toContain(data.modelSelection.model);
-  expect(missingOut.error).toContain('pass --out <path>.json for the full list');
+  expect(missingOut.error).toContain('pass --out <path>.json for a saved JSON copy');
   const result = invoke([...args, '--verify', verify, '--out', out]);
   expect(result.status).toBe(2);
   const summary = JSON.parse(result.output), full = JSON.parse(readFileSync(out, 'utf8'));
   expect(summary.reportPath).toBe(out);
   expect(summary.omittedMismatches).toBe(1);
-  expect(summary.omittedPayloadFields).toBe(1);
+  expect(summary.omittedPayloadFields).toBe(2);
   expect(full.mismatches[0]).toContain(data.modelSelection.model);
   expect(result.output.length).toBeLessThan(2000);
+});
+
+test('plans exceeding 4096 bytes require --out and keep stdout empty on error', () => {
+  const f = setup();
+  // The role alone is 4400 UTF-8 bytes, so crossing the byte limit never relies on temp paths.
+  const role = 'é'.repeat(2200);
+  f.roles.roles[0].id = role;
+  const args = planArgs(f); args[1] = role;
+  const out = `${f.dir}/plan.json`;
+  const saved = invoke([...args, '--out', out]);
+  expect(saved.status).toBe(0);
+  const full = JSON.parse(readFileSync(out, 'utf8'));
+  const inline = `${JSON.stringify(full)}\n`;
+  expect(inline.length).toBeLessThan(4096);
+  expect(new TextEncoder().encode(inline).length).toBeGreaterThan(4096);
+  expect(full.modelSelection).toEqual({ instanceId: 'codexAlt', model: 'gpt-6.1-sol',
+    options: [{ id: 'reasoningEffort', value: 'high' }] });
+  expect(JSON.parse(saved.output).reportPath).toBe(out);
+  expect(JSON.parse(saved.output).omittedPayloadFields).toBe(2);
+  expect(JSON.parse(saved.output)).not.toHaveProperty('modelSelection');
+  const result = invoke(args);
+  expect(result.status).toBe(1);
+  expect(result.output).toBe('');
+  expect(result.error).toContain('pass --out');
+});
+
+test('unwritable --out preserves all verification mismatches and exit 2', () => {
+  const f = setup(), args = planArgs(f), data = configuration();
+  data.modelSelection.instanceId = 'wrong';
+  data.modelSelection.model = 'wrong'.repeat(2000);
+  data.modelSelection.options = [];
+  data.runtimeMode = 'auto';
+  const verify = f.save('configuration', data);
+  // A directory cannot be written as a file, even by a root test process.
+  const inline = invoke([...args, '--verify', verify]);
+  const result = invoke([...args, '--verify', verify, '--out', f.dir]);
+  expect(result.status).toBe(2);
+  expect(result.output).toBe(inline.output);
+  for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) expect(result.output).toContain(field);
+  expect(result.output).toContain(data.modelSelection.model);
+  expect(result.output).not.toContain('MATCH');
+  expect(result.error).toContain(f.dir);
+  expect(result.error).toContain('pass --out <writable report.json path>');
+  const matched = invoke([...args, '--verify', f.save('configuration', configuration()), '--out', f.dir]);
+  expect(matched.status).toBe(1);
+  expect(matched.output).toBe('');
 });
 
 test('main accepts argv and captures plan, verification and errors through io in process', async () => {
@@ -305,7 +384,7 @@ test('main accepts argv and captures plan, verification and errors through io in
   expect(JSON.parse(output).modelSelection.instanceId).toBe('codexAlt');
   output = '';
   expect(module.main([...args, '--verify', f.save('configuration', configuration())], io)).toBe(0);
-  expect(output).toContain('MATCH');
+  expect(output.split('\n').slice(-2)).toEqual(['MATCH', '']);
   expect(module.main([], io)).toBe(1);
   expect(error).toContain('pass');
 });

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync, renameSync } from 'node:fs';
 import { main, summarizePillars } from '../../skills/axstack/scripts/readiness.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
@@ -105,6 +105,40 @@ test('absent configured criteria fail, TypeScript is n/a, and unsupported stacks
   }
 });
 
+// Real PEM fixtures generated with OpenSSL; no fixture key is used outside tests.
+const certificate = `-----BEGIN CERTIFICATE-----
+MIIBnjCCAUOgAwIBAgIUCkuWmClDX79wX4USnPWzYM7nE5IwCgYIKoZIzj0EAwIw
+JDEiMCAGA1UEAwwZcmVhZGluZXNzLWZpeHR1cmUuaW52YWxpZDAeFw0yNjEwMTEx
+NzQ3MzVaFw0yNjEwMTIxNzQ3MzVaMCQxIjAgBgNVBAMMGXJlYWRpbmVzcy1maXh0
+dXJlLmludmFsaWQwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQqvLbrGiMnqnYO
+jbOdTHOnIVzQTGfLOariyPSe+LRjDT1UGpPyYl5fwrpdbzmSuPZxfATZFPS/LZtW
+SCAkIXG4o1MwUTAdBgNVHQ4EFgQUC1Yr6NHCIN0MUZJ9dYTWfCImcIAwHwYDVR0j
+BBgwFoAUC1Yr6NHCIN0MUZJ9dYTWfCImcIAwDwYDVR0TAQH/BAUwAwEB/zAKBggq
+hkjOPQQDAgNJADBGAiEAkSk5ReOfnC/oroeTVH71l8R7nbHAcOD7LKsJsMEdwD4C
+IQDZ+Wc7uyBW3Rf2b6JOTLlnOKLxKpbTUFpNENy527Jmeg==
+-----END CERTIFICATE-----
+`;
+const publicKey = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKry26xojJ6p2Do2znUxzpyFc0Exn
+yzmq4sj0nvi0Yw09VBqT8mJeX8K6XW85krj2cXwE2RT0vy2bVkggJCFxuA==
+-----END PUBLIC KEY-----
+`;
+const privateKey = `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgGiFlmtoUKOG0Ei56
+CthO/BF2E8U/gVn5MFtC0p3WuNihRANCAAQqvLbrGiMnqnYOjbOdTHOnIVzQTGfL
+OariyPSe+LRjDT1UGpPyYl5fwrpdbzmSuPZxfATZFPS/LZtWSCAkIXG4
+-----END PRIVATE KEY-----
+`;
+const encryptedKey = `-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIH0MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBBCukdOSIzcn67GuRUHJ
+GGQ1AgIIADAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQ3pnxUrSIntN7iDjP
++TWpDASBkEOh4+lGexXOt2ZkMHujFdh5yIBb4Ftmtq0q9hQHDoi1WUfUjGVgNpyG
+P9sI/RVygmR8YUbJjTdNPj/VSiLPTCRJA/kWjgayJNlieDHVEacI13pOzDSMkYgc
+klPn5YBm7HfY1ozMOVZOEyhe9qeOoFPYJS+hTUP/t66WF7186LUL1IYNAT9J9DBC
+7eNCNhwpQg==
+-----END ENCRYPTED PRIVATE KEY-----
+`;
+
 test('configured failures include loose TypeScript, wrong docs linkage and tracked secrets', () => {
   const repo = fixture({ ...complete, 'tsconfig.json': { compilerOptions: { strict: false } }, 'CLAUDE.md': 'See README', '.env.example': 'EXAMPLE=', 'key.pem': '-----BEGIN PRIVATE KEY-----\nsecret' });
   const { report } = assess(repo);
@@ -138,12 +172,52 @@ test.each(['.envrc', 'config/.env-local', 'nested/.env_prod', '.environment'])('
   expect(criterion(report, 'security.secrets').evidence).toEqual([`git show ${report.header.revision}:${name}`]);
 });
 
-test('secret-file readiness rejects env files and private-key names without reading contents', () => {
+test('secret-file readiness rejects env files, private-key names and private PEM content', () => {
   const names = ['.env', '.env.production', 'nested/.env.example.local', 'id_rsa', 'id_ed25519', 'id_ecdsa', 'key.pem', 'key.key', 'key.p12', 'nested/key.pfx'];
-  const repo = fixture({ ...complete, ...Object.fromEntries(names.map((name) => [name, 'opaque fixture'])) });
+  const repo = fixture({ ...complete, ...Object.fromEntries(names.map((name) => [name, /\.(pem|key)$/.test(name) ? privateKey : 'opaque fixture'])) });
   const { report } = assess(repo);
   status(report, 'security.secrets', 'fail');
   expect(criterion(report, 'security.secrets').evidence).toEqual(names.sort().map((name) => `git show ${report.header.revision}:${name}`));
+});
+
+test.each(['certificate.pem', 'certificate.key', 'nested/public.pem', 'public.key'])('secret-file readiness accepts complete public PEM files: %s', (name) => {
+  const { code, report } = assess(fixture({ ...complete, [name]: name.includes('certificate') ? certificate : publicKey }));
+  expect(code).toBe(0);
+  status(report, 'security.secrets', 'pass');
+});
+
+test('secret-file readiness retains env-path rejection even for public PEM content', () => {
+  const { code, report } = assess(fixture({ ...complete, 'nested/.env.public.pem': certificate }));
+  expect(code).toBe(0);
+  status(report, 'security.secrets', 'fail');
+});
+
+test.each([privateKey, encryptedKey, publicKey + privateKey])('secret-file readiness rejects private PEM content without disclosing it', (contents) => {
+  const { code, report, error } = assess(fixture({ ...complete, 'certificate.pem': contents }));
+  expect(code).toBe(0);
+  status(report, 'security.secrets', 'fail');
+  expect(criterion(report, 'security.secrets').evidence).toEqual([`git show ${report.header.revision}:certificate.pem`]);
+  expect(JSON.stringify(report) + error).not.toContain(contents.split('\n')[1]);
+});
+
+test.each(['opaque fixture', publicKey.replace('-----END PUBLIC KEY-----', ''), publicKey.replace('MFkw', '!!!!'), publicKey + '\0', publicKey + '\ufffd'])('secret-file readiness keeps malformed or opaque PEM evidence unknown', (contents) => {
+  const { code, report } = assess(fixture({ ...complete, 'key.pem': contents }));
+  expect(code).toBe(0);
+  status(report, 'security.secrets', 'unknown');
+  expect(criterion(report, 'security.secrets').evidence).toEqual([`git show ${report.header.revision}:key.pem`]);
+});
+
+test('secret-file readiness cannot infer private-key absence from an unavailable blob', () => {
+  const repo = fixture({ ...complete, 'key.pem': publicKey });
+  const oid = git(repo, 'rev-parse', 'HEAD:key.pem');
+  const object = `${repo}/.git/objects/${oid.slice(0, 2)}/${oid.slice(2)}`;
+  const saved = `${root}/${oid}`;
+  renameSync(object, saved);
+  try {
+    const { code, report } = assess(repo);
+    expect(code).toBe(0);
+    status(report, 'security.secrets', 'unknown');
+  } finally { renameSync(saved, object); }
 });
 
 test('executed criteria apply presence, prose and lockfile precedence without running commands', () => {

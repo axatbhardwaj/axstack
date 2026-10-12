@@ -52,8 +52,11 @@ describe('bun-native import surface', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     expect(pkg.engines?.bun).toBeDefined();
     expect(pkg.engines).not.toHaveProperty('node');
-    expect(pkg.scripts.test).toMatch(/bun test/);
-    expect(pkg.scripts.test).not.toMatch(/node --test/);
+    // repository-test-runner.test.js checks the actual test runtime for both scripts.
+    for (const name of ['test', 'test:all']) {
+      expect(pkg.scripts[name]).toMatch(/^bun\s+/);
+      expect(pkg.scripts[name]).not.toMatch(/node --test/);
+    }
   });
 
   test('CLI entry uses the Bun shebang', () => {

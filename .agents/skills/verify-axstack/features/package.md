@@ -38,7 +38,7 @@ equivalent rewording, retained checkout guards and the current prose budget:
 
 ```bash
 doctor > "$EVIDENCE/publication-doctor.log" 2>&1
-bun test tests/workflows/publication-repair.test.js \
+bun run test tests/workflows/publication-repair.test.js \
   tests/workflows/publication-integrity.test.js tests/workflows/review-checkout.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/publication-suite.log" 2>&1
 ```

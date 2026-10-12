@@ -91,6 +91,7 @@ Execute all steps in each selected feature file, including its assertions:
 2. [Resolve a model and plan a dispatch](features/dispatch.md).
 3. [Create run records and inspect repositories](features/reports.md).
 4. [Inspect the package payload](features/package.md).
+5. [Inspect workflow instruction contracts](features/workflows.md).
 
 The full suite needs Node for its existing npm staging probe, `ip` for
 loopback fixtures, and an already cached **npm@12.0.2** package including its
@@ -105,14 +106,19 @@ BUNX_CACHE="$TMPDIR/bunx-$(id -u)-npm@12.0.2"
 mkdir -p "$BUNX_CACHE/node_modules/.bin"
 cp -R "$NPM_SOURCE" "$BUNX_CACHE/node_modules/npm"
 ln -s ../npm/bin/npm-cli.js "$BUNX_CACHE/node_modules/.bin/npm"
-setpriv --bounding-set=-dac_override,-dac_read_search bun test \
-  > "$EVIDENCE/full-suite.log" 2>&1
+SUITE_STATUS=0
+bun run test:all > "$EVIDENCE/full-suite.log" 2>&1 || SUITE_STATUS=$?
+printf '%s\n' "$SUITE_STATUS" > "$EVIDENCE/full-suite-exit.txt"
+test "$SUITE_STATUS" -eq 0
 ```
 
-Save the exit status under Evidence even on failure.
+The status is saved before a failed suite stops the offline shell under `set -e`.
+Use `bun run test` for targeted checks and `bun run test:all` for the full suite:
+the repository runner drops DAC override/read-search capabilities for Linux
+root using `setpriv`, and runs Bun directly for other users. Root without
+Linux or `setpriv` holds with exit 2. Bare `bun test` bypasses this recipe.
 The clean environment unsets `CLAUDE_CONFIG_DIR`. Keep TMPDIR outside HOME:
-installer fixtures reject home-based scratch. Do not weaken permission tests
-by retaining root's DAC override capabilities.
+installer fixtures reject home-based scratch. Retain every permission test.
 
 ## Evidence
 
