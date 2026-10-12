@@ -238,15 +238,24 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true`, `everyMs:300000` is armed and
-its ID recorded. Each wake must reconcile all unsettled runs, including a
+`schedule_task` with `bindToCurrentThread:true` is armed at the default
+`everyMs:1800000` or for its 5-minute recovery cases in
+[Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
+with its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
 T3 queues a scheduled wake even while the driver is busy, so copies pile up.
-At the start of each run-watch wake, the driver must cancel every other queued
-copy of its own run-watch prompt with `t3_queue_list` and `t3_queue_cancel`,
-keeping every other queued message, including user and worker messages.
+After a provider error, server restart or Stop, T3 holds the queue: held
+messages do not start, and later queued messages are held too.
+At the start of each run-watch wake, the driver lists every queued message with
+`t3_queue_list` and treats it as stranded.
+The driver must cancel every queued copy of its own run-watch prompt.
 One wake reconciles all those copies.
+For each stranded worker receipt or PR-watch update, the driver must read it
+with `t3_queue_read`, act on it in that wake, then cancel it with `t3_queue_cancel`.
+A queued user message is a pending local action, so the driver must keep every
+queued user message and report it in its reply even on an otherwise unchanged
+wake, because only the user resumes a held queue.
 
 Once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain
@@ -291,10 +300,10 @@ If re-arming fails, restore the bound 5-minute schedule.
 When the run waits only on a user decision or a human-only step, including a
 user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
-When work restarts, restore the normal 5-minute cadence.
+When work restarts, restore the normal 30-minute cadence.
 Keep native PR watches.
 For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
-for 30-minute fallback eligibility, 5-minute recovery, and schedule update read-back.
+for the normal 30-minute cadence, 5-minute recovery, and schedule update read-back.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.

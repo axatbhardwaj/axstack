@@ -125,13 +125,12 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
 });
 
 test('own open PRs use the original T3 driver with the runtime fallback cadence', () => {
-  const concepts = [/own open PRs/i, /chat-run mode/i, /30-minute fallback/i,
-    /when eligible/i, /Chat-run watch runtime/i, /\buse\b/i];
+  const concepts = [/own open PRs/i, /chat-run mode/i, /normal 30-minute cadence/i,
+    /Chat-run watch runtime/i, /\buse\b/i];
   checkRule(sentences(watch()).join('. '), (text) => requires(text, ...concepts),
-    'For own open PRs in chat-run mode, use the 30-minute fallback when eligible under Chat-run watch runtime.',
-    [[/30-minute/i, '5-minute'], [/when eligible/i, 'regardless of eligibility'],
-      [/\buse\b/i, 'avoid']], concepts);
-  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:300000`');
+    'For own open PRs in chat-run mode, use the normal 30-minute cadence under Chat-run watch runtime.',
+    [[/30-minute/i, '5-minute'], [/\buse\b/i, 'avoid']], concepts);
+  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:1800000`');
   expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
   expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
@@ -142,13 +141,12 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
   const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i,
-    /30-minute fallback/i, /native PR watches are armed/i, /work and release are settled/i];
+    /normal 30-minute cadence/i];
   const cadence = (text) => requires(text, ...concepts);
   checkRule(host(), cadence,
-    'A bound T3 schedule wakes the driver thread on a 30-minute fallback while native PR watches are armed and work and release are settled.',
+    'A bound T3 schedule wakes the driver thread on a normal 30-minute cadence.',
     [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores'],
-      [/30-minute/i, '5-minute'], [/watches are armed/i, 'watches are unarmed'],
-      [/work and release are settled/i, 'work and release are unsettled']], concepts);
+      [/30-minute/i, '5-minute']], concepts);
   expect(readme()).toContain('docs/host-operations.md#chat-run-watch-activation');
 });
 
@@ -192,7 +190,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   expect(scenario.expected.action).toContain('keep the same schedule armed while CI or release is pending');
   expect(scenario.expected.action).toContain('never create a second watch');
   expect(scenario.expected.action).toContain('delete only after chat-run stop conditions');
-  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:300000',
+  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:1800000',
     'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
     expect(scenario.expected.action).toContain(concept);
     expect(scenario.expected.action.replaceAll(concept, '')).not.toContain(concept);
@@ -234,15 +232,6 @@ test('watch frontmatter and unchanged links keep their single-line form', () => 
   expect(text).toContain('On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.');
   expect(text).toContain("repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run\n");
   expect(text).not.toMatch(/\[[^\]]*\n[^\]]*\]\(/);
-});
-
-test('unsettled delegated tasks alone keep the 30-minute fallback eligible', () => {
-  const concepts = [/delegated tasks/i, /native completion wakes/i,
-    /unsettled delegated tasks alone/i, /30-minute fallback/i, /keep[^.]*eligible/i];
-  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
-    'Because delegated tasks deliver native completion wakes, unsettled delegated tasks alone keep the 30-minute fallback eligible.',
-    [[/\bkeep\b/i, 'block'], [/unsettled delegated tasks alone/i, 'settled delegated tasks alone'],
-      [/unsettled delegated tasks alone/i, 'unsettled launched threads']], concepts);
 });
 
 test('a resumed question child run keeps the 5-minute cadence', () => {
