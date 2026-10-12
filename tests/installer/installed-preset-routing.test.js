@@ -12,9 +12,17 @@ for (const legacy of [null, 'claude-only']) {
     const home = makeTempRoot('axstack-installed-routing-');
     const routing = readFileSync(join(import.meta.dir, '../../skills/axstack/references/routing.md'), 'utf8');
     const bundle = writeFixtureBundle(home, { supportFiles: { 'routing.md': routing } });
+    const selected = JSON.parse(readFileSync(join(bundle, 'profiles/presets/mixed.json'), 'utf8'));
+    writeFileSync(join(bundle, 'profiles/presets/claude-only.json'), JSON.stringify({
+      ...selected,
+      roles: selected.roles.map((role) => ({ ...role, provider: 'claude', model: 'legacy-model' })),
+    }));
     const skillsDir = join(home, 'installed');
-    runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'],
-      { env: { HOME: home } });
+    const args = ['install', '--bundle', bundle, '--skills-dir', skillsDir,
+      '--tools-dir', join(home, 'tools'), '--yes'];
+    const options = { env: { HOME: home } };
+    runCli(CLI, [...args, '--preset', 'claude-only'], options);
+    expect(JSON.parse(readFileSync(join(skillsDir, 'axstack/roles.json'), 'utf8')).preset).toBe('claude-only');
     const manifestPath = join(skillsDir, '.axstack-manifest.json');
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     expect(manifest.profiles.preset).toBeNull();
@@ -22,8 +30,13 @@ for (const legacy of [null, 'claude-only']) {
       manifest.profiles.preset = legacy;
       writeFileSync(manifestPath, JSON.stringify(manifest));
     }
+    expect(JSON.parse(readFileSync(manifestPath, 'utf8')).profiles.preset).toBe(legacy);
+    // Reinstall reads the injected manifest; legacy provenance cannot select the new roles.
+    runCli(CLI, [...args, '--preset', 'mixed'], options);
+    expect(JSON.parse(readFileSync(manifestPath, 'utf8')).profiles).toEqual(manifest.profiles);
     const snapshot = JSON.parse(readFileSync(join(skillsDir, 'axstack/roles.json'), 'utf8'));
     expect(snapshot.preset).toBe('mixed');
+    expect(snapshot.roles).toEqual(selected.roles);
     const instruction = readFileSync(join(skillsDir, 'axstack-demo/routing.md'), 'utf8');
     expect(requires(instruction, /new runs/i, /preset/i, /skills\/axstack\/roles\.json/i)).toBe(true);
     expect(requires(instruction, /legacy manifest/i, /profiles\.preset/i, /inert/i, /ignored/i, /stale/i)).toBe(true);

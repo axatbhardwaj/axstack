@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { publicDocPaths, docLinkIssues } from './public-docs.js';
 import { checkRule, requires } from './prose-contract.js';
 
@@ -74,4 +74,41 @@ test('workflow editing surfaces include all public documentation pages', () => {
   checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
     'Keep workflow surfaces in skills, profiles, tests/workflows, docs/*.md, and README.md.',
     [[/Keep/i, 'Exclude']], concepts);
+});
+
+
+test('an unmatched inline-code delimiter cannot hide later document links', () => {
+  fixture((dir, put) => {
+    put('README.md', '# Start\nAn unmatched ` delimiter\n[missing](gone.md)\n`valid example`');
+    expect(docLinkIssues(dir)).toEqual(['README.md: missing gone.md']);
+    put('README.md', '# Start\n``[example](gone.md)``\n[missing](gone.md)');
+    expect(docLinkIssues(dir)).toEqual(['README.md: missing gone.md']);
+  });
+});
+
+
+test('package recipe requires every entry point and both current publication references', () => {
+  const recipe = readFileSync(`${root}/.agents/skills/verify-axstack/features/package.md`, 'utf8');
+  const assertions = recipe.match(/cmp "\$EVIDENCE\/archives-before.txt" "\$EVIDENCE\/archives-after.txt"\n([\s\S]*?)\nif rg/)?.[1];
+  expect(assertions).toBeTruthy();
+  const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
+    'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
+    'skills/axstack/references/preview.md', 'skills/axstack/references/pr-chain.md',
+    'skills/axstack-watch/references/repair-publication.md'];
+  fixture((dir, put) => {
+    // The automated recipe boundary needs only Linux/POSIX shell tools.
+    put('bin/rg', '#!/bin/sh\nexit 73\n');
+    chmodSync(`${dir}/bin/rg`, 0o755);
+    const env = { ...Bun.env, PATH: `${dir}/bin:${Bun.env.PATH ?? ''}`, EVIDENCE: dir };
+    expect(Bun.spawnSync([`${dir}/bin/rg`], { env }).exitCode).toBe(73);
+    const check = (listing) => {
+      put('pack.log', listing.map((path) => `packed 100B ${path}`).join('\n'));
+      return Bun.spawnSync(['/bin/bash', '-e', '-c', assertions],
+        { env, stdout: 'pipe', stderr: 'pipe' }).exitCode;
+    };
+    expect(check(members)).toBe(0);
+    for (const missing of members) {
+      expect(check(members.filter((path) => path !== missing)), missing).toBe(1);
+    }
+  });
 });

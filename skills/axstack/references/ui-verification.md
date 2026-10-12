@@ -1,6 +1,6 @@
 # UI verification
 
-Every Playwright, browser, or rendered-UI check outside the three named author
+Every Playwright, browser, or rendered-UI check outside the three named browser
 exceptions, including a "confirm it in the browser" step, goes through async
 `delegate_task` to `axstack-ui-verifier` from the run's role snapshot. Give it the exact build, URL, or artifact and the private
 dispatch's evidence folder. The verifier is read-only: it never edits source.
@@ -8,21 +8,16 @@ The PR writer remains the sole writer.
 
 Before using a PR preview URL, the UI verifier must read [PR previews](preview.md).
 
-The first named author browser exception is archify `finalize` as a headless build gate.
+The first named browser exception is archify `finalize` as a headless build gate.
 Keep finalize outputs only in the private evidence folder.
 Never replace the verifier's rendered pass with finalize.
 
-The second named author browser exception is the driver's two `html_preview`
+The second named browser exception is the driver's two `html_preview`
 runs at 728px dark and 360px light.
-Scan the exact bytes of every page for remote src, srcset, and href on loaded
-resources, `@import`, `url()`, `fetch`, XHR, WebSocket, EventSource, and meta refresh.
-Reject scan matches except local url(#id) references such as SVG markers and gradients.
-Require correct layout, theme, zero console errors, empty `missingImages`,
-height, network, and word count.
 Never replace the verifier's interaction pass with `html_preview`.
 Follow [Inline pages](../../axstack-explain/references/inline-pages.md) for the page checks.
 
-The third named author browser exception permits dispatched roles to use
+The third named browser exception permits dispatched roles to use
 `html_preview` as a non-publishing self-check.
 Dispatched-role self-checks never replace the driver's two previews or the `axstack-ui-verifier` pass.
 Dispatched roles never call `html_render`.
@@ -36,8 +31,8 @@ Candidate browser and visual checks must run in the delegated `axstack-ui-verifi
 For every interactive page, require a real-browser `axstack-ui-verifier` interaction pass.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
 The verifier serves the exact bytes on loopback.
-Open the page with `preview_open` using `open:false`.
-Check clicks, keyboard, focus order, screen-reader names, expanded states, and reduced motion.
+The verifier opens the page with `preview_open` using `open:false`.
+The verifier checks clicks, keyboard, focus order, screen-reader names, expanded states, and reduced motion.
 Require that `performance.getEntriesByType('resource')` is empty.
 The detached-checkout rule does not apply to a page without a candidate.
 
@@ -57,7 +52,8 @@ Keep browser recipes tool-neutral for the verifier.
 
 ## Proof standards
 
-Apply these standards to the verifier's candidate checks and inline-page interaction pass.
+Apply these standards wherever referenced, including the verifier's candidate checks
+and inline-page interaction pass.
 
 Drive the real user path.
 Capture the action, the resulting state and its side effects.

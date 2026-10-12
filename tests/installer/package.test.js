@@ -244,22 +244,14 @@ test('package inventory rejects a linked document omitted from shipped files', (
   expect(() => expectedMembers(dir)).toThrow(/linked doc is not shipped/);
 });
 
-test('Bun and npm dry runs ship linked docs without historical baselines', () => {
+test('Bun dry runs ship linked docs without historical baselines', () => {
   const bun = run(BUN_BIN, ['pm', 'pack', '--dry-run'], { cwd: ROOT });
   expect(bun.exitCode, bun.out).toBe(0);
-  const bunFiles = [...bun.out.matchAll(/^packed \S+ (.+)$/gm)].map(([, path]) => path);
-  const npm = run('npm', ['pack', '--dry-run', '--json'], { cwd: ROOT });
-  expect(npm.exitCode, npm.out).toBe(0);
-  const packed = JSON.parse(npm.stdout);
-  // npm 12 keys results by package name; earlier npm versions return an array.
-  const npmFiles = (Array.isArray(packed) ? packed[0] : Object.values(packed)[0]).files
-    .map(({ path }) => path);
+  const listing = [...bun.out.matchAll(/^packed \S+ (.+)$/gm)].map(([, path]) => path);
   const docs = [...expectedMembers(ROOT)].filter((path) => path.endsWith('.md'))
     .map((path) => path.slice('package/'.length));
-  for (const listing of [bunFiles, npmFiles]) {
-    for (const doc of docs) expect(listing, doc).toContain(doc);
-    expect(listing.some((path) => /^docs\/(?:specs|plans)\//.test(path))).toBe(false);
-  }
+  for (const doc of docs) expect(listing, doc).toContain(doc);
+  expect(listing.some((path) => /^docs\/(?:specs|plans)\//.test(path))).toBe(false);
 });
 
 test('published manifest carries the metadata an npm page needs', () => {

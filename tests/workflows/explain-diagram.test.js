@@ -13,16 +13,20 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 // diagram routing, card exemptions, and finalize-bound QA. Each mutation uses
 // the real source in memory; tests never write tracked files.
 const rules = [
+  ['shared page gate owner', 'skills/axstack/references/ui-verification.md', [/follow|read/i, /page checks/i],
+    /follow|read/i, 'ignore', 'Read [Inline pages](../../axstack-explain/references/inline-pages.md) for the page checks.', null, '../../axstack-explain/references/inline-pages.md'],
+  ['direct viewer declared launch path', 'skills/axstack-diagram/SKILL.md', [/direct viewer requests/i, /follow|read/i, /declared launch path/i],
+    /follow|read/i, 'ignore', "For direct viewer requests, read [Explain's declared launch path](../axstack-explain/SKILL.md#2-choose-proportional-output).", null, '../axstack-explain/SKILL.md#2-choose-proportional-output'],
   ['every diagram', explain, [/load|read|follow/i, /every diagram/i],
     /every/i, 'some', `For every diagram, read [Diagram](${diagram}).`, null, diagram],
   ['discovery triggers', explain, [/description: When/i, /asks how, why, explain, or show/i, /do not understand|cannot understand/i, /spec.*finaliz/i, /judge.*need to understand/i, /use axstack-explain/i, /show how it works/i, /exists/i, /missing/i, /unverified/i],
     /use axstack-explain/i, 'ignore axstack-explain', 'description: When the user asks how, why, explain, or show, says they cannot understand, a spec is being finalized, or you judge they need to understand something, use axstack-explain to show how it works and what exists, is missing, or remains unverified.', /do not understand|cannot understand/i],
-  ['limited chat path', explain, [/chat/i, /only/i, /explicit chat request/i, /without a Q2 trigger/i, /inline-page fallback/i],
-    /only/i, 'also by default', 'Chat is used only for an explicit chat request, an answer without a Q2 trigger, or inline-page fallback.'],
+  ['limited chat path', explain, [/chat/i, /only/i, /explicit chat request/i, /outside the description's conditions/i, /inline-page fallback/i],
+    /only/i, 'also by default', 'Chat is used only for an explicit chat request, an answer outside the description\'s conditions, or inline-page fallback.'],
   ['inline Mermaid without an agent', explain, [/chat/i, /Mermaid rules/i, /inline/i, /agent/i],
     /never dispatch|do not launch/i, 'always dispatch', 'For chat answers, do not launch an agent when using its Mermaid rules inline.', /never dispatch|do not launch/i],
-  ['inline page default', explain, [/Q2 trigger/i, /inline page/i, /default/i, /create|make/i],
-    /default/i, 'exception', 'For a Q2 trigger, make an inline page by default.'],
+  ['inline page default', explain, [/conditions in the description/i, /inline page/i, /default/i, /create|make/i],
+    /default/i, 'exception', 'For the conditions in the description, make an inline page by default.'],
   ['requested artifact format', explain, [/explicitly requested artifact format/i, /honou?r|use/i],
     /honou?r|use/i, 'ignore', 'Use an explicitly requested artifact format.'],
   ['explicit archify author', explain, [/archify/i, /only/i, /explicit viewer request/i, /configured/i, /axstack-explainer/i],
@@ -56,7 +60,11 @@ const rules = [
   ['theme override', pages, [/only|alone/i, /explicit user theme request/i, /overrides/i],
     /only|alone/i, 'any inferred preference or', 'An explicit user theme request alone overrides the page theme.'],
   ['fluid width', pages, [/use|keep/i, /fluid width/i],
-    /fluid/i, 'fixed', 'Keep fluid width.'],
+    /fluid/i, 'fixed', 'Keep fluid width with zero outer horizontal padding.'],
+  ['zero outer padding', pages, [/zero outer horizontal padding/i, /use|keep/i],
+    /zero/i, 'large', 'Keep fluid width with zero outer horizontal padding.'],
+  ['archify-only dark default', pages, [/dark default/i, /archify-only/i, /stays|remains/i],
+    /archify-only/i, 'universal', 'The dark default remains archify-only.'],
   ['page framing', pages, [/outer frame/i, /banner/i, /viewport heights/i],
     /never use|do not use/i, 'use', 'Do not use an outer frame, banner, or viewport heights.', /never use|do not use/i],
   ['chart heights', pages, [/fixed chart heights/i, /use|set/i],
@@ -174,6 +182,7 @@ for (const rule of rules) {
 
 test('every diagram routing preserves the exact relative skill target', () => {
   const source = read(explain);
-  expect(accepts(rules[0], source)).toBe(true);
-  expect(accepts(rules[0], source.replaceAll(diagram, '../axstack-explain/SKILL.md'))).toBe(false);
+  const rule = rules.find(([name]) => name === 'every diagram');
+  expect(accepts(rule, source)).toBe(true);
+  expect(accepts(rule, source.replaceAll(diagram, '../axstack-explain/SKILL.md'))).toBe(false);
 });

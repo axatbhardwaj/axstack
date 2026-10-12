@@ -7,6 +7,7 @@ const router = 'skills/axstack-diagram/SKILL.md';
 const fidelity = 'skills/axstack-diagram/references/fidelity.md';
 const archify = 'skills/axstack-diagram/references/archify.md';
 const ui = 'skills/axstack/references/ui-verification.md';
+const pages = 'skills/axstack-explain/references/inline-pages.md';
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
 const upstreamLimitOverride = (text) => requires(text,
   /follow|use|apply|adopt|defer to/i, /archify(?:'s)? repair limits?/i);
@@ -19,8 +20,8 @@ const rules = [
     /only/i, 'also without a request', 'Choose archify HTML only on an explicit viewer request.'],
   ['viewer author', router, [/viewer/i, /axstack-explainer/i, /author/i],
     /axstack-explainer/i, 'driver', 'The axstack-explainer authors the viewer.'],
-  ['portable destination', router, [/chat fallback/i, /GitHub/i, /docs/i, /Mermaid/i, /use|choose/i],
-    /Mermaid/i, 'archify HTML', 'Choose Mermaid for chat fallback, GitHub, and docs.'],
+  ['portable destination', router, [/chat/i, /GitHub/i, /docs/i, /(?:use|choose) Mermaid/i],
+    /Mermaid/i, 'archify HTML', 'Choose Mermaid for chat, GitHub, and docs.'],
   ['inline page diagrams', router, [/inline pages/i, /inline SVG/i, /CSS/i, /use|choose/i],
     /inline SVG/i, 'remote image', 'Choose inline SVG or CSS inside inline pages.'],
   ['no Mermaid in pages', router, [/Mermaid/i, /inline pages/i],
@@ -143,16 +144,12 @@ const rules = [
     /do not require|never require/i, 'Always require', 'Never require validate before finalize.', /do not require|never require/i],
   ['finalize every repair', archify, [/after every repair edit/i, /rerun|execute/i, /complete/i, /finalize/i],
     /finalize/i, 'validate', 'After every repair edit, execute the complete finalize command.'],
-  ['finalize remains a named exception', ui, [/first/i, /named author browser exception/i, /archify.*finalize/i, /headless build gate/i],
-    /first/i, 'sole', 'The first named author browser exception is archify finalize as a headless build gate.'],
-  ['driver previews are the second exception', ui, [/second/i, /named author browser exception/i, /driver.*two.*html_preview/i, /728px dark/i, /360px light/i],
-    /second/i, 'sole', 'The second named author browser exception is the driver running two html_preview checks at 728px dark and 360px light.'],
-  ['preview gates', ui, [/require|check/i, /layout/i, /theme/i, /zero console errors/i, /empty.*missingImages/i, /height/i, /network/i, /word count/i],
+  ['finalize remains a named exception', ui, [/first/i, /named (?:author )?browser exception/i, /archify.*finalize/i, /headless build gate/i],
+    /first/i, 'sole', 'The first named browser exception is archify finalize as a headless build gate.'],
+  ['driver previews are the second exception', ui, [/second/i, /named (?:author )?browser exception/i, /driver.*two.*html_preview/i, /728px dark/i, /360px light/i],
+    /second/i, 'sole', 'The second named browser exception is the driver running two html_preview checks at 728px dark and 360px light.'],
+  ['preview gates', pages, [/require|check/i, /layout/i, /theme/i, /zero console errors/i, /empty.*missingImages/i, /height/i, /network/i, /word count/i],
     /require|check/i, 'waive', 'Check layout, theme, zero console errors, empty missingImages, height, network, and word count.'],
-  ['static scan exact bytes', ui, [/scan/i, /exact bytes/i, /every page/i, /remote src/i, /srcset/i, /href.*loaded resources/i, /@import/i, /url\(\)/i, /fetch/i, /XHR/i, /WebSocket/i, /EventSource/i, /meta refresh/i],
-    /every page/i, 'some pages', 'For every page, scan the exact bytes for remote src, srcset, href on loaded resources, @import, url(), fetch, XHR, WebSocket, EventSource, and meta refresh.'],
-  ['scan rejects resource loading except local fragments', ui, [/reject/i, /scan matches/i, /except/i, /local url\(#id\)/i],
-    /reject/i, 'accept', 'Reject scan matches except local url(#id) references.'],
   ['previews never replace verifier', ui, [/html_preview/i, /replace/i, /verifier.*interaction pass/i],
     /never replace|do not replace/i, 'Replace', 'Do not replace the verifier interaction pass with html_preview.', /never replace|do not replace/i],
   ['finalize evidence boundary', ui, [/finalize/i, /outputs/i, /only/i, /private evidence folder/i],
@@ -161,8 +158,8 @@ const rules = [
     /never replace|do not replace/i, 'Replace', 'Do not replace the verifier\'s rendered pass with finalize.', /never replace|do not replace/i],
   ['other browser checks stay delegated', ui, [/other browser checks/i, /outside.*three named exceptions/i, /remain|stay/i, /delegated/i, /axstack-ui-verifier/i],
     /remain|stay/i, 'leave', 'All other browser checks outside the three named exceptions stay delegated to axstack-ui-verifier.'],
-  ['dispatched preview self-check exception', ui, [/third/i, /named author browser exception/i, /permits|allows/i, /dispatched roles/i, /html_preview/i, /non-publishing self-check/i],
-    /non-publishing self-check/i, 'publishing check', 'The third named author browser exception allows dispatched roles to use html_preview for a non-publishing self-check.'],
+  ['dispatched preview self-check exception', ui, [/third/i, /named (?:author )?browser exception/i, /permits|allows/i, /dispatched roles/i, /html_preview/i, /non-publishing self-check/i],
+    /non-publishing self-check/i, 'publishing check', 'The third named browser exception allows dispatched roles to use html_preview for a non-publishing self-check.'],
   ['dispatched self-check never replaces required passes', ui, [/dispatched-role self-checks/i, /replace/i, /driver.*two previews/i, /axstack-ui-verifier.*pass/i],
     /never replace|do not replace/i, 'Replace', 'Do not replace the driver two previews or axstack-ui-verifier pass with dispatched-role self-checks.', /never replace|do not replace/i],
   ['dispatched self-check never publishes', ui, [/dispatched roles/i, /html_render/i],

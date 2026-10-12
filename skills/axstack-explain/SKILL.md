@@ -71,11 +71,11 @@ Diagram never calls explain.
    Each card has at most 40 words and cites its source, as defined in
    [Archify](../axstack-diagram/references/archify.md).
    Count node labels, headings, captions, and all non-card text.
-2. Use chat only for an explicit chat request, an answer without a Q2 trigger,
-   or inline-page fallback. Q2 triggers are the conditions in the description.
+2. Use chat only for an explicit chat request, an answer outside the description's conditions,
+   or inline-page fallback.
    Use a compact diagram when useful.
    For chat answers, never dispatch an agent when applying its Mermaid rules inline.
-3. For a Q2 trigger, create an inline page by default.
+3. For the conditions in the description, create an inline page by default.
    Honor an explicitly requested artifact format.
    Use archify only on an explicit viewer request, through the configured
    `axstack-explainer`. The reply adds only what the page omits.

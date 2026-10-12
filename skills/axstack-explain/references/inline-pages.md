@@ -48,7 +48,7 @@ Scan for `@import`, `url()`, `fetch`, XHR, WebSocket, EventSource, and meta refr
 Reject scan matches except local `url(#id)` references such as SVG markers and gradients.
 
 Before publishing, run `html_preview` at 728px dark and 360px light.
-The driver's two previews are an author exception to delegated browser checks.
+The driver's two previews are a named browser exception to delegated browser checks.
 Require correct layout, theme, height, network, word count, zero console errors,
 and empty `missingImages`.
 Check every claim against its source.
@@ -59,8 +59,6 @@ For every interactive page, require a real-browser `axstack-ui-verifier` pass
 for clicks, keyboard, and expanded states.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
 Follow [UI verification](../../axstack/references/ui-verification.md) for that pass.
-The pass covers focus order, screen-reader names, reduced motion, and an empty
-`performance.getEntriesByType('resource')` list.
 
 ## Publish or fall back
 
