@@ -78,7 +78,7 @@ load. When the watch needs a new owner or automated observation, first read
 [T3 runtime](../axstack/references/t3-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
 `axstack-monitor` stays an optional read-only observer for standalone watch
-that never sends. For own open PRs in chat-run mode, use the 30-minute fallback when eligible under
+that never sends. For own open PRs in chat-run mode, use the normal 30-minute cadence under
 [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch);
 the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
 neither. Start no automation for a read-only check.

@@ -238,7 +238,7 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true`, `everyMs:300000` is armed and
+`schedule_task` with `bindToCurrentThread:true`, `everyMs:1800000` is armed and
 its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
@@ -297,10 +297,10 @@ If re-arming fails, restore the bound 5-minute schedule.
 When the run waits only on a user decision or a human-only step, including a
 user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
-When work restarts, restore the normal 5-minute cadence.
+When work restarts, restore the normal 30-minute cadence.
 Keep native PR watches.
 For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
-for 30-minute fallback eligibility, 5-minute recovery, and schedule update read-back.
+for the normal 30-minute cadence, 5-minute recovery, and schedule update read-back.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.

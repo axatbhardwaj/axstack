@@ -16,7 +16,7 @@ const reviewInversions = {
   'driver retains sole ownership and record': 'The driver hands off its role as single owner and sole run-record writer.',
   'cards and hold stay in driver thread': 'Move merge-card replies and `hold` out of the driver thread.',
   'next PR event re-evaluates cadence': 'On the next event on a watched PR, ignore the fallback conditions and retain the wake cadence.',
-  'unsettled work or release restores five minutes': 'If launched work or the release step becomes unsettled, drop the 5-minute cadence.',
+  'normal cadence covers unsettled work and release': 'While launched work or the release step is unsettled, use the 5-minute cadence because no native wakes arrive.',
   'repairs stay with the author': "The driver takes rebases and review feedback from the PR's author and does the repair itself.",
 };
 
@@ -98,8 +98,8 @@ for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
     [/\b60 minutes\b/i, '5 minutes'], /no unsettled (?:launched work|worker)|no PR needing watch events/gi);
   rule(`work restart restores normal cadence (${path})`, path,
     [/work restarts|work resumes/i, /cadence/i],
-    'When work resumes, restore the normal 5-minute cadence.',
-    [/\b(?:normal 5-minute|5-minute normal)\b/i, 'slow 60-minute']);
+    'When work resumes, restore the normal 30-minute cadence.',
+    [/\b(?:normal 30-minute|30-minute normal)\b/i, 'slow 60-minute']);
   rule(`native PR watches stay (${path})`, path, [/native PR watches/i],
     'Retain native PR watches.', [/\b(?:keep|retain)\b/i, 'remove']);
 }
@@ -107,24 +107,15 @@ rule('next PR event re-evaluates cadence', runtime,
   [/next event/i, /watched PR/i, /cadence/i, /fallback conditions/i, /same turn/i],
   'On the next event on a watched PR, re-evaluate the wake cadence against the fallback conditions in the same turn.',
   [/re-evaluate|reassess/i, 'ignore']);
-rule('unsettled work or release restores five minutes', runtime,
-  [/launched work or the release step/i, /unsettled/i, /cadence/i, /everyMs:300000/i,
-    /\b(?:restore|resume|return)\b[^.]*\b5-minute cadence\b|\b5-minute cadence (?:applies|resumes|returns)\b/i],
-  'While launched work or the release step is unsettled, the 5-minute cadence applies (everyMs:300000).',
-  [/5-minute/i, '60-minute']);
+rule('normal cadence covers unsettled work and release', runtime,
+  [/launched work or the release step is unsettled/i, /normal 30-minute cadence/i, /everyMs:1800000/i,
+    /deliver their own wakes/i, /\buse\b/i],
+  'Because launched writers, delegated tasks and native PR watches deliver their own wakes, use the normal 30-minute cadence (everyMs:1800000) even while launched work or the release step is unsettled.',
+  [/30-minute/i, '5-minute']);
 
 // Cadence eligibility and recovery are owned here; native-pr-watch covers the
 // dropped-watch wake's immediate recheck/rearm ordering at the tool boundary.
 for (const [name, concepts, rewording, inversions] of [
-  ['armed native watches permit only a settled 30-minute fallback',
-    [/only while/i, /every open watched PR/i, /\barmed native `?watch_pull_request`?/i,
-      /all launched work is settled/i, /release step is settled or inapplicable/i,
-      /bound chat-run schedule/i, /30-minute fallback/i, /everyMs:1800000/i, /\b(?:use|set)\b/i],
-    'Only while every open watched PR has an armed native watch_pull_request, all launched work is settled, and the release step is settled or inapplicable, set the bound chat-run schedule to a 30-minute fallback (everyMs:1800000).',
-    [[/only while/i, 'even unless'], [/every open watched PR/i, 'some open watched PRs'],
-      [/armed native/i, 'unarmed native'], [/all launched work is settled/i, 'all launched work is unsettled'],
-      [/release step is settled or inapplicable/i, 'release step is unsettled'],
-      [/30-minute/i, '5-minute'], [/everyMs:1800000/i, 'everyMs:300000'], [/\b(?:use|set)\b/i, 'avoid']]],
   ['unavailable, unarmed or failed native rearm restores five minutes',
     [/native `?watch_pull_request`?/i, /unavailable/i, /unarmed for any open member/i,
       /re-arming fails/i, /bound chat-run schedule/i, /5 minutes/i, /everyMs:300000/i, /restore|reset/i],

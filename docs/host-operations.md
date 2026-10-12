@@ -134,10 +134,9 @@ messages under the accepted fleet risk.
 
 ## Chat-run watch activation
 
-A bound T3 schedule resumes the driver thread on a 30-minute fallback while
-native PR watches are armed and work and release are settled.
-Unsettled work or release, unavailable or unarmed native watches for any open
-member, or failed re-arming restore five minutes. Human-only waits use 60 minutes
+A bound T3 schedule wakes the driver thread on a normal 30-minute cadence.
+Unavailable or unarmed native watches for any open member, failed re-arming,
+or a resumed question run restore five minutes. Human-only waits use 60 minutes
 under [Chat-run watch runtime](../skills/axstack-watch/references/watch-runtime.md#chat-run-watch).
 A T3 "stopped watching" notice triggers a PR re-check and native re-arm in that same turn.
 The run record holds the schedule ID and driver thread.
