@@ -18,10 +18,11 @@ for (const legacy of [null, 'claude-only']) {
       roles: selected.roles.map((role) => ({ ...role, provider: 'claude', model: 'legacy-model' })),
     }));
     const skillsDir = join(home, 'installed');
-    const args = ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir,
+    const args = ['install', '--bundle', bundle, '--skills-dir', skillsDir,
       '--tools-dir', join(home, 'tools'), '--yes'];
     const options = { env: { HOME: home } };
-    runCli(CLI, args, options);
+    runCli(CLI, [...args, '--preset', 'claude-only'], options);
+    expect(JSON.parse(readFileSync(join(skillsDir, 'axstack/roles.json'), 'utf8')).preset).toBe('claude-only');
     const manifestPath = join(skillsDir, '.axstack-manifest.json');
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     expect(manifest.profiles.preset).toBeNull();
@@ -31,7 +32,7 @@ for (const legacy of [null, 'claude-only']) {
     }
     expect(JSON.parse(readFileSync(manifestPath, 'utf8')).profiles.preset).toBe(legacy);
     // Reinstall reads the injected manifest; legacy provenance cannot select the new roles.
-    runCli(CLI, args, options);
+    runCli(CLI, [...args, '--preset', 'mixed'], options);
     expect(JSON.parse(readFileSync(manifestPath, 'utf8')).profiles).toEqual(manifest.profiles);
     const snapshot = JSON.parse(readFileSync(join(skillsDir, 'axstack/roles.json'), 'utf8'));
     expect(snapshot.preset).toBe('mixed');
