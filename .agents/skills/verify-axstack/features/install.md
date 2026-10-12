@@ -2,6 +2,9 @@
 
 Entry points: `bin/axstack.js` (`--version`, `install`, `check`),
 `src/installer.js`, `src/capabilities.js`; harness: `tests/installer/helpers.js`.
+Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
+reinstalls after validated null/stale legacy metadata, checking explicit-preset
+role selection and inert provenance preservation.
 Prerequisites: Launch's offline shell and temporary HOME; explicit selected
 preset (default `mixed` below). Archify's upstream is deliberately an absent
 local path. No network clone, live HOME write or production authentication is allowed.
@@ -35,6 +38,11 @@ const selected = await Bun.file(process.env.REPO + "/profiles/presets/" + proces
 if (installed.version !== 1 || installed.preset !== process.env.PRESET ||
     JSON.stringify(installed.roles) !== JSON.stringify(selected.roles))
   throw Error("installed roles differ from selected preset");'
+ROUTING_STATUS=0
+bun run test tests/installer/installed-preset-routing.test.js \
+  > "$EVIDENCE/install-routing.log" 2>&1 || ROUTING_STATUS=$?
+printf '%s\n' "$ROUTING_STATUS" > "$EVIDENCE/install-routing-exit.txt"
+test "$ROUTING_STATUS" -eq 0
 ```
 
 Proof: version matches the package; install creates owned skills, preset and
