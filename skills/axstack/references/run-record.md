@@ -136,7 +136,8 @@ Record the reason for each driver-elected repair in `Decisions`.
 
 Record concise IDs, SHAs, URLs, status, timestamps, next actions, and evidence
 references. Private records include the checkout, evidence and worktree paths
-that the schema requires. Include no tokens, transcripts, full worker output,
+that the schema requires. Include no other machine-specific paths in private records.
+Include no tokens, transcripts, full worker output,
 credentials or private prompts. Publication of a sanitized summary needs separate
 authority.
 

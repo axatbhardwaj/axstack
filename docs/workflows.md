@@ -151,8 +151,7 @@ later installation changes without re-resolution.
 
 Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
-selected preset. The mixed cross-provider peer pair is Sol high followed by
-Opus medium. The mixed peer coordinator and review-lane binding
+selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
 is used in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.

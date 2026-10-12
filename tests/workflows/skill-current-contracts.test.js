@@ -115,3 +115,15 @@ rule('S7: writer dispatch keeps authors and repairs without the retired category
 test('S7: runtime has no remaining code-arena writer category', () => {
   expect(read(shared('t3-runtime'))).not.toMatch(/code-arena/i);
 });
+
+rule('UI verifier candidate row preserves the candidate-checkout boundary', shared('t3-runtime'),
+  [/UI verifier candidate checks/i, /axstack-ui-verifier/i, /delegate_task/i, /detached checkout/i, /candidate SHA/i, /pinned base/i],
+  'UI verifier candidate checks (axstack-ui-verifier) use delegate_task with a detached checkout of candidate SHA and pinned base.',
+  [[/candidate checks/i, 'checks'], [/detached checkout/i, 'driver workspace']],
+  (text) => text.split('\n').find((line) => line.startsWith('| Reviewers'))?.replaceAll(';', ',') ?? '');
+
+rule('S5: other machine-specific paths remain prohibited in private records', shared('run-record'),
+  [/other machine-specific paths/i, /private records/i],
+  'Include no other machine-specific paths in private records.',
+  [[/Include no/i, 'Include']], (text) => text,
+  (text) => prohibits(text, /Include no/i, /other machine-specific paths/i, /private records/i));

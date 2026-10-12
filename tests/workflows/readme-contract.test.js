@@ -96,9 +96,26 @@ test('README preserves preset and merge boundaries', () => {
 test('README links every target documentation page', () => {
   for (const page of ['getting-started', 'concepts', 'guides', 'workflows', 'installation', 'host-operations', 'skill-writing']) {
     const path = `docs/${page}.md`;
-    const linked = (text) => relativeLinks(text).some((href) => href.split('#')[0] === path);
+    const rows = (text) => text.match(/^## Documentation\n\n(\|[^\n]*\n?)+/m)?.[0] ?? '';
+    const linked = (text) => relativeLinks(rows(text)).some((href) => href.split('#')[0] === path);
     expect(existsSync(`${root}/${path}`), path).toBe(true);
     expect(linked(readme), path).toBe(true);
+    const row = readme.split('\n').find((line) => line.startsWith('| ') && line.includes(path));
+    expect(row, `${path}: documentation row`).toBeTruthy();
+    const purpose = {
+      'getting-started': /install.*check.*first.*task/i,
+      concepts: /threads.*roles.*presets.*evidence/i,
+      guides: /journeys.*features.*reviews.*releases/i,
+      workflows: /routing.*review.*merge/i,
+      installation: /commands.*harness.*upgrades.*troubleshooting/i,
+      'host-operations': /host.*provider.*remote.*automations/i,
+      'skill-writing': /skills.*contract tests/i,
+    }[page];
+    const cells = row.split('|');
+    expect(cells[1].toLowerCase()).toContain(`[${page.replaceAll('-', ' ')}]`);
+    expect(cells[2]).toMatch(purpose);
+    expect(purpose.test(''), `${path}: blank purpose`).toBe(false);
+    expect(linked(`${readme.replace(row, '')}\nOutside documentation.\n${row}`), `${path}: row outside table`).toBe(false);
     // Mutate the real README in memory, including repeated links to a page.
     expect(linked(readme.replaceAll(path, 'docs/missing.md')), `${path}: removed target`).toBe(false);
     expect(linked(readme.replaceAll(path, `${path}#section`)), `${path}: anchor variant`).toBe(true);
@@ -151,5 +168,13 @@ for (const path of ['README.md', 'docs/workflows.md', 'docs/getting-started.md',
     checkRule(text, (source) => requires(source, ...viewer),
       'Use archify only on an explicit viewer request.',
       [[/only/i, 'also without a request'], [/explicit viewer request/i, 'complex visuals']], viewer);
+  });
+}
+
+for (const path of ['docs/getting-started.md', 'docs/installation.md']) {
+  test(`${path} names the Linux-only host prerequisite`, () => {
+    checkRule(sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. '),
+      (source) => requires(source, /Linux/i, /only supported/i, /host/i),
+      'Linux is the only supported host OS.', [[/only supported/i, 'additional']]);
   });
 }

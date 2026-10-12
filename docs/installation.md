@@ -1,5 +1,7 @@
 # Installation
 
+Linux is the only supported host OS.
+
 Axstack's Bun CLI installs owned chat skills plus one selected role snapshot and
 checks host capabilities. T3 Code is the only supported active runtime. The CLI
 does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
