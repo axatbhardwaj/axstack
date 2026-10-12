@@ -631,12 +631,13 @@ test('dispatch output guidance separates inputs from tool payload and requires a
 
 test('run-watch wake cancels its own queued duplicate prompts', () => {
   const concepts = [/start of (?:each|every) run-watch wake/i, /\bcancel\b/i,
-    /\b(?:every|each|all) other queued cop(?:y|ies)\b/i, /own run-watch prompt/i, /t3_queue_list/, /t3_queue_cancel/,
+    /\b(?:every|each|all) other queued cop(?:y|ies)\b/i, /\b(?:its|the driver's) own run-watch prompt/i, /t3_queue_list/, /t3_queue_cancel/,
     /keep\w* (?:every|each|all) other queued messages?/i, /including user and worker messages/i];
   checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
     'At the start of every run-watch wake, use t3_queue_list and t3_queue_cancel to cancel all other queued copies of the driver\'s own run-watch prompt, keeping all other queued messages, including user and worker messages.',
     [[/start of (?:each|every) run-watch wake/i, 'end of each run-watch wake'],
-      [/\bcancel\b/i, 'run'], [/\b(?:every|each|all) other queued cop/i, 'one other queued cop'],
+      [/\bcancel\b/i, 'run'], [/\b(?:its|the driver's) own run-watch prompt/i, 'another driver\'s own run-watch prompt'],
+      [/\b(?:every|each|all) other queued cop/i, 'one other queued cop'],
       [/keep\w* (?:every|each|all) other queued messages?/i, 'cancelling every other queued message'],
       [/including user and worker messages/i, 'excluding user and worker messages']], concepts);
 });
