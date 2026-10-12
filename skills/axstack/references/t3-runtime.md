@@ -238,8 +238,10 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true`, `everyMs:1800000` is armed and
-its ID recorded. Each wake must reconcile all unsettled runs, including a
+`schedule_task` with `bindToCurrentThread:true` is armed at the default
+`everyMs:1800000` or for its 5-minute recovery cases in
+[Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
+with its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
 T3 queues a scheduled wake even while the driver is busy, so copies pile up.

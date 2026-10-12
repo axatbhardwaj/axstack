@@ -189,8 +189,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-run-watch-dedupe: +623 measured bytes for queued run-watch copy
   // cancellation, the delegated-task fallback and its question-run limit;
   // always-loaded unchanged.
-  // 20261012-held-queue: +115 measured bytes for stranded queue draining and
-  // the normal 30-minute run-watch cadence; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(387302);
+  // 20261012-held-queue: +258 measured bytes for stranded queue draining and
+  // the normal 30-minute run-watch cadence with 5-minute recovery cases;
+  // always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(387445);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

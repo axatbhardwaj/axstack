@@ -211,7 +211,7 @@ const rules = [
   ["failed branch salvage", [/\bfailed attempt/i, /\bbranch/i, /\bkept/i, /\buntil salvage/i]],
   ["unknown writer liveness", [/\bunknown/i, /\bliveness/i, /\b(?:holds?|held)\b/i, /\breplacement/i]],
   ["replacement reconcile", [/\breconcile/i, /\bold writer/i, /\bbefore/i, /\banother/i]],
-  ["idle writer watch", [/\bunsettled launched thread/i, /\bturn/i, /\bend only/i, /\bschedule_task/, /\bbindToCurrentThread:true/, /\beveryMs:1800000/, /\barmed/i, /\bID recorded/i]],
+  ["idle writer watch", [/\bunsettled launched thread/i, /\bturn/i, /\bend only/i, /\bschedule_task/, /\bbindToCurrentThread:true/, /\beveryMs:1800000/, /\bdefault/i, /\b5-minute recovery cases/i, /\barmed/i, /\bID recorded/i]],
   ["watch reconcile", [/\beach wake/i, /\breconcile all unsettled runs/i, /\bwriter/i, /\bdied/i, /\bwithout sending|silently/i]],
   ["watch failure", [/\bfailed runs/i, /\b(?:holds?|held)\b/i, /incomplete work/i]],
   ["watch deletion", [/\bnothing/i, /\bunsettled/i, /\bdelete_scheduled_task/, /\blist_scheduled_tasks/, /\bread.back/i, /\babsence/i]],
@@ -384,7 +384,7 @@ const rewordings = {
   "failed branch salvage": "Until salvage, the failed attempt's branch is kept.",
   "unknown writer liveness": "Replacement holds when there is unknown liveness.",
   "replacement reconcile": "Before another writer, reconcile the old writer.",
-  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true everyMs:1800000 armed and ID recorded.",
+  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true armed at the default everyMs:1800000 or for its 5-minute recovery cases, and ID recorded.",
   "watch reconcile": "Each wake must reconcile all unsettled runs, including a writer that died silently.",
   "watch failure": "Incomplete work is held when failed runs occur.",
   "watch deletion": "When nothing is unsettled, delete_scheduled_task and read back absence with list_scheduled_tasks.",
@@ -649,13 +649,17 @@ test('run-watch wake cancels its own queued duplicate prompts', () => {
 });
 
 test('run-watch wake acts on stranded worker receipts and PR updates, then cancels them', () => {
+  // One ordered concept binds read -> act -> cancel; reordering or dropping a step fails.
   const concepts = [/\b(?:each|every) stranded worker receipt or PR-watch update\b/i,
-    /\bact on it in (?:that|this|the same) wake\b/i, /\bthen cancel\b/i, /t3_queue_cancel/];
+    /\bread it with t3_queue_read\b[^.]*?\bact on it in (?:that|this|the same) wake\b[^.]*?\bthen cancel it with t3_queue_cancel\b/i,
+    /t3_queue_read/, /t3_queue_cancel/];
   checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
-    'For every stranded worker receipt or PR-watch update, the driver must act on it in the same wake, then cancel it with t3_queue_cancel.',
+    'For every stranded worker receipt or PR-watch update, the driver must first read it with t3_queue_read, act on it in the same wake, and then cancel it with t3_queue_cancel.',
     [[/\b(?:each|every) stranded worker receipt or PR-watch update\b/i, 'each stranded user message'],
       [/\bact on it in (?:that|this|the same) wake\b/i, 'act on it in a later wake'],
-      [/\bthen cancel\b/i, 'then resend']], concepts);
+      [/\bthen cancel it with t3_queue_cancel\b/i, 'then resend it with t3_queue_cancel'],
+      [/act on it in (?:that|this|the same) wake,? (?:and )?then cancel it with t3_queue_cancel/i,
+        'cancel it with t3_queue_cancel, then act on it in that wake']], concepts);
 });
 
 test('run-watch wake keeps queued user messages and reports them', () => {
