@@ -663,9 +663,10 @@ test('run-watch wake acts on stranded worker receipts and PR updates, then cance
 });
 
 test('run-watch wake keeps queued user messages and reports them', () => {
-  const concepts = [/\bkeep\w* (?:every|each|all) queued user messages?\b/i, /\breport\w*\b/i, /\breply\b/i];
+  const concepts = [/\bkeep\w* (?:every|each|all) queued user messages?\b/i, /\breport\w*\b/i, /\breply\b/i,
+    /\bpending local action\b/i, /\b(?:even )?on an otherwise unchanged wake\b/i];
   checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
-    'The driver must keep all queued user messages and report them in its reply.',
+    'A queued user message is a pending local action, so the driver must keep all queued user messages and report them in its reply even on an otherwise unchanged wake.',
     [[/\bkeep\w* (?:every|each|all) queued user messages?\b/i, 'cancel every queued user message'],
-      [/\breport\w*\b/i, 'hide']], concepts);
+      [/\breport\w*\b/i, 'hide'], [/\bpending local action\b/i, 'healthy unchanged observation']], concepts);
 });

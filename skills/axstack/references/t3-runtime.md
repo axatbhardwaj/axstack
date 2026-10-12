@@ -253,8 +253,9 @@ The driver must cancel every queued copy of its own run-watch prompt.
 One wake reconciles all those copies.
 For each stranded worker receipt or PR-watch update, the driver must read it
 with `t3_queue_read`, act on it in that wake, then cancel it with `t3_queue_cancel`.
-The driver must keep every queued user message and report it in its reply,
-because only the user resumes a held queue.
+A queued user message is a pending local action, so the driver must keep every
+queued user message and report it in its reply even on an otherwise unchanged
+wake, because only the user resumes a held queue.
 
 Once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain
