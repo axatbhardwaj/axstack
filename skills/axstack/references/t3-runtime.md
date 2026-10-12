@@ -243,10 +243,16 @@ its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
 T3 queues a scheduled wake even while the driver is busy, so copies pile up.
-At the start of each run-watch wake, the driver must cancel every other queued
-copy of its own run-watch prompt with `t3_queue_list` and `t3_queue_cancel`,
-keeping every other queued message, including user and worker messages.
+After a provider error, server restart or Stop, T3 holds the queue: held
+messages do not start, and later queued messages are held too.
+At the start of each run-watch wake, the driver lists every queued message with
+`t3_queue_list` and treats it as stranded.
+The driver must cancel every queued copy of its own run-watch prompt.
 One wake reconciles all those copies.
+For each stranded worker receipt or PR-watch update, the driver must read it
+with `t3_queue_read`, act on it in that wake, then cancel it with `t3_queue_cancel`.
+The driver must keep every queued user message and report it in its reply,
+because only the user resumes a held queue.
 
 Once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain

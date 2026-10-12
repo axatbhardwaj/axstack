@@ -629,15 +629,39 @@ test('dispatch output guidance separates inputs from tool payload and requires a
     'Large plan output needs --out.', [[/requires|needs/i, 'does not require']], [/--out/]);
 });
 
-test('run-watch wake cancels its own queued duplicate prompts', () => {
-  const concepts = [/start of (?:each|every) run-watch wake/i, /\bcancel\b/i,
-    /\b(?:every|each|all) other queued cop(?:y|ies)\b/i, /\b(?:its|the driver's) own run-watch prompt/i, /t3_queue_list/, /t3_queue_cancel/,
-    /keep\w* (?:every|each|all) other queued messages?/i, /including user and worker messages/i];
+test('run-watch wake treats every queued message as stranded', () => {
+  const concepts = [/start of (?:each|every) run-watch wake/i, /\b(?:every|each|all) queued messages?\b/i,
+    /\bstranded\b/i, /t3_queue_list/];
   checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
-    'At the start of every run-watch wake, use t3_queue_list and t3_queue_cancel to cancel all other queued copies of the driver\'s own run-watch prompt, keeping all other queued messages, including user and worker messages.',
+    'At the start of every run-watch wake, the driver lists every queued message with t3_queue_list and treats it as stranded.',
     [[/start of (?:each|every) run-watch wake/i, 'end of each run-watch wake'],
-      [/\bcancel\b/i, 'run'], [/\b(?:its|the driver's) own run-watch prompt/i, 'another driver\'s own run-watch prompt'],
-      [/\b(?:every|each|all) other queued cop/i, 'one other queued cop'],
-      [/keep\w* (?:every|each|all) other queued messages?/i, 'cancelling every other queued message'],
-      [/including user and worker messages/i, 'excluding user and worker messages']], concepts);
+      [/\b(?:every|each|all) queued messages?\b/i, 'one queued message'],
+      [/\bstranded\b/i, 'pending delivery']], concepts);
+});
+
+test('run-watch wake cancels its own queued duplicate prompts', () => {
+  const concepts = [/\bcancel\b/i, /\b(?:every|each|all) queued cop(?:y|ies)\b/i,
+    /\b(?:its|the driver's) own run-watch prompt/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'The driver must cancel all queued copies of the driver\'s own run-watch prompt.',
+    [[/\bcancel\b/i, 'run'], [/\b(?:its|the driver's) own run-watch prompt/i, 'another driver\'s own run-watch prompt'],
+      [/\b(?:every|each|all) queued cop/i, 'one queued cop']], concepts);
+});
+
+test('run-watch wake acts on stranded worker receipts and PR updates, then cancels them', () => {
+  const concepts = [/\b(?:each|every) stranded worker receipt or PR-watch update\b/i,
+    /\bact on it in (?:that|this|the same) wake\b/i, /\bthen cancel\b/i, /t3_queue_cancel/];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'For every stranded worker receipt or PR-watch update, the driver must act on it in the same wake, then cancel it with t3_queue_cancel.',
+    [[/\b(?:each|every) stranded worker receipt or PR-watch update\b/i, 'each stranded user message'],
+      [/\bact on it in (?:that|this|the same) wake\b/i, 'act on it in a later wake'],
+      [/\bthen cancel\b/i, 'then resend']], concepts);
+});
+
+test('run-watch wake keeps queued user messages and reports them', () => {
+  const concepts = [/\bkeep\w* (?:every|each|all) queued user messages?\b/i, /\breport\w*\b/i, /\breply\b/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'The driver must keep all queued user messages and report them in its reply.',
+    [[/\bkeep\w* (?:every|each|all) queued user messages?\b/i, 'cancel every queued user message'],
+      [/\breport\w*\b/i, 'hide']], concepts);
 });
