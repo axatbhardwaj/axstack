@@ -211,7 +211,7 @@ const rules = [
   ["failed branch salvage", [/\bfailed attempt/i, /\bbranch/i, /\bkept/i, /\buntil salvage/i]],
   ["unknown writer liveness", [/\bunknown/i, /\bliveness/i, /\b(?:holds?|held)\b/i, /\breplacement/i]],
   ["replacement reconcile", [/\breconcile/i, /\bold writer/i, /\bbefore/i, /\banother/i]],
-  ["idle writer watch", [/\bunsettled launched thread/i, /\bturn/i, /\bend only/i, /\bschedule_task/, /\bbindToCurrentThread:true/, /\beveryMs:300000/, /\barmed/i, /\bID recorded/i]],
+  ["idle writer watch", [/\bunsettled launched thread/i, /\bturn/i, /\bend only/i, /\bschedule_task/, /\bbindToCurrentThread:true/, /\beveryMs:1800000/, /\bdefault/i, /\b5-minute recovery cases/i, /\barmed/i, /\bID recorded/i]],
   ["watch reconcile", [/\beach wake/i, /\breconcile all unsettled runs/i, /\bwriter/i, /\bdied/i, /\bwithout sending|silently/i]],
   ["watch failure", [/\bfailed runs/i, /\b(?:holds?|held)\b/i, /incomplete work/i]],
   ["watch deletion", [/\bnothing/i, /\bunsettled/i, /\bdelete_scheduled_task/, /\blist_scheduled_tasks/, /\bread.back/i, /\babsence/i]],
@@ -384,7 +384,7 @@ const rewordings = {
   "failed branch salvage": "Until salvage, the failed attempt's branch is kept.",
   "unknown writer liveness": "Replacement holds when there is unknown liveness.",
   "replacement reconcile": "Before another writer, reconcile the old writer.",
-  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true everyMs:300000 armed and ID recorded.",
+  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true armed at the default everyMs:1800000 or for its 5-minute recovery cases, and ID recorded.",
   "watch reconcile": "Each wake must reconcile all unsettled runs, including a writer that died silently.",
   "watch failure": "Incomplete work is held when failed runs occur.",
   "watch deletion": "When nothing is unsettled, delete_scheduled_task and read back absence with list_scheduled_tasks.",
@@ -631,15 +631,44 @@ test('dispatch output guidance separates inputs from tool payload and requires a
     'Large plan output needs --out.', [[/requires|needs/i, 'does not require']], [/--out/]);
 });
 
-test('run-watch wake cancels its own queued duplicate prompts', () => {
-  const concepts = [/start of (?:each|every) run-watch wake/i, /\bcancel\b/i,
-    /\b(?:every|each|all) other queued cop(?:y|ies)\b/i, /\b(?:its|the driver's) own run-watch prompt/i, /t3_queue_list/, /t3_queue_cancel/,
-    /keep\w* (?:every|each|all) other queued messages?/i, /including user and worker messages/i];
+test('run-watch wake treats every queued message as stranded', () => {
+  const concepts = [/start of (?:each|every) run-watch wake/i, /\b(?:every|each|all) queued messages?\b/i,
+    /\bstranded\b/i, /t3_queue_list/];
   checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
-    'At the start of every run-watch wake, use t3_queue_list and t3_queue_cancel to cancel all other queued copies of the driver\'s own run-watch prompt, keeping all other queued messages, including user and worker messages.',
+    'At the start of every run-watch wake, the driver lists every queued message with t3_queue_list and treats it as stranded.',
     [[/start of (?:each|every) run-watch wake/i, 'end of each run-watch wake'],
-      [/\bcancel\b/i, 'run'], [/\b(?:its|the driver's) own run-watch prompt/i, 'another driver\'s own run-watch prompt'],
-      [/\b(?:every|each|all) other queued cop/i, 'one other queued cop'],
-      [/keep\w* (?:every|each|all) other queued messages?/i, 'cancelling every other queued message'],
-      [/including user and worker messages/i, 'excluding user and worker messages']], concepts);
+      [/\b(?:every|each|all) queued messages?\b/i, 'one queued message'],
+      [/\bstranded\b/i, 'pending delivery']], concepts);
+});
+
+test('run-watch wake cancels its own queued duplicate prompts', () => {
+  const concepts = [/\bcancel\b/i, /\b(?:every|each|all) queued cop(?:y|ies)\b/i,
+    /\b(?:its|the driver's) own run-watch prompt/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'The driver must cancel all queued copies of the driver\'s own run-watch prompt.',
+    [[/\bcancel\b/i, 'run'], [/\b(?:its|the driver's) own run-watch prompt/i, 'another driver\'s own run-watch prompt'],
+      [/\b(?:every|each|all) queued cop/i, 'one queued cop']], concepts);
+});
+
+test('run-watch wake acts on stranded worker receipts and PR updates, then cancels them', () => {
+  // One ordered concept binds read -> act -> cancel; reordering or dropping a step fails.
+  const concepts = [/\b(?:each|every) stranded worker receipt or PR-watch update\b/i,
+    /\bread it with t3_queue_read\b[^.]*?\bact on it in (?:that|this|the same) wake\b[^.]*?\bthen cancel it with t3_queue_cancel\b/i,
+    /t3_queue_read/, /t3_queue_cancel/];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'For every stranded worker receipt or PR-watch update, the driver must first read it with t3_queue_read, act on it in the same wake, and then cancel it with t3_queue_cancel.',
+    [[/\b(?:each|every) stranded worker receipt or PR-watch update\b/i, 'each stranded user message'],
+      [/\bact on it in (?:that|this|the same) wake\b/i, 'act on it in a later wake'],
+      [/\bthen cancel it with t3_queue_cancel\b/i, 'then resend it with t3_queue_cancel'],
+      [/act on it in (?:that|this|the same) wake,? (?:and )?then cancel it with t3_queue_cancel/i,
+        'cancel it with t3_queue_cancel, then act on it in that wake']], concepts);
+});
+
+test('run-watch wake keeps queued user messages and reports them', () => {
+  const concepts = [/\bkeep\w* (?:every|each|all) queued user messages?\b/i, /\breport\w*\b/i, /\breply\b/i,
+    /\bpending local action\b/i, /\b(?:even )?on an otherwise unchanged wake\b/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'A queued user message is a pending local action, so the driver must keep all queued user messages and report them in its reply even on an otherwise unchanged wake.',
+    [[/\bkeep\w* (?:every|each|all) queued user messages?\b/i, 'cancel every queued user message'],
+      [/\breport\w*\b/i, 'hide'], [/\bpending local action\b/i, 'healthy unchanged observation']], concepts);
 });
