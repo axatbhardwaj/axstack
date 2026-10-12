@@ -263,3 +263,21 @@ for (const [name, readSource, concepts, paraphrase, inversions] of [
       paraphrase, inversions, concepts);
   });
 }
+
+test('unsettled delegated tasks alone keep the 30-minute fallback eligible', () => {
+  const concepts = [/delegated tasks/i, /native completion wakes/i,
+    /unsettled delegated tasks alone/i, /30-minute fallback/i, /keep[^.]*eligible/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'Because delegated tasks deliver native completion wakes, unsettled delegated tasks alone keep the 30-minute fallback eligible.',
+    [[/\bkeep\b/i, 'block'], [/unsettled delegated tasks alone/i, 'settled delegated tasks alone'],
+      [/unsettled delegated tasks alone/i, 'unsettled launched threads']], concepts);
+});
+
+test('a resumed question child run keeps the 5-minute cadence', () => {
+  const concepts = [/resumed AXSTACK-QUESTION child run/i, /native completion wake/i,
+    /keeps? the 5-minute cadence/i, /everyMs:300000/, /until its result is accepted/i];
+  checkRule(sentences(runtime().replace(/`/g, '')).join('. '), (text) => requires(text, ...concepts),
+    'Until its result is accepted, a resumed AXSTACK-QUESTION child run lacking a native completion wake keeps the 5-minute cadence (everyMs:300000).',
+    [[/keeps? the 5-minute cadence/i, 'keeps the 30-minute cadence'], [/everyMs:300000/, 'everyMs:1800000'],
+      [/until its result is accepted/i, 'until its question is answered']], concepts);
+});
