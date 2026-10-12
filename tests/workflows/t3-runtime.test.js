@@ -628,3 +628,13 @@ test('dispatch output guidance separates inputs from tool payload and requires a
   checkRule(text, (s) => requires(s, /large plan output/i, /requires|needs/i, /--out/),
     'Large plan output needs --out.', [[/requires|needs/i, 'does not require']], [/--out/]);
 });
+
+test('run-watch wake cancels its own queued duplicate prompts', () => {
+  const concepts = [/start of (?:each|every) run-watch wake/i, /\bcancel\b/i,
+    /other queued cop(?:y|ies)/i, /own run-watch prompt/i, /t3_queue_list/, /t3_queue_cancel/,
+    /keep\w* other queued messages/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'At the start of every run-watch wake, use t3_queue_list and t3_queue_cancel to cancel other queued copies of the driver\'s own run-watch prompt, keeping other queued messages.',
+    [[/start of (?:each|every) run-watch wake/i, 'end of each run-watch wake'],
+      [/\bcancel\b/i, 'run'], [/keeping other queued messages/i, 'cancelling other queued messages']], concepts);
+});

@@ -186,6 +186,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261011-backlog-completion B1: +2830 measured aggregate bytes for
   // current-run settlement, guarded cancellation, durable decisions and merge
   // evidence discipline; always-loaded unchanged. Exact ceiling, no headroom.
-  expect(total).toBeLessThanOrEqual(386564);
+  // 20261012-run-watch-dedupe: +421 measured bytes for queued run-watch copy
+  // cancellation and the delegated-task fallback; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(386985);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

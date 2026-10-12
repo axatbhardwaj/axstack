@@ -235,3 +235,11 @@ test('watch frontmatter and unchanged links keep their single-line form', () => 
   expect(text).toContain("repository, or peer scope. For standalone broad discovery of the user's own PRs (such as “my” or “our” PRs), run\n");
   expect(text).not.toMatch(/\[[^\]]*\n[^\]]*\]\(/);
 });
+
+test('unsettled delegated tasks alone keep the 30-minute fallback eligible', () => {
+  const concepts = [/delegated tasks/i, /native completion wakes/i,
+    /unsettled delegated tasks alone/i, /30-minute fallback/i, /keep[^.]*eligible/i];
+  checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts),
+    'Because delegated tasks deliver native completion wakes, unsettled delegated tasks alone keep the 30-minute fallback eligible.',
+    [[/\bkeep\b/i, 'block'], [/unsettled delegated tasks alone/i, 'unsettled launched threads']], concepts);
+});
