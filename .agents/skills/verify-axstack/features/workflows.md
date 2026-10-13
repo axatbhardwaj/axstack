@@ -46,7 +46,11 @@ as UNKNOWN and cancellation as a separate disposition.
 
 The single-server checks use fake `/proc` trees and injected kill/spawn seams:
 keeper selection, descendant snapshots and SIGKILL order, user/base-dir filters,
-hold/dry-run safety and notification stdin/failure. Unit checks prove the installed
+hold/dry-run safety and notification stdin/failure. They also verify process-local
+base-dir environments, older-only victims, unknown start-time holds, self/ancestor
+protection and continued cleanup/notification after a kill failure. Run the test
+file with TMPDIR both set and unset in a scratch HOME to cover CI's default.
+Unit checks prove the installed
 Bun path and one-minute cadence. They do not kill a live process or activate a timer.
 Confirm `bun "$SCRIPTS/single-server.js" --help` lists all four flags and
 `bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.

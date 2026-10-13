@@ -288,9 +288,18 @@ once; fresh contention reports locked.
 ## Single T3 server
 
 This opt-in timer checks once per minute for this user's `t3 serve` processes
-with the same base dir (default `$HOME/.t3`). It keeps the pid recorded in
-`<base>/userdata/server-runtime.json`. With zero or one server it does nothing;
-with duplicates but no valid readable keeper it holds and kills nothing.
+with the selected base dir (target default `$HOME/.t3`). Each server's base dir
+comes from its `--base-dir <dir>` or `--base-dir=<dir>` flag, then its own
+`T3CODE_HOME`, then its own `$HOME/.t3`, reading the latter values from that
+process's environment. An unreadable or missing environment without an explicit
+flag, or missing base-dir values, makes the whole run hold and kill nothing.
+It keeps the pid recorded in `<base>/userdata/server-runtime.json`.
+With zero or one known matching server it does nothing; with duplicates but no
+valid readable keeper it holds. Duplicate servers must have started strictly
+before the keeper, comparing field 22 (`starttime`) of `/proc/<pid>/stat`.
+An unknown start time or any duplicate started at or after the keeper holds
+the whole run, preserving a possible starting replacement. The script also
+holds if its own pid or an ancestor appears in the planned victim set.
 Otherwise it snapshots descendants before killing each duplicate server first,
 then its children with SIGKILL. The keeper and its descendants are protected.
 It starts no server, reads no database and interrupts no runs automatically.
@@ -304,7 +313,9 @@ bun ~/.agents/skills/axstack/scripts/single-server.js --dry-run
 `--base-dir <dir>` selects a different base dir; `--proc-root <dir>` supplies
 a process-tree fixture (default `/proc`). `--help` lists the flags. Decisions
 are `unchanged`, `hold`, `would-kill` or `killed`, with reason, keeper, matching
-server pids and killed pids (proposed victims in dry-run). Exit 0 includes holds;
+server pids and killed pids (proposed victims in dry-run). Non-ESRCH kill failures
+add their pids to `failed`; remaining kills continue, successful kills still
+notify if configured, and the command exits 1. Exit 0 includes holds;
 exit 1 reports invalid input, discovery, kill or notification failure.
 
 Under host-mutation authority, copy both assets and enable the timer:

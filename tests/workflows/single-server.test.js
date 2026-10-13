@@ -121,6 +121,7 @@ test('equals base-dir form matches a non-default target and ignores other bases'
   f.server(100, [`--base-dir=${target}`]); f.server(200, [`--base-dir=${target}`]);
   f.startTime(100, 20);
   f.server(300, [`--base-dir=${f.base}`]);
+  f.environ(300, { T3CODE_HOME: target });
   // A valid argv base remains sufficient when environ is unreadable.
   chmodSync(`${f.proc}/200/environ`, 0);
   const { code, decision } = await f.execute(['--base-dir', target]);
@@ -219,6 +220,41 @@ test('notification failure exits 1 after killing and keeps a single secret-free 
   expect(decision).toMatchObject({ action: 'killed', reason: 'notify-failed', killed: [200] });
   expect(f.killed).toEqual([[200, 'SIGKILL']]);
 });
+
+test('a non-ESRCH kill failure is recorded, remaining victims are attempted and successful kills still notify', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  f.processEntry(210, ['privileged-child'], 200); f.processEntry(211, ['helper'], 210);
+  const attempts = [];
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
+    kill: (pid, signal) => {
+      attempts.push([pid, signal]);
+      if (pid === 210) throw Object.assign(new Error('secret-value'), { code: 'EPERM' });
+      f.killed.push([pid, signal]);
+    },
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'killed', reason: 'kill-failed', killed: [200, 211, 300], failed: [210] });
+  expect(attempts).toEqual([200, 210, 211, 300].map((pid) => [pid, 'SIGKILL']));
+  expect(f.spawned).toHaveLength(1);
+  const message = await new Response(f.spawned[0].options.stdin).text();
+  expect(message).toContain('killed pids 200, 211, 300');
+  expect(JSON.stringify(decision)).not.toContain('secret-value');
+});
+
+for (const member of ['self', 'ancestor']) {
+  test(`a victim tree containing the script ${member} holds without killing or notifying`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    // Ancestor coverage omits self from the snapshot, so a self-only guard cannot pass.
+    f.processEntry(member === 'self' ? process.pid : process.ppid, ['bun'], 200);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'own-process-tree', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  });
+}
 
 test('invalid flags exit 1 without killing or exposing input', async () => {
   for (const args of [['--unknown-secret'], ['--base-dir'], ['--proc-root', '/absent-secret']]) {

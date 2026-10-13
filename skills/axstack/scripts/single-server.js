@@ -74,8 +74,7 @@ export async function run(args = [], {
   let failure = 'invalid-input';
   let code = 0;
   try {
-    const defaultBase = `${env.HOME}/.t3`;
-    let baseDir = defaultBase;
+    let baseDir = `${env.HOME}/.t3`;
     let procRoot = '/proc';
     let dryRun = false;
     const seen = new Set();
@@ -117,17 +116,32 @@ export async function run(args = [], {
         .map((pid) => [pid, ...descendants(pid, processes)]);
       const roots = trees.filter(([pid]) => !trees.some((tree) => tree[0] !== pid && tree.includes(pid)));
       const victims = [...new Set(roots.flat())].filter((pid) => !protectedPids.has(pid));
+      const ancestors = new Set([process.pid]);
+      let parent = processes.get(process.pid) ?? process.ppid;
+      while (parent && !ancestors.has(parent)) {
+        ancestors.add(parent);
+        parent = processes.get(parent);
+      }
       decision.reason = 'duplicate-servers';
-      if (dryRun) decision = { ...decision, action: 'would-kill', killed: victims };
+      if (victims.some((pid) => ancestors.has(pid))) decision.reason = 'own-process-tree';
+      else if (dryRun) decision = { ...decision, action: 'would-kill', killed: victims };
       else {
         failure = 'kill-failed';
         for (const pid of victims) {
           try { kill(pid, 'SIGKILL'); }
-          catch (error) { if (error.code === 'ESRCH') continue; throw error; }
+          catch (error) {
+            if (error.code !== 'ESRCH') {
+              decision.failed ??= [];
+              decision.failed.push(pid);
+              code = 1;
+            }
+            continue;
+          }
           decision.action = 'killed';
           decision.killed.push(pid);
         }
-        if (!decision.killed.length) decision = { ...decision, action: 'unchanged', reason: 'no-victims' };
+        if (decision.failed?.length) decision.reason = 'kill-failed';
+        else if (!decision.killed.length) decision = { ...decision, action: 'unchanged', reason: 'no-victims' };
         if (decision.killed.length && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
           failure = 'notify-failed';
           const message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ')}. `
