@@ -15,9 +15,14 @@
   Let the installer generate the installed `skills/axstack/roles.json` snapshot.
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
-  Exception: allow one opt-in systemd user timer `axstack-default-sync` running
-  a stateless script that rewrites only T3 `defaultModelSelection`.
-  The timer has no workflow state. The script launches no agent.
+  Exception: allow exactly two opt-in systemd user timers, `axstack-default-sync`
+  and `axstack-single-server`.
+  The `axstack-default-sync` timer runs a stateless script that rewrites only T3
+  `defaultModelSelection`.
+  The `axstack-single-server` timer runs a stateless script that only SIGKILLs
+  duplicate `t3 serve` processes for one base dir and their children, keeping
+  the server recorded in `server-runtime.json`.
+  Both timers have no workflow state. Both scripts launch no agent.
 - Use ordinary PR chains under [PR chains](skills/axstack/references/pr-chain.md);
   preexisting native stacks retain `gh stack`. Workers do not push, submit, merge, publish,
   or release. For own PRs, automatic merge is the default under the

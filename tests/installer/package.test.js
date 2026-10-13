@@ -215,6 +215,9 @@ test('tarball members match the full source tree with no silent omissions', () =
   const expected = expectedMembers(ROOT);
   expect([...expected].filter((m) => !listing.includes(m))).toEqual([]);
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
+  for (const asset of ['scripts/single-server.js', 'systemd/axstack-single-server.service', 'systemd/axstack-single-server.timer']) {
+    expect(listing).toContain(`package/skills/axstack/${asset}`);
+  }
 });
 
 test('package ships every public doc and excludes historical baselines', () => {
@@ -301,7 +304,7 @@ test('published manifest identity matches the repository it is published from', 
 
 test('CLI reports the release version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
-  expect(result.out.trim()).toBe('axstack 0.35.0');
+  expect(result.out.trim()).toBe('axstack 0.36.1');
 });
 
 test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {

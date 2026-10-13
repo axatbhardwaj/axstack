@@ -1,0 +1,266 @@
+import { afterEach, expect, test } from 'bun:test';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { run } from '../../skills/axstack/scripts/single-server.js';
+
+const scratch = [];
+afterEach(() => { for (const path of scratch.splice(0)) rmSync(path, { recursive: true }); });
+
+function fixture() {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/single-server-`);
+  chmodSync(root, 0o700);
+  scratch.push(root);
+  const base = `${root}/home/.t3`;
+  const proc = `${root}/proc`;
+  mkdirSync(`${base}/userdata`, { recursive: true });
+  mkdirSync(proc);
+  const environ = (pid, values) => writeFileSync(`${proc}/${pid}/environ`,
+    Object.entries(values).map(([key, value]) => `${key}=${value}\0`).join(''));
+  const startTime = (pid, ticks) => writeFileSync(`${proc}/${pid}/stat`,
+    `${pid} (t3 (worker) server) S 1 ${'0 '.repeat(17)}${ticks}\n`);
+  const processEntry = (pid, argv, ppid = 1, uid = process.getuid()) => {
+    mkdirSync(`${proc}/${pid}`);
+    writeFileSync(`${proc}/${pid}/cmdline`, `${argv.join('\0')}\0`);
+    writeFileSync(`${proc}/${pid}/status`, `Name:\tt3\nPPid:\t${ppid}\nUid:\t${uid}\t${uid}\t${uid}\t${uid}\n`);
+    environ(pid, { HOME: `${root}/home` });
+    startTime(pid, 10);
+  };
+  const server = (pid, extra = [], ppid = 1) => processEntry(pid, ['/runtime/v1/t3', 'serve', ...extra], ppid);
+  const keeper = (pid) => {
+    writeFileSync(`${base}/userdata/server-runtime.json`, JSON.stringify({ version: 1, pid }));
+    startTime(pid, 20);
+  };
+  const killed = [];
+  const spawned = [];
+  const lines = [];
+  const seams = {
+    env: { HOME: `${root}/home` }, output: (line) => lines.push(line), hostname: () => 'fixture-host',
+    kill: (pid, signal) => killed.push([pid, signal]),
+    spawn: (argv, options) => { spawned.push({ argv, options }); return { exited: Promise.resolve(0) }; },
+  };
+  const execute = async (args = [], overrides = {}) => {
+    const code = await run(['--proc-root', proc, ...args], { ...seams, ...overrides });
+    expect(lines).toHaveLength(1);
+    return { code, decision: JSON.parse(lines[0]) };
+  };
+  return { root, base, proc, environ, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
+}
+
+test('zero or one matching server is unchanged and never notifies', async () => {
+  for (const count of [0, 1]) {
+    const f = fixture();
+    if (count) f.server(100);
+    const { code, decision } = await f.execute([], { env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' } });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'unchanged', servers: count ? [100] : [], killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toEqual([]);
+  }
+});
+
+test('runtime pid wins; capture descendants before killing each server first', async () => {
+  const f = fixture();
+  f.server(100); f.server(200); f.server(300);
+  f.processEntry(210, ['codex'], 200); f.processEntry(211, ['helper'], 210);
+  f.processEntry(310, ['claude'], 300); f.processEntry(110, ['codex'], 100);
+  f.keeper(100);
+  const { code, decision } = await f.execute([], { kill: (pid, signal) => {
+    f.killed.push([pid, signal]);
+    // Simulate immediate reparenting after SIGKILL: ancestry must already be saved.
+    if (pid === 200 || pid === 300) for (const child of [210, 211, 310]) {
+      writeFileSync(`${f.proc}/${child}/status`, `PPid:\t1\nUid:\t${process.getuid()}\n`);
+    }
+  } });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', keeper: 100, servers: [100, 200, 300], killed: [200, 210, 211, 300, 310] });
+  expect(f.killed).toEqual([200, 210, 211, 300, 310].map((pid) => [pid, 'SIGKILL']));
+});
+
+test('discovery filters user, argv identity and base dir; supports both base-dir forms', async () => {
+  const f = fixture();
+  f.server(100, ['--base-dir', f.base]); f.server(200, [`--base-dir=${f.base}`]);
+  f.server(300, ['--base-dir', `${f.root}/other`]);
+  f.processEntry(400, ['node', 'serve']); f.processEntry(500, ['t3', 'pair']);
+  f.processEntry(600, ['t3', 'serve'], 1, process.getuid() + 1);
+  f.keeper(100);
+  const { decision } = await f.execute(['--base-dir', f.base]);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('server base dirs use argv, then T3CODE_HOME, then that process HOME', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.server(400, ['--base-dir', f.base]);
+  f.environ(100, { T3CODE_HOME: f.base, HOME: `${f.root}/other-home` });
+  f.environ(200, { T3CODE_HOME: `${f.root}/other`, HOME: `${f.root}/home` });
+  f.environ(300, { HOME: `${f.root}/other-home` });
+  f.environ(400, { T3CODE_HOME: `${f.root}/other`, HOME: `${f.root}/other-home` });
+  f.keeper(100);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 400], killed: [400] });
+  expect(f.killed).toEqual([[400, 'SIGKILL']]);
+});
+
+for (const state of ['missing', 'unreadable', 'no-home']) {
+  test(`unknown candidate base dir holds when environ is ${state}`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+    if (state === 'missing') rmSync(`${f.proc}/300/environ`);
+    else if (state === 'unreadable') chmodSync(`${f.proc}/300/environ`, 0);
+    else f.environ(300, { UNRELATED: 'secret-value' });
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-base-dir', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+    expect(JSON.stringify(decision)).not.toContain('secret-value');
+  });
+}
+
+test('equals base-dir form matches a non-default target and ignores other bases', async () => {
+  const f = fixture(); const target = `${f.root}/target`;
+  mkdirSync(`${target}/userdata`, { recursive: true });
+  writeFileSync(`${target}/userdata/server-runtime.json`, JSON.stringify({ pid: 100 }));
+  f.server(100, [`--base-dir=${target}`]); f.server(200, [`--base-dir=${target}`]);
+  f.startTime(100, 20);
+  f.server(300, [`--base-dir=${f.base}`]);
+  f.environ(300, { T3CODE_HOME: target });
+  // A valid argv base remains sufficient when environ is unreadable.
+  chmodSync(`${f.proc}/200/environ`, 0);
+  const { code, decision } = await f.execute(['--base-dir', target]);
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('only duplicates strictly older than the keeper are killed; stat comm may contain parentheses and spaces', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  f.startTime(100, '9007199254740993'); f.startTime(200, '9007199254740992');
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+for (const started of [20, 30]) {
+  test(`a duplicate started at ${started} versus keeper 20 holds the whole run`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+    f.startTime(300, started);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'possible-replacement', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  });
+}
+
+for (const state of ['missing', 'unreadable', 'malformed']) {
+  test(`unknown server start time holds when stat is ${state}`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    if (state === 'missing') rmSync(`${f.proc}/200/stat`);
+    else if (state === 'unreadable') chmodSync(`${f.proc}/100/stat`, 0);
+    else writeFileSync(`${f.proc}/200/stat`, '200 (t3 serve) S 1\n');
+    const { code, decision } = await f.execute(['--dry-run']);
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-start-time', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  });
+}
+
+test('duplicate servers hold without a valid readable runtime keeper', async () => {
+  for (const runtime of [null, 'broken json', JSON.stringify({ pid: 999 }), JSON.stringify({ pid: '100' })]) {
+    const f = fixture(); f.server(100); f.server(200);
+    if (runtime !== null) writeFileSync(`${f.base}/userdata/server-runtime.json`, runtime);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', keeper: null, servers: [100, 200], killed: [] });
+    expect(f.killed).toEqual([]);
+  }
+});
+
+test('dry-run reports victims but never kills or notifies', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.processEntry(210, ['codex'], 200); f.keeper(100);
+  const { code, decision } = await f.execute(['--dry-run'], { env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' } });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'would-kill', keeper: 100, killed: [200, 210] });
+  expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+});
+
+test('keeper and its descendants are protected even beneath a duplicate server', async () => {
+  const f = fixture(); f.server(200); f.server(100, [], 200); f.processEntry(110, ['codex'], 100); f.keeper(100);
+  const { decision } = await f.execute();
+  expect(decision.killed).toEqual([200]);
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('nested duplicates are killed parent-first even when the child server has the lower pid', async () => {
+  const f = fixture(); f.server(300); f.server(200); f.server(100, [], 200);
+  f.processEntry(110, ['codex'], 100); f.keeper(300);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision.killed).toEqual([200, 100, 110]);
+  expect(f.killed).toEqual([200, 100, 110].map((pid) => [pid, 'SIGKILL']));
+});
+
+test('kill notification uses sh -c with host, keeper, victims and recovery note on stdin', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  const { code, decision } = await f.execute([], { env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' } });
+  expect(code).toBe(0); expect(decision.action).toBe('killed'); expect(f.spawned).toHaveLength(1);
+  expect(f.spawned[0].argv).toEqual(['sh', '-c', 'notify secret-value']);
+  const message = await new Response(f.spawned[0].options.stdin).text();
+  expect(message).toMatch(/fixture-host.*kept.*100.*killed.*200/s);
+  expect(message).toMatch(/runs.*running.*t3_thread_interrupt/is);
+  expect(f.spawned[0].options).toMatchObject({ stdout: 'ignore', stderr: 'ignore' });
+  expect(JSON.stringify(decision)).not.toContain('secret-value');
+});
+
+test('notification failure exits 1 after killing and keeps a single secret-free decision', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
+    spawn: () => ({ exited: Promise.resolve(5) }),
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'killed', reason: 'notify-failed', killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('a non-ESRCH kill failure is recorded, remaining victims are attempted and successful kills still notify', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  f.processEntry(210, ['privileged-child'], 200); f.processEntry(211, ['helper'], 210);
+  const attempts = [];
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
+    kill: (pid, signal) => {
+      attempts.push([pid, signal]);
+      if (pid === 210) throw Object.assign(new Error('secret-value'), { code: 'EPERM' });
+      f.killed.push([pid, signal]);
+    },
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'killed', reason: 'kill-failed', killed: [200, 211, 300], failed: [210] });
+  expect(attempts).toEqual([200, 210, 211, 300].map((pid) => [pid, 'SIGKILL']));
+  expect(f.spawned).toHaveLength(1);
+  const message = await new Response(f.spawned[0].options.stdin).text();
+  expect(message).toContain('killed pids 200, 211, 300');
+  expect(JSON.stringify(decision)).not.toContain('secret-value');
+});
+
+for (const member of ['self', 'ancestor']) {
+  test(`a victim tree containing the script ${member} holds without killing or notifying`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    // Ancestor coverage omits self from the snapshot, so a self-only guard cannot pass.
+    f.processEntry(member === 'self' ? process.pid : process.ppid, ['bun'], 200);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'own-process-tree', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  });
+}
+
+test('invalid flags exit 1 without killing or exposing input', async () => {
+  for (const args of [['--unknown-secret'], ['--base-dir'], ['--proc-root', '/absent-secret']]) {
+    const f = fixture();
+    const { code, decision } = await f.execute(args);
+    expect(code).toBe(1); expect(decision.action).toBe('hold');
+    expect(f.killed).toEqual([]); expect(JSON.stringify(decision)).not.toContain('secret');
+  }
+});
