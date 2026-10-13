@@ -22,9 +22,11 @@
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
-- `axstack-explainer` authors archify only on an explicit viewer request.
-- `axstack-explainer-review` reviews consequential or complex claims, archify
-  output, or on request; `codex/sol` medium in mixed.
+- `axstack-explainer` authors every visual Explain delivers, including pages,
+  chat Mermaid and anatomy figures; mixed pins Sonnet 5.5 high exactly.
+- `axstack-explainer-review` always reviews every visual; `codex/sol` medium in mixed.
+  Consequential or complex driver-written prose keeps its review rule; every
+  whiteboard defense is consequential, in chat too.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for every PR
   review round and bounded research, spec, ticket, receipt, and release claims.
 - `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)

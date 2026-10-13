@@ -54,7 +54,6 @@ cd "$REPO"
 REV=$(git rev-parse HEAD)
 SCRIPTS="$REPO/skills/axstack/scripts"
 export REV SCRIPTS
-export AXSTACK_ARCHIFY_REPO="$TMPDIR/absent-archify"
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 printf '%s\n' "$REV" > "$EVIDENCE/revision.txt"
 printf '%s\n' "shell PID=$$; no background services" > "$EVIDENCE/processes.txt"
@@ -92,6 +91,7 @@ Execute all steps in each selected feature file, including its assertions:
 3. [Create run records and inspect repositories](features/reports.md).
 4. [Inspect the package payload](features/package.md).
 5. [Inspect workflow instruction contracts](features/workflows.md).
+6. [Inspect Anatomy sources and theme](features/anatomy.md).
 
 The full suite needs Node for its existing npm staging probe, `ip` for
 loopback fixtures, and an already cached **npm@12.0.2** package including its

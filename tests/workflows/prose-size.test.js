@@ -1,11 +1,12 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
+import { isVendored } from './vendored-paths.js';
 
 const root = `${import.meta.dir}/../..`;
 const skills = `${root}/skills`;
 
 test('packaged guidance stays within the aggregate and always-loaded budgets', () => {
-  const markdown = readdirSync(skills, { recursive: true }).filter((path) => path.endsWith('.md'));
+  const markdown = readdirSync(skills, { recursive: true }).filter((path) => path.endsWith('.md') && !isVendored(`skills/${path}`));
   const bytes = (path) => readFileSync(`${skills}/${path}`).byteLength;
   const total = markdown.reduce((sum, path) => sum + bytes(path), 0);
   const alwaysLoaded = ['contracts.md', 'lifecycle.md', 'routing.md']
@@ -193,9 +194,23 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // the normal 30-minute run-watch cadence with 5-minute recovery cases, and
   // stranded user messages as pending local action;
   // always-loaded unchanged.
+  // 20261012-explain-anatomy r10: upstream anatomy Markdown is reference-only;
+  // exclude the shared vendored paths while owned front-door guidance still counts.
+  // Issue #437 r10: +4246 measured owned bytes for whiteboard defense,
+  // every-visual review, delivery holds and Anatomy front door; exact total 391779.
+  // 20261012-explain-anatomy repair1: merge Scout #440 at 6cf5392; +264
+  // measured owned bytes for Scout role guidance; exact total 392043, no headroom.
+  // 20261012-explain-anatomy repair1 review: +196 measured owned bytes
+  // for self-contained whiteboard-defense terminology; exact total 392239.
   // 20261012-scout-skill-align C2: +4311 bytes to the aggregate ceiling;
   // always-loaded unchanged. Keep the measured aggregate ceiling exact.
+  // 20261012-explain-anatomy base update: merge Scout #441 at 6591eb7;
+  // +4330 measured owned bytes for the new Scout skill; exact total 396569.
+  // Preserve both histories above; always-loaded unchanged, no headroom.
   // C3: +80 bytes for Research and Improve routing; always-loaded unchanged.
+  // 20261012-explain-anatomy base update: merge Scout #442 at c7ec79f;
+  // +80 measured owned bytes for Research/Improve routing; exact total 396649.
+  // Preserve both histories; always-loaded unchanged, no headroom.
   // 20261013-verify-wiring A1: ceiling raised by 1436 bytes; A1 content
   // adds 1719 measured bytes; always-loaded unchanged.
   // 20261013-verify-wiring A1 repair1: ceiling raised by 344 bytes for no-skill
@@ -206,6 +221,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // aggregate 393907 bytes; preserve both histories, always-loaded unchanged.
   // 20261013-verify-wiring A1 repair3: measured PR growth +2063 bytes
   // (393987 merged - 391924 main at c7ec79f); exact ceiling, always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(393987);
+  // 20261012-explain-anatomy base update: merge verify wiring #439 at 9af30f4;
+  // +2063 measured owned bytes; exact total 398712, always-loaded unchanged.
+  // Preserve both histories above; no aggregate headroom.
+  expect(total).toBeLessThanOrEqual(398712);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

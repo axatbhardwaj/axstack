@@ -1,0 +1,3 @@
+[test]
+# Pinned upstream sources remain outside repository test discovery.
+pathIgnorePatterns = ["skills/axstack-anatomy/kit/**", "skills/axstack-anatomy/scripts/**", "skills/axstack-anatomy/references/**", "skills/axstack-anatomy/examples/**", "skills/axstack-anatomy/ANATOMY.md", "skills/axstack-anatomy/README.md", "skills/axstack-anatomy/CHANGELOG.md", "skills/axstack-anatomy/LICENSE"]

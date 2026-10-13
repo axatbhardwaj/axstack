@@ -167,17 +167,17 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
 
 test('UI verification routes rendered checks to the read-only verifier', () => {
   const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
-  // The shared routing boundary must retain delegation outside all three exceptions.
+  // The shared routing boundary must retain delegation outside both exceptions.
   const concepts = [/every Playwright, browser, or rendered-UI check/i,
-    /outside.*three named (?:author|browser) exceptions/i,
+    /outside.*two named (?:author|browser) exceptions/i,
     /async.*delegate_task/i, /axstack-ui-verifier/i];
   for (const terminology of ['author', 'browser']) {
     const source = sentences(rule).join('. ')
-      .replace(/three named (?:author|browser) exceptions/gi, `three named ${terminology} exceptions`);
+      .replace(/two named (?:author|browser) exceptions/gi, `two named ${terminology} exceptions`);
     checkRule(source, (text) => requires(text, ...concepts),
-      `Outside the three named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.`,
-      [[/outside/i, 'including'], [/three named (?:author|browser) exceptions/i, 'all browser checks'],
-        [/three/i, 'four'], [/named/i, 'unnamed'], [/async/i, 'synchronous'],
+      `Outside the two named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.`,
+      [[/outside/i, 'including'], [/two named (?:author|browser) exceptions/i, 'all browser checks'],
+        [/two/i, 'three'], [/named/i, 'unnamed'], [/async/i, 'synchronous'],
         [/delegate_task/i, 't3_thread_launch'], [/axstack-ui-verifier/i, 'driver']], concepts);
   }
   expect(rule).toMatch(/read-only/i);
@@ -486,8 +486,8 @@ const migrationRules = [
   ]),
   ['skills/axstack/references/routing.md', [/resolv\w*/i, /Codex/i, /Claude/i, /class/i, /saved T3 capabilities/i, /--provider/i, /--capabilities/i],
     'From saved T3 capabilities, resolve Codex and Claude classes with --provider and --capabilities.'],
-  ['skills/axstack/references/ui-verification.md', [/verifier/i, /use\w*/i, /T3/i, /preview_\*/i],
-    'The verifier uses preview_* from T3.'],
+  ['skills/axstack/references/ui-verification.md', [/use/i, /configured verifier browser/i, /user.*browser.tool policy/i],
+    'Use the configured verifier browser and honor the user browser-tool policy.'],
   ['skills/axstack/references/run-record.md', [/record/i, /driver threadId/i, /projectId/i, /scheduledTaskIds/i],
     'Record projectId, scheduledTaskIds and driver threadId for the run.'],
 ];
@@ -541,12 +541,10 @@ test('presets: mixed owner independently uses Sol high with full access', () => 
 // Runtime snapshots copy these notes from the presets. The role matrix checks
 // cannot catch stale author/reviewer/verifier responsibilities in that prompt.
 const explanationRoles = [
-  ['axstack-explainer', [/authors? archify/i, /only/i, /explicit viewer request/i],
-    'The explainer authors archify only on an explicit viewer request.',
-    [[/only/i, 'also without a request'], [/authors? archify/i, 'authors every inline page']]],
-  ['axstack-explainer-review', [/\breviews?\b/i, /consequential or complex claims/i, /archify output/i, /on request/i],
-    'Review consequential or complex claims, archify output, or on request.',
-    [[/\breviews?\b/i, 'ignore'], [/consequential or complex claims/i, 'simple claims']]],
+  ['axstack-explainer', [/authors every visual Explain delivers/i],
+    'The explainer authors every visual Explain delivers.', [[/every/i, 'some']]],
+  ['axstack-explainer-review', [/always reviews every visual/i],
+    'The reviewer always reviews every visual.', [[/always/i, 'sometimes'], [/every/i, 'some']]],
   ['axstack-ui-verifier', [/owns|performs/i, /inline page/i, /interaction pass/i,
     /every interactive page/i, /exact bytes/i, /SHA-256/i],
     'The verifier performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256.',
@@ -564,3 +562,11 @@ for (const [id, concepts, rewording, inversions] of explanationRoles) {
     checkRule(roster, (text) => requires(text, new RegExp(id), ...concepts), `${id}: ${rewording}`, inversions, concepts);
   });
 }
+
+test('mixed visual author pins Sonnet 5.5 high and reviewer stays Sol', () => {
+  const roles = readJson('profiles/presets/mixed.json').roles;
+  expect(roles.find(({id}) => id === 'axstack-explainer')).toMatchObject({
+    provider: 'claude', modelClass: 'sonnet', model: 'claude-sonnet-5-5', thinkingOptionId: 'high',
+  });
+  expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'sol', thinkingOptionId:'medium'});
+});

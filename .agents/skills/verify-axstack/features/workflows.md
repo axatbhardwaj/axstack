@@ -3,7 +3,7 @@
 Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,relay-discovery,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
-`explain-diagram`, `diagram`, `ui-verification` and `presets` in `tests/workflows/`.
+`explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 
@@ -23,7 +23,8 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/readme-contract.test.js \
   tests/workflows/skill-current-contracts.test.js \
   tests/workflows/explain-diagram.test.js \
-  tests/workflows/diagram.test.js \
+  tests/workflows/explain-fidelity.test.js \
+  tests/workflows/explain-whiteboard.test.js \
   tests/workflows/ui-verification.test.js \
   tests/workflows/presets.test.js \
   tests/workflows/single-server.test.js \
@@ -56,3 +57,33 @@ Confirm `bun "$SCRIPTS/single-server.js" --help` lists all four flags and
 `bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.
 Only use dry-run for host inspection; live kills and notification delivery require
 separate host-mutation authority. Installation must leave timers disabled.
+
+## Explain delivery
+
+Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
+`delivery`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+After base-revision Launch and Doctor, the authored reviewer runs the declared
+workflow checks above plus the full Explain boundary below at the final head.
+
+```bash
+doctor > "$EVIDENCE/explain-doctor.log" 2>&1
+STATUS=0
+bun run test tests/workflows/explain-*.test.js \
+  tests/workflows/ui-verification.test.js tests/workflows/verify-wiring.test.js \
+  > "$EVIDENCE/explain.log" 2>&1 || STATUS=$?
+printf '%s\n' "$STATUS" > "$EVIDENCE/explain-exit.txt"
+test "$STATUS" -eq 0
+```
+
+Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
+700-word counting without card exemptions, exact-byte network scans, preview
+and interaction gates, bounded delivery holds, and ambiguous-render readback.
+For page behavior, delegate this feature path to `axstack-ui-verifier` with the
+reviewed artifact's SHA-256 and private evidence folder. It serves the exact
+bytes on its own isolated host-loopback instance and checks 728px dark/360px
+light, layout, theme, console/network, all interactive states and accessibility.
+Use [Anatomy](anatomy.md#browser-acceptance-handoff) for figure theme/compositing.
+Honor user browser-tool policy. The author performs no review browser drive;
+only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
+author logs and preview URLs alone are not. Mark uncovered behavior explicitly
+`changed-behavior: unproven`.

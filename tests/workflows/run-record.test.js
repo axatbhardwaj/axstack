@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { isVendored } from './vendored-paths.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const root = `${import.meta.dir}/../..`;
@@ -135,7 +136,9 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     ...filesBelow(`${root}/bin`),
   ];
   expect(runtimeFiles.filter((path) => /run-record|progress-ledger|progress\.md/i.test(path))).toEqual([]);
-  const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')).sort();
+  // Anatomy scripts are pinned drawing sources, outside the runtime helper inventory.
+  const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')
+    && !isVendored(path.slice(root.length + 1))).sort();
   expect(skillScripts).toEqual([
     `${root}/skills/axstack/scripts/account-usage.js`,
     `${root}/skills/axstack/scripts/archive-evidence.js`,

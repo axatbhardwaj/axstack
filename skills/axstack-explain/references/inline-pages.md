@@ -9,10 +9,11 @@ Use T3 theme variables and follow the live theme.
 Only an explicit user theme request overrides the page theme.
 Use `--background`, `--foreground`, `--muted-foreground`, `--ring`,
 `--font-sans`, and `--font-mono` for their named purposes.
-The dark default stays archify-only.
 
 Use fluid width, with zero outer horizontal padding.
 Never use an outer frame, banner, or viewport heights.
+Anatomy may retain its figure card as an inner panel with at least 16px padding
+and `var(--radius)`; its page wrapper still has zero gutters and no background.
 Let content set the page height. Use fixed chart heights.
 Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
 
@@ -44,7 +45,9 @@ Pages never use storage, cookies, modals, or popups.
 
 Keep page bytes, SHA-256, and attachmentId in run evidence.
 Scan the exact bytes of every page for remote `src`, `srcset`, and `href` on loaded resources.
-Scan for `@import`, `url()`, `fetch`, XHR, WebSocket, EventSource, and meta refresh.
+Scan for `@import`, CSS `url(` tokens at a word boundary with non-`#` targets, `fetch`, XHR, WebSocket, EventSource, and meta refresh.
+A word boundary before `url(` excludes identifiers such as `knurl(`; local `url(#id)` remains allowed.
+Trim CSS URL target whitespace and quotes before checking whether it starts with `#`.
 Reject scan matches except local `url(#id)` references such as SVG markers and gradients.
 
 Before publishing, run `html_preview` at 728px dark and 360px light.
@@ -63,13 +66,10 @@ Follow [UI verification](../../axstack/references/ui-verification.md) for that p
 ## Publish or fall back
 
 Publish one page per answer.
-Publish with `html_render` from exactly the checked bytes.
+Only the driver publishes with `html_render` from exactly the checked bytes.
 Fix a failed check and rerun on the new bytes.
 A byte change invalidates affected checks and review.
-If either tool cannot be found after one bounded discovery attempt, fall back
-to chat with Mermaid and state the reason.
-If a check, verifier, or required reviewer is unavailable or still fails, fall
-back to chat with Mermaid and state the reason.
+Follow [Delivery](delivery.md) for missing tools, seats, failed checks and repair holds.
 After an ambiguous `html_render` result, never retry.
 After an ambiguous `html_render` result, read `t3_thread_read`, keep the page
-if present, and otherwise fall back to chat.
+if present, and otherwise hold the page and follow Delivery.

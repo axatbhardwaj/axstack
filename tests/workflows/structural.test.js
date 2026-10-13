@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { isVendored } from './vendored-paths.js';
 import { publicDocPaths } from './public-docs.js';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
@@ -83,6 +84,7 @@ const STANDALONE_PHASES = [
 // Only this named pattern list is excluded from the active-reference scan.
 const RETIRED_REFERENCES = {
   runtime: /orca/i,
+  anatomyGeometry: /\bmotorCable(?:Bridge|Rim)\b/g,
   predecessor: /paseo/i,
   legacyConstant: /^export const LEGACY_ROUTING_PATTERN = [^\n]+;$/m,
   history: /^[ \t]*#{1,6}[ \t]+rollback\b|^[ \t]*rollback[ \t]*\r?\n[ \t]*[-=]+[ \t]*$|0\.20\.31|Orca|Historical[ \t-]+migration|Paseo[^.]*cutover|retired.skill migration/im,
@@ -108,6 +110,10 @@ function activeReferences(base) {
       return;
     }
     let text = readFileSync(absolute, 'utf8');
+    // Pinned anatomy geometry identifiers are unrelated to the retired runtime.
+    if (isVendored(path) && path === 'skills/axstack-anatomy/examples/ripple-tank/build.mjs') {
+      text = text.replace(RETIRED_REFERENCES.anatomyGeometry, 'motorHarness');
+    }
     if (path === 'src/instructions.js') text = text.replace(RETIRED_REFERENCES.legacyConstant, '');
     if (path === 'tests/installer/instructions.test.js') {
       text = text.split('\n').filter((line) => !RETIRED_REFERENCES.installerFixtures.includes(line.trim())).join('\n');
@@ -161,6 +167,12 @@ test('structural: reference guard covers content, filenames, and narrow exemptio
       expect(activeReferences(fixture), path).toEqual([`${path}: content`]);
       writeFileSync(join(fixture, path), original);
     }
+    const anatomyPath = 'skills/axstack-anatomy/examples/ripple-tank/build.mjs';
+    const geometry = readFileSync(join(root, anatomyPath), 'utf8');
+    put(anatomyPath, geometry);
+    expect(activeReferences(fixture)).toEqual([]);
+    put(anatomyPath, `${geometry}\nUse ${retired} for routing.`);
+    expect(activeReferences(fixture)).toEqual([`${anatomyPath}: content`]);
   } finally {
     rmSync(fixture, { recursive: true });
   }
@@ -264,7 +276,7 @@ test('structural: skills stay self-contained (no absolute paths or upstream deps
         // D3 permits this attribution link, not an upstream skill dependency.
         // Strip only that link on the diagram credit line; keep every other
         // byte in the guard, including any additional upstream reference.
-        let guarded = p === join(skillsDir, 'axstack-diagram', 'SKILL.md')
+        let guarded = p === join(skillsDir, 'axstack-explain', 'SKILL.md')
           ? text.replace(/^(Ideas: .*?)\[poteto\]\(https:\/\/github\.com\/poteto\/how\)(.*; guidance uses Axstack's own words\.)$/m, '$1$2')
           : text;
         // AC12 requires this pinned credit; preserve the upstream-dependency guard elsewhere.

@@ -19,7 +19,7 @@ for (const legacy of [null, 'claude-only']) {
     }));
     const skillsDir = join(home, 'installed');
     const args = ['install', '--bundle', bundle, '--skills-dir', skillsDir,
-      '--tools-dir', join(home, 'tools'), '--yes'];
+      '--yes'];
     const options = { env: { HOME: home } };
     runCli(CLI, [...args, '--preset', 'claude-only'], options);
     expect(JSON.parse(readFileSync(join(skillsDir, 'axstack/roles.json'), 'utf8')).preset).toBe('claude-only');

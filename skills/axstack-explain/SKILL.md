@@ -1,6 +1,6 @@
 ---
 name: axstack-explain
-description: When the user asks how, why, explain, or show, says they do not understand, a spec is being finalized, or you judge they need to understand something, use axstack-explain to show how it works and what exists, is missing, or remains unverified.
+description: When the user asks how, why, explain, or show, asks to diagram, visualize, draw or defend, requests a whiteboard defense, says they do not understand, a spec is being finalized, or you judge they need to understand something, use axstack-explain to show how it works and what exists, is missing, or remains unverified.
 ---
 
 # Explain
@@ -12,6 +12,7 @@ Explain a system, change, current behavior, intended behavior, or implementation
 gap from inspected evidence. This direct route needs no spec ceremony. Use
 project documentation as evidence where relevant. It supersedes `axstack-docs`; if a stale install
 exposes both skills, route the request here only.
+For a stale `axstack-diagram` install, route requests here only.
 
 Before acting, load [Standing contracts](../axstack/references/contracts.md),
 then follow its required lifecycle and audit pointers. Explanation work has no
@@ -51,9 +52,21 @@ immediately before an actual profile dispatch.
 
 ## 2. Choose proportional output
 
-Load [Diagram](../axstack-diagram/SKILL.md) for every diagram.
 Explain owns evidence gathering, claim labels, the 700-word cap, dispatch, and delivery.
-Diagram never calls explain.
+Choose the best visual for the concept: flowchart, sequence, state, architecture
+map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
+Follow [Fidelity](references/fidelity.md) for every visual.
+For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
+Dispatch every visual Explain delivers to `axstack-explainer` with a bounded
+evidence brief, including inline pages, chat Mermaid and anatomy figures.
+Plain-prose answers stay driver-written; other phases retain their own Mermaid
+owners, and README/docs diagram edits go through Implement under these rules.
+Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
+Use Mermaid for chat, GitHub, and docs.
+Include `accTitle` and `accDescr` in each Mermaid view.
+Never use theme init in Mermaid. Split large Mermaid diagrams into views.
+Use anatomy only on an explicit isometric, physical-object or anatomy request,
+through [Anatomy](../axstack-anatomy/SKILL.md).
 
 1. Keep the primary reader-facing explanation to a maximum of 700 words in
    chat, HTML, and every other requested format. Preserve in that primary view
@@ -67,18 +80,13 @@ Diagram never calls explain.
    maximum. If the draft is longer, compress repetition first and move only
    supporting detail to a separate linked ticket or appendix. Essential answers
    must not be hidden behind links, and evidence must not be silently discarded.
-   Only archify node detail cards are exempt from the 700-word cap.
-   Each card has at most 40 words and cites its source, as defined in
-   [Archify](../axstack-diagram/references/archify.md).
-   Count node labels, headings, captions, and all non-card text.
+   Count node labels, headings, captions, and all page text.
 2. Use chat only for an explicit chat request, an answer outside the description's conditions,
    or inline-page fallback.
    Use a compact diagram when useful.
-   For chat answers, never dispatch an agent when applying its Mermaid rules inline.
 3. For the conditions in the description, create an inline page by default.
    Honor an explicitly requested artifact format.
-   Use archify only on an explicit viewer request, through the configured
-   `axstack-explainer`. The reply adds only what the page omits.
+   The reply adds only what the page omits.
 4. Profile IDs are presets, not availability proof. Before dispatch, follow the
    launch sequence and preserve the configured model, mode, and effort. Report
    an unavailable route; never substitute a model.
@@ -86,16 +94,18 @@ Diagram never calls explain.
 ## 3. Verify and deliver
 
 1. For inline pages, follow [Inline pages](references/inline-pages.md).
-   For archify and every other explicitly requested HTML or visual artifact
+   For every explicitly requested HTML or visual artifact
    outside inline T3 pages, follow [Visual QA](references/visual-qa.md).
 2. Require independent `axstack-explainer-review` for consequential or complex
-   claims, archify output, or on request.
+   claims or on request.
+   The `axstack-explainer-review` always reviews every visual at its exact final
+   bytes before delivery.
    Consequential claims include gap or missing-claim reports, blast-radius
-   safety facts, and spec readbacks.
+   safety facts, spec readbacks, and every whiteboard-defense explanation in chat too.
    Bind it to the exact artifact identity.
    Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet
-   author high and reviewer high sessions are allowed for explanations as
+   author high and reviewer high sessions are allowed for explanations and every visual as
    session independence only. This exception never permits same-model code
    review or a cross-provider-independence claim.
 3. Report source, tests, rendered observations, independent review, and
@@ -103,6 +113,9 @@ Diagram never calls explain.
 4. For a public artifact, remove private paths, identifiers, prompts,
    credentials, messages, and internal records. Local creation does not grant
    authority to publish.
-5. Deliver the smallest useful explanation. Explanation causes no automatic
+5. Follow [Delivery](references/delivery.md) for fallback and repair holds.
+   Deliver the smallest useful explanation. Explanation causes no automatic
    design and no automatic implementation; route later change work separately
    only when the user requests it.
+
+Ideas: [archify](https://github.com/tt-a1i/archify), [diagram-design](https://github.com/cathrynlavery/diagram-design), [visual-explainer](https://github.com/nicobailon/visual-explainer), [Matt Pocock](https://github.com/mattpocock/skills), and [poteto](https://github.com/poteto/how); guidance uses Axstack's own words.

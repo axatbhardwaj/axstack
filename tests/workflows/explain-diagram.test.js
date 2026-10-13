@@ -6,7 +6,6 @@ const root = `${import.meta.dir}/../..`;
 const explain = 'skills/axstack-explain/SKILL.md';
 const qa = 'skills/axstack-explain/references/visual-qa.md';
 const pages = 'skills/axstack-explain/references/inline-pages.md';
-const diagram = '../axstack-diagram/SKILL.md';
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 // Prompt contracts, not live compliance. Existing explain coverage predates
@@ -15,42 +14,28 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const rules = [
   ['shared page gate owner', 'skills/axstack/references/ui-verification.md', [/follow|read/i, /page checks/i],
     /follow|read/i, 'ignore', 'Read [Inline pages](../../axstack-explain/references/inline-pages.md) for the page checks.', null, '../../axstack-explain/references/inline-pages.md'],
-  ['direct viewer declared launch path', 'skills/axstack-diagram/SKILL.md', [/direct viewer requests/i, /follow|read/i, /declared launch path/i],
-    /follow|read/i, 'ignore', "For direct viewer requests, read [Explain's declared launch path](../axstack-explain/SKILL.md#2-choose-proportional-output).", null, '../axstack-explain/SKILL.md#2-choose-proportional-output'],
-  ['every diagram', explain, [/load|read|follow/i, /every diagram/i],
-    /every/i, 'some', `For every diagram, read [Diagram](${diagram}).`, null, diagram],
   ['discovery triggers', explain, [/description: When/i, /asks how, why, explain, or show/i, /do not understand|cannot understand/i, /spec.*finaliz/i, /judge.*need to understand/i, /use axstack-explain/i, /show how it works/i, /exists/i, /missing/i, /unverified/i],
     /use axstack-explain/i, 'ignore axstack-explain', 'description: When the user asks how, why, explain, or show, says they cannot understand, a spec is being finalized, or you judge they need to understand something, use axstack-explain to show how it works and what exists, is missing, or remains unverified.', /do not understand|cannot understand/i],
   ['limited chat path', explain, [/chat/i, /only/i, /explicit chat request/i, /outside the description's conditions/i, /inline-page fallback/i],
     /only/i, 'also by default', 'Chat is used only for an explicit chat request, an answer outside the description\'s conditions, or inline-page fallback.'],
-  ['inline Mermaid without an agent', explain, [/chat/i, /Mermaid rules/i, /inline/i, /agent/i],
-    /never dispatch|do not launch/i, 'always dispatch', 'For chat answers, do not launch an agent when using its Mermaid rules inline.', /never dispatch|do not launch/i],
   ['inline page default', explain, [/conditions in the description/i, /inline page/i, /default/i, /create|make/i],
     /default/i, 'exception', 'For the conditions in the description, make an inline page by default.'],
   ['requested artifact format', explain, [/explicitly requested artifact format/i, /honou?r|use/i],
     /honou?r|use/i, 'ignore', 'Use an explicitly requested artifact format.'],
-  ['explicit archify author', explain, [/archify/i, /only/i, /explicit viewer request/i, /configured/i, /axstack-explainer/i],
-    /only/i, 'by default beyond', 'Use archify only on an explicit viewer request, through the configured axstack-explainer.'],
   ['page QA routing', explain, [/inline pages/i, /follow|read/i],
     /follow|read/i, 'ignore', 'For inline pages, read [Inline pages](references/inline-pages.md).', null, 'references/inline-pages.md'],
-  ['non-inline visual QA routing', explain, [/archify/i, /every other explicitly requested (?:HTML or visual|visual or HTML) artifact/i, /outside inline T3 pages|separate from inline T3 pages/i, /follow|read/i],
-    /every/i, 'some', 'For every other explicitly requested visual or HTML artifact separate from inline T3 pages, as well as archify, read [Visual QA](references/visual-qa.md).', null, 'references/visual-qa.md'],
-  ['independent claim review', explain, [/require|obtain/i, /independent/i, /axstack-explainer-review/i, /consequential or complex claims/i, /archify output/i, /on request/i],
-    /require|obtain/i, 'waive', 'Obtain independent axstack-explainer-review for consequential or complex claims, archify output, or on request.'],
+  ['non-inline visual QA routing', explain, [/every explicitly requested (?:HTML or visual|visual or HTML) artifact/i, /outside inline T3 pages|separate from inline T3 pages/i, /follow|read/i],
+    /every/i, 'some', 'For every explicitly requested visual or HTML artifact separate from inline T3 pages, read [Visual QA](references/visual-qa.md).', null, 'references/visual-qa.md'],
+  ['independent claim review', explain, [/require|obtain/i, /independent/i, /axstack-explainer-review/i, /consequential or complex claims/i, /on request/i],
+    /require|obtain/i, 'waive', 'Obtain independent axstack-explainer-review for consequential or complex claims or on request.'],
   ['consequential examples', explain, [/consequential claims/i, /include|cover/i, /gap or missing-claim reports/i, /blast-radius safety facts/i, /spec readbacks/i],
     /include|cover/i, 'exclude', 'Consequential claims cover gap or missing-claim reports, blast-radius safety facts, and spec readbacks.'],
   ['reply complements page', explain, [/reply/i, /add|contain/i, /only/i, /page omits/i],
     /only/i, 'everything beyond what', 'The reply contains only what the page omits.'],
   ['explain ownership', explain, [/explain owns/i, /evidence gathering/i, /claim labels/i, /700-word cap/i, /dispatch/i, /delivery/i],
     /explain owns/i, 'diagram owns', 'Explain owns evidence gathering, claim labels, the 700-word cap, dispatch, and delivery.'],
-  ['one-way integration', explain, [/diagram/i, /calls?|invokes?/i, /explain/i],
-    /never calls|do not let/i, 'always calls', 'Do not let diagram invoke explain.', /never calls|do not let/i],
-  ['only archify cards exempt', explain, [/only/i, /archify node detail cards/i, /exempt/i, /700-word cap/i],
-    /exempt/i, 'included', 'Only archify node detail cards are exempt from the 700-word cap.'],
-  ['card limit and source', explain, [/each card/i, /at most 40 words|40-word ceiling/i, /source/i],
-    /at most 40 words|40-word ceiling/i, 'at least 400 words', 'Each card has a 40-word ceiling and cites its source.'],
-  ['non-card words counted', explain, [/count|include/i, /node labels/i, /headings/i, /captions/i, /all non-card text/i],
-    /count|include/i, 'exclude', 'Include node labels, headings, captions, and all non-card text in the word count.'],
+  ['all page words counted', explain, [/count|include/i, /node labels/i, /headings/i, /captions/i, /all page text/i],
+    /count|include/i, 'exclude', 'Include node labels, headings, captions, and all page text in the word count.'],
   ['essential answers and evidence visible', explain, [/essential answers/i, /hidden|hide/i, /links/i, /evidence/i, /silently discard/i],
     /must not be hidden behind links, and evidence must not be silently discarded|never hide/i, 'must be hidden', 'Never hide essential answers behind links or silently discard evidence.', /must not be hidden behind links, and evidence must not be silently discarded|never hide/i],
   ['one page', pages, [/publish|show/i, /one page per answer/i],
@@ -63,8 +48,6 @@ const rules = [
     /fluid/i, 'fixed', 'Keep fluid width with zero outer horizontal padding.'],
   ['zero outer padding', pages, [/zero outer horizontal padding/i, /use|keep/i],
     /zero/i, 'large', 'Keep fluid width with zero outer horizontal padding.'],
-  ['archify-only dark default', pages, [/dark default/i, /archify-only/i, /stays|remains/i],
-    /archify-only/i, 'universal', 'The dark default remains archify-only.'],
   ['page framing', pages, [/outer frame/i, /banner/i, /viewport heights/i],
     /never use|do not use/i, 'use', 'Do not use an outer frame, banner, or viewport heights.', /never use|do not use/i],
   ['chart heights', pages, [/fixed chart heights/i, /use|set/i],
@@ -105,10 +88,12 @@ const rules = [
     /are not|never count as/i, 'are', 'Plain links never count as interactive.', /are not|never count as/i],
   ['resource attribute scan', pages, [/scan/i, /exact bytes/i, /every page/i, /remote.*src.*srcset.*href/i, /loaded resources/i],
     /every/i, 'some', 'For every page, scan its exact bytes for remote src, srcset, and href on loaded resources.'],
-  ['CSS and API scan', pages, [/scan/i, /@import/i, /url\(\)/i, /fetch/i, /XHR/i, /WebSocket/i, /EventSource/i, /meta refresh/i],
-    /scan/i, 'ignore', 'Scan meta refresh, EventSource, WebSocket, XHR, fetch, url(), and @import.'],
+  ['CSS and API scan', pages, [/scan/i, /@import/i, /\burl\(/i, /fetch/i, /XHR/i, /WebSocket/i, /EventSource/i, /meta refresh/i],
+    /scan/i, 'ignore', 'Scan meta refresh, EventSource, WebSocket, XHR, fetch, url(, and @import.'],
   ['scan rejection and fragment exception', pages, [/reject/i, /scan matches/i, /except/i, /local.*url\(#id\)/i, /SVG markers and gradients/i],
     /reject/i, 'accept', 'Except local url(#id) references such as SVG markers and gradients, reject scan matches.'],
+  ['CSS target normalization', pages, [/trim/i, /target whitespace and quotes/i, /before/i, /starts.*#/i],
+    /before/i, 'after', 'Trim CSS URL target whitespace and quotes before checking whether it starts with #.'],
   ['accessibility', pages, [/use|provide/i, /semantic elements/i, /labels/i, /visible focus/i, /sufficient contrast/i, /both themes/i],
     /both/i, 'one of the', 'Provide semantic elements, labels, visible focus, and sufficient contrast in both themes.'],
   ['page side effects', pages, [/pages/i, /storage/i, /cookies/i, /modals/i, /popups/i],
@@ -129,22 +114,12 @@ const rules = [
     /exactly/i, 'approximately', 'Render html_render from exactly the checked bytes.'],
   ['repair and rerun', pages, [/fix|repair/i, /failed check/i, /rerun/i, /new bytes/i],
     /rerun/i, 'skip checks on', 'Repair a failed check and rerun on the new bytes.'],
-  ['bounded missing-tool fallback', pages, [/if/i, /either tool/i, /unavailable|cannot be found/i, /one bounded discovery attempt/i, /fall back to chat with Mermaid/i, /state the reason/i],
-    /fall back to chat with Mermaid/i, 'publish unchecked HTML', 'If either tool is unavailable after one bounded discovery attempt, fall back to chat with Mermaid and state the reason.'],
-  ['failed-check fallback', pages, [/if/i, /check, verifier, or required reviewer/i, /unavailable or still fails/i, /fall back to chat with Mermaid/i, /state the reason/i],
-    /fall back to chat with Mermaid/i, 'publish unchecked HTML', 'State the reason and fall back to chat with Mermaid if a check, verifier, or required reviewer is unavailable or still fails.'],
+  ['ambiguous render readback', pages, [/ambiguous.*html_render/i, /read|inspect/i, /t3_thread_read/i, /keep.*page/i, /if present/i, /otherwise hold.*page/i, /Delivery/i],
+    /read|inspect/i, 'skip', 'After an ambiguous html_render result, inspect t3_thread_read, keep the page if present, and otherwise hold the page and follow Delivery.'],
   ['ambiguous render no retry', pages, [/ambiguous.*html_render/i, /retry/i],
     /never retry|do not retry/i, 'retry', 'After an ambiguous html_render result, do not retry.', /never retry|do not retry/i],
-  ['ambiguous render readback', pages, [/ambiguous.*html_render/i, /\b(?:read|inspect)\b/i, /t3_thread_read/i, /keep.*page.*present/i, /otherwise.*chat/i],
-    /\b(?:read|inspect)\b/i, 'ignore', 'After an ambiguous html_render result, inspect t3_thread_read, keep the page if present, and otherwise fall back to chat.'],
   ['QA scope', qa, [/inline pages/i, /follow|read/i],
     /follow|read/i, 'ignore', 'For inline pages, read [Inline pages](inline-pages.md).', null, 'inline-pages.md'],
-  ['verifier hash binding', qa, [/archify output/i, /\b(?:bind|pin)\b/i, /axstack-ui-verifier/i, /finalize receipt/i, /artifact.sha256/i],
-    /\b(?:bind|pin)\b/i, 'unbind', "For archify output, pin the axstack-ui-verifier pass to the finalize receipt's artifact.sha256."],
-  ['reviewer hash binding', qa, [/archify output/i, /\b(?:bind|pin)\b/i, /axstack-explainer-review/i, /finalize receipt/i, /artifact.sha256/i],
-    /\b(?:bind|pin)\b/i, 'unbind', "For archify output, pin axstack-explainer-review to the finalize receipt's artifact.sha256."],
-  ['mandatory nodes and edges', qa, [/archify output/i, /require|obtain/i, /axstack-explainer-review/i, /every node and edge/i, /source/i],
-    /require|obtain/i, 'waive', 'For archify output, obtain axstack-explainer-review of every node and edge against source.'],
   ['byte changes refresh both checks', qa, [/any|every/i, /byte change/i, /requires|needs/i, /fresh QA and review/i],
     /fresh/i, 'stale', 'Every byte change needs fresh QA and review.'],
 ];
@@ -179,10 +154,3 @@ function check(source, rule) {
 for (const rule of rules) {
   test(`explain diagram contract: ${rule[0]}`, () => check(read(rule[1]), rule));
 }
-
-test('every diagram routing preserves the exact relative skill target', () => {
-  const source = read(explain);
-  const rule = rules.find(([name]) => name === 'every diagram');
-  expect(accepts(rule, source)).toBe(true);
-  expect(accepts(rule, source.replaceAll(diagram, '../axstack-explain/SKILL.md'))).toBe(false);
-});
