@@ -24,6 +24,7 @@ test('review manager exposes one short finite-session native prompt', () => {
 
 // The packaged prompt is the gate's production boundary; mutations below
 // protect its semantics without claiming live model or scheduler compliance.
+const gatePaths = ['review-manager-prompt.md', 'automations.md'];
 const quietRules = [
   ['gate precedes skill loading',
     [/quiet check/i, /before/i, /invoking.*axstack-review/i, /reading any.*skills\/\*\*/i],
@@ -49,10 +50,27 @@ const quietRules = [
     [/run.*full pass/i, /when/i, /call fails/i, /pagination/i, /head OIDs/i, /liveness/i, /incomplete/i, /unknown/i],
     'When a call fails or pagination, head OIDs or thread/run liveness is incomplete or unknown, run the full pass.',
     [[/call fails/i, 'call succeeds'], [/incomplete/i, 'complete'], [/unknown/i, 'known']]],
+  ['account picker is mandatory and first',
+    [/account picker/i, /must run first/i, /before.*quiet check/i],
+    'Before the quiet check, the account picker must run first.',
+    [[/must/i, 'may'], [/first/i, 'last'], [/before/i, 'after']], gatePaths],
+  ['recorded work and non-user holds are busy',
+    [/run.*full pass/i, /when/i, /continuity records/i, /\bany\b/i,
+      /unserved/i, /capacity-deferred/i, /INCOMPLETE/, /re-eligible/i,
+      /or any open hold/i, /resume condition/i, /beyond a user decision|other than only the user/i],
+    'When continuity records any unserved, capacity-deferred, INCOMPLETE or re-eligible event, or any open hold with a resume condition other than only the user, run the full pass.',
+    [[/run.*full pass/i, 'end quietly'], [/\bany\b/gi, 'every'],
+      [/or any open hold/i, 'and any open hold'],
+      [/beyond a user decision|other than only the user/i, 'awaiting only the user']], gatePaths],
+  ['user-only holds remain quiet-eligible',
+    [/holds awaiting only the user/i, /remain quiet-eligible/i,
+      /updatedAt/i, /4 h full pass/i, /reminders/i],
+    'Holds awaiting only the user remain quiet-eligible because updatedAt changes with a PR decision and the 4 h full pass covers reminders.',
+    [[/only the user/i, 'also the user'], [/quiet-eligible/i, 'busy']], gatePaths],
 ];
-for (const [name, concepts, rewording, inversions] of quietRules) {
+for (const [name, concepts, rewording, inversions, paths = [gatePaths[0]]] of quietRules) {
   test(`review-manager quiet gate: ${name}`, () => {
-    checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+    for (const path of paths) checkRule(compact(`skills/axstack/references/${path}`),
       (text) => requires(text, ...concepts), rewording,
       [...inversions, [/^/, 'Do not ']], concepts);
   });
@@ -61,29 +79,43 @@ for (const [name, concepts, rewording, inversions] of quietRules) {
 test('quiet check is physically before the full-pass skill entry', () => {
   const text = compact('skills/axstack/references/review-manager-prompt.md');
   const accepts = (source) => {
-    const check = source.search(/quiet check/i);
+    const check = source.search(/\b(?:run|perform) (?:the|a) quiet check/i);
     const entry = source.search(/Enter through installed.*axstack-review/i);
     return check >= 0 && entry > check;
   };
   expect(accepts(text)).toBe(true);
   expect(accepts(text.replace(/quiet check/gi, ''))).toBe(false);
   expect(accepts(`Enter through installed axstack-review. ${text}`)).toBe(false);
-  expect(accepts(text.replace(/quiet check/gi, 'Quiet check'))).toBe(true);
+  const directive = text.match(/\bRun the quiet check[^.]*\./i)[0];
+  expect(accepts(text.replace(directive, '') + directive)).toBe(false);
+  expect(accepts(text.replace(/Run the quiet check/i, 'Perform a quiet check'))).toBe(true);
 });
 
 test('quiet discovery uses authenticated paginated PR and lane inventories', () => {
   const text = compact('skills/axstack/references/review-manager-prompt.md');
-  const concepts = [/gh api user/i, /one paginated.*gh search prs/i,
-    /open/i, /non-draft/i, /involv.*self/i, /authored by someone else/i,
+  const concepts = [/gh api user/i, /union/i, /two paginated.*gh search prs/i,
+    /review-requested:@me/, /involves:@me/, /each with/i, /--limit 1000/,
+    /open/i, /non-draft/i, /authored by someone else/i,
     /\bsorted\b/i, /repo#number/i, /headRefOid/i, /updatedAt/i];
   checkRule(text, (source) => requires(source, ...concepts),
-    'Use gh api user to resolve self, then one paginated gh search prs query for open, non-draft PRs involving self and authored by someone else, producing sorted (repo#number, headRefOid, updatedAt) tuples.',
-    [[/paginated/i, 'first-page'], [/authored by someone else/i, 'authored by self'],
+    'Use gh api user to resolve self, then union two paginated gh search prs queries (review-requested:@me and involves:@me), each with --limit 1000, for open, non-draft PRs authored by someone else, producing sorted (repo#number, headRefOid, updatedAt) tuples.',
+    [[/union/i, 'intersect'], [/each with/i, 'one with'], [/--limit 1000/, '--limit 30'],
+      [/paginated/i, 'first-page'], [/authored by someone else/i, 'authored by self'],
       [/\bsorted\b/i, 'unsorted']], concepts);
   const lane = [/inventory/i, /every page/i, /T3/i, /lane/i, /thread/i, /run/i, /liveness/i];
   checkRule(text, (source) => requires(source, ...lane),
     'Inventory every page of T3 lane threads and their run liveness.',
     [[/every page/i, 'one page']], lane);
+});
+
+test('quiet search results at either limit are incomplete', () => {
+  const cap = [/either query/i, /result count/i, /at or above 1000|1000 or more/i,
+    /coverage/i, /\bincomplete\b/i];
+  checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+    (source) => requires(source, ...cap),
+    'In either query, a result count of 1000 or more makes coverage incomplete.',
+    [[/either query/i, 'both queries'], [/at or above 1000|1000 or more/i, 'below 1000'],
+      [/\bincomplete\b/i, 'complete']], cap);
 });
 
 test('quiet exit is silent and leaves skills, sweep and continuity untouched', () => {
@@ -118,7 +150,7 @@ test('full passes record quiet watermarks in durable continuity', () => {
 
 test('documented review-manager schedules are hourly', () => {
   for (const path of ['skills/axstack/references/automations.md',
-    'skills/axstack/references/lifecycle.md', 'docs/host-operations.md']) {
+    'skills/axstack/references/lifecycle.md', 'docs/host-operations.md', 'README.md']) {
     const text = compact(path);
     expect(text, path).not.toMatch(/15-minute|every 15 minutes|everyMs:900000/i);
     expect(text, path).toMatch(/hourly|every hour/i);

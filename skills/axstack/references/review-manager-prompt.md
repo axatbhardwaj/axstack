@@ -1,13 +1,14 @@
 # Review manager prompt
 
+The account picker must run first, before the quiet check; defer reference loads until a full pass.
 Run the quiet check before invoking `axstack-review` or reading any `skills/**` file.
-The account picker may run first; defer reference loads until a full pass.
 
-Resolve self with `gh api user --jq .login`, then use one paginated `gh search prs`
-query for open, non-draft PRs involving self and authored by someone else,
+Resolve self with `gh api user --jq .login`, then union two paginated `gh search prs`
+queries (`review-requested:@me` and `involves:@me`), each with `--limit 1000`,
+for open, non-draft PRs authored by someone else,
 producing a sorted (repo#number, headRefOid, updatedAt) list.
-Search omits head OIDs: obtain them with read-only `gh pr view --json headRefOid`;
-a reached search cap makes coverage incomplete, including GitHub's 1000-result cap.
+Search omits head OIDs: obtain them with read-only `gh pr view --json headRefOid`.
+A result count at or above 1000 in either query makes coverage incomplete.
 Inventory every page of T3 lane threads and their run liveness, including recorded
 PR-job descendants, using exact lane identities.
 Read continuity at `~/.local/share/axstack/runs/review-manager/progress.md` and
@@ -18,6 +19,10 @@ compare its Watermarks with the inventory:
 - Run the full pass when continuity or either watermark is missing, malformed or unreadable.
 - Run the full pass when `Last full pass:` is at least 4 hours old or in the future.
 - Run the full pass when any call fails or pagination, PR head OIDs or thread/run liveness is incomplete or unknown.
+- Run the full pass when continuity records any unserved, capacity-deferred, `INCOMPLETE` or re-eligible event, or any open hold with a resume condition beyond a user decision (such as capacity or remeasure).
+
+Holds awaiting only the user remain quiet-eligible: a user decision on the PR
+changes `updatedAt` and the 4 h full pass bounds reminders.
 
 If every busy condition is false, end the turn with no text, no skill load, no sweep and no continuity write.
 Otherwise continue with the full pass below; incomplete evidence retains the

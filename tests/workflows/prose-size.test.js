@@ -227,6 +227,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261013-token-efficiency A: +2700 measured aggregate bytes for the quiet
   // review-manager gate and hourly cadence; +18 always-loaded bytes.
   // Exact measured ceilings; no added headroom.
-  expect(total).toBeLessThanOrEqual(401412);
+  // 20261013-token-efficiency A repair1: +1001 measured aggregate bytes for
+  // recorded-work holds, mandatory picker and two-query coverage; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(402413);
   expect(alwaysLoaded).toBeLessThanOrEqual(27215);
 });
