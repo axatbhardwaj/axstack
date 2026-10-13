@@ -31,5 +31,8 @@ The driver owns gating previews and `html_render`.
 Interactive pages require the configured `axstack-ui-verifier` browser pass;
 honor user browser-tool policy. Above 512,000 bytes, use Anatomy's loopback
 verification and host-local save route with the same review bindings.
-Live T3 theme switching remains unproven unless separately observed; wrapper
+Live T3 theme switching remains unproven unless separately observed. The unit
+fixture dispatches mutations by observer scope: animated figure updates must
+not recompute the theme; root attributes, head stylesheets, explicit body markers
+and system appearance still do. Wrapper
 unit tests cover markers, CSS-color resolution, variable changes and standalone fallback.

@@ -43,8 +43,11 @@ body.iso[data-axstack-t3] .iso-plate { padding:16px; border-radius:var(--radius)
   update();
   media.addEventListener('change', update);
   const observer = new view.MutationObserver(update);
-  observer.observe(doc.documentElement, { subtree: true, childList: true, characterData: true,
+  observer.observe(doc.documentElement, {
     attributes: true, attributeFilter: ['class', 'style', 'data-axstack-theme'] });
+  observer.observe(body, { attributes: true, attributeFilter: ['data-axstack-theme'] });
+  observer.observe(doc.head, { subtree: true, childList: true, characterData: true,
+    attributes: true, attributeFilter: ['media', 'disabled'] });
   return () => { media.removeEventListener('change', update); observer.disconnect(); };
 }
 
