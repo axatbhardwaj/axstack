@@ -198,6 +198,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // exclude the shared vendored paths while owned front-door guidance still counts.
   // Issue #437 r10: +4246 measured owned bytes for whiteboard defense,
   // every-visual review, delivery holds and Anatomy front door; exact total 391779.
-  expect(total).toBeLessThanOrEqual(391779);
+  // 20261012-explain-anatomy repair1: merge Scout #440 at 6cf5392; +264
+  // measured owned bytes for Scout role guidance; exact total 392043, no headroom.
+  expect(total).toBeLessThanOrEqual(392043);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

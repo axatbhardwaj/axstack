@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { makeTempRoot } from '../installer/helpers.js';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
@@ -68,7 +69,7 @@ for (const [name, prohibition, concepts, rewording, inversions] of [
 }
 
 test('repository discovery excludes vendored tests while running repository tests', () => {
-  const fixture = mkdtempSync(`${process.env.TMPDIR}/anatomy-discovery-`);
+  const fixture = makeTempRoot('anatomy-discovery-');
   mkdirSync(`${fixture}/skills/axstack-anatomy/scripts`, { recursive: true });
   mkdirSync(`${fixture}/tests/workflows`, { recursive: true });
   mkdirSync(`${fixture}/tests/installer`, { recursive: true });
