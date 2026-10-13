@@ -29,6 +29,8 @@ Direct routes need no spec ceremony:
 - [axstack-perf](../skills/axstack-perf/SKILL.md) routes performance work to
   Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
+- `axstack-scout` gathers cited codebase evidence for broad or unfamiliar
+  questions using independent, read-only seats.
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
   Only the user invokes it.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
