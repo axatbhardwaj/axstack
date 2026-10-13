@@ -195,6 +195,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // always-loaded unchanged.
   // 20261012-scout-skill-align C2: +4311 bytes to the aggregate ceiling;
   // always-loaded unchanged. Keep the measured aggregate ceiling exact.
-  expect(total).toBeLessThanOrEqual(391844);
+  // C3: +80 bytes for Research and Improve routing; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(391924);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
