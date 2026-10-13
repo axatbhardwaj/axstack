@@ -19,6 +19,8 @@ test('scenario corpus distinguishes optional absence from required and launched 
     'required-adviser-outage', 'required-fable-outage', 'model-null-required',
     'auditor-unlaunchable', 'auditor-launched',
   ]);
+  const loss = data.cases.find(({ id }) => id === 'mixed-provider-loss');
+  expect(loss.expected.reason).toMatch(/fewer than two (?:different )?providers/i);
 });
 
 test('optional seats are enumerated and absent only after a recorded failure', () => {
@@ -62,12 +64,26 @@ for (const path of ['skills/axstack/references/role-roster.md', 'skills/axstack-
       'A sized research fan-out in mixed must retain dispatched branches from at least two different providers.',
       [[/at least two/i, 'at least one'], [/different providers/i, 'the same provider'],
         [/requires|must retain/i, 'may retain']], sized);
-    const other = [/every other|all other/i, /mixed fan-out/i, /arena/i, /review/i,
+    const other = [/every other|all other/i, /mixed fan-out/i, /arena/i, /peer review/i,
       /retains|must retain/i, /at least one/i, /Codex/i, /Claude/i];
     checkRule(text, (source) => requires(source, ...other),
-      'All other mixed fan-outs, including review and arena, must retain at least one Claude and one Codex seat.',
+      'All other mixed fan-outs, including peer review and arena, must retain at least one Claude and one Codex seat.',
       [[/every other|all other/i, 'research'], [/retains|must retain/i, 'may retain']], other);
   });
+  for (const minimum of [/sized mixed research fan-out/i, /every other mixed fan-out/i]) {
+    test(`provider loss holds its own fan-out: ${path} ${minimum}`, () => {
+      // Keep each semicolon-linked consequence with its own minimum.
+      const policy = read(path).split(/[.!?]\s+/).find((clause) => minimum.test(clause));
+      expect(policy).toBeDefined();
+      const holds = (clause) => requires(clause.split(';')[1] ?? '',
+        /otherwise|else/i, /hold|block/i, /fan-out/i);
+      expect(holds(policy)).toBe(true);
+      expect(holds(policy.replace(/;[^;]+$/, ''))).toBe(false);
+      expect(holds(policy.replace(/\b(?:hold|block)\b/i, 'continue with available branches'))).toBe(false);
+      expect(holds(policy.replace(/\b(hold|block)\b/i, 'do not $1'))).toBe(false);
+      expect(holds(policy.replace(/(?:otherwise|else)[^;]+$/i, 'else block the affected fan-out'))).toBe(true);
+    });
+  }
 }
 
 test('Scout roster keeps the required seats per facet in each preset', () => {
@@ -94,6 +110,10 @@ test('shared rules qualify only optional seats and preserve required holds', () 
   expect(contracts).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
   expect(routing).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
   expect(routing).toMatch(/\[Role roster\]\(role-roster\.md\) governs[^.]*single-provider absence[^.]*mixed Codex\+Claude fan-out/i);
+  const researchMinimum = [/Role roster/i, /governs/i, /mixed research/i, /at least two/i, /different providers/i];
+  checkRule(sentences(routing).join('. '), (source) => requires(source, ...researchMinimum),
+    'Role roster governs mixed research with at least two different providers.',
+    [[/at least two/i, 'at least one'], [/different providers/i, 'the same provider']], researchMinimum);
   for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
   expect(routing).not.toMatch(/--retry-of|pre-turn Codex rejection/);
   expect(routing).toContain('holds that role with no substitution');

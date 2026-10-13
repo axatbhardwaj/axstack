@@ -333,16 +333,26 @@ test('presets: research sizes dispatch to claims and keeps independent source pa
     },
     {
       concepts: [/dispatch/i, /delegate_task/, /only/i, /branches/i, /source class/i,
-        /needed|needs?|requires?/i, /open/i, /answer-changing claim/i],
-      rewording: 'Dispatch via T3 delegate_task only the branches whose source class an open answer-changing claim requires.',
+        /execution/i, /needed|needs?|requires?/i, /open/i, /answer-changing claim/i],
+      rewording: 'Dispatch via T3 delegate_task only the branches whose source class (including execution) an open answer-changing claim requires.',
       inversions: [[/only/i, 'all'], [/open/i, 'settled']],
     },
     {
       concepts: [/each needed source class/i, /retain|keep|requires?/i, /two/i,
-        /isolated|independent/i, /different providers/i, /where configured|when configured/i],
-      rewording: 'Each needed source class requires two independent branches from different providers when configured.',
-      inversions: [[/two/i, 'one'], [/different providers/i, 'the same provider'],
-        [/isolated|independent/i, 'shared']],
+        /isolated|independent/i, /where configured|when configured/i],
+      rewording: 'Each needed source class requires two independent branches when configured.',
+      inversions: [[/two/i, 'one'], [/isolated|independent/i, 'shared']],
+    },
+    {
+      concepts: [/mixed/i, /each needed source class/i, /retains|requires?/i,
+        /branches/i, /different providers/i],
+      rewording: 'In mixed, each needed source class requires branches from different providers.',
+      inversions: [[/mixed/i, 'codex-only'], [/different providers/i, 'the same provider']],
+    },
+    {
+      concepts: [/dispatch execution/i, /when/i, /claim/i, /depends? on|requires?/i, /runtime behavior/i],
+      rewording: 'Dispatch execution when a claim requires runtime behavior evidence.',
+      inversions: [[/when/i, 'unless']],
     },
     {
       concepts: [/requirements/i, /only when|only if/i, /scope/i, /unclear|ambiguous/i],
@@ -369,6 +379,7 @@ test('presets: research sizes dispatch to claims and keeps independent source pa
   }
   for (const pair of [
     [/code/i, /code-sol/i], [/web/i, /web-google/i],
+    [/`axstack-explore-execution`/, /`axstack-explore-execution-sol`/],
   ]) expect(requires(fanout, ...pair, /pair/i)).toBe(true);
 });
 

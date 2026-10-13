@@ -68,6 +68,6 @@
   dispatch is reconciled, not called absent. A sized mixed research fan-out
   requires dispatched branches spanning at least two different providers;
   otherwise hold that fan-out. Every other mixed fan-out, including arena and
-  review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
+  peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
   Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` probe L1 briefs.

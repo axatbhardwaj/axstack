@@ -15,7 +15,7 @@
     {
       "id": "mixed-provider-loss",
       "input": { "preset": "mixed", "fanout": "code research", "solPair": "launch failure", "otherCodexSeat": "none" },
-      "expected": { "status": "HOLD affected fan-out", "reason": "Mixed fan-out would have no Codex seat", "forbidden": ["substitute model", "claim mixed coverage"] }
+      "expected": { "status": "HOLD affected fan-out", "reason": "Sized mixed research fan-out would have fewer than two different providers", "forbidden": ["substitute model", "claim mixed coverage"] }
     },
     {
       "id": "required-adviser-outage",

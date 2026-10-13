@@ -228,6 +228,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // dispatch and configured independent pairs; always-loaded unchanged, no headroom.
   // 20261013-token-efficiency B repair1: +586 measured bytes for Research's
   // optional-seat and mixed-provider exceptions; always-loaded unchanged, no headroom.
-  expect(total).toBeLessThanOrEqual(399783);
-  expect(alwaysLoaded).toBeLessThanOrEqual(27197);
+  // 20261013-token-efficiency B repair2: +324 measured aggregate bytes,
+  // including +95 always-loaded bytes for the routing summary; no added headroom.
+  expect(total).toBeLessThanOrEqual(400107);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27292);
 });
