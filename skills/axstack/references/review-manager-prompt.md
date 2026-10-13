@@ -2,8 +2,10 @@
 
 The account picker must run first, before the quiet check: from the installed
 `axstack` skill directory, run `bun scripts/pick-instance.js --provider <own provider> --json`.
-Compare `chosenInstanceId` with this pass's current instance from
-`t3_thread_configuration`; defer reference loads until a full pass.
+Find this pass's current instance from `t3_thread_configuration` in the picker
+JSON `instances` and inspect its `state`; defer reference loads until a full pass.
+An eligible current instance remains quiet-eligible even when `chosenInstanceId`
+names a different instance.
 Run the quiet check before invoking `axstack-review` or reading any `skills/**` file.
 
 Resolve self with `gh api user --jq .login`, then union two paginated `gh search prs`
@@ -17,7 +19,7 @@ PR-job descendants, using exact lane identities.
 Read continuity at `~/.local/share/axstack/runs/review-manager/progress.md` and
 compare its Watermarks with the inventory:
 
-- Run the full pass when the picker chose an instance other than this pass's current one.
+- Run the full pass when the picker JSON marks this pass's current instance `excluded`.
 - Run the full pass when the picker exits with code 1.
 - Run the full pass when the picker exits with code 2.
 - Run the full pass when the sorted list differs from `Quiet gate:`.

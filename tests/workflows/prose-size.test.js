@@ -231,6 +231,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // recorded-work holds, mandatory picker and two-query coverage; always-loaded unchanged.
   // 20261013-token-efficiency A repair2: -775 measured aggregate bytes for
   // the canonical prompt gate, inline picker and short automation pointer; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(401638);
+  // 20261013-token-efficiency A repair3: +135 measured aggregate bytes for
+  // current-instance eligibility and lookup; always-loaded unchanged, no headroom.
+  expect(total).toBeLessThanOrEqual(401773);
   expect(alwaysLoaded).toBeLessThanOrEqual(27215);
 });

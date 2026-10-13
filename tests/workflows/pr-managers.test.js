@@ -53,10 +53,21 @@ const quietRules = [
     [/account picker/i, /must run first/i, /before.*quiet check/i],
     'Before the quiet check, the account picker must run first.',
     [[/must/i, 'may'], [/first/i, 'last'], [/before/i, 'after']]],
-  ['picker instance change is busy',
-    [/run.*full pass/i, /when/i, /picker chose/i, /instance other than this pass.s current one/i],
-    "When the picker chose an instance other than this pass's current one, run the full pass.",
-    [[/other than/i, 'identical to']]],
+  ['excluded current instance is busy',
+    [/run.*full pass/i, /when/i, /picker JSON marks/i, /this pass.s current instance/i, /\bexcluded\b/i],
+    "When the picker JSON marks this pass's current instance excluded, run the full pass.",
+    [[/\bexcluded\b/i, 'eligible']]],
+  ['eligible current instance stays quiet-eligible despite a different choice',
+    [/\beligible current instance/i, /remains quiet-eligible/i, /even when/i,
+      /chosenInstanceId/, /different instance/i],
+    'Even when chosenInstanceId names a different instance, an eligible current instance remains quiet-eligible.',
+    [[/\beligible current instance/i, 'excluded current instance'],
+      [/quiet-eligible/i, 'busy'], [/different instance/i, 'the same instance']]],
+  ['picker eligibility lookup uses the current binding',
+    [/find/i, /this pass.s current instance/i, /t3_thread_configuration/,
+      /picker JSON/i, /\binstances\b/, /inspect its.*state/i],
+    "In picker JSON instances, find this pass's current instance from t3_thread_configuration and inspect its state.",
+    [[/this pass.s current instance/i, 'the chosen instance'], [/inspect its.*state/i, 'inspect its score']]],
   ...[1, 2].map((code) => [`picker exit ${code} is busy`,
     [/run.*full pass/i, /when/i, /picker exits/i, new RegExp(`code ${code}\\b`)],
     `When the picker exits with code ${code}, run the full pass.`,
@@ -83,16 +94,25 @@ for (const [name, concepts, rewording, inversions] of quietRules) {
   });
 }
 
+test('sibling picker preference alone does not force a full pass', () => {
+  const text = compact('skills/axstack/references/review-manager-prompt.md');
+  const forcesPass = (source) => requires(source, /run.*full pass/i, /when/i,
+    /picker chose|chosenInstanceId/i, /other than|different/i);
+  expect(forcesPass(text)).toBe(false);
+  expect(forcesPass(`${text} Run the full pass when the picker chose an instance other than this pass's current one.`)).toBe(true);
+});
+
 test('quiet check precedes all skill and reference loads', () => {
   const text = read('skills/axstack/references/review-manager-prompt.md');
   const target = /skills\/|axstack-review\b|(?:automations|t3-runtime)\.md\b/i;
-  const load = /\b(?:load(?:s|ed|ing)?|read(?:s|ing)?|follow(?:s|ing)?|enter(?:s|ing)?|invok(?:e|es|ing))\b/i;
+  const load = /\b(?:load(?:s|ed|ing)?|read(?:s|ing)?|follow(?:s|ing)?|enter(?:s|ing)?|invok(?:e|es|ing)|consult(?:s|ed|ing)?|open(?:s|ed|ing)?|inspect(?:s|ed|ing)?|stud(?:y|ies|ied|ying)|review(?:s|ed|ing)?)\b/i;
   const accepts = (source) => {
     const check = source.search(/\b(?:run|perform) (?:the|a) quiet check/i);
     const prefix = source.slice(0, check);
+    const namedReferences = prefix.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 $2');
     return check >= 0 &&
       !loadedReferences(prefix).some((reference) => target.test(reference)) &&
-      !requires(prefix, load, target);
+      !requires(namedReferences, load, target);
   };
   expect(accepts(text)).toBe(true);
   expect(accepts(text.replace(/quiet check/gi, ''))).toBe(false);
@@ -106,10 +126,13 @@ test('quiet check precedes all skill and reference loads', () => {
     'Read [T3 runtime](t3-runtime.md) and invoke `axstack-review`.',
     movedEntry,
     'Read:\n\n- [Runtime](t3-runtime.md)',
+    'Consult skills/axstack-review/SKILL.md first.',
+    'Open `t3-runtime.md` for the picker rules.',
   ]) expect(accepts(`${probe}\n\n${text}`), probe).toBe(false);
-  for (const verb of ['Load', 'Read', 'Follow', 'Enter', 'Invoke']) {
+  for (const verb of ['Load', 'Read', 'Follow', 'Enter', 'Invoke', 'Consult', 'Open', 'Inspect', 'Study', 'Review']) {
     for (const path of ['skills/axstack-review/SKILL.md', 'axstack-review', 'automations.md', 't3-runtime.md']) {
       expect(accepts(`${verb} \`${path}\`.\n\n${text}`), `${verb} ${path}`).toBe(false);
+      expect(accepts(`${verb} [reference](${path}).\n\n${text}`), `${verb} linked ${path}`).toBe(false);
     }
   }
   expect(accepts(`Never read skills/axstack-review/SKILL.md before the gate.\n\n${text}`)).toBe(true);
