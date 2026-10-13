@@ -233,6 +233,15 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // the canonical prompt gate, inline picker and short automation pointer; always-loaded unchanged.
   // 20261013-token-efficiency A repair3: +135 measured aggregate bytes for
   // current-instance eligibility and lookup; always-loaded unchanged, no headroom.
-  expect(total).toBeLessThanOrEqual(401773);
-  expect(alwaysLoaded).toBeLessThanOrEqual(27215);
+  // 20261013-token-efficiency B: +485 measured bytes for claim-sized Research
+  // dispatch and configured independent pairs; always-loaded unchanged, no headroom.
+  // 20261013-token-efficiency B repair1: +586 measured bytes for Research's
+  // optional-seat and mixed-provider exceptions; always-loaded unchanged, no headroom.
+  // 20261013-token-efficiency B repair2: +324 measured aggregate bytes,
+  // including +95 always-loaded bytes for the routing summary; no added headroom.
+  // 20261013-token-efficiency base1: A +3061 and B +1395 aggregate bytes
+  // combine at 403168; measured always-loaded 27196 + 18 + 95 = 27309.
+  // Retire the inherited one-byte always-loaded headroom; both ceilings are exact.
+  expect(total).toBeLessThanOrEqual(403168);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27309);
 });

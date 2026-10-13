@@ -44,7 +44,8 @@ An exhausted account with no eligible sibling still holds; dispatched roles neve
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection at turn boundaries.
 [Model discipline](contracts.md#model-discipline) governs optional seats,
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
-single-provider absence and mixed Codex+Claude fan-out.
+single-provider absence, mixed research with at least two different providers,
+and other mixed Codex+Claude fan-out (including arena and peer review).
 Bundled presets are setup inputs, not runtime readiness proof.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
