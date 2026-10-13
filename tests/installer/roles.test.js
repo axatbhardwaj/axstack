@@ -237,6 +237,7 @@ test('claude-only intentional-absence allowlist contains exactly the accepted ID
     'axstack-research-web-google', 'axstack-research-x',
     'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
+    'axstack-explore-codebase-luna', 'axstack-explore-codebase-flash',
   ]);
   expect(assessRoleReadiness([
     { id: 'axstack-auditor', name: 'Auditor', provider: 'claude', model: null },
