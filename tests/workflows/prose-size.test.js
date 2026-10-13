@@ -196,6 +196,16 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-scout-skill-align C2: +4311 bytes to the aggregate ceiling;
   // always-loaded unchanged. Keep the measured aggregate ceiling exact.
   // C3: +80 bytes for Research and Improve routing; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(391924);
+  // 20261013-verify-wiring A1: ceiling raised by 1436 bytes; A1 content
+  // adds 1719 measured bytes; always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair1: ceiling raised by 344 bytes for no-skill
+  // template values and the create-PR candidate-recipe exception; always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair2: +264 measured bytes after merging main's
+  // Scout roster guidance; exact aggregate ceiling, always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair2 latest-main merge: exact measured
+  // aggregate 393907 bytes; preserve both histories, always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair3: measured PR growth +2063 bytes
+  // (393987 merged - 391924 main at c7ec79f); exact ceiling, always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(393987);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
