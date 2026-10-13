@@ -80,7 +80,7 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    maximum. If the draft is longer, compress repetition first and move only
    supporting detail to a separate linked ticket or appendix. Essential answers
    must not be hidden behind links, and evidence must not be silently discarded.
-   Count node labels, headings, captions, and all non-card text.
+   Count node labels, headings, captions, and all page text.
 2. Use chat only for an explicit chat request, an answer outside the description's conditions,
    or inline-page fallback.
    Use a compact diagram when useful.

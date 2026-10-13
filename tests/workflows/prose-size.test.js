@@ -200,6 +200,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // every-visual review, delivery holds and Anatomy front door; exact total 391779.
   // 20261012-explain-anatomy repair1: merge Scout #440 at 6cf5392; +264
   // measured owned bytes for Scout role guidance; exact total 392043, no headroom.
-  expect(total).toBeLessThanOrEqual(392043);
+  // 20261012-explain-anatomy repair1 review: +196 measured owned bytes
+  // for self-contained whiteboard-defense terminology; exact total 392239.
+  expect(total).toBeLessThanOrEqual(392239);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

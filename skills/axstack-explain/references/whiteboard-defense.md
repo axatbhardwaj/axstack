@@ -56,4 +56,4 @@ When the user or stated records (run record, spec, PR body or README) identify
 a PoC, demo or experiment, use an optional checklist and proportional answer
 under the ordinary review rule. Never infer that status.
 An intent to ship overrides the PoC exemption.
-An explicit checklist request requires full D2a.
+An explicit checklist request requires full whiteboard defense.
