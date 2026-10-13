@@ -26,7 +26,7 @@ axstack check --harness codex
 ```
 
 Installation writes owned skills and instructions, preserving unrelated content,
-and fetches the pinned archify tool for explicit viewer requests. Reload the
+with the vendored anatomy kit included. Reload the
 harness's skills in T3 after installation. Use the [installation reference](installation.md) for other
 harnesses, source installs or conflicts.
 
@@ -40,13 +40,13 @@ A successful check exits 0. Its four capability rows mean:
 | `t3` | T3's version command succeeds and meets the floor. |
 
 The `gh stack` extension is needed only for preexisting native stacks; ordinary
-PRs/chains use Git and `gh pr`. With this harness target, check also validates the archify record/copy/SHA and
-reports the owned instruction binding. Missing Chrome is a warning. Any reported
-gap exits 1; follow [troubleshooting](installation.md#exit-codes-and-troubleshooting) before
-starting a task.
+PRs/chains use Git and `gh pr`. With this harness target, check also reports the
+owned instruction binding. Any reported gap exits 1; follow
+[troubleshooting](installation.md#exit-codes-and-troubleshooting) before starting a task.
 
 Explanations default to checked inline T3 pages above a short reply.
-Use archify only on an explicit viewer request. Spec approval readbacks also
+Use Anatomy only on an explicit isometric or physical-object figure request.
+Every Explain visual receives author and reviewer dispatches. Spec approval readbacks also
 use inline pages, identifying the revision you approve.
 
 Check does not prove live provider readiness, schedule activation or mobile delivery.

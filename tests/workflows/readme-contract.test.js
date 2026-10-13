@@ -160,14 +160,14 @@ for (const path of ['README.md', 'docs/workflows.md', 'docs/getting-started.md',
     const page = [/explain|explanations/i, /default/i, /inline T3 pages?/i];
     checkRule(text, (source) => requires(source, ...page),
       'Explanations default to inline T3 pages.',
-      [[/default/i, 'sometimes route'], [/inline T3 pages?/i, 'archify viewers']], page);
+      [[/default/i, 'sometimes route'], [/inline T3 pages?/i, 'unreviewed visuals']], page);
   });
-  test(`explain docs: ${path}: viewers by request`, () => {
+  test(`explain docs: ${path}: anatomy by request`, () => {
     const text = sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. ');
-    const viewer = [/use(?:s|d)?/i, /archify/i, /only/i, /explicit viewer request/i];
+    const viewer = [/use(?:s|d)?/i, /anatomy/i, /only/i, /explicit isometric or physical.object figure request/i];
     checkRule(text, (source) => requires(source, ...viewer),
-      'Use archify only on an explicit viewer request.',
-      [[/only/i, 'also without a request'], [/explicit viewer request/i, 'complex visuals']], viewer);
+      'Use Anatomy only on an explicit isometric or physical-object figure request.',
+      [[/only/i, 'also without a request'], [/explicit isometric or physical.object figure request/i, 'complex visuals']], viewer);
   });
 }
 

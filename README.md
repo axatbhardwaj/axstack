@@ -87,10 +87,11 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Operate | [axstack-relay](skills/axstack-relay/SKILL.md) | Send an explicit message or authorized notification. |
 | Understand | [axstack-research](skills/axstack-research/SKILL.md) | Answer one bounded question with sources. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
-| Understand | [axstack-diagram](skills/axstack-diagram/SKILL.md) | Draw SVG/CSS in inline pages, Mermaid for chat/GitHub/docs, or requested archify viewers. |
+| Understand | [axstack-anatomy](skills/axstack-anatomy/SKILL.md) | Build an isometric physical-object figure with the vendored anatomy kit. |
 
 Explanations default to checked inline T3 pages above a short reply.
-Use [archify](https://github.com/tt-a1i/archify) (MIT) only on an explicit viewer request.
+Use Anatomy only on an explicit isometric or physical-object figure request.
+Every Explain visual is authored and independently reviewed; plain prose stays proportional.
 
 ## How work stays controlled
 

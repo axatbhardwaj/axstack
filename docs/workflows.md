@@ -31,16 +31,17 @@ Direct routes need no spec ceremony:
 - `axstack-research` answers one bounded source-backed question.
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
   Only the user invokes it.
+- [axstack-anatomy](../skills/axstack-anatomy/SKILL.md) builds an isometric,
+  physical-object, or anatomy-style figure with the vendored kit and Bun.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
   behavior. Explanations default to checked inline T3 pages above a short reply.
-  Consequential or complex claims, archify output, or a user request require
-  independent explanation review; interactive pages receive a verifier pass.
-- [axstack-diagram](../skills/axstack-diagram/SKILL.md) selects inline SVG or CSS
-  inside pages and Mermaid for chat fallback, GitHub, and docs.
-  Explain loads it for every diagram. Use
-  [archify](https://github.com/tt-a1i/archify) (MIT) only on an explicit viewer request,
-  authored by `axstack-explainer`, with a pinned tool, a passing finalize receipt,
-  rendered QA, and node-and-edge source review.
+  Every visual is authored by `axstack-explainer` and independently reviewed by
+  `axstack-explainer-review`; interactive pages receive a verifier pass.
+  Whole-work understanding and defense covers high-level flow, decisions,
+  data/state, misbehaviour at trust boundaries and visible failure, with open
+  evidence gaps. Narrow questions stay proportional.
+  Explain owns SVG/CSS in inline pages and Mermaid in chat, GitHub and docs.
+  Use Anatomy only on an explicit isometric or physical-object figure request.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code. Its test-audit lens marks every declaration
   in one owner boundary R/F/C/D, reports reviewed and eligible counts, and routes
@@ -133,7 +134,9 @@ assignments for those roles. Mixed web-google and X retain their source-specific
 Antigravity and Grok routes.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
-`axstack-explainer-review` uses Sol medium; `axstack-explainer` stays Sonnet high.
+`axstack-explainer-review` uses Sol medium; `axstack-explainer` pins
+`claude-sonnet-5-5` high with class `sonnet`. Both roles cover every Explain
+visual, including chat Mermaid and anatomy figures.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at high effort.
 The new `-sol` auditor, research-code, and explore-execution seats use Sol high
 in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.

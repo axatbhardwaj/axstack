@@ -11,9 +11,8 @@ Requirements: Bun >=1.3.14, Git, `gh`, and a running
 T3 Code `0.0.46-nightly.20261003.2610` or newer. The driver is a T3 thread
 with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
 Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
-`node:fs` and `node:fs/promises`. The pinned archify tool is the sole external-tool
-exception: installation uses Git and the network, and Bun runs its Node-oriented
-code. This exception introduces no Node.js runtime requirement.
+`node:fs` and `node:fs/promises`. Vendored anatomy code runs with Bun;
+installation has no tool network or Git step and adds no Node.js runtime requirement.
 
 For project setup, remote access, provider runtimes, and relay validation, see
 [Host operations](host-operations.md).
@@ -76,16 +75,11 @@ the settings sidecar preserves the value while any other install still owns it.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
   homes and fixtures only.
 
-Explanations default to inline T3 pages; use archify only on an explicit viewer request.
-Installation sparse-clones archify at the reviewed full SHA in `src/archify-pin.js`
-into `<tools-dir>/archify-<sha>`. It verifies HEAD before use and keeps the
-payload's licence and third-party notices. The manifest owns
-`<skills-dir>/axstack-diagram/archify.json`, which records `{path, sha}`.
-The adjacent `<tools-dir>/archify-<sha>.owners.json` lists its skills-root owners.
-Multiple roots share one copy. Repeat installs leave unchanged files untouched.
-An offline, Git-less, or failed clone still installs the skills, reports
-`archify: unavailable (<reason>)`, and exits 0. An existing SHA mismatch fails.
-`AXSTACK_ARCHIFY_REPO` is a test-only repository override; fixtures use a local repository without network access.
+Explanations default to inline T3 pages. Use Anatomy only on an explicit
+isometric or physical-object figure request. Every visual is authored and
+independently reviewed through the selected preset's explanation roles.
+Repeat installs leave unchanged files untouched. Legacy tool copies are
+released by ownership on upgrade and uninstall; retained copies report why.
 
 See [Account selection environment](concepts.md#account-selection-environment)
 for the picker cache directory and test-only usage endpoint variables.
@@ -142,13 +136,6 @@ owned, missing, unowned, edited, or bound to a different path. Hand-written
 legacy routing outside the owned block is reported for manual migration and
 preserved byte for byte.
 
-With `--skills-dir` or `--harness`, check reports the archify record path, copy
-path, recorded SHA, and checked-out SHA. A missing record, missing copy, or SHA
-mismatch fails the check. Chrome absence prints a warning and does not fail it.
-`ARCHIFY_CHROME` selects the Chrome executable. Without it, check looks for
-common Chrome and Chromium executables on PATH. A check without a skills target
-probes host capabilities only.
-
 Check does not prove MCP readiness, provider/model availability, schedule
 activation, or mobile delivery. Effective permission, skill reload, task
 execution, and end-to-end compatibility also require their own runtime receipts.
@@ -164,14 +151,10 @@ bytes match the manifest. Uninstall with `--force` can remove edited owned files
 Custom, unknown, and unrelated files survive. Directories
 are pruned only when empty, and the target root is never removed.
 
-Uninstall drops that skills root from archify's owners file. It removes the copy
-only when no owners remain, HEAD matches the recorded SHA, and
-`git status --porcelain --ignored` is empty. Otherwise it keeps the copy and
-reports why, even with `--force`. A pin bump or a changed `--tools-dir` releases
-the old copy through the same guard. Installation clones into a temporary sibling
-and renames it into place. A later owner or manifest write failure restores
-ownership and removes only a copy created by that installation. Older manifests
-without an archify record still load.
+Legacy tool release drops only this skills root's ownership. It removes an
+unchanged real copy only at its recorded SHA with no other owners and no
+tracked, untracked or ignored edits. Otherwise it reports why the copy stays.
+Edited or unowned legacy records stay intact; failed manifest writes restore owners.
 
 ## Environment variables
 
@@ -181,8 +164,6 @@ without an archify record still load.
   and the legacy skills manifest; it does not change the shared skill default.
 - `CLAUDE_CONFIG_DIR` selects the directory containing `settings.json` for
   Claude settings management; `--claude-settings` overrides that file.
-- `ARCHIFY_CHROME` selects the Chrome executable used by the archify check.
-- `AXSTACK_ARCHIFY_REPO` is a test-only repository override for archify fixtures.
 
 ## Exit codes and troubleshooting
 
@@ -191,13 +172,12 @@ For every command (install, check, uninstall, help and version), Bun below
 1.3.14 exits 1 before argument parsing or any capability report.
 
 - Install exits 1 for argument or validation errors: an unknown command or flag,
-  missing flag value, obsolete `--profile`, conflicting Claude settings flags,
+  missing flag value, obsolete `--profile` or `--tools-dir`, conflicting Claude settings flags,
   Bun below the floor, missing or invalid preset, unresolved skills target,
-  unavailable default tools path, malformed bundle or manifest, unsafe path or
-  symlink, overlapping skills/tools roots, or a refused home write without `--yes`.
+  malformed bundle or manifest, unsafe path or
+  symlink, overlapping roots, or a refused home write without `--yes`.
 - Install exits 1 for ownership or transaction failures: an unknown destination
-  without `--force`, conflicting instruction-path binding, edited or unowned
-  archify record, existing archify SHA mismatch, Claude settings/sidecar conflict,
+  without `--force`, conflicting instruction-path binding, Claude settings/sidecar conflict,
   concurrent edit, filesystem failure, or failed recovery.
 - Install exits 1 for an instruction conflict that was preserved. Resolve the
   reported block conflict manually before retrying.
@@ -206,19 +186,18 @@ For every command (install, check, uninstall, help and version), Bun below
 - Install exits 1 for a legacy retirement failure after a canonical Codex install;
   that canonical install can already be complete. Preserve the reported assets
   and resolve the retirement error before retrying.
-- Check exits 1 for any reported gap: a failed capability row, invalid archify
-  record/copy/SHA, non-owned instruction binding, or legacy routing outside the
+- Check exits 1 for any reported gap: a failed capability row,
+  non-owned instruction binding, or legacy routing outside the
   owned block. Check exits 1 for argument, bundle-validation, and filesystem errors.
 - Uninstall exits 1 for argument, validation, ownership-binding, home-confirmation,
   or transaction errors; preserved user edits are reported without failing.
 
 Install exits 0 for a clean or idempotent result, preserved edits to ordinary
-owned skills, or unavailable archify caused by an offline host, missing Git, or
-clone failure. Check exits 0 when there are no gaps, and Chrome absence is a warning.
+owned skills. Check exits 0 when there are no gaps.
 Uninstall exits 0 on completion, including preserved user edits and retained
-archify copies. Help and version exit 0 when the Bun floor is met.
+legacy tool copies. Help and version exit 0 when the Bun floor is met.
 
-Start with the reported path and reason. Choose an explicit skills or tools path
+Start with the reported path and reason. Choose an explicit skills path
 when a default cannot resolve. Use `--yes` only for intended home writes, and
 `--force` only after deciding to replace the specific asset. Back up edited files
 before changing ownership. An incomplete rollback reports manual recovery needs;
