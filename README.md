@@ -66,7 +66,7 @@ You make decisions at holds and substantial-spec approval.
 Follow [getting started](docs/getting-started.md) for the full first-task journey
 and [guides](docs/guides.md) for features, reviews, watches, debugging and releases.
 
-## What you can do
+## What you can do (19 skills)
 
 | Layer | Skill | What it does |
 | --- | --- | --- |
@@ -86,6 +86,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Operate | [axstack-cleanup](skills/axstack-cleanup/SKILL.md) | Retire eligible completed agent resources. |
 | Operate | [axstack-relay](skills/axstack-relay/SKILL.md) | Send an explicit message or authorized notification. |
 | Understand | [axstack-research](skills/axstack-research/SKILL.md) | Answer one bounded question with sources. |
+| Understand | [axstack-scout](skills/axstack-scout/SKILL.md) | Gather codebase evidence for an agent across several areas. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
 | Understand | [axstack-diagram](skills/axstack-diagram/SKILL.md) | Draw SVG/CSS in inline pages, Mermaid for chat/GitHub/docs, or requested archify viewers. |
 

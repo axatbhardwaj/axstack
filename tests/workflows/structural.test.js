@@ -61,6 +61,7 @@ const EXPECTED_SKILLS = [
   'axstack-implement',
   'axstack-review',
   'axstack-watch',
+  'axstack-scout',
 ];
 
 // Standalone phases callable directly; each must explicitly load shared contracts.
@@ -74,6 +75,7 @@ const STANDALONE_PHASES = [
   'axstack-implement',
   'axstack-review',
   'axstack-watch',
+  'axstack-scout',
 ];
 
 // NOTE: structural checks only. They verify packaging, not instruction-following behavior.

@@ -16,6 +16,7 @@ const PHASE_SKILLS = [
   'axstack-relay',
   'axstack-research',
   'axstack-review',
+  'axstack-scout',
   'axstack-spec',
   'axstack-tickets',
   'axstack-watch',

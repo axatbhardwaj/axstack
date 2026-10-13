@@ -193,6 +193,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // the normal 30-minute run-watch cadence with 5-minute recovery cases, and
   // stranded user messages as pending local action;
   // always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(387533);
+  // 20261012-scout-skill-align C2: +4311 bytes to the aggregate ceiling;
+  // always-loaded unchanged. Keep the measured aggregate ceiling exact.
+  expect(total).toBeLessThanOrEqual(391844);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
