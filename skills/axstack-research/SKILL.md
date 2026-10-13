@@ -28,7 +28,7 @@ is part of research.
    gathering evidence only after the target and stopping boundary are explicit.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
-   Every other research run dispatches all configured research role branches through
+   Every other research run dispatches every configured research branch through
    T3 `delegate_task`: requirements, code, and web (Sonnet high in mixed/claude-only;
    Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
    built in), and X (Grok).

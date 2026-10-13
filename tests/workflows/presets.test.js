@@ -322,7 +322,7 @@ test('presets: X research uses the Grok route only in mixed', () => {
 
 test('presets: research fans out through the Google web route', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
-  expect(research).toMatch(/every other research run dispatches (?:every|all) configured research (?:role )?branches/i);
+  expect(research).toMatch(/every other research run dispatches every configured research branch/i);
   expect(research).toContain('`axstack-research-web-google`');
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
