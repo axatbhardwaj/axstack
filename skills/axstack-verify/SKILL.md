@@ -70,6 +70,7 @@ Clean up owned resources by literal absolute paths.
 Follow [Safe deletion](../axstack/references/workspace-hygiene.md#safe-deletion).
 
 For a peer PR or a review run, read the Launch recipe and helpers from the base revision and execute against the pinned candidate.
+For an `axstack-verify create` PR, the reviewer drives the candidate's recipe because the base has none.
 Keep trusted base helpers separate from the candidate's recipe files.
 Bind evidence to the served SHA.
 Report an unavailable candidate run as unverified.

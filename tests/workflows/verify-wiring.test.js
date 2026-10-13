@@ -76,6 +76,13 @@ for (const [owner, source] of consumers) {
     'Raise a broken or stale recipe as a low finding that names axstack-verify maintain.',
     [[/low/gi, 'medium'], [/axstack-verify maintain/gi, 'axstack-verify create']]]);
 }
+for (const path of ['skills/axstack-review/SKILL.md', 'skills/axstack-verify/SKILL.md']) {
+  rules.push([`${path} create PR uses candidate recipe`, () => read(path),
+    [/axstack-verify create/i, /PR/i, /reviewer/i, /drives|exercises/i,
+      /candidate.?s? recipe/i, /because|since/i, /base/i, /has none|lacks one/i],
+    'For an axstack-verify create PR, the reviewer exercises the candidate recipe since the base lacks one.',
+    [[/reviewer/gi, 'author'], [/candidate.?s? recipe/gi, 'base recipe'], [/has none|lacks one/gi, 'has one']]]);
+}
 for (const path of watchCopies) {
   rules.push(
     [`${path} local result ownership`, () => proven(path),
@@ -99,6 +106,11 @@ for (const [name, start, end] of [
       /local drive/i, /each|every/i, /affected feature/i, /pinned final head/i],
     'Applicable verify-<app>: Final-head check logs the reviewer local drive of every affected feature at the pinned final head.',
     [[/reviewer/gi, 'author'], [/pinned final head/gi, 'earlier head'], [/each|every/gi, 'selected']]]);
+  rules.push([`Review ${name} no-skill reason`, () => section(review(), start, end).split('\n')
+    .find((line) => /^\s*Applicable verify-<app>:/.test(line)) ?? '',
+    [/use|record/i, /n\/a/i, /reason/i, /when|if/i, /no skill covers/i, /affected behavior/i],
+    'Record n/a — <reason> if no skill covers affected behavior.',
+    [[/n\/a/gi, 'pass'], [/no skill covers/gi, 'a skill covers']], /no skill covers/i]);
 }
 
 for (const [name, readSource, concepts, rewording, inversions, prohibition] of rules) {
@@ -106,7 +118,7 @@ for (const [name, readSource, concepts, rewording, inversions, prohibition] of r
     const accepts = (text) => sentences(text).some((sentence) =>
       !/\b(?:unless|except)\b/i.test(sentence)
       && (prohibition ? prohibits(sentence, prohibition, ...concepts) : requires(sentence, ...concepts)));
-    checkRule(sentences(readSource()).join('. '), accepts, rewording.replace(/\.$/, ''),
+    checkRule(sentences(readSource()).join('. ').replace(/\.$/, ''), accepts, rewording.replace(/\.$/, ''),
       [...inversions, [/^/, 'Do not '], [/$/, ' unless convenient']], concepts);
   });
 }
