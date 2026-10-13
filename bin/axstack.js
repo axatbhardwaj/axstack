@@ -13,7 +13,7 @@ import {
   uninstallBundle,
   validateBundle,
 } from '../src/installer.js';
-import { BUN_FLOOR, checkArchify, checkCapabilities, meetsFloor, runRealCheck } from '../src/capabilities.js';
+import { BUN_FLOOR, checkCapabilities, meetsFloor, runRealCheck } from '../src/capabilities.js';
 import { findLegacyRoutingLines } from '../src/instructions.js';
 import { harnessLocations } from '../src/locations.js';
 
@@ -43,7 +43,7 @@ function packageVersion() {
 const HELP = `axstack — Axstack setup CLI (installation bookkeeping only)
 
 Usage:
-  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--tools-dir <dir>] [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+  axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
   axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack --help | --version
@@ -62,7 +62,6 @@ Flags:
                       Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target. Overrides harness skill defaults
                       and automatic legacy Codex skill retirement.
-  --tools-dir <dir>   Pinned archify copies. Defaults to ~/.axstack/tools.
                       Must be outside skills roots and contain no symlink path.
   --instructions <file>
                       Instruction file to receive the owned routing block.
@@ -107,10 +106,11 @@ function parseArgs(argv) {
   }
   out.command = rest.shift();
   const wantsValue = new Set([
-    '--bundle', '--skills-dir', '--tools-dir', '--instructions', '--harness', '--preset', '--claude-settings',
+    '--bundle', '--skills-dir', '--instructions', '--harness', '--preset', '--claude-settings',
   ]);
   while (rest.length > 0) {
     const tok = rest.shift();
+    if (tok === '--tools-dir') throw new Error('--tools-dir is obsolete; archify provisioning has been retired');
     if (tok === '--profile') {
       throw new Error(
         '--profile is obsolete in the T3 Code installer; role data is installed as axstack/roles.json and legacy Paseo cleanup is separate',
@@ -309,7 +309,6 @@ async function main() {
         bundleDir: flags.bundle ? resolve(flags.bundle) : PACKAGE_ROOT,
         skillsDir,
         preset: flags.preset,
-        toolsDir: flags['tools-dir'] ? expandHome(flags['tools-dir']) : undefined,
         instructionsPath,
         inheritedInstructions: legacyCodexManifest?.instructions,
         force: !!flags.force,
@@ -409,18 +408,6 @@ async function main() {
     }
     if (command === 'check') {
       const report = await checkCapabilities(runRealCheck);
-      const toolSkillsDir = flags['skills-dir'] ? expandHome(flags['skills-dir']) :
-        flags.harness ? resolveHarnessTarget(flags.harness) : null;
-      if (toolSkillsDir) {
-        const tool = await checkArchify(toolSkillsDir);
-        console.log(`archify record: ${tool.recordFile}`);
-        if (tool.record) console.log(`archify copy: ${tool.record.path}; recorded SHA: ${tool.record.sha}; checked-out SHA: ${tool.actual ?? 'unavailable'}`);
-        if (tool.reason) {
-          console.log(`archify: ${tool.reason}`);
-          report.gaps.push(`archify: ${tool.reason}`);
-        }
-        console.log(tool.chrome ? `Chrome: ${tool.chrome}` : 'WARN Chrome: unavailable (viewer verification needs Chrome)');
-      }
       if (flags.bundle) {
         const bundle = await validateBundle(resolve(flags.bundle));
         const presetNames = Object.keys(bundle.presets);
