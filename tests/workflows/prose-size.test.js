@@ -211,6 +211,19 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-explain-anatomy base update: merge Scout #442 at c7ec79f;
   // +80 measured owned bytes for Research/Improve routing; exact total 396649.
   // Preserve both histories; always-loaded unchanged, no headroom.
-  expect(total).toBeLessThanOrEqual(396649);
+  // 20261013-verify-wiring A1: ceiling raised by 1436 bytes; A1 content
+  // adds 1719 measured bytes; always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair1: ceiling raised by 344 bytes for no-skill
+  // template values and the create-PR candidate-recipe exception; always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair2: +264 measured bytes after merging main's
+  // Scout roster guidance; exact aggregate ceiling, always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair2 latest-main merge: exact measured
+  // aggregate 393907 bytes; preserve both histories, always-loaded unchanged.
+  // 20261013-verify-wiring A1 repair3: measured PR growth +2063 bytes
+  // (393987 merged - 391924 main at c7ec79f); exact ceiling, always-loaded unchanged.
+  // 20261012-explain-anatomy base update: merge verify wiring #439 at 9af30f4;
+  // +2063 measured owned bytes; exact total 398712, always-loaded unchanged.
+  // Preserve both histories above; no aggregate headroom.
+  expect(total).toBeLessThanOrEqual(398712);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

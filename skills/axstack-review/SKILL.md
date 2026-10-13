@@ -330,6 +330,14 @@ This section applies to peer and authored PR modes.
    mode-required receipt records concrete evidence and consequences, coverage,
    limitations, and findings without a finding quota.
 
+   If a `verify-<app>` skill covers affected behavior, the authored reviewer runs its base-revision Launch and Doctor against the pinned final head in its detached checkout.
+   For an `axstack-verify create` PR, the reviewer drives the candidate's recipe because the base has none.
+   The author never performs this review drive.
+   The reviewer drives each affected feature and records that drive as the `Final-head check`.
+   Delegate browser drives to `axstack-ui-verifier` with the feature file path.
+   Running the applicable surface counts as spin-up; a CLI run qualifies.
+   Use loopback and isolated instances under [axstack-verify](../axstack-verify/SKILL.md#isolate-every-attempt).
+
    For each finding, name its defect class and list every instance of that
    class in the pinned diff and dependent surfaces: callers, sibling docs,
    README, and tests. A later instance of an already-named class is a coverage
@@ -393,6 +401,7 @@ Authored receipt requirements:
   Report Coverage: COMPLETE | INCOMPLETE with covered angles, acceptance and executable evidence.
   Tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven.
   Record Final-head check: <command> -> <log path> for a check the reviewer ran at the final head; keep the log in the run's evidence folder.
+  Applicable verify-<app>: Final-head check records the reviewer's local drive of each affected feature at the pinned final head. Use n/a — <reason> when no skill covers the affected behavior.
   Record a Safety fact: about the change itself rather than the review process.
   Rate each non-agent comment at the current head above low | low | addressed | uncertain.
   Re-rate each non-agent comment at every new head.
@@ -420,6 +429,7 @@ Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: COMPLETE | INCOMPLETE — <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why; tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven>
 Final-head check: <command> -> <log path> — <check the reviewer ran at the final head; log kept in the run's evidence folder>
+Applicable verify-<app>: <Final-head check records the reviewer's local drive of each affected feature at the pinned final head>. Use n/a — <reason> when no skill covers the affected behavior.
 Findings: <severity + evidence + consequence each>
 Revert: <declared line + diff-based assessment in authored mode>
 Agent-authored comment and thread IDs: <receipt-recorded IDs or none>
