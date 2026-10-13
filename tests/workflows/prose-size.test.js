@@ -207,6 +207,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-explain-anatomy base update: merge Scout #441 at 6591eb7;
   // +4330 measured owned bytes for the new Scout skill; exact total 396569.
   // Preserve both histories above; always-loaded unchanged, no headroom.
-  expect(total).toBeLessThanOrEqual(396569);
+  // C3: +80 bytes for Research and Improve routing; always-loaded unchanged.
+  // 20261012-explain-anatomy base update: merge Scout #442 at c7ec79f;
+  // +80 measured owned bytes for Research/Improve routing; exact total 396649.
+  // Preserve both histories; always-loaded unchanged, no headroom.
+  expect(total).toBeLessThanOrEqual(396649);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
