@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync } from 'node:fs';
-import { requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -20,6 +20,110 @@ test('review manager exposes one short finite-session native prompt', () => {
   const reviewSkill = compact('skills/axstack-review/SKILL.md');
   expect(reviewSkill).toMatch(/fresh review-manager session[\s\S]{0,220}follow only[^.]*discovery[^.]*admission/i);
   expect(reviewSkill).toMatch(/Do not review a PR[^.]*materialize `axstack-owner`[^.]*check out a PR branch/i);
+});
+
+// The packaged prompt is the gate's production boundary; mutations below
+// protect its semantics without claiming live model or scheduler compliance.
+const quietRules = [
+  ['gate precedes skill loading',
+    [/quiet check/i, /before/i, /invoking.*axstack-review/i, /reading any.*skills\/\*\*/i],
+    'Before invoking axstack-review or reading any skills/** file, perform the quiet check.',
+    [[/before/i, 'after']]],
+  ['changed PR list is busy',
+    [/run.*full pass/i, /when/i, /\bsorted list/i, /differs|different/i, /Quiet gate:/i],
+    'When the sorted list is different from Quiet gate:, run the full pass.',
+    [[/differs|different/i, 'equal']]],
+  ['non-terminal lane thread is busy',
+    [/run.*full pass/i, /when/i, /other lane thread/i, /non-terminal/i],
+    'When any other lane thread is non-terminal, run the full pass.',
+    [[/non-terminal/i, 'terminal']]],
+  ['unreadable continuity is busy',
+    [/run.*full pass/i, /when/i, /continuity/i, /watermark/i, /missing/i, /malformed/i, /unreadable/i],
+    'When continuity or a watermark is missing, malformed or unreadable, run the full pass.',
+    [[/unreadable/i, 'readable'], [/missing/i, 'present'], [/malformed/i, 'valid']]],
+  ['stale full pass is busy',
+    [/run.*full pass/i, /when/i, /Last full pass:/i, /at least 4 hours old/i, /future/i],
+    'When Last full pass: is at least 4 hours old or in the future, run the full pass.',
+    [[/at least 4 hours old/i, 'less than 4 hours old']]],
+  ['incomplete calls are busy',
+    [/run.*full pass/i, /when/i, /call fails/i, /pagination/i, /head OIDs/i, /liveness/i, /incomplete/i, /unknown/i],
+    'When a call fails or pagination, head OIDs or thread/run liveness is incomplete or unknown, run the full pass.',
+    [[/call fails/i, 'call succeeds'], [/incomplete/i, 'complete'], [/unknown/i, 'known']]],
+];
+for (const [name, concepts, rewording, inversions] of quietRules) {
+  test(`review-manager quiet gate: ${name}`, () => {
+    checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+      (text) => requires(text, ...concepts), rewording,
+      [...inversions, [/^/, 'Do not ']], concepts);
+  });
+}
+
+test('quiet check is physically before the full-pass skill entry', () => {
+  const text = compact('skills/axstack/references/review-manager-prompt.md');
+  const accepts = (source) => {
+    const check = source.search(/quiet check/i);
+    const entry = source.search(/Enter through installed.*axstack-review/i);
+    return check >= 0 && entry > check;
+  };
+  expect(accepts(text)).toBe(true);
+  expect(accepts(text.replace(/quiet check/gi, ''))).toBe(false);
+  expect(accepts(`Enter through installed axstack-review. ${text}`)).toBe(false);
+  expect(accepts(text.replace(/quiet check/gi, 'Quiet check'))).toBe(true);
+});
+
+test('quiet discovery uses authenticated paginated PR and lane inventories', () => {
+  const text = compact('skills/axstack/references/review-manager-prompt.md');
+  const concepts = [/gh api user/i, /one paginated.*gh search prs/i,
+    /open/i, /non-draft/i, /involv.*self/i, /authored by someone else/i,
+    /\bsorted\b/i, /repo#number/i, /headRefOid/i, /updatedAt/i];
+  checkRule(text, (source) => requires(source, ...concepts),
+    'Use gh api user to resolve self, then one paginated gh search prs query for open, non-draft PRs involving self and authored by someone else, producing sorted (repo#number, headRefOid, updatedAt) tuples.',
+    [[/paginated/i, 'first-page'], [/authored by someone else/i, 'authored by self'],
+      [/\bsorted\b/i, 'unsorted']], concepts);
+  const lane = [/inventory/i, /every page/i, /T3/i, /lane/i, /thread/i, /run/i, /liveness/i];
+  checkRule(text, (source) => requires(source, ...lane),
+    'Inventory every page of T3 lane threads and their run liveness.',
+    [[/every page/i, 'one page']], lane);
+});
+
+test('quiet exit is silent and leaves skills, sweep and continuity untouched', () => {
+  const text = compact('skills/axstack/references/review-manager-prompt.md');
+  const restrictions = [/no text|without text/i,
+    /no skill load|without skill loading/i, /no sweep|without a sweep/i,
+    /no continuity write|without continuity writes/i];
+  const concepts = [/every busy condition is false/i, /end the turn/i, ...restrictions];
+  const accepts = (source) => sentences(source).some((sentence) =>
+    concepts.every((concept) => concept.test(sentence)) &&
+    requires(restrictions.reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
+  checkRule(text, accepts,
+    'When every busy condition is false, end the turn without text, without skill loading, without a sweep and without continuity writes.',
+    [[/every busy condition is false/i, 'any busy condition is true'],
+      ...restrictions.map((rule) => [rule, 'perform the action'])], concepts);
+});
+
+test('full passes record quiet watermarks in durable continuity', () => {
+  for (const path of ['review-manager-prompt.md', 'automations.md']) {
+    const text = compact(`skills/axstack/references/${path}`);
+    const concepts = [/full pass (?:records?|saves?)/i, /Watermarks/i,
+      /Quiet gate:/i, /\bsorted list/i, /Last full pass:/i, /UTC/i];
+    checkRule(text, (source) => requires(source, ...concepts),
+      'The full pass records Watermarks: Quiet gate: as the sorted list and Last full pass: as UTC.',
+      [[/records?|saves?/i, 'ignores'], [/\bsorted\b/i, 'unsorted']], concepts);
+  }
+  const template = read('skills/axstack/references/run-record.md')
+    .split('## Review-manager continuity template')[1].split('## Compact template')[0];
+  expect(template).toMatch(/## Watermarks[\s\S]*Quiet gate:[^\n]*\bsorted\b[^\n]*headRefOid[^\n]*updatedAt/i);
+  expect(template).toMatch(/## Watermarks[\s\S]*Last full pass:[^\n]*UTC/i);
+});
+
+test('documented review-manager schedules are hourly', () => {
+  for (const path of ['skills/axstack/references/automations.md',
+    'skills/axstack/references/lifecycle.md', 'docs/host-operations.md']) {
+    const text = compact(path);
+    expect(text, path).not.toMatch(/15-minute|every 15 minutes|everyMs:900000/i);
+    expect(text, path).toMatch(/hourly|every hour/i);
+    expect(text, path).toContain('everyMs:3600000');
+  }
 });
 
 test('manager contract admits actionable events by measured host capacity, not fixed job counts', () => {
@@ -62,7 +166,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
 
 test('manager sessions reconcile before admission in the dedicated workspace', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/schedule_task[^.]*everyMs:900000[^.]*bindToCurrentThread:false/i);
+  expect(text).toMatch(/schedule_task[^.]*everyMs:3600000[^.]*bindToCurrentThread:false/i);
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native T3[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no further shared-record write/i);

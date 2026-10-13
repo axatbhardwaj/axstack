@@ -52,7 +52,8 @@ Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
 Missing schedule capability holds activation.
-The optional review manager uses an unbound 15-minute T3 schedule and requires
+The optional review manager uses an unbound hourly T3 schedule
+(`everyMs:3600000`) and requires
 its separate native canary before activation. Installed guidance does not prove
 live behavior. See [Review manager](../skills/axstack/references/automations.md).
 
@@ -172,8 +173,10 @@ with the PR; remove the exact unit and route after settlement.
 
 The optional native review manager uses the VPS T3 project `axstack-review-lane`
 on the existing host clone. Configure and read back the lane's `axstack-owner`
-binding, then create an unbound T3 schedule every 15 minutes. Each pass starts
-in a fresh finite worktree from `origin/main`, fetches first, and checks its
+binding, then create an unbound hourly T3 schedule (`everyMs:3600000`).
+The packaged prompt checks for a quiet exit before skill loading; full passes
+follow the lifecycle below. Each pass starts in a fresh finite worktree from
+`origin/main`, fetches first, and checks its
 binding. Continuity lives outside worktrees at
 `~/.local/share/axstack/runs/review-manager/progress.md`. Per-PR detached
 review checkouts come from existing host clones; a missing clone holds that job.
@@ -211,8 +214,9 @@ and [Single T3 server](#single-t3-server).
 
 ## Review automation
 
-The review manager uses one short packaged prompt that loads the current
-relative contract and invokes `axstack-review`. Bounded jobs publish ordinary
+The review manager uses one short packaged prompt that checks for a quiet exit,
+then loads the current relative contract and invokes `axstack-review` for a full pass.
+Bounded jobs publish ordinary
 exact-head review verdicts; peer PRs are merged by the user. Manual adopted-PR maintenance
 uses `axstack-watch` with local-SHA review before authorized publication.
 Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation

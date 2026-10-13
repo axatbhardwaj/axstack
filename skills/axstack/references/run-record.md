@@ -159,6 +159,8 @@ in the adjacent history file, not below this template.
 - <PR or lane, reason, evidence, owner, resume condition; or none>
 
 ## Watermarks
+- Quiet gate: <sorted (repo#number, headRefOid, updatedAt) list; [] when empty>
+- Last full pass: <UTC timestamp of the last full pass>
 - <PR/event identity, exact head/base, last observed receipt; or none>
 
 ## Last pass

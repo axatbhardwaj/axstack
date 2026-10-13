@@ -40,11 +40,24 @@ A missing, non-durable or unreadable continuity path holds admission.
 Follow the [Run record](run-record.md) and use the
 [Review-manager continuity template](run-record.md#review-manager-continuity-template):
 overwrite its four current-state sections and archive superseded history once
-beside it. A no-change pass appends at most one history line.
+beside it. A no-change full pass appends at most one history line.
+
+The packaged prompt runs its quiet check before skill or reference loads; the
+account picker may run first. It compares the authenticated, fully paginated
+open non-draft peer PR inventory (sorted repo#number, headRefOid, updatedAt)
+with `Quiet gate:` in continuity's Watermarks and checks all lane thread/run states.
+A changed list, any other non-terminal lane thread, missing/malformed/unreadable
+continuity or watermark, a `Last full pass:` at least 4 hours old or in the future,
+or any failed call, incomplete pagination or unknown head/liveness makes it busy.
+Busy runs the full pass under the existing holds. Otherwise it ends silently
+without skill loading, sweep or continuity writes.
+The full pass records in Watermarks `Quiet gate:` as the sorted list and
+`Last full pass:` as UTC only as owner-of-record, then reads back the save.
+The sections below govern full passes; a quiet exit bypasses their teardown.
 
 Configure the lane thread via `t3_thread_configure` with the `axstack-owner`
 binding and verify its read-back. Then `schedule_task` uses the packaged prompt,
-`everyMs:900000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
+hourly with `everyMs:3600000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
 Record the schedule ID, project, lane binding and pass thread/run identities.
 Each pass compares its own `t3_thread_configuration` with the recorded binding
 after any owner-only instance update under [Provider bindings](t3-runtime.md#preflight-and-binding), before admission.

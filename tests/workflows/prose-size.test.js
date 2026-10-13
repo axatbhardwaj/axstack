@@ -224,6 +224,9 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-explain-anatomy base update: merge verify wiring #439 at 9af30f4;
   // +2063 measured owned bytes; exact total 398712, always-loaded unchanged.
   // Preserve both histories above; no aggregate headroom.
-  expect(total).toBeLessThanOrEqual(398712);
-  expect(alwaysLoaded).toBeLessThanOrEqual(27197);
+  // 20261013-token-efficiency A: +2700 measured aggregate bytes for the quiet
+  // review-manager gate and hourly cadence; +18 always-loaded bytes.
+  // Exact measured ceilings; no added headroom.
+  expect(total).toBeLessThanOrEqual(401412);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27215);
 });
