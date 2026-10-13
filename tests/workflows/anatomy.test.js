@@ -68,23 +68,30 @@ for (const [name, prohibition, concepts, rewording, inversions] of [
     (text) => prohibits(text, prohibition, ...concepts), rewording, inversions));
 }
 
-test('repository discovery excludes vendored tests while running repository tests', () => {
-  const fixture = makeTempRoot('anatomy-discovery-');
-  mkdirSync(`${fixture}/skills/axstack-anatomy/scripts`, { recursive: true });
-  mkdirSync(`${fixture}/tests/workflows`, { recursive: true });
-  mkdirSync(`${fixture}/tests/installer`, { recursive: true });
-  if (existsSync(`${root}/bunfig.toml`)) writeFileSync(`${fixture}/bunfig.toml`, read('bunfig.toml'));
-  writeFileSync(`${fixture}/skills/axstack-anatomy/scripts/probe.test.mjs`,
-    'import {test} from "bun:test"; test("VENDORED_SENTINEL", () => {throw Error("vendored test executed")});');
-  for (const area of ['workflows', 'installer']) {
-    writeFileSync(`${fixture}/tests/${area}/probe.test.js`,
-      `import {test} from "bun:test"; test("REPOSITORY_${area}", () => {});`);
-  }
-  const child = Bun.spawnSync([process.execPath, `${root}/skills/axstack/scripts/test-repository.js`],
-    { cwd: fixture, env: { ...process.env }, stdout: 'pipe', stderr: 'pipe' });
-  const output = child.stdout.toString() + child.stderr.toString();
-  expect(output).toContain('REPOSITORY_workflows');
-  expect(output).toContain('REPOSITORY_installer');
-  expect(output).not.toContain('VENDORED_SENTINEL');
-  expect(child.exitCode).toBe(0);
-});
+for (const agent of [null, 'CLAUDECODE', 'AI_AGENT']) {
+  test(`repository discovery excludes vendored tests while running repository tests (${agent ?? 'normal'})`, () => {
+    const fixture = makeTempRoot('anatomy-discovery-');
+    mkdirSync(`${fixture}/skills/axstack-anatomy/scripts`, { recursive: true });
+    mkdirSync(`${fixture}/tests/workflows`, { recursive: true });
+    mkdirSync(`${fixture}/tests/installer`, { recursive: true });
+    if (existsSync(`${root}/bunfig.toml`)) writeFileSync(`${fixture}/bunfig.toml`, read('bunfig.toml'));
+    writeFileSync(`${fixture}/skills/axstack-anatomy/scripts/probe.test.mjs`,
+      'import {test} from "bun:test"; test("VENDORED_SENTINEL", () => {throw Error("vendored test executed")});');
+    for (const area of ['workflows', 'installer']) {
+      writeFileSync(`${fixture}/tests/${area}/probe.test.js`,
+        `import {test} from "bun:test"; import {writeFileSync} from "node:fs"; test("REPOSITORY_${area}", () => {writeFileSync(${JSON.stringify(`${fixture}/${area}-ran`)}, "ran")});`);
+    }
+    const env = { ...process.env };
+    delete env.CLAUDECODE;
+    delete env.AI_AGENT;
+    if (agent) env[agent] = '1';
+    const child = Bun.spawnSync([process.execPath, `${root}/skills/axstack/scripts/test-repository.js`],
+      { cwd: fixture, env, stdout: 'pipe', stderr: 'pipe' });
+    const output = child.stdout.toString() + child.stderr.toString();
+    for (const area of ['workflows', 'installer']) {
+      expect(readFileSync(`${fixture}/${area}-ran`, 'utf8')).toBe('ran');
+    }
+    expect(output).not.toContain('VENDORED_SENTINEL');
+    expect(child.exitCode).toBe(0);
+  });
+}
