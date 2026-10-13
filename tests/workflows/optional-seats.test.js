@@ -32,6 +32,44 @@ test('optional seats are enumerated and absent only after a recorded failure', (
   expect(roster).toMatch(/mixed[^.]*Codex[^.]*Claude/i);
 });
 
+test('research sizing overrides optional dispatch without treating unneeded branches as outages', () => {
+  const text = sentences(read('skills/axstack/references/role-roster.md')).join('. ');
+  const sizing = [/always dispatch optional seats/i, /configured and available/i,
+    /except research branches/i, /Research step 2/i, /sizing/i];
+  checkRule(text, (source) => sentences(source).some((sentence) =>
+    sizing.every((concept) => concept.test(sentence))
+    && requires(sentence.replace(/optional seats/gi, 'seats'), /^/)),
+  'When configured and available, always dispatch optional seats except research branches, which follow Research step 2 sizing.',
+  [[/except research branches/i, 'including research branches']], sizing);
+
+  const status = [/research branch/i, /unneeded|unnecessary/i, /open claim/i,
+    /recorded/i, /not needed \(<reason>\)/i, /never as absent or a malfunction/i];
+  const accepts = (source) => sentences(source).some((sentence) =>
+    status.every((concept) => concept.test(sentence))
+    && requires(sentence.replace(/not needed \(<reason>\)/gi, 'reason label')
+      .replace(/never as absent or a malfunction/gi, ''), /^/));
+  checkRule(text, accepts,
+    'An unnecessary research branch for an open claim is recorded `not needed (<reason>)`, never as absent or a malfunction.',
+    [[/never as absent or a malfunction/i, 'always as absent or a malfunction']], status);
+});
+
+for (const path of ['skills/axstack/references/role-roster.md', 'skills/axstack-research/SKILL.md']) {
+  test(`research independence allows two providers while preserving other mixed minima: ${path}`, () => {
+    const text = sentences(read(path)).join('. ');
+    const sized = [/sized/i, /mixed/i, /research fan-out/i, /requires|must retain/i,
+      /dispatched branches/i, /at least two/i, /different providers/i];
+    checkRule(text, (source) => requires(source, ...sized),
+      'A sized research fan-out in mixed must retain dispatched branches from at least two different providers.',
+      [[/at least two/i, 'at least one'], [/different providers/i, 'the same provider'],
+        [/requires|must retain/i, 'may retain']], sized);
+    const other = [/every other|all other/i, /mixed fan-out/i, /arena/i, /review/i,
+      /retains|must retain/i, /at least one/i, /Codex/i, /Claude/i];
+    checkRule(text, (source) => requires(source, ...other),
+      'All other mixed fan-outs, including review and arena, must retain at least one Claude and one Codex seat.',
+      [[/every other|all other/i, 'research'], [/retains|must retain/i, 'may retain']], other);
+  });
+}
+
 test('Scout roster keeps the required seats per facet in each preset', () => {
   const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
   const bullet = roster.split(/\n(?=- )/).find((part) => part.includes('`axstack-explore-codebase-luna`'));

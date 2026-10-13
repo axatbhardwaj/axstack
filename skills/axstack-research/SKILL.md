@@ -68,8 +68,10 @@ is part of research.
    never averaging findings. Record an intentionally absent pair and proceed
    with the base seat alone. The `-sol` pair is optional: fence a launch failure,
    trust/login prompt, or prompt block; record `absent (<reason>)`, and continue
-   with the base seat. In mixed fan-out,
-   retain a Codex and a Claude seat or hold the affected fan-out.
+   with the base seat. A sized mixed research fan-out requires dispatched
+   branches spanning at least two different providers; otherwise hold that fan-out.
+   Every other mixed fan-out, including arena and review, retains at least one
+   Codex and one Claude seat; otherwise hold that fan-out.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards
