@@ -63,3 +63,25 @@ doctor > "$EVIDENCE/capabilities-doctor.log" 2>&1
 bun run test tests/installer/capabilities.test.js tests/installer/r2.test.js \
   > "$EVIDENCE/capabilities-suite.log" 2>&1
 ```
+
+## Legacy retirement and retry
+
+The authored reviewer drives these CLI fixtures at the pinned final head after
+base-revision Launch and Doctor. They cover fresh installs with no external-tool
+provisioning, same-path upgrades and direct uninstall, preserved edits/unowned
+records, owner-release guards and rollback, kept-copy reasons, and forced retry.
+They use private temporary bundles/homes and local Git fixtures, without network.
+
+```bash
+doctor > "$EVIDENCE/retirement-doctor.log" 2>&1
+STATUS=0
+bun run test tests/installer/*retirement.test.js tests/installer/legacy-*.test.js \
+  > "$EVIDENCE/retirement.log" 2>&1 || STATUS=$?
+printf '%s\n' "$STATUS" > "$EVIDENCE/retirement-exit.txt"
+test "$STATUS" -eq 0
+```
+
+Proof includes a kept edited record and its manifest binding, followed by a
+forced retry that releases the owner and removes only a pristine unowned copy.
+The author's earlier fixture log is development evidence; record the reviewer's
+own command and log as the final-head drive. No live host copy is touched.

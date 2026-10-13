@@ -37,3 +37,27 @@ not recompute the theme; root attributes, head stylesheets, explicit body marker
 and system appearance still do. Wrapper
 unit tests cover markers, CSS-color resolution, variable changes, standalone fallback
 and matching document color-scheme on load and every theme change.
+
+## Browser acceptance handoff
+
+For changed rendering or theme behavior, the authored reviewer delegates this
+feature file to `axstack-ui-verifier` at the pinned final head. Unit tests and
+author logs alone do not prove the browser result. Use the verifier's own
+host-loopback instance and configured browser, following UI verification;
+the offline CLI network namespace is not the browser's server instance.
+
+Give the verifier reviewed page bytes rebuilt with this head's wrapper, their
+SHA-256, and a private evidence folder. Bind the served HTTP bytes to that hash.
+At 728px and 360px, drive both dark and light, including OS appearance opposite
+the simulated T3 frame. Test on load and after live changes to `--background`,
+explicit `data-axstack-theme` markers, and standalone system appearance.
+Require body `data-theme` and computed root `color-scheme` to match the resolved
+theme. Also embed the page in a same-origin light parent iframe: the transparent
+outer page must show the light parent's backdrop, with no opaque dark rectangle.
+Record screenshots and computed styles; a same-document background check alone
+misses iframe compositing. Preserve geometry and interactive keyboard/pointer,
+focus and reduced-motion checks under Explain's page rules.
+
+The verifier's own final-head drive is the browser proof. Name unrun cases
+`changed-behavior: unproven`. Live T3 switching is a separate claim from frame
+simulation. Only the driver owns gating previews and page publication.

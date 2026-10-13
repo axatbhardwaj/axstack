@@ -40,3 +40,33 @@ Live acceptance requires the driver's exact task/thread/run identities,
 terminal state, receipt acceptance, settlement and readback, plus a fresh
 run-owned inventory before absence or cadence claims. Retain unobserved cases
 as UNKNOWN and cancellation as a separate disposition.
+
+## Explain delivery
+
+Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
+`delivery`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+After base-revision Launch and Doctor, the authored reviewer runs the declared
+workflow checks above plus the full Explain boundary below at the final head.
+
+```bash
+doctor > "$EVIDENCE/explain-doctor.log" 2>&1
+STATUS=0
+bun run test tests/workflows/explain-*.test.js \
+  tests/workflows/ui-verification.test.js tests/workflows/verify-wiring.test.js \
+  > "$EVIDENCE/explain.log" 2>&1 || STATUS=$?
+printf '%s\n' "$STATUS" > "$EVIDENCE/explain-exit.txt"
+test "$STATUS" -eq 0
+```
+
+Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
+700-word counting without card exemptions, exact-byte network scans, preview
+and interaction gates, bounded delivery holds, and ambiguous-render readback.
+For page behavior, delegate this feature path to `axstack-ui-verifier` with the
+reviewed artifact's SHA-256 and private evidence folder. It serves the exact
+bytes on its own isolated host-loopback instance and checks 728px dark/360px
+light, layout, theme, console/network, all interactive states and accessibility.
+Use [Anatomy](anatomy.md#browser-acceptance-handoff) for figure theme/compositing.
+Honor user browser-tool policy. The author performs no review browser drive;
+only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
+author logs and preview URLs alone are not. Mark uncovered behavior explicitly
+`changed-behavior: unproven`.
