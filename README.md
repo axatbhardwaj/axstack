@@ -115,8 +115,8 @@ subject to explicit stop-after-publication or observation requests.
 See [Host operations](docs/host-operations.md#chat-run-watch-activation) for wake activation and cadence.
 See [Chat-run PR watch](docs/workflows.md#chat-run-pr-watch) for the lifecycle and quiet cadence.
 
-An optional native T3 review manager runs finite peer-review passes every 15
-minutes; the review automation never merges for you. Activation needs live
+An optional native T3 review manager runs finite peer-review passes hourly
+(`everyMs:3600000`); the review automation never merges for you. Activation needs live
 host validation. See [PR-manager setup and safety](docs/host-operations.md#optional-native-peer-review-automation).
 
 

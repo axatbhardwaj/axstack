@@ -24,7 +24,7 @@ const rules = [
   ['next transition', [/update/i, /Next:/i, /transition/i, /owner/i, /hold/i], 'At each transition update Next: with owner and hold.'],
   ['dependent advancement', [/dispatch/i, /unblocked dependent/i, /verify/i, /scope/i, /dependencies/i], 'Verify scope and dependencies and dispatch each unblocked dependent.'],
   ['native handoff reconcile', [/reconcile/i, /T3 threads/i, /runs/i, /Git revisions/i, /pending receipts/i], 'Reconcile pending receipts and Git revisions with T3 threads and runs.'],
-  ['review schedule', [/review manager/i, /T3 scheduled task/i, /15-minute/i], 'The review manager runs on a 15-minute T3 scheduled task.'],
+  ['review schedule', [/review manager/i, /T3 scheduled task/i, /hourly|every hour/i, /everyMs:3600000/], 'The review manager runs on an hourly T3 scheduled task (everyMs:3600000).'],
 ];
 for (const [name, concepts, holdout] of rules) test(`tracking rule: ${name}`, () => {
   expect(requires(lifecycle(), ...concepts)).toBe(true);

@@ -13,6 +13,8 @@ STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/workspace-hygiene.test.js \
   tests/workflows/manager-pass-settlement.test.js \
+  tests/workflows/pr-managers.test.js \
+  tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-discovery.test.js \
   tests/workflows/merge-audit-discipline.test.js \
   tests/workflows/merge-escalation.test.js \

@@ -224,12 +224,24 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261012-explain-anatomy base update: merge verify wiring #439 at 9af30f4;
   // +2063 measured owned bytes; exact total 398712, always-loaded unchanged.
   // Preserve both histories above; no aggregate headroom.
+  // 20261013-token-efficiency A: +2700 measured aggregate bytes for the quiet
+  // review-manager gate and hourly cadence; +18 always-loaded bytes.
+  // Exact measured ceilings; no added headroom.
+  // 20261013-token-efficiency A repair1: +1001 measured aggregate bytes for
+  // recorded-work holds, mandatory picker and two-query coverage; always-loaded unchanged.
+  // 20261013-token-efficiency A repair2: -775 measured aggregate bytes for
+  // the canonical prompt gate, inline picker and short automation pointer; always-loaded unchanged.
+  // 20261013-token-efficiency A repair3: +135 measured aggregate bytes for
+  // current-instance eligibility and lookup; always-loaded unchanged, no headroom.
   // 20261013-token-efficiency B: +485 measured bytes for claim-sized Research
   // dispatch and configured independent pairs; always-loaded unchanged, no headroom.
   // 20261013-token-efficiency B repair1: +586 measured bytes for Research's
   // optional-seat and mixed-provider exceptions; always-loaded unchanged, no headroom.
   // 20261013-token-efficiency B repair2: +324 measured aggregate bytes,
   // including +95 always-loaded bytes for the routing summary; no added headroom.
-  expect(total).toBeLessThanOrEqual(400107);
-  expect(alwaysLoaded).toBeLessThanOrEqual(27292);
+  // 20261013-token-efficiency base1: A +3061 and B +1395 aggregate bytes
+  // combine at 403168; measured always-loaded 27196 + 18 + 95 = 27309.
+  // Retire the inherited one-byte always-loaded headroom; both ceilings are exact.
+  expect(total).toBeLessThanOrEqual(403168);
+  expect(alwaysLoaded).toBeLessThanOrEqual(27309);
 });

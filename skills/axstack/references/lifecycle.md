@@ -131,7 +131,8 @@ differs from merged.
 ## Review automation health
 
 The native review manager uses fresh finite T3 pass threads from its dedicated
-lane project on a 15-minute T3 scheduled task. It admits actionable PR events
+lane project on an hourly T3 scheduled task (`everyMs:3600000`). It admits
+actionable PR events
 within measured host capacity; waiting PRs remain covered without reserving slots.
 Bounded PR jobs use driver-made detached checkouts and settle after descendants.
 Build no custom scheduler, state engine or legacy fallback. See
