@@ -197,6 +197,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // trusted review recipes and local-proof requirements; always-loaded unchanged.
   // 20261013-verify-wiring A1 repair1: +344 measured bytes for no-skill template
   // values and the create-PR candidate-recipe exception; always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(389313);
+  // 20261013-verify-wiring A1 repair2: +264 measured bytes after merging main's
+  // Scout roster guidance; exact aggregate ceiling, always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(389577);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
