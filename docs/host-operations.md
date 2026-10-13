@@ -235,15 +235,24 @@ This opt-in script changes only root `defaultModelSelection` in
 `~/.t3/userdata/settings.json`. Without a pool it changes only the instance
 among enabled accounts of the current Claude/Codex driver.
 `AXSTACK_SYNC_POOL` compares drivers by weekly clocks (>=604800s), without
-plan weights. Rotation needs a ten-point elapsed-minus-used pace lead;
-excluded/unauthorized/skipped current accounts can escape to known candidates.
-Any window at 95% or a reached limit excludes. Non-current absent credentials
+plan weights. Weekly remaining quota is `R = 100 - used` for the selected
+weekly window. Prefer the highest band: `R >= 15`, `10 <= R < 15`, then `R < 10`.
+A higher band switches without a pace margin; within the same band, rotation
+needs a ten-point elapsed-minus-used pace lead and the current account wins ties.
+This also applies when every eligible account is below 10% remaining: known
+usable quota stays usable, ranked by pace. Without a pool, only pace applies.
+This is a best-effort weekly reserve preference, not a guaranteed budget for
+future work. The current hard guard still excludes any window at 95% used
+or a reached limit. Excluded/unauthorized/skipped current accounts can escape
+to known candidates before the unknown hold; otherwise any unknown holds,
+even below 10% remaining. No eligible candidate leaves the default untouched.
+Non-current absent credentials
 exclude; malformed/unreadable credentials and unknown/stale usage hold.
 Cache expires after five minutes. Missing defaults stay untouched; OAuth tokens
 are never refreshed. Each host's pool uses only enabled, credentialed drivers:
 
 ```sh
-AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6.1-sol:xhigh \
+AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium \
   bun ~/.agents/skills/axstack/scripts/sync-default.js --dry-run
 ```
 
@@ -257,6 +266,15 @@ failure. Save the full selection for rollback. Other bytes stay intact.
 A fsynced sibling preserves mode; original bytes are checked before rename and
 read back afterward. The accepted sub-ms T3 write race can lose an edit;
 read-back mismatch is an error.
+
+Validate pool models and efforts against each host's catalog before activation.
+Preserve that host's current Opus effort by including it explicitly when set;
+the illustrative Claude entry above omits effort. If the current Codex default
+still uses Sol, the driver performs a one-time same-account selection migration
+to `gpt-6-astra:medium` during authorized host activation, saving rollback bytes
+and verifying the write/readback. The helper does not enforce models when the
+account stays selected. Only new chats use the changed default; running threads,
+role routing, schedules and `roles.json` stay outside this policy.
 
 Under host-mutation authority, install and enable:
 
@@ -277,7 +295,7 @@ Override Bun/skills paths via `ExecStart`/`Environment` in
 
 ```ini
 [Service]
-Environment=AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6.1-sol:xhigh
+Environment=AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium
 ```
 
 Reload after edits. Logout needs authorized linger; installation never activates units.
