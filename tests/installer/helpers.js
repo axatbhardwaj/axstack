@@ -12,10 +12,6 @@ import { join } from '../../src/posixpath.js';
 // no Node.js runtime).
 export const BUN_BIN = process.execPath;
 
-// Ordinary installer fixtures exercise the offline path. Archify cases pass
-// their own local repository explicitly; no test may clone a remote repo.
-Bun.env.AXSTACK_ARCHIFY_REPO = join(makeTempRoot('axstack-offline-'), 'absent');
-
 export function tempDir() {
   return Bun.env.TMPDIR ?? '/tmp';
 }
@@ -33,9 +29,6 @@ export function runCli(
 ) {
   const fullEnv = { ...Bun.env, ...(env ?? {}) };
   const cliArgs = [...args];
-  if (cliArgs[0] === 'install' && !cliArgs.includes('--tools-dir')) {
-    cliArgs.push('--tools-dir', join(makeTempRoot('axstack-tools-'), 'tools'));
-  }
   for (const key of unset) delete fullEnv[key];
   const result = Bun.spawnSync([BUN_BIN, cli, ...cliArgs], {
     stdout: 'pipe',

@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
@@ -29,23 +29,16 @@ export function archifyFixture() {
   const pkg = join(root, 'cli');
   mkdirSync(pkg);
   for (const dir of ['src', 'bin']) cpSync(join(import.meta.dir, '../..', dir), join(pkg, dir), { recursive: true });
-  // The production pin stays immutable; local fixtures bind a different pin
-  // only in this disposable package, including on the pre-feature revision.
-  const pinFile = join(pkg, 'src', 'archify-pin.js');
-  const pin = existsSync(pinFile) ? readFileSync(pinFile, 'utf8') : '';
-  writeFileSync(pinFile, pin ? pin.replace(/[a-f0-9]{40}/, sha)
-    : `export const ARCHIFY_PIN = { repo: 'unused', sha: '${sha}' };\n`);
   const skills = join(root, 'skills');
   const tools = join(root, 'tools');
   const bundle = writeFixtureBundle(root);
   const cli = join(pkg, 'bin', 'axstack.js');
-  const env = { AXSTACK_ARCHIFY_REPO: repo };
-  const run = (args, options = {}) => runCli(cli, args, { ...options, env: { ...env, ...options.env } });
+  const run = (args, options = {}) => runCli(cli, args, options);
   const install = (extra = [], options) => run([
     'install', '--preset', 'mixed', '--bundle', bundle,
-    '--skills-dir', skills, '--tools-dir', tools, '--no-claude-settings', ...extra,
+    '--skills-dir', skills, '--no-claude-settings', ...extra,
   ], options);
-  return { root, repo, sha, pkg, pinFile, skills, tools, bundle, cli, run, install,
+  return { root, repo, sha, pkg, skills, tools, bundle, cli, run, install,
     copy: join(tools, `archify-${sha}`),
     owners: join(tools, `archify-${sha}.owners.json`),
     record: join(skills, 'axstack-diagram', 'archify.json'), BUN_BIN };
