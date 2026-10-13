@@ -43,6 +43,10 @@
   or high effort holds these roles without substitution.
   `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
   internal reports to its Run and original driver.
+- Scout requires `axstack-explore-codebase` and
+  `axstack-explore-codebase-luna` per facet in mixed (Haiku high + Luna
+  xhigh) and codex-only (Sol high + Luna xhigh). Claude-only requires
+  the Haiku high base seat per facet.
 - Sol pairs `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
   mixed/codex-only; intentionally absent in claude-only. Dispatch each
@@ -52,7 +56,8 @@
 - Optional seats: `axstack-arena-candidate-grok`,
   `axstack-arena-candidate-antigravity`, `axstack-research-web-google`,
   `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
-  `axstack-explore-execution-sol`, `axstack-auditor-sol`.
+  `axstack-explore-execution-sol`, `axstack-auditor-sol`,
+  `axstack-explore-codebase-flash`.
   Always dispatch optional seats when configured and available. Only a
   launch failure, trust/login prompt, or prompt block makes one absent:
   fence the attempt, record `absent (<reason>)`, name it once in the next

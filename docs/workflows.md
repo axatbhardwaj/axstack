@@ -130,8 +130,11 @@ use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
 `axstack-monitor` adopt Haiku 5.5 high, with class `haiku` and exact pin
 `claude-haiku-5-5`. Missing that ID or high effort in saved T3 capabilities
 holds those roles without substitution. `codex-only` keeps its Codex
-assignments for those roles. Mixed web-google and X retain their source-specific
-Antigravity and Grok routes.
+assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
+and `codex-only`, and an optional Antigravity Flash medium seat in `mixed`.
+In `claude-only`, Luna and Flash are intentionally absent; Flash is also
+intentionally absent in `codex-only`. Mixed web-google and X retain their
+source-specific Antigravity and Grok routes.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
 `axstack-explainer-review` uses Sol medium; `axstack-explainer` pins

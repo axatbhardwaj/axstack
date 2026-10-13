@@ -83,6 +83,36 @@ for (const preset of ['mixed', 'claude-only']) {
   });
 }
 
+test('Scout seats resolve from selected preset roles without substituting absent Flash', () => {
+  const data = fresh();
+  data.providers.find((provider) => provider.providerInstanceId === 'codex')
+    .models.push(entry('gpt-6-luna', 'reasoningEffort', ['xhigh']));
+  data.providers.find((provider) => provider.providerInstanceId === 'antigravity')
+    .models.push({ id: 'gemini-3.8-flash-medium', options: [] });
+
+  for (const preset of ['mixed', 'codex-only']) {
+    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
+    const luna = roles.find((role) => role.id === 'axstack-explore-codebase-luna');
+    const flash = roles.find((role) => role.id === 'axstack-explore-codebase-flash');
+    expect(luna, `${preset} Luna seat`).toBeDefined();
+    expect(flash, `${preset} Flash seat`).toBeDefined();
+
+    const lunaResult = resolve(data, ['--class', luna.modelClass], luna.provider, luna.thinkingOptionId);
+    expect(lunaResult.status).toBe(0);
+    expect(JSON.parse(lunaResult.output)).toMatchObject({ provider: 'codex', model: 'gpt-6-luna',
+      effortOption: { id: 'reasoningEffort', value: 'xhigh' } });
+
+    const flashResult = resolve(data, ['--model', String(flash.model)], flash.provider, flash.thinkingOptionId);
+    if (preset === 'mixed') {
+      expect(flashResult.status).toBe(0);
+      expect(JSON.parse(flashResult.output)).toMatchObject({ provider: 'antigravity',
+        model: 'gemini-3.8-flash-medium', effortOption: null });
+    } else {
+      held(flashResult, /intentional absence/i);
+    }
+  }
+});
+
 test('capabilities model:null without class holds Codex/Claude and binds launch-by-agent-ID providers', () => {
   const data = fresh();
   data.providers[2].models.push(entry('grok-9'));

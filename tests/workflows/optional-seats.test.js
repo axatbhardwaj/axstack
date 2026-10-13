@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
@@ -8,6 +8,7 @@ const optional = [
   'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
   'axstack-research-web-google', 'axstack-research-x', 'axstack-checker',
   'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
+  'axstack-explore-codebase-flash',
 ];
 
 test('scenario corpus distinguishes optional absence from required and launched holds', () => {
@@ -22,11 +23,30 @@ test('scenario corpus distinguishes optional absence from required and launched 
 
 test('optional seats are enumerated and absent only after a recorded failure', () => {
   const roster = read('skills/axstack/references/role-roster.md');
-  for (const id of optional) expect(roster).toContain(`\`${id}\``);
+  const listed = roster.match(/Optional seats:([^.]+)\./i)?.[1];
+  expect(listed).toBeDefined();
+  for (const id of optional) expect(listed).toContain(`\`${id}\``);
   expect(roster).toMatch(/dispatch optional seats when configured and available/i);
   expect(roster).toMatch(/launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
   expect(roster).toMatch(/fence[^.]*absent \(<reason>\)[^.]*next read-back[^.]*skip[^.]*without a relay/i);
   expect(roster).toMatch(/mixed[^.]*Codex[^.]*Claude/i);
+});
+
+test('Scout roster keeps the required seats per facet in each preset', () => {
+  const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
+  const bullet = roster.split(/\n(?=- )/).find((part) => part.includes('`axstack-explore-codebase-luna`'));
+  expect(bullet).toBeDefined();
+  const text = sentences(bullet).join('. ');
+  const direction = /\b(?:requires|must)\b/i;
+  const paired = [/Scout/i, /`axstack-explore-codebase`/, /`axstack-explore-codebase-luna`/,
+    /per facet|each facet/i, /mixed/i, /codex-only/i, direction];
+  checkRule(text, (source) => requires(source, ...paired),
+    'For Scout, mixed and codex-only must use `axstack-explore-codebase` and `axstack-explore-codebase-luna` for each facet.',
+    [[direction, 'may']], paired);
+  const claude = [/claude-only/i, /Haiku high/i, /base seat/i, /per facet|each facet/i, direction];
+  checkRule(text, (source) => requires(source, ...claude),
+    'In claude-only, the Haiku high base seat must be used for each facet.',
+    [[direction, 'may']], claude);
 });
 
 test('shared rules qualify only optional seats and preserve required holds', () => {

@@ -286,6 +286,11 @@ The `mixed` and `claude-only` presets assign `axstack-auditor`,
 Activation requires that exact ID and high effort in saved T3 capabilities;
 missing either holds these roles without substitution, including Haiku 4.5.
 The `codex-only` assignments for these roles are unchanged.
+Scout adds `axstack-explore-codebase-luna` at Codex Luna xhigh in `mixed` and
+`codex-only`. The optional `axstack-explore-codebase-flash` seat uses
+Antigravity `gemini-3.8-flash-medium` at medium effort in `mixed`.
+The missing Scout seats have explicit null models: Luna and Flash in
+`claude-only`, and Flash in `codex-only`.
 The three `-sol` pair seats for auditor, research-code, and explore-execution
 use Sol high in `mixed` and `codex-only`; `claude-only` records intentional
 absences. The paired seats run independently on one brief and the driver

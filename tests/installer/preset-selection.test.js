@@ -79,6 +79,36 @@ describe('explicit preset selection', () => {
     }
   });
 
+  test('installed snapshots retain Scout seat bindings for every preset', () => {
+    const expected = {
+      mixed: [
+        ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
+        ['axstack-explore-codebase-flash', 'antigravity', 'gemini-3.8-flash-medium', 'medium', 'full-access'],
+      ],
+      'codex-only': [
+        ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
+        ['axstack-explore-codebase-flash', 'codex', null, 'medium', 'full-access'],
+      ],
+      'claude-only': [
+        ['axstack-explore-codebase-luna', 'claude', null, 'xhigh', 'bypassPermissions'],
+        ['axstack-explore-codebase-flash', 'claude', null, 'medium', 'bypassPermissions'],
+      ],
+    };
+    for (const [preset, seats] of Object.entries(expected)) {
+      const home = makeTempRoot(`axstack-scout-${preset}-`);
+      const skillsDir = join(home, 'installed');
+      runCli(['install', '--preset', preset, '--bundle', join(import.meta.dir, '..', '..'),
+        '--skills-dir', skillsDir, '--no-claude-settings', '--yes'], { env: { HOME: home } });
+      const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
+      for (const [id, provider, binding, effort, modeId] of seats) {
+        const role = roles.find((item) => item.id === id);
+        expect(role, `${preset}: ${id}`).toBeDefined();
+        expect([role.provider, role.modelClass ?? role.model, role.thinkingOptionId, role.modeId])
+          .toEqual([provider, binding, effort, modeId]);
+      }
+    }
+  });
+
   for (const [alias, canonical] of [['codex', 'codex-only'], ['claude', 'claude-only']]) {
     test(`${alias} alias records ${canonical}`, () => {
       const root = makeTempRoot(`axstack-${alias}-alias-`);

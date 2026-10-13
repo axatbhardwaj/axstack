@@ -175,6 +175,24 @@
       "model": "claude-haiku-5-5"
     },
     {
+      "id": "axstack-explore-codebase-luna",
+      "name": "Axstack codebase explorer Luna",
+      "provider": "codex",
+      "modeId": "full-access",
+      "thinkingOptionId": "xhigh",
+      "notes": "Independent read-only Luna Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Unavailable model or effort holds without substitution.",
+      "modelClass": "luna"
+    },
+    {
+      "id": "axstack-explore-codebase-flash",
+      "name": "Axstack codebase explorer Flash",
+      "provider": "antigravity",
+      "model": "gemini-3.8-flash-medium",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Scout breadth seat: searches the whole repository for missed boundaries and counterexamples. Reports evidence for driver reconciliation without cross-reading."
+    },
+    {
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "claude",
