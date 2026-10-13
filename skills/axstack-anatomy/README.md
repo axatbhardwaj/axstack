@@ -101,11 +101,11 @@ Anatomy is a standard [Agent Skill](https://agentskills.io): a folder with a `SK
 |---|---|---|
 | **skills CLI**, for you (Claude Code) | `npx skills add wheresryan22/anatomy -g -a claude-code` | `~/.claude/skills/anatomy` |
 | **skills CLI**, for you (OpenCode) | `npx skills add wheresryan22/anatomy -g -a opencode` | `~/.config/opencode/skills/anatomy` |
-| **skills CLI**, for you (Codex) | `npx skills add wheresryan22/anatomy -g -a codex` | `~/.agents/skills/anatomy` |
+| **skills CLI**, for you (Codex) | `npx skills add wheresryan22/anatomy -g -a codex` | `<Codex home>/skills/anatomy` |
 | **skills CLI**, for one project | `npx skills add wheresryan22/anatomy` | `.claude/skills/anatomy` for Claude Code, `.agents/skills/anatomy` for OpenCode and Codex |
 | **git**, for you (Claude Code) | `git clone https://github.com/wheresryan22/anatomy.git ~/.claude/skills/anatomy` | `~/.claude/skills/anatomy` |
 | **git**, for you (OpenCode) | `git clone https://github.com/wheresryan22/anatomy.git ~/.config/opencode/skills/anatomy` | `~/.config/opencode/skills/anatomy` |
-| **git**, for you (Codex) | `git clone https://github.com/wheresryan22/anatomy.git ~/.agents/skills/anatomy` | `~/.agents/skills/anatomy` |
+| **git**, for you (Codex) | `git clone https://github.com/wheresryan22/anatomy.git <Codex home>/skills/anatomy` | `<Codex home>/skills/anatomy` |
 | **git**, for one project | `git clone https://github.com/wheresryan22/anatomy.git .claude/skills/anatomy` | `.claude/skills/anatomy` (Claude Code and OpenCode) or `.agents/skills/anatomy` (OpenCode and Codex) |
 | **Download**, no git | see below | any of the folders above |
 
@@ -125,7 +125,7 @@ The CLI copies the whole repository, examples included (about 10 MB). It needs a
 
 <br>
 
-Clone the repository into one of the skill folders, so that `SKILL.md` ends up at `<skills folder>/anatomy/SKILL.md`. For Claude Code use `~/.claude/skills/anatomy` or `.claude/skills/anatomy`. For OpenCode use `~/.config/opencode/skills/anatomy` or `.opencode/skills/anatomy`; OpenCode also reads the Claude Code and `.agents` folders. For Codex use `~/.agents/skills/anatomy` or `.agents/skills/anatomy`. For a project install, commit the folder so your team gets it too. To update later, `git pull` inside that folder.
+Clone the repository into one of the skill folders, so that `SKILL.md` ends up at `<skills folder>/anatomy/SKILL.md`. For Claude Code use `~/.claude/skills/anatomy` or `.claude/skills/anatomy`. For OpenCode use `~/.config/opencode/skills/anatomy` or `.opencode/skills/anatomy`; OpenCode also reads the Claude Code and `.agents` folders. For Codex use `<Codex home>/skills/anatomy` or `.agents/skills/anatomy`. For a project install, commit the folder so your team gets it too. To update later, `git pull` inside that folder.
 
 </details>
 
@@ -134,7 +134,7 @@ Clone the repository into one of the skill folders, so that `SKILL.md` ends up a
 
 <br>
 
-[Download the ZIP](https://github.com/wheresryan22/anatomy/archive/refs/heads/main.zip), unpack it, rename the folder from `anatomy-main` to `anatomy`, and move it into `~/.claude/skills/` (Claude Code), `~/.config/opencode/skills/` (OpenCode) or `~/.agents/skills/` (Codex).
+[Download the ZIP](https://github.com/wheresryan22/anatomy/archive/refs/heads/main.zip), unpack it, rename the folder from `anatomy-main` to `anatomy`, and move it into `~/.claude/skills/` (Claude Code), `~/.config/opencode/skills/` (OpenCode) or `<Codex home>/skills/` (Codex).
 
 Or in one line on macOS or Linux:
 
@@ -142,7 +142,7 @@ Or in one line on macOS or Linux:
 mkdir -p ~/.claude/skills/anatomy && curl -L https://github.com/wheresryan22/anatomy/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C ~/.claude/skills/anatomy
 ```
 
-For OpenCode or Codex, put the same files in `~/.config/opencode/skills/anatomy` or `~/.agents/skills/anatomy`:
+For OpenCode or Codex, put the same files in `~/.config/opencode/skills/anatomy` or `<Codex home>/skills/anatomy`:
 
 ```sh
 mkdir -p ~/.config/opencode/skills/anatomy && curl -L https://github.com/wheresryan22/anatomy/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C ~/.config/opencode/skills/anatomy
@@ -238,7 +238,7 @@ Each framework-free example has a Node build script that writes standalone pages
 
 ## How it works
 
-- **[`SKILL.md`](SKILL.md)** is what Claude reads. It sets the workflow: collect the true numbers first, invent the object, write a parts list, plan the world, build the geometry once with the kit, paint back to front, frame it, make it live, and then verify it like a critic. It also holds the craft rules in short form.
+- **[`ANATOMY.md`](ANATOMY.md)** is what Claude reads. It sets the workflow: collect the true numbers first, invent the object, write a parts list, plan the world, build the geometry once with the kit, paint back to front, frame it, make it live, and then verify it like a critic. It also holds the craft rules in short form.
 - **[`kit/`](kit)** is the drawing library the figures are built from: the isometric camera, solids and a parts library (`iso-kit`), round parts on any axis (`lathe.mjs`), pipes and cables (`tube.mjs`), the WebGL layer (`gl.mjs`), the 3D runtime (`turn*.mjs`), and React components (`react/`). Apart from React for those components, it has no dependencies.
 - **[`references/`](references)** are the long-form guides Claude opens when it needs them: craft, the kit API, motion, React, verification, WebGL, a design walkthrough and the 3D mode.
 - **Verification.** [`kit/audit.mjs`](kit/audit.mjs) proves the geometry: nothing passes through anything, every end sits on a mount, and every overlap is drawn in depth order (`node build.mjs --audit`). In headless Chrome, [`scripts/capture.mjs`](scripts/capture.mjs) and [`scripts/drive.mjs`](scripts/drive.mjs) take screenshots, close-ups and slowed-down contact sheets, [`scripts/lines.mjs`](scripts/lines.mjs) fails any line that ends in mid-air, and [`scripts/turn-check.mjs`](scripts/turn-check.mjs) checks 3D figures. The skill tells Claude to read every PNG it makes.
@@ -303,7 +303,7 @@ anatomy/
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it covers building the examples, the checks, and the house rules a change has to keep (among them, no comments in code, and kit changes that leave every existing example byte-identical). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security problems as described in [SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. Read CONTRIBUTING.md (upstream only) first: it covers building the examples, the checks, and the house rules a change has to keep (among them, no comments in code, and kit changes that leave every existing example byte-identical). Please follow the Code of Conduct (upstream only), and report security problems as described in SECURITY.md (upstream only).
 
 - [Report a bug](https://github.com/wheresryan22/anatomy/issues/new?template=bug_report.yml)
 - [Request a figure](https://github.com/wheresryan22/anatomy/issues/new?template=figure_request.yml)

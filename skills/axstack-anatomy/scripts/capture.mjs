@@ -72,7 +72,6 @@ function chromePath() {
     "/usr/bin/google-chrome-stable",
     "/usr/bin/chromium",
     "/usr/bin/chromium-browser",
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   ].filter(Boolean);
   const playwright = join(homedir(), "Library/Caches/ms-playwright");
   if (existsSync(playwright)) {
