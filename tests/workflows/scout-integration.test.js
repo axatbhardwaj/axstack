@@ -41,7 +41,7 @@ test('improve uses Scout for broad mapping without creating a profile', () => {
 
   checkRule(text, noNewProfile,
     'Never create a new profile.',
-    [[/\b(?:Do not|Never)\b/i, 'Always']]);
+    [[profileDenial, 'Always create a new profile']]);
 });
 
 test('improve profile prohibition survives the original no-new-profile wording', () => {
