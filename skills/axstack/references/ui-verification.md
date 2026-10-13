@@ -1,6 +1,6 @@
 # UI verification
 
-Every Playwright, browser, or rendered-UI check outside the three named browser
+Every Playwright, browser, or rendered-UI check outside the two named browser
 exceptions, including a "confirm it in the browser" step, goes through async
 `delegate_task` to `axstack-ui-verifier` from the run's role snapshot. Give it the exact build, URL, or artifact and the private
 dispatch's evidence folder. The verifier is read-only: it never edits source.
@@ -8,30 +8,26 @@ The PR writer remains the sole writer.
 
 Before using a PR preview URL, the UI verifier must read [PR previews](preview.md).
 
-The first named browser exception is archify `finalize` as a headless build gate.
-Keep finalize outputs only in the private evidence folder.
-Never replace the verifier's rendered pass with finalize.
-
-The second named browser exception is the driver's two `html_preview`
+The first named browser exception is the driver's two `html_preview`
 runs at 728px dark and 360px light.
 Never replace the verifier's interaction pass with `html_preview`.
 Follow [Inline pages](../../axstack-explain/references/inline-pages.md) for the page checks.
 
-The third named browser exception permits dispatched roles to use
+The second named browser exception permits dispatched roles to use
 `html_preview` as a non-publishing self-check.
 Dispatched-role self-checks never replace the driver's two previews or the `axstack-ui-verifier` pass.
 Dispatched roles never call `html_render`.
-All other browser checks outside the three named exceptions remain delegated to `axstack-ui-verifier`.
+All other browser checks outside the two named exceptions remain delegated to `axstack-ui-verifier`.
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.
-The verifier uses T3 `preview_*` tools for rendered checks.
+Use the configured verifier browser and honor the user browser-tool policy.
 Candidate browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
 
 For every interactive page, require a real-browser `axstack-ui-verifier` interaction pass.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
 The verifier serves the exact bytes on loopback.
-The verifier opens the page with `preview_open` using `open:false`.
+The verifier opens the loopback page in its configured browser.
 The verifier checks clicks, keyboard, focus order, screen-reader names, expanded states, and reduced motion.
 Require that `performance.getEntriesByType('resource')` is empty.
 The detached-checkout rule does not apply to a page without a candidate.
