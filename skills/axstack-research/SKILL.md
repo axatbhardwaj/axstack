@@ -28,10 +28,17 @@ is part of research.
    gathering evidence only after the target and stopping boundary are explicit.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
-   Every other research run dispatches every configured research branch through
-   T3 `delegate_task`: requirements, code, and web (Sonnet high in mixed/claude-only;
-   Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
-   built in), and X (Grok).
+   For other runs, dispatch through T3 `delegate_task` only branches whose
+   source class (requirements, code, web, X) an open answer-changing claim needs.
+   Dispatch requirements only when scope is unclear.
+   Dispatch X only when a claim depends on X posts.
+   Record each skipped branch as `not needed (<reason>)`.
+   For each needed source class, retain two isolated branches from different
+   providers where configured. The code pair is `axstack-research-code` +
+   `axstack-research-code-sol`; the web pair is `axstack-research-web` +
+   `axstack-research-web-google`. Requirements, code, and web use Sonnet high
+   in mixed/claude-only and Codex in codex-only; web-google uses
+   Gemini/Antigravity with Google Search built in, and X uses Grok.
    Give each branch one owner, allow no cross-reading, and require a cited note
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.

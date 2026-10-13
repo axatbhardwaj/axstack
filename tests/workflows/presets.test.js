@@ -320,9 +320,60 @@ test('presets: X research uses the Grok route only in mixed', () => {
   }
 });
 
-test('presets: research fans out through the Google web route', () => {
+test('presets: research sizes dispatch to claims and keeps independent source pairs', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
-  expect(research).toMatch(/every other research run dispatches every configured research branch/i);
+  const fanout = research.split(/2\. \*\*[^\n]+\*\*/)[1]?.split(/3\. \*\*/)[0];
+  expect(fanout).toBeDefined();
+  const text = sentences(fanout).join('. ');
+  const rules = [
+    {
+      concepts: [/single factual lookup/i, /(?:stays?|remains?) in (?:the current )?chat/i],
+      rewording: 'A single factual lookup remains in the current chat.',
+      inversions: [[/stays?|remains?/i, 'dispatches']],
+    },
+    {
+      concepts: [/dispatch/i, /delegate_task/, /only/i, /branches/i, /source class/i,
+        /needed|needs?|requires?/i, /open/i, /answer-changing claim/i],
+      rewording: 'Dispatch via T3 delegate_task only the branches whose source class an open answer-changing claim requires.',
+      inversions: [[/only/i, 'all'], [/open/i, 'settled']],
+    },
+    {
+      concepts: [/each needed source class/i, /retain|keep|requires?/i, /two/i,
+        /isolated|independent/i, /different providers/i, /where configured|when configured/i],
+      rewording: 'Each needed source class requires two independent branches from different providers when configured.',
+      inversions: [[/two/i, 'one'], [/different providers/i, 'the same provider'],
+        [/isolated|independent/i, 'shared']],
+    },
+    {
+      concepts: [/requirements/i, /only when|only if/i, /scope/i, /unclear|ambiguous/i],
+      rewording: 'Dispatch requirements only if scope is ambiguous.',
+      inversions: [[/only when|only if/i, 'even if'], [/unclear|ambiguous/i, 'clear']],
+    },
+    {
+      concepts: [/\bX\b/, /only when|only if/i, /claim/i, /depends? on|requires?/i, /posts/i],
+      rewording: 'Dispatch X only if a claim requires X posts.',
+      inversions: [[/only when|only if/i, 'even if']],
+    },
+    {
+      concepts: [/record/i, /each|every/i, /skipped branch/i, /not needed \(<reason>\)/i],
+      rewording: 'Record every skipped branch as `not needed (<reason>)`.',
+      inversions: [[/record/i, 'Do not record']],
+    },
+  ];
+  for (const { concepts, rewording, inversions } of rules) {
+    // Mask the required absence label so its "not" is not read as a negated directive.
+    const accepts = (text) => sentences(text).some((sentence) =>
+      concepts.every((concept) => concept.test(sentence))
+      && requires(sentence.replace(/not needed \(<reason>\)/gi, 'absence label'), /^/));
+    checkRule(text, accepts, rewording, inversions, concepts);
+  }
+  for (const pair of [
+    [/code/i, /code-sol/i], [/web/i, /web-google/i],
+  ]) expect(requires(fanout, ...pair, /pair/i)).toBe(true);
+});
+
+test('presets: research keeps Google routing, citations and failure fencing', () => {
+  const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
   expect(research).toContain('`axstack-research-web-google`');
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
