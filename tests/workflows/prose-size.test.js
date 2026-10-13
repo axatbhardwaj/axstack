@@ -202,6 +202,11 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // measured owned bytes for Scout role guidance; exact total 392043, no headroom.
   // 20261012-explain-anatomy repair1 review: +196 measured owned bytes
   // for self-contained whiteboard-defense terminology; exact total 392239.
-  expect(total).toBeLessThanOrEqual(392239);
+  // 20261012-scout-skill-align C2: +4311 bytes to the aggregate ceiling;
+  // always-loaded unchanged. Keep the measured aggregate ceiling exact.
+  // 20261012-explain-anatomy base update: merge Scout #441 at 6591eb7;
+  // +4330 measured owned bytes for the new Scout skill; exact total 396569.
+  // Preserve both histories above; always-loaded unchanged, no headroom.
+  expect(total).toBeLessThanOrEqual(396569);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });
