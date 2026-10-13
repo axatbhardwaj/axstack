@@ -44,9 +44,10 @@ the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
 Installation creates no production schedule and never enables a timer.
-Axstack allows one opt-in systemd user timer `axstack-default-sync` as the
-scheduler exception: it runs a stateless script that rewrites only T3
-`defaultModelSelection`, has no workflow state and launches no agent.
+Axstack allows exactly two opt-in systemd user timers as scheduler exceptions:
+`axstack-default-sync` rewrites only T3 `defaultModelSelection`, and
+`axstack-single-server` removes duplicate server processes for one base dir.
+Both run stateless scripts, keep no workflow state and launch no agent.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -204,8 +205,9 @@ retirement. No broad scratch deletion or forced worktree removal applies.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
 Requested peer reviews cover any accessible repository. T3 owns schedules,
 threads, runs, and delegated tasks; Axstack adds no queue engine, cursor files,
-or historical runtime fallback. The only scheduler exception is the opt-in
-systemd user timer described in [New-chat default sync](#new-chat-default-sync).
+or historical runtime fallback. The only scheduler exceptions are the two opt-in
+systemd user timers described in [New-chat default sync](#new-chat-default-sync)
+and [Single T3 server](#single-t3-server).
 
 ## Review automation
 
@@ -282,3 +284,73 @@ Rollback: remove the pool drop-in, reload, and restore the full selection in T3 
 The sibling `<settings>.axstack-default-sync.lock` directory prevents overlap
 (unchanged/locked). Empty locks older than sixty seconds are removed and retried
 once; fresh contention reports locked.
+
+## Single T3 server
+
+This opt-in timer checks once per minute for this user's `t3 serve` processes
+with the selected base dir (target default `$HOME/.t3`). Each server's base dir
+comes from its `--base-dir <dir>` or `--base-dir=<dir>` flag, then its own
+`T3CODE_HOME`, then its own `$HOME/.t3`, reading the latter values from that
+process's environment. An unreadable or missing environment without an explicit
+flag, or missing base-dir values, makes the whole run hold and kill nothing.
+It keeps the pid recorded in `<base>/userdata/server-runtime.json`.
+With zero or one known matching server it does nothing; with duplicates but no
+valid readable keeper it holds. Duplicate servers must have started strictly
+before the keeper, comparing field 22 (`starttime`) of `/proc/<pid>/stat`.
+An unknown start time or any duplicate started at or after the keeper holds
+the whole run, preserving a possible starting replacement. The script also
+holds if its own pid or an ancestor appears in the planned victim set.
+Otherwise it snapshots descendants before killing each duplicate server first,
+then its children with SIGKILL. The keeper and its descendants are protected.
+It starts no server, reads no database and interrupts no runs automatically.
+
+Preview the one-line JSON decision without killing or notifying:
+
+```sh
+bun ~/.agents/skills/axstack/scripts/single-server.js --dry-run
+```
+
+`--base-dir <dir>` selects a different base dir; `--proc-root <dir>` supplies
+a process-tree fixture (default `/proc`). `--help` lists the flags. Decisions
+are `unchanged`, `hold`, `would-kill` or `killed`, with reason, keeper, matching
+server pids and killed pids (proposed victims in dry-run). Non-ESRCH kill failures
+add their pids to `failed`; remaining kills continue, successful kills still
+notify if configured, and the command exits 1. Exit 0 includes holds;
+exit 1 reports invalid input, discovery, kill or notification failure.
+
+Under host-mutation authority, copy both assets and enable the timer:
+
+```sh
+mkdir -p ~/.config/systemd/user
+cp ~/.agents/skills/axstack/systemd/axstack-single-server.service ~/.config/systemd/user/axstack-single-server.service
+cp ~/.agents/skills/axstack/systemd/axstack-single-server.timer ~/.config/systemd/user/axstack-single-server.timer
+systemctl --user daemon-reload
+systemctl --user enable --now axstack-single-server.timer
+systemctl --user list-timers axstack-single-server.timer
+journalctl --user -u axstack-single-server.service
+```
+
+Installation only copies assets; it never enables either timer. The single-server
+timer starts one minute after user-manager startup and repeats every minute.
+Override Bun/skills paths or add `--base-dir` through the service's `ExecStart`
+drop-in, clearing the existing `ExecStart` first.
+
+To notify only after a kill, use `systemctl --user edit axstack-single-server.service`
+and add a per-host command, then reload:
+
+```ini
+[Service]
+Environment="AXSTACK_SINGLE_SERVER_NOTIFY=hermes send --to telegram --quiet"
+```
+
+The VPS has Hermes locally; other hosts can use
+`Environment="AXSTACK_SINGLE_SERVER_NOTIFY=ssh '<relay-host>' hermes send --to telegram --quiet"`.
+Replace `<relay-host>` with the authorized gateway's hostname.
+The script runs the command via `sh -c`, sending a short message on stdin with
+hostname, kept pid and killed pids. It notes that runs started by the killed
+server may remain `running` and need `t3_thread_interrupt`. Notification failure
+exits 1 after the kills; command output is suppressed. Dry-run, unchanged and
+hold decisions never notify. Verify delivery under the host's notification authority.
+
+Disable with `systemctl --user disable --now axstack-single-server.timer` and
+stop any active one-shot with `systemctl --user stop axstack-single-server.service`.

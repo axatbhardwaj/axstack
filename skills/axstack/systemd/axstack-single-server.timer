@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for duplicate T3 servers every minute
+
+[Timer]
+OnStartupSec=1min
+OnUnitActiveSec=1min
+Unit=axstack-single-server.service
+
+[Install]
+WantedBy=timers.target

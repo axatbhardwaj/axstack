@@ -215,6 +215,9 @@ test('tarball members match the full source tree with no silent omissions', () =
   const expected = expectedMembers(ROOT);
   expect([...expected].filter((m) => !listing.includes(m))).toEqual([]);
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
+  for (const asset of ['scripts/single-server.js', 'systemd/axstack-single-server.service', 'systemd/axstack-single-server.timer']) {
+    expect(listing).toContain(`package/skills/axstack/${asset}`);
+  }
 });
 
 test('package ships every public doc and excludes historical baselines', () => {

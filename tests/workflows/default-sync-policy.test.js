@@ -3,20 +3,35 @@ import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
-test('repository permits only the opt-in stateless default-sync timer exception', () => {
-  const concepts = [/exception/i, /\b(?:one|single)\b/i, /opt.in/i, /systemd user timer/i,
-    /axstack-default-sync/, /stateless script/i, /\bonly\b/i, /defaultModelSelection(?!\.instanceId)/];
+test('repository permits exactly the two opt-in systemd user timers', () => {
+  const concepts = [/exception/i, /(?:exactly|only) (?:two|2)/i, /opt.in/i, /systemd user timers/i,
+    /axstack-default-sync/, /axstack-single-server/];
   const allows = /\b(?:allow\w*|permit\w*)\b/i;
   checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts, allows),
-    'Exception: permit one opt-in systemd user timer axstack-default-sync to run a stateless script that rewrites only T3 defaultModelSelection.',
+    'Exception: permit only two opt-in systemd user timers, axstack-default-sync and axstack-single-server.',
     [[allows, 'forbid']], [...concepts, allows]);
   const doc = readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' ');
   const noState = /(?:no|zero) workflow state/i;
   checkRule(doc, (text) => prohibits(text, noState, /timer/i),
-    'The timer keeps zero workflow state.', [[noState, 'persistent workflow state']], [/timer/i, noState]);
-  const noLaunch = /launches no|never launches/i;
+    'Both timers keep zero workflow state.', [[noState, 'persistent workflow state']], [/timer/i, noState]);
+  const noLaunch = /launch(?:es)? no|never launch(?:es)?/i;
   checkRule(doc, (text) => prohibits(text, noLaunch, /script/i, /agent/i),
     'The script never launches an agent.', [[noLaunch, 'launches']], [/script/i, /agent/i, noLaunch]);
+});
+
+test('default-sync remains confined to the stateless default-selection edit', () => {
+  const concepts = [/axstack-default-sync/, /stateless script/i, /rewrites? only/i, /T3/, /defaultModelSelection(?!\.instanceId)/];
+  checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
+    'The axstack-default-sync timer runs a stateless script that rewrites only T3 defaultModelSelection.',
+    [[/rewrites? only/i, 'rewrites arbitrary fields including']], concepts);
+});
+
+test('single-server is stateless and kills only duplicate server trees while preserving the recorded keeper', () => {
+  const concepts = [/axstack-single-server/, /stateless script/i, /(?:only SIGKILLs|SIGKILLs only)/i,
+    /duplicate.*t3 serve/i, /one base dir/i, /(?:children|descendants)/i, /keep(?:s|ing)/i, /server-runtime\.json/];
+  checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
+    'The axstack-single-server timer runs a stateless script that SIGKILLs only duplicate t3 serve processes for one base dir and their descendants, keeping the server recorded in server-runtime.json.',
+    [[/(?:only SIGKILLs|SIGKILLs only)/i, 'SIGKILLs any'], [/keep(?:s|ing)/i, 'discarding']], concepts);
 });
 
 

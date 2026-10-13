@@ -26,6 +26,10 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/diagram.test.js \
   tests/workflows/ui-verification.test.js \
   tests/workflows/presets.test.js \
+  tests/workflows/single-server.test.js \
+  tests/workflows/single-server-units.test.js \
+  tests/workflows/default-sync-policy.test.js \
+  tests/workflows/run-record.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/workflows.log" 2>&1 || STATUS=$?
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
 test "$STATUS" -eq 0
@@ -39,3 +43,16 @@ Live acceptance requires the driver's exact task/thread/run identities,
 terminal state, receipt acceptance, settlement and readback, plus a fresh
 run-owned inventory before absence or cadence claims. Retain unobserved cases
 as UNKNOWN and cancellation as a separate disposition.
+
+The single-server checks use fake `/proc` trees and injected kill/spawn seams:
+keeper selection, descendant snapshots and SIGKILL order, user/base-dir filters,
+hold/dry-run safety and notification stdin/failure. They also verify process-local
+base-dir environments, older-only victims, unknown start-time holds, self/ancestor
+protection and continued cleanup/notification after a kill failure. Run the test
+file with TMPDIR both set and unset in a scratch HOME to cover CI's default.
+Unit checks prove the installed
+Bun path and one-minute cadence. They do not kill a live process or activate a timer.
+Confirm `bun "$SCRIPTS/single-server.js" --help` lists all four flags and
+`bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.
+Only use dry-run for host inspection; live kills and notification delivery require
+separate host-mutation authority. Installation must leave timers disabled.
