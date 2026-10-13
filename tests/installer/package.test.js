@@ -301,7 +301,7 @@ test('published manifest identity matches the repository it is published from', 
 
 test('CLI reports the release version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
-  expect(result.out.trim()).toBe('axstack 0.35.0');
+  expect(result.out.trim()).toBe('axstack 0.36.0');
 });
 
 test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
