@@ -1,0 +1,8 @@
+[Unit]
+Description=Keep the recorded T3 server and remove duplicate server trees
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+ExecStart=/usr/bin/env bun %h/.agents/skills/axstack/scripts/single-server.js

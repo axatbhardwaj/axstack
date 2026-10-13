@@ -24,6 +24,9 @@ cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
 for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   profiles/presets/mixed.json skills/axstack/references/candidate-publication.md \
   skills/axstack/references/preview.md skills/axstack/references/pr-chain.md \
+  skills/axstack/scripts/single-server.js \
+  skills/axstack/systemd/axstack-single-server.service \
+  skills/axstack/systemd/axstack-single-server.timer \
   skills/axstack-watch/references/repair-publication.md; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
