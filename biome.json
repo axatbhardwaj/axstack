@@ -1,9 +1,25 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "extends": ["./biome-rules.jsonc"],
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["**", "!!**/.github"] },
-  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120, "lineEnding": "lf" },
+  "extends": [
+    "./biome-rules.jsonc"
+  ],
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!!**/.github"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "lineEnding": "lf"
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
@@ -13,6 +29,23 @@
       "expand": "auto"
     }
   },
-  "linter": { "includes": ["**/*.js"], "rules": { "preset": "recommended" } },
-  "assist": { "enabled": false }
+  "linter": {
+    "includes": [
+      "**/*.js",
+      "!skills/axstack-anatomy/kit/**",
+      "!skills/axstack-anatomy/scripts/**",
+      "!skills/axstack-anatomy/references/**",
+      "!skills/axstack-anatomy/examples/**",
+      "!skills/axstack-anatomy/ANATOMY.md",
+      "!skills/axstack-anatomy/README.md",
+      "!skills/axstack-anatomy/CHANGELOG.md",
+      "!skills/axstack-anatomy/LICENSE"
+    ],
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "assist": {
+    "enabled": false
+  }
 }

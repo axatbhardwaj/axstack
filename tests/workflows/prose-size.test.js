@@ -1,11 +1,12 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
+import { isVendored } from './vendored-paths.js';
 
 const root = `${import.meta.dir}/../..`;
 const skills = `${root}/skills`;
 
 test('packaged guidance stays within the aggregate and always-loaded budgets', () => {
-  const markdown = readdirSync(skills, { recursive: true }).filter((path) => path.endsWith('.md'));
+  const markdown = readdirSync(skills, { recursive: true }).filter((path) => path.endsWith('.md') && !isVendored(`skills/${path}`));
   const bytes = (path) => readFileSync(`${skills}/${path}`).byteLength;
   const total = markdown.reduce((sum, path) => sum + bytes(path), 0);
   const alwaysLoaded = ['contracts.md', 'lifecycle.md', 'routing.md']
@@ -193,6 +194,10 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // the normal 30-minute run-watch cadence with 5-minute recovery cases, and
   // stranded user messages as pending local action;
   // always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(387533);
+  // 20261012-explain-anatomy r10: upstream anatomy Markdown is reference-only;
+  // exclude the shared vendored paths while owned front-door guidance still counts.
+  // Issue #437 r10: +4246 measured owned bytes for whiteboard defense,
+  // every-visual review, delivery holds and Anatomy front door; exact total 391779.
+  expect(total).toBeLessThanOrEqual(391779);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

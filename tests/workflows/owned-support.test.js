@@ -136,7 +136,11 @@ test('owned-support: self-contained, no upstream skill dependency', () => {
         const p = join(d, e.name);
         if (e.isDirectory()) walk(p);
         else if (e.isFile()) {
-          const text = readFileSync(p, 'utf8');
+          const source = readFileSync(p, 'utf8');
+          // The retired diagram credit moved intact; this permits attribution only.
+          const text = p === join(skillsDir, 'axstack-explain', 'SKILL.md')
+            ? source.replace(/^(Ideas: .*?)\[poteto\]\(https:\/\/github\.com\/poteto\/how\)(.*; guidance uses Axstack's own words\.)$/m, '$1$2')
+            : source;
           for (const f of forbidden) {
             expect(text.includes(f), `${p} contains forbidden reference: ${f}`).toBe(false);
           }

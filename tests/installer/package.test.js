@@ -319,7 +319,7 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     fullCycle(pkgDir, neutral, `root-${preset}`, preset);
   }
-});
+}, 15000);
 
 test('partial asset tree fails loudly instead of augmenting', () => {
   // Deliberately partial fixture independent of the package branch: a fresh

@@ -85,9 +85,10 @@
 - Target Bun >=1.3.14 JavaScript with no runtime dependencies. Use only the
   narrow Bun-backed `node:fs` and `node:fs/promises` built-in exception; do not
   introduce a Node.js runtime contract.
-- Permit an installer network and Git step only for archify.
-  Run this Node-oriented tool with Bun.
-  Keep this exception limited to archify.
+- Run vendored Node-oriented anatomy code with Bun.
+  Anatomy has no installer network or Git step; this exception adds no runtime dependencies.
+- Permit only local read-only Git checks (`rev-parse` and `status --porcelain --ignored`)
+  for legacy archify release.
 - Keep installer surfaces in `src/`, `bin/`, `package.json`, and
   `tests/installer/`.
 - Keep workflow surfaces in `skills/`, `profiles/`, `tests/workflows/`,
