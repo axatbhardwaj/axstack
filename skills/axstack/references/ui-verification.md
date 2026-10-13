@@ -47,6 +47,7 @@ If a PR changes a mapped feature, its author updates the feature file in the sam
 For a missing skill, add "suggest `axstack-verify create`" to the receipt's `Unverified:` line.
 Never generate a verification skill automatically.
 For a broken or stale recipe, report the gap.
+Report a broken or stale recipe as a `low` finding naming `axstack-verify maintain`.
 Never let a broken or stale recipe waive existing acceptance obligations.
 Keep browser recipes tool-neutral for the verifier.
 

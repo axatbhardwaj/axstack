@@ -418,6 +418,9 @@ Proven verification is required for every own PR. Use the authored receipt:
   Earlier-head red-to-green evidence in the PR's patch lineage counts only when
   the reviewer records that it still applies to the final change.
   An applicable `verify-<app>` passing result is required for the changed behavior.
+  The passing result must come from the reviewer's or `axstack-ui-verifier`'s local drive at that head.
+  The author's log alone never satisfies this requirement.
+  A preview URL never satisfies this requirement.
 - Verification requires no limitation tagged `changed-behavior: unproven`.
   The reviewer tags every limitation leaving changed behavior unexercised or
   unverified, in whatever words, `changed-behavior: unproven`.

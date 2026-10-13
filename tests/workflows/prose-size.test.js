@@ -193,6 +193,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // the normal 30-minute run-watch cadence with 5-minute recovery cases, and
   // stranded user messages as pending local action;
   // always-loaded unchanged.
-  expect(total).toBeLessThanOrEqual(387533);
+  // 20261013-verify-wiring A1: +1436 measured bytes for Align, reviewer drives,
+  // trusted review recipes and local-proof requirements; always-loaded unchanged.
+  expect(total).toBeLessThanOrEqual(388969);
   expect(alwaysLoaded).toBeLessThanOrEqual(27197);
 });

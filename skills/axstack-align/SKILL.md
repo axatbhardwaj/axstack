@@ -149,6 +149,11 @@ approval; record chosen document names and paths once per run.
    gaps. For substantial work, this summary becomes part of the draft spec in
    `axstack-spec`; spec approval is the one human checkpoint. Included and
    excluded work must be distinguishable, and no open item may appear settled.
+   When scope changes runnable behavior, the read-back records a Verification decision.
+   For an applicable `verify-<app>` skill, record the features that cover the change.
+   For a missing skill, the plan always includes `axstack-verify create` as the first PR.
+   Skipping this first PR requires plain AGREE from both `axstack-advisor-astra` and `axstack-advisor-opus` that a verification skill is unnecessary.
+   Record both advisers' reason in the Verification decision.
 2. Classify the result with the shared
    [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):
    - For work clarified as small, return a **small-change intent** handoff with
