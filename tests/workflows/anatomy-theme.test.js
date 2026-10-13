@@ -17,7 +17,7 @@ function fixture({ background = '', marker = '', dark = false, buildTheme = 'dar
   let themeChecks = 0;
   const observations = [];
   const media = { matches: dark, addEventListener: (_, fn) => { change = fn; }, removeEventListener() {} };
-  const doc = { body, documentElement: {}, head: {},
+  const doc = { body, documentElement: { style: {} }, head: {},
     createElement: () => ({}), getElementById: () => null };
   body.parentNode = doc.documentElement;
   doc.head.parentNode = doc.documentElement;
@@ -39,7 +39,7 @@ function fixture({ background = '', marker = '', dark = false, buildTheme = 'dar
   const code = source();
   const install = code ? new Function(`${code}\nreturn installAnatomyTheme;`)() : () => {};
   install({ doc, view, resolveColor: (color) => colors[color] });
-  return { attributes, styles, get themeChecks() { return themeChecks; },
+  return { attributes, styles, rootStyle: doc.documentElement.style, get themeChecks() { return themeChecks; },
     switchBackground: (color, attribute = 'style') => { background = color; notify(doc.documentElement, 'attributes', attribute); },
     switchStylesheet: (color, type) => {
       background = color;
@@ -119,4 +119,34 @@ test('root theme class changes still update the page palette', () => {
   const f = fixture({ background: '#111' });
   f.switchBackground('rgb(255 255 255)', 'class');
   expect(f.attributes['data-theme']).toBe('light');
+});
+
+
+test('document color scheme follows T3 background on load and live changes', () => {
+  const f = fixture({ background: 'rgb(255 255 255)', dark: true });
+  expect(f.rootStyle.colorScheme).toBe('light');
+  f.switchBackground('#111');
+  expect(f.rootStyle.colorScheme).toBe('dark');
+  f.switchStylesheet('rgb(255 255 255)', 'characterData');
+  expect(f.rootStyle.colorScheme).toBe('light');
+});
+
+for (const background of ['', '#111']) {
+  test(`document color scheme follows explicit markers ${background ? 'inside T3' : 'standalone'}`, () => {
+    const f = fixture({ background, marker: 'light', dark: true });
+    expect(f.rootStyle.colorScheme).toBe('light');
+    f.marker('dark');
+    expect(f.rootStyle.colorScheme).toBe('dark');
+    f.marker('light');
+    expect(f.rootStyle.colorScheme).toBe('light');
+  });
+}
+
+test('document color scheme follows system fallback on load and live changes', () => {
+  const f = fixture({ dark: false });
+  expect(f.rootStyle.colorScheme).toBe('light');
+  f.switchMedia(true);
+  expect(f.rootStyle.colorScheme).toBe('dark');
+  f.switchMedia(false);
+  expect(f.rootStyle.colorScheme).toBe('light');
 });

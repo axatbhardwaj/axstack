@@ -35,4 +35,5 @@ Live T3 theme switching remains unproven unless separately observed. The unit
 fixture dispatches mutations by observer scope: animated figure updates must
 not recompute the theme; root attributes, head stylesheets, explicit body markers
 and system appearance still do. Wrapper
-unit tests cover markers, CSS-color resolution, variable changes and standalone fallback.
+unit tests cover markers, CSS-color resolution, variable changes, standalone fallback
+and matching document color-scheme on load and every theme change.

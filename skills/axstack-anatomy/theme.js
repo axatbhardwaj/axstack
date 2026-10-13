@@ -39,6 +39,8 @@ body.iso[data-axstack-t3] .iso-plate { padding:16px; border-radius:var(--radius)
     } else body.removeAttribute('data-axstack-t3');
     const theme = marker === 'dark' || marker === 'light' ? marker : dark ? 'dark' : 'light';
     if (body.getAttribute('data-theme') !== theme) body.setAttribute('data-theme', theme);
+    // Override the kit's dark root scheme so transparent iframe pages follow the frame.
+    if (doc.documentElement.style.colorScheme !== theme) doc.documentElement.style.colorScheme = theme;
   };
   update();
   media.addEventListener('change', update);
