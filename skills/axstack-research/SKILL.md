@@ -28,7 +28,7 @@ is part of research.
    gathering evidence only after the target and stopping boundary are explicit.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
-   Every other research run dispatches every configured research branch through
+   Every other research run dispatches all configured research role branches through
    T3 `delegate_task`: requirements, code, and web (Sonnet high in mixed/claude-only;
    Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
    built in), and X (Grok).
@@ -50,7 +50,8 @@ is part of research.
    - `axstack-research-web`: web and external sources.
    - `axstack-research-web-google`: Google-Search-grounded web sources via Gemini/Antigravity.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
-   - `axstack-explore-codebase`: broad codebase mapping.
+   - For broad codebase mapping, use `axstack-scout`.
+     Never dispatch axstack-explore-codebase directly for broad mapping.
    - `axstack-explore-execution`: execution and runtime traces.
    - `axstack-explore-execution-sol`: independent Sol execution investigation.
 

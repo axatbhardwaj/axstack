@@ -16,9 +16,9 @@ improvement is a valid result.
 Before acting, load [Standing contracts](../axstack/references/contracts.md),
 then follow its lifecycle and audit pointers. Immediately before any useful
 role dispatch, load the [T3 runtime
-sequence](../axstack/references/t3-runtime.md). Use existing
-`axstack-explore-codebase` or `axstack-research-code` roles only when their
-specialization materially helps; create no new profile.
+sequence](../axstack/references/t3-runtime.md). For broad codebase mapping,
+use `axstack-scout`. Use `axstack-research-code` only when specialized code
+investigation helps. Do not create a new profile.
 When dispatching `axstack-research-code`, dispatch `axstack-research-code-sol`
 independently on the same bounded brief without cross-reading. The driver
 reconciles findings per claim and never averages them. Record an intentionally
