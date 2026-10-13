@@ -39,17 +39,21 @@ export function decide(settings, usage, now, pool = null) {
       && Number.isFinite(window?.used) && Number.isFinite(window?.seconds) && window.seconds > 0
       && Number.isFinite(window?.resetAt) && window.resetAt > now
       && (!pooled || window.seconds >= 604800);
+    const remaining = known ? 100 - window.used : null;
     return { instanceId, state: excluded ? 'excluded' : known ? 'eligible' : 'unknown',
+      ...(pooled && { band: known ? remaining >= 15 ? 2 : remaining >= 10 ? 1 : 0 : null }),
       pace: known ? 100 * (1 - (window.resetAt - now) / (window.seconds * 1000)) - window.used : null };
   });
   const current = result.instances.find((entry) => entry.instanceId === from);
-  const best = result.instances.filter((entry) => entry.state === 'eligible').sort((a, b) => b.pace - a.pace)[0];
+  const best = result.instances.filter((entry) => entry.state === 'eligible')
+    .sort((a, b) => (pooled ? b.band - a.band : 0) || b.pace - a.pace)[0];
   const excluded = !current || current.state === 'excluded';
   if (excluded && best) return updated(best, 'current-excluded');
   if (result.instances.some((entry) => entry.state === 'unknown')) return { ...result, reason: 'unknown' };
   if (!best) return { ...result, reason: 'no-eligible' };
-  if (best.instanceId !== from && best.pace - current.pace >= 10) {
-    return updated(best, 'pace');
+  const higherBand = pooled && best.band > current.band;
+  if (best.instanceId !== from && (higherBand || best.pace - current.pace >= 10)) {
+    return updated(best, higherBand ? 'reserve' : 'pace');
   }
   return { ...result, reason: 'margin' };
 }

@@ -32,6 +32,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/single-server.test.js \
   tests/workflows/single-server-units.test.js \
   tests/workflows/default-sync-policy.test.js \
+  tests/workflows/sync-default.test.js \
   tests/workflows/run-record.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/workflows.log" 2>&1 || STATUS=$?
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
@@ -59,6 +60,20 @@ Confirm `bun "$SCRIPTS/single-server.js" --help` lists all four flags and
 `bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.
 Only use dry-run for host inspection; live kills and notification delivery require
 separate host-mutation authority. Installation must leave timers disabled.
+
+The default-sync CLI checks use fake homes and loopback usage responses, never
+live settings. The pool fixture is
+`claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium`; explicit Claude effort
+also has byte-preservation coverage. Checks cover exact weekly reserve bands
+at 15% and 10%, cross-driver band preference despite opposing pace, the same-band
+ten-point pace margin and ties (including all-low usable quota), unknown holds,
+excluded-current escape, hard 95%-used/limit/credential exclusions, no eligible
+candidate, and unchanged no-pool behavior. Dry-run preserves all settings bytes;
+writes preserve every byte outside the decided root selection. This is offline
+policy proof only: best-effort reserve preference does not guarantee a weekly
+budget. Host catalog validation, preserving each host's actual Opus effort,
+one-time same-account Sol migration at driver host activation, running-thread
+non-interference and fleet activation/readback remain separate live checks.
 
 ## Explain delivery
 
