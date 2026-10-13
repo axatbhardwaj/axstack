@@ -28,10 +28,20 @@ is part of research.
    gathering evidence only after the target and stopping boundary are explicit.
 
 2. **Fan out research:** A single factual lookup stays in the current chat.
-   Every other research run dispatches every configured research branch through
-   T3 `delegate_task`: requirements, code, and web (Sonnet high in mixed/claude-only;
-   Codex in codex-only), web-google (Gemini/Antigravity, with Google Search
-   built in), and X (Grok).
+   For other runs, dispatch through T3 `delegate_task` only branches whose
+   source class (requirements, code, execution, web, X) an open answer-changing claim needs.
+   Dispatch requirements only when scope is unclear.
+   Dispatch execution when a claim depends on runtime behavior.
+   Dispatch X only when a claim depends on X posts.
+   Record each skipped branch as `not needed (<reason>)`.
+   For each needed source class, retain two isolated branches where configured.
+   In mixed, each needed source class retains branches from different providers.
+   The code pair is `axstack-research-code` +
+   `axstack-research-code-sol`; the web pair is `axstack-research-web` +
+   `axstack-research-web-google`; the execution pair is `axstack-explore-execution` +
+   `axstack-explore-execution-sol`. Requirements, code, and web use Sonnet high
+   in mixed/claude-only and Codex in codex-only; web-google uses
+   Gemini/Antigravity with Google Search built in, and X uses Grok.
    Give each branch one owner, allow no cross-reading, and require a cited note
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.
@@ -61,8 +71,10 @@ is part of research.
    never averaging findings. Record an intentionally absent pair and proceed
    with the base seat alone. The `-sol` pair is optional: fence a launch failure,
    trust/login prompt, or prompt block; record `absent (<reason>)`, and continue
-   with the base seat. In mixed fan-out,
-   retain a Codex and a Claude seat or hold the affected fan-out.
+   with the base seat. A sized mixed research fan-out requires dispatched
+   branches spanning at least two different providers; otherwise hold that fan-out.
+   Every other mixed fan-out, including arena and peer review, retains at least one
+   Codex and one Claude seat; otherwise hold that fan-out.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards

@@ -58,11 +58,16 @@
   `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
   `axstack-explore-execution-sol`, `axstack-auditor-sol`,
   `axstack-explore-codebase-flash`.
-  Always dispatch optional seats when configured and available. Only a
+  Always dispatch optional seats when configured and available, except research
+  branches, which follow [Research step 2](../../axstack-research/SKILL.md#procedure) sizing.
+  A research branch unneeded by an open claim is recorded `not needed (<reason>)`,
+  never as absent or a malfunction. Only a
   launch failure, trust/login prompt, or prompt block makes one absent:
   fence the attempt, record `absent (<reason>)`, name it once in the next
   read-back, and skip it without a relay or substitution. An uncertain
-  dispatch is reconciled, not called absent. A mixed fan-out still includes
-  at least one Codex and one Claude seat; otherwise hold that fan-out.
+  dispatch is reconciled, not called absent. A sized mixed research fan-out
+  requires dispatched branches spanning at least two different providers;
+  otherwise hold that fan-out. Every other mixed fan-out, including arena and
+  peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
   Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` probe L1 briefs.
