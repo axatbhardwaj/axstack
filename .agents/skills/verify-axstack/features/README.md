@@ -10,14 +10,14 @@ its source entry points, prerequisites, drive commands and observable proof.
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |
 | Inspect workflow instruction contracts | [Workflow contracts](workflows.md) | Semantic removal/inversion and rewording checks; bounded source proof |
+| Build an explicit Anatomy figure | [Anatomy source/theme](anatomy.md) | Upstream blobs, source inventory, injected wrapper and scratch build |
 
 Gotchas: scratch must be outside HOME; install uses temporary HOME and an absent
-local archify upstream; fixture catalogs prove no live model availability.
+no external-tool provisioning; fixture catalogs prove no live model availability.
 Static readiness needs an evidence-owned separate Git directory because of
 its output guard. Read-only offline forge observations remain unknown.
 
-Uncovered surfaces: live T3 MCP launches, browser previews, archify's network
-installation/viewer, external Notion/Linear/Telegram, provider authentication,
+Uncovered surfaces: live T3 MCP launches, browser previews, standalone figure browser delivery, external Notion/Linear/Telegram, provider authentication,
 scheduled work, npm staging approval and release installation across hosts.
 These require their own authorized isolated verification; never infer them
 from this CLI recipe. Uninstall/conflict behavior is covered by the full

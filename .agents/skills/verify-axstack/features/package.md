@@ -37,7 +37,9 @@ Proof: complete pack listing independently contains CLI, helpers, presets and
 both current publication references (`candidate-publication.md`, `preview.md`), excludes the
 repository verification skill and Claude symlink, and creates no new tarball.
 Review the full inventory for accidental data before any publication.
-Prose-size scans only `skills/`; preserve its exact ceiling and all comments.
+Prose-size scans only `skills/`, excluding the upstream paths in the shared
+vendored-path constant; owned guidance still counts. Preserve its measured
+ceiling and all history comments.
 For publication instruction changes, check semantic removal/inversion and
 equivalent rewording, retained checkout guards and the current prose budget:
 
