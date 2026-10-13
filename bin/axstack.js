@@ -62,7 +62,6 @@ Flags:
                       Aliases: codex = codex-only; claude = claude-only.
   --skills-dir <dir>  Explicit install target. Overrides harness skill defaults
                       and automatic legacy Codex skill retirement.
-                      Must be outside skills roots and contain no symlink path.
   --instructions <file>
                       Instruction file to receive the owned routing block.
                       Harness defaults: ~/.claude/CLAUDE.md for Claude,

@@ -85,3 +85,33 @@ test('direct uninstall of an old manifest releases its recorded copy', () => {
   expect(f.run(['uninstall', '--skills-dir', f.skills, '--no-claude-settings']).out).toContain('archify: removed');
   expect(existsSync(f.copy)).toBe(false);
 });
+
+test('uninstall reports an edited legacy record and preserves its retry binding', () => {
+  const f = legacy();
+  writeFileSync(f.record, 'user-edited legacy record\n');
+  const result = f.run(['uninstall', '--skills-dir', f.skills, '--no-claude-settings']);
+  expect(result.out).toContain(`archify: kept ${f.copy} (preserved record ${f.record})`);
+  const manifest = JSON.parse(readFileSync(`${f.skills}/.axstack-manifest.json`));
+  expect(manifest.archify).toEqual({ path: f.copy, sha: f.sha });
+  expect(readFileSync(f.record, 'utf8')).toBe('user-edited legacy record\n');
+  expect(JSON.parse(readFileSync(f.owners))).toEqual([f.skills]);
+});
+
+test('forced retry after preserved legacy record releases ownership and copy', () => {
+  const f = legacy();
+  writeFileSync(f.record, 'user-edited legacy record\n');
+  f.run(['uninstall', '--skills-dir', f.skills, '--no-claude-settings']);
+  const result = f.run(['uninstall', '--skills-dir', f.skills, '--no-claude-settings', '--force']);
+  expect(result.out).toContain('archify: removed');
+  expect(existsSync(f.copy)).toBe(false);
+  expect(existsSync(f.owners)).toBe(false);
+  expect(existsSync(f.record)).toBe(false);
+  expect(existsSync(`${f.skills}/.axstack-manifest.json`)).toBe(false);
+});
+
+test('help keeps the install target free of obsolete tools-root constraints', () => {
+  const f = archifyFixture();
+  const result = f.run(['--help']);
+  expect(result.out).toContain('--skills-dir <dir>');
+  expect(result.out).not.toContain('Must be outside skills roots and contain no symlink path.');
+});

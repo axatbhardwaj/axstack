@@ -1029,6 +1029,9 @@ export async function uninstallBundle({
     summary.claudeSettings = claudePlan.report;
 
     const remainingArchify = ARCHIFY_RECORD in remainingFiles ? manifest.archify : null;
+    if (remainingArchify) {
+      log(`archify: kept ${remainingArchify.path} (preserved record ${join(skillsRoot, ARCHIFY_RECORD)})`);
+    }
     if (manifest.archify && !remainingArchify) {
       archifyRelease = await planArchifyRelease({ record: manifest.archify, skillsRoot, writeAtomic, log });
     }
@@ -1047,6 +1050,7 @@ export async function uninstallBundle({
       await writeManifest(skillsRoot, {
         version: MANIFEST_VERSION,
         files: remainingFiles,
+        ...(remainingArchify ? { archify: remainingArchify } : {}),
         profiles: legacyProfiles,
         claudeSettings: { path: remainingClaudeSettingsPath },
         instructions: remainingInstructions,

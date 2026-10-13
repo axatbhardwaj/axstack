@@ -6,7 +6,8 @@ Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
 reinstalls after validated null/stale legacy metadata, checking explicit-preset
 role selection and inert provenance preservation.
 Prerequisites: Launch's offline shell and temporary HOME; explicit selected
-preset (default `mixed` below). The installer provisions no external tools. No network clone, live HOME write or production authentication is allowed.
+preset (default `mixed` below). The installer suite covers edited legacy-record retention, its kept-copy reason,
+and a subsequent forced uninstall. The installer provisions no external tools. No network clone, live HOME write or production authentication is allowed.
 
 ```bash
 doctor > "$EVIDENCE/install-doctor.log" 2>&1
