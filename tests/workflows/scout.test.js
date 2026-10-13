@@ -67,11 +67,32 @@ const rules = [
   ['reuse bound to full identity',
     (s) => requires(s, /reuse/i, /only/i, /content identity/i, /unchanged/i, /untracked file contents/i),
     'Reuse findings only when content identity, including untracked file contents, is unchanged.', [/unchanged/i, 'changed']],
+  ['seat is read-only and writes only private evidence',
+    (s) => requires(s, /each|every/i, /seat/i, /read-only/i, /writes? (?:only|solely) to/i, /private evidence folder/i),
+    'Every seat is read-only and writes solely to its private evidence folder.', [/read-only/i, 'write-capable']],
+  ['compact summary and saved seat reports',
+    (s) => requires(s, /return|deliver/i, /compact summary/i, /driver/i, /store|save/i, /seat reports/i, /run(?:'s)? evidence folder/i),
+    'Deliver a compact summary to the driver and save seat reports in the run evidence folder.', [/compact summary/i, 'verbose transcript']],
+  ['ordinary chat starts a run with run-init',
+    (s) => requires(s, /Scout call/i, /ordinary chat/i, /creates? a run|starts? a run/i, /run-init/i),
+    'A Scout call in ordinary chat starts a run using run-init.', [/run-init/i, 'manual setup']],
+  ['no mandatory gate for other phases',
+    (s) => prohibits(s, /no mandatory gate/i, /Scout/i, /other phases/i),
+    'Scout imposes no mandatory gate on other phases.', [/no mandatory gate/i, 'a mandatory gate']],
 ];
 
 for (const [name, accepts, rewording, [direction, inversion]] of rules) {
   test(`Scout contract: ${name}`, () => checkRule(compact, accepts, rewording, [[direction, inversion]]));
 }
+
+test('Scout contract: scaling by facets retains every required seat', () => {
+  checkRule(compact,
+    (s) => requires(s, /scale/i, /facet count|number of facets/i),
+    'Scale only by the number of facets.', [[/facet count|number of facets/i, 'seat availability']]);
+  checkRule(compact,
+    (s) => requires(s, /keep|retain/i, /every required seat/i, /within each facet|per facet/i),
+    'Retain every required seat per facet.', [[/every required seat/i, 'some seats']]);
+});
 
 test('Scout trigger is a semantic agent-facing evidence description', () => {
   const description = skill.match(/^description:\s*(.+)$/m)?.[1];
