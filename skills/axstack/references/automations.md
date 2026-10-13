@@ -42,21 +42,7 @@ Follow the [Run record](run-record.md) and use the
 overwrite its four current-state sections and archive superseded history once
 beside it. A no-change full pass appends at most one history line.
 
-The account picker must run first, before the quiet check.
-The packaged prompt runs its quiet check before skill or reference loads.
-It unions two paginated `gh search prs` queries (`review-requested:@me` and
-`involves:@me`), each with `--limit 1000`, for open non-draft PRs authored by
-someone else. A result count at or above 1000 in either query makes coverage incomplete.
-It compares the authenticated peer PR inventory (sorted repo#number, headRefOid, updatedAt)
-with `Quiet gate:` in continuity's Watermarks and checks all lane thread/run states.
-A changed list, any other non-terminal lane thread, missing/malformed/unreadable
-continuity or watermark, a `Last full pass:` at least 4 hours old or in the future,
-or any failed call, incomplete pagination or unknown head/liveness makes it busy.
-Run the full pass when continuity records any unserved, capacity-deferred, `INCOMPLETE` or re-eligible event, or any open hold with a resume condition beyond a user decision (such as capacity or remeasure).
-Holds awaiting only the user remain quiet-eligible: a user decision on the PR
-changes `updatedAt` and the 4 h full pass bounds reminders.
-Busy runs the full pass under the existing holds. Otherwise it ends silently
-without skill loading, sweep or continuity writes.
+Follow the quiet check in the packaged [review-manager prompt](review-manager-prompt.md).
 The full pass records in Watermarks `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
 The sections below govern full passes; a quiet exit bypasses their teardown.
