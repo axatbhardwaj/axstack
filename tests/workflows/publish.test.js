@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
@@ -27,10 +27,16 @@ rule('public redaction reuses Explain and removes all private material',
   'For public articles, run the Explain redaction check to remove private paths, identifiers, credentials, prompts, messages and internal records.',
   [[/run/i, 'skip'], [/remove/i, 'retain']]);
 
-rule('public assets reuse the self-contained Explain check',
-  [/public/i, /run/i, /self.contained/i, /asset/i, /check/i, /explain/i],
+const assetConcepts = [/public/i, /\brun\b/i, /self.contained/i, /asset/i, /check/i, /explain/i];
+rule('public assets reuse the self-contained Explain check', assetConcepts,
   'For public mode, run the self-contained asset check from Explain.',
   [[/run/i, 'skip'], [/self.contained/i, 'remote']]);
+
+test('removing the primary asset check cannot be masked by a later recheck', () => {
+  const primary = sentences(page).find((sentence) => requires(sentence, ...assetConcepts));
+  expect(primary).toBeTruthy();
+  expect(requires(page.replace(primary, ''), ...assetConcepts)).toBe(false);
+});
 
 rule('changed bytes require fresh independent explainer review on final bytes',
   [/require/i, /fresh/i, /independent/i, /axstack-explainer-review/i, /final bytes/i],
@@ -60,3 +66,38 @@ rule('private proof combines anonymous sign-in redirect and live metadata',
     /\bpublished\b/i, /live version/i, /SHA-256/i, /matches/i, /final bytes/i],
   'For private mode, verify anonymous navigation reaches SlashDocs sign-in leading to Dex and notes status reports published with the live version and SHA-256 that matches the final bytes.',
   [[/verify/i, 'skip'], [/anonymous/i, 'owner'], [/matches/i, 'ignores'], [/published/i, 'unpublished']]);
+
+rule('publication belongs only to the driver thread',
+  [/only/i, /driver thread/i, /publish/i],
+  'Only the driver thread publishes the checked article.',
+  [[/only/i, 'any role including the'], [/driver thread/i, 'worker thread'], [/^/, 'Never ']]);
+
+rule('external-edit overwrite warnings reach the user',
+  [/tell|inform|notify/i, /user/i, /when/i, /overwrote_external_edit/i, /true/i],
+  'Inform the user when overwrote_external_edit is true.',
+  [[/tell|inform|notify/i, 'hide from'], [/true/i, 'false'], [/user/i, 'worker']]);
+
+rule('final bytes are previewed in both required widths and themes',
+  [/preview/i, /these exact bytes|final bytes/i, /728px dark/i, /360px light/i],
+  'Preview the final bytes at 728px dark and 360px light.',
+  [[/preview/i, 'skip'], [/these exact bytes|final bytes/i, 'draft bytes'],
+    [/728px dark/i, '728px light'], [/360px light/i, '360px dark']]);
+
+rule('publication receipt returns URL version and SHA',
+  [/return|report/i, /URL/i, /\bversion\b/i, /SHA-256/i],
+  'Report the article URL, version and SHA-256 to the user.',
+  [[/return|report/i, 'omit'], [/URL/i, 'title'], [/\bversion\b/i, 'slug'], [/SHA-256/i, 'byte count']]);
+
+rule('publish routing comes from the host-managed config',
+  [/read/i, /host.managed/i, /~\/\.config\/axstack\/publish\.json/i,
+    /sshHost/i, /publicOrigin/i, /docsOrigin/i],
+  'Read the host-managed ~/.config/axstack/publish.json with sshHost, publicOrigin and docsOrigin fields.',
+  [[/read/i, 'ignore'], [/host.managed/i, 'packaged']]);
+
+rule('missing or invalid publish config holds publication',
+  [/hold/i, /publication/i, /config/i, /missing/i, /invalid/i],
+  'Hold publication if the config is missing or invalid.',
+  [[/hold/i, 'continue'], [/missing/i, 'available'], [/invalid/i, 'valid']]);
+
+rule('publish destinations are never guessed', [/guess/i, /publish host/i, /origin/i],
+  'Never guess a publish host or either origin.', [[/never/i, 'always']], /never/i);

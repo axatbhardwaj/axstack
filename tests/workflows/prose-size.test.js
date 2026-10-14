@@ -244,6 +244,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // Retire the inherited one-byte always-loaded headroom; both ceilings are exact.
   // 20261013-publish-skill-align T10: +4571 measured bytes for the approved
   // Publish skill; always-loaded unchanged. Exact ceiling, no headroom.
-  expect(total).toBeLessThanOrEqual(407739);
+  // T10 repair-1: +600 measured bytes for host-managed publication routing;
+  // always-loaded unchanged. Exact ceiling, no headroom.
+  expect(total).toBeLessThanOrEqual(408339);
   expect(alwaysLoaded).toBeLessThanOrEqual(27309);
 });

@@ -81,6 +81,8 @@ non-interference and fleet activation/readback remain separate live checks.
 Publish's `publish.test.js` checks per-request authority, public redaction and
 self-contained assets, fresh final-byte review, password/TTY prohibitions and
 anonymous live-URL/SHA verification through removal, inversion and rewording.
+It also checks host-managed routing and missing/invalid-config holds, driver-only
+publication, final-byte previews, external-edit warnings and URL/version/SHA receipts.
 This offline recipe proves instructions only. The driver separately runs the
 candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
