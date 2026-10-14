@@ -1,17 +1,40 @@
 import * as fs from 'node:fs';
 
+function normalizeBase(procRoot, pid, base, home) {
+  if (!base) return null;
+  if (base === '~' || base.startsWith('~/')) {
+    if (!home) return null;
+    base = home + base.slice(1);
+  }
+  if (!base.startsWith('/')) {
+    let cwd;
+    try { cwd = fs.readlinkSync(`${procRoot}/${pid}/cwd`); }
+    catch { return null; }
+    if (!cwd.startsWith('/')) return null;
+    base = `${cwd}/${base}`;
+  }
+  const parts = [];
+  for (const part of base.split('/')) {
+    if (part === '..') parts.pop();
+    else if (part && part !== '.') parts.push(part);
+  }
+  return `/${parts.join('/')}`;
+}
+
 function serverBase(procRoot, pid, argv) {
   let base;
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--base-dir') base = argv[++i];
     else if (argv[i].startsWith('--base-dir=')) base = argv[i].slice('--base-dir='.length);
   }
-  if (base !== undefined) return base || null;
+  let home;
   try {
     const environ = fs.readFileSync(`${procRoot}/${pid}/environ`, 'utf8').split('\0');
     const value = (key) => environ.find((entry) => entry.startsWith(`${key}=`))?.slice(key.length + 1);
-    return value('T3CODE_HOME') || (value('HOME') ? `${value('HOME')}/.t3` : null);
-  } catch { return null; }
+    home = value('HOME');
+    if (base === undefined) base = value('T3CODE_HOME') || (home ? `${home}/.t3` : null);
+  } catch { /* An absolute argv base does not need the process environment. */ }
+  return normalizeBase(procRoot, pid, base, home);
 }
 
 function discover(procRoot, uid, baseDir) {
@@ -116,6 +139,8 @@ export async function run(args = [], {
       } else throw new Error('invalid flag');
     }
     if (!env.HOME) throw new Error('missing home');
+    baseDir = normalizeBase(procRoot, process.pid, baseDir, env.HOME);
+    if (baseDir === null) throw new Error('unresolved base dir');
     failure = 'scan-failed';
     const { processes, servers, unknownBase } = discover(procRoot, uid, baseDir);
     decision.servers = servers;

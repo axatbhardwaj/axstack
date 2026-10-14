@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { run } from '../../skills/axstack/scripts/single-server.js';
 
 const scratch = [];
@@ -27,6 +27,10 @@ function fixture() {
     startTime(pid, 10);
   };
   const server = (pid, extra = [], ppid = 1) => processEntry(pid, ['/runtime/v1/t3', 'serve', ...extra], ppid);
+  const cwd = (pid, path) => {
+    mkdirSync(`${proc}/${pid}`, { recursive: true });
+    symlinkSync(path, `${proc}/${pid}/cwd`);
+  };
   const keeper = (pid) => {
     writeFileSync(`${base}/userdata/server-runtime.json`, JSON.stringify({ version: 1, pid }));
     startTime(pid, 20);
@@ -44,7 +48,7 @@ function fixture() {
     expect(lines).toHaveLength(1);
     return { code, decision: JSON.parse(lines[0]) };
   };
-  return { root, base, proc, uptime, environ, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
+  return { root, base, proc, uptime, environ, cwd, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
 }
 
 test('zero or one matching server is unchanged and never notifies', async () => {
@@ -100,6 +104,49 @@ test('server base dirs use argv, then T3CODE_HOME, then that process HOME', asyn
   expect(code).toBe(0);
   expect(decision).toMatchObject({ action: 'killed', servers: [100, 400], killed: [400] });
   expect(f.killed).toEqual([[400, 'SIGKILL']]);
+});
+
+for (const form of ['tilde', 'trailing-slash', 'relative']) {
+  test(`normalizes ${form} base dirs for the guard and each server`, async () => {
+    const f = fixture();
+    const base = form === 'tilde' ? '~/.t3' : form === 'relative' ? './.t3/../.t3/' : `${f.base}///`;
+    f.server(100, ['--base-dir', f.base]); f.server(200, [`--base-dir=${base}`]);
+    f.keeper(100);
+    f.cwd(process.pid, `${f.root}/home`); f.cwd(200, `${f.root}/home`);
+    const { code, decision } = await f.execute(['--base-dir', base]);
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'killed', keeper: 100, servers: [100, 200], killed: [200] });
+    expect(f.killed).toEqual([[200, 'SIGKILL']]);
+  });
+}
+
+test('server tilde expansion uses its own HOME, not the guard HOME', async () => {
+  const f = fixture(); f.server(100); f.server(200, ['--base-dir', '~/.t3/']); f.keeper(100);
+  const { code, decision } = await f.execute(['--base-dir', f.base], {
+    env: { HOME: `${f.root}/different-home` },
+  });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+});
+
+test('relative environment base dirs use each server cwd and ignore other directories', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  f.environ(200, { T3CODE_HOME: '.t3/' }); f.cwd(200, `${f.root}/home`);
+  f.environ(300, { T3CODE_HOME: '.t3/' }); f.cwd(300, `${f.root}/different-home`);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+});
+
+test('relative or tilde server bases hold when cwd or HOME cannot be resolved', async () => {
+  for (const base of ['.t3', '~/.t3']) {
+    const f = fixture(); f.server(100); f.server(200); f.server(300, ['--base-dir', base]); f.keeper(100);
+    if (base.startsWith('~')) f.environ(300, {});
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-base-dir', servers: [100, 200], killed: [] });
+    expect(f.killed).toEqual([]);
+  }
 });
 
 for (const state of ['missing', 'unreadable', 'no-home']) {
