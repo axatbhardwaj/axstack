@@ -26,12 +26,18 @@ test('default-sync remains confined to the stateless default-selection edit', ()
     [[/rewrites? only/i, 'rewrites arbitrary fields including']], concepts);
 });
 
-test('single-server is stateless and kills only duplicate server trees while preserving the recorded keeper', () => {
+test('single-server is stateless and prefers the ownership-lock keeper with a runtime fallback', () => {
   const concepts = [/axstack-single-server/, /stateless script/i, /(?:only SIGKILLs|SIGKILLs only)/i,
-    /duplicate.*t3 serve/i, /one base dir/i, /(?:children|descendants)/i, /keep(?:s|ing)/i, /server-runtime\.json/];
+    /duplicate.*t3 serve/i, /one base dir/i, /(?:children|descendants)/i, /keep(?:s|ing)/i,
+    /(?:holds?|holding) T3['’]s ownership lock/i, /(?:otherwise|else)/i, /server-runtime\.json/,
+    /keep(?:s|ing).*(?:holds?|holding) T3['’]s ownership lock.*(?:otherwise|else).*server-runtime\.json/i];
   checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
-    'The axstack-single-server timer runs a stateless script that SIGKILLs only duplicate t3 serve processes for one base dir and their descendants, keeping the server recorded in server-runtime.json.',
-    [[/(?:only SIGKILLs|SIGKILLs only)/i, 'SIGKILLs any'], [/keep(?:s|ing)/i, 'discarding']], concepts);
+    'The axstack-single-server timer runs a stateless script that SIGKILLs only duplicate t3 serve processes for one base dir and their descendants, keeping the server holding T3’s ownership lock, else the server recorded in server-runtime.json.',
+    [[/(?:only SIGKILLs|SIGKILLs only)/i, 'SIGKILLs any'], [/keep(?:s|ing)/i, 'discarding'],
+      [/(?:holds?|holding) T3['’]s ownership lock/i, 'ignores T3’s ownership lock'],
+      [/(?:otherwise|else)/i, 'rather than'],
+      [/keep(?:s|ing).*?(?:otherwise|else).*?server-runtime\.json/i,
+        'keeping the server recorded in server-runtime.json, otherwise the server holding T3’s ownership lock']], concepts);
 });
 
 

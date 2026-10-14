@@ -60,7 +60,8 @@ unknown uptime/start-time holds, and self/ancestor protection. Hold alerts cover
 the youngest-server age window [600, 780), multiple hold reasons, missing age,
 dry-run suppression, notification stdin and failure. Kill notifications include
 failed survivor pids even when all kill attempts fail. Run the test file with
-TMPDIR set to the owned 0700 scratch outside HOME.
+TMPDIR both set (owned 0700 scratch outside HOME) and unset in a scratch HOME
+to cover CI's default.
 Unit checks prove the installed
 Bun path and one-minute cadence. They do not kill a live process or activate a timer.
 Confirm `bun "$SCRIPTS/single-server.js" --help` lists all five flags (including

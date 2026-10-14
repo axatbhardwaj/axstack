@@ -131,7 +131,8 @@ Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions,
   database. The exceptions are exactly two opt-in systemd user timers:
   `axstack-default-sync` rewrites only T3 `defaultModelSelection`, and
   `axstack-single-server` removes duplicate `t3 serve` process trees for one
-  base dir while keeping the recorded server. Both run stateless scripts, keep
+  base dir while keeping the ownership-lock holder, otherwise the recorded
+  server. Both run stateless scripts, keep
   no workflow state and launch no agent; see
   [New-chat default sync](docs/host-operations.md#new-chat-default-sync) and
   [Single T3 server](docs/host-operations.md#single-t3-server).

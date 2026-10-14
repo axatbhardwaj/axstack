@@ -347,7 +347,8 @@ are `unchanged`, `hold`, `would-kill` or `killed`, with reason, keeper, matching
 server pids and killed pids (proposed victims in dry-run). Non-ESRCH kill failures
 add their pids to `failed`; remaining kills continue, kill attempts still
 notify if configured (including when all fail), and the command exits 1. Exit 0 includes holds;
-exit 1 reports invalid input, discovery, kill or notification failure.
+exit 1 reports invalid input, discovery, kill or notification failure. A failed
+hold-alert notification retains the hold reason and adds `notify: "failed"`.
 
 Under host-mutation authority, copy both assets and enable the timer:
 

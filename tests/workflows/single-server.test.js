@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { run } from '../../skills/axstack/scripts/single-server.js';
 
 const scratch = [];
@@ -78,6 +78,21 @@ test('a unique owner fd supplies a keeper even without runtime data', async () =
   expect(f.killed).toEqual([[200, 'SIGKILL']]);
 });
 
+for (const target of ['resolved', 'lexical']) {
+  test(`a symlinked HOME keeps the owner with a ${target} fd target`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+    renameSync(`${f.root}/home`, `${f.root}/real-home`);
+    symlinkSync(`${f.root}/real-home`, `${f.root}/home`);
+    f.ownerFd(100, target === 'resolved'
+      ? `${f.root}/real-home/.t3/userdata/server-owner.sqlite`
+      : `${f.base}/userdata/server-owner.sqlite`);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+    expect(f.killed).toEqual([[200, 'SIGKILL']]);
+  });
+}
+
 for (const dryRun of [false, true]) {
   test(`multiple owner holders hold and obey alert/dry-run rules (${dryRun})`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.uptime(700);
@@ -147,6 +162,25 @@ test('zero or one matching server is unchanged and never notifies', async () => 
     expect(f.killed).toEqual([]);
     expect(f.spawned).toEqual([]);
   }
+});
+
+test('help lists the replacement-grace flag', async () => {
+  const lines = [];
+  const code = await run(['--help'], { output: (line) => lines.push(line) });
+  expect(code).toBe(0);
+  expect(lines).toHaveLength(1);
+  expect(lines[0]).toMatch(/--grace-seconds\s+N\b/);
+});
+
+test('a single matching server held inside the alert window never notifies', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.environ(200, {}); f.uptime(700);
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+  });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-base-dir', servers: [100], killed: [] });
+  expect(f.killed).toEqual([]);
+  expect(f.spawned).toEqual([]);
 });
 
 test('runtime pid wins; capture descendants before killing each server first', async () => {
@@ -391,18 +425,19 @@ test('persistent hold never alerts in dry-run, without a notifier, or with unkno
   }
 });
 
-test('persistent hold notification failures exit 1 with a secret-free decision', async () => {
-  for (const mode of ['exit', 'throw']) {
+test('persistent hold notification failures retain the hold reason and exit 1 without secrets', async () => {
+  for (const mode of ['exit', 'throw', 'reject']) {
     const f = fixture(); f.server(100); f.server(200); f.uptime(700);
     const { code, decision } = await f.execute([], {
       env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
       spawn: () => {
         if (mode === 'throw') throw new Error('secret-value');
+        if (mode === 'reject') return { exited: Promise.reject(new Error('secret-value')) };
         return { exited: Promise.resolve(5) };
       },
     });
     expect(code).toBe(1);
-    expect(decision).toMatchObject({ action: 'hold', reason: 'notify-failed', killed: [] });
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', notify: 'failed', killed: [] });
     expect(f.killed).toEqual([]);
     expect(JSON.stringify(decision)).not.toContain('secret-value');
   }

@@ -72,24 +72,24 @@ function descendants(pid, processes) {
   return [...found];
 }
 
-function ownerFd(procRoot, pid, ownerFile) {
+function ownerFd(procRoot, pid, ownerFiles) {
   let unknown = false;
   let fds;
   try { fds = fs.readdirSync(`${procRoot}/${pid}/fd`); }
   catch (error) { return ['ENOENT', 'ESRCH'].includes(error.code) ? false : null; }
   for (const fd of fds) {
-    try { if (fs.readlinkSync(`${procRoot}/${pid}/fd/${fd}`) === ownerFile) return true; }
+    try { if (ownerFiles.includes(fs.readlinkSync(`${procRoot}/${pid}/fd/${fd}`))) return true; }
     catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) unknown = true; }
   }
   return unknown ? null : false;
 }
 
-function serverOwner(procRoot, pid, processes, ownerFile) {
-  const main = ownerFd(procRoot, pid, ownerFile);
+function serverOwner(procRoot, pid, processes, ownerFiles) {
+  const main = ownerFd(procRoot, pid, ownerFiles);
   if (main === true) return true;
   let unknown = main === null;
   for (const child of descendants(pid, processes)) {
-    const holds = ownerFd(procRoot, child, ownerFile);
+    const holds = ownerFd(procRoot, child, ownerFiles);
     if (holds === true) return true;
     if (holds === null) unknown = true;
   }
@@ -169,8 +169,11 @@ export async function run(args = [], {
     failure = 'scan-failed';
     const { processes, servers, unknownBase } = discover(procRoot, uid, baseDir);
     decision.servers = servers;
+    const ownerFiles = [`${baseDir}/userdata/server-owner.sqlite`];
+    try { ownerFiles.push(`${fs.realpathSync(`${baseDir}/userdata`)}/server-owner.sqlite`); }
+    catch { /* Keep lexical matching when the userdata directory cannot be resolved. */ }
     const owners = servers.map((pid) => [pid,
-      serverOwner(procRoot, pid, processes, `${baseDir}/userdata/server-owner.sqlite`)]);
+      serverOwner(procRoot, pid, processes, ownerFiles)]);
     const holders = owners.filter(([, holds]) => holds === true).map(([pid]) => pid);
     const ownerHold = holders.length > 1 ? 'multiple-owner-locks'
       : holders.length === 1 && owners.some(([, holds]) => holds === null) ? 'unknown-owner-lock' : null;
@@ -248,7 +251,9 @@ export async function run(args = [], {
       }
     }
   } catch {
-    decision.reason = failure;
+    if (failure === 'notify-failed' && decision.action === 'hold' && !decision.failed?.length) {
+      decision.notify = 'failed';
+    } else decision.reason = failure;
     code = 1;
   }
   output(JSON.stringify(decision));
