@@ -159,7 +159,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {
   const skillFiles = filesBelow(`${root}/skills`).filter((path) => path.endsWith('/SKILL.md'));
-  expect(skillFiles).toHaveLength(19);
+  expect(skillFiles).toHaveLength(20);
   for (const path of skillFiles) {
     const lines = readFileSync(path, 'utf8').split('\n');
     const descriptions = lines.filter((line) => line.startsWith('description:'));

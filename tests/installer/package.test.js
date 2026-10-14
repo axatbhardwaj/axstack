@@ -157,6 +157,7 @@ function fullCycle(pkgDir, neutral, label, preset) {
   writeFileSync(sentinel, 'unrelated\n');
 
   const rels = skillAssets(pkgDir);
+  if (label.startsWith('root-')) expect(rels).toContain('axstack-publish/SKILL.md');
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
 
@@ -173,6 +174,7 @@ function fullCycle(pkgDir, neutral, label, preset) {
   const ownedFiles = JSON.parse(
     readFileSync(join(skillsDir, '.axstack-manifest.json'), 'utf8'),
   ).files;
+  if (label.startsWith('root-')) expect(ownedFiles['axstack-publish/SKILL.md']).toBeString();
   expect(ownedFiles['axstack/roles.json']).toBeString();
 
   const again = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
@@ -213,6 +215,7 @@ test('tarball members match the full source tree with no silent omissions', () =
   const listing = tarMembers(tgz);
   expect(listing.length).toBeGreaterThan(0);
   const expected = expectedMembers(ROOT);
+  expect(listing).toContain('package/skills/axstack-publish/SKILL.md');
   expect([...expected].filter((m) => !listing.includes(m))).toEqual([]);
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
   for (const asset of ['scripts/single-server.js', 'systemd/axstack-single-server.service', 'systemd/axstack-single-server.timer']) {
