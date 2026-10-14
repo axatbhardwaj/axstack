@@ -318,12 +318,15 @@ flag, or missing base-dir values, makes the whole run hold and kill nothing.
 Both the target and server base dirs expand `~` using their own HOME, resolve
 relative paths against `/proc/<pid>/cwd`, and remove trailing slashes and dot
 segments before comparison. Unresolvable server paths hold the run.
-It keeps the pid recorded in `<base>/userdata/server-runtime.json`.
+It keeps the unique server with an open fd to `<base>/userdata/server-owner.sqlite`
+(checking the main pid before descendants), holds on multiple holders or a known
+holder alongside unreadable competing fds, and falls back to `server-runtime.json`
+when no holder is found, including when fd directories are unreadable.
 With zero or one known matching server it does nothing; with duplicates but no
 valid readable keeper it holds. Servers are ordered by field 22 (`starttime`)
 of `/proc/<pid>/stat`. A duplicate started at or after the keeper holds the
 whole run while younger than 120 seconds, preserving a possible starting
-replacement. Once all such duplicates reach the grace, the recorded live
+replacement. Once all such duplicates reach the grace, the selected live
 keeper wins and cleanup proceeds. Age is `/proc/uptime` minus start ticks / 100;
 unknown uptime or start time still holds the run. The script also
 holds if its own pid or an ancestor appears in the planned victim set.

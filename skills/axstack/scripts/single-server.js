@@ -72,6 +72,30 @@ function descendants(pid, processes) {
   return [...found];
 }
 
+function ownerFd(procRoot, pid, ownerFile) {
+  let unknown = false;
+  let fds;
+  try { fds = fs.readdirSync(`${procRoot}/${pid}/fd`); }
+  catch (error) { return ['ENOENT', 'ESRCH'].includes(error.code) ? false : null; }
+  for (const fd of fds) {
+    try { if (fs.readlinkSync(`${procRoot}/${pid}/fd/${fd}`) === ownerFile) return true; }
+    catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) unknown = true; }
+  }
+  return unknown ? null : false;
+}
+
+function serverOwner(procRoot, pid, processes, ownerFile) {
+  const main = ownerFd(procRoot, pid, ownerFile);
+  if (main === true) return true;
+  let unknown = main === null;
+  for (const child of descendants(pid, processes)) {
+    const holds = ownerFd(procRoot, child, ownerFile);
+    if (holds === true) return true;
+    if (holds === null) unknown = true;
+  }
+  return unknown ? null : false;
+}
+
 function serverTimes(procRoot, servers) {
   let uptime = null;
   try {
@@ -120,7 +144,8 @@ export async function run(args = [], {
       if (flag === '--help' && args.length === 1) {
         output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--grace-seconds N] [--dry-run] [--help]\n'
           + 'Defaults: $HOME/.t3 and /proc. SIGKILL duplicate t3 serve servers and their descendants;\n'
-          + 'keep the runtime pid. Newer servers get 120 seconds grace (N: non-negative integer).\n'
+          + 'prefer the unique server-owner.sqlite fd holder, otherwise the runtime pid.\n'
+          + 'Newer servers get 120 seconds grace (N: non-negative integer).\n'
           + '--dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills,\n'
           + 'or for holds with 2+ servers whose youngest age is 600 to under 780 seconds.');
         return 0;
@@ -144,14 +169,24 @@ export async function run(args = [], {
     failure = 'scan-failed';
     const { processes, servers, unknownBase } = discover(procRoot, uid, baseDir);
     decision.servers = servers;
-    let runtimePid;
-    try { runtimePid = JSON.parse(fs.readFileSync(`${baseDir}/userdata/server-runtime.json`, 'utf8')).pid; }
-    catch { /* Missing, unreadable or malformed runtime data is never authority to kill. */ }
-    if (Number.isSafeInteger(runtimePid) && servers.includes(runtimePid)) decision.keeper = runtimePid;
+    const owners = servers.map((pid) => [pid,
+      serverOwner(procRoot, pid, processes, `${baseDir}/userdata/server-owner.sqlite`)]);
+    const holders = owners.filter(([, holds]) => holds === true).map(([pid]) => pid);
+    const ownerHold = holders.length > 1 ? 'multiple-owner-locks'
+      : holders.length === 1 && owners.some(([, holds]) => holds === null) ? 'unknown-owner-lock' : null;
+    if (holders.length === 1 && !ownerHold) decision.keeper = holders[0];
+    else if (!holders.length) {
+      // Legacy servers have no owner fd; unreadable fds alone retain the runtime fallback.
+      let runtimePid;
+      try { runtimePid = JSON.parse(fs.readFileSync(`${baseDir}/userdata/server-runtime.json`, 'utf8')).pid; }
+      catch { /* Missing, unreadable or malformed runtime data is never authority to kill. */ }
+      if (Number.isSafeInteger(runtimePid) && servers.includes(runtimePid)) decision.keeper = runtimePid;
+    }
     const times = serverTimes(procRoot, servers);
     const ageHold = !unknownBase && servers.length > 1 && decision.keeper !== null
       ? replacementHold(times, servers, decision.keeper, graceSeconds) : null;
-    if (unknownBase) decision.reason = 'unknown-base-dir';
+    if (ownerHold) decision.reason = ownerHold;
+    else if (unknownBase) decision.reason = 'unknown-base-dir';
     else if (servers.length < 2) decision = { ...decision, action: 'unchanged', reason: 'single-server' };
     else if (decision.keeper === null) decision.reason = 'no-valid-keeper';
     else if (ageHold) decision.reason = ageHold;

@@ -50,7 +50,9 @@ run-owned inventory before absence or cadence claims. Retain unobserved cases
 as UNKNOWN and cancellation as a separate disposition.
 
 The single-server checks use fake `/proc` trees and injected kill/spawn seams:
-keeper selection, descendant snapshots and SIGKILL order, user/base-dir filters,
+keeper selection (unique owner-file fd in the main process or descendants,
+multiple-holder holds, unreadable-fd safety and legacy runtime fallback),
+descendant snapshots and SIGKILL order, user/base-dir filters,
 hold/dry-run safety and notification stdin/failure. They also verify process-local
 base-dir environments and normalization (`~`, trailing slashes, relative paths
 against each process cwd), default/custom replacement grace and its expiry,

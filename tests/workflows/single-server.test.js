@@ -21,12 +21,14 @@ function fixture() {
     `${pid} (t3 (worker) server) S 1 ${'0 '.repeat(17)}${ticks}\n`);
   const processEntry = (pid, argv, ppid = 1, uid = process.getuid()) => {
     mkdirSync(`${proc}/${pid}`);
+    mkdirSync(`${proc}/${pid}/fd`);
     writeFileSync(`${proc}/${pid}/cmdline`, `${argv.join('\0')}\0`);
     writeFileSync(`${proc}/${pid}/status`, `Name:\tt3\nPPid:\t${ppid}\nUid:\t${uid}\t${uid}\t${uid}\t${uid}\n`);
     environ(pid, { HOME: `${root}/home` });
     startTime(pid, 10);
   };
   const server = (pid, extra = [], ppid = 1) => processEntry(pid, ['/runtime/v1/t3', 'serve', ...extra], ppid);
+  const ownerFd = (pid, target = `${base}/userdata/server-owner.sqlite`) => symlinkSync(target, `${proc}/${pid}/fd/9`);
   const cwd = (pid, path) => {
     mkdirSync(`${proc}/${pid}`, { recursive: true });
     symlinkSync(path, `${proc}/${pid}/cwd`);
@@ -48,8 +50,92 @@ function fixture() {
     expect(lines).toHaveLength(1);
     return { code, decision: JSON.parse(lines[0]) };
   };
-  return { root, base, proc, uptime, environ, cwd, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
+  return { root, base, proc, uptime, environ, cwd, startTime, server, ownerFd, keeper, processEntry, killed, spawned, seams, execute };
 }
+
+for (const holder of ['server', 'descendant']) {
+  for (const age of [119, 120]) {
+    test(`owner file held by ${holder} overrides runtime pid with duplicate age ${age}s`, async () => {
+      const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+      f.processEntry(110, ['worker'], 100); f.processEntry(210, ['worker'], 200);
+      f.startTime(100, 10000); f.startTime(200, 20000); f.uptime(200 + age);
+      f.ownerFd(holder === 'server' ? 100 : 110);
+      const { code, decision } = await f.execute(['--base-dir', `${f.base}///`]);
+      expect(code).toBe(0);
+      expect(decision).toMatchObject(age < 120
+        ? { action: 'hold', reason: 'possible-replacement', keeper: 100, killed: [] }
+        : { action: 'killed', reason: 'duplicate-servers', keeper: 100, killed: [200, 210] });
+      expect(f.killed).toEqual(age < 120 ? [] : [[200, 'SIGKILL'], [210, 'SIGKILL']]);
+    });
+  }
+}
+
+test('a unique owner fd supplies a keeper even without runtime data', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.ownerFd(100);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+for (const dryRun of [false, true]) {
+  test(`multiple owner holders hold and obey alert/dry-run rules (${dryRun})`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.uptime(700);
+    f.processEntry(110, ['worker'], 100); f.ownerFd(110); f.ownerFd(200);
+    const { code, decision } = await f.execute(dryRun ? ['--dry-run'] : [], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'multiple-owner-locks', keeper: null, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(dryRun ? 0 : 1);
+    if (!dryRun) expect(await new Response(f.spawned[0].options.stdin).text()).toContain('multiple-owner-locks');
+  });
+}
+
+test('other open files do not override the runtime keeper', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+  f.ownerFd(100, `${f.base}/userdata/server-owner.sqlite-wal`);
+  f.ownerFd(200, `${f.root}/other/userdata/server-owner.sqlite`);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', keeper: 200, killed: [100] });
+  expect(f.killed).toEqual([[100, 'SIGKILL']]);
+});
+
+test('without a found owner, unreadable fd directories retain the runtime fallback', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  chmodSync(`${f.proc}/200/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/200/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('a found holder cannot authorize killing a server with unreadable fds', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.ownerFd(100);
+  chmodSync(`${f.proc}/200/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/200/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'hold', reason: 'unknown-owner-lock', keeper: null, killed: [] });
+  expect(f.killed).toEqual([]);
+});
+
+test('a main-process holder does not need readable descendant fds', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.ownerFd(100);
+  f.processEntry(110, ['worker'], 100);
+  chmodSync(`${f.proc}/110/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/110/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
 
 test('zero or one matching server is unchanged and never notifies', async () => {
   for (const count of [0, 1]) {
