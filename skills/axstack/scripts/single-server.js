@@ -98,7 +98,8 @@ export async function run(args = [], {
         output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--grace-seconds N] [--dry-run] [--help]\n'
           + 'Defaults: $HOME/.t3 and /proc. SIGKILL duplicate t3 serve servers and their descendants;\n'
           + 'keep the runtime pid. Newer servers get 120 seconds grace (N: non-negative integer).\n'
-          + '--dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills.');
+          + '--dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills,\n'
+          + 'or for holds with 2+ servers whose youngest age is 600 to under 780 seconds.');
         return 0;
       }
       if (seen.has(flag)) throw new Error('duplicate flag');
@@ -162,15 +163,27 @@ export async function run(args = [], {
         }
         if (decision.failed?.length) decision.reason = 'kill-failed';
         else if (!decision.killed.length) decision = { ...decision, action: 'unchanged', reason: 'no-victims' };
-        if (decision.killed.length && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
-          failure = 'notify-failed';
-          const message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ')}. `
-            + 'Runs started by the killed server may stay running and need t3_thread_interrupt.\n';
-          const child = spawn(['sh', '-c', env.AXSTACK_SINGLE_SERVER_NOTIFY], {
-            stdin: new Blob([message]), stdout: 'ignore', stderr: 'ignore', env,
-          });
-          if (await child.exited !== 0) throw new Error('notification failed');
+      }
+    }
+    if (!dryRun && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
+      let message;
+      failure = 'notify-failed';
+      if (decision.killed.length) {
+        message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ')}. `
+          + 'Runs started by the killed server may stay running and need t3_thread_interrupt.\n';
+      } else if (decision.action === 'hold' && servers.length > 1) {
+        const ages = [...times.ages.values()];
+        const youngest = ages.every((age) => age !== null && age >= 0) ? Math.min(...ages) : null;
+        if (youngest !== null && youngest >= 600 && youngest < 780) {
+          message = `${hostname()}: hold ${decision.reason}; keeper ${decision.keeper ?? 'none'}; `
+            + `servers ${servers.join(', ')}; duplicates are still running.\n`;
         }
+      }
+      if (message) {
+        const child = spawn(['sh', '-c', env.AXSTACK_SINGLE_SERVER_NOTIFY], {
+          stdin: new Blob([message]), stdout: 'ignore', stderr: 'ignore', env,
+        });
+        if (await child.exited !== 0) throw new Error('notification failed');
       }
     }
   } catch {

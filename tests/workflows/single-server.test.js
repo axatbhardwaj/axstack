@@ -205,6 +205,76 @@ test('invalid grace values reject input before scanning or killing', async () =>
   }
 });
 
+for (const age of [599.99, 600, 779.99, 780]) {
+  test(`persistent hold age ${age}s alerts only in the ten-to-thirteen-minute window`, async () => {
+    const f = fixture(); f.server(100); f.server(200);
+    f.startTime(200, 10000); f.uptime(100 + age);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', keeper: null, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(age >= 600 && age < 780 ? 1 : 0);
+    if (f.spawned.length) {
+      expect(f.spawned[0].argv).toEqual(['sh', '-c', 'notify']);
+      expect(f.spawned[0].options).toMatchObject({ stdout: 'ignore', stderr: 'ignore' });
+      const message = await new Response(f.spawned[0].options.stdin).text();
+      expect(message).toMatch(/fixture-host.*no-valid-keeper.*keeper.*none.*servers.*100, 200.*duplicates.*still running/is);
+    }
+  });
+}
+
+for (const reason of ['possible-replacement', 'unknown-base-dir', 'own-process-tree']) {
+  test(`persistent ${reason} hold alerts with the live keeper`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    f.startTime(200, 10000); f.uptime(700);
+    if (reason === 'unknown-base-dir') { f.server(300); f.environ(300, {}); }
+    if (reason === 'own-process-tree') f.processEntry(process.pid, ['bun'], 200);
+    const { code, decision } = await f.execute(reason === 'possible-replacement' ? ['--grace-seconds', '1000'] : [], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason, keeper: 100, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(1);
+    const message = await new Response(f.spawned[0].options.stdin).text();
+    expect(message).toContain(reason);
+    expect(message).toMatch(/keeper.*100.*servers.*100, 200.*duplicates.*still running/is);
+  });
+}
+
+test('persistent hold never alerts in dry-run, without a notifier, or with unknown ages', async () => {
+  for (const mode of ['dry-run', 'no-notifier', 'unknown-start', 'unknown-uptime']) {
+    const f = fixture(); f.server(100); f.server(200); f.uptime(700);
+    if (mode === 'unknown-start') rmSync(`${f.proc}/200/stat`);
+    if (mode === 'unknown-uptime') rmSync(`${f.proc}/uptime`);
+    const { code, decision } = await f.execute(mode === 'dry-run' ? ['--dry-run'] : [], {
+      env: { ...f.seams.env, ...(mode === 'no-notifier' ? {} : { AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' }) },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  }
+});
+
+test('persistent hold notification failures exit 1 with a secret-free decision', async () => {
+  for (const mode of ['exit', 'throw']) {
+    const f = fixture(); f.server(100); f.server(200); f.uptime(700);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
+      spawn: () => {
+        if (mode === 'throw') throw new Error('secret-value');
+        return { exited: Promise.resolve(5) };
+      },
+    });
+    expect(code).toBe(1);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'notify-failed', killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(JSON.stringify(decision)).not.toContain('secret-value');
+  }
+});
+
 for (const state of ['missing', 'unreadable', 'malformed']) {
   test(`unknown server start time holds when stat is ${state}`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.keeper(100);
