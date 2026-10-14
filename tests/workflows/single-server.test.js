@@ -411,7 +411,21 @@ test('a non-ESRCH kill failure is recorded, remaining victims are attempted and 
   expect(f.spawned).toHaveLength(1);
   const message = await new Response(f.spawned[0].options.stdin).text();
   expect(message).toContain('killed pids 200, 211, 300');
+  expect(message).toMatch(/failed.*210.*still running/is);
   expect(JSON.stringify(decision)).not.toContain('secret-value');
+});
+
+test('kill notification lists survivors even when every kill fails', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    kill: () => { throw Object.assign(new Error('denied'), { code: 'EPERM' }); },
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'kill-failed', killed: [], failed: [200] });
+  expect(f.spawned).toHaveLength(1);
+  const message = await new Response(f.spawned[0].options.stdin).text();
+  expect(message).toMatch(/fixture-host.*kept.*100.*failed.*200.*still running/is);
 });
 
 for (const member of ['self', 'ancestor']) {

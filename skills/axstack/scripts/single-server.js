@@ -193,9 +193,10 @@ export async function run(args = [], {
     if (!dryRun && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
       let message;
       failure = 'notify-failed';
-      if (decision.killed.length) {
-        message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ')}. `
+      if (decision.killed.length || decision.failed?.length) {
+        message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ') || 'none'}. `
           + 'Runs started by the killed server may stay running and need t3_thread_interrupt.\n';
+        if (decision.failed?.length) message += `Failed pids ${decision.failed.join(', ')} are still running.\n`;
       } else if (decision.action === 'hold' && servers.length > 1) {
         const ages = [...times.ages.values()];
         const youngest = ages.every((age) => age !== null && age >= 0) ? Math.min(...ages) : null;
