@@ -63,9 +63,52 @@ rule('public proof hashes anonymously read response bytes',
 
 rule('private proof combines anonymous sign-in redirect and live metadata',
   [/private/i, /verify/i, /anonymous/i, /SlashDocs sign.in/i, /Dex/i, /notes status/i,
-    /\bpublished\b/i, /live version/i, /SHA-256/i, /matches/i, /final bytes/i],
-  'For private mode, verify anonymous navigation reaches SlashDocs sign-in leading to Dex and notes status reports published with the live version and SHA-256 that matches the final bytes.',
-  [[/verify/i, 'skip'], [/anonymous/i, 'owner'], [/matches/i, 'ignores'], [/published/i, 'unpublished']]);
+    /\bpublished(?:`?\s*:\s*|\s+is\s+)true\b/i, /live version/i, /SHA-256/i, /matches/i, /final bytes/i],
+  'For private mode, verify anonymous navigation reaches SlashDocs sign-in leading to Dex and notes status reports published is true with the live version and SHA-256 that matches the final bytes.',
+  [[/verify/i, 'skip'], [/anonymous/i, 'owner'], [/matches/i, 'ignores'],
+    [/published/i, 'unpublished'], [/\btrue\b/i, 'false']]);
+
+rule('private version is compared with the publish result',
+  [/compare/i, /status/i, /private version/i, /publish result/i],
+  'Compare the private version from notes status with the publish result.',
+  [[/compare/i, 'ignore'], [/private version/i, 'public version'], [/publish result/i, 'local draft']]);
+
+rule('null metadata or pending publication leaves verification unproven',
+  [/null (?:live )?metadata/i, /\bor\b/i, /pending operation/i, /verification/i, /unproven|unverified/i],
+  'Null metadata or a pending operation leaves verification unverified.',
+  [[/unproven|unverified/i, 'still counts as verified'], [/\bor\b/i, 'and']]);
+
+rule('earlier publication and local creation supply no new authority',
+  [/local creation/i, /earlier publication/i, /publication authority/i],
+  'Local creation or an earlier publication grants no new publication authority.',
+  [[/(supplies|grants) no new publication authority/i, '$1 publication authority']],
+  /(?:supplies|grants) no new publication authority/i);
+
+rule('Explain checks are rerun on final theme-adapted bytes',
+  [/theme adaptation/i, /\b(?:rerun|repeat|recheck)\b/i, /Explain page checks/i, /final bytes/i],
+  'After theme adaptation, repeat the Explain page checks on the final bytes.',
+  [[/\b(?:rerun|repeat|recheck)\b/i, 'skip'], [/final bytes/i, 'original bytes']]);
+
+rule('publish input is stdin only without a TTY and limited to 5 MB',
+  [/stdin only/i, /at most/i, /\b5,000,000 bytes\b/i, /final HTML/i],
+  'Send final HTML on stdin only with no TTY and at most 5,000,000 bytes.',
+  [[/no TTY/i, 'an allocated TTY'], [/stdin only/i, 'file arguments or stdin'],
+    [/at most/i, 'at least'], [/\b5,000,000 bytes\b/i, '50,000,000 bytes']], /no TTY/i);
+
+rule('publish output SHA is compared with the final artifact',
+  [/compare/i, /\b(?:its|publish result's) SHA(?:-256)?\b/i, /final artifact/i],
+  "Compare the publish result's SHA-256 with the final artifact.",
+  [[/compare/i, 'ignore'], [/final artifact/i, 'original draft']]);
+
+rule('returned URL origin matches the configured mode origin',
+  [/require/i, /returned URL(?:'s)? origin/i, /match/i, /configured origin/i, /mode/i],
+  "Require the returned URL origin to match the configured origin for the selected mode.",
+  [[/require/i, 'skip'], [/match/i, 'ignore'], [/configured origin/i, 'arbitrary origin']]);
+
+rule('missing or failed required checks and reviews hold publication',
+  [/hold/i, /publication/i, /required/i, /check/i, /review/i, /missing/i, /failed/i],
+  'Hold publication when a required check or review is missing or failed.',
+  [[/hold/i, 'continue'], [/missing/i, 'completed'], [/failed/i, 'passed']]);
 
 rule('publication belongs only to the driver thread',
   [/only/i, /driver thread/i, /publish/i],

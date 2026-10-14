@@ -83,6 +83,9 @@ self-contained assets, fresh final-byte review, password/TTY prohibitions and
 anonymous live-URL/SHA verification through removal, inversion and rewording.
 It also checks host-managed routing and missing/invalid-config holds, driver-only
 publication, final-byte previews, external-edit warnings and URL/version/SHA receipts.
+Private proof checks published=true, version comparison and null/pending holds;
+earlier publication grants no authority, and theme adaptation requires final-byte
+rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
 This offline recipe proves instructions only. The driver separately runs the
 candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
