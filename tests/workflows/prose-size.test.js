@@ -242,8 +242,8 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // 20261013-token-efficiency base1: A +3061 and B +1395 aggregate bytes
   // combine at 403168; measured always-loaded 27196 + 18 + 95 = 27309.
   // Retire the inherited one-byte always-loaded headroom; both ceilings are exact.
-  // 20261013-publish-skill-align T10: +4549 measured bytes for the approved
+  // 20261013-publish-skill-align T10: +4571 measured bytes for the approved
   // Publish skill; always-loaded unchanged. Exact ceiling, no headroom.
-  expect(total).toBeLessThanOrEqual(407717);
+  expect(total).toBeLessThanOrEqual(407739);
   expect(alwaysLoaded).toBeLessThanOrEqual(27309);
 });

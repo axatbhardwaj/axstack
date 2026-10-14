@@ -1,6 +1,6 @@
 ---
 name: axstack-publish
-description: When the user requests publication of an Explain HTML article, verify and publish that article in the explicitly authorized mode.
+description: When the user requests publication of an Explain HTML article, use axstack-publish to verify and publish that article in the explicitly authorized mode.
 ---
 
 # Publish
@@ -76,6 +76,6 @@ Tell the user when `overwrote_external_edit` is true: publication replaced an
 external edit, retained as an earlier SlashDocs version.
 
 Agents never handle reader passwords.
-Agents never run `notes reader show` or allocate an SSH TTY with `-t` or `-tt`.
+Agents never run `notes reader show` or allocate a TTY (`-t` or `-tt` on SSH).
 Reader and grant commands require their own request and secret-free non-TTY output.
 The owner shares reader credentials separately from the article link.

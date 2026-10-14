@@ -156,8 +156,11 @@ test('manager decisions outlive the finite pass through durable ownership', () =
       [/\band\b/i, 'or']], successor);
 });
 
-function privateTransportLeak(text) {
-  const source = text.replace(/\s+/g, ' ').replace(
+function privateTransportLeak(text, publishing = false) {
+  // AC19 explicitly ships these two binding notes commands, in Publish only.
+  const approved = publishing ? text.replace(
+    /\bssh axat-vps notes (?:publish --mode <private\|public> --slug <slug> < final\.html|status --slug <slug>)(?=`|\n)/g, '') : text;
+  const source = approved.replace(/\s+/g, ' ').replace(
     /\bssh (?:to|from) the gateway host named in the Notification policy\b/gi, '');
   return /\bssh\s+(?:-\S+\s+)*["']?[A-Za-z0-9][\w.-]*|\b[\w.-]+@[A-Za-z][\w.-]*|\/(?:root|home)\//i.test(source);
 }
@@ -171,8 +174,20 @@ test('public transport guard rejects concrete hosts and preserves generic routin
   expect(privateTransportLeak(source)).toBe(false);
   expect(privateTransportLeak(source.replace('over SSH from', 'over ssh to'))).toBe(false);
   for (const file of [...markdownBelow(`${root}/skills`), ...publicDocPaths(root).map((path) => `${root}/${path}`)]) {
-    expect(privateTransportLeak(readFileSync(file, 'utf8')), file).toBe(false);
+    expect(privateTransportLeak(readFileSync(file, 'utf8'), file === `${root}/skills/axstack-publish/SKILL.md`), file).toBe(false);
   }
+});
+
+test('Publish transport exception permits only the two binding commands', () => {
+  const source = read('skills/axstack-publish/SKILL.md');
+  expect(privateTransportLeak(source)).toBe(true);
+  expect(privateTransportLeak(source, true)).toBe(false);
+  for (const snippet of ['ssh gateway.example', 'ssh axat-vps notes reader show alice',
+    'ssh -t axat-vps notes status --slug <slug>', 'ssh axat-vps cat /etc/passwd',
+    'owner@axat-vps', '/home/owner/private']) {
+    expect(privateTransportLeak(`${source}\n${snippet}`, true), snippet).toBe(true);
+  }
+  expect(privateTransportLeak(source.replaceAll('axat-vps', 'another-host'), true)).toBe(true);
 });
 
 test('relay discovery: public Markdown contains no private transport values', () => {
