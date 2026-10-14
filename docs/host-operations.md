@@ -319,7 +319,8 @@ Both the target and server base dirs expand `~` using their own HOME, resolve
 relative paths against `/proc/<pid>/cwd`, and remove trailing slashes and dot
 segments before comparison. Unresolvable server paths hold the run.
 It keeps the unique server with an open fd to `<base>/userdata/server-owner.sqlite`
-(checking the main pid before descendants), holds on multiple holders or a known
+(matching lexical and realpath-resolved userdata paths, and checking the main pid
+before descendants), holds on multiple holders or a known
 holder alongside unreadable competing fds, and falls back to `server-runtime.json`
 when no holder is found, including when fd directories are unreadable.
 With zero or one known matching server it does nothing; with duplicates but no

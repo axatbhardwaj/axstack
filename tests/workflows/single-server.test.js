@@ -549,6 +549,34 @@ test('kill notification lists survivors even when every kill fails', async () =>
   expect(message).toMatch(/fixture-host.*kept.*100.*failed.*200.*still running/is);
 });
 
+test('failed kills followed by a failed notifier retain the kill-notification failure result', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  const attempts = [];
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    kill: (pid) => {
+      attempts.push(pid);
+      throw Object.assign(new Error('denied'), { code: 'EPERM' });
+    },
+    spawn: () => ({ exited: Promise.resolve(5) }),
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'notify-failed', killed: [], failed: [200, 300] });
+  expect(decision).not.toHaveProperty('notify');
+  expect(attempts).toEqual([200, 300]);
+});
+
+test('a scan failure reports scan-failed without a notification result', async () => {
+  const f = fixture();
+  rmSync(f.proc, { recursive: true });
+  const { code, decision } = await f.execute(['--dry-run']);
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'scan-failed', killed: [] });
+  expect(decision).not.toHaveProperty('notify');
+  expect(f.killed).toEqual([]);
+  expect(f.spawned).toEqual([]);
+});
+
 for (const member of ['self', 'ancestor']) {
   test(`a victim tree containing the script ${member} holds without killing or notifying`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.keeper(100);
