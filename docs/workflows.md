@@ -22,6 +22,9 @@ immediately before dispatch or account re-selection.
 
 Direct routes need no spec ceremony:
 
+- [axstack-publish](../skills/axstack-publish/SKILL.md) publishes one Explain
+  HTML article in one explicitly authorized private or public mode through the
+  driver, after final-byte checks, independent review and live verification.
 - [axstack-verify](../skills/axstack-verify/SKILL.md) routes verification-skill
   creation and maintenance through Implement.
   A single-behavior check uses an existing `verify-<app>` skill or UI verification

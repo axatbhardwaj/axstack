@@ -27,6 +27,7 @@ for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/single-server.js \
   skills/axstack/systemd/axstack-single-server.service \
   skills/axstack/systemd/axstack-single-server.timer \
+  skills/axstack-publish/SKILL.md \
   skills/axstack-watch/references/repair-publication.md; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
@@ -54,6 +55,8 @@ bun run test tests/workflows/publication-repair.test.js \
 ```
 
 These checks prove packaged instruction contracts, not live publication.
+`package.test.js` also proves Publish's packed bytes, owned installation,
+repeat install and uninstall under all three presets.
 Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
 
 
