@@ -49,7 +49,12 @@ function descendants(pid, processes) {
   return [...found];
 }
 
-function replacementHold(procRoot, servers, keeper) {
+function serverTimes(procRoot, servers) {
+  let uptime = null;
+  try {
+    const value = fs.readFileSync(`${procRoot}/uptime`, 'utf8').trim().split(/\s+/)[0];
+    if (/^\d+(\.\d+)?$/.test(value) && Number.isFinite(Number(value))) uptime = Number(value);
+  } catch { /* Unknown uptime never authorizes a kill. */ }
   const starts = new Map(servers.map((pid) => {
     let start = null;
     try {
@@ -61,8 +66,16 @@ function replacementHold(procRoot, servers, keeper) {
     } catch { /* Unknown age never authorizes a kill. */ }
     return [pid, start];
   }));
+  const ages = new Map([...starts].map(([pid, start]) => [pid,
+    start === null || uptime === null ? null : uptime - Number(start) / 100]));
+  return { starts, ages, uptime };
+}
+
+function replacementHold({ starts, ages, uptime }, servers, keeper, graceSeconds) {
   if ([...starts.values()].includes(null)) return 'unknown-start-time';
-  if (servers.some((pid) => pid !== keeper && starts.get(pid) >= starts.get(keeper))) return 'possible-replacement';
+  if (uptime === null) return 'unknown-uptime';
+  if (servers.some((pid) => pid !== keeper && starts.get(pid) >= starts.get(keeper)
+    && ages.get(pid) < graceSeconds)) return 'possible-replacement';
   return null;
 }
 
@@ -77,22 +90,28 @@ export async function run(args = [], {
     let baseDir = `${env.HOME}/.t3`;
     let procRoot = '/proc';
     let dryRun = false;
+    let graceSeconds = 120;
     const seen = new Set();
     for (let i = 0; i < args.length; i++) {
       const flag = args[i];
       if (flag === '--help' && args.length === 1) {
-        output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--dry-run] [--help]\n'
+        output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--grace-seconds N] [--dry-run] [--help]\n'
           + 'Defaults: $HOME/.t3 and /proc. SIGKILL duplicate t3 serve servers and their descendants;\n'
-          + 'keep the runtime pid. --dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills.');
+          + 'keep the runtime pid. Newer servers get 120 seconds grace (N: non-negative integer).\n'
+          + '--dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills.');
         return 0;
       }
       if (seen.has(flag)) throw new Error('duplicate flag');
       seen.add(flag);
       if (flag === '--dry-run') dryRun = true;
-      else if (['--base-dir', '--proc-root'].includes(flag) && args[i + 1] && !args[i + 1].startsWith('--')) {
+      else if (['--base-dir', '--proc-root', '--grace-seconds'].includes(flag) && args[i + 1] && !args[i + 1].startsWith('--')) {
         const value = args[++i];
         if (flag === '--base-dir') baseDir = value;
-        else procRoot = value;
+        else if (flag === '--proc-root') procRoot = value;
+        else {
+          if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new Error('invalid grace');
+          graceSeconds = Number(value);
+        }
       } else throw new Error('invalid flag');
     }
     if (!env.HOME) throw new Error('missing home');
@@ -103,8 +122,9 @@ export async function run(args = [], {
     try { runtimePid = JSON.parse(fs.readFileSync(`${baseDir}/userdata/server-runtime.json`, 'utf8')).pid; }
     catch { /* Missing, unreadable or malformed runtime data is never authority to kill. */ }
     if (Number.isSafeInteger(runtimePid) && servers.includes(runtimePid)) decision.keeper = runtimePid;
+    const times = serverTimes(procRoot, servers);
     const ageHold = !unknownBase && servers.length > 1 && decision.keeper !== null
-      ? replacementHold(procRoot, servers, decision.keeper) : null;
+      ? replacementHold(times, servers, decision.keeper, graceSeconds) : null;
     if (unknownBase) decision.reason = 'unknown-base-dir';
     else if (servers.length < 2) decision = { ...decision, action: 'unchanged', reason: 'single-server' };
     else if (decision.keeper === null) decision.reason = 'no-valid-keeper';

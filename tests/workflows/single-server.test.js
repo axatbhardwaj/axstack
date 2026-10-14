@@ -13,6 +13,8 @@ function fixture() {
   const proc = `${root}/proc`;
   mkdirSync(`${base}/userdata`, { recursive: true });
   mkdirSync(proc);
+  const uptime = (seconds) => writeFileSync(`${proc}/uptime`, `${seconds} 0.00\n`);
+  uptime(1000);
   const environ = (pid, values) => writeFileSync(`${proc}/${pid}/environ`,
     Object.entries(values).map(([key, value]) => `${key}=${value}\0`).join(''));
   const startTime = (pid, ticks) => writeFileSync(`${proc}/${pid}/stat`,
@@ -42,7 +44,7 @@ function fixture() {
     expect(lines).toHaveLength(1);
     return { code, decision: JSON.parse(lines[0]) };
   };
-  return { root, base, proc, environ, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
+  return { root, base, proc, uptime, environ, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
 }
 
 test('zero or one matching server is unchanged and never notifies', async () => {
@@ -130,9 +132,10 @@ test('equals base-dir form matches a non-default target and ignores other bases'
   expect(f.killed).toEqual([[200, 'SIGKILL']]);
 });
 
-test('only duplicates strictly older than the keeper are killed; stat comm may contain parentheses and spaces', async () => {
+test('older duplicates are killed; stat comm may contain parentheses and spaces', async () => {
   const f = fixture(); f.server(100); f.server(200); f.keeper(100);
   f.startTime(100, '9007199254740993'); f.startTime(200, '9007199254740992');
+  f.uptime(90071992547410);
   const { code, decision } = await f.execute();
   expect(code).toBe(0);
   expect(decision).toMatchObject({ action: 'killed', killed: [200] });
@@ -143,12 +146,64 @@ for (const started of [20, 30]) {
   test(`a duplicate started at ${started} versus keeper 20 holds the whole run`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
     f.startTime(300, started);
+    f.uptime(100);
     const { code, decision } = await f.execute();
     expect(code).toBe(0);
     expect(decision).toMatchObject({ action: 'hold', reason: 'possible-replacement', killed: [] });
     expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
   });
 }
+
+for (const age of [119.99, 120, 121]) {
+  test(`newer duplicate age ${age}s uses the default 120s grace`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    f.startTime(200, 10000); f.uptime(100 + age);
+    f.processEntry(210, ['codex'], 200);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject(age < 120
+      ? { action: 'hold', reason: 'possible-replacement', killed: [] }
+      : { action: 'killed', reason: 'duplicate-servers', killed: [200, 210] });
+    expect(f.killed).toEqual(age < 120 ? [] : [[200, 'SIGKILL'], [210, 'SIGKILL']]);
+    expect(f.spawned).toHaveLength(age < 120 ? 0 : 1);
+  });
+}
+
+test('custom grace holds all duplicates until every possible replacement expires', async () => {
+  for (const age of [29, 30]) {
+    const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+    f.startTime(200, 10000); f.startTime(300, 20000); f.uptime(200 + age);
+    const { code, decision } = await f.execute(['--grace-seconds', '30']);
+    expect(code).toBe(0);
+    expect(decision).toMatchObject(age < 30
+      ? { action: 'hold', reason: 'possible-replacement', killed: [] }
+      : { action: 'killed', reason: 'duplicate-servers', killed: [200, 300] });
+  }
+});
+
+for (const value of [null, 'bad', '-1', 'Infinity']) {
+  test(`unknown uptime ${value} holds even with a valid keeper`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    if (value === null) rmSync(`${f.proc}/uptime`);
+    else f.uptime(value);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-uptime', killed: [] });
+    expect(f.killed).toEqual([]);
+  });
+}
+
+test('invalid grace values reject input before scanning or killing', async () => {
+  for (const value of ['-1', 'NaN', 'Infinity', '1.5', '']) {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    const { code, decision } = await f.execute(['--grace-seconds', value]);
+    expect(code).toBe(1);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'invalid-input', killed: [] });
+    expect(f.killed).toEqual([]);
+  }
+});
 
 for (const state of ['missing', 'unreadable', 'malformed']) {
   test(`unknown server start time holds when stat is ${state}`, async () => {
