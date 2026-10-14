@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { run } from '../../skills/axstack/scripts/single-server.js';
 
 const scratch = [];
@@ -13,18 +13,26 @@ function fixture() {
   const proc = `${root}/proc`;
   mkdirSync(`${base}/userdata`, { recursive: true });
   mkdirSync(proc);
+  const uptime = (seconds) => writeFileSync(`${proc}/uptime`, `${seconds} 0.00\n`);
+  uptime(1000);
   const environ = (pid, values) => writeFileSync(`${proc}/${pid}/environ`,
     Object.entries(values).map(([key, value]) => `${key}=${value}\0`).join(''));
   const startTime = (pid, ticks) => writeFileSync(`${proc}/${pid}/stat`,
     `${pid} (t3 (worker) server) S 1 ${'0 '.repeat(17)}${ticks}\n`);
   const processEntry = (pid, argv, ppid = 1, uid = process.getuid()) => {
     mkdirSync(`${proc}/${pid}`);
+    mkdirSync(`${proc}/${pid}/fd`);
     writeFileSync(`${proc}/${pid}/cmdline`, `${argv.join('\0')}\0`);
     writeFileSync(`${proc}/${pid}/status`, `Name:\tt3\nPPid:\t${ppid}\nUid:\t${uid}\t${uid}\t${uid}\t${uid}\n`);
     environ(pid, { HOME: `${root}/home` });
     startTime(pid, 10);
   };
   const server = (pid, extra = [], ppid = 1) => processEntry(pid, ['/runtime/v1/t3', 'serve', ...extra], ppid);
+  const ownerFd = (pid, target = `${base}/userdata/server-owner.sqlite`) => symlinkSync(target, `${proc}/${pid}/fd/9`);
+  const cwd = (pid, path) => {
+    mkdirSync(`${proc}/${pid}`, { recursive: true });
+    symlinkSync(path, `${proc}/${pid}/cwd`);
+  };
   const keeper = (pid) => {
     writeFileSync(`${base}/userdata/server-runtime.json`, JSON.stringify({ version: 1, pid }));
     startTime(pid, 20);
@@ -42,8 +50,107 @@ function fixture() {
     expect(lines).toHaveLength(1);
     return { code, decision: JSON.parse(lines[0]) };
   };
-  return { root, base, proc, environ, startTime, server, keeper, processEntry, killed, spawned, seams, execute };
+  return { root, base, proc, uptime, environ, cwd, startTime, server, ownerFd, keeper, processEntry, killed, spawned, seams, execute };
 }
+
+for (const holder of ['server', 'descendant']) {
+  for (const age of [119, 120]) {
+    test(`owner file held by ${holder} overrides runtime pid with duplicate age ${age}s`, async () => {
+      const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+      f.processEntry(110, ['worker'], 100); f.processEntry(210, ['worker'], 200);
+      f.startTime(100, 10000); f.startTime(200, 20000); f.uptime(200 + age);
+      f.ownerFd(holder === 'server' ? 100 : 110);
+      const { code, decision } = await f.execute(['--base-dir', `${f.base}///`]);
+      expect(code).toBe(0);
+      expect(decision).toMatchObject(age < 120
+        ? { action: 'hold', reason: 'possible-replacement', keeper: 100, killed: [] }
+        : { action: 'killed', reason: 'duplicate-servers', keeper: 100, killed: [200, 210] });
+      expect(f.killed).toEqual(age < 120 ? [] : [[200, 'SIGKILL'], [210, 'SIGKILL']]);
+    });
+  }
+}
+
+test('a unique owner fd supplies a keeper even without runtime data', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.ownerFd(100);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+for (const target of ['resolved', 'lexical']) {
+  test(`a symlinked HOME keeps the owner with a ${target} fd target`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+    renameSync(`${f.root}/home`, `${f.root}/real-home`);
+    symlinkSync(`${f.root}/real-home`, `${f.root}/home`);
+    f.ownerFd(100, target === 'resolved'
+      ? `${f.root}/real-home/.t3/userdata/server-owner.sqlite`
+      : `${f.base}/userdata/server-owner.sqlite`);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+    expect(f.killed).toEqual([[200, 'SIGKILL']]);
+  });
+}
+
+for (const dryRun of [false, true]) {
+  test(`multiple owner holders hold and obey alert/dry-run rules (${dryRun})`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.uptime(700);
+    f.processEntry(110, ['worker'], 100); f.ownerFd(110); f.ownerFd(200);
+    const { code, decision } = await f.execute(dryRun ? ['--dry-run'] : [], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'multiple-owner-locks', keeper: null, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(dryRun ? 0 : 1);
+    if (!dryRun) expect(await new Response(f.spawned[0].options.stdin).text()).toContain('multiple-owner-locks');
+  });
+}
+
+test('other open files do not override the runtime keeper', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200);
+  f.ownerFd(100, `${f.base}/userdata/server-owner.sqlite-wal`);
+  f.ownerFd(200, `${f.root}/other/userdata/server-owner.sqlite`);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', keeper: 200, killed: [100] });
+  expect(f.killed).toEqual([[100, 'SIGKILL']]);
+});
+
+test('without a found owner, unreadable fd directories retain the runtime fallback', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  chmodSync(`${f.proc}/200/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/200/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
+
+test('a found holder cannot authorize killing a server with unreadable fds', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.ownerFd(100);
+  chmodSync(`${f.proc}/200/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/200/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'hold', reason: 'unknown-owner-lock', keeper: null, killed: [] });
+  expect(f.killed).toEqual([]);
+});
+
+test('a main-process holder does not need readable descendant fds', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(200); f.ownerFd(100);
+  f.processEntry(110, ['worker'], 100);
+  chmodSync(`${f.proc}/110/fd`, 0);
+  let result;
+  try { result = await f.execute(); }
+  finally { chmodSync(`${f.proc}/110/fd`, 0o700); }
+  expect(result.code).toBe(0);
+  expect(result.decision).toMatchObject({ action: 'killed', keeper: 100, killed: [200] });
+  expect(f.killed).toEqual([[200, 'SIGKILL']]);
+});
 
 test('zero or one matching server is unchanged and never notifies', async () => {
   for (const count of [0, 1]) {
@@ -55,6 +162,25 @@ test('zero or one matching server is unchanged and never notifies', async () => 
     expect(f.killed).toEqual([]);
     expect(f.spawned).toEqual([]);
   }
+});
+
+test('help lists the replacement-grace flag', async () => {
+  const lines = [];
+  const code = await run(['--help'], { output: (line) => lines.push(line) });
+  expect(code).toBe(0);
+  expect(lines).toHaveLength(1);
+  expect(lines[0]).toMatch(/--grace-seconds\s+N\b/);
+});
+
+test('a single matching server held inside the alert window never notifies', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.environ(200, {}); f.uptime(700);
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+  });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-base-dir', servers: [100], killed: [] });
+  expect(f.killed).toEqual([]);
+  expect(f.spawned).toEqual([]);
 });
 
 test('runtime pid wins; capture descendants before killing each server first', async () => {
@@ -100,6 +226,49 @@ test('server base dirs use argv, then T3CODE_HOME, then that process HOME', asyn
   expect(f.killed).toEqual([[400, 'SIGKILL']]);
 });
 
+for (const form of ['tilde', 'trailing-slash', 'relative']) {
+  test(`normalizes ${form} base dirs for the guard and each server`, async () => {
+    const f = fixture();
+    const base = form === 'tilde' ? '~/.t3' : form === 'relative' ? './.t3/../.t3/' : `${f.base}///`;
+    f.server(100, ['--base-dir', f.base]); f.server(200, [`--base-dir=${base}`]);
+    f.keeper(100);
+    f.cwd(process.pid, `${f.root}/home`); f.cwd(200, `${f.root}/home`);
+    const { code, decision } = await f.execute(['--base-dir', base]);
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'killed', keeper: 100, servers: [100, 200], killed: [200] });
+    expect(f.killed).toEqual([[200, 'SIGKILL']]);
+  });
+}
+
+test('server tilde expansion uses its own HOME, not the guard HOME', async () => {
+  const f = fixture(); f.server(100); f.server(200, ['--base-dir', '~/.t3/']); f.keeper(100);
+  const { code, decision } = await f.execute(['--base-dir', f.base], {
+    env: { HOME: `${f.root}/different-home` },
+  });
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+});
+
+test('relative environment base dirs use each server cwd and ignore other directories', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  f.environ(200, { T3CODE_HOME: '.t3/' }); f.cwd(200, `${f.root}/home`);
+  f.environ(300, { T3CODE_HOME: '.t3/' }); f.cwd(300, `${f.root}/different-home`);
+  const { code, decision } = await f.execute();
+  expect(code).toBe(0);
+  expect(decision).toMatchObject({ action: 'killed', servers: [100, 200], killed: [200] });
+});
+
+test('relative or tilde server bases hold when cwd or HOME cannot be resolved', async () => {
+  for (const base of ['.t3', '~/.t3']) {
+    const f = fixture(); f.server(100); f.server(200); f.server(300, ['--base-dir', base]); f.keeper(100);
+    if (base.startsWith('~')) f.environ(300, {});
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-base-dir', servers: [100, 200], killed: [] });
+    expect(f.killed).toEqual([]);
+  }
+});
+
 for (const state of ['missing', 'unreadable', 'no-home']) {
   test(`unknown candidate base dir holds when environ is ${state}`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
@@ -130,9 +299,10 @@ test('equals base-dir form matches a non-default target and ignores other bases'
   expect(f.killed).toEqual([[200, 'SIGKILL']]);
 });
 
-test('only duplicates strictly older than the keeper are killed; stat comm may contain parentheses and spaces', async () => {
+test('older duplicates are killed; stat comm may contain parentheses and spaces', async () => {
   const f = fixture(); f.server(100); f.server(200); f.keeper(100);
   f.startTime(100, '9007199254740993'); f.startTime(200, '9007199254740992');
+  f.uptime(90071992547410);
   const { code, decision } = await f.execute();
   expect(code).toBe(0);
   expect(decision).toMatchObject({ action: 'killed', killed: [200] });
@@ -143,12 +313,135 @@ for (const started of [20, 30]) {
   test(`a duplicate started at ${started} versus keeper 20 holds the whole run`, async () => {
     const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
     f.startTime(300, started);
+    f.uptime(100);
     const { code, decision } = await f.execute();
     expect(code).toBe(0);
     expect(decision).toMatchObject({ action: 'hold', reason: 'possible-replacement', killed: [] });
     expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
   });
 }
+
+for (const age of [119.99, 120, 121]) {
+  test(`newer duplicate age ${age}s uses the default 120s grace`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    f.startTime(200, 10000); f.uptime(100 + age);
+    f.processEntry(210, ['codex'], 200);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject(age < 120
+      ? { action: 'hold', reason: 'possible-replacement', killed: [] }
+      : { action: 'killed', reason: 'duplicate-servers', killed: [200, 210] });
+    expect(f.killed).toEqual(age < 120 ? [] : [[200, 'SIGKILL'], [210, 'SIGKILL']]);
+    expect(f.spawned).toHaveLength(age < 120 ? 0 : 1);
+  });
+}
+
+test('custom grace holds all duplicates until every possible replacement expires', async () => {
+  for (const age of [29, 30]) {
+    const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+    f.startTime(200, 10000); f.startTime(300, 20000); f.uptime(200 + age);
+    const { code, decision } = await f.execute(['--grace-seconds', '30']);
+    expect(code).toBe(0);
+    expect(decision).toMatchObject(age < 30
+      ? { action: 'hold', reason: 'possible-replacement', killed: [] }
+      : { action: 'killed', reason: 'duplicate-servers', killed: [200, 300] });
+  }
+});
+
+for (const value of [null, 'bad', '-1', 'Infinity']) {
+  test(`unknown uptime ${value} holds even with a valid keeper`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    if (value === null) rmSync(`${f.proc}/uptime`);
+    else f.uptime(value);
+    const { code, decision } = await f.execute();
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'unknown-uptime', killed: [] });
+    expect(f.killed).toEqual([]);
+  });
+}
+
+test('invalid grace values reject input before scanning or killing', async () => {
+  for (const value of ['-1', 'NaN', 'Infinity', '1.5', '']) {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    const { code, decision } = await f.execute(['--grace-seconds', value]);
+    expect(code).toBe(1);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'invalid-input', killed: [] });
+    expect(f.killed).toEqual([]);
+  }
+});
+
+for (const age of [599.99, 600, 779.99, 780]) {
+  test(`persistent hold age ${age}s alerts only in the ten-to-thirteen-minute window`, async () => {
+    const f = fixture(); f.server(100); f.server(200);
+    f.startTime(200, 10000); f.uptime(100 + age);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', keeper: null, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(age >= 600 && age < 780 ? 1 : 0);
+    if (f.spawned.length) {
+      expect(f.spawned[0].argv).toEqual(['sh', '-c', 'notify']);
+      expect(f.spawned[0].options).toMatchObject({ stdout: 'ignore', stderr: 'ignore' });
+      const message = await new Response(f.spawned[0].options.stdin).text();
+      expect(message).toMatch(/fixture-host.*no-valid-keeper.*keeper.*none.*servers.*100, 200.*duplicates.*still running/is);
+    }
+  });
+}
+
+for (const reason of ['possible-replacement', 'unknown-base-dir', 'own-process-tree']) {
+  test(`persistent ${reason} hold alerts with the live keeper`, async () => {
+    const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+    f.startTime(200, 10000); f.uptime(700);
+    if (reason === 'unknown-base-dir') { f.server(300); f.environ(300, {}); }
+    if (reason === 'own-process-tree') f.processEntry(process.pid, ['bun'], 200);
+    const { code, decision } = await f.execute(reason === 'possible-replacement' ? ['--grace-seconds', '1000'] : [], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason, keeper: 100, killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(f.spawned).toHaveLength(1);
+    const message = await new Response(f.spawned[0].options.stdin).text();
+    expect(message).toContain(reason);
+    expect(message).toMatch(/keeper.*100.*servers.*100, 200.*duplicates.*still running/is);
+  });
+}
+
+test('persistent hold never alerts in dry-run, without a notifier, or with unknown ages', async () => {
+  for (const mode of ['dry-run', 'no-notifier', 'unknown-start', 'unknown-uptime']) {
+    const f = fixture(); f.server(100); f.server(200); f.uptime(700);
+    if (mode === 'unknown-start') rmSync(`${f.proc}/200/stat`);
+    if (mode === 'unknown-uptime') rmSync(`${f.proc}/uptime`);
+    const { code, decision } = await f.execute(mode === 'dry-run' ? ['--dry-run'] : [], {
+      env: { ...f.seams.env, ...(mode === 'no-notifier' ? {} : { AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' }) },
+    });
+    expect(code).toBe(0);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', killed: [] });
+    expect(f.killed).toEqual([]); expect(f.spawned).toEqual([]);
+  }
+});
+
+test('persistent hold notification failures retain the hold reason and exit 1 without secrets', async () => {
+  for (const mode of ['exit', 'throw', 'reject']) {
+    const f = fixture(); f.server(100); f.server(200); f.uptime(700);
+    const { code, decision } = await f.execute([], {
+      env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify secret-value' },
+      spawn: () => {
+        if (mode === 'throw') throw new Error('secret-value');
+        if (mode === 'reject') return { exited: Promise.reject(new Error('secret-value')) };
+        return { exited: Promise.resolve(5) };
+      },
+    });
+    expect(code).toBe(1);
+    expect(decision).toMatchObject({ action: 'hold', reason: 'no-valid-keeper', notify: 'failed', killed: [] });
+    expect(f.killed).toEqual([]);
+    expect(JSON.stringify(decision)).not.toContain('secret-value');
+  }
+});
 
 for (const state of ['missing', 'unreadable', 'malformed']) {
   test(`unknown server start time holds when stat is ${state}`, async () => {
@@ -239,7 +532,49 @@ test('a non-ESRCH kill failure is recorded, remaining victims are attempted and 
   expect(f.spawned).toHaveLength(1);
   const message = await new Response(f.spawned[0].options.stdin).text();
   expect(message).toContain('killed pids 200, 211, 300');
+  expect(message).toMatch(/failed.*210.*still running/is);
   expect(JSON.stringify(decision)).not.toContain('secret-value');
+});
+
+test('kill notification lists survivors even when every kill fails', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.keeper(100);
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    kill: () => { throw Object.assign(new Error('denied'), { code: 'EPERM' }); },
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'kill-failed', killed: [], failed: [200] });
+  expect(f.spawned).toHaveLength(1);
+  const message = await new Response(f.spawned[0].options.stdin).text();
+  expect(message).toMatch(/fixture-host.*kept.*100.*failed.*200.*still running/is);
+});
+
+test('failed kills followed by a failed notifier retain the kill-notification failure result', async () => {
+  const f = fixture(); f.server(100); f.server(200); f.server(300); f.keeper(100);
+  const attempts = [];
+  const { code, decision } = await f.execute([], {
+    env: { ...f.seams.env, AXSTACK_SINGLE_SERVER_NOTIFY: 'notify' },
+    kill: (pid) => {
+      attempts.push(pid);
+      throw Object.assign(new Error('denied'), { code: 'EPERM' });
+    },
+    spawn: () => ({ exited: Promise.resolve(5) }),
+  });
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'notify-failed', killed: [], failed: [200, 300] });
+  expect(decision).not.toHaveProperty('notify');
+  expect(attempts).toEqual([200, 300]);
+});
+
+test('a scan failure reports scan-failed without a notification result', async () => {
+  const f = fixture();
+  rmSync(f.proc, { recursive: true });
+  const { code, decision } = await f.execute(['--dry-run']);
+  expect(code).toBe(1);
+  expect(decision).toMatchObject({ action: 'hold', reason: 'scan-failed', killed: [] });
+  expect(decision).not.toHaveProperty('notify');
+  expect(f.killed).toEqual([]);
+  expect(f.spawned).toEqual([]);
 });
 
 for (const member of ['self', 'ancestor']) {

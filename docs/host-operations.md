@@ -315,12 +315,21 @@ comes from its `--base-dir <dir>` or `--base-dir=<dir>` flag, then its own
 `T3CODE_HOME`, then its own `$HOME/.t3`, reading the latter values from that
 process's environment. An unreadable or missing environment without an explicit
 flag, or missing base-dir values, makes the whole run hold and kill nothing.
-It keeps the pid recorded in `<base>/userdata/server-runtime.json`.
+Both the target and server base dirs expand `~` using their own HOME, resolve
+relative paths against `/proc/<pid>/cwd`, and remove trailing slashes and dot
+segments before comparison. Unresolvable server paths hold the run.
+It keeps the unique server with an open fd to `<base>/userdata/server-owner.sqlite`
+(matching lexical and realpath-resolved userdata paths, and checking the main pid
+before descendants), holds on multiple holders or a known
+holder alongside unreadable competing fds, and falls back to `server-runtime.json`
+when no holder is found, including when fd directories are unreadable.
 With zero or one known matching server it does nothing; with duplicates but no
-valid readable keeper it holds. Duplicate servers must have started strictly
-before the keeper, comparing field 22 (`starttime`) of `/proc/<pid>/stat`.
-An unknown start time or any duplicate started at or after the keeper holds
-the whole run, preserving a possible starting replacement. The script also
+valid readable keeper it holds. Servers are ordered by field 22 (`starttime`)
+of `/proc/<pid>/stat`. A duplicate started at or after the keeper holds the
+whole run while younger than 120 seconds, preserving a possible starting
+replacement. Once all such duplicates reach the grace, the selected live
+keeper wins and cleanup proceeds. Age is `/proc/uptime` minus start ticks / 100;
+unknown uptime or start time still holds the run. The script also
 holds if its own pid or an ancestor appears in the planned victim set.
 Otherwise it snapshots descendants before killing each duplicate server first,
 then its children with SIGKILL. The keeper and its descendants are protected.
@@ -333,12 +342,14 @@ bun ~/.agents/skills/axstack/scripts/single-server.js --dry-run
 ```
 
 `--base-dir <dir>` selects a different base dir; `--proc-root <dir>` supplies
-a process-tree fixture (default `/proc`). `--help` lists the flags. Decisions
+a process-tree fixture (default `/proc`). `--grace-seconds N` overrides the
+120-second grace with a non-negative integer. `--help` lists the flags. Decisions
 are `unchanged`, `hold`, `would-kill` or `killed`, with reason, keeper, matching
 server pids and killed pids (proposed victims in dry-run). Non-ESRCH kill failures
-add their pids to `failed`; remaining kills continue, successful kills still
-notify if configured, and the command exits 1. Exit 0 includes holds;
-exit 1 reports invalid input, discovery, kill or notification failure.
+add their pids to `failed`; remaining kills continue, kill attempts still
+notify if configured (including when all fail), and the command exits 1. Exit 0 includes holds;
+exit 1 reports invalid input, discovery, kill or notification failure. A failed
+hold-alert notification retains the hold reason and adds `notify: "failed"`.
 
 Under host-mutation authority, copy both assets and enable the timer:
 
@@ -357,7 +368,7 @@ timer starts one minute after user-manager startup and repeats every minute.
 Override Bun/skills paths or add `--base-dir` through the service's `ExecStart`
 drop-in, clearing the existing `ExecStart` first.
 
-To notify only after a kill, use `systemctl --user edit axstack-single-server.service`
+To notify after cleanup attempts and persistent holds, use `systemctl --user edit axstack-single-server.service`
 and add a per-host command, then reload:
 
 ```ini
@@ -369,10 +380,15 @@ The VPS has Hermes locally; other hosts can use
 `Environment="AXSTACK_SINGLE_SERVER_NOTIFY=ssh '<relay-host>' hermes send --to telegram --quiet"`.
 Replace `<relay-host>` with the authorized gateway's hostname.
 The script runs the command via `sh -c`, sending a short message on stdin with
-hostname, kept pid and killed pids. It notes that runs started by the killed
+hostname, kept pid, killed pids and failed survivor pids. It notes that runs started by the killed
 server may remain `running` and need `t3_thread_interrupt`. Notification failure
-exits 1 after the kills; command output is suppressed. Dry-run, unchanged and
-hold decisions never notify. Verify delivery under the host's notification authority.
+exits 1; command output is suppressed. A hold with two or more matching servers
+also notifies when the youngest server's known age is at least 600 seconds and
+under 780 seconds. Its message includes host, hold reason, keeper, server pids,
+and that duplicates are still running. This stateless window produces at most
+about three alerts at the one-minute cadence; it records no notification state.
+Unknown ages suppress hold alerts. Dry-run and unchanged decisions never
+notify. Verify delivery under the host's notification authority.
 
 Disable with `systemctl --user disable --now axstack-single-server.timer` and
 stop any active one-shot with `systemctl --user stop axstack-single-server.service`.

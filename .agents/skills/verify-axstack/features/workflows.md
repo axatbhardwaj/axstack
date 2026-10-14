@@ -50,14 +50,22 @@ run-owned inventory before absence or cadence claims. Retain unobserved cases
 as UNKNOWN and cancellation as a separate disposition.
 
 The single-server checks use fake `/proc` trees and injected kill/spawn seams:
-keeper selection, descendant snapshots and SIGKILL order, user/base-dir filters,
+keeper selection (unique owner-file fd in the main process or descendants,
+multiple-holder holds, unreadable-fd safety and legacy runtime fallback),
+descendant snapshots and SIGKILL order, user/base-dir filters,
 hold/dry-run safety and notification stdin/failure. They also verify process-local
-base-dir environments, older-only victims, unknown start-time holds, self/ancestor
-protection and continued cleanup/notification after a kill failure. Run the test
-file with TMPDIR both set and unset in a scratch HOME to cover CI's default.
+base-dir environments and normalization (`~`, trailing slashes, relative paths
+against each process cwd), default/custom replacement grace and its expiry,
+unknown uptime/start-time holds, and self/ancestor protection. Hold alerts cover
+the youngest-server age window [600, 780), multiple hold reasons, missing age,
+dry-run suppression, notification stdin and failure. Kill notifications include
+failed survivor pids even when all kill attempts fail. Run the test file with
+TMPDIR both set (owned 0700 scratch outside HOME) and unset in a scratch HOME
+to cover CI's default.
 Unit checks prove the installed
 Bun path and one-minute cadence. They do not kill a live process or activate a timer.
-Confirm `bun "$SCRIPTS/single-server.js" --help` lists all four flags and
+Confirm `bun "$SCRIPTS/single-server.js" --help` lists all five flags (including
+`--grace-seconds N`, default 120 seconds) and
 `bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.
 Only use dry-run for host inspection; live kills and notification delivery require
 separate host-mutation authority. Installation must leave timers disabled.

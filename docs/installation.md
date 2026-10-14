@@ -90,8 +90,9 @@ Run these with Bun from the installed `<skills-dir>/axstack/scripts/` directory:
 `resolve-models.js` (model IDs), `pick-instance.js` (dispatch account),
 `pr-digest.js` (PR discovery), `archive-evidence.js` (evidence archive), and
 `sync-default.js [--settings <path>] [--dry-run]` (New-chat default; `AXSTACK_SYNC_POOL` opts into cross-driver rotation).
-`single-server.js [--base-dir <dir>] [--proc-root <dir>] [--dry-run]` removes
-duplicate `t3 serve` process trees while keeping the recorded runtime pid.
+`single-server.js [--base-dir <dir>] [--proc-root <dir>] [--grace-seconds N] [--dry-run]` removes
+duplicate `t3 serve` process trees while keeping the ownership-lock holder,
+otherwise the recorded runtime pid.
 `account-usage.js` shares usage retrieval and the five-minute cache between
 picker and sync. The opt-in systemd user unit files ship in `axstack/systemd/`;
 installation copies them as assets and never enables either timer.

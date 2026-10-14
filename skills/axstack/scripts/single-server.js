@@ -1,17 +1,40 @@
 import * as fs from 'node:fs';
 
+function normalizeBase(procRoot, pid, base, home) {
+  if (!base) return null;
+  if (base === '~' || base.startsWith('~/')) {
+    if (!home) return null;
+    base = home + base.slice(1);
+  }
+  if (!base.startsWith('/')) {
+    let cwd;
+    try { cwd = fs.readlinkSync(`${procRoot}/${pid}/cwd`); }
+    catch { return null; }
+    if (!cwd.startsWith('/')) return null;
+    base = `${cwd}/${base}`;
+  }
+  const parts = [];
+  for (const part of base.split('/')) {
+    if (part === '..') parts.pop();
+    else if (part && part !== '.') parts.push(part);
+  }
+  return `/${parts.join('/')}`;
+}
+
 function serverBase(procRoot, pid, argv) {
   let base;
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--base-dir') base = argv[++i];
     else if (argv[i].startsWith('--base-dir=')) base = argv[i].slice('--base-dir='.length);
   }
-  if (base !== undefined) return base || null;
+  let home;
   try {
     const environ = fs.readFileSync(`${procRoot}/${pid}/environ`, 'utf8').split('\0');
     const value = (key) => environ.find((entry) => entry.startsWith(`${key}=`))?.slice(key.length + 1);
-    return value('T3CODE_HOME') || (value('HOME') ? `${value('HOME')}/.t3` : null);
-  } catch { return null; }
+    home = value('HOME');
+    if (base === undefined) base = value('T3CODE_HOME') || (home ? `${home}/.t3` : null);
+  } catch { /* An absolute argv base does not need the process environment. */ }
+  return normalizeBase(procRoot, pid, base, home);
 }
 
 function discover(procRoot, uid, baseDir) {
@@ -49,7 +72,36 @@ function descendants(pid, processes) {
   return [...found];
 }
 
-function replacementHold(procRoot, servers, keeper) {
+function ownerFd(procRoot, pid, ownerFiles) {
+  let unknown = false;
+  let fds;
+  try { fds = fs.readdirSync(`${procRoot}/${pid}/fd`); }
+  catch (error) { return ['ENOENT', 'ESRCH'].includes(error.code) ? false : null; }
+  for (const fd of fds) {
+    try { if (ownerFiles.includes(fs.readlinkSync(`${procRoot}/${pid}/fd/${fd}`))) return true; }
+    catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) unknown = true; }
+  }
+  return unknown ? null : false;
+}
+
+function serverOwner(procRoot, pid, processes, ownerFiles) {
+  const main = ownerFd(procRoot, pid, ownerFiles);
+  if (main === true) return true;
+  let unknown = main === null;
+  for (const child of descendants(pid, processes)) {
+    const holds = ownerFd(procRoot, child, ownerFiles);
+    if (holds === true) return true;
+    if (holds === null) unknown = true;
+  }
+  return unknown ? null : false;
+}
+
+function serverTimes(procRoot, servers) {
+  let uptime = null;
+  try {
+    const value = fs.readFileSync(`${procRoot}/uptime`, 'utf8').trim().split(/\s+/)[0];
+    if (/^\d+(\.\d+)?$/.test(value) && Number.isFinite(Number(value))) uptime = Number(value);
+  } catch { /* Unknown uptime never authorizes a kill. */ }
   const starts = new Map(servers.map((pid) => {
     let start = null;
     try {
@@ -61,8 +113,16 @@ function replacementHold(procRoot, servers, keeper) {
     } catch { /* Unknown age never authorizes a kill. */ }
     return [pid, start];
   }));
+  const ages = new Map([...starts].map(([pid, start]) => [pid,
+    start === null || uptime === null ? null : uptime - Number(start) / 100]));
+  return { starts, ages, uptime };
+}
+
+function replacementHold({ starts, ages, uptime }, servers, keeper, graceSeconds) {
   if ([...starts.values()].includes(null)) return 'unknown-start-time';
-  if (servers.some((pid) => pid !== keeper && starts.get(pid) >= starts.get(keeper))) return 'possible-replacement';
+  if (uptime === null) return 'unknown-uptime';
+  if (servers.some((pid) => pid !== keeper && starts.get(pid) >= starts.get(keeper)
+    && ages.get(pid) < graceSeconds)) return 'possible-replacement';
   return null;
 }
 
@@ -77,35 +137,59 @@ export async function run(args = [], {
     let baseDir = `${env.HOME}/.t3`;
     let procRoot = '/proc';
     let dryRun = false;
+    let graceSeconds = 120;
     const seen = new Set();
     for (let i = 0; i < args.length; i++) {
       const flag = args[i];
       if (flag === '--help' && args.length === 1) {
-        output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--dry-run] [--help]\n'
+        output('Usage: bun single-server.js [--base-dir DIR] [--proc-root DIR] [--grace-seconds N] [--dry-run] [--help]\n'
           + 'Defaults: $HOME/.t3 and /proc. SIGKILL duplicate t3 serve servers and their descendants;\n'
-          + 'keep the runtime pid. --dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills.');
+          + 'prefer the unique server-owner.sqlite fd holder, otherwise the runtime pid.\n'
+          + 'Newer servers get 120 seconds grace (N: non-negative integer).\n'
+          + '--dry-run reports only. AXSTACK_SINGLE_SERVER_NOTIFY runs via sh -c after kills,\n'
+          + 'or for holds with 2+ servers whose youngest age is 600 to under 780 seconds.');
         return 0;
       }
       if (seen.has(flag)) throw new Error('duplicate flag');
       seen.add(flag);
       if (flag === '--dry-run') dryRun = true;
-      else if (['--base-dir', '--proc-root'].includes(flag) && args[i + 1] && !args[i + 1].startsWith('--')) {
+      else if (['--base-dir', '--proc-root', '--grace-seconds'].includes(flag) && args[i + 1] && !args[i + 1].startsWith('--')) {
         const value = args[++i];
         if (flag === '--base-dir') baseDir = value;
-        else procRoot = value;
+        else if (flag === '--proc-root') procRoot = value;
+        else {
+          if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new Error('invalid grace');
+          graceSeconds = Number(value);
+        }
       } else throw new Error('invalid flag');
     }
     if (!env.HOME) throw new Error('missing home');
+    baseDir = normalizeBase(procRoot, process.pid, baseDir, env.HOME);
+    if (baseDir === null) throw new Error('unresolved base dir');
     failure = 'scan-failed';
     const { processes, servers, unknownBase } = discover(procRoot, uid, baseDir);
     decision.servers = servers;
-    let runtimePid;
-    try { runtimePid = JSON.parse(fs.readFileSync(`${baseDir}/userdata/server-runtime.json`, 'utf8')).pid; }
-    catch { /* Missing, unreadable or malformed runtime data is never authority to kill. */ }
-    if (Number.isSafeInteger(runtimePid) && servers.includes(runtimePid)) decision.keeper = runtimePid;
+    const ownerFiles = [`${baseDir}/userdata/server-owner.sqlite`];
+    try { ownerFiles.push(`${fs.realpathSync(`${baseDir}/userdata`)}/server-owner.sqlite`); }
+    catch { /* Keep lexical matching when the userdata directory cannot be resolved. */ }
+    const owners = servers.map((pid) => [pid,
+      serverOwner(procRoot, pid, processes, ownerFiles)]);
+    const holders = owners.filter(([, holds]) => holds === true).map(([pid]) => pid);
+    const ownerHold = holders.length > 1 ? 'multiple-owner-locks'
+      : holders.length === 1 && owners.some(([, holds]) => holds === null) ? 'unknown-owner-lock' : null;
+    if (holders.length === 1 && !ownerHold) decision.keeper = holders[0];
+    else if (!holders.length) {
+      // Legacy servers have no owner fd; unreadable fds alone retain the runtime fallback.
+      let runtimePid;
+      try { runtimePid = JSON.parse(fs.readFileSync(`${baseDir}/userdata/server-runtime.json`, 'utf8')).pid; }
+      catch { /* Missing, unreadable or malformed runtime data is never authority to kill. */ }
+      if (Number.isSafeInteger(runtimePid) && servers.includes(runtimePid)) decision.keeper = runtimePid;
+    }
+    const times = serverTimes(procRoot, servers);
     const ageHold = !unknownBase && servers.length > 1 && decision.keeper !== null
-      ? replacementHold(procRoot, servers, decision.keeper) : null;
-    if (unknownBase) decision.reason = 'unknown-base-dir';
+      ? replacementHold(times, servers, decision.keeper, graceSeconds) : null;
+    if (ownerHold) decision.reason = ownerHold;
+    else if (unknownBase) decision.reason = 'unknown-base-dir';
     else if (servers.length < 2) decision = { ...decision, action: 'unchanged', reason: 'single-server' };
     else if (decision.keeper === null) decision.reason = 'no-valid-keeper';
     else if (ageHold) decision.reason = ageHold;
@@ -142,19 +226,34 @@ export async function run(args = [], {
         }
         if (decision.failed?.length) decision.reason = 'kill-failed';
         else if (!decision.killed.length) decision = { ...decision, action: 'unchanged', reason: 'no-victims' };
-        if (decision.killed.length && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
-          failure = 'notify-failed';
-          const message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ')}. `
-            + 'Runs started by the killed server may stay running and need t3_thread_interrupt.\n';
-          const child = spawn(['sh', '-c', env.AXSTACK_SINGLE_SERVER_NOTIFY], {
-            stdin: new Blob([message]), stdout: 'ignore', stderr: 'ignore', env,
-          });
-          if (await child.exited !== 0) throw new Error('notification failed');
+      }
+    }
+    if (!dryRun && env.AXSTACK_SINGLE_SERVER_NOTIFY) {
+      let message;
+      failure = 'notify-failed';
+      if (decision.killed.length || decision.failed?.length) {
+        message = `${hostname()}: kept pid ${decision.keeper}; killed pids ${decision.killed.join(', ') || 'none'}. `
+          + 'Runs started by the killed server may stay running and need t3_thread_interrupt.\n';
+        if (decision.failed?.length) message += `Failed pids ${decision.failed.join(', ')} are still running.\n`;
+      } else if (decision.action === 'hold' && servers.length > 1) {
+        const ages = [...times.ages.values()];
+        const youngest = ages.every((age) => age !== null && age >= 0) ? Math.min(...ages) : null;
+        if (youngest !== null && youngest >= 600 && youngest < 780) {
+          message = `${hostname()}: hold ${decision.reason}; keeper ${decision.keeper ?? 'none'}; `
+            + `servers ${servers.join(', ')}; duplicates are still running.\n`;
         }
+      }
+      if (message) {
+        const child = spawn(['sh', '-c', env.AXSTACK_SINGLE_SERVER_NOTIFY], {
+          stdin: new Blob([message]), stdout: 'ignore', stderr: 'ignore', env,
+        });
+        if (await child.exited !== 0) throw new Error('notification failed');
       }
     }
   } catch {
-    decision.reason = failure;
+    if (failure === 'notify-failed' && decision.action === 'hold' && !decision.failed?.length) {
+      decision.notify = 'failed';
+    } else decision.reason = failure;
     code = 1;
   }
   output(JSON.stringify(decision));

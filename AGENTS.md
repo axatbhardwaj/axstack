@@ -21,7 +21,8 @@
   `defaultModelSelection`.
   The `axstack-single-server` timer runs a stateless script that only SIGKILLs
   duplicate `t3 serve` processes for one base dir and their children, keeping
-  the server recorded in `server-runtime.json`.
+  the server that holds T3's ownership lock, otherwise the server recorded in
+  `server-runtime.json`.
   Both timers have no workflow state. Both scripts launch no agent.
 - Use ordinary PR chains under [PR chains](skills/axstack/references/pr-chain.md);
   preexisting native stacks retain `gh stack`. Workers do not push, submit, merge, publish,
