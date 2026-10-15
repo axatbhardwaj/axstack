@@ -39,7 +39,9 @@
       "!skills/axstack-anatomy/ANATOMY.md",
       "!skills/axstack-anatomy/README.md",
       "!skills/axstack-anatomy/CHANGELOG.md",
-      "!skills/axstack-anatomy/LICENSE"
+      "!skills/axstack-anatomy/LICENSE",
+      "!skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md",
+      "!skills/axstack-explain/references/frontend-design/LICENSE.txt"
     ],
     "rules": {
       "preset": "recommended"

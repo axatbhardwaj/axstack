@@ -28,6 +28,10 @@ for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/systemd/axstack-single-server.service \
   skills/axstack/systemd/axstack-single-server.timer \
   skills/axstack-publish/SKILL.md \
+  skills/axstack-explain/references/design.md \
+  skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md \
+  skills/axstack-explain/references/frontend-design/LICENSE.txt \
+  skills/axstack-explain/references/frontend-design/PROVENANCE.md \
   skills/axstack-watch/references/repair-publication.md; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
@@ -51,7 +55,7 @@ equivalent rewording, retained checkout guards and the current prose budget:
 doctor > "$EVIDENCE/publication-doctor.log" 2>&1
 bun run test tests/workflows/publication-repair.test.js \
   tests/workflows/publication-integrity.test.js tests/workflows/review-checkout.test.js \
-  tests/workflows/prose-size.test.js > "$EVIDENCE/publication-suite.log" 2>&1
+  tests/workflows/prose-size.test.js tests/workflows/frontend-design-source.test.js > "$EVIDENCE/publication-suite.log" 2>&1
 ```
 
 These checks prove packaged instruction contracts, not live publication.

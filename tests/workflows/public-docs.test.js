@@ -97,6 +97,10 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack/scripts/single-server.js',
     'skills/axstack/systemd/axstack-single-server.service', 'skills/axstack/systemd/axstack-single-server.timer',
     'skills/axstack-publish/SKILL.md',
+    'skills/axstack-explain/references/design.md',
+    'skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md',
+    'skills/axstack-explain/references/frontend-design/LICENSE.txt',
+    'skills/axstack-explain/references/frontend-design/PROVENANCE.md',
     'skills/axstack-watch/references/repair-publication.md'];
   fixture((dir, put) => {
     // The automated recipe boundary needs only Linux/POSIX shell tools.

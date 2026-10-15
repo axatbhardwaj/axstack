@@ -59,6 +59,11 @@ Follow [Fidelity](references/fidelity.md) for every visual.
 For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
 Dispatch every visual Explain delivers to `axstack-explainer` with a bounded
 evidence brief, including inline pages, chat Mermaid and anatomy figures.
+The `axstack-explainer` loads [design.md](references/design.md) and reads
+[FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
+and every Publish article adaptation.
+Never load either reference for chat Mermaid or anatomy figures.
+Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.
 Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
@@ -100,6 +105,8 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    claims or on request.
    The `axstack-explainer-review` always reviews every visual at its exact final
    bytes before delivery.
+   For inline HTML pages and Publish article adaptations, include the
+   [design review](references/visual-qa.md) and [Delivery](references/delivery.md) rules.
    Consequential claims include gap or missing-claim reports, blast-radius
    safety facts, spec readbacks, and every whiteboard-defense explanation in chat too.
    Bind it to the exact artifact identity.
@@ -119,3 +126,5 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    only when the user requests it.
 
 Ideas: [archify](https://github.com/tt-a1i/archify), [diagram-design](https://github.com/cathrynlavery/diagram-design), [visual-explainer](https://github.com/nicobailon/visual-explainer), [Matt Pocock](https://github.com/mattpocock/skills), and [poteto](https://github.com/poteto/how); guidance uses Axstack's own words.
+
+Vendored reference: [frontend-design](references/frontend-design/PROVENANCE.md), Apache-2.0.

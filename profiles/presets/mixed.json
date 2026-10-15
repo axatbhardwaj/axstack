@@ -142,7 +142,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Visual author: authors every visual Explain delivers, including pages, chat Mermaid and anatomy figures, with source fidelity. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Visual author: authors every visual Explain delivers, including pages, chat Mermaid and anatomy figures, with source fidelity. T3 resolves Claude classes from saved capabilities; a Claude rejection holds. Also authors Publish article adaptations.",
       "modelClass": "sonnet",
       "model": "claude-sonnet-5-5"
     },
@@ -152,7 +152,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Independent Sol medium explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity. The rendered pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
+      "notes": "Independent Sol medium explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution. Design review follows design.md for every inline HTML page and every Publish article adaptation. For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light bound to the artifact SHA-256 and recorded before review. Apply Delivery's one design-only repair round within the two-round limit, disclosed cosmetic exception and unknown-render holds. Chat Mermaid and anatomy keep their existing review.",
       "modelClass": "sol"
     },
     {

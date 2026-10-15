@@ -43,15 +43,26 @@ For public mode, run Explain's [self-contained asset check](../axstack-explain/r
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
 and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
 
-Add a standalone light/dark theme with inline defaults and `prefers-color-scheme`
-so the article works outside T3; honor an explicit user theme request.
+Send the article adaptation, including art direction and standalone light/dark theme,
+to `axstack-explainer` with a bounded brief.
+The explainer follows Explain's [design guidance](../axstack-explain/references/design.md)
+and reads [frontend-design](../axstack-explain/references/frontend-design/FRONTEND-DESIGN.md).
+Require inline defaults and `prefers-color-scheme` so the article works outside T3;
+honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
 then rerun the referenced Explain page checks on these final bytes.
+Before independent review, have `axstack-ui-verifier` preview these exact bytes with
+Playwright MCP at 728px dark and 360px light and record both screenshots with paths,
+their artifact SHA-256 and the Explain QA results.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
-Preview these exact bytes with Playwright MCP at 728px dark and 360px light;
-record both screenshots and the Explain QA results.
+The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
+reviewer's design review against design.md, alongside source-fidelity review.
+Apply Explain's [Delivery](../axstack-explain/references/delivery.md) one-round design repair
+and disclosed cosmetic exception; that exception leaves all other requirements binding.
 Any subsequent byte change invalidates checks and review: repeat this step.
 Hold publication while any required check or review is missing or failed.
+Unavailable, unreadable or stale renders leave design review unknown and hold publication;
+unknown is never passed or a cosmetic exception.
 
 ## 3. Publish from the driver
 
