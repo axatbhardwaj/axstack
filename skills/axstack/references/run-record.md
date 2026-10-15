@@ -213,7 +213,7 @@ Resume: <commands or evidence refs bound to exact revisions>
 
 | Dispatch key | Provider/model echo | Configuration read-back | Completion receipt | Post-completion HEAD/porcelain check result | Settle readback |
 | --- | --- | --- | --- | --- | --- |
-| <key> | <actual provider/model + evidence ref> | <options/runtimeMode + evidence ref> | <marker + IDs + evidence ref> | <compared HEAD/status + pass/hold + evidence ref> | settled: true (t3_thread_read evidence) or held: <reason> |
+| <key> | <actual provider/model + evidence ref> | <options/runtimeMode + evidence ref> | <marker + IDs + evidence ref> | <compared HEAD/status + pass/hold + evidence ref> | settled: true (t3_thread_read <UTC>) or held: <reason> |
 
 Status: <active/paused/held/complete/Archived>
 Updated: <UTC timestamp>

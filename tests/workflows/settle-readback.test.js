@@ -12,77 +12,82 @@ test('settle readback: dispatch schema records success evidence or a hold', () =
     '| Dispatch key | Settle readback |', [[/Settle readback/, 'Task completion']]);
   const example = rows.find((line) => line.startsWith('| <key> |')) ?? '';
   expect(example.split('|').length).toBe(header.split('|').length);
-  checkRule(example, (text) => requires(text, /settled: true/i, /t3_thread_read/i, /held: <reason>/i),
-    '| <key> | held: <reason> or settled: true (t3_thread_read evidence) |',
-    [[/settled: true/i, 'settled: false']], [/t3_thread_read/i, /held: <reason>/i]);
+  checkRule(example, (text) => requires(text, /settled: true/i, /t3_thread_read/i, /<UTC>/i, /held: <reason>/i),
+    '| <key> | held: <reason> or settled: true (t3_thread_read <UTC>) |',
+    [[/settled: true/i, 'settled: false']], [/t3_thread_read/i, /<UTC>/i, /held: <reason>/i]);
 });
 
 test('settle readback: mandatory close-out row covers all run-owned workers', () => {
   const row = record().split('\n').find((line) => /\| Every run-owned delegated child/i.test(line)) ?? '';
-  const concepts = [/every run-owned delegated child/i, /launched writer/i, /settled/i, /passed/i];
-  checkRule(row, (text) => requires(text, ...concepts),
+  const concepts = [/every run-owned delegated child/i, /launched writer/i, /\bsettled\b/i];
+  const accepts = (text) => {
+    const cells = text.split('|');
+    return requires(cells[1] ?? '', ...concepts) && requires(cells[2] ?? '', /passed/i);
+  };
+  checkRule(row, accepts,
     '| Every run-owned delegated child and launched writer settled | passed | <inventory ref> | none |',
-    [[/Every run-owned delegated child/i, 'Some delegated children']], concepts);
+    [[/Every run-owned delegated child/i, 'Some delegated children'], [/\bsettled\b/i, 'unsettled']], [...concepts, /passed/i]);
 });
 
 const rules = [
   ['axstack/references/run-record.md', 'only current thread-bound readback passes',
-    [/mandatory/i, /every run-owned delegated child/i, /launched writer/i, /pass only/i, /current/i, /thread.bound/i, /t3_thread_read/i, /settled: true/i],
-    'For every run-owned delegated child and launched writer the mandatory row can pass only with current thread-bound t3_thread_read evidence showing settled: true.',
+    [/mandatory/i, /every run-owned delegated child/i, /launched writer/i, /pass(?:es)? only/i, /current/i, /thread.bound/i, /t3_thread_read/i, /settled: true/i],
+    'For every run-owned delegated child and launched writer the mandatory row passes only with current thread-bound t3_thread_read evidence showing settled: true.',
     [/settled: true/i, 'settled: false']],
   ['axstack/references/run-record.md', 'missing or failed readback holds',
     [/missing or failed/i, /read.?back/i, /hold/i],
-    'Missing or failed read-back requires a hold.', [/hold/i, 'pass']],
+    'Treat a missing or failed read-back as a hold.', [/hold/i, 'pass']],
   ['axstack/references/run-record.md', 'each exception needs user acceptance',
     [/close.out/i, /pending unless/i, /each/i, /unsettled exception/i, /user.accepted hold/i, /Decisions row/i],
-    'Close-out remains pending unless each unsettled exception has a user-accepted hold linked to its Decisions row.',
+    'Close-out is pending unless each unsettled exception carries a user-accepted hold and a link to its Decisions row.',
     [/user.accepted hold/i, 'driver-recorded reason']],
   ['axstack/references/workspace-hygiene.md', 'pinned children still settle',
-    [/pinned run.owned child/i, /still/i, /settled/i],
-    'A pinned run-owned child is still settled.', [/still/i, 'never']],
+    [/pinned run.owned child/i, /\b(?:still|too)\b/i, /\bsettled\b|\bsettle(?= a pinned)/i],
+    'Settle a pinned run-owned child too.', [/(?:still|too)/i, 'never'],
+    [[/\bsettled\b|settle(?= a pinned)/i, 'left unsettled']]],
   ['axstack/references/workspace-hygiene.md', 'settle clears inherited pins',
     [/settle/i, /clears/i, /pin/i, /inherited from/i, /parent/i],
-    "T3 settle clears the pin, including one inherited from the parent at creation.",
+    'Settle clears a pin inherited from the parent as well as a direct pin.',
     [/clears/i, 'preserves']],
   ['axstack/references/workspace-hygiene.md', 'keep-pinned request holds settlement',
     [/user/i, /asked to keep/i, /child pinned/i, /hold/i, /settlement/i, /reason/i],
-    'If the user asked to keep a child pinned, hold its settlement with that reason.',
+    'When the user asked to keep a child pinned, hold settlement and record that reason.',
     [/hold/i, 'complete']],
   ['axstack/references/workspace-hygiene.md', 'refusal records the error in the column',
     [/T3 refusal/i, /parent_not_active/i, /calling driver/i, /own run/i, /live/i, /column/i, /held/i, /error/i],
-    "A T3 refusal such as parent_not_active (the calling driver's own run is not live) puts held: <error> in the column.",
+    "Record a T3 refusal, including parent_not_active (the calling driver's own run is not live), as held: <error> in the run-record Settle readback column.",
     [/held/i, 'passed']],
   ['axstack-brainstorm/references/arena.md', 'synthesis settles candidate and judge threads',
     [/candidate/i, /judge/i, /threads/i, /follow/i, /same.turn settle/i],
-    'For candidate and judge threads, follow the same-turn settle rule during synthesis.',
+    'Follow the same-turn settle rule for candidate threads and judge threads before presenting the synthesis.',
     [/same.turn/i, 'eventual']],
 ];
 
-for (const [path, name, concepts, wording, inversion] of rules) {
+for (const [path, name, concepts, wording, inversion, extraInversions = []] of rules) {
   test(`settle readback: ${name}`, () => {
     // A refusal's explanation contains the expected negative "not live".
     const accepts = (text) => sentences(text).some((clause) =>
       concepts.every((concept) => concept.test(clause))
       && requires(clause.replace(/own run is not live/i, 'own run is inactive'), /^/));
-    checkRule(sentences(read(path)).join('. '), accepts, wording, [inversion], concepts);
+    checkRule(sentences(read(path)).join('. '), accepts, wording, [inversion, ...extraInversions], concepts);
   });
 }
 
 const prohibitions = [
-  ['axstack/references/run-record.md', 'task completion is not settlement', /does not pass/i,
+  ['axstack/references/run-record.md', 'task completion is not settlement', /does not pass|never passes|cannot pass|is not enough to pass/i,
     [/task completion/i, /result_available/i, /alone/i],
-    'Task completion or result_available alone does not pass.', [/does not pass/i, 'passes']],
-  ['axstack/references/run-record.md', 'plain reasons cannot satisfy the row', /does not satisfy/i,
+    'Task completion or result_available alone never passes.', [/does not pass|never passes|cannot pass|is not enough to pass/i, 'passes']],
+  ['axstack/references/run-record.md', 'plain reasons cannot satisfy the row', /does not satisfy|cannot satisfy|is insufficient for/i,
     [/plain recorded reason/i, /row/i],
-    'A plain recorded reason does not satisfy the row.', [/does not satisfy/i, 'satisfies']],
+    'A plain recorded reason is insufficient for the row.', [/does not satisfy|cannot satisfy|is insufficient for/i, 'satisfies']],
   ['axstack/references/workspace-hygiene.md', 'no separate unpin step', /no separate unpin step/i,
-    [], 'There is no separate unpin step.', [/no separate unpin step/i, 'a required separate unpin step']],
-  ['axstack/references/workspace-hygiene.md', 'refusals never reactivate parents', /never reactivate/i,
-    [/parent/i], 'Never reactivate a parent.', [/never reactivate/i, 'Reactivate']],
-  ['axstack/references/lifecycle.md', 'finished task cannot replace settle and readback', /does not count/i,
+    [], 'No separate unpin step is needed.', [/no separate unpin step/i, 'a required separate unpin step']],
+  ['axstack/references/workspace-hygiene.md', 'refusals never reactivate parents', /(?:never|do not) reactivate/i,
+    [/parent/i], 'Do not reactivate a parent.', [/(?:never|do not) reactivate/i, 'Reactivate']],
+  ['axstack/references/lifecycle.md', 'finished task cannot replace settle and readback', /does not count|is not settlement/i,
     [/settle each worker thread/i, /t3_thread_organize/i, /read back/i, /settled: true/i, /finished task/i],
-    'Settle each worker thread with t3_thread_organize and read back settled: true, because a finished task does not count.',
-    [/does not count/i, 'counts']],
+    'A finished task is not settlement, so settle each worker thread with t3_thread_organize and read back settled: true.',
+    [/does not count|is not settlement/i, 'counts']],
 ];
 
 for (const [path, name, negative, concepts, wording, inversion] of prohibitions) {
