@@ -94,3 +94,32 @@ rule(delivery, 'unavailable unreadable or stale render holds unknown',
   [[/unknown/i, 'passed'], [/holds?/i, 'permits']]);
 rule(delivery, 'unknown check cannot expire as a tell', [/unknown check/i, /tell/i, /expires/i],
   'An unknown check is never a tell that expires after one round.', [[/never/i, 'always']], /never a tell/i);
+
+rule(publish, 'Publish render gaps hold publication with unknown design review',
+  [/unavailable/i, /unreadable/i, /stale/i, /renders?/i, /unknown/i, /hold/i, /publication/i],
+  'An unreadable or stale render, or one that is unavailable, keeps publication on hold and design review unknown.',
+  [[/unknown/i, 'passed'], [/hold/i, 'release']]);
+rule(publish, 'Publish cannot treat unknown as a pass or cosmetic exception',
+  [/unknown/i, /passed|approval/i, /cosmetic exception/i],
+  'A cosmetic exception or approval must never be inferred from unknown design review.',
+  [[/never/i, 'always']], /never (?:passed|be inferred)/i);
+rule(publish, 'Publish cosmetic exception preserves every other requirement',
+  [/exception/i, /all other requirements|every other requirement/i, /binding|mandatory/i],
+  'Every other requirement stays mandatory when recording a cosmetic exception.',
+  [[/binding|mandatory/i, 'waived'], [/all other requirements|every other requirement/i, 'selected requirements']]);
+rule(delivery, 'a tell causing a defect retains its normal hold and repair',
+  [/tell/i, /caus/i, /defect/i, /keeps|retain/i, /normal|ordinary/i, /hold/i, /repair/i, /rules/i],
+  'For any such defect caused by a tell, retain its ordinary repair rules and hold.',
+  [[/keeps|retain/i, 'waive'], [/hold/i, 'release'], [/repair/i, 'exception']]);
+rule(publish, 'Publish explainer applies both design references',
+  [/explainer/i, /follows|apply/i, /design guidance|design rules/i, /reads?/i, /frontend-design/i],
+  'Read frontend-design and apply the design rules from Explain when the explainer adapts an article.',
+  [[/follows|apply/i, 'ignores'], [/reads?/i, 'ignores']]);
+for (const [path, label] of [[explain, 'Explain'], [qa, 'Visual QA']]) {
+  rule(path, `${label} preserves standalone HTML review and Visual QA`,
+    [/standalone HTML files/i, /explicitly requested/i, /keep|preserve/i, /existing|current/i, /review/i, /Visual QA/i],
+    'Preserve current review and Visual QA when standalone HTML files are explicitly requested.',
+    [[/keep|preserve/i, 'discard'], [/existing|current/i, 'new'], [/Visual QA/i, 'source checks only']]);
+}
+rule(delivery, 'overall look remains advisory', [/overall look/i, /advisory|advice only/i],
+  'The overall look serves as advice only.', [[/advisory|advice only/i, 'blocking']]);

@@ -51,10 +51,9 @@ Require inline defaults and `prefers-color-scheme` so the article works outside 
 honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
 then rerun the referenced Explain page checks on these final bytes.
-Before independent review, `axstack-ui-verifier` runs Playwright MCP checks and
-records screenshots with paths and their artifact SHA-256.
-Have the verifier preview these exact bytes with Playwright MCP at 728px dark and 360px light;
-record both screenshots and the Explain QA results.
+Before independent review, have `axstack-ui-verifier` preview these exact bytes with
+Playwright MCP at 728px dark and 360px light and record both screenshots with paths,
+their artifact SHA-256 and the Explain QA results.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
 reviewer's design review against design.md, alongside source-fidelity review.

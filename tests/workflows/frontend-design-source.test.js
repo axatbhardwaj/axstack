@@ -14,7 +14,6 @@ test('frontend-design reference preserves the reviewed upstream bytes and licenc
   for (const [name, blob] of Object.entries(blobs)) {
     const path = `${root}/${directory}/${name}`;
     expect(existsSync(path), `packaged upstream ${name}`).toBe(true);
-    if (!existsSync(path)) continue;
     const bytes = readFileSync(path);
     expect(new Bun.CryptoHasher('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex'), name)
       .toBe(blob);
@@ -24,7 +23,6 @@ test('frontend-design reference preserves the reviewed upstream bytes and licenc
 test('frontend-design provenance stays owned and the payload stays reference-only', () => {
   const path = `${root}/${directory}/PROVENANCE.md`;
   expect(existsSync(path)).toBe(true);
-  if (!existsSync(path)) return;
   const provenance = readFileSync(path, 'utf8');
   for (const fact of ['anthropics/skills', upstream, 'skills/frontend-design/SKILL.md',
     blobs['FRONTEND-DESIGN.md'], blobs['LICENSE.txt'], 'renamed, bytes unchanged', 'Apache-2.0', 'not registered as a skill']) {

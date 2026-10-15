@@ -652,3 +652,20 @@ for (const preset of presetNames) {
     }
   });
 }
+
+for (const preset of presetNames) {
+  test(`design exclusions: ${preset} reviewer preserves Mermaid and anatomy review`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    const concepts = [/chat Mermaid/i, /anatomy/i, /keep|retain/i, /existing|current/i, /review/i];
+    checkRule(notes, (text) => requires(text, ...concepts),
+      'Retain the current review for anatomy and chat Mermaid.',
+      [[/keep|retain/i, 'discard'], [/existing|current/i, 'new'], [/anatomy/i, 'other figures']], concepts);
+  });
+  test(`Publish author: ${preset} explainer authors article adaptations`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer').notes;
+    const concepts = [/authors|creates/i, /Publish article adaptations/i];
+    checkRule(notes, (text) => requires(text, ...concepts),
+      'Creates Publish article adaptations too.',
+      [[/authors|creates/i, 'ignores'], [/Publish article adaptations/i, 'draft pages']], concepts);
+  });
+}
