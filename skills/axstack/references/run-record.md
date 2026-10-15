@@ -125,9 +125,15 @@ If neither passing evidence nor a `Decisions` row with a user-accepted hold exis
 A recorded user-accepted hold in `Decisions` satisfies that clause for close-out; keep the unmet result explicit.
 Record the reason for each driver-elected repair in `Decisions`.
 
+The mandatory settlement row covers every run-owned delegated child and launched writer and can pass only with current, thread-bound `t3_thread_read` evidence showing `settled: true`.
+Task completion or `result_available` alone does not pass.
+A missing or failed read-back is a hold. A plain recorded reason does not satisfy the row.
+Close-out stays pending unless each unsettled exception has a user-accepted hold linked to its `Decisions` row.
+
 ```markdown
 | Acceptance check | Result | Evidence or user-accepted hold | Repair election (Decisions row + reason, or none) |
 | --- | --- | --- | --- |
+| Every run-owned delegated child and launched writer settled | passed | <current thread-bound t3_thread_read inventory ref: settled: true for each> | <Decisions row + reason, or none> |
 | <check + clause> | passed | <SHA + check/log pointer> | <Decisions row + reason, or none> |
 | <check + unmet clause> | held (user accepted) | <Decisions row + user acceptance receipt> | <Decisions row + reason, or none> |
 ```
@@ -205,9 +211,9 @@ Resume: <commands or evidence refs bound to exact revisions>
 | --- | --- | --- | --- | --- | --- |
 | <task> | <task IDs or none> | <role + session ID + worktree, or receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
 
-| Dispatch key | Provider/model echo | Configuration read-back | Completion receipt | Post-completion HEAD/porcelain check result |
-| --- | --- | --- | --- | --- |
-| <key> | <actual provider/model + evidence ref> | <options/runtimeMode + evidence ref> | <marker + IDs + evidence ref> | <compared HEAD/status + pass/hold + evidence ref> |
+| Dispatch key | Provider/model echo | Configuration read-back | Completion receipt | Post-completion HEAD/porcelain check result | Settle readback |
+| --- | --- | --- | --- | --- | --- |
+| <key> | <actual provider/model + evidence ref> | <options/runtimeMode + evidence ref> | <marker + IDs + evidence ref> | <compared HEAD/status + pass/hold + evidence ref> | settled: true (t3_thread_read evidence) or held: <reason> |
 
 Status: <active/paused/held/complete/Archived>
 Updated: <UTC timestamp>

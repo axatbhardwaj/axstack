@@ -37,6 +37,7 @@ hard-to-reverse choices; they replace the critique round for that question.
    average.
 6. **Present.** Return the synthesized design to the caller with its
    trade-off, judge verdicts per round, and what was grafted or rejected.
+   For candidate and judge threads, follow the [same-turn settle rule](../../axstack/references/workspace-hygiene.md#settlement).
    The user still decides; spec approval remains the one human checkpoint.
 
 Record the synthesis note (base, graft sources, rejections, dropouts, judge
