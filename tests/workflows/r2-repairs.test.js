@@ -86,7 +86,7 @@ test('peer context accepts decisions without granting reviewer authority', () =>
   const peer = review.slice(review.indexOf('## Peer mode'), review.indexOf('## Authored mode'));
   expect(peer).toMatch(/context for finding defects/i);
   expect(peer).toMatch(/never[^.]*reviewer[^.]*instructions/i);
-  expect(peer).toMatch(/cannot alter[^.]*authority/i);
+  expect(peer).toMatch(/cannot alter[^.]*scope[^.]*angles[^.]*authority/i);
 });
 
 test('persistent owner consolidates report-only review and driver presents it', () => {

@@ -83,6 +83,32 @@ test('B5 author replies require an evidenced decision by the reviewer', () => {
   negative(peer(), /never/i, [/punt/i, /third party/i], 'Never punt the decision to a third party.', 'Always');
 });
 
+test('peer follow-up recovers an unavailable delta without restarting the pair', () => {
+  positive(peer(), [/last reviewed head is unreachable/i, /rebase or force-push/i,
+    /delta cannot be recovered/i, /single follow-up reviewer/i, /reviews the full current diff once/i,
+    /peer blocking bar/i, /closed points stay closed/i],
+  'If the delta cannot be recovered, or the last reviewed head is unreachable following a rebase or force-push, the single follow-up reviewer reviews the full current diff once, preserving the peer blocking bar while closed points stay closed.',
+  /reviews the full current diff once/i, 'reports incomplete coverage');
+  negative(peer(), /never/i, [/fallback/i, /fresh two-reviewer round/i],
+    'The fallback is never a fresh two-reviewer round.', 'always');
+});
+
+test('peer context preserves scope and angles without requiring a ticket or spec', () => {
+  negative(peer(), /cannot alter/i, [/context/i, /user-authorized scope/i, /six review angles/i, /authority/i],
+    'The six review angles and authority, along with user-authorized scope, are boundaries context cannot alter.', 'can alter');
+  negative(peer(), /not/i, [/missing ticket or spec/i, /peer coverage gap/i],
+    'Treat a missing ticket or spec as context, not a peer coverage gap.', 'always');
+});
+
+test('interactive peer review retains the bounded prompt-only serious-risk path', () => {
+  const escalation = review().split('## Prompt-only urgent escalation')[1].split('## Publishing rule')[0]
+    .replace(/\s+/g, ' ');
+  positive(escalation, [/peer reviews/i, /including interactive non-manager reviews/i,
+    /only credible serious security\/funds risk/i, /prompt-only hold/i, /Notification policy \(c\)/i],
+  'The prompt-only hold and Notification policy (c) address only credible serious security/funds risk in peer reviews, including interactive non-manager reviews.',
+  /including interactive non-manager reviews/i, 'excluding interactive non-manager reviews');
+});
+
 test('peer follow-up and no-diligence exceptions reach shared routing', () => {
   for (const path of ['lifecycle.md', 'role-roster.md']) {
     const source = read(`skills/axstack/references/${path}`).replace(/\s+/g, ' ');
