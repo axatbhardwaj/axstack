@@ -219,8 +219,11 @@ then loads the current relative contract and invokes `axstack-review` for a full
 Bounded jobs publish ordinary
 exact-head review verdicts; peer PRs are merged by the user. Manual adopted-PR maintenance
 uses `axstack-watch` with local-SHA review before authorized publication.
-Exceptional security, permanent-on-chain, or architectural decisions remain actionable in GitHub or a durable user-owned conversation
-after the manager session ends, with an authorized deduplicated Telegram notification.
+Only credible serious security/funds risk on peer reviews remains actionable
+in GitHub or a durable user-owned conversation after the manager session ends,
+with an authorized deduplicated Telegram notification. Other capped peer-review
+disputes go to the adviser panel; architecture, permanent on-chain or process
+decisions alone never trigger a ping.
 The current operational contract is
 [Review-manager contract](../skills/axstack/references/automations.md).
 

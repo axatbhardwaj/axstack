@@ -8,7 +8,8 @@
   for authorized standalone maintenance. Other roles never acquire merge authority.
 - `axstack-reviewer-primary` and `axstack-reviewer-peer` are the ordered
   peer pair. In `mixed`, the cross-provider pair is Sol high followed by Opus medium.
-  Peer review uses both; authored review uses this table:
+  First peer review uses both. Peer follow-up uses one reviewer under
+  [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr); authored review uses this table:
 
   | Preset | Author class | Reviewer (class/effort) |
   | --- | --- | --- |
@@ -27,7 +28,7 @@
 - `axstack-explainer-review` always reviews every visual; `codex/sol` medium in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
-- `axstack-diligence`: read-only [diligence checks](diligence.md) for every PR
+- `axstack-diligence`: read-only [diligence checks](diligence.md) for every authored PR
   review round and bounded research, spec, ticket, receipt, and release claims.
 - `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)
   for every interactive page, bound to the exact bytes and SHA-256.
@@ -68,6 +69,6 @@
   dispatch is reconciled, not called absent. A sized mixed research fan-out
   requires dispatched branches spanning at least two different providers;
   otherwise hold that fan-out. Every other mixed fan-out, including arena and
-  peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
+  first peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
   Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` probe L1 briefs.

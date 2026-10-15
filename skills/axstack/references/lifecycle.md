@@ -14,8 +14,9 @@ binding state and receipts to exact revisions.
   Own PRs default to automatic merge under watch §5's predicate.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
-- Reviewers: peer = two configured roles with the same brief and isolated first
-  pass; authored = one eligible role from author provenance. Each uses a
+- Reviewers: first peer review = two configured roles with the same brief and isolated first
+  pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
+  authored = one eligible role from author provenance. Each uses a
   separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).

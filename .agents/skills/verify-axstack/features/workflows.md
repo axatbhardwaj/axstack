@@ -16,6 +16,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/workspace-hygiene.test.js \
   tests/workflows/manager-pass-settlement.test.js \
   tests/workflows/pr-managers.test.js \
+  tests/workflows/peer-review.test.js \
   tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-discovery.test.js \
   tests/workflows/merge-audit-discipline.test.js \
@@ -41,6 +42,10 @@ bun run test tests/workflows/completion-guards.test.js \
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
 test "$STATUS" -eq 0
 ```
+
+Peer review contracts cover context-only intent, validated behaviour blockers,
+binding verdicts, bounded follow-ups, reply finality, the five-request adviser
+panel and compact output, while preserving authored review requirements.
 
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset

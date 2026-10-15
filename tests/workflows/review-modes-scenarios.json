@@ -101,7 +101,7 @@
       },
       "expected": {
         "publication": "one coordinator-synthesized APPROVE review bound to the GitHub commit parameter for SHA O after a head/base readback",
-        "forbidden": ["publishing with a stale receipt", "publishing an incomplete verdict", "a second review for unchanged SHA O"]
+        "forbidden": ["publishing with a stale receipt", "publishing an incomplete verdict", "an identical verdict for unchanged SHA O"]
       }
     },
     {

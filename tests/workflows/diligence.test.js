@@ -48,10 +48,10 @@ test('diligence contract checks intent, claims, metadata and evidence without ed
   expect(rule).toMatch(/never (?:authors|edits)/);
 });
 
-test('every review round has independent exact-revision diligence and a PASS gate', () => {
+test('every authored review round has independent exact-revision diligence and a PASS gate', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   const implement = compact('skills/axstack-implement/SKILL.md');
-  expect(review).toMatch(/peer and authored.*axstack-diligence.*same exact revision/);
+  expect(review).toMatch(/In authored PR review rounds, dispatch `axstack-diligence`.*same exact revision/);
   expect(review).toMatch(/independent.*configured reviewer/);
   expect(review).toMatch(/diligence `FINDINGS`.*same author.*same round/);
   expect(implement).toMatch(/Merge-ready.*diligence `PASS`/);

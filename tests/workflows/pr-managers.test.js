@@ -358,7 +358,8 @@ test('review manager preserves peer, decision, notification, and merge boundarie
   const manager = compact('skills/axstack/references/automations.md');
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/Peer code stays readonly/i);
-  expect(manager).toMatch(/security concern[^.]*permanent on-chain[^.]*architecture decision/i);
+  // Peer process/architecture escalation is superseded by peer-review.test.js B6.
+  expect(manager).toMatch(/Only credible serious security\/funds risk[^.]*Notification policy \(c\)/i);
   expect(manager).toMatch(/Telegram delivery[^.]*Telegram reply[^.]*silence never authorizes/i);
   expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
   expect(manager).toMatch(/Human merge remains the boundary/i);
@@ -377,7 +378,7 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(8);
+  expect(data.version).toBe(9);
   expect(data.migration).toMatch(/v8[^.]*T3 pass threads/i);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
@@ -398,7 +399,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('1868e51eb131995009de34a71a360b4f56d1e15dd53fd17429fb08322d14c2c2');
+  )).toBe('09fa60d12baea153af3ae33136dae502dd0e156fb19806c5785588059281d581');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',

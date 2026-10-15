@@ -13,15 +13,15 @@ test('watch and lifecycle require diligence PASS at the exact head', () => {
 
 test('review keeps diligence independent and requires its PASS for merge-ready', () => {
   const review = compact('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/In peer and authored PR review rounds, dispatch `axstack-diligence` independently alongside the configured reviewer\(s\) on the same exact revision and base\./);
+  expect(review).toMatch(/In authored PR review rounds, dispatch `axstack-diligence` independently alongside the configured reviewer\(s\) on the same exact revision and base\./);
   expect(review).toMatch(/A diligence `FINDINGS` receipt[^.]{0,140}it is not an extra `REQUEST_CHANGES` round\./);
-  expect(review).toMatch(/\*\*Diligence:\*\* a current `PASS` is required with reviewer approval for merge-ready;/);
+  expect(review).toMatch(/\*\*Authored diligence:\*\* a current `PASS` is required with reviewer approval for merge-ready;/);
 });
 
 test('authored receipt counts exclude the separate diligence receipt', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/The diligence receipt is separate and does not count as a reviewer receipt\./);
-  expect(review).toMatch(/an authored reviewer receipt count other than one is not the selected mode\./);
+  expect(review).toMatch(/an authored reviewer receipt count other than one is not the selected mode\./i);
   expect(review).toMatch(/Authored mode requires its one current eligible configured reviewer receipt and a separate current diligence receipt;/);
 });
 
@@ -51,6 +51,4 @@ test('diligence FINDINGS are report-only and stay in the owning phase', () => {
   expect(compact('skills/axstack/references/diligence.md')).toMatch(/`FINDINGS` identifies a medium or high mismatch for the driver to resolve at the owning phase; it does not edit the artifact or create another review round by itself\./);
 });
 
-test('peer publishing also requires its separate current diligence receipt', () => {
-  expect(compact('skills/axstack-review/SKILL.md')).toMatch(/- Peer mode requires both current reviews, a separate current diligence receipt, and no unresolved material finding[^.]{0,100}\./);
-});
+// Peer no-diligence and first/follow-up receipts: peer-review.test.js (B4).

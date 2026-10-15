@@ -38,7 +38,7 @@ test('review modes: raw scenario contracts cover the amendments', () => {
 
 // The remaining checks are shipped prompt-policy structure, not proof that a
 // future agent will follow the prompts.
-test('review modes: peer dispatch requires the primary and peer seats', () => {
+test('review modes: first peer dispatch requires the primary and peer seats', () => {
   const raw = read('skills/axstack-review/SKILL.md');
   const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
   checkRule(peer, (text) => requires(text,
@@ -164,7 +164,7 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
   expect(watch).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(repair).toMatch(/authored[^.]*review rule/i);
   expect(repair).toMatch(/current authored[^.]*receipt|authored[^.]*current receipt/i);
-  expect(lifecycle).toMatch(/peer[^.]*two configured roles[^.]*same brief[^.]*isolated/i);
+  expect(lifecycle).toMatch(/first peer review[^.]*two configured roles[^.]*same brief[^.]*isolated/i);
   expect(lifecycle).toMatch(/authored[^.]*one eligible role[^.]*author provenance/i);
 });
 

@@ -33,8 +33,10 @@ because a small change is new.
 ## Review a PR
 
 Use `$axstack-review Review this pull request: <PR URL>`.
-Peer review takes the PR description, linked issue and repository rules as intent
-evidence. Configured reviewers inspect isolated checkouts at a pinned revision.
+Peer review takes the PR description, linked issue and repository rules as
+context for code and design defects, not a contract. Accept the author's stated
+scope or design decisions made elsewhere. Configured reviewers inspect isolated
+checkouts at a pinned revision.
 An authored candidate follows its provider-based review pairing. Findings bind
 to the reviewed head; a changed head needs fresh evidence.
 
