@@ -99,7 +99,7 @@ candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
 
 Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
-`delivery`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+`delivery`, `design`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
 After base-revision Launch and Doctor, the authored reviewer runs the declared
 workflow checks above plus the full Explain boundary below at the final head.
 
@@ -114,7 +114,10 @@ test "$STATUS" -eq 0
 ```
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
-700-word counting without card exemptions, exact-byte network scans, preview
+700-word counting without card exemptions, design precedence and carve-outs,
+inline reviewer self-previews and Publish verifier PNGs before review, bounded
+cosmetic exceptions without waiving other gates, unknown-render holds,
+system fonts and no design history, exact-byte network scans, preview
 and interaction gates, bounded delivery holds, and ambiguous-render readback.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact

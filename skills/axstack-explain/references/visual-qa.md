@@ -2,6 +2,17 @@
 
 For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
+Design review against [design.md](design.md) covers every inline HTML page and every Publish article adaptation.
+For inline pages, the reviewer itself renders exact bytes with `html_preview` at
+728px dark and 360px light as a non-publishing self-check.
+This supplements the driver's required previews and any verifier pass.
+For Publish, the reviewer opens `axstack-ui-verifier` PNGs at 728px dark and
+360px light, with paths bound to the artifact SHA-256 and recorded before review.
+The driver forwards those paths and SHA-256; changed bytes require fresh screenshots and review.
+Apply [Delivery](delivery.md)'s one-round design repair, disclosed cosmetic exception and unknown-render holds.
+Chat Mermaid, anatomy and explicitly requested standalone HTML files keep their existing review and Visual QA.
+Interaction checks remain with `axstack-ui-verifier`; source-fidelity review is unchanged.
+
 Use this checklist for every HTML explanation and other visual artifacts where
 rendering matters.
 

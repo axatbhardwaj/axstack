@@ -202,7 +202,7 @@ for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const notes = roles.find(({ id }) => id === 'axstack-explainer-review')?.notes;
     expect(notes).toMatch(/checks the exact artifact for text and source fidelity/i);
-    expect(notes).toMatch(/rendered pass belongs to axstack-ui-verifier/i);
+    expect(notes).toMatch(/browser interaction pass belongs to axstack-ui-verifier/i);
     expect(notes).not.toMatch(/rendered behavior where warranted/i);
   });
 }
@@ -632,3 +632,23 @@ test('mixed visual author pins Sonnet 5.5 high and reviewer stays Sol', () => {
   });
   expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'sol', thinkingOptionId:'medium'});
 });
+
+for (const preset of presetNames) {
+  test(`design render sources: ${preset} explanation reviewer`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    const rules = [
+      [[/inline/i, /reviewer/i, /itself/i, /renders/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
+        'For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
+        [[/renders/i, 'skips'], [/itself/i, 'via the author'], [/html_preview/i, 'html_render']]],
+      [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /728px dark/i, /360px light/i, /artifact SHA-256/i, /before review/i],
+        'For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light bound to the artifact SHA-256 and recorded before review.',
+        [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review']]],
+      [[/design review/i, /follows/i, /design\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
+        'Design review follows design.md for every inline HTML page and every Publish article adaptation.',
+        [[/follows/i, 'skips'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]],
+    ];
+    for (const [concepts, rewording, inversions] of rules) {
+      checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
+    }
+  });
+}
