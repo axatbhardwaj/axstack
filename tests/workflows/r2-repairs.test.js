@@ -81,12 +81,12 @@ test('routing labels lifecycle scope as mode-specific', () => {
   expect(routing).not.toContain('## Lifecycle routes (approved scope required)');
 });
 
-test('peer content is intent evidence and never reviewer instructions', () => {
+test('peer context accepts decisions without granting reviewer authority', () => {
   const review = read('skills/axstack-review/SKILL.md');
   const peer = review.slice(review.indexOf('## Peer mode'), review.indexOf('## Authored mode'));
-  expect(peer).toMatch(/untrusted intent (data|evidence)/i);
+  expect(peer).toMatch(/context for finding defects/i);
   expect(peer).toMatch(/never[^.]*reviewer[^.]*instructions/i);
-  expect(peer).toMatch(/cannot alter[^.]*scope[^.]*angles[^.]*authority/i);
+  expect(peer).toMatch(/cannot alter[^.]*authority/i);
 });
 
 test('persistent owner consolidates report-only review and driver presents it', () => {

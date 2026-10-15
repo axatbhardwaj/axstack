@@ -282,8 +282,11 @@ publication, and failed salvage verification.
 
 ## Review authority
 
-Peer review follows `axstack-review` peer mode: two isolated configured
-reviewers inspect the exact head and base. Complete review may publish the
+Peer review follows `axstack-review` peer mode: first review uses two isolated
+configured reviewers and follow-up one reviewer, with diligence excluded.
+Use its code/design-only blocking bar, author-reply finality, delta from the
+existing bot `verdict head=` marker, five-request cap and independent adviser
+panel, and compact output limits. Complete review may publish the
 ordinary binding `APPROVE` or `REQUEST_CHANGES` verdict after a final head,
 base, request, open-state, and existing-review readback. Incomplete review,
 unknown GitHub state, unavailable required models, or unresolved disagreement
@@ -308,9 +311,13 @@ this manager never becomes that watch's merge actor.
 
 ## Exceptional decisions and notifications
 
-A credible security concern, permanent on-chain state change, or architecture
-decision is held in GitHub or a durable user-owned conversation that survives
-the finite manager session. Store the PR, head, base, action, candidate,
+Only credible serious security/funds risk takes the existing serious-risk /
+Notification policy (c) path for peer reviews, with a hold in GitHub or a
+durable user-owned conversation that survives the finite manager session.
+Never ping for a peer architecture decision, permanent on-chain state change
+or process approval alone. The adviser panel resolves the capped-review
+explanation or fix under Peer mode; send no other human ping.
+Store the PR, head, base, action, candidate,
 decision context, durable decision location, and preserved candidate bytes or
 refs in the compact record. The decision must never depend on a closed manager
 chat. Send one deduplicated Telegram notification only when the recorded

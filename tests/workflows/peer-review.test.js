@@ -92,3 +92,66 @@ test('peer follow-up and no-diligence exceptions reach shared routing', () => {
   negative(read('skills/axstack/references/diligence.md').replace(/\s+/g, ' '),
     /never/i, [/peer review/i, /diligence/i], 'Never dispatch diligence for peer review.', 'Always');
 });
+
+test('B6 sixth change request goes through an independent adviser panel', () => {
+  positive(peer(), [/at most five/i, /REQUEST_CHANGES/i, /bot markers/i, /PR/i],
+    'Allow at most five ordinary REQUEST_CHANGES per PR, counting bot markers.', /five/i, 'six');
+  negative(peer(), /do not publish/i, [/sixth/i, /REQUEST_CHANGES/i, /panel/i],
+    'Do not publish a sixth REQUEST_CHANGES before the adviser panel.', 'Publish');
+  positive(peer(), [/dispatch/i, /axstack-advisor-astra/i, /axstack-advisor-opus/i, /independently/i,
+    /open blockers/i, /author.*replies/i, /delta/i, /code/i],
+    'Dispatch axstack-advisor-astra and axstack-advisor-opus independently with open blockers, author replies, delta and code.',
+    /independently/i, 'jointly');
+  negative(peer(), /no cross-read/i, [/advisers/i], 'Advisers have no cross-read.', 'shared cross-read');
+  positive(peer(), [/both judge/i, /explanation or fix/i, /justifies approval/i],
+    'Both judge whether the explanation or fix justifies approval.', /justifies approval/i, 'needs human approval');
+  positive(peer(), [/both accept/i, /APPROVE/i, /advisers accepted the author's explanation/i],
+    "Both accept -> APPROVE with one line: advisers accepted the author's explanation.", /APPROVE/, 'REQUEST_CHANGES');
+  positive(peer(), [/both reject/i, /REQUEST_CHANGES/i, /short reasons/i, /final/i, /later heads/i, /only/i],
+    'Both reject -> REQUEST_CHANGES with short reasons that are final, and later heads are checked only against those points.',
+    /final/i, 'provisional');
+  positive(peer(), [/split/i, /one reconciliation reply each/i, /then/i, /axstack-escalation-fable/i, /decides/i, /contracts/i],
+    'On a split, take one reconciliation reply each, then axstack-escalation-fable decides under contracts.',
+    /one reconciliation reply each/i, 'unlimited reconciliation');
+  positive(peer(), [/credible serious security\/funds risk/i, /serious-risk/i, /Notification policy/i, /\(c\)/i],
+    'Credible serious security/funds risk follows the serious-risk and Notification policy (c) path.', /\(c\)/i, '(b)');
+  negative(peer(), /no other human ping/i, [], 'Send no other human ping.', 'Send another human ping');
+});
+
+test('B7 peer output has bounded findings and compact follow-up status', () => {
+  positive(peer(), [/first peer review/i, /400 words/i, /one verdict line/i, /location/i, /breakage/i, /evidence/i, /one-line fix hint/i],
+    'First peer review stays within about 400 words: one verdict line and blockers with location, breakage, evidence and a one-line fix hint.',
+    /400 words/i, '1000 words');
+  negative(peer(), /Not verified:/i, [/at most five one-line notes/i, /one/i],
+    'Include at most five one-line notes and one Not verified: line.', 'Verified:');
+  positive(peer(), [/follow-up/i, /150 words/i, /blocker status/i, /new qualifying blocker/i],
+    'Follow-up stays within about 150 words: blocker status and any new qualifying blocker.', /150 words/i, '1000 words');
+  negative(peer(), /no/i, [/process narration/i, /disposition essays/i, /decision needed/i],
+    'Use no process narration, disposition essays or decision needed sections.', 'Include');
+});
+
+test('B8 authored rubric, diligence and review authority retain their contracts', () => {
+  const source = review().replace(/\s+/g, ' ');
+  const severity = source.split('## Finding severity')[1].split('## Codebase findings mode')[0];
+  positive(severity, [/medium/i, /high/i, /block/i, /APPROVE/i],
+    'Medium and high findings block APPROVE.', /block/i, 'allow');
+  negative(severity, /nobody can/i, [/lower a rating/i], 'Nobody can lower a rating.', 'Everybody can');
+  positive(source, [/In authored PR review rounds/i, /dispatch/i, /axstack-diligence/i, /independently/i, /same exact revision and base/i],
+    'In authored PR review rounds dispatch axstack-diligence independently on the same exact revision and base.',
+    /dispatch/i, 'skip');
+  positive(source, [/authored reviewer/i, /checks/i, /Revert/i, /diff/i],
+    'The authored reviewer checks the Revert line against the diff.', /checks/i, 'ignores');
+  positive(source, [/authored mode/i, /verify the recorded shape/i, /pinned head and base/i],
+    'In authored mode verify the recorded shape against the pinned head and base.', /verify/i, 'ignore');
+  positive(source, [/recorded owning watch thread/i, /applies/i, /guarded merge and card rules/i],
+    'The recorded owning watch thread applies guarded merge and card rules.', /applies/i, 'ignores');
+});
+
+test('manager authority uses bounded peer rounds and no process escalation', () => {
+  const source = read('skills/axstack/references/automations.md').replace(/\s+/g, ' ');
+  positive(source, [/first review/i, /two isolated configured reviewers/i, /follow-up/i, /one reviewer/i, /diligence excluded/i],
+    'First review uses two isolated configured reviewers and follow-up one reviewer, with diligence excluded.',
+    /one reviewer/i, 'two reviewers');
+  negative(source, /never/i, [/peer/i, /architecture decision/i, /permanent on-chain state change/i, /process approval/i, /ping/i],
+    'Never ping for peer architecture decision, permanent on-chain state change or process approval alone.', 'Always');
+});

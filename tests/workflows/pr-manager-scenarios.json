@@ -1,7 +1,7 @@
 {
-  "version": 8,
+  "version": 9,
   "evidence": "behavioral evaluation inputs and expected decisions; this fixture is not a model evaluation result, scheduler implementation, or live-runtime receipt",
-  "migration": "v8 explicitly migrates dedicated-workspace terminal-close holdouts to T3 pass threads, guarded Git retirement, and storage limits; v7 source corpus is preserved in the base revision.",
+  "migration": "v9 changes only the durable-review-decision trigger from architecture to credible serious funds risk for the accepted peer redesign; the prior holdout is preserved in the base revision. v8 explicitly migrates dedicated-workspace terminal-close holdouts to T3 pass threads, guarded Git retirement, and storage limits; v7 source corpus is preserved in the base revision.",
   "cases": [
     {
       "id": "thirty-peer-pr-coverage",
@@ -29,7 +29,7 @@
     },
     {
       "id": "durable-review-decision",
-      "input": "a peer review raises an architecture decision after all descendants settle; exact head/base and finding evidence must survive manager closure",
+      "input": "a peer review raises a credible serious funds risk after all descendants settle; exact head/base and finding evidence must survive manager closure",
       "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "end the finite manager turn only after saving continuity"],
       "forbidden": ["depend on the closed manager chat for the answer", "treat Telegram or silence as authority"]
     },
