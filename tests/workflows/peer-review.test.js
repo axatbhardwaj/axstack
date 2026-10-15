@@ -9,10 +9,10 @@ const peer = () => review().split('## Peer mode (colleague PR)')[1].split('## Au
 // Each independent prompt contract is tested against removal, inversion and an
 // equivalent rewording in memory. These checks do not prove agent compliance.
 const positive = (source, concepts, rewording, direction, inversion) =>
-  checkRule(source, (text) => requires(text, ...concepts), rewording,
+  checkRule(source.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'), (text) => requires(text, ...concepts), rewording,
     [[direction, inversion]], concepts);
 const negative = (source, prohibition, concepts, rewording, inversion) =>
-  checkRule(source, (text) => prohibits(text, prohibition, ...concepts), rewording,
+  checkRule(source.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'), (text) => prohibits(text, prohibition, ...concepts), rewording,
     [[prohibition, inversion]], concepts);
 
 test('peer usage: marker selects first review or follow-up', () => {
@@ -57,4 +57,38 @@ test('B3 peers receive a binding verdict without merge authority', () => {
   negative(peer(), /no blocker remains open/i, [/APPROVE/i, /notes/i, /body/i],
     'APPROVE when no blocker remains open, with notes in the body.', 'any blocker remains open');
   negative(peer(), /never/i, [/bot/i, /merges peer PRs/i], 'The bot never merges peer PRs.', 'always');
+});
+
+test('B4 first review is broad and follow-ups stay bounded', () => {
+  positive(peer(), [/first review/i, /axstack-reviewer-primary/i, /axstack-reviewer-peer/i, /full diff/i, /all six angles/i],
+    'First review dispatches axstack-reviewer-primary and axstack-reviewer-peer on the full diff and all six angles.',
+    /full diff/i, 'delta only');
+  negative(peer(), /never/i, [/peer/i, /diligence/i], 'Never dispatch diligence in peer mode.', 'Always');
+  positive(peer(), [/follow-up/i, /one reviewer/i, /prior blockers?/i, /fixed or open/i, /author.*replies/i, /PR comments/i, /only the delta/i, /last reviewed head/i],
+    'Follow-up uses one reviewer to mark prior blockers fixed or open, read author replies and PR comments, and inspect only the delta since the last reviewed head.',
+    /one reviewer/i, 'two reviewers');
+  positive(peer(), [/new blocker/i, /only/i, /behaviour defect introduced by the delta/i, /missed serious security/i, /data.loss/i, /funds/i],
+    'A new blocker qualifies only for a behaviour defect introduced by the delta or missed serious security, data-loss or funds defects.',
+    /only/i, 'also');
+  negative(peer(), /no new notes/i, [/unchanged code/i], 'Add no new notes on unchanged code.', 'Add new notes');
+  positive(peer(), [/closed point/i, /fixed or accepted/i, /stays closed unless/i, /same defect reproduces/i, /new head/i],
+    'A closed point, fixed or accepted, stays closed unless the same defect reproduces at the new head.',
+    /stays closed unless/i, 'reopens even without proof that');
+});
+
+test('B5 author replies require an evidenced decision by the reviewer', () => {
+  positive(peer(), [/author explanations are evidence/i, /weigh each reply/i, /accept.*close/i, /reject with concrete evidence/i],
+    'Author explanations are evidence: weigh each reply and accept to close or reject with concrete evidence.',
+    /are evidence/i, 'are irrelevant');
+  negative(peer(), /never/i, [/punt/i, /third party/i], 'Never punt the decision to a third party.', 'Always');
+});
+
+test('peer follow-up and no-diligence exceptions reach shared routing', () => {
+  for (const path of ['lifecycle.md', 'role-roster.md']) {
+    const source = read(`skills/axstack/references/${path}`).replace(/\s+/g, ' ');
+    positive(source, [/peer follow-up/i, /one reviewer/i],
+      'Peer follow-up uses one reviewer.', /one reviewer/i, 'two reviewers');
+  }
+  negative(read('skills/axstack/references/diligence.md').replace(/\s+/g, ' '),
+    /never/i, [/peer review/i, /diligence/i], 'Never dispatch diligence for peer review.', 'Always');
 });

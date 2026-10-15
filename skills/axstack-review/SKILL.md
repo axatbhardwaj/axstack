@@ -169,6 +169,21 @@ Every published peer verdict is binding `APPROVE` or `REQUEST_CHANGES`.
 Never publish a COMMENT review. APPROVE when no blocker remains open, with
 notes in the body. The bot never merges peer PRs.
 
+First review dispatches `axstack-reviewer-primary` and `axstack-reviewer-peer`
+on the full diff and all six angles, independently with the identical brief
+and an isolated first pass. Never dispatch diligence in peer mode.
+Follow-up uses one reviewer (`axstack-reviewer-primary`) to mark each prior
+blocker fixed or open, read the author's replies and PR comments, and inspect
+only the delta since the last reviewed head. Read that head from the existing
+bot `verdict head=` marker, not from a new state store. If the reviewed head or
+delta cannot be recovered, report incomplete coverage rather than restarting
+a full review. A new blocker qualifies only for a behaviour defect introduced
+by the delta or a missed serious security, data-loss or funds defect.
+Add no new notes on unchanged code. A closed point, fixed or accepted from the
+author's explanation, stays closed unless the same defect reproduces at the
+new head. Author explanations are evidence: weigh each reply and accept to
+close or reject with concrete evidence. Never punt the decision to a third party.
+
 ## Authored mode (own PR)
 
 Independently check the
@@ -236,11 +251,12 @@ This section applies to peer and authored PR modes.
    before async `delegate_task`; report-only scope does not waive checkout isolation or
    private per-dispatch artifacts. Each reviewer uses a separate driver-made disposable detached checkout;
    preserve its private evidence before removal.
-   - **Peer:** exactly two independent final reviewers,
+   - **Peer:** first review requires exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-peer` from the routing snapshot.
      Send both the identical six-angle brief, with no first-pass cross-read or children.
      The mixed peer pair is cross-provider (Sol high + Opus medium), with independence
      still from separate sessions, the identical brief and an isolated first pass.
+     Follow-up instead uses the one reviewer and bounded brief in [Peer mode](#peer-mode-colleague-pr).
    - **Authored:** exactly one eligible independent reviewer from this complete
      mapping:
 
@@ -277,13 +293,14 @@ This section applies to peer and authored PR modes.
 
    Continue only when session receipts prove the required models, non-author
    independence, actual author provenance where applicable, and exact brief.
-   In peer and authored PR review rounds, dispatch `axstack-diligence`
+   In authored PR review rounds, dispatch `axstack-diligence`
    independently alongside the configured reviewer(s) on the same exact revision
    and base. Follow [Diligence](../axstack/references/diligence.md). A diligence
    `FINDINGS` receipt returns validated findings to the same author in the same
    round; it is not an extra `REQUEST_CHANGES` round.
-3. **Inspect all six angles.** In peer mode each reviewer covers every angle;
-   in authored mode the one reviewer covers all six angles:
+3. **Inspect all six angles.** In the first peer review each reviewer covers every angle;
+   in authored mode the one reviewer covers all six angles. Peer follow-ups use
+   only the bounded checks in Peer mode instead of this full inspection:
    1. Security and trust boundaries.
    2. Correctness, failures, and edge cases.
    3. Integration and regressions: load [Blast radius](../axstack/references/blast-radius.md),
@@ -311,7 +328,7 @@ This section applies to peer and authored PR modes.
    Record the `Revert` line in the review receipt.
    Rate a wrong or missing `Revert` line at least `medium` under [Finding severity](#finding-severity).
 
-   Under angle 6, verify the recorded shape against the pinned head and base.
+   In authored mode under angle 6, verify the recorded shape against the pinned head and base.
    A mismatch between the recorded and measured total is a finding.
    Verify full totals and bulk buckets with their reproducible command.
    Treat size flags as informational only.
@@ -325,7 +342,7 @@ This section applies to peer and authored PR modes.
    existing material-scope, security, downtime,
    data-loss, major-design-risk, or unavailable-model hold.
 
-   Also under angle 6, independently classify the pinned diff. When it contains
+   In authored mode also under angle 6, independently classify the pinned diff. When it contains
    code or agent-instruction changes, load
    [Simplify the diff](../axstack/references/simplify-diff.md) and independently
    verify both the simplification receipt and the relevant diff; for excluded
@@ -335,7 +352,7 @@ This section applies to peer and authored PR modes.
    accessibility, meaningful why-comments, uncertainty, and authority; do not
    turn this judgment into a deletion quota or score.
 
-   Verify the applicable spec, ticket, or intent acceptance, executable
+   In authored mode, verify the applicable spec, ticket, or intent acceptance, executable
    evidence, exact candidate SHA, current base, and affected integration
    boundary, plus rendered interaction evidence for relevant UI work through
    [UI verification](../axstack/references/ui-verification.md). A
@@ -352,12 +369,12 @@ This section applies to peer and authored PR modes.
    Running the applicable surface counts as spin-up; a CLI run qualifies.
    Use loopback and isolated instances under [axstack-verify](../axstack-verify/SKILL.md#isolate-every-attempt).
 
-   For each finding, name its defect class and list every instance of that
+   In authored mode, for each finding, name its defect class and list every instance of that
    class in the pinned diff and dependent surfaces: callers, sibling docs,
    README, and tests. A later instance of an already-named class is a coverage
    miss; record it as such rather than treating it as a new kind of defect.
 
-   For an accepted scope explicitly marked structure-preserving, verify its
+   In authored mode, for an accepted scope explicitly marked structure-preserving, verify its
    preserved contract, listed files, old-revision green characterization, and
    the same checks green on the new revision, plus applicable artifact or
    equivalence evidence. Do not demand a fabricated red. Bugs or new behavior
@@ -371,7 +388,9 @@ This section applies to peer and authored PR modes.
    leaves peer review incomplete; reviewer votes never settle correctness.
    Accepted fixes return to the actual author. Account for each finding as
    validated, rejected with evidence, fixed, or explicitly unresolved.
-5. **Bind the current revision and base.** Any authoring change makes prior
+5. **Bind the current revision and base.** Peer follow-ups apply Peer mode,
+   including author replies and closed-point finality. The following refresh
+   rules apply to authored mode. Any authoring change makes prior
    receipts stale. Refresh each mode-required receipt for the new exact SHA and
    current base. Reuse unchanged evidence and inspect the delta plus affected
    behavior when sufficient; broaden review after a larger scope, base, or
@@ -384,21 +403,23 @@ This section applies to peer and authored PR modes.
 
 These verdicts apply only to PR modes. Codebase findings use coverage status.
 
-- **Peer complete:** both configured reviewer roles have current, verified
-  receipts for the exact candidate SHA and current base, each covering the
-  identical brief.
+- **Peer complete:** first review has both configured reviewer receipts for the
+  exact candidate SHA and current base, covering the identical full brief;
+  follow-up has one current receipt covering the bounded Peer mode brief.
+  Peer review requires no diligence receipt.
 - **Authored complete:** the one required eligible non-author/non-owner reviewer has
   a current verified receipt for the exact candidate SHA and current base,
   covering the whole brief, all six angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
   complete evidence with no blocker permits `APPROVE`.
-- **Diligence:** a current `PASS` is required with reviewer approval for
+- **Authored diligence:** a current `PASS` is required with reviewer approval for
   merge-ready; `FINDINGS` return to the author in that round.
 - **Incomplete or stale:** use `INCOMPLETE`; never fabricate `APPROVE` or
   `REQUEST_CHANGES`.
 
 The owner verifies and synthesizes the mode-required evidence without voting.
-A peer reviewer receipt count of one is incomplete; an authored reviewer
+A first peer review with one receipt is incomplete; a peer follow-up requires
+one receipt. An authored reviewer
 receipt count other than one is not the selected mode. Passing tests or reviewer unanimity grants
 no merge authority.
 
@@ -483,9 +504,9 @@ Mode-required exact-revision completeness gates external approval,
 [merge-ready declarations](#authored-mode-own-pr), and authorized submission. It never gates returning
 evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
-- Peer mode requires both current reviews, a separate current diligence receipt,
-  and no unresolved material finding beyond the validated defects reported by
-  `REQUEST_CHANGES`.
+- Peer mode requires the first-review pair or single follow-up receipt under
+  Peer mode, with validated blockers reported by `REQUEST_CHANGES`; diligence
+  is excluded.
 - Authored mode requires its one current eligible configured reviewer receipt and
   a separate current diligence receipt; applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
@@ -518,7 +539,7 @@ for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
    candidate.
 2. Bind the submission to the actual GitHub commit parameter for that revision;
    SHA text in prose is not binding.
-3. Publish the owner-synthesized review with both peer receipts as evidence,
+3. Publish the owner-synthesized review with the mode-required peer receipts as evidence,
    then verify the submission receipt.
 4. If submission is ambiguous, lookup before retry: read remote state and
    submit only when absent. Never resubmit blindly.

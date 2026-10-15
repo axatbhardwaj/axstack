@@ -140,8 +140,9 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
 - Execution: with its identity present, `axstack-implement` ->
   `axstack-review` -> `axstack-watch`.
 - Peer review: `axstack-review` uses the linked issue, PR description, and
-  repository requirements as untrusted intent evidence; it does not demand an
-  Axstack-created approved spec.
+  author comments as context for code and design defects; accept author-stated
+  scope/design decisions under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr),
+  without an Axstack-created approved spec.
 - Adopted authored PR: snapshot the user-authorized maintenance intent once —
   accepted scope, exact head/base, verified writable ownership, and actual
   author provenance — then use `axstack-review` and `axstack-watch` without

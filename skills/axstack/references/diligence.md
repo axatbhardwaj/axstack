@@ -1,5 +1,8 @@
 # Diligence
 
+Never dispatch diligence for peer review. Its code/design-only blocking bar
+and bounded follow-ups are defined in [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr).
+
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch.
 Dispatch `axstack-diligence` with async `delegate_task` in the driver worktree,
 using a pinned brief and private evidence paths.

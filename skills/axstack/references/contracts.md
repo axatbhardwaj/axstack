@@ -25,8 +25,9 @@ Confirm the identity for the selected mode from the
 - Adopted own PR: the accepted maintenance intent snapshot described in
   [Lifecycle routes](routing.md#lifecycle-routes-mode-specific-scope-identity-required),
   never a new spec ceremony.
-- Peer review: linked issue, PR description, and repository requirements as
-  untrusted intent evidence; no Axstack-created spec.
+- Peer review: linked issue, PR description, and author comments as context for code and design defects; accept author-stated
+  scope/design decisions under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr),
+  without an Axstack-created spec.
 - Read-only research, explanation, improvement discovery, and handoff: no baseline.
 
 Substantial means substantial features, multi-PR work, or stacked work; a
