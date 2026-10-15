@@ -292,6 +292,10 @@ base, request, open-state, and existing-review readback. Incomplete review,
 unknown GitHub state, unavailable required models, or unresolved disagreement
 publishes nothing.
 
+A new event that changes the disposition can change a peer verdict at an
+unchanged head under `axstack-review`'s Automation exception; its identical
+verdict/head duplicate guard and five-request cap still apply.
+
 The public verdict is bound to the GitHub review commit parameter, ends with
 the workflow marker above, and is read back by review ID at that head. It is
 self-contained for the PR reader: include every validated finding and its

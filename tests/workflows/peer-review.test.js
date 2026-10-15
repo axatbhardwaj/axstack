@@ -192,3 +192,19 @@ test('manager authority uses bounded peer rounds and no process escalation', () 
   negative(source, /never/i, [/peer/i, /architecture decision/i, /permanent on-chain state change/i, /process approval/i, /ping/i],
     'Never ping for peer architecture decision, permanent on-chain state change or process approval alone.', 'Always');
 });
+
+test('peer publication accepts an event-driven verdict change at the same head', () => {
+  const source = review().split('## Automation exception')[1].replace(/\s+/g, ' ');
+  positive(source, [/publish/i, /changed peer verdict/i, /same head/i, /only when/i,
+    /new event/i, /author reply/i, /PR comment/i, /review re-request/i, /changes the disposition/i],
+  'Only when a new event (author reply, PR comment or review re-request) changes the disposition, publish a changed peer verdict at the same head.',
+  /only when/i, 'regardless of whether');
+});
+
+test('peer publication still deduplicates identical verdicts and counts same-head requests', () => {
+  const source = review().split('## Automation exception')[1].replace(/\s+/g, ' ');
+  negative(source, /never/i, [/resubmit/i, /identical verdict/i, /same head/i],
+    'An identical verdict at the same head is never something to resubmit.', 'Always');
+  positive(source, [/every/i, /same-head/i, /REQUEST_CHANGES/i, /five-request cap/i],
+    'The five-request cap includes every same-head REQUEST_CHANGES submission.', /every/i, 'zero');
+});

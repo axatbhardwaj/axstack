@@ -595,10 +595,17 @@ no validated blocker and `REQUEST_CHANGES` requires at least one evidenced
 validated blocker. `INCOMPLETE`, unavailable inputs, unresolved disagreement,
 or unknown GitHub state submits nothing.
 
-Immediately before `gh pr review`, re-read self's reviews at the head. If one
-already exists, skip submission and record its id. Otherwise re-check head,
-base, draft status, authorship, and allowlist, bind the verdict to the exact
-commit parameter, and end the body with this marker line:
+Immediately before `gh pr review`, re-read self's reviews at the head.
+Never resubmit an identical verdict at the same head. Record the existing
+review id for such duplicates. Publish a changed peer verdict at the same head
+only when a new event (author reply, PR comment or review re-request) changes
+the disposition. A newly accepted explanation can turn same-head
+`REQUEST_CHANGES` into `APPROVE`. Count every same-head `REQUEST_CHANGES`
+submission toward the five-request cap.
+
+Before every submission, re-check head, base, draft status, authorship, and
+allowlist, bind the verdict to the exact commit parameter, and end the body
+with this marker line:
 
 ```text
 <!-- axstack-automation verdict head=<sha> -->
