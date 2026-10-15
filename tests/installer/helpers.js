@@ -22,12 +22,16 @@ export function makeTempRoot(prefix = 'axstack-test-') {
 
 // Run the real CLI under Bun and assert on exit codes (Bun.spawnSync
 // reports nonzero via exitCode instead of throwing).
+// Pass only deliberate env overrides; spreading Bun.env reintroduces config homes.
 export function runCli(
   cli,
   args,
   { expectFail = false, cwd, env, unset = [], timeout = 60000 } = {},
 ) {
-  const fullEnv = { ...Bun.env, ...(env ?? {}) };
+  const fullEnv = { ...Bun.env };
+  // Agent config homes must not override the fixture HOME or explicit paths.
+  for (const key of ['CLAUDE_CONFIG_DIR', 'CODEX_HOME']) delete fullEnv[key];
+  Object.assign(fullEnv, env);
   const cliArgs = [...args];
   for (const key of unset) delete fullEnv[key];
   const result = Bun.spawnSync([BUN_BIN, cli, ...cliArgs], {

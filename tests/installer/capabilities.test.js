@@ -12,7 +12,7 @@ import {
 } from '../../src/capabilities.js';
 import * as capabilities from '../../src/capabilities.js';
 import { sentences, requires } from '../workflows/prose-contract.js';
-import { BUN_BIN, makeTempRoot, runCli as runBunCli } from './helpers.js';
+import { makeTempRoot, runCli as runBunCli } from './helpers.js';
 
 const CLI = join(import.meta.dir, '../../bin/axstack.js');
 const runCli = (args, opts) => runBunCli(CLI, args, opts);
@@ -226,11 +226,8 @@ describe('Bun spawn semantics', () => {
   test('real check of a missing tool reports a gap', async () => {
     const emptyBin = join(makeTempRoot(), 'empty-bin');
     mkdirSync(emptyBin, { recursive: true });
-    const real = Bun.spawnSync(
-      [BUN_BIN, CLI, 'check'],
-      { stdout: 'pipe', stderr: 'pipe', env: { ...Bun.env, PATH: emptyBin }, timeout: 60000 },
-    );
-    expect(real.exitCode).not.toBe(0);
-    expect(real.stdout.toString()).toMatch(/MISSING.*(git|gh|T3)/);
+    const real = runCli(['check'], { expectFail: true, env: { PATH: emptyBin } });
+    expect(real.ok).toBe(false);
+    expect(real.out).toMatch(/MISSING.*(git|gh|T3)/);
   });
 });

@@ -101,8 +101,32 @@ function bunOnlyEnv(neutral) {
   const binDir = join(neutral, 'bin');
   mkdirSync(binDir, { recursive: true });
   if (!existsSync(join(binDir, 'bun'))) symlinkSync(BUN_BIN, join(binDir, 'bun'));
-  return { ...Bun.env, PATH: binDir };
+  return { PATH: binDir };
 }
+
+test('bun-only package fixtures do not reintroduce ambient config homes', () => {
+  const neutral = makeTempRoot('axstack-package-env-');
+  const probe = join(neutral, 'env.js');
+  writeFileSync(probe, `console.log(JSON.stringify({
+    claude: Bun.env.CLAUDE_CONFIG_DIR ?? null,
+    codex: Bun.env.CODEX_HOME ?? null,
+  }));`);
+  const previous = {
+    CLAUDE_CONFIG_DIR: Bun.env.CLAUDE_CONFIG_DIR,
+    CODEX_HOME: Bun.env.CODEX_HOME,
+  };
+  try {
+    Bun.env.CLAUDE_CONFIG_DIR = join(neutral, 'ambient-claude');
+    Bun.env.CODEX_HOME = join(neutral, 'ambient-codex');
+    const result = runBunCli(probe, [], { env: bunOnlyEnv(neutral), cwd: neutral });
+    expect(JSON.parse(result.out)).toEqual({ claude: null, codex: null });
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete Bun.env[key];
+      else Bun.env[key] = value;
+    }
+  }
+});
 
 function skillAssets(pkgDir) {
   const skillsRoot = join(pkgDir, 'skills');
