@@ -23,8 +23,8 @@ test('peer usage: marker selects first review or follow-up', () => {
 });
 
 test('B1 peer intent is context and author decisions are accepted', () => {
-  positive(peer(), [/peer scope/i, /code and design only/i],
-    'Peer scope covers code and design only.', /only/i, 'and process');
+  positive(peer(), [/peer scope/i, /\bcode\b/i, /\bdesign\b/i, /\bonly\b/i],
+    'Only code and design are in peer scope.', /only/i, 'and process');
   positive(peer(), [/ticket/i, /PR description/i, /author comments/i, /context/i, /defects/i],
     'Ticket, PR description and author comments supply context for finding defects.', /context/i, 'binding obligations');
   negative(peer(), /never ask/i, [/author/i, /approvals/i, /sign-offs/i, /spec approver/i, /process decision/i],
@@ -81,6 +81,17 @@ test('B5 author replies require an evidenced decision by the reviewer', () => {
     'Author explanations are evidence: weigh each reply and accept to close or reject with concrete evidence.',
     /are evidence/i, 'are irrelevant');
   negative(peer(), /never/i, [/punt/i, /third party/i], 'Never punt the decision to a third party.', 'Always');
+});
+
+test('peer blockers get a defect-class sweep on each full-diff pass', () => {
+  const source = review().replace(/\s+/g, ' ');
+  positive(source, [/peer blockers/i, /first review/i, /single-reviewer full-diff fallback/i,
+    /name/i, /defect class/i, /list every instance/i, /pinned diff/i, /dependent surfaces/i,
+    /callers/i, /sibling docs/i, /README/i, /tests/i],
+  'For peer blockers in the single-reviewer full-diff fallback or the first review, name the defect class and list every instance across the pinned diff and dependent surfaces, including callers, sibling docs, README and tests.',
+  /peer blockers/i, 'peer notes');
+  negative(source, /never/i, [/defect-class sweep/i, /peer notes/i],
+    'Never apply the defect-class sweep to peer notes.', 'Always');
 });
 
 test('peer follow-up recovers an unavailable delta without restarting the pair', () => {

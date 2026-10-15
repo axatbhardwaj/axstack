@@ -396,10 +396,12 @@ This section applies to peer and authored PR modes.
    Running the applicable surface counts as spin-up; a CLI run qualifies.
    Use loopback and isolated instances under [axstack-verify](../axstack-verify/SKILL.md#isolate-every-attempt).
 
-   In authored mode, for each finding, name its defect class and list every instance of that
-   class in the pinned diff and dependent surfaces: callers, sibling docs,
+   In authored mode, and for peer blockers in the first review or the
+   single-reviewer full-diff fallback, name each finding's defect class and list every
+   instance of that class in the pinned diff and dependent surfaces: callers, sibling docs,
    README, and tests. A later instance of an already-named class is a coverage
    miss; record it as such rather than treating it as a new kind of defect.
+   Never apply the defect-class sweep to peer notes.
 
    In authored mode, for an accepted scope explicitly marked structure-preserving, verify its
    preserved contract, listed files, old-revision green characterization, and
