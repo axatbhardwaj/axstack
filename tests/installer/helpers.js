@@ -22,6 +22,7 @@ export function makeTempRoot(prefix = 'axstack-test-') {
 
 // Run the real CLI under Bun and assert on exit codes (Bun.spawnSync
 // reports nonzero via exitCode instead of throwing).
+// Pass only deliberate env overrides; spreading Bun.env reintroduces config homes.
 export function runCli(
   cli,
   args,
