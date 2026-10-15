@@ -37,6 +37,12 @@ These metadata actions do not remove worktrees. Accept matching delegated task
 or launched run completion under the runtime contract before settlement.
 After the driver accepts a launched writer's (author or repair) or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, in the same driver turn it settles the matching thread with `t3_thread_organize` using `action: settle` as metadata only.
 The driver reads back `settled: true` with `t3_thread_read` on the writer thread for launched writers and on the `childThreadId` for delegated tasks.
+This extends the existing same-turn settle rule: a pinned run-owned child is still settled.
+T3's settle clears the pin, including one inherited from the parent at creation. There is no separate unpin step.
+Native T3 tools do not show pins, so the read-back stays `settled: true`.
+If the user asked to keep a child pinned, hold its settlement with that reason.
+A T3 refusal such as `parent_not_active` (the calling driver's own run is not live) puts `held: <error>` in the [run-record `Settle readback` column](run-record.md#compact-template). Never reactivate a parent.
+For close-out holds, follow the [run-record acceptance rules](run-record.md#close-out-acceptance).
 A missing or failed settle readback never triggers author repair: it holds only that dispatch's next advancement (publication, review routing, merge-ready) until resolved.
 Settling never removes, archives or abandons the thread or worktree.
 Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author.
