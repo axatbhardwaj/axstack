@@ -1,6 +1,6 @@
 # Audit follow-ups and Explain design guidance
 
-**Status:** Draft rev 4 (2026-10-15). **Repository:** `axatbhardwaj/axstack`. **Source baseline:** `9698c8e` (v0.40.0; owned skill prose is unchanged on `main` at `32ee66b`). **Align record:** private run `20261014-mode-skill-audit`. It holds Q1–Q6, three Align adviser rounds, three spec adviser rounds, spec diligence, and these research notes: mine-a, mine-b, audit, product-audit and threads-gate-census. Host, project and thread details for D3 stay in that private record.
+**Status:** Approved rev 4 (2026-10-15, user approval in chat; reviewed content SHA-256 1d419f59c0ce3b134a44914c2f75ac77c58f5961127479e5f04f780f445fc803). **Repository:** `axatbhardwaj/axstack`. **Source baseline:** `9698c8e` (v0.40.0; owned skill prose is unchanged on `main` at `32ee66b`). **Align record:** private run `20261014-mode-skill-audit`. It holds Q1–Q6, three Align adviser rounds, three spec adviser rounds, spec diligence, and these research notes: mine-a, mine-b, audit, product-audit and threads-gate-census. Host, project and thread details for D3 stay in that private record.
 
 ## Outcome
 
