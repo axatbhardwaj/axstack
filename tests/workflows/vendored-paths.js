@@ -8,6 +8,8 @@ export const VENDORED_PATHS = [
   'skills/axstack-anatomy/README.md',
   'skills/axstack-anatomy/CHANGELOG.md',
   'skills/axstack-anatomy/LICENSE',
+  'skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md',
+  'skills/axstack-explain/references/frontend-design/LICENSE.txt',
 ];
 
 export const isVendored = (path) => VENDORED_PATHS.some((pattern) =>
