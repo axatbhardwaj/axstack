@@ -20,10 +20,10 @@ function rule(path, name, concepts, rewording, inversions, prohibition) {
 }
 
 rule(guide, 'frontend-design is the sole authority for every visual choice on both page kinds',
-  [/FRONTEND-DESIGN\.md/i, /sole design authority/i, /every inline HTML page/i, /every Publish article adaptation/i,
+  [/FRONTEND-DESIGN\.md/i, /(?:sole|only|exclusive) design authority/i, /every inline HTML page/i, /every Publish article adaptation/i,
     /palette/i, /typography/i, /layout/i, /spacing/i, /structure/i, /motion/i, /self-critique/i],
-  'For every Publish article adaptation and every inline HTML page, FRONTEND-DESIGN.md is the sole design authority for palette, typography, layout, spacing, structure, motion and self-critique.',
-  [[/sole design authority/i, 'optional inspiration'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+  'For every Publish article adaptation and every inline HTML page, FRONTEND-DESIGN.md is the only design authority for palette, typography, layout, spacing, structure, motion and self-critique.',
+  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
 rule(guide, 'hard rules win conflicts', [/hard rules/i, /win|override/i, /conflict/i],
   'On conflict, the hard rules override design choices.', [[/win|override/i, 'yield to']]);
 rule(guide, 'source fidelity wins design choices', [/source fidelity/i, /beats|overrides/i, /design choice/i, /diagram edges/i, /order/i, /tables/i, /code paths/i, /show the source/i],
@@ -31,10 +31,18 @@ rule(guide, 'source fidelity wins design choices', [/source fidelity/i, /beats|o
   [[/beats|overrides/i, 'yields to'], [/show/i, 'ignore']]);
 rule(guide, 'subject confirmation never blocks authoring', [/confirm/i, /subject/i],
   'Never stop to confirm the subject.', [[/never/i, 'always']], /never stop/i);
-rule(guide, 'both page kinds allow T3 variables or system fonts',
-  [/inline/i, /published/i, /fonts/i, /T3 font variables or system font stacks/i, /both/i, /allowed/i],
-  'T3 font variables or system font stacks are both allowed as fonts on published articles and inline pages.',
-  [[/or system font stacks/i, 'only'], [/both/i, 'neither'], [/allowed/i, 'forbidden']]);
+rule(guide, 'inline fonts use T3 variables or system stacks',
+  [/inline pages/i, /use/i, /T3 font variables or system font stacks/i],
+  'Use T3 font variables or system font stacks for inline pages.',
+  [[/use/i, 'ignore'], [/or system font stacks/i, 'only']]);
+rule(guide, 'published fonts use system stacks',
+  [/published articles/i, /use/i, /system font stacks/i],
+  'Use system font stacks for published articles.',
+  [[/use/i, 'ignore'], [/system font stacks/i, 'T3 font variables']]);
+rule(guide, 'inline embed-fit and page rules also win conflicts',
+  [/non-anatomy inline pages only|only non-anatomy inline pages/i, /follow|consult/i, /inline-pages\.md/i, /embed.fit/i, /page rules/i, /win|override/i, /conflict/i],
+  'For only non-anatomy inline pages, consult inline-pages.md whose embed-fit and page rules override design choices on conflict.',
+  [[/non-anatomy inline pages only|only non-anatomy inline pages/i, 'all inline and published pages'], [/win|override/i, 'yield to'], [/follow|consult/i, 'ignore']]);
 rule(guide, 'live T3 theme supplies inline ground and ink',
   [/inline pages/i, /follow/i, /live T3 theme/i, /ground/i, /--background/i, /ink/i, /--foreground/i],
   'Inline pages follow the live T3 theme with ground from --background and ink from --foreground.',
@@ -75,6 +83,18 @@ rule(explain, 'explainer loads both references for both page kinds',
   [/axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'The axstack-explainer loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
   [[/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(explain, 'explainer authority stays bound by hard rules',
+  [/frontend-design/i, /(?:sole|only|exclusive) design authority/i, /subject to|bound by/i, /design\.md's hard rules/i],
+  "Use frontend-design as the only design authority, bound by design.md's hard rules.",
+  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/subject to|bound by/i, 'free from']]);
+rule(delivery, 'two-round prose fallback excludes design-only findings',
+  [/except for|apart from/i, /design.only findings/i, /replace/i, /visual/i, /two repair rounds/i, /same author/i, /plain prose/i],
+  'Apart from design-only findings, replace a visual still failing checks after two repair rounds with the same author by plain prose.',
+  [[/except for|apart from/i, 'including'], [/design.only findings/i, 'all failures']]);
+rule(publish, 'publication hold excludes only second-round design delivery',
+  [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
+  'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
+  [[/except for|apart from/i, 'including'], [/after the second round/i, 'before the first round'], [/design.only delivery/i, 'any delivery']]);
 rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /either reference/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',

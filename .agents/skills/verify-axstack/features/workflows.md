@@ -102,7 +102,7 @@ Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
 Publish and `explain-design.test.js` also check frontend-design's sole design authority,
-shared font choices, free palette with theme legibility and the accessibility floor, plus screenshot
+inline font choices and published system stacks, free palette with theme legibility and the accessibility floor, plus screenshot
 review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
@@ -133,7 +133,7 @@ Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
 inline reviewer self-previews and Publish verifier PNGs before review, blocking
 design findings repaired within two rounds and delivered by name after round two
 when only design findings remain, normal holds for other failures, unknown-render holds,
-T3 or system fonts on both page kinds and no design history, exact-byte network scans, preview
+T3 or system fonts inline, published system stacks and no design history, exact-byte network scans, preview
 and interaction gates, bounded delivery holds, and ambiguous-render readback.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact

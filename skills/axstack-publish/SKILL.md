@@ -68,7 +68,7 @@ interaction and publication failures.
 Any subsequent byte change invalidates checks and review: repeat this step.
 Hold publication while any required check or review is missing or failed, except for
 the design-only delivery after the second round above.
-Unavailable, unreadable or stale renders leave design review unknown and hold publication;
+Unavailable, unreadable or stale renders leave design review unknown and hold publication.
 Never treat unknown design review as a pass.
 
 ## 3. Publish from the driver

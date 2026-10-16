@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { checkRule, loadedReferences, requires, sentences } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
@@ -667,6 +667,16 @@ for (const preset of presetNames) {
         'Deliver the visual with each finding named if only design findings remain after the second round.',
         [[/second round/i, 'first round'], [/named/i, 'hidden']]],
     ]) checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
+  });
+}
+
+for (const preset of presetNames) {
+  test(`remaining design findings stay disclosed: ${preset} explanation reviewer`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    const concepts = [/remaining finding/i, /fixed/i, /clean pass/i];
+    checkRule(notes, (text) => prohibits(text, /never describe/i, ...concepts),
+      'Never describe any remaining finding as a clean pass or fixed.',
+      [[/never/i, 'always']], concepts);
   });
 }
 
