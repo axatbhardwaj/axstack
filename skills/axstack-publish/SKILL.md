@@ -41,7 +41,10 @@ For public mode, run the [Explain redaction check](../axstack-explain/SKILL.md#3
 to remove private paths, IDs, credentials, prompts, messages and internal records.
 For public mode, run Explain's [self-contained asset check](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
-and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
+for self-contained bytes, semantics, accessibility and security, and
+[Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
+Inline zero-padding embed rules apply only to T3 frames.
+Use [design.md](../axstack-explain/references/design.md) for standalone Publish layout.
 
 Send the article adaptation, including art direction and standalone light/dark theme,
 to `axstack-explainer` with a bounded brief.
@@ -52,7 +55,8 @@ honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
 then rerun the referenced Explain page checks on these final bytes.
 Before independent review, have `axstack-ui-verifier` preview these exact bytes with
-Playwright MCP at 728px dark and 360px light and record both screenshots with paths,
+Playwright MCP at 728px dark and 360px light plus 390px mobile and 1440px desktop,
+covering all four widths in both themes, and record screenshots with paths,
 their artifact SHA-256 and the Explain QA results.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the

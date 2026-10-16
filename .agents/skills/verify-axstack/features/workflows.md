@@ -101,6 +101,9 @@ publication, final-byte previews, external-edit warnings and URL/version/SHA rec
 Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
+Publish and `explain-design.test.js` also check the standalone/inline layout boundary,
+mobile gutters, desktop composition and typography/chart legibility, plus screenshot
+review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
 This offline recipe proves instructions only. The driver separately runs the
 candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
@@ -130,6 +133,11 @@ For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact
 bytes on its own isolated host-loopback instance and checks 728px dark/360px
 light, layout, theme, console/network, all interactive states and accessibility.
+For standalone Publish articles, also capture 390px mobile and real 1440px desktop
+screenshots and cover all four widths in both themes before independent review.
+Inspect desktop balance, horizontal margins, prose measure, typography, section rhythm
+and chart legibility; inspect mobile gutters and readable text/labels, with clipping
+and horizontal-scroll checks throughout. A 728px render alone leaves desktop unproven.
 Use [Anatomy](anatomy.md#browser-acceptance-handoff) for figure theme/compositing.
 Honor user browser-tool policy. The author performs no review browser drive;
 only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
