@@ -104,9 +104,11 @@ publication, final-byte previews, external-edit warnings and URL/version/SHA rec
 Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
-Publish and `explain-design.test.js` also check the standalone/inline layout boundary,
-mobile gutters, desktop composition and typography/chart legibility, plus screenshot
+Publish and `explain-design.test.js` also check frontend-design's sole design authority,
+inline font choices and published system stacks, inline colours derived from T3 theme variables,
+theme legibility and the accessibility floor, plus screenshot
 review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
+Inline pages never switch palettes on `prefers-color-scheme` or redefine T3 variables.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
 Preset reviewer-note contracts mirror Publish's four-width, both-theme inputs and
@@ -132,10 +134,11 @@ test "$STATUS" -eq 0
 ```
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
-700-word counting without card exemptions, design precedence and carve-outs,
-inline reviewer self-previews and Publish verifier PNGs before review, bounded
-cosmetic exceptions without waiving other gates, unknown-render holds,
-system fonts and no design history, exact-byte network scans, preview
+700-word counting without card exemptions, frontend-design authority and hard rules,
+inline reviewer self-previews and Publish verifier PNGs before review, blocking
+design findings repaired within two rounds and delivered by name after round two
+when only design findings remain, normal holds for other failures, unknown-render holds,
+T3 or system fonts inline, published system stacks and no design history, exact-byte network scans, preview
 and interaction gates, bounded delivery holds, and ambiguous-render readback.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact

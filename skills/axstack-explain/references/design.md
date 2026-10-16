@@ -1,37 +1,14 @@
 # Design
 
-Apply precedence in this order: 1) Axstack page rules for the output kind plus this file's subject, colour, motion, font and no-notes rules, 2) source fidelity, 3) named tells, 4) frontend-design for approach and everything else.
-Inline pages favour restraint; published articles may vary boldly within levels 1–3.
+[FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) is the sole design authority for every visual choice — palette, typography, layout, spacing, structure, motion and self-critique — on every inline HTML page and every Publish article adaptation.
+These hard rules win on conflict.
 
-Named tells:
-- Eyebrow labels or tiny tracked caps.
-- A single styled accent word.
-- Gradients, glass or resting shadows.
-- Emoji or decorative blobs.
-- Rows of identical cards or bordered boxes.
-- More than two typefaces or five sizes.
-- Body text outside full ink or default left alignment.
+- Never load network resources or font files. Inline pages use T3 font variables or system font stacks. Published articles use system font stacks.
+- Inline pages follow the live T3 theme: derive every colour from T3 theme variables — ground from `--background`, ink from `--foreground`, all other colours via `color-mix()` with them or T3 semantic/chart variables (`--muted-foreground`, `--accent`, `--success`, `--warning`, `--destructive`, `--info`, `--chart-1`…`--chart-6`). Keep every colour legible in light and dark. `var()` fallbacks are allowed for standalone viewing. Never switch inline palettes on `prefers-color-scheme`; T3's theme leaves that query unchanged. Never redefine T3's own variables in inline pages. Published articles support light and dark via `prefers-color-scheme` outside T3.
+- Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in both themes.
+- Never stop to confirm the subject: the brief and evidence are the subject.
+- Never keep design notes or history across pages. This overrides frontend-design's note hint.
+- Source fidelity beats any design choice: diagram edges, order, tables and code paths show the source.
+- For non-anatomy inline pages only, follow [inline-pages.md](inline-pages.md): its Embed fit and Page rules sections also win on conflict. Anatomy follows its own kit.
 
-Diagram edges and arrows, timeline order, tables and code paths are content, not ornament.
-Anatomy follows its kit.
-A behaviour required by a higher-priority rule is never a tell.
-
-The actual subject and question determine structure.
-Never stop to confirm the subject.
-Inline colour: `--background` is ground, `--foreground` is ink, `--muted-foreground` serves only secondary text, `--ring` is the single accent.
-Published articles may use a small named palette checked in light and dark.
-Motion is static by default; any animation is CSS-only and respects reduced motion.
-Inline pages use only T3 font variables.
-Published articles use system font stacks.
-Never use font files or network requests.
-Never keep design notes or history across pages; frontend-design's note-keeping hint does not apply.
-
-## Standalone Publish layout
-
-Give standalone Publish articles mobile gutters, a bounded prose measure and intentional horizontal margins for balanced desktop composition.
-Centre the reading column or use a deliberate asymmetric layout that balances the whole viewport.
-Set readable body typography and line height, clear heading hierarchy and generous section spacing for standalone articles.
-Size chart labels, values, units and spacing for legibility at mobile and desktop widths in both themes.
-Choose dimensions and rhythm for the article's content; the inline T3 frame supplies its own surrounding space.
-
-Credit: [taste-skill](https://github.com/Leonxlnx/taste-skill/tree/f624f37a) (MIT, `Leonxlnx/taste-skill` at `f624f37a`) and [frontend-design](frontend-design/PROVENANCE.md).
+Credit: [frontend-design](frontend-design/PROVENANCE.md).

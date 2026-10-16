@@ -7,21 +7,25 @@ The driver publishes the page in its own thread.
 
 Use T3 theme variables and follow the live theme.
 Only an explicit user theme request overrides the page theme.
-Use `--background`, `--foreground`, `--muted-foreground`, `--ring`,
-`--font-sans`, and `--font-mono` for their named purposes.
-
-Use fluid width, with zero outer horizontal padding.
-Never use an outer frame, banner, or viewport heights.
-Anatomy may retain its figure card as an inner panel with at least 16px padding
-and `var(--radius)`; its page wrapper still has zero gutters and no background.
-Let content set the page height. Use fixed chart heights.
-Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
+For inline pages other than anatomy, follow [design.md](design.md) for the theme rule and visual design authority.
+Anatomy follows its own kit.
 
 Choose the page shape from its content rather than a fixed template.
 Map stages to a connected diagram, sequence to a timeline, comparison to side
-by side or table, and separate equal items to a list.
-Prefer diagrams and timelines. Avoid grids of bordered boxes.
-Keep borders minimal and use color only where it has meaning.
+by side or table, and separate equal items to a list; frontend-design can refine this content-shape mapping guidance.
+
+## Embed fit
+
+The T3 frame is borderless on the thread background, with its left edge aligned to reply text.
+Use fluid width with zero horizontal padding on the outermost element.
+Never add an outer card, border or banner title.
+A banner title means an outer header block or band; an ordinary page heading is allowed.
+Keep html, body and the outermost element without a background colour.
+Give any inner box with its own background at least 16px padding on every side and `var(--radius)` corners.
+Anatomy may retain its figure card as an inner panel with at least 16px padding and `var(--radius)`; its page wrapper still has zero gutters and no background.
+Never use viewport heights.
+Let content set the page height. Use fixed chart heights.
+Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
 
 ## Page rules
 
