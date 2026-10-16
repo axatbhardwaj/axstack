@@ -38,3 +38,11 @@ Acceptance: both feature PRs merged; publish verified; Axstack installed only af
 Authority: r2 approval grants T3 migration, Haoshoku release/install and one-time theme application; Axstack standing release/install also applies.
 Owner: driver. Size estimate: release metadata plus operational evidence.
 Depends: A, H and V; npm approval where required. Status: Pending.
+
+## Shared acceptance constraints (apply to A/H/V/R)
+
+- A and H each require meaningful Bun behavioral red/green evidence using temporary homes; H extends workspaces/primary-app, install_user_scripts, configure_axstack, t3_tailscale/configure_tailscale_t3, configure_t3_code_server and t3_desktop_preflight fixtures, explicitly including wrong channel and failed setup. Its scope includes Super+T and Debian installation. Both advisers agreed no separate verify-haoshoku skill is needed.
+- Both PRs require cross-provider authored review and diligence, no human review requests, and merge only under the standing watch predicate. Keep automatic worktree cleanup disabled.
+- Preserve the current Omarchy theme and unrelated preferences. Add no runtime, scheduler, daemon, palette converter or state store; never create a second server for theme setup. A missing supported client theme path blocks the theme slice; the manual import checkpoint applies only when a supported import exists but safe automation is unavailable.
+- V uses existing supported install paths and channel controls, installed-package/CLI smoke checks, and Playwright for a real stable desktop where available. Retain explicit evidence if desktop-specific appearance cannot be proved. Report source and live verification separately.
+- Inspect the phone version; human Android verification may remain a named checkpoint. A newer-than-stable running build or failed smoke check holds its host. The current driver is on axat-vps, so doing it last implements the listed fleet order and active-run preservation, not a changed order.
