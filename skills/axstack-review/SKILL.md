@@ -202,8 +202,8 @@ the sole exception to the ordinary five-request cap; later heads check those
 final points, rather than restarting the panel or discovering ordinary findings.
 On a split, take one reconciliation reply each, then `axstack-escalation-fable`
 decides under [contracts](../axstack/references/contracts.md#driver-and-adviser-split).
-Credible serious security/funds risk follows the existing serious-risk and
-Notification policy (c) path. Send no other human ping.
+Credible serious security/funds risk follows the existing serious-risk hold path
+in the T3 driver thread. Send no other human ping.
 
 First peer review stays within about 400 words: one verdict line and each
 blocker with location, breakage, evidence and a one-line fix hint. Include at
@@ -507,7 +507,7 @@ Escalate to user: <yes | no> — <criterion> — <reason>
 ## Prompt-only urgent escalation
 
 Peer reviews, including interactive non-manager reviews, raise only credible
-serious security/funds risk through this prompt-only hold and Notification policy (c).
+serious security/funds risk through this prompt-only hold in the T3 driver thread.
 
 In authored and codebase modes, promptly raise credible serious security issues, possible
 downtime or data loss, and major design concerns without waiting for every
@@ -519,19 +519,15 @@ work, or reporting validated risk as `REQUEST_CHANGES`. Disagreement and
 silence leave the hold open.
 
 This escalation exists only in prompts and briefs; no runtime component
-enforces it. When the brief carries a `Notification policy`, the optional
-[axstack-relay](../axstack-relay/SKILL.md) retains the caller's existing
-authorization; the T3 driver thread is the concrete fallback. If
-relay delivery fails, send the same escalation there. Failed delivery never resolves the
-concern. Use no private escalation script. Public installations inherit no
-private transport values or configuration.
+enforces it. Raise the hold in the T3 driver thread and end the turn parked on
+the user's decision. Silence leaves the hold open. Use no private escalation script.
 
 Under a manager PR job, apply Peer mode's serious security/funds threshold.
 A qualifying credible serious risk found by a reviewer raises the
 standing internal prompt and dependent-action hold immediately in the compact
 run record and a durable GitHub or user-owned conversation. The authorized
-`axstack-relay` notification points the user there; delivery or silence never
-authorizes action.
+driver raises the hold in the T3 driver thread and ends the turn parked on the
+decision; silence never authorizes action.
 
 ## Publishing rule
 

@@ -40,14 +40,15 @@ affected work after reconciliation; silence does not.
 The driver records each verified `Autopilot:` transition in the private run
 record, which remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
-human approval)` as a decision hold eligible under the Notification policy.
+human approval)` as a decision hold raised in the T3 driver thread; end the turn
+parked on the decision.
 
 ## Reversible local repair
 
 Only when the repair is fully reversible from a checksummed backup verified
 before repair, the driver can repair local state of its own run repository.
 Record the backup path, checksum, verification, and restore command.
-Send a post-repair notice under Notification policy (c).
+Post a post-repair note in the T3 driver thread.
 The driver must never edit candidate source during this repair.
 Keep exactly one writer per candidate.
 Effects outside the run repository or repairs without a verified backup
@@ -169,10 +170,8 @@ instructions, always win.
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
 
-Follow [Watch notifications](../../axstack-watch/SKILL.md#4-route-each-wake)
-under the recorded Notification policy. Decision holds, including spec and npm
-approval, are always eligible.
-Across implementation and release, peer PR merge-ready and merged notifications
-together are capped at two per run; deduplicate by purpose and revision. Healthy ticks stay
-quiet. A failed or uncertain delivery preserves the underlying hold. A relay
-message is only a notification, never authority to approve, merge, or publish.
+Follow [Decisions and holds](../../axstack-watch/SKILL.md#4-route-each-wake).
+Raise decision holds, including spec and npm stage approval, and serious-risk
+holds in the T3 driver thread; end the turn parked on the decision.
+Revalidate the current head and base on a user reply; it clears only its bound cause.
+Healthy ticks stay quiet.

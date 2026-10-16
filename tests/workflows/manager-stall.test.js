@@ -22,7 +22,7 @@ test('an idle PR job holds incomplete and a stalled owner notifies once', () => 
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/idle final turn[^.]*valid completion receipt[^.]*incomplete/i);
   expect(text).toMatch(/second brief ask follows the five-minute stop rule/i);
-  expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*one deduplicated notification/i);
+  expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*one deduplicated note/i);
   expect(text).toMatch(/started coordinator[^.]*waiting on its reviewers[^.]*live reviewer task or running wait[^.]*not idle[^.]*never stopped/i);
 });
 
@@ -107,8 +107,8 @@ const recoveryRules = [
     'Otherwise classify the event as INCOMPLETE and unserved, keeping it eligible again.',
     [/re-eligible|eligible again/i, 'ineligible']],
   ['failed recovery holds and notifies once', [/failed interrupt/i, /unverified terminal state/i,
-    /keeps?|retains?/i, /existing hold/i, /(?:one|a single).*deduplicated notification/i],
-    'A failed interrupt or unverified terminal state retains the existing hold and sends a single deduplicated notification under the recorded Notification policy.',
+    /keeps?|retains?/i, /existing hold/i, /(?:one|a single).*deduplicated note/i],
+    'A failed interrupt or unverified terminal state retains the existing hold and sends a single deduplicated note in the T3 driver thread.',
     [/keeps?|retains?/i, 'releases']],
   ['other unknown liveness holds', [/outside/i, /wedg.*recover/i,
     /unknown liveness/i, /blocks/i, /admission/i, /shared-record writes/i,

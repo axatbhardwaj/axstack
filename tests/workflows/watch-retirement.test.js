@@ -36,9 +36,9 @@ test('current user guidance contains no scheduled own-PR repair path', () => {
   expect(workflows).toMatch(/Manual adopted-PR repair[^.]*local SHA[^.]*scoped Git push[^.]*gh pr create\/edit[^.]*publication/i);
 });
 
-test('manual watch keeps a concrete fallback when relay is unavailable', () => {
+test('manual watch raises serious-risk holds in the driver thread', () => {
   const watch = read('skills/axstack-watch/SKILL.md');
-  expect(watch).toMatch(/absent policy\s+or failed relay[^.]*current T3 driver thread[^.]*hold open/i);
+  expect(watch).toMatch(/Raise user-decision holds and serious-risk holds in the T3 driver thread[^.]*parked on the decision/i);
 });
 
 test('review distinguishes implementation publication from local-SHA maintenance review', () => {

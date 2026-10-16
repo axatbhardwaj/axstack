@@ -18,5 +18,5 @@ Report the top three PRs to act on with reasons drawn from the observed state.
 If fewer than three PRs exist, report those available.
 Never declare a PR merge-ready.
 
-Never merge, post comments, change labels, push, send relay messages, dispatch
+Never merge, post comments, change labels, push, send user messages, dispatch
 work, or launch threads.

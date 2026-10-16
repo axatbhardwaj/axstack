@@ -359,8 +359,8 @@ test('review manager preserves peer, decision, notification, and merge boundarie
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/Peer code stays readonly/i);
   // Peer process/architecture escalation is superseded by peer-review.test.js B6.
-  expect(manager).toMatch(/Only credible serious security\/funds risk[^.]*Notification policy \(c\)/i);
-  expect(manager).toMatch(/Telegram delivery[^.]*Telegram reply[^.]*silence never authorizes/i);
+  expect(manager).toMatch(/Only credible serious security\/funds risk[^.]*serious-risk hold path in the T3 driver thread/i);
+  expect(manager).toMatch(/Silence never authorizes\s+an action/i);
   expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
   expect(manager).toMatch(/Human merge remains the boundary/i);
 });
@@ -395,11 +395,12 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'resource-aware-sixth-job',
   ];
   expect(data.cases.slice(0, holdoutIds.length).map(({ id }) => id)).toEqual(holdoutIds);
+  // The durable-decision case now rejects worker text and silence as authority.
   expect(Bun.CryptoHasher.hash(
     'sha256',
     JSON.stringify(data.cases.slice(0, holdoutIds.length)),
     'hex',
-  )).toBe('09fa60d12baea153af3ae33136dae502dd0e156fb19806c5785588059281d581');
+  )).toBe('9507fedf4cdfaccf07d8d99f8dd5a6a760d57c03b013cd9ca137efd1b2b391b5');
   expect(data.cases.slice(holdoutIds.length).map(({ id }) => id)).toEqual([
     'private-job-temp-cleanup',
     'permission-prompt-hold',

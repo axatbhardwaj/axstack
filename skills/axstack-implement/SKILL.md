@@ -263,9 +263,9 @@ its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopil
 That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
-Follow [Watch notifications](../axstack-watch/SKILL.md#4-route-each-wake)
-under the recorded Notification policy, retaining its relay categories,
-deduplication and driver-thread fallback. Serious risks relay immediately.
+Follow [Decisions and holds](../axstack-watch/SKILL.md#4-route-each-wake).
+Raise user-decision and serious-risk holds in the T3 driver thread and end the
+turn parked on the decision. Serious risks are raised immediately.
 
 Merge-ready opens the merge boundary. Own PRs default to automatic merge under
 [watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely).

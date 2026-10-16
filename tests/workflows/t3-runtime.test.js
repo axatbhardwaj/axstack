@@ -603,14 +603,6 @@ test('T3 review placement retains the checkout and private evidence receipt inte
 
 // Review isolation/readback, publication authority, readiness, current-attempt
 // completion and ownership already have exact pins or instruction checks above.
-test('Telegram requires recorded authority and keeps routine events in the driver thread', () => {
-  const relay = normalize(read('skills/axstack-relay/SKILL.md'));
-  for (const pin of [
-    'an explicit standing instruction to contact the user via Telegram authorizes proactive outreach for a credible serious risk immediately, or for a genuine blocked operation that still needs user intervention after bounded safe recovery.',
-    'Progress, CI pending, and completion are never eligible merely because a policy exists.',
-  ]) expect(relay).toContain(pin);
-});
-
 for (const phase of ['implement', 'watch']) {
   test(`routine events stay in the driver thread: ${phase}`, () => {
     const own = read(`skills/axstack-${phase}/SKILL.md`);

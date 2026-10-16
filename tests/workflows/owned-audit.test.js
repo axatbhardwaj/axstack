@@ -273,7 +273,7 @@ test('owned-audit: existing twelve scenarios preserved unchanged', () => {
     'changed-parent',
     'spec-drift',
     'two-reviewer-disagreement',
-    'serious-risk-relay-failure',
+    'serious-risk-driver-hold',
     'duplicate-launch-uncertainty',
     'linear-done-drift',
     'watch-expiry',

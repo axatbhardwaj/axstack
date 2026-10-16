@@ -52,7 +52,7 @@ const rules = [
     "When a PR removes or weakens a check, test-runner setting or ruleset that gates its own merge, verification requires the reviewer ran the base's checks against the head.", [/base.s checks against the head/i, 'head checks alone']],
   ['close gaps first', [/driver first closes/i, /verification gap/i, /run(?:s|ning)? the check/i, /re-dispatch/i, /author/i],
     'The driver first closes a verification gap itself by running the check, re-dispatching review, or returning work to the author.', [/first closes/i, 'ignores']],
-  ['only unclosable gap relays', [/only/i, /gap.*(?:cannot|unable to) close/i, /verification not proven/i, /card/i, /head and base/i],
+  ['only unclosable gap needs a decision', [/only/i, /gap.*(?:cannot|unable to) close/i, /verification not proven/i, /card/i, /head and base/i],
     'Only a gap the driver cannot close becomes a verification not proven card bound to head and base.', [/only/i, 'every gap, including'], /cannot close|not proven/gi],
   ['card describes gap and action', [/card names/i, /what is unproven/i, /why/i, /action.*settle/i],
     'The card names the action that would settle what is unproven and explains why.', [/action.*settle/i, 'a milestone']],
@@ -82,8 +82,8 @@ const rules = [
     'Until resolved, human CHANGES_REQUESTED holds automatic merge.', [/holds automatic merge/i, 'permits automatic merge']],
   ['late comment fresh dispatch', [/comment.*after.*receipt/i, /fresh review dispatch/i, /rating/i, /gap closing/i],
     'For rating as gap closing, a comment received after the receipt triggers a fresh review dispatch.', [/fresh review dispatch/i, 'immediate blocked ping']],
-  ['unresolved rating reports and keeps holding', [/unrated or uncertain/i, /after one fresh rating dispatch/i, /keeps holding the merge/i, /report-only decision-style card/i, /head and base/i],
-    'After one fresh rating dispatch an item still unrated or uncertain keeps holding the merge and posts a report-only decision-style card bound to head and base.', [/keeps holding the merge/i, 'permits the merge']],
+  ['unresolved rating reports and keeps holding', [/unrated or uncertain/i, /after one fresh rating dispatch/i, /keeps holding the merge/i, /report-only rating card/i, /T3 driver thread/i, /head and base/i],
+    'After one fresh rating dispatch an item still unrated or uncertain keeps holding the merge and posts a report-only rating card in the T3 driver thread, bound to head and base.', [/keeps holding the merge/i, 'permits the merge']],
   ['rating card names settling actions', [/rating card/i, /names the comment/i, /why/i, /unrated or uncertain/i, /action that settles it/i, /re-rating by the reviewer/i, /commenter resolving or replying/i, /author addressing it/i],
     'The rating card names the comment, why it is unrated or uncertain, and the action that settles it: re-rating by the reviewer, the commenter resolving or replying, or the author addressing it.', [/names the comment/i, 'omits the comment']],
   ['rating notification deduplicates by comment and head', [/report-only rating card/i, /notification of an unsettled rating/i, /deduplicated per comment and head/i],
@@ -112,10 +112,10 @@ const rules = [
     'The clock is what a same-patch-id rebase keeps.', [/keeps/i, 'resets']],
   ['once per key persists', [/each key/i, /sent at most once/i, /readiness.*lost.*regained/i, /patch.*changes/i],
     'Even if the patch changes or readiness is lost and regained, each key is sent at most once.', [/at most once/i, 'repeatedly']],
-  ['ping delay and simultaneous keys', [/after 60 minutes/i, /one relay per key/i, /simultaneous blockers/i, /new key/i],
-    'For simultaneous blockers or a new key, send one relay per key after 60 minutes.', [/60 minutes/i, '5 minutes']],
+  ['ping delay and simultaneous keys', [/after 60 minutes/i, /one T3 driver-thread note per key/i, /simultaneous blockers/i, /new key/i],
+    'For simultaneous blockers or a new key, send one T3 driver-thread note per key after 60 minutes.', [/60 minutes/i, '5 minutes']],
   ['ping payload', [/<repo>#<n>/i, /waiting <age>/i, /@<login\|no reviewer>/i, /approval\|changes\|comment/i, /ready at <sha7>/i],
-    'Relay this payload: <repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>, ready at <sha7>.', [/@<login\|no reviewer>/i, '@unknown'], /no reviewer/i],
+    'Post this payload: <repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>, ready at <sha7>.', [/@<login\|no reviewer>/i, '@unknown'], /no reviewer/i],
   ['existing wakes only', [/check runs/i, /existing watch wakes/i, /no new schedule/i],
     'On existing watch wakes the check runs, with no new schedule.', [/no new schedule/i, 'a new schedule'], /no new schedule/i],
   ['ping no reply needed', [/ping/i, /notification only/i, /blocker clears/i, /merges with no reply/i],
@@ -139,55 +139,16 @@ for (const path of [watch, docs]) {
   }
 }
 
-const notificationRules = [
-  ['bounded categories', [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i, /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i],
-    'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the unresolved-rating notice, the 60-minute blocked ping, serious-risk holds and user-decision holds.', [/limited to/i, 'unrestricted beyond']],
-  ['peer budget across phases', [/peer PRs/i, /deduplicate/i, /implementation and release/i],
-    'For peer PRs deduplicate across implementation and release.', [/deduplicate/i, 'duplicate']],
-  ['verification decision hold', [/verification not proven/i, /user-decision hold/i, /Notification policy/i],
-    'Verification not proven is a user-decision hold under the Notification policy.', [/user-decision hold/i, 'routine progress'], /not proven/i],
-  ['blocked notification only', [/60-minute blocked ping/i, /notification-only category/i, /Notification policy/i],
-    'Under the Notification policy, the 60-minute blocked ping belongs to a notification-only category.', [/notification-only category/i, 'user-decision hold']],
-  ['unresolved rating notification only', [/unresolved-rating notice/i, /notification-only category/i, /Notification policy/i],
-    'Under the Notification policy, the unresolved-rating notice belongs to a notification-only category.', [/notification-only category/i, 'user-decision hold']],
-  ['unresolved rating deduplication', [/unresolved-rating notice/i, /deduplicated/i, /per comment and head/i],
-    'Per comment and head, the unresolved-rating notice is deduplicated.', [/per comment and head/i, 'per wake']],
-  ['unresolved rating has no reply authority', [/unresolved-rating notice/i, /reply authority/i],
-    'The unresolved-rating notice grants no reply authority.', [/no reply authority/i, 'reply authority'], /no reply authority/i],
-  ['unresolved rating preserves hold', [/unresolved-rating notice/i, /clears? the (?:merge )?hold/i],
-    'The unresolved-rating notice never clears the merge hold.', [/never clears/i, 'clears'], /never clears/i],
-  ['own milestones stop', [/routine/i, /merge-ready/i, /merged/i, /relays/i, /own PRs/i],
-    'For own PRs never send routine merged or merge-ready relays.', [/never send/i, 'send'], /never send/i],
-  ['peer notifications unchanged', [/notifications for peer PRs/i, /unchanged/i, /at most two/i, /merge-ready.*merged/i, /per run/i],
-    'Notifications for peer PRs keep an unchanged cap of at most two merge-ready/merged milestones per run.', [/unchanged/i, 'stopped']],
-];
-for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md', 'skills/axstack-implement/SKILL.md',
-  'skills/axstack-watch/references/watch-runtime.md', 'skills/axstack/references/autopilot.md']) {
-  const shared = {
-    'skills/axstack-implement/SKILL.md': '../axstack-watch/SKILL.md#4-route-each-wake',
-    'skills/axstack/references/autopilot.md': '../../axstack-watch/SKILL.md#4-route-each-wake',
-    'skills/axstack-watch/references/watch-runtime.md': '../SKILL.md#4-route-each-wake',
-  };
-  const own = read(path);
-  // Consolidated entry points must positively load the canonical notification policy.
-  if (shared[path]) expect(loadedReferences(own)).toContain(shared[path]);
-  const source = path === watch || shared[path]
-    ? read(watch).split('## 4. Route each wake')[1].split('## 5.')[0] : own;
-  for (const [name, concepts, rewording, inversion, prohibition] of notificationRules) {
-    test(`notification scope ${path}: ${name}`, () => {
-      const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
-      checkRule(compact(source), accepts, rewording, [inversion], concepts);
-    });
-  }
+// Callers must positively load the canonical driver-thread hold rules.
+for (const [path, target] of [
+  ['skills/axstack-implement/SKILL.md', '../axstack-watch/SKILL.md#4-route-each-wake'],
+  ['skills/axstack/references/autopilot.md', '../../axstack-watch/SKILL.md#4-route-each-wake'],
+  ['skills/axstack-watch/references/watch-runtime.md', '../SKILL.md#4-route-each-wake'],
+]) {
+  test(`driver-thread hold routing: ${path}`, () => {
+    expect(loadedReferences(read(path))).toContain(target);
+  });
 }
-
-test('relay identifies the report-only unresolved-rating notice', () => {
-  const concepts = [/unresolved-rating notice/i, /relay/i, /report-only comment-rating card/i,
-    /still unrated or uncertain/i, /after one fresh rating dispatch/i, /head and base/i, /comment/i, /settling action/i];
-  checkRule(compact(read('skills/axstack-relay/SKILL.md')), (text) => requires(text, ...concepts),
-    'For an item still unrated or uncertain after one fresh rating dispatch relay the unresolved-rating notice as a report-only comment-rating card naming the comment and settling action, bound to head and base.',
-    [[/after one fresh rating dispatch/i, 'before any rating dispatch']], concepts);
-});
 
 // These caller summaries must agree with the canonical predicate; a pointer
 // alone must not coexist with a narrower instruction in the same surface.
@@ -212,46 +173,12 @@ test('audit delivery applies proven verification and escalation', () => {
     [[/proven verification/i, 'review votes alone']], concepts);
 });
 
-// The rebase brings a distinct reply protocol: an eligible verification hold
-// must use that protocol, rather than treating a raw Telegram choice as assent.
-for (const path of [watch, docs, 'skills/axstack-relay/SKILL.md']) {
-  for (const [name, concepts, wording, prohibition] of [
-    ['verification uses receipt-bound decision cards', [/verification not proven/i, /follow Relay.s decision-card procedure/i, /sent run receipt/i, /each option.s scope/i, /exact PR head and base/i],
-      "For verification not proven, the driver shall follow Relay's decision-card procedure, binding each option's scope and the sent run receipt to the exact PR head and base.", /not proven/i],
-    ['forwarded acceptance uses the reply protocol', [/verification decision/i, /forwarded choice/i, /Relay.s four reply checks/i, /acknowledgement-before-action/i, /before settling only its bound cause/i],
-      "For a verification decision, a forwarded choice shall pass Relay's four reply checks and acknowledgement-before-action rule before settling only its bound cause."],
-    ['changed base supersedes the verification card', [/changed PR head or base/i, /supersede/i, /open verification decision card/i, /reissu.*only if a decision is still needed/i],
-      'A changed PR head or base shall supersede its open verification decision card, reissuing only if a decision is still needed.'],
-  ]) {
-    test(`merge relay reconciliation ${path}: ${name}`, () => {
-      const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts, /must|shall/i)
-        : requires(text, ...concepts, /must|shall/i);
-      checkRule(compact(read(path)), accepts, wording, [[/must|shall/i, 'must not']], concepts);
-    });
-  }
-}
-for (const path of [docs, 'skills/axstack-relay/SKILL.md']) {
-  for (const [name, concepts, wording] of [
-    ['reply responses are distinct from proactive notifications', [/decision responses/i, /separate from/i, /proactive Notification policy categories/i],
-      'Decision responses shall remain separate from proactive Notification policy categories.'],
-    ['own decision outcomes resolve the cause', [/own PRs/i, /required decision outcome/i, /resolution of the bound cause/i, /rather than a routine merge-ready or merged milestone/i],
-      'For own PRs the driver shall send the required decision outcome as resolution of the bound cause, rather than a routine merge-ready or merged milestone.'],
-  ]) {
-    test(`merge relay reconciliation ${path}: ${name}`, () => {
-      checkRule(compact(read(path)), (text) => requires(text, ...concepts, /must|shall/i), wording,
-        [[/must|shall/i, 'must not']], concepts);
-    });
-  }
-}
-
-for (const [name, concepts, wording, inversion, prohibition] of [
-  ['rating report has no reply-dependent authority', [/report-only comment-rating cards/i, /reply-dependent decision-card procedure/i, /user acceptance/i],
-    'Report-only comment-rating cards never use the reply-dependent decision-card procedure or offer user acceptance.', [/never use/i, 'use'], /never use/i],
-  ['relay reply cannot clear a comment rating hold', [/user reply/i, /comment rating hold/i],
-    'A comment rating hold is one that a user reply never clears.', [/never clears/i, 'clears'], /never clears/i],
-]) {
-  test(`merge relay reconciliation: ${name}`, () => {
-    checkRule(compact(read('skills/axstack-relay/SKILL.md')), (text) => prohibits(text, prohibition, ...concepts),
-      wording, [inversion], concepts);
+for (const path of [watch, docs]) {
+  test(`verification decision context: ${path}`, () => {
+    const concepts = [/changed PR head or base/i, /supersede/i,
+      /open verification decision card/i, /reissuing only if a decision is still needed/i];
+    checkRule(compact(read(path)), (text) => requires(text, ...concepts),
+      'A changed PR head or base must supersede its open verification decision card, reissuing only if a decision is still needed.',
+      [[/must supersede/i, 'must keep']], concepts);
   });
 }

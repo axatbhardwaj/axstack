@@ -13,7 +13,6 @@ const PHASE_SKILLS = [
   'axstack-explain',
   'axstack-implement',
   'axstack-improve',
-  'axstack-relay',
   'axstack-research',
   'axstack-review',
   'axstack-scout',
