@@ -183,7 +183,6 @@ Scope: <repo + accepted bounds>
 Authority: <who authorized which mutation>
 Intent: <approved spec rev | small-change intent | adopted snapshot | peer/read-only mode>
 Routing: <preset + source + snapshot ref>
-Notification policy: <none | transport/target label/host/instructions path>
 Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled <ts>)
 Next: <owner; last receipt time; next action; hold or none>
 Approval mode: <solo | team; collaborator readback receipt>

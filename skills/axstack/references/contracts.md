@@ -6,7 +6,7 @@ For user-facing output, follow [STE-inspired writing](ste-writing.md).
 
 ## Required lifecycle load
 
-Except for `axstack-audit`, `axstack-relay`, and `axstack-correct`, every
+Except for `axstack-audit` and `axstack-correct`, every
 independently called phase must load and follow [Shared lifecycle](lifecycle.md) before acting. When a
 substantive run ends or reaches a meaningful checkpoint, apply the lifecycle
 audit hook. The audit phase loads these contracts, writes its assigned record,
@@ -113,7 +113,7 @@ For local repository-state recovery, this exception applies.
 Only when the repair is fully reversible from a checksummed backup verified
 before repair, the driver can repair local state of its own run repository.
 Record the backup path, checksum, verification, and restore command.
-Send a post-repair notice under Notification policy (c).
+Post a post-repair note in the T3 driver thread.
 The driver must never edit candidate source during this repair.
 Keep exactly one writer per candidate.
 Effects outside the run repository or repairs without a verified backup

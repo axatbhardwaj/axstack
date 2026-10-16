@@ -14,7 +14,7 @@ Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
 `node:fs` and `node:fs/promises`. Vendored anatomy code runs with Bun;
 installation has no tool network or Git step and adds no Node.js runtime requirement.
 
-For project setup, remote access, provider runtimes, and relay validation, see
+For project setup, remote access, and provider runtimes, see
 [Host operations](host-operations.md).
 
 ## Commands

@@ -38,35 +38,31 @@ rule('implement run done waits for Release', implement, 'The run is done only', 
 rule('watch Close-out waits for Release', watch, 'When every required PR is merged', /Release step is settled or not applicable/);
 rule('watch end waits for Release', watch, 'End a chat-run watch', /release step is settled or not applicable/);
 rule('runtime end waits for Release', runtime, 'Stop the chosen wake only', /release step is settled or not applicable/);
-// The bounded categories include a notification-only wait ping; peer caps
-// remain protected at each caller and at the canonical notification boundary.
-for (const [name, source] of [
-  ['implement relay remains bounded', implement],
-  ['runtime notification allowlist and budget', runtime],
-]) {
-  test(name, () => {
-    const concepts = [/relay eligibility/i, /limited to/i, /user-decision holds/i, /serious-risk holds/i,
-      /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i];
+// Watch owns decision delivery; these callers must positively inherit that rule.
+for (const [name, source] of [['implement', implement], ['runtime', runtime]]) {
+  test(`${name} keeps decision holds in the driver thread`, () => {
+    const concepts = [/user-decision holds/i, /serious-risk holds/i, /T3 driver thread/i,
+      /driver ends its turn parked on the decision/i];
     checkRule(source(), (text) => requires(text, ...concepts),
-      'Under the Notification policy relay eligibility is limited to capped peer PR milestones, the unresolved-rating notice, the 60-minute blocked ping, serious-risk holds and user-decision holds.',
-      [[/limited to/i, 'unrestricted beyond']], concepts);
+      'Raise user-decision holds and serious-risk holds in the T3 driver thread, and the driver ends its turn parked on the decision.',
+      [[/parked on the decision/i, 'continuing without a decision']], concepts);
   });
 }
-test('implement retains immediate risk relay and bounded recovery through Watch', () => {
-  const source = implement();
-  const concepts = [/serious risks? relay immediately/i, /genuine blocked operations/i,
-    /user intervention/i, /bounded safe recovery/i];
-  checkRule(source.replace(/;(?= genuine blocked)/, ','), (text) => requires(text, ...concepts),
-    'Serious risks relay immediately, with genuine blocked operations needing user intervention relayed after bounded safe recovery.',
-    [[/bounded safe recovery/i, 'no recovery']], concepts);
+test('watch raises serious risks immediately and attempts bounded safe recovery', () => {
+  const concepts = [/raise serious risks immediately/i, /bounded safe recovery/i, /blocked operations/i];
+  checkRule(watch().replace(/;(?= attempt bounded)/, ','), (text) => requires(text, ...concepts),
+    'Raise serious risks immediately, and attempt bounded safe recovery for blocked operations.',
+    [[/immediately/i, 'next week']], concepts);
 });
-test('watch notification allowlist', () => {
-  const concepts = [/owner/i, /axstack-relay/i, /user-decision holds/i, /serious-risk holds/i,
-    /60-minute blocked ping/i, /unresolved-rating notice/i, /capped peer PR milestones/i, /Notification policy/i];
-  checkRule(watch().replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'), (text) => requires(text, ...concepts),
-    'Under a Notification policy the owner uses axstack-relay for user-decision holds, serious-risk holds, the unresolved-rating notice, the 60-minute blocked ping and capped peer PR milestones.',
-    [[/60-minute blocked ping/i, 'routine progress'], [/unresolved-rating notice/i, 'routine progress']], concepts);
-});
+for (const path of ['skills/axstack-watch/SKILL.md', 'skills/axstack-implement/SKILL.md', 'docs/workflows.md']) {
+  test(`blocked operation still needing the user is raised after recovery: ${path}`, () => {
+    const concepts = [/after bounded safe recovery/i, /raise/i, /genuine blocked operation/i,
+      /still needs the user/i, /T3 driver thread/i, /driver ends its turn parked on (?:it|that blocker)/i];
+    checkRule(read(path), (text) => requires(text, ...concepts),
+      'Raise a genuine blocked operation that still needs the user in the T3 driver thread after bounded safe recovery, and the driver ends its turn parked on that blocker.',
+      [[/raise/i, 'ignore'], [/after bounded safe recovery/i, 'before bounded safe recovery']], concepts);
+  });
+}
 // default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
@@ -78,7 +74,6 @@ rule('silence cannot resume', autopilot, 'A user answer to the hold', /silence d
 rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /human's decision/);
 rule('guarded merge actor', autopilot, 'The recorded owning watch thread', /merge actor.*axstack-owner.*standalone.*small or adopted/);
 rule('human approval is not re-requested', autopilot, 'After merge-ready', /without re-requesting human review/);
-rule('relay does not grant authority', autopilot, 'A relay message is only', /never authority to approve, merge, or publish/);
 // autopilot-authority.test.js owns recorded authority for tag, publish, and install.
 rule('hosts are not inferred', autopilot, 'Install hosts come only', /absent host list is a decision hold, not permission to infer hosts/);
 rule('cancellation settles with guards', autopilot, 'Cancel sets', /stops new actions.*guarded settlement/);
@@ -95,7 +90,6 @@ rule('closed-unmerged watch holds and continues wake', watch, 'A required PR clo
 rule('closed-unmerged runtime holds and continues wake', runtime, 'A required PR closed without merging', /decision hold.*wake remains active/);
 
 rule('silence cannot grant release authority', autopilot, 'The small-change intent read-back names', /silence cannot fill a missing authority or target/);
-rule('relay never sends policy-enabled progress', () => read('skills/axstack-relay/SKILL.md'), 'Progress, CI pending, and completion are never eligible', /merely because a policy exists/);
 rule('implement verifies forge state on wake', implement, "driver resumes on the user's next message", /verify merge state through the forge on wake/);
 rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms that merge', /tag and wait for the staged publish/);
 rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
@@ -121,8 +115,6 @@ rule('release bump defaults to patch', autopilot, 'Default to a patch', /minor i
 rule('registry wake verifies package and version', autopilot, 'A wake verifies the registry', /expected package and version/);
 rule('adopted PR requires maintenance snapshot', autopilot, 'An explicitly adopted PR joins', /only with its maintenance snapshot/);
 rule('healthy ticks stay quiet', autopilot, 'Healthy ticks stay quiet', /^Healthy ticks stay quiet\.$/);
-rule('relay deduplicates by purpose and revision', autopilot, 'Across implementation and release', /deduplicate by purpose and revision/);
-rule('milestone cap spans implementation and release', autopilot, 'Across implementation and release', /merge-ready and merged notifications together are capped at two per run/);
 // Each verified publication arms or joins; the semantic contract owns that check.
 rule('Align continues small work to Implement', () => read('skills/axstack-align/SKILL.md'), 'Substantial work continues to', /small work continues from its small-change intent to Implement/);
 // own-pr-watch-docs.test.js owns every-phase publication on all three public docs.

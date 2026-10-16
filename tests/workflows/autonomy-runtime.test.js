@@ -4,7 +4,6 @@ import { checkRule, requires, prohibits } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../skills/${path}`, 'utf8')
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
-const relay = 'axstack-relay/SKILL.md';
 const lifecycle = 'axstack/references/lifecycle.md';
 const runtime = 'axstack/references/t3-runtime.md';
 const publication = 'axstack/references/candidate-publication.md';
@@ -21,20 +20,6 @@ function rule(name, path, concepts, rewording, inversions, negative) {
     checkRule(read(path), accepts, rewording, inversions, required);
   });
 }
-
-rule('reply route is verified before a reply-dependent send', relay,
-  [/before/i, /reply-dependent send/i, /reply.route/i, /Hermes 0\.21/i, /registry entry/i, /Decisions topic/i, /home DM/i, /busy_input_mode/i, /queue/i, /hermes mcp test/i],
-  'Before a reply-dependent send, check reply-route readiness: Hermes 0.21 or newer, a registry entry for the Decisions topic listed in the verified home DM, effective busy_input_mode queue, and passing hermes mcp test.',
-  [[/\b(?:verify|check)\b/i, 'ignore'], [/\bbefore\b/i, 'after']]);
-rule('unready reply route names the T3 action route', relay,
-  [/reply-route readiness fails/i, /T3 driver thread/i, /action route/i, /message/i],
-  'When reply-route readiness fails, identify the T3 driver thread as the action route in the message.',
-  [[/\b(?:name|identify)\b/i, 'omit'], [/\bT3 driver thread\b/i, 'Telegram reply']]);
-rule('fallback send requires the thread action route', relay,
-  [/action uses that thread/i, /Telegram reply/i],
-  'Only when the action uses that thread instead of a Telegram reply, deliver it.',
-  [[/\b(?:send|deliver) it\b/i, 'Ignore it'], [/\bonly when\b/i, 'even unless'],
-    [/\binstead of\b/i, 'together with']]);
 
 rule('a fork starts as an observer', lifecycle, [/forked thread/i, /starts? as/i],
   'A forked thread starts as a read-only observer.',

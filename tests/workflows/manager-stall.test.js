@@ -18,11 +18,11 @@ test('dispatching owner confirms its own brief once when a worker asks', () => {
   expect(text).toMatch(/Never answer trust or permission prompts/i);
 });
 
-test('an idle PR job holds incomplete and a stalled owner notifies once', () => {
+test('an idle PR job holds incomplete and a stalled owner follows the new-hold signal rule', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/idle final turn[^.]*valid completion receipt[^.]*incomplete/i);
   expect(text).toMatch(/second brief ask follows the five-minute stop rule/i);
-  expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*one deduplicated notification/i);
+  expect(text).toMatch(/duplicate[^.]*stalled owner[^.]*five minutes[^.]*flag and alert rule[^.]*new user-needed hold/i);
   expect(text).toMatch(/started coordinator[^.]*waiting on its reviewers[^.]*live reviewer task or running wait[^.]*not idle[^.]*never stopped/i);
 });
 
@@ -106,9 +106,9 @@ const recoveryRules = [
     /INCOMPLETE/, /re-eligible|eligible again/i],
     'Otherwise classify the event as INCOMPLETE and unserved, keeping it eligible again.',
     [/re-eligible|eligible again/i, 'ineligible']],
-  ['failed recovery holds and notifies once', [/failed interrupt/i, /unverified terminal state/i,
-    /keeps?|retains?/i, /existing hold/i, /(?:one|a single).*deduplicated notification/i],
-    'A failed interrupt or unverified terminal state retains the existing hold and sends a single deduplicated notification under the recorded Notification policy.',
+  ['failed recovery holds and routes user-needed signals', [/failed interrupt/i, /unverified terminal state/i,
+    /keeps?|retains?/i, /existing hold/i, /flag and alert rule/i, /resume needs the user/i],
+    'A failed interrupt or unverified terminal state retains the existing hold and follows the flag and alert rule when its resume needs the user.',
     [/keeps?|retains?/i, 'releases']],
   ['other unknown liveness holds', [/outside/i, /wedg.*recover/i,
     /unknown liveness/i, /blocks/i, /admission/i, /shared-record writes/i,

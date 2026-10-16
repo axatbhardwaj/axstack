@@ -10,7 +10,7 @@ const packaged = readdirSync(`${root}/skills`, { recursive: true })
   .filter((path) => path.endsWith('.md')).map((path) => `skills/${path}`);
 const paths = [...packaged, 'AGENTS.md', ...publicDocPaths(root)];
 const actorSurfaces = [
-  'skills/axstack-relay/SKILL.md', 'skills/axstack/references/diligence.md',
+  'skills/axstack/references/diligence.md',
   'skills/axstack-audit/SKILL.md', 'skills/axstack-review/SKILL.md',
   'skills/axstack/references/candidate-publication.md',
   'skills/axstack/references/run-record.md', 'skills/axstack/references/test-audit-weekly.md',

@@ -31,7 +31,7 @@
       "id": "durable-review-decision",
       "input": "a peer review raises a credible serious funds risk after all descendants settle; exact head/base and finding evidence must survive manager closure",
       "expected": ["persist the finding and decision context", "leave the decision actionable in GitHub or a durable user-owned conversation", "end the finite manager turn only after saving continuity"],
-      "forbidden": ["depend on the closed manager chat for the answer", "treat Telegram or silence as authority"]
+      "forbidden": ["depend on the closed manager chat for the answer", "treat worker text or silence as authority"]
     },
     {
       "id": "same-head-new-peer-request",

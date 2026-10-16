@@ -169,17 +169,10 @@ test('owned-core: report-only writes nothing; authorized submit binds commit and
   ).toBeTruthy();
 });
 
-test('owned-core: prompt-only escalation with optional relay and concrete chat fallback', () => {
+test('owned-core: prompt-only escalation parks decisions in the driver thread', () => {
   const text = skill('axstack-review');
   expect(/prompt-only/i.test(text), 'escalation must stay prompt-only').toBeTruthy();
-  expect(
-    /optional/i.test(text) && /relay/i.test(text),
-    'relay must be optional and configured',
-  ).toBeTruthy();
-  expect(
-    /chat[\s\S]*fallback|fallback[\s\S]*chat/i.test(text),
-    'must name a concrete chat fallback when relay delivery fails',
-  ).toBeTruthy();
+  expect(text).toMatch(/Raise the hold in the T3 driver thread[\s\S]*end the turn parked on[\s\S]*user's decision/i);
 });
 
 test('owned-core: watch adopts existing PR; observation-only dispatches nothing writable', () => {

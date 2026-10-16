@@ -84,7 +84,7 @@ const rules = [
     [[/\b(?:never|do not) declare\b/gi, 'Declares']]],
 ];
 
-for (const action of ['merge', 'post comments', 'change labels', 'push', 'send relay messages', 'dispatch work', 'launch threads']) {
+for (const action of ['merge', 'post comments', 'change labels', 'push', 'send user messages', 'dispatch work', 'launch threads']) {
   rules.push([`read-only: ${action}`, prompt, forbidden, [new RegExp(`\\b${action}\\b`, 'i')],
     `Do not ${action}.`, [[/\b(?:never|do not)\b/gi, 'Always']]]);
 }
@@ -126,7 +126,7 @@ const mutations = [
   ['posts comments', /\bpost\w*\b.*\bcomments\b/i],
   ['changes labels', /\bchang\w*\b.*\blabels\b/i],
   ['pushes', /\bpush\w*\b/i],
-  ['sends relay messages', /\bsend\w*\b.*\brelay messages\b/i],
+  ['sends user messages', /\bsend\w*\b.*\buser messages\b/i],
   ['dispatches work', /\bdispatch\w*\b.*\bwork\b/i],
   ['launches threads', /\blaunch\w*\b.*\bthreads\b/i],
   ['declares a PR merge-ready', /\bdeclar\w*\b.*\bPR\b.*\bmerge-ready\b/i],
@@ -145,7 +145,7 @@ const qualifierReversals = [
   ['all own open PRs across the set', 'Read all open PRs authored by anyone, including the user, in every repository in the recorded set, including all pages.'],
   ['stale threshold', 'Flag stale PRs after 1 day of inactivity instead of 7 days.'],
   ['one unbound nightly native schedule', 'Use one native T3 schedule_task, unbound, nightly at 02:00 host time, with fixed_time and bindToCurrentThread:true instead of bindToCurrentThread:false.'],
-  ['read-only: send relay messages', 'Never merge, post comments, change labels, push, send relay messages, dispatch work, or launch threads except for relay summaries.'],
+  ['read-only: send user messages', 'Never merge, post comments, change labels, push, send user messages, dispatch work, or launch threads except for summaries.'],
 ];
 for (const [name, opposite] of qualifierReversals) {
   test(`nightly triage owning rule rejects qualifier reversal: ${name} -> ${opposite}`, () => {

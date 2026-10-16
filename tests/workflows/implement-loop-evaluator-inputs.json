@@ -44,7 +44,7 @@
     },
     {
       "id": "autopilot-substantial-gate-one", "title": "Substantial gate one",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Complete substantial work", "run_state": "Align and the reviewable spec draft are complete. The human has not approved the spec. Name the paused Autopilot state, notification policy, and continuation after human approval."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Complete substantial work", "run_state": "Align and the reviewable spec draft are complete. The human has not approved the spec. Name the paused Autopilot state, T3 driver-thread decision hold, and continuation after human approval."}
     },
     {
       "id": "autopilot-tickets-advance", "title": "Tickets advance without a second instruction",
@@ -76,15 +76,15 @@
     },
     {
       "id": "autopilot-wake-expiry", "title": "Native lifetime renews the same wake",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Maintain an open PR", "run_state": "The native chat-run schedule has a lifetime with an open PR and no new human decision. Name the same recorded schedule ID, update_scheduled_task re-arm at a wake, ongoing watch authority, and quiet notification policy."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Maintain an open PR", "run_state": "The native chat-run schedule has a lifetime with an open PR and no new human decision. Name the same recorded schedule ID, update_scheduled_task re-arm at a wake, ongoing watch authority, and quiet driver-thread reporting."}
     },
     {
       "id": "autopilot-closed-unmerged-pr", "title": "Closed required PR blocks release",
       "input": {"invocation": "Authorized engineering delivery", "request": "Decide release eligibility", "run_state": "A required feature PR closes without merging while other PRs merged. Decide whether release is eligible and what remains held."}
     },
     {
-      "id": "autopilot-notification-dedup", "title": "Notification budget spans release",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Apply the Notification policy", "run_state": "One decision hold and two merge-ready or merged milestones were relayed. The release PR becomes merge-ready and then merged. Apply the budget and deduplication."}
+      "id": "autopilot-driver-holds", "title": "Driver-thread holds survive release",
+      "input": {"invocation": "Authorized engineering delivery", "request": "Keep decisions in the T3 driver thread", "run_state": "A verification decision hold remains open while an unrelated release PR becomes merge-ready and then merged. Keep the hold in the T3 driver thread, park on the decision and revalidate head and base before clearing only its bound cause."}
     }
   ]
 }

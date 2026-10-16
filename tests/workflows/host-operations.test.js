@@ -5,14 +5,14 @@ import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
-const markers = /tailscale|t3\s+pair|hermes\s+send|axstack-review-lane/i;
+const markers = /tailscale|t3\s+pair|axstack-review-lane/i;
 const withoutHostLinks = (text) => text.replace(/\[[^\]]*\]\((?:docs\/)?host-operations\.md(?:#[^)]+)?\)/g, '');
 
 for (const path of publicDocPaths(root).filter((path) => path !== 'docs/host-operations.md')) {
   test(`host setup has one public home: ${path}`, () => {
     const doc = read(path).replace(/\s+/g, ' ');
     expect(withoutHostLinks(doc)).not.toMatch(markers);
-    for (const marker of ['tailscale', 't3 pair', 'hermes send', 'axstack-review-lane']) {
+    for (const marker of ['tailscale', 't3 pair', 'axstack-review-lane']) {
       expect(withoutHostLinks(`${doc} ${marker}`)).toMatch(markers);
       expect(withoutHostLinks(`${doc} [${marker}](${path === 'README.md' ? 'docs/' : ''}host-operations.md)`))
         .not.toMatch(markers);
