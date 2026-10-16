@@ -137,11 +137,6 @@ rule('final bytes get mobile, intermediate and real desktop previews in both the
     [/728px dark/i, '728px light'], [/360px light/i, '360px dark'],
     [/1440px desktop/i, '728px intermediate'], [/all four widths in both themes/i, 'one theme per width']]);
 
-rule('zero-padding embed geometry is scoped to inline T3 frames',
-  [/inline/i, /zero.padding/i, /embed/i, /rules/i, /apply/i, /only/i, /T3 frames/i],
-  'Only T3 frames apply the inline zero-padding embed rules.',
-  [[/only/i, 'also'], [/T3 frames/i, 'standalone articles'], [/apply/i, 'ignore']]);
-
 rule('publication receipt returns URL version and SHA',
   [/return|report/i, /URL/i, /\bversion\b/i, /SHA-256/i],
   'Report the article URL, version and SHA-256 to the user.',

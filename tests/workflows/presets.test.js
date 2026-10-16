@@ -646,13 +646,27 @@ for (const preset of presetNames) {
         [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
           [/390px mobile/i, '390px omitted'], [/1440px desktop/i, '728px intermediate'],
           [/all four widths in both themes/i, 'one theme per width']]],
-      [[/design review/i, /follows/i, /design\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
-        'Design review follows design.md for every inline HTML page and every Publish article adaptation.',
+      [[/design review/i, /follows/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
+        'Design review follows design.md and FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
         [[/follows/i, 'skips'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]],
     ];
     for (const [concepts, rewording, inversions] of rules) {
       checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
     }
+  });
+}
+
+for (const preset of presetNames) {
+  test(`design repair limit: ${preset} explanation reviewer`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    for (const [concepts, rewording, inversions] of [
+      [[/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i, /within/i, /two.round/i],
+        'Within the two-round visual limit, the same author repairs a blocking design finding for a page that fails to look decent.',
+        [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/within/i, 'outside']]],
+      [[/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
+        'Deliver the visual with each finding named if only design findings remain after the second round.',
+        [[/second round/i, 'first round'], [/named/i, 'hidden']]],
+    ]) checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
   });
 }
 
