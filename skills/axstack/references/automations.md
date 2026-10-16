@@ -329,7 +329,9 @@ final message: credible serious security/funds risk, a stalled or wedged owner,
 failed interrupt, schedule disabled at the storage limit, or any other hold whose
 resume needs the user.
 Rename it `Needs you: <kind> <repo>#<n>` (or `<lane>`), link the PR when present,
-and use `t3_thread_organize` to pin then `mark_unread`.
+and use `t3_thread_organize` to pin.
+Never mark the pass's own thread unread.
+`mark_unread` needs a completed run, and the pass's own completion already raises T3's alert.
 Never include security detail in the title or alert.
 The owner records the flagged threadId and alert outcome with the hold in continuity.
 An unchanged hold never re-flags or re-alerts, except for the failed-send retry below.
