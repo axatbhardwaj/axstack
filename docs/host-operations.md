@@ -148,7 +148,7 @@ disputes go to the adviser panel; architecture, permanent on-chain or process
 decisions alone never trigger a ping.
 The current operational contract is
 [Review-manager contract](../skills/axstack/references/automations.md).
-The review manager's alert command is named in its host instructions (the live schedule prompt).
+The review manager's alert command is named in its host instructions, for example its live schedule prompt.
 
 These documents and their source-contract tests define expected decisions.
 Scenario fixtures are behavioral-evaluation inputs, not model-evaluation

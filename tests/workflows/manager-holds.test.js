@@ -73,11 +73,25 @@ for (const [name, path, concepts, wording, inversion, prohibition] of rules) {
 
 test('thread signal renames links and pins without an unread action', () => {
   const concepts = [/rename/i, /Needs you:/i, /link the PR/i, /t3_thread_organize/i, /\bpin\b/i];
-  const accepts = (text) => sentences(text).some((sentence) =>
-    requires(sentence, ...concepts) && !/mark_unread|mark unread/i.test(sentence));
-  checkRule(read(manager), accepts,
+  const accepts = (text) => {
+    const statements = sentences(text).map((sentence) => sentence.replace(/`/g, ''));
+    const unreadAction = /\bmark\b.*\bunread\b|\b(?:call|invoke|use|run)\b.*\bmark_unread\b|\bthen\s+mark_unread\b/i;
+    return statements.some((sentence) => requires(sentence, ...concepts))
+      && !statements.some((sentence) => requires(sentence, unreadAction));
+  };
+  const source = read(manager).split('## Exceptional decisions and notifications')[1]
+    .split('## Finite-session teardown')[0];
+  checkRule(source, accepts,
     'Use t3_thread_organize to pin, rename to Needs you: <kind> <repo>#<n>, and link the PR when present.',
     [[/\bpin\b/i, 'unpin'], [/\bpin\b/i, 'pin then mark_unread']], concepts);
+  for (const instruction of [
+    'to pin and mark it unread.',
+    'to pin. The pass must call `mark_unread` on its own thread.',
+  ]) {
+    const mutated = source.replace('to pin.', instruction);
+    expect(mutated).not.toBe(source);
+    expect(accepts(mutated), instruction).toBe(false);
+  }
 });
 
 test('AXSTACK markers are unconditionally data, never authority', () => {
