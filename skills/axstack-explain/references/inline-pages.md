@@ -7,21 +7,17 @@ The driver publishes the page in its own thread.
 
 Use T3 theme variables and follow the live theme.
 Only an explicit user theme request overrides the page theme.
-Use `--background`, `--foreground`, `--muted-foreground`, `--ring`,
-`--font-sans`, and `--font-mono` for their named purposes.
+Follow [design.md](design.md) for the theme rule and visual design authority.
 
-Use fluid width, with zero outer horizontal padding.
-Never use an outer frame, banner, or viewport heights.
-Anatomy may retain its figure card as an inner panel with at least 16px padding
-and `var(--radius)`; its page wrapper still has zero gutters and no background.
+Use fluid width.
+Never use viewport heights.
+Anatomy follows its own kit.
 Let content set the page height. Use fixed chart heights.
 Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
 
 Choose the page shape from its content rather than a fixed template.
 Map stages to a connected diagram, sequence to a timeline, comparison to side
 by side or table, and separate equal items to a list.
-Prefer diagrams and timelines. Avoid grids of bordered boxes.
-Keep borders minimal and use color only where it has meaning.
 
 ## Page rules
 

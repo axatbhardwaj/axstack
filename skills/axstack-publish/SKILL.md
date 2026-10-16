@@ -42,12 +42,10 @@ to remove private paths, IDs, credentials, prompts, messages and internal record
 For public mode, run Explain's [self-contained asset check](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
 and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
-[Inline zero-padding embed rules](../axstack-explain/references/inline-pages.md#shape-and-theme) apply only to T3 frames.
-Use [design.md](../axstack-explain/references/design.md) for standalone Publish layout.
 
 Send the article adaptation, including art direction and standalone light/dark theme,
 to `axstack-explainer` with a bounded brief.
-The explainer follows Explain's [design guidance](../axstack-explain/references/design.md)
+The explainer loads and follows Explain's [design guidance](../axstack-explain/references/design.md)
 and reads [frontend-design](../axstack-explain/references/frontend-design/FRONTEND-DESIGN.md).
 Require inline defaults and `prefers-color-scheme` so the article works outside T3;
 honor an explicit user theme request.
@@ -59,13 +57,19 @@ covering all four widths in both themes, and record screenshots with paths,
 their artifact SHA-256 and the Explain QA results.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
-reviewer's design review against design.md, alongside source-fidelity review.
-Apply Explain's [Delivery](../axstack-explain/references/delivery.md) one-round design repair
-and disclosed cosmetic exception; that exception leaves all other requirements binding.
+reviewer's design review against FRONTEND-DESIGN.md (calibration defaults, restraint
+and quality floor) plus design.md's hard rules, alongside source-fidelity review.
+A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit.
+If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
+Never describe a remaining finding as fixed or a clean pass.
+Follow Explain's [Delivery](../axstack-explain/references/delivery.md) for normal holds
+on hard-rule, fidelity, security, asset, theme, accessibility, layout-defect,
+interaction and publication failures.
 Any subsequent byte change invalidates checks and review: repeat this step.
-Hold publication while any required check or review is missing or failed.
+Hold publication while any required check or review is missing or failed, except for
+the design-only delivery after the second round above.
 Unavailable, unreadable or stale renders leave design review unknown and hold publication;
-unknown is never passed or a cosmetic exception.
+Never treat unknown design review as a pass.
 
 ## 3. Publish from the driver
 
