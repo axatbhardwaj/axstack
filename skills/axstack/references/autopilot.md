@@ -170,7 +170,7 @@ instructions, always win.
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
 
-Follow [Decisions and holds](../../axstack-watch/SKILL.md#4-route-each-wake).
+Follow [Route each wake](../../axstack-watch/SKILL.md#4-route-each-wake).
 Raise decision holds, including spec and npm stage approval, and serious-risk
 holds in the T3 driver thread; end the turn parked on the decision.
 Revalidate the current head and base on a user reply; it clears only its bound cause.

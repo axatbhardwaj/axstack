@@ -107,7 +107,7 @@ Reconcile prior tasks, thread/run identities, receipts and GitHub before retryin
 an uncertain wake. Wake only the exact live original driver.
 A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.
 
-Follow [Decisions and holds](../SKILL.md#4-route-each-wake) for T3 driver-thread
+Follow [Route each wake](../SKILL.md#4-route-each-wake) for T3 driver-thread
 notes and deduplication. Quiet ticks stay quiet.
 
 The driver alone routes repair.

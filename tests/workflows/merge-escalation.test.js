@@ -110,16 +110,16 @@ const rules = [
     'If its patch-id changes or the PR stops being ready-except-human, the clock resets.', [/resets/i, 'continues']],
   ['same patch rebase keeps clock', [/same-patch-id rebase/i, /keeps/i, /clock/i],
     'The clock is what a same-patch-id rebase keeps.', [/keeps/i, 'resets']],
-  ['once per key persists', [/each key/i, /sent at most once/i, /readiness.*lost.*regained/i, /patch.*changes/i],
-    'Even if the patch changes or readiness is lost and regained, each key is sent at most once.', [/at most once/i, 'repeatedly']],
-  ['ping delay and simultaneous keys', [/after 60 minutes/i, /one T3 driver-thread note per key/i, /simultaneous blockers/i, /new key/i],
-    'For simultaneous blockers or a new key, send one T3 driver-thread note per key after 60 minutes.', [/60 minutes/i, '5 minutes']],
-  ['ping payload', [/<repo>#<n>/i, /waiting <age>/i, /@<login\|no reviewer>/i, /approval\|changes\|comment/i, /ready at <sha7>/i],
+  ['once per key persists', [/each key/i, /posted at most once/i, /readiness.*lost.*regained/i, /patch.*changes/i],
+    'Even if the patch changes or readiness is lost and regained, each key is posted at most once.', [/at most once/i, 'repeatedly']],
+  ['note delay and simultaneous keys', [/after 60 minutes/i, /one T3 driver-thread note per key/i, /simultaneous blockers/i, /new key/i],
+    'For simultaneous blockers or a new key, post one T3 driver-thread note per key after 60 minutes.', [/60 minutes/i, '5 minutes']],
+  ['note payload', [/<repo>#<n>/i, /waiting <age>/i, /@<login\|no reviewer>/i, /approval\|changes\|comment/i, /ready at <sha7>/i],
     'Post this payload: <repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>, ready at <sha7>.', [/@<login\|no reviewer>/i, '@unknown'], /no reviewer/i],
   ['existing wakes only', [/check runs/i, /existing watch wakes/i, /no new schedule/i],
     'On existing watch wakes the check runs, with no new schedule.', [/no new schedule/i, 'a new schedule'], /no new schedule/i],
-  ['ping no reply needed', [/ping/i, /notification only/i, /blocker clears/i, /merges with no reply/i],
-    'The ping is a notification only and when the blocker clears the PR merges with no reply.', [/with no reply/i, 'after a reply'], /with no reply/i],
+  ['note no reply needed', [/note/i, /notification only/i, /blocker clears/i, /merges with no reply/i],
+    'The note is a notification only and when the blocker clears the PR merges with no reply.', [/with no reply/i, 'after a reply'], /with no reply/i],
 ];
 
 for (const path of [watch, docs]) {
