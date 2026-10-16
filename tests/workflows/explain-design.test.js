@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
@@ -19,49 +19,156 @@ function rule(path, name, concepts, rewording, inversions, prohibition) {
   });
 }
 
-rule(guide, 'precedence preserves all four levels in order',
-  [/order/i, /1\).*page rules.*subject.*colour.*motion.*font.*no.notes.*2\).*source fidelity.*3\).*named tells.*4\).*frontend-design/i],
-  'Use this order: 1) page rules plus subject, colour, motion, font and no-notes rules, 2) source fidelity, 3) named tells, 4) frontend-design.',
-  [[/1\)/, '4)'], [/2\)/, '3)'], [/3\)/, '2)'], [/4\)/, '1)'], [/order/i, 'optional order']], /no.notes/i);
-rule(guide, 'content shapes are exempt from ornament tells',
-  [/diagram edges.*arrows.*timeline order.*tables.*code paths/i, /content/i, /ornament/i],
-  'Diagram edges and arrows, timeline order, tables and code paths are content, never ornament.',
-  [[/content/i, 'decoration'], [/not|never/i, 'always']], /(?:not|never) ornament/i);
-rule(guide, 'anatomy follows its kit', [/anatomy/i, /follows|uses/i, /kit/i],
-  'Anatomy uses its kit.', [[/follows|uses/i, 'skips']]);
-rule(guide, 'required higher-rule behaviour is exempt', [/higher.priority rule/i, /behaviour/i, /tell/i],
-  'A behaviour required by a higher-priority rule is never a tell.', [[/never/i, 'always']], /never a tell/i);
-rule(guide, 'subject determines structure without confirmation', [/subject.*question/i, /structure/i],
-  'The actual subject and question determine structure.', [[/determine|drives?/i, 'never determines']]);
+rule(guide, 'frontend-design is the sole authority for every visual choice on both page kinds',
+  [/FRONTEND-DESIGN\.md/i, /(?:sole|only|exclusive) design authority/i, /every inline HTML page/i, /every Publish article adaptation/i,
+    /palette/i, /typography/i, /layout/i, /spacing/i, /structure/i, /motion/i, /self-critique/i],
+  'For every Publish article adaptation and every inline HTML page, FRONTEND-DESIGN.md is the only design authority for palette, typography, layout, spacing, structure, motion and self-critique.',
+  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(guide, 'hard rules win conflicts', [/hard rules/i, /win|override/i, /conflict/i],
+  'On conflict, the hard rules override design choices.', [[/win|override/i, 'yield to']]);
+rule(guide, 'source fidelity wins design choices', [/source fidelity/i, /beats|overrides/i, /design choice/i, /diagram edges/i, /order/i, /tables/i, /code paths/i, /show the source/i],
+  'Source fidelity overrides every design choice: diagram edges, order, tables and code paths show the source.',
+  [[/beats|overrides/i, 'yields to'], [/show/i, 'ignore']]);
 rule(guide, 'subject confirmation never blocks authoring', [/confirm/i, /subject/i],
   'Never stop to confirm the subject.', [[/never/i, 'always']], /never stop/i);
-rule(guide, 'inline fonts come only from T3 variables', [/inline/i, /only/i, /T3 font variables/i],
-  'Inline pages use only T3 font variables.', [[/only/i, 'optional'], [/T3 font variables/i, 'web fonts']]);
-rule(guide, 'published fonts use system stacks', [/published/i, /use/i, /system font stacks/i],
-  'Published articles use system font stacks.', [[/use/i, 'skip'], [/system font stacks/i, 'downloaded fonts']]);
-rule(guide, 'standalone composition has mobile gutters and balanced desktop margins',
-  [/standalone Publish articles/i, /mobile gutters/i, /bounded prose measure/i, /intentional horizontal margins/i, /balanced desktop composition/i],
-  'For balanced desktop composition, give standalone Publish articles intentional horizontal margins and a bounded prose measure, plus mobile gutters.',
-  [[/mobile gutters/i, 'edge-to-edge mobile text'], [/bounded prose measure/i, 'unlimited prose width'],
-    [/intentional horizontal margins/i, 'zero horizontal margins'], [/balanced desktop composition/i, 'inline embed geometry']]);
-rule(guide, 'standalone typography and rhythm support reading',
-  [/standalone articles/i, /readable body typography/i, /line height/i, /heading hierarchy/i, /generous section spacing/i],
-  'For standalone articles, set generous section spacing and heading hierarchy with readable body typography and line height.',
-  [[/readable body typography/i, 'tiny body typography'], [/line height/i, 'cramped lines'],
-    [/heading hierarchy/i, 'uniform headings'], [/generous section spacing/i, 'zero section spacing']]);
-rule(guide, 'chart legibility spans widths and themes',
-  [/chart/i, /labels/i, /values/i, /units/i, /spacing/i, /legibility/i, /mobile and desktop/i, /both themes/i],
-  'Ensure chart legibility with labels, values, units and spacing suited to mobile and desktop widths in both themes.',
-  [[/legibility/i, 'decoration'], [/mobile and desktop/i, 'desktop only'], [/both themes/i, 'one theme']]);
-rule(guide, 'font files and network are prohibited', [/font files/i, /network/i],
-  'Never use font files or network requests.', [[/never/i, 'always']], /never use/i);
+rule(guide, 'inline fonts use T3 variables or system stacks',
+  [/inline pages/i, /use/i, /T3 font variables or system font stacks/i],
+  'Use T3 font variables or system font stacks for inline pages.',
+  [[/use/i, 'ignore'], [/or system font stacks/i, 'only']]);
+test('design: published fonts use system stacks without T3 variables', () => {
+  const text = sentences(readFileSync(base + guide, 'utf8')).join('. ');
+  const concepts = [/published articles/i, /use/i, /system font stacks/i];
+  const accepts = (source) => requires(source, ...concepts)
+    && !sentences(source).some((sentence) => requires(sentence, /published articles/i, /T3 font variables/i));
+  checkRule(text, accepts, 'Use system font stacks for published articles.',
+    [[/use/i, 'ignore'], [/system font stacks/i, 'T3 font variables'],
+      [/system font stacks/i, 'T3 font variables or system font stacks']], concepts);
+});
+rule(guide, 'inline embed-fit and page rules also win conflicts',
+  [/non-anatomy inline pages only|only non-anatomy inline pages/i, /follow|consult/i, /inline-pages\.md/i, /Embed fit/i, /Page rules/i, /sections/i, /win|override/i, /conflict/i],
+  'For only non-anatomy inline pages, consult inline-pages.md whose Embed fit and Page rules sections override design choices on conflict.',
+  [[/non-anatomy inline pages only|only non-anatomy inline pages/i, 'all inline and published pages'], [/win|override/i, 'yield to'], [/follow|consult/i, 'ignore']]);
+rule(guide, 'live T3 theme supplies inline ground and ink',
+  [/inline pages/i, /follow/i, /live T3 theme/i, /ground/i, /--background/i, /ink/i, /--foreground/i],
+  'Inline pages follow the live T3 theme with ground from --background and ink from --foreground.',
+  [[/follow/i, 'ignore'], [/live T3 theme/i, 'fixed theme'], [/--background/i, '--ring']]);
+rule(guide, 'every inline colour derives from T3 theme variables',
+  [/inline pages/i, /derive every colou?r/i, /T3 theme variables/i, /all other colou?rs/i, /color-mix\(\).*with them/i, /or T3 semantic.chart variables/i],
+  'For inline pages, derive every color from T3 theme variables: ground and ink supply all other colors via color-mix() with them or T3 semantic/chart variables.',
+  [[/derive every colou?r/i, 'choose each colour freely'], [/color-mix\(\).*with them/i, 'fixed hex palettes'], [/or T3 semantic.chart variables/i, 'or arbitrary colours']]);
+rule(guide, 'every colour stays legible in both themes',
+  [/every colou?r/i, /legible/i, /light and dark/i],
+  'Ensure every color stays legible in light and dark.',
+  [[/legible/i, 'decorative'], [/light and dark/i, 'dark only']]);
+rule(guide, 'inline palettes never switch on the system colour query',
+  [/inline palettes/i, /prefers-color-scheme/i],
+  'Never switch inline palettes using prefers-color-scheme.',
+  [[/never/i, 'always'], [/inline palettes/i, 'published palettes']], /never switch/i);
+rule(guide, 'inline pages preserve T3-owned variables',
+  [/inline pages/i, /T3(?:'s own|.owned) variables/i],
+  'In inline pages, never redefine T3-owned variables.',
+  [[/never/i, 'always']], /never redefine/i);
+rule(guide, 'standalone viewing allows variable fallbacks',
+  [/var\(\)/i, /fallbacks/i, /allowed|permitted/i, /standalone viewing/i],
+  'For standalone viewing, var() fallbacks are permitted.',
+  [[/allowed|permitted/i, 'forbidden'], [/standalone viewing/i, 'T3 internals']]);
+rule(guide, 'published articles support both themes outside T3 through the system query',
+  [/published articles/i, /support/i, /light and dark/i, /prefers-color-scheme/i, /outside T3/i],
+  'Outside T3, published articles support light and dark using prefers-color-scheme.',
+  [[/support/i, 'ignore'], [/light and dark/i, 'light only'], [/prefers-color-scheme/i, 'the T3 class']]);
+rule(guide, 'accessibility floor covers mobile focus motion and contrast',
+  [/responsive/i, /360px/i, /visible keyboard focus/i, /reduced motion/i, /respected/i, /sufficient contrast/i, /both themes/i],
+  'Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in both themes.',
+  [[/360px/i, '728px'], [/visible keyboard focus/i, 'hidden focus'], [/respected/i, 'ignored'], [/both themes/i, 'one theme']]);
+rule(guide, 'font files and network are prohibited', [/font files/i, /network resources/i],
+  'Never load font files or network resources.', [[/never/i, 'always']], /never load/i);
 rule(guide, 'design history is not kept across pages', [/design notes/i, /history/i, /across pages/i],
   'Never keep design notes or history across pages.', [[/never/i, 'always']], /never keep/i);
+
+test('design freedom removes the old Axstack style restrictions', () => {
+  const design = readFileSync(base + guide, 'utf8');
+  const inline = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
+  expect(design).not.toMatch(/named tells|single accent|muted.only|taste-skill|Standalone Publish layout/i);
+  expect(readFileSync(base + publish, 'utf8')).not.toMatch(/zero.padding embed rules/i);
+  expect(inline).not.toMatch(/Prefer diagrams and timelines|Avoid grids of bordered boxes|Keep borders minimal|for their named purposes/i);
+});
+
+// These constraints belong to T3's host frame, rather than art direction.
+for (const [name, concepts, rewording, inversions, prohibition] of [
+  ['host frame alignment', [/T3 frame/i, /borderless/i, /thread background/i, /left edge/i, /reply text/i],
+    'The borderless T3 frame sits on the thread background with its left edge aligned to reply text.',
+    [[/borderless/i, 'bordered'], [/reply text/i, 'viewport']]],
+  ['outer width and padding', [/use|keep/i, /fluid width/i, /zero horizontal padding/i, /outermost element/i],
+    'Keep the outermost element at fluid width with zero horizontal padding.',
+    [[/fluid width/i, 'fixed width'], [/zero horizontal padding/i, '24px horizontal padding']]],
+  ['outer framing', [/outer card/i, /border/i, /banner title/i],
+    'Never use an outer card, border or banner title.',
+    [[/never/i, 'always']], /never (?:add|use)/i],
+  ['banner title scope', [/banner title/i, /means|denotes/i, /outer header block or band/i],
+    'A banner title denotes an outer header block or band.',
+    [[/outer header block or band/i, 'page heading']]],
+  ['ordinary page headings', [/ordinary page heading/i, /allowed|permitted/i],
+    'An ordinary page heading is permitted.',
+    [[/allowed|permitted/i, 'forbidden']]],
+  ['transparent page layers', [/keep|leave/i, /html/i, /body/i, /outermost element/i, /without a background colou?r/i],
+    'Leave html, body and the outermost element without a background color.',
+    [[/without a background colou?r/i, 'with a background color']]],
+  ['anatomy wrapper stays flush and transparent', [/page wrapper/i, /zero gutters/i, /no background/i],
+    'Keep zero gutters and no background on the page wrapper.',
+    [[/zero gutters/i, '16px gutters'], [/no background/i, 'an opaque background']], /no background/i],
+  ['inner box spacing and corners', [/give|set/i, /inner box/i, /own background/i, /at least 16px padding/i, /every side/i, /var\(--radius\)/i, /corners/i],
+    'Set var(--radius) corners and at least 16px padding on every side for any inner box with its own background.',
+    [[/at least 16px padding/i, '4px padding'], [/every side/i, 'the left side'], [/var\(--radius\)/i, '0px']]],
+]) {
+  test(`design: T3 embed fit ${name}`, () => {
+    const page = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
+    const section = page.split('\n## Embed fit\n')[1]?.split('\n## ')[0] ?? '';
+    const accepts = (source) => prohibition ? prohibits(source, prohibition, ...concepts) : requires(source, ...concepts);
+    checkRule(sentences(section).join('. '), accepts, rewording, inversions, concepts);
+  });
+}
+test('design: T3 embed fit permits the anatomy figure card as an inner panel', () => {
+  const page = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
+  const section = sentences(page.split('\n## Embed fit\n')[1]?.split('\n## ')[0] ?? '').join('. ');
+  const concepts = [/Anatomy/i, /(?:may|can) retain|can keep/i, /figure card/i, /inner panel/i, /at least 16px padding/i, /var\(--radius\)/i];
+  // The affirmative-instruction helper treats may as optional; normalize this explicit permission.
+  const accepts = (source) => requires(source.replace(/\bmay retain\b/gi, 'can retain'), ...concepts);
+  checkRule(section, accepts,
+    'Anatomy can keep its figure card as an inner panel with at least 16px padding and var(--radius).',
+    [[/(?:may|can) retain|can keep/i, 'must remove'], [/inner panel/i, 'outer frame'],
+      [/at least 16px padding/i, '4px padding'], [/var\(--radius\)/i, '0px']], concepts);
+});
+
+rule('axstack-explain/references/inline-pages.md', 'content mapping is refinable design guidance',
+  [/content.shape mapping/i, /guidance/i, /frontend-design/i, /can refine/i],
+  'Treat the content-shape mapping as guidance that frontend-design can refine.',
+  [[/can refine/i, 'must preserve'], [/guidance/i, 'hard rules']]);
+
+rule('axstack-explain/references/inline-pages.md', 'inline design authority excludes anatomy',
+  [/inline pages (?:other than|except) anatomy|non-anatomy inline pages/i, /follow|consult/i, /design\.md/i, /theme rule/i, /visual design authority/i],
+  'For non-anatomy inline pages, consult design.md for visual design authority and the theme rule.',
+  [[/inline pages (?:other than|except) anatomy|non-anatomy inline pages/i, 'all inline pages including anatomy'],
+    [/follow|consult/i, 'ignore']]);
+
+rule('axstack-explain/references/inline-pages.md', 'anatomy follows its kit', [/anatomy/i, /follows|uses/i, /kit/i],
+  'Anatomy uses its kit.', [[/follows|uses/i, 'skips']]);
 
 rule(explain, 'explainer loads both references for both page kinds',
   [/axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'The axstack-explainer loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
   [[/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(explain, 'explainer authority stays bound by hard rules',
+  [/frontend-design/i, /(?:sole|only|exclusive) design authority/i, /subject to|bound by/i, /design\.md's hard rules/i],
+  "Use frontend-design as the only design authority, bound by design.md's hard rules.",
+  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/subject to|bound by/i, 'free from']]);
+rule(delivery, 'two-round prose fallback excludes design-only findings',
+  [/except for|apart from/i, /design.only findings/i, /replace/i, /visual/i, /two repair rounds/i, /same author/i, /plain prose/i],
+  'Apart from design-only findings, replace a visual still failing checks after two repair rounds with the same author by plain prose.',
+  [[/except for|apart from/i, 'including'], [/design.only findings/i, 'all failures']]);
+rule(publish, 'publication hold excludes only second-round design delivery',
+  [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
+  'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
+  [[/except for|apart from/i, 'including'], [/after the second round/i, 'before the first round'], [/design.only delivery/i, 'any delivery']]);
 rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /either reference/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',
@@ -70,8 +177,8 @@ rule(publish, 'Publish delegates article adaptation to explainer',
   [[/send/i, 'skip'], [/axstack-explainer/i, 'driver']]);
 
 rule(qa, 'design review covers exactly inline and Publish pages',
-  [/design review/i, /covers/i, /design\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
-  'Design review against design.md covers every inline HTML page and every Publish article adaptation.',
+  [/design review/i, /covers/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /calibration defaults/i, /restraint/i, /quality floor/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'Design review against design.md and FRONTEND-DESIGN.md covers every inline HTML page and every Publish article adaptation, including calibration defaults, restraint and quality floor.',
   [[/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles'], [/covers/i, 'skips']]);
 rule(qa, 'inline reviewer renders exact bytes itself',
   [/inline/i, /reviewer/i, /itself/i, /renders?/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
@@ -100,45 +207,32 @@ rule(publish, 'Publish screenshots precede independent review',
   'Before independent review, axstack-ui-verifier runs Playwright MCP checks and records screenshots with paths and their artifact SHA-256.',
   [[/before/i, 'after'], [/axstack-ui-verifier/i, 'author'], [/records?/i, 'skips']]);
 
-rule(delivery, 'one design repair counts within the visual limit',
-  [/named tell/i, /blocking/i, /one design-only repair round/i, /same author/i, /within/i, /two-round/i],
-  'A named tell is blocking for one design-only repair round with the same author, counting within the two-round visual limit.',
-  [[/one design-only repair round/i, 'two design-only repair rounds'], [/within/i, 'outside'], [/blocking/i, 'optional']]);
-rule(delivery, 'there is no second design repair round', [/second design-only round/i],
-  'Never start a second design-only round.', [[/never/i, 'always']], /never start/i);
-rule(delivery, 'remaining cosmetic tells are disclosed exceptions',
-  [/cosmetic tell/i, /fresh.*exact.byte renders/i, /disclosed/i, /non-blocking design exception/i, /evidence/i, /delivery/i],
-  'A cosmetic tell remaining in fresh exact-byte renders becomes a disclosed non-blocking design exception, recorded in evidence and named in delivery.',
-  [[/disclosed/i, 'hidden'], [/non-blocking/i, 'blocking'], [/fresh/i, 'stale']]);
-rule(delivery, 'exception never claims fixed or clean', [/fixed/i, /clean design pass/i],
-  'Never describe the exception as fixed or a clean design pass.', [[/never/i, 'always']], /never describe/i);
-rule(delivery, 'exception cannot waive other requirements',
-  [/exception/i, /source.fidelity/i, /security/i, /asset/i, /theme/i, /layout/i, /accessibility/i, /interaction/i, /publication/i, /requirements/i],
-  'This exception never waives source-fidelity, security, asset, theme, layout, accessibility, interaction or publication requirements.',
-  [[/never waives/i, 'waives']], /never waives/i);
+for (const path of [qa, delivery, publish]) {
+  rule(path, `${path} treats poor appearance as blocking within two rounds`,
+    [/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i, /within/i, /two.round/i],
+    'Within the two-round visual limit, the same author repairs a blocking design finding for a page that fails to look decent.',
+    [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver'], [/within/i, 'outside']]);
+  rule(path, `${path} delivers remaining design findings after round two by name`,
+    [/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
+    'Deliver the visual with each finding named if only design findings remain after the second round.',
+    [[/only design findings remain/i, 'any failures remain'], [/second round/i, 'first round'], [/named/i, 'hidden']]);
+  rule(path, `${path} remaining findings cannot be called fixed or clean`, [/finding/i, /fixed/i, /clean pass/i],
+    'Never describe any remaining finding as a clean pass or fixed.', [[/never/i, 'always']], /never describe/i);
+}
+rule(delivery, 'other failures keep normal holds',
+  [/hard.rule/i, /fidelity/i, /security/i, /theme/i, /accessibility/i, /layout.defect/i, /interaction/i, /failures/i, /keep|retain/i, /normal holds/i],
+  'Hard-rule, fidelity, security, theme, accessibility, layout-defect and interaction failures retain their normal holds.',
+  [[/keep|retain/i, 'waive'], [/normal holds/i, 'design-only treatment']]);
 rule(delivery, 'unavailable unreadable or stale render holds unknown',
   [/unavailable/i, /unreadable/i, /stale/i, /render/i, /unknown/i, /hold/i, /visual/i, /publication/i],
   'An unavailable, unreadable or stale render leaves design review unknown and holds the visual or publication.',
   [[/unknown/i, 'passed'], [/holds?/i, 'permits']]);
-rule(delivery, 'unknown check cannot expire as a tell', [/unknown check/i, /tell/i, /expires/i],
-  'An unknown check is never a tell that expires after one round.', [[/never/i, 'always']], /never a tell/i);
-
 rule(publish, 'Publish render gaps hold publication with unknown design review',
   [/unavailable/i, /unreadable/i, /stale/i, /renders?/i, /unknown/i, /hold/i, /publication/i],
   'An unreadable or stale render, or one that is unavailable, keeps publication on hold and design review unknown.',
   [[/unknown/i, 'passed'], [/hold/i, 'release']]);
-rule(publish, 'Publish cannot treat unknown as a pass or cosmetic exception',
-  [/unknown/i, /passed|approval/i, /cosmetic exception/i],
-  'A cosmetic exception or approval must never be inferred from unknown design review.',
-  [[/never/i, 'always']], /never (?:passed|be inferred)/i);
-rule(publish, 'Publish cosmetic exception preserves every other requirement',
-  [/exception/i, /all other requirements|every other requirement/i, /binding|mandatory/i],
-  'Every other requirement stays mandatory when recording a cosmetic exception.',
-  [[/binding|mandatory/i, 'waived'], [/all other requirements|every other requirement/i, 'selected requirements']]);
-rule(delivery, 'a tell causing a defect retains its normal hold and repair',
-  [/tell/i, /caus/i, /defect/i, /keeps|retain/i, /normal|ordinary/i, /hold/i, /repair/i, /rules/i],
-  'For any such defect caused by a tell, retain its ordinary repair rules and hold.',
-  [[/keeps|retain/i, 'waive'], [/hold/i, 'release'], [/repair/i, 'exception']]);
+rule(publish, 'Publish cannot treat unknown as a pass', [/unknown/i, /pass/i],
+  'Never treat unknown design review as a pass.', [[/never/i, 'always']], /never treat/i);
 rule(publish, 'Publish explainer applies both design references',
   [/explainer/i, /follows|apply/i, /design guidance|design rules/i, /reads?/i, /frontend-design/i],
   'Read frontend-design and apply the design rules from Explain when the explainer adapts an article.',
@@ -149,5 +243,3 @@ for (const [path, label] of [[explain, 'Explain'], [qa, 'Visual QA']]) {
     'Preserve current review and Visual QA when standalone HTML files are explicitly requested.',
     [[/keep|preserve/i, 'discard'], [/existing|current/i, 'new'], [/Visual QA/i, 'source checks only']]);
 }
-rule(delivery, 'overall look remains advisory', [/overall look/i, /advisory|advice only/i],
-  'The overall look serves as advice only.', [[/advisory|advice only/i, 'blocking']]);
