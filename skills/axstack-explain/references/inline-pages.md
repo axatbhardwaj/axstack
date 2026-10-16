@@ -19,6 +19,7 @@ by side or table, and separate equal items to a list; frontend-design can refine
 The T3 frame is borderless on the thread background, with its left edge aligned to reply text.
 Use fluid width with zero horizontal padding on the outermost element.
 Never add an outer card, border or banner title.
+A banner title means an outer header block or band; an ordinary page heading is allowed.
 Keep html, body and the outermost element without a background colour.
 Give any inner box with its own background at least 16px padding on every side and `var(--radius)` corners.
 Never use viewport heights.

@@ -52,12 +52,30 @@ rule(guide, 'live T3 theme supplies inline ground and ink',
   [/inline pages/i, /follow/i, /live T3 theme/i, /ground/i, /--background/i, /ink/i, /--foreground/i],
   'Inline pages follow the live T3 theme with ground from --background and ink from --foreground.',
   [[/follow/i, 'ignore'], [/live T3 theme/i, 'fixed theme'], [/--background/i, '--ring']]);
-rule(guide, 'other colours are free within light and dark legibility',
-  [/choose/i, /all other colou?rs/i, /freely/i, /legible/i, /light and dark/i],
-  'Keeping all other colors legible in light and dark, choose them freely.',
-  [[/freely/i, 'from one accent'], [/legible/i, 'decorative'], [/light and dark/i, 'dark only']]);
-rule(guide, 'published articles support both themes', [/published articles/i, /support/i, /light and dark/i],
-  'Support light and dark in published articles.', [[/support/i, 'ignore'], [/light and dark/i, 'light only']]);
+rule(guide, 'every inline colour derives from T3 theme variables',
+  [/inline pages/i, /derive every colou?r/i, /T3 theme variables/i, /all other colou?rs/i, /color-mix\(\).*with them/i, /or T3 semantic.chart variables/i],
+  'For inline pages, derive every color from T3 theme variables: ground and ink supply all other colors via color-mix() with them or T3 semantic/chart variables.',
+  [[/derive every colou?r/i, 'choose each colour freely'], [/color-mix\(\).*with them/i, 'fixed hex palettes'], [/or T3 semantic.chart variables/i, 'or arbitrary colours']]);
+rule(guide, 'every colour stays legible in both themes',
+  [/every colou?r/i, /legible/i, /light and dark/i],
+  'Ensure every color stays legible in light and dark.',
+  [[/legible/i, 'decorative'], [/light and dark/i, 'dark only']]);
+rule(guide, 'inline palettes never switch on the system colour query',
+  [/inline palettes/i, /prefers-color-scheme/i],
+  'Never switch inline palettes using prefers-color-scheme.',
+  [[/never/i, 'always'], [/inline palettes/i, 'published palettes']], /never switch/i);
+rule(guide, 'inline pages preserve T3-owned variables',
+  [/inline pages/i, /T3(?:'s own|.owned) variables/i],
+  'In inline pages, never redefine T3-owned variables.',
+  [[/never/i, 'always']], /never redefine/i);
+rule(guide, 'standalone viewing allows variable fallbacks',
+  [/var\(\)/i, /fallbacks/i, /allowed|permitted/i, /standalone viewing/i],
+  'For standalone viewing, var() fallbacks are permitted.',
+  [[/allowed|permitted/i, 'forbidden'], [/standalone viewing/i, 'T3 internals']]);
+rule(guide, 'published articles support both themes outside T3 through the system query',
+  [/published articles/i, /support/i, /light and dark/i, /prefers-color-scheme/i, /outside T3/i],
+  'Outside T3, published articles support light and dark using prefers-color-scheme.',
+  [[/support/i, 'ignore'], [/light and dark/i, 'light only'], [/prefers-color-scheme/i, 'the T3 class']]);
 rule(guide, 'accessibility floor covers mobile focus motion and contrast',
   [/responsive/i, /360px/i, /visible keyboard focus/i, /reduced motion/i, /respected/i, /sufficient contrast/i, /both themes/i],
   'Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in both themes.',
@@ -86,6 +104,12 @@ for (const [name, concepts, rewording, inversions, prohibition] of [
   ['outer framing', [/outer card/i, /border/i, /banner title/i],
     'Never use an outer card, border or banner title.',
     [[/never/i, 'always']], /never (?:add|use)/i],
+  ['banner title scope', [/banner title/i, /means|denotes/i, /outer header block or band/i],
+    'A banner title denotes an outer header block or band.',
+    [[/outer header block or band/i, 'page heading']]],
+  ['ordinary page headings', [/ordinary page heading/i, /allowed|permitted/i],
+    'An ordinary page heading is permitted.',
+    [[/allowed|permitted/i, 'forbidden']]],
   ['transparent page layers', [/keep|leave/i, /html/i, /body/i, /outermost element/i, /without a background colou?r/i],
     'Leave html, body and the outermost element without a background color.',
     [[/without a background colou?r/i, 'with a background color']]],
