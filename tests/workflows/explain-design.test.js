@@ -95,7 +95,7 @@ for (const [name, concepts, rewording, inversions, prohibition] of [
 ]) {
   test(`design: T3 embed fit ${name}`, () => {
     const page = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
-    const section = page.match(/^## Embed fit\n([\s\S]*?)(?=\n## |$)/m)?.[1] ?? '';
+    const section = page.split('\n## Embed fit\n')[1]?.split('\n## ')[0] ?? '';
     const accepts = (source) => prohibition ? prohibits(source, prohibition, ...concepts) : requires(source, ...concepts);
     checkRule(sentences(section).join('. '), accepts, rewording, inversions, concepts);
   });
