@@ -102,8 +102,10 @@ Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
 Publish and `explain-design.test.js` also check frontend-design's sole design authority,
-inline font choices and published system stacks, free palette with theme legibility and the accessibility floor, plus screenshot
+inline font choices and published system stacks, inline colours derived from T3 theme variables,
+theme legibility and the accessibility floor, plus screenshot
 review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
+Inline pages never switch palettes on `prefers-color-scheme` or redefine T3 variables.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
 Preset reviewer-note contracts mirror Publish's four-width, both-theme inputs and

@@ -22,6 +22,7 @@ Never add an outer card, border or banner title.
 A banner title means an outer header block or band; an ordinary page heading is allowed.
 Keep html, body and the outermost element without a background colour.
 Give any inner box with its own background at least 16px padding on every side and `var(--radius)` corners.
+Anatomy may retain its figure card as an inner panel with at least 16px padding and `var(--radius)`; its page wrapper still has zero gutters and no background.
 Never use viewport heights.
 Let content set the page height. Use fixed chart heights.
 Set frame `height` to the larger contentHeight of the two previews, capped at 2000.

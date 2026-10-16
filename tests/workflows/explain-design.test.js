@@ -113,6 +113,9 @@ for (const [name, concepts, rewording, inversions, prohibition] of [
   ['transparent page layers', [/keep|leave/i, /html/i, /body/i, /outermost element/i, /without a background colou?r/i],
     'Leave html, body and the outermost element without a background color.',
     [[/without a background colou?r/i, 'with a background color']]],
+  ['anatomy wrapper stays flush and transparent', [/page wrapper/i, /zero gutters/i, /no background/i],
+    'Keep zero gutters and no background on the page wrapper.',
+    [[/zero gutters/i, '16px gutters'], [/no background/i, 'an opaque background']], /no background/i],
   ['inner box spacing and corners', [/give|set/i, /inner box/i, /own background/i, /at least 16px padding/i, /every side/i, /var\(--radius\)/i, /corners/i],
     'Set var(--radius) corners and at least 16px padding on every side for any inner box with its own background.',
     [[/at least 16px padding/i, '4px padding'], [/every side/i, 'the left side'], [/var\(--radius\)/i, '0px']]],
@@ -124,6 +127,18 @@ for (const [name, concepts, rewording, inversions, prohibition] of [
     checkRule(sentences(section).join('. '), accepts, rewording, inversions, concepts);
   });
 }
+test('design: T3 embed fit permits the anatomy figure card as an inner panel', () => {
+  const page = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
+  const section = sentences(page.split('\n## Embed fit\n')[1]?.split('\n## ')[0] ?? '').join('. ');
+  const concepts = [/Anatomy/i, /(?:may|can) retain|can keep/i, /figure card/i, /inner panel/i, /at least 16px padding/i, /var\(--radius\)/i];
+  // The affirmative-instruction helper treats may as optional; normalize this explicit permission.
+  const accepts = (source) => requires(source.replace(/\bmay retain\b/gi, 'can retain'), ...concepts);
+  checkRule(section, accepts,
+    'Anatomy can keep its figure card as an inner panel with at least 16px padding and var(--radius).',
+    [[/(?:may|can) retain|can keep/i, 'must remove'], [/inner panel/i, 'outer frame'],
+      [/at least 16px padding/i, '4px padding'], [/var\(--radius\)/i, '0px']], concepts);
+});
+
 rule('axstack-explain/references/inline-pages.md', 'content mapping is refinable design guidance',
   [/content.shape mapping/i, /guidance/i, /frontend-design/i, /can refine/i],
   'Treat the content-shape mapping as guidance that frontend-design can refine.',
