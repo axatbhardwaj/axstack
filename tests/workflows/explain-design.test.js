@@ -39,6 +39,20 @@ rule(guide, 'inline fonts come only from T3 variables', [/inline/i, /only/i, /T3
   'Inline pages use only T3 font variables.', [[/only/i, 'optional'], [/T3 font variables/i, 'web fonts']]);
 rule(guide, 'published fonts use system stacks', [/published/i, /use/i, /system font stacks/i],
   'Published articles use system font stacks.', [[/use/i, 'skip'], [/system font stacks/i, 'downloaded fonts']]);
+rule(guide, 'standalone composition has mobile gutters and balanced desktop margins',
+  [/standalone Publish articles/i, /mobile gutters/i, /bounded prose measure/i, /intentional horizontal margins/i, /balanced desktop composition/i],
+  'For balanced desktop composition, give standalone Publish articles intentional horizontal margins and a bounded prose measure, plus mobile gutters.',
+  [[/mobile gutters/i, 'edge-to-edge mobile text'], [/bounded prose measure/i, 'unlimited prose width'],
+    [/intentional horizontal margins/i, 'zero horizontal margins'], [/balanced desktop composition/i, 'inline embed geometry']]);
+rule(guide, 'standalone typography and rhythm support reading',
+  [/standalone articles/i, /readable body typography/i, /line height/i, /heading hierarchy/i, /generous section spacing/i],
+  'For standalone articles, set generous section spacing and heading hierarchy with readable body typography and line height.',
+  [[/readable body typography/i, 'tiny body typography'], [/line height/i, 'cramped lines'],
+    [/heading hierarchy/i, 'uniform headings'], [/generous section spacing/i, 'zero section spacing']]);
+rule(guide, 'chart legibility spans widths and themes',
+  [/chart/i, /labels/i, /values/i, /units/i, /spacing/i, /legibility/i, /mobile and desktop/i, /both themes/i],
+  'Ensure chart legibility with labels, values, units and spacing suited to mobile and desktop widths in both themes.',
+  [[/legibility/i, 'decoration'], [/mobile and desktop/i, 'desktop only'], [/both themes/i, 'one theme']]);
 rule(guide, 'font files and network are prohibited', [/font files/i, /network/i],
   'Never use font files or network requests.', [[/never/i, 'always']], /never use/i);
 rule(guide, 'design history is not kept across pages', [/design notes/i, /history/i, /across pages/i],
@@ -64,9 +78,23 @@ rule(qa, 'inline reviewer renders exact bytes itself',
   'For inline pages, the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
   [[/renders?/i, 'skips'], [/itself/i, 'via the author'], [/exact bytes/i, 'earlier bytes'], [/html_preview/i, 'html_render']]);
 rule(qa, 'Publish reviewer opens verifier PNGs bound to final bytes',
-  [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /728px dark/i, /360px light/i, /artifact SHA-256/i, /before review/i],
-  'For Publish, the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light, with paths bound to the artifact SHA-256 and recorded before review.',
-  [[/opens?/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'], [/artifact SHA-256/i, 'draft title']]);
+  [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /728px dark/i, /360px light/i,
+    /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
+  'For Publish, the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 before review.',
+  [[/opens?/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
+    [/artifact SHA-256/i, 'draft title'], [/1440px desktop/i, '728px intermediate'],
+    [/all four widths in both themes/i, 'one theme per width']]);
+rule(qa, 'desktop screenshot inspection checks composition beyond absence of overflow',
+  [/inspect/i, /1440px desktop screenshot/i, /balanced composition/i, /horizontal margins/i,
+    /prose measure/i, /typography/i, /section spacing/i, /chart legibility/i],
+  'Inspect typography, section spacing and chart legibility alongside prose measure, horizontal margins and balanced composition in the 1440px desktop screenshot.',
+  [[/inspect/i, 'skip'], [/1440px desktop screenshot/i, '728px screenshot'],
+    [/balanced composition/i, 'overflow only'], [/chart legibility/i, 'chart presence']]);
+rule(qa, 'mobile screenshot inspection checks gutters and readable content',
+  [/inspect/i, /360px and 390px mobile screenshots/i, /gutters/i, /readable text/i, /chart labels/i],
+  'Inspect gutters, readable text and chart labels in the 360px and 390px mobile screenshots.',
+  [[/inspect/i, 'skip'], [/gutters/i, 'edge-to-edge text'], [/readable text/i, 'text presence'],
+    [/chart labels/i, 'chart presence']]);
 rule(publish, 'Publish screenshots precede independent review',
   [/before.*review/i, /records?/i, /axstack-ui-verifier/i, /Playwright MCP/i, /screenshots/i, /paths/i, /SHA-256/i],
   'Before independent review, axstack-ui-verifier runs Playwright MCP checks and records screenshots with paths and their artifact SHA-256.',
