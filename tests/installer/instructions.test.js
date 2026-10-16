@@ -166,7 +166,7 @@ function legacyRoutingFixture() {
   const home = join(root, 'home');
   const fakeBin = join(root, 'fake-bin');
   mkdirSync(fakeBin, { recursive: true });
-  for (const [name, output] of [['git', 'git fixture'], ['gh', 'gh fixture'], ['t3', 't3 v0.0.46-nightly.20261003.2610']]) {
+  for (const [name, output] of [['git', 'git fixture'], ['gh', 'gh fixture'], ['t3', 't3 v0.1.0']]) {
     const file = join(fakeBin, name);
     writeFileSync(file, `#!/bin/sh\necho '${output}'\n`);
     chmodSync(file, 0o755);

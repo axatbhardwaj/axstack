@@ -23,7 +23,7 @@ function fakeExec(overrides = {}) {
     git: { ok: true, stdout: 'git version 2.40.0' },
     gh: { ok: true, stdout: 'gh version 2.0.0' },
     'gh-stack': { ok: true, stdout: 'gh-stack available' },
-    't3-binary': { ok: true, stdout: 't3 v0.0.46-nightly.20261003.2610' },
+    't3-binary': { ok: true, stdout: 't3 v0.1.0' },
   };
   return async (name) => ({ ...base[name], ...overrides[name] } ?? { ok: false, stdout: '' });
 }
@@ -104,35 +104,29 @@ test('missing T3 is a capability gap', async () => {
   expect(report.checks.find((check) => check.name === 't3-binary')?.ok).toBe(false);
 });
 
-test('T3 floor compares base versions before nightly dates and builds', async () => {
-  for (const [stdout, ok] of [
-    ['t3 v0.0.46-nightly.20261003.2610', true],
-    ['0.0.46-nightly.20261003', false],
-    ['t3 v0.0.46-nightly.20261003.2609', false],
-    ['t3 v0.0.46-nightly.20261003.2611', true],
-    ['t3 v0.0.46-nightly.20261003.99', false],
-    ['t3 v0.0.46-nightly.20261004.1', true],
-    ['t3 v0.0.46-nightly.20261002.9999', false],
-    ['t3 v0.0.45-nightly.20261004.1', false],
-    ['t3 v0.0.47', true],
-    ['t3 v1.0.0', true],
-    ['t3 v0.0.46', true],
-    ['t3 v0.0.45', false],
-    ['t3 v0.0.47-nightly.20261002.1', true],
-    ['t3 v0.0.47-nightly.20261003.2609', true],
-    ['t3 v0.0.47-nightly.20261002', true],
-    ['t3 v0.0.47-beta.1', false],
-    ['t3 v0.0.46-nightly.20261303.1', false],
-    ['t3 v0.0.46-nightly.20260230.1', false],
-    ['t3 v0.0.46-nightly.20261003.garbage', false],
-    ['not a version', false],
-    ['', false],
-    ['t3 v0.0.47 extra', false],
-  ]) {
-    const report = await checkCapabilities(fakeExec({ 't3-binary': { ok: true, stdout } }));
-    expect(report.checks.find((check) => check.name === 't3-binary')?.ok, stdout).toBe(ok);
-  }
-  expect(capabilities.T3_FLOOR).toBe('0.0.46-nightly.20261003.2610');
+test.each([
+  '0.1.0', 'v0.1.0', 't3 0.1.0', 't3 v0.1.0',
+  '  t3 v0.1.0\n', 't3 v0.1.1', 't3 0.2.0', 't3 v1.0.0',
+])('T3 stable prerequisite accepts supported output %j', async (stdout) => {
+  const report = await checkCapabilities(fakeExec({ 't3-binary': { ok: true, stdout } }));
+  expect(report.checks.find((check) => check.name === 't3-binary')?.ok).toBe(true);
+  expect(report.gaps).toEqual([]);
+});
+
+test.each([
+  't3 v0.0.46', 't3 v0.0.99',
+  't3 v0.0.46-nightly.20261003.2610', 't3 v0.1.0-nightly.20261016.1',
+  't3 v1.0.0-nightly.20261016.1', 't3 v0.1.0-beta.1', 't3 v1.0.0-rc.1',
+  'not a version', '', 't3 v0.1', 't3 v0.1.0 extra',
+  't3 v0.1.0.1', 't3 v00.1.0', 't3 v0.01.0', 't3 v0.1.00',
+  't3 v0.1.0\nt3 v1.0.0',
+])('T3 stable prerequisite rejects %j with actionable remediation', async (stdout) => {
+  const report = await checkCapabilities(fakeExec({ 't3-binary': { ok: true, stdout } }));
+  const check = report.checks.find((check) => check.name === 't3-binary');
+  expect(check?.ok).toBe(false);
+  expect(report.gaps).toHaveLength(1);
+  expect(check?.detail).toMatch(/install.*T3.*stable.*0\.1\.0.*PATH/i);
+  expect(check?.detail).toMatch(/rerun.*axstack check/i);
 });
 
 test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => {
@@ -147,39 +141,43 @@ test('CLI check reports gaps and exits non-zero with an empty tool PATH', () => 
   expect(r.out.toLowerCase()).toMatch(/gap|missing|not found/);
 });
 
-test('CLI check succeeds with a controlled fake toolchain', () => {
-  // Hermetic success case: every external binary is a fixture script, so the
-  // test never depends on the host's live T3/gh-stack setup. The Bun
-  // runtime/version assertion stays real; missing-tool checks are untouched.
-  const fakeBin = join(makeTempRoot(), 'fake-bin');
-  mkdirSync(fakeBin, { recursive: true });
-  const log = join(fakeBin, 'argv.log');
-  const script = (name, body) => {
-    const p = join(fakeBin, name);
-    writeFileSync(p, `#!/bin/sh\n${body}\n`);
-    chmodSync(p, 0o755);
-  };
-  script('git', 'echo "git version 9.9.9-fake"');
-  script('t3', `echo "t3 $*" >> "${log}"
-echo 't3 v0.0.46-nightly.20261003.2610'`);
-  writeFileSync(
-    join(fakeBin, 'gh'),
-    '#!/bin/sh\n' +
-      `echo "gh $*" >> "${log}"\n` +
-      'if [ "$1" = "--version" ]; then echo "gh version 9.9.9-fake"; exit 0; fi\n' +
-      'if [ "$1" = "stack" ] && [ "$2" = "--help" ]; then echo "fake gh stack help"; exit 0; fi\n' +
-      'echo "unexpected gh args: $*" >&2; exit 1\n',
-  );
-  chmodSync(join(fakeBin, 'gh'), 0o755);
-  const r = runCli(['check'], {
-    env: { PATH: fakeBin },
+test.each([
+  ['t3 v0.1.0', true],
+  ['t3 v0.0.46', false],
+  ['t3 v1.0.0-nightly.20261016.1', false],
+  ['t3 v1.0.0-rc.1', false],
+  ['not a version', false],
+])('CLI check is read-only with T3 output %j', (output, ok) => {
+  const root = makeTempRoot();
+  const fakeBin = join(root, 'fake-bin');
+  const home = join(root, 'home');
+  mkdirSync(fakeBin);
+  mkdirSync(home);
+  const settings = join(home, 'settings.json');
+  writeFileSync(settings, '{"updateChannel":"nightly","custom":true}\n');
+  const log = join(root, 'argv.log');
+  for (const [name, stdout] of [
+    ['git', 'git version 9.9.9-fake'], ['gh', 'gh version 9.9.9-fake'], ['t3', output],
+  ]) {
+    const file = join(fakeBin, name);
+    writeFileSync(file, `#!/bin/sh\necho "${name} $*" >> "${log}"\n[ "$#" = 1 ] && [ "$1" = --version ] || exit 99\necho '${stdout}'\n`);
+    chmodSync(file, 0o755);
+  }
+  const snapshot = () => Object.fromEntries(Array.from(new Bun.Glob('**/*').scanSync({ cwd: home, dot: true, onlyFiles: true }))
+    .map((path) => [path, readFileSync(join(home, path), 'utf8')]));
+  const before = snapshot();
+  // Disable Bun's runtime cache so HOME snapshots measure Axstack writes.
+  const result = runCli(['check'], {
+    expectFail: !ok, env: { HOME: home, PATH: fakeBin, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' },
   });
-  expect(r.ok).toBe(true);
-  expect(r.out).toContain('git version 9.9.9-fake');
-  expect(r.out).toContain('0.0.46-nightly.20261003.2610');
-  expect(readFileSync(log, 'utf8')).toContain('t3 --version');
-  expect(r.out).toContain(`v${Bun.version}`);
-  expect(readFileSync(log, 'utf8')).not.toContain('gh stack');
+  expect(result.ok).toBe(ok);
+  expect(result.out).toMatch(/T3 Code.*stable.*0\.1\.0/i);
+  expect(result.out).toContain(`v${Bun.version}`);
+  if (!ok) expect(result.out).toMatch(/install.*stable.*rerun.*axstack check/i);
+  expect(readFileSync(log, 'utf8').trim().split('\n')).toEqual([
+    'git --version', 'gh --version', 't3 --version',
+  ]);
+  expect(snapshot()).toEqual(before);
 });
 
 describe('Bun runtime floor', () => {

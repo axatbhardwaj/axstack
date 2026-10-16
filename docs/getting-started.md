@@ -9,7 +9,10 @@ For the mental model, read [concepts](concepts.md); for other journeys, use
 ## Prepare your host
 
 You need Bun >=1.3.14, Git, the GitHub CLI, and
-T3 Code `0.0.46-nightly.20261003.2610` or newer. These executables must be on PATH.
+T3 Code stable `0.1.0` or newer. These executables must be on PATH.
+Nightly and other prerelease builds are unsupported. Install or update T3 from
+its stable channel, ensure the stable `t3` executable is on PATH, and rerun
+`axstack check` if this prerequisite fails. Check does not install or switch T3.
 The providers required by your chosen preset must be available inside T3.
 See [installation](installation.md) for harness paths and
 [host operations](host-operations.md) for provider and project setup.
@@ -37,7 +40,7 @@ A successful check exits 0. Its four capability rows mean:
 | `bun` | The running Bun version meets the floor. |
 | `git` | Git's version command succeeds. |
 | `gh` | The GitHub CLI's version command succeeds. |
-| `t3` | T3's version command succeeds and meets the floor. |
+| `t3` | T3's version command succeeds and reports stable >=0.1.0. |
 
 The `gh stack` extension is needed only for preexisting native stacks; ordinary
 PRs/chains use Git and `gh pr`. With this harness target, check also reports the
