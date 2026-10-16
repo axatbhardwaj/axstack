@@ -10,14 +10,20 @@ Only an explicit user theme request overrides the page theme.
 For inline pages other than anatomy, follow [design.md](design.md) for the theme rule and visual design authority.
 Anatomy follows its own kit.
 
-Use fluid width.
+Choose the page shape from its content rather than a fixed template.
+Map stages to a connected diagram, sequence to a timeline, comparison to side
+by side or table, and separate equal items to a list; frontend-design can refine this content-shape mapping guidance.
+
+## Embed fit
+
+The T3 frame is borderless on the thread background, with its left edge aligned to reply text.
+Use fluid width with zero horizontal padding on the outermost element.
+Never add an outer card, border or banner title.
+Keep html, body and the outermost element without a background colour.
+Give any inner box with its own background at least 16px padding on every side and `var(--radius)` corners.
 Never use viewport heights.
 Let content set the page height. Use fixed chart heights.
 Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
-
-Choose the page shape from its content rather than a fixed template.
-Map stages to a connected diagram, sequence to a timeline, comparison to side
-by side or table, and separate equal items to a list.
 
 ## Page rules
 

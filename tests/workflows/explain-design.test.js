@@ -35,13 +35,18 @@ rule(guide, 'inline fonts use T3 variables or system stacks',
   [/inline pages/i, /use/i, /T3 font variables or system font stacks/i],
   'Use T3 font variables or system font stacks for inline pages.',
   [[/use/i, 'ignore'], [/or system font stacks/i, 'only']]);
-rule(guide, 'published fonts use system stacks',
-  [/published articles/i, /use/i, /system font stacks/i],
-  'Use system font stacks for published articles.',
-  [[/use/i, 'ignore'], [/system font stacks/i, 'T3 font variables']]);
+test('design: published fonts use system stacks without T3 variables', () => {
+  const text = sentences(readFileSync(base + guide, 'utf8')).join('. ');
+  const concepts = [/published articles/i, /use/i, /system font stacks/i];
+  const accepts = (source) => requires(source, ...concepts)
+    && !sentences(source).some((sentence) => requires(sentence, /published articles/i, /T3 font variables/i));
+  checkRule(text, accepts, 'Use system font stacks for published articles.',
+    [[/use/i, 'ignore'], [/system font stacks/i, 'T3 font variables'],
+      [/system font stacks/i, 'T3 font variables or system font stacks']], concepts);
+});
 rule(guide, 'inline embed-fit and page rules also win conflicts',
-  [/non-anatomy inline pages only|only non-anatomy inline pages/i, /follow|consult/i, /inline-pages\.md/i, /embed.fit/i, /page rules/i, /win|override/i, /conflict/i],
-  'For only non-anatomy inline pages, consult inline-pages.md whose embed-fit and page rules override design choices on conflict.',
+  [/non-anatomy inline pages only|only non-anatomy inline pages/i, /follow|consult/i, /inline-pages\.md/i, /Embed fit/i, /Page rules/i, /sections/i, /win|override/i, /conflict/i],
+  'For only non-anatomy inline pages, consult inline-pages.md whose Embed fit and Page rules sections override design choices on conflict.',
   [[/non-anatomy inline pages only|only non-anatomy inline pages/i, 'all inline and published pages'], [/win|override/i, 'yield to'], [/follow|consult/i, 'ignore']]);
 rule(guide, 'live T3 theme supplies inline ground and ink',
   [/inline pages/i, /follow/i, /live T3 theme/i, /ground/i, /--background/i, /ink/i, /--foreground/i],
@@ -67,8 +72,38 @@ test('design freedom removes the old Axstack style restrictions', () => {
   const inline = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
   expect(design).not.toMatch(/named tells|single accent|muted.only|taste-skill|Standalone Publish layout/i);
   expect(readFileSync(base + publish, 'utf8')).not.toMatch(/zero.padding embed rules/i);
-  expect(inline).not.toMatch(/zero (?:outer horizontal padding|gutters)|never use an outer frame|Prefer diagrams and timelines|Avoid grids of bordered boxes|Keep borders minimal|for their named purposes/i);
+  expect(inline).not.toMatch(/Prefer diagrams and timelines|Avoid grids of bordered boxes|Keep borders minimal|for their named purposes/i);
 });
+
+// These constraints belong to T3's host frame, rather than art direction.
+for (const [name, concepts, rewording, inversions, prohibition] of [
+  ['host frame alignment', [/T3 frame/i, /borderless/i, /thread background/i, /left edge/i, /reply text/i],
+    'The borderless T3 frame sits on the thread background with its left edge aligned to reply text.',
+    [[/borderless/i, 'bordered'], [/reply text/i, 'viewport']]],
+  ['outer width and padding', [/use|keep/i, /fluid width/i, /zero horizontal padding/i, /outermost element/i],
+    'Keep the outermost element at fluid width with zero horizontal padding.',
+    [[/fluid width/i, 'fixed width'], [/zero horizontal padding/i, '24px horizontal padding']]],
+  ['outer framing', [/outer card/i, /border/i, /banner title/i],
+    'Never use an outer card, border or banner title.',
+    [[/never/i, 'always']], /never (?:add|use)/i],
+  ['transparent page layers', [/keep|leave/i, /html/i, /body/i, /outermost element/i, /without a background colou?r/i],
+    'Leave html, body and the outermost element without a background color.',
+    [[/without a background colou?r/i, 'with a background color']]],
+  ['inner box spacing and corners', [/give|set/i, /inner box/i, /own background/i, /at least 16px padding/i, /every side/i, /var\(--radius\)/i, /corners/i],
+    'Set var(--radius) corners and at least 16px padding on every side for any inner box with its own background.',
+    [[/at least 16px padding/i, '4px padding'], [/every side/i, 'the left side'], [/var\(--radius\)/i, '0px']]],
+]) {
+  test(`design: T3 embed fit ${name}`, () => {
+    const page = readFileSync(`${base}axstack-explain/references/inline-pages.md`, 'utf8');
+    const section = page.match(/^## Embed fit\n([\s\S]*?)(?=\n## |$)/m)?.[1] ?? '';
+    const accepts = (source) => prohibition ? prohibits(source, prohibition, ...concepts) : requires(source, ...concepts);
+    checkRule(sentences(section).join('. '), accepts, rewording, inversions, concepts);
+  });
+}
+rule('axstack-explain/references/inline-pages.md', 'content mapping is refinable design guidance',
+  [/content.shape mapping/i, /guidance/i, /frontend-design/i, /can refine/i],
+  'Treat the content-shape mapping as guidance that frontend-design can refine.',
+  [[/can refine/i, 'must preserve'], [/guidance/i, 'hard rules']]);
 
 rule('axstack-explain/references/inline-pages.md', 'inline design authority excludes anatomy',
   [/inline pages (?:other than|except) anatomy|non-anatomy inline pages/i, /follow|consult/i, /design\.md/i, /theme rule/i, /visual design authority/i],

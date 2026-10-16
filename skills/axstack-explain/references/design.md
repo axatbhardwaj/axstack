@@ -9,6 +9,6 @@ These hard rules win on conflict.
 - Never stop to confirm the subject: the brief and evidence are the subject.
 - Never keep design notes or history across pages. This overrides frontend-design's note hint.
 - Source fidelity beats any design choice: diagram edges, order, tables and code paths show the source.
-- For non-anatomy inline pages only, follow [inline-pages.md](inline-pages.md): its embed-fit and page rules also win on conflict. Anatomy follows its own kit.
+- For non-anatomy inline pages only, follow [inline-pages.md](inline-pages.md): its Embed fit and Page rules sections also win on conflict. Anatomy follows its own kit.
 
 Credit: [frontend-design](frontend-design/PROVENANCE.md).
