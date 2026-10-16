@@ -82,8 +82,8 @@ const quietRules = [
       [/beyond a user decision|other than only the user/i, 'awaiting only the user']]],
   ['user-only holds remain quiet-eligible',
     [/holds awaiting only the user/i, /remain quiet-eligible/i,
-      /updatedAt/i, /4 h full pass/i, /reminders/i],
-    'Holds awaiting only the user remain quiet-eligible because updatedAt changes with a PR decision and the 4 h full pass covers reminders.',
+      /updatedAt/i, /4 h full pass/i, /reconcil.*replies in flagged threads/i],
+    'Holds awaiting only the user remain quiet-eligible because updatedAt changes with a PR decision and the 4 h full pass reconciles replies in flagged threads.',
     [[/only the user/i, 'also the user'], [/quiet-eligible/i, 'busy']]],
 ];
 for (const [name, concepts, rewording, inversions] of quietRules) {
@@ -359,7 +359,7 @@ test('review manager preserves peer, decision, notification, and merge boundarie
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/Peer code stays readonly/i);
   // Peer process/architecture escalation is superseded by peer-review.test.js B6.
-  expect(manager).toMatch(/Only credible serious security\/funds risk[^.]*serious-risk hold path in the T3 driver thread/i);
+  expect(manager).toMatch(/Only credible serious security\/funds risk[^.]*peer-review serious-risk hold/i);
   expect(manager).toMatch(/Silence never authorizes\s+an action/i);
   expect(manager).toMatch(/No manager[^.]*may merge[^.]*close[^.]*force-push[^.]*rebase[^.]*restack[^.]*mutate a PR branch/i);
   expect(manager).toMatch(/Human merge remains the boundary/i);

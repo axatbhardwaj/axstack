@@ -143,7 +143,7 @@ exact-head review verdicts; peer PRs are merged by the user. Manual adopted-PR m
 uses `axstack-watch` with local-SHA review before authorized publication.
 Only credible serious security/funds risk on peer reviews remains actionable
 in GitHub or a durable user-owned conversation after the manager session ends,
-with a note in the T3 driver thread. Other capped peer-review
+with its own pass thread flagged and an optional host-policy alert. Other capped peer-review
 disputes go to the adviser panel; architecture, permanent on-chain or process
 decisions alone never trigger a ping.
 The current operational contract is

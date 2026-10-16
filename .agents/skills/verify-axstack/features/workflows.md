@@ -1,13 +1,14 @@
 # Inspect workflow instruction contracts
 
 Entry points: packaged workflow skills and shared references; fixtures:
-`tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
+`tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js`.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 The removal check covers shipped transport absence and driver-thread decision holds.
+Manager-hold checks cover finite-pass flagging, optional host alerts and host-defined user input.
 
 ```bash
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
@@ -20,6 +21,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/peer-review.test.js \
   tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-removal.test.js \
+  tests/workflows/manager-holds.test.js \
   tests/workflows/merge-audit-discipline.test.js \
   tests/workflows/merge-escalation.test.js \
   tests/workflows/autopilot-repair.test.js \

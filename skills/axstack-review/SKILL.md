@@ -525,9 +525,9 @@ the user's decision. Silence leaves the hold open. Use no private escalation scr
 Under a manager PR job, apply Peer mode's serious security/funds threshold.
 A qualifying credible serious risk found by a reviewer raises the
 standing internal prompt and dependent-action hold immediately in the compact
-run record and a durable GitHub or user-owned conversation. The authorized
-driver raises the hold in the T3 driver thread and ends the turn parked on the
-decision; silence never authorizes action.
+run record and a durable GitHub or user-owned conversation. The manager pass
+follows [flag and alert](../axstack/references/automations.md#exceptional-decisions-and-notifications)
+for its own thread; silence never authorizes action.
 
 ## Publishing rule
 

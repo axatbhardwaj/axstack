@@ -546,7 +546,8 @@ changes. A same-patch-id rebase keeps the clock.
 Each key is sent at most once, even when readiness is lost and regained or the
 patch changes. After 60 minutes, post one T3 driver-thread note per key, including
 simultaneous blockers and a new key.
-Send `<repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>; ready at <sha7>.`
+Write the blocked note as short bullet points with the action first and a PR link.
+Include `<repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|comment>; ready at <sha7>.`
 The check runs on existing watch wakes with no new schedule.
 The ping is a notification only: when the blocker clears, the PR merges with no reply.
 

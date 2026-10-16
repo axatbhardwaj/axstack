@@ -30,7 +30,7 @@ compare its Watermarks with the inventory:
 - Run the full pass when continuity records any unserved, capacity-deferred, `INCOMPLETE` or re-eligible event, or any open hold with a resume condition beyond a user decision (such as capacity or remeasure).
 
 Holds awaiting only the user remain quiet-eligible: a user decision on the PR
-changes `updatedAt` and the 4 h full pass bounds reminders.
+changes `updatedAt`, and the 4 h full pass reconciles replies in flagged threads.
 
 If every busy condition is false, end the turn with no text, no skill load, no sweep and no continuity write.
 Otherwise continue with the full pass below; incomplete evidence retains the
