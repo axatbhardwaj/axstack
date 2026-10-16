@@ -17,7 +17,7 @@ and provisions no external tools. Fixture catalogs prove no live model availabil
 Static readiness needs an evidence-owned separate Git directory because of
 its output guard. Read-only offline forge observations remain unknown.
 
-Uncovered surfaces: live T3 MCP launches, driver gating previews, live T3 frame delivery, external Notion/Linear/Telegram, provider authentication,
+Uncovered surfaces: live T3 MCP launches, driver gating previews, live T3 frame delivery, external Notion/Linear, provider authentication,
 scheduled work, npm staging approval and release installation across hosts.
 These require their own authorized isolated verification; never infer them
 from this CLI recipe. The install feature maps retirement/retry fixtures; workflow and Anatomy
