@@ -1,6 +1,6 @@
 // Host capability checks. Injected execution keeps tests off live runtimes.
 export const BUN_FLOOR = '1.3.14';
-export const T3_FLOOR = '0.0.46-nightly.20261003.2610';
+export const T3_FLOOR = '0.1.0';
 
 export const PROBE_LIMITATIONS = [
   'T3 orchestration MCP readiness, provider auth, models and effort are verified by driver preflight inside a T3 thread, never from the binary probe.',
@@ -13,7 +13,7 @@ const CHECK_LABELS = {
   bun: 'bun >= 1.3.14 runtime',
   git: 'git CLI',
   gh: 'gh CLI',
-  't3-binary': `T3 Code CLI >= ${T3_FLOOR}`,
+  't3-binary': `T3 Code CLI stable >= ${T3_FLOOR}`,
 };
 
 // Ordinary PRs need Git and gh; legacy native-stack operations probe separately.
@@ -24,22 +24,13 @@ export const PROBE_COMMANDS = {
 };
 
 function validT3Version(stdout) {
-  const match = /^(?:t3\s+)?v?(\d+\.\d+\.\d+)(?:-nightly\.(\d{8})(?:\.(\d+))?)?$/.exec(stdout.trim());
-  const [floorVersion, floorNightly] = T3_FLOOR.split('-nightly.');
-  const [floorDate, floorBuild] = floorNightly.split('.');
-  if (!match || !meetsFloor(match[1], floorVersion)) return false;
-  if (!match[2]) return true;
-  const date = match[2];
-  const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-  const parsed = new Date(`${iso}T00:00:00Z`);
-  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso
-    && (match[1] !== floorVersion || date > floorDate || (date === floorDate && match[3] !== undefined
-      && Number(match[3]) >= Number(floorBuild)));
+  const match = /^(?:t3\s+)?v?((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/.exec(stdout.trim());
+  return !!match && meetsFloor(match[1], T3_FLOOR);
 }
 
 function validateT3Result(result) {
   if (!result?.ok || validT3Version(String(result.stdout ?? ''))) return result;
-  return { ok: false, stdout: `requires T3 >= ${T3_FLOOR}; got ${String(result.stdout ?? '').trim() || 'malformed version'}` };
+  return { ok: false, stdout: `Install T3 Code stable >= ${T3_FLOOR} on PATH; rerun axstack check. Got: ${String(result.stdout ?? '').trim() || 'malformed version'}` };
 }
 
 // Pure semver-floor comparison over numeric prefix segments ("1.3.14" style;

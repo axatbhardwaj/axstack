@@ -5,7 +5,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 
 | User feature | Recipe | Evidence |
 | --- | --- | --- |
-| Install skills and inspect host setup | [Install/check/version](install.md) | Owned files, repeat install, legacy retirement/retry and capability gaps |
+| Install skills and inspect host setup | [Install/check/version](install.md) | Owned files, repeat install, legacy retirement/retry, stable T3 prerequisite and read-only capability gaps |
 | Resolve saved models and prepare dispatch | [Model/dispatch plans](dispatch.md) | Resolved model, bound instance, MATCH readback |
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |

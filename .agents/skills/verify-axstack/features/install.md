@@ -57,11 +57,16 @@ are explicit environment gaps, not a successful host check.
 Gotcha: installation alone cannot prove harness discovery or model readiness.
 Ordinary check must never invoke or require `gh stack`; legacy native-stack
 operations probe it separately. Verify that boundary with the controlled
-toolchain tests:
+toolchain tests. These accept stable T3 >=0.1.0 with bare, `v`, `t3` and
+`t3 v` version forms; old, nightly, other prerelease and malformed outputs fail
+with stable installation/PATH remediation. The CLI fixtures assert only version
+commands run and temporary HOME contents survive both success and failure. They
+disable Bun's transpiler cache so runtime cache files cannot mask product writes:
 
 ```bash
 doctor > "$EVIDENCE/capabilities-doctor.log" 2>&1
 bun run test tests/installer/capabilities.test.js tests/installer/r2.test.js \
+  tests/installer/instructions.test.js \
   > "$EVIDENCE/capabilities-suite.log" 2>&1
 ```
 

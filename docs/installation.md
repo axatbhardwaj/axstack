@@ -8,7 +8,7 @@ does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
 workflow database.
 
 Requirements: Bun >=1.3.14, Git, `gh`, and a running
-T3 Code `0.0.46-nightly.20261003.2610` or newer. The driver is a T3 thread
+T3 Code stable `0.1.0` or newer. The driver is a T3 thread
 with the `t3-code` MCP. See the [T3 runtime boundary](../skills/axstack/references/t3-runtime.md).
 Axstack has no runtime package dependencies. Filesystem access uses Bun-backed
 `node:fs` and `node:fs/promises`. Vendored anatomy code runs with Bun;
@@ -129,7 +129,12 @@ legacy native-stack operations, which probe `gh stack --help` separately:
 | `bun` | The `bun` row reports the already-validated running version, because Bun below 1.3.14 exits 1 before any row is printed. |
 | `git` | `git --version` succeeds. |
 | `gh` | `gh --version` succeeds. |
-| `t3` | `t3 --version` succeeds and its output meets the T3 version floor. |
+| `t3` | `t3 --version` succeeds and reports a stable release >=0.1.0; nightly and other prerelease builds fail. |
+
+For an old, nightly, prerelease or malformed T3 version, install or update T3 Code
+from its stable channel, ensure the stable `t3` executable is on PATH, and rerun
+`axstack check`. Check only probes capabilities; it never installs T3 or changes
+its update channel or settings.
 
 `--bundle` additionally validates the bundle and reports its skill-file count
 and preset names; it does not compare every installed skill's bytes.

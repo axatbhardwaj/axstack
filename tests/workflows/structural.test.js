@@ -218,7 +218,7 @@ test('structural: public guidance identifies T3 and qualifies runtime evidence',
 test('structural: host operations records current setup requirements', () => {
   const installation = readFileSync(join(root, 'docs/installation.md'), 'utf8').replace(/\s+/g, ' ');
   const host = readFileSync(join(root, 'docs/host-operations.md'), 'utf8').replace(/\s+/g, ' ');
-  expect(installation).toContain('0.0.46-nightly.20261003.2610');
+  expect(installation).toContain('0.1.0');
   expect(host).toContain('t3 serve --tailscale-serve');
   expect(host).toContain('t3 pair');
   for (const [concepts, holdout] of [
