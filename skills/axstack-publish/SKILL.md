@@ -42,7 +42,7 @@ to remove private paths, IDs, credentials, prompts, messages and internal record
 For public mode, run Explain's [self-contained asset check](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
 and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
-Inline zero-padding embed rules apply only to T3 frames.
+[Inline zero-padding embed rules](../axstack-explain/references/inline-pages.md#shape-and-theme) apply only to T3 frames.
 Use [design.md](../axstack-explain/references/design.md) for standalone Publish layout.
 
 Send the article adaptation, including art direction and standalone light/dark theme,

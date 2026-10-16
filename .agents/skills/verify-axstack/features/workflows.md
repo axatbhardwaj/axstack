@@ -106,6 +106,9 @@ mobile gutters, desktop composition and typography/chart legibility, plus screen
 review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
+Preset reviewer-note contracts mirror Publish's four-width, both-theme inputs and
+desktop/mobile inspection duties across mixed, codex-only and claude-only snapshots,
+while preserving the inline-only two-preview self-check.
 This offline recipe proves instructions only. The driver separately runs the
 candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
