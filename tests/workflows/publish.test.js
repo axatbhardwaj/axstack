@@ -32,6 +32,15 @@ rule('public assets reuse the self-contained Explain check', assetConcepts,
   'For public mode, run the self-contained asset check from Explain.',
   [[/run/i, 'skip'], [/self.contained/i, 'remote']]);
 
+// Join the whole rule sets: an asset/security-only enumeration loses other obligations.
+rule('Publish reuses the complete Explain page rules alongside Visual QA',
+  [/reuse|follow|apply/i, /Explain's page rules and Visual QA|Visual QA and Explain's page rules/i,
+    /checks/i, /verifier routing/i],
+  "For verifier routing and checks, follow Visual QA and Explain's page rules.",
+  [[/reuse|follow|apply/i, 'skip'],
+    [/Explain's page rules and Visual QA|Visual QA and Explain's page rules/i,
+      "Explain's page rules for self-contained bytes, semantics, accessibility and security, and Visual QA"]]);
+
 test('removing the primary asset check cannot be masked by a later recheck', () => {
   const primary = sentences(page).find((sentence) => requires(sentence, ...assetConcepts));
   expect(primary).toBeTruthy();
