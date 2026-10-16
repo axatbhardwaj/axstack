@@ -640,9 +640,12 @@ for (const preset of presetNames) {
       [[/inline/i, /reviewer/i, /itself/i, /renders/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
         'For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
         [[/renders/i, 'skips'], [/itself/i, 'via the author'], [/html_preview/i, 'html_render']]],
-      [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /728px dark/i, /360px light/i, /artifact SHA-256/i, /before review/i],
-        'For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light bound to the artifact SHA-256 and recorded before review.',
-        [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review']]],
+      [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /728px dark/i, /360px light/i,
+        /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
+        'For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes bound to the artifact SHA-256 before review.',
+        [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
+          [/390px mobile/i, '390px omitted'], [/1440px desktop/i, '728px intermediate'],
+          [/all four widths in both themes/i, 'one theme per width']]],
       [[/design review/i, /follows/i, /design\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
         'Design review follows design.md for every inline HTML page and every Publish article adaptation.',
         [[/follows/i, 'skips'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]],
@@ -651,6 +654,25 @@ for (const preset of presetNames) {
       checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
     }
   });
+}
+
+// These duties also ship in roles.json; checking only visual-qa.md misses stale presets.
+for (const [label, concepts, rewording, inversions] of [
+  ['desktop', [/inspect/i, /1440px desktop screenshot/i, /balanced composition/i, /horizontal margins/i,
+    /prose measure/i, /typography/i, /section spacing/i, /chart legibility/i],
+  'Inspect typography, section spacing and chart legibility alongside prose measure, horizontal margins and balanced composition in the 1440px desktop screenshot.',
+  [[/inspect/i, 'skip'], [/1440px desktop screenshot/i, '728px screenshot'],
+    [/balanced composition/i, 'overflow only'], [/chart legibility/i, 'chart presence']]],
+  ['mobile', [/inspect/i, /360px and 390px mobile screenshots/i, /gutters/i, /readable text/i, /chart labels/i],
+  'Inspect gutters, readable text and chart labels in the 360px and 390px mobile screenshots.',
+  [[/inspect/i, 'skip'], [/gutters/i, 'edge-to-edge text'], [/readable text/i, 'text presence']]],
+]) {
+  for (const preset of presetNames) {
+    test(`Publish ${label} inspection: ${preset} explanation reviewer`, () => {
+      const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+      checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
+    });
+  }
 }
 
 for (const preset of presetNames) {
