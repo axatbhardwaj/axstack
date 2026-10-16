@@ -62,6 +62,12 @@ test('design freedom removes the old Axstack style restrictions', () => {
   expect(inline).not.toMatch(/zero (?:outer horizontal padding|gutters)|never use an outer frame|Prefer diagrams and timelines|Avoid grids of bordered boxes|Keep borders minimal|for their named purposes/i);
 });
 
+rule('axstack-explain/references/inline-pages.md', 'inline design authority excludes anatomy',
+  [/inline pages (?:other than|except) anatomy|non-anatomy inline pages/i, /follow|consult/i, /design\.md/i, /theme rule/i, /visual design authority/i],
+  'For non-anatomy inline pages, consult design.md for visual design authority and the theme rule.',
+  [[/inline pages (?:other than|except) anatomy|non-anatomy inline pages/i, 'all inline pages including anatomy'],
+    [/follow|consult/i, 'ignore']]);
+
 rule('axstack-explain/references/inline-pages.md', 'anatomy follows its kit', [/anatomy/i, /follows|uses/i, /kit/i],
   'Anatomy uses its kit.', [[/follows|uses/i, 'skips']]);
 

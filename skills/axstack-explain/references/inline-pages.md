@@ -7,11 +7,11 @@ The driver publishes the page in its own thread.
 
 Use T3 theme variables and follow the live theme.
 Only an explicit user theme request overrides the page theme.
-Follow [design.md](design.md) for the theme rule and visual design authority.
+For inline pages other than anatomy, follow [design.md](design.md) for the theme rule and visual design authority.
+Anatomy follows its own kit.
 
 Use fluid width.
 Never use viewport heights.
-Anatomy follows its own kit.
 Let content set the page height. Use fixed chart heights.
 Set frame `height` to the larger contentHeight of the two previews, capped at 2000.
 
