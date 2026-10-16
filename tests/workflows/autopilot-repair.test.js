@@ -54,6 +54,15 @@ test('watch raises serious risks immediately and attempts bounded safe recovery'
     'Raise serious risks immediately, and attempt bounded safe recovery for blocked operations.',
     [[/immediately/i, 'next week']], concepts);
 });
+for (const path of ['skills/axstack-watch/SKILL.md', 'skills/axstack-implement/SKILL.md', 'docs/workflows.md']) {
+  test(`blocked operation still needing the user is raised after recovery: ${path}`, () => {
+    const concepts = [/after bounded safe recovery/i, /raise/i, /genuine blocked operation/i,
+      /still needs the user/i, /T3 driver thread/i, /driver ends its turn parked on (?:it|that blocker)/i];
+    checkRule(read(path), (text) => requires(text, ...concepts),
+      'Raise a genuine blocked operation that still needs the user in the T3 driver thread after bounded safe recovery, and the driver ends its turn parked on that blocker.',
+      [[/raise/i, 'ignore'], [/after bounded safe recovery/i, 'before bounded safe recovery']], concepts);
+  });
+}
 // default-auto-merge.test.js owns the AGENTS release merge and human npm gate.
 rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under release', /authority recorded for that run/);
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);

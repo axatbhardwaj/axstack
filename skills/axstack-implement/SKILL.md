@@ -266,6 +266,8 @@ With settled threads, end a turn only when every required PR is `merge-ready` or
 Follow [Decisions and holds](../axstack-watch/SKILL.md#4-route-each-wake).
 Raise user-decision and serious-risk holds in the T3 driver thread and end the
 turn parked on the decision. Serious risks are raised immediately.
+After bounded safe recovery, raise a genuine blocked operation that still needs
+the user in the T3 driver thread, and the driver ends its turn parked on it.
 
 Merge-ready opens the merge boundary. Own PRs default to automatic merge under
 [watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely).

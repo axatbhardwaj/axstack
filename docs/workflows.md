@@ -315,6 +315,8 @@ and the driver ends its turn parked on the decision.
 These include `verification not proven`, merge cards needing user input,
 spec approval and npm stage approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
+After bounded safe recovery, raise a genuine blocked operation that still needs
+the user in the T3 driver thread, and the driver ends its turn parked on it.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and

@@ -53,7 +53,7 @@ panel and compact output, while preserving authored review requirements.
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
 policy; prose budgets use measured bytes. No test result proves native queue
-coverage, atomic settlement, universal English parsing.
+coverage, atomic settlement, or universal English parsing.
 Live acceptance requires the driver's exact task/thread/run identities,
 terminal state, receipt acceptance, settlement and readback, plus a fresh
 run-owned inventory before absence or cadence claims. Retain unobserved cases
