@@ -3,6 +3,11 @@
 Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,relay-discovery,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js`.
+Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
+packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
+bytes, exclusions, failure guidance, renames and subdirectory invocation.
+`staged-token-gate.test.js` checks the Implement instruction with removal,
+inversion and equivalent-rewording probes. These tests install no Git hooks.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
@@ -12,6 +17,8 @@ network. The tests inspect instructions, not live agent compliance.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/staged-file-tokens.test.js \
+  tests/workflows/staged-token-gate.test.js \
   tests/workflows/settle-readback.test.js \
   tests/workflows/workspace-hygiene.test.js \
   tests/workflows/manager-pass-settlement.test.js \
