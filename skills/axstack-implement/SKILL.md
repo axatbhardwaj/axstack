@@ -162,6 +162,13 @@ applied or found not applicable in the `Simplification:` line of the
 [section 5 implementation receipt](#5-verify-and-return-the-candidate),
 including evidence and retained complexity.
 
+Before every commit, the author runs the
+[staged-file token gate](../axstack/scripts/check-staged-file-tokens.js)
+with `bun` from the target repository.
+If the gate fails, split files per its instructions before retrying.
+Never bypass the staged-file token gate.
+Record the staged-file token gate result in the implementation receipt.
+
 ## 5. Verify and return the candidate
 
 Run the acceptance checks and affected integration boundaries. Record commands,
@@ -189,6 +196,7 @@ Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
+Token limit: <staged-file gate command + observed result before each commit>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>

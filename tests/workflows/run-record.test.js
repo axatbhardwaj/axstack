@@ -142,6 +142,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
   expect(skillScripts).toEqual([
     `${root}/skills/axstack/scripts/account-usage.js`,
     `${root}/skills/axstack/scripts/archive-evidence.js`,
+    `${root}/skills/axstack/scripts/check-staged-file-tokens.js`,
     `${root}/skills/axstack/scripts/dispatch-plan.js`,
     `${root}/skills/axstack/scripts/pick-instance.js`,
     `${root}/skills/axstack/scripts/pr-digest.js`,
