@@ -64,7 +64,6 @@ for own PRs, automatic merge is the default under the
 The recorded owning watch thread merges under the same watch predicate.
 Workers never merge.
 
-Notify only under the run's Notification policy: a decision park, merge-ready
-(within the run's milestone cap), or serious-risk hold; never progress or
-heartbeats. Keep routine reports in the T3 driver thread, including skipped or empty passes.
+Raise decision and serious-risk holds in the T3 driver thread; end the turn
+parked on the decision. Keep routine reports there, including skipped or empty passes.
 Settle owned workers and preserve evidence under the shared lifecycle.

@@ -9,7 +9,6 @@ const runtime = 'axstack-watch/references/watch-runtime.md';
 const watch = 'axstack-watch/SKILL.md';
 const record = 'axstack/references/run-record.md';
 const implement = 'axstack-implement/SKILL.md';
-const relay = 'axstack-relay/SKILL.md';
 
 const reviewInversions = {
   'explicit user publication boundary wins': 'Explicit user stop-after-publication and observation-only requests are overridden by the watch.',
@@ -155,13 +154,6 @@ rule('cards and hold stay in driver thread', watch,
   [/merge-card replies/i, /`hold`|\bhold\b/i, /driver thread/i],
   'Merge-card replies and `hold` go in the driver thread.',
   [/\b(?:in|within) (?:the )?driver thread\b/i, 'outside the driver thread']);
-rule('stale PRs never notify', relay,
-  [/stale PRs/i, /notif\w*/i],
-  'Never notify for stale PRs.', [/never/i, 'always'], /never/i);
-rule('milestones retain shared cap', relay,
-  [/two|2/i, /merge-ready/i, /merged/i, /notifications/i, /per run/i],
-  'Limit merge-ready and merged notifications to at most two per run.',
-  [/\b(?:cap|limit)\b/i, 'expand']);
 rule('Close-out follows watch end', watch,
   [/Close-out/i, /watch ends|end of the watch/i],
   'Close-out follows the end of the watch.',

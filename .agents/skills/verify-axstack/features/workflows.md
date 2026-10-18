@@ -1,7 +1,7 @@
 # Inspect workflow instruction contracts
 
 Entry points: packaged workflow skills and shared references; fixtures:
-`tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,relay-discovery,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
+`tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js`.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
 packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
@@ -14,6 +14,8 @@ C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contr
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
+The removal check covers shipped transport absence and driver-thread decision holds.
+Manager-hold checks cover finite-pass flagging, optional host alerts and host-defined user input.
 
 ```bash
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
@@ -27,7 +29,8 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/pr-managers.test.js \
   tests/workflows/peer-review.test.js \
   tests/workflows/isolated-manager-passes.test.js \
-  tests/workflows/relay-discovery.test.js \
+  tests/workflows/relay-removal.test.js \
+  tests/workflows/manager-holds.test.js \
   tests/workflows/merge-audit-discipline.test.js \
   tests/workflows/merge-escalation.test.js \
   tests/workflows/autopilot-repair.test.js \
@@ -59,7 +62,7 @@ panel and compact output, while preserving authored review requirements.
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
 policy; prose budgets use measured bytes. No test result proves native queue
-coverage, atomic settlement, relay authentication or universal English parsing.
+coverage, atomic settlement, or universal English parsing.
 Live acceptance requires the driver's exact task/thread/run identities,
 terminal state, receipt acceptance, settlement and readback, plus a fresh
 run-owned inventory before absence or cadence claims. Retain unobserved cases

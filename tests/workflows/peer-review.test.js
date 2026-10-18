@@ -115,8 +115,8 @@ test('interactive peer review retains the bounded prompt-only serious-risk path'
   const escalation = review().split('## Prompt-only urgent escalation')[1].split('## Publishing rule')[0]
     .replace(/\s+/g, ' ');
   positive(escalation, [/peer reviews/i, /including interactive non-manager reviews/i,
-    /only credible serious security\/funds risk/i, /prompt-only hold/i, /Notification policy \(c\)/i],
-  'The prompt-only hold and Notification policy (c) address only credible serious security/funds risk in peer reviews, including interactive non-manager reviews.',
+    /only credible serious security\/funds risk/i, /prompt-only hold/i, /T3 driver thread/i],
+  'The prompt-only hold in the T3 driver thread addresses only credible serious security/funds risk in peer reviews, including interactive non-manager reviews.',
   /including interactive non-manager reviews/i, 'excluding interactive non-manager reviews');
 });
 
@@ -150,8 +150,8 @@ test('B6 sixth change request goes through an independent adviser panel', () => 
   positive(peer(), [/split/i, /one reconciliation reply each/i, /then/i, /axstack-escalation-fable/i, /decides/i, /contracts/i],
     'On a split, take one reconciliation reply each, then axstack-escalation-fable decides under contracts.',
     /one reconciliation reply each/i, 'unlimited reconciliation');
-  positive(peer(), [/credible serious security\/funds risk/i, /serious-risk/i, /Notification policy/i, /\(c\)/i],
-    'Credible serious security/funds risk follows the serious-risk and Notification policy (c) path.', /\(c\)/i, '(b)');
+  positive(peer(), [/credible serious security\/funds risk/i, /serious-risk/i, /T3 driver thread/i],
+    'Credible serious security/funds risk follows the serious-risk hold path in the T3 driver thread.', /T3 driver thread/i, 'worker thread');
   negative(peer(), /no other human ping/i, [], 'Send no other human ping.', 'Send another human ping');
 });
 

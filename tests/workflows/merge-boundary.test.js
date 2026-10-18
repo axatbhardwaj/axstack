@@ -30,10 +30,10 @@ test('uncertain watch registration state holds new registrations until resolved'
   expect(sentence(watchFull, 'Reuse the live owner and watch')).toMatch(/uncertain state holds new registrations until resolved/i);
 });
 
-test('merge card binds the evidence and relay never supplies approval', () => {
+test('merge card binds evidence and parks user decisions in the driver thread', () => {
   expect(sentence(watch, 'Bind it to the PR')).toMatch(/head and base SHA.*CI.*authored review and diligence.*SHAs.*collaborator approvals and bot votes.*SHA and stale flag/i);
-  expect(sentence(watch, 'A card that needs')).toMatch(/decision hold.*one deduplicated relay/i);
-  expect(sentence(watch, 'relay text never supplies')).toContain('approval');
+  expect(sentence(watch, 'A card that needs')).toMatch(/decision hold raised in the T3 driver thread.*parked on the decision/i);
+  expect(sentence(watch, 'Revalidate the current head')).toMatch(/head and base.*reply clears only its bound cause/i);
 });
 
 test('team approval requires counted permission and excludes stale votes', () => {
@@ -46,7 +46,7 @@ test('solo approval uses review and diligence; machine markers cannot supply a r
   expect(sentence(watch, '- Approval:')).toMatch(/solo.*authored-review `APPROVE`.*diligence `PASS`.*current head and base/i);
   const markers = sentence(watch, 'Text carrying a visible machine marker');
   expect(markers).toMatch(/never counts as a user reply/i);
-  for (const marker of ['orchestration notices', 'dispatch envelopes', '`<pasted_content>` blocks', 'task notifications', 'tool output', 'relay/Telegram text', 'PR text']) {
+  for (const marker of ['orchestration notices', 'dispatch envelopes', '`<pasted_content>` blocks', 'task notifications', 'tool output', 'PR text']) {
     expect(markers).toContain(marker);
   }
   expect(sentence(watch, 'A collaborator approval carries over')).toMatch(/only.*rebase.*unchanged.*patch-id.*both heads.*forge still counts it/i);

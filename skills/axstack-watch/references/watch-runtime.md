@@ -107,9 +107,8 @@ Reconcile prior tasks, thread/run identities, receipts and GitHub before retryin
 an uncertain wake. Wake only the exact live original driver.
 A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.
 
-The driver records one Notification policy for `axstack-relay` Telegram home.
-Follow [Watch notifications](../SKILL.md#4-route-each-wake) for categories,
-deduplication and driver-thread fallback. Quiet ticks never notify.
+Follow [Route each wake](../SKILL.md#4-route-each-wake) for T3 driver-thread
+notes and deduplication. Quiet ticks stay quiet.
 
 The driver alone routes repair.
 The driver routes base updates and review feedback to the PR's author for repair.

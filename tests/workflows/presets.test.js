@@ -475,7 +475,7 @@ test('presets: monitor remains a standalone read-only observer', () => {
 
 // T5a migration contracts: instruction checks, not live T3 execution proof.
 const phaseNames = ['align', 'audit', 'debug', 'explain', 'implement', 'improve',
-  'relay', 'research', 'review', 'spec', 'tickets'];
+  'research', 'review', 'spec', 'tickets'];
 const migratedGuidance = [
   ...phaseNames.map((name) => `skills/axstack-${name}/SKILL.md`),
   ...['routing', 'contracts', 'run-record', 'autopilot', 'diligence', 'ui-verification']
@@ -566,12 +566,6 @@ for (const [path, concepts, rewording] of migrationRules) {
     }
   });
 }
-
-test('T5a relay fallback and act location use the T3 driver thread', () => {
-  const text = guidance('skills/axstack-relay/SKILL.md');
-  expect(text.match(/the T3 driver thread/g)).toHaveLength(4);
-  expect(text).toContain('hermes send --to <target> --file <path> --json');
-});
 
 test('T5a run record exposes native delegated and writer identities', () => {
   const text = guidance('skills/axstack/references/run-record.md');

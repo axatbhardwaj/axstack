@@ -54,10 +54,10 @@ for (const file of ['autopilot', 'contracts']) {
     [/record/i, /backup path/i, /checksum/i, /verification/i, /restore command/i],
     'Record the backup path, checksum, verification, and restore command for the repair.',
     [[/record/i, 'Omit'], [/restore command/i, 'repair command']]);
-  rule(`${file}: repair sends a post-repair notification under policy c`, file,
-    [/send/i, /post-repair notice/i, /Notification policy/i, /\(c\)/i],
-    'Under Notification policy (c), send a post-repair notice.',
-    [[/send/i, 'Suppress'], [/post-repair notice/i, 'pre-repair notice'], [/\(c\)/i, '(b)']]);
+  rule(`${file}: repair posts a driver-thread note`, file,
+    [/post a/i, /post-repair note/i, /T3 driver thread/i],
+    'Post a post-repair note in the T3 driver thread.',
+    [[/Post a/i, 'Suppress a'], [/post-repair note/i, 'pre-repair note'], [/T3 driver thread/i, 'worker thread']]);
   rule(`${file}: reversible recovery never edits candidate source`, file,
     [/driver/i, /edit/i, /candidate source/i, /repair/i],
     'The driver must never edit candidate source during this repair.',

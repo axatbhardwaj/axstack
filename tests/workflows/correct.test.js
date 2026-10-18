@@ -71,11 +71,11 @@ const rules = [
 
 const lifecycleExemption = [
   'report-only lifecycle exemption',
-  [/Except for|Other than|Excluding/i, /\baxstack-audit\b/i, /\baxstack-relay\b/i, /\baxstack-correct\b/i,
+  [/Except for|Other than|Excluding/i, /\baxstack-audit\b/i, /\baxstack-correct\b/i,
     /every|all/i, /independently called phases?/i, /\bmust\b|required to/i,
     /load|read/i, /follow|apply/i, /Shared lifecycle/i, /before acting|before action/i],
   0, 'Including',
-  'Other than `axstack-audit`, `axstack-relay`, and `axstack-correct`, all independently called phases are required to read and apply [Shared lifecycle](lifecycle.md) before action.',
+  'Other than `axstack-audit` and `axstack-correct`, all independently called phases are required to read and apply [Shared lifecycle](lifecycle.md) before action.',
 ];
 
 const acceptsRule = ([, concepts, , , , prohibition]) => (text) => prohibition
