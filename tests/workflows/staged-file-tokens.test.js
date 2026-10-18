@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-staged-file-tokens.js`;
 const large = 'authored content\n'.repeat(1500); // 25,500 bytes / 4 = 6,375 tokens.
 
 function fixture() {
-  const cwd = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/token-limit-`);
+  const cwd = realpathSync(mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/token-limit-`));
   const git = (...args) => {
     const result = Bun.spawnSync(['git', ...args], { cwd });
     if (result.exitCode) throw Error(result.stderr.toString());
