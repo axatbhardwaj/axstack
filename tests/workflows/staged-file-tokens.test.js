@@ -41,6 +41,7 @@ test('oversized authored files fail with every path, floor token count and split
   expect(message).toContain('"foo.ts": 6375 tokens');
   expect(message).toContain('odd\\tname\\n[1].rs');
   expect(message).toContain('5001 tokens');
+  expect(message).toContain(`add a glob to "${f.cwd}/.git/info/token-limit-ignore"`);
   for (const concept of [/top-level.*responsibilit/i, /folder.*original file/i,
     /foo\/types\.ts/, /foo\/parse\.ts/, /foo\/index\.ts/, /foo\/mod\.rs/,
     /Svelte.*child components/i, /\.ts.*pure logic/i, /spec.*describe.*behaviour/i,
@@ -115,6 +116,27 @@ test('uses repo-local ignore globs and comments without writing repository files
   expect(f.git('status', '--porcelain', '--untracked-files=all')).toBe(before);
   f.stage('outside.ts', large);
   expect(f.run().exitCode).toBe(1);
+});
+
+test('linked worktrees share main-repo ignores and report their resolved location', () => {
+  const f = fixture();
+  f.stage('seed.ts', 'small');
+  f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
+  const linked = `${f.cwd}/linked`;
+  f.git('worktree', 'add', '--detach', linked);
+  const ignoreFile = `${f.cwd}/.git/info/token-limit-ignore`;
+  writeFileSync(ignoreFile, 'recordings/*.txt\n');
+  mkdirSync(`${linked}/recordings`);
+  writeFileSync(`${linked}/recordings/session.txt`, large);
+  f.git('-C', linked, 'add', 'recordings/session.txt');
+  expect(f.run(`${linked}/recordings`).exitCode).toBe(0);
+  writeFileSync(`${linked}/authored.ts`, large);
+  f.git('-C', linked, 'add', 'authored.ts');
+  const result = f.run(linked);
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr.toString()).toContain('"authored.ts": 6375 tokens');
+  expect(result.stderr.toString()).not.toContain('"recordings/session.txt":');
+  expect(result.stderr.toString()).toContain(`add a glob to "${ignoreFile}"`);
 });
 
 test('skips submodule gitlinks and checks renamed files', () => {

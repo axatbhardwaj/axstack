@@ -6,6 +6,8 @@ Settlement read-back contracts: `tests/workflows/settle-readback.test.js`.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
 packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
 bytes, exclusions, failure guidance, renames and subdirectory invocation.
+It also checks shared main-repo ignore globs from a linked worktree and the
+resolved ignore-file location in failure guidance.
 `staged-token-gate.test.js` checks the Implement instruction with removal,
 inversion and equivalent-rewording probes. These tests install no Git hooks.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,

@@ -13,10 +13,10 @@ function git(...args) {
 
 try {
   root = git('rev-parse', '--show-toplevel').trim();
-  const gitDir = git('rev-parse', '--absolute-git-dir').trim();
+  const ignoreFile = git('rev-parse', '--path-format=absolute', '--git-path', 'info/token-limit-ignore').trim();
   let ignores = [];
   try {
-    ignores = readFileSync(`${gitDir}/info/token-limit-ignore`, 'utf8').split(/\r?\n/)
+    ignores = readFileSync(ignoreFile, 'utf8').split(/\r?\n/)
       .map((line) => line.trim()).filter((line) => line && !line.startsWith('#'))
       .map((pattern) => new Bun.Glob(pattern));
   } catch (error) {
@@ -51,7 +51,7 @@ Split each file before committing:
 4. Move code verbatim first, then refactor in a separate commit.
 5. Aim for ~3000 tokens per file.
 6. Stage the new files and re-commit.
-If truly generated or recorded data, add a glob to .git/info/token-limit-ignore
+If truly generated or recorded data, add a glob to ${JSON.stringify(ignoreFile)}
 or give the file a generated banner in its first 5 lines.`);
     process.exit(1);
   }
