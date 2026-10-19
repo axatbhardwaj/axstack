@@ -72,10 +72,11 @@ for (const item of ['tracker access', 'adviser or arena-seat availability', 'CI-
   test(`hold example: ${item}`, () => {
     expect(autopilot()).toContain(item);
     if (item !== 'adviser or arena-seat availability') return;
-    const concepts = [/adviser or arena-seat availability/i, /holds? the work that needs them/i];
+    const concepts = [/\badviser or arena-seat availability\b/i, /\bholds? the work that needs them\b/i];
     checkRule(autopilot(), (text) => requires(text, ...concepts),
       'For example, adviser or arena-seat availability holds the work that needs them.',
-      [[/holds?/i, 'never holds']], concepts);
+      [[/\bholds?\b/i, 'never holds'],
+        ...concepts.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], concepts);
     // Availability still holds dependent work; eligible hold cards inherit
     // their bounded wait and unavailable-seat exception from the contract.
     const source = readFileSync(`${root}/skills/axstack/references/autopilot.md`, 'utf8');

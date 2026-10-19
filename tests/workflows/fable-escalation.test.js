@@ -29,15 +29,17 @@ test('workflow: escalation is bounded, fresh, and leaves prior holds intact', ()
   const contracts = prose('skills/axstack/references/contracts.md');
   expect(contracts).toMatch(/high-stakes[^.]*axstack-advisor-astra[^.]*axstack-escalation-fable[^.]*plain AGREE/i);
   expect(contracts).toMatch(/two attempts[^.]*same named goal[^.]*acceptance check/i);
-  const trigger = [/Astra/i, /Opus/i, /one reconciliation/i, /no safe discriminating check/i];
-  checkRule(contracts, (text) => prohibits(text, /no safe discriminating check/i, ...trigger),
+  const trigger = [/\bAstra\b/i, /\bOpus\b/i, /\bone reconciliation\b/i, /\bno safe discriminating check\b/i];
+  checkRule(contracts, (text) => prohibits(text, /\bno safe discriminating check\b/i, ...trigger),
     'Escalation applies when Astra and Opus contradict after one reconciliation with no safe discriminating check.',
-    [[/no safe discriminating check/i, 'a safe discriminating check']], trigger);
-  const carveOut = [/advised hold or step-back/i, /not high-stakes/i, /split.*user/i, /no reconciliation.*no Fable/i];
-  const ban = /not high-stakes|no reconciliation|no Fable/gi;
+    [[/\bno safe discriminating check\b/i, 'a safe discriminating check'],
+      ...trigger.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], trigger);
+  const carveOut = [/\badvised hold or step-back\b/i, /\bnot high-stakes\b/i, /\bsplit\b.*\buser\b/i, /\bno reconciliation\b.*\bno Fable\b/i];
+  const ban = /\b(?:not high-stakes|no reconciliation|no Fable)\b/gi;
   checkRule(contracts, (text) => prohibits(text, ban, ...carveOut),
     'At an advised hold or step-back that is not high-stakes, send the adviser split to the user with no reconciliation and no Fable.',
-    [[ban, 'permit']], carveOut);
+    [[ban, 'permit'],
+      ...carveOut.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], carveOut);
   expect(contracts).toMatch(/stuck[^.]*two failed attempts/i);
   expect(contracts).toMatch(/setup slips[^.]*new user requirements[^.]*do not count/i);
   expect(contracts).toMatch(/fresh session[^.]*never reuses[^.]*adviser[^.]*candidate/i);
