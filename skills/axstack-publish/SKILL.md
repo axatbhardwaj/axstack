@@ -35,6 +35,35 @@ Promotion, unpublish, reader changes and grant changes each need their own reque
 Local creation or an earlier publication supplies no new publication authority.
 If the request leaves the article or mode unclear, hold publication for clarification.
 
+Before publishing, validate the slug as in §3 and read `ssh <publish host> notes status --slug <slug>`.
+Before a republish, state the slug's current audience from status.
+Public mode never asks about or takes an audience.
+Before promoting a shared slug to public, warn that the article becomes world-readable.
+
+In private mode, run `ssh <publish host> notes audience list` on the validated host
+with no TTY and require one JSON line.
+Validate its `audiences` array of `{name, title, reader, folder, disabled, pending}`.
+If `audience list` fails, run `ssh <publish host> notes --help` with no TTY.
+An `audience list` failure holds sharing and is reported unless `notes --help`
+lacks a `notes audience list` usage entry.
+If `notes --help` lacks the `notes audience list` entry, ask nothing new.
+Other failures hold only sharing; publication may proceed under its existing authority.
+
+In private mode only, ask once while binding the request, before publishing.
+Ask only if enabled, complete audiences exist (`disabled: false`, `pending: null`)
+and `notes status --slug <slug>` shows the slug unshared.
+For an existing private document, treat the slug as unshared only when its private
+status has both `private.audience: null` and `private.share: null`.
+For a new slug, `private: null` counts as unshared.
+Hold sharing if status is unreadable, ambiguous or shows a pending share.
+For one audience ask “Is this for <title>?” and for several ask
+“For which audience: <titles> or none?”.
+For an already-published slug, the question states that the team will also see earlier versions.
+The answer is the explicit grant request for exactly that slug and that audience.
+Never infer an audience from a slug, title, repository or label.
+A “no” never revokes access.
+Removals and other readers still need their own request.
+
 ## 2. Prepare the final artifact
 
 For public mode, run the [Explain redaction check](../axstack-explain/SKILL.md#3-verify-and-deliver)
@@ -106,6 +135,16 @@ run; an anonymous redirect and CLI metadata do not prove a reader grant.
 Return URL, version and SHA-256 with the live verification evidence or its hold.
 Tell the user when `overwrote_external_edit` is true: publication replaced an
 external edit, retained as an earlier SlashDocs version.
+
+On a yes for one audience or an explicit selection among several audiences,
+only after the verified private publish (§3 and §4), run
+`ssh <publish host> notes grant add --slug <slug> --audience <audience>`.
+Use the selected audience's `name` for `<audience>` and safely quote arguments.
+Require exit zero and one secret-free JSON line for the grant, without a TTY.
+Check grant JSON fields `slug`, `audience`, `doc` and `folder` match the requested
+slug and audience, published doc and selected folder.
+Report a failed or held share as incomplete while the private publish stays valid.
+Never claim a failed or held share succeeded.
 
 Agents never handle reader passwords.
 Agents never run `notes reader show` or allocate a TTY (`-t` or `-tt` on SSH).
