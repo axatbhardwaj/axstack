@@ -40,6 +40,9 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/pr-managers.test.js \
   tests/workflows/pr-managers-lifecycle.test.js \
   tests/workflows/peer-review.test.js \
+  tests/workflows/pre-existing.test.js \
+  tests/workflows/review-severity.test.js \
+  tests/workflows/merge-boundary.test.js \
   tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-removal.test.js \
   tests/workflows/manager-holds.test.js \
@@ -74,6 +77,10 @@ test "$STATUS" -eq 0
 Peer review contracts cover context-only intent, validated behaviour blockers,
 binding verdicts, bounded follow-ups, reply finality, the five-request adviser
 panel and compact output, while preserving authored review requirements.
+Pre-existing checks cover Source-base and merge-base proof, exclusions,
+reviewer-only tagging, authored/diligence/watch exceptions and unchanged human
+holds. Every semantic rule rejects removal/inversion and accepts equivalent
+wording; live disposition validation remains unproven.
 
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset

@@ -11,6 +11,7 @@ Limitations: <unverified boundaries + why; tag each limitation leaving changed b
 Final-head check: <command> -> <log path> — <check the reviewer ran at the final head; log kept in the run's evidence folder>
 Applicable verify-<app>: <Final-head check records the reviewer's local drive of each affected feature at the pinned final head>. Use n/a — <reason> when no skill covers the affected behavior.
 Findings: <severity + evidence + consequence each>
+Pre-existing: <each item with reference revision and evidence, or none>
 Revert: <declared line + diff-based assessment in authored mode>
 Agent-authored comment and thread IDs: <receipt-recorded IDs or none>
 Non-agent comments: <each comment ID at the current head: above low | low | addressed | uncertain; re-rate each non-agent comment at every new head; none if absent>

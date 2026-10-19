@@ -66,7 +66,7 @@ For each current head and base SHA, every merge-ready term must hold:
   holds. Checks from other apps may be neutral or skipped; none may be pending.
 - Feedback and revision: the PR is not draft and is mergeable against the
   current base; no unresolved blocking agent-authored thread, top-level blocking comment, or
-  effective blocking review remains. Authored review `APPROVE` and diligence
+  effective blocking review remains after the validated `Pre-existing` thread exception below. Authored review `APPROVE` and diligence
   `PASS` are bound to the current head and base. No `Escalate to user`
   (apart from the settled verification cause below),
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk
@@ -98,7 +98,9 @@ deduplicated per comment and head.
 A report-only rating card never offers a user-acceptance path.
 A user reply never clears a comment rating hold.
 Agents never resolve or dismiss non-agent items.
-Agent-authored threads with only `low` findings can stay open.
+Agent-authored threads with only `low` or validated `Pre-existing` findings can stay open.
+Agent-authored threads on validated `Pre-existing` findings do not hold automatic merge.
+A bot or human comment about `Pre-existing` still holds merge under its own rating.
 Apply any repository rule that requires conversation resolution.
 
 Under authorized own-PR maintenance, keep repairing and merging the base

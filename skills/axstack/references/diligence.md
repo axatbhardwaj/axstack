@@ -15,8 +15,10 @@ The recorded owning watch thread merges under the
 Diligence never merges.
 
 Load [Finding severity](../../axstack-review/SKILL.md#finding-severity) for the shared rubric.
-Diligence returns `FINDINGS` for any `medium` or `high` mismatch.
-Diligence returns `PASS` with the low items listed when only low mismatches remain.
+Diligence returns `FINDINGS` for any `medium` or `high` mismatch except validated `Pre-existing` items.
+Diligence returns `PASS` with the low and validated `Pre-existing` items listed
+when only low mismatches or validated `Pre-existing` items remain.
+Diligence returns `FINDINGS` to contest a `Pre-existing` tag that lacks evidence or hits an exclusion.
 Keep diligence `UNKNOWN` unchanged.
 
 For a PR, compare every changed line with the accepted intent and exclusions:

@@ -144,7 +144,7 @@ This section applies to peer and authored PR modes.
    instance of that class in the pinned diff and dependent surfaces: callers, sibling docs,
    README, and tests. A later instance of an already-named class is a coverage
    miss; record it as such rather than treating it as a new kind of defect.
-   Never apply the defect-class sweep to peer notes.
+   Never apply the defect-class sweep to ordinary peer notes after disposition validation.
 
    In authored mode, for an accepted scope explicitly marked structure-preserving, verify its
    preserved contract, listed files, old-revision green characterization, and
