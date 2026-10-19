@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readSkillFile as readFileSync } from './skill-source.js';
-import { checkRule, loadedReferences, prohibits, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const contracts = () => read('skills/axstack/references/contracts.md').replace(/\s+/g, ' ');
@@ -65,15 +65,36 @@ rule('adviser packet and question omit the driver pick',
   "The driver's own pick is what the evidence packet and question omit.");
 rule('single-provider intentional absence', [/\bsingle-provider\b/i, /\bone configured adviser\b/i, /\bother\b.*\bintentional absence\b/i],
   'Single-provider presets use the one configured adviser and record the other as an intentional absence.');
-rule('4.2: high stakes overrides ordinary seats',
-  [/\bhigh-stakes\b.*\bsingle-provider\b/i, /\baxstack-advisor-astra\b/i, /\baxstack-escalation-fable\b/i, /\bplain AGREE\b/i, /\bbounded checks\b/i],
-  'For high-stakes holds including single-provider, use axstack-advisor-astra and axstack-escalation-fable plain AGREE after bounded checks.');
+test('4.2: high stakes overrides ordinary seats without inventing a single-provider mapping', () => {
+  const concepts = [/\bhigh-stakes holds\b/i, /\baxstack-advisor-astra\b/i, /\baxstack-escalation-fable\b/i, /\bplain AGREE\b/i, /\bbounded checks\b/i, /\bordinary seats\b/i];
+  const accepts = (text) => sentences(text).some((unit) =>
+    requires(unit, ...concepts) && !/\bsingle-provider\b/i.test(unit));
+  checkRule(advised(), accepts,
+    'For high-stakes holds, use axstack-advisor-astra and axstack-escalation-fable plain AGREE after bounded checks instead of the ordinary seats.',
+    [[/^/, 'Do not '], [/\bhigh-stakes holds\b/i, 'high-stakes holds including single-provider'],
+      ...concepts.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], concepts);
+});
+rule('single-provider high-stakes holds keep the existing explicit-user pause',
+  [/\bsingle-provider high-stakes hold\b/i, /\bpause\b/i, /\bexplicit user decision\b/i, /\bexisting contract\b/i],
+  'Under the existing contract, pause for an explicit user decision for a single-provider high-stakes hold.');
+rule('single-provider high-stakes advice consults only the configured seat once',
+  [/\bsingle-provider preset\b/i, /\bconsult the configured one\b/i, /\bthose two seats\b/i, /\bonce\b/i],
+  'For a single-provider preset, consult the configured one of those two seats once.');
+rule('absent high-stakes seat is unavailable on the card',
+  [/\bshow\b/i, /\badvice unavailable: <seat>(?!\w)/i, /\babsent high-stakes seat\b/i],
+  'For the absent high-stakes seat, show advice unavailable: <seat>.');
+rule('single-provider high-stakes cannot form AGREE',
+  [/\bsingle-provider preset\b/i, /\bAGREE can form\b/i],
+  'For a single-provider preset, no AGREE can form.', /\bno\b/i);
+rule('single-provider high-stakes marker is in Recommended parenthetical status',
+  [/\bsingle-provider high-stakes card\b/i, /\bhigh-stakes: no AGREE\b/i, /\bparenthetical\b.*\bRecommended\b.*\bstatus\b/i],
+  'Mark the single-provider high-stakes card with high-stakes: no AGREE in the parenthetical Recommended status.', /\bno AGREE\b/i);
 rule('4.2: high stakes retains card wait and authority rules',
   [/\bhigh-stakes\b/i, /\bcard\b.*\bwait\b.*\bauthority\b.*\bstill apply\b/i],
   'For high-stakes holds the card, wait and authority rules here still apply.');
 rule('4.2: high-stakes split is explicitly unresolved',
-  [/\bAstra\b.*\bFable\b.*\bdisagree\b/i, /\bboth options\b/i, /\bdriver\b.*\bpick first\b/i, /\bhigh-stakes: no AGREE\b/i],
-  'If Astra and Fable still disagree, show both options with the driver pick first marked high-stakes: no AGREE.', /\bno AGREE\b/i);
+  [/\bAstra\b.*\bFable\b.*\bdisagree\b/i, /\bboth options\b/i, /\bdriver\b.*\bpick first\b/i, /\bhigh-stakes: no AGREE\b/i, /\bparenthetical\b.*\bRecommended\b.*\bstatus\b/i],
+  'If Astra and Fable disagree, show both options with the driver pick first and high-stakes: no AGREE in the parenthetical Recommended status.', /\bno AGREE\b/i);
 rule('4.2: user pick resolves high stakes explicitly', [/\buser\b.*\bpick\b/i, /\bexplicit user decision\b/i],
   'The user pick is the explicit user decision.');
 rule('4.2: driver pick is not AGREE', [/\bdriver\b.*\bpick\b/i, /\bcounts as AGREE\b/i],

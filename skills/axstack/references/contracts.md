@@ -138,13 +138,20 @@ Advisers never cross-read one another.
 Single-provider presets use the one configured adviser and record the other
 as an intentional absence.
 
-For high-stakes holds, including single-provider, use `axstack-advisor-astra`
-and `axstack-escalation-fable` plain AGREE after bounded checks under the
-existing high-stakes contract instead of the ordinary seats.
+For high-stakes holds, use `axstack-advisor-astra` and `axstack-escalation-fable`
+plain AGREE after bounded checks under the existing high-stakes contract
+instead of the ordinary seats.
+For a single-provider high-stakes hold, pause for an explicit user decision
+under the existing contract.
+In a single-provider preset, consult the configured one of those two seats once.
+Show `advice unavailable: <seat>` for the absent high-stakes seat.
+In a single-provider preset, no AGREE can form.
+Mark the single-provider high-stakes card `high-stakes: no AGREE`
+in the parenthetical `Recommended` status.
 Only seats and disagreement handling follow that contract.
 For high-stakes holds the card, wait and authority rules here still apply.
 If Astra and Fable still disagree, show both options with the driver's pick
-first marked `high-stakes: no AGREE`.
+first and `high-stakes: no AGREE` in the parenthetical `Recommended` status.
 The user's pick is the explicit user decision.
 The driver's pick never counts as AGREE.
 
