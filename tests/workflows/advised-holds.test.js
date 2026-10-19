@@ -52,11 +52,17 @@ rule('4.1: driver dispositions only advise if raised to the user',
 rule('close gaps then form own assessment before advice',
   [/\bbefore\b.*\b(?:advice|consult)\b/i, /\bdriver\b.*\bcloses\b.*\bgap\b/i, /\bexisting\b.*\brules\b/i, /\bthen\b.*\bown assessment\b/i],
   'Before advice the driver closes the gap under existing rules where possible, then forms its own assessment.');
+rule('pre-advice gap-closing does not spend the advice-driven action',
+  [/\bpre-advice gap-closing\b/i, /\bspends\b.*\bone advice-driven action\b/i],
+  'The pre-advice gap-closing never spends the one advice-driven action.', /\bnever\b/i);
 rule('mixed adviser seats are independent and equally briefed',
   [/\bmixed\b/i, /\baxstack-advisor-astra\b/i, /\baxstack-advisor-opus\b/i, /\bindependently\b/i, /\bsame bounded evidence\b.*\bquestion\b/i],
   'In mixed consult axstack-advisor-astra and axstack-advisor-opus independently with the same bounded evidence packet and question.');
 rule('independence excludes cross-reading', [/\badvisers\b/i, /\bcross-read\b/i],
   'Advisers never cross-read one another.', /\bnever\b/i);
+rule('adviser packet and question omit the driver pick',
+  [/\bevidence packet and question\b/i, /\bomit\b/i, /\bdriver\b.*\bown pick\b/i],
+  "The driver's own pick is what the evidence packet and question omit.");
 rule('single-provider intentional absence', [/\bsingle-provider\b/i, /\bone configured adviser\b/i, /\bother\b.*\bintentional absence\b/i],
   'Single-provider presets use the one configured adviser and record the other as an intentional absence.');
 rule('4.2: high stakes overrides ordinary seats',
@@ -75,6 +81,9 @@ rule('4.2: driver pick is not AGREE', [/\bdriver\b.*\bpick\b/i, /\bcounts as AGR
 rule('4.2: ordinary split presents reasons and driver pick first',
   [/\bnon-high-stakes\b.*\bsplit\b/i, /\bboth options\b/i, /\bone-line reasons\b/i, /\bdriver\b.*\bpick first\b/i],
   'On a non-high-stakes split show both options with one-line reasons and the driver pick first.');
+rule('single-provider disagreement displays both options with driver first',
+  [/\bsingle-provider adviser\b/i, /\bdisagreement with the driver\b/i, /\bshow both options\b/i, /\bone-line reasons\b/i, /\bdriver\b.*\bpick first\b/i, /\bas on a split\b/i],
+  'For a single-provider adviser disagreement with the driver, show both options with one-line reasons and the driver pick first, as on a split.');
 
 rule('4.6: advice grants no authority', [/\badvice\b/i, /\bclears\b.*\bhold\b/i, /\bgrants\b.*\bapproval\b.*\bmerge\b.*\buser-accepted unproven\b/i],
   'Advice never clears a hold or grants approval, merge or user-accepted unproven.', /\bnever\b/i);
@@ -113,15 +122,35 @@ rule('4.5: changed evidence authority or question requires fresh advice', [/\bch
   'Changed evidence, authority or question requires fresh advice.');
 rule('round-4 card reuses step-back advice with delta brief', [/\bround-4 card\b/i, /\breuses\b.*\bstep-back advisers\b/i, /\bdelta-only brief\b/i],
   'The round-4 card reuses step-back advisers with a delta-only brief.');
-rule('card rebinds separately from advice reuse', [/\bcard\b.*\brebinds\b/i, /\bcurrent head and base\b/i, /\bsupersede rules\b/i],
-  'The card rebinds to the current head and base under existing supersede rules.');
+rule('head or base changes supersede the card',
+  [/\bhead or base change\b/i, /\bsupersede the card\b/i, /\bexisting supersede rules\b/i],
+  'Under the existing supersede rules, a head or base change requires the driver to supersede the card.');
+rule('reissue only a still-needed decision at current revisions',
+  [/\breissue the card\b/i, /\bonly if\b.*\bdecision is still needed\b/i, /\bcurrent head and base\b/i],
+  'At the current head and base, reissue the card only if the decision is still needed.');
+rule('reissued cards reuse unchanged advice',
+  [/\breuse unchanged advice\b/i, /\breissuing the card\b/i],
+  'When reissuing the card, reuse unchanged advice.');
+rule('same-cause reissued card is the same hold without a new alert',
+  [/\breissued card\b/i, /\bsame cause\b/i, /\bsame hold\b/i, /\bsends\b.*\bnew alert\b/i],
+  'For the same cause, the reissued card is the same hold and sends no new alert.', /\bno\b/i);
+rule('superseded-head or base reply clears nothing at new revisions',
+  [/\breply bound to a superseded head or base\b/i, /\bclears nothing\b/i, /\bnew head or base\b/i],
+  'At the new head or base, a reply bound to a superseded head or base clears nothing.');
 rule('4.7: self-close is bounded and agreed',
-  [/\bper PR and cause kind\b/i, /\bonce\b/i, /\bclose\b.*\bcause\b/i, /\bexisting authority\b/i, /\bonly\b.*\badvisers agree\b/i],
-  'Per PR and cause kind the driver can act once to close the cause within existing authority only when advisers agree.');
+  [/\bafter advice\b/i, /\bper PR and cause kind\b/i, /\bonce\b/i, /\bclose\b.*\bcause\b/i, /\bexisting authority\b/i, /\bonly\b.*\badvisers agree\b/i],
+  'After advice, per PR and cause kind the driver can act once to close the cause within existing authority only when advisers agree.');
 rule('4.7: single adviser agrees with driver for self-close', [/\bsingle-provider\b/i, /\bself-close\b/i, /\badviser\b.*\bmust agree\b.*\bdriver\b/i],
   'In single-provider presets self-close requires the adviser must agree with the driver.');
-rule('4.7: split recurrence or new hold raises card', [/\bsplit\b/i, /\bcause recurs\b/i, /\bnew hold\b/i, /\bpost\b.*\bcard\b/i],
-  'On a split, if the cause recurs, or if the action raises a new hold, post the card.');
+rule('4.7: split or single-adviser disagreement raises card',
+  [/\bpost the card\b/i, /\bsplit or a single-adviser disagreement\b/i, /\bwith the driver\b/i],
+  'Post the card when there is a split or a single-adviser disagreement with the driver.');
+rule('4.7: cause recurrence after the advice-driven action raises card',
+  [/\bpost the card\b/i, /\bcause recurs after that one action\b/i],
+  'If the cause recurs after that one action, post the card.');
+rule('4.7: action raising a new hold raises card',
+  [/\bpost the card\b/i, /\baction raises a new hold\b/i],
+  'When the action raises a new hold, post the card.');
 rule('4.7: serious risk raises immediately across phases before advice',
   [/\boutside peer mode\b/i, /\bserious-risk\b.*\bimmediately\b/i, /\bwatch\b.*\bimplement\b.*\breview\b.*\bautopilot\b.*\bdebug\b/i, /\bbefore\b.*\badvisers\b/i],
   'Outside peer mode raise every serious-risk hold immediately in watch, implement, review, autopilot or debug before dispatching advisers.');

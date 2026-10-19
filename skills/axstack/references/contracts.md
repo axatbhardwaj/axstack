@@ -130,8 +130,10 @@ Never advise review-manager pass holds; the manager keeps its flagged-thread pat
 
 Before advice the driver closes the gap where possible under existing rules,
 then forms its own assessment.
+This pre-advice gap-closing never spends the one advice-driven action.
 In `mixed`, consult `axstack-advisor-astra` and `axstack-advisor-opus`
 independently with the same bounded evidence packet and question.
+The evidence packet and question omit the driver's own pick.
 Advisers never cross-read one another.
 Single-provider presets use the one configured adviser and record the other
 as an intentional absence.
@@ -158,6 +160,8 @@ Reply: 1. <option> 2. <option> ...
 
 On a non-high-stakes split show both options with one-line reasons and the
 driver's pick first; apply the Fable carve-out above.
+On a single-provider adviser disagreement with the driver, show both options
+with one-line reasons and the driver's pick first, as on a split.
 With multiple open cards each reply names its PR, or the hold key for a hold
 without a PR.
 An ambiguous reply clears nothing and the driver asks once.
@@ -180,12 +184,17 @@ Reuse an advice receipt while its cause and evidence packet, including patch-id,
 are unchanged.
 Changed evidence, authority or question requires fresh advice.
 The round-4 card reuses the step-back advisers with a delta-only brief.
-The card rebinds to the current head and base under existing supersede rules.
+On a head or base change, supersede the card under the existing supersede rules.
+Reissue the card only if the decision is still needed, bound to the current head and base.
+Reuse unchanged advice when reissuing the card.
+A reissued card for the same cause is the same hold and sends no new alert.
+A reply bound to a superseded head or base clears nothing at the new head or base.
 
-Per PR and cause kind the driver can act once on advice to close the cause
+After advice, per PR and cause kind the driver can act once on advice to close the cause
 within existing authority only when advisers agree.
 In single-provider presets, for self-close the adviser must agree with the driver.
-On a split, if the cause recurs, or if the action raises a new hold, post the card.
+Post the card on a split or a single-adviser disagreement with the driver.
+Post the card when the cause recurs after that one action, or when the action raises a new hold.
 
 Outside peer mode raise every serious-risk hold immediately in watch, implement,
 review, autopilot or debug before dispatching advisers.
