@@ -77,14 +77,22 @@ notes or repeat an earlier note or request.
 Keep closed points closed under the follow-up rules above.
 A validated `Pre-existing` defect never blocks except for serious security,
 data-loss or funds defects.
+Present a serious security, data-loss or funds `Pre-existing` defect as an ordinary
+blocker that says it is pre-existing.
+Serious security, data-loss or funds blockers never get a draft or an `Also pre-existing:` entry.
 The peer serious-risk ping keeps its security/funds threshold.
 The owner's existing focused check (review §4) settles a disputed `Pre-existing` tag.
 
 Only defects in changed files or their direct callers and callees get a `Pre-existing` draft.
 Use one trailing `Pre-existing` block with at most two drafts.
+When more than two non-blocking defects qualify for drafts, select the two with the highest rating.
+Break rating ties by first appearance in the diff.
 The `Pre-existing` block is exempt from the five-note limit and the word budget.
-Put all other validated `Pre-existing` defects, including outside that range,
-on one `Also pre-existing:` line.
+Put all other validated `Pre-existing` defects that are non-blocking, including
+unselected eligible defects and defects outside that range, on one `Also pre-existing:` line.
+Place the `Also pre-existing:` line last in the trailing `Pre-existing` block.
+Each `Also pre-existing:` entry gives a title and `file:line`.
+`Also pre-existing:` entries get no tracker search or filing request.
 Each draft says the bug is pre-existing and not caused by this PR.
 Each draft gives a self-contained bug report: title, `file:line`, reference SHA,
 reproduction or evidence and impact.

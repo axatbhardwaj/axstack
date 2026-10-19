@@ -128,8 +128,8 @@ rule('drafts are exempt from note and word budgets', peer,
   'The Pre-existing block is exempt from the five-note limit and the word budget.',
   /\bexempt\b/i, 'counted');
 rule('overflow and out-of-range defects stay on one line', peer,
-  [/\ball other validated Pre-existing defects\b/i, /\boutside\b.*\brange\b/i, /\bone\b/i, /\bAlso pre-existing:/i],
-  'Put all other validated Pre-existing defects, including outside that range, on one Also pre-existing: line.',
+  [/\ball other validated Pre-existing defects\b/i, /\bnon-blocking\b/i, /\bunselected eligible defects\b/i, /\boutside\b.*\brange\b/i, /\bone\b/i, /\bAlso pre-existing:/i],
+  'On one Also pre-existing: line, put all other validated Pre-existing defects that are non-blocking, including unselected eligible defects and defects outside that range.',
   /\bone\b/i, 'several');
 rule('draft makes non-causation explicit', peer,
   [/\beach draft\b/i, /\bbug is pre-existing\b/i, /\bnot caused by this PR\b/i],
@@ -185,3 +185,40 @@ rule('peer serious-risk ping retains its security/funds threshold', peer,
 rule('peer closed points stay closed under follow-up rules', peer,
   [/\bkeep\b/i, /\bclosed points closed\b/i, /\bfollow-up rules\b/i],
   'Under the follow-up rules, keep closed points closed.', /\bkeep\b/i, 'Reopen');
+
+rule('serious inherited peer defects are labelled ordinary blockers', peer,
+  [/\bpresent\b/i, /\bserious security\b/i, /\bdata-loss\b/i, /\bfunds\b/i,
+    /\bPre-existing defect\b/i, /\bordinary blocker\b/i, /\bsays it is pre-existing\b/i],
+  'Present a Pre-existing defect involving serious security, data-loss or funds as an ordinary blocker that says it is pre-existing.',
+  /\bordinary blocker\b/i, 'non-blocking note');
+rule('serious inherited blockers stay out of drafts and Also entries', peer,
+  [/\bserious security\b/i, /\bdata-loss\b/i, /\bfunds blockers\b/i,
+    /\bdraft\b/i, /\bAlso pre-existing:/i, /\bentry\b/i],
+  'For serious security, data-loss or funds blockers, a draft or an Also pre-existing: entry is never added.',
+  /\bnever\b/i, 'always', /\bnever\b/i);
+rule('overflow peer drafts select the two highest-rated eligible defects', peer,
+  [/\bmore than two\b/i, /\bnon-blocking defects\b/i, /\bqualify for drafts\b/i,
+    /\bselect the two\b/i, /\bhighest rating\b/i],
+  'Select the two with the highest rating when more than two non-blocking defects qualify for drafts.',
+  /\bhighest\b/i, 'lowest');
+rule('draft rating ties use first appearance in the diff', peer,
+  [/\bbreak rating ties\b/i, /\bfirst appearance\b/i, /\bdiff\b/i],
+  'Use first appearance in the diff to break rating ties.', /\bfirst\b/i, 'last');
+rule('Also line closes the trailing exempt block', peer,
+  [/\bAlso pre-existing:/i, /\bline last\b/i, /\btrailing Pre-existing block\b/i],
+  'In the trailing Pre-existing block, place the Also pre-existing: line last.',
+  /\blast\b/i, 'first');
+rule('Also entries contain a title and location', peer,
+  [/\beach Also pre-existing:/i, /\bentry\b/i, /\btitle\b/i, /\bfile:line\b/i],
+  'A title and file:line are what each Also pre-existing: entry gives.',
+  /\bfile:line\b/i, 'private receipt path');
+rule('Also entries have neither tracker searches nor filing requests', peer,
+  [/\bAlso pre-existing:/i, /\bentries\b/i, /\btracker search\b/i, /\bfiling request\b/i],
+  'For Also pre-existing: entries, use no tracker search or filing request.',
+  /\bno\b/i, 'a', /\bno\b/i);
+rule('own-run diff checks span the reference revision through PR head', severity,
+  [/\bown run PRs\b/i, /\ball Pre-existing diff checks\b/i,
+    /\breference revision to the PR head\b/i, /\bunchanged defective code\b/i,
+    /\bintroduction\b/i, /\bamplification\b/i, /\bnew exposure\b/i, /\bsame-class instances\b/i],
+  'All Pre-existing diff checks for own run PRs span the reference revision to the PR head: unchanged defective code, introduction/amplification/new exposure and same-class instances.',
+  /\breference revision to the PR head\b/i, 'PR head to the reference revision');

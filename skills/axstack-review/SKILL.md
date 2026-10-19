@@ -74,6 +74,7 @@ For own run PRs, the reference revision is the run's recorded `Source base`,
 rather than a chain child's parent head.
 For adopted own PRs and peer PRs, the reference revision is the merge-base of
 the PR head with the default branch.
+For own run PRs, all `Pre-existing` diff checks span the reference revision to the PR head: unchanged defective code, introduction/amplification/new exposure and same-class instances.
 The diff must not change the defective code.
 The diff must not introduce, amplify or newly expose the defect through changed
 callers or configuration.
