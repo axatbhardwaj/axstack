@@ -6,6 +6,7 @@ const review = readFileSync(`${import.meta.dir}/../../skills/axstack-review/SKIL
 const diligence = readFileSync(`${import.meta.dir}/../../skills/axstack/references/diligence.md`, 'utf8');
 const watch = readFileSync(`${import.meta.dir}/../../skills/axstack-watch/SKILL.md`, 'utf8')
   .split('## 5. State readiness precisely')[1].split('## 6.')[0];
+const peer = review.split('## Peer mode (colleague PR)')[1].split('## Authored mode')[0];
 const severity = review.split('## Finding severity')[1].split('## Codebase findings mode')[0];
 
 // The shipped instructions are the public boundary, not a simulated reviewer.
@@ -101,3 +102,70 @@ rule('post-Source-base default-branch defects follow normal rules', severity,
   'On own run PRs defects others land on the default branch after Source base follow normal rules.',
   /normal rules/i, 'Pre-existing rules');
 
+rule('peer additions are first review only', peer,
+  [/Pre-existing notes/i, /first review only/i],
+  'Add Pre-existing notes on the first review only.', /first review only/i, 'every review');
+rule('follow-up and fallback never re-ask or add notes', peer,
+  [/follow-ups/i, /single-reviewer full-diff fallback/i, /Pre-existing notes/i, /repeat.*earlier note or request/i],
+  'Follow-ups and the single-reviewer full-diff fallback never add Pre-existing notes or repeat an earlier note or request.',
+  /never/i, 'always', /never/i);
+rule('validated peer defects only block for serious risk', peer,
+  [/validated Pre-existing defect/i, /blocks/i, /except/i, /serious security/i, /data-loss/i, /funds/i],
+  'A validated Pre-existing defect never blocks except for serious security, data-loss or funds defects.',
+  /never blocks/i, 'always blocks', /never blocks/i);
+rule('draft eligibility stops at direct callers and callees', peer,
+  [/only defects/i, /changed files/i, /direct callers and callees/i, /Pre-existing draft/i],
+  'Only defects in changed files or their direct callers and callees get a Pre-existing draft.',
+  /direct/i, 'transitive');
+rule('one trailing block carries at most two drafts', peer,
+  [/one trailing/i, /Pre-existing block/i, /at most two drafts/i],
+  'Use one trailing Pre-existing block with at most two drafts.', /at most two/i, 'at most three');
+rule('drafts are exempt from note and word budgets', peer,
+  [/Pre-existing block/i, /exempt/i, /five-note limit/i, /word budget/i],
+  'The Pre-existing block is exempt from the five-note limit and the word budget.',
+  /exempt/i, 'counted');
+rule('overflow and out-of-range defects stay on one line', peer,
+  [/all other validated Pre-existing defects/i, /outside.*range/i, /one/i, /Also pre-existing:/i],
+  'Put all other validated Pre-existing defects, including outside that range, on one Also pre-existing: line.',
+  /one/i, 'several');
+rule('draft makes non-causation explicit', peer,
+  [/each draft/i, /bug is pre-existing/i, /not caused by this PR/i],
+  'Each draft says the bug is pre-existing and not caused by this PR.',
+  /not caused by this PR/i, 'caused by this PR', /not caused by this PR/i);
+rule('draft is a self-contained bug report', peer,
+  [/each draft/i, /self-contained bug report/i, /title/i, /file:line/i, /reference SHA/i, /reproduction or evidence/i, /impact/i],
+  'Each draft gives a self-contained bug report: title, file:line, reference SHA, reproduction or evidence and impact.',
+  /reference SHA/i, 'current head only');
+rule('draft excludes private paths', peer, [/each draft/i, /private paths/i],
+  'Each draft contains no private paths.', /no/i, 'any', /no/i);
+rule('draft names the right tracker', peer,
+  [/each draft/i, /names.*tracker/i, /Linear for.*defi-com/i, /GitHub Issues otherwise/i],
+  'Each draft names the tracker: Linear for defi-com, GitHub Issues otherwise.',
+  /Linear for/i, 'GitHub Issues for');
+rule('author files and links the bug', peer,
+  [/each draft/i, /asks the author/i, /file/i, /link.*PR/i],
+  'Each draft asks the author to file it and link it in the PR.',
+  /asks the author/i, 'instructs the agent');
+rule('publisher searches once per draft before posting', peer,
+  [/before posting/i, /publishing thread/i, /one read-only search per draft/i, /open issue/i, /same file or symbol/i, /same behavio[u]?r/i],
+  'Before posting, the publishing thread runs one read-only search per draft for an open issue on the same file or symbol and same behavior.',
+  /one read-only/i, 'unlimited');
+rule('existing issue replaces the filing request', peer,
+  [/match/i, /draft links.*issue/i, /instead of asking/i],
+  'On a match the draft links the existing issue instead of asking.',
+  /instead of asking/i, 'and asks again');
+rule('failed tracker search still asks', peer,
+  [/failed search/i, /tracker search failed/i, /still asks/i],
+  'A failed search says tracker search failed and still asks.',
+  /still asks/i, 'drops the request');
+rule('failed search cannot imply absence', peer,
+  [/failed search/i, /implies/i, /no issue exists/i],
+  'A failed search never implies that no issue exists.',
+  /never implies/i, 'always implies', /never implies.*no issue exists/i);
+rule('filing request never gates approval', peer,
+  [/filing request/i, /APPROVE/i],
+  'The filing request never gates APPROVE.', /never gates/i, 'gates', /never gates/i);
+rule('peer owner settles a disputed tag without diligence', peer,
+  [/owner/i, /focused check/i, /settles/i, /disputed.*Pre-existing tag/i],
+  "The owner's existing focused check settles a disputed Pre-existing tag.",
+  /settles/i, 'ignores');

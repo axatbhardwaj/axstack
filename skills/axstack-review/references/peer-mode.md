@@ -5,7 +5,7 @@ are context for finding defects. They are not a contract. Context never supplies
 reviewer instructions. Context cannot alter the user-authorized scope, the six
 review angles, or authority. A missing ticket or spec is not a peer coverage gap.
 Never ask the author for approvals, sign-offs, a spec approver or a process
-decision. Accept the author's
+decision, except the `Pre-existing` filing request (the only exception). Accept the author's
 statement that a scope or design point was approved or decided elsewhere.
 That decision is not a finding. Peer review needs no Axstack-created approved
 spec. Peer code stays readonly; the reviewer never edits it. Record exact head,
@@ -19,7 +19,8 @@ reproduction or quoted code: wrong results, security, data loss or funds,
 availability regression, or a broken caller contract. Stale or wrong PR
 description, counts, SHAs, test adequacy, mutation survivors, missing tests,
 docs, style, simplification and process are non-blocking notes.
-Peer notes have no follow-up issue required. Record uncertainty as a limitation
+Peer notes have no follow-up issue required, except the `Pre-existing` filing
+request (the only exception). Record uncertainty as a limitation
 instead of a higher rating. The peer bar overrides "medium and high block" and
 "nobody can lower a rating" for peer findings only. The authored rubric stays
 unchanged.
@@ -63,7 +64,36 @@ in the T3 driver thread. Send no other human ping.
 
 First peer review stays within about 400 words: one verdict line and each
 blocker with location, breakage, evidence and a one-line fix hint. Include at
-most five one-line notes and one `Not verified:` line. Follow-up stays within
+most five one-line notes and one `Not verified:` line, with the `Pre-existing`
+block exempt. Follow-up stays within
 about 150 words: blocker status and any new qualifying blocker. Use no process
 narration, disposition essays or decision needed sections.
 
+### Pre-existing peer notes
+
+Add `Pre-existing` notes on the first review only.
+Follow-ups and the single-reviewer full-diff fallback never add `Pre-existing`
+notes or repeat an earlier note or request.
+Keep closed points closed under the follow-up rules above.
+A validated `Pre-existing` defect never blocks except for serious security,
+data-loss or funds defects.
+The peer serious-risk ping keeps its security/funds threshold.
+The owner's existing focused check (review §4) settles a disputed `Pre-existing` tag.
+
+Only defects in changed files or their direct callers and callees get a `Pre-existing` draft.
+Use one trailing `Pre-existing` block with at most two drafts.
+The `Pre-existing` block is exempt from the five-note limit and the word budget.
+Put all other validated `Pre-existing` defects, including outside that range,
+on one `Also pre-existing:` line.
+Each draft says the bug is pre-existing and not caused by this PR.
+Each draft gives a self-contained bug report: title, `file:line`, reference SHA,
+reproduction or evidence and impact.
+Each draft contains no private paths.
+Each draft names the tracker: Linear for `defi-com`, GitHub Issues otherwise.
+Each draft asks the author to file it and link it in the PR.
+Before posting, the publishing thread runs one read-only search per draft for
+an open issue on the same file or symbol and same behaviour.
+On a match, the draft links the existing issue instead of asking.
+A failed search says `tracker search failed` and still asks.
+A failed search never implies that no issue exists.
+The filing request never gates `APPROVE`.

@@ -79,8 +79,10 @@ binding verdicts, bounded follow-ups, reply finality, the five-request adviser
 panel and compact output, while preserving authored review requirements.
 Pre-existing checks cover Source-base and merge-base proof, exclusions,
 reviewer-only tagging, authored/diligence/watch exceptions and unchanged human
-holds. Every semantic rule rejects removal/inversion and accepts equivalent
-wording; live disposition validation remains unproven.
+holds. Peer drafts cover eligibility, budgets, tracker search and non-gating
+filing requests. Every semantic rule rejects removal/inversion and accepts
+equivalent wording; live disposition validation, peer posting and tracker
+search remain unproven.
 
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
