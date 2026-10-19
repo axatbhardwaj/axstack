@@ -34,6 +34,14 @@ rule('a new private-null slug counts as unshared',
   'A new slug with private: null counts as unshared.',
   [[/counts as unshared/i, 'counts as shared']]);
 
+rule('unshared private status requires both null audience and null share',
+  [/unshared/i, /only when/i, /private status/i, /both/i,
+    /private\.audience`?: null/i, /private\.share`?: null/i],
+  'Only when private status has both private.share: null and private.audience: null, treat the slug as unshared.',
+  [[/only when/i, 'even unless'], [/both/i, 'either'],
+    [/private\.audience`?: null/i, 'private.audience: selected'],
+    [/private\.share`?: null/i, 'private.share: pending']]);
+
 rule('audience prompts offer one title or several titles with none',
   [/one audience/i, /Is this for <title>\?/i, /several/i, /For which audience: <titles> or none\?/i],
   'With one audience, use “Is this for <title>?” and with several, use “For which audience: <titles> or none?”.',
@@ -86,11 +94,18 @@ rule('old hosts ask nothing new when help lacks audience list',
   'Ask nothing new when notes --help lacks a notes audience list entry.',
   [[/nothing new/i, 'for an audience']], /nothing new/i);
 
-rule('yes shares only after the verified private publish',
-  [/yes/i, /only after/i, /verified private publish/i, /§3/i, /§4/i, /run/i,
+rule('audience list failure runs remote help without a TTY',
+  [/audience list/i, /fails|failure/i, /run/i, /ssh <publish host> notes --help/i],
+  'When audience list reports failure, run ssh <publish host> notes --help with no TTY.',
+  [[/run/i, 'skip'], [/fails|failure/i, 'succeeds'], [/no TTY/i, 'an allocated TTY']], /no TTY/i);
+
+rule('yes or an audience selection shares only after the verified private publish',
+  [/yes for one audience/i, /(?:selection|choice).*?several audiences/i,
+    /only after/i, /verified private publish/i, /§3/i, /§4/i, /run/i,
     /ssh <publish host> notes grant add --slug <slug> --audience <audience>/i],
-  'Only after the verified private publish (§3 and §4), on yes, run ssh <publish host> notes grant add --slug <slug> --audience <audience>.',
-  [[/only after/i, 'before'], [/verified private publish/i, 'attempted upload'], [/yes/i, 'any answer']]);
+  'A yes for one audience or a choice among several audiences means run ssh <publish host> notes grant add --slug <slug> --audience <audience> only after the verified private publish (§3 and §4).',
+  [[/only after/i, 'before'], [/verified private publish/i, 'attempted upload'],
+    [/yes for one audience/i, 'any answer'], [/(?:selection|choice).*?several audiences/i, 'a rejection']]);
 
 rule('grant JSON is checked against the slug audience document and folder',
   [/check|validate/i, /grant/i, /JSON/i, /slug/i, /audience/i, /doc/i, /folder/i,

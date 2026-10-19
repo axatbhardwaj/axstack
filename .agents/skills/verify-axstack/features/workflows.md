@@ -110,6 +110,9 @@ Publish audience keeper: `publish-audience.test.js` checks private-only discover
 and questions, enabled/complete and unshared status, one-slug/one-audience consent,
 earlier-version warnings, inference and revocation prohibitions, republish disclosure,
 public exclusion and promotion warnings, old-help fallback and failure holds.
+The operational checks require remote non-TTY `notes --help` after list failure
+and both null private audience/share fields for an existing unshared document.
+Grant consent covers both a yes for one audience and a selection among several.
 It checks verified-publish-before-grant ordering, grant JSON identity, incomplete
 share reporting, placeholders and absence of service IDs. Each semantic test drives
 real-source removal and inversion red plus equivalent-rewording green in memory.

@@ -43,6 +43,7 @@ Before promoting a shared slug to public, warn that the article becomes world-re
 In private mode, run `ssh <publish host> notes audience list` on the validated host
 with no TTY and require one JSON line.
 Validate its `audiences` array of `{name, title, reader, folder, disabled, pending}`.
+If `audience list` fails, run `ssh <publish host> notes --help` with no TTY.
 An `audience list` failure holds sharing and is reported unless `notes --help`
 lacks a `notes audience list` usage entry.
 If `notes --help` lacks the `notes audience list` entry, ask nothing new.
@@ -51,6 +52,8 @@ Other failures hold only sharing; publication may proceed under its existing aut
 In private mode only, ask once while binding the request, before publishing.
 Ask only if enabled, complete audiences exist (`disabled: false`, `pending: null`)
 and `notes status --slug <slug>` shows the slug unshared.
+For an existing private document, treat the slug as unshared only when its private
+status has both `private.audience: null` and `private.share: null`.
 For a new slug, `private: null` counts as unshared.
 Hold sharing if status is unreadable, ambiguous or shows a pending share.
 For one audience ask “Is this for <title>?” and for several ask
@@ -133,7 +136,8 @@ Return URL, version and SHA-256 with the live verification evidence or its hold.
 Tell the user when `overwrote_external_edit` is true: publication replaced an
 external edit, retained as an earlier SlashDocs version.
 
-On yes, only after the verified private publish (§3 and §4), run
+On a yes for one audience or an explicit selection among several audiences,
+only after the verified private publish (§3 and §4), run
 `ssh <publish host> notes grant add --slug <slug> --audience <audience>`.
 Use the selected audience's `name` for `<audience>` and safely quote arguments.
 Require exit zero and one secret-free JSON line for the grant, without a TTY.
