@@ -10,10 +10,24 @@ rule is removed or inverted runs red before the skill edit, then green. Existing
 tests named here are updated, not deleted, and keep removal-or-inversion red.
 `bun run test:all` passes at each PR head.
 
+## C0 Split oversized review and watch skills (structure-preserving prerequisite)
+
+Capability: docs/plans/advised-holds.md#c0 "Split oversized review and watch skills"
+Internal task: T0 -> launched writer (axstack-author) -> branch axstack/20261019-advised-holds/axstack-author/p0-split-a1, based on the commit that adds this section
+Theme: move sections of `skills/axstack-review/SKILL.md` (36123 B) and `skills/axstack-watch/SKILL.md` (28340 B) verbatim into reference files so both pass the staged-file token gate (20000 B); added after spec approval with user acceptance (2026-10-19) because the gate blocked T1 and T2 commits
+Size est: medium (moves plus test path updates; no new rules)
+Acceptance: structure-preserving; same checks green before and after.
+- Moved text is byte-for-byte unchanged; no rule is added, removed or reworded.
+- Each moved section keeps its heading at its original position with one load-and-follow link to its reference, so existing anchors (for example `#peer-mode-colleague-pr`, `#5-state-readiness-precisely`) still resolve.
+- Each SKILL.md and each new reference stays at or below 15000 B, leaving room for T1 and T2.
+- Tests that read moved text read the reference instead; no assertion is weakened.
+- The staged-file token gate passes for every commit; `bun run test:all` passes.
+Depends: none
+
 ## C1 Advised holds
 
 Capability: docs/plans/advised-holds.md#c1 "Advised holds"
-Internal task: T1 -> launched writer (axstack-author) -> branch axstack/20261019-advised-holds/axstack-author/t1-advised-holds-a1, based on the commit that adds this map
+Internal task: T1 -> launched writer (axstack-author) -> branch axstack/20261019-advised-holds/axstack-author/t1-advised-holds-a1, based on the commit that adds this map; merges main after T0 merges
 Theme: one `Advised holds` contract in `skills/axstack/references/contracts.md` plus pointers from watch (§4 holds, verification card, merge card), implement (step 4 `held`), review (urgent escalation) and autopilot (advance and hold); the Fable carve-out at contracts' Fable rule
 Size est: medium (one new contract section, four short pointers, one new test file, two updated tests)
 Acceptance: spec acceptance 1 and 4.1-4.7, scope 1.
@@ -22,12 +36,12 @@ Acceptance: spec acceptance 1 and 4.1-4.7, scope 1.
 - Fable carve-out sentence at contracts' Fable rule, scoped to holds and step-backs that are not high-stakes.
 - Pointers in watch, implement, review and autopilot reference the contract without copying it.
 - New tests cover scenarios 4.1-4.7; `fable-escalation.test.js:31` and `autopilot-repair.test.js:70` updated.
-Depends: none
+Depends: T0
 
 ## C2 Pre-existing findings
 
 Capability: docs/plans/advised-holds.md#c2 "Pre-existing findings"
-Internal task: T2 -> launched writer (axstack-author) -> branch axstack/20261019-advised-holds/axstack-author/t2-pre-existing-a1, based on the commit that adds this map (parallel with T1)
+Internal task: T2 -> launched writer (axstack-author) -> branch axstack/20261019-advised-holds/axstack-author/t2-pre-existing-a1, based on the commit that adds this map (parallel with T1); merges main after T0 merges
 Theme: the `Pre-existing` disposition across review (finding severity, authored rules, peer mode, receipt), diligence and watch §5
 Size est: medium (review, diligence and watch edits, one new test file, several updated tests)
 Acceptance: spec acceptance 3 and 4.9-4.11, scope 3.
@@ -36,7 +50,7 @@ Acceptance: spec acceptance 3 and 4.9-4.11, scope 3.
 - Peer: first review only; never blocks except serious security, data-loss or funds; at most two drafts for changed files and direct callers/callees in one trailing block; other items on one `Also pre-existing:` line; one read-only tracker search per draft; the only exceptions to "never ask the author for ... a process decision" and "peer notes have no follow-up issue required".
 - Receipt gains the `Pre-existing:` line; known gaps recorded.
 - New tests cover scenarios 4.9-4.11; updated: `review-severity.test.js:41-42, 45-51, 52-58, 65-68, 106`, `peer-review.test.js:30-31, 45-46, 162-163`, `merge-boundary.test.js:63`.
-Depends: none
+Depends: T0
 
 ## C3 Round-3 step-back
 
