@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const watchFull = read('skills/axstack-watch/SKILL.md');

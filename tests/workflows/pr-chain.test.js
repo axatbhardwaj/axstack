@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => existsSync(`${import.meta.dir}/../../${path}`)

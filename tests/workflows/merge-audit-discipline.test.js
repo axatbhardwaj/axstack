@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 // Separate contracts for the missing #251 clauses; existing merge-boundary,

@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const review = 'skills/axstack-review/SKILL.md';

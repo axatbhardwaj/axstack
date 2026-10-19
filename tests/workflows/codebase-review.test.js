@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');

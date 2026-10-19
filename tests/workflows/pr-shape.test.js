@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const shape = 'skills/axstack/references/pr-shape.md';
