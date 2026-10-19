@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, prohibits } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -28,7 +29,15 @@ test('workflow: escalation is bounded, fresh, and leaves prior holds intact', ()
   const contracts = prose('skills/axstack/references/contracts.md');
   expect(contracts).toMatch(/high-stakes[^.]*axstack-advisor-astra[^.]*axstack-escalation-fable[^.]*plain AGREE/i);
   expect(contracts).toMatch(/two attempts[^.]*same named goal[^.]*acceptance check/i);
-  expect(contracts).toMatch(/Astra[^.]*Opus[^.]*one reconciliation[^.]*no safe discriminating check/i);
+  const trigger = [/Astra/i, /Opus/i, /one reconciliation/i, /no safe discriminating check/i];
+  checkRule(contracts, (text) => prohibits(text, /no safe discriminating check/i, ...trigger),
+    'Escalation applies when Astra and Opus contradict after one reconciliation with no safe discriminating check.',
+    [[/no safe discriminating check/i, 'a safe discriminating check']], trigger);
+  const carveOut = [/advised hold or step-back/i, /not high-stakes/i, /split.*user/i, /no reconciliation.*no Fable/i];
+  const ban = /not high-stakes|no reconciliation|no Fable/gi;
+  checkRule(contracts, (text) => prohibits(text, ban, ...carveOut),
+    'At an advised hold or step-back that is not high-stakes, send the adviser split to the user with no reconciliation and no Fable.',
+    [[ban, 'permit']], carveOut);
   expect(contracts).toMatch(/stuck[^.]*two failed attempts/i);
   expect(contracts).toMatch(/setup slips[^.]*new user requirements[^.]*do not count/i);
   expect(contracts).toMatch(/fresh session[^.]*never reuses[^.]*adviser[^.]*candidate/i);
