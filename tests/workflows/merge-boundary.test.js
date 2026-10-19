@@ -62,12 +62,12 @@ test('CI requires complete successful base workflow jobs and no pending checks',
 
 test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
   const feedback = sentence(watch, 'Feedback and revision:');
-  expect(feedback).toMatch(/not draft.*mergeable against the current base/i);
-  const concepts = [/blocking agent-authored thread/i, /top-level blocking comment/i,
-    /effective blocking review remains/i, /validated.*Pre-existing.*thread exception/i];
-  checkRule(feedback.replace(/`/g, ''), (text) => prohibits(text, /no unresolved/i, ...concepts),
+  expect(feedback).toMatch(/\bnot draft\b.*\bmergeable against the current base\b/i);
+  const concepts = [/\bblocking agent-authored thread\b/i, /\btop-level blocking comment\b/i,
+    /\beffective blocking review remains\b/i, /\bvalidated\b.*\bPre-existing\b.*\bthread exception\b/i];
+  checkRule(feedback.replace(/`/g, ''), (text) => prohibits(text, /\bno unresolved\b/i, ...concepts),
     'After the validated Pre-existing thread exception, no unresolved blocking agent-authored thread, top-level blocking comment, or effective blocking review remains.',
-    [[/no unresolved/i, 'unresolved'], [/validated.*Pre-existing.*thread exception/i, 'no exception']], concepts);
+    [[/\bno unresolved\b/i, 'unresolved'], [/\bvalidated\b.*\bPre-existing\b.*\bthread exception\b/i, 'no exception']], concepts);
   expect(sentence(watch, 'Authored review `APPROVE`')).toMatch(/diligence.*`PASS`.*current head and base/i);
   expect(sentence(watch, 'No `Escalate to user`')).toMatch(/unsettled author Dispatch.*task, PR, dependency, run-wide, or serious-risk.*hold/i);
   expect(sentence(watch, 'Veto:')).toMatch(/no `do-not-merge` label.*no chat `hold`/i);
