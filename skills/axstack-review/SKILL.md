@@ -187,6 +187,8 @@ Load and follow [Template: review receipt (one block per revision)](references/r
 
 ## Prompt-only urgent escalation
 
+Follow [Advised holds](../axstack/references/contracts.md#advised-holds) for urgent escalation ordering and eligible advice.
+
 Peer reviews, including interactive non-manager reviews, raise only credible
 serious security/funds risk through this prompt-only hold in the T3 driver thread.
 

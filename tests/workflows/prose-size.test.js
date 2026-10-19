@@ -16,6 +16,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // The PR that would cross a ceiling raises it by a round step (+100,000
   // aggregate, +5,000 always-loaded), with a one-line reason in the PR body
   // and commit message. Contract text is never trimmed to fit.
+  // Advised holds adds shared seat, card, wait and authority rules (+5,000 always-loaded).
   expect(total).toBeLessThanOrEqual(500000);
-  expect(alwaysLoaded).toBeLessThanOrEqual(30000);
+  expect(alwaysLoaded).toBeLessThanOrEqual(35000);
 });

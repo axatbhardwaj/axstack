@@ -69,7 +69,26 @@ rule('AGENTS per-run host authority', () => read('AGENTS.md'), 'VPS only under r
 rule('run-wide hold stops the run', autopilot, 'Run-wide holds', /authority.*scope.*cancellation.*serious risk stop the run/);
 rule('scoped hold blocks dependants', autopilot, 'A task, PR, resource, or operation hold', /blocks only its dependants; continue independent authorized work/);
 for (const item of ['tracker access', 'adviser or arena-seat availability', 'CI-wait timeout', 'readiness UNKNOWN', 'dismissed approval', 'wake or cleanup uncertainty', 'single-provider routing', 'existing tag or version', 'failed publish']) {
-  test(`hold example: ${item}`, () => expect(autopilot()).toContain(item));
+  test(`hold example: ${item}`, () => {
+    expect(autopilot()).toContain(item);
+    if (item !== 'adviser or arena-seat availability') return;
+    const concepts = [/\badviser or arena-seat availability\b/i, /\bholds? the work that needs them\b/i];
+    checkRule(autopilot(), (text) => requires(text, ...concepts),
+      'For example, adviser or arena-seat availability holds the work that needs them.',
+      [[/\bholds?\b/i, 'never holds'],
+        ...concepts.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], concepts);
+    // Availability still holds dependent work; eligible hold cards inherit
+    // their bounded wait and unavailable-seat exception from the contract.
+    const source = readFileSync(`${root}/skills/axstack/references/autopilot.md`, 'utf8');
+    const section = source.split('## Advance and hold')[1].split('## ')[0];
+    const link = 'contracts.md#advised-holds';
+    expect(loadedReferences(section)).toContain(link);
+    const directive = section.match(/Follow \[Advised holds\]\([^)]*\)[^.]*\./)?.[0];
+    expect(directive).toBeDefined();
+    expect(loadedReferences(section.replace(directive, ''))).not.toContain(link);
+    expect(loadedReferences(section.replace(directive, `Never ${directive}`))).not.toContain(link);
+    expect(loadedReferences(section.replace(directive, directive.replace('Follow', 'Read')))).toContain(link);
+  });
 }
 rule('silence cannot resume', autopilot, 'A user answer to the hold', /silence does not/);
 rule('spec approval cannot be inferred', autopilot, 'Spec approval is always', /human's decision/);

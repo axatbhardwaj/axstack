@@ -9,6 +9,8 @@ not a mode change.
 
 ## Advance and hold
 
+Follow [Advised holds](contracts.md#advised-holds) for eligible user-decision holds.
+
 Advance only after the finishing phase returns its completed identity (a
 small-change intent, approved spec, matching ticket map, merge-ready or merged
 state) and no hold affects the next action. Record each hold's reason, owner,
