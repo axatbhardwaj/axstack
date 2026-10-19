@@ -1,3 +1,4 @@
+import { readSkillFile } from './skill-source.js';
 import { expect, test } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -189,7 +190,7 @@ test('UI verification routes rendered checks to the read-only verifier', () => {
     'skills/axstack-explain/references/visual-qa.md',
     'skills/axstack-debug/SKILL.md',
   ]) {
-    expect(readFileSync(`${root}/${path}`, 'utf8'), path).toContain('ui-verification.md');
+    expect(readSkillFile(`${root}/${path}`, 'utf8'), path).toContain('ui-verification.md');
   }
   const cases = readJson('tests/workflows/routing-scenarios.json').cases;
   const ui = cases.find(({ id }) => id === 'ui-change-rendered-check');

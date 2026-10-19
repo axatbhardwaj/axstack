@@ -3,6 +3,17 @@
 Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js`.
+Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
+`references/codebase-mode.md`, `references/codebase-brief.md`,
+`references/codebase-report.md`, `references/peer-mode.md`,
+`references/review-candidate.md`, `references/candidate-brief.md` and
+`references/review-receipt.md` under `skills/axstack-review/`.
+Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
+`references/readiness.md`, `references/proven-verification.md`,
+`references/escalation.md` and `references/blocked-on-person.md` under
+`skills/axstack-watch/`.
+Split test files: `tests/workflows/{presets-research,presets-roles,presets-runtime,pr-managers-lifecycle,structural-workflows}.test.js`;
+runtime tables: `tests/workflows/t3-runtime/*.js`.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
 packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
 bytes, exclusions, failure guidance, renames and subdirectory invocation.
@@ -27,6 +38,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/workspace-hygiene.test.js \
   tests/workflows/manager-pass-settlement.test.js \
   tests/workflows/pr-managers.test.js \
+  tests/workflows/pr-managers-lifecycle.test.js \
   tests/workflows/peer-review.test.js \
   tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-removal.test.js \
@@ -45,6 +57,9 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/explain-whiteboard.test.js \
   tests/workflows/ui-verification.test.js \
   tests/workflows/presets.test.js \
+  tests/workflows/presets-research.test.js \
+  tests/workflows/presets-roles.test.js \
+  tests/workflows/presets-runtime.test.js \
   tests/workflows/single-server.test.js \
   tests/workflows/single-server-units.test.js \
   tests/workflows/default-sync-policy.test.js \

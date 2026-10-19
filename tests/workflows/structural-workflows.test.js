@@ -1,10 +1,11 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
 import { isVendored } from './vendored-paths.js';
 import { publicDocPaths } from './public-docs.js';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
-import { readFileSync, existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { loadedReferences, requires, sentences } from './prose-contract.js';
 
 const SEP = '/';

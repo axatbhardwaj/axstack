@@ -1,6 +1,7 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { checkRule, loadedReferences, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);

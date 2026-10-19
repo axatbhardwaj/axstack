@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 
 // These check instruction contracts, not live agent compliance. Synonyms allow
 // prose edits; removal/inversion and paraphrase probes live in the run evidence.

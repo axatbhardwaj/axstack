@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 import { checkRule, requires } from './prose-contract.js';
 import { deriveModelClass } from '../../src/roles.js';
 

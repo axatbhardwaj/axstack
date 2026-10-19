@@ -1,5 +1,6 @@
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+
 import { publicDocPaths } from './public-docs.js';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 

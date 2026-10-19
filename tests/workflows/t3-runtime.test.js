@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readSkillFile as readFileSync } from './skill-source.js';
 import { dispatchRules } from './t3-runtime/dispatch-rules.js';
 import { settlementRules } from './t3-runtime/settlement-rules.js';
 import { rewordings } from './t3-runtime/rewordings.js';
