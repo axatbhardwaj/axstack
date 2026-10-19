@@ -99,6 +99,115 @@ discriminating check. A bare "stuck" claim needs pointers to two failed attempts
 setup slips and new user requirements do not count. Each use starts a fresh
 session that never reuses an adviser or candidate context. Escalation never
 resets existing holds or attempt budgets.
+At an advised hold or step-back that is not high-stakes, an adviser split goes
+to the user with no reconciliation and no Fable.
+
+## Advised holds
+
+Advise when a hold reaches the user and the reply picks between two or more
+paths an agent can then carry out.
+The criterion governs and the examples are illustrative.
+The never-advised list is exhaustive and judged by the cause, rather than reply
+option wording.
+Examples include `verification not proven`, provenance or unclosable-verification
+merge cards, a blocked operation after bounded recovery, a scoped no-test-first
+decision, the round-4 step-back hold, major-design urgent escalation in authored
+or codebase review, and authored `Escalate to user` concerns about security,
+permanent on-chain state changes or an architectural change in approach.
+Diligence `UNKNOWN` and a `Learning` contradiction remain driver dispositions,
+advised only if raised to the user as a hold.
+
+Never advise spec approval, npm stage approval or collaborator approval.
+Never advise access or credentials.
+Never advise forge merges by the user.
+Never advise `Auto-merge: off`.
+Never advise work-promotion, deploying-base or unknown-base report cards.
+Never advise the report-only comment-rating card.
+Never advise model unavailability or substitution.
+Never advise denied actions or explicit user stops.
+Never advise peer-review holds; peer mode keeps its cap panel and sends no other human ping.
+Never advise review-manager pass holds; the manager keeps its flagged-thread path.
+
+Before advice the driver closes the gap where possible under existing rules,
+then forms its own assessment.
+This pre-advice gap-closing never spends the one advice-driven action.
+In `mixed`, consult `axstack-advisor-astra` and `axstack-advisor-opus`
+independently with the same bounded evidence packet and question.
+The evidence packet and question omit the driver's own pick.
+Advisers never cross-read one another.
+Single-provider presets use the one configured adviser and record the other
+as an intentional absence.
+
+For high-stakes holds, use `axstack-advisor-astra` and `axstack-escalation-fable`
+plain AGREE after bounded checks under the existing high-stakes contract
+instead of the ordinary seats.
+For a single-provider high-stakes hold, pause for an explicit user decision
+under the existing contract.
+In a single-provider preset, consult the configured one of those two seats once.
+Show `advice unavailable: <seat>` for the absent high-stakes seat.
+In a single-provider preset, no AGREE can form.
+Mark the single-provider high-stakes card `high-stakes: no AGREE`
+in the parenthetical `Recommended` status.
+Only seats and disagreement handling follow that contract.
+For high-stakes holds the card, wait and authority rules here still apply.
+If Astra and Fable still disagree, show both options with the driver's pick
+first and `high-stakes: no AGREE` in the parenthetical `Recommended` status.
+The user's pick is the explicit user decision.
+The driver's pick never counts as AGREE.
+
+Add `Recommended`, `Trade-off`, `Checks would miss` and numbered `Reply` lines
+to the existing card:
+
+```text
+Recommended: <option n> (<advisers agree | advisers split | one adviser | advice pending: <seat> | advice unavailable: <seat>>)
+Trade-off: <one line>
+Checks would miss: <what tests and review would miss on this path | n/a for a non-code hold>
+Reply: 1. <option> 2. <option> ...
+```
+
+On a non-high-stakes split show both options with one-line reasons and the
+driver's pick first; apply the Fable carve-out above.
+On a single-provider adviser disagreement with the driver, show both options
+with one-line reasons and the driver's pick first, as on a split.
+With multiple open cards each reply names its PR, or the hold key for a hold
+without a PR.
+An ambiguous reply clears nothing and the driver asks once.
+Advice never clears a hold or grants approval, merge or `user-accepted unproven`.
+Silence never applies the recommendation.
+A user reply clears only its bound cause.
+
+Make one attempt per seat with no automatic retry or substitution.
+With a run watch armed wait at most until the next bound watch wake, then
+post the card.
+With no watch armed post the card at once.
+A running seat shows `advice pending: <seat>` on the card.
+A failed or unavailable seat shows `advice unavailable: <seat>` on the card.
+Late advice is an addendum in the driver thread, never a new hold or second alert.
+Keep pending dispatches in the run record and settle them when they terminate.
+Record an unavailable seat as a model gap for later work needing that seat.
+An advice gap never blocks the card or the user's reply.
+
+Reuse an advice receipt while its cause and evidence packet, including patch-id,
+are unchanged.
+Changed evidence, authority or question requires fresh advice.
+The round-4 card reuses the step-back advisers with a delta-only brief.
+On a head or base change, supersede the card under the existing supersede rules.
+Reissue the card only if the decision is still needed, bound to the current head and base.
+Reuse unchanged advice when reissuing the card.
+A reissued card for the same cause is the same hold and sends no new alert.
+A reply bound to a superseded head or base clears nothing at the new head or base.
+
+After advice, per PR and cause kind the driver can act once on advice to close the cause
+within existing authority only when advisers agree.
+In single-provider presets, for self-close the adviser must agree with the driver.
+Post the card on a split or a single-adviser disagreement with the driver.
+Post the card when the cause recurs after that one action, or when the action raises a new hold.
+
+Outside peer mode raise every serious-risk hold immediately in watch, implement,
+review, autopilot or debug before dispatching advisers.
+Serious-risk holds include security, downtime, data loss and major design.
+Serious-risk advice follows as an addendum with no second alert.
+Peer serious-risk holds stay never advised under the peer-review exclusion above.
 
 ## Serious risk
 

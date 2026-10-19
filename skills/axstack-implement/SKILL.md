@@ -254,6 +254,7 @@ For each PR:
    risk, or the third review round with `REQUEST_CHANGES` and/or diligence
    `FINDINGS` on one PR records `held`. A changed parent immediately invalidates affected child readiness; refresh
    the next ready children as needed under PR chains before step 1.
+   Follow [Advised holds](../axstack/references/contracts.md#advised-holds) for eligible `held` causes.
    Merge-ready also requires a current diligence `PASS` at that head; diligence
    `FINDINGS` return to the same author within the review round.
    Diligence `UNKNOWN` records the PR as `held` with the reason in the run record
@@ -272,6 +273,7 @@ That watch owns the bound T3 schedule wake; its runtime sets the cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
 Follow [Route each wake](../axstack-watch/SKILL.md#4-route-each-wake).
+Follow [Advised holds](../axstack/references/contracts.md#advised-holds) when raising eligible holds.
 Raise user-decision and serious-risk holds in the T3 driver thread and end the
 turn parked on the decision. Serious risks are raised immediately.
 After bounded safe recovery, raise a genuine blocked operation that still needs

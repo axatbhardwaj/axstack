@@ -28,6 +28,7 @@ The driver first closes a verification gap itself: run the check, re-dispatch
 review, or return the work to the author. Only a gap the driver cannot close
 becomes a `verification not proven` card bound to head and base.
 The card names what is unproven, why, and the action that would settle it.
+Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for eligible verification cards.
 
 Raise `verification not proven` in the T3 driver thread and end the turn parked
 on the decision, bound to the exact PR head and base.
