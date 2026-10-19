@@ -40,6 +40,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/readme-contract.test.js \
   tests/workflows/skill-current-contracts.test.js \
   tests/workflows/publish.test.js \
+  tests/workflows/publish-audience.test.js \
   tests/workflows/explain-diagram.test.js \
   tests/workflows/explain-fidelity.test.js \
   tests/workflows/explain-whiteboard.test.js \
@@ -104,6 +105,20 @@ one-time same-account Sol migration at driver host activation, running-thread
 non-interference and fleet activation/readback remain separate live checks.
 
 ## Explain delivery
+
+Publish audience keeper: `publish-audience.test.js` checks private-only discovery
+and questions, enabled/complete and unshared status, one-slug/one-audience consent,
+earlier-version warnings, inference and revocation prohibitions, republish disclosure,
+public exclusion and promotion warnings, old-help fallback and failure holds.
+It checks verified-publish-before-grant ordering, grant JSON identity, incomplete
+share reporting, placeholders and absence of service IDs. Each semantic test drives
+real-source removal and inversion red plus equivalent-rewording green in memory.
+These checks prove instructions only. In a separately authorized live run, drive
+zero/one/several audiences, new/unshared/shared slugs, disabled/pending entries,
+old help, list/status failures, yes/no, grant failure and public promotion.
+Record the question, status audience, command order, grant JSON readback and hold;
+confirm private publication remains valid when sharing fails. Never use reader
+passwords. Unrun CLI and reader-access cases remain unverified.
 
 Publish's `publish.test.js` checks per-request authority, public redaction and
 self-contained assets, fresh final-byte review, password/TTY prohibitions and

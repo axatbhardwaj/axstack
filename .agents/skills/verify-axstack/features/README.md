@@ -9,7 +9,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 | Resolve saved models and prepare dispatch | [Model/dispatch plans](dispatch.md) | Resolved model, bound instance, MATCH readback |
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |
-| Explain/Publish delivery and workflow contracts | [Workflow contracts](workflows.md) | Semantic source contracts and reviewer/verifier delivery drives |
+| Explain/Publish delivery and workflow contracts | [Workflow contracts](workflows.md) | Semantic source contracts, private audience authority and reviewer/verifier delivery drives |
 | Build an explicit Anatomy figure | [Anatomy source/theme](anatomy.md) | Source inventory, wrapper/scratch build and delegated frame-theme/compositing drive |
 
 Gotchas: scratch must be outside HOME; installation uses a private temporary HOME
