@@ -1,6 +1,6 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readSkillFile as readFileSync } from './skill-source.js';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const contracts = () => read('skills/axstack/references/contracts.md').replace(/\s+/g, ' ');
@@ -125,3 +125,35 @@ rule('serious risk categories stay complete', [/serious-risk/i, /security.*downt
 rule('serious risk advice is addendum with no second alert', [/serious-risk advice/i, /addendum/i, /second alert/i],
   'Serious-risk advice follows as an addendum with no second alert.', /no/i);
 
+const pointers = [
+  ['skills/axstack-watch/SKILL.md', [
+    ['## 4.', '## 5.'],
+    ['The driver first closes a verification gap', '### Escalation'],
+    ['Post a merge card', '### Blocked on a person'],
+  ]],
+  ['skills/axstack-implement/SKILL.md', [
+    ['`INCOMPLETE`, a provenance gap', 'The T3 run watch'],
+    ['Follow [Route each wake]', 'Merge-ready opens'],
+  ]],
+  ['skills/axstack-review/SKILL.md', [
+    ['Every brief ends', '## Template: review receipt'],
+    ['## Prompt-only urgent escalation', 'Under a manager PR job'],
+  ]],
+];
+for (const [path, sections] of pointers) {
+  for (const [anchor, end] of sections) test(`contract pointer: ${path} at ${anchor}`, () => {
+    const source = read(path);
+    const start = source.indexOf(anchor);
+    const stop = source.indexOf(end, start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(stop).toBeGreaterThan(start);
+    const window = source.slice(start, stop);
+    const link = '../axstack/references/contracts.md#advised-holds';
+    expect(loadedReferences(window)).toContain(link);
+    const directive = window.match(/Follow \[Advised holds\]\([^)]*\)[^.]*\./)?.[0];
+    expect(directive).toBeDefined();
+    expect(loadedReferences(window.replace(directive, ''))).not.toContain(link);
+    expect(loadedReferences(window.replace(directive, `Never ${directive}`))).not.toContain(link);
+    expect(loadedReferences(window.replace(directive, directive.replace('Follow', 'Consult')))).toContain(link);
+  });
+}

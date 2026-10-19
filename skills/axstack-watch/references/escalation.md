@@ -32,6 +32,7 @@ A quoted format inside a bullet never counts as the declaration.
 `Auto-merge: off` for a run or PR makes the merge card wait, and it waits for the user.
 
 Post a merge card for every nonqualifying approval, base, verification, or off case.
+Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for eligible merge-card causes.
 Bind it to the PR head and base SHA; list CI, authored review and diligence at
 those SHAs, counted collaborator approvals and bot votes with each vote's SHA
 and stale flag, and the causes holding this merge.

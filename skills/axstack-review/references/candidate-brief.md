@@ -30,3 +30,4 @@ reviewer criterion. The answer is escalation input, not a veto or verdict; see
 [Native PR managers](../../axstack/references/automations.md) for the manager-chat
 hold.
 
+Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for eligible authored escalation holds.

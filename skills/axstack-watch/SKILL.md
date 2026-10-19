@@ -130,6 +130,7 @@ Historical provenance still follows §5's merge-card rule.
 A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
 
+Follow [Advised holds](../axstack/references/contracts.md#advised-holds) before parking a user-decision hold.
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
 and the driver ends its turn parked on the decision.
 These include `verification not proven`, merge cards needing user input,

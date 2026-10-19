@@ -27,6 +27,10 @@ Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 The removal check covers shipped transport absence and driver-thread decision holds.
 Manager-hold checks cover finite-pass flagging, optional host alerts and host-defined user input.
+Advised-hold checks cover eligibility and exclusions, adviser seats and splits,
+bounded waits and gaps, advice reuse, reply authority and serious-risk ordering.
+The existing Fable and autopilot checks retain the general escalation and
+availability rules while loading the advised-hold exceptions.
 
 ```bash
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
@@ -46,6 +50,8 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/merge-audit-discipline.test.js \
   tests/workflows/merge-escalation.test.js \
   tests/workflows/autopilot-repair.test.js \
+  tests/workflows/advised-holds.test.js \
+  tests/workflows/fable-escalation.test.js \
   tests/workflows/dependabot-driver.test.js \
   tests/workflows/analysis-pairs.test.js \
   tests/workflows/public-docs.test.js \
