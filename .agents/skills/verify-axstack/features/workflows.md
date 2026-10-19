@@ -84,7 +84,8 @@ filing requests. Every semantic rule rejects removal/inversion and accepts
 equivalent wording; live disposition validation, peer posting and tracker
 search remain unproven. Clarification checks cover highest-rating draft choice,
 diff-order ties, blocker-only serious findings, trailing summary fields and
-search limits, and the reference-to-head diff for own-run chains.
+search limits, zero-draft block shape, unchanged-file tie ordering, and the
+reference-to-head diff for own-run chains.
 
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset

@@ -87,10 +87,12 @@ Only defects in changed files or their direct callers and callees get a `Pre-exi
 Use one trailing `Pre-existing` block with at most two drafts.
 When more than two non-blocking defects qualify for drafts, select the two with the highest rating.
 Break rating ties by first appearance in the diff.
+Rank tied eligible defects outside changed files after tied changed-file defects, using file path and then line for their order.
 The `Pre-existing` block is exempt from the five-note limit and the word budget.
 Put all other validated `Pre-existing` defects that are non-blocking, including
 unselected eligible defects and defects outside that range, on one `Also pre-existing:` line.
 Place the `Also pre-existing:` line last in the trailing `Pre-existing` block.
+With zero drafts, the trailing `Pre-existing` block holds only the `Also pre-existing:` line.
 Each `Also pre-existing:` entry gives a title and `file:line`.
 `Also pre-existing:` entries get no tracker search or filing request.
 Each draft says the bug is pre-existing and not caused by this PR.

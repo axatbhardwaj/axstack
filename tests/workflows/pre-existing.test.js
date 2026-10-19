@@ -205,7 +205,7 @@ rule('draft rating ties use first appearance in the diff', peer,
   [/\bbreak rating ties\b/i, /\bfirst appearance\b/i, /\bdiff\b/i],
   'Use first appearance in the diff to break rating ties.', /\bfirst\b/i, 'last');
 rule('Also line closes the trailing exempt block', peer,
-  [/\bAlso pre-existing:/i, /\bline last\b/i, /\btrailing Pre-existing block\b/i],
+  [/\bAlso pre-existing:/i, /\bline last\b/i, /\bin the trailing Pre-existing block\b/i],
   'In the trailing Pre-existing block, place the Also pre-existing: line last.',
   /\blast\b/i, 'first');
 rule('Also entries contain a title and location', peer,
@@ -222,3 +222,15 @@ rule('own-run diff checks span the reference revision through PR head', severity
     /\bintroduction\b/i, /\bamplification\b/i, /\bnew exposure\b/i, /\bsame-class instances\b/i],
   'All Pre-existing diff checks for own run PRs span the reference revision to the PR head: unchanged defective code, introduction/amplification/new exposure and same-class instances.',
   /\breference revision to the PR head\b/i, 'PR head to the reference revision');
+
+rule('zero-draft block holds only the Also line', peer,
+  [/\bwith zero drafts\b/i,
+    /\btrailing Pre-existing block holds only the Also pre-existing: line\b/i],
+  'The trailing Pre-existing block holds only the Also pre-existing: line with zero drafts.',
+  /\bholds only\b/i, 'excludes');
+
+rule('tied eligible defects outside changed files follow changed-file ties by path and line', peer,
+  [/\brank tied eligible defects outside changed files after tied changed-file defects\b/i,
+    /\bfile path and then line\b/i],
+  'Using file path and then line for their order, rank tied eligible defects outside changed files after tied changed-file defects.',
+  /\bafter\b/i, 'before');
