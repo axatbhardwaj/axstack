@@ -29,6 +29,8 @@ The removal check covers shipped transport absence and driver-thread decision ho
 Manager-hold checks cover finite-pass flagging, optional host alerts and host-defined user input.
 Advised-hold checks cover eligibility and exclusions, adviser seats and splits,
 bounded waits and gaps, advice reuse, reply authority and serious-risk ordering.
+Step-back checks cover both adviser seats, conditional round-4 repair, independent
+review and diligence, unchanged ratings and independent-hold cards.
 The existing Fable and autopilot checks retain the general escalation and
 availability rules while loading the advised-hold exceptions.
 
@@ -54,6 +56,10 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/merge-escalation.test.js \
   tests/workflows/autopilot-repair.test.js \
   tests/workflows/advised-holds.test.js \
+  tests/workflows/step-back.test.js \
+  tests/workflows/review-convergence.test.js \
+  tests/workflows/implement-loop.test.js \
+  tests/workflows/diligence-repair.test.js \
   tests/workflows/fable-escalation.test.js \
   tests/workflows/dependabot-driver.test.js \
   tests/workflows/analysis-pairs.test.js \

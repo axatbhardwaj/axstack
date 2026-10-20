@@ -250,9 +250,8 @@ For each PR:
    polish.
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
    findings to the same author for a new revision, increments `repairs`, and
-   returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model, serious
-   risk, or the third review round with `REQUEST_CHANGES` and/or diligence
-   `FINDINGS` on one PR records `held`. A changed parent immediately invalidates affected child readiness; refresh
+   returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model or serious
+   risk records `held`. A changed parent immediately invalidates affected child readiness; refresh
    the next ready children as needed under PR chains before step 1.
    Follow [Advised holds](../axstack/references/contracts.md#advised-holds) for eligible `held` causes.
    Merge-ready also requires a current diligence `PASS` at that head; diligence
@@ -263,7 +262,13 @@ For each PR:
    rule as a finding on the owning PR and hold merge-ready until the contradiction is resolved.
    An unrelated run-record `Learning` leaves merge-ready eligibility unchanged.
    A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` increments
-   `repairs` once and counts once toward the third-round hold.
+   `repairs` once and counts once toward the round-3 step-back.
+   Failed checks and post-readiness feedback increment `repairs` but never count
+   as failing review rounds.
+   On a PR's third failing review round, the driver steps back with both
+   `axstack-advisor-astra` and `axstack-advisor-opus` for exactly one extra repair
+   round (round 4).
+   Load and follow [Round-3 step-back](references/step-back.md).
 
 The T3 run watch reconciles every unsettled dispatch attempt; the bounded
 forge check wait is the only other implementation wait.

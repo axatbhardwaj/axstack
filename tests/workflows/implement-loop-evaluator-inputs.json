@@ -56,7 +56,7 @@
     },
     {
       "id": "autopilot-hold-resume", "title": "Hold then resume",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Resume safely", "run_state": "Implement repairs diligence FINDINGS with the same author until the bounded third-round rule records a hold. Later the human answers that hold. Explain repair versus pause and reconciliation before resuming."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Resume safely", "run_state": "Implement repairs diligence FINDINGS with the same author with a round-3 adviser step-back and exactly one advised round-4 repair when every condition holds; any later failing review round records a hold. Later the human answers that hold. Explain repair versus pause and reconciliation before resuming."}
     },
     {
       "id": "autopilot-cancel", "title": "Cancel with owned resources",
