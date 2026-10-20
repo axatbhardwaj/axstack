@@ -1,3 +1,4 @@
+import { checkRule, requires } from './prose-contract.js';
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 
@@ -21,7 +22,10 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
     /authoring\s*\|\s*published\s*\|\s*in-review\s*\|\s*repairing\(n\)\s*\|\s*merge-ready\s*\|\s*merged\s*\|\s*held/i,
   );
   expect(loaded).toMatch(/REQUEST_CHANGES[^.]*same author[^.]*new revision[^.]*repairs/i);
-  expect(loaded).toMatch(/third review round with `REQUEST_CHANGES` and\/or diligence `FINDINGS`[^.]*held/i);
+  checkRule(loaded.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
+  [[/\bsteps back\b/i, 'holds without stepping back']]);
   expect(loaded).toMatch(/`codex-only`[^.]*`claude-only`[^.]*hold[^.]*step \(3\)[^.]*no substitution/i);
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
   expect(loaded).toMatch(/merge-ready opens the merge boundary/i);

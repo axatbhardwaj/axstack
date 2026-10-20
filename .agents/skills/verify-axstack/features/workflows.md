@@ -29,6 +29,14 @@ The removal check covers shipped transport absence and driver-thread decision ho
 Manager-hold checks cover finite-pass flagging, optional host alerts and host-defined user input.
 Advised-hold checks cover eligibility and exclusions, adviser seats and splits,
 bounded waits and gaps, advice reuse, reply authority and serious-risk ordering.
+Step-back checks cover both adviser seats, conditional round-4 repair, independent
+review and diligence, unchanged ratings and independent-hold cards. Durable
+per-PR budgets cover ticketless/adopted entries, legacy Runtime versions,
+unknown history, separate budgets for shared issues, write-before-dispatch,
+replacement/split inheritance and no renewal after interruption or later failure.
+Repair checks cover unused budgets at three or more failing rounds, user-picked
+step-back repairs consuming the budget before dispatch, zero-round legacy
+initialization, the later-failure advised card and both required load directives.
 The existing Fable and autopilot checks retain the general escalation and
 availability rules while loading the advised-hold exceptions.
 
@@ -54,6 +62,11 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/merge-escalation.test.js \
   tests/workflows/autopilot-repair.test.js \
   tests/workflows/advised-holds.test.js \
+  tests/workflows/step-back.test.js \
+  tests/workflows/step-back-repair.test.js \
+  tests/workflows/review-convergence.test.js \
+  tests/workflows/implement-loop.test.js \
+  tests/workflows/diligence-repair.test.js \
   tests/workflows/fable-escalation.test.js \
   tests/workflows/dependabot-driver.test.js \
   tests/workflows/analysis-pairs.test.js \

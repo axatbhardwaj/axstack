@@ -1,3 +1,4 @@
+import { checkRule, requires } from './prose-contract.js';
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
 
@@ -26,11 +27,18 @@ test('authored receipt counts exclude the separate diligence receipt', () => {
   expect(review).toMatch(/Authored mode requires its one current eligible configured reviewer receipt and a separate current diligence receipt;/);
 });
 
-test('implement holds on the third finding round and preserves the PASS gate', () => {
+test('implement counts one failing round toward step-back and preserves the PASS gate', () => {
   const implement = compact('skills/axstack-implement/SKILL.md');
   expect(implement).toMatch(/Merge-ready also requires a current diligence `PASS` at that head; diligence `FINDINGS` return to the same author within the review round\./);
-  expect(implement).toMatch(/A round with reviewer `REQUEST_CHANGES` and\/or diligence `FINDINGS` increments `repairs` once and counts once toward the third-round hold\./);
-  expect(implement).toMatch(/the third review round with `REQUEST_CHANGES` and\/or diligence `FINDINGS` on one PR records `held`/);
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /\bround with reviewer REQUEST_CHANGES\b.*\bdiligence FINDINGS\b/i,
+    /\bincrements repairs once\b/i, /\bcounts once toward\b.*\bround-3 step-back\b/i),
+  'A round with reviewer REQUEST_CHANGES and/or diligence FINDINGS increments repairs once and counts once toward the round-3 step-back.',
+  [[/\bcounts once\b/i, 'counts twice']]);
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
+  [[/\bsteps back\b/i, 'holds without stepping back']]);
 });
 
 test('diligence rejects stale receipts and binds PR evidence to head and base', () => {

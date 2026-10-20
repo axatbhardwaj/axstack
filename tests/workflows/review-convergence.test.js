@@ -1,3 +1,4 @@
+import { checkRule, requires } from './prose-contract.js';
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
 
@@ -17,7 +18,10 @@ test('implement accepts non-blocking review notes without driver-elected polish'
   expect(implement).toMatch(/APPROVE[^.]*non-blocking findings[^.]*diligence `PASS`[^.]*merge-ready/i);
   expect(implement).toMatch(/driver records[^.]*non-blocking notes[^.]*does not elect a repair/i);
   expect(implement).toMatch(/only the user[^.]*ask for polish/i);
-  expect(implement).toMatch(/third review round[^.]*REQUEST_CHANGES[^.]*FINDINGS[^.]*held/i);
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
+  [[/\bsteps back\b/i, 'holds without stepping back']]);
 });
 
 test('optional adviser notes are dispositioned without changing the draft', () => {

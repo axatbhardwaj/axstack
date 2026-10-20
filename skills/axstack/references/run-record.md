@@ -81,6 +81,29 @@ owner stops.
 deleted.
 The driver records `paused` on a user request or a hold; idle alone is neither.
 
+## Review-round budgets
+
+Each PR membership entry carries `rounds: <n>` and `step-back: unused | used r<n>`.
+The field `rounds` counts failing review rounds, not `repairs`.
+Ticketless PRs (small-change intents) and adopted PRs have entries too.
+A new planned PR, small-change PR or adopted PR starts at `rounds: 0` and `step-back: unused`
+when it enters the run, unless a prior run entry exists.
+When a prior run entry exists for the PR, copy that entry, including adopted PRs.
+A prior record predates the field only when its `Runtime` line names an Axstack version below 0.48.0.
+Such a pre-field entry starts with `rounds: 0` and `step-back: unused` only if the field is absent.
+Except for that absent-field initialization, an inherited entry with missing or unclear `rounds` or `step-back` values
+counts as `step-back: used`, including a newer record missing the field or an unknown `Runtime` version.
+Distinct PRs that share one ticket or issue keep separate budgets.
+Write `step-back: used r<n>` before dispatching any repair from the step-back,
+including a user-picked path from the advised step-back card.
+A replacement or split PR copies its predecessor's entry.
+The entry persists across rebases, resumes and owner transfer.
+A `step-back: used` entry permits no further extension.
+Any counted failing review round after the extension records `held` with an advised card,
+including a re-review after a base update and a round after a passing round 4.
+Follow [Advised holds](contracts.md#advised-holds) for that card.
+An interrupted or failed extra-round attempt never earns a second extension and follows the existing failure rules.
+
 ## Handoff and resumption
 
 Keep handoff state in this same record, never a second wrapper record. Before an
@@ -190,7 +213,7 @@ Deploying bases: <base -> integration | deploying; docs/workflow evidence>
 PR digest watermarks: <repo -> absolute path of its per-repository JSON file inside the private run directory> | none
 Release: <AGENTS.md file:line + tag-triggered workflow path + named install hosts> | not applicable (<reason>)
 Source base: <exact revision or source identity>
-PR membership: <PR -> ordinary-chain | legacy-native-stack; direct dependencies incl unpublished; active authors; head/base branch/base SHA>
+PR membership: <PR -> ordinary-chain | legacy-native-stack; direct dependencies incl unpublished; active authors; head/base branch/base SHA; rounds: <n>; step-back: unused | used r<n>>
 IDs: <projectId + driver threadId/runId + dispatch identity receipt pointers>
 Runtime: <host + T3 version + installed Axstack SHA + installed Axstack version/check time + last reference read time + capabilities JSON path>
 Schedules: <scheduledTaskIds of every watch and manager schedule>
