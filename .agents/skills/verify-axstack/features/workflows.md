@@ -30,7 +30,10 @@ Manager-hold checks cover finite-pass flagging, optional host alerts and host-de
 Advised-hold checks cover eligibility and exclusions, adviser seats and splits,
 bounded waits and gaps, advice reuse, reply authority and serious-risk ordering.
 Step-back checks cover both adviser seats, conditional round-4 repair, independent
-review and diligence, unchanged ratings and independent-hold cards.
+review and diligence, unchanged ratings and independent-hold cards. Durable
+per-PR budgets cover ticketless/adopted entries, legacy Runtime versions,
+unknown history, separate budgets for shared issues, write-before-dispatch,
+replacement/split inheritance and no renewal after interruption or later failure.
 The existing Fable and autopilot checks retain the general escalation and
 availability rules while loading the advised-hold exceptions.
 

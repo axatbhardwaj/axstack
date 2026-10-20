@@ -41,8 +41,8 @@ rule('checks and post-readiness feedback consume repairs rather than rounds', im
   /\bnever count as failing review rounds\b/i, 'always count as failing review rounds',
   /\bnever count as failing review rounds\b/i);
 rule('4.4 unavailable step-back seat means no agreement', implement,
-  [/\bunavailable step-back seat\b/i, /\bcounts as no agreement\b/i],
-  'An unavailable step-back seat counts as no agreement.',
+  [/\bunavailable step-back seat\b/i, /\bcounts as no agreement\b/i, /\bfalls to the user with the advised step-back card\b/i],
+  'An unavailable step-back seat counts as no agreement and falls to the user with the advised step-back card.',
   /\bcounts as no agreement\b/i, 'counts as agreement', /\bcounts as no agreement\b/i);
 
 for (const [name, concept, wording] of [
@@ -110,3 +110,77 @@ rule('diligence UNKNOWN remains a driver-disposition hold', entry,
   [/\bdiligence UNKNOWN\b/i, /\brecords\b.*\bheld\b/i, /\bblocks merge-ready\b.*\bdriver\b.*\brecorded disposition\b/i],
   "Diligence UNKNOWN records the PR as held and blocks merge-ready pending the driver's recorded disposition.",
   /\bblocks merge-ready\b/i, 'permits merge-ready');
+
+const record = read('skills/axstack/references/run-record.md');
+test('Step-back: PR membership template carries both per-PR budget fields', () => {
+  const row = record.match(/^PR membership:.*$/m)?.[0] ?? '';
+  const concepts = [/\bPR membership:/i, /\brounds: <n>/i, /\bstep-back: unused \| used r<n>/i];
+  checkRule(row.replace(/;/g, ','), (text) => requires(text, ...concepts),
+    'PR membership: <PR -> rounds: <n>, step-back: unused | used r<n>>',
+    [[/\brounds: <n>/i, 'repairs: <n>']], concepts);
+});
+rule('each PR membership entry has distinct round and extension fields', record,
+  [/\beach PR membership entry\b/i, /\brounds: <n>/i, /\bstep-back: unused \| used r<n>/i],
+  'Each PR membership entry carries rounds: <n> and step-back: unused | used r<n>.',
+  /\beach PR membership entry\b/i, 'Only each ticket entry');
+rule('rounds count failing reviews rather than repairs', record,
+  [/\brounds counts failing review rounds\b/i, /\brepairs\b/i],
+  'The field rounds counts failing review rounds, not repairs.',
+  /\bnot repairs\b/i, 'also repairs', /\bnot repairs\b/i);
+rule('ticketless and adopted PRs also have entries', record,
+  [/\bticketless PRs\b/i, /\bsmall-change intents\b/i, /\badopted PRs\b/i, /\bhave entries\b/i],
+  'Ticketless PRs (small-change intents) and adopted PRs have entries too.',
+  /\bhave entries\b/i, 'omit entries');
+rule('new planned small-change and adopted PRs start with an unused budget', record,
+  [/\bnew planned PR\b/i, /\bsmall-change PR\b/i, /\badopted PR\b/i,
+    /\bstarts\b.*\brounds: 0\b.*\bstep-back: unused\b/i, /\bwhen it enters the run\b/i, /\bunless a prior run\b.*\bentry exists\b/i],
+  'A new planned PR, small-change PR or adopted PR starts at rounds: 0 and step-back: unused when it enters the run, unless a prior run entry exists.',
+  /\bstep-back: unused\b/i, 'step-back: used');
+rule('adopted and other PRs copy prior entries instead of resetting', record,
+  [/\bprior run\b.*\bentry exists\b/i, /\bcopy that entry\b/i, /\bincluding adopted PRs\b/i],
+  'When a prior run entry exists for the PR, copy that entry, including adopted PRs.',
+  /\bcopy that entry\b/i, 'reset that entry');
+rule('pre-field Runtime version is explicit and alone permits legacy initialization', record,
+  [/\bprior record predates the field only when\b/i, /\bRuntime line\b/i, /\bAxstack version below 0\.48\.0\b/i],
+  'A prior record predates the field only when its Runtime line names an Axstack version below 0.48.0.',
+  /\bbelow 0\.48\.0\b/i, 'at or above 0.48.0');
+rule('pre-field entries start unused', record,
+  [/\bsuch a pre-field entry\b/i, /\bstarts\b.*\bstep-back: unused\b/i],
+  'Such a pre-field entry starts with step-back: unused.',
+  /\bstep-back: unused\b/i, 'step-back: used');
+rule('unclear inherited history newer missing fields and unknown Runtime use the budget', record,
+  [/\bexcept for that absent-field initialization\b/i, /\binherited entry\b/i, /\bmissing or unclear\b.*\brounds or step-back values\b/i,
+    /\bcounts as step-back: used\b/i, /\bnewer record missing the field\b/i, /\bunknown Runtime version\b/i],
+  'Except for that absent-field initialization, an inherited entry with missing or unclear rounds or step-back values counts as step-back: used, including a newer record missing the field or an unknown Runtime version.',
+  /\bcounts as step-back: used\b/i, 'counts as step-back: unused');
+rule('separate PRs sharing a ticket retain separate budgets', record,
+  [/\bdistinct PRs\b/i, /\bshare one ticket or issue\b/i, /\bkeep separate budgets\b/i],
+  'Distinct PRs that share one ticket or issue keep separate budgets.',
+  /\bseparate budgets\b/i, 'one budget');
+rule('consume the extension before dispatching its repair', record,
+  [/\bwrite step-back: used r<n> before dispatching\b/i, /\badvised repair brief\b/i],
+  'Write step-back: used r<n> before dispatching the advised repair brief.',
+  /\bbefore dispatching\b/i, 'after dispatching');
+rule('replacement and split PRs inherit predecessor budget', record,
+  [/\breplacement or split PR\b/i, /\bcopies\b.*\bpredecessor\b.*\bentry\b/i],
+  "A replacement or split PR copies its predecessor's entry.", /\bcopies\b/i, 'resets');
+rule('budgets persist through rebases resumes and owner transfer', record,
+  [/\bentry persists across rebases\b.*\bresumes\b.*\bowner transfer\b/i],
+  'The entry persists across rebases, resumes and owner transfer.', /\bpersists\b/i, 'resets');
+rule('any failing review after extension holds even after a base update or passing round 4', record,
+  [/\bany counted failing review round after the extension records held\b/i, /\badvised card\b/i,
+    /\bre-review after a base update\b/i, /\bround after a passing round 4\b/i],
+  'Any counted failing review round after the extension records held with an advised card, including a re-review after a base update and a round after a passing round 4.',
+  /\brecords held\b/i, 'earns another extension');
+rule('interrupted and failed round-4 attempts never renew the extension', record,
+  [/\binterrupted or failed round-4 attempt\b/i, /\bsecond extension\b/i, /\bfollows\b.*\bexisting failure rules\b/i],
+  'An interrupted or failed round-4 attempt never earns a second extension and follows the existing failure rules.',
+  /\bnever earns a second extension\b/i, 'earns a second extension', /\bnever earns a second extension\b/i);
+rule('a used entry cannot receive another extension', record,
+  [/\bstep-back: used entry\b/i, /\bpermits no further extension\b/i],
+  'A step-back: used entry permits no further extension.',
+  /\bpermits no further extension\b/i, 'permits a further extension', /\bpermits no further extension\b/i);
+rule('legacy initialization cannot reset a recorded extension', record,
+  [/\bpre-field entry\b/i, /\bstep-back: unused\b/i, /\bonly if the field is absent\b/i],
+  'Such a pre-field entry starts with step-back: unused only if the field is absent.',
+  /\bonly if the field is absent\b/i, 'even if the field is present');

@@ -269,6 +269,7 @@ For each PR:
    `axstack-advisor-astra` and `axstack-advisor-opus` for exactly one extra repair
    round (round 4).
    Load and follow [Round-3 step-back](references/step-back.md).
+   Load and follow [Review-round budgets](../axstack/references/run-record.md#review-round-budgets) before dispatching an advised repair brief.
 
 The T3 run watch reconciles every unsettled dispatch attempt; the bounded
 forge check wait is the only other implementation wait.

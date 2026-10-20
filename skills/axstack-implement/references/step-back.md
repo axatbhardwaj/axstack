@@ -1,6 +1,6 @@
 # Round-3 step-back
 
-An unavailable step-back seat counts as no agreement.
+An unavailable step-back seat counts as no agreement and falls to the user with the advised step-back card.
 Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for
 seat attempts, waits, gaps and cards, including the round-4 card's delta-only adviser reuse.
 
