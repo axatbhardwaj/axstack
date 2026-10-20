@@ -1,6 +1,5 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { test } from 'bun:test';
-
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
@@ -28,8 +27,8 @@ test('B1 peer intent is context and author decisions are accepted', () => {
     'Only code and design are in peer scope.', /only/i, 'and process');
   positive(peer(), [/ticket/i, /PR description/i, /author comments/i, /context/i, /defects/i],
     'Ticket, PR description and author comments supply context for finding defects.', /context/i, 'binding obligations');
-  negative(peer(), /never ask/i, [/author/i, /approvals/i, /sign-offs/i, /spec approver/i, /process decision/i],
-    'Never ask the author for approvals, sign-offs, a spec approver or a process decision.', 'Always ask');
+  negative(peer(), /\bnever ask\b/i, [/\bauthor\b/i, /\bapprovals\b/i, /\bsign-offs\b/i, /\bspec approver\b/i, /\bprocess decision\b/i, /\bexcept\b.*\bPre-existing\b`? filing request\b/i, /\bonly exception\b/i],
+    'Never ask the author for approvals, sign-offs, a spec approver or a process decision, except the Pre-existing filing request (the only exception).', 'Always ask');
   positive(peer(), [/accept/i, /author/i, /scope or design/i, /approved or decided elsewhere/i],
     'Accept an author statement that a scope or design point was approved or decided elsewhere.', /accept/i, 'Reject');
 });
@@ -43,8 +42,8 @@ test('B2 peer blockers require a validated current behaviour defect', () => {
     /docs/i, /style/i, /simplification/i, /process/i, /non-blocking notes/i],
   'PR description, counts, SHAs, test adequacy, mutation survivors, missing tests, docs, style, simplification and process belong in non-blocking notes.',
   /non-blocking notes/i, 'blocking findings');
-  negative(peer(), /no follow-up issue required/i, [/notes/i],
-    'Peer notes have no follow-up issue required.', 'a follow-up issue required');
+  negative(peer(), /\bno follow-up issue required\b/i, [/\bnotes\b/i, /\bexcept\b.*\bPre-existing\b`? filing request\b/i, /\bonly exception\b/i],
+    'Peer notes have no follow-up issue required, except the Pre-existing filing request (the only exception).', 'a follow-up issue required');
   positive(peer(), [/uncertainty/i, /limitation/i, /instead of/i, /higher rating/i],
     'Record uncertainty as a limitation instead of a higher rating.', /limitation/i, 'blocker');
   positive(peer(), [/peer bar overrides/i, /medium and high block/i, /nobody can lower a rating/i, /peer findings only/i],
@@ -91,8 +90,8 @@ test('peer blockers get a defect-class sweep on each full-diff pass', () => {
     /callers/i, /sibling docs/i, /README/i, /tests/i],
   'For peer blockers in the single-reviewer full-diff fallback or the first review, name the defect class and list every instance across the pinned diff and dependent surfaces, including callers, sibling docs, README and tests.',
   /peer blockers/i, 'peer notes');
-  negative(source, /never/i, [/defect-class sweep/i, /peer notes/i],
-    'Never apply the defect-class sweep to peer notes.', 'Always');
+  negative(source, /\bnever\b/i, [/\bdefect-class sweep\b/i, /\bordinary peer notes\b/i, /\bafter disposition validation\b/i],
+    'Never apply the defect-class sweep to ordinary peer notes after disposition validation.', 'Always');
 });
 
 test('peer follow-up recovers an unavailable delta without restarting the pair', () => {
@@ -160,8 +159,8 @@ test('B7 peer output has bounded findings and compact follow-up status', () => {
   positive(peer(), [/first peer review/i, /400 words/i, /one verdict line/i, /location/i, /breakage/i, /evidence/i, /one-line fix hint/i],
     'First peer review stays within about 400 words: one verdict line and blockers with location, breakage, evidence and a one-line fix hint.',
     /400 words/i, '1000 words');
-  negative(peer(), /Not verified:/i, [/at most five one-line notes/i, /one/i],
-    'Include at most five one-line notes and one Not verified: line.', 'Verified:');
+  negative(peer(), /\bNot verified:/i, [/\bat most five one-line notes\b/i, /\bone\b/i, /\bPre-existing\b`? block\b/i, /\bexempt\b/i],
+    'Include at most five one-line notes and one Not verified: line, with the Pre-existing block exempt.', 'Verified:');
   positive(peer(), [/follow-up/i, /150 words/i, /blocker status/i, /new qualifying blocker/i],
     'Follow-up stays within about 150 words: blocker status and any new qualifying blocker.', /150 words/i, '1000 words');
   negative(peer(), /no/i, [/process narration/i, /disposition essays/i, /decision needed/i],

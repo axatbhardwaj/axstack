@@ -55,12 +55,39 @@ The reviewer rates each finding.
 Round uncertain ratings up.
 Only diligence can raise a rating.
 Nobody can lower a rating.
-`medium` and `high` findings block `APPROVE`.
-Fix and re-review every `medium` or `high` finding.
+`medium` and `high` findings block `APPROVE`, except validated `Pre-existing` findings in authored mode.
+Fix and re-review every `medium` or `high` finding, except validated `Pre-existing` findings in authored mode.
 `low` findings do not block approval or merge.
-The owner records all low findings in one follow-up issue in the repository's
-tracker (GitHub Issues, or Linear for `defi-com`), linked from the PR.
+The owner records all low findings and validated `Pre-existing` items with their
+severity and evidence in one follow-up issue in the repository's tracker (GitHub Issues, or Linear for `defi-com`), linked from the PR.
 The follow-up issue never gates merge.
+
+### Pre-existing disposition
+
+`Pre-existing` is a disposition, not a severity.
+Only the reviewer applies the `Pre-existing` tag.
+The author never self-tags.
+Prove the defect itself exists at the reference revision using quoted code there
+plus a reproduction or a same-input argument.
+Blame alone is not enough.
+For own run PRs, the reference revision is the run's recorded `Source base`,
+rather than a chain child's parent head.
+For adopted own PRs and peer PRs, the reference revision is the merge-base of
+the PR head with the default branch.
+For own run PRs, all `Pre-existing` diff checks span the reference revision to the PR head: unchanged defective code, introduction/amplification/new exposure and same-class instances.
+The diff must not change the defective code.
+The diff must not introduce, amplify or newly expose the defect through changed
+callers or configuration.
+
+Exclude the defect the accepted scope targets (peer: linked issue or stated
+purpose) from `Pre-existing`.
+Exclude a defect an acceptance check depends on from `Pre-existing`.
+Exclude another instance of the same defect class inside the diff from `Pre-existing`.
+Exclude amplified or newly exposed defects from `Pre-existing`.
+Run the defect-class sweep before a finding takes `Pre-existing`, including peer candidates.
+Failed proof denies the disposition, never raises a rating or creates a peer blocker by itself.
+In authored mode, serious-risk categories still raise the serious-risk hold for `Pre-existing` findings.
+On own run PRs, defects others land on the default branch after `Source base` follow normal rules.
 
 ## Codebase findings mode
 
