@@ -35,9 +35,9 @@ test('implement counts one failing round toward step-back and preserves the PASS
     /\bincrements repairs once\b/i, /\bcounts once toward\b.*\bround-3 step-back\b/i),
   'A round with reviewer REQUEST_CHANGES and/or diligence FINDINGS increments repairs once and counts once toward the round-3 step-back.',
   [[/\bcounts once\b/i, 'counts twice']]);
-  checkRule(implement, (text) => requires(text,
-    /\bthird failing review round\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
-  'At the third failing review round, the driver steps back for exactly one extra repair round.',
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
   [[/\bsteps back\b/i, 'holds without stepping back']]);
 });
 

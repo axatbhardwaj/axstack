@@ -265,11 +265,12 @@ For each PR:
    `repairs` once and counts once toward the round-3 step-back.
    Failed checks and post-readiness feedback increment `repairs` but never count
    as failing review rounds.
-   On a PR's third failing review round, the driver steps back with both
-   `axstack-advisor-astra` and `axstack-advisor-opus` for exactly one extra repair
-   round (round 4).
+   On any counted failing review round that leaves `rounds` at 3 or more while
+   `step-back: unused`, the driver steps back with both `axstack-advisor-astra`
+   and `axstack-advisor-opus` to assess exactly one extra repair round (round 4
+   in the normal case).
    Load and follow [Round-3 step-back](references/step-back.md).
-   Load and follow [Review-round budgets](../axstack/references/run-record.md#review-round-budgets) before dispatching an advised repair brief.
+   Load and follow [Review-round budgets](../axstack/references/run-record.md#review-round-budgets) before dispatching any repair from the step-back.
 
 The T3 run watch reconciles every unsettled dispatch attempt; the bounded
 forge check wait is the only other implementation wait.

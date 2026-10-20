@@ -18,9 +18,9 @@ test('implement accepts non-blocking review notes without driver-elected polish'
   expect(implement).toMatch(/APPROVE[^.]*non-blocking findings[^.]*diligence `PASS`[^.]*merge-ready/i);
   expect(implement).toMatch(/driver records[^.]*non-blocking notes[^.]*does not elect a repair/i);
   expect(implement).toMatch(/only the user[^.]*ask for polish/i);
-  checkRule(implement, (text) => requires(text,
-    /\bthird failing review round\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
-  'At the third failing review round, the driver steps back for exactly one extra repair round.',
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
   [[/\bsteps back\b/i, 'holds without stepping back']]);
 });
 

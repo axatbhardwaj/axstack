@@ -19,14 +19,14 @@ function rule(name, source, concepts, rewording, direction, inverse, prohibition
   });
 }
 
-test('Step-back: third failure replaces the immediate hold with both seats and one extra round', () => {
-  const concepts = [/\bthird failing review round\b/i, /\bdriver\b.*\bsteps back\b/i,
+test('Step-back: eligible failing review replaces the immediate hold with both seats and one extra round', () => {
+  const concepts = [/\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i,
     /\bboth\b.*\baxstack-advisor-astra\b.*\baxstack-advisor-opus\b/i,
     /\bexactly one extra repair round\b/i, /\bround 4\b/i];
   const accepts = (text) => requires(text, ...concepts) && !sentences(text).some((unit) =>
     /\bthird (?:failing )?review round\b.*\brecords? held\b/i.test(unit));
   checkRule(entry.replace(/`/g, '').replace(/\s+/g, ' '), accepts,
-    'At the third failing review round the driver steps back with both axstack-advisor-astra and axstack-advisor-opus for exactly one extra repair round (round 4).',
+    'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back with both axstack-advisor-astra and axstack-advisor-opus for exactly one extra repair round (round 4).',
     [[/\bsteps back\b/i, 'holds without stepping back'], [/$/, '. The third review round records held.']], concepts);
 });
 rule('review and diligence fail together only once', entry,
@@ -54,9 +54,9 @@ for (const [name, concept, wording] of [
   [/\beach adviser\b/i, /\bindependently\b/i, /\bgets\b/i, concept],
   `Each adviser independently gets the ${wording}.`, /\bgets\b/i, 'omits');
 
-rule('one advised round-4 repair brief returns to the same author only if all conditions hold', implement,
-  [/\bsend one advised repair brief\b/i, /\bsame author\b/i, /\bround 4 only\b/i, /\ball conditions below hold\b/i],
-  'Send one advised repair brief to the same author for round 4 only when all conditions below hold.',
+rule('one advised extra-round repair brief returns to the same author only if all conditions hold', implement,
+  [/\bsend one advised repair brief\b/i, /\bsame author\b/i, /\bextra round only\b/i, /\ball conditions below hold\b/i],
+  'Send one advised repair brief to the same author for the extra round only when all conditions below hold.',
   /\ball conditions below hold\b/i, 'any condition below holds');
 for (const [name, concept, wording, direction, inverse, ban] of [
   ['driver acceptance', /\bdriver accepts the path\b/i, 'The driver accepts the path.', /\baccepts\b/i, 'rejects'],
@@ -66,10 +66,10 @@ for (const [name, concept, wording, direction, inverse, ban] of [
   ['independent holds absent', /\bindependent hold applies\b/i, 'No independent hold applies.', /\bNo independent hold applies\b/i, 'An independent hold applies', /\bNo independent hold applies\b/i],
 ]) rule(`round-4 condition: ${name}`, implement, [concept], wording, direction, inverse, ban);
 
-rule('round 4 requires fresh independent same-role review and diligence', implement,
-  [/\bround 4 requires\b/i, /\bfresh\b.*\bindependent reviewer and diligence receipts\b/i,
+rule('the extra round requires fresh independent same-role review and diligence', implement,
+  [/\bextra round requires\b/i, /\bfresh\b.*\bindependent reviewer and diligence receipts\b/i,
     /\bfresh session\b.*\bsame mapped reviewer role\b/i],
-  'Round 4 requires fresh independent reviewer and diligence receipts from a fresh session of the same mapped reviewer role.',
+  'The extra round requires fresh independent reviewer and diligence receipts from a fresh session of the same mapped reviewer role.',
   /\bfresh session\b/i, 'reused session');
 rule('round 4 adds no extra reviewer', implement, [/\bextra reviewer\b/i],
   'Do not add an extra reviewer.', /\bDo not add\b/i, 'Add', /\bDo not add\b/i);
@@ -78,9 +78,9 @@ rule('advisers cannot lower ratings or clear findings', implement,
   'Advisers must never lower a rating or clear a finding.',
   /\bmust never\b/i, 'can', /\bmust never\b/i);
 rule('Pre-existing proposals require evidence and reviewer validation', implement,
-  [/\badvisers can propose Pre-existing with evidence\b/i, /\bround-4 reviewer validates\b/i, /\breview\b.*\bPre-existing rules\b/i],
-  "Advisers can propose Pre-existing with evidence, which the round-4 reviewer validates under review's Pre-existing rules.",
-  /\bround-4 reviewer validates\b/i, 'author validates');
+  [/\badvisers can propose Pre-existing with evidence\b/i, /\bextra-round reviewer validates\b/i, /\breview\b.*\bPre-existing rules\b/i],
+  "Advisers can propose Pre-existing with evidence, which the extra-round reviewer validates under review's Pre-existing rules.",
+  /\bextra-round reviewer validates\b/i, 'author validates');
 
 rule('failed conditions fall to the user with an advised step-back card', implement,
   [/\bany condition fails\b/i, /\brecord held\b/i, /\buser\b.*\badvised step-back card\b/i],
@@ -144,9 +144,9 @@ rule('pre-field Runtime version is explicit and alone permits legacy initializat
   [/\bprior record predates the field only when\b/i, /\bRuntime line\b/i, /\bAxstack version below 0\.48\.0\b/i],
   'A prior record predates the field only when its Runtime line names an Axstack version below 0.48.0.',
   /\bbelow 0\.48\.0\b/i, 'at or above 0.48.0');
-rule('pre-field entries start unused', record,
-  [/\bsuch a pre-field entry\b/i, /\bstarts\b.*\bstep-back: unused\b/i],
-  'Such a pre-field entry starts with step-back: unused.',
+rule('pre-field entries start at zero failing rounds and unused', record,
+  [/\bsuch a pre-field entry\b/i, /\bstarts\b.*\brounds: 0\b.*\bstep-back: unused\b/i],
+  'Such a pre-field entry starts with rounds: 0 and step-back: unused.',
   /\bstep-back: unused\b/i, 'step-back: used');
 rule('unclear inherited history newer missing fields and unknown Runtime use the budget', record,
   [/\bexcept for that absent-field initialization\b/i, /\binherited entry\b/i, /\bmissing or unclear\b.*\brounds or step-back values\b/i,
@@ -157,9 +157,9 @@ rule('separate PRs sharing a ticket retain separate budgets', record,
   [/\bdistinct PRs\b/i, /\bshare one ticket or issue\b/i, /\bkeep separate budgets\b/i],
   'Distinct PRs that share one ticket or issue keep separate budgets.',
   /\bseparate budgets\b/i, 'one budget');
-rule('consume the extension before dispatching its repair', record,
-  [/\bwrite step-back: used r<n> before dispatching\b/i, /\badvised repair brief\b/i],
-  'Write step-back: used r<n> before dispatching the advised repair brief.',
+rule('consume the extension before dispatching any step-back repair', record,
+  [/\bwrite step-back: used r<n> before dispatching\b/i, /\bany repair from the step-back\b/i],
+  'Write step-back: used r<n> before dispatching any repair from the step-back.',
   /\bbefore dispatching\b/i, 'after dispatching');
 rule('replacement and split PRs inherit predecessor budget', record,
   [/\breplacement or split PR\b/i, /\bcopies\b.*\bpredecessor\b.*\bentry\b/i],
@@ -172,9 +172,9 @@ rule('any failing review after extension holds even after a base update or passi
     /\bre-review after a base update\b/i, /\bround after a passing round 4\b/i],
   'Any counted failing review round after the extension records held with an advised card, including a re-review after a base update and a round after a passing round 4.',
   /\brecords held\b/i, 'earns another extension');
-rule('interrupted and failed round-4 attempts never renew the extension', record,
-  [/\binterrupted or failed round-4 attempt\b/i, /\bsecond extension\b/i, /\bfollows\b.*\bexisting failure rules\b/i],
-  'An interrupted or failed round-4 attempt never earns a second extension and follows the existing failure rules.',
+rule('interrupted and failed extra-round attempts never renew the extension', record,
+  [/\binterrupted or failed extra-round attempt\b/i, /\bsecond extension\b/i, /\bfollows\b.*\bexisting failure rules\b/i],
+  'An interrupted or failed extra-round attempt never earns a second extension and follows the existing failure rules.',
   /\bnever earns a second extension\b/i, 'earns a second extension', /\bnever earns a second extension\b/i);
 rule('a used entry cannot receive another extension', record,
   [/\bstep-back: used entry\b/i, /\bpermits no further extension\b/i],
@@ -182,5 +182,5 @@ rule('a used entry cannot receive another extension', record,
   /\bpermits no further extension\b/i, 'permits a further extension', /\bpermits no further extension\b/i);
 rule('legacy initialization cannot reset a recorded extension', record,
   [/\bpre-field entry\b/i, /\bstep-back: unused\b/i, /\bonly if the field is absent\b/i],
-  'Such a pre-field entry starts with step-back: unused only if the field is absent.',
+  'Such a pre-field entry starts with rounds: 0 and step-back: unused only if the field is absent.',
   /\bonly if the field is absent\b/i, 'even if the field is present');

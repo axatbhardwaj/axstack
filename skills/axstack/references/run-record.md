@@ -90,18 +90,19 @@ A new planned PR, small-change PR or adopted PR starts at `rounds: 0` and `step-
 when it enters the run, unless a prior run entry exists.
 When a prior run entry exists for the PR, copy that entry, including adopted PRs.
 A prior record predates the field only when its `Runtime` line names an Axstack version below 0.48.0.
-Such a pre-field entry starts with `step-back: unused` only if the field is absent.
+Such a pre-field entry starts with `rounds: 0` and `step-back: unused` only if the field is absent.
 Except for that absent-field initialization, an inherited entry with missing or unclear `rounds` or `step-back` values
 counts as `step-back: used`, including a newer record missing the field or an unknown `Runtime` version.
 Distinct PRs that share one ticket or issue keep separate budgets.
-Write `step-back: used r<n>` before dispatching the advised repair brief.
+Write `step-back: used r<n>` before dispatching any repair from the step-back,
+including a user-picked path from the advised step-back card.
 A replacement or split PR copies its predecessor's entry.
 The entry persists across rebases, resumes and owner transfer.
 A `step-back: used` entry permits no further extension.
 Any counted failing review round after the extension records `held` with an advised card,
 including a re-review after a base update and a round after a passing round 4.
 Follow [Advised holds](contracts.md#advised-holds) for that card.
-An interrupted or failed round-4 attempt never earns a second extension and follows the existing failure rules.
+An interrupted or failed extra-round attempt never earns a second extension and follows the existing failure rules.
 
 ## Handoff and resumption
 

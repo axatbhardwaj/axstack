@@ -9,7 +9,7 @@ Each adviser independently gets the per-round deltas.
 Each adviser independently gets blame showing the round in which each flagged line first appeared.
 Each adviser independently gets the approved scope, sketch and approach.
 
-Send one advised repair brief to the same author for round 4 only when all conditions below hold:
+Send one advised repair brief to the same author for the extra round only when all conditions below hold:
 
 - The driver accepts the path.
 - Both advisers agree on the path.
@@ -17,10 +17,10 @@ Send one advised repair brief to the same author for round 4 only when all condi
   The path must not break a sketch `Binding` line.
 - No independent hold applies.
 
-Round 4 requires fresh independent reviewer and diligence receipts, with a fresh session of the same mapped reviewer role.
+The extra round requires fresh independent reviewer and diligence receipts, with a fresh session of the same mapped reviewer role.
 Do not add an extra reviewer.
 Advisers must never lower a rating or clear a finding.
-Advisers can propose `Pre-existing` with evidence, which the round-4 reviewer validates under
+Advisers can propose `Pre-existing` with evidence, which the extra-round reviewer validates under
 [review's Pre-existing rules](../../axstack-review/SKILL.md#finding-severity).
 
 When any condition fails, record `held` and fall to the user with the advised step-back card.

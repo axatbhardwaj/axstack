@@ -22,9 +22,9 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
     /authoring\s*\|\s*published\s*\|\s*in-review\s*\|\s*repairing\(n\)\s*\|\s*merge-ready\s*\|\s*merged\s*\|\s*held/i,
   );
   expect(loaded).toMatch(/REQUEST_CHANGES[^.]*same author[^.]*new revision[^.]*repairs/i);
-  checkRule(loaded, (text) => requires(text,
-    /\bthird failing review round\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
-  'At the third failing review round, the driver steps back for exactly one extra repair round.',
+  checkRule(loaded.replace(/`/g, ''), (text) => requires(text,
+    /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
+  'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
   [[/\bsteps back\b/i, 'holds without stepping back']]);
   expect(loaded).toMatch(/`codex-only`[^.]*`claude-only`[^.]*hold[^.]*step \(3\)[^.]*no substitution/i);
   expect(loaded).toMatch(/serious risk[^.]*immediately/i);
