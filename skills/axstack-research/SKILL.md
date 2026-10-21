@@ -57,6 +57,9 @@ is part of research.
    - `axstack-research-requirements`: requirements and intent.
    - `axstack-research-code`: code behavior.
    - `axstack-research-code-sol`: independent Sol code investigation.
+   - `axstack-research-code-spark`: optional third code branch in mixed whenever
+     the code source class is needed, independent of the Sonnet and Sol branches.
+     A Spark-only claim stays unverified.
    - `axstack-research-web`: web and external sources.
    - `axstack-research-web-google`: Google-Search-grounded web sources via Gemini/Antigravity.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
