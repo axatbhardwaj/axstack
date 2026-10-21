@@ -328,7 +328,8 @@ unavailable adviser and round-2 seat remain explicit same-provider
 `model: null` roles, which do not make installation unready;
 Align and Spec still hold until both Astra and Opus can return independent
 receipts. Every brainstorm runs a light arena across configured families.
-Use judges only for Rung 2 hard-to-reverse choices: round 1 needs Opus; round 2,
+Use judges only for Rung 2 hard-to-reverse choices. Mixed round 1 needs Astra
+and optional Muse; claude-only round 1 needs Opus; round 2,
 if invoked, needs escalation Fable and Astra; a required seat that is unavailable
 holds that round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only

@@ -64,20 +64,24 @@ The current T3 thread is the driver, whatever model runs it; there is no driver
 profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
-consults `axstack-advisor-astra` and `axstack-advisor-opus` independently with
+consults `axstack-advisor-astra`, `axstack-advisor-opus`, and optional
+`axstack-advisor-muse` independently with
 the same bounded evidence and question. The exception covers every brainstorm: the driver frames
 its brief and rubric and assesses only after the candidates and required judge
 rounds return. The driver synthesizes disagreements,
 owns the decision, and the user still approves the spec. Reuse each valid
 unchanged receipt; changed evidence, scope, or question requires a fresh
-receipt. If either adviser is unavailable, Align and Spec hold without model or
-provider substitution while unrelated safe work may continue.
+receipt. If Astra or Opus is unavailable, Align and Spec hold without model or
+provider substitution while unrelated safe work may continue. Verified Muse
+absence does not hold either phase; a launched Muse seat remains outstanding.
+Align and Spec synthesis does not require unanimity.
 
 For `axstack-debug`, ordinary diagnosis consults the preset's configured
-adviser roles (both in `mixed`; the one configured adviser in a single-provider
+adviser roles (Astra, Opus, and optional Muse in `mixed`; the one configured adviser in a single-provider
 preset, recording the other as an intentional absence). The high-stakes and
 serious-risk contracts override that rule whenever their conditions arise. A
-configured but unavailable adviser holds debug L1; an unavailable escalation seat holds L2 without substitution.
+configured but unavailable Astra or Opus adviser holds debug L1; verified Muse
+absence does not hold L1. An unavailable escalation seat holds L2 without substitution.
 Reuse a debug receipt while its evidence packet is unchanged.
 
 High-stakes decisions require `axstack-advisor-astra` and
@@ -133,6 +137,8 @@ then forms its own assessment.
 This pre-advice gap-closing never spends the one advice-driven action.
 In `mixed`, consult `axstack-advisor-astra` and `axstack-advisor-opus`
 independently with the same bounded evidence packet and question.
+Consult optional `axstack-advisor-muse` independently on that packet and
+question when available.
 The evidence packet and question omit the driver's own pick.
 Advisers never cross-read one another.
 Single-provider presets use the one configured adviser and record the other
@@ -159,7 +165,7 @@ Add `Recommended`, `Trade-off`, `Checks would miss` and numbered `Reply` lines
 to the existing card:
 
 ```text
-Recommended: <option n> (<advisers agree | advisers split | one adviser | advice pending: <seat> | advice unavailable: <seat>>)
+Recommended: <option n> (<combined adviser and availability statuses>)
 Trade-off: <one line>
 Checks would miss: <what tests and review would miss on this path | n/a for a non-code hold>
 Reply: 1. <option> 2. <option> ...
@@ -182,7 +188,12 @@ post the card.
 With no watch armed post the card at once.
 A running seat shows `advice pending: <seat>` on the card.
 A failed or unavailable seat shows `advice unavailable: <seat>` on the card.
+Combine the vote status with pending or unavailable status in the parentheses:
+`advisers agree 3/3`, `advisers split 2-1`,
+`advisers agree 2/2; advice unavailable: axstack-advisor-muse`, or
+`advisers agree 2/2; advice pending: axstack-advisor-muse`.
 Late advice is an addendum in the driver thread, never a new hold or second alert.
+Late Muse advice never retroactively unlocks a self-close.
 Keep pending dispatches in the run record and settle them when they terminate.
 Record an unavailable seat as a model gap for later work needing that seat.
 An advice gap never blocks the card or the user's reply.
@@ -197,8 +208,13 @@ Reuse unchanged advice when reissuing the card.
 A reissued card for the same cause is the same hold and sends no new alert.
 A reply bound to a superseded head or base clears nothing at the new head or base.
 
-After advice, per PR and cause kind the driver can act once on advice to close the cause
-within existing authority only when advisers agree.
+For advised-hold self-close, every adviser that ran must recommend the same
+option to permit one advice-driven attempt per PR and cause kind to close the
+cause within existing authority. Any non-unanimous completed result, including 2-1, 1-1,
+1-1-1, or AGREE-WITH-CHANGES, is a split sent by card with the driver's pick
+first and dissent named. A pending Muse adviser blocks self-close. This
+unanimity rule also binds Align verify-skip plain AGREE and Implement step-back,
+but not Align or Spec synthesis. Advice grants no approval or hold clearance.
 In single-provider presets, for self-close the adviser must agree with the driver.
 Post the card on a split or a single-adviser disagreement with the driver.
 Post the card when the cause recurs after that one action, or when the action raises a new hold.

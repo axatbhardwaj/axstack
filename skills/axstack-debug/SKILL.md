@@ -104,20 +104,20 @@ before any further probe or attempt.
 | L2 | two failed attempts at the same named goal and stated acceptance check (second failure overall); or each fix reveals a new symptom elsewhere | `axstack-advisor-astra` and `axstack-escalation-fable` (fresh session) on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
 
 L1 is inadmissible without a red loop. Ordinary diagnosis is not a high-stakes
-decision: in `mixed` both advisers are consulted and both receipts are
-required; a single-provider preset consults its one configured adviser and
+decision: in `mixed` Astra and Opus are required, with Muse an optional third
+adviser; a single-provider preset consults its one configured adviser and
 records the other as an intentional absence. Whenever a run exposes a
 high-stakes architecture choice, serious security, downtime, or data-loss
 risk, the standing high-stakes and serious-risk contracts override this rule,
-including the single-provider high-stakes hold. An adviser configured but
-unavailable at launch holds L1 without substitution; a null or unavailable L2
+including the single-provider high-stakes hold. An unavailable Astra or Opus
+adviser holds L1 without substitution; verified Muse absence does not. A null or unavailable L2
 seat holds L2 without substitution. L0 continues.
 Reuse an L1 adviser receipt while the packet is unchanged; a changed packet needs
 a fresh receipt.
 
 **Plan merge.** The driver de-duplicates the advisers' hypotheses, ranks the
-union with reasons recorded in the run record, drops hypotheses both advisers
-refute, assigns the top N to the N live investigators (briefs ≤ seats per
+union with reasons recorded in the run record, drops a hypothesis only when
+every adviser that ran refutes it, assigns the top N to the N live investigators (briefs ≤ seats per
 wave), and records the remainder as untested (queued). A second wave on the same roles is allowed on changed
 evidence. If every probe is refuted or inconclusive, one bounded adviser replan
 on the new evidence, then hold for the user; never unbounded.
