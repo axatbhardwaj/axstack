@@ -36,7 +36,7 @@ function followUp(source) {
   if (!sentence) return false;
   return /\b(?:requires|needs) exactly (?:one|1)\b[^.]*`?axstack-reviewer-primary`? receipt\b/i.test(sentence)
     && (sentence.match(/\breceipts?\b/gi) ?? []).length === 1
-    && !/axstack-reviewer-(?!primary\b)|\bMuse\b/i.test(sentence);
+    && !/axstack-reviewer-(?!primary\b)|\bMuse\b|\b(?:another|additional|extra|second)\s+(?:reviewer|seat|receipt)\b|\b(?:two|three|2|3)\s+(?:reviewers|seats|receipts)\b/i.test(sentence);
 }
 
 test('mixed first peer review has three independent receipts or two after verified Muse absence', () => {
@@ -132,7 +132,8 @@ test('peer follow-up keeps exactly one primary receipt', () => {
   expect(followUp(peer.replace(sentence,
     'Peer follow-up needs exactly 1 `axstack-reviewer-primary` receipt.'))).toBe(true);
   for (const extra of ['and one `axstack-reviewer-peer` receipt', 'plus a Muse receipt',
-    'and one `axstack-reviewer-muse` receipt']) {
+    'and one `axstack-reviewer-muse` receipt', 'plus a second seat',
+    'and another reviewer', 'and two seats']) {
     expect(followUp(peer.replace(sentence, sentence.replace(/receipt\b/i, `receipt ${extra}`)))).toBe(false);
   }
   expect(followUp(peer.replace(sentence, sentence.replace(/exactly (?:one|1)/i, 'at least one')))).toBe(false);
