@@ -29,7 +29,7 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Provider bindings must map grok→`grok` and antigravity→`antigravity`, with
+Provider bindings must map grok→`grok`, antigravity→`antigravity`, and muse→`muse`, with
 canonical error-exit fallbacks codex→`codex` and claude→`claudeAgent`.
 At each dispatch or launch, claude and codex must bind to the instanceId printed
 by `scripts/pick-instance.js --provider <provider>`.
@@ -41,9 +41,12 @@ is permitted, with provider, model, class and effort rules required to remain un
 An exhausted account with no eligible sibling must hold.
 Dispatched roles never fail over mid-thread.
 
-When the driver starts or resumes a run and at the start of every run-watch wake,
+When a Codex or Claude driver starts or resumes a run and at the start of every run-watch wake,
 it runs `scripts/pick-instance.js --provider <its own provider> --json`.
-Read its current binding with `t3_thread_configuration` and save picker JSON in private run evidence.
+Muse drivers skip the picker. A Muse driver invoking `pick-instance.js --provider muse`
+gets exit 1 and keeps its current binding; it never selects another provider from that error.
+Every driver must read its current binding with `t3_thread_configuration`,
+and Codex and Claude drivers save picker JSON in private run evidence.
 If the driver's own current instance is `excluded` for a usage limit and an eligible
 same-provider sibling exists, it must switch itself via `t3_thread_configure` to the
 chosen sibling instance, keeping the same provider, model and effort/options, then continue.
@@ -94,8 +97,9 @@ using the recorded role snapshot and saved capabilities.
 Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
 For claude/codex, the `--picker` JSON must come from saved
 `scripts/pick-instance.js --provider <role provider> --json` output.
-For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
+For grok/antigravity/muse, or after a claude/codex picker exit-1 canonical fallback,
 pass `{"chosenInstanceId":"<canonical instance>"}`.
+For Muse, that synthetic picker file uses `{"chosenInstanceId":"muse"}`.
 For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
 with the same plan inputs and saved `t3_thread_configuration` read-back.
 
@@ -107,6 +111,8 @@ A missing or malformed catalog holds resolution.
 
 For a null-model grok or antigravity role, record the exact model ID from the plan,
 rather than an unresolved provider default.
+For a pinned Muse role, record its exact model ID from the plan and require the
+advertised `reasoningEffort: medium`; never use a provider default effort.
 Antigravity must hold when saved capabilities advertise zero models.
 No matching effort suffix holds resolution for Antigravity.
 For codex or claude, a role lacking both model and class is an intentional
