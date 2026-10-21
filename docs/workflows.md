@@ -137,7 +137,8 @@ use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
 `claude-haiku-5-5`. Missing that ID or high effort in saved T3 capabilities
 holds those roles without substitution. `codex-only` keeps its Codex
 assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
-and `codex-only`, and an optional Antigravity Flash medium seat in `mixed`.
+and `codex-only`, and optional Antigravity Flash medium and Muse Spark medium
+whole-question seats in `mixed`.
 In `claude-only`, Luna and Flash are intentionally absent; Flash is also
 intentionally absent in `codex-only`. Mixed web-google and X retain their
 source-specific Antigravity and Grok routes.
@@ -151,6 +152,11 @@ The new `-sol` auditor, research-code, and explore-execution seats use Sol high
 in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.
 Dispatch the base and Sol seats independently on the same brief, then reconcile
 their findings per claim without averaging.
+Mixed code Research also adds optional Muse Spark as a third code branch; a
+Spark-only claim stays unverified. Mixed Align, Spec, Debug L1, and advised
+holds add optional Muse Wonderful advice. Mixed Rung 2 arena round 1 judges
+are Astra and optional Muse; claude-only retains Opus. Round 2 uses fresh
+Fable and Astra sessions.
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
