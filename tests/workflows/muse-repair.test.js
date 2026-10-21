@@ -40,7 +40,7 @@ test('arena holds an unavailable required Fable judge in round 2', () => {
     [/required/i, /Fable/i, /round 2/i, /unavailable/i, /holds that question/i],
     /Fable in round 2/i, 'optional Muse in round 2',
     'A required judge, including Fable in round 2, unavailable at launch holds that question.',
-    /never Fable|Fable.*(?:not|required.*not)/i);
+    /\b(?:never|no|excluding)\s+Fable\b|\bFable\b.*\b(?:not required|excluded)\b/i);
 });
 
 test('codex-only keeps its explicit null Opus round-1 hold', () => {
@@ -92,6 +92,23 @@ test('arena provider floor binds candidates rather than judges', () => {
     [/arena/i, /floor/i, /candidates/i, /not judges|rather than judges/i],
     /not judges/i, 'and judges',
     'In arena, this floor binds candidates rather than judges.');
+});
+
+test('role roster arena provider floor binds candidates rather than judges', () => {
+  policy('skills/axstack/references/role-roster.md', /For arena this floor/i,
+    [/arena/i, /floor/i, /candidates/i, /not judges|rather than judges/i],
+    /not judges/i, 'and judges',
+    'For arena, the provider floor binds candidates rather than judges.');
+});
+
+test('mixed arena provider floor retains Codex and Claude candidates', () => {
+  const path = 'skills/axstack-brainstorm/references/arena.md';
+  const anchor = /In mixed fan-out retain/i;
+  const concepts = [/mixed fan-out/i, /Codex/i, /Claude/i, /candidate/i, /hold/i];
+  const equivalent = 'For a mixed fan-out, retain one Codex and one Claude candidate or hold the question.';
+  for (const inverse of ['judge', 'seat']) {
+    policy(path, anchor, concepts, /candidate/i, inverse, equivalent);
+  }
 });
 
 test('verified Muse absence skips the arena seat without holding its phase', () => {
