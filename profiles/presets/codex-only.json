@@ -20,15 +20,6 @@
       "notes": "Opus adviser intentionally absent in codex-only; the explicit null holds Align and Spec without substitution."
     },
     {
-      "id": "axstack-advisor-muse",
-      "name": "Axstack Muse adviser (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional absence in codex-only: axstack-advisor-muse is unavailable, never dispatched, and has no substitute."
-    },
-    {
       "id": "axstack-owner",
       "name": "Axstack PR owner",
       "provider": "codex",
@@ -74,15 +65,6 @@
       "modelClass": "luna"
     },
     {
-      "id": "axstack-reviewer-muse",
-      "name": "Axstack Muse reviewer (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional absence in codex-only: axstack-reviewer-muse is unavailable, never dispatched, and has no substitute."
-    },
-    {
       "id": "axstack-diligence",
       "name": "Axstack diligence checker",
       "provider": "codex",
@@ -126,15 +108,6 @@
       "thinkingOptionId": "high",
       "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
       "modelClass": "sol"
-    },
-    {
-      "id": "axstack-research-code-spark",
-      "name": "Axstack Spark code researcher (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional absence in codex-only: axstack-research-code-spark is unavailable, never dispatched, and has no substitute."
     },
     {
       "id": "axstack-research-web",
@@ -216,15 +189,6 @@
       "modeId": "full-access",
       "thinkingOptionId": "medium",
       "notes": "Intentional single-provider absence: Flash Scout seat is unavailable in codex-only."
-    },
-    {
-      "id": "axstack-explore-codebase-spark",
-      "name": "Axstack Spark codebase explorer (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional absence in codex-only: axstack-explore-codebase-spark is unavailable, never dispatched, and has no substitute."
     },
     {
       "id": "axstack-explore-execution",
@@ -333,15 +297,6 @@
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
       "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. Intentionally absent in the codex-only preset; round 1 holds without substitution."
-    },
-    {
-      "id": "axstack-arena-judge-muse",
-      "name": "Axstack Muse arena judge (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional absence in codex-only: axstack-arena-judge-muse would score every candidate by label, but is unavailable, never dispatched, and has no substitute."
     },
     {
       "id": "axstack-arena-candidate-grok",
