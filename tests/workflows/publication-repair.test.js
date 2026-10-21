@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
@@ -25,14 +25,14 @@ const rules = [
     /verify|check/i, 'ignore',
     'Tie each publication operation to the exact reviewed revision, then check the submission receipt and remote state.'],
   ['publication holds until the complete new-revision and base receipt', repair,
-    [/publication/i, /held until|blocked until/i, /every mode-required authored reviewer receipt/i,
+    [/publication/i, /held until|blocked until/i, /(?:every|each) mode-required authored reviewer receipt/i,
       /exact new revision/i, /base/i, /code/i, /repl/i, /all six angles/i,
       /applicable acceptance/i, /affected boundaries/i, /exact reply identities/i],
     /held until|blocked until/i, 'permitted before',
     'Publication is blocked until every mode-required authored reviewer receipt covers the exact new revision and base, code and replies, all six angles, applicable acceptance, affected boundaries and exact reply identities with no unresolved material finding or urgent hold.',
     /no unresolved material finding or urgent hold/i],
   ['unresolved material findings and urgent holds prevent publication', repair,
-    [/publication/i, /held until|blocked until/i, /every mode-required authored reviewer receipt/i,
+    [/publication/i, /held until|blocked until/i, /(?:every|each) mode-required authored reviewer receipt/i,
       /material finding/i, /urgent hold/i],
     /no unresolved material finding or urgent hold/i, 'unresolved material finding or urgent hold allowed',
     'Publication stays held until every mode-required authored reviewer receipt is complete with no unresolved material finding or urgent hold.',
@@ -65,6 +65,15 @@ const rules = [
     /same/i, 'different',
     'Release checks follow the same driver-made SHA-pinned detached-checkout procedure.'],
 ];
+
+test('publication M1: repair needs exactly its mode-required eligible receipts', () => {
+  const text = read(repair);
+  const count = /authored review rule[^.]*\brequires?\b[^.]*\b(?:exactly|precisely)\b[^.]*\bmode-required count\b[^.]*complete eligible[^.]*reviewer receipts/i;
+  const sentence = text.match(/The authored review rule[^.]*/i)?.[0];
+  expect(sentence).toMatch(count);
+  expect(sentence.replace(/\b(?:exactly|precisely)\b/i, 'at least one')).not.toMatch(count);
+  expect('The authored review rule requires precisely its mode-required count of complete eligible non-author/non-owner reviewer receipts.').toMatch(count);
+});
 
 for (const [name, path, concepts, direction, inverse, rewording, prohibition] of rules) {
   test(`publication M1: ${name}`, () => {

@@ -65,9 +65,9 @@ test('B4 first review is broad and follow-ups stay bounded', () => {
     /three receipts/i, 'two receipts');
   expect(peer()).toMatch(/full diff[^.]*all six angles/i);
   negative(peer(), /never/i, [/peer/i, /diligence/i], 'Never dispatch diligence in peer mode.', 'Always');
-  positive(peer(), [/peer follow-up/i, /exactly one.*receipt/i, /prior blockers?/i, /fixed or open/i, /author.*replies/i, /PR comments/i, /only the delta/i, /last reviewed head/i],
+  positive(peer(), [/peer follow-up/i, /exactly (?:one|1).*receipt/i, /prior blockers?/i, /fixed or open/i, /author.*replies/i, /PR comments/i, /only the delta/i, /last reviewed head/i],
     'Peer follow-up requires exactly one primary receipt to mark prior blockers fixed or open, read author replies and PR comments, and inspect only the delta since the last reviewed head.',
-    /exactly one/i, 'two');
+    /exactly (?:one|1)/i, 'two');
   positive(peer(), [/new blocker/i, /only/i, /behaviour defect introduced by the delta/i, /missed serious security/i, /data.loss/i, /funds/i],
     'A new blocker qualifies only for a behaviour defect introduced by the delta or missed serious security, data-loss or funds defects.',
     /only/i, 'also');
@@ -187,7 +187,7 @@ test('B8 authored rubric, diligence and review authority retain their contracts'
 
 test('manager authority uses bounded peer rounds and no process escalation', () => {
   const source = read('skills/axstack/references/automations.md').replace(/\s+/g, ' ');
-  positive(source, [/mixed first peer review/i, /three isolated receipts/i, /two with verified Muse absence/i],
+  positive(source, [/mixed first peer review/i, /three isolated receipts/i, /two (?:with|after) verified Muse absence/i],
     'Mixed first peer review uses three isolated receipts, or two with verified Muse absence.',
     /three isolated receipts/i, 'one receipt');
   expect(source).toMatch(/peer follow-up uses exactly one[^.]*axstack-reviewer-primary/i);
