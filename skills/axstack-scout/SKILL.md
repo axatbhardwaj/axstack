@@ -58,7 +58,9 @@ missing from saved capabilities holds that seat under the existing unavailable
 model rule, without substitution. A Flash hold covers only the Flash seat,
 and Scout returns the other seats' summary while naming that hold. An
 uncertain dispatch is reconciled, not recorded absent. For Spark, apply the
-verified Muse absence rule in [Role roster](../axstack/references/role-roster.md).
+verified Muse absence rule in [Role roster](../axstack/references/role-roster.md):
+a pre-dispatch `dispatch-plan` exit-2 resolution hold records `absent (<reason>)`;
+a post-launch settings mismatch remains unresolved, not absent.
 
 ## 3. Pin evidence and report
 

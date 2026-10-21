@@ -103,6 +103,7 @@ counts with denominators plus the evidence behind the count:
   evidence path is absent, or `UNKNOWN` with the reason when its records are
   unavailable.
 - Independent exact-revision review status and unresolved findings.
+- Adviser receipts counted for advisers that ran; exclude verified Muse absences.
   For authored PRs, measure the selected reviewer against this class pairing:
 
   | Preset | Author class | Reviewer (class/effort) |

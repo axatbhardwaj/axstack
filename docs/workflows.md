@@ -232,8 +232,10 @@ for explicit ownership transfer.
   report-only. Every invocation compares independent Astra, Opus, Grok and
   Antigravity candidates, including premise and smallest-change/do-nothing
   checks. The driver scores, picks and grafts; Rung 1 uses no judges. At Rung 2,
-  `axstack-arena-judge-opus` judges round 1; disagreement on the base or caller
-  re-invocation with the user's rejection triggers fresh Fable/Astra round 2.
+  mixed round 1 uses Astra and optional Muse; claude-only round 1 uses Opus.
+  Codex-only round 1 holds on its null Opus judge. Round 2 starts if the driver
+  and completed round-1 judges disagree on the base or the user rejects the
+  round-1 recommendation; it uses fresh Fable and Astra judge sessions.
   It returns a verdict, sketch and proposed questions, with no interview,
   prototype or execution approval. Required seats hold; optional dropouts are
   fenced. Fable also serves the bounded triggers in

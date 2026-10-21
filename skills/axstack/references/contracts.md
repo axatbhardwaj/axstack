@@ -192,6 +192,7 @@ Combine the vote status with pending or unavailable status in the parentheses:
 `advisers agree 3/3`, `advisers split 2-1`,
 `advisers agree 2/2; advice unavailable: axstack-advisor-muse`, or
 `advisers agree 2/2; advice pending: axstack-advisor-muse`.
+Single-provider ordinary advice reports `one adviser` when its configured seat ran.
 Late advice is an addendum in the driver thread, never a new hold or second alert.
 Late Muse advice never retroactively unlocks a self-close.
 Keep pending dispatches in the run record and settle them when they terminate.
@@ -208,14 +209,16 @@ Reuse unchanged advice when reissuing the card.
 A reissued card for the same cause is the same hold and sends no new alert.
 A reply bound to a superseded head or base clears nothing at the new head or base.
 
-For advised-hold self-close, every adviser that ran must recommend the same
-option to permit one advice-driven attempt per PR and cause kind to close the
-cause within existing authority. Any non-unanimous completed result, including 2-1, 1-1,
+For advised-hold self-close, Astra and Opus must both have run. Every adviser
+that ran must recommend the same option to permit one advice-driven attempt
+per PR and cause kind to close the cause within existing authority.
+Any non-unanimous completed result, including 2-1, 1-1,
 1-1-1, or AGREE-WITH-CHANGES, is a split sent by card with the driver's pick
 first and dissent named. A pending Muse adviser blocks self-close. This
 unanimity rule also binds Align verify-skip plain AGREE and Implement step-back,
 but not Align or Spec synthesis. Advice grants no approval or hold clearance.
-In single-provider presets, for self-close the adviser must agree with the driver.
+In single-provider presets, an adviser agreeing with the driver informs the card,
+but cannot self-close without Astra and Opus.
 Post the card on a split or a single-adviser disagreement with the driver.
 Post the card when the cause recurs after that one action, or when the action raises a new hold.
 

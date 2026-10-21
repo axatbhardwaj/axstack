@@ -103,6 +103,8 @@ test('align arena: scenario corpus covers four families and availability holds',
 
 test('installation guide holds only the judge seats needed by each arena round', () => {
   const installation = compact('docs/installation.md');
-  expect(installation).toMatch(/judges only for Rung 2 hard-to-reverse choices\. Mixed round 1[^.]*Astra[^.]*Muse[^.]*round 2[^.]*Fable[^.]*Astra[^.]*required seat[^.]*unavailable[^.]*holds/i);
+  expect(installation).toMatch(/judges only for Rung 2 hard-to-reverse choices\. Mixed round 1[^.]*Astra[^.]*Muse/i);
+  expect(installation).toMatch(/codex-only round 1 holds[^.]*Opus judge[^.]*model: null/i);
+  expect(installation).toMatch(/Round 2[^.]*Fable[^.]*Astra[^.]*unavailable required judge[^.]*holds/i);
   expect(installation).not.toMatch(/arena-grade Align question holds until both judge seats can/i);
 });

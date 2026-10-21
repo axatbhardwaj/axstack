@@ -19,8 +19,9 @@ hard-to-reverse choices; they replace the critique round for that question.
    round 1 give `axstack-arena-judge-astra` and optional
    `axstack-arena-judge-muse` the anonymized, relabeled candidates and rubric to
    score every candidate per criterion and recommend a base with a reason.
-   In claude-only round 1 use `axstack-arena-judge-opus`; codex-only retains its
-   existing single-provider route. Opus is not dispatched in mixed round 1.
+   In claude-only round 1 use `axstack-arena-judge-opus`. In codex-only,
+   `axstack-arena-judge-opus` has `model: null`, so round 1 holds without
+   substitution. Opus is not dispatched in mixed round 1.
    If the driver and completed round-1 judges disagree on the base, or the
    user rejects the round-1 recommendation, run round 2 with fresh sessions:
    `axstack-escalation-fable` and `axstack-arena-judge-astra` independently
@@ -55,8 +56,8 @@ first candidate or judge dispatch. If an optional Grok or Antigravity candidate
 malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
 record `absent (<reason>)`, name it once in the next
 read-back, and continue with available candidates without relay or substitution.
-A required adviser, candidate, or judge (Astra or Opus, never verified-absent
-Muse) needed for this rung unavailable at
+A required adviser, candidate, or judge (Astra or Opus as applicable, Fable in
+round 2) unavailable at
 launch or returning a failed receipt holds that question without substitution;
 record the gap and return a proposed question to the caller about whether to proceed.
 Verified Muse absence is skipped without a phase hold; a launched Muse judge

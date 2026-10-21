@@ -53,8 +53,9 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    Dispatch configured `axstack-advisor-astra`, `axstack-advisor-opus`, and
    optional `axstack-advisor-muse` independently,
    without cross-reading, with the same bounded evidence and question. The
-   driver synthesizes disagreements. Cache both receipts with the draft and
-   reuse unchanged receipts only while their evidence, scope, and question
+   driver synthesizes disagreements. Cache Astra and Opus receipts with the
+   draft, plus Muse's receipt when it ran. Reuse unchanged receipts only while
+   their evidence, scope, and question
    remain unchanged. If Astra or Opus is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
    criteria, exclusions, and both adviser receipts or the reported hold.

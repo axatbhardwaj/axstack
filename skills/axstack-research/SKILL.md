@@ -77,7 +77,8 @@ is part of research.
    with the base seat. A sized mixed research fan-out requires dispatched
    branches spanning at least two different providers; otherwise hold that fan-out.
    Every other mixed fan-out, including arena and peer review, retains at least one
-   Codex and one Claude seat; otherwise hold that fan-out.
+   Codex and one Claude seat; otherwise hold that fan-out. For arena, this
+   floor binds candidates rather than judges.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards

@@ -159,11 +159,14 @@ rule('superseded-head or base reply clears nothing at new revisions',
   [/\breply bound to a superseded head or base\b/i, /\bclears nothing\b/i, /\bnew head or base\b/i],
   'At the new head or base, a reply bound to a superseded head or base clears nothing.');
 rule('4.7: self-close is bounded and agreed',
-  [/\badvised-hold self-close\b/i, /\bevery adviser that ran\b/i, /\bsame option\b/i,
+  [/\bevery adviser that ran\b/i, /\bsame option\b/i,
     /\bone advice-driven attempt per PR and cause kind\b/i, /\bclose the cause\b/i, /\bexisting authority\b/i],
-  'For advised-hold self-close, every adviser that ran recommends the same option to permit one advice-driven attempt per PR and cause kind to close the cause within existing authority.');
-rule('4.7: single adviser agrees with driver for self-close', [/\bsingle-provider\b/i, /\bself-close\b/i, /\badviser\b.*\bmust agree\b.*\bdriver\b/i],
-  'In single-provider presets self-close requires the adviser must agree with the driver.');
+  'Every adviser that ran recommends the same option to permit one advice-driven attempt per PR and cause kind to close the cause within existing authority.');
+rule('4.7: single-provider advice informs the card without self-close',
+  [/\bsingle-provider\b/i, /\badviser\b/i, /\bdriver\b/i, /\bcard\b/i,
+    /\bAstra\b/i, /\bOpus\b/i],
+  'In single-provider presets, an adviser agreeing with the driver informs the card but cannot self-close without Astra and Opus.',
+  /\bcannot self-close\b/i);
 rule('4.7: split or single-adviser disagreement raises card',
   [/\bpost the card\b/i, /\bsplit or a single-adviser disagreement\b/i, /\bwith the driver\b/i],
   'Post the card when there is a split or a single-adviser disagreement with the driver.');
