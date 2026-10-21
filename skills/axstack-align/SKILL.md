@@ -73,9 +73,8 @@ user round, the driver independently drafts the prioritized frontier and
 recommendations, except for brainstorm questions, where the driver frames the
 brief and rubric and assesses after the candidates and required judge rounds
 return. Reuse valid brainstorm receipts to replace the adviser consult for
-that question. For other questions, consult `axstack-advisor-astra`,
-`axstack-advisor-opus`, and optional `axstack-advisor-muse` independently,
-without cross-reading, using the same
+that question. For other questions, consult `axstack-advisor-astra` and
+`axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
 or rejects each material point with a reason. Use one focused reply when
@@ -86,23 +85,20 @@ Immediately before the first actual adviser dispatch, load and follow
 [T3 runtime](../axstack/references/t3-runtime.md). Reuse each adviser
 session and settled receipt; consult only the changed frontier and reuse
 unchanged receipts. Record compact adviser evidence, the driver's assessment,
-and user-resolved choices for `axstack-spec`. If Astra or Opus is unavailable,
-hold Align; verified Muse absence does not hold it. A launched Muse seat remains
-outstanding. Safe fact work may continue without substitution.
+and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
+hold Align; safe fact work may continue without substitution.
 
 An optional adviser note may be deferred or rejected in a `Decisions` row with
 the draft unchanged; it needs no new adviser pair.
 By default, changed draft text requires fresh receipts on the new revision.
 The only exception to this default is delta confirmation, available only after
-each adviser that ran confirms the driver's meaning-preservation claim; Astra
-and Opus must run, while verified Muse absence is excluded.
+each configured adviser seat confirms the driver's meaning-preservation claim.
 If the driver claims an edit preserves criterion, scope, decision and
-instruction meaning, each adviser that ran confirms that claim on the
+instruction meaning, each configured adviser seat confirms that claim on the
 delta, naming its prior receipt, the delta and the new revision.
 If a seat disagrees, a blocking finding exists, a high-stakes decision arises,
 or meaning changes, obtain full fresh review on the new revision.
-An unavailable Astra or Opus adviser seat holds the affected phase; verified
-Muse absence does not.
+An unavailable adviser seat holds the affected phase.
 
 ## Use the brainstorm synthesis
 
@@ -156,11 +152,8 @@ approval; record chosen document names and paths once per run.
    When scope changes runnable behavior, the read-back records a Verification decision.
    For an applicable `verify-<app>` skill, record the features that cover the change.
    For a missing skill, the plan always includes `axstack-verify create` as the first PR.
-   Skipping this first PR requires plain AGREE from both
-   `axstack-advisor-astra` and `axstack-advisor-opus`, plus every Muse adviser
-   that ran, that a verification skill is unnecessary. A pending Muse adviser
-   blocks the skip. Record both advisers' reasons and any Muse reason in the
-   Verification decision.
+   Skipping this first PR requires plain AGREE from both `axstack-advisor-astra` and `axstack-advisor-opus` that a verification skill is unnecessary.
+   Record both advisers' reason in the Verification decision.
 2. Classify the result with the shared
    [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):
    - For work clarified as small, return a **small-change intent** handoff with

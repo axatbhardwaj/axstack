@@ -70,10 +70,10 @@ test('debug: L2 preserves both triggers, both architecture seats, and the user c
 test('debug: adviser rule, plan merge, fan-out floor and completion are explicit', () => {
   const text = compact(SKILL);
   expect(text).toMatch(/ordinary diagnos\w+[^.]*not a high-stakes decision/i);
-  expect(text).toMatch(/mixed[^.]*Astra and Opus are required[^.]*Muse an optional third/i);
+  expect(text).toMatch(/mixed[^.]*both advisers[^.]*both receipts/i);
   expect(text).toMatch(/single-provider[^.]*one configured adviser/i);
   expect(text).toMatch(/high-stakes[^.]*serious-risk[^.]*override/i);
-  expect(text).toMatch(/unavailable Astra or Opus[^.]*holds? L1[^.]*\. A null or unavailable L2[^.]*holds L2/i);
+  expect(text).toMatch(/configured but unavailable[^.]*holds? L1[^.]*null or unavailable L2[^.]*holds L2/i);
   expect(text).toMatch(/de-duplicates?[^.]*ranks? the union with reasons recorded in the run record/i);
   expect(text).toMatch(/briefs? [<≤]=? seats|briefs? (?:never exceed|at most)[^.]*seats/i);
   expect(text).toMatch(/untested \(queued\)|recorded as untested/i);

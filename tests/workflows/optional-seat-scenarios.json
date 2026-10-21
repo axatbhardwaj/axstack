@@ -41,11 +41,6 @@
       "id": "auditor-launched",
       "input": { "phase": "Close-out", "auditor": "Dispatch started then failed" },
       "expected": { "status": "HOLD until launched Dispatch settles", "forbidden": ["use unlaunchable archive exception"] }
-    },
-    {
-      "id": "muse-missing-medium",
-      "input": { "preset": "mixed", "role": "axstack-advisor-muse", "effort": "medium", "savedCapabilities": "Muse pin advertised without medium", "dispatchStarted": false },
-      "expected": { "action": "Fence pre-dispatch attempt; record absent (dispatch-plan exit-2 missing medium); exclude Muse from adviser counts", "forbidden": ["phase hold", "count Muse as adviser", "substitute another model"] }
     }
   ]
 }

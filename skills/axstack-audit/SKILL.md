@@ -111,7 +111,6 @@ counts with denominators plus the evidence behind the count:
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
-- Adviser receipts counted for advisers that ran; exclude verified Muse absences.
 - Simplification applicability determinations evidenced / total candidate diffs,
   and complete simplification receipts / total candidates, broken down as
   `applied`, `not-applicable`, or `UNKNOWN` with the reason. This measures
