@@ -52,10 +52,16 @@ test('review modes: mixed first peer dispatch requires the primary, peer and Mus
 test('review modes: mixed cross-provider peer independence requires isolated sessions', () => {
   const raw = read('skills/axstack-review/references/review-candidate.md');
   const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
-  expect(peer).toMatch(/Sol high[^.]*Opus medium/i);
-  expect(peer).toMatch(/identical six-angle brief[^.]*no cross-read/i);
-  expect(peer).toMatch(/cross-provider[^.]*independently isolated/i);
-  expect(peer).toMatch(/isolated first pass/i);
+  const accepts = (text) => requires(text, /mixed first peer review/i,
+    /Sol high/i, /Opus medium/i, /cross-provider/i, /separate sessions/i,
+    /identical brief/i, /isolated first pass/i, /independence/i);
+  checkRule(peer, accepts,
+    'In mixed first peer review, the Sol high and Opus medium cross-provider pair and Muse get independence from separate sessions, an identical brief, and an isolated first pass.',
+    [[/cross-provider/i, 'same-provider'], [/Sol high/i, 'Sol low'],
+      [/Opus medium/i, 'Opus high'], [/separate sessions/i, 'shared sessions'],
+      [/identical brief/i, 'different briefs'], [/isolated first pass/i, 'shared first pass']],
+    [/mixed first peer review/i, /Sol high/i, /Opus medium/i, /cross-provider/i,
+      /separate sessions/i, /identical brief/i, /isolated first pass/i, /independence/i]);
 });
 
 test('review modes: authored routing follows actual author provenance', () => {
@@ -160,7 +166,7 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
   expect(watch).toMatch(/actual author/i);
   expect(watch).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(repair).toMatch(/authored[^.]*review rule/i);
-  expect(repair).toMatch(/current authored[^.]*receipt|authored[^.]*current receipt/i);
+  expect(repair).toMatch(/every mode-required authored reviewer receipt[^.]*exact new revision and base/i);
   expect(lifecycle).toMatch(/mixed first peer review[^.]*three receipts[^.]*two with verified Muse absence[^.]*same brief[^.]*isolated/i);
   expect(lifecycle).toMatch(/mixed Sol-authored review[^.]*two receipts[^.]*one with verified Muse absence/i);
 });

@@ -81,11 +81,11 @@ For each current head and base SHA, every merge-ready term must hold:
 - Veto: no `do-not-merge` label and no chat `hold` applies.
 
 Only comments and threads whose IDs are recorded in an agent receipt count as agent-authored.
-The authored reviewer rates each non-agent review thread, review body, or
+Every mode-required authored reviewer seat rates each non-agent review thread, review body, or
 top-level comment from a human or a bot at the current head as `above low`,
 `low`, `addressed` or `uncertain`. Re-rate every non-agent item at each new head.
-Reviewer-rated `low` or `addressed` items do not hold automatic merge.
-An `above low`, unrated or `uncertain` item holds automatic merge.
+An item rated `low` or `addressed` by every required seat does not hold automatic merge.
+An `above low`, unrated or `uncertain` rating from any required seat holds automatic merge.
 Human `CHANGES_REQUESTED` holds automatic merge until resolved.
 A comment arriving after the receipt triggers a fresh review dispatch for rating
 as gap closing.

@@ -26,13 +26,16 @@ This section applies to peer and authored PR modes.
      and `axstack-reviewer-muse`, or two with verified Muse absence, at the exact SHA
      and base after an isolated first pass. Send each the identical six-angle brief
      with no cross-read or children. The Sol/Opus pair stays cross-provider and
-     independently isolated. Single-provider first review keeps exactly two
+     independently isolated. In mixed first peer review, the Sol high and Opus
+     medium cross-provider pair and Muse get independence from separate sessions,
+     the identical brief, and an isolated first pass.
+     Single-provider first review keeps exactly two
      configured reviewers and never dispatches Muse.
      Use [Role roster](../../axstack/references/role-roster.md#role-roster) for
      verified Muse absence; a launched Muse seat remains outstanding.
      Peer follow-up requires exactly one `axstack-reviewer-primary` receipt on
      the bounded brief in [Peer mode](../SKILL.md#peer-mode-colleague-pr).
-   - **Authored:** choose eligible independent reviewers from this complete
+   - **Authored:** dispatch exactly the mode-required eligible independent reviewers from this complete
      mapping:
 
      | Preset | Actual author provider/class | Reviewer role (configured class/effort) |

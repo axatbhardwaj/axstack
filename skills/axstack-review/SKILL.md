@@ -183,7 +183,7 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
 The owner verifies and synthesizes the mode-required evidence without voting.
 A first peer review with fewer than its mode-required receipts is incomplete;
 a peer follow-up requires one primary receipt. An authored reviewer receipt
-count below its mode-required count is incomplete. Passing tests or reviewer unanimity grants
+count other than its mode-required count is incomplete. Passing tests or reviewer unanimity grants
 no merge authority.
 
 ## Template: candidate review brief
@@ -230,7 +230,7 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 - Peer mode requires its mode-specific first-review receipts or single primary follow-up receipt under
   Peer mode, with validated blockers reported by `REQUEST_CHANGES`; diligence
   is excluded.
-- Authored mode requires every mode-required current eligible configured reviewer receipt and
+- Authored mode requires exactly its mode-required count of current eligible configured reviewer receipts and
   a separate current diligence receipt; applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.

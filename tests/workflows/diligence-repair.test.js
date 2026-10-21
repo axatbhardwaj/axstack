@@ -23,8 +23,8 @@ test('review keeps diligence independent and requires its PASS for merge-ready',
 test('authored receipt counts exclude the separate diligence receipt', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/The diligence receipt is separate and does not count as a reviewer receipt\./);
-  expect(review).toMatch(/an authored reviewer receipt count below its mode-required count is incomplete\./i);
-  expect(review).toMatch(/Authored mode requires every mode-required current eligible configured reviewer receipt and a separate current diligence receipt;/);
+  expect(review).toMatch(/an authored reviewer receipt count other than its mode-required count is incomplete\./i);
+  expect(review).toMatch(/Authored mode requires exactly its mode-required count of current eligible configured reviewer receipts and a separate current diligence receipt;/);
 });
 
 test('implement counts one failing round toward step-back and preserves the PASS gate', () => {

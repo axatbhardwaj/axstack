@@ -268,7 +268,9 @@ for explicit ownership transfer.
   medium/high finding from either seat blocks approval and `repairs` increments
   once per round. Opus-authored review keeps one Sol primary and no Muse seat.
   Single-provider first peer review keeps two receipts and authored review
-  keeps one; Muse seats are never dispatched. Every eligible reviewer runs in
+  keeps one; Muse seats are never dispatched. Authored PRs receive exactly the
+  mode-required eligible cross-family/preset-mapped reviewer receipts. Every
+  eligible reviewer runs in
   a separate detached checkout, with private evidence preserved before
   removal. First peer reviews and authored reviews cover security,
   correctness, integration, requirements, design, and simplicity; peer follow-ups
@@ -449,11 +451,11 @@ accepted head and base while other escalation holds still apply.
 In a work repository a reply never replaces counted collaborator approval.
 
 Only comments and threads whose IDs are recorded in an agent receipt count as agent-authored.
-The authored reviewer rates each non-agent review thread, review body, or
+Every mode-required authored reviewer seat rates each non-agent review thread, review body, or
 top-level comment from a human or a bot at the current head as `above low`,
 `low`, `addressed` or `uncertain`. Re-rate every non-agent item at each new head.
-Reviewer-rated `low` or `addressed` items do not hold automatic merge.
-An `above low`, unrated or `uncertain` item holds automatic merge.
+An item rated `low` or `addressed` by every required seat does not hold automatic merge.
+An `above low`, unrated or `uncertain` rating from any required seat holds automatic merge.
 Human `CHANGES_REQUESTED` holds automatic merge until resolved.
 A comment arriving after the receipt triggers a fresh review dispatch for rating
 as gap closing.

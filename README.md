@@ -15,7 +15,7 @@ coordination. You can start at the phase you need.
 | Failure mode | How Axstack responds |
 | --- | --- |
 | Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
-| Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and the first mixed peer review pairs Sol high with Opus medium in isolated sessions at the exact revision. Peer follow-ups use one reviewer. |
+| Nobody really reviewed it | Strict TDD checks behavior first. In mixed, authored review is cross-provider, and first peer review uses Sol high, Opus medium and Muse in isolated sessions at the exact revision. Sol-authored review uses Opus and Muse seats (one with verified Muse absence). Mixed first peer review needs three receipts, or two with verified Muse absence. Peer follow-ups use one primary reviewer. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
 | Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
 
@@ -101,9 +101,10 @@ Every Explain visual is authored and independently reviewed; plain prose stays p
   visible T3 orchestration via the `t3-code` MCP; harness-native subagent
   tools are forbidden. Separate worktrees keep one writer on each candidate.
   See the [T3 runtime boundary](skills/axstack/references/t3-runtime.md).
-- Peer PRs receive two independent reviews on the first review and one reviewer
-  on follow-ups. Authored changes receive a reviewer
-  selected from the author's configured pairing. Reviews bind to exact revisions.
+- Mixed first peer review needs three receipts, or two with verified Muse absence;
+  single-provider first peer review keeps two. Peer follow-up needs one primary
+  reviewer. Authored changes receive all mode-required reviewer receipts from
+  the author's configured pairing. Reviews bind to exact revisions.
 - Agents keep accepted decisions and evidence for resume. Missing authority,
   unavailable models, and serious risks surface as holds. For own PRs, automatic
   merge is the default under the

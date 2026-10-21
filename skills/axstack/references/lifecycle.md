@@ -19,7 +19,8 @@ binding state and receipts to exact revisions.
   Peer follow-up uses exactly one `axstack-reviewer-primary` receipt under
   [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr).
   Mixed Sol-authored review = two receipts, or one with verified Muse absence;
-  Opus-authored and single-provider authored review keep one. Each uses a
+  Opus-authored and single-provider authored review keep one. All authored
+  reviewers are eligible from actual author provenance. Each uses a
   separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).

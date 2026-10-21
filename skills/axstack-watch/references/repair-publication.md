@@ -19,11 +19,11 @@ The author commits the smallest in-scope repair and exact public reply bodies in
 the owned worktree, keyed to feedback IDs and candidate revision. Obtain
 independent review of the exact local candidate SHA and replies in an isolated
 detached checkout against the pinned base before publication.
-Nothing is pushed for review. Publication is held until the current authored review receipt covers
+Nothing is pushed for review. Publication is held until every mode-required authored reviewer receipt covers
 the exact new revision and base, code/replies, all six angles, applicable acceptance,
 affected boundaries and exact reply identities with no unresolved material finding or urgent hold.
-The authored review rule in `axstack-review` requires exactly one complete
-eligible non-author/non-owner reviewer.
+The authored review rule in `axstack-review` requires exactly its mode-required
+count of complete eligible non-author/non-owner reviewer receipts.
 Record a serious-risk hold in both the run record and a durable GitHub or user-owned
 conversation, preserving candidate/exact context;
 raise the hold in the T3 driver thread and end the turn parked on the decision.

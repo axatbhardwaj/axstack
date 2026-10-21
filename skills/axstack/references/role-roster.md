@@ -20,6 +20,7 @@
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
+
   Mixed Sol-authored review requires two receipts (`axstack-reviewer-secondary`
   and `axstack-reviewer-muse`), or one with verified Muse absence. Mixed
   Opus-authored review keeps one Sol receipt and no Muse seat. Single-provider

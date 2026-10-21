@@ -84,10 +84,10 @@ test('README preserves preset and merge boundaries', () => {
   expect(readme).toMatch(/single-provider presets[^.]*not automatic cross-class or cross-provider fallbacks when a model is unavailable/i);
   checkRule(prose, (text) => requires(text,
     /mixed/i, /authored review/i, /cross-provider/i, /peer review/i,
-    /isolated sessions/i, /Sol[- ]high/i, /Opus[- ]medium/i),
-  'In mixed, authored review is cross-provider and peer review pairs Sol-high with Opus-medium in isolated sessions to check the exact revision.',
+    /isolated sessions/i, /Sol[- ]high/i, /Opus[- ]medium/i, /Muse/i),
+  'In mixed, authored review is cross-provider and first peer review uses Sol-high, Opus-medium and Muse in isolated sessions to check the exact revision.',
   [[/authored review/i, 'peer review'], [/isolated/i, 'shared'],
-    [/Opus[- ]medium/i, 'Sol high']]);
+    [/Opus[- ]medium/i, 'Sol high'], [/Muse/i, 'no third seat']]);
   expect(readme).toMatch(/review automation never merges/i);
   expect(readme).toMatch(/automatic\s+merge is the default under the[\s\S]*watch predicate/i);
   expect(readme).toContain('[Releases](https://github.com/axatbhardwaj/axstack/releases)');
