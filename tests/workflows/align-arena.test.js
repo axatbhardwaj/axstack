@@ -56,7 +56,7 @@ test('align arena: synthesis lands in Decisions rows and absent seats hold only 
   expect(text).toMatch(/uncertain dispatch[^.]*reconcile[^.]*never treated as absent/i);
 });
 
-test('align arena: judge seats exist in every preset at xhigh and mirror adviser availability', () => {
+test('align arena: original judges retain xhigh and all judges receive every candidate', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const opus = roles.find(({ id }) => id === 'axstack-arena-judge-opus');

@@ -20,6 +20,15 @@
       "modelClass": "opus"
     },
     {
+      "id": "axstack-advisor-muse",
+      "name": "Axstack Muse adviser",
+      "provider": "muse",
+      "model": "muse-wonder-full-1.0",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Muse adviser. Fresh session for the bounded question; never author or owner, and never cross-reads another adviser. Verified absence follows the optional-seat rule."
+    },
+    {
       "id": "axstack-owner",
       "name": "Axstack PR owner",
       "provider": "codex",
@@ -65,6 +74,15 @@
       "modelClass": "opus"
     },
     {
+      "id": "axstack-reviewer-muse",
+      "name": "Axstack Muse reviewer",
+      "provider": "muse",
+      "model": "muse-wonder-full-1.0",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Muse reviewer of the exact candidate SHA and base. Fresh session; never author or owner, and never cross-reads another reviewer. Verified absence follows the optional-seat rule."
+    },
+    {
       "id": "axstack-diligence",
       "name": "Axstack diligence checker",
       "provider": "claude",
@@ -108,6 +126,15 @@
       "thinkingOptionId": "high",
       "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
       "modelClass": "sol"
+    },
+    {
+      "id": "axstack-research-code-spark",
+      "name": "Axstack Spark code researcher",
+      "provider": "muse",
+      "model": "muse-spark-1.3",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Spark code research branch. Fresh session on the bounded question; never author or owner, and never cross-reads another researcher. Never the sole source for a verified claim; verified absence follows the optional-seat rule."
     },
     {
       "id": "axstack-research-web",
@@ -193,6 +220,15 @@
       "notes": "Optional read-only Scout breadth seat: searches the whole repository for missed boundaries and counterexamples. Reports evidence for driver reconciliation without cross-reading."
     },
     {
+      "id": "axstack-explore-codebase-spark",
+      "name": "Axstack Spark codebase explorer",
+      "provider": "muse",
+      "model": "muse-spark-1.3",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Spark whole-question breadth seat for Scout, not a facet. Fresh session; never author or owner, and never cross-reads another explorer. The driver reconciles its findings; verified absence follows the optional-seat rule."
+    },
+    {
       "id": "axstack-explore-execution",
       "name": "Axstack execution explorer",
       "provider": "claude",
@@ -269,11 +305,11 @@
     {
       "id": "axstack-debug-investigator-4",
       "name": "Axstack debug investigator 4",
-      "provider": "codex",
+      "provider": "muse",
+      "model": "muse-wonder-full-1.0",
       "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity.",
-      "modelClass": "sol"
+      "thinkingOptionId": "medium",
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. Muse Wonder medium is pinned for this seat."
     },
     {
       "id": "axstack-arena-judge-astra",
@@ -301,6 +337,15 @@
       "thinkingOptionId": "xhigh",
       "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
+    },
+    {
+      "id": "axstack-arena-judge-muse",
+      "name": "Axstack Muse arena judge",
+      "provider": "muse",
+      "model": "muse-wonder-full-1.0",
+      "modeId": "full-access",
+      "thinkingOptionId": "medium",
+      "notes": "Optional read-only Muse arena judge. Fresh session for the rubric and every candidate by label; never author or owner, and never cross-reads another judge. Verified absence follows the optional-seat rule."
     },
     {
       "id": "axstack-arena-candidate-grok",
