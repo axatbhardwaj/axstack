@@ -209,7 +209,7 @@ Reuse unchanged advice when reissuing the card.
 A reissued card for the same cause is the same hold and sends no new alert.
 A reply bound to a superseded head or base clears nothing at the new head or base.
 
-For advised-hold self-close, Astra and Opus must both have run. Every adviser
+In `mixed`, for advised-hold self-close, Astra and Opus must both have run. Every adviser
 that ran must recommend the same option to permit one advice-driven attempt
 per PR and cause kind to close the cause within existing authority.
 Any non-unanimous completed result, including 2-1, 1-1,
@@ -217,8 +217,8 @@ Any non-unanimous completed result, including 2-1, 1-1,
 first and dissent named. A pending Muse adviser blocks self-close. This
 unanimity rule also binds Align verify-skip plain AGREE and Implement step-back,
 but not Align or Spec synthesis. Advice grants no approval or hold clearance.
-In single-provider presets, an adviser agreeing with the driver informs the card,
-but cannot self-close without Astra and Opus.
+In single-provider presets, the one configured adviser must run and agree with
+the driver for self-close.
 Post the card on a split or a single-adviser disagreement with the driver.
 Post the card when the cause recurs after that one action, or when the action raises a new hold.
 

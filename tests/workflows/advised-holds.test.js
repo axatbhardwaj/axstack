@@ -162,11 +162,12 @@ rule('4.7: self-close is bounded and agreed',
   [/\bevery adviser that ran\b/i, /\bsame option\b/i,
     /\bone advice-driven attempt per PR and cause kind\b/i, /\bclose the cause\b/i, /\bexisting authority\b/i],
   'Every adviser that ran recommends the same option to permit one advice-driven attempt per PR and cause kind to close the cause within existing authority.');
-rule('4.7: single-provider advice informs the card without self-close',
-  [/\bsingle-provider\b/i, /\badviser\b/i, /\bdriver\b/i, /\bcard\b/i,
-    /\bAstra\b/i, /\bOpus\b/i],
-  'In single-provider presets, an adviser agreeing with the driver informs the card but cannot self-close without Astra and Opus.',
-  /\bcannot self-close\b/i);
+rule('4.7: single-provider self-close needs its configured adviser to run and agree',
+  [/\bsingle-provider\b/i, /\bone configured adviser\b/i, /\bmust (?:have )?run\b/i,
+    /\bagree with the driver\b/i, /\bself-close\b/i],
+  'In a single-provider preset, the one configured adviser must run and agree with the driver for self-close.',
+  undefined, [[/\bmust (?:have )?run\b/i, 'may be absent'],
+    [/\bagree with the driver\b/i, 'disagree with the driver']]);
 rule('4.7: split or single-adviser disagreement raises card',
   [/\bpost the card\b/i, /\bsplit or a single-adviser disagreement\b/i, /\bwith the driver\b/i],
   'Post the card when there is a split or a single-adviser disagreement with the driver.');

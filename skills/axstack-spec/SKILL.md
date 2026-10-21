@@ -58,7 +58,8 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    their evidence, scope, and question
    remain unchanged. If Astra or Opus is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
-   criteria, exclusions, and both adviser receipts or the reported hold.
+   criteria, exclusions, Astra and Opus receipts, plus Muse's receipt if it ran,
+   or the reported hold.
    An optional adviser note may be deferred or rejected in a `Decisions` row
    with the draft unchanged; it needs no new adviser pair.
    By default, changed draft text requires fresh receipts on the new revision.

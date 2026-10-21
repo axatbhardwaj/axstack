@@ -63,5 +63,6 @@ record the gap and return a proposed question to the caller about whether to pro
 Verified Muse absence is skipped without a phase hold; a launched Muse judge
 remains outstanding. In mixed fan-out retain at least one Codex and one Claude
 candidate, or hold the affected question.
+This arena floor binds candidates, not judges.
 For an uncertain dispatch, reconcile natively; it is never treated as absent.
 Unaffected fact work and questions continue.
