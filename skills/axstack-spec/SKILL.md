@@ -48,26 +48,31 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    carries a sketch, include the [design lens](../axstack/references/design-lens.md)
    sketch in the approved revision's `Design` section and its `Usage` line in
    acceptance. First record the driver's
-   independent assessment, then load
-   [T3 runtime](../axstack/references/t3-runtime.md) before dispatching the
-   configured `axstack-advisor-astra` and `axstack-advisor-opus` independently,
+   independent assessment. Then load
+   [T3 runtime](../axstack/references/t3-runtime.md) before dispatching advisers.
+   Dispatch configured `axstack-advisor-astra`, `axstack-advisor-opus`, and
+   optional `axstack-advisor-muse` independently,
    without cross-reading, with the same bounded evidence and question. The
-   driver synthesizes disagreements. Cache both receipts with the draft and
-   reuse unchanged receipts only while their evidence, scope, and question
-   remain unchanged. If either adviser is unavailable, hold Spec without
+   driver synthesizes disagreements. Cache Astra and Opus receipts with the
+   draft, plus Muse's receipt when it ran. Reuse unchanged receipts only while
+   their evidence, scope, and question
+   remain unchanged. If Astra or Opus is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
-   criteria, exclusions, and both adviser receipts or the reported hold.
+   criteria, exclusions, Astra and Opus receipts, plus Muse's receipt if it ran,
+   or the reported hold.
    An optional adviser note may be deferred or rejected in a `Decisions` row
    with the draft unchanged; it needs no new adviser pair.
    By default, changed draft text requires fresh receipts on the new revision.
    The only exception to this default is delta confirmation, available only after
-   each configured adviser seat confirms the driver's meaning-preservation claim.
+   each adviser that ran confirms the driver's meaning-preservation claim;
+   Astra and Opus must run, while verified Muse absence is excluded.
    If the driver claims an edit preserves criterion, scope, decision and
-   instruction meaning, each configured adviser seat confirms that claim on
+   instruction meaning, each adviser that ran confirms that claim on
    the delta, naming its prior receipt, the delta and the new revision.
    If a seat disagrees, a blocking finding exists, a high-stakes decision arises,
    or meaning changes, obtain full fresh review on the new revision.
-   An unavailable adviser seat holds the affected phase.
+   An unavailable Astra or Opus adviser seat holds the affected phase;
+   verified Muse absence does not. A launched Muse seat remains outstanding.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
    require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`

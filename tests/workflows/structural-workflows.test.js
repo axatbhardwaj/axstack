@@ -212,7 +212,7 @@ test('structural: contracts carry dual-adviser consultation without a driver pro
   expect(/single-provider high-stakes[^.]*pause/i.test(text), 'unmapped single-provider high-stakes work must pause').toBeTruthy();
   expect(/axstack-driver|effective effort|return[^.]*medium/i.test(text), 'contracts must not carry a driver profile or effort rule').toBe(false);
   expect(/current T3 thread[^.]*driver|driver[^.]*current T3 thread/i.test(text), 'contracts must keep the current chat as driver').toBeTruthy();
-  expect(/either adviser[^.]*unavailable[^.]*hold|hold[^.]*either adviser[^.]*unavailable/i.test(text)).toBeTruthy();
+  expect(/Astra or Opus[^.]*unavailable[^.]*hold/i.test(text)).toBeTruthy();
 });
 
 test('structural: Rung 2 adds every configured family without changing the ordinary adviser pair', () => {

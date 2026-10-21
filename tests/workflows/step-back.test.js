@@ -40,9 +40,9 @@ rule('checks and post-readiness feedback consume repairs rather than rounds', im
   'Failed checks and post-readiness feedback increment repairs but never count as failing review rounds.',
   /\bnever count as failing review rounds\b/i, 'always count as failing review rounds',
   /\bnever count as failing review rounds\b/i);
-rule('4.4 unavailable step-back seat means no agreement', implement,
-  [/\bunavailable step-back seat\b/i, /\bcounts as no agreement\b/i, /\bfalls to the user with the advised step-back card\b/i],
-  'An unavailable step-back seat counts as no agreement and falls to the user with the advised step-back card.',
+rule('4.4 unavailable Astra or Opus step-back seat means no agreement', implement,
+  [/\bunavailable Astra or Opus step-back seat\b/i, /\bcounts as no agreement\b/i, /\bfalls to the user with the advised step-back card\b/i],
+  'An unavailable Astra or Opus step-back seat counts as no agreement and falls to the user with the advised step-back card.',
   /\bcounts as no agreement\b/i, 'counts as agreement', /\bcounts as no agreement\b/i);
 
 for (const [name, concept, wording] of [
@@ -60,7 +60,7 @@ rule('one advised extra-round repair brief returns to the same author only if al
   /\ball conditions below hold\b/i, 'any condition below holds');
 for (const [name, concept, wording, direction, inverse, ban] of [
   ['driver acceptance', /\bdriver accepts the path\b/i, 'The driver accepts the path.', /\baccepts\b/i, 'rejects'],
-  ['both advisers agree', /\bboth advisers agree on the path\b/i, 'Both advisers agree on the path.', /\bboth\b/i, 'Either'],
+  ['all completed advisers agree', /\bevery adviser that ran recommends the same path\b/i, 'Every adviser that ran recommends the same path.', /\bevery adviser that ran\b/i, 'Any one adviser'],
   ['scope boundary', /\bpath stays inside the approved scope\b/i, 'The path stays inside the approved scope.', /\bstays inside\b/i, 'leaves'],
   ['Binding boundary', /\bpath\b.*\bbreak\b.*\bsketch Binding line\b/i, 'The path must not break a sketch Binding line.', /\bmust not break\b/i, 'may break', /\bmust not break\b/i],
   ['independent holds absent', /\bindependent hold applies\b/i, 'No independent hold applies.', /\bNo independent hold applies\b/i, 'An independent hold applies', /\bNo independent hold applies\b/i],
@@ -87,9 +87,9 @@ rule('failed conditions fall to the user with an advised step-back card', implem
   'When any condition fails, record held and fall to the user with the advised step-back card.',
   /\brecord held\b/i, 'record merge-ready');
 rule('fall-to-user examples include split unavailable rejected and scope-breaking paths', implement,
-  [/\bfailed conditions include\b/i, /\badviser split\b/i, /\bunavailable seat\b/i,
+  [/\bfailed conditions include\b/i, /\badviser split\b/i, /\bunavailable Astra or Opus seat\b/i,
     /\bdriver rejecting\b/i, /\bonly path\b.*\bleaving\b.*\bscope\b.*\bbreaking\b.*\bBinding line\b/i],
-  'Failed conditions include an adviser split, an unavailable seat, the driver rejecting the agreed path, or the only path leaving approved scope or breaking a Binding line.',
+  'Failed conditions include an adviser split, an unavailable Astra or Opus seat, the driver rejecting the agreed path, or the only path leaving approved scope or breaking a Binding line.',
   /\bFailed conditions include\b/i, 'Permitted conditions include');
 rule('scope changes keep the material-revision route', implement,
   [/\bscope change follows\b.*\bmaterial-revision route\b/i],

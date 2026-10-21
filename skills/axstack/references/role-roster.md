@@ -18,9 +18,12 @@
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
+  optional `axstack-advisor-muse` advises without authoring.
   `axstack-arena-candidate-grok`/
   `axstack-arena-candidate-antigravity` add families.
-  `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
+  `axstack-arena-judge-astra` and optional `axstack-arena-judge-muse` judge mixed round 1;
+  `axstack-arena-judge-opus` judges claude-only round 1 (inactive in mixed);
+  fresh `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors every visual Explain delivers, including pages,
@@ -58,17 +61,31 @@
   `axstack-arena-candidate-antigravity`, `axstack-research-web-google`,
   `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
   `axstack-explore-execution-sol`, `axstack-auditor-sol`,
-  `axstack-explore-codebase-flash`.
+  `axstack-explore-codebase-flash`, `axstack-advisor-muse`,
+  `axstack-reviewer-muse`, `axstack-arena-judge-muse`,
+  `axstack-explore-codebase-spark`, `axstack-research-code-spark`,
+  and mixed `axstack-debug-investigator-4`.
   Always dispatch optional seats when configured and available, except research
   branches, which follow [Research step 2](../../axstack-research/SKILL.md#procedure) sizing.
   A research branch unneeded by an open claim is recorded `not needed (<reason>)`,
   never as absent or a malfunction. Only a
-  launch failure, trust/login prompt, or prompt block makes one absent:
+  launch failure, trust/login prompt, prompt block, or pre-dispatch
+  `dispatch-plan` exit-2 resolution hold makes one absent:
   fence the attempt, record `absent (<reason>)`, name it once in the next
   read-back, and skip it without a relay or substitution. An uncertain
-  dispatch is reconciled, not called absent. A sized mixed research fan-out
+  dispatch is reconciled, not called absent. Verified Muse absence is recorded
+  `absent (<reason>)` after launch failure, trust/login prompt, prompt block,
+  pre-dispatch `dispatch-plan` exit-2 hold, or `muse usage limit` for seats
+  not yet launched after a limit recorded this run until the recorded reset;
+  without a recorded reset, until a later Muse turn completes or the run ends.
+  Verified Muse absence is excluded from every count and never counts as
+  no-agreement or a phase hold. A launched Muse seat remains outstanding;
+  its phase waits for T3 auto-continue after reset (residual stall).
+  A post-launch configuration read-back mismatch is unresolved, not absence.
+  A sized mixed research fan-out
   requires dispatched branches spanning at least two different providers;
   otherwise hold that fan-out. Every other mixed fan-out, including arena and
-  first peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
+  first peer review, retains at least one Codex and one Claude seat;
+  otherwise hold that fan-out. For arena this floor binds candidates, not judges.
   Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` probe L1 briefs.

@@ -317,7 +317,7 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Arena judge (Astra seat). Read-only cross-judge for an arena-grade Align decision: receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads the other judge, never mutates. Disagreement between judges is surfaced by the driver, never averaged.",
+      "notes": "Read-only Astra judge in mixed round 1 and round 2: scores every candidate by label. Round 2 uses a fresh session without its round-1 receipt; same-family agreement is not independent corroboration. Never authors a candidate in that arena session set, cross-reads a judge, or mutates.",
       "modelClass": "astra"
     },
     {
@@ -335,7 +335,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Read-only arena judge, inactive in mixed; claude-only round 1 uses this role. Scores every candidate by label. Never authors a candidate, cross-reads another judge, or mutates. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
