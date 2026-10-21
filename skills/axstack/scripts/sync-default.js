@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import { accountUsage, expandHome } from './account-usage.js';
 
 const drivers = { claudeAgent: 'claude', codex: 'codex' };
-const weights = { claudeAgent: { default_claude_max_20x: 4 }, codex: { pro: 4 } };
 function parsePool(value) {
   if (!value) return null;
   const pool = {};
@@ -46,18 +45,15 @@ export function decide(settings, usage, now, pool = null) {
       pace: known ? 100 * (1 - (window.resetAt - now) / (window.seconds * 1000)) - window.used : null };
   });
   const current = result.instances.find((entry) => entry.instanceId === from);
-  const weight = (entry) => Object.hasOwn(weights[settings.providerInstances[entry.instanceId].driver],
-    usage.find((account) => account.instanceId === entry.instanceId)?.tier) ? 4 : 1;
   const best = result.instances.filter((entry) => entry.state === 'eligible')
-    .sort((a, b) => weight(b) - weight(a) || (pooled ? b.band - a.band : 0) || b.pace - a.pace)[0];
+    .sort((a, b) => (pooled ? b.band - a.band : 0) || b.pace - a.pace)[0];
   const excluded = !current || current.state === 'excluded';
   if (excluded && best) return updated(best, 'current-excluded');
   if (result.instances.some((entry) => entry.state === 'unknown')) return { ...result, reason: 'unknown' };
   if (!best) return { ...result, reason: 'no-eligible' };
-  const higherTier = weight(best) > weight(current);
   const higherBand = pooled && best.band > current.band;
-  if (best.instanceId !== from && (higherTier || higherBand || best.pace - current.pace >= 10)) {
-    return updated(best, higherTier ? 'tier' : higherBand ? 'reserve' : 'pace');
+  if (best.instanceId !== from && (higherBand || best.pace - current.pace >= 10)) {
+    return updated(best, higherBand ? 'reserve' : 'pace');
   }
   return { ...result, reason: 'margin' };
 }

@@ -160,16 +160,13 @@ canary described by the operational contract.
 This opt-in script changes only root `defaultModelSelection` in
 `~/.t3/userdata/settings.json`. Without a pool it changes only the instance
 among enabled accounts of the current Claude/Codex driver.
-`sync-default` prefers eligible tier-weight-4 accounts before tier-weight-1
-accounts, even when the higher tier has a worse band or pace. Within the top
-tier, `AXSTACK_SYNC_POOL` compares drivers by weekly clocks (>=604800s).
-Weekly remaining quota is `R = 100 - used` for the selected weekly window.
-Prefer the highest band: `R >= 15`, `10 <= R < 15`, then `R < 10`.
+`AXSTACK_SYNC_POOL` compares drivers by weekly clocks (>=604800s), without
+plan weights. Weekly remaining quota is `R = 100 - used` for the selected
+weekly window. Prefer the highest band: `R >= 15`, `10 <= R < 15`, then `R < 10`.
 A higher band switches without a pace margin; within the same band, rotation
 needs a ten-point elapsed-minus-used pace lead and the current account wins ties.
 This also applies when every eligible account is below 10% remaining: known
-usable quota stays usable, ranked by pace. Without a pool, pace applies within
-the highest eligible tier.
+usable quota stays usable, ranked by pace. Without a pool, only pace applies.
 This is a best-effort weekly reserve preference, not a guaranteed budget for
 future work. The current hard guard still excludes any window at 95% used
 or a reached limit. Excluded/unauthorized/skipped current accounts can escape

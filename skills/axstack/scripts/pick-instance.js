@@ -24,18 +24,14 @@ function argumentsFrom(args) {
 
 async function account(instanceId, instance, provider) {
   const value = await accountUsage(instanceId, instance, provider);
-  if (value.state === 'skipped') return { instanceId, weight: 1, score: null, state: value.state, reason: value.reason };
+  if (value.state === 'skipped') return { instanceId, score: null, state: value.state, reason: value.reason };
   const stale = value.state === 'stale';
-  const weight = Object.hasOwn(weights[provider], value.tier) ? weights[provider][value.tier] : 1;
   if (value.utilization >= 95 || value.limitReached) {
-    return { instanceId, weight, score: null, state: 'excluded', stale, reason: 'usage limit' };
+    return { instanceId, score: null, state: 'excluded', stale, reason: 'usage limit' };
   }
-  if (value.unauthorized && value.tokenUnexpired) {
-    return { instanceId, weight, score: null, state: 'excluded', stale, reason: 'unauthorized' };
-  }
-  const unknown = value.utilization === null || stale || value.unauthorized;
-  return { instanceId, weight, score: unknown ? weight : (100 - value.utilization) * weight,
-    state: unknown ? 'unknown' : value.state, stale };
+  const weight = Object.hasOwn(weights[provider], value.tier) ? weights[provider][value.tier] : 1;
+  return { instanceId, score: value.utilization === null ? weight : (100 - value.utilization) * weight,
+    state: value.utilization === null ? 'unknown' : value.state, stale };
 }
 
 try {
@@ -48,8 +44,7 @@ try {
     instance.enabled && instance.driver === drivers[options.provider])) {
     instances.push(await account(instanceId, instance, options.provider));
   }
-  const chosen = instances.filter((instance) => instance.score !== null)
-    .sort((a, b) => b.weight - a.weight || b.score - a.score)[0];
+  const chosen = instances.filter((instance) => instance.score !== null).sort((a, b) => b.score - a.score)[0];
   if (!chosen) {
     console.error('account selection hold: no eligible provider instances');
     process.exitCode = 2;
