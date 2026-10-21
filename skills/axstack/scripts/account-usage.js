@@ -42,6 +42,11 @@ export async function accountUsage(instanceId, instance, provider) {
       'anthropic-beta': 'oauth-2025-04-20', 'user-agent': 'claude-cli/2.1.0 (external, cli)' }
     : { authorization: `Bearer ${credentials.tokens.access_token}`,
       'chatgpt-account-id': credentials.tokens.account_id };
+  const expiry = provider === 'claude' ? credentials.claudeAiOauth.expiresAt
+    : credentials.tokens.expires_at ?? credentials.tokens.expiresAt;
+  const expiryMs = typeof expiry === 'string' ? Date.parse(expiry)
+    : Number.isFinite(expiry) ? expiry < 1e12 ? expiry * 1000 : expiry : NaN;
+  const tokenUnexpired = Number.isFinite(expiryMs) && expiryMs > Date.now();
   const url = provider === 'claude'
     ? process.env.AXSTACK_CLAUDE_USAGE_URL || 'https://api.anthropic.com/api/oauth/usage'
     : process.env.AXSTACK_CODEX_USAGE_URL || 'https://chatgpt.com/backend-api/wham/usage';
@@ -75,5 +80,5 @@ export async function accountUsage(instanceId, instance, provider) {
       value ??= { tier: credentials.claudeAiOauth?.rateLimitTier, utilization: null };
     }
   }
-  return { instanceId, ...value, state, unauthorized };
+  return { instanceId, ...value, state, unauthorized, tokenUnexpired };
 }
