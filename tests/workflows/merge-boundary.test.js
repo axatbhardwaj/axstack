@@ -44,7 +44,7 @@ test('team approval requires counted permission and excludes stale votes', () =>
 });
 
 test('solo approval uses review and diligence; machine markers cannot supply a reply', () => {
-  expect(sentence(watch, '- Approval:')).toMatch(/solo.*authored-review `APPROVE`.*diligence `PASS`.*current head and base/i);
+  expect(sentence(watch, '- Approval:')).toMatch(/solo.*every mode-required authored reviewer receipt.*`APPROVE`.*current head and base.*verified Muse absence allowed.*diligence `PASS`/i);
   const markers = sentence(watch, 'Text carrying a visible machine marker');
   expect(markers).toMatch(/never counts as a user reply/i);
   for (const marker of ['orchestration notices', 'dispatch envelopes', '`<pasted_content>` blocks', 'task notifications', 'tool output', 'PR text']) {
@@ -68,7 +68,7 @@ test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
   checkRule(feedback.replace(/`/g, ''), (text) => prohibits(text, /\bno unresolved\b/i, ...concepts),
     'After the validated Pre-existing thread exception, no unresolved blocking agent-authored thread, top-level blocking comment, or effective blocking review remains.',
     [[/\bno unresolved\b/i, 'unresolved'], [/\bvalidated\b.*\bPre-existing\b.*\bthread exception\b/i, 'no exception']], concepts);
-  expect(sentence(watch, 'Authored review `APPROVE`')).toMatch(/diligence.*`PASS`.*current head and base/i);
+  expect(sentence(watch, 'Every mode-required authored reviewer receipt `APPROVE`')).toMatch(/diligence.*`PASS`.*current head and base/i);
   expect(sentence(watch, 'No `Escalate to user`')).toMatch(/unsettled author Dispatch.*task, PR, dependency, run-wide, or serious-risk.*hold/i);
   expect(sentence(watch, 'Veto:')).toMatch(/no `do-not-merge` label.*no chat `hold`/i);
 });

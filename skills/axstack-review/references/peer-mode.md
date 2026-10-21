@@ -29,10 +29,14 @@ Every published peer verdict is binding `APPROVE` or `REQUEST_CHANGES`.
 Never publish a COMMENT review. APPROVE when no blocker remains open, with
 notes in the body. The bot never merges peer PRs.
 
-First review dispatches `axstack-reviewer-primary` and `axstack-reviewer-peer`
-on the full diff and all six angles, independently with the identical brief
-and an isolated first pass. Never dispatch diligence in peer mode.
-Follow-up uses one reviewer (`axstack-reviewer-primary`) to mark each prior
+Mixed first peer review requires three receipts: `axstack-reviewer-primary`
+(Sol), `axstack-reviewer-peer` (Opus), and `axstack-reviewer-muse`; two suffice
+with verified Muse absence. Each covers the exact SHA and base, full diff and
+all six angles independently with the identical brief and an isolated first pass.
+Single-provider first review keeps its two configured reviewers and never
+dispatches Muse. Peer terms only apply: no authored acceptance or diligence
+requirements are imported. Never dispatch diligence in peer mode.
+Peer follow-up requires exactly one `axstack-reviewer-primary` receipt to mark each prior
 blocker fixed or open, read the author's replies and PR comments, and inspect
 only the delta since the last reviewed head. Read that head from the existing
 bot `verdict head=` marker, not from a new state store. When the last reviewed

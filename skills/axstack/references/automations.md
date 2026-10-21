@@ -282,8 +282,10 @@ publication, and failed salvage verification.
 
 ## Review authority
 
-Peer review follows `axstack-review` peer mode: first review uses two isolated
-configured reviewers and follow-up one reviewer, with diligence excluded.
+Peer review follows `axstack-review` peer mode: mixed first peer review uses
+three isolated receipts, or two with verified Muse absence; single-provider
+first review keeps two. Peer follow-up uses exactly one
+`axstack-reviewer-primary` receipt. Diligence is never dispatched in peer mode.
 Use its code/design-only blocking bar, author-reply finality, delta from the
 existing bot `verdict head=` marker, five-request cap and independent adviser
 panel, and compact output limits. Complete review may publish the

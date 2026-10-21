@@ -31,15 +31,16 @@ retargeting and retirement. Bind readiness to PR, head, base branch identity
 and base SHA, including an unchanged head after retargeting.
 For each current head and base SHA, every merge-ready term must hold:
 
-- Approval: in `solo` mode, authored-review `APPROVE` plus diligence `PASS`, both
-  bound to the current head and base, satisfy approval.
-  The reviewer's provider differs from every provider that authored or repaired
+- Approval: in `solo` mode, every mode-required authored reviewer receipt must
+  `APPROVE` at the current head and base (verified Muse absence allowed), plus
+  diligence `PASS` at that head and base, to satisfy approval.
+  Each reviewer's provider differs from every provider that authored or repaired
   commits in `merge-base..head`, using receipt-recorded provenance.
   Both modes use `git patch-id --stable` of `merge-base..head`.
   A rebase or base-update merge with unchanged patch-id adds no provenance.
   Unknown or mixed provenance and PRs the user wrote by hand post a merge card.
   In `team` mode, require at least one counted collaborator approval at the
-  current head plus the same authored review and diligence.
+  current head plus the same mode-required authored review and diligence.
   Human approval: in `team` mode, count the forge's latest opinionated review
   from each non-author account of type `User` only when it is `APPROVED`, not
   dismissed, and `collaborators/{login}/permission` is write, maintain, or admin.
@@ -66,7 +67,7 @@ For each current head and base SHA, every merge-ready term must hold:
   holds. Checks from other apps may be neutral or skipped; none may be pending.
 - Feedback and revision: the PR is not draft and is mergeable against the
   current base; no unresolved blocking agent-authored thread, top-level blocking comment, or
-  effective blocking review remains after the validated `Pre-existing` thread exception below. Authored review `APPROVE` and diligence
+  effective blocking review remains after the validated `Pre-existing` thread exception below. Every mode-required authored reviewer receipt `APPROVE` and diligence
   `PASS` are bound to the current head and base. No `Escalate to user`
   (apart from the settled verification cause below),
   unsettled author Dispatch, or task, PR, dependency, run-wide, or serious-risk

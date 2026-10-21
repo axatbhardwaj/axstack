@@ -1,5 +1,5 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
@@ -60,13 +60,14 @@ test('B3 peers receive a binding verdict without merge authority', () => {
 });
 
 test('B4 first review is broad and follow-ups stay bounded', () => {
-  positive(peer(), [/first review/i, /axstack-reviewer-primary/i, /axstack-reviewer-peer/i, /full diff/i, /all six angles/i],
-    'First review dispatches axstack-reviewer-primary and axstack-reviewer-peer on the full diff and all six angles.',
-    /full diff/i, 'delta only');
+  positive(peer(), [/mixed first peer review/i, /three receipts/i, /axstack-reviewer-primary/i, /axstack-reviewer-peer/i, /axstack-reviewer-muse/i],
+    'Mixed first peer review needs three receipts from axstack-reviewer-primary, axstack-reviewer-peer, and axstack-reviewer-muse.',
+    /three receipts/i, 'two receipts');
+  expect(peer()).toMatch(/full diff[^.]*all six angles/i);
   negative(peer(), /never/i, [/peer/i, /diligence/i], 'Never dispatch diligence in peer mode.', 'Always');
-  positive(peer(), [/follow-up/i, /one reviewer/i, /prior blockers?/i, /fixed or open/i, /author.*replies/i, /PR comments/i, /only the delta/i, /last reviewed head/i],
-    'Follow-up uses one reviewer to mark prior blockers fixed or open, read author replies and PR comments, and inspect only the delta since the last reviewed head.',
-    /one reviewer/i, 'two reviewers');
+  positive(peer(), [/peer follow-up/i, /exactly one.*receipt/i, /prior blockers?/i, /fixed or open/i, /author.*replies/i, /PR comments/i, /only the delta/i, /last reviewed head/i],
+    'Peer follow-up requires exactly one primary receipt to mark prior blockers fixed or open, read author replies and PR comments, and inspect only the delta since the last reviewed head.',
+    /exactly one/i, 'two');
   positive(peer(), [/new blocker/i, /only/i, /behaviour defect introduced by the delta/i, /missed serious security/i, /data.loss/i, /funds/i],
     'A new blocker qualifies only for a behaviour defect introduced by the delta or missed serious security, data-loss or funds defects.',
     /only/i, 'also');
@@ -123,8 +124,8 @@ test('interactive peer review retains the bounded prompt-only serious-risk path'
 test('peer follow-up and no-diligence exceptions reach shared routing', () => {
   for (const path of ['lifecycle.md', 'role-roster.md']) {
     const source = read(`skills/axstack/references/${path}`).replace(/\s+/g, ' ');
-    positive(source, [/peer follow-up/i, /one reviewer/i],
-      'Peer follow-up uses one reviewer.', /one reviewer/i, 'two reviewers');
+    positive(source, [/peer follow-up/i, /exactly one/i, /axstack-reviewer-primary/i, /receipt/i],
+      'Peer follow-up uses exactly one axstack-reviewer-primary receipt.', /exactly one/i, 'two');
   }
   negative(read('skills/axstack/references/diligence.md').replace(/\s+/g, ' '),
     /never/i, [/peer review/i, /diligence/i], 'Never dispatch diligence for peer review.', 'Always');
@@ -186,9 +187,11 @@ test('B8 authored rubric, diligence and review authority retain their contracts'
 
 test('manager authority uses bounded peer rounds and no process escalation', () => {
   const source = read('skills/axstack/references/automations.md').replace(/\s+/g, ' ');
-  positive(source, [/first review/i, /two isolated configured reviewers/i, /follow-up/i, /one reviewer/i, /diligence excluded/i],
-    'First review uses two isolated configured reviewers and follow-up one reviewer, with diligence excluded.',
-    /one reviewer/i, 'two reviewers');
+  positive(source, [/mixed first peer review/i, /three isolated receipts/i, /two with verified Muse absence/i],
+    'Mixed first peer review uses three isolated receipts, or two with verified Muse absence.',
+    /three isolated receipts/i, 'one receipt');
+  expect(source).toMatch(/peer follow-up uses exactly one[^.]*axstack-reviewer-primary/i);
+  expect(source).toMatch(/diligence is never dispatched in peer mode/i);
   negative(source, /never/i, [/peer/i, /architecture decision/i, /permanent on-chain state change/i, /process approval/i, /ping/i],
     'Never ping for peer architecture decision, permanent on-chain state change or process approval alone.', 'Always');
 });

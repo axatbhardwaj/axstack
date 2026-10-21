@@ -102,7 +102,7 @@ test('scope identity: public docs and local-record exemption describe the propor
     expect(text, `${name}: missing small-change path`).toMatch(/small[^.]*request|small[^.]*issue/i);
   }
   const reviewDocs = workflows.slice(workflows.indexOf('- `axstack-review`'), workflows.indexOf('- `axstack-watch`'));
-  expect(reviewDocs).toMatch(/authored[^.]*eligible/i);
+  expect(reviewDocs).toMatch(/authored[\s\S]*eligible/i);
   expect(workflows).toMatch(/substantial[^.]*approved spec[^.]*matching ticket map/i);
   expect(workflows).toMatch(/Small[^.]*small-change intent/i);
   expect(spec).toMatch(/2026-09-13[^.]*user-requested/i);

@@ -8,7 +8,10 @@
   for authorized standalone maintenance. Other roles never acquire merge authority.
 - `axstack-reviewer-primary` and `axstack-reviewer-peer` are the ordered
   peer pair. In `mixed`, the cross-provider pair is Sol high followed by Opus medium.
-  First peer review uses both. Peer follow-up uses one reviewer under
+  Mixed first peer review adds `axstack-reviewer-muse`: three receipts, or two
+  with verified Muse absence. Single-provider first peer review keeps two and
+  never dispatches Muse. Peer follow-up uses exactly one `axstack-reviewer-primary`
+  receipt under
   [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr); authored review uses this table:
 
   | Preset | Author class | Reviewer (class/effort) |
@@ -17,6 +20,10 @@
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
+  Mixed Sol-authored review requires two receipts (`axstack-reviewer-secondary`
+  and `axstack-reviewer-muse`), or one with verified Muse absence. Mixed
+  Opus-authored review keeps one Sol receipt and no Muse seat. Single-provider
+  authored counts stay one; Muse seats are never dispatched.
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   optional `axstack-advisor-muse` advises without authoring.
   `axstack-arena-candidate-grok`/

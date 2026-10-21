@@ -103,7 +103,7 @@ test('owned-core: review authored mode keeps baseline; adopted scope needs no re
 test('owned-core: merge-ready requires a current independent approval receipt', () => {
   const text = skill('axstack-review');
   expect(text).toMatch(
-    /mode is ready[^.]*independent review receipt[^.]*APPROVE[^.]*non-author[^.]*non-owner[^.]*exact current head/i,
+    /mode is ready[^.]*every mode-required authored reviewer receipt[^.]*APPROVE[^.]*current head and base[^.]*verified Muse absence allowed/i,
   );
   expect(text).toMatch(
     /green CI[^.]*passing tests[^.]*older-head receipt[^.]*UNKNOWN[^.]*never merge-ready/i,
@@ -392,7 +392,7 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through T3[^.]*lifecycle close-out/i);
-  expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
+  expect(lifecycle).toMatch(/merge-ready requires every mode-required authored reviewer receipt[^.]*current diligence `PASS` at that exact head; CI\/tests alone are insufficient/i);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [

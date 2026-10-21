@@ -126,7 +126,7 @@ role.
 
 | Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Haiku xhigh + Sol high |
+| `mixed` | Sol high | Sol high; Opus medium; Muse medium | Astra high / Opus xhigh | Haiku xhigh + Sol high |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
 | `claude-only` | Opus medium | Opus medium; Sonnet high | unavailable / Opus xhigh | Sonnet high (Sol absent) |
 
@@ -168,7 +168,8 @@ malformed catalogs hold. Active runs and resume reuse their snapshot after
 later installation changes without re-resolution.
 
 Peer roles use the stable IDs `axstack-reviewer-primary` and
-`axstack-reviewer-peer`; their provider/class mappings come only from the
+`axstack-reviewer-peer`; mixed first review adds `axstack-reviewer-muse`.
+Their provider/class mappings come only from the
 selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
 is used in the authored mapping and, alongside `axstack-reviewer-primary`,
@@ -260,15 +261,22 @@ for explicit ownership transfer.
   [test-value gate](../skills/axstack/references/test-value.md) to each new or
   changed test; reviewers check added, changed, and removed test hunks, including
   the named keepers or vacuity/obsolescence evidence for removals.
-- `axstack-review` gives peer PRs two isolated same-brief reviewers on the first
-  review and one reviewer on follow-ups; authored PRs receive one eligible
-  cross-family/preset-mapped reviewer. Every reviewer runs in
+- `axstack-review` gives mixed first peer review three receipts (Sol primary,
+  Opus peer, Muse), or two with verified Muse absence. Peer follow-up keeps
+  exactly one primary receipt. Mixed Sol-authored review needs two receipts
+  (Opus secondary and Muse), or one with verified Muse absence; a validated
+  medium/high finding from either seat blocks approval and `repairs` increments
+  once per round. Opus-authored review keeps one Sol primary and no Muse seat.
+  Single-provider first peer review keeps two receipts and authored review
+  keeps one; Muse seats are never dispatched. Every eligible reviewer runs in
   a separate detached checkout, with private evidence preserved before
   removal. First peer reviews and authored reviews cover security,
   correctness, integration, requirements, design, and simplicity; peer follow-ups
   check prior blockers, author replies and the delta, with a full-diff fallback
   when the last-reviewed head or delta cannot be recovered. Report-only
   never publishes; authorized submission binds the exact commit.
+  Peer review uses peer terms only; authored acceptance and diligence do not
+  apply, and diligence is never dispatched in peer mode.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
   repair authority. Within an implementation run, fixes return to the original
@@ -378,8 +386,9 @@ admin permission. A `defi-com` repository, an extra writer, or an incomplete or
 failed readback classes as work (`team`).
 Every other repository is work (`team`).
 
-Solo approval is current-head-and-base cross-provider authored-review `APPROVE`
-plus diligence `PASS`. The reviewer differs from every receipt-recorded provider
+Solo approval requires every mode-required authored reviewer receipt to
+`APPROVE` at the current head and base (verified Muse absence allowed), plus
+diligence `PASS`. Each reviewer differs from every receipt-recorded provider
 that authored or repaired `merge-base..head` commits. Team approval also needs a
 counted non-author collaborator review at the current head. Axstack automation
 votes never count. Unknown or mixed provenance and manually authored PRs need a

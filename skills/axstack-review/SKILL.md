@@ -120,9 +120,10 @@ before an approval or [merge-ready declaration](#authored-mode-own-pr):
   snapshot is accepted without repeated approval.
 
 The mode is ready when the applicable identity matches the candidate, no
-material scope change remains unaccepted, and an independent review receipt
-records `APPROVE` from the required non-author, non-owner reviewer at the exact
-current head. Green CI, passing tests, or an older-head receipt leave readiness
+material scope change remains unaccepted, and every mode-required authored
+reviewer receipt records `APPROVE` at the current head and base (verified Muse
+absence allowed). Every reviewer is independent, non-author and non-owner.
+Green CI, passing tests, or an older-head receipt leave readiness
 `UNKNOWN`, never merge-ready. Readonly investigation may continue while an
 identity gap holds declarations.
 
@@ -157,13 +158,21 @@ Load and follow [Review the candidate](references/review-candidate.md).
 
 These verdicts apply only to PR modes. Codebase findings use coverage status.
 
-- **Peer complete:** first review has both configured reviewer receipts for the
-  exact candidate SHA and current base, covering the identical full brief;
-  follow-up has one current receipt covering the bounded Peer mode brief.
+- **Peer complete:** mixed first peer review has three receipts (Sol primary,
+  Opus peer, Muse), or two with verified Muse absence, for the exact candidate
+  SHA and current base, covering the identical full brief with an isolated
+  first pass. Single-provider first review keeps two configured receipts and
+  never dispatches Muse. Follow-up has exactly one current
+  `axstack-reviewer-primary` receipt covering the bounded Peer mode brief.
   Peer review requires no diligence receipt.
-- **Authored complete:** the one required eligible non-author/non-owner reviewer has
-  a current verified receipt for the exact candidate SHA and current base,
-  covering the whole brief, all six angles, and applicable acceptance.
+- **Authored complete:** mixed Sol-authored review has two receipts (Opus secondary
+  and Muse), or one with verified Muse absence. A validated medium/high finding
+  from either seat blocks; one `repairs` increment is recorded per round.
+  Mixed Opus-authored review keeps one Sol primary receipt with no Muse seat.
+  Single-provider counts stay one and Muse is never dispatched. Every required
+  eligible non-author/non-owner reviewer has a current verified receipt for
+  the exact candidate SHA and current base, covering the whole brief, all six
+  angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
   complete evidence with no blocker permits `APPROVE`.
 - **Authored diligence:** a current `PASS` is required with reviewer approval for
@@ -172,9 +181,9 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
   `REQUEST_CHANGES`.
 
 The owner verifies and synthesizes the mode-required evidence without voting.
-A first peer review with one receipt is incomplete; a peer follow-up requires
-one receipt. An authored reviewer
-receipt count other than one is not the selected mode. Passing tests or reviewer unanimity grants
+A first peer review with fewer than its mode-required receipts is incomplete;
+a peer follow-up requires one primary receipt. An authored reviewer receipt
+count below its mode-required count is incomplete. Passing tests or reviewer unanimity grants
 no merge authority.
 
 ## Template: candidate review brief
@@ -218,10 +227,10 @@ Mode-required exact-revision completeness gates external approval,
 [merge-ready declarations](#authored-mode-own-pr), and authorized submission. It never gates returning
 evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
 
-- Peer mode requires the first-review pair or single follow-up receipt under
+- Peer mode requires its mode-specific first-review receipts or single primary follow-up receipt under
   Peer mode, with validated blockers reported by `REQUEST_CHANGES`; diligence
   is excluded.
-- Authored mode requires its one current eligible configured reviewer receipt and
+- Authored mode requires every mode-required current eligible configured reviewer receipt and
   a separate current diligence receipt; applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.

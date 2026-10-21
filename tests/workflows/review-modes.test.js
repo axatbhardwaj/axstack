@@ -39,27 +39,23 @@ test('review modes: raw scenario contracts cover the amendments', () => {
 
 // The remaining checks are shipped prompt-policy structure, not proof that a
 // future agent will follow the prompts.
-test('review modes: first peer dispatch requires the primary and peer seats', () => {
-  const raw = read('skills/axstack-review/SKILL.md');
+test('review modes: mixed first peer dispatch requires the primary, peer and Muse seats', () => {
+  const raw = read('skills/axstack-review/references/review-candidate.md');
   const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
   checkRule(peer, (text) => requires(text,
-    /peer/i, /exactly two/i, /axstack-reviewer-primary/, /axstack-reviewer-peer/),
-  'Peer mode requires exactly two reviewers: axstack-reviewer-primary and axstack-reviewer-peer.',
-  [[/axstack-reviewer-peer/, 'axstack-reviewer-secondary'], [/exactly two/i, 'exactly one']]);
+    /mixed first peer review/i, /three receipts/i, /axstack-reviewer-primary/,
+    /axstack-reviewer-peer/, /axstack-reviewer-muse/),
+  'Mixed first peer review requires three receipts: axstack-reviewer-primary, axstack-reviewer-peer and axstack-reviewer-muse.',
+  [[/axstack-reviewer-peer/, 'axstack-reviewer-secondary'], [/three receipts/i, 'two receipts']]);
 });
 
 test('review modes: mixed cross-provider peer independence requires isolated sessions', () => {
-  const raw = read('skills/axstack-review/SKILL.md');
+  const raw = read('skills/axstack-review/references/review-candidate.md');
   const peer = raw.slice(raw.indexOf('- **Peer:**'), raw.indexOf('- **Authored:**')).replace(/\s+/g, ' ');
-  checkRule(peer, (text) => requires(text,
-    /mixed/i, /cross-provider/i, /Sol[- ]high/i, /Opus[- ]medium/i, /independence/i,
-    /separate sessions/i, /identical brief/i, /isolated first pass/i),
-  'The mixed cross-provider peer pair uses Sol-high and Opus-medium, with independence requiring separate sessions, the identical brief and an isolated first pass.',
-  [[/cross-provider/i, 'same-provider'], [/Sol[- ]high/i, 'Sol low'],
-    [/Opus[- ]medium/i, 'Opus high'], [/separate sessions/i, 'shared sessions'],
-    [/identical brief/i, 'different briefs'], [/isolated first pass/i, 'shared first pass']],
-  [/cross-provider/i, /Sol[- ]high/i, /Opus[- ]medium/i, /separate sessions/i,
-    /identical brief/i, /isolated first pass/i]);
+  expect(peer).toMatch(/Sol high[^.]*Opus medium/i);
+  expect(peer).toMatch(/identical six-angle brief[^.]*no cross-read/i);
+  expect(peer).toMatch(/cross-provider[^.]*independently isolated/i);
+  expect(peer).toMatch(/isolated first pass/i);
 });
 
 test('review modes: authored routing follows actual author provenance', () => {
@@ -165,8 +161,8 @@ test('review modes: watch repairs and completeness use the selected mode', () =>
   expect(watch).toMatch(/never assume[^.]*author|do not assume[^.]*author/i);
   expect(repair).toMatch(/authored[^.]*review rule/i);
   expect(repair).toMatch(/current authored[^.]*receipt|authored[^.]*current receipt/i);
-  expect(lifecycle).toMatch(/first peer review[^.]*two configured roles[^.]*same brief[^.]*isolated/i);
-  expect(lifecycle).toMatch(/authored[^.]*one eligible role[^.]*author provenance/i);
+  expect(lifecycle).toMatch(/mixed first peer review[^.]*three receipts[^.]*two with verified Muse absence[^.]*same brief[^.]*isolated/i);
+  expect(lifecycle).toMatch(/mixed Sol-authored review[^.]*two receipts[^.]*one with verified Muse absence/i);
 });
 
 test('review modes: neutral reviewer IDs carry each ordered preset pair', () => {

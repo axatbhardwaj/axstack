@@ -17,6 +17,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // aggregate, +5,000 always-loaded), with a one-line reason in the PR body
   // and commit message. Contract text is never trimmed to fit.
   // Advised holds adds shared seat, card, wait and authority rules (+5,000 always-loaded).
+  // Muse review counts add mode-specific receipt and readiness rules (+5,000 always-loaded).
   expect(total).toBeLessThanOrEqual(500000);
-  expect(alwaysLoaded).toBeLessThanOrEqual(35000);
+  expect(alwaysLoaded).toBeLessThanOrEqual(40000);
 });

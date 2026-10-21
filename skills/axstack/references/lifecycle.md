@@ -14,9 +14,12 @@ binding state and receipts to exact revisions.
   Own PRs default to automatic merge under watch §5's predicate.
 - Author: exactly one writer per candidate; accepted fixes return there.
   Workers launch no recursive teams.
-- Reviewers: first peer review = two configured roles with the same brief and isolated first
-  pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
-  authored = one eligible role from author provenance. Each uses a
+- Reviewers: mixed first peer review = three receipts, or two with verified Muse absence,
+  with the same brief and isolated first pass. Single-provider first peer review keeps two.
+  Peer follow-up uses exactly one `axstack-reviewer-primary` receipt under
+  [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr).
+  Mixed Sol-authored review = two receipts, or one with verified Muse absence;
+  Opus-authored and single-provider authored review keep one. Each uses a
   separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
 - Automation review manager and monitors: see
   [Review automation health](#review-automation-health).
@@ -125,9 +128,10 @@ Tracking grants no merge, release, model-substitution, or scope authority.
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; the review automation has no task-owned
-deadline. Merge-ready requires applicable review receipt(s) and current diligence
-`PASS` at the exact head; CI/tests alone are insufficient. Merge-ready
-differs from merged.
+deadline. Merge-ready requires every mode-required authored reviewer receipt to
+`APPROVE` at the current head and base (verified Muse absence allowed), plus
+current diligence `PASS` at that exact head; CI/tests alone are insufficient.
+Merge-ready differs from merged.
 
 ## Review automation health
 

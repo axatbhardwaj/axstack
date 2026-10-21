@@ -21,13 +21,18 @@ This section applies to peer and authored PR modes.
    before async `delegate_task`; report-only scope does not waive checkout isolation or
    private per-dispatch artifacts. Each reviewer uses a separate driver-made disposable detached checkout;
    preserve its private evidence before removal.
-   - **Peer:** first review requires exactly two independent final reviewers,
-     `axstack-reviewer-primary` and `axstack-reviewer-peer` from the routing snapshot.
-     Send both the identical six-angle brief, with no first-pass cross-read or children.
-     The mixed peer pair is cross-provider (Sol high + Opus medium), with independence
-     still from separate sessions, the identical brief and an isolated first pass.
-     Follow-up instead uses the one reviewer and bounded brief in [Peer mode](../SKILL.md#peer-mode-colleague-pr).
-   - **Authored:** exactly one eligible independent reviewer from this complete
+   - **Peer:** mixed first peer review requires three receipts from
+     `axstack-reviewer-primary` (Sol high), `axstack-reviewer-peer` (Opus medium),
+     and `axstack-reviewer-muse`, or two with verified Muse absence, at the exact SHA
+     and base after an isolated first pass. Send each the identical six-angle brief
+     with no cross-read or children. The Sol/Opus pair stays cross-provider and
+     independently isolated. Single-provider first review keeps exactly two
+     configured reviewers and never dispatches Muse.
+     Use [Role roster](../../axstack/references/role-roster.md#role-roster) for
+     verified Muse absence; a launched Muse seat remains outstanding.
+     Peer follow-up requires exactly one `axstack-reviewer-primary` receipt on
+     the bounded brief in [Peer mode](../SKILL.md#peer-mode-colleague-pr).
+   - **Authored:** choose eligible independent reviewers from this complete
      mapping:
 
      | Preset | Actual author provider/class | Reviewer role (configured class/effort) |
@@ -37,6 +42,13 @@ This section applies to peer and authored PR modes.
      | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
      | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 
+     Mixed Sol-authored review requires two receipts from `axstack-reviewer-secondary`
+     and `axstack-reviewer-muse`, or one with verified Muse absence.
+     Either seat's validated medium/high finding blocks approval; record one
+     `repairs` increment per round regardless of seat count.
+     Mixed Opus-authored review keeps one `axstack-reviewer-primary` receipt
+     and no Muse seat. Single-provider presets keep one authored reviewer;
+     Muse seats are never dispatched.
      The diligence receipt is separate and does not count as a reviewer receipt.
 
      From the recorded exact model ID, derive its class and match provenance
@@ -44,9 +56,9 @@ This section applies to peer and authored PR modes.
      An ID with no class is `INCOMPLETE`. Any other author provenance for the
      selected preset is unsupported and `INCOMPLETE`, including its secondary
      reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
-     ask the user. Never derive a reverse pairing from slot position. The
-     reviewer covers the complete brief alone. No author or owner session may
-     review, even if its role or provider label changes.
+     ask the user. Never derive a reverse pairing from slot position.
+     Each required reviewer covers the complete brief alone. No author or owner
+     session may review, even if its role or provider label changes.
 
    Mixed authored review is cross-provider. Single-provider review uses different
    models, not cross-provider independence. The claude-only Sonnet explanation
@@ -69,7 +81,7 @@ This section applies to peer and authored PR modes.
    `FINDINGS` receipt returns validated findings to the same author in the same
    round; it is not an extra `REQUEST_CHANGES` round.
 3. **Inspect all six angles.** In the first peer review each reviewer covers every angle;
-   in authored mode the one reviewer covers all six angles. Peer follow-ups use
+   in authored mode each required reviewer covers all six angles. Peer follow-ups use
    only the bounded checks in Peer mode instead of this full inspection:
    1. Security and trust boundaries.
    2. Correctness, failures, and edge cases.

@@ -10,7 +10,7 @@ const compact = (path) => read(path).replace(/\s+/g, ' ');
 test('watch and lifecycle require diligence PASS at the exact head', () => {
   const watch = compact('skills/axstack-watch/SKILL.md').split('## 5. State readiness precisely')[1]?.split('## 6.')[0];
   expect(watch).toMatch(/A current diligence `PASS` at the exact head is required before any merge-ready statement\./);
-  expect(compact('skills/axstack/references/lifecycle.md')).toMatch(/Merge-ready requires applicable review receipt\(s\) and current diligence `PASS` at the exact head; CI\/tests alone are insufficient\./);
+  expect(compact('skills/axstack/references/lifecycle.md')).toMatch(/Merge-ready requires every mode-required authored reviewer receipt to `APPROVE` at the current head and base[^.]*current diligence `PASS` at that exact head; CI\/tests alone are insufficient\./);
 });
 
 test('review keeps diligence independent and requires its PASS for merge-ready', () => {
@@ -23,8 +23,8 @@ test('review keeps diligence independent and requires its PASS for merge-ready',
 test('authored receipt counts exclude the separate diligence receipt', () => {
   const review = compact('skills/axstack-review/SKILL.md');
   expect(review).toMatch(/The diligence receipt is separate and does not count as a reviewer receipt\./);
-  expect(review).toMatch(/an authored reviewer receipt count other than one is not the selected mode\./i);
-  expect(review).toMatch(/Authored mode requires its one current eligible configured reviewer receipt and a separate current diligence receipt;/);
+  expect(review).toMatch(/an authored reviewer receipt count below its mode-required count is incomplete\./i);
+  expect(review).toMatch(/Authored mode requires every mode-required current eligible configured reviewer receipt and a separate current diligence receipt;/);
 });
 
 test('implement counts one failing round toward step-back and preserves the PASS gate', () => {
