@@ -73,6 +73,8 @@ test('Muse resolves only exact Wonder and Spark pins with advertised medium reas
     expect(JSON.parse(result.output)).toMatchObject({ provider: 'muse', providerInstanceId: 'muse',
       model: pin, effortOption: { id: 'reasoningEffort', value: 'medium' } });
   }
+  held(resolve(data, ['--model', 'null'], 'muse', 'medium'), /exact model pin/i);
+  held(resolve(data, ['--class', 'sol'], 'muse', 'medium'), /exact model pin/i);
   held(resolve(data, ['--model', 'muse-wonder-full-1.2'], 'muse', 'medium'), /missing requested model/i);
   data.providers.at(-1).models[0].options[0].options = [{ id: 'low', isDefault: true }];
   held(resolve(data, ['--model', 'muse-wonder-full-1.0'], 'muse', 'medium'), /unsupported effort medium/i);

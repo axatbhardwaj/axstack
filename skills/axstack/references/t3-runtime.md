@@ -45,8 +45,8 @@ When a Codex or Claude driver starts or resumes a run and at the start of every 
 it runs `scripts/pick-instance.js --provider <its own provider> --json`.
 Muse drivers skip the picker. A Muse driver invoking `pick-instance.js --provider muse`
 gets exit 1 and keeps its current binding; it never selects another provider from that error.
-Each Codex or Claude driver must read its current binding with `t3_thread_configuration`
-and save picker JSON in private run evidence.
+Every driver must read its current binding with `t3_thread_configuration`,
+and Codex and Claude drivers save picker JSON in private run evidence.
 If the driver's own current instance is `excluded` for a usage limit and an eligible
 same-provider sibling exists, it must switch itself via `t3_thread_configure` to the
 chosen sibling instance, keeping the same provider, model and effort/options, then continue.

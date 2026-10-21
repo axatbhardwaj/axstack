@@ -34,7 +34,15 @@ test('mixed Muse seats plan through the synthetic muse instance with exact mediu
       expect(JSON.parse(result.output)).toMatchObject({ target: { providerInstanceId: 'muse', model,
         options: [{ id: 'reasoningEffort', value: 'medium' }] }, runtimeMode: 'full-access' });
     }
-    catalog.providers.at(-1).models[0].options[0].options = [{ id: 'low' }];
+    catalog.providers.push({ ...catalog.providers.at(-1), providerInstanceId: 'museAlt' });
+    writeFileSync(picker, JSON.stringify({ chosenInstanceId: 'museAlt' }));
+    const wrongInstance = run('axstack-advisor-muse');
+    expect(wrongInstance.status).toBe(2);
+    expect(wrongInstance.output).toBe('');
+    expect(wrongInstance.error).toContain('picker instance museAlt does not bind provider muse');
+    writeFileSync(picker, JSON.stringify({ chosenInstanceId: 'muse' }));
+    catalog.providers.find((provider) => provider.providerInstanceId === 'muse').models[0]
+      .options[0].options = [{ id: 'low' }];
     const unavailable = run('axstack-advisor-muse');
     expect(unavailable.status).toBe(2);
     expect(unavailable.error).toContain('unsupported effort medium');
