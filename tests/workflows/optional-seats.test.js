@@ -9,9 +9,6 @@ const optional = [
   'axstack-research-web-google', 'axstack-research-x', 'axstack-checker',
   'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
   'axstack-explore-codebase-flash',
-  'axstack-advisor-muse', 'axstack-reviewer-muse', 'axstack-arena-judge-muse',
-  'axstack-explore-codebase-spark', 'axstack-research-code-spark',
-  'axstack-debug-investigator-4',
 ];
 
 test('scenario corpus distinguishes optional absence from required and launched holds', () => {
@@ -21,31 +18,9 @@ test('scenario corpus distinguishes optional absence from required and launched 
     'optional-present', 'optional-absent', 'mixed-provider-loss',
     'required-adviser-outage', 'required-fable-outage', 'model-null-required',
     'auditor-unlaunchable', 'auditor-launched',
-    'muse-missing-medium',
   ]);
   const loss = data.cases.find(({ id }) => id === 'mixed-provider-loss');
   expect(loss.expected.reason).toMatch(/fewer than two (?:different )?providers/i);
-});
-
-test('Muse absence is recorded before launch, excluded from counts, and a launched seat remains outstanding', () => {
-  const roster = read('skills/axstack/references/role-roster.md');
-  expect(roster).toMatch(/verified Muse absence[^.]*launch failure[^.]*trust\/login prompt[^.]*prompt block[^.]*dispatch-plan[^.]*exit-2[^.]*muse usage limit/i);
-  expect(roster).toMatch(/muse usage limit[^.]*not yet launched[^.]*recorded reset[^.]*later Muse turn completes[^.]*run ends/i);
-  expect(roster).toMatch(/verified Muse absence[^.]*excluded from every count[^.]*never[^.]*no.agreement[^.]*phase hold/i);
-  expect(roster).toMatch(/launched Muse seat[^.]*outstanding[^.]*T3 auto.continue/i);
-  const cases = JSON.parse(readFileSync(`${root}/tests/workflows/optional-seat-scenarios.json`, 'utf8')).cases;
-  const missing = cases.find(({ id }) => id === 'muse-missing-medium');
-  expect(missing.input).toMatchObject({ role: 'axstack-advisor-muse', effort: 'medium', dispatchStarted: false });
-  expect(missing.expected.action).toMatch(/record absent \(dispatch-plan exit-2[^)]*\)/i);
-  expect(missing.expected.forbidden.join(' ')).toMatch(/phase hold|count.*adviser/i);
-});
-
-test('Spark dispatch stays optional and scoped to whole-question Scout and needed code Research', () => {
-  const scout = read('skills/axstack-scout/SKILL.md');
-  const research = read('skills/axstack-research/SKILL.md');
-  expect(scout).toMatch(/mixed[^.]*one optional[^.]*axstack-explore-codebase-flash[^.]*axstack-explore-codebase-spark[^.]*whole[^.]*question[^.]*eight seats/i);
-  expect(research).toMatch(/axstack-research-code-spark[^.]*optional third code branch[^.]*code source class is needed/i);
-  expect(research).toMatch(/Spark-only claim[^.]*unverified/i);
 });
 
 test('optional seats are enumerated and absent only after a recorded failure', () => {
@@ -153,7 +128,7 @@ test('research and arena continue after optional dropout, with required seats he
   expect(research).toMatch(/Required branches hold their affected work/i);
   expect(arena).toMatch(/optional[^.]*candidate[^.]*absent[^.]*continue/i);
   expect(arena).toMatch(/required adviser, candidate, or judge[^.]*holds/i);
-  expect(align).toMatch(/Astra or Opus[^.]*unavailable[^.]*hold Align/i);
+  expect(align).toMatch(/adviser[^.]*unavailable[^.]*hold/i);
   for (const prose of [research, arena]) {
     expect(prose).toMatch(/launch failure[^.]*trust\/login prompt[^.]*prompt block/i);
   }

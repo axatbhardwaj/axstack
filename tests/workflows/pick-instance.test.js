@@ -22,10 +22,8 @@ function fixture(provider, accounts) {
     const dir = account.defaultHome ? `${home}/.${provider}` : `${home}/account-${index}`;
     mkdirSync(dir, { recursive: true });
     const credentials = provider === 'claude'
-      ? { claudeAiOauth: { accessToken: `${token}-${id}`, rateLimitTier: account.tier,
-        ...(account.expiresAt !== undefined && { expiresAt: account.expiresAt }) } }
-      : { tokens: { access_token: `${token}-${id}`, account_id: id,
-        ...(account.expiresAt !== undefined && { expires_at: account.expiresAt }) } };
+      ? { claudeAiOauth: { accessToken: `${token}-${id}`, rateLimitTier: account.tier } }
+      : { tokens: { access_token: `${token}-${id}`, account_id: id } };
     if (!account.missing) writeFileSync(`${dir}/${provider === 'claude' ? '.credentials.json' : 'auth.json'}`,
       JSON.stringify(credentials));
     replies.set(id, { body: account.body, status: account.status });
@@ -196,7 +194,7 @@ test('failed usage requests without cache rank by tier alone and mark uncertaint
   expect(result.data.instances[0]).toMatchObject({ score: 1, state: 'unknown' });
 });
 
-test('stale low usage becomes unknown-scored while stale exhaustion stays excluded', async () => {
+test('429 uses expired per-account usage and preserves exhausted-account exclusion', async () => {
   const f = fixture('codex', [
     { id: 'available', status: 429, body: { error: token } },
     { id: 'exhausted', status: 429, body: { error: token } },
@@ -213,7 +211,7 @@ test('stale low usage becomes unknown-scored while stale exhaustion stays exclud
   const result = await f.run();
   expect(result.status).toBe(0);
   expect(result.data.chosenInstanceId).toBe('available');
-  expect(result.data.instances[0]).toMatchObject({ score: 4, state: 'unknown', stale: true });
+  expect(result.data.instances[0]).toMatchObject({ score: 240, state: 'stale' });
   expect(result.data.instances[1]).toMatchObject({ score: null, state: 'excluded', stale: true });
 });
 
@@ -232,7 +230,7 @@ test('corrupt cache cannot block a healthy usage request', async () => {
   }
 });
 
-test('expired cache refreshes successfully and network failure marks cached usage unknown', async () => {
+test('expired cache refreshes successfully and network failure retains the last usage', async () => {
   const f = fixture('claude', [{ id: 'account', tier: 'default_claude_max_20x', body: claudeUsage(10, 40) }]);
   expect((await f.run()).data.instances[0].score).toBe(240);
   expireCache(f);
@@ -243,58 +241,7 @@ test('expired cache refreshes successfully and network failure marks cached usag
   servers.pop().stop(true);
   const result = await f.run();
   expect(result.status).toBe(0);
-  expect(result.data.instances[0]).toMatchObject({ score: 4, state: 'unknown', stale: true });
-});
-
-test('higher tier wins before headroom and JSON exposes each tier weight', async () => {
-  const f = fixture('claude', [
-    { id: 'max20', tier: 'default_claude_max_20x', body: claudeUsage(80, 80) },
-    { id: 'max5', tier: 'default_claude_max_5x', body: claudeUsage(0, 0) },
-  ]);
-  const result = await f.run();
-  expect(result.data.chosenInstanceId).toBe('max20');
-  expect(result.data.instances.map(({ weight }) => weight)).toEqual([4, 1]);
-});
-
-test('unexpired 401/403 exclude while expired or unverified token expiry remains unknown', async () => {
-  for (const status of [401, 403]) {
-    const f = fixture('claude', [
-      { id: 'unexpired', tier: 'default_claude_max_20x', expiresAt: Date.now() + 3600000, status },
-      { id: 'expired', tier: 'default_claude_max_20x', expiresAt: Date.now() - 3600000, status },
-      { id: 'unknown-expiry', tier: 'default_claude_max_20x', status },
-      { id: 'fresh', tier: 'default_claude_max_20x', body: claudeUsage(80, 80) },
-    ]);
-    mkdirSync(`${f.home}/cache/axstack`, { recursive: true });
-    writeFileSync(`${f.home}/cache/axstack/usage.json`, JSON.stringify(Object.fromEntries(
-      ['unexpired', 'expired', 'unknown-expiry'].map((id, index) => [
-        JSON.stringify(['claude', `${f.home}/account-${index}`]),
-        { updatedAt: Date.now() - 360000, tier: 'default_claude_max_20x', utilization: 0, limitReached: false },
-      ]))));
-    const result = await f.run();
-    expect(result.data.chosenInstanceId).toBe('fresh');
-    expect(result.data.instances.map(({ state }) => state)).toEqual(['excluded', 'unknown', 'unknown', 'fresh']);
-  }
-  const f = fixture('codex', [
-    { id: 'unexpired', expiresAt: Math.floor(Date.now() / 1000) + 3600, status: 401 },
-    { id: 'unknown-expiry', status: 401 },
-  ]);
-  expect((await f.run()).data.instances.map(({ state }) => state)).toEqual(['excluded', 'unknown']);
-});
-
-test('stale low usage cannot outrank a fresh sibling', async () => {
-  const f = fixture('codex', [
-    { id: 'stale', status: 503 },
-    { id: 'fresh', body: codexUsage('pro', 80, 80) },
-  ]);
-  mkdirSync(`${f.home}/cache/axstack`, { recursive: true });
-  writeFileSync(`${f.home}/cache/axstack/usage.json`, JSON.stringify({
-    [JSON.stringify(['codex', `${f.home}/account-0`])]: {
-      updatedAt: Date.now() - 360000, tier: 'pro', utilization: 0, limitReached: false,
-    },
-  }));
-  const result = await f.run();
-  expect(result.data.chosenInstanceId).toBe('fresh');
-  expect(result.data.instances[0]).toMatchObject({ score: 4, state: 'unknown', stale: true });
+  expect(result.data.instances[0]).toMatchObject({ score: 80, state: 'stale' });
 });
 
 test('Codex homePath fallback and tilde expansion reach the configured credentials', async () => {

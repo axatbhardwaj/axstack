@@ -25,17 +25,17 @@ for (const name of ['axstack-align', 'axstack-spec']) {
     'By default, edited draft wording needs new receipts on the updated revision.',
     [[/\b(?:requires|needs)\b/i, 'forgoes'], [/\bby default\b/i, 'Only when claimed material']]);
   rule(`${name} delta confirmation is the only changed-text exception`, source,
-    [/only exception/i, /default/i, /each adviser that ran/i,
+    [/only exception/i, /default/i, /each configured adviser seat/i,
       /confirms/i, /driver.s meaning-preservation claim/i],
-    "The only exception to this default is delta confirmation, available only after each adviser that ran confirms the driver's meaning-preservation claim.",
+    "The only exception to this default is delta confirmation, available only after each configured adviser seat confirms the driver's meaning-preservation claim.",
     [[/\bonly exception\b/i, 'optional exception'],
-      [/\bonly after\b/i, 'before'], [/\beach adviser that ran\b/i, 'one adviser seat']]);
+      [/\bonly after\b/i, 'before'], [/\beach configured adviser seat\b/i, 'one adviser seat']]);
   rule(`${name} each seat confirms a meaning-preserving delta`, source,
     [/driver claims/i, /edit/i, /preserves/i, /criterion/i, /scope/i, /decision/i,
-      /instruction meaning/i, /each adviser that ran/i, /on the delta/i,
+      /instruction meaning/i, /each configured adviser seat/i, /on the delta/i,
       /prior receipt/i, /new revision/i],
-    'If the driver claims an edit preserves criterion, scope, decision and instruction meaning, each adviser that ran verifies that claim on the delta, naming its prior receipt, the delta and the new revision.',
-    [[/\b(?:confirms|verifies)\b/i, 'ignores'], [/\beach adviser that ran\b/i, 'one adviser seat'],
+    'If the driver claims an edit preserves criterion, scope, decision and instruction meaning, each configured adviser seat verifies that claim on the delta, naming its prior receipt, the delta and the new revision.',
+    [[/\b(?:confirms|verifies)\b/i, 'ignores'], [/\beach configured adviser seat\b/i, 'one adviser seat'],
       [/\bpreserves\b/i, 'changes']]);
   rule(`${name} disagreement or consequential changes need full review`, source,
     [/seat disagrees/i, /blocking finding|blocker/i, /high-stakes decision/i, /meaning changes/i,

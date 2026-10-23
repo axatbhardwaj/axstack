@@ -67,14 +67,13 @@ immediately before dispatch, receipt consumption or recovery.
 
 Before each Claude or Codex dispatch or launch, the driver runs
 `bun skills/axstack/scripts/pick-instance.js --provider claude|codex`.
-The picker groups eligible accounts by tier weight (4 before 1), then selects
-the highest score within the top non-empty group. Save its `--json` output,
-including each instance's `weight`, in private evidence and record the chosen
-instance ID. `--settings <path>` overrides
+The picker selects the enabled account of that provider's T3 driver with the
+highest tier-weighted headroom. Save its `--json` output in private evidence
+and record the chosen instance ID. `--settings <path>` overrides
 `~/.t3/userdata/settings.json`.
 
 For known usage, the score equals `(100 − max known window utilization) × tier weight`.
-For unknown utilization or stale usage, the score equals the tier weight alone.
+For unknown utilization, the score equals the tier weight alone.
 The maximum uses the known utilization windows; an unavailable window is not
 assumed to be empty.
 
@@ -88,15 +87,9 @@ assumed to be empty.
 For an unknown tier, the weight equals 1.
 An account with any window at ≥95% or a reported limit reached is excluded.
 Accounts with missing credentials are skipped.
-Usage is cached for five minutes. A failed request with stale cached usage has
-state `unknown` and a tier-only score; stale usage at ≥95% or with a reported
-limit reached still excludes the account. Without cache, usage is unknown.
-Below the usage hard limit, a 401/403 excludes only when the on-disk token is
-unexpired (Claude `claudeAiOauth.expiresAt`; Codex token expiry when present).
-Otherwise its state is `unknown`. The picker never refreshes OAuth. This differs from `sync-default`,
-which excludes unauthorized only for the current default instance. Codex's plan
-is unknown until a successful usage response, so an uncached failed Codex
-request has weight 1.
+Usage is cached for five minutes. Failed requests use stale usage when present,
+otherwise a tier-only unknown score. Codex's plan is unknown until a successful
+usage response, so an uncached failed Codex request has weight 1.
 
 Exit 0 prints the selected instance or JSON.
 For dispatched roles, only error exit 1 permits fallback to the canonical instance after validating availability.
@@ -110,11 +103,7 @@ and effort remain fixed. Dispatched roles never fail over mid-thread.
 See [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
 for schedule rebinding and the [policy carve-out](workflows.md#automatic-merge-boundaries).
 
-The opt-in `sync-default.js` prefers higher-tier accounts before comparing
-reserve bands (with a pool) or elapsed-minus-used pace. A higher band, a
-ten-point pace lead within a band, or current exclusion can rotate the New-chat
-default. `AXSTACK_SYNC_POOL` enables cross-driver weekly comparison and
-model/effort selection; without it, only the same-driver account changes.
+The opt-in `sync-default.js` rotates the New-chat default by elapsed-minus-used pace at a ten-point lead or current exclusion. `AXSTACK_SYNC_POOL` enables cross-driver weekly comparison and model/effort selection; without it, only the same-driver account changes.
 
 ## Account selection environment
 

@@ -60,28 +60,6 @@ test('capabilities uses an explicit preset pin as given ahead of a class', () =>
   held(resolve(capabilities, ['--model', 'missing', '--class', 'sol']), /missing.*model|model.*missing/i);
 });
 
-test('Muse resolves only exact Wonder and Spark pins with advertised medium reasoning effort', () => {
-  const data = fresh();
-  data.providers.push({ providerInstanceId: 'muse', driverKind: 'muse', models: [
-    entry('muse-wonder-full-1.0', 'reasoningEffort', ['low', 'medium']),
-    entry('muse-spark-1.3', 'reasoningEffort', ['medium']),
-    entry('muse-wonder-full-1.1', 'reasoningEffort', ['medium']),
-  ] });
-  for (const pin of ['muse-wonder-full-1.0', 'muse-spark-1.3']) {
-    const result = resolve(data, ['--model', pin], 'muse', 'medium');
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.output)).toMatchObject({ provider: 'muse', providerInstanceId: 'muse',
-      model: pin, effortOption: { id: 'reasoningEffort', value: 'medium' } });
-  }
-  held(resolve(data, ['--model', 'null'], 'muse', 'medium'), /exact model pin/i);
-  held(resolve(data, ['--class', 'sol'], 'muse', 'medium'), /exact model pin/i);
-  held(resolve(data, ['--model', 'muse-wonder-full-1.2'], 'muse', 'medium'), /missing requested model/i);
-  data.providers.at(-1).models[0].options[0].options = [{ id: 'low', isDefault: true }];
-  held(resolve(data, ['--model', 'muse-wonder-full-1.0'], 'muse', 'medium'), /unsupported effort medium/i);
-  data.providers.at(-1).models[0].options[0].id = 'effort';
-  held(resolve(data, ['--model', 'muse-wonder-full-1.0'], 'muse', 'medium'), /unsupported effort medium/i);
-});
-
 for (const preset of ['mixed', 'claude-only']) {
   test(`capabilities: ${preset} mapping and monitoring bind Haiku 5.5 high without substitution`, () => {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));

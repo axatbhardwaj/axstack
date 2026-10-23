@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
-const bindings = { codex: 'codex', claude: 'claudeAgent', grok: 'grok', antigravity: 'antigravity', muse: 'muse' };
-const effortIds = { codex: 'reasoningEffort', claude: 'effort', grok: 'reasoningEffort', muse: 'reasoningEffort' };
+const bindings = { codex: 'codex', claude: 'claudeAgent', grok: 'grok', antigravity: 'antigravity' };
+const effortIds = { codex: 'reasoningEffort', claude: 'effort', grok: 'reasoningEffort' };
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 
 function argumentsFrom(args) {
@@ -21,7 +21,7 @@ function argumentsFrom(args) {
     }
   }
   if (!options.provider || !options.capabilities || !options.effort) {
-    throw new Error('expected --provider codex|claude|grok|antigravity|muse --capabilities path --effort level');
+    throw new Error('expected --provider codex|claude|grok|antigravity --capabilities path --effort level');
   }
   return options;
 }
@@ -46,9 +46,6 @@ function providerFrom(catalog, provider) {
 }
 
 function modelFrom(models, { provider, model: pin, class: modelClass, excluded, effort }) {
-  if (provider === 'muse' && (!pin || pin === 'null')) {
-    throw new Error('Muse roles require an exact model pin');
-  }
   if (pin && pin !== 'null') {
     const model = models.find((model) => model.id === pin && !excluded.includes(model.id));
     if (!model) throw new Error(`missing requested model ${pin}`);

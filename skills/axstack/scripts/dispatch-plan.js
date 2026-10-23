@@ -143,7 +143,7 @@ function plan(argv, io) {
   const chosen = readJSON(args['--capabilities']).providers
     .filter((provider) => provider.providerInstanceId === picker.chosenInstanceId);
   if (chosen.length !== 1 || chosen[0].driverKind !== providerInstanceId
-    || (['grok', 'antigravity', 'muse'].includes(role.provider) && picker.chosenInstanceId !== providerInstanceId)) {
+    || (['grok', 'antigravity'].includes(role.provider) && picker.chosenInstanceId !== providerInstanceId)) {
     hold(`picker instance ${picker.chosenInstanceId} does not bind provider ${role.provider}`);
   }
   if (!Array.isArray(chosen[0].models)) {

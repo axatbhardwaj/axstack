@@ -159,15 +159,10 @@ rule('superseded-head or base reply clears nothing at new revisions',
   [/\breply bound to a superseded head or base\b/i, /\bclears nothing\b/i, /\bnew head or base\b/i],
   'At the new head or base, a reply bound to a superseded head or base clears nothing.');
 rule('4.7: self-close is bounded and agreed',
-  [/\bevery adviser that ran\b/i, /\bsame option\b/i,
-    /\bone advice-driven attempt per PR and cause kind\b/i, /\bclose the cause\b/i, /\bexisting authority\b/i],
-  'Every adviser that ran recommends the same option to permit one advice-driven attempt per PR and cause kind to close the cause within existing authority.');
-rule('4.7: single-provider self-close needs its configured adviser to run and agree',
-  [/\bsingle-provider\b/i, /\bone configured adviser\b/i, /\bmust (?:have )?run\b/i,
-    /\bagree with the driver\b/i, /\bself-close\b/i],
-  'In a single-provider preset, the one configured adviser must run and agree with the driver for self-close.',
-  undefined, [[/\bmust (?:have )?run\b/i, 'may be absent'],
-    [/\bagree with the driver\b/i, 'disagree with the driver']]);
+  [/\bafter advice\b/i, /\bper PR and cause kind\b/i, /\bonce\b/i, /\bclose\b.*\bcause\b/i, /\bexisting authority\b/i, /\bonly\b.*\badvisers agree\b/i],
+  'After advice, per PR and cause kind the driver can act once to close the cause within existing authority only when advisers agree.');
+rule('4.7: single adviser agrees with driver for self-close', [/\bsingle-provider\b/i, /\bself-close\b/i, /\badviser\b.*\bmust agree\b.*\bdriver\b/i],
+  'In single-provider presets self-close requires the adviser must agree with the driver.');
 rule('4.7: split or single-adviser disagreement raises card',
   [/\bpost the card\b/i, /\bsplit or a single-adviser disagreement\b/i, /\bwith the driver\b/i],
   'Post the card when there is a split or a single-adviser disagreement with the driver.');

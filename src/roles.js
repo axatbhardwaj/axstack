@@ -1,13 +1,8 @@
 const PROVIDER_BOUNDS = Object.freeze({
-  mixed: new Set(['codex', 'claude', 'grok', 'antigravity', 'muse']),
+  mixed: new Set(['codex', 'claude', 'grok', 'antigravity']),
   'codex-only': new Set(['codex']),
   'claude-only': new Set(['claude']),
 });
-
-const MUSE_ABSENCE_IDS = new Set([
-  'axstack-advisor-muse', 'axstack-reviewer-muse', 'axstack-arena-judge-muse',
-  'axstack-explore-codebase-spark', 'axstack-research-code-spark',
-]);
 
 const CLASS_PROVIDERS = Object.freeze({
   fable: 'claude', opus: 'claude', sonnet: 'claude', haiku: 'claude',
@@ -98,8 +93,7 @@ export function assessRoleReadiness(roles, preset) {
     (preset === 'mixed' && role.id === 'axstack-arena-candidate-grok' && role.provider === 'grok') ||
     (preset === 'mixed' && role.id === 'axstack-arena-candidate-antigravity' && role.provider === 'antigravity') ||
     (preset === 'codex-only' && ['axstack-advisor-opus', 'axstack-escalation-fable', 'axstack-arena-judge-opus', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity', 'axstack-explore-codebase-flash'].includes(role.id)) ||
-    (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity', 'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-explore-codebase-luna', 'axstack-explore-codebase-flash'].includes(role.id)) ||
-    (preset !== 'mixed' && MUSE_ABSENCE_IDS.has(role.id))
+    (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra', 'axstack-research-web-google', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity', 'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-explore-codebase-luna', 'axstack-explore-codebase-flash'].includes(role.id))
   );
   for (const role of roles) {
     if (!bounds.has(role.provider)) {
