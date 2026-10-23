@@ -6,6 +6,7 @@ Example: bun scripts/pr-shape.js --base main --head HEAD
 
 --base  Required actual PR base (parent branch for a stacked child)
 --head  Required candidate commit or branch
+--source Optional source ref for the read-only sync term; no source means n/a
 --help  Show flags, example, bucket definitions and exit codes
 
 Read-only Git; writes nothing, retains no state. Prints a bounded JSON summary:
@@ -17,15 +18,18 @@ Generated means linguist-generated set or true in .gitattributes at the head;
 uses the destination path for renames. Unset, false and unspecified are excluded.
 Ignores system/global attributes; local info/attributes causes an unknown bucket.
 Never subtract buckets; formatter-only changes require manual disclosure.
-No cohesion or approval verdict. Exit codes: 0 measured, 1 input/Git error,
-2 incomplete (no merge-base or unavailable committed-attribute evidence).
+Sync reports B <= H AND (H <= S OR (B <= S AND H tree == S tree)).
+Ancestor exit 1 means fail; other Git errors or missing source objects mean unknown.
+No term grants authority. No cohesion or approval verdict.
+Exit codes: 0 measured (including failed terms), 1 input/Git error,
+2 incomplete (unknown sync, no merge-base or unavailable committed-attribute evidence).
 `;
 
 function optionsFrom(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
-    if (!['--base', '--head'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
+    if (!['--base', '--head', '--source'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
     if (!value || value.startsWith('-')) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
@@ -42,6 +46,34 @@ function run(argv, input) {
   const result = Bun.spawnSync(argv, { stdin: input === undefined ? 'ignore' : new TextEncoder().encode(input),
     stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GIT_ATTR_NOSYSTEM: '1' } });
   return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
+}
+
+function syncTerm(inputs, gitCommand) {
+  const evidence = { base: inputs.base, head: inputs.head, source: null, commands: [] };
+  if (!inputs.sourceRef) return { status: 'n/a', evidence: { ...evidence, reason: 'no --source supplied' } };
+  const query = (...args) => {
+    const argv = gitCommand(...args);
+    evidence.commands.push(argv);
+    return run(argv);
+  };
+  const result = (status, reason) => ({ status, evidence: { ...evidence, reason } });
+  const source = query('rev-parse', '--verify', '--end-of-options', `${inputs.sourceRef}^{commit}`);
+  if (source.code) return result('unknown', source.stderr.trim());
+  inputs.source = evidence.source = source.stdout.trim();
+  const ancestor = (a, b) => query('merge-base', '--is-ancestor', a, b).code;
+  const baseHead = ancestor(inputs.base, inputs.head);
+  if (baseHead !== 0) return result(baseHead === 1 ? 'fail' : 'unknown', 'base ancestor of head');
+  const headSource = ancestor(inputs.head, inputs.source);
+  if (headSource === 0) return result('pass', 'base <= head <= source');
+  if (headSource !== 1) return result('unknown', 'head/source ancestry unavailable');
+  const baseSource = ancestor(inputs.base, inputs.source);
+  if (baseSource !== 0) return result(baseSource === 1 ? 'fail' : 'unknown', 'base ancestor of source');
+  const headTree = query('rev-parse', '--verify', `${inputs.head}^{tree}`);
+  const sourceTree = query('rev-parse', '--verify', `${inputs.source}^{tree}`);
+  if (headTree.code || sourceTree.code) return result('unknown', 'tree objects unavailable');
+  evidence.headTree = headTree.stdout.trim();
+  evidence.sourceTree = sourceTree.stdout.trim();
+  return result(evidence.headTree === evidence.sourceTree ? 'pass' : 'fail', 'base <= source and equal head/source trees');
 }
 
 function numstat(text) {
@@ -87,11 +119,13 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       return result.stdout.trim();
     };
     const inputs = { repo, baseRef: options['--base'], headRef: options['--head'], base: resolve('--base'), head: resolve('--head') };
+    if (options['--source']) inputs.sourceRef = options['--source'];
+    const sync = syncTerm(inputs, gitCommand);
     const mergeCommand = gitCommand('merge-base', inputs.base, inputs.head);
     const merge = run(mergeCommand);
     if (merge.code) {
       const unknown = { status: 'unknown', evidence: { commands: [mergeCommand], reason: merge.stderr.trim() || 'no common ancestor' } };
-      io.stdout(`${JSON.stringify({ inputs, mergeBase: { ...unknown, value: null }, totals: unknown,
+      io.stdout(`${JSON.stringify({ inputs, sync, mergeBase: { ...unknown, value: null }, totals: unknown,
         buckets: { lockfiles: unknown, generated: unknown } })}\n`);
       return 2;
     }
@@ -118,13 +152,13 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       }
       generated = summarize(rows.filter((row) => paths.has(row.path)), attrEvidence);
     }
-    io.stdout(`${JSON.stringify({ inputs, mergeBase: { status: 'pass', value: mergeBase, evidence: { commands: [mergeCommand] } },
+    io.stdout(`${JSON.stringify({ inputs, sync, mergeBase: { status: 'pass', value: mergeBase, evidence: { commands: [mergeCommand] } },
       totals: summarize(rows, { commands: [diffCommand], select: 'all records; no exclusions' }),
       buckets: { lockfiles: summarize(rows.filter((row) => lockfiles.includes(row.path.split('/').at(-1))),
         { commands: [diffCommand], select: 'destination basename is exactly one of lockfileNames', lockfileNames: lockfiles }), generated },
       disclosures: 'Buckets may overlap. Never subtract them from totals. Formatter-only changes require manual disclosure; cohesion is a manual judgment.',
     })}\n`);
-    return generated.status === 'unknown' ? 2 : 0;
+    return generated.status === 'unknown' || sync.status === 'unknown' ? 2 : 0;
   } catch (error) {
     io.stderr(`pr-shape error: ${error.message}\n`);
     return 1;
