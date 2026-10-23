@@ -77,6 +77,11 @@ For each current head and base SHA, every merge-ready term must hold:
   evidence instead.
 - Proven verification: apply every receipt and acceptance term below, or its
   head-and-base-bound user acceptance, while every other gate still holds.
+- Risky paths: `merge-base..head` touches none of database migrations,
+  auth/authentication code, secrets or credential config, money/funds-moving
+  paths, or production deploy config, or a head-and-base-bound user clearance
+  under [Escalation](escalation.md) applies.
+  An uncertain risky-path classification holds automatic merge.
 - Veto: no `do-not-merge` label and no chat `hold` applies.
 
 Only comments and threads whose IDs are recorded in an agent receipt count as agent-authored.

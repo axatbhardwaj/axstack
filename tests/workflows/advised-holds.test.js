@@ -35,6 +35,7 @@ const exclusions = [
   ['access', /\baccess\b.*\bcredentials\b/i, 'access or credentials'],
   ['forge', /\bforge merges by the user\b/i, 'forge merges by the user'],
   ['off', /\bAuto-merge: off\b/i, 'Auto-merge: off'],
+  ['risky paths', /\brisky-path holds\b/i, 'risky-path holds'],
   ['report bases', /\bwork-promotion\b.*\bdeploying-base\b.*\bunknown-base\b.*\breport cards\b/i, 'work-promotion, deploying-base or unknown-base report cards'],
   ['ratings', /\breport-only comment-rating card\b/i, 'the report-only comment-rating card'],
   ['models', /\bmodel unavailability\b.*\bsubstitution\b/i, 'model unavailability or substitution'],
