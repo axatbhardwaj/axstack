@@ -289,8 +289,9 @@ existing bot `verdict head=` marker, five-request cap and independent adviser
 panel, and compact output limits. Complete review may publish the
 ordinary binding `APPROVE` or `REQUEST_CHANGES` verdict after a final head,
 base, request, open-state, and existing-review readback. Incomplete review,
-unknown GitHub state, unavailable required models, or unresolved disagreement
+unknown GitHub state or unavailable required models
 publishes nothing.
+Resolve peer unresolved disagreement through the verifier route under corroboration.
 
 A new event that changes the disposition can change a peer verdict at an
 unchanged head under `axstack-review`'s Automation exception; its identical

@@ -29,6 +29,34 @@ Every published peer verdict is binding `APPROVE` or `REQUEST_CHANGES`.
 Never publish a COMMENT review. APPROVE when no blocker remains open, with
 notes in the body. The bot never merges peer PRs.
 
+### Corroboration
+
+The owner can refute an allegation first with evidence.
+Send surviving single-source blockers to a fresh session of the other peer-pair
+role, batched per direction (primary's allegations to peer and peer's to primary).
+Use at most two verifiers per first review and one per follow-up.
+The verifier brief contains the allegation, relevant author replies and context,
+pinned head and base, and code. Never include reviewer verdicts in the verifier brief.
+For each blocker return CONFIRMED, REFUTED or UNSETTLED with the verifier's own evidence.
+Single-provider presets use the other model of the pair and disclose session/model
+independence instead of cross-family independence.
+A verifier receipt never replaces a reviewer receipt or counts toward the five-request cap.
+
+A blocker stands only when both first-pass reviewers raised the same concrete
+defect with behavioural evidence, or a verifier CONFIRMED it.
+Match the defect at any rating, treating an ambiguous match as single-source.
+REFUTED allegations are dropped and recorded privately as rejected with evidence.
+REFUTED allegations are never posted.
+UNSETTLED becomes a non-blocking note plus `Not verified:` within the five-note limit.
+Verifier unavailable or failed means INCOMPLETE.
+When the verifier unavailable or failed outcome holds, submit nothing.
+Pre-existing disputes settle before corroboration.
+This bar preserves the serious-risk hold path and the adviser panel below.
+
+On follow-up, prior open blockers and rejected rebuttals skip the verifier.
+New or reopened blockers, including the full-diff fallback, require verification.
+Downgraded notes never re-block unless the delta changes them or there is serious risk.
+
 First review dispatches `axstack-reviewer-primary` and `axstack-reviewer-peer`
 on the full diff and all six angles, independently with the identical brief
 and an isolated first pass. Never dispatch diligence in peer mode.

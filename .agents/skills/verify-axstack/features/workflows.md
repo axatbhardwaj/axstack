@@ -52,6 +52,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/pr-managers.test.js \
   tests/workflows/pr-managers-lifecycle.test.js \
   tests/workflows/peer-review.test.js \
+  tests/workflows/peer-corroboration.test.js \
   tests/workflows/pre-existing.test.js \
   tests/workflows/review-severity.test.js \
   tests/workflows/merge-boundary.test.js \
@@ -96,6 +97,10 @@ test "$STATUS" -eq 0
 Peer review contracts cover context-only intent, validated behaviour blockers,
 binding verdicts, bounded follow-ups, reply finality, the five-request adviser
 panel and compact output, while preserving authored review requirements.
+Corroboration checks cover owner refutation, fresh opposite-role verifier
+batches, evidence-only briefs, receipt independence, confirmed/refuted/unsettled
+outcomes, failed-verifier holds and follow-up finality, including both shared
+disagreement carve-outs. These remain prompt contracts, not live agent proof.
 Pre-existing checks cover Source-base and merge-base proof, exclusions,
 reviewer-only tagging, authored/diligence/watch exceptions and unchanged human
 holds. Peer drafts cover eligibility, budgets, tracker search and non-gating

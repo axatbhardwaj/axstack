@@ -161,6 +161,7 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
   exact candidate SHA and current base, covering the identical full brief;
   follow-up has one current receipt covering the bounded Peer mode brief.
   Peer review requires no diligence receipt.
+  Peer complete also requires verifier receipts when dispatched.
 - **Authored complete:** the one required eligible non-author/non-owner reviewer has
   a current verified receipt for the exact candidate SHA and current base,
   covering the whole brief, all six angles, and applicable acceptance.
@@ -271,7 +272,9 @@ existing bot verdict markers across heads before publishing `REQUEST_CHANGES`;
 a would-be sixth takes the panel path before submission. A serious-risk escalation holds
 submission at its durable decision location. Otherwise `APPROVE` requires
 no validated blocker and `REQUEST_CHANGES` requires at least one evidenced
-validated blocker. `INCOMPLETE`, unavailable inputs, unresolved disagreement,
+validated blocker under Peer mode's corroboration bar.
+Under the Automation exception, route unresolved disagreement through the peer verifier route.
+`INCOMPLETE`, unavailable inputs,
 or unknown GitHub state submits nothing.
 
 Immediately before `gh pr review`, re-read self's reviews at the head.
