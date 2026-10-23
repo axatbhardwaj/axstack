@@ -12,6 +12,7 @@ Personal and work PRs remain eligible whatever files they change, including
 `.github/`, workflow-invoked files, package.json, lockfiles, test-runner config,
 branch-protection or ruleset config, `CODEOWNERS`, `AGENTS.md`, and non-clean
 revert lines such as `Revert: steps`.
+Apply the [risky-path hold](readiness.md#5-state-readiness-precisely).
 
 For a legacy native `gh stack`, only the bottom member's base must be eligible.
 Each other member's base must be the next-lower member's branch at its reviewed head.

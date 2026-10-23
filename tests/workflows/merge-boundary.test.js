@@ -1,6 +1,6 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { checkRule, prohibits } from './prose-contract.js';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const watchFull = read('skills/axstack-watch/SKILL.md');
@@ -72,6 +72,37 @@ test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
   expect(sentence(watch, 'No `Escalate to user`')).toMatch(/unsettled author Dispatch.*task, PR, dependency, run-wide, or serious-risk.*hold/i);
   expect(sentence(watch, 'Veto:')).toMatch(/no `do-not-merge` label.*no chat `hold`/i);
 });
+
+// Risky-path instructions are the boundary; mutations stay entirely in memory.
+for (const [name, concepts, rewording, inversions] of [
+  ['diff categories hold automatic merge at a merge card',
+    [/merge-base\.\.head/i, /touch(?:es|ing)?/i, /database migrations/i,
+      /auth(?:\/authentication|entication)? code/i, /secrets/i,
+      /credential config/i, /money\/funds-moving paths/i,
+      /production deploy config/i, /hold automatic merge/i,
+      /post a merge card/i, /stop at merge-ready/i],
+    'If merge-base..head touches database migrations, authentication code, secrets or credential config, money/funds-moving paths, or production deploy config, hold automatic merge, post a merge card and stop at merge-ready.',
+    [[/hold automatic merge/i, 'allow automatic merge'],
+      [/post a merge card/i, 'skip the merge card'],
+      [/stop at merge-ready/i, 'continue past merge-ready']]],
+  ['clearance needs the explicit user command at the exact PR head and base',
+    [/only/i, /explicit user/i, /"merge this"/i, /(?:this|that) PR/i,
+      /exact head and base SHA/i, /clear(?:s)?/i, /(?:this|the) hold/i],
+    'Only an explicit user "merge this" for that PR at the exact head and base SHA can clear the hold.',
+    [[/only/i, 'optionally'], [/explicit user/i, 'agent'],
+      [/exact head and base SHA/i, 'any prior revision'],
+      [/clear(?:s)?/i, 'retains']]],
+  ['head or base changes restore the hold',
+    [/new head or base/i, /re-applies|restores/i, /the hold/i],
+    'A new head or base restores the hold.',
+    [[/re-applies|restores/i, 'clears'],
+      [/new head or base/i, 'new head only']]],
+]) {
+  test(`risky-path merge hold: ${name}`, () => {
+    checkRule(watch.replace(/\s+/g, ' '), (text) => requires(text, ...concepts),
+      rewording, inversions, concepts);
+  });
+}
 
 test('small and standalone maintenance share the guarded watch authority', () => {
   expect(sentence(autopilot, '- Small:')).toMatch(/small-change intent.*watch.*predicate/i);

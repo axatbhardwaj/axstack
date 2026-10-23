@@ -12,6 +12,8 @@ Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/readiness.md`, `references/proven-verification.md`,
 `references/escalation.md` and `references/blocked-on-person.md` under
 `skills/axstack-watch/`.
+`merge-boundary.test.js` checks risky-path merge holds, exact-revision user
+clearance and renewed holds after head or base changes.
 Split test files: `tests/workflows/{presets-research,presets-roles,presets-runtime,pr-managers-lifecycle,structural-workflows}.test.js`;
 runtime tables: `tests/workflows/t3-runtime/*.js`.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
