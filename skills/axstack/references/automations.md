@@ -149,6 +149,14 @@ all scanned; those ten occupy zero slots.
 
 ## Admission and fairness
 
+Before admission, check sync eligibility against the user-recorded pair in the
+durable record under [PR shape](pr-shape.md#peer-sync-proof).
+On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
+with event identity for dedupe, and leave the PR for the user.
+Sync fail or unknown follows ordinary review.
+Each bounded PR job follows [Peer mode](../../axstack-review/references/peer-mode.md#sync-admission-and-round-freshness)
+stale-round discard before each dispatch, before reconcile and before submission.
+
 The review manager admits all eligible actionable PR events
 that measured host capacity can support across ticks. Before each admission,
 inspect available memory, CPU load, and active worker trees across the host;
@@ -289,8 +297,9 @@ existing bot `verdict head=` marker, five-request cap and independent adviser
 panel, and compact output limits. Complete review may publish the
 ordinary binding `APPROVE` or `REQUEST_CHANGES` verdict after a final head,
 base, request, open-state, and existing-review readback. Incomplete review,
-unknown GitHub state, unavailable required models, or unresolved disagreement
+unknown GitHub state or unavailable required models
 publishes nothing.
+Resolve peer unresolved disagreement through the verifier route under corroboration.
 
 A new event that changes the disposition can change a peer verdict at an
 unchanged head under `axstack-review`'s Automation exception; its identical

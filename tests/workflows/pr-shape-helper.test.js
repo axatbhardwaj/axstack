@@ -104,13 +104,84 @@ test('measures the stacked merge-base with renames, binaries and unusual paths w
 test('help advertises every flag, a complete example, fixed buckets and read-only behavior', () => {
   const result = invoke(root, ['--help']);
   expect(result.code, result.stderr).toBe(0);
-  for (const flag of ['--help', '--base', '--head']) expect(result.stdout).toContain(flag);
+  for (const flag of ['--help', '--base', '--head', '--source']) expect(result.stdout).toContain(flag);
   expect(result.stdout).toMatch(/bun scripts\/pr-shape\.js --base main --head HEAD/);
   expect(result.stdout).toMatch(/read-only/i);
   expect(result.stdout).toContain('linguist-generated');
   for (const name of ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock']) {
     expect(result.stdout).toContain(name);
   }
+});
+
+test('sync proves fast-forward containment even after the source advances, without mutation', () => {
+  const { repo, parent: base, head } = fixture();
+  git(repo, 'reset', '--hard', head);
+  writeFileSync(`${repo}/later.txt`, 'later source change\n');
+  const source = commit(repo, 'source advances');
+  const status = git(repo, 'status', '--porcelain', '--ignored');
+  const index = readFileSync(`${repo}/.git/index`);
+  const result = invoke(repo, ['--base', base, '--head', head, '--source', source]);
+  expect(result.code, result.stderr).toBe(0);
+  expect(result.data.inputs).toMatchObject({ base, head, source, sourceRef: source });
+  expect(result.data.sync).toMatchObject({ status: 'pass', evidence: { base, head, source } });
+  expect(result.data.sync.evidence.commands.some((argv) => argv.includes('--is-ancestor'))).toBe(true);
+  for (const argv of result.data.sync.evidence.commands) {
+    expect(Bun.spawnSync(argv, { cwd: repo }).exitCode).toBe(0);
+  }
+  expect(git(repo, 'status', '--porcelain', '--ignored')).toBe(status);
+  expect(readFileSync(`${repo}/.git/index`)).toEqual(index);
+});
+
+test('sync covers no-ff promotions but rejects a base-only hotfix lost from the source', () => {
+  const { repo, parent, head: source } = fixture();
+  git(repo, 'reset', '--hard', parent);
+  git(repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test',
+    'merge', '--no-ff', '-qm', 'promotion', source);
+  const head = git(repo, 'rev-parse', 'HEAD');
+  expect(invoke(repo, ['--base', parent, '--head', head, '--source', source]).data?.sync?.status).toBe('pass');
+  git(repo, 'reset', '--hard', parent);
+  writeFileSync(`${repo}/hotfix.txt`, 'base-only hotfix\n');
+  const hotfix = commit(repo, 'base-only hotfix');
+  git(repo, 'read-tree', source);
+  git(repo, 'checkout-index', '-af');
+  git(repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test',
+    'commit', '-qm', 'overwrite base with source tree');
+  expect(git(repo, 'rev-parse', 'HEAD^{tree}')).toBe(git(repo, 'rev-parse', `${source}^{tree}`));
+  expect(invoke(repo, ['--base', hotfix, '--head', 'HEAD', '--source', source]).data?.sync?.status).toBe('fail');
+});
+
+test('sync fails divergent head/source trees despite a shared ancestor base', () => {
+  const { repo, parent: base, head, base: source } = fixture();
+  expect(git(repo, 'merge-base', base, head)).toBe(base);
+  expect(git(repo, 'merge-base', base, source)).toBe(base);
+  expect(git(repo, 'merge-base', head, source)).toBe(base);
+  expect(head).not.toBe(base);
+  const headTree = git(repo, 'rev-parse', `${head}^{tree}`);
+  const sourceTree = git(repo, 'rev-parse', `${source}^{tree}`);
+  expect(headTree).not.toBe(sourceTree);
+  const result = invoke(repo, ['--base', base, '--head', head, '--source', source]);
+  expect(result.code, result.stderr).toBe(0);
+  expect(result.data.sync).toMatchObject({ status: 'fail', evidence: {
+    base, head, source, headTree, sourceTree, reason: 'base <= source and equal head/source trees',
+  } });
+});
+
+test('sync fails unrelated histories and a head that omits the base', () => {
+  const { repo, parent, head, base } = fixture();
+  expect(invoke(repo, ['--base', base, '--head', head, '--source', head]).data?.sync?.status).toBe('fail');
+  git(repo, 'checkout', '--orphan', 'unrelated-sync');
+  const unrelated = commit(repo, 'unrelated');
+  expect(invoke(repo, ['--base', unrelated, '--head', head, '--source', head]).data?.sync?.status).toBe('fail');
+  expect(invoke(repo, ['--base', parent, '--head', head, '--source', unrelated]).data?.sync?.status).toBe('fail');
+});
+
+test('sync distinguishes absent source from missing source objects', () => {
+  const { repo, parent: base, head } = fixture();
+  expect(invoke(repo, ['--base', base, '--head', head]).data?.sync?.status).toBe('n/a');
+  const result = invoke(repo, ['--base', base, '--head', head, '--source', 'missing-source']);
+  expect(result.code, result.stderr).toBe(2);
+  expect(result.data?.sync).toMatchObject({ status: 'unknown', evidence: { base, head, source: null } });
+  expect(result.data.sync.evidence.commands[0]).toContain('missing-source^{commit}');
 });
 
 test('a nested caller measures the same repository paths despite diff.relative configuration', () => {

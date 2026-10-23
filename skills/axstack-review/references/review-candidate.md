@@ -27,6 +27,8 @@ This section applies to peer and authored PR modes.
      The mixed peer pair is cross-provider (Sol high + Opus medium), with independence
      still from separate sessions, the identical brief and an isolated first pass.
      Follow-up instead uses the one reviewer and bounded brief in [Peer mode](../SKILL.md#peer-mode-colleague-pr).
+     Peer verifiers use fresh other-role sessions with the same checkout isolation.
+     Apply Peer mode's corroboration brief and per-direction batching after first-pass receipts.
    - **Authored:** exactly one eligible independent reviewer from this complete
      mapping:
 
@@ -156,8 +158,9 @@ This section applies to peer and authored PR modes.
    handler returns 200 and creates a session. Consequence: expired links remain
    usable.`
 4. **Reconcile findings without voting.** The owner verifies findings and uses
-   focused checks to resolve contradictions. Unresolved material disagreement
-   leaves peer review incomplete; reviewer votes never settle correctness.
+   focused checks to resolve contradictions. For peer unresolved disagreement,
+   use the verifier route under [corroboration](peer-mode.md#corroboration).
+   Reviewer votes never settle correctness.
    Accepted fixes return to the actual author. Account for each finding as
    validated, rejected with evidence, fixed, or explicitly unresolved.
 5. **Bind the current revision and base.** Peer follow-ups apply Peer mode,

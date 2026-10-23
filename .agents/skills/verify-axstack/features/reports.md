@@ -2,6 +2,11 @@
 
 Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness}.js`;
 fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper}.test.js`.
+The pr-shape fixtures cover the optional `--source` sync term: fast-forward
+containment after source advancement, no-ff promotion trees, unrelated history,
+lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
+missing source objects and absent-source n/a.
+They bind the proof to resolved SHAs and check that Git remains unchanged.
 Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`;
 contract checks exercise ancestor-first repair and genuine paraphrases with removal/
 inversion negatives; local history fixtures cover three layers, siblings,

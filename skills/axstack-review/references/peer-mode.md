@@ -11,6 +11,26 @@ That decision is not a finding. Peer review needs no Axstack-created approved
 spec. Peer code stays readonly; the reviewer never edits it. Record exact head,
 current base, context and authority before dispatch.
 
+### Sync admission and round freshness
+
+Sync admission requires the user-recorded pair, matching head repo and base repo,
+and fetched source SHA under [PR shape](../../axstack/references/pr-shape.md#peer-sync-proof).
+On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
+with event identity, and leave the PR for the user.
+Sync fail or unknown enters ordinary review.
+
+Before each dispatch, before reconcile and before submission, re-read PR state,
+head, base branch, base SHA and draft against the pinned event.
+Discard if merged or closed, head or base SHA moved, base retargeted, or draft.
+On discard, cancel owned tasks, verify settlement under
+[Held job settlement](../../axstack/references/automations.md#held-job-settlement),
+preserve evidence and record `discarded: <reason>`.
+On discard, submit nothing.
+For merged or closed PRs, run existing cleanup.
+A new head is a new event, never a restart inside the job.
+Unknown GitHub state holds, never discards.
+Add no polling loop or watcher.
+
 A missing bot verdict marker selects the first review. An existing bot verdict
 marker selects follow-up from its `verdict head=` to the current head.
 
@@ -28,6 +48,34 @@ unchanged.
 Every published peer verdict is binding `APPROVE` or `REQUEST_CHANGES`.
 Never publish a COMMENT review. APPROVE when no blocker remains open, with
 notes in the body. The bot never merges peer PRs.
+
+### Corroboration
+
+The owner can refute an allegation first with evidence.
+Send surviving single-source blockers to a fresh session of the other peer-pair
+role, batched per direction (primary's allegations to peer and peer's to primary).
+Use at most two verifiers per first review and one per follow-up.
+The verifier brief contains the allegation, relevant author replies and context,
+pinned head and base, and code. Never include reviewer verdicts in the verifier brief.
+For each blocker return CONFIRMED, REFUTED or UNSETTLED with the verifier's own evidence.
+Single-provider presets use the other model of the pair and disclose session/model
+independence instead of cross-family independence.
+A verifier receipt never replaces a reviewer receipt or counts toward the five-request cap.
+
+A blocker stands only when both first-pass reviewers raised the same concrete
+defect with behavioural evidence, or a verifier CONFIRMED it.
+Match the defect at any rating, treating an ambiguous match as single-source.
+REFUTED allegations are dropped and recorded privately as rejected with evidence.
+REFUTED allegations are never posted.
+UNSETTLED becomes a non-blocking note plus `Not verified:` within the five-note limit.
+Verifier unavailable or failed means INCOMPLETE.
+When the verifier unavailable or failed outcome holds, submit nothing.
+Pre-existing disputes settle before corroboration.
+This bar preserves the serious-risk hold path and the adviser panel below.
+
+On follow-up, prior open blockers and rejected rebuttals skip the verifier.
+New or reopened blockers, including the full-diff fallback, require verification.
+Downgraded notes never re-block unless the delta changes them or there is serious risk.
 
 First review dispatches `axstack-reviewer-primary` and `axstack-reviewer-peer`
 on the full diff and all six angles, independently with the identical brief
