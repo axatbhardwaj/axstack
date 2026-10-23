@@ -11,6 +11,26 @@ That decision is not a finding. Peer review needs no Axstack-created approved
 spec. Peer code stays readonly; the reviewer never edits it. Record exact head,
 current base, context and authority before dispatch.
 
+### Sync admission and round freshness
+
+Sync admission requires the user-recorded pair, matching head repo and base repo,
+and fetched source SHA under [PR shape](../../axstack/references/pr-shape.md#peer-sync-proof).
+On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
+with event identity, and leave the PR for the user.
+Sync fail or unknown enters ordinary review.
+
+Before each dispatch, before reconcile and before submission, re-read PR state,
+head, base branch, base SHA and draft against the pinned event.
+Discard if merged or closed, head or base SHA moved, base retargeted, or draft.
+On discard, cancel owned tasks, verify settlement under
+[Held job settlement](../../axstack/references/automations.md#held-job-settlement),
+preserve evidence and record `discarded: <reason>`.
+On discard, submit nothing.
+For merged or closed PRs, run existing cleanup.
+A new head is a new event, never a restart inside the job.
+Unknown GitHub state holds, never discards.
+Add no polling loop or watcher.
+
 A missing bot verdict marker selects the first review. An existing bot verdict
 marker selects follow-up from its `verdict head=` to the current head.
 

@@ -37,6 +37,8 @@ When the caller is a bounded review-manager PR job, load
 [Native PR managers](../axstack/references/automations.md): its reviewer briefs
 carry the required escalation field and every eligible peer PR takes a binding
 `APPROVE` or `REQUEST_CHANGES` verdict under the automation exception below.
+Sync skips are exempt from binding-verdict requirements under Peer mode.
+For a sync skip, never fabricate an internal verdict.
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 

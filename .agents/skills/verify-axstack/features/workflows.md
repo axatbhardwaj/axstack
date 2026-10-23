@@ -53,6 +53,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/pr-managers-lifecycle.test.js \
   tests/workflows/peer-review.test.js \
   tests/workflows/peer-corroboration.test.js \
+  tests/workflows/peer-round-lifecycle.test.js \
   tests/workflows/pre-existing.test.js \
   tests/workflows/review-severity.test.js \
   tests/workflows/merge-boundary.test.js \
@@ -101,6 +102,9 @@ Corroboration checks cover owner refutation, fresh opposite-role verifier
 batches, evidence-only briefs, receipt independence, confirmed/refuted/unsettled
 outcomes, failed-verifier holds and follow-up finality, including both shared
 disagreement carve-outs. These remain prompt contracts, not live agent proof.
+Peer round checks cover user-recorded sync pairs, same-repository source proof,
+no-submission skips and dedupe, and stale-round readbacks, cancellation,
+settlement, cleanup and unknown-state holds without a watcher.
 Pre-existing checks cover Source-base and merge-base proof, exclusions,
 reviewer-only tagging, authored/diligence/watch exceptions and unchanged human
 holds. Peer drafts cover eligibility, budgets, tracker search and non-gating

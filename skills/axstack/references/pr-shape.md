@@ -18,6 +18,23 @@ Never automatically subtract bulk from the full total; silent exclusion is forbi
 Disclose each bulk bucket with a reproducible recorded command.
 There is no universal safe LOC limit or fixed token percentage.
 
+## Peer sync proof
+
+Run `pr-shape.js --base <base> --head <head> --source <source>`.
+The sync term grants no authority.
+Sync is eligible only for a user-recorded pair `<repo>: <source> -> <base>`
+in the manager durable record, or user-named for manual review.
+The head repo must equal the base repo.
+Source S is a fetched base-repo ref with its SHA recorded.
+Resolve B/H/S to base/head/source commit SHAs.
+Pass requires B <= H and either H <= S or both B <= S and equal H/S trees.
+Use `git merge-base --is-ancestor` for <= and `git rev-parse <sha>^{tree}` for trees.
+Ancestor exit 1 means fail, other Git errors or missing objects mean unknown,
+and absent `--source` means n/a. Preserve the helper's commands and SHAs.
+On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
+with event identity for dedupe, and leave the PR for the user.
+Sync fail or unknown takes ordinary review.
+
 ## Theme
 One behavior or component may include the callers, tests, types, docs, and
 migrations that must change together to stay green and reviewable.
