@@ -31,7 +31,7 @@ at line start in the PR description.
 A quoted format inside a bullet never counts as the declaration.
 `--admin` and rule bypass are never used.
 `Auto-merge: off` for a run or PR makes the merge card wait, and it waits for the user.
-A risky-path hold blocks automatic merge at merge-ready.
+A risky-path hold blocks automatic merge.
 
 Post a merge card for every nonqualifying approval, base, verification, off,
 or risky-path case.

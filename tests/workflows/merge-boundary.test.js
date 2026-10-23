@@ -1,6 +1,6 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const watchFull = read('skills/axstack-watch/SKILL.md');
@@ -96,10 +96,6 @@ for (const [name, concepts, rewording, inversions] of [
     [/uncertain risky-path classification/i, /holds automatic merge/i],
     'Any uncertain risky-path classification holds automatic merge.',
     [[/holds automatic merge/i, 'allows automatic merge']]],
-  ['a risky-path hold blocks automatic merge at merge-ready',
-    [/risky-path hold/i, /blocks automatic merge/i, /at merge-ready/i],
-    'At merge-ready a risky-path hold blocks automatic merge.',
-    [[/blocks automatic merge/i, 'allows automatic merge']]],
   ['risky paths require a merge card',
     [/post a merge card/i, /every/i, /risky-path case/i],
     'Post a merge card for every risky-path case.',
@@ -127,6 +123,18 @@ for (const [name, concepts, rewording, inversions] of [
       rewording, inversions, concepts);
   });
 }
+
+test('risky-path merge hold applies independently of readiness', () => {
+  const concepts = [/risky-path hold/i, /blocks automatic merge/i];
+  const readinessCondition = /\b(?:at|after) (?:merge-ready|readiness)\b|\bonce the PR is ready\b/i;
+  const accepts = (text) => sentences(text).some((unit) =>
+    requires(unit, ...concepts) && !readinessCondition.test(unit));
+  checkRule(watch.replace(/\s+/g, ' '), accepts,
+    'Every risky-path hold blocks automatic merge.',
+    [[/blocks automatic merge/i, 'allows automatic merge'],
+      [/blocks automatic merge/i, 'blocks automatic merge only at merge-ready'],
+      [/blocks automatic merge/i, 'blocks automatic merge only once the PR is ready']], concepts);
+});
 
 test('small and standalone maintenance share the guarded watch authority', () => {
   expect(sentence(autopilot, '- Small:')).toMatch(/small-change intent.*watch.*predicate/i);
