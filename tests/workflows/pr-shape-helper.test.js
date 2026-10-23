@@ -150,6 +150,22 @@ test('sync covers no-ff promotions but rejects a base-only hotfix lost from the 
   expect(invoke(repo, ['--base', hotfix, '--head', 'HEAD', '--source', source]).data?.sync?.status).toBe('fail');
 });
 
+test('sync fails divergent head/source trees despite a shared ancestor base', () => {
+  const { repo, parent: base, head, base: source } = fixture();
+  expect(git(repo, 'merge-base', base, head)).toBe(base);
+  expect(git(repo, 'merge-base', base, source)).toBe(base);
+  expect(git(repo, 'merge-base', head, source)).toBe(base);
+  expect(head).not.toBe(base);
+  const headTree = git(repo, 'rev-parse', `${head}^{tree}`);
+  const sourceTree = git(repo, 'rev-parse', `${source}^{tree}`);
+  expect(headTree).not.toBe(sourceTree);
+  const result = invoke(repo, ['--base', base, '--head', head, '--source', source]);
+  expect(result.code, result.stderr).toBe(0);
+  expect(result.data.sync).toMatchObject({ status: 'fail', evidence: {
+    base, head, source, headTree, sourceTree, reason: 'base <= source and equal head/source trees',
+  } });
+});
+
 test('sync fails unrelated histories and a head that omits the base', () => {
   const { repo, parent, head, base } = fixture();
   expect(invoke(repo, ['--base', base, '--head', head, '--source', head]).data?.sync?.status).toBe('fail');
