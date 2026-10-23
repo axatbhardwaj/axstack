@@ -121,6 +121,7 @@ Never advise spec approval, npm stage approval or collaborator approval.
 Never advise access or credentials.
 Never advise forge merges by the user.
 Never advise `Auto-merge: off`.
+Never advise risky-path holds.
 Never advise work-promotion, deploying-base or unknown-base report cards.
 Never advise the report-only comment-rating card.
 Never advise model unavailability or substitution.
