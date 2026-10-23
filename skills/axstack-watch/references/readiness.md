@@ -47,8 +47,14 @@ For each current head and base SHA, every merge-ready term must hold:
   Reviews carrying an Axstack automation marker never count.
   A later `CHANGES_REQUESTED` blocks until resolved; a stale or dismissed
   approval does not count.
-  A collaborator approval carries over only across a rebase, base-update merge or base-only retarget with unchanged
-  patch-id recorded for both heads while the forge still counts it.
+  A collaborator approval carries over only across a rebase, base-update merge or
+  base-only retarget with unchanged patch-id recorded for both heads, or to a new
+  head made by repairs addressing review feedback (that reviewer's comments,
+  other review threads, authored-review or diligence findings, or CI fixes),
+  while the forge still counts it.
+  Carryover requires an undismissed approval, no later `CHANGES_REQUESTED` from
+  that reviewer, and repository rules that require neither last-push approval
+  nor stale-review dismissal.
   Require fresh authored review, diligence, and CI on every new head.
   Refresh authored review, diligence and CI evidence at the current head and base after every head or base change; base updates return to the same author under the existing repair route.
   Text carrying a visible machine marker never counts as a user reply:

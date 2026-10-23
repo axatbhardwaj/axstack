@@ -15,6 +15,8 @@ Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `merge-boundary.test.js` checks risky-path merge holds, exact-revision user
 clearance, uncertain classification, parking decision holds and renewed holds
 after head or base changes; `advised-holds.test.js` pins their advice exclusion.
+`approval-carryover.test.js` checks forge-counted feedback-repair approval
+carryover and repository-rule guards with removal, inversion and rewording probes.
 Split test files: `tests/workflows/{presets-research,presets-roles,presets-runtime,pr-managers-lifecycle,structural-workflows}.test.js`;
 runtime tables: `tests/workflows/t3-runtime/*.js`.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
@@ -60,6 +62,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/pre-existing.test.js \
   tests/workflows/review-severity.test.js \
   tests/workflows/merge-boundary.test.js \
+  tests/workflows/approval-carryover.test.js \
   tests/workflows/isolated-manager-passes.test.js \
   tests/workflows/relay-removal.test.js \
   tests/workflows/manager-holds.test.js \
