@@ -159,7 +159,7 @@ test('capabilities holds unknown or ambiguous provider instances without substit
 });
 
 test('capabilities holds empty catalogs, unknown classes and unsupported effort options', () => {
-  held(resolve(capabilities, ['--class', 'terra']), /matching.*model/i);
+  held(resolve(capabilities, ['--class', 'unknown']), /matching.*model/i);
   held(resolve(capabilities, ['--class', 'sol'], 'grok'), /class/i);
   held(resolve(capabilities, ['--model', 'null'], 'antigravity'), /unknown provider/i);
   const empty = fresh(); empty.providers[0].models = [];
@@ -204,4 +204,24 @@ test('mixed tracker checker resolves its configured Claude class at low effort',
   expect(result.status).toBe(0);
   expect(JSON.parse(result.output)).toMatchObject({ provider: 'claude', providerInstanceId: 'claudeAgent',
     model: 'claude-sonnet-5-5', effortOption: { id: 'effort', value: 'low' } });
+});
+
+test('Terra preset seats resolve their exact model and effort from saved capabilities', () => {
+  const data = fresh();
+  data.providers.find((provider) => provider.providerInstanceId === 'codex')
+    .models.push(entry('gpt-6.1-terra', 'reasoningEffort', ['medium', 'high', 'xhigh']));
+  for (const [preset, id, effort] of [
+    ['mixed', 'axstack-research-code-sol', 'high'],
+    ['mixed', 'axstack-explore-execution-sol', 'high'],
+    ['mixed', 'axstack-explainer-review', 'medium'],
+    ['codex-only', 'axstack-reviewer-secondary', 'xhigh'],
+  ]) {
+    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
+    const role = roles.find((role) => role.id === id);
+    const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
+    const result = resolve(data, args, role.provider, role.thinkingOptionId);
+    expect(result.status, `${preset}: ${id}`).toBe(0);
+    expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', providerInstanceId: 'codex',
+      model: 'gpt-6.1-terra', effortOption: { id: 'reasoningEffort', value: effort } });
+  }
 });

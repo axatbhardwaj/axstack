@@ -102,12 +102,12 @@
     },
     {
       "id": "axstack-research-code-sol",
-      "name": "Axstack research code Sol",
+      "name": "Axstack research code Terra",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
-      "modelClass": "sol"
+      "notes": "Independent Terra high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "terra"
     },
     {
       "id": "axstack-research-web",
@@ -143,8 +143,8 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "medium",
-      "notes": "Independent Sol medium explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution. Design review follows design.md hard rules and FRONTEND-DESIGN.md (calibration defaults, restraint and quality floor) for every inline HTML page and every Publish article adaptation. For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 and recorded before review. Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins, bounded prose measure, typography, section spacing and chart legibility. Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels. A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit. If only design findings remain after the second round, deliver the visual with each finding named. Never describe a remaining finding as fixed or a clean pass. Apply Delivery's normal holds for other failures and unknown renders. Chat Mermaid and anatomy keep their existing review.",
-      "modelClass": "sol"
+      "notes": "Independent Terra medium explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution. Design review follows design.md hard rules and FRONTEND-DESIGN.md (calibration defaults, restraint and quality floor) for every inline HTML page and every Publish article adaptation. For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 and recorded before review. Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins, bounded prose measure, typography, section spacing and chart legibility. Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels. A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit. If only design findings remain after the second round, deliver the visual with each finding named. Never describe a remaining finding as fixed or a clean pass. Apply Delivery's normal holds for other failures and unknown renders. Chat Mermaid and anatomy keep their existing review.",
+      "modelClass": "terra"
     },
     {
       "id": "axstack-ui-verifier",
@@ -185,12 +185,12 @@
     },
     {
       "id": "axstack-explore-execution-sol",
-      "name": "Axstack execution explorer Sol",
+      "name": "Axstack execution explorer Terra",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Sol high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation.",
-      "modelClass": "sol"
+      "notes": "Independent Terra high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "terra"
     },
     {
       "id": "axstack-auditor",

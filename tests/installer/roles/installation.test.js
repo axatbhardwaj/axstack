@@ -71,7 +71,7 @@ test('installed presets route analysis roles to the selected provider', () => {
   }
 });
 
-test('installed presets expose independent Sol analysis pair seats', () => {
+test('installed presets expose independent Codex analysis pair seats', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const rootDir = makeTempRoot(`axstack-sol-pairs-${preset}-`);
     const skillsDir = join(rootDir, 'installed');
@@ -88,7 +88,7 @@ test('installed presets expose independent Sol analysis pair seats', () => {
       const pair = roles.find((entry) => entry.id === id);
       expect(pair, `${preset}: ${id}`).toMatchObject(preset === 'claude-only'
         ? { provider: 'claude', model: null }
-        : { provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high' });
+        : { provider: 'codex', modelClass: preset === 'mixed' && id !== 'axstack-auditor-sol' ? 'terra' : 'sol', thinkingOptionId: 'high' });
     }
   }
 });

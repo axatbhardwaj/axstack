@@ -52,8 +52,8 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Eligible authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
-      "modelClass": "luna"
+      "notes": "Terra xhigh authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
+      "modelClass": "terra"
     },
     {
       "id": "axstack-reviewer-peer",

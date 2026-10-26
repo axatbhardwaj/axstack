@@ -5,7 +5,7 @@
     {
       "id": "mixed-analysis-sonnet-high",
       "input": { "preset": "mixed", "work": "audit plus requirements, code, and web research with execution exploration" },
-      "expected": { "routes": ["axstack-auditor: claude/claude-haiku-5-5 xhigh", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6-sol high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6-sol high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
+      "expected": { "routes": ["axstack-auditor: claude/claude-haiku-5-5 xhigh", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6.1-terra high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6.1-terra high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
     },
     {
       "id": "claude-only-sol-pairs-absent",
@@ -30,7 +30,7 @@
     {
       "id": "codex-sol-authored",
       "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-sol high", "candidate": "SHA E", "base": "SHA F" },
-      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6-luna xhigh"], "independence": "different model, not cross-provider" }
+      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6.1-terra xhigh"], "independence": "different model, not cross-provider" }
     },
     {
       "id": "claude-opus-authored",
@@ -74,7 +74,7 @@
     },
     {
       "id": "required-model-unavailable",
-      "input": { "preset": "codex-only", "role": "axstack-reviewer-secondary", "availability": "gpt-6-luna unavailable" },
+      "input": { "preset": "codex-only", "role": "axstack-reviewer-secondary", "availability": "gpt-6.1-terra unavailable" },
       "expected": { "status": "HOLD", "action": "report gap and ask user", "forbidden": ["fallback", "quota routing", "subscription inference"] }
     },
     {

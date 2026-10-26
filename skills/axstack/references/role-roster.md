@@ -15,7 +15,7 @@
   | --- | --- | --- |
   | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   `axstack-arena-candidate-grok` adds a family.
@@ -24,7 +24,7 @@
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer` authors every visual Explain delivers, including pages,
   chat Mermaid and anatomy figures; mixed pins Sonnet 5.5 high exactly.
-- `axstack-explainer-review` always reviews every visual; `codex/sol` medium in mixed.
+- `axstack-explainer-review` always reviews every visual; `codex/terra` medium in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for every authored PR
@@ -45,9 +45,10 @@
   `axstack-explore-codebase-luna` per facet in mixed (Haiku high + Luna
   xhigh) and codex-only (Sol high + Luna xhigh). Claude-only requires
   the Haiku high base seat per facet.
-- Sol pairs `axstack-auditor-sol`/`axstack-research-code-sol`/
+- Sol pairs (stable `-sol` IDs) `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
-  mixed/codex-only; intentionally absent in claude-only. Dispatch each
+  mixed/codex-only; intentionally absent in claude-only. In mixed,
+  research-code and explore-execution use `codex/terra` high instead. Dispatch each
   independently from its base seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.
   Record intentional absence and continue with Sonnet alone.

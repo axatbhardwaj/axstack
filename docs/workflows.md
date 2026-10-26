@@ -140,14 +140,15 @@ and `codex-only`. In `claude-only`, Luna is intentionally absent.
 The mixed X route uses Grok.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
-`axstack-explainer-review` uses Sol medium; `axstack-explainer` pins
+`axstack-explainer-review` uses Terra medium; `axstack-explainer` pins
 `claude-sonnet-5-5` high with class `sonnet`. Both roles cover every Explain
 visual, including chat Mermaid and anatomy figures.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at high effort.
-The new `-sol` auditor, research-code, and explore-execution seats use Sol high
-in `mixed` and `codex-only`; `claude-only` records each as intentionally absent.
-Dispatch the base and Sol seats independently on the same brief, then reconcile
-their findings per claim without averaging.
+The `-sol` research-code and explore-execution seats use Terra high in `mixed`
+and Sol high in `codex-only`; the auditor pair stays Sol high in both.
+`claude-only` records each as intentionally absent. Their stable role IDs remain
+unchanged. Dispatch the base and paired seats independently on the same brief,
+then reconcile their findings per claim without averaging.
 
 The installed `<skills-dir>/axstack/roles.json` adds the selected preset name:
 `{ "version": 1, "preset": "<name>", "roles": [...] }`. The runtime reads it
@@ -162,7 +163,8 @@ Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
-is used in the authored mapping and, alongside `axstack-reviewer-primary`,
+uses Terra xhigh for Sol-authored candidates in `codex-only`. It is used
+in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.
 
 The unavailable adviser in each single-provider preset stays explicitly
