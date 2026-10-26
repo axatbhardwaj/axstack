@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, loadedReferences, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
