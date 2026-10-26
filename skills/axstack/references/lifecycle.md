@@ -18,7 +18,7 @@ binding state and receipts to exact revisions.
   pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
   authored = one eligible role from author provenance. Each uses a
   separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
-- Automation review manager and monitors: see
+- Automation review manager: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.

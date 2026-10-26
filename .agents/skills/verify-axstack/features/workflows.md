@@ -28,6 +28,8 @@ resolved ignore-file location in failure guidance.
 inversion and equivalent-rewording probes. These tests install no Git hooks.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
+`presets.test.js` guards retired `axstack-monitor` absence in bundled presets
+and shipped watch/roster prose while retaining codebase explorer bindings.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 The removal check covers shipped transport absence and driver-thread decision holds.

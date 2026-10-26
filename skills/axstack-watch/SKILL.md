@@ -77,15 +77,14 @@ load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [T3 runtime](../axstack/references/t3-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
-`axstack-monitor` stays an optional read-only observer for standalone watch
-that never sends. For own open PRs in chat-run mode, use the normal 30-minute cadence under
+For own open PRs in chat-run mode, use the normal 30-minute cadence under
 [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch);
 the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
 neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
-the owner launches the writer, reviewers, and optional monitor. Leaf workers
+the owner launches the writer and reviewers. Leaf workers
 create no recursive teams, and the adoption watcher is never the writer.
 
 A standalone live watch has verified role and timer receipts, handshakes, watched scope,
@@ -142,7 +141,6 @@ Routine questions stay in the T3 driver thread. Progress, CI pending, and comple
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and
 head. It grants no reply authority and never clears the hold.
-The standalone monitor never sends; the chat-run schedule resumes the driver.
 Healthy watch observations remain quiet.
 
 ## 5. State readiness precisely

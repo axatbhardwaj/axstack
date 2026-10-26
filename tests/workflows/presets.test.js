@@ -32,7 +32,6 @@ const roleIds = [
   'axstack-explore-codebase-flash',
   'axstack-explore-execution',
   'axstack-explore-execution-sol',
-  'axstack-monitor',
   'axstack-auditor',
   'axstack-auditor-sol',
   'axstack-debug-investigator-1',
@@ -64,7 +63,6 @@ const expected = {
     a('sonnet', 'high'),
     a('haiku', 'high'), c('luna', 'xhigh'), ag('gemini-3.8-flash-medium', 'medium'),
     a('sonnet', 'high'), c('sol', 'high'),
-    a('haiku', 'high'),
     a('haiku', 'xhigh'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
@@ -84,7 +82,6 @@ const expected = {
     c('sol', 'medium'),
     c('sol', 'high'), c('luna', 'xhigh'), c(null, 'medium'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'low'),
     c('luna', 'xhigh'), c('sol', 'high'),
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), c('sol', 'high'),
@@ -114,7 +111,6 @@ const expected = {
     a(null, 'xhigh'), a(null, 'medium'),
     a('sonnet', 'high'),
     a(null, 'high'),
-    a('haiku', 'high'),
     a('sonnet', 'high'),
     a(null, 'high'),
     a('opus', 'medium'),
@@ -356,15 +352,16 @@ test('presets: public workflow table names the current codex-only peer model fam
   );
 });
 
-test('presets: monitor remains a standalone read-only observer', () => {
+test('presets: retired monitor is absent from bundled roles and watch guidance', () => {
   for (const preset of presetNames) {
-    const byId = Object.fromEntries(readJson(`profiles/presets/${preset}.json`).roles.map((r) => [r.id, r]));
-    const monitor = byId['axstack-monitor'].notes;
-    expect(monitor, `${preset}: held wording`).not.toMatch(/activation is held|capability hold/i);
-    expect(monitor).not.toMatch(/driver automation|mutating owner|pushes/i);
-    expect(monitor).toMatch(/optional[^.]*read-only|read-only[^.]*optional/i);
-    expect(monitor).toMatch(/never sends/i);
-    expect(monitor).toMatch(/standalone PR watch/i);
-    expect(byId['axstack-watchdog']).toBeUndefined();
+    const roles = readJson(`profiles/presets/${preset}.json`).roles;
+    expect(roles.some(({ id }) => id === 'axstack-monitor'), preset).toBe(false);
+  }
+  for (const path of [
+    'skills/axstack/references/role-roster.md',
+    'skills/axstack-watch/SKILL.md',
+    'skills/axstack-watch/references/watch-runtime.md',
+  ]) {
+    expect(readFileSync(`${root}/${path}`, 'utf8'), path).not.toContain('axstack-monitor');
   }
 });

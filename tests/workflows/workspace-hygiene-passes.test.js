@@ -33,7 +33,6 @@ test('T3 pass settlement preserves the current pass and separates metadata from 
 test('scheduled passes sweep recorded repositories after predecessor cleanup', () => {
   const hygiene = read('skills/axstack/references/workspace-hygiene.md').replace(/\s+/g, ' ');
   const manager = read('skills/axstack/references/automations.md').replace(/\s+/g, ' ');
-  const watch = read('skills/axstack-watch/references/watch-runtime.md').replace(/\s+/g, ' ');
 
   expect(hygiene).toMatch(/scheduled pass[^.]*recorded cleanup authority[^.]*lane's driver/i);
   expect(hygiene).toMatch(/project-scoped T3 threads[^.]*git worktree list --porcelain[^.]*run records/i);
@@ -45,7 +44,6 @@ test('scheduled passes sweep recorded repositories after predecessor cleanup', (
   expect(manager).toMatch(/Session admission[\s\S]*?owner-of-record performs guarded retirement[\s\S]*?before discovery or admission/i);
   expect(manager).toMatch(/sweep[^.]*silent when nothing was removed/i);
   expect(manager).toMatch(/sweep results[^.]*continuity[^.]*Open holds/i);
-  expect(watch).toMatch(/read-only[^.]*axstack-monitor[^.]*reports[^.]*leftovers[^.]*never salvage or remove/i);
 });
 
 test('watch sweep needs cleanup authority independent of repair authority', () => {

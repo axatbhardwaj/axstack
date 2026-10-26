@@ -61,25 +61,23 @@ test('capabilities uses an explicit preset pin as given ahead of a class', () =>
 });
 
 for (const preset of ['mixed', 'claude-only']) {
-  test(`capabilities: ${preset} mapping and monitoring bind Haiku 5.5 high without substitution`, () => {
+  test(`capabilities: ${preset} codebase mapping binds Haiku 5.5 high without substitution`, () => {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const data = fresh();
     const claude = data.providers.find((p) => p.providerInstanceId === 'claudeAgent');
     // Synthetic catalog only: newer and older family members cannot replace the pin.
-    for (const id of ['axstack-explore-codebase', 'axstack-monitor']) {
-      const role = roles.find((role) => role.id === id);
-      const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
-      claude.models = ['claude-haiku-4-5', 'claude-haiku-5-5', 'claude-haiku-5-6']
-        .map((id) => entry(id, 'effort'));
-      const result = resolve(data, args, role.provider, role.thinkingOptionId);
-      expect(result.status).toBe(0);
-      expect(JSON.parse(result.output)).toMatchObject({ model: 'claude-haiku-5-5',
-        effortOption: { id: 'effort', value: 'high' } });
-      claude.models = [entry('claude-haiku-4-5', 'effort')];
-      held(resolve(data, args, role.provider, role.thinkingOptionId), /missing requested model claude-haiku-5-5/i);
-      claude.models.push(entry('claude-haiku-5-5', 'effort', ['low']));
-      held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort high/i);
-    }
+    const role = roles.find((role) => role.id === 'axstack-explore-codebase');
+    const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
+    claude.models = ['claude-haiku-4-5', 'claude-haiku-5-5', 'claude-haiku-5-6']
+      .map((id) => entry(id, 'effort'));
+    const result = resolve(data, args, role.provider, role.thinkingOptionId);
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.output)).toMatchObject({ model: 'claude-haiku-5-5',
+      effortOption: { id: 'effort', value: 'high' } });
+    claude.models = [entry('claude-haiku-4-5', 'effort')];
+    held(resolve(data, args, role.provider, role.thinkingOptionId), /missing requested model claude-haiku-5-5/i);
+    claude.models.push(entry('claude-haiku-5-5', 'effort', ['low']));
+    held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort high/i);
   });
 }
 
