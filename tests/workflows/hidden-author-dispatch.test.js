@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
@@ -8,8 +8,8 @@ const implement = 'axstack-implement/SKILL.md';
 const hygiene = 'axstack/references/workspace-hygiene.md';
 // Each copy is a shipped instruction boundary; mutations stay in memory.
 const rules = [
-  ['fresh isolation proof', [runtime], [/[Bb]efore git switch -c/, /delegated fresh author.*verify/i, /starting branch matches t3\/<id>/, /git rev-parse --show-toplevel/, /differs from.*driver worktree.*named in.*brief/i],
-    'Before git switch -c, the delegated fresh author shall verify the starting branch matches t3/<id> and git rev-parse --show-toplevel differs from the driver worktree named in its brief.', [/differs from/i, 'equals']],
+  ['fresh isolation proof', [runtime], [/[Bb]efore git switch -c/, /delegated fresh author.*verify/i, /git rev-parse --show-toplevel/, /differs from.*driver worktree.*named in.*brief/i],
+    'Before git switch -c, the delegated fresh author shall verify git rev-parse --show-toplevel differs from the driver worktree named in its brief.', [/differs from/i, 'equals']],
   ['failed isolation proof', [runtime], [/failed isolation proof/i, /stop.*AXSTACK-FAILED/, /change nothing/i],
     'On failed isolation proof, stop with AXSTACK-FAILED and change nothing.', [/change nothing/i, 'switch branches anyway']],
   ['driver isolation readback', [runtime], [/after dispatch/i, /driver.*reads? back/i, /child.*worktreePath/, /hold if.*equals.*driver worktree/i],
@@ -28,8 +28,22 @@ const rules = [
     'The delegated fresh author brief step 1 shall verify the branch is absent before git switch -c <encoded branch> <pinned base SHA>, then verify HEAD equals the pinned base SHA.', [/before/i, 'after']],
   ['non-resetting switch', [runtime], [/git switch -C/],
     'Never use git switch -C.', [/never/i, 'always'], /never use/i],
-  ['temporary branch retirement', [runtime], [/delete.*exact T3 t3\/<id> branch/i, /only after.*switch succeeds.*HEAD.*verified/i],
-    'Delete the exact T3 t3/<id> branch only after the switch succeeds and HEAD is verified.', [/only after/i, 'before']],
+  ['temporary branch retirement', [runtime], [/delete.*T3.created starting branch.*current name/i, /only after.*switch succeeds.*HEAD.*verified/i],
+    'Delete the T3-created starting branch under its current name only after the switch succeeds and HEAD is verified.', [/only after/i, 'before']],
+  ['linked clean isolation', [runtime], [/isolation proof/i, /git rev-parse --git-dir/, /differs from git rev-parse --git-common-dir/, /git status --porcelain.*(?:is|be|returns) empty\b/i],
+    'For the isolation proof, git status --porcelain must be empty and git rev-parse --git-dir differs from git rev-parse --git-common-dir.', [/differs from/, 'equals']],
+  ['name independent isolation', [runtime], [/isolation proof/i, /depend on.*starting branch name/i],
+    'Never depend on the starting branch name for the isolation proof.', [/never/i, 'always'], /never depend on/i],
+  ['record starting identity', [runtime], [/immediately before git switch -c/i, /record.*git symbolic-ref --short HEAD/i, /starting HEAD.*git rev-parse HEAD/],
+    'Record starting HEAD via git rev-parse HEAD and current branch via git symbolic-ref --short HEAD immediately before git switch -c.', [/before/, 'after']],
+  ['rename awareness', [runtime], [/T3/i, /rename.*starting branch/i, /after start/i],
+    'After start, T3 can rename the starting branch.', [/\bcan\b/, 'cannot']],
+  ['rename recovery', [runtime], [/T3.*renamed.*recorded name/i, /follow.*worktree reflog rename.*final name/i],
+    'Follow the worktree reflog rename to the final name when T3 renamed the recorded name between capture and switch.', [/follow/i, 'ignore']],
+  ['retirement guards', [runtime], [/delete only if/i, /no worktree.*checked out/i, /tip equals.*recorded starting HEAD/i],
+    'Delete only if its tip equals the recorded starting HEAD and no worktree has it checked out.', [/equals/, 'differs from'], /no worktree/i],
+  ['uncertain retirement', [runtime], [/cannot.*identified safely/i, /leave.*(?:name|list).*receipt.*driver cleanup/i],
+    'When the branch cannot be identified safely, leave it and list it in the receipt for driver cleanup.', [/leave/, 'delete'], /cannot be identified safely/i],
   ['author identity', [runtime], [/at dispatch/i, /record/i, /taskId/, /childThreadId/, /worktreePath/, /encoded branch/i],
     'At dispatch, record the encoded branch, worktreePath, childThreadId and taskId.', [/record/i, 'discard']],
   ['lost delegated response', [runtime], [/lost delegated.*response/i, /retry.*same.*clientRequestId/i, /recover.*task identity/i],
@@ -60,7 +74,21 @@ for (const [name, paths, concepts, wording, inversion, negative] of rules) {
     const required = [...concepts, inversion[0]];
     const accepts = (source) => negative ? prohibits(source, negative, ...required) : requires(source, ...required);
     const inversions = [inversion];
+    if (name === 'linked clean isolation') inversions.push([/is empty|must be empty/i, 'is non-empty']);
+    if (name === 'retirement guards') inversions.push([/no worktree/i, 'a worktree']);
     if (name === 'fresh branch bootstrap') inversions.push([/git switch -c/, 'git switch -C'], [/branch is absent/i, 'branch exists']);
     checkRule(text, accepts, wording, inversions, required);
   });
 }
+
+const obsoleteBootstrap = (text) => sentences(text).some((sentence) =>
+  requires(sentence, /t3\/<id>/, /branch|isolation|proof/i)) || /until E2 lands/i.test(text);
+test('obsolete branch-name proof and transitional activation stay absent', () => {
+  const text = readFileSync(`${import.meta.dir}/../../skills/${runtime}`, 'utf8').replace(/`/g, '');
+  expect(obsoleteBootstrap(text)).toBe(false);
+  for (const extra of ['The starting branch must match t3/<id> for isolation proof.',
+    'For isolation, require a branch named t3/<id>.',
+    'E1 and E2 ship in the same release: until E2 lands, launched writers remain a valid route.']) {
+    expect(obsoleteBootstrap(`${text}\n${extra}`)).toBe(true);
+  }
+});

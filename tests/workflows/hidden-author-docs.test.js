@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, requires, sentences } from './prose-contract.js';
 
@@ -19,3 +19,13 @@ for (const path of paths) for (const [concepts, rewording, inversion] of rules) 
     checkRule(text, (source) => requires(source, ...required), rewording, [inversion], required);
   });
 }
+
+for (const path of paths) test(`launch users exclude authors outside fallback in ${path}`, () => {
+  const valid = (text) => !sentences(text).some((sentence) =>
+    requires(sentence, /t3_thread_launch/, /\b(?:authors?|writers?)\b/i)
+    && !requires(sentence, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i));
+  const text = readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/`/g, '');
+  expect(valid(text)).toBe(true);
+  expect(valid(text.replace('Top-level drivers use', 'Authors and top-level drivers use'))).toBe(false);
+  expect(valid(`${text}\nUse t3_thread_launch for writers.`)).toBe(false);
+});

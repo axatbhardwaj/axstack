@@ -163,13 +163,20 @@ and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its
 original form and record both; normalization is never an identity substitute.
 
 Before dispatch, the driver must name its resolved worktree absolute path in the author brief.
-Before `git switch -c`, the delegated fresh author must verify its starting branch matches `t3/<id>` and `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
+Before `git switch -c`, the delegated fresh author must verify `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
+The isolation proof also requires `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir` (a linked worktree) and `git status --porcelain` is empty.
+The isolation proof must never depend on the starting branch name.
+T3 can rename the starting branch after start.
 On failed isolation proof, stop with `AXSTACK-FAILED` and change nothing.
 After dispatch, the driver must read back the child's `worktreePath` and hold if it is missing or equals the driver worktree.
 The delegated fresh author brief step 1 must verify the branch is absent before
 `git switch -c <encoded branch> <pinned base SHA>`, then verify HEAD equals the pinned base SHA.
+Immediately before `git switch -c`, record the current starting branch with `git symbolic-ref --short HEAD` and starting HEAD with `git rev-parse HEAD`.
 Never use `git switch -C`.
-Delete the exact T3 `t3/<id>` branch only after the switch succeeds and HEAD is verified.
+Delete the T3-created starting branch under its current name only after the switch succeeds and HEAD is verified.
+If T3 renamed the recorded name between capture and switch, follow the worktree reflog rename to the final name.
+Delete only if no worktree has it checked out and its tip equals the recorded starting HEAD.
+If it cannot be identified safely, leave it and name it in the receipt for driver cleanup.
 At dispatch, record taskId, childThreadId, worktreePath and encoded branch.
 T3 worktree isolation starts from the parent HEAD and ignores workspaceStrategy,
 so the delegated fresh child must perform step 1 in its own checkout before writing.
