@@ -30,13 +30,13 @@ function orderedSteps(text, steps) {
 const sequences = [
   ['parking', [
     /(?:call|use) unwatch_pull_request for each watched member/i,
-    /(?:post(?: or update)?|update) the text card.*?answer the prompt/i,
+    /(?:post(?: or update)?|update) (?:the|a) text card.*?answer the prompt/i,
     /(?:call|use) update_scheduled_task enabled:false/i,
     /read(?: it)?[- ]back/i,
     /cancel queued.*?run-watch(?: copies| prompt)/i,
     /(?:use|ask with) (?:the )?harness question tool/i,
   ], [
-    '1. Call unwatch_pull_request for each watched member. 2. Post the text card saying answer the prompt. 3. Call update_scheduled_task enabled:false and read it back. 4. Cancel queued run-watch copies. 5. Use the harness question tool.',
+    '1. Call unwatch_pull_request for each watched member. 2. Post a text card saying answer the prompt. 3. Call update_scheduled_task enabled:false and read it back. 4. Cancel queued run-watch copies. 5. Use the harness question tool.',
     'First use unwatch_pull_request for each watched member; next update the text card saying answer the prompt; next use update_scheduled_task enabled:false; read it back; cancel queued copies of the run-watch prompt; finally ask with the harness question tool.',
   ]],
   ['answer resumption', [

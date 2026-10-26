@@ -3,6 +3,7 @@ import { dispatchRules } from './t3-runtime/dispatch-rules.js';
 import { settlementRules } from './t3-runtime/settlement-rules.js';
 import { rewordings } from './t3-runtime/rewordings.js';
 import { driverInversions } from './t3-runtime/driver-inversions.js';
+import { recovery } from './t3-runtime/recovery-actions.js';
 import { expect, test } from 'bun:test';
 
 import { sentences, requires, prohibits, checkRule, loadedReferences } from './prose-contract.js';
@@ -138,28 +139,6 @@ for (const rule of rules) {
 
 // Each AC2 expected action shares its concepts with the corresponding rule
 // paragraph; the instruction checks above independently cover the rules.
-const recovery = {
-  'lost-launch-response': [
-    [/lost launch response/i, [/ke(?:ep|pt)/i, /reserved branch/i]],
-    [/recovery must adopt/i, [/adopt/i, /one exact match/i, /relaunch once/i, /proven absence/i, /incomplete inventory/i, /hold/i]],
-  ],
-  'silent-provisioning-failure': [
-    [/post-launch/i, [/launch failure/i, /activeRunId/, /worktreePath/, /started/i, /still preparing/i, /hold/i, /next wake/i]],
-    [/task_status failed/i, [/incomplete/i]],
-  ],
-  'writer-death-after-idle': [
-    [/unsettled launched thread/i, [/failed run/i, /hold/i, /incomplete/i]],
-    [/replacement after terminal failure/i, [/terminal failure/i, /a<n\+1>/, /failed/i, /branch/i, /salvage/i]],
-  ],
-  'stale-completion': [
-    [/completion must match/i, [/current attempt/i, /SHA/, /receipt/i, /evidence/i]],
-    [/driver must persist only the task_status/i, [/persist/i, /task_status/, /before/i, /t3_thread_read|thread reads/i]],
-    [/launched writer completion/i, [/require/i, /terminal/i]],
-  ],
-  'child-question-resume': [
-    [/AXSTACK-QUESTION.*answer once/is, [/t3_thread_send/, /childThreadId/, /600000/, /watch/i, /latestTerminal/, /newer than/i, /question run/i]],
-  ],
-};
 
 test('AC2 recovery actions match their rule paragraphs', () => {
   const scenarios = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json'));

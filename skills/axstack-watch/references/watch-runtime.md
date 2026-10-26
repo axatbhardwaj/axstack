@@ -51,13 +51,15 @@ at once.
 When work restarts, re-evaluate cadence against the recovery conditions below.
 Keep native PR watches for forge-resolved waits.
 Delegated tasks and native PR watches provide native completion paths: they deliver their own wakes.
-Launched writers and resumed marker questions lack native completion paths.
+Launched writers, including their resumed marker questions, lack native completion paths.
 With native completion paths for all unsettled work and armed native PR watches,
 use the 60-minute backstop (`everyMs:3600000`), including while release is pending.
 While a writer or follow-up is unsettled without a native completion path, use
 the 5-minute cadence (`everyMs:300000`).
-A resumed `AXSTACK-QUESTION` child run lacks a native completion wake, so it
-keeps the 5-minute cadence (`everyMs:300000`) until its result is accepted.
+A launched-writer `AXSTACK-QUESTION` marker resume lacks a native completion wake, so it
+keeps the 5-minute cadence (`everyMs:300000`) while any launched writer exists.
+Delegated-child questions retain native completion paths and use the 60-minute backstop
+when other recovery conditions are clear.
 An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.
 If native `watch_pull_request` is unavailable or unarmed for any open member,
 or re-arming fails, restore the bound chat-run schedule to 5 minutes (`everyMs:300000`).
