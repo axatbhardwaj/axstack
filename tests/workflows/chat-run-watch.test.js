@@ -6,7 +6,6 @@ import { requires, checkRule, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8').replace(/\s+/g, ' ');
 const watch = () => read('skills/axstack-watch/SKILL.md');
 const runtime = () => read('skills/axstack-watch/references/watch-runtime.md');
-const roster = () => read('skills/axstack/references/role-roster.md');
 const readme = () => read('README.md');
 const host = () => read('docs/host-operations.md');
 const runRecord = () => read('skills/axstack/references/run-record.md');
@@ -63,10 +62,8 @@ test('driver records verified Autopilot transitions in the authoritative private
   expect(recordsTransition(instruction.replace('records', 'does not record'))).toBe(false);
 });
 
-test('observer reports internally; only original driver routes repairs and writers', () => {
+test('only original driver routes repairs and writers', () => {
   const text = watch() + runtime();
-  expect(roster()).toMatch(/axstack-monitor[^.]*standalone watch[^.]*never sends[^.]*chat-run watch[^.]*bounded internal reports[^.]*Run/);
-  expect(runtime()).toMatch(/It never writes[\s\S]*?dispatches authors/i);
   expect(text).toMatch(/driver[^.]*alone[^.]*repair/i);
   expect(text).toMatch(/independent PRs[^.]*parallel/i);
   expect(text).toMatch(/same PR[^.]*one author/i);

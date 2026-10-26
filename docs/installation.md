@@ -290,10 +290,10 @@ the user explicitly changes it and accepts the resulting evidence invalidation.
 The `mixed` and `claude-only` presets assign `axstack-auditor`,
 `axstack-research-requirements`, `axstack-research-code`, `axstack-research-web`,
 `axstack-explore-execution` to the Claude Sonnet class at high effort.
-`axstack-explore-codebase` and `axstack-monitor` adopt Haiku 5.5 high with
+`axstack-explore-codebase` adopts Haiku 5.5 high with
 `modelClass: haiku` and the exact `model: claude-haiku-5-5` pin.
 Activation requires that exact ID and high effort in saved T3 capabilities;
-missing either holds these roles without substitution, including Haiku 4.5.
+missing either holds this role without substitution, including Haiku 4.5.
 The `codex-only` assignments for these roles are unchanged.
 Scout adds `axstack-explore-codebase-luna` at Codex Luna xhigh in `mixed` and
 `codex-only`. The optional `axstack-explore-codebase-flash` seat uses

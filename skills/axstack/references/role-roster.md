@@ -39,11 +39,9 @@
 - `axstack-auditor`: `claude/haiku` xhigh in mixed, pinned to
   `claude-haiku-5-5`. Missing that exact model or xhigh effort holds without
   substitution. `claude/sonnet` high in claude-only; `codex/luna` xhigh in codex-only.
-- `axstack-explore-codebase`/`axstack-monitor`: `claude/haiku` high in
+- `axstack-explore-codebase`: `claude/haiku` high in
   mixed/claude-only, pinned to `claude-haiku-5-5`. Missing that exact model
-  or high effort holds these roles without substitution.
-  `axstack-monitor`: standalone watch never sends; chat-run watch: bounded
-  internal reports to its Run and original driver.
+  or high effort holds this role without substitution.
 - Scout requires `axstack-explore-codebase` and
   `axstack-explore-codebase-luna` per facet in mixed (Haiku high + Luna
   xhigh) and codex-only (Sol high + Luna xhigh). Claude-only requires
