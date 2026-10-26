@@ -374,6 +374,14 @@ an action. There is no programmatic decision interpreter.
 
 ## Finite-session teardown
 
+At pass end, an unbound pass calls `t3_thread_organize` with `action: settle` on its
+own thread only, only when it owns no PR watch, has zero unsettled descendants,
+has no pending receipt and is not held, wedged or a stalled owner.
+Self-settle is the one exception to terminal-before-settle: T3 returns
+`settlesWhenTurnEnds:true` and the next pass verifies `settled: true`.
+This deferred metadata request takes effect after the current turn ends;
+a failed request or next-pass verification keeps the pass unresolved.
+
 Decisions outliving a finite manager pass retain their receipt and hold in durable
 continuity, with the flagged thread or GitHub as the action route.
 

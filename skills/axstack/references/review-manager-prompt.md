@@ -23,7 +23,8 @@ compare its Watermarks with the inventory:
 Holds awaiting only the user remain quiet-eligible: a user decision on the PR
 changes `updatedAt`, and the 4 h full pass reconciles replies in flagged threads.
 
-If every busy condition is false, end the turn with no text, no skill load, no sweep and no continuity write.
+If every busy condition is false, apply the guarded pass-end self-settle below,
+then end the turn with no text, no skill load, no sweep and no continuity write.
 Otherwise continue with the full pass below; incomplete evidence retains the
 existing admission and cleanup holds.
 
@@ -51,3 +52,10 @@ The full pass records in Watermarks `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
 Never check out a PR branch here.
+
+At pass end, an unbound pass calls `t3_thread_organize` with `action: settle` on its
+own thread only, only when it owns no PR watch, has zero unsettled descendants,
+has no pending receipt and is not held, wedged or a stalled owner.
+Follow [Finite-session teardown](automations.md#finite-session-teardown) for
+deferred self-settle and next-pass verification; this applies to quiet, skipped
+and empty passes too.
