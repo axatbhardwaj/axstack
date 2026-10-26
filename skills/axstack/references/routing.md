@@ -148,4 +148,5 @@ not alone a formal spec trigger. Hold affected unsafe work while reassessing.
   author provenance — then use `axstack-review` and `axstack-watch` without
   repeated approval or new spec ceremony. Never infer the author from the
   orchestrator or assume an imported own PR's author.
+  Before pushing a stale or external PR, follow [adoption dispositions](../../axstack-watch/SKILL.md#stale-or-external-prs).
 - Direct later phase: start there and pass that phase's identity check.
