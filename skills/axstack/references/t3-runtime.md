@@ -91,7 +91,7 @@ Account switches must happen before exhaustion at the picker's near-limit cutoff
 For plan generation, run
 `scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
-Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
+Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` plus `isolation` when present into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
 For claude/codex, the `--picker` JSON must come from saved
 `scripts/pick-instance.js --provider <role provider> --json` output.
 For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
@@ -162,6 +162,10 @@ The branch must be `axstack/<run>/<role>/<task>-a<n>`; lowercase each segment
 and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its
 original form and record both; normalization is never an identity substitute.
 
+Before dispatch, the driver must name its resolved worktree absolute path in the author brief.
+Before `git switch -c`, the fresh author must verify its starting branch matches `t3/<id>` and `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
+On failed isolation proof, stop with `AXSTACK-FAILED` and change nothing.
+After dispatch, the driver must read back the child's `worktreePath` and hold if it equals the driver worktree.
 The fresh author brief step 1 must verify the branch is absent before
 `git switch -c <encoded branch> <pinned base SHA>`, then verify HEAD equals the pinned base SHA.
 Never use `git switch -C`.
@@ -178,10 +182,10 @@ The launch-only recovery and completion rules below cover that transition and fa
 
 `baseRef` must always be a commit SHA, never a branch name; T3 renames its
 `t3code/*` branches. Pin base and candidate before dispatch.
-Fetch the pinned base commit into the launch repository before a writer launch.
-Before a writer launch, verify locally that the pinned base SHA resolves to a
+Fetch the pinned base commit into the dispatch repository before an author dispatch.
+Before an author dispatch, verify locally that the pinned base SHA resolves to a
 commit with that exact SHA.
-If fetch or verification fails, hold that launch.
+If fetch or verification fails, hold that dispatch.
 
 Workers must finish with exactly one final marker: `AXSTACK-DONE key=… head=…
 report=…`, `AXSTACK-FAILED key=… head=… report=…`, or `AXSTACK-QUESTION key=… q=…`.

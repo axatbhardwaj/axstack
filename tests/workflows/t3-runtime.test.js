@@ -228,9 +228,9 @@ for (const phase of ['implement', 'watch']) {
 test('dispatch output guidance separates inputs from tool payload and requires an artifact for large plans', () => {
   const text = runtime();
   checkRule(text, (s) => requires(s, /plan JSON/i, /inputs/i, /omit|exclude/i,
-    /copy/i, /target/i, /modelSelection/i, /runtimeMode/i, /delegate_task/i, /t3_thread_launch/i),
-    'Plan JSON carries inputs, which callers omit when copying target/modelSelection and runtimeMode into delegate_task/t3_thread_launch.',
-    [[/omit|exclude/i, 'include']], [/inputs/i, /runtimeMode/i]);
+    /copy/i, /target/i, /modelSelection/i, /runtimeMode/i, /isolation/i, /delegate_task/i, /t3_thread_launch/i),
+    'Plan JSON carries inputs, which callers omit when copying target/modelSelection and runtimeMode plus isolation when present into delegate_task/t3_thread_launch.',
+    [[/omit|exclude/i, 'include']], [/inputs/i, /runtimeMode/i, /isolation/i]);
   checkRule(text, (s) => requires(s, /large plan output/i, /requires|needs/i, /--out/),
     'Large plan output needs --out.', [[/requires|needs/i, 'does not require']], [/--out/]);
 });

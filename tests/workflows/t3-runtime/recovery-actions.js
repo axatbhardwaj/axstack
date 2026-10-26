@@ -1,6 +1,6 @@
 // Expected recovery actions bind scenarios to their shipped rule paragraphs.
 export const recovery = {
-  'lost-launch-response': [
+  'lost-writer-dispatch-response': [
     [/lost delegated.*response/is, [/retry/i, /same stable/i, /clientRequestId/, /recover task identity/i, /never start a second writer/i, /outcome is unknown/i]],
   ],
   'silent-provisioning-failure': [

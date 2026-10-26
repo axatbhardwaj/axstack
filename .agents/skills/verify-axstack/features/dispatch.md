@@ -20,11 +20,11 @@ bun "$SCRIPTS/dispatch-plan.js" --role axstack-author --roles "$ROLES" \
   --capabilities "$CAPS" --picker "$TMPDIR/picker.json" --kind task \
   --verify "$TMPDIR/configuration.json" > "$EVIDENCE/plan-verify.log"
 test "$(tail -n 1 "$EVIDENCE/plan-verify.log")" = MATCH
-bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); const m = await Bun.file(process.env.EVIDENCE + "/model.json").json(); const s = await Bun.file(process.env.EVIDENCE + "/plan.log").json(); if (m.model !== "gpt-6.1-sol" || p.target.providerInstanceId !== "codexAlt" || p.target.model !== m.model || p.runtimeMode !== "full-access" || s.reportPath !== process.env.EVIDENCE + "/plan.json" || s.omittedPayloadFields !== 2 || s.target !== undefined) throw Error("fixture binding or saved-payload summary mismatch");'
+bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); const m = await Bun.file(process.env.EVIDENCE + "/model.json").json(); const s = await Bun.file(process.env.EVIDENCE + "/plan.log").json(); if (m.model !== "gpt-6.1-sol" || p.target.providerInstanceId !== "codexAlt" || p.target.model !== m.model || p.runtimeMode !== "full-access" || s.reportPath !== process.env.EVIDENCE + "/plan.json" || s.omittedPayloadFields !== 3 || p.isolation !== "worktree" || s.target !== undefined) throw Error("fixture binding or saved-payload summary mismatch");'
 ```
 
 Proof: resolution outputs the fixture Sol model; the delegated task plan binds its
-alternate instance and full-access mode; MATCH is the readback's last line.
+alternate instance, full-access mode and worktree isolation; MATCH is the readback's last line.
 With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
 An omitted provider label is reported as unknown while the exact instance,
 model, options and mode remain checked. Input paths remain in the complete JSON.

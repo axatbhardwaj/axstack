@@ -8,6 +8,16 @@ const implement = 'axstack-implement/SKILL.md';
 const hygiene = 'axstack/references/workspace-hygiene.md';
 // Each copy is a shipped instruction boundary; mutations stay in memory.
 const rules = [
+  ['fresh isolation proof', [runtime], [/[Bb]efore git switch -c/, /fresh author.*verify/i, /starting branch matches t3\/<id>/, /git rev-parse --show-toplevel/, /differs from.*driver worktree.*named in.*brief/i],
+    'Before git switch -c, the fresh author shall verify the starting branch matches t3/<id> and git rev-parse --show-toplevel differs from the driver worktree named in its brief.', [/differs from/i, 'equals']],
+  ['failed isolation proof', [runtime], [/failed isolation proof/i, /stop.*AXSTACK-FAILED/, /change nothing/i],
+    'On failed isolation proof, stop with AXSTACK-FAILED and change nothing.', [/change nothing/i, 'switch branches anyway']],
+  ['driver isolation readback', [runtime], [/after dispatch/i, /driver.*read back/i, /child.*worktreePath/, /hold if it equals.*driver worktree/i],
+    'After dispatch the driver shall read back the child worktreePath and hold if it equals the driver worktree.', [/hold if it equals/i, 'hold if it differs from']],
+  ['driver path in brief', [runtime], [/before dispatch/i, /driver.*name/i, /worktree.*absolute path.*author brief/i],
+    'Before dispatch, the driver names its worktree absolute path in the author brief.', [/before dispatch/i, 'after dispatch']],
+  ['fallback repair', [runtime], [/launched fallback/i, /retain.*same author thread/i, /use launched-run completion checks/i],
+    'Retain the same author thread for a launched fallback and use launched-run completion checks.', [/same author thread/i, 'new author thread']],
   ['author route', [runtime, implement], [/authors?/i, /async delegate_task/i, /isolation:"worktree"/i, /title = dispatch key/i, /stable clientRequestId/i],
     'Authors shall use async delegate_task with isolation:"worktree", title = dispatch key and stable clientRequestId.', [/delegate_task/i, 't3_thread_launch']],
   ['fresh branch bootstrap', [runtime], [/fresh author brief step 1/i, /verify.*branch.*absent.*before/i, /git switch -c <encoded branch> <pinned base SHA>/, /then verify HEAD equals.*pinned base SHA/i],

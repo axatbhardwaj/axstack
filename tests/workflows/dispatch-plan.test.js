@@ -53,9 +53,17 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
       expect(JSON.parse(result.output)).toEqual({ inputs: { role, kind, roles: `${f.dir}/roles.json`,
         capabilities: `${f.dir}/capabilities.json`, picker: `${f.dir}/picker.json` },
         [kind === 'launch' ? 'modelSelection' : 'target']: selection,
-        runtimeMode: 'full-access' });
+        runtimeMode: 'full-access', ...(role === 'axstack-author' && kind === 'task' ? { isolation: 'worktree' } : {}) });
     }
   }
+});
+
+test('saved author task payload carries isolation alongside its target', () => {
+  const f = setup(), args = planArgs(f); args[args.length - 1] = 'task';
+  const out = `${f.dir}/author-plan.json`, result = invoke([...args, '--out', out]);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(readFileSync(out, 'utf8')).isolation).toBe('worktree');
+  expect(JSON.parse(result.output).omittedPayloadFields).toBe(3);
 });
 
 test('a recorded exact model pin wins over its class and a newer catalog model', () => {

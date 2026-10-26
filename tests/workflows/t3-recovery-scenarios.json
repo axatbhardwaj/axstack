@@ -2,7 +2,7 @@
   "description": "AC2 instruction scenarios; live T3 exercise is recorded separately at the migration gate. T3/T4 append hygiene and watch cases.",
   "cases": [
     {
-      "id": "lost-launch-response",
+      "id": "lost-writer-dispatch-response",
       "input": "delegate_task with worktree isolation returned no response; the writer outcome is unknown.",
       "contracts": ["key and title", "delegate completion"],
       "expected": { "action": "Retry with the same stable clientRequestId to recover task identity; never start a second writer while the outcome is unknown." }
