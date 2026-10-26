@@ -92,7 +92,7 @@ Never require a manual `axstack-watch` invocation.
 The driver remains the single owner and sole run-record writer.
 Never create a per-PR session or an ownership hand-off.
 Read the [T3 runtime boundary](t3-runtime.md) and use its bound
-`schedule_task` wake (`everyMs:1800000`), recording the scheduledTaskId.
+`schedule_task` wake (`everyMs:3600000`), recording the scheduledTaskId.
 Follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
 alongside that bound schedule.
 Apply [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)

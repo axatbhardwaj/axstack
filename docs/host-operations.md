@@ -58,15 +58,20 @@ live behavior. See [Review manager](../skills/axstack/references/automations.md)
 
 ## Chat-run watch activation
 
-A bound T3 schedule wakes the driver thread on a normal 30-minute cadence.
+A bound T3 schedule wakes the driver thread on a 60-minute backstop cadence.
 Unavailable or unarmed native watches for any open member, failed re-arming,
-or a resumed question run restore five minutes. Human-only waits use 60 minutes
+or an unsettled writer or follow-up without a native completion path restore
+five minutes. A user Stop never activates this recovery. Other waits use 60 minutes
 under [Chat-run watch runtime](../skills/axstack-watch/references/watch-runtime.md#chat-run-watch).
 For a non-user stop while the PR stays open, follow
 [Native PR links and watches](../skills/axstack/references/t3-runtime.md#native-pr-links-and-watches)
 in that same turn: unsettle the driver thread before native re-arm.
 User Stop stays stopped; the linked procedure owns stop-reason recording,
-diagnostic rate-limit checks and waiting for reset.
+diagnostic rate-limit checks and recovery on the next wake after reset.
+Never wait for a GraphQL reset inside a turn. After one PR merge auto-settles a
+multi-PR driver, re-arm the remaining watches through that procedure.
+The digest runs only on schedule wakes; native PR wakes reconcile their event
+and a current-state read.
 The run record holds the schedule ID and driver thread.
 Each wake reconciles all unsettled dispatch attempts
 and runs the own-PR maintenance loop: feedback, base movement, required CI,

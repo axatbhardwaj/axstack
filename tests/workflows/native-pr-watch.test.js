@@ -102,8 +102,8 @@ rule('non-user stop notice is a wake with same-turn PR recheck', runtime,
     [/non-user/i, 'user'], [/itself a driver wake/i, 'only data for a later wake']]);
 rule('open PR must rearm in the same turn after a non-user stop', runtime,
   [/non-user stop/i, /PR (?:stays|remains) open/i, /driver must/i, /re-arm/i,
-    /same turn/i, /after any GraphQL reset wait/i],
-  'When a PR remains open after a non-user stop, the driver must re-arm during that same turn, after any GraphQL reset wait.',
+    /same turn/i, /when GraphQL quota permits|with available GraphQL quota/i],
+  'When a PR remains open after a non-user stop, the driver must re-arm during that same turn with available GraphQL quota.',
   [[/driver must/i, 'driver may'], [/re-arm/i, 'skip recovery'],
     [/same turn/i, 'later turn'], [/PR (?:stays|remains) open/i, 'PR is closed']]);
 rule('host guide follows canonical recovery with unsettle before rearm', '../docs/host-operations.md',
@@ -144,10 +144,20 @@ rule('read failure uses diagnostic GraphQL rate-limit check', runtime,
   [/could not read/i, /gh api rate_limit --jq .resources.graphql/i, /diagnostic only/i],
   'For a could not read stop, execute gh api rate_limit --jq .resources.graphql as a diagnostic only.',
   [[/run|execute/i, 'skip'], [/diagnostic only/i, 'authoritative stop reason']], /could not read/i);
-rule('near-zero quota waits for reset before rearm', runtime,
-  [/GraphQL remaining/i, /near 0/i, /wait for reset/i, /before re-arming/i],
-  'If GraphQL remaining is near 0, wait for reset before re-arming.',
-  [[/wait for reset/i, 'retry immediately'], [/before re-arming/i, 'after re-arming']]);
+rule('near-zero quota defers rearm through the five-minute schedule', runtime,
+  [/GraphQL remaining/i, /near 0/i, /(?:defer|postpone) re-arming until (?:the )?reset/i, /bound schedule/i,
+    /5 minutes/i, /re-arm on the next wake after reset|resume watch on the next wake after reset/i],
+  'If GraphQL remaining is near 0, postpone re-arming until the reset: set the bound schedule to 5 minutes and resume watch on the next wake after reset.',
+  [[/(?:defer|postpone) re-arming until (?:the )?reset/i, 're-arm immediately'], [/5 minutes/i, '60 minutes'],
+    [/re-arm on the next wake after reset|resume watch on the next wake after reset/i, 're-arm before reset']]);
+rule('GraphQL reset never blocks a turn', runtime, [/GraphQL reset/i, /inside a turn/i],
+  'Never wait for a GraphQL reset inside a turn.', [[/never/i, 'always']], /never wait/i);
+rule('one merge rearms remaining members after native driver settlement', runtime,
+  [/multi-PR driver/i, /T3 auto-settles/i, /one PR merge/i, /re-arms|rearm/i,
+    /remaining open members|other open PRs/i, /recovery steps|recovery procedure/i, /before ending the turn|before the turn ends/i],
+  'When T3 auto-settles a multi-PR driver on one PR merge, it must rearm other open PRs through the recovery procedure before the turn ends.',
+  [[/re-arms|rearm/i, 'abandons'], [/remaining open members|other open PRs/i, 'merged members'],
+    [/before ending the turn|before the turn ends/i, 'at some later turn']]);
 rule('T3 stop reason is recorded', runtime,
   [/record|save/i, /stop reason/i, /T3 gives/i],
   'Save the stop reason T3 gives.', [[/record|save/i, 'discard']]);

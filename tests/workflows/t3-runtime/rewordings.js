@@ -124,7 +124,7 @@ export const rewordings = {
   "failed branch salvage": "Until salvage, the failed attempt's branch is kept.",
   "unknown writer liveness": "Replacement holds when there is unknown liveness.",
   "replacement reconcile": "Before another writer, reconcile the old writer.",
-  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true armed at the default everyMs:1800000 or for its 5-minute recovery cases, and ID recorded.",
+  "idle writer watch": "With an unsettled launched thread, the turn can end only with schedule_task bindToCurrentThread:true armed at the default everyMs:3600000 or for its 5-minute recovery cases, and ID recorded.",
   "watch reconcile": "Each wake must reconcile all unsettled runs, including a writer that died silently.",
   "watch failure": "Incomplete work is held when failed runs occur.",
   "watch deletion": "When nothing is unsettled, delete_scheduled_task and read back absence with list_scheduled_tasks.",
