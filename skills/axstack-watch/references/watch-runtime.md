@@ -4,6 +4,9 @@ Read this before starting, resuming, or stopping automated PR observation.
 
 Follow [Native PR links and watches](../../axstack/references/t3-runtime.md#native-pr-links-and-watches)
 for linking, event wakes, re-watching, fallback, and teardown in both watch modes.
+For base movement, native watch reports only conflicts.
+Route base movement without conflict from the schedule-wake digest to the
+existing base-update rule below, which merges the advanced base into an ordinary root PR.
 
 For each own PR, the owner must follow [PR previews](../../axstack/references/preview.md)
 when deciding on a preview, restarting it after a head change, or tearing it down.

@@ -62,7 +62,11 @@ A bound T3 schedule wakes the driver thread on a normal 30-minute cadence.
 Unavailable or unarmed native watches for any open member, failed re-arming,
 or a resumed question run restore five minutes. Human-only waits use 60 minutes
 under [Chat-run watch runtime](../skills/axstack-watch/references/watch-runtime.md#chat-run-watch).
-A T3 "stopped watching" notice triggers a PR re-check and native re-arm in that same turn.
+For a non-user stop while the PR stays open, follow
+[Native PR links and watches](../skills/axstack/references/t3-runtime.md#native-pr-links-and-watches)
+in that same turn: unsettle the driver thread before native re-arm.
+User Stop stays stopped; the linked procedure owns stop-reason recording,
+diagnostic rate-limit checks and waiting for reset.
 The run record holds the schedule ID and driver thread.
 Each wake reconciles all unsettled dispatch attempts
 and runs the own-PR maintenance loop: feedback, base movement, required CI,

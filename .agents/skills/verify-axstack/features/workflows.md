@@ -4,6 +4,9 @@ Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js` and
 `tests/workflows/native-pr-watch.test.js` cover read-first native/manual author settlement.
+The native-watch contracts also cover driver-only arming, stop conditions,
+non-user-stop recovery with unsettle and diagnostic rate-limit checks, and
+conflict-free base movement through the existing base-update rule.
 Runtime preflight contracts cover merge-deleted author worktrees and private evidence.
 Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-mode.md`, `references/codebase-brief.md`,
