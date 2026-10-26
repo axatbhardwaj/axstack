@@ -210,6 +210,44 @@ Serious-risk holds include security, downtime, data loss and major design.
 Serious-risk advice follows as an addendum with no second alert.
 Peer serious-risk holds stay never advised under the peer-review exclusion above.
 
+### Parked user-reply holds
+
+A parked hold waits only on a user reply in chat.
+A parked hold has no unsettled worker, pending adviser seat or pending receipt.
+Never park holds resolved on the forge, including user merge, npm stage approval
+and human review.
+Scoped and forge-resolved holds use a text card only, and watches and the
+60-minute backstop stay.
+
+For parking, call `unwatch_pull_request` for each watched member, then post the
+text card saying "answer the prompt", then call `update_scheduled_task`
+`enabled:false` with read-back, then cancel queued copies of the run-watch
+prompt, then use the harness question tool.
+Include the PR URL, cause, head and base in the question, with the recommended
+option first and numbered replies.
+If disable or its read-back fails, reconcile the exact schedule ID.
+When verified enabled, roll back to the unparked user-decision state, re-arm
+watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches)
+and set cadence to 60 min.
+When verified enabled, post the card without the question.
+When the state remains unknown, mark the card `automatic recovery unproven`
+and hold UNKNOWN.
+Never infer an enabled backstop from a failed read.
+
+On an answer from the question tool or chat, reconcile current PR and run state
+first, then bind the answer to the hold key, head and base, then re-enable the
+schedule, re-arm watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches)
+and continue.
+Stale answers clear nothing.
+While parked there is no wake source and the text card is the lasting signal.
+On the user's next message, if the hold is still open and
+`t3_pending_request_list` shows no pending request, re-ask once under the same
+hold key.
+Re-ask without a new alert.
+If the question tool is unavailable, follow the same parking order and record
+`question tool unavailable`.
+If the question tool is unavailable, omit the question step.
+
 ## Serious risk
 
 Raise credible serious security, downtime, data-loss, or major-design risk
