@@ -1,14 +1,8 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from '../../src/posixpath.js';
-import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
-import {
-  assertBundleRoles,
-  assessInstalledRoleSnapshot,
-  assessRoleReadiness,
-  deriveModelClass,
-  installedRoleBytes,
-} from '../../src/roles.js';
+import { join } from '../../../src/posixpath.js';
+import { makeTempRoot, runCli, writeFixtureBundle } from '../helpers.js';
+import { assessInstalledRoleSnapshot } from '../../../src/roles.js';
 
 const role = (id, model = 'model') => ({
   id,
@@ -17,71 +11,11 @@ const role = (id, model = 'model') => ({
   model,
 });
 
-const root = import.meta.dir.slice(0, -'/tests/installer'.length);
+const root = import.meta.dir.slice(0, -'/tests/installer/roles'.length);
 const solPairIds = [
   'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
 ];
 
-test('model classes derive only from complete Codex IDs and Claude family prefixes', () => {
-  for (const [modelClass, id, provider] of [
-    ['sol', 'gpt-6.10-sol', 'codex'],
-    ['astra', 'gpt-6-astra', 'codex'],
-    ['luna', 'gpt-6.1-luna', 'codex'],
-    ...['fable', 'opus', 'sonnet', 'haiku'].map((name) => [name, `claude-${name}-5-5`, 'claude']),
-  ]) {
-    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), provider, modelClass }])).not.toThrow();
-  }
-  for (const id of ['gpt-5.6-terra', 'gpt-5.5', 'gpt-reserve', 'gpt-6-sol-preview', 'xgpt-6-sol']) {
-    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), modelClass: 'sol' }])).toThrow();
-  }
-});
-
-test('deriveModelClass maps exact model families and rejects IDs outside them', () => {
-  for (const [model, expected] of [
-    ['gpt-6-sol', 'sol'],
-    ['gpt-6.1-sol', 'sol'],
-    ['gpt-6.10-luna', 'luna'],
-    ['claude-opus-5-5', 'opus'],
-    ['gpt-5.6-terra', null],
-    ['gpt-5.5', null],
-    ['gpt-reserve', null],
-    ['gpt-sol', null],
-    ['gpt-6..1-sol', null],
-    ['gpt-6-sol-mini', null],
-    ['xgpt-6-sol', null],
-    ['claude-opus', null],
-    ['claude-opusx-5', null],
-    ['xclaude-opus-5', null],
-    ['claude-terra-1', null],
-  ]) {
-    expect(deriveModelClass(model), model).toBe(expected);
-  }
-});
-
-test('role rows accept class only, class with matching pin, legacy pin and allowlisted absence', () => {
-  const rows = [
-    { id: 'axstack-driver', name: 'Driver', provider: 'codex', modelClass: 'sol' },
-    { ...role('axstack-monitor', null), modelClass: 'astra' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
-    role('axstack-research-code', 'gpt-5.6-terra'),
-    { ...role('axstack-checker', null), provider: 'antigravity' },
-  ];
-  expect(() => assertBundleRoles(rows)).not.toThrow();
-  expect(assessRoleReadiness(rows, 'mixed')).toEqual({ ready: true, gaps: [] });
-});
-
-test('role rows reject class/provider and pin/class mismatches before installation', () => {
-  for (const [row, message] of [
-    [{ ...role('axstack-driver', null), provider: 'claude', modelClass: 'sol' }, /class.*provider/i],
-    [{ ...role('axstack-driver', 'gpt-6-luna'), modelClass: 'sol' }, /pin.*class/i],
-    [{ ...role('axstack-driver', 'gpt-5.6-terra'), modelClass: 'sol' }, /pin.*class/i],
-    [{ ...role('axstack-driver', null), modelClass: 'terra' }, /modelClass/i],
-    [{ ...role('axstack-driver', null), modelClass: ['sol'] }, /modelClass/i],
-    [{ id: 'axstack-driver', name: 'Driver', provider: 'codex' }, /model/i],
-  ]) {
-    expect(() => assertBundleRoles([row])).toThrow(message);
-  }
-});
 
 test('upgrade reports existing role IDs when modelClass or model changes', () => {
   const rootDir = makeTempRoot('axstack-model-field-upgrade-');
@@ -101,147 +35,6 @@ test('upgrade reports existing role IDs when modelClass or model changes', () =>
   expect(result.out).toContain('changed role models: axstack-driver (modelClass), axstack-monitor (model)');
   expect(result.out).not.toContain('axstack-checker (');
   expect(runCli(cli, args(newBundle), { env: { HOME: rootDir } }).out).not.toContain('changed role models:');
-});
-
-test('installed readiness compares role IDs with the selected bundle', () => {
-  const expectedRoles = [
-    role('axstack-author', 'gpt-6-sol'),
-    role('axstack-reviewer-primary', 'gpt-6-sol'),
-    role('axstack-reviewer-secondary', 'claude-opus-5-5'),
-    { ...role('axstack-checker', null), provider: 'antigravity' },
-  ];
-  const installed = installedRoleBytes('mixed', [
-    { ...role('axstack-checker', null), provider: 'antigravity' },
-  ]);
-
-  const result = assessInstalledRoleSnapshot(installed, 'mixed', expectedRoles);
-
-  expect(result.ready).toBe(false);
-  expect(result.gaps).toEqual([
-    'missing selected bundle role: axstack-author',
-    'missing selected bundle role: axstack-reviewer-primary',
-    'missing selected bundle role: axstack-reviewer-secondary',
-  ]);
-});
-
-test('single-provider readiness accepts only the intentionally unavailable adviser', () => {
-  const roles = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
-    role('axstack-author', 'gpt-6-sol'),
-    role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
-  ];
-
-  expect(assessRoleReadiness(roles, 'codex-only')).toEqual({ ready: true, gaps: [] });
-  roles.find(({ id }) => id === 'axstack-author').model = null;
-  expect(assessRoleReadiness(roles, 'codex-only').gaps).toContain(
-    'axstack-author requires a configured model',
-  );
-});
-
-test('authored pairing accepts all four class routes and newer exact author IDs', () => {
-  for (const [preset, author, primary, secondary] of [
-    ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
-    ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
-    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
-    ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
-  ]) {
-    const rows = [
-      { ...role('axstack-author', author[2]), provider: author[0] },
-      { id: 'axstack-reviewer-primary', name: 'Primary', provider: primary[0], modelClass: primary[1], thinkingOptionId: primary[2] },
-      { id: 'axstack-reviewer-secondary', name: 'Secondary', provider: secondary[0], modelClass: secondary[1], thinkingOptionId: secondary[2] },
-    ];
-    expect(assessRoleReadiness(rows, preset), `${preset}: ${author[2]}`).toEqual({ ready: true, gaps: [] });
-    rows[0] = { ...rows[0], modelClass: author[1] };
-    expect(assessRoleReadiness(rows, preset).ready).toBe(true);
-    rows[0] = { id: 'axstack-author', name: 'Author', provider: author[0], modelClass: author[1] };
-    expect(assessRoleReadiness(rows, preset)).toEqual({ ready: true, gaps: [] });
-  }
-});
-
-test('authored pairing rejects author IDs without a class and wrong reviewer class or effort', () => {
-  const rows = [
-    role('axstack-author', 'gpt-5.6-terra'),
-    { ...role('axstack-reviewer-primary', null), modelClass: 'sol', thinkingOptionId: 'high' },
-    { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' },
-  ];
-  for (const model of ['gpt-5.6-terra', 'unknown']) {
-    rows[0].model = model;
-    expect(assessRoleReadiness(rows, 'mixed').gaps).toContain(`authored routing gap: unsupported axstack-author route codex/${model}`);
-  }
-  rows[0].model = 'gpt-5.6-sol';
-  rows[2] = { ...rows[2], provider: 'codex', modelClass: 'luna' };
-  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/high'))).toBe(true);
-  rows[2] = { ...rows[2], provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium' };
-  expect(assessRoleReadiness(rows, 'mixed').gaps.some((gap) => gap.includes('axstack-reviewer-secondary must be claude/opus/high'))).toBe(true);
-});
-
-test('reviewer distinctness compares resolved IDs or unresolved classes', () => {
-  const rows = [
-    { ...role('axstack-reviewer-primary', null), modelClass: 'sol' },
-    { ...role('axstack-reviewer-secondary', null), modelClass: 'luna' },
-  ];
-  expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
-  rows[1].modelClass = 'sol';
-  expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain('reviewer pair must use two distinct models');
-
-  rows[0] = role('axstack-reviewer-primary', 'gpt-6-sol');
-  rows[1] = role('axstack-reviewer-secondary', 'gpt-6.1-sol');
-  expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
-  rows[1].model = 'gpt-6-sol';
-  expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain('reviewer pair must use two distinct models');
-
-  rows[0].model = null;
-  rows[1].model = null;
-  expect(assessRoleReadiness(rows, 'codex-only').gaps).not.toContain('reviewer pair must use two distinct models');
-});
-
-test('readiness accepts the intentionally unavailable X research route', () => {
-  const mixed = [
-    role('axstack-research-x', null),
-  ];
-  mixed[0].provider = 'grok';
-  expect(assessRoleReadiness(mixed, 'mixed')).toEqual({ ready: true, gaps: [] });
-
-  for (const preset of ['codex-only', 'claude-only']) {
-    const provider = preset === 'codex-only' ? 'codex' : 'claude';
-    expect(assessRoleReadiness([
-      { ...role('axstack-research-x', null), provider },
-    ], preset)).toEqual({ ready: true, gaps: [] });
-  }
-});
-
-test('mixed X research null model is launchable only through the Grok provider', () => {
-  expect(assessRoleReadiness([
-    { ...role('axstack-research-x', null), provider: 'claude' },
-  ], 'mixed').gaps).toContain(
-    'axstack-research-x requires a configured model',
-  );
-});
-
-test('preset readiness accepts the configured research routes', () => {
-  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
-    const { roles } = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8'));
-    expect(assessRoleReadiness(roles, preset), preset).toEqual({ ready: true, gaps: [] });
-  }
-});
-
-test('claude-only intentional-absence allowlist contains exactly the accepted IDs', () => {
-  const source = readFileSync(`${root}/src/roles.js`, 'utf8');
-  const clause = source.match(/\(preset === 'claude-only' && \[([^\]]+)\]\.includes\(role\.id\)\)/)?.[1];
-  expect(clause).toBeTruthy();
-  const ids = [...clause.matchAll(/'([^']+)'/g)].map((match) => match[1]);
-  expect(ids).toEqual([
-    'axstack-advisor-astra', 'axstack-arena-judge-astra',
-    'axstack-research-web-google', 'axstack-research-x',
-    'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
-    'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
-    'axstack-explore-codebase-luna', 'axstack-explore-codebase-flash',
-  ]);
-  expect(assessRoleReadiness([
-    { id: 'axstack-auditor', name: 'Auditor', provider: 'claude', model: null },
-  ], 'claude-only').gaps).toContain('axstack-auditor requires a configured model');
 });
 
 test('installed presets route analysis roles to the selected provider', () => {
@@ -273,7 +66,6 @@ test('installed presets route analysis roles to the selected provider', () => {
       if (mixedAuditor) expect(actual.model).toBe('claude-haiku-5-5');
     }
     if (preset === 'mixed') {
-      expect(byId['axstack-research-web-google'].provider).toBe('antigravity');
       expect(byId['axstack-research-x'].provider).toBe('grok');
     }
   }
@@ -301,12 +93,12 @@ test('installed presets expose independent Sol analysis pair seats', () => {
   }
 });
 
-test('an installation without arena candidates reports both added IDs', () => {
+test('an installation without arena candidate reports its added ID', () => {
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
   const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-arena-judge-opus', 'axstack-ui-verifier', 'axstack-diligence', ...solPairIds].includes(id));
-  const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
+  const old = current.filter(({ id }) => id !== 'axstack-arena-candidate-grok');
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
   const cli = `${root}/bin/axstack.js`;
@@ -317,11 +109,10 @@ test('an installation without arena candidates reports both added IDs', () => {
   expect(JSON.parse(before.toString()).roles).toHaveLength(old.length);
   expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
     'missing selected bundle role: axstack-arena-candidate-grok',
-    'missing selected bundle role: axstack-arena-candidate-antigravity',
   ]);
   const result = runCli(cli, args(newBundle), { env: { HOME: home } });
   expect(result.out).toContain('axstack/roles.json');
-  expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok, axstack-arena-candidate-antigravity');
+  expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(current.length);
   expect(runCli(cli, args(newBundle), { env: { HOME: home } }).out).not.toContain('added role IDs:');
   writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: old }) + '\n');
@@ -446,102 +237,6 @@ test('a null row in prior installed roles does not hide removed role IDs', () =>
   expect(result.out).toContain('added role IDs: axstack-driver, axstack-new');
   expect(result.out).toContain('removed role IDs: axstack-retired');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toEqual(current);
-});
-
-test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
-  expect(assessRoleReadiness([
-    { ...role('axstack-research-web-google', null), provider: 'antigravity' },
-    { ...role('axstack-checker', null), provider: 'antigravity' },
-  ], 'mixed')).toEqual({ ready: true, gaps: [] });
-
-  expect(assessRoleReadiness([
-    { ...role('axstack-monitor', null), provider: 'antigravity' },
-  ], 'mixed').gaps).toContain(
-    'axstack-monitor requires a configured model',
-  );
-});
-
-test('arena candidate null models follow their configured family or intentional single-provider absence', () => {
-  for (const [id, provider] of [
-    ['axstack-arena-candidate-grok', 'grok'],
-    ['axstack-arena-candidate-antigravity', 'antigravity'],
-  ]) {
-    expect(assessRoleReadiness([{ ...role(id, null), provider }], 'mixed')).toEqual({ ready: true, gaps: [] });
-    expect(assessRoleReadiness([{ ...role(id, null), provider: 'codex' }], 'mixed').gaps).toContain(`${id} requires a configured model`);
-    for (const preset of ['codex-only', 'claude-only']) {
-      const singleProvider = preset === 'codex-only' ? 'codex' : 'claude';
-      expect(assessRoleReadiness([{ ...role(id, null), provider: singleProvider }], preset)).toEqual({ ready: true, gaps: [] });
-    }
-  }
-});
-
-test('claude-only readiness permits the unavailable Astra slot', () => {
-  const roles = [
-    { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
-    { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
-    { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
-    {
-      ...role('axstack-reviewer-secondary', 'claude-sonnet-5-5'),
-      provider: 'claude', thinkingOptionId: 'high',
-    },
-  ];
-
-  expect(assessRoleReadiness(roles, 'claude-only')).toEqual({ ready: true, gaps: [] });
-});
-
-test('arena judge seats follow the adviser absence rule per provider preset', () => {
-  const codex = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
-    role('axstack-author', 'gpt-6-sol'),
-    role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
-    { ...role('axstack-arena-judge-astra', 'gpt-6-astra'), thinkingOptionId: 'xhigh' },
-    { ...role('axstack-escalation-fable', null), thinkingOptionId: 'xhigh' },
-  ];
-  expect(assessRoleReadiness(codex, 'codex-only')).toEqual({ ready: true, gaps: [] });
-  codex.find(({ id }) => id === 'axstack-arena-judge-astra').model = null;
-  expect(assessRoleReadiness(codex, 'codex-only').gaps).toEqual([
-    'axstack-arena-judge-astra requires a configured model',
-  ]);
-
-  const mixed = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
-    role('axstack-author', 'gpt-6-sol'),
-    role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-escalation-fable', null), provider: 'claude', thinkingOptionId: 'xhigh' },
-  ];
-  expect(assessRoleReadiness(mixed, 'mixed').gaps).toEqual([
-    'axstack-escalation-fable requires a configured model',
-  ]);
-});
-
-test('Opus judge is absent only in codex-only readiness', () => {
-  const opus = { ...role('axstack-arena-judge-opus', null), provider: 'codex', thinkingOptionId: 'xhigh' };
-  expect(assessRoleReadiness([opus], 'codex-only')).toEqual({ ready: true, gaps: [] });
-  expect(assessRoleReadiness([{ ...opus, provider: 'claude' }], 'mixed').gaps).toContain(
-    'axstack-arena-judge-opus requires a configured model',
-  );
-  expect(assessRoleReadiness([{ ...opus, provider: 'claude' }], 'claude-only').gaps).toContain(
-    'axstack-arena-judge-opus requires a configured model',
-  );
-});
-
-test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {
-  const roles = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
-    role('axstack-author', 'gpt-6-sol'),
-    role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6-luna'), thinkingOptionId: 'xhigh' },
-    role('axstack-debug-investigator-1', null),
-  ];
-  expect(assessRoleReadiness(roles, 'codex-only').gaps).toEqual([
-    'axstack-debug-investigator-1 requires a configured model',
-  ]);
 });
 
 test('installed presets expose the peer seat without changing authored routes', () => {

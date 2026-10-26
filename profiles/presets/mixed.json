@@ -76,11 +76,11 @@
     {
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
-      "provider": "antigravity",
-      "model": null,
-      "modeId": "full-access",
+      "provider": "claude",
+      "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
-      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. Cheap report-only seat on Gemini Flash; dispatch through the T3 Antigravity ACP provider."
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. Sonnet low tracker checker. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "modelClass": "sonnet"
     },
     {
       "id": "axstack-research-requirements",
@@ -117,15 +117,6 @@
       "thinkingOptionId": "high",
       "notes": "Sonnet high research web reader: gathers primary-source facts efficiently. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
-    },
-    {
-      "id": "axstack-research-web-google",
-      "name": "Axstack research web (Google)",
-      "provider": "antigravity",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Google-Search-grounded web research branch on Gemini via the T3 Antigravity ACP provider; resolve the model from saved T3 capabilities; cites URL + access date per claim and re-opens sources because the provider's search citation format is undocumented; report-only."
     },
     {
       "id": "axstack-research-x",
@@ -182,15 +173,6 @@
       "thinkingOptionId": "xhigh",
       "notes": "Independent read-only Luna Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Unavailable model or effort holds without substitution.",
       "modelClass": "luna"
-    },
-    {
-      "id": "axstack-explore-codebase-flash",
-      "name": "Axstack codebase explorer Flash",
-      "provider": "antigravity",
-      "model": "gemini-3.8-flash-medium",
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Optional read-only Scout breadth seat: searches the whole repository for missed boundaries and counterexamples. Reports evidence for driver reconciliation without cross-reading."
     },
     {
       "id": "axstack-explore-execution",
@@ -300,15 +282,6 @@
       "modeId": "full-access",
       "thinkingOptionId": "high",
       "notes": "Independent Grok Rung 2 design candidate. Use the T3 Grok provider and resolve the model from saved capabilities. Receives the same brief without cross-reading; returns design, rationale, and rejected alternatives."
-    },
-    {
-      "id": "axstack-arena-candidate-antigravity",
-      "name": "Axstack arena candidate Antigravity",
-      "provider": "antigravity",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Independent Antigravity Rung 2 design candidate. Use the T3 Antigravity ACP provider and resolve the model from saved capabilities. Receives the same brief without cross-reading; returns design, rationale, and rejected alternatives."
     }
   ]
 }

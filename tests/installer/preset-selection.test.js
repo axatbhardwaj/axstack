@@ -81,15 +81,12 @@ describe('explicit preset selection', () => {
     const expected = {
       mixed: [
         ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
-        ['axstack-explore-codebase-flash', 'antigravity', 'gemini-3.8-flash-medium', 'medium', 'full-access'],
       ],
       'codex-only': [
         ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
-        ['axstack-explore-codebase-flash', 'codex', null, 'medium', 'full-access'],
       ],
       'claude-only': [
         ['axstack-explore-codebase-luna', 'claude', null, 'xhigh', 'bypassPermissions'],
-        ['axstack-explore-codebase-flash', 'claude', null, 'medium', 'bypassPermissions'],
       ],
     };
     for (const [preset, seats] of Object.entries(expected)) {
