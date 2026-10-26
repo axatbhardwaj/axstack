@@ -26,7 +26,7 @@ The authored review rule in `axstack-review` requires exactly one complete
 eligible non-author/non-owner reviewer.
 Record a serious-risk hold in both the run record and a durable GitHub or user-owned
 conversation, preserving candidate/exact context;
-raise the hold in the T3 driver thread and end the turn parked on the decision.
+raise the hold in the T3 driver thread and end the turn waiting on the decision.
 Publication waits for the
 user's decision at that durable location and exact-input revalidation.
 

@@ -9,7 +9,8 @@ non-user-stop recovery with unsettle and diagnostic rate-limit checks, and
 conflict-free base movement through the existing base-update rule.
 `chat-run-watch.test.js` and `automatic-own-pr-watch.test.js` cover the hourly
 backstop, five-minute recovery, user Stop exclusion and schedule-only digest.
-`parked-holds.test.js` and `parked-watch.test.js` cover the shared user-reply
+`parked-holds.test.js`, `parked-hold-order.test.js`, `hold-waiting.test.js` and
+`parked-watch.test.js` cover the shared user-reply
 hold procedure and its runtime, Autopilot, watch and public-guide references.
 Their removal, inversion and rewording probes verify instruction contracts;
 the live parking and restart canary remains a separate driver check.
@@ -78,6 +79,8 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/chat-run-watch.test.js \
   tests/workflows/automatic-own-pr-watch.test.js \
   tests/workflows/parked-holds.test.js \
+  tests/workflows/parked-hold-order.test.js \
+  tests/workflows/hold-waiting.test.js \
   tests/workflows/parked-watch.test.js \
   tests/workflows/watch-quota-recovery.test.js \
   tests/workflows/workspace-hygiene.test.js \

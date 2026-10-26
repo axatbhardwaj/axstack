@@ -43,10 +43,10 @@ rule('runtime end waits for Release', runtime, 'Stop the chosen wake only', /rel
 for (const [name, source] of [['implement', implement], ['runtime', runtime]]) {
   test(`${name} keeps decision holds in the driver thread`, () => {
     const concepts = [/user-decision holds/i, /serious-risk holds/i, /T3 driver thread/i,
-      /driver ends its turn parked on the decision/i];
+      /driver ends its turn waiting on the decision/i];
     checkRule(source(), (text) => requires(text, ...concepts),
-      'Raise user-decision holds and serious-risk holds in the T3 driver thread, and the driver ends its turn parked on the decision.',
-      [[/parked on the decision/i, 'continuing without a decision']], concepts);
+      'Raise user-decision holds and serious-risk holds in the T3 driver thread, and the driver ends its turn waiting on the decision.',
+      [[/waiting on the decision/i, 'continuing without a decision']], concepts);
   });
 }
 test('watch raises serious risks immediately and attempts bounded safe recovery', () => {
@@ -58,9 +58,9 @@ test('watch raises serious risks immediately and attempts bounded safe recovery'
 for (const path of ['skills/axstack-watch/SKILL.md', 'skills/axstack-implement/SKILL.md', 'docs/workflows.md']) {
   test(`blocked operation still needing the user is raised after recovery: ${path}`, () => {
     const concepts = [/after bounded safe recovery/i, /raise/i, /genuine blocked operation/i,
-      /still needs the user/i, /T3 driver thread/i, /driver ends its turn parked on (?:it|that blocker)/i];
+      /still needs the user/i, /T3 driver thread/i, /driver ends its turn waiting on (?:it|that blocker)/i];
     checkRule(read(path), (text) => requires(text, ...concepts),
-      'Raise a genuine blocked operation that still needs the user in the T3 driver thread after bounded safe recovery, and the driver ends its turn parked on that blocker.',
+      'Raise a genuine blocked operation that still needs the user in the T3 driver thread after bounded safe recovery, and the driver ends its turn waiting on that blocker.',
       [[/raise/i, 'ignore'], [/after bounded safe recovery/i, 'before bounded safe recovery']], concepts);
   });
 }

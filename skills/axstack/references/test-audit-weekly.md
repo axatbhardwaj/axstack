@@ -65,5 +65,5 @@ The recorded owning watch thread merges under the same watch predicate.
 Workers never merge.
 
 Raise decision and serious-risk holds in the T3 driver thread; end the turn
-parked on the decision. Keep routine reports there, including skipped or empty passes.
+waiting on the decision. Keep routine reports there, including skipped or empty passes.
 Settle owned workers and preserve evidence under the shared lifecycle.

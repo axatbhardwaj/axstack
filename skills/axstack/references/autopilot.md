@@ -44,7 +44,7 @@ The driver records each verified `Autopilot:` transition in the private run
 record, which remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold raised in the T3 driver thread; end the turn
-parked on the decision.
+waiting on the decision.
 
 ## Reversible local repair
 
@@ -176,6 +176,6 @@ Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver accou
 
 Follow [Route each wake](../../axstack-watch/SKILL.md#4-route-each-wake).
 Raise decision holds, including spec and npm stage approval, and serious-risk
-holds in the T3 driver thread; end the turn parked on the decision.
+holds in the T3 driver thread; end the turn waiting on the decision.
 Revalidate the current head and base on a user reply; it clears only its bound cause.
 Healthy ticks stay quiet.

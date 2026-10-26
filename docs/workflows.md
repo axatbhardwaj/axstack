@@ -313,12 +313,12 @@ keeps the current owner and a resumable record.
 For parked holds, follow [Parked user-reply holds](../skills/axstack/references/contracts.md#parked-user-reply-holds).
 
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
-and the driver ends its turn parked on the decision.
+and the driver ends its turn waiting on the decision.
 These include `verification not proven`, merge cards needing user input,
 spec approval and npm stage approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
 After bounded safe recovery, raise a genuine blocked operation that still needs
-the user in the T3 driver thread, and the driver ends its turn parked on it.
+the user in the T3 driver thread, and the driver ends its turn waiting on it.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and
@@ -419,7 +419,7 @@ review, or return the work to the author. Only a gap the driver cannot close
 becomes a `verification not proven` card bound to head and base.
 The card names what is unproven, why, and the action that would settle it.
 
-Raise `verification not proven` in the T3 driver thread and end the turn parked
+Raise `verification not proven` in the T3 driver thread and end the turn waiting
 on the decision, bound to the exact PR head and base.
 A changed PR head or base must supersede its open verification decision card,
 reissuing only if a decision is still needed.
@@ -517,7 +517,7 @@ those SHAs, counted collaborator approvals and bot votes with each vote's SHA
 and stale flag, and the causes holding this merge.
 A card that needs the user's decision (work promotion or work deploying/unknown base,
 `Auto-merge: off`, provenance, or an unclosable verification gap) is a decision
-hold raised in the T3 driver thread; the driver ends its turn parked on the decision.
+hold raised in the T3 driver thread; the driver ends its turn waiting on the decision.
 Revalidate the current head and base; the reply clears only its bound cause.
 Person-wait cards follow the clock below.
 A changed head or base requires a refreshed card.

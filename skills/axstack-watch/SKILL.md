@@ -167,12 +167,12 @@ the current revision, and a recorded hold or next owner where work remains.
 Follow [Advised holds](../axstack/references/contracts.md#advised-holds) before parking a user-decision hold.
 For parked holds, follow [Parked user-reply holds](../axstack/references/contracts.md#parked-user-reply-holds).
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
-and the driver ends its turn parked on the decision.
+and the driver ends its turn waiting on the decision.
 These include `verification not proven`, merge cards needing user input,
 spec approval and npm stage approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
 After bounded safe recovery, raise a genuine blocked operation that still needs
-the user in the T3 driver thread, and the driver ends its turn parked on it.
+the user in the T3 driver thread, and the driver ends its turn waiting on it.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and

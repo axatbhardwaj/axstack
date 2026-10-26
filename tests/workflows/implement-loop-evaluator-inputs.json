@@ -84,7 +84,7 @@
     },
     {
       "id": "autopilot-driver-holds", "title": "Driver-thread holds survive release",
-      "input": {"invocation": "Authorized engineering delivery", "request": "Keep decisions in the T3 driver thread", "run_state": "A verification decision hold remains open while an unrelated release PR becomes merge-ready and then merged. Keep the hold in the T3 driver thread, park on the decision and revalidate head and base before clearing only its bound cause."}
+      "input": {"invocation": "Authorized engineering delivery", "request": "Keep decisions in the T3 driver thread", "run_state": "A verification decision hold remains open while an unrelated release PR becomes merge-ready and then merged. Keep the hold in the T3 driver thread, wait on the decision and revalidate head and base before clearing only its bound cause."}
     }
   ]
 }

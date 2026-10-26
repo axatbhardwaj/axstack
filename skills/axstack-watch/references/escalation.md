@@ -42,7 +42,7 @@ and stale flag, and the causes holding this merge.
 A card that needs the user's decision (work promotion or work deploying/unknown
 base, `Auto-merge: off`, risky-path, provenance, or an unclosable verification gap)
 is a decision hold raised in the T3 driver thread, and the driver ends its turn
-parked on the decision.
+waiting on the decision.
 Revalidate the current head and base; the reply clears only its bound cause.
 Person-wait cards follow the clock below.
 A changed head or base requires a refreshed card.

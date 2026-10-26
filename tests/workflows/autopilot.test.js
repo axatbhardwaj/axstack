@@ -54,7 +54,7 @@ test('resume and cancellation preserve driver-thread decisions and attempt budge
   expect(text).toMatch(/every entry[\s\S]*reconcile[\s\S]*owner[\s\S]*attempt[\s\S]*approved revision[\s\S]*wakes/i);
   expect(text).toMatch(/wakes[\s\S]*do not reset attempt budgets[\s\S]*do not grant approvals/i);
   expect(text).toMatch(/cancel[\s\S]*off[\s\S]*stops new actions[\s\S]*watch §6/i);
-  expect(text).toMatch(/decision holds[\s\S]*T3 driver thread[\s\S]*parked on the decision/i);
+  expect(text).toMatch(/decision holds[\s\S]*T3 driver thread[\s\S]*waiting on the decision/i);
   expect(text).toMatch(/revalidate the current head and base[\s\S]*reply[\s\S]*clears only its bound cause/i);
   expect(read('skills/axstack/references/run-record.md')).toMatch(/Autopilot: on \| paused[\s\S]*off \(cancelled/i);
 });

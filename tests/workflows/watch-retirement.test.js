@@ -38,7 +38,7 @@ test('current user guidance contains no scheduled own-PR repair path', () => {
 
 test('manual watch raises serious-risk holds in the driver thread', () => {
   const watch = read('skills/axstack-watch/SKILL.md');
-  expect(watch).toMatch(/Raise user-decision holds and serious-risk holds in the T3 driver thread[^.]*parked on the decision/i);
+  expect(watch).toMatch(/Raise user-decision holds and serious-risk holds in the T3 driver thread[^.]*waiting on the decision/i);
 });
 
 test('review distinguishes implementation publication from local-SHA maintenance review', () => {

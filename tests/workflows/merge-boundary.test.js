@@ -33,7 +33,7 @@ test('uncertain watch registration state holds new registrations until resolved'
 
 test('merge card binds evidence and parks user decisions in the driver thread', () => {
   expect(sentence(watch, 'Bind it to the PR')).toMatch(/head and base SHA.*CI.*authored review and diligence.*SHAs.*collaborator approvals and bot votes.*SHA and stale flag/i);
-  expect(sentence(watch, 'A card that needs')).toMatch(/decision hold raised in the T3 driver thread.*parked on the decision/i);
+  expect(sentence(watch, 'A card that needs')).toMatch(/decision hold raised in the T3 driver thread.*waiting on the decision/i);
   expect(sentence(watch, 'Revalidate the current head')).toMatch(/head and base.*reply clears only its bound cause/i);
 });
 
@@ -102,10 +102,10 @@ for (const [name, concepts, rewording, inversions] of [
     [[/post a merge card/i, 'skip the merge card']]],
   ['risky paths park the driver on a decision hold',
     [/risky-path/i, /decision hold/i, /T3 driver thread/i,
-      /driver ends its turn parked on the decision/i],
-    'A risky-path card is a decision hold in the T3 driver thread and the driver ends its turn parked on the decision.',
+      /driver ends its turn waiting on the decision/i],
+    'A risky-path card is a decision hold in the T3 driver thread and the driver ends its turn waiting on the decision.',
     [[/decision hold/i, 'progress update'],
-      [/driver ends its turn parked on the decision/i, 'driver continues automatic merging']]],
+      [/driver ends its turn waiting on the decision/i, 'driver continues automatic merging']]],
   ['file eligibility remains subject to the risky-path hold',
     [/personal and work PRs/i, /eligible/i, /whatever files/i,
       /subject to the risky-path hold/i],
