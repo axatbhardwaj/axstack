@@ -239,7 +239,7 @@ replacement; reconcile the old writer before admitting another.
 
 With an unsettled launched thread, the driver turn must end only while a bound
 `schedule_task` with `bindToCurrentThread:true` is armed at the default
-`everyMs:1800000` or for its 5-minute recovery cases in
+`everyMs:3600000` or for its 5-minute recovery cases in
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
 with its ID recorded. Each wake must reconcile all unsettled runs, including a
 writer that died without sending; failed runs hold incomplete work. The watch
@@ -298,11 +298,14 @@ Native watch ends after 8 failed reads, or on settle, archive, user Stop, or PR 
 A non-user T3 "stopped watching" notice is itself a driver wake: in that same turn,
 re-check the PR.
 After a non-user stop while the PR stays open, the driver must re-arm in that
-same turn, after any GraphQL reset wait, using the recovery steps below.
+same turn when GraphQL quota permits, using the recovery steps below.
 Record the stop reason T3 gives.
 Re-arm only after a stop not caused by the user.
 For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
-When GraphQL remaining is near 0, wait for reset before re-arming.
+When GraphQL remaining is near 0, defer re-arming until reset: set the bound
+schedule to 5 minutes and re-arm on the next wake after reset.
+Record the GraphQL reset time in the run record.
+Never wait for a GraphQL reset inside a turn.
 Before re-arming, first unsettle the driver thread with `t3_thread_organize`
 using `action: unsettle`, then call `watch_pull_request` again.
 Never re-arm in a loop.
@@ -314,10 +317,15 @@ If re-arming fails, restore the bound 5-minute schedule.
 When the run waits only on a user decision or a human-only step, including a
 user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
-When work restarts, restore the normal 30-minute cadence.
+When work restarts, re-evaluate cadence against the recovery conditions in
+[Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch).
 Keep native PR watches.
 For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
-for the normal 30-minute cadence, 5-minute recovery, and schedule update read-back.
+for the 60-minute backstop, 5-minute recovery, and schedule update read-back.
+An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.
+After T3 auto-settles a multi-PR driver on one PR merge, it re-arms remaining
+open members through the recovery steps before ending the turn.
+If rate-limited, use the 5-minute schedule and next-wake recovery above.
 The schedule still reconciles author and review tasks, readiness, and release.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.

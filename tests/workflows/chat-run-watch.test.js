@@ -31,16 +31,23 @@ test('same-head feedback and checks are events while unchanged complete passes s
   expect(text).toMatch(/API[^.]*incomplete[^.]*UNKNOWN/i);
 });
 
-test('chat-run wake uses the PR digest before deciding whether to act', () => {
+test('schedule wake uses the PR digest before deciding whether to act', () => {
   const text = runtime();
-  const concepts = [/start of (?:each|every) driver wake/i, /follow Provider bindings/i,
-    /driver account re-selection/i, /then run the digest/i, /pr-digest\.js/i];
+  const concepts = [/start of (?:each|every) schedule wake/i, /run|execute/i,
+    /the digest/i, /once per repository/i];
   checkRule(sentences(text).join('. '), (source) => requires(source, ...concepts),
-    'At the start of every driver wake, follow Provider bindings for driver account re-selection, then run the digest using pr-digest.js.',
-    [[/start of (?:each|every) driver wake/i, 'end of selected wakes'],
-      [/follow Provider bindings/i, 'skip Provider bindings'],
-      [/then run the digest/i, 'then skip the digest']], concepts);
-  const invocation = text.match(/At the start of each driver wake[\s\S]*?Exit 0/)?.[0] ?? '';
+    'At the start of every schedule wake, execute the digest once per repository.',
+    [[/start of (?:each|every) schedule wake/i, 'end of selected wakes'],
+      [/run|execute/i, 'skip']], concepts);
+  const picker = [/start of (?:each|every) driver wake/i, /follow Provider bindings/i,
+    /driver account re-selection/i];
+  const repicksEveryWake = (source) => sentences(source).some((unit) =>
+    requires(unit, ...picker) && !/\b(?:while|when|if) a schedule exists\b/i.test(unit));
+  checkRule(sentences(text).join('. '), repicksEveryWake,
+    'Follow Provider bindings for driver account re-selection at the start of every driver wake.',
+    [[/follow Provider bindings/i, 'skip Provider bindings'],
+      [/driver account re-selection/i, 'driver account re-selection only while a schedule exists']], picker);
+  const invocation = text.match(/At the start of each schedule wake[\s\S]*?Exit 0/)?.[0] ?? '';
   expect(invocation).toMatch(/once per repository/i);
   expect(invocation).toMatch(/installed[^.]*axstack[^.]*skill directory/i);
   expect(invocation).toMatch(/bun scripts\/pr-digest\.js --repo <owner\/name> --prs <[^>]*every watched member[^>]*in that repo> --watermark <[^>]*repository[^>]*per.repository JSON watermark file path>/i);
@@ -117,12 +124,12 @@ test('authorized own PR maintenance loops through feedback, base movement, and r
 });
 
 test('own open PRs use the original T3 driver with the runtime fallback cadence', () => {
-  const concepts = [/own open PRs/i, /chat-run mode/i, /normal 30-minute cadence/i,
+  const concepts = [/own open PRs/i, /chat-run mode/i, /60-minute backstop cadence/i,
     /Chat-run watch runtime/i, /\buse\b/i];
   checkRule(sentences(watch()).join('. '), (text) => requires(text, ...concepts),
-    'For own open PRs in chat-run mode, use the normal 30-minute cadence under Chat-run watch runtime.',
-    [[/30-minute/i, '5-minute'], [/\buse\b/i, 'avoid']], concepts);
-  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:1800000`');
+    'For own open PRs in chat-run mode, use the 60-minute backstop cadence under Chat-run watch runtime.',
+    [[/60-minute/i, '5-minute'], [/\buse\b/i, 'avoid']], concepts);
+  expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:3600000`');
   expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
   expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
@@ -133,12 +140,12 @@ test('chat-run wake waits for settled work and release; docs describe the defaul
   expect(watch()).toMatch(/end a chat-run watch[^.]*merged or closed[^.]*launched work is settled[^.]*release[^.]*cancellation/i);
   expect(watch()).toMatch(/stop the chosen wake[^.]*verify its stop receipt/i);
   const concepts = [/\bbound T3 schedule/i, /\b(?:resumes|wakes)\b/i, /driver thread/i,
-    /normal 30-minute cadence/i];
+    /60-minute backstop cadence/i];
   const cadence = (text) => requires(text, ...concepts);
   checkRule(host(), cadence,
-    'A bound T3 schedule wakes the driver thread on a normal 30-minute cadence.',
+    'A bound T3 schedule wakes the driver thread on a 60-minute backstop cadence.',
     [[/bound T3 schedule/i, 'unbound T3 schedule'], [/resumes|wakes/i, 'ignores'],
-      [/30-minute/i, '5-minute']], concepts);
+      [/60-minute/i, '5-minute']], concepts);
   expect(readme()).toContain('docs/host-operations.md#chat-run-watch-activation');
 });
 
@@ -182,7 +189,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   expect(scenario.expected.action).toContain('keep the same schedule armed while CI or release is pending');
   expect(scenario.expected.action).toContain('never create a second watch');
   expect(scenario.expected.action).toContain('delete only after chat-run stop conditions');
-  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:1800000',
+  for (const concept of ['schedule_task', 'bindToCurrentThread:true', 'everyMs:3600000',
     'reconcile', 'delete_scheduled_task', 'list_scheduled_tasks', 'absence', 'hold']) {
     expect(scenario.expected.action).toContain(concept);
     expect(scenario.expected.action.replaceAll(concept, '')).not.toContain(concept);
@@ -265,6 +272,20 @@ test('a resumed question child run keeps the 5-minute cadence', () => {
     /keeps? the 5-minute cadence/i, /everyMs:300000/, /until its result is accepted/i];
   checkRule(sentences(runtime().replace(/`/g, '')).join('. '), (text) => requires(text, ...concepts),
     'Until its result is accepted, a resumed AXSTACK-QUESTION child run lacking a native completion wake keeps the 5-minute cadence (everyMs:300000).',
-    [[/keeps? the 5-minute cadence/i, 'keeps the 30-minute cadence'], [/everyMs:300000/, 'everyMs:1800000'],
+    [[/keeps? the 5-minute cadence/i, 'keeps the 60-minute cadence'], [/everyMs:300000/, 'everyMs:3600000'],
       [/until its result is accepted/i, 'until its question is answered']], concepts);
+});
+
+// Native events already carry a reason to act; only backstop ticks need a digest.
+test('digest is restricted to schedule wakes and native events read current state', () => {
+  for (const [concepts, rewording, inversions] of [
+    [[/pr-digest\.js/i, /only on schedule wakes|on scheduled wakes only/i, /run|execute/i],
+      'Execute pr-digest.js on scheduled wakes only.',
+      [[/only on schedule wakes|on scheduled wakes only/i, 'on every driver wake'], [/run|execute/i, 'skip']]],
+    [[/native PR (?:wakes|events)/i, /reconcile|process/i, /event/i, /current-state read|fresh state read/i, /instead of running|without executing/i, /pr-digest\.js/i],
+      'For native PR events, process the event using a fresh state read without executing pr-digest.js.',
+      [[/reconcile|process/i, 'ignore'], [/current-state read|fresh state read/i, 'cached state'], [/instead of running|without executing/i, 'alongside running']]],
+  ]) {
+    checkRule(sentences(runtime()).join('. '), (text) => requires(text, ...concepts), rewording, inversions, concepts);
+  }
 });

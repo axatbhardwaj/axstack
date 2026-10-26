@@ -15,7 +15,6 @@ const reviewInversions = {
   'driver retains sole ownership and record': 'The driver hands off its role as single owner and sole run-record writer.',
   'cards and hold stay in driver thread': 'Move merge-card replies and `hold` out of the driver thread.',
   'next PR event re-evaluates cadence': 'On the next event on a watched PR, ignore the fallback conditions and retain the wake cadence.',
-  'normal cadence covers unsettled work and release': 'While launched work or the release step is unsettled, use the 5-minute cadence because no native wakes arrive.',
   'repairs stay with the author': "The driver takes base updates and review feedback from the PR's author and does the repair itself.",
 };
 
@@ -95,10 +94,10 @@ for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
       /cadence/i, /at once|immediately/i],
     'When the run waits only on a user decision or a human-only step, including a user merge, with no unsettled worker and no PR needing watch events, immediately change the run watch cadence to 60 minutes.',
     [/\b60 minutes\b/i, '5 minutes'], /no unsettled (?:launched work|worker)|no PR needing watch events/gi);
-  rule(`work restart restores normal cadence (${path})`, path,
-    [/work restarts|work resumes/i, /cadence/i],
-    'When work resumes, restore the normal 30-minute cadence.',
-    [/\b(?:normal 30-minute|30-minute normal)\b/i, 'slow 60-minute']);
+  rule(`work restart rechecks recovery conditions (${path})`, path,
+    [/work restarts|work resumes/i, /cadence/i, /recovery conditions/i],
+    'When work resumes, reassess cadence against the recovery conditions.',
+    [/re-evaluate|reassess/i, 'ignore']);
   rule(`native PR watches stay (${path})`, path, [/native PR watches/i],
     'Retain native PR watches.', [/\b(?:keep|retain)\b/i, 'remove']);
 }
@@ -106,11 +105,25 @@ rule('next PR event re-evaluates cadence', runtime,
   [/next event/i, /watched PR/i, /cadence/i, /fallback conditions/i, /same turn/i],
   'On the next event on a watched PR, re-evaluate the wake cadence against the fallback conditions in the same turn.',
   [/re-evaluate|reassess/i, 'ignore']);
-rule('normal cadence covers unsettled work and release', runtime,
-  [/launched work or the release step is unsettled/i, /normal 30-minute cadence/i, /everyMs:1800000/i,
-    /deliver their own wakes/i, /\buse\b/i],
-  'Because launched writers, delegated tasks and native PR watches deliver their own wakes, use the normal 30-minute cadence (everyMs:1800000) even while launched work or the release step is unsettled.',
-  [/30-minute/i, '5-minute']);
+rule('unsettled writer or follow-up without native completion uses recovery', runtime,
+  [/writer or follow-up|follow-up or writer/i, /unsettled|unfinished/i, /(?:without|lacking) a native completion path/i, /5-minute cadence/i, /everyMs:300000/i],
+  'A follow-up or writer that is unfinished and lacking a native completion path uses the 5-minute cadence (everyMs:300000).',
+  [/5-minute/i, '60-minute']);
+rule('healthy native completion paths use hourly backstop during release too', runtime,
+  [/native completion paths/i, /all unsettled work|every unsettled task/i, /armed native PR watches|native PR watches armed/i,
+    /60-minute backstop/i, /everyMs:3600000/i, /release is pending/i],
+  'With native PR watches armed and native completion paths for every unsettled task, use the 60-minute backstop (everyMs:3600000), including while release is pending.',
+  [/60-minute/i, '5-minute']);
+rule('cadence defaults to hourly outside recovery', runtime,
+  [/otherwise/i, /use/i, /60-minute backstop/i],
+  'Otherwise, use the 60-minute backstop.', [/60-minute/i, '5-minute']);
+const stopRecoveryBan = /\b(?:never (?:triggers?|activates?)|(?:do|does|must) not (?:(?:switch|change) to|trigger|activate))\b/i;
+for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
+  rule(`user Stop does not activate watch recovery (${path})`, path,
+    [/open PR/i, /unwatched/i, /user Stop/i, /5-minute recovery cadence/i],
+    'When a user Stop leaves an open PR unwatched, do not switch to the 5-minute recovery cadence.',
+    [stopRecoveryBan, 'always triggers'], stopRecoveryBan);
+}
 
 // Cadence eligibility and recovery are owned here; native-pr-watch covers the
 // dropped-watch wake's immediate recheck/rearm ordering at the tool boundary.
@@ -120,8 +133,8 @@ for (const [name, concepts, rewording, inversions] of [
       /re-arming fails/i, /bound chat-run schedule/i, /5 minutes/i, /everyMs:300000/i, /restore|reset/i],
     'If native watch_pull_request is unavailable or unarmed for any open member, or re-arming fails, reset the bound chat-run schedule to 5 minutes (everyMs:300000).',
     [[/unavailable/i, 'available'], [/unarmed for any open member/i, 'armed for every open member'],
-      [/re-arming fails/i, 're-arming succeeds'], [/5 minutes/i, '30 minutes'],
-      [/everyMs:300000/i, 'everyMs:1800000'], [/restore|reset/i, 'retain']]],
+      [/re-arming fails/i, 're-arming succeeds'], [/5 minutes/i, '60 minutes'],
+      [/everyMs:300000/i, 'everyMs:3600000'], [/restore|reset/i, 'retain']]],
 ]) {
   test(`automatic own-PR watch: ${name}`, () => {
     const accepts = (text) => sentences(text).some((unit) =>
@@ -158,3 +171,16 @@ rule('Close-out follows watch end', watch,
   [/Close-out/i, /watch ends|end of the watch/i],
   'Close-out follows the end of the watch.',
   [/\b(?:after|follows)\b/i, (word) => word.toLowerCase() === 'after' ? 'before' : 'precedes']);
+
+rule('work restart names the linked recovery contract', 'axstack/references/t3-runtime.md',
+  [/work restarts|work resumes/i, /recovery conditions/i, /Chat-run watch runtime/i],
+  'When work resumes, reassess cadence against the recovery conditions in Chat-run watch runtime.',
+  [/re-evaluate|reassess/i, 'ignore']);
+rule('native completion paths identify their wake sources', runtime,
+  [/delegated tasks/i, /native PR watches/i, /native completion paths/i, /deliver their own wakes|supply their own notifications/i],
+  'Delegated tasks and native PR watches provide native completion paths because they supply their own notifications.',
+  [/provide|have/i, 'lack']);
+rule('launched writers and marker resumes lack native completion paths', runtime,
+  [/launched writers/i, /resumed marker questions/i, /native completion paths/i],
+  'Launched writers and resumed marker questions do not have native completion paths.',
+  [/lack|do not have/i, 'have'], /lack|do not have/i);

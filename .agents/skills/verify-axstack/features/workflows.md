@@ -7,6 +7,13 @@ Settlement read-back contracts: `tests/workflows/settle-readback.test.js` and
 The native-watch contracts also cover driver-only arming, stop conditions,
 non-user-stop recovery with unsettle and diagnostic rate-limit checks, and
 conflict-free base movement through the existing base-update rule.
+`chat-run-watch.test.js` and `automatic-own-pr-watch.test.js` cover the hourly
+backstop, five-minute recovery, user Stop exclusion and schedule-only digest.
+Native-watch checks also cover next-wake quota recovery and re-arming remaining
+PRs after a merge auto-settles the driver, including the host-guide copies.
+`watch-quota-recovery.test.js` covers saved reset deadlines and digest deferral
+and restart; cadence checks define native wake sources and every-wake account
+selection. These remain instruction contracts.
 Runtime preflight contracts cover merge-deleted author worktrees and private evidence.
 Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-mode.md`, `references/codebase-brief.md`,
@@ -63,6 +70,10 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/staged-file-tokens.test.js \
   tests/workflows/staged-token-gate.test.js \
   tests/workflows/settle-readback.test.js \
+  tests/workflows/native-pr-watch.test.js \
+  tests/workflows/chat-run-watch.test.js \
+  tests/workflows/automatic-own-pr-watch.test.js \
+  tests/workflows/watch-quota-recovery.test.js \
   tests/workflows/workspace-hygiene.test.js \
   tests/workflows/manager-pass-settlement.test.js \
   tests/workflows/pr-managers.test.js \
