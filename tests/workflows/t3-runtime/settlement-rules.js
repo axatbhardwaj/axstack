@@ -5,7 +5,7 @@ export const settlementRules = [
   ["probe checkout", [/\bdisposable/i, /\bdetached/i, /\bcandidate SHA/i, /\bpinned base/i, /git worktree add --detach/]],
   ["probe cd", [/\bbrief/i, /\brequir/i, /\bcd/i, /into it/i]],
   ["probe outputs", [/\bdisposable probes/i, /\boutputs/i, /<run>\/evidence\/<key>\//]],
-  ["writer launch", [/\bauthor/i, /\bt3_thread_launch/, /\btype:worktree/, /\bstartFromOrigin:false/, /\bown worktree/i, /\bmerges or closes/i]],
+  ["writer launch", [/\bauthor/i, /\bdelegate_task/, /\basync/i, /isolation:"worktree"/, /title = dispatch key/i, /stable clientRequestId/i, /\bown worktree/i, /\bmerges or closes/i]],
   ["owner row", [/\bowner/i, /\bdriver thread/i, /\bdriver worktree/i]],
   ["owner source exclusion", [/\btracked candidate source/i, /\btests/i], /\bnever (?:writes|edits|changes) tracked candidate source or tests|never (?:be )?(?:written|edited|changed)/i],
   ["owner worker exclusion", [/\bworker launch/i], /\bNo worker launch/i],

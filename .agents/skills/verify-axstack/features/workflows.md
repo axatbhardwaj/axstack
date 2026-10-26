@@ -18,6 +18,9 @@ Native-watch checks also cover next-wake quota recovery and re-arming remaining
 PRs after a merge auto-settles the driver, including the host-guide copies.
 `watch-quota-recovery.test.js` covers saved reset deadlines and digest deferral
 and restart; cadence checks define native wake sources. These remain instruction contracts.
+`hidden-author-dispatch.test.js` checks worktree delegation, fresh branch bootstrap,
+idempotent recovery, same-child repair, delegated candidate checks and manual
+settlement/retirement in each shipped copy; the live canary stays a driver check.
 Runtime preflight contracts cover merge-deleted author worktrees and private evidence.
 Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-mode.md`, `references/codebase-brief.md`,

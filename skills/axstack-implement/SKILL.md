@@ -65,8 +65,9 @@ Immediately before an actual role dispatch, read and follow the
 [T3 runtime boundary](../axstack/references/t3-runtime.md). Ordinary local
 reading and writing does not require that launch reference.
 
-Launch authors through `t3_thread_launch` in their own SHA-pinned worktrees;
-use async `delegate_task` for non-writers under the runtime contract.
+Authors must use async `delegate_task` with `isolation:"worktree"`, title = dispatch key
+and stable `clientRequestId` under the runtime contract's fresh-checkout bootstrap,
+same-child repair and recorded launch fallback rules.
 
 One persistent owner remains accountable for each PR. Exactly one author writes
 it; accepted repairs return there while its evidence is usable, and the owner
