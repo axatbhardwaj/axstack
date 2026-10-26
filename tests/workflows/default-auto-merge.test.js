@@ -108,8 +108,8 @@ test('merge eligibility grants no publish or host install authority', () => {
 const documented = [
   ['excluded peer merges', [/automatic merge/i, /peer PRs/i, /excluded/i],
     'Peer PRs are excluded from automatic merge.', [/excluded/i, 'permitted']],
-  ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
-    'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],
+  ['excluded infrastructure changes', [/excluded/i, /changes to proxy or hub infrastructure/i, /IP routing/i],
+    'Changes to proxy or hub infrastructure and IP routing are excluded.', [/excluded/i, 'authorized']],
   ['deferred contention', [/local CI contention/i, /deferred/i],
     'Local CI contention handling remains deferred.', [/deferred/i, 'implemented']],
   ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /provider\/model substitution/i, /excluded/i],

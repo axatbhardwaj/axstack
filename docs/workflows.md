@@ -570,8 +570,7 @@ Npm publication still requires human stage approval; agents never run
 This policy grants no release, npm publish, or host install
 authority. See [Preview authority and operations](host-operations.md#private-pr-previews).
 
-Excluded: CLI proxy, account pooling behind a proxy or shared session, and IP
-routing; local CI contention handling is deferred. Quota-driven scheduling or
+Excluded: changes to proxy or hub infrastructure and IP routing; local CI contention handling is deferred. Quota-driven scheduling or
 model routing (provider/model substitution) is excluded. Automatic
 merge of work promotion, deploying-base and unknown-base PRs is excluded.
 Automatic merge of peer PRs is excluded. Previews

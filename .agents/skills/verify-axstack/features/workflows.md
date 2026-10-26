@@ -43,6 +43,8 @@ Split test files: `tests/workflows/{presets-research,presets-roles,presets-runti
 runtime tables: `tests/workflows/t3-runtime/*.js`.
 `provider-bindings.test.js` checks fixed Claude/Codex instance bindings and
 usage-limit holds without failover, with removal, inversion and rewording probes.
+`runtime-safety.test.js` preserves the single-server keeper, sole stateless timer
+and model-discipline contracts with removal, inversion and rewording probes.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
 packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
 bytes, exclusions, failure guidance, renames and subdirectory invocation.
@@ -129,6 +131,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/single-server.test.js \
   tests/workflows/single-server-units.test.js \
   tests/workflows/provider-bindings.test.js \
+  tests/workflows/runtime-safety.test.js \
   tests/workflows/run-record.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/workflows.log" 2>&1 || STATUS=$?
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
