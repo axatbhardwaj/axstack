@@ -15,11 +15,13 @@ compare its Watermarks with the inventory:
 
 - Run the full pass when the sorted list differs from `Quiet gate:`.
 - Run the full pass when any other lane thread is non-terminal.
-- Run the full pass when the recorded prior pass thread is unsettled.
+- Run the full pass only when the recorded prior pass thread is unsettled and no guard keeps it unsettled.
 - Run the full pass when continuity or either watermark is missing, malformed or unreadable.
 - Run the full pass when `Last full pass:` is at least 4 hours old or in the future.
 - Run the full pass when any call fails or pagination, PR head OIDs or thread/run liveness is incomplete or unknown.
 - Run the full pass when continuity records any unserved, capacity-deferred, `INCOMPLETE` or re-eligible event, or any open hold with a resume condition beyond a user decision (such as capacity or remeasure).
+
+Held or flagged prior passes never force a full pass or failure report by their unsettled state alone.
 
 Holds awaiting only the user remain quiet-eligible: a user decision on the PR
 changes `updatedAt`, and the 4 h full pass reconciles replies in flagged threads.

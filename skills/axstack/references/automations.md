@@ -383,7 +383,13 @@ Self-settle is the one exception to terminal-before-settle: T3 returns
 This deferred metadata request takes effect after the current turn ends.
 The next pass uses `t3_thread_read` on the recorded prior pass threadId before replacing
 its identity record, and verifies `settled: true`.
-If the prior thread is unsettled, settle it under the existing pass-start guards
+Only prior passes that no guard keeps unsettled enter unresolved recovery.
+A guard includes a hold or flag, an owned watch, unsettled descendants, a pending
+receipt, a wedged pass or stalled owner, and every existing pass-start protection.
+If a guard keeps a prior pass unsettled, drop it from the unresolved list and retain
+its existing hold or flagged-threadId record (or watch/descendant ownership record).
+Held or flagged prior passes never force a full pass or failure report by their unsettled state alone.
+If the prior thread is unsettled and eligible, settle it under the existing pass-start guards
 below and read back `settled: true`.
 For a failed request or next-pass verification, the next pass owns unresolved
 recovery and records a hold or report with the exact threadId and resume action.
