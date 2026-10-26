@@ -205,7 +205,7 @@ work, or reporting validated risk as `REQUEST_CHANGES`. Disagreement and
 silence leave the hold open.
 
 This escalation exists only in prompts and briefs; no runtime component
-enforces it. Raise the hold in the T3 driver thread and end the turn parked on
+enforces it. Raise the hold in the T3 driver thread and end the turn waiting on
 the user's decision. Silence leaves the hold open. Use no private escalation script.
 
 Under a manager PR job, apply Peer mode's serious security/funds threshold.

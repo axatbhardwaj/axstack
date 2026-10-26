@@ -172,7 +172,7 @@ test('owned-core: report-only writes nothing; authorized submit binds commit and
 test('owned-core: prompt-only escalation parks decisions in the driver thread', () => {
   const text = skill('axstack-review');
   expect(/prompt-only/i.test(text), 'escalation must stay prompt-only').toBeTruthy();
-  expect(text).toMatch(/Raise the hold in the T3 driver thread[\s\S]*end the turn parked on[\s\S]*user's decision/i);
+  expect(text).toMatch(/Raise the hold in the T3 driver thread[\s\S]*end the turn waiting on[\s\S]*user's decision/i);
 });
 
 test('owned-core: watch adopts existing PR; observation-only dispatches nothing writable', () => {

@@ -10,6 +10,7 @@ not a mode change.
 ## Advance and hold
 
 Follow [Advised holds](contracts.md#advised-holds) for eligible user-decision holds.
+For parked holds, follow [Parked user-reply holds](contracts.md#parked-user-reply-holds).
 
 Advance only after the finishing phase returns its completed identity (a
 small-change intent, approved spec, matching ticket map, merge-ready or merged
@@ -43,7 +44,7 @@ The driver records each verified `Autopilot:` transition in the private run
 record, which remains authoritative.
 Awaiting human spec approval records `Autopilot: paused (spec approval; resume:
 human approval)` as a decision hold raised in the T3 driver thread; end the turn
-parked on the decision.
+waiting on the decision.
 
 ## Reversible local repair
 
@@ -109,7 +110,8 @@ End the chat-run watch only when every watched PR is merged or closed,
 launched work is settled, and the run's release step is settled or not applicable,
 or the user cancels.
 A required PR closed without merging is incomplete scope; it does not make the run release-eligible.
-Keep its decision hold and wake until the user resolves scope or cancels.
+Keep its decision hold until the user resolves scope or cancels.
+For a required PR closed without merging, apply parking eligibility.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 Follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 for quiet cadence and native schedule re-arming.
@@ -174,6 +176,6 @@ Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver accou
 
 Follow [Route each wake](../../axstack-watch/SKILL.md#4-route-each-wake).
 Raise decision holds, including spec and npm stage approval, and serious-risk
-holds in the T3 driver thread; end the turn parked on the decision.
+holds in the T3 driver thread; end the turn waiting on the decision.
 Revalidate the current head and base on a user reply; it clears only its bound cause.
 Healthy ticks stay quiet.

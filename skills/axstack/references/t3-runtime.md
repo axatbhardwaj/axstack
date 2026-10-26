@@ -295,6 +295,8 @@ Delegated children never call `watch_pull_request`.
 Before arming, handle existing checks and comments because only later comments wake the thread.
 Never poll or keep a model active between native PR wake events.
 Native watch ends after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.
+For parked holds, follow [Parked user-reply holds](contracts.md#parked-user-reply-holds).
+A parking unwatch never triggers native re-arm or the 5-minute recovery cadence.
 A non-user T3 "stopped watching" notice is itself a driver wake: in that same turn,
 re-check the PR.
 After a non-user stop while the PR stays open, the driver must re-arm in that
@@ -314,12 +316,12 @@ Route native PR wake events through watch §4 and the unchanged §5 readiness pr
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
 If re-arming fails, restore the bound 5-minute schedule.
-When the run waits only on a user decision or a human-only step, including a
-user merge, with no unsettled worker and no PR needing watch events, change
-the run watch cadence to 60 minutes at once.
+For forge-resolved human waits, including user merge, npm stage approval and
+human review, with no unsettled worker and no PR needing watch events, set the run watch cadence to 60 minutes
+at once.
 When work restarts, re-evaluate cadence against the recovery conditions in
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch).
-Keep native PR watches.
+Keep native PR watches for forge-resolved waits.
 For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 for the 60-minute backstop, 5-minute recovery, and schedule update read-back.
 An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.

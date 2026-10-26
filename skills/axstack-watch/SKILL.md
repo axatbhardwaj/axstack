@@ -112,7 +112,7 @@ load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [T3 runtime](../axstack/references/t3-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
-For own open PRs in chat-run mode, use the 60-minute backstop cadence under
+Outside parked holds, for own open PRs in chat-run mode, use the 60-minute backstop cadence under
 [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch);
 the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
 neither. Start no automation for a read-only check.
@@ -165,13 +165,14 @@ A handled wake has an acknowledged event ID, an observation or action bound to
 the current revision, and a recorded hold or next owner where work remains.
 
 Follow [Advised holds](../axstack/references/contracts.md#advised-holds) before parking a user-decision hold.
+For parked holds, follow [Parked user-reply holds](../axstack/references/contracts.md#parked-user-reply-holds).
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
-and the driver ends its turn parked on the decision.
+and the driver ends its turn waiting on the decision.
 These include `verification not proven`, merge cards needing user input,
 spec approval and npm stage approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
 After bounded safe recovery, raise a genuine blocked operation that still needs
-the user in the T3 driver thread, and the driver ends its turn parked on it.
+the user in the T3 driver thread, and the driver ends its turn waiting on it.
 Routine questions stay in the T3 driver thread. Progress, CI pending, and completion always stay
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and
@@ -203,7 +204,8 @@ End a chat-run watch only after all members merged or closed, launched work is s
 and the run's release step is settled or not applicable, or user cancellation.
 Without an Autopilot or Release record, the release step is not
 applicable to this watch. A required PR closed without merging records a
-decision hold and the wake remains active until the user resolves scope or cancels.
+decision hold until the user resolves scope or cancels.
+For a required PR closed without merging, apply parking eligibility.
 Stop the chosen wake and verify
 its stop receipt; a failed or uncertain schedule deletion is a hold.
 Delete only the recorded schedule and verify absence with `list_scheduled_tasks` under

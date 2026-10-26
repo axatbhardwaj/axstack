@@ -69,7 +69,7 @@
     {
       "id": "serious-risk-driver-hold",
       "title": "Serious risk holds dependent work in the driver thread",
-      "spec_ref": "Prompt-only urgent escalation: credible serious security/infra-downtime/data-loss/major-design concern raised immediately. Hold approval/merge-ready/dependent dangerous actions. Instruction in skills, not programmatic gate. Raise the hold in the T3 driver thread and park the turn on the decision.",
+      "spec_ref": "Prompt-only urgent escalation: credible serious security/infra-downtime/data-loss/major-design concern raised immediately. Hold approval/merge-ready/dependent dangerous actions. Instruction in skills, not programmatic gate. Raise the hold in the T3 driver thread and end the turn waiting on the decision.",
       "input": {
         "run_state": "Final review in progress on PR-A.",
         "event": "Reviewer finds credible serious security issue (auth bypass with exploit steps) during review."
@@ -78,7 +78,7 @@
         "immediate": "Raise to owner/driver and user without waiting for second reviewer or consensus",
         "hold": ["Approval, merge-ready declarations, and dependent dangerous actions"],
         "continue": ["Safe investigation and unrelated work may continue"],
-        "decision": "Raise the hold in the T3 driver thread and end the turn parked on the decision; silence leaves the hold open",
+        "decision": "Raise the hold in the T3 driver thread and end the turn waiting on the decision; silence leaves the hold open",
         "forbidden": ["Implementing a programmatic escalation gate/hook/engine", "Proceeding on disagreement or silence as permission"],
         "evidence": "Present evidence, likely impact, options, and needed user decision"
       }

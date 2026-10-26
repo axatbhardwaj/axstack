@@ -30,7 +30,7 @@ becomes a `verification not proven` card bound to head and base.
 The card names what is unproven, why, and the action that would settle it.
 Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for eligible verification cards.
 
-Raise `verification not proven` in the T3 driver thread and end the turn parked
+Raise `verification not proven` in the T3 driver thread and end the turn waiting
 on the decision, bound to the exact PR head and base.
 A changed PR head or base must supersede its open verification decision card,
 reissuing only if a decision is still needed.

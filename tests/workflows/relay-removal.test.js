@@ -18,10 +18,10 @@ test('the shipped workflow has no removed notification transport', () => {
   expect(hits).toEqual([]);
 });
 
-test('watch raises user decisions in the T3 driver thread and parks the turn', () => {
+test('watch raises user decisions in the T3 driver thread and waits on the decision', () => {
   const source = readFileSync(`${root}/skills/axstack-watch/SKILL.md`, 'utf8').replace(/\s+/g, ' ');
-  const concepts = [/user-decision holds/i, /T3 driver thread/i, /ends? (?:its|the) turn/i, /parked on the decision/i];
+  const concepts = [/user-decision holds/i, /T3 driver thread/i, /ends? (?:its|the) turn/i, /waiting on the decision/i];
   checkRule(source, (text) => requires(text, ...concepts),
-    'Raise user-decision holds in the T3 driver thread, and the driver ends its turn parked on the decision.',
-    [[/parked on the decision/i, 'continuing without the decision']], concepts);
+    'Raise user-decision holds in the T3 driver thread, and the driver ends its turn waiting on the decision.',
+    [[/waiting on the decision/i, 'continuing without the decision']], concepts);
 });

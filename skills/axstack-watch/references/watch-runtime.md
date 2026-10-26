@@ -42,11 +42,14 @@ One bound schedule serves both the run watch and the chat-run watch; never creat
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 If the native schedule has a lifetime, the driver re-arms it at a wake.
 Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.
-When the run waits only on a user decision or a human-only step, including a
-user merge, with no unsettled worker and no PR needing watch events, change
-the run watch cadence to 60 minutes at once.
+For parked holds, follow [Parked user-reply holds](../../axstack/references/contracts.md#parked-user-reply-holds).
+While parked, keep the bound run watch disabled until the answer.
+A parking unwatch never triggers native re-arm or the 5-minute recovery cadence.
+For forge-resolved human waits, including user merge, npm stage approval and
+human review, with no unsettled worker and no PR needing watch events, set the run watch cadence to 60 minutes
+at once.
 When work restarts, re-evaluate cadence against the recovery conditions below.
-Keep native PR watches.
+Keep native PR watches for forge-resolved waits.
 Delegated tasks and native PR watches provide native completion paths: they deliver their own wakes.
 Launched writers and resumed marker questions lack native completion paths.
 With native completion paths for all unsettled work and armed native PR watches,
@@ -62,7 +65,7 @@ Otherwise, use the 60-minute backstop.
 On the next event on a watched PR, re-evaluate the wake cadence against the
 fallback conditions in the same turn.
 Apply these conditions before ending each driver turn, including after initial
-arming or a work restart; the 60-minute human-only wait rule above still applies.
+arming or a work restart; the parking and forge-resolved wait rules above still apply.
 Read back each schedule update and record its receipt; an uncertain update holds affected work.
 Each wake reconciles all unsettled runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
@@ -149,14 +152,14 @@ Stop the chosen wake only when every watched PR is merged or closed,
 launched work is settled, and the run's release step is settled or not applicable,
 or the user cancels. Without an Autopilot or Release record, the release step is not
 applicable to this watch. A required PR closed without merging records a
-decision hold and the wake remains active until the user resolves scope or cancels;
-the run is not release-eligible.
+decision hold until the user resolves scope or cancels; the run is not release-eligible.
+For a required PR closed without merging, apply parking eligibility.
 Delete only the recorded watch with `delete_scheduled_task` and read back its absence with
 `list_scheduled_tasks`.
 An uncertain delete preserves the hold and recorded schedule ID.
 Re-read membership and confirm no ambiguous publication or unsettled pass;
 cancellation prevents new work but does not prove running workers exited.
-For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed,
+For an unparked chat-run watch, keep the bound run watch armed until every watched PR is merged or closed,
 launched work is settled, and the release step is settled or not applicable, or until user cancellation.
 For a chat-run watch, defer the T3 runtime's "nothing remains unsettled" deletion until those chat-run stop conditions.
 The driver separately settles workers, preserves evidence, and archives the run;
