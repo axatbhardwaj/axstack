@@ -66,7 +66,6 @@ test('installed presets route analysis roles to the selected provider', () => {
       if (mixedAuditor) expect(actual.model).toBe('claude-haiku-5-5');
     }
     if (preset === 'mixed') {
-      expect(byId['axstack-research-web-google'].provider).toBe('antigravity');
       expect(byId['axstack-research-x'].provider).toBe('grok');
     }
   }
@@ -94,12 +93,12 @@ test('installed presets expose independent Sol analysis pair seats', () => {
   }
 });
 
-test('an installation without arena candidates reports both added IDs', () => {
+test('an installation without arena candidate reports its added ID', () => {
   const rootDir = makeTempRoot('axstack-role-upgrade-');
   const home = rootDir;
   const skillsDir = join(rootDir, 'installed');
   const current = JSON.parse(readFileSync(`${root}/profiles/presets/mixed.json`, 'utf8')).roles.filter(({ id }) => !['axstack-arena-judge-opus', 'axstack-ui-verifier', 'axstack-diligence', ...solPairIds].includes(id));
-  const old = current.filter(({ id }) => !['axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity'].includes(id));
+  const old = current.filter(({ id }) => id !== 'axstack-arena-candidate-grok');
   const oldBundle = writeFixtureBundle(rootDir, { name: 'old', presets: { mixed: old } });
   const newBundle = writeFixtureBundle(rootDir, { name: 'new', presets: { mixed: current } });
   const cli = `${root}/bin/axstack.js`;
@@ -110,11 +109,10 @@ test('an installation without arena candidates reports both added IDs', () => {
   expect(JSON.parse(before.toString()).roles).toHaveLength(old.length);
   expect(assessInstalledRoleSnapshot(before, 'mixed', current).gaps).toEqual([
     'missing selected bundle role: axstack-arena-candidate-grok',
-    'missing selected bundle role: axstack-arena-candidate-antigravity',
   ]);
   const result = runCli(cli, args(newBundle), { env: { HOME: home } });
   expect(result.out).toContain('axstack/roles.json');
-  expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok, axstack-arena-candidate-antigravity');
+  expect(result.out).toContain('added role IDs: axstack-arena-candidate-grok');
   expect(JSON.parse(readFileSync(rolesPath, 'utf8')).roles).toHaveLength(current.length);
   expect(runCli(cli, args(newBundle), { env: { HOME: home } }).out).not.toContain('added role IDs:');
   writeFileSync(rolesPath, JSON.stringify({ version: 1, preset: 'mixed', roles: old }) + '\n');

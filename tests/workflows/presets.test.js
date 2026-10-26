@@ -22,14 +22,12 @@ const roleIds = [
   'axstack-research-code',
   'axstack-research-code-sol',
   'axstack-research-web',
-  'axstack-research-web-google',
   'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
   'axstack-ui-verifier',
   'axstack-explore-codebase',
   'axstack-explore-codebase-luna',
-  'axstack-explore-codebase-flash',
   'axstack-explore-execution',
   'axstack-explore-execution-sol',
   'axstack-auditor',
@@ -42,13 +40,11 @@ const roleIds = [
   'axstack-escalation-fable',
   'axstack-arena-judge-opus',
   'axstack-arena-candidate-grok',
-  'axstack-arena-candidate-antigravity',
 ];
 
 const c = (model, effort) => ['codex', model, 'full-access', effort];
 const a = (model, effort) => ['claude', model, 'bypassPermissions', effort];
 const g = (model, effort) => ['grok', model, 'full-access', effort];
-const ag = (model, effort) => ['antigravity', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('astra', 'high'),
@@ -56,18 +52,18 @@ const expected = {
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
-    ag(null, 'low'), a('sonnet', 'high'),
-    a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), ag(null, 'high'),
+    a(null, 'low'), a('sonnet', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'),
     g(null, 'high'),
     a('sonnet', 'high'), c('sol', 'medium'),
     a('sonnet', 'high'),
-    a('haiku', 'high'), c('luna', 'xhigh'), ag('gemini-3.8-flash-medium', 'medium'),
+    a('haiku', 'high'), c('luna', 'xhigh'),
     a('sonnet', 'high'), c('sol', 'high'),
     a('haiku', 'xhigh'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
     c('astra', 'xhigh'), a('fable', 'xhigh'), a('opus', 'xhigh'),
-    g(null, 'high'), ag(null, 'high'),
+    g(null, 'high'),
   ],
   'codex-only': [
     c('astra', 'high'),
@@ -76,17 +72,17 @@ const expected = {
     c('sol', 'high'), c('luna', 'xhigh'), c('luna', 'xhigh'),
     c('sol', 'high'),
     c('luna', 'low'), c('astra', 'medium'),
-    c('sol', 'high'), c('sol', 'high'), c('sol', 'low'), c(null, 'high'),
+    c('sol', 'high'), c('sol', 'high'), c('sol', 'low'),
     c(null, 'high'),
     c('sol', 'high'), c('luna', 'xhigh'),
     c('sol', 'medium'),
-    c('sol', 'high'), c('luna', 'xhigh'), c(null, 'medium'),
+    c('sol', 'high'), c('luna', 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
     c('luna', 'xhigh'), c('sol', 'high'),
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), c('sol', 'high'),
     c('astra', 'xhigh'), c(null, 'xhigh'), c(null, 'xhigh'),
-    c(null, 'high'), c(null, 'high'),
+    c(null, 'high'),
   ],
   'claude-only': [
     a(null, 'high'),
@@ -103,12 +99,11 @@ const expected = {
     a(null, 'high'),
     a('sonnet', 'high'),
     a(null, 'high'),
-    a(null, 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
     a('haiku', 'high'),
-    a(null, 'xhigh'), a(null, 'medium'),
+    a(null, 'xhigh'),
     a('sonnet', 'high'),
     a(null, 'high'),
     a('sonnet', 'high'),
@@ -120,7 +115,6 @@ const expected = {
     a(null, 'xhigh'),
     a('fable', 'xhigh'),
     a('opus', 'xhigh'),
-    a(null, 'high'),
     a(null, 'high'),
   ],};
 
@@ -372,4 +366,15 @@ test('presets: retired monitor is absent from bundled roles and watch guidance',
   }
   const runtime = readFileSync(`${root}/skills/axstack/references/t3-runtime.md`, 'utf8');
   expect(runtime, 'dispatch table must omit the retired role').not.toMatch(/^\|[^\n]*\bmonitor\b[^\n]*\|$/im);
+});
+
+test('presets expose no retired workflow seats or provider', () => {
+  for (const preset of presetNames) {
+    const { roles } = readJson(`profiles/presets/${preset}.json`);
+    expect(roles.some(({ provider }) => provider === 'antigravity')).toBe(false);
+    for (const id of ['axstack-research-web-google', 'axstack-explore-codebase-flash',
+      'axstack-arena-candidate-antigravity']) {
+      expect(roles.some((role) => role.id === id)).toBe(false);
+    }
+  }
 });

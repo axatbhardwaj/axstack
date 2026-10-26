@@ -81,33 +81,20 @@ for (const preset of ['mixed', 'claude-only']) {
   });
 }
 
-test('Scout seats resolve from selected preset roles without substituting absent Flash', () => {
+test('Scout seats resolve from selected preset roles without substitution', () => {
   const data = fresh();
   data.providers.find((provider) => provider.providerInstanceId === 'codex')
     .models.push(entry('gpt-6-luna', 'reasoningEffort', ['xhigh']));
-  data.providers.find((provider) => provider.providerInstanceId === 'antigravity')
-    .models.push({ id: 'gemini-3.8-flash-medium', options: [] });
 
   for (const preset of ['mixed', 'codex-only']) {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const luna = roles.find((role) => role.id === 'axstack-explore-codebase-luna');
-    const flash = roles.find((role) => role.id === 'axstack-explore-codebase-flash');
     expect(luna, `${preset} Luna seat`).toBeDefined();
-    expect(flash, `${preset} Flash seat`).toBeDefined();
 
     const lunaResult = resolve(data, ['--class', luna.modelClass], luna.provider, luna.thinkingOptionId);
     expect(lunaResult.status).toBe(0);
     expect(JSON.parse(lunaResult.output)).toMatchObject({ provider: 'codex', model: 'gpt-6-luna',
       effortOption: { id: 'reasoningEffort', value: 'xhigh' } });
-
-    const flashResult = resolve(data, ['--model', String(flash.model)], flash.provider, flash.thinkingOptionId);
-    if (preset === 'mixed') {
-      expect(flashResult.status).toBe(0);
-      expect(JSON.parse(flashResult.output)).toMatchObject({ provider: 'antigravity',
-        model: 'gemini-3.8-flash-medium', effortOption: null });
-    } else {
-      held(flashResult, /intentional absence/i);
-    }
   }
 });
 
@@ -174,7 +161,7 @@ test('capabilities holds unknown or ambiguous provider instances without substit
 test('capabilities holds empty catalogs, unknown classes and unsupported effort options', () => {
   held(resolve(capabilities, ['--class', 'terra']), /matching.*model/i);
   held(resolve(capabilities, ['--class', 'sol'], 'grok'), /class/i);
-  held(resolve(capabilities, ['--model', 'null'], 'antigravity'), /model/i);
+  held(resolve(capabilities, ['--model', 'null'], 'antigravity'), /unknown provider/i);
   const empty = fresh(); empty.providers[0].models = [];
   held(resolve(empty, ['--model', 'null']), /model/i);
   const noEffort = fresh(); noEffort.providers[0].models[0].options = [];
@@ -191,25 +178,12 @@ test('capabilities preserves explicit rejection exclusions and holds when all ma
   held(resolve(capabilities, ['--class', 'sol', '--exclude']), /exclude/i);
 });
 
-test('capabilities Antigravity binds the first effort-suffixed ID without an effort option', () => {
+test('capabilities rejects the retired workflow provider even with a usable catalog', () => {
   const data = fresh();
-  data.providers[3].models = ['gemini-3.8-flash-low', 'gemini-3.8-flash-high',
-    'gemini-3.8-pro-high'].map((id) => ({ id, options: [] }));
-  for (const effort of ['high', 'low']) {
-    const result = resolve(data, ['--model', 'null'], 'antigravity', effort);
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.output)).toEqual({ provider: 'antigravity', providerInstanceId: 'antigravity',
-      model: `gemini-3.8-flash-${effort}`, effortOption: null, source: 'capabilities', path: result.path });
-  }
-  const pin = resolve(data, ['--model', 'gemini-3.8-pro-high'], 'antigravity');
-  expect(pin.status).toBe(0);
-  expect(JSON.parse(pin.output).model).toBe('gemini-3.8-pro-high');
-  held(resolve(data, ['--model', 'gemini-3.8-flash-low'], 'antigravity'), /unsupported effort/i);
-  held(resolve(data, ['--model', 'null', '--exclude', 'gemini-3.8-flash-high'], 'antigravity'), /model/i);
-  data.providers[3].models = [{ id: 'gemini-3.8-flash-high-preview', options: [] },
-    entry('gemini-3.8-flash-low', 'effort')];
-  held(resolve(data, ['--model', 'null'], 'antigravity'), /model/i);
-  held(resolve(data, ['--model', 'gemini-3.8-flash-low'], 'antigravity'), /unsupported effort/i);
+  data.providers = data.providers.filter((p) => p.providerInstanceId !== 'antigravity');
+  data.providers.push({ providerInstanceId: 'antigravity', driverKind: 'antigravity',
+    models: [{ id: 'retired-high', options: [] }] });
+  held(resolve(data, ['--model', 'retired-high'], 'antigravity'), /unknown provider/);
 });
 
 test('capabilities rejects missing CLI values and unknown flags', () => {

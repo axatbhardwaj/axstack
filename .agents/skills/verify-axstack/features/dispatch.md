@@ -25,6 +25,9 @@ bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); co
 Proof: resolution outputs the fixture Sol model; the delegated task plan binds the
 fixed Codex instance, full-access mode and worktree isolation; MATCH is the readback's last line.
 With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
+The resolver accepts only Codex, Claude and Grok workflow providers. Run
+`bun run test tests/workflows/resolve-models.test.js tests/workflows/dispatch-plan.test.js`
+to verify unsupported-provider holds, saved bindings and readback mismatches.
 An omitted provider label is reported as unknown while the exact instance,
 model, options and mode remain checked. Input paths remain in the complete JSON.
 These fixture results grant no live dispatch authority. Missing models or

@@ -99,16 +99,7 @@ test('presets: research keeps Google routing, citations and failure fencing', ()
   expect(research).toMatch(/without relay or substitution/i);
 
   const mixed = readJson('profiles/presets/mixed.json').roles;
-  const google = mixed.find(({ id }) => id === 'axstack-research-web-google');
-  expect(google).toMatchObject({ provider: 'antigravity', model: null, thinkingOptionId: 'high' });
   expect(mixed.find(({ id }) => id === 'axstack-checker')).toMatchObject({
-    provider: 'antigravity', model: null, thinkingOptionId: 'low',
+    provider: 'claude', model: null, thinkingOptionId: 'low',
   });
-  for (const preset of ['codex-only', 'claude-only']) {
-    const unavailable = readJson(`profiles/presets/${preset}.json`).roles
-      .find(({ id }) => id === 'axstack-research-web-google');
-    expect(unavailable?.model).toBeNull();
-    expect(unavailable?.notes).toMatch(/intentional single-provider absence/i);
-  }
 });
-

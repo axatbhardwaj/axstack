@@ -119,15 +119,6 @@
       "modelClass": "sol"
     },
     {
-      "id": "axstack-research-web-google",
-      "name": "Axstack research web (Google unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Intentional single-provider absence: Google-Search-grounded web research via Gemini/Antigravity is unavailable in codex-only. The explicit null holds this route without provider substitution."
-    },
-    {
       "id": "axstack-research-x",
       "name": "Axstack research X (unavailable)",
       "provider": "codex",
@@ -180,15 +171,6 @@
       "thinkingOptionId": "xhigh",
       "notes": "Independent read-only Luna Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Unavailable model or effort holds without substitution.",
       "modelClass": "luna"
-    },
-    {
-      "id": "axstack-explore-codebase-flash",
-      "name": "Axstack codebase explorer Flash (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "medium",
-      "notes": "Intentional single-provider absence: Flash Scout seat is unavailable in codex-only."
     },
     {
       "id": "axstack-explore-execution",
@@ -297,15 +279,6 @@
       "modeId": "full-access",
       "thinkingOptionId": "high",
       "notes": "Intentional single-provider absence in the codex-only preset; Grok candidate unavailable. Arena holds without substitution."
-    },
-    {
-      "id": "axstack-arena-candidate-antigravity",
-      "name": "Axstack arena candidate Antigravity (unavailable)",
-      "provider": "codex",
-      "model": null,
-      "modeId": "full-access",
-      "thinkingOptionId": "high",
-      "notes": "Intentional single-provider absence in the codex-only preset; Antigravity candidate unavailable. Arena holds without substitution."
     }
   ]
 }

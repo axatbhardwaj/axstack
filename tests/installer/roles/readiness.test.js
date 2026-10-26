@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { join } from '../../../src/posixpath.js';
 import { assessInstalledRoleSnapshot, assessRoleReadiness, installedRoleBytes } from '../../../src/roles.js';
 
 const role = (id, model = 'model') => ({
@@ -16,10 +17,10 @@ test('installed readiness compares role IDs with the selected bundle', () => {
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     role('axstack-reviewer-secondary', 'claude-opus-5-5'),
-    { ...role('axstack-checker', null), provider: 'antigravity' },
+    { ...role('axstack-checker', null), provider: 'claude' },
   ];
   const installed = installedRoleBytes('mixed', [
-    { ...role('axstack-checker', null), provider: 'antigravity' },
+    { ...role('axstack-checker', null), provider: 'claude' },
   ]);
 
   const result = assessInstalledRoleSnapshot(installed, 'mixed', expectedRoles);
@@ -142,33 +143,27 @@ test('claude-only intentional-absence allowlist contains exactly the accepted ID
   const ids = [...clause.matchAll(/'([^']+)'/g)].map((match) => match[1]);
   expect(ids).toEqual([
     'axstack-advisor-astra', 'axstack-arena-judge-astra',
-    'axstack-research-web-google', 'axstack-research-x',
-    'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
+    'axstack-research-x',
+    'axstack-arena-candidate-grok',
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
-    'axstack-explore-codebase-luna', 'axstack-explore-codebase-flash',
+    'axstack-explore-codebase-luna',
   ]);
   expect(assessRoleReadiness([
     { id: 'axstack-auditor', name: 'Auditor', provider: 'claude', model: null },
   ], 'claude-only').gaps).toContain('axstack-auditor requires a configured model');
 });
 
-test('mixed Antigravity null models are limited to the configured launch-by-agent-id roles', () => {
-  expect(assessRoleReadiness([
-    { ...role('axstack-research-web-google', null), provider: 'antigravity' },
-    { ...role('axstack-checker', null), provider: 'antigravity' },
-  ], 'mixed')).toEqual({ ready: true, gaps: [] });
-
-  expect(assessRoleReadiness([
-    { ...role('axstack-monitor', null), provider: 'antigravity' },
-  ], 'mixed').gaps).toContain(
-    'axstack-monitor requires a configured model',
-  );
+test('mixed readiness rejects the retired workflow provider', () => {
+  const result = assessRoleReadiness([
+    { ...role('axstack-checker', 'configured-model'), provider: 'antigravity' },
+  ], 'mixed');
+  expect(result.ready).toBe(false);
+  expect(result.gaps.join(' ')).toMatch(/outside mixed bounds/);
 });
 
 test('arena candidate null models follow their configured family or intentional single-provider absence', () => {
   for (const [id, provider] of [
     ['axstack-arena-candidate-grok', 'grok'],
-    ['axstack-arena-candidate-antigravity', 'antigravity'],
   ]) {
     expect(assessRoleReadiness([{ ...role(id, null), provider }], 'mixed')).toEqual({ ready: true, gaps: [] });
     expect(assessRoleReadiness([{ ...role(id, null), provider: 'codex' }], 'mixed').gaps).toContain(`${id} requires a configured model`);

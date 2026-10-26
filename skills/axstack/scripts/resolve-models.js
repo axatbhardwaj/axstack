@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-const bindings = { codex: 'codex', claude: 'claudeAgent', grok: 'grok', antigravity: 'antigravity' };
+const bindings = { codex: 'codex', claude: 'claudeAgent', grok: 'grok' };
 const effortIds = { codex: 'reasoningEffort', claude: 'effort', grok: 'reasoningEffort' };
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 
@@ -21,7 +21,7 @@ function argumentsFrom(args) {
     }
   }
   if (!options.provider || !options.capabilities || !options.effort) {
-    throw new Error('expected --provider codex|claude|grok|antigravity --capabilities path --effort level');
+    throw new Error('expected --provider codex|claude|grok --capabilities path --effort level');
   }
   return options;
 }
@@ -45,7 +45,7 @@ function providerFrom(catalog, provider) {
   return instance;
 }
 
-function modelFrom(models, { provider, model: pin, class: modelClass, excluded, effort }) {
+function modelFrom(models, { provider, model: pin, class: modelClass, excluded }) {
   if (pin && pin !== 'null') {
     const model = models.find((model) => model.id === pin && !excluded.includes(model.id));
     if (!model) throw new Error(`missing requested model ${pin}`);
@@ -56,9 +56,7 @@ function modelFrom(models, { provider, model: pin, class: modelClass, excluded, 
     if (['codex', 'claude'].includes(provider)) {
       throw new Error(`intentional absence for ${provider}: missing model and class`);
     }
-    // Antigravity encodes effort in its ID; exclusions never select a substitute.
-    const model = provider === 'antigravity'
-      ? models.find((model) => model.id.endsWith(`-${effort}`)) : models[0];
+    const model = models[0];
     if (!model || excluded.includes(model.id)) throw new Error('missing first listed model');
     return model;
   }
@@ -89,19 +87,12 @@ try {
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
   const instance = providerFrom(catalog, provider);
   const model = modelFrom(instance.models, options);
-  let effortOption = null;
-  if (provider === 'antigravity') {
-    if (!model.id.endsWith(`-${effort}`)) {
-      throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
-    }
-  } else {
-    const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
-    if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
-      || (provider === 'grok' && effort === 'max')) {
-      throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
-    }
-    effortOption = { id: effortOptions[0].id, value: effort };
+  const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
+  if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
+    || (provider === 'grok' && effort === 'max')) {
+    throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
   }
+  const effortOption = { id: effortOptions[0].id, value: effort };
   console.log(JSON.stringify({ provider, providerInstanceId: instance.providerInstanceId,
     model: model.id, effortOption, source: 'capabilities', path }));
 } catch (error) {

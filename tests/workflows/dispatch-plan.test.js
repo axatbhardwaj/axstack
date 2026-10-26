@@ -5,7 +5,6 @@ const script = `${import.meta.dir}/../../skills/axstack/scripts/dispatch-plan.js
 const resolver = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.js`;
 const fixture = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/dispatch-plan.json`, 'utf8'));
 const catalog = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/t3-capabilities.json`, 'utf8'));
-catalog.providers.find((p) => p.driverKind === 'antigravity').models = fixture.antigravityModels;
 const roots = [];
 afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true }); });
 
@@ -49,7 +48,6 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
     ['axstack-author', 'codex', 'gpt-6.1-sol', [{ id: 'reasoningEffort', value: 'high' }]],
     ['axstack-reviewer', 'claudeAgent', 'claude-opus-5-5', [{ id: 'effort', value: 'medium' }]],
     ['axstack-research-x', 'grok', 'grok-4.7', [{ id: 'reasoningEffort', value: 'high' }]],
-    ['axstack-checker', 'antigravity', 'gemini-3.8-flash-low', []],
   ];
   for (const [role, instance, model, options] of cases) {
     const f = setup();
@@ -168,19 +166,6 @@ test('verification prints every mismatch with expected and observed evidence', (
   for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) expect(result.output).toContain(field);
   expect(result.output).toContain('gpt-6.1-sol');
   expect(result.output).toContain('wrong');
-});
-
-test('Antigravity verifies effort through its model suffix with no effort option', () => {
-  const f = setup();
-  const data = { modelSelection: { instanceId: 'antigravity', model: 'gemini-3.8-flash-low', options: [] },
-    runtimeMode: 'full-access' };
-  const matched = f.run('axstack-checker', 'launch', data);
-  expect(matched.status).toBe(0);
-  expect(matched.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
-  data.modelSelection.model = 'gemini-3.8-flash-high';
-  const result = f.run('axstack-checker', 'launch', data);
-  expect(result.status).toBe(2);
-  expect(result.output).toContain('model');
 });
 
 test('--help lists every flag, exit meaning and read-only side effect contract', () => {
