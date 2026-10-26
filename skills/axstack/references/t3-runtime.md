@@ -260,10 +260,10 @@ Before finishing PR work, including watch end or Close-out, the driver calls
 Never link unrelated PRs.
 
 Authors are never PR-linked: the driver alone links and watches the PR.
-For delegated authors after accepted completion, in the same driver turn settle with
+For delegated authors and launched fallback authors after accepted completion, in the same driver turn settle with
 `t3_thread_organize` using `action: settle`, read back `settled: true` with `t3_thread_read`
 and record `settle: manual` under the [Settlement](workspace-hygiene.md#settlement) guards.
-For delegated authors, archive and guarded manual worktree removal wait for PR merge or close.
+For delegated authors and launched fallback authors, archive and guarded manual worktree removal wait for PR merge or close.
 Never rely on automatic child cleanup.
 
 When the forge confirms a run PR merged or closed, in the same driver turn the

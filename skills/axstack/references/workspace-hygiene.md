@@ -45,8 +45,8 @@ These metadata actions do not remove worktrees. Accept matching delegated task
 or launched run completion under the runtime contract before settlement.
 After the driver accepts a launched writer's (author or repair) or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, in the same driver turn it settles the matching thread with `t3_thread_organize` using `action: settle` as metadata only.
 The driver reads back `settled: true` with `t3_thread_read` on the writer thread for launched writers and on the `childThreadId` for delegated tasks.
-For delegated authors after accepted completion, in the same driver turn settle with `t3_thread_organize` using `action: settle`, read back `settled: true` with `t3_thread_read` and record `settle: manual`.
-For delegated authors, archive and guarded manual worktree removal wait for PR merge or close.
+For delegated authors and launched fallback authors after accepted completion, in the same driver turn settle with `t3_thread_organize` using `action: settle`, read back `settled: true` with `t3_thread_read` and record `settle: manual`.
+For delegated authors and launched fallback authors, archive and guarded manual worktree removal wait for PR merge or close.
 Never rely on automatic child cleanup.
 Delegated author threads stay hidden in the sidebar regardless of settlement; visibility statements below apply to launched writers.
 This extends the existing same-turn settle rule: a pinned run-owned child is still settled.

@@ -60,10 +60,10 @@ const rules = [
     'Use t3_thread_launch as a rare author fallback only when worktree isolation is unavailable and record each use in the run record.', [/only when/i, 'even when']],
   ['fallback workspace', [runtime], [/recorded author launch/i, /type:worktree/, /baseRef:<SHA>/, /branch:<encoded branch>/, /startFromOrigin:false/],
     'For a recorded author launch, use {startFromOrigin:false, branch:<encoded branch>, baseRef:<SHA>, type:worktree}.', [/startFromOrigin:false/, 'startFromOrigin:true']],
-  ['manual author settlement', [runtime, hygiene], [/delegated authors/i, /accepted completion/i, /same driver turn/i, /settle.*t3_thread_organize.*action: settle/i, /read back.*settled: true.*t3_thread_read/i, /record.*settle: manual/i],
-    'For delegated authors after accepted completion, in the same driver turn settle with t3_thread_organize action: settle, read back settled: true with t3_thread_read and record settle: manual.', [/same driver turn/i, 'later turn']],
-  ['guarded manual retirement', [runtime, hygiene], [/delegated author/i, /archive.*guarded manual worktree removal/i, /wait for.*PR.*merge or close/i],
-    'For delegated authors, archive and guarded manual worktree removal wait for PR merge or close.', [/wait for/i, 'precede']],
+  ['manual author settlement', [runtime, hygiene], [/delegated authors/i, /launched fallback authors/i, /accepted completion/i, /same driver turn/i, /settle.*t3_thread_organize.*action: settle/i, /read back.*settled: true.*t3_thread_read/i, /record.*settle: manual/i],
+    'After accepted completion for launched fallback authors and delegated authors, settle with t3_thread_organize action: settle in the same driver turn, then record settle: manual and read back settled: true with t3_thread_read.', [/same driver turn/i, 'later turn']],
+  ['guarded manual retirement', [runtime, hygiene], [/delegated author/i, /launched fallback authors/i, /archive.*guarded manual worktree removal/i, /wait for.*PR.*merge or close/i],
+    'Archive and guarded manual worktree removal for launched fallback authors and delegated authors wait for PR merge or close.', [/wait for/i, 'precede']],
   ['no automatic child cleanup', [runtime, hygiene], [/automatic child cleanup/i],
     'Never rely on automatic child cleanup.', [/never/i, 'always'], /never rely/i],
 ];
@@ -74,6 +74,7 @@ for (const [name, paths, concepts, wording, inversion, negative] of rules) {
     const required = [...concepts, inversion[0]];
     const accepts = (source) => negative ? prohibits(source, negative, ...required) : requires(source, ...required);
     const inversions = [inversion];
+    if (name === 'manual author settlement') inversions.push([/launched fallback authors/i, 'not launched fallback authors']);
     if (name === 'linked clean isolation') inversions.push([/is empty|must be empty/i, 'is non-empty']);
     if (name === 'retirement guards') inversions.push([/no worktree/i, 'a worktree']);
     if (name === 'fresh branch bootstrap') inversions.push([/git switch -c/, 'git switch -C'], [/branch is absent/i, 'branch exists']);
