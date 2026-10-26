@@ -91,3 +91,38 @@ test('authored review receipt carries the declared line and diff assessment', ()
   const receipt = read(review).split('## Template: review receipt')[1].split('## Prompt-only urgent escalation')[0];
   expect(receipt).toMatch(/^Revert: <.*declared line.*diff.*authored.*>$/m);
 });
+
+// Issue #534: protect publication instructions, not live forge or agent behavior.
+const bodyRules = [
+  ['problem before fix', [/open|start/i, /plain|simple/i, /problem/i, /user.*request/i, /then/i, /fix|solution/i],
+    "Start with the problem in simple words from the user's request, then the solution.", [/then/i, 'before']],
+  ['no opening inventory', [/lead|open|start/i, /implementation inventory/i],
+    'Never start with an implementation inventory.', [/never|do not/i, 'Always'], /never|do not/i],
+  ['title explains value', [/title/i, /why/i, /change matters/i],
+    'Write a title that states why the change matters.', [/why/i, 'whether']],
+  ['title conventions', [/title/i, /repo/i, /conventions/i, /consult|check/i, /recent.*merged PRs/i],
+    'For title conventions in this repository, consult recently merged PRs.', [/consult|check/i, 'Ignore']],
+  ['attribution ends body', [/end|finish/i, /description/i, /Created with <model> in <harness>/],
+    'Finish the description with `Created with <model> in <harness>`.', [/end|finish/i, 'Begin']],
+  ['all writer models', [/include|list/i, /author/i, /subagent/i, /models/i, /wrote code/i],
+    'List the author and subagent models that wrote code.', [/include|list/i, 'Omit']],
+  ['reported model identity', [/use/i, /model name/i, /harness reports/i],
+    'Use the model name that the harness reports.', [/use/i, 'Avoid']],
+  ['unknown model', [/model.*unknown|unknown.*model/i, /name/i, /harness/i, /guessing/i],
+    'If the model is unknown, name the harness without guessing a model.', [/without guessing/i, 'by guessing'], /without guessing/i],
+  ['real PRs trigger bots', [/open|create/i, /real PRs/i, /drafts/i, /bots run/i],
+    'Create real PRs, not drafts, so bots run.', [/never drafts|not drafts/i, 'as drafts'], /never drafts|not drafts/i],
+  ['GraphQL fallback', [/if/i, /gh pr create/i, /GraphQL/i, /rate limit/i, /exhausted/i, /REST/i],
+    'If `gh pr create` fails with the GraphQL rate limit exhausted, use REST.', [/\buse\b|through/i, 'avoid']],
+];
+const body = () => read(shape).split('## PR body')[1].split('\n## ')[0].replace(/\s+/g, ' ');
+for (const [name, concepts, rewording, inversion, prohibition] of bodyRules) {
+  test(`PR body contract: ${name}`, () => {
+    const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
+    checkRule(body(), accepts, rewording, [inversion], concepts);
+  });
+}
+test('publication loads body policy and preserves the REST creation command', () => {
+  expect(loadedReferences(read(publication))).toContain('pr-shape.md#pr-body');
+  expect(body()).toContain('gh api repos/<owner>/<repo>/pulls -f title=... -f head=... -f base=... -F body=@<file>');
+});

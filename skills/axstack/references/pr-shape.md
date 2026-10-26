@@ -43,6 +43,21 @@ Smaller cohesive PRs are encouraged; no padding.
 
 ## PR body
 
+Open every own PR description with the problem in plain words from the user's
+request, then the fix.
+Do not lead with an implementation inventory.
+Use a title that explains why the change matters.
+For repository title conventions, check recently merged PRs.
+
+End the description with `Created with <model> in <harness>`.
+Include the author and subagent models that wrote code.
+Use the model name the harness reports.
+If the model is unknown, name the harness without guessing a model.
+
+Open real PRs, never drafts, so review bots run.
+If `gh pr create` fails because the GraphQL rate limit is exhausted, use REST:
+`gh api repos/<owner>/<repo>/pulls -f title=... -f head=... -f base=... -F body=@<file>`.
+
 Every own PR description must contain exactly one `Revert` line.
 Follow [Revert line](candidate-publication.md#revert-line) for its format and classification.
 
