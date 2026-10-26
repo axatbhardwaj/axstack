@@ -7,10 +7,10 @@ instructions and local tests do not prove live provider readiness or delivery.
 
 ## T3 setup
 
-Set `worktreeCleanup` to `off` for every Axstack project before dispatch;
-Axstack preserves author worktrees and salvages evidence before retirement.
-The driver reads back this setting via `t3_project_read` where exposed, or
-records the setup limitation.
+Hosts can delete author worktrees at merge through `storageCleanup.worktreeOnMerge`.
+`t3_project_read` cannot read `storageCleanup.worktreeOnMerge`.
+Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/`.
+A missing merged or closed author worktree is expected, not a hold.
 
 For remote and Android access on the existing tailnet, run:
 

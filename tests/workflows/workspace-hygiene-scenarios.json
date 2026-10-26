@@ -75,16 +75,16 @@
       "contract": "User-created threads and other projects' items are reported, never touched."
     },
     {
-      "id": "cleanup-preflight-off",
-      "input": "T3 offers an automatic worktree cleanup setting for this project.",
-      "expected": "Require automatic cleanup off.",
-      "contract": "`worktreeCleanup` must be `off` for every Axstack project."
+      "id": "cleanup-evidence-location",
+      "input": "The host may delete an author worktree when its PR merges.",
+      "expected": "Keep evidence in the private run folder outside the worktree.",
+      "contract": "Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/`."
     },
     {
-      "id": "cleanup-preflight-readback",
-      "input": "Project cleanup settings are exposed by the runtime schema.",
-      "expected": "Read the setting through the project API.",
-      "contract": "Preflight reads back `worktreeCleanup` via `t3_project_read` where exposed; otherwise record a limitation pointing to the documented installation setup step."
+      "id": "cleanup-missing-worktree",
+      "input": "The author worktree is missing after its PR merged or closed.",
+      "expected": "Expect the missing worktree without a hold.",
+      "contract": "A missing merged or closed author worktree is expected, not a hold."
     },
     {
       "id": "remote-branch-counterpart",
