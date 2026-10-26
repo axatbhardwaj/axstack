@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Behavioral evaluation cases for the repaired core migration (conditional scope identity, verdict separation, observation-only dominance, adoption authority, monitor/watchdog split, exact publication). Each case gives observable scenario inputs and expected decisions. A fresh evaluator executes these against skill prompts; keyword matching is not behavior. The existing 12 scenarios in scenarios.json are unchanged.",
+  "note": "Behavioral evaluation cases for the repaired core migration (conditional scope identity, verdict separation, observation-only dominance, adoption authority, bounded standalone watch, exact publication). Each case gives observable scenario inputs and expected decisions. A fresh evaluator executes these against skill prompts; keyword matching is not behavior. The existing 12 scenarios in scenarios.json are unchanged.",
   "cases": [
     {
       "id": "conditional-scope",
@@ -74,19 +74,19 @@
       }
     },
     {
-      "id": "standalone-monitor-lifetime",
-      "title": "Standalone monitor reads product state for a bounded watch lifetime",
+      "id": "standalone-watch-lifetime",
+      "title": "Standalone watch reads product state for a bounded watch lifetime",
       "skill_ref": "axstack-watch",
       "input": {
         "request": "A delivered PR is under watch. A reviewer approves while required CI is still pending.",
-        "facts": "A standalone monitor runs on its cadence with a 24h expiry. No user renewal."
+        "facts": "A standalone watch runs on its cadence with a 24h expiry. No user renewal."
       },
       "expected": {
-        "monitor": "Reads GitHub and all feedback plus latest checks on its cadence; surfaces actionable events with persisted, acknowledged IDs",
+        "observation": "Reads GitHub and all feedback plus latest checks on its cadence; surfaces actionable events with persisted, acknowledged IDs",
         "steady_state": "No-change ticks do not wake the owner",
         "readiness": "Owner validates against current required checks, feedback, approvals, and mergeability; a review approval alone is NOT merge-ready",
         "api_errors": "Block readiness; never imply coverage",
-        "expiry": "The standalone monitor stops at the 24h deadline including an open PR; timer receipts are verified and cleaned up on early closure, cancel, or expiry"
+        "expiry": "The standalone watch stops at the 24h deadline including an open PR; timer receipts are verified and cleaned up on early closure, cancel, or expiry"
       }
     },
     {

@@ -138,7 +138,7 @@ configuration; unrelated configurations remain eligible.
 
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
-| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, monitor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
+| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
 | Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
@@ -290,10 +290,22 @@ that author thread until resolved.
 For every watched own PR in chat-run or standalone adopted maintenance, when
 available the driver calls `watch_pull_request` for T3 wakes on check completion,
 new comments from others, or branch conflicts, then ends the turn.
+Only the PR-owning driver calls `watch_pull_request`.
+Delegated children never call `watch_pull_request`.
+Before arming, handle existing checks and comments because only later comments wake the thread.
 Never poll or keep a model active between native PR wake events.
-A T3 "stopped watching" notice is itself a driver wake: in that same turn,
-re-check the PR and call `watch_pull_request` again.
-This includes a stop after T3 could not read the PR for 15 minutes.
+Native watch ends after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.
+A non-user T3 "stopped watching" notice is itself a driver wake: in that same turn,
+re-check the PR.
+After a non-user stop while the PR stays open, the driver must re-arm in that
+same turn, after any GraphQL reset wait, using the recovery steps below.
+Record the stop reason T3 gives.
+Re-arm only after a stop not caused by the user.
+For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
+When GraphQL remaining is near 0, wait for reset before re-arming.
+Before re-arming, first unsettle the driver thread with `t3_thread_organize`
+using `action: unsettle`, then call `watch_pull_request` again.
+Never re-arm in a loop.
 Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
 
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule

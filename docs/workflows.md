@@ -132,10 +132,10 @@ role.
 
 In `mixed` and `claude-only`, `axstack-research-requirements`,
 `axstack-research-code`, `axstack-research-web`, and `axstack-explore-execution`
-use the Claude Sonnet class at high effort. `axstack-explore-codebase` and
-`axstack-monitor` adopt Haiku 5.5 high, with class `haiku` and exact pin
+use the Claude Sonnet class at high effort. `axstack-explore-codebase` adopts
+Haiku 5.5 high, with class `haiku` and exact pin
 `claude-haiku-5-5`. Missing that ID or high effort in saved T3 capabilities
-holds those roles without substitution. `codex-only` keeps its Codex
+holds that role without substitution. `codex-only` keeps its Codex
 assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
 and `codex-only`, and an optional Antigravity Flash medium seat in `mixed`.
 In `claude-only`, Luna and Flash are intentionally absent; Flash is also
@@ -321,7 +321,6 @@ Routine questions stay in the T3 driver thread. Progress, CI pending, and comple
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and
 head. It grants no reply authority and never clears the hold.
-The standalone monitor never sends; the chat-run schedule resumes the driver.
 Healthy watch observations remain quiet.
 
 ## Chat-run PR watch

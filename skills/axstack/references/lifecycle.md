@@ -18,7 +18,7 @@ binding state and receipts to exact revisions.
   pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
   authored = one eligible role from author provenance. Each uses a
   separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
-- Automation review manager and monitors: see
+- Automation review manager: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
@@ -29,8 +29,8 @@ theme/size; queue dependencies under [PR chains](pr-chain.md).
 
 ## Ownership
 
-The PR owner is accountable for candidate, fixes, evidence, monitoring; a
-chat-run observer reports only to its driver. Peer code stays read-only.
+The PR owner is accountable for candidate, fixes, evidence, monitoring.
+Peer code stays read-only.
 Missing or idle sessions never transfer ownership.
 Owned work enters review via the revision-bound
 [candidate-publication boundary](candidate-publication.md).

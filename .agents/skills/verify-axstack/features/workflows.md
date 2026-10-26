@@ -4,6 +4,9 @@ Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js` and
 `tests/workflows/native-pr-watch.test.js` cover read-first native/manual author settlement.
+The native-watch contracts also cover driver-only arming, stop conditions,
+non-user-stop recovery with unsettle and diagnostic rate-limit checks, and
+conflict-free base movement through the existing base-update rule.
 Runtime preflight contracts cover merge-deleted author worktrees and private evidence.
 Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-mode.md`, `references/codebase-brief.md`,
@@ -14,6 +17,9 @@ Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/readiness.md`, `references/proven-verification.md`,
 `references/escalation.md` and `references/blocked-on-person.md` under
 `skills/axstack-watch/`.
+`adoption-disposition.test.js` checks pre-push MODERNIZE/REWORK/CLOSE decisions,
+base/replacement inspection, single-author repair and independent review before
+publication, read-only modes, and the scoped rebase lease with semantic mutations.
 `merge-boundary.test.js` checks risky-path merge holds, exact-revision user
 clearance, uncertain classification, parking decision holds and renewed holds
 after head or base changes; `advised-holds.test.js` pins their advice exclusion.
@@ -30,6 +36,8 @@ resolved ignore-file location in failure guidance.
 inversion and equivalent-rewording probes. These tests install no Git hooks.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
+`presets.test.js` guards retired `axstack-monitor` absence in bundled presets
+and shipped watch/roster prose while retaining codebase explorer bindings.
 Prerequisites: Launch and Doctor; this path needs no live T3, credentials or
 network. The tests inspect instructions, not live agent compliance.
 The removal check covers shipped transport absence and driver-thread decision holds.
@@ -51,6 +59,7 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/adoption-disposition.test.js \
   tests/workflows/staged-file-tokens.test.js \
   tests/workflows/staged-token-gate.test.js \
   tests/workflows/settle-readback.test.js \

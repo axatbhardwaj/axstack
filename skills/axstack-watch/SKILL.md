@@ -48,6 +48,41 @@ Adoption is settled when the record names one persistent owner, one watch, the
 exact PR revision and base, and the applicable authority snapshot. If writable
 access is unverified, record the hold and continue read-only; pushing stays held.
 
+### Stale or external PRs
+
+Here, stale or external means the base moved since opening, or the PR was not
+authored in this run.
+For a stale or external PR, the driver records MODERNIZE, REWORK or CLOSE before
+any push. Fetch the actual remote base and PR head, recording the head SHA and
+merge base. Inspect base commits since divergence and merged and open PRs for
+the same fix before choosing a disposition.
+
+Route MODERNIZE and authorized REWORK through
+[Repair and publication](references/repair-publication.md): the single repair
+author writes in its owned worktree, then independent authored review covers
+the exact rebased or reworked head and base before driver publication.
+The driver never writes tracked files.
+
+- **MODERNIZE:** for a useful goal whose implementation remains the right shape,
+  the repair author rebases onto the freshly fetched actual base.
+  Run focused checks and record pre-rebase and post-rebase `git range-diff`
+  and focused-check evidence, inspecting the final diff for lost intent or
+  reintroduced landed behavior.
+  After independent review, the driver confirms the expected-old remote SHA
+  matches the head SHA observed before the rebase, then pushes this narrowly
+  justified history rewrite with
+  `--force-with-lease=refs/heads/<branch>:<observed-head-sha>` under
+  [Candidate publication](../axstack/references/candidate-publication.md).
+  A lease mismatch holds publication: fetch and reassess.
+- **REWORK:** for a useful goal in the wrong shape, describe the smallest
+  credible rewrite and stop unless the user authorized rework.
+- **CLOSE:** when superseded or obsolete, cite concrete evidence and ask the
+  user before closing.
+
+These dispositions preserve the recorded mode and authority snapshot: peer and
+observation-only adoption remains read-only. Routine force push for ordinary
+PRs stays forbidden under Candidate publication.
+
 ## 2. Fix the operating mode
 
 Choose one mode under [Shared routing](../axstack/references/routing.md#direct-routes-no-spec-ceremony)
@@ -77,15 +112,14 @@ load. When the watch needs a new owner or automated observation, first read
 [Watch runtime](references/watch-runtime.md) and then
 [T3 runtime](../axstack/references/t3-runtime.md). Reconcile before creating
 anything. Task-owned observations use their recorded wakes and expiry.
-`axstack-monitor` stays an optional read-only observer for standalone watch
-that never sends. For own open PRs in chat-run mode, use the normal 30-minute cadence under
+For own open PRs in chat-run mode, use the normal 30-minute cadence under
 [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch);
 the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
 neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner
 exists. Once it exists, the current chat is not a competing coordinator. Only
-the owner launches the writer, reviewers, and optional monitor. Leaf workers
+the owner launches the writer and reviewers. Leaf workers
 create no recursive teams, and the adoption watcher is never the writer.
 
 A standalone live watch has verified role and timer receipts, handshakes, watched scope,
@@ -142,7 +176,6 @@ Routine questions stay in the T3 driver thread. Progress, CI pending, and comple
 in the T3 driver thread.
 Post the report-only unresolved-rating notice there, deduplicated per comment and
 head. It grants no reply authority and never clears the hold.
-The standalone monitor never sends; the chat-run schedule resumes the driver.
 Healthy watch observations remain quiet.
 
 ## 5. State readiness precisely
