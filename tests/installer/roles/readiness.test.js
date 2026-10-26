@@ -69,15 +69,15 @@ test('authored pairing accepts all four class routes and newer exact author IDs'
   }
 });
 
-test('authored pairing rejects author IDs without a class and wrong reviewer class or effort', () => {
+test('authored pairing rejects unsupported author routes and wrong reviewer class or effort', () => {
   const rows = [
     role('axstack-author', 'gpt-5.6-terra'),
     { ...role('axstack-reviewer-primary', null), modelClass: 'sol', thinkingOptionId: 'high' },
     { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' },
   ];
-  for (const model of ['gpt-5.6-terra', 'unknown']) {
+  for (const [model, route] of [['gpt-5.6-terra', 'terra'], ['unknown', 'unknown']]) {
     rows[0].model = model;
-    expect(assessRoleReadiness(rows, 'mixed').gaps).toContain(`authored routing gap: unsupported axstack-author route codex/${model}`);
+    expect(assessRoleReadiness(rows, 'mixed').gaps).toContain(`authored routing gap: unsupported axstack-author route codex/${route}`);
   }
   rows[0].model = 'gpt-5.6-sol';
   rows[2] = { ...rows[2], provider: 'codex', modelClass: 'luna' };

@@ -14,6 +14,7 @@ test('model classes derive only from complete Codex IDs and Claude family prefix
     ['sol', 'gpt-6.10-sol', 'codex'],
     ['astra', 'gpt-6-astra', 'codex'],
     ['luna', 'gpt-6.1-luna', 'codex'],
+    ['terra', 'gpt-6.1-terra', 'codex'],
     ...['fable', 'opus', 'sonnet', 'haiku'].map((name) => [name, `claude-${name}-5-5`, 'claude']),
   ]) {
     expect(() => assertBundleRoles([{ ...role('axstack-driver', id), provider, modelClass }])).not.toThrow();
@@ -28,13 +29,20 @@ test('deriveModelClass maps exact model families and rejects IDs outside them', 
     ['gpt-6-sol', 'sol'],
     ['gpt-6.1-sol', 'sol'],
     ['gpt-6.10-luna', 'luna'],
+    ['gpt-6.1-terra', 'terra'],
+    ['gpt-5.6-sol', 'sol'],
+    ['gpt-5.6-luna', 'luna'],
+    ['gpt-5.6-terra', 'terra'],
     ['claude-opus-5-5', 'opus'],
-    ['gpt-5.6-terra', null],
     ['gpt-5.5', null],
     ['gpt-reserve', null],
     ['gpt-sol', null],
     ['gpt-6..1-sol', null],
     ['gpt-6-sol-mini', null],
+    ['gpt-6.1-terra-preview', null],
+    ['gpt-6..1-terra', null],
+    ['xgpt-6.1-terra', null],
+    ['gpt-terra', null],
     ['xgpt-6-sol', null],
     ['claude-opus', null],
     ['claude-opusx-5', null],
@@ -52,6 +60,7 @@ test('role rows accept class only, class with matching pin, legacy pin and allow
     { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
     role('axstack-research-code', 'gpt-5.6-terra'),
     { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
+    { ...role('axstack-research-code-sol', null), modelClass: 'terra' },
   ];
   expect(() => assertBundleRoles(rows)).not.toThrow();
   expect(assessRoleReadiness(rows, 'mixed')).toEqual({ ready: true, gaps: [] });
@@ -62,7 +71,8 @@ test('role rows reject class/provider and pin/class mismatches before installati
     [{ ...role('axstack-driver', null), provider: 'claude', modelClass: 'sol' }, /class.*provider/i],
     [{ ...role('axstack-driver', 'gpt-6-luna'), modelClass: 'sol' }, /pin.*class/i],
     [{ ...role('axstack-driver', 'gpt-5.6-terra'), modelClass: 'sol' }, /pin.*class/i],
-    [{ ...role('axstack-driver', null), modelClass: 'terra' }, /modelClass/i],
+    [{ ...role('axstack-driver', null), provider: 'claude', modelClass: 'terra' }, /class.*provider/i],
+    [{ ...role('axstack-driver', null), modelClass: 'unknown' }, /modelClass/i],
     [{ ...role('axstack-driver', null), modelClass: ['sol'] }, /modelClass/i],
     [{ id: 'axstack-driver', name: 'Driver', provider: 'codex' }, /model/i],
   ]) {
