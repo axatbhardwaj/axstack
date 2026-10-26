@@ -124,18 +124,16 @@ host validation. See [PR-manager setup and safety](docs/host-operations.md#optio
 
 ## Automatic merge boundaries
 
-Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions, account-selection carve-out and accepted risks](docs/workflows.md#automatic-merge-boundaries).
+Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions and accepted risks](docs/workflows.md#automatic-merge-boundaries).
 
 ## Some notes
 
 - T3 Code is the only supported active runtime. Axstack adds no daemon or runtime
-  database. The exceptions are exactly two opt-in systemd user timers:
-  `axstack-default-sync` rewrites only T3 `defaultModelSelection`, and
+  database. The exception is exactly one opt-in systemd user timer:
   `axstack-single-server` removes duplicate `t3 serve` process trees for one
   base dir while keeping the ownership-lock holder, otherwise the recorded
-  server. Both run stateless scripts, keep
-  no workflow state and launch no agent; see
-  [New-chat default sync](docs/host-operations.md#new-chat-default-sync) and
+  server. It runs a stateless script, keeps
+  no workflow state and launches no agent; see
   [Single T3 server](docs/host-operations.md#single-t3-server).
 - The recorded owning watch thread merges eligible own PRs; excluded PRs use a merge card.
 - This is an early project; expect the workflows to evolve.
@@ -145,7 +143,7 @@ Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions,
 | Page | Use it for |
 | --- | --- |
 | [Getting started](docs/getting-started.md) | Install, understand `check`, and run a first bounded task. |
-| [Concepts](docs/concepts.md) | Driver threads, phases, roles, presets, holds, evidence and account selection. |
+| [Concepts](docs/concepts.md) | Driver threads, phases, roles, presets, holds, evidence and provider bindings. |
 | [Guides](docs/guides.md) | Step-by-step journeys for features, fixes, reviews, watches, debugging and releases. |
 | [Workflows](docs/workflows.md) | Routing, review policy, merge boundaries, exclusions and accepted risks. |
 | [Installation](docs/installation.md) | CLI commands, harness paths, configuration, upgrades and troubleshooting. |

@@ -108,8 +108,8 @@ test('merge eligibility grants no publish or host install authority', () => {
 const documented = [
   ['excluded peer merges', [/automatic merge/i, /peer PRs/i, /excluded/i],
     'Peer PRs are excluded from automatic merge.', [/excluded/i, 'permitted']],
-  ['excluded proxy routing', [/excluded/i, /CLI proxy/i, /account pooling/i, /proxy or shared session/i, /IP routing/i],
-    'CLI proxy, account pooling behind a proxy or shared session, and IP routing are excluded.', [/excluded/i, 'authorized']],
+  ['excluded infrastructure changes', [/excluded/i, /changes to proxy or hub infrastructure/i, /IP routing/i],
+    'Changes to proxy or hub infrastructure and IP routing are excluded.', [/excluded/i, 'authorized']],
   ['deferred contention', [/local CI contention/i, /deferred/i],
     'Local CI contention handling remains deferred.', [/deferred/i, 'implemented']],
   ['excluded quota routing', [/quota-driven/i, /scheduling/i, /model routing/i, /provider\/model substitution/i, /excluded/i],
@@ -138,13 +138,6 @@ for (const [name, concepts, rewording, inversion, prohibition] of documented) {
     checkRule(compact(read('docs/workflows.md')), acceptsRule(concepts, prohibition), rewording, [inversion], concepts);
   });
 }
-
-test('documentation permits only own same-provider same-model account selection', () => {
-  const concepts = [/per-dispatch/i, /selection/i, /user.s own/i, /same-provider/i, /same-model/i, /permitted/i];
-  checkRule(compact(read('docs/workflows.md')), (text) => sentences(text).some((unit) => requires(unit, ...concepts) && !/\bunless|\bexcept/i.test(unit)),
-    "Per-dispatch selection among the user's own same-provider, same-model accounts is permitted.",
-    [[/permitted/i, 'forbidden']], concepts);
-});
 
 test('workflows is the single public home for exclusions and accepted risks', () => {
   for (const path of publicDocPaths(`${import.meta.dir}/../..`).filter((path) => path !== 'docs/workflows.md')) {

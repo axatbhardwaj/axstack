@@ -81,23 +81,17 @@ independently reviewed through the selected preset's explanation roles.
 Repeat installs leave unchanged files untouched. Legacy tool copies are
 released by ownership on upgrade and uninstall; retained copies report why.
 
-See [Account selection environment](concepts.md#account-selection-environment)
-for the picker cache directory and test-only usage endpoint variables.
-
 ## Packaged scripts
 
 Run these with Bun from the installed `<skills-dir>/axstack/scripts/` directory:
-`resolve-models.js` (model IDs), `pick-instance.js` (dispatch account),
-`pr-digest.js` (PR discovery), `archive-evidence.js` (evidence archive), and
-`sync-default.js [--settings <path>] [--dry-run]` (New-chat default; `AXSTACK_SYNC_POOL` opts into cross-driver rotation).
+`resolve-models.js` (model IDs), `pr-digest.js` (PR discovery), and
+`archive-evidence.js` (evidence archive).
 `single-server.js [--base-dir <dir>] [--proc-root <dir>] [--grace-seconds N] [--dry-run]` removes
 duplicate `t3 serve` process trees while keeping the ownership-lock holder,
 otherwise the recorded runtime pid.
-`account-usage.js` shares usage retrieval and the five-minute cache between
-picker and sync. The opt-in systemd user unit files ship in `axstack/systemd/`;
-installation copies them as assets and never enables either timer.
-See [New-chat default sync](host-operations.md#new-chat-default-sync) and
-[Single T3 server](host-operations.md#single-t3-server) for activation.
+The opt-in systemd user unit files ship in `axstack/systemd/`;
+installation copies them as assets and never enables the timer.
+See [Single T3 server](host-operations.md#single-t3-server) for activation.
 
 ## Role presets
 
@@ -336,11 +330,10 @@ and reports a resolution hold on exit 1.
 
 A preset model is used as given; class rows resolve to the newest
 matching catalog ID. Resume retains the recorded snapshot without re-resolution.
-Rejection, timeout, quota, and auth failures hold; outside bounded same-provider,
-same-model account selection among one driver's instances via `pick-instance.js`,
+Rejection, timeout, quota, and auth failures hold;
 no subscription inference, quota routing, or alternative-model retry applies.
 Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for driver account re-selection at turn boundaries and schedule rebinding.
+for fixed provider instances and usage-limit holds.
 
 `modeId` and similar permission fields remain conservative declared intent.
 They do not prove effective T3 `runtimeMode`, sandboxing, or permission parity.
@@ -355,20 +348,6 @@ Run them from the bundle root, or replace the relative script path with its
 installed shared-root path. The [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
 owns model/account authority; [Cleanup](../skills/axstack-cleanup/SKILL.md)
 owns evidence retirement authority.
-
-### Account picker
-
-```text
-bun skills/axstack/scripts/pick-instance.js --provider <claude|codex> [--settings <t3-settings-json>] [--json]
-```
-
-`--settings` overrides the default `~/.t3/userdata/settings.json`; `--json`
-prints the selected instance and scored inventory rather than only its ID.
-The picker uses exit 0 for an eligible selection, exit 1 for invalid input/settings
-or an unexpected failure, and exit 2 when no eligible provider instance remains.
-Follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for dispatch fallback, driver stay rules, and holds; selection alone grants no
-provider or model substitution authority.
 
 ### PR digest
 

@@ -15,10 +15,9 @@ The directly invoked phase loads the applicable shared references for routing,
 lifecycle, T3 runtime boundaries, role/model/risk contracts, the run record,
 and PR shape.
 
-For the picker score, account eligibility, dispatch exits and driver stay rule,
-see [Account selection](concepts.md#account-selection). Follow
+Follow
 [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-immediately before dispatch or account re-selection.
+immediately before dispatch.
 
 Direct routes need no spec ceremony:
 
@@ -178,8 +177,7 @@ in saved T3 capabilities. Empty Antigravity catalogs hold. Missing or
 unavailable roles hold only affected work. Requested model, effort, and
 permission values need actual T3 configuration read-back; stored `modeId` is
 neither permission parity nor a sandbox. Rejection, timeout, quota, and auth
-failures hold; outside bounded same-provider, same-model account selection among
-one driver's instances via `pick-instance.js`, no subscription inference, quota
+failures hold; no subscription inference, quota
 routing, or alternative retry applies.
 
 ## T3 runtime boundary
@@ -572,10 +570,8 @@ Npm publication still requires human stage approval; agents never run
 This policy grants no release, npm publish, or host install
 authority. See [Preview authority and operations](host-operations.md#private-pr-previews).
 
-Excluded: CLI proxy, account pooling behind a proxy or shared session, and IP
-routing; local CI contention handling is deferred. Quota-driven scheduling or
-model routing (provider/model substitution) is excluded. Per-dispatch selection
-among the user's own same-provider, same-model accounts is permitted. Automatic
+Excluded: changes to proxy or hub infrastructure and IP routing; local CI contention handling is deferred. Quota-driven scheduling or
+model routing (provider/model substitution) is excluded. Automatic
 merge of work promotion, deploying-base and unknown-base PRs is excluded.
 Automatic merge of peer PRs is excluded. Previews
 outside the VPS, public previews, and production data are excluded. Nightly triage

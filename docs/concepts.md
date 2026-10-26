@@ -63,52 +63,9 @@ run receipts and revision-bound completion are separate from capability
 discovery. Read the [runtime contract](../skills/axstack/references/t3-runtime.md)
 immediately before dispatch, receipt consumption or recovery.
 
-## Account selection
+## Provider bindings
 
-Before each Claude or Codex dispatch or launch, the driver runs
-`bun skills/axstack/scripts/pick-instance.js --provider claude|codex`.
-The picker selects the enabled account of that provider's T3 driver with the
-highest tier-weighted headroom. Save its `--json` output in private evidence
-and record the chosen instance ID. `--settings <path>` overrides
-`~/.t3/userdata/settings.json`.
-
-For known usage, the score equals `(100 − max known window utilization) × tier weight`.
-For unknown utilization, the score equals the tier weight alone.
-The maximum uses the known utilization windows; an unavailable window is not
-assumed to be empty.
-
-| Provider / tier | Weight |
-| --- | --- |
-| Claude Max 20x: `default_claude_max_20x` | 4 |
-| Claude Max 5x: `default_claude_max_5x` | 1 |
-| Codex: `pro` | 4 |
-| Codex: `prolite` | 1 |
-
-For an unknown tier, the weight equals 1.
-An account with any window at ≥95% or a reported limit reached is excluded.
-Accounts with missing credentials are skipped.
-Usage is cached for five minutes. Failed requests use stale usage when present,
-otherwise a tier-only unknown score. Codex's plan is unknown until a successful
-usage response, so an uncached failed Codex request has weight 1.
-
-Exit 0 prints the selected instance or JSON.
-For dispatched roles, only error exit 1 permits fallback to the canonical instance after validating availability.
-The canonical instances are `codex` and `claudeAgent`.
-Exit 2 (no eligible provider instances) must hold the work without fallback.
-If the driver's own current instance is eligible, it must stay despite headroom differences.
-On error exit 1, the driver must keep its current instance.
-At a turn boundary, an excluded driver with an eligible same-provider sibling
-switches its own calling thread and records the change. Provider, model, class
-and effort remain fixed. Dispatched roles never fail over mid-thread.
-See [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for schedule rebinding and the [policy carve-out](workflows.md#automatic-merge-boundaries).
-
-The opt-in `sync-default.js` rotates the New-chat default by elapsed-minus-used pace at a ten-point lead or current exclusion. `AXSTACK_SYNC_POOL` enables cross-driver weekly comparison and model/effort selection; without it, only the same-driver account changes.
-
-## Account selection environment
-
-`XDG_CACHE_HOME` selects the cache directory; the default is `~/.cache`.
-The usage cache lives at `<cache-dir>/axstack/usage.json`.
-`AXSTACK_CLAUDE_USAGE_URL` is a test-only endpoint override for Claude usage.
-`AXSTACK_CODEX_USAGE_URL` is a test-only endpoint override for Codex usage.
-Local tests use loopback endpoints; these variables are not provider setup steps.
+Claude binds to T3 instance `claudeAgent`; Codex binds to `codex`.
+Grok and Antigravity keep `grok` and `antigravity` respectively.
+A usage-limited instance holds the work without failover.
+See [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding).

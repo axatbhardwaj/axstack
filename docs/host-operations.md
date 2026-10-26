@@ -43,10 +43,9 @@ the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
 Installation creates no production schedule and never enables a timer.
-Axstack allows exactly two opt-in systemd user timers as scheduler exceptions:
-`axstack-default-sync` rewrites only T3 `defaultModelSelection`, and
+Axstack allows exactly one opt-in systemd user timer as a scheduler exception:
 `axstack-single-server` removes duplicate server processes for one base dir.
-Both run stateless scripts, keep no workflow state and launch no agent.
+It runs a stateless script, keeps no workflow state and launches no agent.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -115,7 +114,7 @@ binding. Continuity lives outside worktrees at
 `~/.local/share/axstack/runs/review-manager/progress.md`. Per-PR detached
 review checkouts come from existing host clones; a missing clone holds that job.
 At pass start, follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
-for account selection and schedule recreation.
+for provider binding.
 
 Every pass reconciles saved, GitHub, and native T3 state across the lane before
 admission and reads all discovery pages. Incomplete inventory or unknown
@@ -142,9 +141,8 @@ retirement. No broad scratch deletion or forced worktree removal applies.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
 Requested peer reviews cover any accessible repository. T3 owns schedules,
 threads, runs, and delegated tasks; Axstack adds no queue engine, cursor files,
-or historical runtime fallback. The only scheduler exceptions are the two opt-in
-systemd user timers described in [New-chat default sync](#new-chat-default-sync)
-and [Single T3 server](#single-t3-server).
+or historical runtime fallback. The only scheduler exception is the opt-in
+systemd user timer described in [Single T3 server](#single-t3-server).
 
 ## Review automation
 
@@ -166,84 +164,6 @@ These documents and their source-contract tests define expected decisions.
 Scenario fixtures are behavioral-evaluation inputs, not model-evaluation
 results, and neither form is live proof; activation still requires the native
 canary described by the operational contract.
-
-## New-chat default sync
-
-This opt-in script changes only root `defaultModelSelection` in
-`~/.t3/userdata/settings.json`. Without a pool it changes only the instance
-among enabled accounts of the current Claude/Codex driver.
-`AXSTACK_SYNC_POOL` compares drivers by weekly clocks (>=604800s), without
-plan weights. Weekly remaining quota is `R = 100 - used` for the selected
-weekly window. Prefer the highest band: `R >= 15`, `10 <= R < 15`, then `R < 10`.
-A higher band switches without a pace margin; within the same band, rotation
-needs a ten-point elapsed-minus-used pace lead and the current account wins ties.
-This also applies when every eligible account is below 10% remaining: known
-usable quota stays usable, ranked by pace. Without a pool, only pace applies.
-This is a best-effort weekly reserve preference, not a guaranteed budget for
-future work. The current hard guard still excludes any window at 95% used
-or a reached limit. Excluded/unauthorized/skipped current accounts can escape
-to known candidates before the unknown hold; otherwise any unknown holds,
-even below 10% remaining. No eligible candidate leaves the default untouched.
-Non-current absent credentials
-exclude; malformed/unreadable credentials and unknown/stale usage hold.
-Cache expires after five minutes. Missing defaults stay untouched; OAuth tokens
-are never refreshed. Each host's pool uses only enabled, credentialed drivers:
-
-```sh
-AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium \
-  bun ~/.agents/skills/axstack/scripts/sync-default.js --dry-run
-```
-
-Exit 0 prints one token-free JSON decision with proposed selection; dry-run
-never writes. `--settings <path>` selects another file. Pool entries are
-`driver=model[:effort]`: Claude `effort` or Codex `reasoningEffort` options;
-omitted effort omits options. Rotation writes the full pool selection,
-overwriting manual model/effort picks only then. Pin with `AXSTACK_SYNC_DEFAULT=0`
-or a default driver outside the pool. Exit 1 means invalid pool/settings or write
-failure. Save the full selection for rollback. Other bytes stay intact.
-A fsynced sibling preserves mode; original bytes are checked before rename and
-read back afterward. The accepted sub-ms T3 write race can lose an edit;
-read-back mismatch is an error.
-
-Validate pool models and efforts against each host's catalog before activation.
-Preserve that host's current Opus effort by including it explicitly when set;
-the illustrative Claude entry above omits effort. If the current Codex default
-still uses Sol, the driver performs a one-time same-account selection migration
-to `gpt-6-astra:medium` during authorized host activation, saving rollback bytes
-and verifying the write/readback. The helper does not enforce models when the
-account stays selected. Only new chats use the changed default; running threads,
-role routing, schedules and `roles.json` stay outside this policy.
-
-Under host-mutation authority, install and enable:
-
-```sh
-mkdir -p ~/.config/systemd/user
-cp ~/.agents/skills/axstack/systemd/axstack-default-sync.service ~/.config/systemd/user/axstack-default-sync.service
-cp ~/.agents/skills/axstack/systemd/axstack-default-sync.timer ~/.config/systemd/user/axstack-default-sync.timer
-systemctl --user daemon-reload
-systemctl --user enable --now axstack-default-sync.timer
-systemctl --user list-timers axstack-default-sync.timer
-journalctl --user -u axstack-default-sync.service
-```
-
-The timer starts about one minute after user-manager startup, then every ten
-minutes. Its monotonic `Persistent=true` timer never replays calendar ticks.
-Override Bun/skills paths via `ExecStart`/`Environment` in
-`systemctl --user edit axstack-default-sync.service`. Add the per-host pool:
-
-```ini
-[Service]
-Environment=AXSTACK_SYNC_POOL=claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium
-```
-
-Reload after edits. Logout needs authorized linger; installation never activates units.
-
-Disable with `systemctl --user disable --now axstack-default-sync.timer` and
-stop any active one-shot with `systemctl --user stop axstack-default-sync.service`.
-Rollback: remove the pool drop-in, reload, and restore the full selection in T3 Settings.
-The sibling `<settings>.axstack-default-sync.lock` directory prevents overlap
-(unchanged/locked). Empty locks older than sixty seconds are removed and retried
-once; fresh contention reports locked.
 
 ## Single T3 server
 

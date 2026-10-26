@@ -8,7 +8,7 @@ For optional weekly test audits, use the separate packaged
 The native canary below is also required before weekly activation.
 
 At every scheduled pass start, follow [Provider bindings](t3-runtime.md#preflight-and-binding)
-for account selection and schedule ownership.
+for provider binding.
 
 For nightly read-only PR reports, use the separate packaged
 [Nightly PR-triage prompt](pr-triage-nightly.md).

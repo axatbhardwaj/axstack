@@ -160,7 +160,7 @@ test('AC2 recovery actions match their rule paragraphs', () => {
   }
 });
 
-test('driver routing summaries load the canonical turn-boundary rule', () => {
+test('provider binding summaries load the canonical runtime rule', () => {
   for (const path of [
     'skills/axstack/references/contracts.md', 'skills/axstack/references/routing.md',
     'skills/axstack/references/autopilot.md', 'skills/axstack-watch/references/watch-runtime.md',
@@ -170,7 +170,6 @@ test('driver routing summaries load the canonical turn-boundary rule', () => {
   ]) {
     const text = read(path);
     expect(loadedReferences(text).some((link) => link.endsWith('t3-runtime.md#preflight-and-binding')), path).toBe(true);
-    // A blanket prohibition would override the linked driver exception.
     for (const sentence of sentences(text)) {
       if (/(?:never|no) mid-thread failover/i.test(sentence)) {
         expect(/dispatched roles/i.test(sentence), path).toBe(true);

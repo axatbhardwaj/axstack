@@ -1,16 +1,15 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const flags = ['--role', '--roles', '--capabilities', '--picker', '--kind', '--verify', '--out'];
+const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--out'];
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
-  --capabilities <saved.json> --picker <picker.json> --kind task|launch
+  --capabilities <saved.json> --kind task|launch
   [--verify <configuration.json>] [--out <report.json>]
-Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind task
+Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --kind task
 
 --role          Role ID from the supplied snapshot
 --roles         Installed-style roles.json (version 1, roles array)
 --capabilities  Saved orchestrator_capabilities JSON; reuse the run's saved snapshot
---picker        Saved picker JSON; uses chosenInstanceId
 --kind          task emits target and, for axstack-author, isolation:"worktree"; launch emits modelSelection
 --verify        Compare t3_thread_configuration JSON; print evidence then MATCH or each mismatch
 --out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
@@ -61,7 +60,7 @@ function normalizedOptions(options) {
   return JSON.stringify(entries.sort(([left], [right]) => left.localeCompare(right)));
 }
 
-function verify(configuration, instanceId, provider, model, options) {
+function verify(configuration, provider, model, options) {
   const mismatches = [];
   const selection = configuration?.modelSelection;
   const compare = (field, expected, observed, equal = expected === observed) => {
@@ -73,7 +72,7 @@ function verify(configuration, instanceId, provider, model, options) {
     compare('provider', provider, selection.provider,
       (selection.provider === 'claude' ? 'claudeAgent' : selection.provider) === provider);
   }
-  compare('instanceId', instanceId, selection?.instanceId);
+  compare('instanceId', provider, selection?.instanceId);
   compare('model', model, selection?.model);
   compare('options', options, selection?.options,
     normalizedOptions(options) === normalizedOptions(selection?.options));
@@ -130,8 +129,6 @@ function plan(argv, io) {
   if (!nonempty(role.model) && !nonempty(role.modelClass) && role.model !== null) {
     hold(`model unavailable for role ${role.id}`);
   }
-  const picker = readJSON(args['--picker']);
-  if (!nonempty(picker?.chosenInstanceId)) hold('picker chosen instance unavailable');
   const modelArgs = typeof role.model === 'string' ? ['--model', role.model]
     : role.modelClass ? ['--class', role.modelClass] : ['--model', String(role.model)];
   const resolved = Bun.spawnSync([process.execPath, `${import.meta.dir}/resolve-models.js`,
@@ -140,28 +137,13 @@ function plan(argv, io) {
   if (resolved.stderr.length) io.stderr(resolved.stderr.toString());
   if (resolved.exitCode !== 0) return resolved.exitCode === 1 ? 2 : 1;
   const { model, effortOption, providerInstanceId } = JSON.parse(resolved.stdout.toString());
-  const chosen = readJSON(args['--capabilities']).providers
-    .filter((provider) => provider.providerInstanceId === picker.chosenInstanceId);
-  if (chosen.length !== 1 || chosen[0].driverKind !== providerInstanceId
-    || (['grok', 'antigravity'].includes(role.provider) && picker.chosenInstanceId !== providerInstanceId)) {
-    hold(`picker instance ${picker.chosenInstanceId} does not bind provider ${role.provider}`);
-  }
-  if (!Array.isArray(chosen[0].models)) {
-    hold(`malformed models on instance ${picker.chosenInstanceId}; expected an array; observed ${JSON.stringify(chosen[0].models) ?? 'missing'}`);
-  }
-  const selectedModel = chosen[0].models.find((entry) => entry.id === model);
-  if (!selectedModel) hold(`model ${model} unavailable on instance ${picker.chosenInstanceId}`);
-  if (effortOption && !selectedModel.options?.some((option) => option.id === effortOption.id
-    && option.options?.some((value) => value.id === effortOption.value))) {
-    hold(`effort ${effortOption.value} unavailable on instance ${picker.chosenInstanceId}`);
-  }
   const options = effortOption ? [effortOption] : [];
   if (args['--verify']) {
-    const verification = verify(readJSON(args['--verify']), picker.chosenInstanceId, providerInstanceId, model, options);
+    const verification = verify(readJSON(args['--verify']), providerInstanceId, model, options);
     emit(verification);
     return verification.mismatches.length ? 2 : 0;
   }
-  const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: picker.chosenInstanceId,
+  const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: providerInstanceId,
     model, options };
   emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
     ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });

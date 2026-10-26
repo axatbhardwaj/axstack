@@ -29,73 +29,14 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Provider bindings must map grok→`grok` and antigravity→`antigravity`, with
-canonical error-exit fallbacks codex→`codex` and claude→`claudeAgent`.
-At each dispatch or launch, claude and codex must bind to the instanceId printed
-by `scripts/pick-instance.js --provider <provider>`.
-For dispatched roles, only error exit 1 permits fallback to the canonical instance after validating availability.
-Exit 2 (no eligible provider instances) must hold the work without fallback.
-Record the chosen instanceId and a pointer to saved `--json` output in the dispatch record.
-Only same-provider, same-model account selection among instances of one driver
-is permitted, with provider, model, class and effort rules required to remain unchanged.
-An exhausted account with no eligible sibling must hold.
-Dispatched roles never fail over mid-thread.
-
-When the driver starts or resumes a run and at the start of every run-watch wake,
-it runs `scripts/pick-instance.js --provider <its own provider> --json`.
-Read its current binding with `t3_thread_configuration` and save picker JSON in private run evidence.
-If the driver's own current instance is `excluded` for a usage limit and an eligible
-same-provider sibling exists, it must switch itself via `t3_thread_configure` to the
-chosen sibling instance, keeping the same provider, model and effort/options, then continue.
-The driver must record from/to instance, a pointer to saved picker JSON and UTC time in `progress.md`.
-If the driver's own current instance is eligible, it must stay despite headroom differences.
-On exit 2 (no eligible sibling), the driver must hold under the existing rule.
-On error exit 1, the driver must keep its current instance.
-Driver account re-selection must configure only the calling thread and only at a turn boundary.
-A turn already paused by a usage limit cannot self-recover.
-The next wake or user message runs this check.
-
-Driver self-switching is required from v0.25.1.
-T3 scheduled tasks retain the creation-time instanceId for wakes and fresh-thread
-passes regardless of the calling thread's current binding.
-The driver must arm a run watch only after picking its account: `pick-instance.js` before `schedule_task`.
-On a driver self-switch, delete and recreate its armed bound run watch with the
-same prompt, cadence and binding on the new instance.
-
-Every scheduled automation pass runs `scripts/pick-instance.js --provider <its own provider> --json`
-at pass start, including fresh-thread review-manager passes.
-Scheduled passes follow the driver's eligibility and stay rules: an eligible own instance stays,
-exit 1 keeps the current instance and exit 2 holds.
-If a scheduled pass's own current instance is `excluded` and an eligible same-provider sibling exists,
-it must switch itself via `t3_thread_configure` to the chosen sibling instance,
-keeping the same provider, model and effort/options.
-On a scheduled pass self-switch in a review-manager lane, only the owner-of-record, after lane reconciliation
-and the duplicate check, must delete and recreate its own schedule with the same
-prompt, cadence and binding on the chosen instance.
-On any other scheduled pass self-switch, delete and recreate its own schedule with
-the same prompt, cadence and binding on the chosen instance only after `list_scheduled_tasks`
-confirms no replacement for that schedule on the chosen instance already exists.
-If a replacement for that schedule on the chosen instance already exists, any other scheduled pass must skip recreation.
-For a review-manager self-switch, only the owner-of-record must update the recorded
-`axstack-owner` binding's instanceId to the chosen instance after verifying unchanged
-provider/model/effort/options with `t3_thread_configuration` and attaching the picker
-switch receipt, before the admission binding comparison.
-For each schedule replacement, read back old absence and new presence using `list_scheduled_tasks`.
-For each schedule replacement, record old/new scheduledTaskId, from/to instance,
-picker JSON pointer and UTC time in the `progress.md` or durable activation/continuity record.
-Retain the recorded schedule's title and enabled state and use a fresh stable creation `clientRequestId`.
-An uncertain replacement holds affected work: preserve its native receipts for reconciliation.
-A scheduled pass already running on an exhausted account cannot recover.
-Account switches must happen before exhaustion at the picker's near-limit cutoff.
+Provider bindings must map codex→`codex`, claude→`claudeAgent`, grok→`grok` and antigravity→`antigravity`.
+For every dispatch or launch, claude must bind to `claudeAgent` and codex must bind to `codex`.
+A usage-limited instance must hold the work without failover.
 
 For plan generation, run
-`scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
+`scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
 Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` plus `isolation` when present into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
-For claude/codex, the `--picker` JSON must come from saved
-`scripts/pick-instance.js --provider <role provider> --json` output.
-For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
-pass `{"chosenInstanceId":"<canonical instance>"}`.
 For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
 with the same plan inputs and saved `t3_thread_configuration` read-back.
 
@@ -114,8 +55,6 @@ absence and must hold; never use a provider default for that role.
 
 An unavailable provider, model, role, mode or effort must hold that role with
 no substitution. Auth, quota, timeout and rejection do not select an alternative.
-Here alternative means a provider or model substitution, excluding the bounded
-same-provider, same-model account selection above.
 Intentional absent seats remain recorded absences; availability is runtime proof.
 
 Grok's CLI requires ≥1.0.13.

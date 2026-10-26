@@ -172,7 +172,7 @@ Never narrow standing merge delegation without a user instruction.
 Explicit user restrictions, including `Auto-merge: off`, chat holds, and user
 instructions, always win.
 
-Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for driver account re-selection on start, resume and run-watch wakes.
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) on start, resume and run-watch wakes.
 
 Follow [Route each wake](../../axstack-watch/SKILL.md#4-route-each-wake).
 Raise decision holds, including spec and npm stage approval, and serious-risk
