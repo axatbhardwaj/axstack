@@ -146,8 +146,12 @@ Before dispatch, read [T3 runtime](../axstack/references/t3-runtime.md).
 The T3 driver thread is the sole owner and coordinator; it never writes tracked files or repairs an author’s source.
 Standalone peer review or watch adoption reuses that driver and any valid
 recorded ownership. `axstack-owner` is a binding, not a separately launched worker.
-Only the driver launches writers through `t3_thread_launch` and non-writers
-through async `delegate_task` under the runtime contract. Leaf workers create
+Only the driver dispatches workers under the runtime contract.
+Use async `delegate_task` for every role, including authors with
+`isolation:"worktree"` in their own SHA-pinned worktrees.
+Top-level drivers use `t3_thread_launch`.
+Use `t3_thread_launch` as a rare author fallback only when
+worktree isolation is unavailable and record each use in the run record. Leaf workers create
 no recursive teams. A bounded manager PR job keeps its admitted coordinator
 and settles after its skill-owned reviewers settle.
 

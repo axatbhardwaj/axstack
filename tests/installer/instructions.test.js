@@ -106,14 +106,18 @@ describe('owned instruction block primitives', () => {
 const prohibits = (text, prohibition, ...concepts) => sentences(text).some((sentence) =>
   prohibition.test(sentence) && concepts.every((concept) => concept.test(sentence))
   && requires(sentence.replace(prohibition, ''), /^/));
+const unsafeLaunch = (text) => sentences(text).some((sentence) =>
+  requires(sentence, /t3_thread_launch/, /\b(?:authors?|writers?)\b/i)
+  && !requires(sentence, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i));
 const rules = {
   routing: (text) => requires(text, /\b(?:route|rout\w*|dispatch)\b/i, /subagents?/i,
     /delegated workers?/i, /reviewers?/i, /cross.harness dispatch/i, /T3 Code orchestration/i, /t3-code.*MCP|MCP.*t3-code/i),
-  delegates: (text) => requires(text, /delegate_task/, /\b(?:use|us\w*|run|rout\w*)\b/i, /non.writer roles?/i),
-  writers: (text) => !/non.writer/i.test(text) && requires(text, /t3_thread_launch/, /\b(?:use|us\w*|run|rout\w*)\b/i, /\bwriters?\b/i),
+  delegates: (text) => requires(text, /delegate_task/, /\b(?:use|us\w*|run|rout\w*)\b/i, /every role/i, /including authors/i, /isolation:"worktree"/i),
+  drivers: (text) => !unsafeLaunch(text) && requires(text, /t3_thread_launch/, /\b(?:use|us\w*|run|rout\w*)\b/i, /top.level drivers?/i),
+  fallback: (text) => requires(text, /t3_thread_launch/, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i),
   authorization: (text) => requires(text, /^(?:the )?user\s+(?:authoriz\w*|permit\w*|allow\w*)\b/i,
     /Axstack drivers?/i, /\bT3\b/i, /\brun\b/i, /\bfull.access\b/i, /launch/i,
-    /top.level writer threads?/i, /worktrees?/i, /within approved scope/i),
+    /top.level driver threads?/i, /delegated writers/i, /worktrees?/i, /within approved scope/i),
   native: (text) => prohibits(text, /\b(?:do not use|never use|forbid\w*)\b/i,
     /harness.native subagent tools?|native subagent tools?[^.;]*harness/i, /delegated work/i),
 };
@@ -122,11 +126,12 @@ const holdouts = {
     'Route reviewers, cross-harness dispatches, subagents and delegated workers through T3 Code orchestration using the t3-code MCP.',
     'Through the MCP named t3-code, T3 Code orchestration routes delegated workers, subagents, cross-harness dispatches and reviewers.',
   ],
-  delegates: ['For non-writer roles, use delegate_task.', 'Run non-writer roles using delegate_task.'],
-  writers: ['For writers, use t3_thread_launch.', 'Writers run using t3_thread_launch.'],
+  delegates: ['Use delegate_task for every role, including authors with isolation:"worktree".', 'For every role including authors, run delegate_task with isolation:"worktree".'],
+  drivers: ['Use t3_thread_launch for top-level drivers.', 'Top-level drivers run using t3_thread_launch.'],
+  fallback: ['Use t3_thread_launch as a rare author fallback only when worktree isolation is unavailable and record each use in the run record.'],
   authorization: [
-    'The user permits Axstack drivers in T3 to launch top-level writer threads and worktrees within approved scope and run full-access.',
-    'User allows Axstack drivers to run full-access in T3 and launch worktrees and top-level writer threads within approved scope.',
+    'The user permits Axstack drivers in T3 to launch top-level driver threads, delegated writers and worktrees within approved scope and run full-access.',
+    'User allows Axstack drivers to run full-access in T3 and launch worktrees and top-level driver threads, delegated writers within approved scope.',
   ],
   native: ['Never use harness-native subagent tools for delegated work.', 'For delegated work, do not use native subagent tools from the harness.'],
 };
@@ -137,7 +142,11 @@ const inversions = (text) => [
   text.replace(/\bnever\b/gi, 'always').replace(/\bnot\b/gi, 'indeed'),
   text.replace(/\b(route|routes|run|runs|launch|authorizes|permits|allows)\b/gi, 'avoid $1'),
   text.replace(/\buser\b/gi, 'author rather than the user'),
-  text.replace(/\b(non-writer roles|writers)\b/gi, (role) => role.toLowerCase() === 'writers' ? 'non-writer roles' : 'writers'),
+  text.replace(/\b(every role|top-level drivers|delegated writers)\b/gi, 'non-writer roles'),
+  text.replace(/only when/gi, 'even when'),
+  text.replace(/rare /gi, ''),
+  text.replace(/isolation:"worktree"/g, 'isolation:"none"'),
+  text.replace(/record each use/gi, 'discard each use'),
   text.replace(/\b(full-access|approved)\b/gi, 'un$1'),
   text.replace(/[.]$/, '') + ' only for optional work',
 ].filter((changed) => changed !== text);
@@ -229,5 +238,13 @@ test('CLI reports hand-written legacy routing gaps without editing either global
     expect(readFileSync(file + '.other', 'utf8')).toBe(original);
     runCli(cli, ['uninstall', '--skills-dir', skills, '--instructions', file, '--no-claude-settings', '--yes'], { env: { HOME: home } });
     expect(readFileSync(file, 'utf8')).toBe(original);
+  }
+});
+
+test('installed block rejects additional launched author or writer routes', () => {
+  const text = renderInstructionBlock().replace(/`/g, '');
+  expect(rules.drivers(text)).toBe(true);
+  for (const extra of ['Use t3_thread_launch for writers.', 'Authors and top-level drivers use t3_thread_launch.']) {
+    expect(rules.drivers(`${text}\n${extra}`)).toBe(false);
   }
 });
