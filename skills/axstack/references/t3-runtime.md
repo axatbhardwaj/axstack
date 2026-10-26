@@ -95,6 +95,8 @@ At launch and rename, visible driver thread titles express a plain outcome of
 at most 30 characters.
 Visible driver thread titles use no repo, issue or size prefix.
 Hidden children keep dispatch-key titles.
+D9 applies to driver threads only, while flagged unbound pass threads retain the
+`Needs you: <kind> <repo>#<n>` (or `<lane>`) rename under Automations.
 
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.

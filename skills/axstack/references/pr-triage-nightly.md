@@ -21,6 +21,11 @@ Never declare a PR merge-ready.
 Never merge, post comments, change labels, push, send user messages, dispatch
 work, or launch threads.
 
+At pass start, read the recorded prior pass thread with `t3_thread_read` and
+apply [Finite-session teardown](automations.md#finite-session-teardown)'s guarded
+verification or hold/report before replacing its identity.
+Record own pass threadId in the existing activation record and read back the save.
+
 At pass end, an unbound pass calls `t3_thread_organize` with `action: settle` on its
 own thread only, only when it owns no PR watch, has zero unsettled descendants,
 has no pending receipt and is not held, wedged or a stalled owner.

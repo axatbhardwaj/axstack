@@ -15,6 +15,7 @@ compare its Watermarks with the inventory:
 
 - Run the full pass when the sorted list differs from `Quiet gate:`.
 - Run the full pass when any other lane thread is non-terminal.
+- Run the full pass when the recorded prior pass thread is unsettled.
 - Run the full pass when continuity or either watermark is missing, malformed or unreadable.
 - Run the full pass when `Last full pass:` is at least 4 hours old or in the future.
 - Run the full pass when any call fails or pagination, PR head OIDs or thread/run liveness is incomplete or unknown.
@@ -23,8 +24,13 @@ compare its Watermarks with the inventory:
 Holds awaiting only the user remain quiet-eligible: a user decision on the PR
 changes `updatedAt`, and the 4 h full pass reconciles replies in flagged threads.
 
+Before evaluating the quiet gate, read the recorded prior pass thread with
+`t3_thread_read`; unknown identity or readback forces a full pass.
+Record own pass threadId in review-manager continuity after reading the prior identity,
+before duplicate classification, then read back the identity save.
+
 If every busy condition is false, apply the guarded pass-end self-settle below,
-then end the turn with no text, no skill load, no sweep and no continuity write.
+then end the turn with no text, no skill load, no sweep and no other continuity write.
 Otherwise continue with the full pass below; incomplete evidence retains the
 existing admission and cleanup holds.
 
