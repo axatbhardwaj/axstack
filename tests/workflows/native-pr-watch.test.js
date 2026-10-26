@@ -123,12 +123,18 @@ rule('failed author-link readback holds only its PR and retries the link', runti
   "A missing or failed author-link readback never triggers author repair: it holds only that PR's merge-ready and requires retrying the link.",
   [[/never triggers/i, 'always triggers'], [/\bholds?\b/i, 'releases'],
     [/requires retrying/i, 'forbids retrying']], /never triggers/i);
-rule('forge merge or close settles the author thread in the same turn with readback', runtime,
-  [/forge confirms/i, /run PR merged or closed/i, /same driver turn/i, /driver/i,
-    /author thread/i, /t3_thread_organize/i, /action: settle/i,
-    /t3_thread_read/i, /settled.*true/i, /for that thread/i],
-  'In the same driver turn when the forge confirms a run PR merged or closed, the driver settles its author thread via t3_thread_organize with action: settle and verifies settled: true via t3_thread_read for that thread.',
-  [[/driver settles?/i, 'driver unsettles'], [/\b(?:reads? back|verifies?)\b/i, 'ignores']]);
+rule('forge merge or close reads author settlement first in the same turn', runtime,
+  [/forge confirms/i, /run PR merged or closed/i, /same driver turn/i, /author thread/i, /t3_thread_read/i],
+  'When the forge confirms a run PR merged or closed, in the same driver turn first read its author thread with t3_thread_read.',
+  [[/first reads?|first read/i, 'eventually read']]);
+rule('already settled author records native settlement', runtime,
+  [/already/i, /settled.*true/i, /record/i, /settle: native/i],
+  'Record settle: native if the readback already shows settled: true.',
+  [[/settled.*true/i, 'settled: false'], [/settle: native/i, 'settle: manual']]);
+rule('otherwise settle manually and read back before recording', runtime,
+  [/otherwise/i, /t3_thread_organize/i, /action: settle/i, /t3_thread_read/i, /settled.*true/i, /settle: manual/i],
+  'Otherwise settle with t3_thread_organize using action: settle, then read back settled: true with t3_thread_read before recording settle: manual.',
+  [[/then read back/i, 'skip readback'], [/before recording/i, 'after recording'], [/settle: manual/i, 'settle: native']]);
 rule('missing settlement readback holds watch end and Close-out only for its thread', runtime,
   [/missing or failed/i, /settle readback/i, /watch end/i, /Close-out/i,
     /only.*that author thread/i, /until resolved/i],

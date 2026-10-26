@@ -118,14 +118,20 @@ for (const rule of rules) {
         rewordings[name], driverInversions[name], rule[1]);
       return;
     }
-    const source = sentences(runtime());
-    const matching = source.filter((sentence) => accepts(sentence, rule));
-    expect(matching.length, name).toBeGreaterThan(0);
-    expect(accepts(source.filter((sentence) => !matching.includes(sentence)).join('. '), rule), name).toBe(false);
-    const rewording = rewordings[name];
-    expect(accepts(rewording, rule), rewording).toBe(true);
-    for (const sentence of [...matching, rewording]) {
-      expect(accepts(negate(sentence), rule), negate(sentence)).toBe(false);
+    const preflight = name.startsWith('cleanup ') && name !== 'cleanup evidence priority';
+    const sources = preflight ? [runtime(), ...[
+      'skills/axstack/references/workspace-hygiene.md', 'skills/axstack-cleanup/SKILL.md', 'docs/host-operations.md',
+    ].map((path) => read(path).replace(/`/g, ''))] : [runtime()];
+    for (const text of sources) {
+      const source = sentences(text);
+      const matching = source.filter((sentence) => accepts(sentence, rule));
+      expect(matching.length, name).toBeGreaterThan(0);
+      expect(accepts(source.filter((sentence) => !matching.includes(sentence)).join('. '), rule), name).toBe(false);
+      const rewording = rewordings[name];
+      expect(accepts(rewording, rule), rewording).toBe(true);
+      for (const sentence of [...matching, rewording]) {
+        expect(accepts(negate(sentence), rule), negate(sentence)).toBe(false);
+      }
     }
   });
 }
