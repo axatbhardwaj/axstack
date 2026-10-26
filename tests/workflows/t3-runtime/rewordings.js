@@ -75,7 +75,7 @@ export const rewordings = {
   "probe checkout": "Use git worktree add --detach for a disposable detached checkout pinned to candidate SHA and pinned base.",
   "probe cd": "Into it the brief requires cd.",
   "probe outputs": "Only disposable probes write there, and outputs go to <run>/evidence/<key>/.",
-  "writer launch": "Until the PR merges or closes, author and repairs retain their own worktree, launched by t3_thread_launch with startFromOrigin:false and type:worktree.",
+  "writer launch": "Author and repairs must use async delegate_task with isolation:\"worktree\", title = dispatch key and stable clientRequestId in their own worktree kept until the PR merges or closes.",
   "owner row": "The Owner is the Driver thread in the Driver worktree.",
   "owner source exclusion": "Tracked candidate source or tests are never edited.",
   "owner worker exclusion": "No worker launch applies.",

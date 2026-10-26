@@ -7,7 +7,6 @@ const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 const lifecycle = () => read('skills/axstack/references/lifecycle.md');
 const pins = [
   'Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.',
-  'Writer completion requires `AXSTACK-DONE` plus terminal `t3_thread_wait` on the recorded run and candidate checks: non-empty diff, clean tree, and named red/green logs.',
   'Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one.',
   'End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles all unsettled runs.',
   'Tracking grants no merge, release, model-substitution, or scope authority.',
@@ -18,6 +17,7 @@ for (const pin of pins) test(`tracking safety: ${pin}`, () => {
   expect(text.split(pin).length).toBe(2);
 });
 const rules = [
+  ['fallback writer completion', [/launched fallback writer completion/i, /requires/i, /AXSTACK-DONE/, /terminal `?t3_thread_wait/i, /recorded run/i, /non-empty diff/i, /clean tree/i, /named red\/green logs/i], 'Launched fallback writer completion requires AXSTACK-DONE and terminal t3_thread_wait on the recorded run plus non-empty diff, clean tree and named red/green logs.'],
   ['writer marker delivery', [/launched writer/i, /sends/i, /marker/i, /t3_thread_send/i, /mode: queue/i, /recorded driver thread/i], 'Using t3_thread_send with mode: queue, the launched writer sends its marker to the recorded driver thread.'],
   ['forbidden wait loops', [/sleep/i, /poll loops/i, /forbidden/i], 'Sleep and poll loops are forbidden.'],
   ['wait timeout re-arm', [/t3_thread_wait/i, /recorded watch/i, /re-arm/i, /waits/i, /timeout/i], 'Re-arm waits on timeout using t3_thread_wait and the recorded watch.'],
@@ -64,7 +64,6 @@ test('delivery and recovery preserve runtime identity and ownership', () => {
     'An older attempt never completes a newer one; stale or duplicate receipts remain evidence, deduplicated by runtime identity.',
     'On a T3 `threadId/runId` mismatch the driver must stop consuming and reconcile the recorded driver identity with native state; never forge a sender or borrow an identity to bypass the mismatch.',
     'The driver must retain a user-taken-over T3 thread; never send cleanup commands to it, including `t3_thread_organize` settle or archive.',
-    'A repair must use `t3_thread_send(writerThreadId, mode:queue)` to the same author in the same attempt and worktree; pin the new candidate revision.',
   ]) expect(runtime).toContain(pin);
 });
 

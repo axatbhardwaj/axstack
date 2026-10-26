@@ -5,13 +5,13 @@ const nonempty = (value) => typeof value === 'string' && value.trim().length > 0
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
   --capabilities <saved.json> --picker <picker.json> --kind task|launch
   [--verify <configuration.json>] [--out <report.json>]
-Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind launch
+Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind task
 
 --role          Role ID from the supplied snapshot
 --roles         Installed-style roles.json (version 1, roles array)
 --capabilities  Saved orchestrator_capabilities JSON; reuse the run's saved snapshot
 --picker        Saved picker JSON; uses chosenInstanceId
---kind          task emits target; launch emits modelSelection
+--kind          task emits target and, for axstack-author, isolation:"worktree"; launch emits modelSelection
 --verify        Compare t3_thread_configuration JSON; print evidence then MATCH or each mismatch
 --out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
 --help          Show all flags and exit codes
@@ -163,7 +163,8 @@ function plan(argv, io) {
   }
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: picker.chosenInstanceId,
     model, options };
-  emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access' });
+  emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
+    ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });
   return 0;
 }
 

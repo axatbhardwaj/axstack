@@ -53,9 +53,17 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
       expect(JSON.parse(result.output)).toEqual({ inputs: { role, kind, roles: `${f.dir}/roles.json`,
         capabilities: `${f.dir}/capabilities.json`, picker: `${f.dir}/picker.json` },
         [kind === 'launch' ? 'modelSelection' : 'target']: selection,
-        runtimeMode: 'full-access' });
+        runtimeMode: 'full-access', ...(role === 'axstack-author' && kind === 'task' ? { isolation: 'worktree' } : {}) });
     }
   }
+});
+
+test('saved author task payload carries isolation alongside its target', () => {
+  const f = setup(), args = planArgs(f); args[args.length - 1] = 'task';
+  const out = `${f.dir}/author-plan.json`, result = invoke([...args, '--out', out]);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(readFileSync(out, 'utf8')).isolation).toBe('worktree');
+  expect(JSON.parse(result.output).omittedPayloadFields).toBe(3);
 });
 
 test('a recorded exact model pin wins over its class and a newer catalog model', () => {
@@ -291,8 +299,8 @@ test('the test runner removes each fixture directory after its test', () => {
 const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
   '--capabilities', f.save('capabilities', f.capabilities), '--picker', f.save('picker', f.picker), '--kind', 'launch'];
 
-test('CLI example includes every required input', () => {
-  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role .* --roles .* --capabilities .* --picker .* --kind launch/);
+test('CLI author example includes every required input and the delegated task kind', () => {
+  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role axstack-author --roles .* --capabilities .* --picker .* --kind task/);
 });
 
 test('usage/input errors tell the caller how to recover', () => {

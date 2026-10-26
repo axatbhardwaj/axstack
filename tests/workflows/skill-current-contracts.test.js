@@ -108,8 +108,8 @@ rule('S6: audit schema measures simplification applicability and receipt complet
     !/incomplete|partial|not complete/i.test(line) && concepts.every((concept) => concept.test(line))));
 
 rule('S7: writer dispatch keeps authors and repairs without the retired category', shared('t3-runtime'),
-  [/Author and repairs/i, /t3_thread_launch/i, /own worktree/i, /merges or closes/i],
-  'Author and repairs use t3_thread_launch in their own worktree kept until the PR merges or closes.',
+  [/Author and repairs/i, /delegate_task/i, /isolation:"worktree"/i, /own worktree/i, /merges or closes/i],
+  'Author and repairs use delegate_task with isolation:"worktree" in their own worktree kept until the PR merges or closes.',
   [[/Author and repairs/i, 'code-arena writers']],
   (text) => text.split('\n').find((line) => line.startsWith('| Author')) ?? '');
 test('S7: runtime has no remaining code-arena writer category', () => {

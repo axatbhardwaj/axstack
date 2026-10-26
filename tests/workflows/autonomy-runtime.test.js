@@ -42,19 +42,19 @@ rule('completion is processed in the same turn with existing safeguards', runtim
   'When a completion arrives, handle it in the same driver turn after the required terminal checks, delegated hasPendingChildRuns:false, and writer candidate checks.',
   [[/\b(?:process|handle)\b/i, 'ignore'], [/\bsame driver turn\b/i, 'next wake'],
     [/\bafter\b/i, 'before'], [/hasPendingChildRuns:false/i, 'hasPendingChildRuns:true']]);
-rule('pinned base is fetched before a writer launch', runtime,
-  [/pinned base commit/i, /launch repository/i, /before/i, /writer launch/i],
-  'Retrieve the pinned base commit into the launch repository before a writer launch.',
+rule('pinned base is fetched before an author dispatch', runtime,
+  [/pinned base commit/i, /dispatch repository/i, /before/i, /author dispatch/i],
+  'Retrieve the pinned base commit into the dispatch repository before an author dispatch.',
   [[/\b(?:fetch|retrieve)\b/i, 'skip'], [/\bbefore\b/i, 'after']]);
-rule('pinned base is verified locally before a writer launch', runtime,
-  [/before/i, /writer launch/i, /locally/i, /pinned base SHA/i,
+rule('pinned base is verified locally before an author dispatch', runtime,
+  [/before/i, /author dispatch/i, /locally/i, /pinned base SHA/i,
     /resolves? to/i, /commit/i, /exact SHA/i],
-  'Before a writer launch, check locally that the pinned base SHA resolves to a commit with that exact SHA.',
+  'Before an author dispatch, check locally that the pinned base SHA resolves to a commit with that exact SHA.',
   [[/\b(?:verify|check)\b/i, 'ignore'], [/\bbefore\b/i, 'after'],
     [/\blocally\b/i, 'remotely'], [/\bexact SHA\b/i, 'branch tip']]);
-rule('failed fetch or verification holds the launch', runtime,
-  [/fetch or verification/i, /that launch/i],
-  'When fetch or verification fails, block that launch.',
+rule('failed fetch or verification holds the dispatch', runtime,
+  [/fetch or verification/i, /that dispatch/i],
+  'When fetch or verification fails, block that dispatch.',
   [[/\b(?:hold|block)\b/i, 'continue'], [/\bfails\b/i, 'succeeds'],
     [/\bfetch or verification\b/i, 'fetch and verification']]);
 

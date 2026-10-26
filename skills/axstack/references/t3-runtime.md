@@ -91,7 +91,7 @@ Account switches must happen before exhaustion at the picker's near-limit cutoff
 For plan generation, run
 `scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
-Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
+Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` plus `isolation` when present into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
 For claude/codex, the `--picker` JSON must come from saved
 `scripts/pick-instance.js --provider <role provider> --json` output.
 For grok/antigravity, or after a claude/codex picker exit-1 canonical fallback,
@@ -140,7 +140,7 @@ configuration; unrelated configurations remain eligible.
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
 | Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
-| Author and repairs | Must use `t3_thread_launch` with `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}` in their own worktree, kept until PR merges or closes | Writer sends a receipt to the driver; driver verifies terminal run and candidate |
+| Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
 The UI verifier checkout row applies to candidate checks, while a page without
@@ -162,12 +162,30 @@ The branch must be `axstack/<run>/<role>/<task>-a<n>`; lowercase each segment
 and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its
 original form and record both; normalization is never an identity substitute.
 
+Before dispatch, the driver must name its resolved worktree absolute path in the author brief.
+Before `git switch -c`, the fresh author must verify its starting branch matches `t3/<id>` and `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
+On failed isolation proof, stop with `AXSTACK-FAILED` and change nothing.
+After dispatch, the driver must read back the child's `worktreePath` and hold if it equals the driver worktree.
+The fresh author brief step 1 must verify the branch is absent before
+`git switch -c <encoded branch> <pinned base SHA>`, then verify HEAD equals the pinned base SHA.
+Never use `git switch -C`.
+Delete the exact T3 `t3/<id>` branch only after the switch succeeds and HEAD is verified.
+At dispatch, record taskId, childThreadId, worktreePath and encoded branch.
+T3 worktree isolation starts from the parent HEAD and ignores workspaceStrategy,
+so the fresh child must perform step 1 in its own checkout before writing.
+
+Keep `t3_thread_launch` for top-level drivers; use `t3_thread_launch` as a rare
+author fallback only when worktree isolation is unavailable and record each use in the run record.
+E1 and E2 ship in the same release: until E2 lands, launched writers remain a valid route.
+For a recorded author launch, use `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}`.
+The launch-only recovery and completion rules below cover that transition and fallback.
+
 `baseRef` must always be a commit SHA, never a branch name; T3 renames its
 `t3code/*` branches. Pin base and candidate before dispatch.
-Fetch the pinned base commit into the launch repository before a writer launch.
-Before a writer launch, verify locally that the pinned base SHA resolves to a
+Fetch the pinned base commit into the dispatch repository before an author dispatch.
+Before an author dispatch, verify locally that the pinned base SHA resolves to a
 commit with that exact SHA.
-If fetch or verification fails, hold that launch.
+If fetch or verification fails, hold that dispatch.
 
 Workers must finish with exactly one final marker: `AXSTACK-DONE key=… head=…
 report=…`, `AXSTACK-FAILED key=… head=… report=…`, or `AXSTACK-QUESTION key=… q=…`.
@@ -184,6 +202,9 @@ Before any `t3_thread_read` for a delegated task, the driver must persist only t
 Delegated completion must require terminal `completed`, `result_available`,
 `hasPendingChildRuns:false`, and final `AXSTACK-DONE`; a question stays
 incomplete even when native status says completed.
+
+Delegated author completion requires delegated terminal checks plus candidate checks:
+non-empty diff, clean tree and named red/green logs.
 
 Launched writer completion must require terminal `t3_thread_wait` on that run,
 then candidate checks: non-empty diff, clean tree and named red/green logs.
@@ -207,7 +228,10 @@ including untracked entries. Any change is a hold before advancing that work.
 
 ## Launch recovery, repairs and questions
 
-For a lost launch response the driver must use fully paginated `t3_thread_list`
+For a lost delegated dispatch or repair response, retry with the same stable
+`clientRequestId` to recover task identity. Never start a second writer while the outcome is unknown.
+
+For a lost launch response on the recorded fallback route the driver must use fully paginated `t3_thread_list`
 with `titleContains=<key>`, filtered to exact whole-title equality, plus
 `git worktree list`. Keep the reserved branch through recovery. A branch or
 worktree without a reconciled thread prevents proof of absence.
@@ -243,8 +267,10 @@ watch. Persist status again and accept only `latestTerminal*` with
 lexical ID order), terminal success and matching receipt key/SHA. The original
 summary stays stable; no notification is assumed for a launched-writer resumed result.
 
-A repair must use `t3_thread_send(writerThreadId, mode:queue)` to the same
-author in the same attempt and worktree; pin the new candidate revision.
+A delegated repair must use a stable clientRequestId with `t3_thread_send(childThreadId, mode:queue, clientRequestId)` to the same author
+in the same attempt, worktree and branch, record the returned taskId and verify the existing candidate head.
+Repairs never repeat fresh checkout step 1. Pin the new candidate revision.
+For a launched fallback, retain the same author thread and use launched-run completion checks.
 
 A replacement after terminal failure must use `a<n+1>`, a new branch and title;
 the failed attempt's branch is kept until salvage. Unknown liveness holds
@@ -282,13 +308,12 @@ Before finishing PR work, including watch end or Close-out, the driver calls
 `list_thread_pull_requests` and links every missing run PR.
 Never link unrelated PRs.
 
-After verified publication readback of an own PR, for every layer of an ordinary-chain or legacy `gh stack`,
-the driver also calls `t3_thread_update` with `action: link_pull_request`,
-`pullRequest` containing its number, repository and full PR URL, and `threadId`
-set to the author thread, then reads back the PR link with
-`list_thread_pull_requests` for that same author thread.
-A missing or failed author-link readback never triggers author repair: it holds
-only that PR's merge-ready and requires retrying the link.
+Authors are never PR-linked: the driver alone links and watches the PR.
+For delegated authors after accepted completion, in the same driver turn settle with
+`t3_thread_organize` using `action: settle`, read back `settled: true` with `t3_thread_read`
+and record `settle: manual` under the [Settlement](workspace-hygiene.md#settlement) guards.
+For delegated authors, archive and guarded manual worktree removal wait for PR merge or close.
+Never rely on automatic child cleanup.
 
 When the forge confirms a run PR merged or closed, in the same driver turn the
 driver first reads its author thread with `t3_thread_read`.
