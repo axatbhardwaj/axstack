@@ -16,7 +16,9 @@ function rule(name, path, concepts, rewording, inversions, negative) {
     const required = [...concepts, ...inversions.map(([direction]) => direction)];
     const accepts = negative ? (text) => prohibits(text, negative, ...required)
       : (text) => requires(text, ...required);
-    checkRule(source, accepts, rewording, inversions, required);
+    for (const equivalent of [rewording].flat()) {
+      checkRule(source, accepts, equivalent, inversions, required);
+    }
   });
 }
 
@@ -98,6 +100,18 @@ rule('non-user stop notice is a wake with same-turn PR recheck', runtime,
   'A non-user T3 stopped watching notice is itself a driver wake: during that same turn, re-check the PR.',
   [[/same turn/i, 'next wake'], [/re-checks?/i, 'ignores'],
     [/non-user/i, 'user'], [/itself a driver wake/i, 'only data for a later wake']]);
+rule('open PR must rearm in the same turn after a non-user stop', runtime,
+  [/non-user stop/i, /PR (?:stays|remains) open/i, /driver must/i, /re-arm/i,
+    /same turn/i, /after any GraphQL reset wait/i],
+  'When a PR remains open after a non-user stop, the driver must re-arm during that same turn, after any GraphQL reset wait.',
+  [[/driver must/i, 'driver may'], [/re-arm/i, 'skip recovery'],
+    [/same turn/i, 'later turn'], [/PR (?:stays|remains) open/i, 'PR is closed']]);
+rule('host guide follows canonical recovery with unsettle before rearm', '../docs/host-operations.md',
+  [/non-user stop/i, /PR (?:stays|remains) open/i, /same turn/i,
+    /follow/i, /Native PR links and watches/i, /unsettle.*before.*re-arm/i],
+  'For a non-user stop while the PR remains open, follow Native PR links and watches in that same turn: unsettle before native re-arm.',
+  [[/non-user stop/i, 'user Stop'], [/same turn/i, 'later turn'],
+    [/follow/i, 'bypass'], [/unsettle.*before.*re-arm/i, 're-arm before unsettle']]);
 rule('only the PR-owning driver watches', runtime,
   [/only the PR-owning driver/i, /calls|invokes/i, /watch_pull_request/i],
   'Only the PR-owning driver invokes watch_pull_request.',
@@ -116,8 +130,10 @@ rule('native watch stop conditions match T3', runtime,
   'Native watch stops after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.',
   [[/ends|stops/i, 'continues'], [/after 8 failed reads/i, 'after 15 minutes']]);
 rule('rearm excludes user stops', runtime, [/re-arm/i],
-  'Re-arm only after a stop not caused by the user.',
-  [[/not caused by the user/i, 'caused by the user']], /only after a stop not caused by the user/i);
+  ['Re-arm only after a stop the user did not cause.',
+    'Re-arm solely after a stop that was not caused by the user.'],
+  [[/not caused by the user|the user did not cause/i, 'caused by the user']],
+  /(?:only|solely) after a stop (?:that was )?(?:not caused by the user|the user did not cause)/i);
 rule('rearm first unsettles the driver thread', runtime,
   [/before re-arming/i, /first unsettle/i, /driver thread/i, /t3_thread_organize/i,
     /action: unsettle/i, /then (?:call|invoke)/i, /watch_pull_request/i, /again/i],
@@ -136,20 +152,16 @@ rule('T3 stop reason is recorded', runtime,
   [/record|save/i, /stop reason/i, /T3 gives/i],
   'Save the stop reason T3 gives.', [[/record|save/i, 'discard']]);
 rule('rearm never loops', runtime, [/re-arm/i, /in a loop/i],
-  'Never re-arm in a loop.', [[/never/i, 'always']], /never/i);
+  'Never perform re-arming in a loop.', [[/never/i, 'always']], /never/i);
 rule('conflict-free base movement routes through the existing update rule',
   'axstack-watch/references/watch-runtime.md',
   [/base movement without conflict/i, /schedule-wake digest/i, /existing base-update rule/i],
-  'Route base movement without conflict from the schedule-wake digest to the existing base-update rule below.',
+  'Use the existing base-update rule to route base movement without conflict found by the schedule-wake digest.',
   [[/route/i, 'ignore'], [/existing base-update rule/i, 'new readiness term']]);
 rule('native watch reports conflicts rather than conflict-free base movement',
-  'axstack-watch/references/watch-runtime.md', [/native watch/i, /reports conflicts only/i],
-  'Native watch reports conflicts only.', [[/reports conflicts only/i, 'reports every base movement']]);
-rule('base freshness keeps the existing readiness term',
-  'axstack-watch/references/watch-runtime.md', [/existing base-ancestry freshness term/i, /unchanged/i],
-  'Keep the existing base-ancestry freshness term unchanged.', [[/unchanged/i, 'replaced']]);
-rule('base movement adds no readiness term', 'axstack-watch/references/watch-runtime.md',
-  [/readiness term/i], 'Add no new readiness term.', [[/no new/i, 'a new']], /no new/i);
+  'axstack-watch/references/watch-runtime.md', [/base movement/i, /native watch/i, /reports/i, /only/i, /conflicts/i],
+  'Regarding base movement, native watch only reports conflicts.',
+  [[/only/i, 'also other movement and'], [/conflicts/i, 'all changes']]);
 rule('missing native watch falls back to schedule and digest without a hold', runtime,
   [/watch_pull_request/i, /unavailable/i, /bound 5-minute schedule/i, /scripts\/pr-digest\.js/i],
   'Without a hold, fall back to scripts/pr-digest.js and the bound 5-minute schedule whenever watch_pull_request is unavailable.',

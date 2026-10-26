@@ -297,6 +297,8 @@ Never poll or keep a model active between native PR wake events.
 Native watch ends after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.
 A non-user T3 "stopped watching" notice is itself a driver wake: in that same turn,
 re-check the PR.
+After a non-user stop while the PR stays open, the driver must re-arm in that
+same turn, after any GraphQL reset wait, using the recovery steps below.
 Record the stop reason T3 gives.
 Re-arm only after a stop not caused by the user.
 For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
