@@ -117,10 +117,13 @@ rule('healthy native completion paths use hourly backstop during release too', r
 rule('cadence defaults to hourly outside recovery', runtime,
   [/otherwise/i, /use/i, /60-minute backstop/i],
   'Otherwise, use the 60-minute backstop.', [/60-minute/i, '5-minute']);
-rule('user Stop does not activate watch recovery', runtime,
-  [/open PR/i, /unwatched/i, /user Stop/i, /5-minute recovery cadence/i],
-  'A user Stop that leaves an open PR unwatched never triggers the 5-minute recovery cadence.',
-  [/never triggers/i, 'always triggers'], /never triggers/i);
+const stopRecoveryBan = /\b(?:never (?:triggers?|activates?)|(?:do|does|must) not (?:(?:switch|change) to|trigger|activate))\b/i;
+for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
+  rule(`user Stop does not activate watch recovery (${path})`, path,
+    [/open PR/i, /unwatched/i, /user Stop/i, /5-minute recovery cadence/i],
+    'When a user Stop leaves an open PR unwatched, do not switch to the 5-minute recovery cadence.',
+    [stopRecoveryBan, 'always triggers'], stopRecoveryBan);
+}
 
 // Cadence eligibility and recovery are owned here; native-pr-watch covers the
 // dropped-watch wake's immediate recheck/rearm ordering at the tool boundary.
@@ -168,3 +171,16 @@ rule('Close-out follows watch end', watch,
   [/Close-out/i, /watch ends|end of the watch/i],
   'Close-out follows the end of the watch.',
   [/\b(?:after|follows)\b/i, (word) => word.toLowerCase() === 'after' ? 'before' : 'precedes']);
+
+rule('work restart names the linked recovery contract', 'axstack/references/t3-runtime.md',
+  [/work restarts|work resumes/i, /recovery conditions/i, /Chat-run watch runtime/i],
+  'When work resumes, reassess cadence against the recovery conditions in Chat-run watch runtime.',
+  [/re-evaluate|reassess/i, 'ignore']);
+rule('native completion paths identify their wake sources', runtime,
+  [/delegated tasks/i, /native PR watches/i, /native completion paths/i, /deliver their own wakes|supply their own notifications/i],
+  'Delegated tasks and native PR watches provide native completion paths because they supply their own notifications.',
+  [/provide|have/i, 'lack']);
+rule('launched writers and marker resumes lack native completion paths', runtime,
+  [/launched writers/i, /resumed marker questions/i, /native completion paths/i],
+  'Launched writers and resumed marker questions do not have native completion paths.',
+  [/lack|do not have/i, 'have'], /lack|do not have/i);

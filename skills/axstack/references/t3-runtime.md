@@ -304,6 +304,7 @@ Re-arm only after a stop not caused by the user.
 For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
 When GraphQL remaining is near 0, defer re-arming until reset: set the bound
 schedule to 5 minutes and re-arm on the next wake after reset.
+Record the GraphQL reset time in the run record.
 Never wait for a GraphQL reset inside a turn.
 Before re-arming, first unsettle the driver thread with `t3_thread_organize`
 using `action: unsettle`, then call `watch_pull_request` again.
@@ -316,7 +317,8 @@ If re-arming fails, restore the bound 5-minute schedule.
 When the run waits only on a user decision or a human-only step, including a
 user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
-When work restarts, re-evaluate cadence against the recovery conditions below.
+When work restarts, re-evaluate cadence against the recovery conditions in
+[Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch).
 Keep native PR watches.
 For chat-run cadence changes, follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 for the 60-minute backstop, 5-minute recovery, and schedule update read-back.

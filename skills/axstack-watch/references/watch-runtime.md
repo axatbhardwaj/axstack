@@ -47,6 +47,8 @@ user merge, with no unsettled worker and no PR needing watch events, change
 the run watch cadence to 60 minutes at once.
 When work restarts, re-evaluate cadence against the recovery conditions below.
 Keep native PR watches.
+Delegated tasks and native PR watches provide native completion paths: they deliver their own wakes.
+Launched writers and resumed marker questions lack native completion paths.
 With native completion paths for all unsettled work and armed native PR watches,
 use the 60-minute backstop (`everyMs:3600000`), including while release is pending.
 While a writer or follow-up is unsettled without a native completion path, use
@@ -68,9 +70,14 @@ A missing schedule capability holds activation. Delegated roles follow T3 runtim
 add no daemon and no polling model between wakes.
 
 At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
-for driver account re-selection while a schedule exists.
+for driver account re-selection.
 On native PR wakes, reconcile the event plus a current-state read instead of running `pr-digest.js`.
-At the start of each schedule wake, run the digest once per repository
+On 5-minute schedule wakes before the recorded GraphQL reset time, skip
+`pr-digest.js` for the affected repository and continue local reconciliation.
+On the first schedule wake at or after the recorded GraphQL reset time, resume
+the digest and re-arm using the native-watch recovery procedure.
+At the start of each schedule wake, outside that repository's GraphQL reset wait,
+run the digest once per repository
 from the installed `axstack` skill directory.
 Run `scripts/pr-digest.js` only on schedule wakes, using:
 `bun scripts/pr-digest.js --repo <owner/name> --prs <comma-separated numbers of every watched member in that repo> --watermark <that repository's per-repository JSON watermark file path>`.
