@@ -140,11 +140,9 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
   const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')
     && !isVendored(path.slice(root.length + 1))).sort();
   expect(skillScripts).toEqual([
-    `${root}/skills/axstack/scripts/account-usage.js`,
     `${root}/skills/axstack/scripts/archive-evidence.js`,
     `${root}/skills/axstack/scripts/check-staged-file-tokens.js`,
     `${root}/skills/axstack/scripts/dispatch-plan.js`,
-    `${root}/skills/axstack/scripts/pick-instance.js`,
     `${root}/skills/axstack/scripts/pr-digest.js`,
     `${root}/skills/axstack/scripts/pr-shape.js`,
     `${root}/skills/axstack/scripts/readiness-run.js`,
@@ -152,7 +150,6 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     `${root}/skills/axstack/scripts/resolve-models.js`,
     `${root}/skills/axstack/scripts/run-init.js`,
     `${root}/skills/axstack/scripts/single-server.js`,
-    `${root}/skills/axstack/scripts/sync-default.js`,
     `${root}/skills/axstack/scripts/test-repository.js`,
   ].sort());
   expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
