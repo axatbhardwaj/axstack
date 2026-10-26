@@ -109,7 +109,7 @@ counts with denominators plus the evidence behind the count:
   | --- | --- | --- |
   | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - Simplification applicability determinations evidenced / total candidate diffs,
   and complete simplification receipts / total candidates, broken down as

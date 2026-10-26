@@ -55,8 +55,8 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
 
   const cases = JSON.parse(read('tests/workflows/routing-scenarios.json')).cases;
   const mixed = cases.find(({ id }) => id === 'mixed-analysis-sonnet-high');
-  expect(mixed?.expected?.routes).toContain('axstack-research-code-sol: codex/gpt-6-sol high');
-  expect(mixed?.expected?.routes).toContain('axstack-explore-execution-sol: codex/gpt-6-sol high');
+  expect(mixed?.expected?.routes).toContain('axstack-research-code-sol: codex/gpt-6.1-terra high');
+  expect(mixed?.expected?.routes).toContain('axstack-explore-execution-sol: codex/gpt-6.1-terra high');
   expect(mixed?.expected?.pairing).toMatch(/independent[^.]*without cross-reading[^.]*per claim[^.]*without averaging/i);
   const absent = cases.find(({ id }) => id === 'claude-only-sol-pairs-absent');
   expect(absent?.expected?.absent).toEqual([

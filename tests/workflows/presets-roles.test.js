@@ -53,12 +53,12 @@ for (const [id, concepts, rewording, inversions] of explanationRoles) {
   });
 }
 
-test('mixed visual author pins Sonnet 5.5 high and reviewer stays Sol', () => {
+test('mixed visual author pins Sonnet 5.5 high and reviewer uses Terra', () => {
   const roles = readJson('profiles/presets/mixed.json').roles;
   expect(roles.find(({id}) => id === 'axstack-explainer')).toMatchObject({
     provider: 'claude', modelClass: 'sonnet', model: 'claude-sonnet-5-5', thinkingOptionId: 'high',
   });
-  expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'sol', thinkingOptionId:'medium'});
+  expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'terra', thinkingOptionId:'medium'});
 });
 
 for (const preset of presetNames) {

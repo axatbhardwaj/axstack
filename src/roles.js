@@ -6,12 +6,12 @@ const PROVIDER_BOUNDS = Object.freeze({
 
 const CLASS_PROVIDERS = Object.freeze({
   fable: 'claude', opus: 'claude', sonnet: 'claude', haiku: 'claude',
-  astra: 'codex', sol: 'codex', luna: 'codex',
+  astra: 'codex', sol: 'codex', luna: 'codex', terra: 'codex',
 });
 
 export function deriveModelClass(model) {
   if (typeof model !== 'string') return null;
-  return model.match(/^gpt-(\d+(?:\.\d+)*)-(astra|sol|luna)$/)?.[2]
+  return model.match(/^gpt-(\d+(?:\.\d+)*)-(astra|sol|luna|terra)$/)?.[2]
     ?? model.match(/^claude-(fable|opus|sonnet|haiku)-/)?.[1]
     ?? null;
 }
@@ -22,7 +22,7 @@ const AUTHORED_ROUTES = Object.freeze({
     'claude/opus': ['axstack-reviewer-primary', 'codex/sol', 'high'],
   },
   'codex-only': {
-    'codex/sol': ['axstack-reviewer-secondary', 'codex/luna', 'xhigh'],
+    'codex/sol': ['axstack-reviewer-secondary', 'codex/terra', 'xhigh'],
   },
   'claude-only': {
     'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'high'],

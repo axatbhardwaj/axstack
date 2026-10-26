@@ -294,10 +294,11 @@ missing either holds this role without substitution, including Haiku 4.5.
 The `codex-only` assignments for these roles are unchanged.
 Scout adds `axstack-explore-codebase-luna` at Codex Luna xhigh in `mixed` and
 `codex-only`. Luna has an explicit null model in `claude-only`.
-The three `-sol` pair seats for auditor, research-code, and explore-execution
-use Sol high in `mixed` and `codex-only`; `claude-only` records intentional
-absences. The paired seats run independently on one brief and the driver
-reconciles their findings.
+The `-sol` research-code and explore-execution pair seats use Terra high in
+`mixed` and Sol high in `codex-only`; the auditor pair stays Sol high in both.
+Their role IDs remain unchanged. `claude-only` records intentional absences.
+The paired seats run independently on one brief and the driver reconciles
+their findings.
 
 The mixed checker uses the Claude Sonnet class at low effort, resolved from
 saved capabilities. Mixed `axstack-research-x` uses `grok` with

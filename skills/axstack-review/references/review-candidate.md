@@ -36,7 +36,7 @@ This section applies to peer and authored PR modes.
      | --- | --- | --- |
      | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
      | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-     | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
+     | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` xhigh) |
      | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 
      The diligence receipt is separate and does not count as a reviewer receipt.
