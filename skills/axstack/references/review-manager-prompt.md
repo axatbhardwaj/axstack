@@ -1,11 +1,5 @@
 # Review manager prompt
 
-The account picker must run first, before the quiet check: from the installed
-`axstack` skill directory, run `bun scripts/pick-instance.js --provider <own provider> --json`.
-Find this pass's current instance from `t3_thread_configuration` in the picker
-JSON `instances` and inspect its `state`; defer reference loads until a full pass.
-An eligible current instance remains quiet-eligible even when `chosenInstanceId`
-names a different instance.
 Run the quiet check before invoking `axstack-review` or reading any `skills/**` file.
 
 Resolve self with `gh api user --jq .login`, then union two paginated `gh search prs`
@@ -19,9 +13,6 @@ PR-job descendants, using exact lane identities.
 Read continuity at `~/.local/share/axstack/runs/review-manager/progress.md` and
 compare its Watermarks with the inventory:
 
-- Run the full pass when the picker JSON marks this pass's current instance `excluded`.
-- Run the full pass when the picker exits with code 1.
-- Run the full pass when the picker exits with code 2.
 - Run the full pass when the sorted list differs from `Quiet gate:`.
 - Run the full pass when any other lane thread is non-terminal.
 - Run the full pass when continuity or either watermark is missing, malformed or unreadable.
@@ -38,7 +29,7 @@ existing admission and cleanup holds.
 
 ## Full pass
 
-Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for own account selection.
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for provider binding.
 
 You are a fresh finite T3 review-manager pass in project `axstack-review-lane`
 on the VPS's existing `axatbhardwaj/axstack` clone. Fetch first; this unbound

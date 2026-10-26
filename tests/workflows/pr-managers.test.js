@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
-import { publicDocPaths } from './public-docs.js';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { checkRule, loadedReferences, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
@@ -49,29 +48,6 @@ const quietRules = [
     [/run.*full pass/i, /when/i, /call fails/i, /pagination/i, /head OIDs/i, /liveness/i, /incomplete/i, /unknown/i],
     'When a call fails or pagination, head OIDs or thread/run liveness is incomplete or unknown, run the full pass.',
     [[/call fails/i, 'call succeeds'], [/incomplete/i, 'complete'], [/unknown/i, 'known']]],
-  ['account picker is mandatory and first',
-    [/account picker/i, /must run first/i, /before.*quiet check/i],
-    'Before the quiet check, the account picker must run first.',
-    [[/must/i, 'may'], [/first/i, 'last'], [/before/i, 'after']]],
-  ['excluded current instance is busy',
-    [/run.*full pass/i, /when/i, /picker JSON marks/i, /this pass.s current instance/i, /\bexcluded\b/i],
-    "When the picker JSON marks this pass's current instance excluded, run the full pass.",
-    [[/\bexcluded\b/i, 'eligible']]],
-  ['eligible current instance stays quiet-eligible despite a different choice',
-    [/\beligible current instance/i, /remains quiet-eligible/i, /even when/i,
-      /chosenInstanceId/, /different instance/i],
-    'Even when chosenInstanceId names a different instance, an eligible current instance remains quiet-eligible.',
-    [[/\beligible current instance/i, 'excluded current instance'],
-      [/quiet-eligible/i, 'busy'], [/different instance/i, 'the same instance']]],
-  ['picker eligibility lookup uses the current binding',
-    [/find/i, /this pass.s current instance/i, /t3_thread_configuration/,
-      /picker JSON/i, /\binstances\b/, /inspect its.*state/i],
-    "In picker JSON instances, find this pass's current instance from t3_thread_configuration and inspect its state.",
-    [[/this pass.s current instance/i, 'the chosen instance'], [/inspect its.*state/i, 'inspect its score']]],
-  ...[1, 2].map((code) => [`picker exit ${code} is busy`,
-    [/run.*full pass/i, /when/i, /picker exits/i, new RegExp(`code ${code}\\b`)],
-    `When the picker exits with code ${code}, run the full pass.`,
-    [[new RegExp(`code ${code}\\b`), 'code 0']]]),
   ['recorded work and non-user holds are busy',
     [/run.*full pass/i, /when/i, /continuity records/i, /\bany\b/i,
       /unserved/i, /capacity-deferred/i, /INCOMPLETE/, /re-eligible/i,
@@ -94,14 +70,6 @@ for (const [name, concepts, rewording, inversions] of quietRules) {
   });
 }
 
-test('sibling picker preference alone does not force a full pass', () => {
-  const text = compact('skills/axstack/references/review-manager-prompt.md');
-  const forcesPass = (source) => requires(source, /run.*full pass/i, /when/i,
-    /picker chose|chosenInstanceId/i, /other than|different/i);
-  expect(forcesPass(text)).toBe(false);
-  expect(forcesPass(`${text} Run the full pass when the picker chose an instance other than this pass's current one.`)).toBe(true);
-});
-
 test('quiet check precedes all skill and reference loads', () => {
   const text = read('skills/axstack/references/review-manager-prompt.md');
   const target = /skills\/|axstack-review\b|(?:automations|t3-runtime)\.md\b/i;
@@ -122,12 +90,12 @@ test('quiet check precedes all skill and reference loads', () => {
   expect(accepts(text.replace(/Run the quiet check/i, 'Perform a quiet check'))).toBe(true);
   const movedEntry = 'Enter through installed `axstack-review`, which loads `../axstack/references/automations.md` relatively.';
   for (const probe of [
-    'Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for own account selection.',
+    'Follow [Provider bindings](t3-runtime.md#preflight-and-binding) for provider binding.',
     'Read [T3 runtime](t3-runtime.md) and invoke `axstack-review`.',
     movedEntry,
     'Read:\n\n- [Runtime](t3-runtime.md)',
     'Consult skills/axstack-review/SKILL.md first.',
-    'Open `t3-runtime.md` for the picker rules.',
+    'Open `t3-runtime.md` for the binding rules.',
   ]) expect(accepts(`${probe}\n\n${text}`), probe).toBe(false);
   for (const verb of ['Load', 'Read', 'Follow', 'Enter', 'Invoke', 'Consult', 'Open', 'Inspect', 'Study', 'Review']) {
     for (const path of ['skills/axstack-review/SKILL.md', 'axstack-review', 'automations.md', 't3-runtime.md']) {
@@ -136,19 +104,6 @@ test('quiet check precedes all skill and reference loads', () => {
     }
   }
   expect(accepts(`Never read skills/axstack-review/SKILL.md before the gate.\n\n${text}`)).toBe(true);
-});
-
-test('quiet path gives the exact picker invocation inline before the gate', () => {
-  const text = read('skills/axstack/references/review-manager-prompt.md');
-  const command = 'bun scripts/pick-instance.js --provider <own provider> --json';
-  const accepts = (source) => {
-    const index = source.indexOf(command);
-    const check = source.search(/\b(?:run|perform) (?:the|a) quiet check/i);
-    return index >= 0 && index < check && /installed\s+`axstack`\s+skill directory/i.test(source.slice(0, check));
-  };
-  expect(accepts(text)).toBe(true);
-  expect(accepts(text.replace(command, ''))).toBe(false);
-  expect(accepts(text.replace(command, '') + command)).toBe(false);
 });
 
 test('automations routes the quiet check to its packaged owner', () => {

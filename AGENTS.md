@@ -15,15 +15,12 @@
   Let the installer generate the installed `skills/axstack/roles.json` snapshot.
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
-  Exception: allow exactly two opt-in systemd user timers, `axstack-default-sync`
-  and `axstack-single-server`.
-  The `axstack-default-sync` timer runs a stateless script that rewrites only T3
-  `defaultModelSelection`.
+  Exception: allow exactly one opt-in systemd user timer, `axstack-single-server`.
   The `axstack-single-server` timer runs a stateless script that only SIGKILLs
   duplicate `t3 serve` processes for one base dir and their children, keeping
   the server that holds T3's ownership lock, otherwise the server recorded in
   `server-runtime.json`.
-  Both timers have no workflow state. Both scripts launch no agent.
+  The timer has no workflow state. Its script launches no agent.
 - Use ordinary PR chains under [PR chains](skills/axstack/references/pr-chain.md);
   preexisting native stacks retain `gh stack`. Workers do not push, submit, merge, publish,
   or release. For own PRs, automatic merge is the default under the
@@ -43,7 +40,7 @@
 
 - Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
 - Only the new helpers `dispatch-plan`, `pr-shape`, `readiness` and `run-init`
-  follow this rule; the existing six scripts retain their behavior.
+  follow this rule; the existing scripts retain their behavior.
   Fact and plan helpers (`dispatch-plan`, `pr-shape`, `readiness` without `--run`)
   use explicit inputs, read-only `git`/`gh` or saved T3 JSON, output to stdout
   or a caller-given path, and keep no state between calls.

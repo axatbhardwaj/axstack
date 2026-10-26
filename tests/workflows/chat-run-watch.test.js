@@ -39,14 +39,6 @@ test('schedule wake uses the PR digest before deciding whether to act', () => {
     'At the start of every schedule wake, execute the digest once per repository.',
     [[/start of (?:each|every) schedule wake/i, 'end of selected wakes'],
       [/run|execute/i, 'skip']], concepts);
-  const picker = [/start of (?:each|every) driver wake/i, /follow Provider bindings/i,
-    /driver account re-selection/i];
-  const repicksEveryWake = (source) => sentences(source).some((unit) =>
-    requires(unit, ...picker) && !/\b(?:while|when|if) a schedule exists\b/i.test(unit));
-  checkRule(sentences(text).join('. '), repicksEveryWake,
-    'Follow Provider bindings for driver account re-selection at the start of every driver wake.',
-    [[/follow Provider bindings/i, 'skip Provider bindings'],
-      [/driver account re-selection/i, 'driver account re-selection only while a schedule exists']], picker);
   const invocation = text.match(/At the start of each schedule wake[\s\S]*?Exit 0/)?.[0] ?? '';
   expect(invocation).toMatch(/once per repository/i);
   expect(invocation).toMatch(/installed[^.]*axstack[^.]*skill directory/i);
