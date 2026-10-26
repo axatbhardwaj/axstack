@@ -77,10 +77,10 @@
       "id": "axstack-checker",
       "name": "Axstack tracker checker",
       "provider": "claude",
-      "model": null,
       "modeId": "bypassPermissions",
       "thinkingOptionId": "low",
-      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. An intentionally absent role stays absent; configured null-model bindings resolve from saved T3 capabilities."
+      "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. Sonnet low tracker checker. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "modelClass": "sonnet"
     },
     {
       "id": "axstack-research-requirements",

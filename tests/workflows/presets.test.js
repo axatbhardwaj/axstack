@@ -52,7 +52,7 @@ const expected = {
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
-    a(null, 'low'), a('sonnet', 'high'),
+    a('sonnet', 'low'), a('sonnet', 'high'),
     a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'),
     g(null, 'high'),
     a('sonnet', 'high'), c('sol', 'medium'),
@@ -290,7 +290,7 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
   }
   const checker = readJson('profiles/presets/mixed.json').roles
     .find(({ id }) => id === 'axstack-checker');
-  expect(checker.model).toBeNull();
+  expect(checker.modelClass).toBe('sonnet');
 });
 
 test('presets: all packaged Markdown pointers resolve', () => {

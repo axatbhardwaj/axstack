@@ -51,7 +51,7 @@ test('role rows accept class only, class with matching pin, legacy pin and allow
     { ...role('axstack-monitor', null), modelClass: 'astra' },
     { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
     role('axstack-research-code', 'gpt-5.6-terra'),
-    { ...role('axstack-checker', null), provider: 'claude' },
+    { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
   ];
   expect(() => assertBundleRoles(rows)).not.toThrow();
   expect(assessRoleReadiness(rows, 'mixed')).toEqual({ ready: true, gaps: [] });

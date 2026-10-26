@@ -17,10 +17,10 @@ test('installed readiness compares role IDs with the selected bundle', () => {
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     role('axstack-reviewer-secondary', 'claude-opus-5-5'),
-    { ...role('axstack-checker', null), provider: 'claude' },
+    { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
   ];
   const installed = installedRoleBytes('mixed', [
-    { ...role('axstack-checker', null), provider: 'claude' },
+    { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
   ]);
 
   const result = assessInstalledRoleSnapshot(installed, 'mixed', expectedRoles);
@@ -243,3 +243,7 @@ test('readiness rejects a null model on a non-intentional row such as an investi
   ]);
 });
 
+test('mixed checker needs a configured model or class', () => {
+  expect(assessRoleReadiness([{ ...role('axstack-checker', null), provider: 'claude' }], 'mixed').gaps)
+    .toContain('axstack-checker requires a configured model');
+});

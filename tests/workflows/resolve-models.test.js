@@ -195,3 +195,13 @@ test('capabilities rejects missing CLI values and unknown flags', () => {
 test('capabilities holds an unconfigured model instead of silently treating it as model:null', () => {
   held(resolve(capabilities, []), /expected.*class.*model|missing.*model/i);
 });
+
+test('mixed tracker checker resolves its configured Claude class at low effort', () => {
+  const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/mixed.json`, 'utf8'));
+  const role = roles.find(({ id }) => id === 'axstack-checker');
+  const args = role.modelClass ? ['--class', role.modelClass] : ['--model', String(role.model)];
+  const result = resolve(capabilities, args, role.provider, role.thinkingOptionId);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ provider: 'claude', providerInstanceId: 'claudeAgent',
+    model: 'claude-sonnet-5-5', effortOption: { id: 'effort', value: 'low' } });
+});

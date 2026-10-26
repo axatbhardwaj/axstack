@@ -28,6 +28,8 @@ With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
 The resolver accepts only Codex, Claude and Grok workflow providers. Run
 `bun run test tests/workflows/resolve-models.test.js tests/workflows/dispatch-plan.test.js`
 to verify unsupported-provider holds, saved bindings and readback mismatches.
+The resolver suite also proves the mixed tracker checker resolves to Claude
+Sonnet with low effort; readiness rejects a checker lacking both model and class.
 An omitted provider label is reported as unknown while the exact instance,
 model, options and mode remain checked. Input paths remain in the complete JSON.
 These fixture results grant no live dispatch authority. Missing models or

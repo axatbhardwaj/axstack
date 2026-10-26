@@ -100,6 +100,6 @@ test('presets: research keeps Google routing, citations and failure fencing', ()
 
   const mixed = readJson('profiles/presets/mixed.json').roles;
   expect(mixed.find(({ id }) => id === 'axstack-checker')).toMatchObject({
-    provider: 'claude', model: null, thinkingOptionId: 'low',
+    provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'low',
   });
 });
