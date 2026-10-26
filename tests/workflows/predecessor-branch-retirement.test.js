@@ -3,19 +3,23 @@ import { readFileSync } from 'node:fs';
 
 const source = () => readFileSync(`${import.meta.dir}/../../skills/axstack/references/automations.md`, 'utf8');
 const conditions = [
+  /(?:read|capture) (?:its|the) current branch name from (?:the|that) worktree before (?:removing|retiring) (?:it|the worktree)/i,
+  /regardless of (?:the |its )?(?:branch )?name pattern/i,
+  /fetch origin before (?:checking|verifying) ancestry/i,
   /predecessor pass is settled/i,
   /(?:proven|verified) run\/lane-owned by recorded identity/i,
   /(?:its|all) descendants and evidence are settled/i,
   /no worktree (?:has the branch checked out|checks out the branch)/i,
   /no remote counterpart exists/i,
   /(?:its|the) tip (?:equals|matches) the recorded tip/i,
-  /(?:its|the) tip is (?:an ancestor of|ancestral to) the verified remote default branch/i,
+  /(?:its|the) tip is (?:an ancestor of|ancestral to) (?:the verified remote default branch|origin\/main)/i,
 ];
 
 function guarded(text) {
   const paragraph = text.replace(/\s+/g, ' ').match(/[^.]*git branch -D[^.]*\.[^.]*\./)?.[0] ?? '';
   return /review-manager pass may/i.test(paragraph) && /only (?:when|if) all/i.test(paragraph)
     && /(?:otherwise|else)[, ]+(?:hold|retirement holds)/i.test(paragraph)
+    && /(?:record|list) (?:it|the branch) in Open holds/i.test(paragraph)
     && conditions.every((condition) => condition.test(paragraph));
 }
 
@@ -33,6 +37,10 @@ test('retirement contract detects removal and directional inversions', () => {
     ['its tip is an ancestor of', 'its tip is not an ancestor of'],
     ['only when ALL', 'even when not all'],
     ['Otherwise hold', 'Otherwise proceed'],
+    ['read its current branch name from the worktree before removing it', 'infer the branch name from the thread title'],
+    ['regardless of branch name pattern', 'only for t3code/* branches'],
+    ['fetch origin before checking ancestry', 'skip fetching origin before checking ancestry'],
+    ['record it in Open holds', 'discard the branch'],
   ]) {
     expect(text).toContain(before);
     expect(guarded(text.replace(before, after))).toBe(false);
@@ -40,10 +48,12 @@ test('retirement contract detects removal and directional inversions', () => {
 });
 
 test('retirement contract survives equivalent rewording', () => {
-  expect(guarded(`A review-manager pass may retire a predecessor local t3code/* branch
+  expect(guarded(`A review-manager pass may retire a predecessor local branch; capture the current branch
+    name from that worktree before retiring the worktree, regardless of its name pattern;
+    fetch origin before verifying ancestry,
     using git branch -D only if all these checks hold: the predecessor pass is settled,
     verified run/lane-owned by recorded identity, all descendants and evidence are settled,
     no worktree checks out the branch, no remote counterpart exists, the tip matches the
     recorded tip, and the tip is ancestral to the verified remote default branch.
-    Else retirement holds.`)).toBe(true);
+    Else retirement holds; list the branch in Open holds.`)).toBe(true);
 });
