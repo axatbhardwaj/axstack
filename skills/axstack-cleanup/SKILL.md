@@ -20,9 +20,12 @@ Before any runtime action, load and follow:
   evidence is the last removable-worktree blocker
 
 Use project-scoped T3 thread inventory, `git worktree list --porcelain` and run
-records. Preflight requires `worktreeCleanup` off via `t3_project_read` where
-exposed, or a recorded setup limitation. Follow the runtime schema, never invent
-an alternate command protocol.
+records.
+Hosts can delete author worktrees at merge through `storageCleanup.worktreeOnMerge`.
+`t3_project_read` cannot read `storageCleanup.worktreeOnMerge`.
+Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/`.
+A missing merged or closed author worktree is expected, not a hold.
+Follow the runtime schema, never invent an alternate command protocol.
 
 ## Authority and scope
 

@@ -278,8 +278,10 @@ A missing or failed author-link readback never triggers author repair: it holds
 only that PR's merge-ready and requires retrying the link.
 
 When the forge confirms a run PR merged or closed, in the same driver turn the
-driver settles its author thread with `t3_thread_organize` using `action: settle`
-and reads back `settled: true` with `t3_thread_read` for that thread.
+driver first reads its author thread with `t3_thread_read`.
+If the readback already shows `settled: true`, record `settle: native`.
+Otherwise settle with `t3_thread_organize` using `action: settle`, then read back
+`settled: true` with `t3_thread_read` before recording `settle: manual`.
 Apply the existing [Settlement](workspace-hygiene.md#settlement) guards:
 terminal run evidence is required and user-taken-over threads stay untouched.
 A missing or failed settle readback holds watch end and Close-out only for
@@ -361,10 +363,11 @@ these metadata actions are not worktree removal.
 
 ## Project preflight and run record
 
-`worktreeCleanup` must be `off` for every Axstack project. Preflight reads it
-with `t3_project_read` where exposed; otherwise record a limitation pointing
-to the documented installation setup step. Automatic worktree deletion cannot
-replace evidence readback and salvage.
+Hosts can delete author worktrees at merge through `storageCleanup.worktreeOnMerge`.
+`t3_project_read` cannot read `storageCleanup.worktreeOnMerge`.
+Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/`.
+A missing merged or closed author worktree is expected, not a hold.
+Automatic worktree deletion cannot replace evidence readback and salvage.
 
 The run record must contain driver threadId, projectId, host, T3 version,
 installed Axstack SHA, capabilities JSON path and scheduledTaskIds for every
