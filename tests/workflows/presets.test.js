@@ -359,9 +359,17 @@ test('presets: retired monitor is absent from bundled roles and watch guidance',
   }
   for (const path of [
     'skills/axstack/references/role-roster.md',
+    'skills/axstack/references/lifecycle.md',
+    'skills/axstack/references/t3-runtime.md',
     'skills/axstack-watch/SKILL.md',
     'skills/axstack-watch/references/watch-runtime.md',
+    'docs/workflows.md',
+    'docs/installation.md',
   ]) {
-    expect(readFileSync(`${root}/${path}`, 'utf8'), path).not.toContain('axstack-monitor');
+    const text = readFileSync(`${root}/${path}`, 'utf8');
+    expect(text, path).not.toContain('axstack-monitor');
+    expect(text, path).not.toMatch(/\bchat-run\s+(?:read-only\s+)?observer\b/i);
   }
+  const runtime = readFileSync(`${root}/skills/axstack/references/t3-runtime.md`, 'utf8');
+  expect(runtime, 'dispatch table must omit the retired role').not.toMatch(/^\|[^\n]*\bmonitor\b[^\n]*\|$/im);
 });

@@ -320,7 +320,7 @@ test('owned-core: standalone review/watch materialize axstack-owner; workers nev
     expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();
     expect(
       /only[\s\S]*owner[\s\S]*launch/i.test(text),
-      `${name}: only the owner launches writer/reviewers/monitor`,
+      `${name}: only the owner launches writer/reviewers`,
     ).toBeTruthy();
     expect(
       /no.*recursive|never.*recursive/is.test(text),

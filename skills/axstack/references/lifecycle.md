@@ -29,8 +29,8 @@ theme/size; queue dependencies under [PR chains](pr-chain.md).
 
 ## Ownership
 
-The PR owner is accountable for candidate, fixes, evidence, monitoring; a
-chat-run observer reports only to its driver. Peer code stays read-only.
+The PR owner is accountable for candidate, fixes, evidence, monitoring.
+Peer code stays read-only.
 Missing or idle sessions never transfer ownership.
 Owned work enters review via the revision-bound
 [candidate-publication boundary](candidate-publication.md).
