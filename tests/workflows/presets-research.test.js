@@ -103,3 +103,12 @@ test('presets: research keeps web routing, citations and failure fencing', () =>
     provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'low',
   });
 });
+for (const path of ['docs/installation.md', 'docs/workflows.md']) {
+  test(`mixed checker documentation keeps configured Sonnet low: ${path}`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
+    const concepts = [/mixed checker/i, /Claude/i, /Sonnet class/i, /low effort/i, /saved capabilities/i];
+    checkRule(text, (source) => requires(source, ...concepts),
+      'From saved capabilities, resolve the mixed checker with the Claude Sonnet class at low effort.',
+      [[/low effort/i, 'high effort']], concepts);
+  });
+}

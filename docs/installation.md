@@ -243,9 +243,8 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker,
-  `axstack-research-x`, and the Grok arena candidate
-  explicitly permit `model: null`;
+- every role has valid preserved fields; `axstack-research-x` and the Grok
+  arena candidate explicitly permit `model: null`;
   in each single-provider preset, the unavailable adviser and round-2 seat
   explicitly permit `model: null`, as do the X research route
   and the Grok arena candidate;
@@ -296,8 +295,8 @@ use Sol high in `mixed` and `codex-only`; `claude-only` records intentional
 absences. The paired seats run independently on one brief and the driver
 reconciles their findings.
 
-The mixed checker uses Claude with `model: null` and remains intentionally
-absent until configured. Mixed `axstack-research-x` uses `grok` with
+The mixed checker uses the Claude Sonnet class at low effort, resolved from
+saved capabilities. Mixed `axstack-research-x` uses `grok` with
 `model: null`; T3 resolves its exact model from the first entry for that provider
 in saved capabilities. The single-provider presets configure the checker and
 keep X research as an intentional absence. Their

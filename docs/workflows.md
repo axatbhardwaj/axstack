@@ -168,8 +168,8 @@ in codebase findings mode.
 The unavailable adviser in each single-provider preset stays explicitly
 `model: null` within that provider's bounds. Installer readiness accepts that
 intentional absence, but Align and Spec hold because both independent receipts
-are required. The mixed checker uses Claude with
-`model: null` and remains intentionally absent until configured. The X route
+are required. The mixed checker uses the Claude Sonnet class at low effort,
+resolved from saved capabilities. The X route
 uses `grok` with `model: null` and resolves the exact model from the first
 provider entry in saved T3 capabilities. Missing or
 unavailable roles hold only affected work. Requested model, effort, and
