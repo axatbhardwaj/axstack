@@ -175,7 +175,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
   expect(scenario).toBeDefined();
   expect(scenario.contracts).toEqual([
     'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
-    'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
+    'For an unparked chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
     'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
     'Each wake reconciles all unsettled runs before running the authorized maintenance loop.',
     'A failed run holds incomplete work even when its writer sent no receipt.',
@@ -198,7 +198,7 @@ test('AC2 bound watch wakes and verifies exact schedule deletion', () => {
 
 for (const sentence of [
   'One bound schedule serves both the run watch and the chat-run watch; never create a second watch.',
-  'For a chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
+  'For an unparked chat-run watch, keep the bound run watch armed until every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or until user cancellation.',
   'For a chat-run watch, defer the T3 runtime\'s "nothing remains unsettled" deletion until those chat-run stop conditions.',
   'Wake only the exact live original driver.',
   'A busy, missing, protected (user-taken-over) or permission-held driver is never interrupted or replaced.',

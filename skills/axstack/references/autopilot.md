@@ -10,6 +10,7 @@ not a mode change.
 ## Advance and hold
 
 Follow [Advised holds](contracts.md#advised-holds) for eligible user-decision holds.
+For parked holds, follow [Parked user-reply holds](contracts.md#parked-user-reply-holds).
 
 Advance only after the finishing phase returns its completed identity (a
 small-change intent, approved spec, matching ticket map, merge-ready or merged
@@ -109,7 +110,8 @@ End the chat-run watch only when every watched PR is merged or closed,
 launched work is settled, and the run's release step is settled or not applicable,
 or the user cancels.
 A required PR closed without merging is incomplete scope; it does not make the run release-eligible.
-Keep its decision hold and wake until the user resolves scope or cancels.
+Keep its decision hold until the user resolves scope or cancels.
+For a required PR closed without merging, apply parking eligibility.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 Follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 for quiet cadence and native schedule re-arming.

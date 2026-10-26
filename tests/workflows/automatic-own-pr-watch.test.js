@@ -78,28 +78,28 @@ rule('terminal stop waits for workers and release', runtime,
     /launched work is settled/i, /release step is settled or not applicable/i, /user cancels/i],
   'The wake ends only when every watched PR is merged or closed, launched work is settled, and the release step is settled or not applicable, or the user cancels.',
   [/\b(?:stop|ends?)\b/i, (word) => word.toLowerCase() === 'stop' ? 'Continue' : 'continues'], /not applicable/i);
-rule('closed required PR retains decision hold and wake', runtime,
+rule('closed required PR retains decision hold', runtime,
   [/required PR/i, /closed without merging/i, /decision hold/i,
-    /wake.*\bactive\b|\bactive\b.*wake/i, /user/i, /resolves scope/i, /cancels/i],
-  'A required PR closed without merging has a decision hold and an active wake until the user resolves scope or cancels.',
-  [/\bactive\b/i, 'inactive']);
+    /records|has/i, /user/i, /resolves scope/i, /cancels/i],
+  'A required PR closed without merging has a decision hold until the user resolves scope or cancels.',
+  [/records|has/i, 'ignores']);
 rule('open PRs have no expiry or reauthorization', runtime,
   [/chat-run watch/i, /expire/i, /re-authorization/i, /PRs remain open/i],
   'The chat-run watch never expires or waits for re-authorization while PRs remain open.',
   [/never/i, 'always'], /never/i);
 for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
-  rule(`human-only wait slows at once (${path})`, path,
-    [/only/i, /user decision/i, /human-only step/i, /user merge/i,
-      /no unsettled (?:launched work|worker)/i, /no PR needing watch events/i,
+  rule(`forge-resolved wait slows at once (${path})`, path,
+    [/forge-resolved human waits/i, /user merge/i, /npm stage approval/i, /human review/i,
+      /no unsettled worker/i,
       /cadence/i, /at once|immediately/i],
-    'When the run waits only on a user decision or a human-only step, including a user merge, with no unsettled worker and no PR needing watch events, immediately change the run watch cadence to 60 minutes.',
-    [/\b60 minutes\b/i, '5 minutes'], /no unsettled (?:launched work|worker)|no PR needing watch events/gi);
+    'For forge-resolved human waits, including user merge, npm stage approval and human review, with no unsettled worker, immediately set the run watch cadence to 60 minutes.',
+    [/\b60 minutes\b/i, '5 minutes'], /no unsettled worker/i);
   rule(`work restart rechecks recovery conditions (${path})`, path,
     [/work restarts|work resumes/i, /cadence/i, /recovery conditions/i],
     'When work resumes, reassess cadence against the recovery conditions.',
     [/re-evaluate|reassess/i, 'ignore']);
-  rule(`native PR watches stay (${path})`, path, [/native PR watches/i],
-    'Retain native PR watches.', [/\b(?:keep|retain)\b/i, 'remove']);
+  rule(`native PR watches stay (${path})`, path, [/native PR watches/i, /forge-resolved waits/i],
+    'Retain native PR watches for forge-resolved waits.', [/\b(?:keep|retain)\b/i, 'remove']);
 }
 rule('next PR event re-evaluates cadence', runtime,
   [/next event/i, /watched PR/i, /cadence/i, /fallback conditions/i, /same turn/i],

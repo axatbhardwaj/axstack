@@ -106,8 +106,8 @@ rule('spec gate records paused state', autopilot, 'Awaiting human spec approval'
 rule('missing hosts hold at Align or spec', autopilot, 'A missing install host list', /Align or spec time.*decision hold/);
 rule('running author survives cancellation until settlement', autopilot, 'Cancellation does not cancel', /running author run.*settle/);
 rule('Close-out records installed version', autopilot, 'Close-out last', /release and install receipts.*installed version/);
-rule('closed-unmerged watch holds and continues wake', watch, 'A required PR closed without merging', /decision hold.*wake remains active/);
-rule('closed-unmerged runtime holds and continues wake', runtime, 'A required PR closed without merging', /decision hold.*wake remains active/);
+rule('closed-unmerged watch holds scope', watch, 'A required PR closed without merging', /decision hold.*until the user resolves scope or cancels/);
+rule('closed-unmerged runtime holds scope', runtime, 'A required PR closed without merging', /decision hold.*until the user resolves scope or cancels/);
 
 rule('silence cannot grant release authority', autopilot, 'The small-change intent read-back names', /silence cannot fill a missing authority or target/);
 rule('implement verifies forge state on wake', implement, "driver resumes on the user's next message", /verify merge state through the forge on wake/);

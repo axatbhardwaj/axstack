@@ -58,6 +58,9 @@ live behavior. See [Review manager](../skills/axstack/references/automations.md)
 
 ## Chat-run watch activation
 
+For parked holds, follow [Parked user-reply holds](../skills/axstack/references/contracts.md#parked-user-reply-holds).
+A parking unwatch never triggers native re-arm or the 5-minute recovery cadence.
+
 A bound T3 schedule wakes the driver thread on a 60-minute backstop cadence.
 Unavailable or unarmed native watches for any open member, failed re-arming,
 or an unsettled writer or follow-up without a native completion path restore

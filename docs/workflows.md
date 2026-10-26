@@ -310,6 +310,8 @@ keeps the current owner and a resumable record.
 
 ## Decisions and holds
 
+For parked holds, follow [Parked user-reply holds](../skills/axstack/references/contracts.md#parked-user-reply-holds).
+
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
 and the driver ends its turn parked on the decision.
 These include `verification not proven`, merge cards needing user input,
@@ -352,7 +354,8 @@ An incomplete scan leaves readiness `UNKNOWN`.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 The chat-run watch ends only when all watched PRs merge or close, launched work
 is settled, and release is settled or not applicable, or the user cancels.
-A required PR closed without merging keeps its decision hold and wake.
+A required PR closed without merging keeps its decision hold.
+For a required PR closed without merging, apply parking eligibility.
 Follow [Chat-run watch runtime](../skills/axstack-watch/references/watch-runtime.md#chat-run-watch)
 for native lifetime re-arming and quiet cadence changes on the recorded schedule ID.
 Implementation candidates are published and read back before independent

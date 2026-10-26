@@ -214,6 +214,7 @@ Peer serious-risk holds stay never advised under the peer-review exclusion above
 
 A parked hold waits only on a user reply in chat.
 A parked hold has no unsettled worker, pending adviser seat or pending receipt.
+A parked run has no forge-resolved hold.
 Never park holds resolved on the forge, including user merge, npm stage approval
 and human review.
 Scoped and forge-resolved holds use a text card only, and watches and the
