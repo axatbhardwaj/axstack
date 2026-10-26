@@ -290,10 +290,20 @@ that author thread until resolved.
 For every watched own PR in chat-run or standalone adopted maintenance, when
 available the driver calls `watch_pull_request` for T3 wakes on check completion,
 new comments from others, or branch conflicts, then ends the turn.
+Only the PR-owning driver calls `watch_pull_request`.
+Delegated children never call `watch_pull_request`.
+Before arming, handle existing checks and comments because only later comments wake the thread.
 Never poll or keep a model active between native PR wake events.
-A T3 "stopped watching" notice is itself a driver wake: in that same turn,
-re-check the PR and call `watch_pull_request` again.
-This includes a stop after T3 could not read the PR for 15 minutes.
+Native watch ends after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.
+A non-user T3 "stopped watching" notice is itself a driver wake: in that same turn,
+re-check the PR.
+Record the stop reason T3 gives.
+Re-arm only after a stop not caused by the user.
+For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
+When GraphQL remaining is near 0, wait for reset before re-arming.
+Before re-arming, first unsettle the driver thread with `t3_thread_organize`
+using `action: unsettle`, then call `watch_pull_request` again.
+Never re-arm in a loop.
 Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
 
 If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule

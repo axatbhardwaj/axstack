@@ -92,12 +92,64 @@ rule('native watch arms event wakes and ends the turn', runtime,
     /new comments from others/i, /branch conflicts/i],
   'When available, for every watched own PR in chat-run or standalone adopted maintenance, the driver invokes watch_pull_request and ends the turn so T3 wakes on check completion, new comments from others, or branch conflicts.',
   [[/\b(?:calls?|invokes?)\b/i, 'bypasses'], [/ends? the turn/i, 'keeps the turn running']]);
-rule('stopped native watch notice is a wake with same-turn recheck and rearm', runtime,
+rule('non-user stop notice is a wake with same-turn PR recheck', runtime,
   [/T3/i, /stopped watching/i, /notice/i, /itself a driver wake/i,
-    /same turn/i, /PR/i, /watch_pull_request/i, /again/i],
-  'A T3 stopped watching notice is itself a driver wake: during that same turn, re-check the PR and invoke watch_pull_request again.',
+    /same turn/i, /PR/i, /non-user/i],
+  'A non-user T3 stopped watching notice is itself a driver wake: during that same turn, re-check the PR.',
   [[/same turn/i, 'next wake'], [/re-checks?/i, 'ignores'],
-    [/\b(?:call|invoke)s?\b/i, 'bypasses'], [/itself a driver wake/i, 'only data for a later wake']]);
+    [/non-user/i, 'user'], [/itself a driver wake/i, 'only data for a later wake']]);
+rule('only the PR-owning driver watches', runtime,
+  [/only the PR-owning driver/i, /calls|invokes/i, /watch_pull_request/i],
+  'Only the PR-owning driver invokes watch_pull_request.',
+  [[/only the PR-owning driver/i, 'any driver or child']]);
+rule('delegated children never watch', runtime,
+  [/delegated children/i, /watch_pull_request/i],
+  'Delegated children never invoke watch_pull_request.',
+  [[/never/i, 'always']], /never (?:call|invoke)/i);
+rule('existing checks and comments are handled before arming', runtime,
+  [/before arming/i, /handle|process/i, /existing checks and comments/i, /only later comments wake/i],
+  'Before arming, process existing checks and comments since only later comments wake the thread.',
+  [[/before arming/i, 'after arming'], [/handle|process/i, 'ignore'],
+    [/only later comments wake/i, 'all historical comments wake']]);
+rule('native watch stop conditions match T3', runtime,
+  [/native watch/i, /ends|stops/i, /after 8 failed reads/i, /settle/i, /archive/i, /user Stop/i, /PR merge\/close/i],
+  'Native watch stops after 8 failed reads, or on settle, archive, user Stop, or PR merge/close.',
+  [[/ends|stops/i, 'continues'], [/after 8 failed reads/i, 'after 15 minutes']]);
+rule('rearm excludes user stops', runtime, [/re-arm/i],
+  'Re-arm only after a stop not caused by the user.',
+  [[/not caused by the user/i, 'caused by the user']], /only after a stop not caused by the user/i);
+rule('rearm first unsettles the driver thread', runtime,
+  [/before re-arming/i, /first unsettle/i, /driver thread/i, /t3_thread_organize/i,
+    /action: unsettle/i, /then (?:call|invoke)/i, /watch_pull_request/i, /again/i],
+  'Before re-arming, first unsettle the driver thread with t3_thread_organize action: unsettle, then invoke watch_pull_request again.',
+  [[/first unsettle/i, 'leave settled'], [/action: unsettle/i, 'action: settle'],
+    [/then (?:call|invoke)/i, 'previously invoke']]);
+rule('read failure uses diagnostic GraphQL rate-limit check', runtime,
+  [/could not read/i, /gh api rate_limit --jq .resources.graphql/i, /diagnostic only/i],
+  'For a could not read stop, execute gh api rate_limit --jq .resources.graphql as a diagnostic only.',
+  [[/run|execute/i, 'skip'], [/diagnostic only/i, 'authoritative stop reason']], /could not read/i);
+rule('near-zero quota waits for reset before rearm', runtime,
+  [/GraphQL remaining/i, /near 0/i, /wait for reset/i, /before re-arming/i],
+  'If GraphQL remaining is near 0, wait for reset before re-arming.',
+  [[/wait for reset/i, 'retry immediately'], [/before re-arming/i, 'after re-arming']]);
+rule('T3 stop reason is recorded', runtime,
+  [/record|save/i, /stop reason/i, /T3 gives/i],
+  'Save the stop reason T3 gives.', [[/record|save/i, 'discard']]);
+rule('rearm never loops', runtime, [/re-arm/i, /in a loop/i],
+  'Never re-arm in a loop.', [[/never/i, 'always']], /never/i);
+rule('conflict-free base movement routes through the existing update rule',
+  'axstack-watch/references/watch-runtime.md',
+  [/base movement without conflict/i, /schedule-wake digest/i, /existing base-update rule/i],
+  'Route base movement without conflict from the schedule-wake digest to the existing base-update rule below.',
+  [[/route/i, 'ignore'], [/existing base-update rule/i, 'new readiness term']]);
+rule('native watch reports conflicts rather than conflict-free base movement',
+  'axstack-watch/references/watch-runtime.md', [/native watch/i, /reports conflicts only/i],
+  'Native watch reports conflicts only.', [[/reports conflicts only/i, 'reports every base movement']]);
+rule('base freshness keeps the existing readiness term',
+  'axstack-watch/references/watch-runtime.md', [/existing base-ancestry freshness term/i, /unchanged/i],
+  'Keep the existing base-ancestry freshness term unchanged.', [[/unchanged/i, 'replaced']]);
+rule('base movement adds no readiness term', 'axstack-watch/references/watch-runtime.md',
+  [/readiness term/i], 'Add no new readiness term.', [[/no new/i, 'a new']], /no new/i);
 rule('missing native watch falls back to schedule and digest without a hold', runtime,
   [/watch_pull_request/i, /unavailable/i, /bound 5-minute schedule/i, /scripts\/pr-digest\.js/i],
   'Without a hold, fall back to scripts/pr-digest.js and the bound 5-minute schedule whenever watch_pull_request is unavailable.',
