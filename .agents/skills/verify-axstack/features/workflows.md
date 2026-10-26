@@ -13,7 +13,8 @@ Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/escalation.md` and `references/blocked-on-person.md` under
 `skills/axstack-watch/`.
 `adoption-disposition.test.js` checks pre-push MODERNIZE/REWORK/CLOSE decisions,
-base/replacement inspection and the narrowly justified rebase lease with semantic mutations.
+base/replacement inspection, single-author repair and independent review before
+publication, read-only modes, and the scoped rebase lease with semantic mutations.
 `merge-boundary.test.js` checks risky-path merge holds, exact-revision user
 clearance, uncertain classification, parking decision holds and renewed holds
 after head or base changes; `advised-holds.test.js` pins their advice exclusion.

@@ -50,18 +50,27 @@ access is unverified, record the hold and continue read-only; pushing stays held
 
 ### Stale or external PRs
 
+Here, stale or external means the base moved since opening, or the PR was not
+authored in this run.
 For a stale or external PR, the driver records MODERNIZE, REWORK or CLOSE before
 any push. Fetch the actual remote base and PR head, recording the head SHA and
 merge base. Inspect base commits since divergence and merged and open PRs for
 the same fix before choosing a disposition.
 
+Route MODERNIZE and authorized REWORK through
+[Repair and publication](references/repair-publication.md): the single repair
+author writes in its owned worktree, then independent authored review covers
+the exact rebased or reworked head and base before driver publication.
+The driver never writes tracked files.
+
 - **MODERNIZE:** for a useful goal whose implementation remains the right shape,
-  rebase onto the freshly fetched actual base.
-  For MODERNIZE, compare pre-rebase and post-rebase series with `git range-diff`,
-  inspect the final diff for lost intent or reintroduced landed behavior, and run
-  focused checks. Confirm the expected-old remote SHA matches the head SHA
-  observed before the rebase.
-  Push this narrowly justified history rewrite with
+  the repair author rebases onto the freshly fetched actual base.
+  Run focused checks and record pre-rebase and post-rebase `git range-diff`
+  and focused-check evidence, inspecting the final diff for lost intent or
+  reintroduced landed behavior.
+  After independent review, the driver confirms the expected-old remote SHA
+  matches the head SHA observed before the rebase, then pushes this narrowly
+  justified history rewrite with
   `--force-with-lease=refs/heads/<branch>:<observed-head-sha>` under
   [Candidate publication](../axstack/references/candidate-publication.md).
   A lease mismatch holds publication: fetch and reassess.
