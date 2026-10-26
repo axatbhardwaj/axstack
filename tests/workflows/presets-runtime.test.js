@@ -74,13 +74,6 @@ for (const [path, sentence] of migrationPins) {
 }
 
 const migrationRules = [
-  ...['skills/axstack/references/routing.md', 'docs/installation.md'].flatMap((path) => [
-    [path, [/Antigravity/i, /model:\s*null/i, /first (?:listed model|model listed)/i,
-      /ID (?:ends with|ending in)/i, /-<effort>/i, /saved capabilities/i],
-      'For Antigravity model:null, select from saved capabilities the first model listed whose ID ends with -<effort>.'],
-    [path, [/Antigravity/i, /missing/i, /effort-suffix matches/i, /hold\w*/i, /resolution/i],
-      'Antigravity resolution holds for missing effort-suffix matches.'],
-  ]),
   ['skills/axstack/references/routing.md', [/resolv\w*/i, /Codex/i, /Claude/i, /class/i, /saved T3 capabilities/i, /--provider/i, /--capabilities/i],
     'From saved T3 capabilities, resolve Codex and Claude classes with --provider and --capabilities.'],
   ['skills/axstack/references/ui-verification.md', [/use/i, /configured verifier browser/i, /user.*browser.tool policy/i],

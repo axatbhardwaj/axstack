@@ -1,5 +1,8 @@
 # Inspect workflow instruction contracts
 
+`workflow-retirement.test.js` guards active guidance and presets against retired
+workflow routes while preserving the documented installer harness interfaces.
+
 Entry points: packaged workflow skills and shared references; fixtures:
 `tests/workflows/{completion-guards,workspace-hygiene,manager-pass-settlement,manager-holds,relay-removal,merge-audit-discipline,merge-escalation,autopilot-repair,dependabot-driver,analysis-pairs}.test.js`.
 Settlement read-back contracts: `tests/workflows/settle-readback.test.js` and

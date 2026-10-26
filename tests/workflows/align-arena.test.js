@@ -31,7 +31,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   }
   expect(text).toMatch(/three to six gradeable rubric criteria/i);
   expect(text).toMatch(/candidates receive only the brief/i);
-  for (const id of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity']) expect(text).toContain(id);
+  for (const id of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok']) expect(text).toContain(id);
   expect(text).toMatch(/one candidate per configured family[^.]*same brief[^.]*without cross-reading/i);
   expect(text).toMatch(/the driver authors no candidate/i);
   expect(text).toMatch(/round 1[^.]*axstack-arena-judge-opus[^.]*score/i);
@@ -51,7 +51,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
 test('align arena: synthesis lands in Decisions rows and absent seats hold only that question', () => {
   const text = compact('skills/axstack-brainstorm/references/arena.md');
   expect(text).toMatch(/synthesis note[^.]*judge verdicts per round[^.]*`Decisions` rows/i);
-  expect(text).toMatch(/optional Grok or Antigravity candidate[^.]*malfunctions[^.]*absent/i);
+  expect(text).toMatch(/optional Grok candidate[^.]*malfunctions[^.]*absent/i);
   expect(text).toMatch(/required adviser, candidate, or judge[^.]*unavailable[^.]*holds that question/i);
   expect(text).toMatch(/uncertain dispatch[^.]*reconcile[^.]*never treated as absent/i);
 });
@@ -79,7 +79,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
   }
   const routing = compact('skills/axstack/references/role-roster.md');
   expect(routing).toMatch(/axstack-arena-judge-opus[^.]*round 1[^.]*axstack-escalation-fable[^.]*axstack-arena-judge-astra[^.]*round 2/i);
-  expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*axstack-arena-candidate-antigravity[^.]*families/i);
+  expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*family/i);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     for (const arenaRole of roles.filter(({ id }) => id.startsWith('axstack-arena-'))) {
@@ -94,7 +94,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
 test('align arena: scenario corpus covers four families and availability holds', () => {
   const cases = readJson('tests/workflows/align-grilling-scenarios.json').cases;
   const byId = Object.fromEntries(cases.map((item) => [item.id, item]));
-  expect(byId['design-rung-2'].expected.join(' ')).toMatch(/Astra[^.]*Fable[^.]*Grok[^.]*Antigravity/i);
+  expect(byId['design-rung-2'].expected.join(' ')).toMatch(/Astra[^.]*Fable[^.]*Grok/i);
   expect(byId['arena-grok-unavailable'].expected.join(' ')).toMatch(/Fence[^.]*absent[^.]*continue/i);
   expect(byId['arena-single-provider-hold'].expected.join(' ')).toMatch(/Hold[^.]*single-provider/i);
 });

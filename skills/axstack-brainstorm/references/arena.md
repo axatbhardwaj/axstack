@@ -12,7 +12,7 @@ hard-to-reverse choices; they replace the critique round for that question.
    example, taking the shortest path that compiles. Treat them as prompts, not defects. Candidates receive only the brief; the rubric is for judging.
 2. **Fan out.** Produce one candidate per configured family independently from the same brief,
    without cross-reading: `axstack-advisor-astra`, `axstack-advisor-opus`,
-   `axstack-arena-candidate-grok`, and `axstack-arena-candidate-antigravity`.
+   and `axstack-arena-candidate-grok`.
    Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
    The driver drafts no recommendation until every candidate returns.
 3. **Cross-judge (Rung 2 only).** After every candidate completes, give round 1 judge
@@ -45,7 +45,7 @@ verdicts per round) as `Decisions` rows in the
 [caller's run record](../../axstack/references/run-record.md) when one exists,
 otherwise include it in the returned verdict. Load
 [T3 runtime](../../axstack/references/t3-runtime.md) immediately before the
-first candidate or judge dispatch. If an optional Grok or Antigravity candidate
+first candidate or judge dispatch. If an optional Grok candidate
 malfunctions (launch failure, trust/login prompt, or prompt block), fence it,
 record `absent (<reason>)`, name it once in the next
 read-back, and continue with available candidates without relay or substitution.

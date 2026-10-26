@@ -23,9 +23,9 @@ const rules = [
   ['same-child restriction', [/only|limited to/i, /author continuation/i, /(?:a|the|that) child.s own question/i, /same child/i],
   "Reuse of the same child is limited to author continuation or an answer to that child's own question.",
   [/only|limited to/i, 'arbitrarily including']],
-  ['marker fallback', [/providers without a question tool/i, /grok/i, /antigravity/i,
+  ['marker fallback', [/providers without a question tool/i, /grok/i,
     /launched writers/i, /AXSTACK-QUESTION/i, /keep|retain/i],
-  'Launched writers and providers without a question tool (grok, antigravity) retain the AXSTACK-QUESTION marker route.',
+  'Launched writers and providers without a question tool (grok) retain the AXSTACK-QUESTION marker route.',
   [/keep|retain/i, 'discard'], /without a question tool/i],
 ];
 

@@ -18,8 +18,7 @@
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/luna` xhigh) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
-  `axstack-arena-candidate-grok`/
-  `axstack-arena-candidate-antigravity` add families.
+  `axstack-arena-candidate-grok` adds a family.
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
@@ -53,10 +52,8 @@
   cross-reading. The driver reconciles findings per claim, never averages.
   Record intentional absence and continue with Sonnet alone.
 - Optional seats: `axstack-arena-candidate-grok`,
-  `axstack-arena-candidate-antigravity`, `axstack-research-web-google`,
   `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
-  `axstack-explore-execution-sol`, `axstack-auditor-sol`,
-  `axstack-explore-codebase-flash`.
+  `axstack-explore-execution-sol`, `axstack-auditor-sol`.
   Always dispatch optional seats when configured and available, except research
   branches, which follow [Research step 2](../../axstack-research/SKILL.md#procedure) sizing.
   A research branch unneeded by an open claim is recorded `not needed (<reason>)`,

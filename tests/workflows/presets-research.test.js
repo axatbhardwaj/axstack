@@ -83,14 +83,14 @@ test('presets: research sizes dispatch to claims and keeps independent source pa
     checkRule(text, accepts, rewording, inversions, concepts);
   }
   for (const pair of [
-    [/code/i, /code-sol/i], [/web/i, /web-google/i],
+    [/code/i, /code-sol/i],
     [/`axstack-explore-execution`/, /`axstack-explore-execution-sol`/],
   ]) expect(requires(fanout, ...pair, /pair/i)).toBe(true);
 });
 
-test('presets: research keeps Google routing, citations and failure fencing', () => {
+test('presets: research keeps web routing, citations and failure fencing', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
-  expect(research).toContain('`axstack-research-web-google`');
+  expect(research).toContain('`axstack-research-web`');
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
   expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);
@@ -103,3 +103,12 @@ test('presets: research keeps Google routing, citations and failure fencing', ()
     provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'low',
   });
 });
+for (const path of ['docs/installation.md', 'docs/workflows.md']) {
+  test(`mixed checker documentation keeps configured Sonnet low: ${path}`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
+    const concepts = [/mixed checker/i, /Claude/i, /Sonnet class/i, /low effort/i, /saved capabilities/i];
+    checkRule(text, (source) => requires(source, ...concepts),
+      'From saved capabilities, resolve the mixed checker with the Claude Sonnet class at low effort.',
+      [[/low effort/i, 'high effort']], concepts);
+  });
+}

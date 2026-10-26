@@ -23,13 +23,6 @@ Run `t3 serve --tailscale-serve` as a VPS user service and pair the Android
 app with `t3 pair`. T3 Connect is outside this setup. Service installation,
 network access, and pairing require their own authorized host checks.
 
-Install Antigravity through T3 provider settings using its managed runtime,
-then complete the user's browser sign-in before its canary. T3 uses Google's
-Antigravity ACP agent (`agy_acp_server`); the IDE/`agy` CLI skill paths in the
-installation reference are separate installer targets and do not configure this managed runtime.
-Antigravity roles receive self-contained briefs; its runtime does not read
-`~/.agents/skills`. A missing runtime, sign-in, or canary holds those roles.
-
 Grok CLI must be >=1.0.13 on desktop and VPS. T3 advertising Grok does not
 prove the CLI runs.
 

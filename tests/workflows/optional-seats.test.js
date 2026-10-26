@@ -5,10 +5,9 @@ import { checkRule, requires, sentences } from './prose-contract.js';
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8').replace(/\s+/g, ' ');
 const optional = [
-  'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity',
-  'axstack-research-web-google', 'axstack-research-x', 'axstack-checker',
+  'axstack-arena-candidate-grok',
+  'axstack-research-x', 'axstack-checker',
   'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-auditor-sol',
-  'axstack-explore-codebase-flash',
 ];
 
 test('scenario corpus distinguishes optional absence from required and launched holds', () => {

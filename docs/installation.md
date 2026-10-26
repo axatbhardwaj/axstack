@@ -247,12 +247,11 @@ The complete bundle is validated before writes:
 - each preset is a real JSON file with version 1, a non-empty `roles` array,
   the filename's selected identity supplied by the caller, and the same role-ID
   set as its peers;
-- every role has valid preserved fields, while the mixed checker,
-  `axstack-research-web-google`, `axstack-research-x`, and both arena candidate launch-by-agent-id
-  routes explicitly permit `model: null`;
+- every role has valid preserved fields; `axstack-research-x` and the Grok
+  arena candidate explicitly permit `model: null`;
   in each single-provider preset, the unavailable adviser and round-2 seat
-  explicitly permit `model: null`, as do both cross-provider research routes
-  and both arena candidate seats;
+  explicitly permit `model: null`, as do the X research route
+  and the Grok arena candidate;
 - obsolete runtime configuration flags fail before mutation with migration
   guidance.
 
@@ -294,24 +293,17 @@ Activation requires that exact ID and high effort in saved T3 capabilities;
 missing either holds this role without substitution, including Haiku 4.5.
 The `codex-only` assignments for these roles are unchanged.
 Scout adds `axstack-explore-codebase-luna` at Codex Luna xhigh in `mixed` and
-`codex-only`. The optional `axstack-explore-codebase-flash` seat uses
-Antigravity `gemini-3.8-flash-medium` at medium effort in `mixed`.
-The missing Scout seats have explicit null models: Luna and Flash in
-`claude-only`, and Flash in `codex-only`.
+`codex-only`. Luna has an explicit null model in `claude-only`.
 The three `-sol` pair seats for auditor, research-code, and explore-execution
 use Sol high in `mixed` and `codex-only`; `claude-only` records intentional
 absences. The paired seats run independently on one brief and the driver
 reconciles their findings.
 
-The mixed checker and `axstack-research-web-google` have provider
-`antigravity`; mixed `axstack-research-x` has provider `grok`. All three use
-`model: null` with notes authorizing their agent-ID routes; T3 resolves Grok's
-exact model from the first entry for that provider in saved capabilities.
-For Antigravity `model:null` roles, select the first listed model whose ID ends
-with `-<effort>` from saved capabilities and record its exact ID.
-Missing effort-suffix matches hold resolution for Antigravity, including empty
-model catalogs. The single-provider presets configure the checker and keep
-both cross-provider research routes as intentional absences. Their
+The mixed checker uses the Claude Sonnet class at low effort, resolved from
+saved capabilities. Mixed `axstack-research-x` uses `grok` with
+`model: null`; T3 resolves its exact model from the first entry for that provider
+in saved capabilities. The single-provider presets configure the checker and
+keep X research as an intentional absence. Their
 unavailable adviser and round-2 seat remain explicit same-provider
 `model: null` roles, which do not make installation unready;
 Align and Spec still hold until both Astra and Opus can return independent
@@ -324,7 +316,7 @@ the affected work. Codex and Claude class resolution reads the saved T3 capabili
 the command below; missing or malformed catalogs hold.
 
 ```text
-bun skills/axstack/scripts/resolve-models.js --provider <codex|claude|grok|antigravity> --capabilities <saved-json> <--class <class>|--model <id|null>> --effort <level> [--exclude <id>]
+bun skills/axstack/scripts/resolve-models.js --provider <codex|claude|grok> --capabilities <saved-json> <--class <class>|--model <id|null>> --effort <level> [--exclude <id>]
 ```
 
 `--class` resolves a class; `--model` selects an exact ID or an explicitly
