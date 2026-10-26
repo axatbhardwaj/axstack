@@ -222,7 +222,7 @@ test('structural: host operations records current setup requirements', () => {
   expect(host).toContain('t3 serve --tailscale-serve');
   expect(host).toContain('t3 pair');
   for (const [concepts, holdout] of [
-    [[/worktreeCleanup/, /off/, /Axstack project/i], 'For each Axstack project, worktreeCleanup must be off.'],
+    [[/hosts/i, /can delete author worktrees/i, /merge/i, /storageCleanup\.worktreeOnMerge/], 'Hosts can delete author worktrees at merge using storageCleanup.worktreeOnMerge.'],
     [[/Antigravity/i, /T3/i, /managed runtime/i, /sign.in/i], 'Use the T3 managed runtime for Antigravity and complete browser sign-in.'],
     [[/Grok CLI/i, /(?:>=|≥)1\.0\.13/], 'Grok CLI must be >=1.0.13.'],
   ]) {
