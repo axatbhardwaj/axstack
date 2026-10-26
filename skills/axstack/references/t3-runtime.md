@@ -29,7 +29,7 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Provider bindings must map codex→`codex`, claude→`claudeAgent`, grok→`grok` and antigravity→`antigravity`.
+Provider bindings must map codex→`codex`, claude→`claudeAgent` and grok→`grok`.
 For every dispatch or launch, claude must bind to `claudeAgent` and codex must bind to `codex`.
 A usage-limited instance must hold the work without failover.
 
@@ -46,10 +46,8 @@ A preset model must be used as given.
 
 A missing or malformed catalog holds resolution.
 
-For a null-model grok or antigravity role, record the exact model ID from the plan,
+For a null-model grok role, record the exact model ID from the plan,
 rather than an unresolved provider default.
-Antigravity must hold when saved capabilities advertise zero models.
-No matching effort suffix holds resolution for Antigravity.
 For codex or claude, a role lacking both model and class is an intentional
 absence and must hold; never use a provider default for that role.
 
@@ -193,7 +191,7 @@ Use `t3_pending_request_read`, then confirm the request is still pending with
 using `t3_pending_request_respond`; a second ask holds.
 Independent review rounds require fresh `delegate_task` calls.
 Only author continuation and an answer to a child's own question use the same child.
-Providers without a question tool (grok, antigravity) and launched writers keep
+Providers without a question tool (grok) and launched writers keep
 the `AXSTACK-QUESTION` marker route.
 
 For a delegated marker question, answer once with `t3_thread_send(childThreadId, mode:queue)`,

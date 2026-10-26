@@ -30,8 +30,7 @@ count; keep every required seat within each facet.
 ## 2. Dispatch independent seats
 
 Use the run's selected preset and role snapshot. Give seats for one facet the
-same brief without cross-reading; the optional Flash seat searches the whole
-question for missed boundaries and counterexamples.
+same brief without cross-reading.
 
 - In mixed, each facet requires an independent Haiku and Luna pair: one
   `axstack-explore-codebase` (Haiku 5.5 high) and one
@@ -42,21 +41,12 @@ question for missed boundaries and counterexamples.
 - In claude-only, each facet requires one Haiku seat:
   `axstack-explore-codebase` (Haiku 5.5 high).
 
-In mixed, dispatch one optional `axstack-explore-codebase-flash` for the Scout
-call, for at most seven seats across three facets.
-
 Sol and Luna agreement is not cross-family corroboration. An unavailable or
 rejected required seat holds Scout without substitution. The first dispatch
 for each provider/model/effort must reach a running or completed run before
 siblings launch, and its rejection stops siblings of that configuration.
 
-A Flash launch failure, trust/login prompt, or prompt block records
-`absent (<reason>)` and Scout continues with the required seats. Fence the
-failed attempt and name its absence once in the next read-back. A Flash model
-missing from saved capabilities holds that seat under the existing unavailable
-model rule, without substitution. A Flash hold covers only the Flash seat,
-and Scout returns the other seats' summary while naming that hold. An
-uncertain dispatch is reconciled, not recorded absent.
+An uncertain dispatch is reconciled, not recorded absent.
 
 ## 3. Pin evidence and report
 

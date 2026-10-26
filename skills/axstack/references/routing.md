@@ -29,9 +29,6 @@ using saved T3 capabilities JSON; missing or malformed capabilities holds.
 Claude exact IDs come from capabilities, replacing transcript read-back.
 Use an explicit model as given; for `model:null` without a class, grok uses the
 provider's first listed model from saved capabilities and records its exact ID.
-For `model:null` without a class, Antigravity must select the first listed model
-whose ID ends with `-<effort>` from saved capabilities and record its exact ID.
-Missing effort-suffix matches hold resolution for Antigravity.
 A Codex or Claude role with neither model nor class is an intentional absence
 and holds.
 Resume must reuse the saved capabilities and role snapshot with no re-resolution; changes require the user’s explicit decision.

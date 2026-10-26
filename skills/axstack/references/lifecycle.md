@@ -104,7 +104,7 @@ Use `t3_pending_request_read`, then confirm the request is still pending with
 using `t3_pending_request_respond`; a second ask holds.
 Independent review rounds require fresh `delegate_task` calls.
 Only author continuation and an answer to a child's own question use the same child.
-Providers without a question tool (grok, antigravity) and launched writers keep
+Providers without a question tool (grok) and launched writers keep
 the `AXSTACK-QUESTION` marker route.
 
 Healthy unchanged passes are silent.

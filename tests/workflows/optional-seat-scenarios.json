@@ -9,8 +9,8 @@
     },
     {
       "id": "optional-absent",
-      "input": { "preset": "mixed", "fanout": "research", "googleSeat": "trust/login prompt", "otherSeats": "Sonnet code and Sol code launchable" },
-      "expected": { "action": "Fence Google attempt; record absent (trust/login prompt); name it once in next read-back; continue with Sonnet and Sol without relay", "forbidden": ["substitute Google", "drop Codex or Claude"] }
+      "input": { "preset": "mixed", "fanout": "research", "xSeat": "trust/login prompt", "otherSeats": "Sonnet code and Sol code launchable" },
+      "expected": { "action": "Fence X attempt; record absent (trust/login prompt); name it once in next read-back; continue with Sonnet and Sol without relay", "forbidden": ["substitute X", "drop Codex or Claude"] }
     },
     {
       "id": "mixed-provider-loss",

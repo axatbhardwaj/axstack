@@ -167,7 +167,6 @@ test('owned-support: research is source-first with verified boundaries', () => {
     'axstack-research-code',
     'axstack-research-code-sol',
     'axstack-research-web',
-    'axstack-research-web-google',
     'axstack-research-x',
     'axstack-scout',
     'axstack-explore-execution',

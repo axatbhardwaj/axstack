@@ -83,14 +83,14 @@ test('presets: research sizes dispatch to claims and keeps independent source pa
     checkRule(text, accepts, rewording, inversions, concepts);
   }
   for (const pair of [
-    [/code/i, /code-sol/i], [/web/i, /web-google/i],
+    [/code/i, /code-sol/i],
     [/`axstack-explore-execution`/, /`axstack-explore-execution-sol`/],
   ]) expect(requires(fanout, ...pair, /pair/i)).toBe(true);
 });
 
-test('presets: research keeps Google routing, citations and failure fencing', () => {
+test('presets: research keeps web routing, citations and failure fencing', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
-  expect(research).toContain('`axstack-research-web-google`');
+  expect(research).toContain('`axstack-research-web`');
   expect(research).toMatch(/URL (?:\+|and) access date per claim/i);
   expect(research).toMatch(/re-open sources and never trust a search\s+summary/i);
   expect(research).toMatch(/reconciles agreements\/disagreements per claim/i);

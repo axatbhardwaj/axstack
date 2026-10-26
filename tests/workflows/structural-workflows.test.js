@@ -219,7 +219,7 @@ test('structural: Rung 2 adds every configured family without changing the ordin
   const align = readFileSync(join(skillsDir, 'axstack-align', 'SKILL.md'), 'utf8');
   const arena = readFileSync(join(skillsDir, 'axstack-brainstorm', 'references/arena.md'), 'utf8');
   expect(arena).toMatch(/only at Rung 2[^.]*judge rounds/i);
-  for (const role of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok', 'axstack-arena-candidate-antigravity']) {
+  for (const role of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok']) {
     expect(arena).toContain(role);
   }
   expect(align).toMatch(/axstack-advisor-astra[^.]*axstack-advisor-opus[^.]*independently/i);

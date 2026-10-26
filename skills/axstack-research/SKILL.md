@@ -37,11 +37,10 @@ is part of research.
    For each needed source class, retain two isolated branches where configured.
    In mixed, each needed source class retains branches from different providers.
    The code pair is `axstack-research-code` +
-   `axstack-research-code-sol`; the web pair is `axstack-research-web` +
-   `axstack-research-web-google`; the execution pair is `axstack-explore-execution` +
+   `axstack-research-code-sol`; the web branch is `axstack-research-web`;
+   the execution pair is `axstack-explore-execution` +
    `axstack-explore-execution-sol`. Requirements, code, and web use Sonnet high
-   in mixed/claude-only and Codex in codex-only; web-google uses
-   Gemini/Antigravity with Google Search built in, and X uses Grok.
+   in mixed/claude-only and Codex in codex-only; X uses Grok.
    Give each branch one owner, allow no cross-reading, and require a cited note
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.
@@ -58,7 +57,6 @@ is part of research.
    - `axstack-research-code`: code behavior.
    - `axstack-research-code-sol`: independent Sol code investigation.
    - `axstack-research-web`: web and external sources.
-   - `axstack-research-web-google`: Google-Search-grounded web sources via Gemini/Antigravity.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
    - For broad codebase mapping, use `axstack-scout`.
      Never dispatch `axstack-explore-codebase` directly for broad mapping.

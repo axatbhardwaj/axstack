@@ -66,6 +66,6 @@ immediately before dispatch, receipt consumption or recovery.
 ## Provider bindings
 
 Claude binds to T3 instance `claudeAgent`; Codex binds to `codex`.
-Grok and Antigravity keep `grok` and `antigravity` respectively.
+Grok binds to `grok`.
 A usage-limited instance holds the work without failover.
 See [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding).

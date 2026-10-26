@@ -136,10 +136,8 @@ Haiku 5.5 high, with class `haiku` and exact pin
 `claude-haiku-5-5`. Missing that ID or high effort in saved T3 capabilities
 holds that role without substitution. `codex-only` keeps its Codex
 assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
-and `codex-only`, and an optional Antigravity Flash medium seat in `mixed`.
-In `claude-only`, Luna and Flash are intentionally absent; Flash is also
-intentionally absent in `codex-only`. Mixed web-google and X retain their
-source-specific Antigravity and Grok routes.
+and `codex-only`. In `claude-only`, Luna is intentionally absent.
+The mixed X route uses Grok.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
 `axstack-explainer-review` uses Sol medium; `axstack-explainer` pins
@@ -170,10 +168,10 @@ in codebase findings mode.
 The unavailable adviser in each single-provider preset stays explicitly
 `model: null` within that provider's bounds. Installer readiness accepts that
 intentional absence, but Align and Spec hold because both independent receipts
-are required. The mixed checker and Google web-research route use provider
-`antigravity`; the X route uses `grok`. Those agent-ID routes retain
-`model: null` notes and resolve the exact model from the first provider entry
-in saved T3 capabilities. Empty Antigravity catalogs hold. Missing or
+are required. The mixed checker uses Claude with
+`model: null` and remains intentionally absent until configured. The X route
+uses `grok` with `model: null` and resolves the exact model from the first
+provider entry in saved T3 capabilities. Missing or
 unavailable roles hold only affected work. Requested model, effort, and
 permission values need actual T3 configuration read-back; stored `modeId` is
 neither permission parity nor a sandbox. Rejection, timeout, quota, and auth
@@ -214,7 +212,7 @@ Use `t3_pending_request_read`, then confirm the request is still pending with
 using `t3_pending_request_respond`; a second ask holds.
 Independent review rounds require fresh `delegate_task` calls.
 Only author continuation and an answer to a child's own question use the same child.
-Providers without a question tool (grok, antigravity) and launched writers keep
+Providers without a question tool (grok) and launched writers keep
 the `AXSTACK-QUESTION` marker route.
 
 Trust, permission, authentication, and provider safety prompts are holds;
@@ -232,8 +230,8 @@ for explicit ownership transfer.
   Rung 1 or 2 design question it loads `axstack-brainstorm` inline and reuses
   its receipt instead of consulting twice; Align owns the interview.
 - `axstack-brainstorm` validates an approach standalone or inline in the driver,
-  report-only. Every invocation compares independent Astra, Opus, Grok and
-  Antigravity candidates, including premise and smallest-change/do-nothing
+  report-only. Every invocation compares independent Astra, Opus and Grok
+  candidates, including premise and smallest-change/do-nothing
   checks. The driver scores, picks and grafts; Rung 1 uses no judges. At Rung 2,
   `axstack-arena-judge-opus` judges round 1; disagreement on the base or caller
   re-invocation with the user's rejection triggers fresh Fable/Astra round 2.
