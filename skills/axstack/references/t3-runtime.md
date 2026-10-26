@@ -34,10 +34,9 @@ For every dispatch or launch, claude must bind to `claudeAgent` and codex must b
 A usage-limited instance must hold the work without failover.
 
 For plan generation, run
-`scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --picker <picker.json> --kind task|launch`
+`scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
 Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` plus `isolation` when present into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
-For every provider, pass `--picker` JSON containing `{"chosenInstanceId":"<canonical instance>"}` using the provider bindings above.
 For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
 with the same plan inputs and saved `t3_thread_configuration` read-back.
 

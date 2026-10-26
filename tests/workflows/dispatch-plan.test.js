@@ -14,7 +14,6 @@ function setup() {
   roots.push(dir);
   const roles = { version: fixture.version, preset: fixture.preset, roles: structuredClone(fixture.roles) };
   const capabilities = structuredClone(catalog);
-  const picker = structuredClone(fixture.picker);
   const save = (name, data) => {
     const path = `${dir}/${name}.json`;
     writeFileSync(path, JSON.stringify(data));
@@ -22,11 +21,11 @@ function setup() {
   };
   function run(role = 'axstack-author', kind = 'launch', configuration) {
     const args = ['--role', role, '--roles', save('roles', roles),
-      '--capabilities', save('capabilities', capabilities), '--picker', save('picker', picker), '--kind', kind];
+      '--capabilities', save('capabilities', capabilities), '--kind', kind];
     if (configuration !== undefined) args.push('--verify', save('configuration', configuration));
     return invoke(args);
   }
-  return { dir, roles, capabilities, picker, save, run };
+  return { dir, roles, capabilities, save, run };
 }
 
 function invoke(args) {
@@ -34,16 +33,26 @@ function invoke(args) {
   return { status: result.exitCode, output: result.stdout.toString(), error: result.stderr.toString() };
 }
 
+test('catalog siblings cannot change the fixed Codex dispatch binding', () => {
+  const f = setup();
+  expect(f.capabilities.providers.some((p) => p.providerInstanceId === 'codexAlt')).toBe(true);
+  for (const kind of ['launch', 'task']) {
+    const result = f.run('axstack-author', kind);
+    expect(result.status).toBe(0);
+    const plan = JSON.parse(result.output);
+    expect(kind === 'launch' ? plan.modelSelection.instanceId : plan.target.providerInstanceId).toBe('codex');
+  }
+});
+
 test('dispatch plans equal hand-built payloads for every provider and both tool kinds', () => {
   const cases = [
-    ['axstack-author', 'codexAlt', 'gpt-6.1-sol', [{ id: 'reasoningEffort', value: 'high' }]],
+    ['axstack-author', 'codex', 'gpt-6.1-sol', [{ id: 'reasoningEffort', value: 'high' }]],
     ['axstack-reviewer', 'claudeAgent', 'claude-opus-5-5', [{ id: 'effort', value: 'medium' }]],
     ['axstack-research-x', 'grok', 'grok-4.7', [{ id: 'reasoningEffort', value: 'high' }]],
     ['axstack-checker', 'antigravity', 'gemini-3.8-flash-low', []],
   ];
   for (const [role, instance, model, options] of cases) {
     const f = setup();
-    f.picker.chosenInstanceId = instance;
     for (const kind of ['task', 'launch']) {
       const result = f.run(role, kind);
       expect(result.status).toBe(0);
@@ -51,7 +60,7 @@ test('dispatch plans equal hand-built payloads for every provider and both tool 
       const selection = kind === 'launch' ? { instanceId: instance, model, options }
         : { providerInstanceId: instance, model, options };
       expect(JSON.parse(result.output)).toEqual({ inputs: { role, kind, roles: `${f.dir}/roles.json`,
-        capabilities: `${f.dir}/capabilities.json`, picker: `${f.dir}/picker.json` },
+        capabilities: `${f.dir}/capabilities.json` },
         [kind === 'launch' ? 'modelSelection' : 'target']: selection,
         runtimeMode: 'full-access', ...(role === 'axstack-author' && kind === 'task' ? { isolation: 'worktree' } : {}) });
     }
@@ -86,7 +95,7 @@ test('resolver holds map exit 1 to exit 2 and preserve stderr byte for byte', ()
   expect(result.error).toBe(direct.stderr.toString());
 });
 
-const configuration = () => ({ modelSelection: { instanceId: 'codexAlt', model: 'gpt-6.1-sol',
+const configuration = () => ({ modelSelection: { instanceId: 'codex', model: 'gpt-6.1-sol',
   options: [{ id: 'reasoningEffort', value: 'high' }] }, runtimeMode: 'full-access' });
 
 test('verification matches T3 read-back for either dispatch kind and normalizes option maps', () => {
@@ -120,7 +129,7 @@ test('verification records the omitted provider label without changing the insta
 });
 
 for (const [index, [field, change]] of [
-  ['instance', (data) => { data.modelSelection.instanceId = 'codex'; }],
+  ['instance', (data) => { data.modelSelection.instanceId = 'codexAlt'; }],
   ['provider', (data) => { data.modelSelection.provider = 'grok'; }],
   ['model', (data) => { data.modelSelection.model = 'gpt-6-sol'; }],
   ['options', (data) => { data.modelSelection.options[0].value = 'low'; }],
@@ -162,7 +171,7 @@ test('verification prints every mismatch with expected and observed evidence', (
 });
 
 test('Antigravity verifies effort through its model suffix with no effort option', () => {
-  const f = setup(); f.picker.chosenInstanceId = 'antigravity';
+  const f = setup();
   const data = { modelSelection: { instanceId: 'antigravity', model: 'gemini-3.8-flash-low', options: [] },
     runtimeMode: 'full-access' };
   const matched = f.run('axstack-checker', 'launch', data);
@@ -177,7 +186,7 @@ test('Antigravity verifies effort through its model suffix with no effort option
 test('--help lists every flag, exit meaning and read-only side effect contract', () => {
   const result = invoke(['--help']);
   expect(result.status).toBe(0);
-  for (const flag of ['--role', '--roles', '--capabilities', '--picker', '--kind', '--verify', '--help']) {
+  for (const flag of ['--role', '--roles', '--capabilities', '--kind', '--verify', '--help']) {
     expect(result.output).toContain(flag);
   }
   expect(result.output).toMatch(/0.*ok.*1.*error.*2.*hold/i);
@@ -192,8 +201,6 @@ for (const [index, [field, change]] of [
   ['mode', (f) => { f.roles.roles[0].modeId = 'bypassPermissions'; }],
   ['effort', (f) => { delete f.roles.roles[0].thinkingOptionId; }],
   ['model', (f) => { delete f.roles.roles[0].modelClass; }],
-  ['instance', (f) => { f.picker.chosenInstanceId = null; }],
-  ['instance', (f) => { f.picker.chosenInstanceId = 'grok'; }],
 ].entries()) {
   test(`unavailable ${field} holds without emitting a dispatch (case ${index + 1})`, () => {
     const f = setup(); change(f);
@@ -204,15 +211,15 @@ for (const [index, [field, change]] of [
   });
 }
 
-test('a catalog-advertised sibling must have the same provider and model/effort', () => {
+test('the canonical instance must have the expected provider and model/effort', () => {
   for (const change of [
     (p) => { p.driverKind = 'grok'; },
     (p) => { p.models = []; },
     (p) => { p.models[0].options[0].options = [{ id: 'low' }]; },
   ]) {
     const f = setup();
-    const sibling = f.capabilities.providers.find((p) => p.providerInstanceId === 'codexAlt');
-    change(sibling);
+    const canonical = f.capabilities.providers.find((p) => p.providerInstanceId === 'codex');
+    change(canonical);
     const result = f.run();
     expect(result.status).toBe(2);
     expect(result.output).toBe('');
@@ -220,17 +227,16 @@ test('a catalog-advertised sibling must have the same provider and model/effort'
   }
 });
 
-test('malformed selected sibling models produce a named hold with instance evidence', () => {
+test('malformed canonical models preserve the resolver hold', () => {
   for (const models of [{}, 'models', false, null]) {
     const f = setup();
-    f.capabilities.providers.find((p) => p.providerInstanceId === 'codexAlt').models = models;
+    f.capabilities.providers.find((p) => p.providerInstanceId === 'codex').models = models;
     for (const kind of ['launch', 'task']) {
       const result = f.run('axstack-author', kind);
       expect(result.status).toBe(2);
       expect(result.output).toBe('');
-      expect(result.error).toContain('dispatch-plan hold:');
+      expect(result.error).toContain('model capabilities resolution hold:');
       expect(result.error).toContain('models');
-      expect(result.error).toContain('codexAlt');
       expect(result.error).not.toContain('TypeError');
     }
   }
@@ -245,9 +251,9 @@ test('CLI usage and unreadable JSON are errors rather than holds', () => {
   }
   const f = setup();
   const args = ['--role', 'axstack-author', '--roles', `${f.dir}/missing.json`,
-    '--capabilities', f.save('capabilities', catalog), '--picker', f.save('picker', fixture.picker), '--kind', 'launch'];
+    '--capabilities', f.save('capabilities', catalog), '--kind', 'launch'];
   expect(invoke(args).status).toBe(1);
-  args[3] = f.save('roles', f.roles); args[9] = 'other';
+  args[3] = f.save('roles', f.roles); args[7] = 'other';
   expect(invoke(args).status).toBe(1);
 });
 
@@ -259,23 +265,27 @@ test('malformed capabilities holds with the resolver diagnostic preserved', () =
   expect(result.error).toBe('model capabilities resolution hold: malformed capabilities providers\n');
 });
 
-for (const instanceId of ['claudeAgent', 'codexx', 'codexAlt']) {
+test('a missing canonical instance holds even when its sibling is advertised', () => {
+  const f = setup();
+  f.capabilities.providers = f.capabilities.providers.filter((p) => p.providerInstanceId !== 'codex');
   for (const kind of ['launch', 'task']) {
-    for (const verifying of [false, true]) {
-      test(`unadvertised ${instanceId} holds for ${kind}${verifying ? ' verification' : ' planning'}`, () => {
-        const f = setup();
-        // Keep only the canonical Codex catalog, as in the reviewer's saved subset.
-        f.capabilities.providers = f.capabilities.providers.filter((p) => p.providerInstanceId === 'codex');
-        f.picker.chosenInstanceId = instanceId;
-        const data = configuration(); data.modelSelection.instanceId = instanceId;
-        const result = f.run('axstack-author', kind, verifying ? data : undefined);
-        expect(result.status).toBe(2);
-        expect(result.output).toBe('');
-        expect(result.error).toContain('instance');
-        expect(result.error).toContain(instanceId);
-      });
-    }
+    const result = f.run('axstack-author', kind);
+    expect(result.status).toBe(2);
+    expect(result.output).toBe('');
+    expect(result.error).toContain('provider instance codex');
   }
+});
+
+for (const instanceId of ['claudeAgent', 'codexx', 'codexAlt']) {
+  test(`verification rejects non-canonical instance ${instanceId}`, () => {
+    const f = setup();
+    const data = configuration(); data.modelSelection.instanceId = instanceId;
+    const result = f.run('axstack-author', 'task', data);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain('instanceId: fail');
+    expect(result.output).toContain(instanceId);
+    expect(result.output).not.toContain('MATCH');
+  });
 }
 
 test('--help also succeeds when combined with other flags', () => {
@@ -297,10 +307,10 @@ test('the test runner removes each fixture directory after its test', () => {
 });
 
 const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
-  '--capabilities', f.save('capabilities', f.capabilities), '--picker', f.save('picker', f.picker), '--kind', 'launch'];
+  '--capabilities', f.save('capabilities', f.capabilities), '--kind', 'launch'];
 
 test('CLI author example includes every required input and the delegated task kind', () => {
-  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role axstack-author --roles .* --capabilities .* --picker .* --kind task/);
+  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role axstack-author --roles .* --capabilities .* --kind task/);
 });
 
 test('usage/input errors tell the caller how to recover', () => {
@@ -313,7 +323,7 @@ test('usage/input errors tell the caller how to recover', () => {
 
 test('plan and verification name every supplied input path', () => {
   const f = setup(), args = planArgs(f);
-  expect(JSON.parse(invoke(args).output).inputs).toEqual({ role: 'axstack-author', roles: args[3], capabilities: args[5], picker: args[7], kind: 'launch' });
+  expect(JSON.parse(invoke(args).output).inputs).toEqual({ role: 'axstack-author', roles: args[3], capabilities: args[5], kind: 'launch' });
   const path = f.save('configuration', configuration());
   expect(invoke([...args, '--verify', path]).output).toContain(path);
 });
@@ -349,7 +359,7 @@ test('plans exceeding 4096 bytes require --out and keep stdout empty on error', 
   const inline = `${JSON.stringify(full)}\n`;
   expect(inline.length).toBeLessThan(4096);
   expect(new TextEncoder().encode(inline).length).toBeGreaterThan(4096);
-  expect(full.modelSelection).toEqual({ instanceId: 'codexAlt', model: 'gpt-6.1-sol',
+  expect(full.modelSelection).toEqual({ instanceId: 'codex', model: 'gpt-6.1-sol',
     options: [{ id: 'reasoningEffort', value: 'high' }] });
   expect(JSON.parse(saved.output).reportPath).toBe(out);
   expect(JSON.parse(saved.output).omittedPayloadFields).toBe(2);
@@ -389,7 +399,7 @@ test('main accepts argv and captures plan, verification and errors through io in
   let output = '', error = '';
   const io = { stdout: (text) => { output += text; }, stderr: (text) => { error += text; } };
   expect(module.main(args, io)).toBe(0);
-  expect(JSON.parse(output).modelSelection.instanceId).toBe('codexAlt');
+  expect(JSON.parse(output).modelSelection.instanceId).toBe('codex');
   output = '';
   expect(module.main([...args, '--verify', f.save('configuration', configuration())], io)).toBe(0);
   expect(output.split('\n').slice(-2)).toEqual(['MATCH', '']);

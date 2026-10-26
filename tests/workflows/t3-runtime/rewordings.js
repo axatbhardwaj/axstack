@@ -6,7 +6,7 @@ export const rewordings = {
   "snapshot change": "The user's explicit decision is required for changes.",
   "provider mapping": "Bindings are antigravity→antigravity, grok→grok, claude→claudeAgent and codex→codex.",
   "mandatory agent-ID bindings": "Bindings are required to map antigravity to antigravity and grok to grok.",
-  "dispatch plan pointer": "Invoke scripts/dispatch-plan.js with --kind, --picker, --capabilities, --roles and --role using saved capabilities and the recorded role snapshot to generate the plan.",
+  "dispatch plan pointer": "Invoke scripts/dispatch-plan.js with --kind, --capabilities, --roles and --role using saved capabilities and the recorded role snapshot to generate the plan.",
   "dispatch verification pointer": "Invoke scripts/dispatch-plan.js --verify with saved t3_thread_configuration read-back and the same plan inputs.",
   "permission intent limitation": "Stored permission intent supplies neither effective parity nor a security boundary.",
   "pinned model": "As given, the preset model is used.",

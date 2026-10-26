@@ -8,7 +8,6 @@
     {"id":"axstack-checker","provider":"antigravity","model":null,"modeId":"full-access","thinkingOptionId":"low"},
     {"id":"axstack-pinned","provider":"codex","modelClass":"sol","model":"gpt-6-sol","modeId":"full-access","thinkingOptionId":"high"}
   ],
-  "picker": {"chosenInstanceId":"codexAlt","instances":[{"instanceId":"codex"},{"instanceId":"codexAlt"}]},
   "antigravityModels": [
     {"id":"gemini-3.8-flash-high","options":[]},
     {"id":"gemini-3.8-flash-low","options":[]},

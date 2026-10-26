@@ -7,7 +7,7 @@ export const dispatchRules = [
   ["provider mapping", [/\bbindings/i, /\bcodex→codex/, /\bclaude→claudeAgent/, /grok→grok/, /\bantigravity→antigravity/]],
   ["mandatory agent-ID bindings", [/\bbindings/i, /\b(?:must|shall|required)\b/i,
     /\bgrok(?:→|\s+to\s+)grok\b/i, /\bantigravity(?:→|\s+to\s+)antigravity\b/i]],
-  ["dispatch plan pointer", [/\b(?:run|invoke)\b/i, /scripts\/dispatch-plan\.js/, /--role/, /--roles/, /--capabilities/, /--picker/, /--kind/, /recorded role snapshot/i, /saved capabilities/i]],
+  ["dispatch plan pointer", [/\b(?:run|invoke)\b/i, /scripts\/dispatch-plan\.js/, /--role/, /--roles/, /--capabilities/, /--kind/, /recorded role snapshot/i, /saved capabilities/i]],
   ["dispatch verification pointer", [/\b(?:run|invoke)\b/i, /scripts\/dispatch-plan\.js --verify/, /same plan inputs/i, /saved t3_thread_configuration read-back/i]],
   ["permission intent limitation", [/stored permission intent/i, /effective parity/i, /security boundary/i], /neither effective parity nor a security boundary/i],
   ["pinned model", [/\bpreset model/i, /\bused|use/i, /\bas given/i]],
