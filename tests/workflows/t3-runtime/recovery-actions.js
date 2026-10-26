@@ -1,8 +1,7 @@
 // Expected recovery actions bind scenarios to their shipped rule paragraphs.
 export const recovery = {
   'lost-launch-response': [
-    [/lost launch response/i, [/ke(?:ep|pt)/i, /reserved branch/i]],
-    [/recovery must adopt/i, [/adopt/i, /one exact match/i, /relaunch once/i, /proven absence/i, /incomplete inventory/i, /hold/i]],
+    [/lost delegated.*response/is, [/retry/i, /same stable/i, /clientRequestId/, /recover task identity/i, /never start a second writer/i, /outcome is unknown/i]],
   ],
   'silent-provisioning-failure': [
     [/post-launch/i, [/launch failure/i, /activeRunId/, /worktreePath/, /started/i, /still preparing/i, /hold/i, /next wake/i]],

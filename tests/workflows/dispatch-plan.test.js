@@ -291,8 +291,8 @@ test('the test runner removes each fixture directory after its test', () => {
 const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
   '--capabilities', f.save('capabilities', f.capabilities), '--picker', f.save('picker', f.picker), '--kind', 'launch'];
 
-test('CLI example includes every required input', () => {
-  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role .* --roles .* --capabilities .* --picker .* --kind launch/);
+test('CLI author example includes every required input and the delegated task kind', () => {
+  expect(invoke(['--help']).output).toMatch(/Example: bun .* --role axstack-author --roles .* --capabilities .* --picker .* --kind task/);
 });
 
 test('usage/input errors tell the caller how to recover', () => {

@@ -86,7 +86,10 @@ Follow [T3 runtime](t3-runtime.md) for native completion, questions, launch
 recovery and run-watch waits. Delegated notifications wake the driver; a launched
 writer sends its marker with `t3_thread_send` using `mode: queue` to the recorded driver thread.
 Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.
-Writer completion requires `AXSTACK-DONE` plus terminal `t3_thread_wait` on the recorded run and candidate checks: non-empty diff, clean tree, and named red/green logs.
+Delegated author completion requires delegated terminal checks plus candidate checks: non-empty diff, clean tree and named red/green logs.
+A delegated repair uses a stable clientRequestId with `t3_thread_send(childThreadId, mode:queue, clientRequestId)` to the same author in the same worktree and branch, records the returned taskId and verifies the existing candidate head.
+Repairs never repeat fresh checkout step 1.
+Launched fallback writer completion requires `AXSTACK-DONE` plus terminal `t3_thread_wait` on the recorded run and candidate checks: non-empty diff, clean tree, and named red/green logs.
 Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one.
 Process the whole delivery before advancement, validating sender, scope,
 authority, revisions and artifacts. Deduplicate by native task/thread/run identity.

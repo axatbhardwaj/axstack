@@ -5,7 +5,7 @@ const nonempty = (value) => typeof value === 'string' && value.trim().length > 0
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
   --capabilities <saved.json> --picker <picker.json> --kind task|launch
   [--verify <configuration.json>] [--out <report.json>]
-Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind launch
+Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --picker picker.json --kind task
 
 --role          Role ID from the supplied snapshot
 --roles         Installed-style roles.json (version 1, roles array)
