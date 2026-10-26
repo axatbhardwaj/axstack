@@ -139,13 +139,6 @@ for (const [name, concepts, rewording, inversion, prohibition] of documented) {
   });
 }
 
-test('documentation permits only own same-provider same-model account selection', () => {
-  const concepts = [/per-dispatch/i, /selection/i, /user.s own/i, /same-provider/i, /same-model/i, /permitted/i];
-  checkRule(compact(read('docs/workflows.md')), (text) => sentences(text).some((unit) => requires(unit, ...concepts) && !/\bunless|\bexcept/i.test(unit)),
-    "Per-dispatch selection among the user's own same-provider, same-model accounts is permitted.",
-    [[/permitted/i, 'forbidden']], concepts);
-});
-
 test('workflows is the single public home for exclusions and accepted risks', () => {
   for (const path of publicDocPaths(`${import.meta.dir}/../..`).filter((path) => path !== 'docs/workflows.md')) {
     const source = compact(read(path));

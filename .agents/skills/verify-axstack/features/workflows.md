@@ -17,8 +17,7 @@ the live parking and restart canary remains a separate driver check.
 Native-watch checks also cover next-wake quota recovery and re-arming remaining
 PRs after a merge auto-settles the driver, including the host-guide copies.
 `watch-quota-recovery.test.js` covers saved reset deadlines and digest deferral
-and restart; cadence checks define native wake sources and every-wake account
-selection. These remain instruction contracts.
+and restart; cadence checks define native wake sources. These remain instruction contracts.
 Runtime preflight contracts cover merge-deleted author worktrees and private evidence.
 Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-mode.md`, `references/codebase-brief.md`,
@@ -39,6 +38,8 @@ after head or base changes; `advised-holds.test.js` pins their advice exclusion.
 carryover and repository-rule guards with removal, inversion and rewording probes.
 Split test files: `tests/workflows/{presets-research,presets-roles,presets-runtime,pr-managers-lifecycle,structural-workflows}.test.js`;
 runtime tables: `tests/workflows/t3-runtime/*.js`.
+`provider-bindings.test.js` checks fixed Claude/Codex instance bindings and
+usage-limit holds without failover, with removal, inversion and rewording probes.
 Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
 packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
 bytes, exclusions, failure guidance, renames and subdirectory invocation.
@@ -124,8 +125,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/presets-runtime.test.js \
   tests/workflows/single-server.test.js \
   tests/workflows/single-server-units.test.js \
-  tests/workflows/default-sync-policy.test.js \
-  tests/workflows/sync-default.test.js \
+  tests/workflows/provider-bindings.test.js \
   tests/workflows/run-record.test.js \
   tests/workflows/prose-size.test.js > "$EVIDENCE/workflows.log" 2>&1 || STATUS=$?
 printf '%s\n' "$STATUS" > "$EVIDENCE/workflows-exit.txt"
@@ -181,20 +181,6 @@ Confirm `bun "$SCRIPTS/single-server.js" --help` lists all five flags (including
 `bun "$SCRIPTS/single-server.js" --dry-run` emits one JSON decision with exit 0.
 Only use dry-run for host inspection; live kills and notification delivery require
 separate host-mutation authority. Installation must leave timers disabled.
-
-The default-sync CLI checks use fake homes and loopback usage responses, never
-live settings. The pool fixture is
-`claudeAgent=claude-opus-5-5,codex=gpt-6-astra:medium`; explicit Claude effort
-also has byte-preservation coverage. Checks cover exact weekly reserve bands
-at 15% and 10%, cross-driver band preference despite opposing pace, the same-band
-ten-point pace margin and ties (including all-low usable quota), unknown holds,
-excluded-current escape, hard 95%-used/limit/credential exclusions, no eligible
-candidate, and unchanged no-pool behavior. Dry-run preserves all settings bytes;
-writes preserve every byte outside the decided root selection. This is offline
-policy proof only: best-effort reserve preference does not guarantee a weekly
-budget. Host catalog validation, preserving each host's actual Opus effort,
-one-time same-account Sol migration at driver host activation, running-thread
-non-interference and fleet activation/readback remain separate live checks.
 
 ## Explain delivery
 

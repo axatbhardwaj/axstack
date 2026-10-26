@@ -117,7 +117,6 @@ for (const [name, concepts, rewording] of [
 }
 
 for (const [name, script, flags, exits] of [
-  ['Account picker', 'pick-instance.js', ['--provider', '--settings', '--json'], [0, 1, 2]],
   ['PR digest', 'pr-digest.js', ['--repo', '--prs', '--input', '--watermark'], [0, 10, 2]],
   ['Evidence archive', 'archive-evidence.js', ['--source-root', '--archive-root', '--repo', '--pr', '--run', '--task', '--head', '--dispatch', '--file', '--operation', '--manifest-hash'], [0, 1]],
 ]) {
