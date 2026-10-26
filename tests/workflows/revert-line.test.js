@@ -94,16 +94,17 @@ test('authored review receipt carries the declared line and diff assessment', ()
 
 // Issue #534: protect publication instructions, not live forge or agent behavior.
 const bodyRules = [
-  ['problem before fix', [/open|start/i, /plain|simple/i, /problem/i, /user.*request/i, /then/i, /fix|solution/i],
-    "Start with the problem in simple words from the user's request, then the solution.", [/then/i, 'before']],
+  ['problem before fix', [/open|start/i, /plain|simple/i, /user.*request/i, /problem.*\b(?:then|before|followed by)\b.*(?:fix|solution)/i],
+    "Start with the problem in simple words from the user's request, before the solution.", [/problem(.*)(fix|solution)/i, '$2$1problem']],
   ['no opening inventory', [/lead|open|start/i, /implementation inventory/i],
     'Never start with an implementation inventory.', [/never|do not/i, 'Always'], /never|do not/i],
   ['title explains value', [/title/i, /why/i, /change matters/i],
     'Write a title that states why the change matters.', [/why/i, 'whether']],
   ['title conventions', [/title/i, /repo/i, /conventions/i, /consult|check/i, /recent.*merged PRs/i],
     'For title conventions in this repository, consult recently merged PRs.', [/consult|check/i, 'Ignore']],
-  ['attribution ends body', [/end|finish/i, /description/i, /Created with <model> in <harness>/],
-    'Finish the description with `Created with <model> in <harness>`.', [/end|finish/i, 'Begin']],
+  ['attribution ends body', [/\b(?:end|finish) the description with `Created with/i, /Created with <model> in <harness>/],
+    'Finish the description with `Created with <model> in <harness>`.',
+    [/(?:end|finish) the description with (`Created with <model> in <harness>`)/i, 'Put $1 first in the description and end with the Revert line']],
   ['all writer models', [/include|list/i, /author/i, /subagent/i, /models/i, /wrote code/i],
     'List the author and subagent models that wrote code.', [/include|list/i, 'Omit']],
   ['reported model identity', [/use/i, /model name/i, /harness reports/i],
