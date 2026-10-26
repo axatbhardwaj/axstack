@@ -75,7 +75,7 @@
       "expected": [
         "Classify Rung 2 using the existing ADR test and enter the arena",
         "Frame a rubric for the design question and keep the user decision checkpoint",
-        "Fan out independent Astra, Fable, and Grok candidates from one brief without cross-reading; two judges score anonymized labels against the driver-tailored rubric"
+        "Fan out independent Astra, Opus, and Grok candidates from one brief without cross-reading; two judges score anonymized labels against the driver-tailored rubric"
       ]
     },
     {

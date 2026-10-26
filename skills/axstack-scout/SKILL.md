@@ -46,7 +46,7 @@ rejected required seat holds Scout without substitution. The first dispatch
 for each provider/model/effort must reach a running or completed run before
 siblings launch, and its rejection stops siblings of that configuration.
 
-An uncertain dispatch is reconciled, not recorded absent.
+Reconcile an uncertain dispatch natively before proceeding with Scout.
 
 ## 3. Pin evidence and report
 

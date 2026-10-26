@@ -387,7 +387,7 @@ Only prior passes that no guard keeps unsettled enter unresolved recovery.
 A guard includes a hold or flag, an owned watch, unsettled descendants, a pending
 receipt, a wedged pass or stalled owner, and every existing pass-start protection.
 If a guard keeps a prior pass unsettled, drop it from the unresolved list and retain
-its existing hold or flagged-threadId record (or watch/descendant ownership record).
+any existing record, including non-terminal run evidence and user takeover.
 Held or flagged prior passes never force a full pass or failure report by their unsettled state alone.
 If the prior thread is unsettled and eligible, settle it under the existing pass-start guards
 below and read back `settled: true`.
@@ -430,12 +430,14 @@ Retirement settles remaining predecessor, duplicate and failed-successor pass th
 Unknown, active or user-taken-over threads,
 ambiguous publication and failed salvage stay preserved.
 
-A review-manager pass may retire a predecessor pass's local `t3code/*` branch
-with exact `git branch -D <branch>` only when ALL hold: the predecessor pass is
+A review-manager pass may retire a predecessor pass's local branch with exact
+`git branch -D <branch>`; read its current branch name from the worktree before
+removing it, regardless of branch name pattern; fetch origin before checking
+ancestry; delete only when ALL hold: the predecessor pass is
 settled and proven run/lane-owned by recorded identity, its descendants and
 evidence are settled, no worktree has the branch checked out, no remote
 counterpart exists, its tip equals the recorded tip, and its tip is an ancestor
-of the verified remote default branch. Otherwise hold; all other `git branch -d`
+of origin/main. Otherwise hold and record it in Open holds; all other `git branch -d`
 rules remain unchanged.
 
 Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule

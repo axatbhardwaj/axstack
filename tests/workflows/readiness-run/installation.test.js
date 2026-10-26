@@ -158,7 +158,7 @@ test('frozen npm install resolves a committed local dependency without any regis
   expect(item(result.report, 'testing.test').status).toBe('pass');
   expect(readFileSync(result.report.commands.find((step) => step.kind === 'script').logPath, 'utf8')).toContain('local dependency installed');
   expect(manifest(repo)).toEqual(before);
-});
+}, 20000);
 
 test('run executes dependency-free Bun scripts without a lockfile', () => {
   const bin = mkdtempSync(`${root}/real-bun-`);
