@@ -46,7 +46,7 @@ For parked holds, follow [Parked user-reply holds](../../axstack/references/cont
 While parked, keep the bound run watch disabled until the answer.
 A parking unwatch never triggers native re-arm or the 5-minute recovery cadence.
 For forge-resolved human waits, including user merge, npm stage approval and
-human review, with no unsettled worker, set the run watch cadence to 60 minutes
+human review, with no unsettled worker and no PR needing watch events, set the run watch cadence to 60 minutes
 at once.
 When work restarts, re-evaluate cadence against the recovery conditions below.
 Keep native PR watches for forge-resolved waits.

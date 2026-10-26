@@ -317,7 +317,7 @@ If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
 If re-arming fails, restore the bound 5-minute schedule.
 For forge-resolved human waits, including user merge, npm stage approval and
-human review, with no unsettled worker, set the run watch cadence to 60 minutes
+human review, with no unsettled worker and no PR needing watch events, set the run watch cadence to 60 minutes
 at once.
 When work restarts, re-evaluate cadence against the recovery conditions in
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch).

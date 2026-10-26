@@ -212,42 +212,57 @@ Peer serious-risk holds stay never advised under the peer-review exclusion above
 
 ### Parked user-reply holds
 
+When late advice completes and the hold becomes user-only, re-evaluate parking
+eligibility and update the existing text card under the same hold key.
+
 A parked hold waits only on a user reply in chat.
 A parked hold has no unsettled worker, pending adviser seat or pending receipt.
-A parked run has no forge-resolved hold.
+A parked run has no forge-resolved hold and no other member PR needing watch events (CI, review, approval or repair).
 Never park holds resolved on the forge, including user merge, npm stage approval
 and human review.
 Scoped and forge-resolved holds use a text card only, and watches and the
 60-minute backstop stay.
 
-For parking, call `unwatch_pull_request` for each watched member, then post the
-text card saying "answer the prompt", then call `update_scheduled_task`
-`enabled:false` with read-back, then cancel queued copies of the run-watch
-prompt, then use the harness question tool.
+For parking:
+
+1. Call `unwatch_pull_request` for each watched member.
+2. Post or update the text card saying "answer the prompt".
+3. Call `update_scheduled_task` `enabled:false` and read it back.
+4. Cancel queued copies of the run-watch prompt.
+5. Use the harness question tool.
+
 Include the PR URL, cause, head and base in the question, with the recommended
 option first and numbered replies.
 If disable or its read-back fails, reconcile the exact schedule ID.
+For either failed-disable branch, update the existing text card by posting a
+corrected version under the same hold key without a new alert.
 When verified enabled, roll back to the unparked user-decision state, re-arm
 watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches)
-and set cadence to 60 min.
-When verified enabled, post the card without the question.
-When the state remains unknown, mark the card `automatic recovery unproven`
-and hold UNKNOWN.
+and update the existing text card to remove "answer the prompt" and omit the question.
+After successful native re-arm, set cadence to 60 min.
+If native re-arm fails or is rate-limited, use the 5-minute recovery cadence
+under the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches).
+When the state remains unknown, update the existing text card to remove
+"answer the prompt", mark it `automatic recovery unproven`, hold UNKNOWN and
+omit the question.
 Never infer an enabled backstop from a failed read.
 
-On an answer from the question tool or chat, reconcile current PR and run state
-first, then bind the answer to the hold key, head and base, then re-enable the
-schedule, re-arm watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches)
-and continue.
+On an answer from the question tool or chat:
+
+1. Reconcile current PR and run state.
+2. Bind the answer to the hold key, head and base.
+3. Re-enable the schedule.
+4. Re-arm watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches).
+5. Continue.
+
 Stale answers clear nothing.
 While parked there is no wake source and the text card is the lasting signal.
 On the user's next message, if the hold is still open and
 `t3_pending_request_list` shows no pending request, re-ask once under the same
 hold key.
 Re-ask without a new alert.
-If the question tool is unavailable, follow the same parking order and record
-`question tool unavailable`.
-If the question tool is unavailable, omit the question step.
+If the question tool is unavailable, follow the same parking order, omit the
+question step and record `question tool unavailable`.
 
 ## Serious risk
 
