@@ -206,7 +206,18 @@ configuration, and private evidence. Persist `task_status` before
 settled child runs, and the current `AXSTACK-DONE` marker. Launched writers
 send their marker to the driver, which also verifies terminal `t3_thread_wait`,
 a clean tree, non-empty diff, and red/green logs. An older attempt never
-completes a newer one. Questions remain incomplete until the resumed run settles.
+completes a newer one. Questions remain incomplete until the answered task or resumed run settles.
+
+For a delegated child, detect questions with `t3_pending_request_list(childThreadId)`.
+Never rely on `hasPendingQuestion` alone.
+Codex `request_user_input_async` does not set it.
+Use `t3_pending_request_read`, then confirm the request is still pending with
+`t3_pending_request_list(childThreadId)`, then answer once within existing authority
+using `t3_pending_request_respond`; a second ask holds.
+Independent review rounds require fresh `delegate_task` calls.
+Only author continuation and an answer to a child's own question use the same child.
+Providers without a question tool (grok, antigravity) and launched writers keep
+the `AXSTACK-QUESTION` marker route.
 
 Trust, permission, authentication, and provider safety prompts are holds;
 never answer trust or permission prompts for a worker. Unknown liveness,

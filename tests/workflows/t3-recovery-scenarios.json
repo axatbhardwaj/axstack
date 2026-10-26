@@ -27,9 +27,9 @@
     },
     {
       "id": "child-question-resume",
-      "input": "task_status is completed with AXSTACK-QUESTION; after an answer the original summary remains unchanged and no resumed-run notification arrives.",
-      "contracts": ["delegate completion", "question resume", "status persistence"],
-      "expected": { "action": "Answer once via t3_thread_send to childThreadId, wait 600000ms on the resumed run with watch rearming, and accept only latestTerminal* newer than the question run." }
+      "input": "A delegated child asks with Codex request_user_input_async while task_status.hasPendingQuestion is false.",
+      "contracts": ["delegate completion", "status persistence"],
+      "expected": { "action": "Detect using t3_pending_request_list(childThreadId), use t3_pending_request_read, confirm still pending, and answer once within existing authority via t3_pending_request_respond." }
     },
     {
       "id": "delegated-reviewer-isolation",

@@ -267,13 +267,13 @@ for (const [name, readSource, concepts, paraphrase, inversions] of [
   });
 }
 
-test('a resumed question child run keeps the 5-minute cadence', () => {
-  const concepts = [/resumed AXSTACK-QUESTION child run/i, /native completion wake/i,
-    /keeps? the 5-minute cadence/i, /everyMs:300000/, /until its result is accepted/i];
+test('launched-writer marker resumes keep recovery cadence while any launched writer exists', () => {
+  const concepts = [/launched-writer AXSTACK-QUESTION marker resume/i, /native completion wake/i,
+    /keeps? the 5-minute cadence/i, /everyMs:300000/, /while any launched writer exists/i];
   checkRule(sentences(runtime().replace(/`/g, '')).join('. '), (text) => requires(text, ...concepts),
-    'Until its result is accepted, a resumed AXSTACK-QUESTION child run lacking a native completion wake keeps the 5-minute cadence (everyMs:300000).',
+    'While any launched writer exists, a launched-writer AXSTACK-QUESTION marker resume lacking a native completion wake keeps the 5-minute cadence (everyMs:300000).',
     [[/keeps? the 5-minute cadence/i, 'keeps the 60-minute cadence'], [/everyMs:300000/, 'everyMs:3600000'],
-      [/until its result is accepted/i, 'until its question is answered']], concepts);
+      [/while any launched writer exists/i, 'only until this result is accepted']], concepts);
 });
 
 // Native events already carry a reason to act; only backstop ticks need a digest.

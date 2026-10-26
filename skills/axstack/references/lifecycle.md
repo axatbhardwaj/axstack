@@ -92,6 +92,18 @@ Process the whole delivery before advancement, validating sender, scope,
 authority, revisions and artifacts. Deduplicate by native task/thread/run identity.
 A question marker stays incomplete; failure, interruption, permission prompts
 and refusals hold with preserved evidence. Receipt messages alone are progress.
+
+For a delegated child, detect questions with `t3_pending_request_list(childThreadId)`.
+Never rely on `hasPendingQuestion` alone.
+Codex `request_user_input_async` does not set it.
+Use `t3_pending_request_read`, then confirm the request is still pending with
+`t3_pending_request_list(childThreadId)`, then answer once within existing authority
+using `t3_pending_request_respond`; a second ask holds.
+Independent review rounds require fresh `delegate_task` calls.
+Only author continuation and an answer to a child's own question use the same child.
+Providers without a question tool (grok, antigravity) and launched writers keep
+the `AXSTACK-QUESTION` marker route.
+
 Healthy unchanged passes are silent.
 An explicitly invoked phase dispatches its configured roles through T3 and
 closes with the lifecycle close-out; in-chat execution covers only ordinary

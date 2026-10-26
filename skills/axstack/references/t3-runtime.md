@@ -222,13 +222,26 @@ failed is launch failure; timed-out with `t3_thread_read` showing both
 `activeRunId` and `worktreePath` is started; still preparing is a hold and
 re-read at the next wake. An unresolved state preserves the attempt.
 
-For `AXSTACK-QUESTION` the driver must answer once using `t3_thread_send` to
-the `childThreadId`, record the returned resumed runId, then
+For a delegated child, detect questions with `t3_pending_request_list(childThreadId)`.
+Never rely on `hasPendingQuestion` alone.
+Codex `request_user_input_async` does not set it.
+Use `t3_pending_request_read`, then confirm the request is still pending with
+`t3_pending_request_list(childThreadId)`, then answer once within existing authority
+using `t3_pending_request_respond`; a second ask holds.
+Independent review rounds require fresh `delegate_task` calls.
+Only author continuation and an answer to a child's own question use the same child.
+Providers without a question tool (grok, antigravity) and launched writers keep
+the `AXSTACK-QUESTION` marker route.
+
+For a delegated marker question, answer once with `t3_thread_send(childThreadId, mode:queue)`,
+record the returned `taskId`, and consume the follow-up under delegated terminal checks.
+For a launched-writer `AXSTACK-QUESTION` marker the driver must answer once using
+`t3_thread_send` to the `childThreadId`, record the returned resumed runId, then
 `t3_thread_wait(childThreadId, runId, timeoutMs:600000)`, re-armed by the run
 watch. Persist status again and accept only `latestTerminal*` with
 `latestTerminalRunId` newer than the question run (recorded run ordering, not
 lexical ID order), terminal success and matching receipt key/SHA. The original
-summary stays stable; no notification is assumed for a resumed result.
+summary stays stable; no notification is assumed for a launched-writer resumed result.
 
 A repair must use `t3_thread_send(writerThreadId, mode:queue)` to the same
 author in the same attempt and worktree; pin the new candidate revision.
