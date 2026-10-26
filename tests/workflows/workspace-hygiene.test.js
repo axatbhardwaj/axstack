@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
+import { settlementRules } from './t3-runtime/settlement-rules.js';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
@@ -137,12 +138,19 @@ test('hygiene scenarios retain twenty distinct safety boundaries', () => {
   expect(scenarios).toHaveLength(20);
   expect(new Set(scenarios.map(({ id }) => id)).size).toBe(20);
 });
-// Exact safety pins: deliberate wording changes require a test edit.
+// Remaining safety pins retain exact text; cleanup scenarios check semantic contracts.
 for (const { id, input, expected, contract } of scenarios) {
-  test(`hygiene safety: ${id} exact text`, () => {
+  test(`hygiene safety: ${id}`, () => {
     expect(input.length).toBeGreaterThan(20);
     expect(expected.length).toBeGreaterThan(5);
     const text = normalize(hygiene());
+    const name = { 'cleanup-evidence-location': 'cleanup evidence location', 'cleanup-missing-worktree': 'cleanup missing worktree' }[id];
+    if (name) {
+      const [, concepts, negative] = settlementRules.find(([key]) => key === name);
+      checkRule(text, (source) => prohibits(source.replace(/`/g, ''), negative, ...concepts), contract.replace(/`/g, ''),
+        [[negative, 'always allowed']], concepts);
+      return;
+    }
     expect(text).toContain(contract);
     expect(text.split(contract).length).toBe(2);
   });

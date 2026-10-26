@@ -24,8 +24,10 @@ still appears is a hold; agents do not answer it.
 
 ## Project preflight
 
-`worktreeCleanup` must be `off` for every Axstack project.
-Preflight reads back `worktreeCleanup` via `t3_project_read` where exposed; otherwise record a limitation pointing to the documented installation setup step.
+Hosts can delete author worktrees at merge through `storageCleanup.worktreeOnMerge`.
+`t3_project_read` cannot read `storageCleanup.worktreeOnMerge`.
+Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/`.
+A missing merged or closed author worktree is expected, not a hold.
 Automatic deletion cannot replace evidence readback or salvage. Do not change
 project settings without recorded host-mutation authority.
 
