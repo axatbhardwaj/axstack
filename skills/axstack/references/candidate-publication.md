@@ -13,6 +13,7 @@ folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
 Follow [PR chains](pr-chain.md) for recorded membership and base-bound evidence.
 For ordinary PRs, use `git push origin HEAD:refs/heads/<owned branch>` and
 `gh pr create` or `gh pr edit` with the actual parent or integration base.
+Follow [PR body](pr-shape.md#pr-body) for the title, description and creation fallback.
 Never use routine force push for ordinary PRs. For legacy native `gh stack`,
 prefer a fast-forward push of existing commits, preserving unrelated entries.
 Before a history rewrite, confirm expected-old remote SHA and use a narrowly
