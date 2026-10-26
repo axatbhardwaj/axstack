@@ -57,8 +57,11 @@ do not belong in it.
 
 ## T3 runtime boundary
 
-Delegation uses the `t3-code` MCP. Read-only roles use `delegate_task`; authors
-use `t3_thread_launch` with their own pinned worktrees. Configuration read-back,
+Delegation uses the `t3-code` MCP. Use async `delegate_task` for every role, including authors with
+`isolation:"worktree"` in their own SHA-pinned worktrees.
+Top-level drivers use `t3_thread_launch`.
+Use `t3_thread_launch` as a rare author fallback only when
+worktree isolation is unavailable and record each use in the run record. Configuration read-back,
 run receipts and revision-bound completion are separate from capability
 discovery. Read the [runtime contract](../skills/axstack/references/t3-runtime.md)
 immediately before dispatch, receipt consumption or recovery.

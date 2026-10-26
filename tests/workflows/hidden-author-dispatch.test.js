@@ -8,20 +8,24 @@ const implement = 'axstack-implement/SKILL.md';
 const hygiene = 'axstack/references/workspace-hygiene.md';
 // Each copy is a shipped instruction boundary; mutations stay in memory.
 const rules = [
-  ['fresh isolation proof', [runtime], [/[Bb]efore git switch -c/, /fresh author.*verify/i, /starting branch matches t3\/<id>/, /git rev-parse --show-toplevel/, /differs from.*driver worktree.*named in.*brief/i],
-    'Before git switch -c, the fresh author shall verify the starting branch matches t3/<id> and git rev-parse --show-toplevel differs from the driver worktree named in its brief.', [/differs from/i, 'equals']],
+  ['fresh isolation proof', [runtime], [/[Bb]efore git switch -c/, /delegated fresh author.*verify/i, /starting branch matches t3\/<id>/, /git rev-parse --show-toplevel/, /differs from.*driver worktree.*named in.*brief/i],
+    'Before git switch -c, the delegated fresh author shall verify the starting branch matches t3/<id> and git rev-parse --show-toplevel differs from the driver worktree named in its brief.', [/differs from/i, 'equals']],
   ['failed isolation proof', [runtime], [/failed isolation proof/i, /stop.*AXSTACK-FAILED/, /change nothing/i],
     'On failed isolation proof, stop with AXSTACK-FAILED and change nothing.', [/change nothing/i, 'switch branches anyway']],
-  ['driver isolation readback', [runtime], [/after dispatch/i, /driver.*read back/i, /child.*worktreePath/, /hold if it equals.*driver worktree/i],
-    'After dispatch the driver shall read back the child worktreePath and hold if it equals the driver worktree.', [/hold if it equals/i, 'hold if it differs from']],
+  ['driver isolation readback', [runtime], [/after dispatch/i, /driver.*reads? back/i, /child.*worktreePath/, /hold if.*equals.*driver worktree/i],
+    'After dispatch the driver shall read back the child worktreePath and hold if it equals the driver worktree.', [/equals/i, 'differs from']],
+  ['missing isolation readback', [runtime], [/after dispatch/i, /driver.*reads? back/i, /child.*worktreePath/, /hold if.*(?:missing|absent).*driver worktree/i],
+    'After dispatch, the driver reads back the child worktreePath and must hold if it is missing or equals the driver worktree.', [/missing/i, 'present']],
+  ['fallback skips bootstrap', [runtime], [/launched fallback author/i, /starts.*encoded branch/i, /skips.*step 1.*isolation proof/i],
+    'A launched fallback author starts on its encoded branch and skips step 1 and the isolation proof.', [/skips/i, 'repeats']],
   ['driver path in brief', [runtime], [/before dispatch/i, /driver.*name/i, /worktree.*absolute path.*author brief/i],
     'Before dispatch, the driver names its worktree absolute path in the author brief.', [/before dispatch/i, 'after dispatch']],
   ['fallback repair', [runtime], [/launched fallback/i, /retain.*same author thread/i, /use launched-run completion checks/i],
     'Retain the same author thread for a launched fallback and use launched-run completion checks.', [/same author thread/i, 'new author thread']],
   ['author route', [runtime, implement], [/authors?/i, /async delegate_task/i, /isolation:"worktree"/i, /title = dispatch key/i, /stable clientRequestId/i],
     'Authors shall use async delegate_task with isolation:"worktree", title = dispatch key and stable clientRequestId.', [/delegate_task/i, 't3_thread_launch']],
-  ['fresh branch bootstrap', [runtime], [/fresh author brief step 1/i, /verify.*branch.*absent.*before/i, /git switch -c <encoded branch> <pinned base SHA>/, /then verify HEAD equals.*pinned base SHA/i],
-    'The fresh author brief step 1 shall verify the branch is absent before git switch -c <encoded branch> <pinned base SHA>, then verify HEAD equals the pinned base SHA.', [/before/i, 'after']],
+  ['fresh branch bootstrap', [runtime], [/delegated fresh author brief step 1/i, /verify.*branch.*absent.*before/i, /git switch -c <encoded branch> <pinned base SHA>/, /then verify HEAD equals.*pinned base SHA/i],
+    'The delegated fresh author brief step 1 shall verify the branch is absent before git switch -c <encoded branch> <pinned base SHA>, then verify HEAD equals the pinned base SHA.', [/before/i, 'after']],
   ['non-resetting switch', [runtime], [/git switch -C/],
     'Never use git switch -C.', [/never/i, 'always'], /never use/i],
   ['temporary branch retirement', [runtime], [/delete.*exact T3 t3\/<id> branch/i, /only after.*switch succeeds.*HEAD.*verified/i],
@@ -48,8 +52,6 @@ const rules = [
     'For delegated authors, archive and guarded manual worktree removal wait for PR merge or close.', [/wait for/i, 'precede']],
   ['no automatic child cleanup', [runtime, hygiene], [/automatic child cleanup/i],
     'Never rely on automatic child cleanup.', [/never/i, 'always'], /never rely/i],
-  ['activation boundary', [runtime], [/E1 and E2/i, /same release/i, /until E2 lands/i, /launched writers remain.*valid route/i],
-    'E1 and E2 ship in the same release: until E2 lands, launched writers remain a valid route.', [/until E2 lands/i, 'forever']],
 ];
 
 for (const [name, paths, concepts, wording, inversion, negative] of rules) {

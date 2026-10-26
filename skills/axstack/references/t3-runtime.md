@@ -163,22 +163,22 @@ and replace every `[^a-z0-9-]` character with `-`. Keep the dispatch key in its
 original form and record both; normalization is never an identity substitute.
 
 Before dispatch, the driver must name its resolved worktree absolute path in the author brief.
-Before `git switch -c`, the fresh author must verify its starting branch matches `t3/<id>` and `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
+Before `git switch -c`, the delegated fresh author must verify its starting branch matches `t3/<id>` and `git rev-parse --show-toplevel` differs from the driver worktree named in the brief.
 On failed isolation proof, stop with `AXSTACK-FAILED` and change nothing.
-After dispatch, the driver must read back the child's `worktreePath` and hold if it equals the driver worktree.
-The fresh author brief step 1 must verify the branch is absent before
+After dispatch, the driver must read back the child's `worktreePath` and hold if it is missing or equals the driver worktree.
+The delegated fresh author brief step 1 must verify the branch is absent before
 `git switch -c <encoded branch> <pinned base SHA>`, then verify HEAD equals the pinned base SHA.
 Never use `git switch -C`.
 Delete the exact T3 `t3/<id>` branch only after the switch succeeds and HEAD is verified.
 At dispatch, record taskId, childThreadId, worktreePath and encoded branch.
 T3 worktree isolation starts from the parent HEAD and ignores workspaceStrategy,
-so the fresh child must perform step 1 in its own checkout before writing.
+so the delegated fresh child must perform step 1 in its own checkout before writing.
 
 Keep `t3_thread_launch` for top-level drivers; use `t3_thread_launch` as a rare
 author fallback only when worktree isolation is unavailable and record each use in the run record.
-E1 and E2 ship in the same release: until E2 lands, launched writers remain a valid route.
 For a recorded author launch, use `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}`.
-The launch-only recovery and completion rules below cover that transition and fallback.
+A launched fallback author starts on its encoded branch and skips step 1 and the isolation proof.
+The launch-only recovery and completion rules below cover that fallback.
 
 `baseRef` must always be a commit SHA, never a branch name; T3 renames its
 `t3code/*` branches. Pin base and candidate before dispatch.

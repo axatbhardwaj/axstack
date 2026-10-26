@@ -2,6 +2,8 @@
 
 Entry points: `bin/axstack.js` (`--version`, `install`, `check`),
 `src/installer.js`, `src/capabilities.js`; harness: `tests/installer/helpers.js`.
+Owned instructions route every role through `delegate_task`, with author worktree
+isolation, top-level driver launches and a recorded rare author fallback.
 Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
 reinstalls after validated null/stale legacy metadata, checking explicit-preset
 role selection and inert provenance preservation.

@@ -193,9 +193,13 @@ Capability discovery alone is not execution proof.
 
 All subagent, delegated-worker, reviewer, and cross-harness work uses T3
 orchestration through the `t3-code` MCP. Do not use harness-native subagent
-tools. Read-only roles use async `delegate_task`; reviewers and investigators
-receive driver-made disposable detached checkouts pinned to candidate and base.
-Authors use `t3_thread_launch` in their own SHA-pinned worktrees. Repairs return
+tools. Use async `delegate_task` for every role, including authors with
+`isolation:"worktree"` in their own SHA-pinned worktrees.
+Top-level drivers use `t3_thread_launch`.
+Use `t3_thread_launch` as a rare author fallback only when
+worktree isolation is unavailable and record each use in the run record.
+Reviewers and investigators receive driver-made disposable detached checkouts pinned to candidate
+and base. Repairs return
 to the same author and worktree. The current T3 driver owns coordination and
 forge mutations and never writes an author's tracked files.
 
@@ -203,8 +207,10 @@ Preserve native `taskId/childThreadId/childRunId` or
 `threadId/runId/worktree/branch/base SHA`, dispatch key, requested/effective
 configuration, and private evidence. Persist `task_status` before
 `t3_thread_read`; delegated completion needs terminal success, available result,
-settled child runs, and the current `AXSTACK-DONE` marker. Launched writers
-send their marker to the driver, which also verifies terminal `t3_thread_wait`,
+settled child runs, and the current `AXSTACK-DONE` marker. Delegated authors also
+require a clean tree, non-empty diff and red/green logs.
+Launched fallback writers send their marker to the driver, which also verifies
+terminal `t3_thread_wait`,
 a clean tree, non-empty diff, and red/green logs. An older attempt never
 completes a newer one. Questions remain incomplete until the answered task or resumed run settles.
 
