@@ -67,3 +67,15 @@ Workers never merge.
 Raise decision and serious-risk holds in the T3 driver thread; end the turn
 waiting on the decision. Keep routine reports there, including skipped or empty passes.
 Settle owned workers and preserve evidence under the shared lifecycle.
+
+At pass start, read the recorded prior pass thread with `t3_thread_read` and
+apply [Finite-session teardown](automations.md#finite-session-teardown)'s guarded
+verification or hold/report before replacing its identity.
+Record own pass threadId in the existing activation record and read back the save.
+
+At pass end, an unbound pass calls `t3_thread_organize` with `action: settle` on its
+own thread only, only when it owns no PR watch, has zero unsettled descendants,
+has no pending receipt and is not held, wedged or a stalled owner.
+Follow [Finite-session teardown](automations.md#finite-session-teardown) for
+deferred self-settle and next-pass verification; this applies to quiet, skipped
+and empty passes too.

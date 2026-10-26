@@ -146,7 +146,7 @@ test('quiet exit is silent and leaves skills, sweep and continuity untouched', (
   const text = compact('skills/axstack/references/review-manager-prompt.md');
   const restrictions = [/no text|without text/i,
     /no skill load|without skill loading/i, /no sweep|without a sweep/i,
-    /no continuity write|without continuity writes/i];
+    /no (?:other )?continuity write|without continuity writes/i];
   const concepts = [/every busy condition is false/i, /end the turn/i, ...restrictions];
   const accepts = (source) => sentences(source).some((sentence) =>
     concepts.every((concept) => concept.test(sentence)) &&

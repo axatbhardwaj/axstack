@@ -45,7 +45,8 @@ beside it. A no-change full pass appends at most one history line.
 Follow the quiet check in the packaged [review-manager prompt](review-manager-prompt.md).
 The full pass records in Watermarks `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
-The sections below govern full passes; a quiet exit bypasses their teardown.
+The sections below govern full passes; a quiet exit bypasses their teardown
+except the guarded pass-end self-settle.
 
 Configure the lane thread via `t3_thread_configure` with the `axstack-owner`
 binding and verify its read-back. Then `schedule_task` uses the packaged prompt,
@@ -373,6 +374,31 @@ input makes the old decision stale and holds that action. Silence never authoriz
 an action. There is no programmatic decision interpreter.
 
 ## Finite-session teardown
+
+At pass end, an unbound pass calls `t3_thread_organize` with `action: settle` on its
+own thread only, only when it owns no PR watch, has zero unsettled descendants,
+has no pending receipt and is not held, wedged or a stalled owner.
+Self-settle is the one exception to terminal-before-settle: T3 returns
+`settlesWhenTurnEnds:true` and the next pass verifies `settled: true`.
+This deferred metadata request takes effect after the current turn ends.
+The next pass uses `t3_thread_read` on the recorded prior pass threadId before replacing
+its identity record, and verifies `settled: true`.
+Only prior passes that no guard keeps unsettled enter unresolved recovery.
+A guard includes a hold or flag, an owned watch, unsettled descendants, a pending
+receipt, a wedged pass or stalled owner, and every existing pass-start protection.
+If a guard keeps a prior pass unsettled, drop it from the unresolved list and retain
+its existing hold or flagged-threadId record (or watch/descendant ownership record).
+Held or flagged prior passes never force a full pass or failure report by their unsettled state alone.
+If the prior thread is unsettled and eligible, settle it under the existing pass-start guards
+below and read back `settled: true`.
+For a failed request or next-pass verification, the next pass owns unresolved
+recovery and records a hold or report with the exact threadId and resume action.
+If identity, guards or readback are unavailable, preserve the thread and report
+that gap instead of settling it; the next eligible pass retries guarded verification.
+Keep unresolved prior threadIds in the same record until verified settled.
+Never guess thread identity from a title.
+The sole continuity-write exception records own pass threadId before duplicate
+classification and on quiet exits; all other shared writes retain their existing guards.
 
 Decisions outliving a finite manager pass retain their receipt and hold in durable
 continuity, with the flagged thread or GitHub as the action route.

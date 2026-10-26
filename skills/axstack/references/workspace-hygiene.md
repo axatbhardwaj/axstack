@@ -35,6 +35,12 @@ project settings without recorded host-mutation authority.
 
 Cleanup order is: settled descendants -> evidence readback -> salvage dirty or ignored non-cache content -> t3_thread_organize archive -> exact git worktree remove without force -> git branch -d for local-only branches.
 Require terminal run evidence before `t3_thread_organize` settle or archive.
+Self-settle is the one exception to terminal-before-settle: T3 returns
+`settlesWhenTurnEnds:true` and the next pass verifies `settled: true`.
+Apply the guarded unbound pass-end action in
+[Finite-session teardown](automations.md#finite-session-teardown).
+Record `settle: native` only when no driver settle was issued for that thread;
+otherwise retain `settle: manual` even when a later read already shows settled.
 These metadata actions do not remove worktrees. Accept matching delegated task
 or launched run completion under the runtime contract before settlement.
 After the driver accepts a launched writer's (author or repair) or delegated task's completion from terminal run evidence plus a verified receipt or candidate check, in the same driver turn it settles the matching thread with `t3_thread_organize` using `action: settle` as metadata only.

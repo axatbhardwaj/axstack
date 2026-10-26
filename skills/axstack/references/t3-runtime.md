@@ -89,6 +89,13 @@ The driver may write planning artifacts (spec, ticket map) in its own worktree w
 Repairs return to that author. Missing or idle sessions grant no ownership transfer.
 The current chat/driver has no role row in any preset.
 
+At launch and rename, visible driver thread titles express a plain outcome of
+at most 30 characters.
+Visible driver thread titles use no repo, issue or size prefix.
+Hidden children keep dispatch-key titles.
+D9 applies to driver threads only, while flagged unbound pass threads retain the
+`Needs you: <kind> <repo>#<n>` (or `<lane>`) rename under Automations.
+
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
 used as the exact whole T3 title. Substring matches do not establish identity.
 Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
@@ -261,7 +268,8 @@ Never rely on automatic child cleanup.
 
 When the forge confirms a run PR merged or closed, in the same driver turn the
 driver first reads its author thread with `t3_thread_read`.
-If the readback already shows `settled: true`, record `settle: native`.
+If the readback already shows `settled: true`, record `settle: native` only when
+no driver settle was issued for that thread; otherwise retain `settle: manual`.
 Otherwise settle with `t3_thread_organize` using `action: settle`, then read back
 `settled: true` with `t3_thread_read` before recording `settle: manual`.
 Apply the existing [Settlement](workspace-hygiene.md#settlement) guards:
@@ -364,6 +372,10 @@ The driver must retain a user-taken-over T3 thread; never send cleanup commands
 to it, including `t3_thread_organize` settle or archive.
 Require T3 terminal run evidence before `t3_thread_organize` settle or archive;
 these metadata actions are not worktree removal.
+Self-settle is the one exception to terminal-before-settle: T3 returns
+`settlesWhenTurnEnds:true` and the next pass verifies `settled: true`.
+Apply the guarded unbound pass-end action in
+[Finite-session teardown](automations.md#finite-session-teardown).
 
 ## Project preflight and run record
 

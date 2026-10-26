@@ -194,10 +194,11 @@ rule('forge merge or close reads author settlement first in the same turn', runt
   [/forge confirms/i, /run PR merged or closed/i, /same driver turn/i, /author thread/i, /t3_thread_read/i],
   'When the forge confirms a run PR merged or closed, in the same driver turn first read its author thread with t3_thread_read.',
   [[/first reads?|first read/i, 'eventually read']]);
-rule('already settled author records native settlement', runtime,
-  [/already/i, /settled.*true/i, /record/i, /settle: native/i],
-  'Record settle: native if the readback already shows settled: true.',
-  [[/settled.*true/i, 'settled: false'], [/settle: native/i, 'settle: manual']]);
+rule('already settled author records native only without driver settlement', runtime,
+  [/already/i, /settled.*true/i, /record/i, /settle: native/i, /only when/i, /that thread/i],
+  'Only when no driver settle was issued for that thread, record settle: native if the readback already shows settled: true.',
+  [[/settled.*true/i, 'settled: false'], [/settle: native/i, 'settle: manual'],
+    [/no driver settle was issued/i, 'a driver settle was issued']], /no driver settle was issued/i);
 rule('otherwise settle manually and read back before recording', runtime,
   [/otherwise/i, /t3_thread_organize/i, /action: settle/i, /t3_thread_read/i, /settled.*true/i, /settle: manual/i],
   'Otherwise settle with t3_thread_organize using action: settle, then read back settled: true with t3_thread_read before recording settle: manual.',
