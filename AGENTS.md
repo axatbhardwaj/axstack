@@ -15,7 +15,10 @@
   Let the installer generate the installed `skills/axstack/roles.json` snapshot.
 - Do not add an Axstack daemon, scheduler, runtime database, workflow state
   machine, or programmatic escalation gate.
-  Exception: allow exactly one opt-in systemd user timer, `axstack-single-server`.
+  Exception: allow only the opt-in systemd user timers `axstack-single-server`
+  and `axstack-default-sync`. The latter runs the bounded stateless New-chat default
+  script every five minutes, changing only global `defaultModelSelection` under
+  explicit opt-in; it launches no agent and keeps no workflow state.
   The `axstack-single-server` timer runs a stateless script that only SIGKILLs
   duplicate `t3 serve` processes for one base dir and their children, keeping
   the server that holds T3's ownership lock, otherwise the server recorded in

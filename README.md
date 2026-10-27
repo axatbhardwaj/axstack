@@ -174,3 +174,7 @@ Regenerate `bun.lock` with the minimum Bun version in `package.json.engines`
 ## License
 
 [MIT](LICENSE) © 2026 Axat Bhardwaj.
+
+The [opt-in saved New-chat default script](skills/axstack/references/default-routing.md)
+uses subscription capacity and preserves project overrides; its five-minute timer
+is never enabled by installation. Role-labelled title instructions need T3 >=0.1.3.

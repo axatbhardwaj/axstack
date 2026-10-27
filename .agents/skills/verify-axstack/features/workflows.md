@@ -268,3 +268,27 @@ Honor user browser-tool policy. The author performs no review browser drive;
 only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
 author logs and preview URLs alone are not. Mark uncovered behavior explicitly
 `changed-behavior: unproven`.
+
+## Saved New-chat defaults
+
+Entry points: `skills/axstack/scripts/sync-default.js`, `default-policy.js`,
+`default-settings.js`, `hub-usage.js`; policy and opt-in instructions:
+`skills/axstack/references/default-routing.md`. After Launch and Doctor:
+
+```bash
+doctor > "$EVIDENCE/default-routing-doctor.log" 2>&1
+bun run test tests/workflows/default-routing.test.js \
+  tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
+  tests/workflows/hub-usage.test.js tests/workflows/default-routing-assets.test.js \
+  tests/workflows/pass-self-settle.test.js tests/workflows/hidden-author-dispatch.test.js \
+  tests/workflows/runtime-safety.test.js > "$EVIDENCE/default-routing.log" 2>&1
+```
+
+Proof: fixture CLI dry-run changes no bytes; apply changes only the default and
+preserves overrides/text-generation settings, modes and locks. A fake loopback
+hub exercises the real management envelope without secrets. Policy tests cover
+same-account eligibility, equal-account aggregation, the 25% reserve, stale/missing
+inputs, reset timing and stable fairness. Title contracts preserve role-labelled
+keys. No live request, live settings write, timer activation, existing thread
+mutation or title-model execution is covered. Manually verify New chat and client
+refresh only under driver authorization; unsupported T3 title settings remain held.

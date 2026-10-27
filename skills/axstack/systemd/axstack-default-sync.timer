@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh the saved T3 New-chat default every five minutes (opt-in)
+
+[Timer]
+OnStartupSec=5min
+OnUnitActiveSec=5min
+Unit=axstack-default-sync.service
+
+[Install]
+WantedBy=timers.target

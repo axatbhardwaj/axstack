@@ -1,0 +1,9 @@
+[Unit]
+Description=Choose the saved T3 New-chat default from subscription capacity
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+TimeoutStartSec=180
+ExecStart=/usr/bin/env bun %h/.agents/skills/axstack/scripts/sync-default.js --apply
