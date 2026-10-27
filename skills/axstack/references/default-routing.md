@@ -51,7 +51,7 @@ remaining quota in every applicable window. Null or absent reset timing is valid
 Claude session/weekly/scoped Opus and Codex windows. The adapter omits the missing
 reset; it never invents a timestamp. Unknown reset timing alone does **not** mean
 unused or not started: the reported used percentage still governs remaining quota,
-same-account eligibility and Astra's reserve, including exhaustion at 100% used.
+same-account eligibility and the primary-pool reserve, including exhaustion at 100% used.
 For pressure, an untimed window earns zero elapsed-window credit, a conservative
 lower bound, while its full reported usage is subtracted. `untimedWindows` reports
 these windows (including relevant Opus scope); n/a session windows are separate.
@@ -65,11 +65,18 @@ A weekly-exhausted account contributes 100% session usage. Different resets stay
 per account; T3 lists refill events scaled by member count, rather than inventing
 one pool reset. An n/a session contributes neither a zero nor 100% observation;
 only accounts with an applicable session enter its mean, and an all-n/a session
-is reported as null with status n/a. This script uses that unrounded mean for the reserve check:
-Astra is excluded if either applicable Codex window has less than 25% remaining; exactly
-25% is eligible. Opus has no Codex reserve exclusion. Percentages do not establish
-absolute tokens or relative subscription sizes. Duplicate identities hold
-instead of silently adding capacity from overlapping sources.
+is reported as null with status n/a. For each primary pool, remaining capacity is
+its minimum applicable session/weekly unrounded pooled percentage; n/a is omitted.
+Sol xhigh is eligible **only when both Opus and Astra pools have <30% remaining**.
+Exactly 30% on either pool excludes Sol, even if it is the current default.
+When both are low, choose Sol if its Codex accounts and catalog are eligible.
+Otherwise choose eligible Opus medium/Astra medium, preferring a non-low primary
+over a low primary before pacing or fairness. If only low primaries remain
+available, use those; exhausted accounts never gain capacity. Scoped Opus limits
+still constrain eligibility; an unavailable primary is not evidence of <30%.
+Unknown telemetry or catalogs hold. There is no separate Astra reserve cutoff.
+Percentages do not establish absolute tokens or relative subscription sizes.
+Duplicate identities hold instead of adding capacity from overlapping sources.
 
 Pressure is the worse session/weekly mean of elapsed-window percentage minus
 used percentage, higher meaning more underused capacity. As in T3's pace display,
@@ -105,11 +112,11 @@ that period, not an immutable record of its original model; hard-deleted/pruned
 records and manual model changes limit fidelity. The source/coverage is reported.
 A supplied project-only list remains caller-scoped, not global history.
 
-When history is unavailable, similarly pressured eligible models receive fixed
-six-hour UTC slots in Opus/Astra/Sol order. The target is stable within a slot;
+When history is unavailable, similarly pressured eligible primaries receive fixed
+six-hour UTC slots in Opus/Astra order. Sol is selected only in the both-low case. The target is stable within a slot;
 pressure hysteresis still protects a current default outside a fair tie. This
 prevents indefinite starvation without timer state, a new database, per-tick
-rotation, or any claim of equal chat counts. Quota eligibility/reserves always win.
+rotation, or any claim of equal chat counts. Reserve eligibility always wins over fairness and hysteresis.
 
 ## Run or enable
 

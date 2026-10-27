@@ -47,7 +47,7 @@ for (const idle of [false, true]) test(`real CLI native inputs with idle Claude=
       return JSON.parse(out);
     };
     const dry = await invoke();
-    expect(dry.selection.model).toBe('gpt-6.1-sol');
+    expect(dry.selection.model).toBe('gpt-6-astra');
     expect(dry.pools.codex.sessionStatus).toBe('n/a');
     expect(dry.pools.codex.weeklyRemaining).toBe(88);
     expect(dry.history.counts['gpt-6-astra']).toBe(5);
@@ -55,7 +55,7 @@ for (const idle of [false, true]) test(`real CLI native inputs with idle Claude=
     await invoke('--apply');
     const after = JSON.parse(fs.readFileSync(path, 'utf8'));
     expect(after.usageLimitSources).toEqual(f.settings.usageLimitSources);
-    expect(after.defaultModelSelection.model).toBe('gpt-6.1-sol');
+    expect(after.defaultModelSelection.model).toBe('gpt-6-astra');
     expect(fs.readFileSync(secret, 'utf8')).toBe(sentinel);
     fs.unlinkSync(secret);
     const missing = Bun.spawn([process.execPath, script, '--settings', path], { stdout: 'pipe', stderr: 'pipe' });

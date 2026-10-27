@@ -35,7 +35,7 @@ test('missing and incompatible history are unavailable rather than empty zero-co
   expect(readHistory(`${f.dir}/settings.json`, now).unavailable).toMatch(/database/);
 }));
 
-test('native manual start counts select Sol when it is underused, including mobile starts', () => {
+test('native manual counts include mobile starts but cannot admit forbidden Sol', () => {
   const f = fixture();
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 30; }); });
   const thread = (id, model, instance, source) => ({ threadId: id, createdAt: new Date(now - 1000).toISOString(),
@@ -43,7 +43,7 @@ test('native manual start counts select Sol when it is underused, including mobi
   const threads = [thread('c1', 'claude-opus-5-5', 'claude', 'web'), thread('c2', 'claude-opus-5-5', 'claude', 'mobile'),
     ...Array.from({ length: 5 }, (_, i) => thread(`a${i}`, 'gpt-6-astra', 'code', 'mobile'))];
   const r = decide(f.settings, f.usage, f.catalogs, f.now, { threads, nextCursor: null, total: threads.length });
-  expect(r.selection.model).toBe('gpt-6.1-sol');
+  expect(r.selection.model).toBe('claude-opus-5-5');
   expect(r.history.counts).toEqual({ 'claude-opus-5-5': 2, 'gpt-6-astra': 5, 'gpt-6.1-sol': 0 });
 });
 
@@ -57,7 +57,7 @@ for (const bad of [{ threads: [], nextCursor: 0 }, { threads: [], total: 9 },
   });
 }
 
-test('history failure still gives all similarly pressured routes a bounded turn without per-tick churn', () => {
+test('history failure gives eligible primaries a bounded turn without per-tick churn', () => {
   const f = fixture();
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 30; }); });
   const chosen = new Set();
@@ -76,7 +76,7 @@ test('history failure still gives all similarly pressured routes a bounded turn 
     const again = decide(f.settings, usage, catalogs, at + 1000, { unavailable: 'database unavailable' });
     expect(again.action).toBe('unchanged');
   }
-  expect([...chosen].sort()).toEqual(['claude-opus-5-5', 'gpt-6-astra', 'gpt-6.1-sol']);
+  expect([...chosen].sort()).toEqual(['claude-opus-5-5', 'gpt-6-astra']);
 });
 
 test('read-only history refuses a WAL without existing shared memory instead of creating sidecars', () => database((f) => {

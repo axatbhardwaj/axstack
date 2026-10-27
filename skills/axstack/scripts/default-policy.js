@@ -97,9 +97,15 @@ export function decide(settings, snapshots, catalogs, now, history = null) {
     }
     const choices = candidates(settings, catalogs, now);
     result.pools = Object.fromEntries(['claudeAgent', 'codex'].map((d) => [d, pool(all, d, now)]));
-    const eligible = choices.filter((c) => result.pools[c.driver].eligibleAccounts > 0
-      && (c.selection.model !== 'gpt-6-astra'
-        || Math.min(...[result.pools.codex.sessionRemaining, result.pools.codex.weeklyRemaining].filter((v) => v !== null)) >= 25));
+    const low = (driver) => Math.min(...[result.pools[driver].sessionRemaining,
+      result.pools[driver].weeklyRemaining].filter((v) => v !== null)) < 30;
+    const available = choices.filter((c) => result.pools[c.driver].eligibleAccounts > 0);
+    const sol = available.filter((c) => c.selection.model === 'gpt-6.1-sol');
+    const primaries = available.filter((c) => c.selection.model !== 'gpt-6.1-sol');
+    const nonLow = primaries.filter((c) => !low(c.driver));
+    // Apply the reserve before pacing, fairness and hysteresis can retain a forbidden default.
+    const eligible = low('claudeAgent') && low('codex') && sol.length ? sol
+      : nonLow.length ? nonLow : primaries;
     if (!eligible.length) throw Error('both pools exhausted; no account has both windows available');
     const best = Math.max(...eligible.map((c) => result.pools[c.driver].score));
     const tied = eligible.filter((c) => best - result.pools[c.driver].score <= 5);
@@ -118,8 +124,8 @@ export function decide(settings, snapshots, catalogs, now, history = null) {
     }
     if (!chosen && current && best - result.pools[current.driver].score < 10) {
       // Fixed UTC slots prevent starvation without persistent timer state or per-tick rotation.
-      const rotation = Math.floor(now / (6 * 3600000)) % choices.length;
-      const target = [...choices.slice(rotation), ...choices.slice(0, rotation)].find((c) => tied.includes(c));
+      const rotation = Math.floor(now / (6 * 3600000)) % eligible.length;
+      const target = [...eligible.slice(rotation), ...eligible.slice(0, rotation)].find((c) => tied.includes(c));
       chosen = !counts && tied.includes(current) ? target : current;
     }
     if (!chosen) {

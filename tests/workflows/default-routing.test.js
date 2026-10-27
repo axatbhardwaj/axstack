@@ -13,16 +13,22 @@ test('underused Codex becomes the new-chat default without changing any other se
   expect(result.projectOverrideCoverage).toMatch(/legacy project records not inspected/);
 });
 
-for (const [used, astra] of [[75, true], [75.01, false]]) {
-  test(`Astra reserve boundary at ${100 - used}% remaining`, () => {
-    const f = fixture();
-    f.usage[0].accounts[1].usageLimits.windows[1].usedPercent = used;
-    f.usage[0].accounts[0].usageLimits.windows.forEach((w) => { w.usedPercent = 98; });
-    const r = decide(f.settings, f.usage, f.catalogs, f.now);
-    expect(r.selection.model).toBe(astra ? 'gpt-6-astra' : 'gpt-6.1-sol');
-    expect(r.selection.options[0].value).toBe(astra ? 'medium' : 'xhigh');
+for (const [opus, astra, model] of [
+  [29.99, 29.99, 'gpt-6.1-sol'], [29.99, 30, 'gpt-6-astra'],
+  [30, 29.99, 'claude-opus-5-5'], [30, 30, 'claude-opus-5-5'], [80, 20, 'claude-opus-5-5'],
+  [20, 80, 'gpt-6-astra'], [70, 70, 'claude-opus-5-5'],
+]) test(`reserve routing with Opus ${opus}% / Astra ${astra}% remaining`, () => {
+  const f = fixture();
+  // Current Sol must not bypass the primary-pool threshold through hysteresis.
+  f.settings.defaultModelSelection = selection('code', 'gpt-6.1-sol', 'xhigh');
+  f.usage[0].accounts.forEach((a, i) => {
+    a.usageLimits.windows.forEach((w) => { w.usedPercent = 100 - [opus, astra][i]; });
   });
-}
+  const r = decide(f.settings, f.usage, f.catalogs, f.now, { threads: [] });
+  expect(r.action).toBe(model === 'gpt-6.1-sol' ? 'unchanged' : 'update');
+  expect(r.selection).toEqual(selection(model.startsWith('gpt') ? 'code' : 'claude', model,
+    model === 'gpt-6.1-sol' ? 'xhigh' : 'medium'));
+});
 
 test('pool mean includes exhausted accounts; one exhausted account does not exhaust the pool', () => {
   const f = fixture();
@@ -64,7 +70,7 @@ for (const corrupt of [
   expect(r.selection).toEqual(f.settings.defaultModelSelection);
 });
 
-test('fully exhausted pools hold, while Opus remains eligible below the Codex reserve', () => {
+test('fully exhausted pools hold, while available Opus can serve an exhausted Codex pool', () => {
   const f = fixture();
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 100; }); });
   expect(decide(f.settings, f.usage, f.catalogs, f.now).action).toBe('held');
@@ -76,7 +82,7 @@ test('reset timing ranks underused capacity and tiny movement does not churn', (
   const f = fixture();
   f.settings.defaultModelSelection = selection('code', 'gpt-6-astra', 'medium');
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 30; }); });
-  const stable = decide(f.settings, f.usage, f.catalogs, f.now);
+  const stable = decide(f.settings, f.usage, f.catalogs, f.now, { threads: [] });
   expect(stable.action).toBe('unchanged');
   f.usage[0].accounts[1].usageLimits.windows.forEach((w) => {
     w.resetsAt = new Date(f.now + w.windowDurationMins * 60000 * 0.1).toISOString();
