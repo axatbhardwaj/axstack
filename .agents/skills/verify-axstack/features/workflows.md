@@ -278,6 +278,7 @@ Entry points: `skills/axstack/scripts/sync-default.js`, `default-policy.js`,
 ```bash
 doctor > "$EVIDENCE/default-routing-doctor.log" 2>&1
 bun run test tests/workflows/default-routing.test.js \
+  tests/workflows/default-sol-reserve.test.js \
   tests/workflows/default-reset-timing.test.js \
   tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
   tests/workflows/hub-usage.test.js tests/workflows/hub-secret.test.js \
@@ -288,19 +289,19 @@ bun run test tests/workflows/default-routing.test.js \
 ```
 
 Proof: fixture CLI dry-run changes no bytes; apply changes only the default and
-preserves overrides/text-generation settings, modes and locks. A fake loopback
-hub exercises the real management envelope without secrets. Policy tests cover
-same-account eligibility, equal-account aggregation, the 25% reserve, authoritative
-single-window n/a versus incomplete telemetry, stale/missing inputs, reset timing
-and stable fairness. Valid null/absent resets retain reported usage and use zero
-elapsed credit; malformed non-null dates and stale telemetry hold. The CLI fixture
-includes an idle Claude account with a null reset. Fixture masked source keys resolve without logging/leaking or
-persisting hydration. Read-only native metadata covers web/mobile and completeness,
-with unavailable diagnostics and bounded UTC tie rotation. The real CLI combines
-these boundaries against a fake hub and an existing fixture history DB. Title contracts preserve role-labelled
-keys. No live request, live settings write, timer activation, existing thread
-mutation or title-model execution is covered. Manually verify New chat and client
-refresh only under driver authorization; unsupported T3 title settings remain held.
+preserves overrides/text-generation settings, modes and locks. A loopback hub
+drives the management envelope. Policy tests cover same-account eligibility,
+equal-account pooled minima, both-low <30% Sol admission, either-30% exclusion,
+non-low primary preference, scoped/exhausted/unknown holds, weekly-only n/a and
+primary fairness. Forbidden Sol is evicted before hysteresis. Null/absent resets
+retain usage with zero elapsed credit; malformed dates and stale telemetry hold.
+The CLI includes an idle Claude account with a null reset. Fixture masked keys
+resolve without leaking or persisting hydration. Read-only metadata covers
+web/mobile, completeness, unavailable diagnostics and bounded UTC tie rotation.
+The CLI drives a fake hub and fixture history DB. Title contracts retain role keys.
+No live request, settings write, timer activation, existing-thread mutation or
+title-model execution is covered. Verify New chat/client refresh only under driver
+authorization; unsupported T3 title settings remain held.
 
 The five routing fixture files follow the existing `TMPDIR ?? '/tmp'` pattern so
 CI's bare `bun test` entrypoint works without an exported TMPDIR. Each mkdtemp root
