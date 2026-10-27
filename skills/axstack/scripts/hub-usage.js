@@ -1,3 +1,4 @@
+import { managementKey } from './hub-secret.js';
 // Read-only subset of T3 0.1.3 makeCliproxyApi. Never fetch token files or reset credits.
 async function management(config, path, body) {
   const base = new URL(config.url.endsWith('/') ? config.url : `${config.url}/`);
@@ -30,6 +31,7 @@ async function accountUsage(config, account, now) {
       url: driver === 'codex' ? 'https://chatgpt.com/backend-api/wham/usage' : 'https://api.anthropic.com/api/oauth/usage', header });
     if (!Number.isInteger(response.status_code) || response.status_code < 200 || response.status_code >= 300 || typeof response.body !== 'string') throw Error('provider refused');
     const usage = JSON.parse(response.body);
+    if (!usage || typeof usage !== 'object' || usage.error || usage.errors) throw Error('provider payload error');
     const windows = [];
     if (driver === 'codex') {
       for (const key of ['primary_window', 'secondary_window']) {
@@ -51,17 +53,26 @@ async function accountUsage(config, account, now) {
           label: `Weekly · ${w.scope?.model?.display_name ?? ''}`, usedPercent: w.percent, resetsAt: w.resets_at, windowDurationMins: 10080 });
       }
     }
-    return { ...base, usageLimits: { checkedAt, windows } };
+    const weeklyOnly = driver === 'codex' && usage.rate_limit?.primary_window?.limit_window_seconds === 604800
+      && usage.rate_limit.secondary_window == null && windows.length === 1 && windows[0].kind === 'weekly';
+    return { ...base, usageLimits: { checkedAt, windows,
+      ...(weeklyOnly ? { notApplicable: { session: 'verified Codex weekly-only response' } } : {}) } };
   } catch {
     return { ...base, usageLimits: { checkedAt, windows: [], unavailable: { reason: 'probeFailed' } } };
   }
 }
 
-export async function readHub(settings, now = Date.now()) {
+export async function readHub(settings, now = Date.now(), settingsPath) {
   const sources = Object.entries(settings.usageLimitSources ?? {}).filter(([, s]) => s.enabled === true && s.kind === 'cliproxy');
   if (sources.length !== 1) throw Error('expected exactly one enabled cliproxy usage source');
   const snapshots = [];
-  for (const [id, config] of sources) {
+  for (const [id, source] of sources) {
+    let config;
+    try { config = { ...source, managementKey: managementKey(source.managementKey, id, settingsPath) }; }
+    catch {
+      snapshots.push({ id, kind: 'cliproxy', checkedAt: new Date(now).toISOString(), accounts: [], error: 'hub management key missing or unsafe' });
+      continue;
+    }
     try {
       const raw = await management(config, 'auth-files');
       if (!Array.isArray(raw.files)) throw Error('invalid account list');

@@ -45,3 +45,20 @@ test('malformed provider status holds the account instead of trusting a quota-sh
     expect(r[0].accounts[0].usageLimits.unavailable?.reason).toBe('probeFailed');
   } finally { server.stop(true); }
 });
+
+test('verified weekly-only Codex response marks session n/a, without inventing session capacity', async () => {
+  const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch(req) {
+    return Response.json(new URL(req.url).pathname.endsWith('auth-files')
+      ? { files: [{ id: 'x', provider: 'codex', auth_index: '1' }] }
+      : { status_code: 200, body: JSON.stringify({ rate_limit: { primary_window: {
+        used_percent: 24, reset_at: (now + 1000000) / 1000, limit_window_seconds: 604800,
+      } } }) });
+  } });
+  try {
+    const r = await readHub({ usageLimitSources: { hub: { enabled: true, kind: 'cliproxy',
+      url: `http://127.0.0.1:${server.port}`, managementKey: 'fake' } } }, now);
+    const u = r[0].accounts[0].usageLimits;
+    expect(u.windows.map((w) => w.kind)).toEqual(['weekly']);
+    expect(u.notApplicable).toEqual({ session: 'verified Codex weekly-only response' });
+  } finally { server.stop(true); }
+});
