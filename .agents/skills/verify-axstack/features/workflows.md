@@ -272,14 +272,16 @@ author logs and preview URLs alone are not. Mark uncovered behavior explicitly
 ## Saved New-chat defaults
 
 Entry points: `skills/axstack/scripts/sync-default.js`, `default-policy.js`,
-`default-settings.js`, `hub-usage.js`; policy and opt-in instructions:
+`default-settings.js`, `hub-usage.js`, `hub-secret.js`, `driver-history.js`; policy and opt-in instructions:
 `skills/axstack/references/default-routing.md`. After Launch and Doctor:
 
 ```bash
 doctor > "$EVIDENCE/default-routing-doctor.log" 2>&1
 bun run test tests/workflows/default-routing.test.js \
   tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
-  tests/workflows/hub-usage.test.js tests/workflows/default-routing-assets.test.js \
+  tests/workflows/hub-usage.test.js tests/workflows/hub-secret.test.js \
+  tests/workflows/driver-history.test.js tests/workflows/default-live-input.test.js \
+  tests/workflows/default-routing-assets.test.js \
   tests/workflows/pass-self-settle.test.js tests/workflows/hidden-author-dispatch.test.js \
   tests/workflows/runtime-safety.test.js > "$EVIDENCE/default-routing.log" 2>&1
 ```
@@ -287,8 +289,12 @@ bun run test tests/workflows/default-routing.test.js \
 Proof: fixture CLI dry-run changes no bytes; apply changes only the default and
 preserves overrides/text-generation settings, modes and locks. A fake loopback
 hub exercises the real management envelope without secrets. Policy tests cover
-same-account eligibility, equal-account aggregation, the 25% reserve, stale/missing
-inputs, reset timing and stable fairness. Title contracts preserve role-labelled
+same-account eligibility, equal-account aggregation, the 25% reserve, authoritative
+single-window n/a versus incomplete telemetry, stale/missing inputs, reset timing
+and stable fairness. Fixture masked source keys resolve without logging/leaking or
+persisting hydration. Read-only native metadata covers web/mobile and completeness,
+with unavailable diagnostics and bounded UTC tie rotation. The real CLI combines
+these boundaries against a fake hub and an existing fixture history DB. Title contracts preserve role-labelled
 keys. No live request, live settings write, timer activation, existing thread
 mutation or title-model execution is covered. Manually verify New chat and client
 refresh only under driver authorization; unsupported T3 title settings remain held.

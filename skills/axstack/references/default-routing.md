@@ -13,11 +13,17 @@ There is no per-start hook or guarantee that a client has refreshed its saved de
 ## Inputs and policy
 
 The live path reads the one enabled `cliproxy` source from settings, using its
-URL and management key in memory. Like installed T3 0.1.3 `makeCliproxyApi`, it
+URL and management key in memory. When settings contain the literal masked key
+`••••••`, resolve only `secrets/usage-limit-source-<base64url(sourceId)>.bin` beside
+the explicit settings file, using T3's UTF-8/base64url naming. Inline keys still work.
+The settings object stays masked; only a temporary hub config is hydrated. Secret
+files must be owned private regular files, with no symlinks or shared writable
+parent; malformed, missing or unsafe keys hold with a sanitized reason. Neither
+secret bytes nor raw settings/headers/responses are logged or persisted. Like installed T3 0.1.3 `makeCliproxyApi`, it
 GETs `v0/management/auth-files`, then POSTs `api-call` envelopes requesting GET
 Anthropic OAuth `/api/oauth/usage` or Codex `/backend-api/wham/usage`. Hub-side
 `$TOKEN$` substitution keeps account tokens out of the script. It never requests
-credentials, reset credits or reset-quota operations. HTTPS is required except
+account credential contents, reset credits or reset-quota operations. HTTPS is required except
 loopback fixtures, redirects are refused, requests time out after 15 seconds,
 and at most 32 accounts are queried in batches of four. A source/account failure
 holds; reports contain only policy diagnostics, never raw settings or responses.
@@ -34,9 +40,13 @@ catalog evidence, not successful provider execution.
 Routes: Claude `claude-opus-5-5` medium; Codex `gpt-6-astra` medium;
 Codex `gpt-6.1-sol` xhigh. The configured instance IDs are discovered, not renamed.
 Both source and account telemetry must be no older than five minutes, with
-valid session/weekly percentages, durations and future resets. Missing, stale,
-malformed or ambiguous data holds the entire decision, without failover.
-An account needs remaining quota in both windows. A blocked account does not
+valid applicable session/weekly percentages, durations and future resets. Missing,
+stale, malformed or ambiguous data holds the entire decision, without failover.
+A successful Codex response containing only a seven-day primary window (secondary
+absent/null) is authoritative single-window telemetry: the adapter explicitly marks
+session n/a. It does not synthesize session capacity. A plain incomplete snapshot
+without this provenance still holds; weekly is always required. An account needs
+remaining quota in every applicable window. A blocked account does not
 exhaust other accounts. Opus scoped weekly limits also constrain eligibility.
 
 Installed T3 0.1.3 client `main-lZWM_z1N.js` functions `g7`/`_7` display **equal
@@ -44,8 +54,10 @@ account arithmetic means**, not a weighted quota total: each account contributes
 one percentage. Codex groups by window kind; Claude uses kind plus window ID.
 A weekly-exhausted account contributes 100% session usage. Different resets stay
 per account; T3 lists refill events scaled by member count, rather than inventing
-one pool reset. This script uses that unrounded mean for the reserve check:
-Astra is excluded if either Codex window has less than 25% remaining; exactly
+one pool reset. An n/a session contributes neither a zero nor 100% observation;
+only accounts with an applicable session enter its mean, and an all-n/a session
+is reported as null with status n/a. This script uses that unrounded mean for the reserve check:
+Astra is excluded if either applicable Codex window has less than 25% remaining; exactly
 25% is eligible. Opus has no Codex reserve exclusion. Percentages do not establish
 absolute tokens or relative subscription sizes. Duplicate identities hold
 instead of silently adding capacity from overlapping sources.
@@ -58,16 +70,37 @@ computed per account before averaging. Similar pressure is within five percentag
 points; an existing eligible default stays unless a challenger is at least ten
 points better or a fair tie-break is justified.
 
-Optional `--history-file` accepts a complete saved T3 thread-list object with
-`threads`, no next cursor/hasMore, and explicit `createdBy:user`,
-`creationSource:web`, `parentThreadId:null`, `createdAt` and `modelSelection`.
-It counts only identifiable manual driver starts in the preceding seven days;
-a two-start difference can break a similar-pressure tie. Do not supply a partial
-or filtered inventory as complete. No existing CLI was verified to export all
-these fields, so the timer runs without history. Without it, a healthy current
-default stays; when selection is needed, choose the next tied route after the
-current default in Opus/Astra/Sol order. This simple rotation cannot claim equal
-chat counts. No new state database or per-tick rotation is introduced.
+The timer automatically reads the existing `statev2.sqlite` beside settings using
+Bun's built-in SQLite read-only mode. It queries only recent thread metadata from
+`orchestration_v2_projection_threads` across all projects, including archived and
+soft-deleted records still present. It creates no DB, migrates nothing, and issues
+no T3 auth session. Symlink/unsafe DB or WAL/shared-memory paths hold history;
+a WAL without existing shared memory is refused to avoid creating sidecars.
+SQLite's normal transient reader locks are required. Metadata reads are capped at
+50,000 rows. Missing, incompatible, incomplete or malformed history reports an
+explicit unavailable reason, without pretending the counts are all zero.
+
+This route avoids installed CLI limitations: 0.1.0 has no thread-list command;
+0.1.3's thread list exhausts pagination but issues/revokes an auth session, and
+its project command has no list subcommand. No CLI auth or settings updates are
+needed. `--history-db` selects another existing projection DB; `--history-file`
+overrides the DB with a saved native thread-list array or complete result object.
+A non-null cursor (including zero), hasMore, total mismatch, duplicates or missing
+manual identity makes the inventory unavailable.
+
+Count identifiable top-level `createdBy:user` starts from web **or mobile** in the
+preceding seven days, using native `providerInstanceId` and `model` fields (legacy
+modelSelection snapshots also work). Two extra starts can break a pressure tie.
+Projection metadata describes the **current saved model** of a thread created in
+that period, not an immutable record of its original model; hard-deleted/pruned
+records and manual model changes limit fidelity. The source/coverage is reported.
+A supplied project-only list remains caller-scoped, not global history.
+
+When history is unavailable, similarly pressured eligible models receive fixed
+six-hour UTC slots in Opus/Astra/Sol order. The target is stable within a slot;
+pressure hysteresis still protects a current default outside a fair tie. This
+prevents indefinite starvation without timer state, a new database, per-tick
+rotation, or any claim of equal chat counts. Quota eligibility/reserves always win.
 
 ## Run or enable
 

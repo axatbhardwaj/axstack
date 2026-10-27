@@ -97,6 +97,7 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack/scripts/single-server.js',
     'skills/axstack/scripts/sync-default.js', 'skills/axstack/scripts/hub-usage.js',
     'skills/axstack/scripts/default-policy.js', 'skills/axstack/scripts/default-settings.js',
+    'skills/axstack/scripts/hub-secret.js', 'skills/axstack/scripts/driver-history.js',
     'skills/axstack/references/thread-title-instructions.txt',
     'skills/axstack/systemd/axstack-default-sync.service', 'skills/axstack/systemd/axstack-default-sync.timer',
     'skills/axstack/systemd/axstack-single-server.service', 'skills/axstack/systemd/axstack-single-server.timer',
