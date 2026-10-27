@@ -74,6 +74,7 @@ test('fully exhausted pools hold, while Opus remains eligible below the Codex re
 
 test('reset timing ranks underused capacity and tiny movement does not churn', () => {
   const f = fixture();
+  f.settings.defaultModelSelection = selection('code', 'gpt-6-astra', 'medium');
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 30; }); });
   const stable = decide(f.settings, f.usage, f.catalogs, f.now);
   expect(stable.action).toBe('unchanged');
@@ -104,4 +105,22 @@ test('native model-scoped weekly windows constrain Opus without making the main 
   const r = decide(f.settings, f.usage, f.catalogs, f.now);
   expect(r.action).toBe('update');
   expect(r.selection.instanceId).toBe('code');
+});
+
+test('authoritative session n/a leaves weekly reserve and eligibility applicable', () => {
+  const f = fixture();
+  const u = f.usage[0].accounts[1].usageLimits;
+  u.windows.shift();
+  u.notApplicable = { session: 'verified Codex weekly-only response' };
+  let r = decide(f.settings, f.usage, f.catalogs, f.now);
+  expect(r.action).toBe('update');
+  expect(r.pools.codex.sessionRemaining).toBeNull();
+  expect(r.pools.codex.sessionStatus).toBe('n/a');
+  expect(r.selection.model).toBe('gpt-6-astra');
+  u.windows[0].usedPercent = 76;
+  f.usage[0].accounts[0].usageLimits.windows.forEach((w) => { w.usedPercent = 99; });
+  r = decide(f.settings, f.usage, f.catalogs, f.now);
+  expect(r.selection.model).toBe('gpt-6.1-sol');
+  u.windows = [];
+  expect(decide(f.settings, f.usage, f.catalogs, f.now).action).toBe('held');
 });

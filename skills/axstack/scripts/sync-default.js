@@ -1,17 +1,22 @@
 import * as fs from 'node:fs';
 import { decide } from './default-policy.js';
 import { commit } from './default-settings.js';
+import { readHistory } from './driver-history.js';
 import { readHub } from './hub-usage.js';
 export { decide } from './default-policy.js';
 
 const help = `Usage: bun sync-default.js [--settings path] [--dry-run | --apply]
   --usage-file path   T3 UsageLimitSourceSnapshot array (otherwise read configured hub)
   --catalog-dir path T3 provider cache directory (default: T3 caches beside userdata)
-  --history-file path Complete saved T3 thread-list JSON; optional fairness input
+  --history-file path Complete saved native T3 thread-list JSON (overrides database read)
+  --history-db path   Existing T3 projection DB (default: statev2.sqlite beside settings)
   --now ISO          Deterministic clock for fixtures; cannot combine with live hub
   --help             Print this help
 Dry-run is the default and writes nothing. Reads settings, provider model caches,
-optional snapshots/history, or configured cliproxy auth-files/api-call usage endpoints.
+existing T3 projection history read-only (no create/migrate/auth updates), optional snapshots,
+or configured cliproxy auth-files/api-call usage endpoints.
+Masked hub keys read ONLY userdata/secrets/usage-limit-source-<base64url(sourceId)>.bin
+beside --settings, in memory. Secret symlinks, unsafe permissions and malformed keys hold.
 --apply writes ONLY global defaultModelSelection in --settings (default ~/.t3/userdata/settings.json).
 Apply creates a sibling .axstack-default-sync.lock directory and unique .tmp file,
 fsyncs and atomically renames settings, preserves mode, compares concurrent edits
@@ -22,7 +27,7 @@ Exit: 0 decision/unchanged, 1 input/I/O error, 2 held. Output contains no secret
 
 async function main() {
   const options = {};
-  const values = ['--settings', '--usage-file', '--catalog-dir', '--history-file', '--now'];
+  const values = ['--settings', '--usage-file', '--catalog-dir', '--history-file', '--history-db', '--now'];
   const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
@@ -49,8 +54,12 @@ async function main() {
     try { catalogs.push(JSON.parse(fs.readFileSync(`${cache}/${id}.json`, 'utf8'))); }
     catch { /* Policy reports an unknown catalog; never guess a model. */ }
   }
-  const usage = options['--usage-file'] ? JSON.parse(fs.readFileSync(options['--usage-file'], 'utf8')) : await readHub(settings, now);
-  const history = options['--history-file'] ? JSON.parse(fs.readFileSync(options['--history-file'], 'utf8')) : null;
+  const usage = options['--usage-file'] ? JSON.parse(fs.readFileSync(options['--usage-file'], 'utf8')) : await readHub(settings, now, path);
+  let history;
+  if (options['--history-file']) {
+    try { history = JSON.parse(fs.readFileSync(options['--history-file'], 'utf8')); }
+    catch { history = { unavailable: 'history file unavailable or malformed' }; }
+  } else history = readHistory(path, now, options['--history-db']);
   const result = decide(settings, usage, catalogs, now, history);
   if (result.action === 'update' && options['--apply']) {
     const status = commit(path, original, result.selection);
