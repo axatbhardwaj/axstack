@@ -31,5 +31,5 @@ export const dispatchRules = [
   ["first configuration canary", [/\bfirst dispatch/i, /\bprovider/i, /\bmodel/i, /\beffort/i, /\brunning/i, /\bcompleted/i, /\bbefore/i, /\bsiblings/i]],
   ["canary rejection", [/\breject/i, /\bstop|block/i, /\bsiblings/i, /\bconfiguration/i]],
   ["unrelated configurations", [/\bunrelated configurations/i, /\beligible|\badmissible/i]],
-  ["read-only delegates", [/\badvisers/i, /\bresearch/i, /\bdiligence/i, /\bdelegate_task/, /\basync/i, /\bdriver worktree/i, /\btitle = dispatch key/i]],
+  ["read-only delegates", [/\badvisers/i, /\bresearch/i, /\bdiligence/i, /\bdelegate_task/, /\basync/i, /\bdriver worktree/i, /\btitle = role-labelled dispatch key/i]],
 ];

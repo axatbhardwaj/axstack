@@ -27,6 +27,15 @@ for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/single-server.js \
   skills/axstack/systemd/axstack-single-server.service \
   skills/axstack/systemd/axstack-single-server.timer \
+  skills/axstack/scripts/sync-default.js \
+  skills/axstack/scripts/hub-usage.js \
+  skills/axstack/scripts/default-policy.js \
+  skills/axstack/scripts/default-settings.js \
+  skills/axstack/scripts/hub-secret.js \
+  skills/axstack/scripts/driver-history.js \
+  skills/axstack/references/thread-title-instructions.txt \
+  skills/axstack/systemd/axstack-default-sync.service \
+  skills/axstack/systemd/axstack-default-sync.timer \
   skills/axstack-publish/SKILL.md \
   skills/axstack-explain/references/design.md \
   skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md \

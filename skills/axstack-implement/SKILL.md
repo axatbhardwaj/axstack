@@ -65,7 +65,7 @@ Immediately before an actual role dispatch, read and follow the
 [T3 runtime boundary](../axstack/references/t3-runtime.md). Ordinary local
 reading and writing does not require that launch reference.
 
-Authors must use async `delegate_task` with `isolation:"worktree"`, title = dispatch key
+Authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key
 and stable `clientRequestId` under the runtime contract's fresh-checkout bootstrap,
 same-child repair and recorded launch fallback rules.
 

@@ -3,13 +3,13 @@ import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
-test('repository permits exactly one opt-in systemd user timer', () => {
-  const concepts = [/exception/i, /(?:exactly|only) (?:one|1)/i, /opt.in/i, /systemd user timer/i,
-    /axstack-single-server/];
+test('repository permits only the two bounded opt-in timers', () => {
+  const concepts = [/exception/i, /only/i, /opt.in/i, /systemd user timers/i,
+    /axstack-single-server/, /axstack-default-sync/];
   const allows = /\b(?:allow\w*|permit\w*)\b/i;
   checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts, allows),
-    'Exception: permit only one opt-in systemd user timer, axstack-single-server.',
-    [[allows, 'forbid'], [/(?:exactly|only) (?:one|1)/i, 'exactly two']], [...concepts, allows]);
+    'Exception: permit only the opt-in systemd user timers axstack-single-server and axstack-default-sync.',
+    [[allows, 'forbid'], [/only/i, 'any']], [...concepts, allows]);
   const doc = readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' ');
   const noState = /(?:no|zero) workflow state/i;
   checkRule(doc, (text) => prohibits(text, noState, /timer/i),
