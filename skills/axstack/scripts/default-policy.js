@@ -73,6 +73,8 @@ export function decide(settings, snapshots, catalogs, now, history = null) {
   const result = { action: 'held', selection: settings.defaultModelSelection,
     projectOverrides: Object.entries(settings.projectSettingsOverrides ?? {})
       .filter(([, p]) => p?.defaultModelSelection !== undefined).map(([id]) => id),
+    projectOverrideCoverage: settings.projectSettingsFolded === true ? 'saved settings overrides'
+      : 'saved settings overrides only; legacy project records not inspected',
     fairness: 'history unavailable; stable default, simple tie rotation only when selection is needed' };
   try {
     if (!Number.isFinite(now) || !Array.isArray(snapshots) || !snapshots.length || !Array.isArray(catalogs)) throw Error('missing input');

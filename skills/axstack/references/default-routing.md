@@ -1,6 +1,7 @@
 # Saved New-chat default (opt-in)
 
-`bun ~/.agents/skills/axstack/scripts/sync-default.js --help` lists all inputs
+Run these commands from the installed Axstack skill directory (containing
+`scripts/` and `systemd/`). `bun scripts/sync-default.js --help` lists all inputs
 and writes. Dry-run is the default. `--apply` changes only the global saved
 `defaultModelSelection`; existing chats, dispatch roles and provider settings
 are untouched. Manual New chat may retain a draft model choice; project overrides
@@ -73,8 +74,8 @@ chat counts. No new state database or per-tick rotation is introduced.
 First inspect a dry-run, including any hold and project overrides:
 
 ```bash
-bun ~/.agents/skills/axstack/scripts/sync-default.js
-bun ~/.agents/skills/axstack/scripts/sync-default.js --apply
+bun scripts/sync-default.js
+bun scripts/sync-default.js --apply
 ```
 
 `--usage-file` accepts an array of normalized T3 `UsageLimitSourceSnapshot`
@@ -93,7 +94,7 @@ writes, install the shipped units:
 
 ```bash
 mkdir -p ~/.config/systemd/user
-cp ~/.agents/skills/axstack/systemd/axstack-default-sync.{service,timer} ~/.config/systemd/user/
+cp systemd/axstack-default-sync.{service,timer} ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now axstack-default-sync.timer
 journalctl --user -u axstack-default-sync.service -n 20
@@ -110,7 +111,7 @@ provider failover, account routing, or live service upgrade is included.
 On **T3 server >=0.1.3** paste [the short instructions](thread-title-instructions.txt)
 into global Settings → Threads → title instructions, or use the supported
 `server.updateSettings` patch containing only `threadTitleInstructions`.
-Preserve `textGenerationModelSelection` (including the current Gemini model).
+Preserve `textGenerationModelSelection`.
 This script never writes title settings; 0.1.0 does not support that field.
 Do not upgrade or restart T3 as part of enabling this script.
 

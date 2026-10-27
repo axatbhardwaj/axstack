@@ -10,6 +10,7 @@ test('underused Codex becomes the new-chat default without changing any other se
   expect(result.selection).toEqual(selection('code', 'gpt-6-astra', 'medium'));
   expect(JSON.stringify(f.settings)).toBe(before);
   expect(result.projectOverrides).toEqual(['project']);
+  expect(result.projectOverrideCoverage).toMatch(/legacy project records not inspected/);
 });
 
 for (const [used, astra] of [[75, true], [75.01, false]]) {
