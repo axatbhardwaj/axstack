@@ -278,6 +278,7 @@ Entry points: `skills/axstack/scripts/sync-default.js`, `default-policy.js`,
 ```bash
 doctor > "$EVIDENCE/default-routing-doctor.log" 2>&1
 bun run test tests/workflows/default-routing.test.js \
+  tests/workflows/default-reset-timing.test.js \
   tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
   tests/workflows/hub-usage.test.js tests/workflows/hub-secret.test.js \
   tests/workflows/driver-history.test.js tests/workflows/default-live-input.test.js \
@@ -291,10 +292,19 @@ preserves overrides/text-generation settings, modes and locks. A fake loopback
 hub exercises the real management envelope without secrets. Policy tests cover
 same-account eligibility, equal-account aggregation, the 25% reserve, authoritative
 single-window n/a versus incomplete telemetry, stale/missing inputs, reset timing
-and stable fairness. Fixture masked source keys resolve without logging/leaking or
+and stable fairness. Valid null/absent resets retain reported usage and use zero
+elapsed credit; malformed non-null dates and stale telemetry hold. The CLI fixture
+includes an idle Claude account with a null reset. Fixture masked source keys resolve without logging/leaking or
 persisting hydration. Read-only native metadata covers web/mobile and completeness,
 with unavailable diagnostics and bounded UTC tie rotation. The real CLI combines
 these boundaries against a fake hub and an existing fixture history DB. Title contracts preserve role-labelled
 keys. No live request, live settings write, timer activation, existing thread
 mutation or title-model execution is covered. Manually verify New chat and client
 refresh only under driver authorization; unsupported T3 title settings remain held.
+
+The five routing fixture files follow the existing `TMPDIR ?? '/tmp'` pattern so
+CI's bare `bun test` entrypoint works without an exported TMPDIR. Each mkdtemp root
+is owned/private (0700); normal verification still supplies an owned 0700 TMPDIR
+outside HOME. For CI-equivalent reproduction, unset TMPDIR only in the isolated
+child test process and run those five files, retaining its setup-failure/pass logs.
+Run that check and the full recipe on both matrix Bun versions when available.

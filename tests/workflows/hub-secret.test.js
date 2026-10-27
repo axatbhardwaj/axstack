@@ -4,7 +4,7 @@ import { readHub } from '../../skills/axstack/scripts/hub-usage.js';
 import { now } from './default-routing-fixtures.js';
 
 async function fixture(run) {
-  const dir = fs.mkdtempSync(`${process.env.TMPDIR}/hub-secret-`);
+  const dir = fs.mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/hub-secret-`);
   fs.mkdirSync(`${dir}/secrets`, { mode: 0o700 });
   const sentinel = 'private-fixture-sentinel';
   const id = 'hub/utf8-é';

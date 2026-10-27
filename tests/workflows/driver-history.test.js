@@ -6,7 +6,7 @@ import { fixture, now } from './default-routing-fixtures.js';
 import { decide } from '../../skills/axstack/scripts/default-policy.js';
 
 function database(run) {
-  const dir = fs.mkdtempSync(`${process.env.TMPDIR}/driver-history-`);
+  const dir = fs.mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/driver-history-`);
   const path = `${dir}/statev2.sqlite`;
   const d = new Database(path, { create: true });
   d.exec(`CREATE TABLE orchestration_v2_projection_threads (thread_id TEXT, created_at TEXT, provider_instance_id TEXT, payload_json TEXT)`);

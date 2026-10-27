@@ -8,6 +8,14 @@ const mean = (values) => values.reduce((a, b) => a + b, 0) / values.length;
 const fresh = (date, now, age) => Number.isFinite(Date.parse(date)) && now >= Date.parse(date) && now - Date.parse(date) <= age;
 const same = (a, b) => a?.instanceId === b?.instanceId && a?.model === b?.model;
 
+// Unknown reset timing earns no elapsed-window allowance; reported usage remains authoritative.
+function elapsed(window, now, minutes) {
+  if (window.resetsAt == null) return 0;
+  const reset = typeof window.resetsAt === 'string' ? Date.parse(window.resetsAt) : NaN;
+  if (!Number.isFinite(reset) || reset <= now || reset - now > minutes * 60000) throw Error('malformed reset timing');
+  return 1 - (reset - now) / (minutes * 60000);
+}
+
 function pool(accounts, driver, now) {
   const members = accounts.filter((a) => a.driver === driver);
   if (!members.length) throw Error(`missing ${driver} accounts`);
@@ -21,20 +29,20 @@ function pool(accounts, driver, now) {
       if (found.length !== 1) throw Error(`missing or ambiguous ${driver} ${kind} window`);
       const w = found[0];
       if (!Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100
-        || !Number.isFinite(w.windowDurationMins) || w.windowDurationMins <= 0
-        || !Number.isFinite(Date.parse(w.resetsAt)) || Date.parse(w.resetsAt) <= now
-        || Date.parse(w.resetsAt) - now > w.windowDurationMins * 60000) throw Error(`malformed ${driver} ${kind} window`);
-      return { used: w.usedPercent, elapsed: 1 - (Date.parse(w.resetsAt) - now) / (w.windowDurationMins * 60000) };
+        || !Number.isFinite(w.windowDurationMins) || w.windowDurationMins <= 0) throw Error(`malformed ${driver} ${kind} window`);
+      return { used: w.usedPercent, elapsed: elapsed(w, now, w.windowDurationMins), resetKnown: w.resetsAt != null };
     });
     const scoped = u.windows.filter((w) => w.id?.startsWith('seven_day_') && /opus/i.test(w.label ?? ''));
     for (const w of scoped) {
-      if (!Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100
-        || !Number.isFinite(Date.parse(w.resetsAt)) || Date.parse(w.resetsAt) <= now) throw Error('unknown Opus scoped telemetry');
+      if (!Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100) throw Error('unknown Opus scoped telemetry');
+      elapsed(w, now, 10080);
     }
+    const untimedWindows = windows.filter((w) => w?.resetKnown === false).length
+      + scoped.filter((w) => w.resetsAt == null).length;
     const viable = windows.every((w) => w === null || w.used < 100) && scoped.every((w) => w.usedPercent < 100);
     // Match T3's pool display: a weekly-blocked account contributes 100% session used.
     if (windows[0] && windows[1].used >= 100) windows[0] = { used: 100, elapsed: null };
-    return { windows, viable };
+    return { windows, viable, untimedWindows };
   });
   const applicable = [0, 1].map((i) => rows.flatMap((r) => r.windows[i] ? [r.windows[i]] : []));
   const remaining = applicable.map((ws) => ws.length ? 100 - mean(ws.map((w) => w.used)) : null);
@@ -44,7 +52,8 @@ function pool(accounts, driver, now) {
   });
   return { sessionRemaining: remaining[0], weeklyRemaining: remaining[1],
     sessionStatus: applicable[0].length ? 'applicable' : 'n/a', sessionAccounts: applicable[0].length,
-    eligibleAccounts: rows.filter((r) => r.viable).length, score: Math.min(...pace) };
+    eligibleAccounts: rows.filter((r) => r.viable).length,
+    untimedWindows: rows.reduce((sum, r) => sum + r.untimedWindows, 0), score: Math.min(...pace) };
 }
 
 function candidates(settings, catalogs, now) {

@@ -36,6 +36,7 @@ async function accountUsage(config, account, now) {
     if (driver === 'codex') {
       for (const key of ['primary_window', 'secondary_window']) {
         const w = usage.rate_limit?.[key];
+        if (w?.reset_at != null && (typeof w.reset_at !== 'number' || !Number.isFinite(w.reset_at))) throw Error('invalid Codex reset');
         const minutes = w?.limit_window_seconds / 60;
         const kind = minutes >= 43200 ? 'monthly' : minutes >= 10080 ? 'weekly' : 'session';
         if (w) windows.push({ id: key === 'primary_window' ? 'primary' : 'secondary', kind, label: kind, usedPercent: w.used_percent,
@@ -46,11 +47,11 @@ async function accountUsage(config, account, now) {
       for (const [key, kind, duration] of [['five_hour', 'session', 300], ['seven_day', 'weekly', 10080]]) {
         const w = usage[key];
         if (w) windows.push({ id: key, kind, label: key, usedPercent: w.utilization,
-          resetsAt: w.resets_at, windowDurationMins: duration });
+          ...(w.resets_at == null ? {} : { resetsAt: w.resets_at }), windowDurationMins: duration });
       }
       for (const w of usage.limits ?? []) {
         if (w.kind === 'weekly_scoped') windows.push({ id: `seven_day_${String(w.scope?.model?.display_name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, kind: 'weekly',
-          label: `Weekly · ${w.scope?.model?.display_name ?? ''}`, usedPercent: w.percent, resetsAt: w.resets_at, windowDurationMins: 10080 });
+          label: `Weekly · ${w.scope?.model?.display_name ?? ''}`, usedPercent: w.percent, ...(w.resets_at == null ? {} : { resetsAt: w.resets_at }), windowDurationMins: 10080 });
       }
     }
     const weeklyOnly = driver === 'codex' && usage.rate_limit?.primary_window?.limit_window_seconds === 604800

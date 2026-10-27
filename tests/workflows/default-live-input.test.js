@@ -4,8 +4,8 @@ import * as fs from 'node:fs';
 import { fixture } from './default-routing-fixtures.js';
 const script = `${import.meta.dir}/../../skills/axstack/scripts/sync-default.js`;
 
-test('real CLI combines masked key, weekly-only Codex, Fable limits and automatic native history safely', async () => {
-  const dir = fs.mkdtempSync(`${process.env.TMPDIR}/default-live-input-`);
+for (const idle of [false, true]) test(`real CLI native inputs with idle Claude=${idle}`, async () => {
+  const dir = fs.mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/default-live-input-`);
   const at = Date.now(); const f = fixture(); const sentinel = 'cli-secret-sentinel';
   fs.mkdirSync(`${dir}/userdata`, { mode: 0o700 }); fs.mkdirSync(`${dir}/caches`);
   fs.mkdirSync(`${dir}/userdata/secrets`, { mode: 0o700 });
@@ -25,7 +25,7 @@ test('real CLI combines masked key, weekly-only Codex, Fable limits and automati
     ] });
     const body = await req.json();
     const usage = body.auth_index.startsWith('c') ? {
-      five_hour: { utilization: 20, resets_at: new Date(at + 9000000).toISOString() },
+      five_hour: { utilization: idle ? 0 : 20, resets_at: idle ? null : new Date(at + 9000000).toISOString() },
       seven_day: { utilization: 30, resets_at: new Date(at + 302400000).toISOString() },
       limits: [{ kind: 'weekly_scoped', percent: 100, resets_at: new Date(at + 100000).toISOString(),
         scope: { model: { display_name: 'Fable' } } }],

@@ -4,7 +4,7 @@ import { commit } from '../../skills/axstack/scripts/default-settings.js';
 import { fixture, selection } from './default-routing-fixtures.js';
 
 function withFile(run) {
-  const dir = fs.mkdtempSync(`${process.env.TMPDIR}/settings-`);
+  const dir = fs.mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/settings-`);
   try {
     const path = `${dir}/settings.json`;
     const before = JSON.stringify(fixture().settings);

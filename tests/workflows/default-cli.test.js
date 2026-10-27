@@ -4,7 +4,7 @@ import { fixture, now } from './default-routing-fixtures.js';
 const script = `${import.meta.dir}/../../skills/axstack/scripts/sync-default.js`;
 
 test('real CLI resolves relative settings, dry-run writes nothing, apply preserves overrides', () => {
-  const dir = fs.mkdtempSync(`${process.env.TMPDIR}/default-cli-`);
+  const dir = fs.mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/default-cli-`);
   try {
     const f = fixture();
     fs.mkdirSync(`${dir}/userdata`); fs.mkdirSync(`${dir}/caches`);

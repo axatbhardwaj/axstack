@@ -40,13 +40,22 @@ catalog evidence, not successful provider execution.
 Routes: Claude `claude-opus-5-5` medium; Codex `gpt-6-astra` medium;
 Codex `gpt-6.1-sol` xhigh. The configured instance IDs are discovered, not renamed.
 Both source and account telemetry must be no older than five minutes, with
-valid applicable session/weekly percentages, durations and future resets. Missing,
+valid applicable session/weekly percentages and durations. A supplied reset must
+be a valid future date within its window duration. Missing,
 stale, malformed or ambiguous data holds the entire decision, without failover.
 A successful Codex response containing only a seven-day primary window (secondary
 absent/null) is authoritative single-window telemetry: the adapter explicitly marks
 session n/a. It does not synthesize session capacity. A plain incomplete snapshot
 without this provenance still holds; weekly is always required. An account needs
-remaining quota in every applicable window. A blocked account does not
+remaining quota in every applicable window. Null or absent reset timing is valid for
+Claude session/weekly/scoped Opus and Codex windows. The adapter omits the missing
+reset; it never invents a timestamp. Unknown reset timing alone does **not** mean
+unused or not started: the reported used percentage still governs remaining quota,
+same-account eligibility and Astra's reserve, including exhaustion at 100% used.
+For pressure, an untimed window earns zero elapsed-window credit, a conservative
+lower bound, while its full reported usage is subtracted. `untimedWindows` reports
+these windows (including relevant Opus scope); n/a session windows are separate.
+Malformed non-null dates, stale telemetry and missing applicable windows still hold. A blocked account does not
 exhaust other accounts. Opus scoped weekly limits also constrain eligibility.
 
 Installed T3 0.1.3 client `main-lZWM_z1N.js` functions `g7`/`_7` display **equal
