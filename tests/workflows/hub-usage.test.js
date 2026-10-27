@@ -28,7 +28,10 @@ test('live adapter reads hub management protocol and normalizes provider usage w
     expect(r[0].accounts.map((a) => a.driver)).toEqual(['claudeAgent', 'codex']);
     expect(r[0].accounts[1].usageLimits.windows.map((w) => w.usedPercent)).toEqual([40, 50]);
     expect(calls).toHaveLength(2);
-    expect(calls[1].url).toBe('https://chatgpt.com/backend-api/wham/usage');
+    expect(calls.map(({ auth_index, url }) => [auth_index, url]).sort()).toEqual([
+      ['1', 'https://api.anthropic.com/api/oauth/usage'],
+      ['2', 'https://chatgpt.com/backend-api/wham/usage'],
+    ]);
     expect(JSON.stringify(r)).not.toContain('fake-key');
   } finally { server.stop(true); }
 });
