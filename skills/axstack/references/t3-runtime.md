@@ -75,9 +75,9 @@ configuration; unrelated configurations remain eligible.
 
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
-| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`) | Must use async `delegate_task`, title = dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
-| Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
+| Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = role-labelled dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
+| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
 The UI verifier checkout row applies to candidate checks, while a page without
@@ -89,15 +89,21 @@ The driver may write planning artifacts (spec, ticket map) in its own worktree w
 Repairs return to that author. Missing or idle sessions grant no ownership transfer.
 The current chat/driver has no role row in any preset.
 
-At launch and rename, visible driver thread titles express a plain outcome of
-at most 30 characters.
+At launch and rename, visible driver thread titles express a plain outcome with
+`Driver:` prefix, at most 30 characters including the prefix.
 Visible driver thread titles use no repo, issue or size prefix.
-Hidden children keep dispatch-key titles.
+Hidden children keep role-labelled dispatch-key titles.
 D9 applies to driver threads only, while flagged unbound pass threads retain the
 `Needs you: <kind> <repo>#<n>` (or `<lane>`) rename under Automations.
 
 The dispatch key must be `<run>:<role>:<task>:a<n>`, recorded before launch and
-used as the exact whole T3 title. Substring matches do not establish identity.
+preserved byte-for-byte after its role prefix in the exact whole T3 title.
+Use `Worker: <dispatch-key>` for authors, `Reviewer: <dispatch-key>` for reviewers,
+`Researcher: <dispatch-key>` for research, and `Subagent: <dispatch-key>` for other children.
+Record both the key and complete display title; compare the exact complete title
+during recovery. Substring matches do not establish identity. Branch and task
+identity continue to use the original dispatch key. On title regeneration preserve
+explicit role-labelled dispatch keys and `Needs you:` notices unchanged.
 Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
 Every dispatch brief must state that dispatched roles never call `html_render`.
 Dispatched roles may call `html_preview` within [UI verification](ui-verification.md).

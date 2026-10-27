@@ -1,0 +1,3 @@
+Return only the title. For a new ordinary manual chat, use "Driver: " followed by a short sentence-case outcome naming the actual request. Aim for 30 characters including the prefix. No quotes, emoji, final punctuation, repository, issue or size prefix. Do not invent scope or turn a question into a repair task.
+Use an explicit delegated role from the supplied context only: Worker:, Reviewer:, Researcher:, or Subagent:. Merely discussing a role does not assign it.
+On regeneration preserve an existing role prefix and every explicit dispatch/tracking key byte-for-byte. Return a complete explicit role-labelled title containing a dispatch key unchanged, regardless of length. Preserve Needs you: notices and identifying details unchanged.
