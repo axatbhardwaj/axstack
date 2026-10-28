@@ -92,6 +92,7 @@ test('package recipe requires every entry point and both current publication ref
   const assertions = recipe.match(/cmp "\$EVIDENCE\/archives-before.txt" "\$EVIDENCE\/archives-after.txt"\n([\s\S]*?)\nif rg/)?.[1];
   expect(assertions).toBeTruthy();
   const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
+    'skills/axstack-spec/references/format.md',
     'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
     'skills/axstack/references/preview.md', 'skills/axstack/references/pr-chain.md',
     'skills/axstack/scripts/single-server.js',

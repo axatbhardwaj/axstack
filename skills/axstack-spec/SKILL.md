@@ -43,8 +43,9 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    access before any issue write. Record the repository and identity checked.
    Missing access preserves the GitHub selection and stops the phase without
    mutation or fallback. Markdown mode skips external access preflight.
-3. **Draft with decision evidence.** Write observable acceptance criteria
-   and explicit exclusions in the selected store. Only when the scope identity
+3. **Draft with decision evidence.** Follow the
+   [readable specification format](references/format.md) when drafting in the
+   selected store. Only when the scope identity
    carries a sketch, include the [design lens](../axstack/references/design-lens.md)
    sketch in the approved revision's `Design` section and its `Usage` line in
    acceptance. First record the driver's
@@ -90,7 +91,8 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
    [Diligence](../axstack/references/diligence.md) to check the draft against
    the Align decisions for anything dropped, added, or softened.
 5. **Snapshot the baseline.** Record the approved revision identity and a
-   concise repository Markdown counterpart. In Linear mode, the native
+   concise repository Markdown counterpart pointing to the same requirements,
+   not a second human or agent contract. In Linear mode, the native
    document remains authoritative. In GitHub mode, the approved issue body is
    authoritative and its GitHub issue URL plus SHA-256 body digest identifies
    the exact approved revision. In Markdown mode, the agreed repository path does.

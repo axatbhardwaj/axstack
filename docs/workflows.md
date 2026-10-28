@@ -256,7 +256,10 @@ for explicit ownership transfer.
   fenced. Fable also serves the bounded triggers in
   [Standing contracts](../skills/axstack/references/contracts.md).
 - `axstack-spec` writes observable acceptance, exclusions, decisions, and one
-  user-approved revision baseline. Linear through the executor MCP is the
+  user-approved revision baseline. Its [shared format](../skills/axstack-spec/references/format.md)
+  opens with the human decision brief, groups binding requirements by capability,
+  and separates evidence/history. Review checks readability alongside completeness.
+  Linear through the executor MCP is the
   default only for `defi-com` repositories; GitHub Issues and repository
   Markdown are explicit alternatives and the stores for other repositories.
   A GitHub baseline pins the issue URL and approved body digest. Preflight
