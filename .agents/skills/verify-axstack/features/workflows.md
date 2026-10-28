@@ -1,5 +1,11 @@
 # Inspect workflow instruction contracts
 
+Readable shared specifications: `skills/axstack-spec/SKILL.md` loads its relative
+`references/format.md`; draft-spec diligence checks comprehension alongside
+completeness. `spec-format.test.js` covers brief-first decisions/scope/risks,
+binding capability contracts, current criteria versus immutable approved history,
+and a usable example with semantic removal/inversion/rewording probes.
+
 `workflow-retirement.test.js` guards active guidance and presets against retired
 workflow routes while preserving the documented installer harness interfaces.
 
@@ -86,6 +92,7 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/spec-format.test.js \
   tests/workflows/adoption-disposition.test.js \
   tests/workflows/staged-file-tokens.test.js \
   tests/workflows/staged-token-gate.test.js \

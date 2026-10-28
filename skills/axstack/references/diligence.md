@@ -29,7 +29,10 @@ paths, and stale references. Bind the result to the exact head and base.
 
 For research, reopen cited sources for answer-changing claims before the
 driver folds verified claims. For a draft spec, compare it with Align decisions
-before user approval: flag anything dropped, added, or softened. For tickets,
+before user approval: flag anything dropped, added, or softened. For a draft spec,
+check readability alongside completeness using the
+[shared format](../../axstack-spec/references/format.md#readability-review).
+For tickets,
 map every spec acceptance item to a capability's acceptance. Before candidate
 publication, compare the author receipt with its evidence folder: red/green
 logs exist, and counts, SHAs, and paths match. For release preparation, compare
