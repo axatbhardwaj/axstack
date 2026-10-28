@@ -84,6 +84,8 @@ Size alone never requires user approval.
 
 ## 3. Establish test-first evidence
 
+For authorized UI improvement work, load [UI improvement loop](../axstack/references/ui-improvement-loop.md).
+
 For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
 For performance work, run the change loop defined in [Performance loop](../axstack/references/perf-loop.md).
 For an accepted optimization scope without new behavior explicitly marked structure-preserving, use the structure-preserving path with the same checks green before and after plus the measured delta.

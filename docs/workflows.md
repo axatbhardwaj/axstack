@@ -624,3 +624,15 @@ runtime receipts; evidence from one route does not establish support for all rol
 Bun >=1.3.14, with no runtime dependencies. Workflow checks use
 `bun test tests/workflows/`; the only approved Node built-ins are Bun-backed
 `node:fs` and `node:fs/promises`.
+
+## UI improvement
+
+For “improve this screen”, Improve reports ranked defects for a named screen or
+flow using Playwright evidence from the existing read-only UI verifier. Each
+fix has observable acceptance criteria; missing renders remain unverified.
+Authorized bounded changes enter Implement's [UI improvement loop](../skills/axstack/references/ui-improvement-loop.md):
+one writer and hypothesis, a frozen capture protocol, fresh renders each attempt,
+independent blind A/B, hard functional/accessibility/interaction gates and
+keep/revert to the best-known candidate. Record a finite budget and plateau
+threshold before editing; stop at goal, plateau or budget. Aesthetic scores
+alone cannot establish success. Existing exact-revision delivery gates remain.

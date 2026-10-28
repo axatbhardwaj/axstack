@@ -70,7 +70,7 @@ step (3) for user routing: no substitution or same-provider review.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).
-- Code quality/refactor discovery -> `axstack-improve`: rank bounded
+- Code quality/refactor or named UI screen/flow discovery -> `axstack-improve`: rank bounded
   candidates with evidence; report only, no source edits.
 - Repeated mistakes need evidence and stronger checks -> `axstack-correct`:
   user-invoked, report only.
