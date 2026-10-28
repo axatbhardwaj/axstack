@@ -59,8 +59,11 @@ The fixtures preserve index-only reads, exclusions (including generated banners,
 binaries and gitlinks), renames, subdirectory invocation and shared main-repo
 ignore globs from linked worktrees. Advisories offer no ignore/banner escape.
 `staged-token-gate.test.js` checks pre-commit execution, advisory success,
-no size-only splits or approval requests, structural review, error integrity and
-receipt recording with removal, inversion and equivalent-rewording probes.
+no size-only splits or approval requests, structural review, helper error exits,
+author error resolution before committing, enforceable repository checks, no
+hiding authored files behind exclusions, and receipt recording with removal,
+inversion and equivalent-rewording probes. Helper nonzero exits and the author
+stop-on-error duty are separate contracts.
 Also run these two staged-file test files with `TMPDIR` unset, as in CI; their
 shared temp root falls back to `/tmp`. Keep that `/tmp` private to the dispatch
 (e.g. a mount namespace bound to owned 0700 scratch outside HOME).
