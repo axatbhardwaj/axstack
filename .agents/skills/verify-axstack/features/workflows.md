@@ -48,13 +48,23 @@ runtime tables: `tests/workflows/t3-runtime/*.js`.
 usage-limit holds without failover, with removal, inversion and rewording probes.
 `runtime-safety.test.js` preserves the single-server keeper, sole stateless timer
 and model-discipline contracts with removal, inversion and rewording probes.
-Staged-file writer gate: `tests/workflows/staged-file-tokens.test.js` drives the
-packaged `check-staged-file-tokens.js` in temporary Git repos; it checks index
-bytes, exclusions, failure guidance, renames and subdirectory invocation.
-It also checks shared main-repo ignore globs from a linked worktree and the
-resolved ignore-file location in failure guidance.
-`staged-token-gate.test.js` checks the Implement instruction with removal,
-inversion and equivalent-rewording probes. These tests install no Git hooks.
+Staged-file size advisory: `tests/workflows/staged-file-tokens.test.js` drives
+packaged `check-staged-file-tokens.js` in temporary Git repos. Successful
+measurements exit 0 and report exact bytes above 20,000, including new source,
+legacy edits, unchanged incoming merge blobs and docs/changelogs. The boundary
+is byte-based; any token estimate must be explicitly rough. Git, read,
+malformed-size and unmerged-index errors exit nonzero, including conflicts on
+excluded paths. Empty indexes and initial repos remain valid.
+The fixtures preserve index-only reads, exclusions (including generated banners,
+binaries and gitlinks), renames, subdirectory invocation and shared main-repo
+ignore globs from linked worktrees. Advisories offer no ignore/banner escape.
+`staged-token-gate.test.js` checks pre-commit execution, advisory success,
+no size-only splits or approval requests, structural review, error integrity and
+receipt recording with removal, inversion and equivalent-rewording probes.
+These tests install no Git hooks and prove instructions and fixture CLI behavior,
+not live author compliance. Run the workflow command below after Launch/Doctor;
+record isolation or harness-discovery gaps and complete feasible checks without
+claiming offline acceptance when those prerequisites are unavailable.
 C1 documentation keepers: `public-docs`, `readme-contract`, `skill-current-contracts`,
 `explain-diagram`, `explain-fidelity`, `explain-whiteboard`, `ui-verification` and `presets` in `tests/workflows/`.
 `presets.test.js` guards retired `axstack-monitor` absence in bundled presets
