@@ -67,6 +67,31 @@ const iteration = [
     inversion: [/one writer/i, 'concurrent writers'],
   },
   {
+    concepts: [/visual.only attempt/i, /red/i, /axstack-ui-verifier/i, /execute|run/i, /anchored acceptance check/i, /best.known/i, /before the edit/i, /record/i, /failure/i, /capture evidence/i],
+    rewording: 'For a visual-only attempt, red requires axstack-ui-verifier to run the anchored acceptance check against best-known before the edit and record failure with capture evidence.',
+    inversion: [/before the edit/i, 'after the edit'],
+  },
+  {
+    concepts: [/green/i, /verifier/i, /fresh candidate/i, /pass/i, /same acceptance check/i, /all hard gates/i],
+    rewording: 'Green requires the verifier to pass the same acceptance check and all hard gates on the fresh candidate.',
+    inversion: [/pass/i, 'may fail'],
+  },
+  {
+    concepts: [/observable repository behavior tests/i, /required/i, /where applicable/i],
+    rewording: 'Where applicable, observable repository behavior tests are required.',
+    inversion: [/required/i, 'optional'],
+  },
+  {
+    concepts: [/browser checks/i, /red/i, /green/i, /delegated/i, /axstack-ui-verifier/i],
+    rewording: 'Browser checks for red and green stay delegated to axstack-ui-verifier.',
+    inversion: [/delegated/i, 'performed by the author instead of'],
+  },
+  {
+    concepts: [/meaningful test.first check/i, /unavailable/i, /hold/i, /dependent implementation/i, /scoped decision/i],
+    rewording: 'Hold dependent implementation for a scoped decision when a meaningful test-first check is unavailable.',
+    inversion: [/hold/i, 'proceed with'],
+  },
+  {
     concepts: [/each attempt/i, /fresh renders/i, /best.known/i, /candidate/i, /same/i, /protocol/i, /exact revisions/i],
     rewording: 'Each attempt requires fresh renders of best-known and candidate exact revisions under the same protocol.',
     inversion: [/fresh renders/i, 'reused images'],
@@ -109,18 +134,24 @@ for (const [index, rule] of iteration.entries()) {
   });
 }
 
-test('UI iteration rejects uncertain captures and aesthetic-score-only wins', () => {
-  for (const [concepts, rewording, inversion] of [
-    [[/missing|failed/i, /capture/i, /uncertain/i, /comparison/i, /justify/i, /win/i],
-      'A missing capture or uncertain comparison cannot justify a win.', [/cannot/i, 'can']],
-    [[/numeric/i, /aesthetic score/i, /sole/i, /success/i],
-      'Never use a numeric aesthetic score as the sole success criterion.', [/Never/i, 'Always']],
-  ]) {
+for (const [concepts, rewording, inversion] of [
+  [[/screenshot alone/i, /count/i, /behavioral red/i],
+    'Never count a screenshot alone as behavioral red.', [/Never/i, 'Always']],
+  [[/subjective score/i, /count/i, /behavioral red/i],
+    'Never count a subjective score as behavioral red.', [/Never/i, 'Always']],
+  [[/retrospective checks/i, /count/i, /red/i],
+    'Never count retrospective checks as red.', [/Never/i, 'Always']],
+  [[/missing|failed/i, /capture/i, /uncertain/i, /comparison/i, /justify/i, /win/i],
+    'A missing capture or uncertain comparison cannot justify a win.', [/cannot/i, 'can']],
+  [[/numeric/i, /aesthetic score/i, /sole/i, /success/i],
+    'Never use a numeric aesthetic score as the sole success criterion.', [/Never/i, 'Always']],
+]) {
+  test(`UI iteration evidence guard: ${rewording}`, () => {
     const negative = /cannot|never/i;
     checkRule(read(loop), (text) => prohibits(text, negative, ...concepts),
       rewording, [inversion], concepts);
-  }
-});
+  });
+}
 
 test('authorized UI implementation loads the shared loop while preserving the perf route', () => {
   const text = readFileSync(`${import.meta.dir}/../../${implement}`, 'utf8');

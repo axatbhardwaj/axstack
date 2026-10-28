@@ -17,6 +17,11 @@ Proof: report-only discovery for a named screen/flow, Playwright evidence,
 ranked defects and criteria; fixed capture procedure, fresh comparable renders,
 blind independent A/B, hard gates, keep/revert, disagreement and finite stopping.
 Each semantic keeper rejects removal/inversion and accepts equivalent rewording.
+Visual-only TDD keepers require verifier-executed acceptance failure on best-known
+before editing, then the same check passing on a fresh candidate with hard gates.
+They preserve applicable repository behavior tests and browser delegation,
+reject screenshot-only, subjective-score and retrospective red, and retain the
+hold when a meaningful test-first check is unavailable.
 This does not prove a live visual improvement, capture comparability or reviewer
 blindness. For an actual product UI run, the driver delegates Playwright through
 the existing UI verifier with exact revision, protocol and private evidence;

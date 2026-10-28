@@ -30,6 +30,16 @@ When the protocol changes, recapture both sides before comparison and record why
 Use one writer and one hypothesis for each attempt.
 Tie the small change to one ranked defect and its acceptance checks; keep
 unrelated cleanup outside the attempt. Apply Implement's normal TDD path.
+For a visual-only attempt, red requires axstack-ui-verifier to execute the
+anchored acceptance check against best-known before the edit and record its
+failure with capture evidence. Never count a screenshot alone as behavioral red.
+Never count a subjective score as behavioral red.
+Green requires the verifier's fresh candidate to pass that same acceptance
+check plus all hard gates. Observable repository behavior tests remain required
+where applicable. Browser checks, including red and green, remain delegated to
+axstack-ui-verifier. If a meaningful test-first check is unavailable, hold
+dependent implementation for a scoped decision. Never count retrospective
+checks as red.
 Each attempt requires fresh renders of best-known and candidate exact revisions
 under the same protocol. Bind screenshots and interaction logs to revision,
 route, fixture, viewport, theme and state in the private evidence manifest.
