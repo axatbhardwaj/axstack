@@ -1,10 +1,52 @@
 import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 import { prohibits, requires } from '../workflows/prose-contract.js';
 
 const CLI = join(import.meta.dir, '..', '..', 'bin', 'axstack.js');
+
+test('installed mixed UI verifier dispatches Terra high and holds when unavailable', () => {
+  const root = makeTempRoot('axstack-ui-routing-');
+  const home = join(root, 'home');
+  mkdirSync(home);
+  const skillsDir = join(home, '.agents/skills');
+  const bundle = join(import.meta.dir, '../..');
+  const options = { env: { HOME: home } };
+  runCli(CLI, ['install', '--preset', 'mixed', '--bundle', bundle,
+    '--skills-dir', skillsDir, '--instructions', join(home, 'AGENTS.md'),
+    '--no-claude-settings', '--yes'], options);
+  const capabilities = JSON.parse(readFileSync(join(import.meta.dir,
+    '../workflows/fixtures/t3-capabilities.json'), 'utf8'));
+  const codex = capabilities.providers.find(({ providerInstanceId }) => providerInstanceId === 'codex');
+  codex.models.push({ id: 'gpt-6.1-terra', options: [
+    { id: 'reasoningEffort', options: [{ id: 'high' }] },
+  ] });
+  const caps = join(root, 'capabilities.json');
+  writeFileSync(caps, JSON.stringify(capabilities));
+  const script = join(skillsDir, 'axstack/scripts/dispatch-plan.js');
+  const args = ['--role', 'axstack-ui-verifier', '--roles', join(skillsDir, 'axstack/roles.json'),
+    '--capabilities', caps, '--kind', 'task'];
+  const result = runCli(script, args, options);
+  expect(JSON.parse(result.out)).toMatchObject({
+    target: { providerInstanceId: 'codex', model: 'gpt-6.1-terra',
+      options: [{ id: 'reasoningEffort', value: 'high' }] },
+    runtimeMode: 'full-access',
+  });
+  // Sol and Claude remain available: neither may substitute for missing Terra/high.
+  for (const models of [codex.models.filter(({ id }) => id !== 'gpt-6.1-terra'),
+    codex.models.map((model) => model.id === 'gpt-6.1-terra'
+      ? { ...model, options: [{ id: 'reasoningEffort', options: [{ id: 'medium' }] }] } : model)]) {
+    writeFileSync(caps, JSON.stringify({ ...capabilities, providers: capabilities.providers.map(
+      (provider) => provider === codex ? { ...provider, models } : provider) }));
+    const held = Bun.spawnSync([process.execPath, script, ...args], {
+      env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe',
+    });
+    expect(held.exitCode).toBe(2);
+    expect(held.stdout.toString()).toBe('');
+    expect(held.stderr.toString()).toMatch(/model|effort/);
+  }
+});
 // Exercise the installed instruction boundary, including real manifest bytes.
 // This proves the declared route is usable, not a live agent routing decision.
 for (const legacy of [null, 'claude-only']) {
