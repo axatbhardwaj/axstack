@@ -6,7 +6,9 @@ Owned instructions route every role through `delegate_task`, with author worktre
 isolation, top-level driver launches and a recorded rare author fallback.
 Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
 reinstalls after validated null/stale legacy metadata, checking explicit-preset
-role selection and inert provenance preservation.
+role selection and inert provenance preservation. It also exercises the real mixed
+bundle through its installed dispatch helper, verifying Terra high/full-access for
+the UI verifier and holds when its model or effort is missing.
 Prerequisites: Launch's offline shell and temporary HOME; explicit selected
 preset (default `mixed` below). The installer suite covers edited legacy-record retention, its kept-copy reason,
 and a subsequent forced uninstall. The installer provisions no external tools. No network clone, live HOME write or production authentication is allowed.

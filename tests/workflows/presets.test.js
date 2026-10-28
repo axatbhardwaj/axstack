@@ -57,7 +57,7 @@ const expected = {
     a('sonnet', 'high'), c('terra', 'high'), a('sonnet', 'high'), c('terra', 'high'),
     g(null, 'high'),
     a('sonnet', 'high'), c('terra', 'high'),
-    a('sonnet', 'high'),
+    c('terra', 'high'),
     a('haiku', 'high'), c('luna', 'xhigh'),
     a('sonnet', 'high'), c('terra', 'high'),
     a('haiku', 'xhigh'), c('sol', 'high'),
