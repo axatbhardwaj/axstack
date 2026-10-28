@@ -51,8 +51,8 @@
       "name": "Axstack reviewer (secondary)",
       "provider": "codex",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
-      "notes": "Terra xhigh authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
+      "thinkingOptionId": "high",
+      "notes": "Terra high authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
       "modelClass": "terra"
     },
     {

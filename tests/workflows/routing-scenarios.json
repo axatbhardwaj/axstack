@@ -30,7 +30,7 @@
     {
       "id": "codex-sol-authored",
       "input": { "preset": "codex-only", "mode": "authored", "actualAuthor": "codex/gpt-6-sol high", "candidate": "SHA E", "base": "SHA F" },
-      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6.1-terra xhigh"], "independence": "different model, not cross-provider" }
+      "expected": { "reviewers": ["axstack-reviewer-secondary: codex/gpt-6.1-terra high"], "independence": "different model, not cross-provider" }
     },
     {
       "id": "claude-opus-authored",

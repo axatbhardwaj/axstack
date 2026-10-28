@@ -39,7 +39,7 @@ test('single-provider readiness accepts only the intentionally unavailable advis
     { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
   ];
 
   expect(assessRoleReadiness(roles, 'codex-only')).toEqual({ ready: true, gaps: [] });
@@ -53,7 +53,7 @@ test('authored pairing accepts all four class routes and newer exact author IDs'
   for (const [preset, author, primary, secondary] of [
     ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
     ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
-    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'terra', 'xhigh']],
+    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'terra', 'high']],
     ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
   ]) {
     const rows = [
@@ -71,7 +71,7 @@ test('authored pairing accepts all four class routes and newer exact author IDs'
 
 test('authored pairing rejects unsupported author routes and wrong reviewer class or effort', () => {
   const rows = [
-    role('axstack-author', 'gpt-5.6-terra'),
+    { ...role('axstack-author', 'gpt-5.6-terra'), thinkingOptionId: 'high' },
     { ...role('axstack-reviewer-primary', null), modelClass: 'sol', thinkingOptionId: 'high' },
     { ...role('axstack-reviewer-secondary', null), provider: 'claude', modelClass: 'opus', thinkingOptionId: 'high' },
   ];
@@ -195,7 +195,7 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
     { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
     { ...role('axstack-arena-judge-astra', 'gpt-6-astra'), thinkingOptionId: 'xhigh' },
     { ...role('axstack-escalation-fable', null), thinkingOptionId: 'xhigh' },
   ];
@@ -235,7 +235,7 @@ test('readiness rejects a null model on a non-intentional row such as an investi
     { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
     role('axstack-debug-investigator-1', null),
   ];
   expect(assessRoleReadiness(roles, 'codex-only').gaps).toEqual([
@@ -248,16 +248,25 @@ test('mixed checker needs a configured model or class', () => {
     .toContain('axstack-checker requires a configured model');
 });
 
-test('codex-only authored route holds a Luna reviewer or wrong Terra effort', () => {
+test('codex-only authored route holds a Luna reviewer', () => {
   const rows = [
     role('axstack-author', 'gpt-6.1-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
   ];
   expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
-  for (const [model, effort] of [['gpt-6-luna', 'xhigh'], ['gpt-6.1-terra', 'high']]) {
-    rows[1] = { ...rows[1], model, thinkingOptionId: effort };
-    expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain(
-      'authored routing gap: axstack-reviewer-secondary must be codex/terra/xhigh for author codex/sol',
-    );
+  rows[1] = { ...rows[1], model: 'gpt-6-luna', thinkingOptionId: 'xhigh' };
+  expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain(
+    'authored routing gap: axstack-reviewer-secondary must be codex/terra/high for author codex/sol',
+  );
+});
+
+
+test('installed snapshot readiness holds tampered Terra effort', () => {
+  const expected = [{ ...role('axstack-custom', 'gpt-6.1-terra'), thinkingOptionId: 'high' }];
+  for (const effort of [undefined, 'medium', 'xhigh']) {
+    const bytes = installedRoleBytes('mixed', [{ ...expected[0], thinkingOptionId: effort }]);
+    const readback = assessInstalledRoleSnapshot(bytes, 'mixed', expected);
+    expect(readback.ready).toBe(false);
+    expect(readback.gaps.join(' ')).toMatch(/Terra.*high/i);
   }
 });

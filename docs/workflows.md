@@ -140,7 +140,7 @@ and `codex-only`. In `claude-only`, Luna is intentionally absent.
 The mixed X route uses Grok.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
-`axstack-explainer-review` uses Terra medium; `axstack-explainer` pins
+`axstack-explainer-review` uses Terra high; `axstack-explainer` pins
 `claude-sonnet-5-5` high with class `sonnet`. Both roles cover every Explain
 visual, including chat Mermaid and anatomy figures.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at high effort.
@@ -163,7 +163,7 @@ Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
-uses Terra xhigh for Sol-authored candidates in `codex-only`. It is used
+uses Terra high for Sol-authored candidates in `codex-only`. It is used
 in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.
 

@@ -31,7 +31,9 @@ to verify unsupported-provider holds, saved bindings and readback mismatches.
 The resolver suite also proves the mixed tracker checker resolves to Claude
 Sonnet with low effort; readiness rejects a checker lacking both model and class.
 It resolves the mixed research-code, execution and visual-review seats and the
-codex-only authored reviewer to Terra with their configured efforts. The role
+codex-only authored reviewer to Terra at exactly high effort. Class-based and explicit Terra pins reject
+medium/xhigh/missing effort, including through dispatch-plan; unavailable high
+holds without selecting an older model. Effective non-high readback holds. The role
 readiness suite rejects Luna or a wrong effort for that authored reviewer.
 An omitted provider label is reported as unknown while the exact instance,
 model, options and mode remain checked. Input paths remain in the complete JSON.

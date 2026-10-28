@@ -82,7 +82,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   const routes = [
     ['mixed', 'codex/sol', 'axstack-reviewer-secondary', 'claude/opus', 'high'],
     ['mixed', 'claude/opus', 'axstack-reviewer-primary', 'codex/sol', 'high'],
-    ['codex-only', 'codex/sol', 'axstack-reviewer-secondary', 'codex/terra', 'xhigh'],
+    ['codex-only', 'codex/sol', 'axstack-reviewer-secondary', 'codex/terra', 'high'],
     ['claude-only', 'claude/opus', 'axstack-reviewer-secondary', 'claude/sonnet', 'high'],
   ];
   for (const path of ['skills/axstack-review/SKILL.md', 'skills/axstack/references/role-roster.md', 'skills/axstack-audit/SKILL.md']) {

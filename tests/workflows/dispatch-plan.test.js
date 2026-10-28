@@ -1,36 +1,10 @@
-import { afterEach, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
+
+import { configuration, invoke, planArgs, setup } from './dispatch-plan/fixtures.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/dispatch-plan.js`;
 const resolver = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.js`;
-const fixture = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/dispatch-plan.json`, 'utf8'));
-const catalog = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/t3-capabilities.json`, 'utf8'));
-const roots = [];
-afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true }); });
-
-function setup() {
-  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/dispatch-plan-`);
-  roots.push(dir);
-  const roles = { version: fixture.version, preset: fixture.preset, roles: structuredClone(fixture.roles) };
-  const capabilities = structuredClone(catalog);
-  const save = (name, data) => {
-    const path = `${dir}/${name}.json`;
-    writeFileSync(path, JSON.stringify(data));
-    return path;
-  };
-  function run(role = 'axstack-author', kind = 'launch', configuration) {
-    const args = ['--role', role, '--roles', save('roles', roles),
-      '--capabilities', save('capabilities', capabilities), '--kind', kind];
-    if (configuration !== undefined) args.push('--verify', save('configuration', configuration));
-    return invoke(args);
-  }
-  return { dir, roles, capabilities, save, run };
-}
-
-function invoke(args) {
-  const result = Bun.spawnSync([process.execPath, script, ...args], { stdout: 'pipe', stderr: 'pipe' });
-  return { status: result.exitCode, output: result.stdout.toString(), error: result.stderr.toString() };
-}
 
 test('catalog siblings cannot change the fixed Codex dispatch binding', () => {
   const f = setup();
@@ -93,8 +67,6 @@ test('resolver holds map exit 1 to exit 2 and preserve stderr byte for byte', ()
   expect(result.error).toBe(direct.stderr.toString());
 });
 
-const configuration = () => ({ modelSelection: { instanceId: 'codex', model: 'gpt-6.1-sol',
-  options: [{ id: 'reasoningEffort', value: 'high' }] }, runtimeMode: 'full-access' });
 
 test('verification matches T3 read-back for either dispatch kind and normalizes option maps', () => {
   const f = setup();
@@ -236,7 +208,7 @@ test('CLI usage and unreadable JSON are errors rather than holds', () => {
   }
   const f = setup();
   const args = ['--role', 'axstack-author', '--roles', `${f.dir}/missing.json`,
-    '--capabilities', f.save('capabilities', catalog), '--kind', 'launch'];
+    '--capabilities', f.save('capabilities', f.capabilities), '--kind', 'launch'];
   expect(invoke(args).status).toBe(1);
   args[3] = f.save('roles', f.roles); args[7] = 'other';
   expect(invoke(args).status).toBe(1);
@@ -291,8 +263,6 @@ test('the test runner removes each fixture directory after its test', () => {
   expect(readdirSync(nestedRoot)).toEqual([]);
 });
 
-const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
-  '--capabilities', f.save('capabilities', f.capabilities), '--kind', 'launch'];
 
 test('CLI author example includes every required input and the delegated task kind', () => {
   expect(invoke(['--help']).output).toMatch(/Example: bun .* --role axstack-author --roles .* --capabilities .* --kind task/);

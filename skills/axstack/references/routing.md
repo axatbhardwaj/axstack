@@ -32,6 +32,8 @@ provider's first listed model from saved capabilities and records its exact ID.
 A Codex or Claude role with neither model nor class is an intentional absence
 and holds.
 Resume must reuse the saved capabilities and role snapshot with no re-resolution; changes require the user’s explicit decision.
+Every Terra class or explicit Terra model pin requires exactly high effort.
+Missing high effort holds without substitution or silently coercing the request.
 An unavailable provider, model, role, mode or effort holds that role with no substitution.
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Replacing a session needs an explicit user decision and revalidation.

@@ -87,6 +87,9 @@ try {
   const catalog = JSON.parse(readFileSync(path, 'utf8'));
   const instance = providerFrom(catalog, provider);
   const model = modelFrom(instance.models, options);
+  if ((options.class === 'terra' || /^gpt-\d+(?:\.\d+)*-terra$/.test(model.id)) && effort !== 'high') {
+    throw new Error('Terra requires exactly high effort');
+  }
   const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
   if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
     || (provider === 'grok' && effort === 'max')) {

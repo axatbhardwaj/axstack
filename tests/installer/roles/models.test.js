@@ -17,7 +17,7 @@ test('model classes derive only from complete Codex IDs and Claude family prefix
     ['terra', 'gpt-6.1-terra', 'codex'],
     ...['fable', 'opus', 'sonnet', 'haiku'].map((name) => [name, `claude-${name}-5-5`, 'claude']),
   ]) {
-    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), provider, modelClass }])).not.toThrow();
+    expect(() => assertBundleRoles([{ ...role('axstack-driver', id), provider, modelClass, ...(modelClass === 'terra' ? { thinkingOptionId: 'high' } : {}) }])).not.toThrow();
   }
   for (const id of ['gpt-5.6-terra', 'gpt-5.5', 'gpt-reserve', 'gpt-6-sol-preview', 'xgpt-6-sol']) {
     expect(() => assertBundleRoles([{ ...role('axstack-driver', id), modelClass: 'sol' }])).toThrow();
@@ -58,9 +58,9 @@ test('role rows accept class only, class with matching pin, legacy pin and allow
     { id: 'axstack-driver', name: 'Driver', provider: 'codex', modelClass: 'sol' },
     { ...role('axstack-monitor', null), modelClass: 'astra' },
     { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
-    role('axstack-research-code', 'gpt-5.6-terra'),
+    { ...role('axstack-research-code', 'gpt-5.6-terra'), thinkingOptionId: 'high' },
     { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
-    { ...role('axstack-research-code-sol', null), modelClass: 'terra' },
+    { ...role('axstack-research-code-sol', null), modelClass: 'terra', thinkingOptionId: 'high' },
   ];
   expect(() => assertBundleRoles(rows)).not.toThrow();
   expect(assessRoleReadiness(rows, 'mixed')).toEqual({ ready: true, gaps: [] });
@@ -80,3 +80,14 @@ test('role rows reject class/provider and pin/class mismatches before installati
   }
 });
 
+
+test('bundle validation requires high for any Terra class or explicit model pin', () => {
+  for (const binding of [{ modelClass: 'terra' }, { model: 'gpt-6.1-terra' }]) {
+    for (const effort of [undefined, 'medium', 'xhigh']) {
+      expect(() => assertBundleRoles([{ id: 'axstack-custom', name: 'Custom', provider: 'codex',
+        ...binding, ...(effort ? { thinkingOptionId: effort } : {}) }])).toThrow(/Terra.*high/i);
+    }
+    expect(() => assertBundleRoles([{ id: 'axstack-custom', name: 'Custom', provider: 'codex',
+      ...binding, thinkingOptionId: 'high' }])).not.toThrow();
+  }
+});

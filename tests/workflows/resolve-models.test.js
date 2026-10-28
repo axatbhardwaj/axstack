@@ -213,8 +213,8 @@ test('Terra preset seats resolve their exact model and effort from saved capabil
   for (const [preset, id, effort] of [
     ['mixed', 'axstack-research-code-sol', 'high'],
     ['mixed', 'axstack-explore-execution-sol', 'high'],
-    ['mixed', 'axstack-explainer-review', 'medium'],
-    ['codex-only', 'axstack-reviewer-secondary', 'xhigh'],
+    ['mixed', 'axstack-explainer-review', 'high'],
+    ['codex-only', 'axstack-reviewer-secondary', 'high'],
   ]) {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const role = roles.find((role) => role.id === id);
@@ -224,4 +224,22 @@ test('Terra preset seats resolve their exact model and effort from saved capabil
     expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', providerInstanceId: 'codex',
       model: 'gpt-6.1-terra', effortOption: { id: 'reasoningEffort', value: effort } });
   }
+});
+
+test('Terra class and explicit pins reject every effort except high without coercion', () => {
+  const data = fresh();
+  data.providers[0].models.push(entry('gpt-6.1-terra', 'reasoningEffort', ['low', 'medium', 'high', 'xhigh']));
+  for (const args of [['--class', 'terra'], ['--model', 'gpt-6.1-terra'],
+    ['--class', 'terra', '--model', 'gpt-6-sol']]) {
+    for (const effort of ['low', 'medium', 'xhigh']) {
+      held(resolve(data, args, 'codex', effort), /Terra.*(?:exactly|requires?).*high/i);
+    }
+  }
+  const result = resolve(data, ['--model', 'gpt-6.1-terra']);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'gpt-6.1-terra',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  // The newest Terra lacking high must hold, even with an older usable Terra.
+  data.providers[0].models.push(entry('gpt-6.2-terra', 'reasoningEffort', ['xhigh']));
+  held(resolve(data, ['--class', 'terra']), /unsupported effort high.*gpt-6.2-terra/i);
 });
