@@ -2,7 +2,6 @@ import { afterEach } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../../skills/axstack/scripts/dispatch-plan.js`;
-const resolver = `${import.meta.dir}/../../../skills/axstack/scripts/resolve-models.js`;
 const fixture = JSON.parse(readFileSync(`${import.meta.dir}/../fixtures/dispatch-plan.json`, 'utf8'));
 const catalog = JSON.parse(readFileSync(`${import.meta.dir}/../fixtures/t3-capabilities.json`, 'utf8'));
 const roots = [];
