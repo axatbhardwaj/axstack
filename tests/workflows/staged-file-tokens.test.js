@@ -3,9 +3,10 @@ import { chmodSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from '
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-staged-file-tokens.js`;
 const large = 'authored content\n'.repeat(1500); // 25,500 bytes.
+const tempRoot = process.env.TMPDIR ?? '/tmp';
 
 function fixture() {
-  const cwd = realpathSync(mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/token-limit-`));
+  const cwd = realpathSync(mkdtempSync(`${tempRoot}/token-limit-`));
   const git = (...args) => {
     const result = Bun.spawnSync(['git', ...args], { cwd });
     if (result.exitCode) throw Error(result.stderr.toString());
@@ -183,7 +184,7 @@ test('skips submodule gitlinks and checks renamed files', () => {
 
 test('Git and ignore-file read failures are explicit errors', () => {
   const f = fixture();
-  const outside = realpathSync(mkdtempSync(`${process.env.TMPDIR}/not-git-`));
+  const outside = realpathSync(mkdtempSync(`${tempRoot}/not-git-`));
   let result = f.run(outside);
   expect(result.exitCode).not.toBe(0);
   expect(result.stderr.toString()).toMatch(/check failed/i);

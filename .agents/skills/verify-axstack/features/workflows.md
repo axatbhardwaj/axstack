@@ -61,6 +61,9 @@ ignore globs from linked worktrees. Advisories offer no ignore/banner escape.
 `staged-token-gate.test.js` checks pre-commit execution, advisory success,
 no size-only splits or approval requests, structural review, error integrity and
 receipt recording with removal, inversion and equivalent-rewording probes.
+Also run these two staged-file test files with `TMPDIR` unset, as in CI; their
+shared temp root falls back to `/tmp`. Keep that `/tmp` private to the dispatch
+(e.g. a mount namespace bound to owned 0700 scratch outside HOME).
 These tests install no Git hooks and prove instructions and fixture CLI behavior,
 not live author compliance. Run the workflow command below after Launch/Doctor;
 record isolation or harness-discovery gaps and complete feasible checks without
