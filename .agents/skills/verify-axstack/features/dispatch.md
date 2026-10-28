@@ -28,10 +28,14 @@ With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
 The resolver accepts only Codex, Claude and Grok workflow providers. Run
 `bun run test tests/installer/installed-preset-routing.test.js tests/workflows/resolve-models.test.js tests/workflows/dispatch-plan.test.js`
 to verify unsupported-provider holds, saved bindings and readback mismatches.
+Run `bun run test tests/workflows/research-web.test.js` to exercise mixed
+Terra-high web dispatch/readback and both provider-bounded explicit absences.
 The resolver suite also proves the mixed tracker checker resolves to Claude
 Sonnet with low effort; readiness rejects a checker lacking both model and class.
 It resolves the mixed research-code, execution and visual-review seats and the
-codex-only authored reviewer to Terra with their configured efforts. The role
+codex-only authored reviewer to Terra at exactly high effort. Class-based and explicit Terra pins reject
+medium/xhigh/missing effort, including through dispatch-plan; unavailable high
+holds without selecting an older model. Effective non-high readback holds. The role
 readiness suite rejects Luna or a wrong effort for that authored reviewer.
 The installed-routing boundary installs the real mixed bundle and dispatches its
 existing UI verifier to Codex `gpt-6.1-terra` high/full-access from saved

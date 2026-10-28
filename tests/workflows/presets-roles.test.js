@@ -58,7 +58,7 @@ test('mixed visual author pins Sonnet 5.5 high and reviewer uses Terra', () => {
   expect(roles.find(({id}) => id === 'axstack-explainer')).toMatchObject({
     provider: 'claude', modelClass: 'sonnet', model: 'claude-sonnet-5-5', thinkingOptionId: 'high',
   });
-  expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'terra', thinkingOptionId:'medium'});
+  expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'terra', thinkingOptionId:'high'});
 });
 
 for (const preset of presetNames) {

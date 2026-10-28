@@ -32,6 +32,8 @@ provider's first listed model from saved capabilities and records its exact ID.
 A Codex or Claude role with neither model nor class is an intentional absence
 and holds.
 Resume must reuse the saved capabilities and role snapshot with no re-resolution; changes require the user’s explicit decision.
+Every Terra class or explicit Terra model pin requires exactly high effort.
+Missing high effort holds without substitution or silently coercing the request.
 An unavailable provider, model, role, mode or effort holds that role with no substitution.
 Preset changes apply to new runs only; an active run keeps its snapshot.
 Replacing a session needs an explicit user decision and revalidation.
@@ -68,7 +70,7 @@ step (3) for user routing: no substitution or same-provider review.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).
-- Code quality/refactor discovery -> `axstack-improve`: rank bounded
+- Code quality/refactor or named UI screen/flow discovery -> `axstack-improve`: rank bounded
   candidates with evidence; report only, no source edits.
 - Repeated mistakes need evidence and stronger checks -> `axstack-correct`:
   user-invoked, report only.

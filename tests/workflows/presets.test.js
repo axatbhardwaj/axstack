@@ -22,6 +22,7 @@ const roleIds = [
   'axstack-research-code',
   'axstack-research-code-sol',
   'axstack-research-web',
+  'axstack-research-web-sol',
   'axstack-research-x',
   'axstack-explainer',
   'axstack-explainer-review',
@@ -53,9 +54,9 @@ const expected = {
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
     a('sonnet', 'low'), a('sonnet', 'high'),
-    a('sonnet', 'high'), c('terra', 'high'), a('sonnet', 'high'),
+    a('sonnet', 'high'), c('terra', 'high'), a('sonnet', 'high'), c('terra', 'high'),
     g(null, 'high'),
-    a('sonnet', 'high'), c('terra', 'medium'),
+    a('sonnet', 'high'), c('terra', 'high'),
     c('terra', 'high'),
     a('haiku', 'high'), c('luna', 'xhigh'),
     a('sonnet', 'high'), c('terra', 'high'),
@@ -69,10 +70,10 @@ const expected = {
     c('astra', 'high'),
     c(null, 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'high'), c('terra', 'xhigh'), c('luna', 'xhigh'),
+    c('sol', 'high'), c('terra', 'high'), c('luna', 'xhigh'),
     c('sol', 'high'),
     c('luna', 'low'), c('astra', 'medium'),
-    c('sol', 'high'), c('sol', 'high'), c('sol', 'low'),
+    c('sol', 'high'), c('sol', 'high'), c('sol', 'low'), c(null, 'high'),
     c(null, 'high'),
     c('sol', 'high'), c('luna', 'xhigh'),
     c('sol', 'medium'),
@@ -98,6 +99,7 @@ const expected = {
     a('sonnet', 'high'),
     a(null, 'high'),
     a('sonnet', 'high'),
+    a(null, 'high'),
     a(null, 'high'),
     a('sonnet', 'high'),
     a('sonnet', 'high'),
@@ -263,7 +265,7 @@ test('presets: auditor route agrees with audit skill and workflow table', () => 
 });
 
 test('presets: Codex explainer reviewer uses the selected class and effort', () => {
-  for (const [preset, modelClass, effort] of [['mixed', 'terra', 'medium'], ['codex-only', 'luna', 'xhigh']]) {
+  for (const [preset, modelClass, effort] of [['mixed', 'terra', 'high'], ['codex-only', 'luna', 'xhigh']]) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
     expect(reviewer).toMatchObject({

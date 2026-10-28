@@ -1,6 +1,6 @@
 ---
 name: axstack-improve
-description: When assessing codebase quality or planning a refactor, use axstack-improve to find evidenced improvements and prepare behavior-preserving changes.
+description: When assessing codebase quality, improving a named screen or flow, or planning a refactor, use axstack-improve to report evidenced improvements and prepare bounded changes.
 ---
 
 # Improve
@@ -9,8 +9,8 @@ On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
 Find a small set of worthwhile maintainability, architecture, or testability
-improvements from inspected code. This is a direct discovery route: it needs no
-spec or tickets and writes only the requested report. No worthwhile
+improvements from inspected code or rendered UI. This is a direct discovery
+route: it needs no spec or tickets and writes only the requested report. No worthwhile
 improvement is a valid result.
 
 Before acting, load [Standing contracts](../axstack/references/contracts.md),
@@ -49,6 +49,23 @@ For performance work, rank candidates in mantra order.
    restored locality when the evidence supports them.
 4. Apply KISS, YAGNI, and SOLID as judgment, not a mandatory scorecard. Use no
    invented metrics and no arbitrary complexity targets.
+
+### UI discovery
+
+UI discovery for a named screen or flow remains report-only.
+Record the user's task, exact build/revision, inspected route and relevant
+fixtures, themes, viewports and interaction states before assessing it.
+UI discovery requires Playwright render evidence from `axstack-ui-verifier`
+at the exact revision under [UI verification](../axstack/references/ui-verification.md).
+Rank UI defects in hierarchy, typography, spacing, contrast, responsive layout
+and interaction with evidence and acceptance criteria. Link each defect to a
+capture or observed action, explain user impact, and rank by task blockage,
+severity and likely benefit relative to effort; separate observation from preference.
+UI discovery labels a missing or failed capture unverified.
+Return the ranked report and capture boundaries, including a no-change result
+when warranted. Clear authorized UI work routes to Implement with its accepted
+small-change intent; selection alone retains section 3's action boundary.
+For the execution handoff, read [UI improvement loop](../axstack/references/ui-improvement-loop.md).
 
 ### Test-audit lens
 

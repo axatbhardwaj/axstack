@@ -137,10 +137,15 @@ Haiku 5.5 high, with class `haiku` and exact pin
 holds that role without substitution. `codex-only` keeps its Codex
 assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
 and `codex-only`. In `claude-only`, Luna is intentionally absent.
+For a needed web claim in mixed, pair `axstack-research-web` (Sonnet high)
+with optional `axstack-research-web-sol` (Terra high), independently on the same
+bounded brief without cross-reading. Both single-provider presets explicitly
+mark the web pair absent and keep their base web researcher. Optional launch
+failures retain fencing and the mixed research provider floor.
 The mixed X route uses Grok.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
-`axstack-explainer-review` uses Terra medium; `axstack-explainer` pins
+`axstack-explainer-review` uses Terra high; `axstack-explainer` pins
 `claude-sonnet-5-5` high with class `sonnet`. Both roles cover every Explain
 visual, including chat Mermaid and anatomy figures. The existing mixed
 `axstack-ui-verifier` resolves the Codex Terra class at high effort with
@@ -166,7 +171,7 @@ Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
-uses Terra xhigh for Sol-authored candidates in `codex-only`. It is used
+uses Terra high for Sol-authored candidates in `codex-only`. It is used
 in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.
 
@@ -622,3 +627,15 @@ runtime receipts; evidence from one route does not establish support for all rol
 Bun >=1.3.14, with no runtime dependencies. Workflow checks use
 `bun test tests/workflows/`; the only approved Node built-ins are Bun-backed
 `node:fs` and `node:fs/promises`.
+
+## UI improvement
+
+For “improve this screen”, Improve reports ranked defects for a named screen or
+flow using Playwright evidence from the existing read-only UI verifier. Each
+fix has observable acceptance criteria; missing renders remain unverified.
+Authorized bounded changes enter Implement's [UI improvement loop](../skills/axstack/references/ui-improvement-loop.md):
+one writer and hypothesis, a frozen capture protocol, fresh renders each attempt,
+independent blind A/B, hard functional/accessibility/interaction gates and
+keep/revert to the best-known candidate. Record a finite budget and plateau
+threshold before editing; stop at goal, plateau or budget. Aesthetic scores
+alone cannot establish success. Existing exact-revision delivery gates remain.

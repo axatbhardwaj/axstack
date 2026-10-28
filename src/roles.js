@@ -22,7 +22,7 @@ const AUTHORED_ROUTES = Object.freeze({
     'claude/opus': ['axstack-reviewer-primary', 'codex/sol', 'high'],
   },
   'codex-only': {
-    'codex/sol': ['axstack-reviewer-secondary', 'codex/terra', 'xhigh'],
+    'codex/sol': ['axstack-reviewer-secondary', 'codex/terra', 'high'],
   },
   'claude-only': {
     'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'high'],
@@ -66,6 +66,9 @@ export function assertBundleRoles(roles) {
     if (hasClass && typeof role.model === 'string' && deriveModelClass(role.model) !== role.modelClass) {
       throw new Error(`invalid bundle roles: ${role.id} model pin does not match model class`);
     }
+    if (roleClass(role) === 'terra' && role.thinkingOptionId !== 'high') {
+      throw new Error(`invalid bundle roles: ${role.id} Terra requires exactly high effort`);
+    }
     for (const field of ['icon', 'color', 'modeId', 'thinkingOptionId', 'notes']) {
       if (role[field] !== undefined && typeof role[field] !== 'string') {
         throw new Error(`invalid bundle roles: ${field} must be a string when present`);
@@ -89,8 +92,8 @@ export function assessRoleReadiness(roles, preset) {
   const isIntentionalAbsence = (role) => role.model === null && (
     (preset === 'mixed' && role.id === 'axstack-research-x' && role.provider === 'grok') ||
     (preset === 'mixed' && role.id === 'axstack-arena-candidate-grok' && role.provider === 'grok') ||
-    (preset === 'codex-only' && ['axstack-advisor-opus', 'axstack-escalation-fable', 'axstack-arena-judge-opus', 'axstack-research-x', 'axstack-arena-candidate-grok'].includes(role.id)) ||
-    (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-explore-codebase-luna'].includes(role.id))
+    (preset === 'codex-only' && ['axstack-advisor-opus', 'axstack-escalation-fable', 'axstack-arena-judge-opus', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-research-web-sol'].includes(role.id)) ||
+    (preset === 'claude-only' && ['axstack-advisor-astra', 'axstack-arena-judge-astra', 'axstack-research-x', 'axstack-arena-candidate-grok', 'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol', 'axstack-explore-codebase-luna', 'axstack-research-web-sol'].includes(role.id))
   );
   for (const role of roles) {
     if (!bounds.has(role.provider)) {

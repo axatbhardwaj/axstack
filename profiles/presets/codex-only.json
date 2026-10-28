@@ -51,8 +51,8 @@
       "name": "Axstack reviewer (secondary)",
       "provider": "codex",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
-      "notes": "Terra xhigh authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
+      "thinkingOptionId": "high",
+      "notes": "Terra high authored reviewer for a Sol-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance.",
       "modelClass": "terra"
     },
     {
@@ -117,6 +117,15 @@
       "thinkingOptionId": "low",
       "notes": "Research web reader: gathers primary-source facts efficiently. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
+    },
+    {
+      "id": "axstack-research-web-sol",
+      "name": "Axstack research web Terra",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence: the mixed Terra web pair is unavailable in this preset. Record the absence and use the base web researcher without substitution."
     },
     {
       "id": "axstack-research-x",

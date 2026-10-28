@@ -119,6 +119,15 @@
       "modelClass": "sonnet"
     },
     {
+      "id": "axstack-research-web-sol",
+      "name": "Axstack research web Terra",
+      "provider": "claude",
+      "model": null,
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence: the mixed Terra web pair is unavailable in this preset. Record the absence and use the base web researcher without substitution."
+    },
+    {
       "id": "axstack-research-x",
       "name": "Axstack research X (unavailable)",
       "provider": "claude",
