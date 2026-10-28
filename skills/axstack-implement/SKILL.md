@@ -166,11 +166,17 @@ applied or found not applicable in the `Simplification:` line of the
 including evidence and retained complexity.
 
 Before every commit, the author runs the
-[staged-file token gate](../axstack/scripts/check-staged-file-tokens.js)
+[staged-file size check](../axstack/scripts/check-staged-file-tokens.js)
 with `bun` from the target repository.
-If the gate fails, split files per its instructions before retrying.
-Never bypass the staged-file token gate.
-Record the staged-file token gate result in the implementation receipt.
+Successful staged-file size measurements, including files above 20,000 bytes,
+are advisory and exit 0.
+Never require splitting files solely for size.
+Never request user approval solely for file size.
+Review file structure and responsibilities even when size is advisory.
+Git, read, malformed-size and unmerged-index errors must fail with a nonzero exit.
+Resolve measurement errors before committing; keep repository-owned checks enforceable.
+Preserve the check's exclusions, but never hide authored files behind generated banners or ignore globs.
+Record the staged-file size check result in the implementation receipt.
 
 ## 5. Verify and return the candidate
 
@@ -199,7 +205,7 @@ Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
-Token limit: <staged-file gate command + observed result before each commit>
+Token limit: <staged-file size check command + observed advisories/errors before each commit>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <checks + observed results>
 Dependencies: <parent revisions or none>

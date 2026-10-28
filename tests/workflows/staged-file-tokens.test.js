@@ -1,11 +1,12 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-staged-file-tokens.js`;
-const large = 'authored content\n'.repeat(1500); // 25,500 bytes / 4 = 6,375 tokens.
+const large = 'authored content\n'.repeat(1500); // 25,500 bytes.
+const tempRoot = process.env.TMPDIR ?? '/tmp';
 
 function fixture() {
-  const cwd = realpathSync(mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/token-limit-`));
+  const cwd = realpathSync(mkdtempSync(`${tempRoot}/token-limit-`));
   const git = (...args) => {
     const result = Bun.spawnSync(['git', ...args], { cwd });
     if (result.exitCode) throw Error(result.stderr.toString());
@@ -22,45 +23,71 @@ function fixture() {
   return { cwd, git, stage, run };
 }
 
+function expectSilent(result) {
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toBe('');
+}
+
 test('small, empty and exactly 20,000-byte staged blobs pass', () => {
   const f = fixture();
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
   f.stage('small.ts', 'export const small = true;');
   f.stage('limit.ts', 'x'.repeat(20000));
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
 });
 
-test('oversized authored files fail with every path, floor token count and split guidance', () => {
+test('new source and docs above the byte boundary produce exact-size advisories', () => {
   const f = fixture();
   f.stage('foo.ts', large);
-  f.stage('odd\tname\n[1].rs', 'x'.repeat(20007));
+  f.stage('odd\tname\n[1].rs', 'x'.repeat(20001));
+  f.stage('docs/design.md', 'é'.repeat(10001));
+  f.stage('CHANGELOG.md', large);
   const result = f.run();
-  expect(result.exitCode).toBe(1);
-  expect(result.stdout.toString()).toBe('');
+  expect(result.exitCode).toBe(0);
   const message = result.stderr.toString();
-  expect(message).toContain('"foo.ts": 6375 tokens');
-  expect(message).toContain('odd\\tname\\n[1].rs');
-  expect(message).toContain('5001 tokens');
-  expect(message).toContain(`add a glob to "${f.cwd}/.git/info/token-limit-ignore"`);
-  for (const concept of [/top-level.*responsibilit/i, /folder.*original file/i,
-    /foo\/types\.ts/, /foo\/parse\.ts/, /foo\/index\.ts/, /foo\/mod\.rs/,
-    /Svelte.*child components/i, /\.ts.*pure logic/i, /spec.*describe.*behaviour/i,
-    /HTML.*topic.*index/i, /public surface.*re-exports/i, /imports.*same commit/i,
-    /verbatim.*separate commit/i, /3000 tokens/, /stage.*re-commit/i,
-    /generated.*recorded/i, /\.git\/info\/token-limit-ignore/, /generated banner/i]) {
-    expect(message).toMatch(concept);
+  expect(message).toMatch(/advisory/i);
+  for (const [path, bytes] of [['foo.ts', 25500], ['odd\tname\n[1].rs', 20001],
+    ['docs/design.md', 20002], ['CHANGELOG.md', 25500]]) {
+    expect(message).toContain(`${JSON.stringify(path)}: ${bytes} bytes`);
   }
+  expect(message).not.toMatch(/split each|3000|add a glob|generated banner/i);
+  if (/tokens/i.test(message)) expect(message).toMatch(/rough|approximate|estimate/i);
+});
+
+test('tiny legacy edits and unchanged incoming merge blobs remain advisory', () => {
+  const f = fixture();
+  const commit = () => f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
+  f.stage('legacy.ts', large);
+  commit();
+  const base = f.git('rev-parse', 'HEAD').trim();
+  f.git('switch', '-c', 'incoming');
+  f.stage('imported.ts', large);
+  commit();
+  const incoming = f.git('rev-parse', 'HEAD').trim();
+  f.git('switch', '-c', 'local', base);
+  f.stage('legacy.ts', `${large}x`);
+  let result = f.run();
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('"legacy.ts": 25501 bytes');
+  commit();
+  f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'merge', '--no-commit', incoming);
+  result = f.run();
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('"imported.ts": 25500 bytes');
+  expect(f.git('rev-parse', ':imported.ts')).toBe(f.git('rev-parse', `${incoming}:imported.ts`));
 });
 
 test('uses staged bytes and includes files outside the current subdirectory', () => {
   const f = fixture();
   f.stage('foo.ts', 'small staged blob');
   writeFileSync(`${f.cwd}/foo.ts`, large);
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
   f.stage('foo.ts', large);
   writeFileSync(`${f.cwd}/foo.ts`, 'small working tree');
   mkdirSync(`${f.cwd}/sub`);
-  expect(f.run(`${f.cwd}/sub`).exitCode).toBe(1);
+  const result = f.run(`${f.cwd}/sub`);
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('25500 bytes');
 });
 
 test('deleted staged files are ignored', () => {
@@ -68,7 +95,7 @@ test('deleted staged files are ignored', () => {
   f.stage('removed.ts', large);
   f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
   f.git('rm', 'removed.ts');
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
 });
 
 for (const path of ['bun.lock', 'nested/tool.lockb', 'nested/package-lock.json', 'pnpm-lock.yaml',
@@ -79,11 +106,11 @@ for (const path of ['bun.lock', 'nested/tool.lockb', 'nested/package-lock.json',
   test(`skips non-authored path ${path} without exempting authored neighbours`, () => {
     const f = fixture();
     f.stage(path, large);
-    expect(f.run().exitCode).toBe(0);
+    expectSilent(f.run());
     f.stage('authored.ts', large);
     const result = f.run();
-    expect(result.exitCode).toBe(1);
-    expect(result.stderr.toString()).toContain('"authored.ts": 6375 tokens');
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr.toString()).toContain('"authored.ts": 25500 bytes');
     expect(result.stderr.toString()).not.toContain(`${JSON.stringify(path)}:`);
   });
 }
@@ -94,16 +121,18 @@ for (const banner of ['// @generated', '// AUTO-GENERATED', '// auto generated',
     const f = fixture();
     f.stage('code.ts', `one\ntwo\nthree\nfour\n${banner}\n${large.repeat(10)}`);
     writeFileSync(`${f.cwd}/code.ts`, large); // Banner detection must read the index.
-    expect(f.run().exitCode).toBe(0);
+    expectSilent(f.run());
     f.stage('code.ts', `one\ntwo\nthree\nfour\nfive\n${banner}\n${large}`);
-    expect(f.run().exitCode).toBe(1);
+    const result = f.run();
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr.toString()).toContain('bytes');
   });
 }
 
 test('skips Git-detected binary blobs even without a known extension', () => {
   const f = fixture();
   f.stage('payload.unknown', `\0${large}`);
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
 });
 
 test('uses repo-local ignore globs and comments without writing repository files', () => {
@@ -112,13 +141,15 @@ test('uses repo-local ignore globs and comments without writing repository files
   f.stage('recordings/other.json', large);
   writeFileSync(`${f.cwd}/.git/info/token-limit-ignore`, '# Recorded data\n\nrecordings/**/*.txt\nrecordings/*.json\n');
   const before = f.git('status', '--porcelain', '--untracked-files=all');
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
   expect(f.git('status', '--porcelain', '--untracked-files=all')).toBe(before);
   f.stage('outside.ts', large);
-  expect(f.run().exitCode).toBe(1);
+  const result = f.run();
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('"outside.ts": 25500 bytes');
 });
 
-test('linked worktrees share main-repo ignores and report their resolved location', () => {
+test('linked worktrees share main-repo ignores', () => {
   const f = fixture();
   f.stage('seed.ts', 'small');
   f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
@@ -129,14 +160,13 @@ test('linked worktrees share main-repo ignores and report their resolved locatio
   mkdirSync(`${linked}/recordings`);
   writeFileSync(`${linked}/recordings/session.txt`, large);
   f.git('-C', linked, 'add', 'recordings/session.txt');
-  expect(f.run(`${linked}/recordings`).exitCode).toBe(0);
+  expectSilent(f.run(`${linked}/recordings`));
   writeFileSync(`${linked}/authored.ts`, large);
   f.git('-C', linked, 'add', 'authored.ts');
   const result = f.run(linked);
-  expect(result.exitCode).toBe(1);
-  expect(result.stderr.toString()).toContain('"authored.ts": 6375 tokens');
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('"authored.ts": 25500 bytes');
   expect(result.stderr.toString()).not.toContain('"recordings/session.txt":');
-  expect(result.stderr.toString()).toContain(`add a glob to "${ignoreFile}"`);
 });
 
 test('skips submodule gitlinks and checks renamed files', () => {
@@ -145,9 +175,52 @@ test('skips submodule gitlinks and checks renamed files', () => {
   f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
   // A gitlink can refer to an object absent from this repository.
   f.git('update-index', '--add', '--cacheinfo', `160000,${'1'.repeat(40)},submodule`);
-  expect(f.run().exitCode).toBe(0);
+  expectSilent(f.run());
   f.git('mv', 'old.ts', 'renamed.ts');
   const result = f.run();
-  expect(result.exitCode).toBe(1);
-  expect(result.stderr.toString()).toContain('"renamed.ts": 6375 tokens');
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toContain('"renamed.ts": 25500 bytes');
+});
+
+test('Git and ignore-file read failures are explicit errors', () => {
+  const f = fixture();
+  const outside = realpathSync(mkdtempSync(`${tempRoot}/not-git-`));
+  let result = f.run(outside);
+  expect(result.exitCode).not.toBe(0);
+  expect(result.stderr.toString()).toMatch(/check failed/i);
+  mkdirSync(`${f.cwd}/.git/info/token-limit-ignore`);
+  result = f.run();
+  expect(result.exitCode).not.toBe(0);
+  expect(result.stderr.toString()).toMatch(/check failed/i);
+});
+
+for (const size of ['NaN', '', '-1', '1.5', '20001oops', '9007199254740992', 'error']) {
+  test(`invalid size or failed blob read is an error: ${JSON.stringify(size)}`, () => {
+    const f = fixture();
+    f.stage('file.ts', 'small');
+    const bin = `${f.cwd}/fake-bin`;
+    mkdirSync(bin);
+    const realGit = Bun.which('git');
+    const response = size === 'error' ? 'echo "blob read failed" >&2; exit 1' : `printf '%s' '${size}'`;
+    writeFileSync(`${bin}/git`, `#!/bin/sh\ncase "$*" in *"cat-file -s"*) ${response};; *) exec "${realGit}" "$@";; esac\n`);
+    chmodSync(`${bin}/git`, 0o700);
+    const result = Bun.spawnSync([process.execPath, script], {
+      cwd: f.cwd, env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+    });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toMatch(/check failed/i);
+  });
+}
+
+test('unmerged index entries are errors even for excluded paths', () => {
+  const f = fixture();
+  f.stage('seed.ts', 'small');
+  const blob = f.git('rev-parse', ':seed.ts').trim();
+  const result = Bun.spawnSync(['git', 'update-index', '--index-info'], {
+    cwd: f.cwd, stdin: Buffer.from(`100644 ${blob} 1\tignored.png\n100644 ${blob} 2\tignored.png\n`),
+  });
+  expect(result.exitCode).toBe(0);
+  const check = f.run();
+  expect(check.exitCode).not.toBe(0);
+  expect(check.stderr.toString()).toMatch(/unmerged/i);
 });
