@@ -142,7 +142,10 @@ The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed
 `axstack-explainer-review` uses Terra medium; `axstack-explainer` pins
 `claude-sonnet-5-5` high with class `sonnet`. Both roles cover every Explain
-visual, including chat Mermaid and anatomy figures.
+visual, including chat Mermaid and anatomy figures. The existing mixed
+`axstack-ui-verifier` resolves the Codex Terra class at high effort with
+full-access mode; its read-only browser verification duties stay unchanged.
+An unavailable model or effort holds without substitution.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at high effort.
 The `-sol` research-code and explore-execution seats use Terra high in `mixed`
 and Sol high in `codex-only`; the auditor pair stays Sol high in both.
