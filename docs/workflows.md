@@ -137,6 +137,11 @@ Haiku 5.5 high, with class `haiku` and exact pin
 holds that role without substitution. `codex-only` keeps its Codex
 assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
 and `codex-only`. In `claude-only`, Luna is intentionally absent.
+For a needed web claim in mixed, pair `axstack-research-web` (Sonnet high)
+with optional `axstack-research-web-sol` (Terra high), independently on the same
+bounded brief without cross-reading. Both single-provider presets explicitly
+mark the web pair absent and keep their base web researcher. Optional launch
+failures retain fencing and the mixed research provider floor.
 The mixed X route uses Grok.
 The mixed `axstack-auditor` uses Haiku 5.5 xhigh, pinned to `claude-haiku-5-5`;
 missing that ID or xhigh effort holds without substitution. The mixed

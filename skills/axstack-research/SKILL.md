@@ -37,7 +37,9 @@ is part of research.
    For each needed source class, retain two isolated branches where configured.
    In mixed, each needed source class retains branches from different providers.
    The code pair is `axstack-research-code` +
-   `axstack-research-code-sol`; the web branch is `axstack-research-web`;
+   `axstack-research-code-sol`.
+   In mixed the web pair is `axstack-research-web` +
+   `axstack-research-web-sol` (Terra high);
    the execution pair is `axstack-explore-execution` +
    `axstack-explore-execution-sol`. Requirements, code, and web use Sonnet high
    in mixed/claude-only and Codex in codex-only; X uses Grok.
@@ -57,13 +59,14 @@ is part of research.
    - `axstack-research-code`: code behavior.
    - `axstack-research-code-sol`: independent code investigation (Terra high in mixed, Sol high in codex-only).
    - `axstack-research-web`: web and external sources.
+   - `axstack-research-web-sol`: independent Terra high web reader in mixed; intentionally absent in both single-provider presets.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
    - For broad codebase mapping, use `axstack-scout`.
      Never dispatch `axstack-explore-codebase` directly for broad mapping.
    - `axstack-explore-execution`: execution and runtime traces.
    - `axstack-explore-execution-sol`: independent execution investigation (Terra high in mixed, Sol high in codex-only).
 
-   When dispatching `axstack-research-code` or `axstack-explore-execution`,
+   When dispatching `axstack-research-web`, `axstack-research-code` or `axstack-explore-execution`,
    dispatch its `-sol` pair independently on the same bounded brief without
    cross-reading. The driver reconciles agreement and disagreement per claim,
    never averaging findings. Record an intentionally absent pair and proceed

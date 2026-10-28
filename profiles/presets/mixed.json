@@ -119,6 +119,15 @@
       "modelClass": "sonnet"
     },
     {
+      "id": "axstack-research-web-sol",
+      "name": "Axstack research web Terra",
+      "provider": "codex",
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Independent Terra high web researcher on the same bounded brief as the Sonnet base seat without cross-reading. Cites primary sources for driver reconciliation per claim; optional seat failures follow the role roster.",
+      "modelClass": "terra"
+    },
+    {
       "id": "axstack-research-x",
       "name": "Axstack research X",
       "provider": "grok",

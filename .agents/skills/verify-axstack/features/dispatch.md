@@ -28,6 +28,8 @@ With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
 The resolver accepts only Codex, Claude and Grok workflow providers. Run
 `bun run test tests/workflows/resolve-models.test.js tests/workflows/dispatch-plan.test.js`
 to verify unsupported-provider holds, saved bindings and readback mismatches.
+Run `bun run test tests/workflows/research-web.test.js` to exercise mixed
+Terra-high web dispatch/readback and both provider-bounded explicit absences.
 The resolver suite also proves the mixed tracker checker resolves to Claude
 Sonnet with low effort; readiness rejects a checker lacking both model and class.
 It resolves the mixed research-code, execution and visual-review seats and the

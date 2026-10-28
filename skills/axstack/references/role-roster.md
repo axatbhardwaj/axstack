@@ -52,8 +52,13 @@
   independently from its base seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.
   Record intentional absence and continue with Sonnet alone.
+- Web pair `axstack-research-web`/`axstack-research-web-sol`: Sonnet high +
+  Terra high in mixed, independently on the same bounded brief without
+  cross-reading, with driver reconciliation per claim. The `-sol` web seat is
+  intentionally absent in both single-provider presets; use the base seat alone.
 - Optional seats: `axstack-arena-candidate-grok`,
   `axstack-research-x`, `axstack-checker`, `axstack-research-code-sol`,
+  `axstack-research-web-sol`,
   `axstack-explore-execution-sol`, `axstack-auditor-sol`.
   Always dispatch optional seats when configured and available, except research
   branches, which follow [Research step 2](../../axstack-research/SKILL.md#procedure) sizing.
