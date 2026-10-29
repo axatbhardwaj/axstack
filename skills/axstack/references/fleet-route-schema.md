@@ -50,7 +50,8 @@ names such as `browser:headed`, `worktree-isolation`, `session:sign-in`; each va
 is `{value: true|false|null, evidence}`. Required capabilities must be true and
 proven in both configuration and the destination snapshot.
 
-Remote authors cannot use `remote` routes. A coordinator route is disabled
+Coordinator routes are exclusively for `author` requests; readers use local/remote
+routes. Remote authors cannot use `remote` routes. A coordinator route is disabled
 unless explicitly enabled with `authorProof`:
 `{originEnvironmentId, environmentId, originVersions, destinationVersions,
 evidence, gatesPassed: true}`. Both version objects contain exact nonempty

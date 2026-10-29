@@ -97,6 +97,7 @@ export function routeReasons(route, host, destination, facts, input, now) {
   if (Object.hasOwn(input.exclusions.hosts, host.id)) add('excluded-host');
   if (Object.hasOwn(input.exclusions.routes, route.id)) add('excluded-route');
   if (!route.enabled) add('route-disabled');
+  if (route.kind === 'remote-author-coordinator' && r.role !== 'author') add('route-role-mismatch');
   if (!evidence(route.evidence, host.environmentId, now)) add('evidence-unproven');
   if (!facts) add('route-unproven');
   else {

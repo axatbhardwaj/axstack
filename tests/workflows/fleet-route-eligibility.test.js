@@ -114,3 +114,9 @@ describe('explanations and hostile JSON keys', () => {
     expect(run(f).selected.telemetry.cpuBp).toBe(700);
   });
 });
+
+test('author coordinator routes cannot be used for read-only roles', () => {
+  const f = fixture(); f.config.routes[0].kind = 'remote-author-coordinator';
+  expect(selected(f)).toBe('worker-b');
+  expect(run(f).excluded[0].reasons).toContain('route-role-mismatch');
+});
