@@ -76,6 +76,11 @@ assignment/pending de-duplication, unknown inventory, required actual sessions,
 capability/project/access/target exclusions, local-only authors on both personal
 fixture hosts, disabled/version-bound remote authors, overload continuation,
 clock freshness, basis-point precision and explicit schema/digest errors.
+The disabled coordinator has complete valid proof; directed-origin, each proof
+field and both endpoint versions are checked independently. Additional tables
+isolate execution availability/provider/mode/options, evidence and observation
+times, config/join ambiguity and assignment conflicts; result mutation checks
+protect the supplied snapshot from output aliases.
 No credential, personal host configuration, T3 launch or live telemetry is used.
 Preserve JSON and logs outside scratch selected for deletion. Repeat this drive
 when selector/schema changes; later integration recipes must verify the actual

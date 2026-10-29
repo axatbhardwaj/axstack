@@ -106,6 +106,32 @@ describe('assignment provenance', () => {
   });
 });
 
+describe('conflicting assignment identities', () => {
+  test.each([
+    ['same client on different environments', (f) => {
+      f.input.pendingAssignments = [
+        { clientRequestId: 'batch:one', environmentId: 'worker-a' },
+        { clientRequestId: 'batch:one', environmentId: 'worker-b' },
+      ];
+    }],
+    ['same client with different returned tasks', (f) => {
+      f.input.pendingAssignments = ['origin:one', 'origin:two'].map((taskId) =>
+        ({ clientRequestId: 'batch:one', environmentId: 'worker-a', taskId }));
+    }],
+    ['returned task disagrees with inventory environment', (f) => {
+      f.input.assignments = [{ assignmentId: 'origin:one', environmentId: 'worker-a', state: 'running' }];
+      f.input.pendingAssignments = [{ clientRequestId: 'batch:one', taskId: 'origin:one', environmentId: 'worker-b' }];
+    }],
+    ['two clients map one pending task to different environments', (f) => {
+      f.input.pendingAssignments = ['worker-a', 'worker-b'].map((environmentId, i) =>
+        ({ clientRequestId: `batch:${i}`, taskId: 'origin:one', environmentId }));
+    }],
+  ])('%s is rejected instead of silently undercounted', (_, mutate) => {
+    const f = fixture(); mutate(f);
+    expect(() => run(f)).toThrow('assignment-conflict');
+  });
+});
+
 describe('clock, precision and telemetry', () => {
   test.each([
     ['stale', { receivedAt: NOW - 15001 }], ['future', { receivedAt: NOW + 1 }],
@@ -119,6 +145,14 @@ describe('clock, precision and telemetry', () => {
     expect(run(f)).toMatchObject({ stage: 'fallback', selected: { hostId: 'worker-b' } });
     expect(run(f).eligible[0].telemetry.status).toBe('unknown');
     expect(run(f).excluded).toEqual([]);
+  });
+  test.each([-1, 10001, 5000.5, null, '9000'])('invalid latest RAM %s remains unknown', (ramLatestBp) => {
+    const f = fixture([6000, 6000, 6000, 6000, 6000]);
+    f.input.telemetry[0].ramLatestBp = ramLatestBp;
+    const result = run(f);
+    expect(result.selected.hostId).toBe('worker-b');
+    expect(result.eligible[0].telemetry).toMatchObject({ status: 'unknown', reason: 'malformed' });
+    expect(result.excluded).toEqual([]);
   });
   test('collector freshness boundary, raw fractions upward and deterministic JSON', () => {
     const f = fixture([null, 5001, 5001, 1000, 1000]);
@@ -155,4 +189,23 @@ describe('telemetry interval consistency', () => {
     expect(run(f).eligible[0].telemetry.loadBp).toBe(9000);
     expect(selected(f)).toBe('worker-b');
   });
+});
+
+
+test.each([
+  ['request capabilities', (result) => { result.request.requiredCapabilities.push('new-capability'); }],
+  ['selected options', (result) => { result.selected.execution.options.effort = 'changed'; }],
+  ['selected route evidence', (result) => { result.selected.routeEvidence.pointer = 'changed'; }],
+  ['selected destination evidence', (result) => { result.selected.destinationEvidence.pointer = 'changed'; }],
+  ['selected capabilities', (result) => { result.selected.capabilities['browser:headed'].value = false; }],
+  ['eligible host versions', (result) => { result.eligible[1].versions.t3 = 'changed'; }],
+  ['excluded evidence', (result) => { result.excluded[0].evidence.configuredRoute.pointer = 'changed'; }],
+])('mutating output %s cannot change the supplied snapshot', (_, mutateResult) => {
+  const f = fixture();
+  f.input.exclusions.routes['route-worker-c'] = 'synthetic failed launch';
+  const input = f.bind(); const before = JSON.stringify(input);
+  const result = recommend(input, NOW);
+  expect(result.selected.hostId).toBe('worker-a');
+  mutateResult(result);
+  expect(JSON.stringify(input)).toBe(before);
 });
