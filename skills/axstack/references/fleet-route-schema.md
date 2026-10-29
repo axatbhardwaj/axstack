@@ -109,6 +109,12 @@ eligible; unreadable/unknown facts exclude it. `project` is `{id, repositoryId}`
 these are destination-verified facts, never the origin's model catalog. They
 must match the request exactly (option object key order is immaterial).
 Missing projects and mismatched repository/target settings have distinct reasons.
+For dispatch-plan binding, also supply `capabilitiesDigest`: the lowercase
+SHA-256 of the exact raw saved destination `orchestrator_capabilities` JSON
+bytes. The selector carries this optional fact as `destinationCapabilitiesDigest`;
+the adapter requires it. Collect the catalog on that destination/session, not
+from the origin's catalog. Both current `options.values[]` (strings/booleans)
+and legacy `options.options[].id` advertisements are supported.
 
 A route observation is `{routeId, reachable, authorized, expiresAt,
 destinationSnapshotId, evidence}`. Reachability and authorization must be true.
@@ -189,8 +195,33 @@ Excluded entries include host/route identity, reason codes, explicit exclusion
 text and available configured/observed evidence. Failed alternative routes may
 appear even when another route on that host is eligible.
 
-C1b binds the exact environment/project, destination snapshot, requested
-provider/model/options/mode and config digest to dispatch-plan. C3 binds them
-to actual launch/readback/remote receipts. A recommendation never launches,
+### Dispatch-plan adapter
+
+Add `--recommendation recommendation.json --fleet-input snapshot.json
+--now 100000 --config-digest <run-pin>` to the existing dispatch-plan flags.
+All four are required together. `--capabilities` names the raw destination
+catalog. The complete selector input includes config bytes; retain the CLI's
+saved input plus the reviewed `configText` if the CLI supplied it from a file.
+Recompute using the same explicit time and task before binding. The adapter
+rejects any recommendation disagreement, missing/mismatched catalog digest,
+unavailable destination model/options, or role/settings/config disagreement.
+It never reinterprets a requested model pin as a different available model.
+
+Task plans add `environmentId`/`projectId` to `target`; launch plans add them
+beside `modelSelection`. All requested options survive as T3 option entries.
+Both include `fleetBinding: {configDigest, destinationSnapshotId,
+destinationCapabilitiesDigest}`. This is preserved evidence, not a T3 launch
+parameter. Copy only tool-supported launch fields. Coordinator author routes
+remain explicitly unsupported pending C3 lifecycle enablement.
+
+For `--verify`, supply the effective configuration plus independently observed
+`environmentId`, `projectId` and the preserved `fleetBinding` in one JSON
+envelope. All are compared; missing values hold. Do not synthesize observed
+fields from the plan. C3 owns live evidence collection and remote receipts;
+C1b verifies supplied evidence only and cannot authenticate its origin.
+Fleet binding mismatches exit 2; malformed CLI/files exit 1. Existing local
+planning without these flags retains its interface.
+
+A recommendation never launches,
 provisions, mutates links, retries submission or grants authority. Call afresh
 before each dispatch; assignment/load snapshots remain subject to races.

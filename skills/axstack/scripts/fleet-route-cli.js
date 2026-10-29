@@ -22,7 +22,7 @@ Exit codes: 0 recommendation/help, 1 input/config error, 2 no executable route.
 `;
 
 const fail = (code) => { throw new Error(code); };
-export function readInput(path) {
+function readInput(path) {
   let value;
   try { value = readFileSync(path, 'utf8'); } catch { fail('missing-input'); }
   try { return JSON.parse(value); } catch { fail('input-json'); }

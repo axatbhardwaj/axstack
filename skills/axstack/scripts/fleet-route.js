@@ -31,6 +31,8 @@ export function recommend(input, now) {
         accepted = { hostId, environmentId: host.environmentId, projectId: destination.project.id,
           repositoryId: destination.project.repositoryId, routeId: route.id, routeKind: route.kind,
           destinationSnapshotId: destination.snapshotId, destinationObservedAt: destination.observedAt,
+          ...(destination.capabilitiesDigest !== undefined
+            ? { destinationCapabilitiesDigest: destination.capabilitiesDigest } : {}),
           destinationEvidence: destination.evidence, routeEvidence: facts.evidence, versions: destination.versions,
           execution: destination.execution, capabilities: destination.capabilities,
           fallbackLimitBp: host.fallbackLimitBp, assignmentCount: counts.byEnvironment[host.environmentId],
