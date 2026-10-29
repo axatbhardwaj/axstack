@@ -4,7 +4,7 @@ Approved spec: r6, `docs/specs/fleet-routing.md` at `8912084d`, SHA-256 `afaca25
 Approval: Axat answered “let's go” to the r6 implementation/store checkpoint. Exact approved bytes retain historical draft/pending labels; this record establishes approval without rewriting the snapshot.
 Store: repository Markdown, axatbhardwaj/axstack. Haoshoku changes form a dependent capability in axatbhardwaj/haoshoku.
 Owner: originating T3 driver `1ac64f7f-58aa-42f4-a68c-f8c8916203f1`; any transfer requires explicit acceptance. Authors receive T3-owned isolated worktrees; never shell-created author worktrees.
-State: mapped; map diligence pending. Source base: Axstack `7879335ca4ca2d66ea2f10a5d97885188a5e100d`. No source implementation yet.
+State: mapped; map diligence findings repaired by driver; no spec changes. Source base: Axstack `7879335ca4ca2d66ea2f10a5d97885188a5e100d`. No source implementation yet.
 
 ## C1 — Predictable worker recommendations
 
@@ -67,3 +67,14 @@ Depends: C1-C5; conditional author enabled only with C3b gates. Do not label par
 ## Tracking
 
 All C1-C6 pending. No PRs, authors or worktrees yet. Driver records per-task source base, candidate, PR URL, review rounds and acceptance receipts in private run record. Keep capability status open until merges and checks complete. Mapping changes cannot rewrite approved requirements.
+
+## Diligence repairs and assignment fields
+- C1 explicitly owns Bun >=1.3.14/no runtime dependencies, --config with account-local default, and interactive authentication on the actual session host with no credential transfer. C1 owns the offline instruction-integration check as well as selector/CLI checks.
+- C2 records/tests sampling interval and timeout in --help.
+- C3 owns driver-side T3 inventory collection instructions, origin-qualified IDs/remote environment mapping, pending submission reconciliation and de-duplication. No new task-owned repeating timer.
+- C3b coordinator never publishes PRs, changes global settings or recursively routes across hosts. Unavailable target base without root mutation makes that pilot attempt ineligible. These are explicit pilot gates. Preserve unknown liveness after unconfirmed stop and block replacements; record nested IDs; disconnected cancellation tests use only owned contexts; no top-level fallback without separately explicit new-thread request.
+- C4 states native UI placement separately from worker placement and that native balancing never overrides explicit worker environmentId. Pin the Haoshoku source base; /root/dev/Haoshoku and /root/dev/haoshoku are distinct existing checkouts, never interchangeable.
+- C5 verifies iosatellite existing axstack-default-sync timer wiring and records active/inactive/absent from observation, never assumption. Expired links are ineligible.
+- C3/C6 link fleet-verification.md from verify-axstack uncovered surfaces.
+- For every C1a/C1b/C2/C3a/C3b/C4 author: PR owner is originating driver until a recorded transfer; worktree is T3-allocated at dispatch with actual absolute path recorded before edits. None allocated yet. C5/C6 operational work belongs to the driver; no code-author worktree unless a distinct code slice is dispatched.
+- Map diligence report 4fca762af2aeaadeec138242a5612341b23c17d6a948d9991a2724f13f902216 mapped every other F1-F6 clause; driver accepts the map after these direct repairs.
