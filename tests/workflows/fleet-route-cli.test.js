@@ -4,7 +4,7 @@ import { fixture, NOW } from './fleet-route-fixture.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/fleet-route.js`;
 function setup() {
-  const dir = mkdtempSync(`${process.env.TMPDIR}/fleet-cli-`);
+  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/fleet-cli-`);
   const f = fixture();
   const save = (name, value) => {
     const path = `${dir}/${name}`;
