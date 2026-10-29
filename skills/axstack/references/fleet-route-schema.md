@@ -3,7 +3,7 @@
 C1a exports `recommend(input, now)` and `parseFleetConfig(configText, configDigest)`
 from `../scripts/fleet-route.js`. Both are synchronous Bun APIs. They perform no
 I/O, use no ambient clock and keep no state. Importing the module launches nothing.
-The CLI, collector and dispatch-plan adapter are subsequent slices.
+The CLI wraps this API; the collector is a subsequent slice.
 
 ```js
 import { recommend } from '../scripts/fleet-route.js';
@@ -25,6 +25,25 @@ these errors belongs to the adapter; exceptions never authorize fallback routes.
 `parseFleetConfig` verifies the digest before parsing and returns the validated
 object. Missing/invalid configuration and digest mismatches fail explicitly.
 No account path or fleet identity is built into this API.
+
+### Offline command
+
+`bun fleet-route.js recommend --input snapshot.json --now 100000 --json`
+reads saved facts plus `--config <path>` (default:
+`~/.config/haoshoku/fleet-routing.json`). It never samples or dispatches.
+`--config-digest <sha256>` pins reviewed config bytes; otherwise the saved
+input must carry `configDigest`. Any saved `configText`/`configDigest` must
+agree with the file and explicit pin. Saved input may omit `configText`.
+`--task <name>` overrides only the request task preference. Evaluation time
+is required and explicit. `--help` lists flags and side effects.
+
+With `--json`, stdout is the complete schema-1 result; errors are always
+`{"error":{"code":"stable-code","message":"detail"}}` on stderr with
+empty stdout. Exit 0 means a recommendation/help, 1 means an input/config
+error, and 2 means explicit no-route JSON (when `--json` is used). Without
+`--json`, stdout is a one-line stage/host/reason summary. Authentication stays
+on the actual destination session: required session capabilities are supplied
+evidence, never inferred from the origin catalog or copied credentials.
 
 | Config field | Contract |
 | --- | --- |

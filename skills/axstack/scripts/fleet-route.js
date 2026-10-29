@@ -76,3 +76,8 @@ export function recommend(input, now) {
     stage, reason: flags.localAuthorOnly ? 'author-local-only' : reason, decisionReason: reason,
     selected, flags, counts, eligible, excluded });
 }
+
+if (import.meta.main) {
+  const { main } = await import('./fleet-route-cli.js');
+  process.exitCode = main(process.argv.slice(2));
+}
