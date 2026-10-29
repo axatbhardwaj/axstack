@@ -45,3 +45,43 @@ An omitted provider label is reported as unknown while the exact instance,
 model, options and mode remain checked. Input paths remain in the complete JSON.
 These fixture results grant no live dispatch authority. Missing models or
 mismatched readback must hold, not substitute.
+
+
+## Pure fleet recommendations (C1a)
+
+Entry point: `skills/axstack/scripts/fleet-route.js`; internal config/fact modules
+are packaged relative imports. Input/output contract:
+`skills/axstack/references/fleet-route-schema.md`. Prerequisites: Launch and
+Doctor, Bun >=1.3.14; synthetic fixture facts only, no network or live config.
+This path imports the production API directly; CLI/dispatch binding and
+sampling are subsequent slices and are not claimed by this recipe.
+
+```bash
+doctor > "$EVIDENCE/fleet-doctor.log" 2>&1
+bun run test tests/workflows/fleet-route.test.js tests/workflows/fleet-route-eligibility.test.js > "$EVIDENCE/fleet-selector.log" 2>&1
+bun -e 'import { recommend } from "./skills/axstack/scripts/fleet-route.js";
+import { fixture, NOW } from "./tests/workflows/fleet-route-fixture.js";
+const f = fixture(); const input = f.bind(); const before = JSON.stringify(input);
+const result = recommend(input, NOW);
+if (result.stage !== "balance" || result.selected.environmentId !== "worker-a"
+ || result.selected.projectId !== "project-worker-a" || JSON.stringify(input) !== before)
+ throw Error("pure selector binding or mutation failure");
+console.log(JSON.stringify(result, null, 2));' > "$EVIDENCE/fleet-recommendation.json"
+```
+
+Proof: fixture selection is worker-a/project-worker-a with destination model
+settings, exact config digest and provenance; input bytes remain unchanged.
+Tests prove all four ordered stages, 20/35/40 sequential batch spread,
+assignment/pending de-duplication, unknown inventory, required actual sessions,
+capability/project/access/target exclusions, local-only authors on both personal
+fixture hosts, disabled/version-bound remote authors, overload continuation,
+clock freshness, basis-point precision and explicit schema/digest errors.
+The disabled coordinator has complete valid proof; directed-origin, each proof
+field and both endpoint versions are checked independently. Additional tables
+isolate execution availability/provider/mode/options, evidence and observation
+times, config/join ambiguity and assignment conflicts; result mutation checks
+protect the supplied snapshot from output aliases.
+No credential, personal host configuration, T3 launch or live telemetry is used.
+Preserve JSON and logs outside scratch selected for deletion. Repeat this drive
+when selector/schema changes; later integration recipes must verify the actual
+destination readback independently rather than treating this output as authority.
