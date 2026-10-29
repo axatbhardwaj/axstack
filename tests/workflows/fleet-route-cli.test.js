@@ -66,6 +66,26 @@ test('CLI task choice and reasoned exclusion retry use saved facts', () => {
     ]) });
 });
 
+test('explicit config pin cannot replace a different saved pin even with valid config bytes', () => {
+  const f = setup();
+  const savedPin = f.input.configDigest;
+  f.f.config.balanceLimitBp = 4500;
+  f.f.bind();
+  delete f.input.configText; // The independent saved-pin guard must decide this case.
+  f.save('config.json', JSON.stringify(f.f.config));
+  f.save('input.json', f.input);
+  const args = [...f.args, '--config-digest', f.input.configDigest];
+  const control = f.run(args);
+  expect(control.status, control.error).toBe(0);
+  expect(JSON.parse(control.output).selected.hostId).toBe('worker-a');
+  f.input.configDigest = savedPin;
+  f.save('input.json', f.input);
+  const result = f.run(args);
+  expect(result.status).toBe(1);
+  expect(result.output).toBe('');
+  expect(JSON.parse(result.error)).toEqual({ error: { code: 'config-digest-mismatch', message: 'config-digest-mismatch' } });
+});
+
 test('no executable route has explicit JSON and hold status', () => {
   const f = setup();
   f.input.destinations = [];

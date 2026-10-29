@@ -145,7 +145,12 @@ Proof: the real CLI produces worker-a/project-worker-a; saved task target and
 MATCH bind exact config/catalog bytes and requested settings. Tests cover
 current T3 `options.values[]` and legacy `options.options[]`, extra option
 preservation, explicit missing/schema/digest errors, exclusions and mismatch
-holds. The default config-path test uses only a temporary account. Network
+holds. Valid positive controls precede independent run-pin, configured role/settings,
+fully proven coordinator, catalog ambiguity/unsupported option and no-route holds.
+Changed catalogs are re-digested and destination execution agrees with the request,
+so earlier selector/digest failures cannot mask those binding checks. These
+pre-plan holds assert exact errors and empty stdout. The default config-path test uses
+only a temporary account. Network
 isolation plus before/after fixture bytes guard the offline/no-mutation contract.
 `fleetBinding` is evidence, not a supported T3 dispatch parameter. Live C3 must
 collect host-qualified readback independently; fixture MATCH grants no authority.
