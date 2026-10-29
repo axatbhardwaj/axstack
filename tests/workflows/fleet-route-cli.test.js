@@ -31,7 +31,8 @@ test('saved-input CLI returns deterministic destination facts without modifying 
   expect(result.status).toBe(0);
   const report = JSON.parse(result.output);
   expect(report).toMatchObject({ schemaVersion: 1, evaluatedAt: NOW, configDigest: f.input.configDigest,
-    stage: 'balance', selected: { environmentId: 'worker-a', projectId: 'project-worker-a',
+    originEnvironmentId: 'env-personal-a',
+    stage: 'balance', selected: { hostId: 'worker-a', environmentId: 'env-worker-a', projectId: 'project-worker-a',
       destinationSnapshotId: 'snapshot-worker-a', execution: { model: 'fixture-model' } } });
   expect(result.error).toBe('');
   expect(f.run().output).toBe(result.output);

@@ -14,10 +14,15 @@ describe('ordered fleet placement', () => {
       const result = recommend(input, NOW);
       expect(JSON.stringify(input)).toBe(before);
       expect(result.stage).toBe('balance');
-      picks.push(result.selected.hostId);
+      picks.push({ hostId: result.selected.hostId, environmentId: result.selected.environmentId,
+        projectId: result.selected.projectId });
       f.input.pendingAssignments.push({ clientRequestId: `batch:${i}`, environmentId: result.selected.environmentId });
     }
-    expect(picks).toEqual(['worker-a', 'worker-b', 'worker-c']);
+    expect(picks).toEqual([
+      { hostId: 'worker-a', environmentId: 'env-worker-a', projectId: 'project-worker-a' },
+      { hostId: 'worker-b', environmentId: 'env-worker-b', projectId: 'project-worker-b' },
+      { hostId: 'worker-c', environmentId: 'env-worker-c', projectId: 'project-worker-c' },
+    ]);
   });
   test('balance threshold returns afresh; CPU and RAM both determine pressure', () => {
     const f = fixture([5000, 5001, 5001, 0, 0]);
@@ -54,7 +59,7 @@ describe('ordered fleet placement', () => {
     f.input.request.task = 'playwright';
     f.input.request.requiredCapabilities = ['browser:headed'];
     expect(selected(f)).toBe('worker-c');
-    f.input.pendingAssignments.push({ clientRequestId: 'batch:one', environmentId: 'worker-c' });
+    f.input.pendingAssignments.push({ clientRequestId: 'batch:one', environmentId: 'env-worker-c' });
     expect(selected(f)).toBe('worker-a');
     f.input.pendingAssignments = [];
     f.input.telemetry[2].cpuBp = 3000;
@@ -78,30 +83,30 @@ describe('assignment provenance', () => {
   test('origin-qualified IDs and task mappings de-duplicate inventory and pending', () => {
     const f = fixture();
     f.input.assignments = [
-      { assignmentId: 'origin:task-1', environmentId: 'worker-a', state: 'running' },
-      { assignmentId: 'origin:task-1', environmentId: 'worker-a', state: 'running' },
-      { assignmentId: 'origin:done', environmentId: 'worker-b', state: 'completed' },
+      { assignmentId: 'origin:task-1', environmentId: 'env-worker-a', state: 'running' },
+      { assignmentId: 'origin:task-1', environmentId: 'env-worker-a', state: 'running' },
+      { assignmentId: 'origin:done', environmentId: 'env-worker-b', state: 'completed' },
     ];
     f.input.pendingAssignments = [
-      { clientRequestId: 'batch:a', environmentId: 'worker-a', taskId: 'origin:task-1' },
-      { clientRequestId: 'batch:a', environmentId: 'worker-a', taskId: 'origin:task-1' },
-      { clientRequestId: 'batch:b', environmentId: 'worker-b' },
-      { clientRequestId: 'batch:b', environmentId: 'worker-b' },
-      { clientRequestId: 'batch:done', environmentId: 'worker-b', taskId: 'origin:done' },
+      { clientRequestId: 'batch:a', environmentId: 'env-worker-a', taskId: 'origin:task-1' },
+      { clientRequestId: 'batch:a', environmentId: 'env-worker-a', taskId: 'origin:task-1' },
+      { clientRequestId: 'batch:b', environmentId: 'env-worker-b' },
+      { clientRequestId: 'batch:b', environmentId: 'env-worker-b' },
+      { clientRequestId: 'batch:done', environmentId: 'env-worker-b', taskId: 'origin:done' },
     ];
     expect(selected(f)).toBe('worker-c');
-    expect(run(f).counts).toMatchObject({ byEnvironment: { 'worker-a': 1, 'worker-b': 1, 'worker-c': 0 }, inventoryStatus: 'known', inventoryObservedAt: NOW });
+    expect(run(f).counts).toMatchObject({ byEnvironment: { 'env-worker-a': 1, 'env-worker-b': 1, 'env-worker-c': 0 }, inventoryStatus: 'known', inventoryObservedAt: NOW });
   });
   test('unavailable inventory uses pending only with explicit uncertainty', () => {
     const f = fixture();
     f.input.inventoryStatus = 'unknown';
-    f.input.assignments = [{ assignmentId: 'origin:stale', environmentId: 'worker-b', state: 'running' }];
-    f.input.pendingAssignments = [{ clientRequestId: 'batch:a', environmentId: 'worker-a' }];
+    f.input.assignments = [{ assignmentId: 'origin:stale', environmentId: 'env-worker-b', state: 'running' }];
+    f.input.pendingAssignments = [{ clientRequestId: 'batch:a', environmentId: 'env-worker-a' }];
     expect(run(f)).toMatchObject({ selected: { hostId: 'worker-b' }, flags: { countsUnknown: true } });
   });
   test('ambiguous identity mapping is rejected rather than undercounted', () => {
     const f = fixture();
-    f.input.assignments = ['worker-a', 'worker-b'].map((environmentId) => ({ assignmentId: 'origin:one', environmentId, state: 'running' }));
+    f.input.assignments = ['env-worker-a', 'env-worker-b'].map((environmentId) => ({ assignmentId: 'origin:one', environmentId, state: 'running' }));
     expect(() => run(f)).toThrow('assignment-conflict');
   });
 });
@@ -110,20 +115,20 @@ describe('conflicting assignment identities', () => {
   test.each([
     ['same client on different environments', (f) => {
       f.input.pendingAssignments = [
-        { clientRequestId: 'batch:one', environmentId: 'worker-a' },
-        { clientRequestId: 'batch:one', environmentId: 'worker-b' },
+        { clientRequestId: 'batch:one', environmentId: 'env-worker-a' },
+        { clientRequestId: 'batch:one', environmentId: 'env-worker-b' },
       ];
     }],
     ['same client with different returned tasks', (f) => {
       f.input.pendingAssignments = ['origin:one', 'origin:two'].map((taskId) =>
-        ({ clientRequestId: 'batch:one', environmentId: 'worker-a', taskId }));
+        ({ clientRequestId: 'batch:one', environmentId: 'env-worker-a', taskId }));
     }],
     ['returned task disagrees with inventory environment', (f) => {
-      f.input.assignments = [{ assignmentId: 'origin:one', environmentId: 'worker-a', state: 'running' }];
-      f.input.pendingAssignments = [{ clientRequestId: 'batch:one', taskId: 'origin:one', environmentId: 'worker-b' }];
+      f.input.assignments = [{ assignmentId: 'origin:one', environmentId: 'env-worker-a', state: 'running' }];
+      f.input.pendingAssignments = [{ clientRequestId: 'batch:one', taskId: 'origin:one', environmentId: 'env-worker-b' }];
     }],
     ['two clients map one pending task to different environments', (f) => {
-      f.input.pendingAssignments = ['worker-a', 'worker-b'].map((environmentId, i) =>
+      f.input.pendingAssignments = ['env-worker-a', 'env-worker-b'].map((environmentId, i) =>
         ({ clientRequestId: `batch:${i}`, taskId: 'origin:one', environmentId }));
     }],
   ])('%s is rejected instead of silently undercounted', (_, mutate) => {

@@ -63,13 +63,14 @@ bun -e 'import { recommend } from "./skills/axstack/scripts/fleet-route.js";
 import { fixture, NOW } from "./tests/workflows/fleet-route-fixture.js";
 const f = fixture(); const input = f.bind(); const before = JSON.stringify(input);
 const result = recommend(input, NOW);
-if (result.stage !== "balance" || result.selected.environmentId !== "worker-a"
+if (result.stage !== "balance" || result.selected.hostId !== "worker-a" || result.selected.environmentId !== "env-worker-a"
  || result.selected.projectId !== "project-worker-a" || JSON.stringify(input) !== before)
  throw Error("pure selector binding or mutation failure");
 console.log(JSON.stringify(result, null, 2));' > "$EVIDENCE/fleet-recommendation.json"
 ```
 
-Proof: fixture selection is worker-a/project-worker-a with destination model
+Proof: fixture selection is host worker-a, environment env-worker-a and
+project project-worker-a, with destination model
 settings, exact config digest and provenance; input bytes remain unchanged.
 Tests prove all four ordered stages, 20/35/40 sequential batch spread,
 assignment/pending de-duplication, unknown inventory, required actual sessions,
@@ -112,7 +113,7 @@ await Bun.write(root + "/fleet-roles.json", JSON.stringify({version: 1, roles: [
   {id: "fixture-reader", provider: "codex", model: "gpt-6.1-sol",
     thinkingOptionId: "high", modeId: "full-access"}]}));
 await Bun.write(root + "/fleet-pin.txt", input.configDigest);
-await Bun.write(root + "/fleet-readback.json", JSON.stringify({environmentId: "worker-a",
+await Bun.write(root + "/fleet-readback.json", JSON.stringify({environmentId: "env-worker-a",
   projectId: "project-worker-a", runtimeMode: "full-access",
   modelSelection: {instanceId: "codex", model: "gpt-6.1-sol", options: {reasoningEffort: "high"}},
   fleetBinding: {configDigest: input.configDigest, destinationSnapshotId: "snapshot-worker-a",
@@ -134,14 +135,15 @@ test "$(tail -n 1 "$EVIDENCE/fleet-verify.log")" = MATCH
 bun -e 'const root = process.env.EVIDENCE;
 const plan = await Bun.file(root + "/fleet-plan.json").json();
 const rec = await Bun.file(root + "/fleet-cli.json").json();
-if (plan.target.environmentId !== "worker-a" || plan.target.projectId !== "project-worker-a"
+if (rec.selected.hostId !== "worker-a" || rec.selected.environmentId !== "env-worker-a"
+ || plan.target.environmentId !== "env-worker-a" || plan.target.projectId !== "project-worker-a"
  || plan.fleetBinding.configDigest !== rec.configDigest
  || plan.fleetBinding.destinationCapabilitiesDigest !== rec.selected.destinationCapabilitiesDigest
  || plan.target.model !== "gpt-6.1-sol" || plan.target.options[0].value !== "high")
  throw Error("fleet CLI destination binding mismatch");'
 ```
 
-Proof: the real CLI produces worker-a/project-worker-a; saved task target and
+Proof: the real CLI selects host worker-a and targets env-worker-a/project-worker-a; saved task target and
 MATCH bind exact config/catalog bytes and requested settings. Tests cover
 current T3 `options.values[]` and legacy `options.options[]`, extra option
 preservation, explicit missing/schema/digest errors, exclusions and mismatch

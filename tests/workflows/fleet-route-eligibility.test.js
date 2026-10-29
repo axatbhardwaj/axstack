@@ -7,7 +7,7 @@ const selected = (f) => run(f).selected?.hostId;
 function authorFixture() {
   const f = fixture(); f.input.request.role = 'author';
   const route = f.config.routes[0]; route.kind = 'remote-author-coordinator';
-  route.authorProof = { originEnvironmentId: 'personal-a', environmentId: 'worker-a',
+  route.authorProof = { originEnvironmentId: 'env-personal-a', environmentId: 'env-worker-a',
     originVersions: structuredClone(f.input.origin.versions),
     destinationVersions: structuredClone(f.input.destinations[0].versions),
     evidence: structuredClone(route.evidence), gatesPassed: true };
@@ -45,18 +45,18 @@ describe('eligibility before load', () => {
     expect(run(f)).toMatchObject({ selected: { hostId: 'worker-c', projectId: 'project-worker-c', routeId: 'route-worker-c', destinationSnapshotId: 'snapshot-worker-c' } });
     expect(run(f).excluded.map((e) => e.reasons[0])).toEqual(['excluded-route', 'excluded-host']);
   });
-  test.each(['personal-a', 'personal-b'])('author local-only fallback on %s ignores soft pool preference', (local) => {
+  test.each([['personal-a', 'env-personal-a'], ['personal-b', 'env-personal-b']])('author local-only fallback on %s ignores soft pool preference', (local, environmentId) => {
     const f = fixture([1000, 1000, 1000, 9500, 9500]);
-    f.input.origin.environmentId = local;
-    f.config.routes.forEach((r) => { r.originEnvironmentId = local; r.kind = r.environmentId === local ? 'local' : 'remote'; });
+    f.input.origin.environmentId = environmentId;
+    f.config.routes.forEach((r) => { r.originEnvironmentId = environmentId; r.kind = r.environmentId === environmentId ? 'local' : 'remote'; });
     f.input.request.role = 'author';
-    expect(run(f)).toMatchObject({ stage: 'fallback', selected: { hostId: local }, flags: { localAuthorOnly: true, overloaded: true } });
+    expect(run(f)).toMatchObject({ stage: 'fallback', selected: { hostId: local, environmentId }, flags: { localAuthorOnly: true, overloaded: true } });
     expect(run(f).excluded.every((r) => r.reasons.includes('remote-author-unsupported'))).toBe(true);
   });
   test('required actual session overrides preferences, without credential movement', () => {
     const f = fixture();
     f.input.request.requiredCapabilities = ['session:sign-in'];
-    f.input.destinations.forEach((d) => { d.capabilities['session:sign-in'].value = d.environmentId === 'personal-b'; });
+    f.input.destinations.forEach((d) => { d.capabilities['session:sign-in'].value = d.environmentId === 'env-personal-b'; });
     expect(selected(f)).toBe('personal-b');
   });
   test('a disabled coordinator with complete valid proof stays disabled', () => {
@@ -71,7 +71,7 @@ describe('eligibility before load', () => {
     ['gates not passed', (f) => { f.config.routes[0].authorProof.gatesPassed = false; }],
     ['missing gate result', (f) => { delete f.config.routes[0].authorProof.gatesPassed; }],
     ['wrong proof origin', (f) => { f.config.routes[0].authorProof.originEnvironmentId = 'other-origin'; }],
-    ['wrong proof destination', (f) => { f.config.routes[0].authorProof.environmentId = 'worker-b'; }],
+    ['wrong proof destination', (f) => { f.config.routes[0].authorProof.environmentId = 'env-worker-b'; }],
     ...['t3', 'axstack'].flatMap((version) => [
       [`changed origin ${version}`, (f) => { f.input.origin.versions = { ...f.input.origin.versions, [version]: 'changed' }; }],
       [`changed destination ${version}`, (f) => { f.input.destinations[0].versions = { ...f.input.destinations[0].versions, [version]: 'changed' }; }],
@@ -81,7 +81,7 @@ describe('eligibility before load', () => {
     ['missing origin versions', (f) => { delete f.config.routes[0].authorProof.originVersions; }],
     ['missing destination versions', (f) => { delete f.config.routes[0].authorProof.destinationVersions; }],
     ['missing proof evidence', (f) => { delete f.config.routes[0].authorProof.evidence; }],
-    ['wrong proof evidence host', (f) => { f.config.routes[0].authorProof.evidence.environmentId = 'worker-b'; }],
+    ['wrong proof evidence host', (f) => { f.config.routes[0].authorProof.evidence.environmentId = 'env-worker-b'; }],
     ['empty proof evidence pointer', (f) => { f.config.routes[0].authorProof.evidence.pointer = ''; }],
     ['missing proof evidence time', (f) => { delete f.config.routes[0].authorProof.evidence.observedAt; }],
     ['future proof evidence', (f) => { f.config.routes[0].authorProof.evidence.observedAt = NOW + 1; }],
@@ -97,7 +97,7 @@ describe('eligibility before load', () => {
     expect(selected(f)).toBe('worker-a');
     f.config.routes[0].originEnvironmentId = 'other-origin';
     expect(selected(f)).toBe('personal-a');
-    expect(run(f).excluded[0]).toMatchObject({ hostId: 'worker-a', routeId: null, reasons: ['route-missing'] });
+    expect(run(f).excluded[0]).toMatchObject({ hostId: 'worker-a', environmentId: 'env-worker-a', routeId: null, reasons: ['route-missing'] });
   });
   test.each(['configured', 'observed'])('authors require automatic %s local isolation', (source) => {
     const f = fixture(); f.input.request.role = 'author';
@@ -141,14 +141,14 @@ describe('schema and configuration binding', () => {
     ['config-route', (f) => { f.config.routes[0].kind = 'local'; f.bind(); }],
     ['config-route', (f) => { f.config.routes[3].kind = 'remote'; f.bind(); }],
     ['config-route', (f) => { f.config.routes.push(structuredClone(f.config.routes[0])); f.bind(); }],
-    ['config-host', (f) => { f.config.hosts[1].environmentId = 'worker-a'; f.bind(); }],
+    ['config-host', (f) => { f.config.hosts[1].environmentId = 'env-worker-a'; f.bind(); }],
     ...[undefined, -1, NOW - 0.5, NOW + 1].map((observedAt) => ['inventory-schema', (f) => { f.input.inventoryObservedAt = observedAt; f.bind(); }]),
     ...[['destinations', 'environmentId'], ['routeFacts', 'routeId'], ['telemetry', 'environmentId']].flatMap(([key, id]) => [
       [`${key}-schema`, (f) => { f.input[key].push(structuredClone(f.input[key][0])); f.bind(); }],
       [`${key}-schema`, (f) => { delete f.input[key][0][id]; f.bind(); }],
     ]),
     ['inventory-schema', (f) => { f.input.inventoryStatus = 'maybe'; f.bind(); }],
-    ['assignment-schema', (f) => { f.input.assignments = [{ assignmentId: 'no-origin', environmentId: 'worker-a', state: 'running' }]; f.bind(); }],
+    ['assignment-schema', (f) => { f.input.assignments = [{ assignmentId: 'no-origin', environmentId: 'env-worker-a', state: 'running' }]; f.bind(); }],
   ])('%s fails explicitly', (reason, mutate) => {
     const f = fixture(); mutate(f);
     expect(() => recommend(f.input, NOW)).toThrow(reason);
@@ -163,10 +163,10 @@ describe('explanations and hostile JSON keys', () => {
   });
   test('exclusions preserve host-qualified evidence and caller explanation', () => {
     const f = fixture(); f.input.routeFacts[0].authorized = false;
-    expect(run(f).excluded[0]).toMatchObject({ evidence: {
-      configuredRoute: { environmentId: 'worker-a', pointer: 'fixture://proof' },
-      observedRoute: { environmentId: 'worker-a', pointer: 'fixture://proof' },
-      destination: { environmentId: 'worker-a', pointer: 'fixture://proof' },
+    expect(run(f).excluded[0]).toMatchObject({ hostId: 'worker-a', environmentId: 'env-worker-a', evidence: {
+      configuredRoute: { environmentId: 'env-worker-a', pointer: 'fixture://proof' },
+      observedRoute: { environmentId: 'env-worker-a', pointer: 'fixture://proof' },
+      destination: { environmentId: 'env-worker-a', pointer: 'fixture://proof' },
       destinationSnapshotId: 'snapshot-worker-a',
     } });
   });

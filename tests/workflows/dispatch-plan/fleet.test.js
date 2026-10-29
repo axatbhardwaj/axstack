@@ -31,7 +31,7 @@ function fleet() {
     if (configuration !== undefined) args.push('--verify', f.save('configuration', configuration));
     return invoke(args);
   };
-  const readback = () => ({ ...configuration(), environmentId: 'worker-a', projectId: 'project-worker-a',
+  const readback = () => ({ ...configuration(), environmentId: 'env-worker-a', projectId: 'project-worker-a',
     fleetBinding: { configDigest: input.configDigest, destinationSnapshotId: 'snapshot-worker-a',
       destinationCapabilitiesDigest: digest() },
     modelSelection: { ...configuration().modelSelection, options: { reasoningEffort: 'high', serviceTier: 'priority' } } });
@@ -51,12 +51,12 @@ function fleet() {
     bindConfig() { data.bind(); refresh(); }, get saved() { return saved; } };
 }
 
-function planned(f, overrides = {}, environmentId = 'worker-a') {
+function planned(f, overrides = {}, destination = { environmentId: 'env-worker-a', projectId: 'project-worker-a' }) {
   const result = f.run(undefined, [], 'task', overrides);
   expect(result.status, result.error).toBe(0);
   expect(result.error).toBe('');
   expect(JSON.parse(result.output).target).toMatchObject({ providerInstanceId: 'codex',
-    model: 'gpt-6.1-sol', environmentId, projectId: `project-${environmentId}` });
+    model: 'gpt-6.1-sol', ...destination });
 }
 
 function held(result, code) {
@@ -75,7 +75,7 @@ test('fleet plans bind task/launch destinations and preserve every requested opt
     const selection = kind === 'task' ? plan.target : plan.modelSelection;
     expect(selection.model).toBe('gpt-6.1-sol');
     expect(selection.options).toEqual([{ id: 'reasoningEffort', value: 'high' }, { id: 'serviceTier', value: 'priority' }]);
-    expect(kind === 'task' ? plan.target : plan).toMatchObject({ environmentId: 'worker-a', projectId: 'project-worker-a' });
+    expect(kind === 'task' ? plan.target : plan).toMatchObject({ environmentId: 'env-worker-a', projectId: 'project-worker-a' });
     expect(plan.runtimeMode).toBe('full-access');
   }
   expect(f.run(f.readback()).output).toContain('MATCH');
@@ -84,7 +84,8 @@ test('fleet plans bind task/launch destinations and preserve every requested opt
 test('fleet readback detects destination, snapshot, settings and config mismatches', () => {
   const f = fleet();
   for (const [field, change] of [
-    ['environmentId', (v) => { v.environmentId = 'personal-a'; }],
+    ['environmentId', (v) => { v.environmentId = 'worker-a'; }],
+    ['environmentId', (v) => { v.environmentId = 'env-personal-a'; }],
     ['projectId', (v) => { v.projectId = 'other-project'; }],
     ['destinationSnapshotId', (v) => { v.fleetBinding.destinationSnapshotId = 'other-snapshot'; }],
     ['destinationCapabilitiesDigest', (v) => { v.fleetBinding.destinationCapabilitiesDigest = '0'.repeat(64); }],
@@ -154,7 +155,7 @@ test.each([
   const f = fleet();
   planned(f);
   f.setRequest(patch); // Keep destination execution consistent so the selector cannot mask this check.
-  expect(f.saved.selected?.environmentId).toBe('worker-a');
+  expect(f.saved.selected?.environmentId).toBe('env-worker-a');
   held(f.run(), 'settings-mismatch');
 });
 
@@ -162,22 +163,23 @@ test.each(['reader', 'author'])('a valid %s request cannot acquire the opposite 
   const f = fleet();
   f.setRequest({ role });
   const configured = role === 'author' ? 'axstack-author' : 'axstack-reader';
-  planned(f, { role: configured }, role === 'author' ? 'personal-a' : 'worker-a');
+  planned(f, { role: configured }, role === 'author' ? { environmentId: 'env-personal-a', projectId: 'project-personal-a' }
+    : { environmentId: 'env-worker-a', projectId: 'project-worker-a' });
   held(f.run(undefined, [], 'task', { role: role === 'author' ? 'axstack-reader' : 'axstack-author' }), 'settings-mismatch');
 });
 
 test('fully proven coordinator selection stays held after a valid local author plan', () => {
   const f = fleet();
   f.setRequest({ role: 'author' });
-  planned(f, { role: 'axstack-author' }, 'personal-a');
+  planned(f, { role: 'axstack-author' }, { environmentId: 'env-personal-a', projectId: 'project-personal-a' });
   const route = f.config.routes[0];
   route.kind = 'remote-author-coordinator';
-  route.authorProof = { originEnvironmentId: 'personal-a', environmentId: 'worker-a',
+  route.authorProof = { originEnvironmentId: 'env-personal-a', environmentId: 'env-worker-a',
     originVersions: structuredClone(f.input.origin.versions),
     destinationVersions: structuredClone(f.input.destinations[0].versions),
     evidence: structuredClone(route.evidence), gatesPassed: true };
   f.bindConfig();
-  expect(f.saved.selected).toMatchObject({ environmentId: 'worker-a', routeKind: 'remote-author-coordinator' });
+  expect(f.saved.selected).toMatchObject({ environmentId: 'env-worker-a', routeKind: 'remote-author-coordinator' });
   held(f.run(undefined, [], 'task', { role: 'axstack-author' }), 'remote-author-not-enabled');
 });
 
@@ -192,7 +194,7 @@ test.each([
   planned(f);
   change(f);
   f.refreshCatalog(); // Bind the changed bytes, not a stale digest that would hide option validation.
-  expect(f.saved.selected?.environmentId).toBe('worker-a');
+  expect(f.saved.selected?.environmentId).toBe('env-worker-a');
   held(f.run(), code);
 });
 
@@ -205,7 +207,7 @@ test.each([
   const f = fleet();
   planned(f);
   f.setRequest({ options });
-  expect(f.saved.selected?.environmentId).toBe('worker-a');
+  expect(f.saved.selected?.environmentId).toBe('env-worker-a');
   held(f.run(), code);
 });
 
