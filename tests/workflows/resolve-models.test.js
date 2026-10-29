@@ -243,3 +243,22 @@ test('Terra class and explicit pins reject every effort except high without coer
   data.providers[0].models.push(entry('gpt-6.2-terra', 'reasoningEffort', ['xhigh']));
   held(resolve(data, ['--class', 'terra']), /unsupported effort high.*gpt-6.2-terra/i);
 });
+
+
+test('current T3 values arrays resolve high without normalizing the saved snapshot', () => {
+  const data = fresh();
+  for (const provider of data.providers) for (const model of provider.models) {
+    for (const option of model.options) {
+      option.values = option.options.map(({ id }) => id);
+      delete option.options;
+    }
+  }
+  const result = resolve(data);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'gpt-6.1-sol',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  data.providers[0].models[0].options[0].values = ['low'];
+  held(resolve(data), /unsupported effort high/);
+  data.providers[0].models[0].options[0].values = [null];
+  held(resolve(data), /malformed capabilities/);
+});

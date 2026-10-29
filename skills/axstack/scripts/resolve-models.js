@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 const bindings = { codex: 'codex', claude: 'claudeAgent', grok: 'grok' };
 const effortIds = { codex: 'reasoningEffort', claude: 'effort', grok: 'reasoningEffort' };
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
+const optionValues = (option) => option.values ?? option.options?.map((value) => value.id);
 
 function argumentsFrom(args) {
   const options = { excluded: [] };
@@ -39,7 +40,9 @@ function providerFrom(catalog, provider) {
   if (!Array.isArray(instance.models) || instance.models.some((model) =>
     !model || !nonempty(model.id) || !Array.isArray(model.options) || model.options.some((option) =>
       !option || !nonempty(option.id) || (option.options !== undefined &&
-        (!Array.isArray(option.options) || option.options.some((value) => !value || !nonempty(value.id))))))) {
+        (!Array.isArray(option.options) || option.options.some((value) => !value || !nonempty(value.id))))
+      || (option.values !== undefined && (!Array.isArray(option.values)
+        || option.values.some((value) => typeof value !== 'boolean' && !nonempty(value))))))) {
     throw new Error('malformed capabilities models or options');
   }
   return instance;
@@ -91,7 +94,7 @@ try {
     throw new Error('Terra requires exactly high effort');
   }
   const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
-  if (effortOptions.length !== 1 || !effortOptions[0].options?.some((value) => value.id === effort)
+  if (effortOptions.length !== 1 || !optionValues(effortOptions[0])?.includes(effort)
     || (provider === 'grok' && effort === 'max')) {
     throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
   }
