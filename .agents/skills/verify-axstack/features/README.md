@@ -6,6 +6,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 | User feature | Recipe | Evidence |
 | --- | --- | --- |
 | Install skills and inspect host setup | [Install/check/version](install.md) | Owned files, repeat install, legacy retirement/retry, stable T3 prerequisite and read-only capability gaps |
+| Recommend a worker from supplied fleet facts | [Pure selector](dispatch.md#pure-fleet-recommendations-c1a) | Ordered stages, eligibility, digest binding, assignment spread and clock/precision |
 | Resolve saved models and prepare dispatch | [Model/dispatch plans](dispatch.md) | Resolved model, bound instance, MATCH readback |
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |
@@ -18,7 +19,7 @@ and provisions no external tools. Fixture catalogs prove no live model availabil
 Static readiness needs an evidence-owned separate Git directory because of
 its output guard. Read-only offline forge observations remain unknown.
 
-Uncovered surfaces: live T3 MCP launches, driver gating previews, live T3 frame delivery, external Notion/Linear, provider authentication,
+Uncovered surfaces: live fleet sampling/links/dispatch and remote-author pilot gates (later slices), live T3 MCP launches, driver gating previews, live T3 frame delivery, external Notion/Linear, provider authentication,
 scheduled work, npm staging approval and release installation across hosts.
 These require their own authorized isolated verification; never infer them
 from this CLI recipe. The install feature maps retirement/retry fixtures; workflow and Anatomy
