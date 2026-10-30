@@ -278,6 +278,29 @@ test('native receipt validates remote null-child completion and newer provider c
 test.each([
   ['receipt-observation', (r) => { r.status.tool = 'worker-self-report'; }],
   ['receipt-version', (r) => { r.schemaVersion = 2; }],
+  ...Object.entries({ environmentId: 'env-worker-b', projectId: 'project-worker-b', providerInstanceId: 'other-provider', model: 'other-model', options: { reasoningEffort: 'low' } })
+    .map(([key, value]) => ['receipt-requested', (r) => { r.requested.target[key] = value; }]),
+  ...['status', 'thread'].flatMap((where) => ['providerInstanceId', 'model'].map((key) =>
+    ['receipt-effective', (r) => { (where === 'status' ? r.status.value : r.thread.value.thread)[key] = 'other'; }])),
+  ['receipt-origin', (r) => { r.status.value.taskId = 'other-task'; }],
+  ['receipt-origin', (r) => { r.submission.taskId = 'other-task'; }],
+  ['receipt-destination', (r) => { r.submission.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-destination', (r) => { r.submission.remoteChild.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-run', (r) => { r.remoteChild.threadId = 'other-thread'; }],
+  ['receipt-terminal', (r) => { r.status.value.latestTerminalStatus = 'failed'; }],
+  ['receipt-terminal', (r) => { r.thread.value.thread.status = 'running'; }],
+  ['receipt-terminal', (r) => { r.thread.value.thread.activeRunId = 'new-run'; }],
+  ['receipt-terminal', (r) => { r.terminal.value.timedOut = true; }],
+  ['receipt-question', (r) => { r.status.value.hasPendingQuestion = true; }],
+  ['receipt-question', (r) => { r.status.value.pendingApproval = { requestId: 'approval' }; }],
+  ['receipt-question', (r) => { r.questions.tool = 'other-tool'; }],
+  ['receipt-question', (r) => { r.questions.environmentId = 'env-worker-b'; }],
+  ['receipt-question', (r) => { r.questions.args.threadId = 'other-thread'; }],
+  ['receipt-question', (r) => { r.questions.observedAt = -1; }],
+  ['receipt-question', (r) => { r.questions.observedAt = NOW + 1; }],
+  ['receipt-question', (r) => { r.questions.evidence = ''; }],
+  ['receipt-question', (r) => { r.questions.value.requests = { length: 0 }; }],
   ['receipt-destination', (r) => { r.thread.value.thread.threadId = 'other-thread'; }],
   ['receipt-run', (r) => { r.terminal.value.threadId = 'other-thread'; }],
   ['receipt-run', (r) => { r.thread.value.recentRuns.push({ runId: 'newer-run', ordinal: 3, status: 'completed' }); }],
@@ -395,6 +418,24 @@ test('remote reviewer checkout binds owned host/path, candidate and base readbac
       hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
       candidate: 'a'.repeat(40), base: 'b'.repeat(40), evidence: 'target://exact-sha-check' } };
   expect(f.run(value).output).toContain('MATCH');
+  // Each authority term must remain explicit even if another term also holds.
+  const missingCheckout = structuredClone(value);
+  delete missingCheckout.fleetReceipt.checkout;
+  missingCheckout.fleetReceipt.thread.value.thread.worktreePath = null;
+  missingCheckout.fleetReceipt.requested.isolation = 'shared';
+  const missingResult = f.run(missingCheckout);
+  expect(missingResult.status).toBe(2);
+  expect(missingResult.output).toContain('receipt-checkout: unknown');
+  for (const change of [
+    (v) => { v.fleetReceipt.checkout.path = v.fleetReceipt.checkout.readback.path = v.fleetReceipt.thread.value.thread.worktreePath = 'relative/path'; },
+    (v) => { v.fleetAttempt.base = v.fleetReceipt.checkout.base = v.fleetReceipt.checkout.readback.base = 'not-a-commit'; },
+  ]) {
+    const bad = structuredClone(value);
+    change(bad);
+    const result = f.run(bad);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain('receipt-checkout: fail');
+  }
   const misplaced = structuredClone(value);
   misplaced.fleetReceipt.thread.value.thread.worktreePath = '/target/different-checkout';
   const misplacedResult = f.run(misplaced);
@@ -408,6 +449,7 @@ test('remote reviewer checkout binds owned host/path, candidate and base readbac
   for (const [where, key, changed] of [
     ['checkout', 'hostId', 'env-worker-a'], ['checkout', 'environmentId', 'env-worker-b'],
     ['checkout', 'path', '/target/other'], ['checkout', 'base', 'c'.repeat(40)],
+    ['checkout', 'candidate', 'c'.repeat(40)], ['readback', 'hostId', 'worker-b'], ['readback', 'evidence', ''],
     ['readback', 'environmentId', 'env-worker-b'], ['readback', 'path', '/other'],
     ['readback', 'candidate', 'c'.repeat(40)], ['readback', 'base', 'c'.repeat(40)],
   ]) {

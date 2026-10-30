@@ -196,3 +196,58 @@ test('incomplete inventory labels known pending counts as a lower bound', () => 
   expect(f.counts()).toMatchObject({ inventoryStatus: 'unknown',
     byEnvironment: { 'env-worker-c': null }, pendingLowerBound: { 'env-worker-c': 1 } });
 });
+
+
+test.each([
+  ['origin-unknown', (_, n) => { n.tasks[0].origin = { ...n.tasks[0].origin, environmentId: '' }; }],
+  ['origin-unknown', (_, n) => { n.tasks[0].origin = { ...n.tasks[0].origin, threadId: '' }; }],
+  ['origin-unknown', (_, n) => { n.tasks[0].task.taskId = ''; }],
+  ...['environmentId', 'threadId'].map((key) => ['origin-unknown', (_, n) => { n.pending[0].origin = { ...n.pending[0].origin, [key]: '' }; }]),
+  ['origin-unknown', (_, n) => { n.pending[0].clientRequestId = ''; }],
+  ['origin-unknown', (_, n) => { n.pending[0].taskId = ''; }],
+  ['host-unmapped', (_, n) => { n.pending[0].environmentId = 'unmapped'; }],
+  ['inventory-incomplete', (_, n) => { n.observedAt = -1; }],
+  ['assignment-root-unknown', (f, n) => { n.tasks.push({ ...f.item('nested', 'env-worker-a'), assignmentRoot: { environmentId: 'other-origin', taskId: 'task-1' } }); }],
+])('native inventory validates each supplied identity field: %s', (code, alter) => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.pending.push({ origin: f.origin, clientRequestId: 'pending', environmentId: 'env-worker-c' });
+  expect(f.counts().inventoryStatus).toBe('known');
+  alter(f, n);
+  expect(f.counts()).toMatchObject({ inventoryStatus: 'unknown', inventoryReasons: [code] });
+});
+
+test('invalid collecting time cannot make inventory known', () => {
+  const f = snapshot();
+  expect(f.counts().inventoryStatus).toBe('known');
+  expect(assignmentCounts(f.input, f.config.hosts, NOW + 0.5)).toMatchObject({ inventoryStatus: 'unknown', inventoryReasons: ['inventory-incomplete'] });
+});
+
+test.each([
+  ['queued', 1], ['waiting', 1], ['failed', 0], ['cancelled', 0], ['interrupted', 0],
+])('native state %s has its specified count without becoming unknown', (status, count) => {
+  const f = snapshot();
+  expect(f.counts().inventoryStatus).toBe('known');
+  f.input.nativeInventory.tasks[0].task.status = status;
+  expect(f.counts().inventoryStatus).toBe('known');
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(count);
+});
+
+test('pending client identities include origin environment independently of thread', () => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.pending.push({ origin: f.origin, clientRequestId: 'same-client', environmentId: 'env-worker-c' });
+  expect(f.counts().byEnvironment['env-worker-c']).toBe(1);
+  n.pending.push({ origin: { ...f.origin, environmentId: 'other-origin' }, clientRequestId: 'same-client', environmentId: 'env-worker-c' });
+  expect(f.counts().byEnvironment['env-worker-c']).toBe(2);
+});
+
+test('punctuation in origin and task IDs cannot merge distinct assignments', () => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.tasks = [{ ...f.item('b:c', 'env-worker-a'), origin: { ...f.origin, environmentId: 'a' } }];
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+  n.tasks.push({ ...f.item('c', 'env-worker-a'), origin: { ...f.origin, environmentId: 'a:b' } });
+  expect(f.counts().inventoryStatus).toBe('known');
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(2);
+});
