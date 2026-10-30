@@ -10,6 +10,7 @@ export function currentRecord(thread, owner, maxMessages) {
   // Native roles and authorship are supplied by the caller, never reconstructed from text.
   const last = thread.messages.at(-1);
   if (last?.role !== 'assistant' || last.source !== 'native' || !sameOwner(last.author, owner) || !pointer(last.id)
+    || !pointer(thread.latestRunId) || last.runId !== thread.latestRunId
     || typeof last.text !== 'string') return null;
   let record = null;
   for (const match of last.text.matchAll(/(?:^|\n)```json\s*\n([\s\S]*?)\n```(?=\n|$)/g)) {

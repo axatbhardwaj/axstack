@@ -42,8 +42,8 @@ function ownerTerms(input, row, record, at, base) {
   const historyKnown = history?.known === true && Array.isArray(history.entries)
     && history.entries.every((entry) => pointer(entry?.id) && validKey(entry.key) && pointer(entry.evidence)
       && ['accepted', 'queued', 'running', 'ambiguous'].includes(entry.outcome));
-  const queued = queueKnown && raw.queue.items.some((entry) => sameKey(entry.key, key) && ['queued', 'running'].includes(entry.state));
-  const waking = wakesKnown && raw.wakeDeliveries.some((entry) => sameKey(entry.key, key) && ['queued', 'running'].includes(entry.state));
+  const queued = queueKnown && raw.queue.items.some((entry) => sameKey(entry.key, key));
+  const waking = wakesKnown && raw.wakeDeliveries.some((entry) => sameKey(entry.key, key));
   const sameHost = input.recovery?.owner?.host === row.owner.host;
   const edge = (Array.isArray(input.edges) ? input.edges : []).find((entry) => sameOwner(entry.from, input.recovery?.owner)
     && sameOwner(entry.to, row.owner) && entry.c4Installed === true && entry.writeVerified === true
@@ -73,10 +73,10 @@ function ownerTerms(input, row, record, at, base) {
       'owner and recovery receipt history'),
     term('condition-dedupe', prior.length === 0 ? 'pass' : 'fail', prior[0]?.evidence ?? 'no prior same-key delivery in saved history'),
     term('wake-precedence', record && (record.nextEligibleCheck === null || Date.parse(record.nextEligibleCheck) <= at)
-      && !queued && !waking ? 'pass' : 'fail', 'next eligible check and same-key queued/running wake'),
+      && !queued && !waking ? 'pass' : 'fail', 'next eligible check and same-key observed delivery'),
     term('directed-edge', sameHost ? 'n/a' : edge ? 'pass' : 'unknown', sameHost ? 'same-host' : edge?.evidence ?? 'missing installed C4/directed C5 proof'),
     term('named-condition', reason && (raw.humanGate === 'none' || reason === 'missing-diagnosis') ? 'pass' : 'fail',
-      raw.blocker?.evidence ?? record?.dependency.id ?? 'no inspected specific nonhuman condition'),
+      raw.blocker?.evidence ?? record?.dependency?.id ?? 'no inspected specific nonhuman condition'),
   ] };
 }
 

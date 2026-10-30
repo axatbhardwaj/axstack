@@ -1,7 +1,7 @@
 export const HOSTS = ['io', 'iobook', 'iobox', 'iosatellite', 'axat-vps'];
 export const activeRuns = new Set(['queued', 'preparing', 'starting', 'running', 'waiting']);
 export const pointer = (value) => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9:/._#?=&%+@-]{0,1023}$/.test(value);
-export const instant = (value) => typeof value === 'string' && /^\d{4}-\d\d-\d\dT/.test(value)
+export const instant = (value) => typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(value)
   && Number.isFinite(Date.parse(value));
 const threadLink = (value) => typeof value === 'string' && (pointer(value) && value.startsWith('t3-thread://')
   || value.startsWith('<t3-thread://') && value.endsWith('>') && pointer(value.slice(1, -1)));
@@ -19,7 +19,7 @@ export function threadStatus(thread, at) {
   if (Number.isInteger(thread.pendingRequests) && thread.pendingRequests > 0) state = 'needs-you';
   else if (activeRuns.has(thread.run)) state = 'working';
   else if (['failed', 'interrupted'].includes(thread.run)) state = 'failed';
-  else if ([null, 'completed', 'idle'].includes(thread.run) && thread.pendingRequests === 0) state = 'idle';
+  else if (['completed', 'idle'].includes(thread.run) && thread.pendingRequests === 0) state = 'idle';
   const last = Array.isArray(thread.messages) ? thread.messages.filter((m) => m.role === 'assistant').at(-1) : null;
   return {
     state, lastRun: thread.run ?? null, pendingRequests: thread.pendingRequests ?? null,

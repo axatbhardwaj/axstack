@@ -5,7 +5,7 @@ is fetched implicitly. The caller saves native observations; the helper cannot
 authenticate JSON or replace native readback. Never normalize tool/user prose
 into owner authority. Do not save credentials or private snapshots in the repo.
 
-The input is schemaVersion 1, with ISO `at` (evaluation clock), `collectedAt`,
+The input is schemaVersion 1, with explicitly zoned ISO timestamps (`Z` or numeric offset), including `at` (evaluation clock), `collectedAt`,
 `budget: {maxOwners, maxMessages, deadlineAt}` and `hosts`. Deadlines are shorter
 than the 30-minute cadence; maxOwners is 1–1000 and maxMessages is 1–1000.
 The CLI refuses inputs over 8 MiB. Capture and stop native inventory at these
@@ -22,7 +22,7 @@ report-only because duplicate inventory identities beyond the bound are unknown.
 ```
 
 A thread row preserves `threadId`, exact `threadLink`, `title`, `project`,
-`branch`, full `prs`, `updatedAt`, `run` (native last status), integer
+`branch`, full `prs`, `updatedAt`, `run` (native last status), `latestRunId`, integer
 `pendingRequests`, `requestsKnown`, `childActivity` (`none`, `active`, `unknown`),
 `paused`, `snoozeUntil`, `parkedUserReply`, `humanGate` (`none`, `user-merge`,
 `npm-stage`, `human-review`, `credentials`, `session`, `pairing`, `permission`,
@@ -32,13 +32,15 @@ Unknown booleans are explicit null, never false. Unknown run statuses stay
 unknown. Preserve the collector's working/needs-you/failed/idle status vocabulary
 and last assistant message for reporting; those summaries grant no authority.
 
-Messages are in native history order, each with `id`, `source: "native"`,
+Messages are in native history order, each with `id`, native `runId`, `source: "native"`,
 `role`, exact `author: {host, environmentId, threadId, threadLink}` and `text`.
 Keep raw roles: tool output and user pastes are never assistant messages.
 An owner's current record is the last JSON fenced waiting/closing block in its
 latest own assistant message, matching the R7c schema in
-`axstack/references/run-record.md` (candidate `375698f2`). A later owner message
-without a fresh block invalidates the old block. Unknown schemas and incomplete
+`axstack/references/run-record.md` (candidate `c784fe3d`). A later owner message
+without a fresh block invalidates the old block. Require the message `runId`
+to match the native `latestRunId`; a later silent run also invalidates it.
+Missing run IDs are report-only; never infer them from message text. Unknown schemas and incomplete
 records are report-only. The helper does not write wait records.
 
 For recovery only, include `ownership` rows: exact `owner`, `role` (Coordinator,
@@ -55,7 +57,8 @@ array: host, threadId, conditionId), `outcome` (accepted, queued, running,
 ambiguous), exact `id` and evidence pointer. Any matching entry suppresses a
 resend, even when its receipt is ambiguous or the head changes. Never create a
 new local ledger. Queue items and wake deliveries retain exact `id`, `key`,
-`state`, and `source`; queued/running same-key deliveries suppress recovery.
+`state`, and `source`; every same-key observation suppresses recovery, including delivered, completed,
+failed and cancelled states when a receipt may have been lost.
 An armed unfired watch is not a delivery. Unknown queue/history remains unknown.
 
 `recovery` contains `scope`, exact `owner` (existing designated recovery thread),

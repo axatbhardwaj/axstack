@@ -108,3 +108,58 @@ test('8: only a current native owner-authored complete record and exact ownershi
   ]) { const input = fixture(); mutate(input); none(input); }
 });
 
+test('real closing wire without dependency remains reportable in recovery', () => {
+  const input = fixture();
+  const closing = { schemaVersion: 1, recordType: 'closing', conditionId: 'upstream-1',
+    owner, outcome: 'completed', diagnosis: 'resolved', evidence: ['native:closed'],
+    authority: { scope: 'accepted-run', evidence: 'native:authority' },
+    nextAction: { action: 'none', mode: 'none', evidence: 'native:closed' },
+    wake: { mechanism: 'none', id: null, scope: 'upstream-1' },
+    lifetime: { scope: 'run', expiresAt: '2026-10-31T12:00:00Z' }, cleanupOwner: owner, cleanup: [] };
+  const closed = structuredClone(thread(input));
+  closed.messages = [message(closing)];
+  delete closed.blocker;
+  const result = recovery({ ...input, hosts: input.hosts.map((host) =>
+    host.host === 'axat-vps' ? { ...host, threads: [closed] } : host) });
+  expect(result.owners[0].classification).toBe('completed-cleanup');
+  expect(result.continuations).toEqual([]);
+});
+
+for (const state of ['queued', 'running', 'delivered', 'completed', 'failed', 'cancelled']) {
+  for (const field of ['queue', 'wakeDeliveries']) {
+    test(`restart receipt gap suppresses same-key ${field} ${state}`, () => {
+      const input = fixture();
+      const items = field === 'queue' ? thread(input).queue.items : thread(input).wakeDeliveries;
+      items.push({ key, state, id: 'native:delivery' });
+      none(JSON.parse(JSON.stringify(input)));
+      items[0].key = [...key.slice(0, 2), 'another-condition'];
+      expect(recovery(input).continuations).toHaveLength(1);
+    });
+  }
+}
+
+test('unknown run and zoneless snooze cannot enable recovery', () => {
+  const input = fixture(); thread(input).run = null; none(input);
+  for (const zone of ['', 'Z', '+05:30']) {
+    const snoozed = fixture();
+    editWait(snoozed, (record) => { record.snoozeUntil = `2026-10-31T12:05:00${zone}`; });
+    none(snoozed);
+  }
+});
+
+test('a later silent run invalidates the previous run wait block', () => {
+  const input = fixture();
+  thread(input).latestRunId = 'native:run-2';
+  none(input);
+  thread(input).messages[0].runId = 'native:run-2';
+  expect(recovery(input).continuations).toHaveLength(1);
+  delete thread(input).latestRunId; none(input);
+  thread(input).latestRunId = 'native:run-2';
+  delete thread(input).messages[0].runId; none(input);
+});
+
+test('zone-less expired snooze is unknown rather than silently interpreted locally', () => {
+  const input = fixture();
+  editWait(input, (record) => { record.snoozeUntil = '2026-10-29T12:05:00'; });
+  none(input);
+});

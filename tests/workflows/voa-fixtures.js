@@ -19,7 +19,7 @@ export function waitRecord() {
 }
 
 export function message(record, role = 'assistant') {
-  return { id: 'native:message-1', source: 'native', role, author: owner,
+  return { id: 'native:message-1', runId: 'native:run-1', source: 'native', role, author: owner,
     text: ['Waiting.', '', '```json', JSON.stringify(record), '```'].join('\n') };
 }
 
@@ -32,7 +32,7 @@ export function fixture() {
       reachable: true, paginationComplete: true, evidence: `native:inventory-${host}`,
       threads: host === 'axat-vps' ? [{
         threadId: owner.threadId, threadLink: owner.threadLink, title: 'Driver', project: 'example',
-        branch: 'feature', prs: [record.dependency.id], updatedAt: '2026-10-30T11:00:00Z', run: 'completed',
+        branch: 'feature', prs: [record.dependency.id], updatedAt: '2026-10-30T11:00:00Z', run: 'completed', latestRunId: 'native:run-1',
         pendingRequests: 0, requestsKnown: true, childActivity: 'none', paused: false, snoozeUntil: null,
         parkedUserReply: false, humanGate: 'none', completed: false, historyKnown: true,
         queue: { known: true, held: false, items: [] }, wakeDeliveries: [], messages: [message(record)],

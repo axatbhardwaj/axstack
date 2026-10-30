@@ -4,7 +4,7 @@ export function cleanupPlan(input) {
   const c = input.cleanup;
   const schedule = input.recovery?.schedule;
   const bound = c?.authorized === true && pointer(c.authorityEvidence) && identity(c.owner)
-    && sameOwner(c.owner, input.recovery?.owner) && c.scope === input.recovery?.scope
+    && sameOwner(c.owner, input.recovery?.owner) && pointer(c.scope) && c.scope === input.recovery?.scope
     && ['completed', 'cancelled', 'expired', 'empty', 'handoff'].includes(c.reason)
     && (c.reason !== 'empty' || c.openRegistrationsKnown === true
       && Array.isArray(c.openRegistrations) && c.openRegistrations.length === 0);

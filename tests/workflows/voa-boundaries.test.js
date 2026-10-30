@@ -5,7 +5,7 @@ import { diagnostic, editWait, fixture, thread } from './voa-fixtures.js';
 test('native collector status vocabulary survives normalization without granting recovery authority', () => {
   for (const [run, pending, expected] of [
     ['running', 0, 'working'], ['waiting', 0, 'working'], ['completed', 1, 'needs-you'],
-    ['failed', 0, 'failed'], ['interrupted', 0, 'failed'], ['completed', 0, 'idle'], [null, 0, 'idle'],
+    ['failed', 0, 'failed'], ['interrupted', 0, 'failed'], ['completed', 0, 'idle'], [null, 0, 'unknown'],
     ['not-a-native-status', 0, 'unknown'], ['completed', null, 'unknown'],
   ]) {
     const input = fixture(); thread(input).run = run; thread(input).pendingRequests = pending;

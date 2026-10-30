@@ -61,3 +61,10 @@ test('11: closing one registration preserves the shared service and every other 
   expect(result.cleanup.preserveIds).toContain('shared-service');
   expect(JSON.stringify(service)).toBe(before);
 });
+
+test('cleanup requires explicit scope even when all absent scopes match', () => {
+  const input = cleanupFixture('completed');
+  delete input.recovery.scope; delete input.recovery.schedule.scope; delete input.cleanup.scope;
+  for (const item of [...input.cleanup.resources, ...input.cleanup.messages]) delete item.scope;
+  expect(evaluate(input, 'cleanup').cleanup).toMatchObject({ scheduleIds: [], messageIds: [] });
+});
