@@ -582,3 +582,19 @@ test.each(['AXSTACK-QUESTION key=run:reader:inspect:a1 q=pending', 'AXSTACK-FAIL
   expect(result.status).toBe(2);
   expect(result.output).toContain('receipt-marker: fail');
 });
+
+for (const where of ['origin', 'destination']) {
+  test.each(['malformed trailer', 'extra tail', 'earlier question'])(`native completion rejects %s on ${where}`, (shape) => {
+    const f = fleet();
+    const value = receipt(f);
+    expect(f.run(value).output).toContain('MATCH');
+    const target = where === 'origin' ? value.fleetReceipt.status.value : value.fleetReceipt.thread.value.items[0];
+    const field = where === 'origin' ? 'latestTerminalSummary' : 'text';
+    const trailer = `PR https://github.com/example/repo/pull/1, head ${'a'.repeat(40)}, checks and reviews passed`;
+    if (shape === 'earlier question') target[field] = `AXSTACK-QUESTION key=run:reader:inspect:a1 q=pending\n${target[field]}`;
+    else target[field] += `\n${shape === 'malformed trailer' ? 'PR needs your answer' : `${trailer}\nunresolved work remains`}`;
+    const result = f.run(value);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain('receipt-marker: fail');
+  });
+}
