@@ -1,7 +1,12 @@
 import { expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { publicDocPaths, docLinkIssues } from './public-docs.js';
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
+
+const guardedDriverLaunches = (text) => sentences(text)
+  .filter((sentence) => /top.level drivers?/i.test(sentence))
+  .every((sentence) => requires(sentence, /explicit user request/i, /only|requires?/i)
+    && !/without|unless|even without/i.test(sentence));
 
 const root = `${import.meta.dir}/../..`;
 
@@ -133,4 +138,39 @@ test('package recipe requires every entry point and both current publication ref
       expect(check(members.filter((path) => path !== missing)), missing).toBe(1);
     }
   });
+});
+
+for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
+  test(`${path}: top-level launch requires an explicit user request`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '').replace(/\s+/g, ' ');
+    const concepts = [/every/i, /top-level launch/i, /including/i, /author fallback/i,
+      /requires/i, /explicit user request/i];
+    checkRule(text, (value) => requires(value, ...concepts),
+      'Every top-level launch, including an author fallback, requires an explicit user request.',
+      [[/requires/i, 'does not require']], concepts);
+  });
+}
+
+for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
+  test(`${path}: additional blanket driver grants are rejected`, () => {
+    const accepts = (text) => guardedDriverLaunches(text) && requires(text, /every/i, /top-level launch/i, /requires/i, /explicit user request/i);
+    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '');
+    expect(accepts(text)).toBe(true);
+    for (const extra of [
+      'The standing block authorizes top-level driver threads.',
+      'Top-level drivers use t3_thread_launch.',
+      'Top-level drivers use t3_thread_launch without an explicit user request.',
+    ]) expect(accepts(`${text}\n${extra}`), extra).toBe(false);
+  });
+}
+
+test('driver launch guard accepts equivalent restrictions and rejects inversions', () => {
+  const equivalent = 'Only after an explicit user request, top-level drivers launch through t3_thread_launch.';
+  expect(guardedDriverLaunches(equivalent)).toBe(true);
+  expect(guardedDriverLaunches('Top-level drivers require an explicit user request before launching.')).toBe(true);
+  for (const changed of [equivalent.replace('Only after', 'Without'),
+    equivalent.replace('explicit user request', 'implicit consent'),
+    'Top-level drivers do not require an explicit user request.']) {
+    expect(guardedDriverLaunches(changed), changed).toBe(false);
+  }
 });

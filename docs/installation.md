@@ -215,10 +215,13 @@ also routes every subagent, delegated worker, reviewer, and cross-harness dispat
 through the `t3-code` MCP. It forbids harness-native subagent tools. The current
 T3 thread is the driver. Use async `delegate_task` for every role, including authors with
 `isolation:"worktree"` in their own SHA-pinned worktrees.
-Top-level drivers use `t3_thread_launch`.
+Every top-level launch, including an author fallback, requires an explicit user request.
+Top-level drivers use `t3_thread_launch` only after an explicit user request.
+Preserve existing accepted authorization within its exact scope.
 Use `t3_thread_launch` as a rare author fallback only when
 worktree isolation is unavailable and record each use in the run record. The standing block
-authorizes top-level driver threads, delegated writers and worktrees;
+authorizes delegated writers and worktrees within approved scope;
+it grants no blanket top-level launch permission;
 it grants no push, merge, release, or host mutation.
 The [runtime reference](../skills/axstack/references/t3-runtime.md) owns the dispatch
 and receipt protocol.
