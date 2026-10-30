@@ -1,5 +1,12 @@
 # Inspect workflow instruction contracts
 
+Multi-project coordination: `multi-driver.test.js` checks the shared runtime
+guidance reached from routing, lifecycle, run-record and Implement. Semantic
+removal/inversion/rewording probes cover authorized fanout, launch-only authority
+holds, independent continuation, cross-project binding, null native parents,
+driver handbacks and exclusive PR/record ownership. This proves instructions;
+live multi-driver launch and handback remain separate authorized driver checks.
+
 Readable shared specifications: `skills/axstack-spec/SKILL.md` loads its relative
 `references/format.md`; draft-spec diligence checks comprehension alongside
 completeness. `spec-format.test.js` covers brief-first decisions/scope/risks,
@@ -108,6 +115,7 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/multi-driver.test.js \
   tests/workflows/spec-format.test.js \
   tests/workflows/adoption-disposition.test.js \
   tests/workflows/staged-file-tokens.test.js \

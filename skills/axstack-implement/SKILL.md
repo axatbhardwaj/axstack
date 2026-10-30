@@ -55,6 +55,8 @@ For substantive delegated or resumable work, use the shared
 [run record](../axstack/references/run-record.md). Reconcile it on restart with
 the approved scope, T3 threads/runs and forge state, exact revisions, tickets, and watches.
 Reuse valid owners and authors; ambiguity holds a replacement writer.
+When a logical parent coordinates project drivers, follow
+[Coordinating multiple drivers](../axstack/references/t3-runtime.md#coordinating-multiple-drivers).
 
 At execution start, bind work to the T3 driver thread and one authoritative
 dispatch attempt. Preserve the actual thread/task/run IDs and process completion
@@ -290,10 +292,13 @@ A turn with unsettled launched threads must end only under the bound-watch rule 
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
 Follow [Route each wake](../axstack-watch/SKILL.md#4-route-each-wake).
 Follow [Advised holds](../axstack/references/contracts.md#advised-holds) when raising eligible holds.
-Raise user-decision and serious-risk holds in the T3 driver thread and end the
-turn waiting on the decision. Serious risks are raised immediately.
+Raise user-decision and serious-risk holds in the owning T3 driver thread and
+end the turn waiting on the decision when all remaining authorized work is held.
+Continue independent authorized work under Autopilot's scoped-hold rules.
+Serious risks are raised immediately.
 After bounded safe recovery, raise a genuine blocked operation that still needs
-the user in the T3 driver thread, and the driver ends its turn waiting on it.
+the user in the owning T3 driver thread, and the driver ends its turn waiting on it
+when all remaining authorized work is held.
 
 Merge-ready opens the merge boundary. Own PRs default to automatic merge under
 [watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely).

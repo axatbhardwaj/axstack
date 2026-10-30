@@ -2,6 +2,8 @@
 
 Choose a route; load only the phase and references needed next.
 Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
+For work spanning project drivers, follow
+[Coordinating multiple drivers](t3-runtime.md#coordinating-multiple-drivers).
 
 ## Role routing
 
