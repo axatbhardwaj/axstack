@@ -78,3 +78,54 @@ All C1-C6 pending. No PRs, authors or worktrees yet. Driver records per-task sou
 - C3/C6 link fleet-verification.md from verify-axstack uncovered surfaces.
 - For every C1a/C1b/C2/C3a/C3b/C4 author: PR owner is originating driver until a recorded transfer; worktree is T3-allocated at dispatch with actual absolute path recorded before edits. None allocated yet. C5/C6 operational work belongs to the driver; no code-author worktree unless a distinct code slice is dispatched.
 - Map diligence report 4fca762af2aeaadeec138242a5612341b23c17d6a948d9991a2724f13f902216 mapped every other F1-F6 clause; driver accepts the map after these direct repairs.
+
+
+## Additive R7.5 map — VOA-assisted recovery (draft)
+
+R6 map remains preserved at `7b7af36f`, SHA-256
+`5515adffd234638858a0f1ba0139fd2f9dd1b4f02c20e9b99d96bb5aea3fe75d`.
+This append-only draft maps R7; it neither reopens C1–C6 approval nor activates
+schedules. Coordinator owns reconciliation; existing Drivers keep their work.
+
+- R7a: resolve canonical VOA source repository/owner and record an accepted
+  project-bound delivery handoff before any source edit. Read-only discovery
+  may proceed now. Installed VOA currently omits iosatellite; no source repo
+  has yet been established. No new top-level thread is authorized.
+- R7b: under the explicit implementation follow-up, implement five-host status coverage, explicit recovery
+  mode and wait-record parsing under R7-1–3; ordinary status stays read-only.
+  Use one isolated writer in the resolved repository and reviewed source PR.
+- R7c: own schemaVersion:1 waiting-turn/closing blocks, including diagnosis and stable condition IDs and immediate Driver diagnosis,
+  plus the rule that recovery never answers a user question. Reconcile Axstack
+  runtime/watch/cleanup instructions with R7-4–6 and the
+  platform ban on polling running delegates. Use an Axstack writer; no overlap
+  with pending multi-driver PR #589 or C4b ownership. No schedule activation.
+- R7d: dry-run the saved eight-workflow evaluation, then execute the implementation-authorized
+  bounded synthetic/owned-resource canary, with expiry, rollback and exact-ID cleanup. Verify exact dependency events or bounded
+  external-condition checks, duplicate prevention, held queues, pauses, and
+  run-vs-service cleanup. Evidence is not fleet-wide proof without coverage.
+- R7e: publish/review/merge under existing rules; coordinate installation of
+  shipped sources and verify both modes. Activate run-scoped recovery only after green canary receipts and recorded
+  host/thread, schedule ID, scope, model/effort, budget, expiry and cleanup owner
+  under R7-5; no repeat approval. Persistent shared service needs separate authority. Close only after R7 acceptance and exact-ID cleanup receipts.
+
+Dependencies: R7a before VOA edits; the accepted implementation follow-up authorizes R7b–e;
+R7b/c before canary. C4/C5/C6 continue independently. Source ownership and event
+capability gaps hold only their dependent actions. Preserve original spec/map
+hashes in existing dispatches; R7 records its follow-up authority and exact implementation revision separately.
+
+R7.1 refinements: R7b includes missing-diagnosis recovery and the closed mode/write
+allowlist. R7c removes active-delegate polling rather than moving it. R7d proves
+all twelve fixed cases, finite pass bounds, native idempotency/ambiguous-send
+handling and exact owner-resource cleanup before any activation. Discovery of
+source ownership and native event/queue support is read-only and precedes adapter
+implementation. Public planning artifacts use private evidence digests only.
+
+R7.5 task acceptance: R7b owns test-first VOA cases 1–12 (case 10 covers recovery-owned resources); R7c owns wait-block,
+non-reply, delegate-polling and lifecycle 10–11 (case 10 covers Driver-owned resources) contracts. Preserve Driver-owned
+launched-Writer lifecycle, the 60-minute own-PR/release backstop and own-PR
+watch fallback schedules; no retained wake polls running delegates. Cross-host R7d
+canaries depend on installed C4 and directed C5 write-link proof, while unrelated
+C1–C6 work continues. R7e reads back any separately authorized live recovery
+prompt on release; no silent schedule change. Source-repository choice remains
+a question only if discovery fails; model/effort, budgets and expiry bind at
+activation. No failed/interrupted reconcile continuation is included.
