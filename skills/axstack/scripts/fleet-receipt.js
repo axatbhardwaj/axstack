@@ -81,7 +81,8 @@ export function inspectFleetReceipt(receipt, expected) {
     && same(questions?.args, { action: 'list', threadId: child(status) })
     && time(questions?.observedAt) && questions.observedAt <= expected.now
     && text(questions?.evidence) && Array.isArray(questions?.value?.requests)
-    && questions.value.requests.length === 0, questions);
+    && questions.value.requests.length === 0, questions,
+  questions == null || questions.value?.requests === undefined);
   const current = thread?.latestRunId;
   const runs = r.thread?.value?.recentRuns;
   const latest = Array.isArray(runs) ? runs.find((v) => v.runId === current) : null;

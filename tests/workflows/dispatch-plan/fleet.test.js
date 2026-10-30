@@ -598,3 +598,15 @@ for (const where of ['origin', 'destination']) {
     expect(result.output).toContain('receipt-marker: fail');
   });
 }
+
+test.each(['missing requests', 'raw requestIds'])('unextracted question list stays unknown: %s', (shape) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  if (shape === 'missing requests') delete value.fleetReceipt.questions.value.requests;
+  else value.fleetReceipt.questions.value = { requestIds: [] };
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-question: unknown');
+  expect(result.output).not.toContain('receipt-question: fail');
+});
