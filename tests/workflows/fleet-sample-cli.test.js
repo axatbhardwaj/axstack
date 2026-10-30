@@ -99,6 +99,7 @@ test('one-command local sample has real pressure and replayable C1 identity bind
 test('collection CLI rejects ambiguous flags and malformed manifest/input before networking', () => {
   for (const [argv, code] of [
     [['sample', ...args, '--json'], 'duplicate-argument'],
+    [['sample', ...args.map((v) => v === `${root}/manifest.json` ? `${root}/absent.json` : v)], 'missing-manifest'],
     [['sample', ...args, '--fleet'], 'duplicate-argument'],
     [['sample', '--fleet'], 'missing-argument'],
     [['sample'], 'missing-argument'],
