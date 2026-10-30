@@ -394,6 +394,21 @@ test.each([
   held(f.run(), code);
 });
 
+test.each([
+  ['access', 'read-only', false], ['expiresAt', new Date(NOW).toISOString(), false],
+  ['access', 'read-only', true], ['expiresAt', new Date(NOW).toISOString(), true],
+])('destination access uses its own link regardless of position: %s %s reversed=%s', (field, denied, reverse) => {
+  const f = fleet();
+  const o = observation(f);
+  const selected = o.links.value.links[0];
+  const unrelated = { ...selected, environmentId: 'env-worker-b' };
+  o.links.value.links = reverse ? [selected, unrelated] : [unrelated, selected];
+  f.input.nativeDestination = o;
+  planned(f);
+  selected[field] = denied;
+  held(f.run(), 'destination-access');
+});
+
 // Receipt additions are separately test-first: count alone cannot prove question absence.
 test('terminal completion requires an observed native pending-question list', () => {
   const f = fleet();
