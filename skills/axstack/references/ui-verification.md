@@ -2,8 +2,11 @@
 
 Every Playwright, browser, or rendered-UI check outside the two named browser
 exceptions, including a "confirm it in the browser" step, goes through async
-`delegate_task` to `axstack-ui-verifier` from the run's role snapshot. Give it the exact build, URL, or artifact and the private
-dispatch's evidence folder. The verifier is read-only: it never edits source.
+`delegate_task` to a configured UI verifier role.
+The configured UI verifier roles are `axstack-ui-verifier` and
+`axstack-ui-verifier-sonnet` from the role snapshot; select them under the
+[dual-run trigger](#android-device-and-webpwa-dual-run) below.
+Give each verifier the exact build, URL, or artifact and the private dispatch's evidence folder. The verifier is read-only: it never edits source.
 The PR writer remains the sole writer.
 
 Before using a PR preview URL, the UI verifier must read [PR previews](preview.md).
@@ -17,12 +20,12 @@ The second named browser exception permits dispatched roles to use
 `html_preview` as a non-publishing self-check.
 Dispatched-role self-checks never replace the driver's two previews or the `axstack-ui-verifier` pass.
 Dispatched roles never call `html_render`.
-All other browser checks outside the two named exceptions remain delegated to `axstack-ui-verifier`.
+All other browser checks outside the two named exceptions remain delegated to configured UI verifier roles under the dual-run trigger below.
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.
 Use the configured verifier browser and honor the user browser-tool policy.
-Candidate browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
+Candidate browser and visual checks must run in a delegated UI verifier role in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
 
 For every interactive page, require a real-browser `axstack-ui-verifier` interaction pass.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
@@ -49,7 +52,10 @@ Keep browser recipes tool-neutral for the verifier.
 
 ## Android device and web/PWA dual run
 
-For Android and web/PWA feature verification, assign run 1 to
+Apply the dual run to Android device verification or explicitly requested
+PWA/app feature verification, such as a `verify-<app>` device recipe or a user request.
+Ordinary review and watch browser checks use one `axstack-ui-verifier` pass by default.
+For these Android and web/PWA runs, assign run 1 to
 `axstack-ui-verifier` (Terra high).
 Dispatch independent run 2 to `axstack-ui-verifier-sonnet` with the same brief
 and the same pinned build.
@@ -64,7 +70,8 @@ Before run 1, record APK SHA-256 (or build SHA) and PWA deploy SHA in the brief.
 Include feature files, prerequisites, target URL and per-feature acceptance checks.
 Select the host through fleet routing using account-local configuration and
 [capability examples](fleet-route-schema.md#device-and-browser-examples).
-On a `desktop:user` host, use only a headless browser and a windowless emulator.
+When `desktop:user` status is missing or unknown, treat the host as a user desktop.
+On a `desktop:user` host, including that safe default, use only a headless browser and a windowless emulator.
 Never focus windows or switch workspaces on a user desktop.
 Allow only one emulator per host at a time.
 Run a thermal precheck before starting on hosts that declare one; honor their
@@ -94,8 +101,10 @@ The driver reconciles each feature:
 
 - When both runs pass, the driver records pass.
 - When both runs fail a feature, the driver records fail and routes it to `axstack-debug`.
-- If runs disagree, the driver holds, requests one Sonnet rerun of that feature,
-  then reports flaky/unverified with all observations; a rerun never erases disagreement.
+- If runs disagree, the driver holds and requests one Sonnet rerun of that feature.
+  If the rerun still disagrees with run 1, report flaky/unverified with all observations.
+  If the rerun agrees with run 1, the agreed result stands and record the initial
+  disagreement in evidence; an agreed failure routes to `axstack-debug`.
 - Blocked or missing coverage remains unverified, never a pass.
 
 ## Proof standards

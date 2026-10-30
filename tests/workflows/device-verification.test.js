@@ -12,7 +12,7 @@ const roster = 'skills/axstack/references/role-roster.md';
 // Existing browser checks do not cover independent device runs or fleet safety.
 function rule(name, path, concepts, equivalent, inversions, ban) {
   test(`device verification: ${name}`, () => {
-    const source = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+    const source = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[`*]/g, '').replace(/\s+/g, ' ');
     const accepts = (text) => ban ? prohibits(text, ban, ...concepts) : requires(text, ...concepts);
     checkRule(source, accepts, equivalent, inversions, concepts);
   });
@@ -33,15 +33,40 @@ rule('both passes', ui, [/both runs pass/i, /driver/i, /records? pass/i],
 rule('both failures route debug', ui, [/both runs fail/i, /driver/i, /records? fail/i, /axstack-debug/i],
   'When both runs fail a feature, the driver records fail and routes it to axstack-debug.',
   [[/records? fail/i, 'records pass'], [/axstack-debug/i, 'axstack-explain']]);
-rule('bounded disagreement', ui, [/disagree/i, /driver/i, /one Sonnet rerun/i, /feature/i, /flaky/i, /unverified/i],
-  'If runs disagree, the driver holds, requests one Sonnet rerun of that feature, then reports flaky/unverified.',
-  [[/one Sonnet rerun/i, 'unlimited Sonnet reruns'], [/flaky\/unverified/i, 'pass']]);
+rule('bounded disagreement', ui, [/if runs disagree/i, /driver/i, /holds/i, /one Sonnet rerun/i, /feature/i],
+  'If runs disagree, the driver holds and requests one Sonnet rerun of that feature.',
+  [[/one Sonnet rerun/i, 'unlimited Sonnet reruns'], [/holds/i, 'passes']]);
+rule('persistent rerun disagreement', ui,
+  [/if (?:the )?rerun still disagrees with run 1/i, /report/i, /flaky\/unverified/i, /all observations/i],
+  'If the rerun still disagrees with run 1, report flaky/unverified with all observations.',
+  [[/still disagrees/i, 'agrees'], [/flaky\/unverified/i, 'pass']]);
+rule('rerun agreement resolves feature with evidence', ui,
+  [/if (?:the )?rerun agrees with run 1/i, /agreed result stands/i, /record/i, /initial disagreement/i, /evidence/i],
+  'If the rerun agrees with run 1, the agreed result stands and record the initial disagreement in evidence.',
+  [[/agrees with run 1/i, 'still disagrees with run 1'], [/agreed result stands/i, 'feature remains unverified']]);
+rule('configured verifier roles', ui,
+  [/configured UI verifier roles/i, /axstack-ui-verifier(?!-sonnet)\b/i, /axstack-ui-verifier-sonnet/i, /role snapshot/i],
+  'The configured UI verifier roles are axstack-ui-verifier and axstack-ui-verifier-sonnet from the role snapshot.',
+  [[/axstack-ui-verifier-sonnet/i, 'author']]);
+rule('explicit dual run trigger', ui,
+  [/apply|use/i, /dual run/i, /Android device verification/i, /explicitly requested PWA\/app feature verification/i,
+    /verify-<app> device recipe/i, /user request/i],
+  'Use the dual run for Android device verification or explicitly requested PWA/app feature verification via a verify-<app> device recipe or user request.',
+  [[/explicitly requested PWA\/app/i, 'all PWA/app']]);
+rule('ordinary review and watch remain one pass', ui,
+  [/ordinary review and watch/i, /browser checks/i, /one axstack-ui-verifier pass/i, /by default/i],
+  'Ordinary review and watch browser checks use one axstack-ui-verifier pass by default.',
+  [[/one axstack-ui-verifier pass/i, 'two independent verifier passes'], [/by default/i, 'only on explicit request']]);
 rule('missing Apple host', ui, [/iOS/i, /without a capable host/i, /report/i, /unverified/i],
   'For iOS without a capable host, report unverified.', [[/unverified/i, 'pass']]);
 rule('route host selection', ui, [/select|choose/i, /host/i, /fleet routing/i, /account.local/i],
   'Choose the host through fleet routing using account-local configuration.', [[/fleet routing/i, 'hardcoded defaults']]);
 rule('desktop safety', ui, [/desktop:user/i, /headless browser/i, /windowless emulator/i, /only/i],
   'On a desktop:user host, use only a headless browser and a windowless emulator.', [[/only/i, 'any mode including']]);
+rule('unknown desktop status is safe', ui,
+  [/desktop:user/i, /missing or unknown/i, /treat/i, /host as a user desktop/i],
+  'When desktop:user status is missing or unknown, treat the host as a user desktop.',
+  [[/missing or unknown/i, 'explicitly true'], [/host as a user desktop/i, 'host as a worker']]);
 rule('no focus or workspace changes', ui, [/focus windows/i, /switch workspaces/i, /user desktop/i],
   'Never focus windows or switch workspaces on a user desktop.', [[/never/i, 'always']], /never/i);
 rule('one emulator per host', ui, [/one emulator/i, /per host/i, /at a time/i],

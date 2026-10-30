@@ -165,15 +165,15 @@ test('UI verification routes rendered checks to the read-only verifier', () => {
   // The shared routing boundary must retain delegation outside both exceptions.
   const concepts = [/every Playwright, browser, or rendered-UI check/i,
     /outside.*two named (?:author|browser) exceptions/i,
-    /async.*delegate_task/i, /axstack-ui-verifier/i];
+    /async.*delegate_task/i, /configured UI verifier role/i];
   for (const terminology of ['author', 'browser']) {
     const source = sentences(rule).join('. ')
       .replace(/two named (?:author|browser) exceptions/gi, `two named ${terminology} exceptions`);
     checkRule(source, (text) => requires(text, ...concepts),
-      `Outside the two named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to axstack-ui-verifier.`,
+      `Outside the two named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to a configured UI verifier role.`,
       [[/outside/i, 'including'], [/two named (?:author|browser) exceptions/i, 'all browser checks'],
         [/two/i, 'three'], [/named/i, 'unnamed'], [/async/i, 'synchronous'],
-        [/delegate_task/i, 't3_thread_launch'], [/axstack-ui-verifier/i, 'driver']], concepts);
+        [/delegate_task/i, 't3_thread_launch'], [/configured UI verifier role/i, 'driver']], concepts);
   }
   expect(rule).toMatch(/read-only/i);
   expect(rule).toMatch(/dispatch.s evidence folder/i);
