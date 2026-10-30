@@ -76,6 +76,9 @@ Use `--mode cleanup` with the same saved input and `cleanup` containing exact
 `owner`, `scope`, `reason` (completed/cancelled/expired/empty/handoff),
 `authorized: true`, `authorityEvidence`, `inventoryKnown: true`, `resources`,
 `messages` and optional `readback: {known, scheduleIds, messageIds, evidence}`.
+For reason `empty`, require `openRegistrationsKnown: true` and
+`openRegistrations: []` from complete native registration inventory; no eligible
+continuation this pass is insufficient.
 Resources have `id`, exact `owner`, `scope`, `kind: "schedule"`, `lifetime:
 "run"` and evidence. Shared services have `lifetime: "shared"` and registration
 IDs; completing one registration preserves the service and all other runs.
