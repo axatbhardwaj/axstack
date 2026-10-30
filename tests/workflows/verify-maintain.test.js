@@ -30,7 +30,8 @@ const rules = [
   ['retry failure', [/retry fails/i, /report/i, /blocked/i, /hold acceptance/i], 'If the retry fails, report blocked and hold acceptance.', [/hold acceptance/gi, 'accept the pass']],
   ['failed cleanup', [/clean up/i, /after/i, /every failed attempt/i], 'Clean up after every failed attempt.', [/every failed attempt/gi, 'success only']],
   ['evidence survival', [/confirm/i, /evidence survives/i, /each cleanup/i, /private evidence folder/i], 'Confirm evidence survives each cleanup in the private evidence folder.', [/survives/gi, 'is removed by']],
-  ['browser boundary', [/delegate/i, /browser drives/i, /UI verification/i, /axstack-ui-verifier/i, /feature file path/i, /brief/i], 'Delegate browser drives through UI verification to axstack-ui-verifier with the feature file path in the brief.', [/axstack-ui-verifier/gi, 'author']],
+  ['dual-run boundary', [/delegate/i, /device checks/i, /explicitly requested app\/PWA verification/i, /UI verification/i, /UI verifier roles/i, /dual run/i, /feature file path/i, /brief/i], 'Delegate device checks and explicitly requested app/PWA verification to UI verifier roles for a dual run through UI verification with the feature file path in the brief.', [/UI verifier roles/gi, 'author']],
+  ['ordinary browser boundary', [/delegate/i, /other recipe browser drives/i, /one `?axstack-ui-verifier`? pass/i], 'Delegate other recipe browser drives to one axstack-ui-verifier pass.', [/one/gi, 'two']],
   ['isolation reuse', [/follow/i, /attempt isolation/i, /both modes/i], 'Follow attempt isolation for both modes.', [/both modes/gi, 'create only']],
 ];
 

@@ -165,6 +165,15 @@
       "modelClass": "terra"
     },
     {
+      "id": "axstack-ui-verifier-sonnet",
+      "name": "Axstack UI verifier Sonnet",
+      "provider": "claude",
+      "modeId": "bypassPermissions",
+      "thinkingOptionId": "high",
+      "notes": "Read-only independent run 2 verifier for Android and web/PWA: same brief and pinned build, never sees run 1 results. Uses T3 device tools and Playwright MCP under ui-verification.md; returns per-feature evidence in its private folder. Never edits source. T3 resolves Claude classes from saved capabilities; a Claude rejection holds. Missing Sonnet high holds without substitution.",
+      "modelClass": "sonnet"
+    },
+    {
       "id": "axstack-explore-codebase",
       "name": "Axstack codebase explorer",
       "provider": "claude",

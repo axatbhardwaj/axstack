@@ -60,8 +60,8 @@ for (const [path, sentence] of [
 test('T3 UI candidate checks retain delegated checkout and private outputs', () => {
   const ui = sentences(read('skills/axstack/references/ui-verification.md')).join('. ');
   checkRule(ui, (text) => requires(text, /candidate.*browser and visual checks/i,
-    /must|shall/i, /delegated.*axstack-ui-verifier/i, /own detached checkout/i),
-    'Candidate browser and visual checks shall run in the delegated axstack-ui-verifier in its own detached checkout.',
+    /must|shall/i, /delegated.*UI verifier role/i, /own detached checkout/i),
+    'Candidate browser and visual checks shall run in a delegated UI verifier role in its own detached checkout.',
     [[/candidate/i, 'standalone page'], [/own detached checkout/i, 'driver worktree']]);
   checkRule(ui, (text) => prohibits(text, /never the driver worktree/i,
     /outputs/i, /private evidence folder/i),
@@ -71,6 +71,17 @@ test('T3 UI candidate checks retain delegated checkout and private outputs', () 
     /UI verifier/i, /candidate checks/i, /page without a candidate/i, /UI verification/i),
     'The UI verifier checkout row covers candidate checks, while a page without a candidate follows UI verification.',
     [[/candidate checks/i, 'all pages']]);
+});
+
+test('T3 both UI verifier seats inherit candidate isolation and permitted outputs', () => {
+  const concepts = [/UI verifier candidate checks/i, /axstack-ui-verifier(?!-sonnet)\b/i,
+    /axstack-ui-verifier-sonnet/i, /async.*delegate_task/i, /disposable detached checkout/i,
+    /candidate SHA/i, /pinned base/i, /outputs.*<run>\/evidence/i];
+  // A dispatch table row is one contract; its semicolons separate workspace steps.
+  const row = (runtime().split('\n').find((line) => /UI verifier candidate checks/i.test(line)) ?? '').replace(/;/g, ',');
+  checkRule(row, (text) => requires(text, ...concepts),
+    'UI verifier candidate checks for axstack-ui-verifier and axstack-ui-verifier-sonnet must use async delegate_task in a disposable detached checkout of candidate SHA and pinned base, with outputs in <run>/evidence/<key>/.',
+    [[/axstack-ui-verifier-sonnet/i, 'author'], [/disposable detached checkout/i, 'driver worktree']], concepts);
 });
 
 // Publication belongs to the driver; preview permission does not grant it.

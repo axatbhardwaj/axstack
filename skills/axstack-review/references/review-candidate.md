@@ -137,7 +137,7 @@ This section applies to peer and authored PR modes.
    For an `axstack-verify create` PR, the reviewer drives the candidate's recipe because the base has none.
    The author never performs this review drive.
    The reviewer drives each affected feature and records that drive as the `Final-head check`.
-   Delegate browser drives to `axstack-ui-verifier` with the feature file path.
+   Delegate browser drives to `axstack-ui-verifier` with the feature file path; device drives follow [UI verification](../../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)'s dual-run trigger.
    Running the applicable surface counts as spin-up; a CLI run qualifies.
    Use loopback and isolated instances under [axstack-verify](../../axstack-verify/SKILL.md#isolate-every-attempt).
 
