@@ -3,8 +3,8 @@ import { canonical, text, time } from './fleet-config.js';
 
 export function inspectDestination(observation, recommendation, capabilitiesText, now) {
   const terms = [];
-  const term = (code, pass, evidence) => terms.push({ code,
-    state: pass ? 'pass' : evidence == null ? 'unknown' : 'fail', evidence: evidence ?? null });
+  const term = (code, pass, evidence, missing = evidence == null) => terms.push({ code,
+    state: pass ? 'pass' : missing ? 'unknown' : 'fail', evidence: evidence ?? null });
   const s = recommendation.selected;
   const o = observation ?? {};
   for (const [name, tool, environmentId, args] of [
@@ -28,7 +28,8 @@ export function inspectDestination(observation, recommendation, capabilitiesText
   const catalog = JSON.parse(capabilitiesText);
   const provider = catalog.providers?.find((v) => v.providerInstanceId === recommendation.request.providerInstanceId);
   term('destination-execution', provider?.canRunChildTask === true
-    && provider?.runtimeModes?.includes(recommendation.request.runtimeMode), provider);
+    && provider?.runtimeModes?.includes(recommendation.request.runtimeMode), provider,
+  provider?.canRunChildTask == null || !Array.isArray(provider?.runtimeModes));
   const local = s.environmentId === recommendation.originEnvironmentId;
   const link = o.links?.value?.links?.find((v) => v.environmentId === s.environmentId);
   term('destination-access', o.links?.value?.environmentId === recommendation.originEnvironmentId

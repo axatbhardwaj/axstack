@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
+import { inspectDestination } from '../../../skills/axstack/scripts/fleet-destination.js';
 import { recommend } from '../../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from '../fleet-route-fixture.js';
 import { configuration, invoke, setup } from './fixtures.js';
@@ -455,4 +456,18 @@ test.each([
   const result = f.run(value);
   expect(result.status).toBe(2);
   expect(result.output).toContain(`${code}: unknown`);
+});
+
+
+test('unadvertised destination execution fields remain unknown with their native evidence', () => {
+  const f = fleet();
+  const observed = observation(f);
+  const inspect = () => inspectDestination(observed, f.saved, observed.capabilities.valueText, NOW);
+  expect(inspect().every((t) => t.state === 'pass')).toBe(true);
+  const catalog = JSON.parse(observed.capabilities.valueText);
+  delete catalog.providers[0].runtimeModes;
+  observed.capabilities.valueText = JSON.stringify(catalog);
+  const term = inspect().find((t) => t.code === 'destination-execution');
+  expect(term.state).toBe('unknown');
+  expect(term.evidence).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
 });
