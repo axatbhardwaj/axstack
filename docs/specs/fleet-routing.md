@@ -135,3 +135,149 @@ M1: stage names are explicit and consistent. M2: driver owns inventory collectio
 
 ## r6 bounded reconciliation repairs
 Opus r4 B1: canonical Haoshoku configs/fleet-routing.json, per-account deployed path, Axat ownership, data-driven policy, five-host deployment and digest checks now binding in F1/F5/F6. B2: all specified fixtures and the explicit three-assignment oracle are now in F6. Collector-clock timestamps and driver-owned remote reviewer checkout preparation clarified. Stage/count repairs from r5 retained. Driver fixed these bounded findings directly without an extra review dispatch. Adviser receipts cover r4 and remain recorded as such; r5/r6 repairs are driver dispositions, not fabricated fresh adviser acceptance. No implementation, live config deployment or user approval occurred.
+
+
+## Additive revision R7.5 — VOA-assisted recovery (draft, 2026-10-30)
+
+### Decision brief
+
+Stale review diagnosis and an untracked upstream dependency required avoidable
+user nudges. Extend VOA with an explicit recovery mode that routes a bounded
+continuation to the existing owning Driver. Ordinary VOA status remains
+read-only. Native events remain the first wake mechanism.
+
+This additive record preserves the original specification-work boundary; the
+implementation follow-up below now authorizes delivery, not immediate activation. R6 remains preserved at commit `7b7af36f`, spec SHA-256
+`afaca25c5bac070aeb38e0e81c2be1a7166521cb62acd86bae477e068c0563f7`.
+The historical R6 text above is unchanged. C1–C6 delivery continues under its
+existing approval; the additive R7 implementation proceeds under the recorded follow-up.
+
+Included: five-host coverage, wait classification, bounded recovery ownership,
+native-event routing, deduplication and exact-resource cleanup. Excluded:
+ordinary status mutations, active-delegate polling, new top-level threads,
+automatic approval, review dismissal, model substitution, new daemon/database,
+and scheduler activation from this spec request.
+
+Implementation is now explicitly authorized by the user's “do it on top of
+existing changes” follow-up. These bounded clarifications implement that request;
+no repeat implementation approval is required. Activation still requires bounded
+live validation and clear schedule ownership. Preserve current candidates and
+add dependent granular changes; do not start a competing rewrite.
+
+Proposed implementation choices and consequences:
+1. Host: designate one existing recovery thread on axat-vps; no new thread.
+2. Trigger: explicit recovery invocation or its authorized bound schedule;
+   ordinary status and periodic status sweeps remain read-only.
+3. Allowlist: bounded owner continuation, own receipt and owned schedule/queue
+   cleanup only; recovery cannot merge, approve or dispatch a writer.
+4. Records: latest structured owner wait/closing block, including diagnosis;
+   missing records stay report-only, with no separate registry.
+5. Deduplication: one send per owner/condition identity; unchanged waits and
+   ambiguous delivery never reset it.
+6. Pass bound: 30-minute cadence, finite work/time budget shorter than cadence;
+   model, effort and actual limits bind before activation.
+7. Lifetime: recorded expiry and exact cleanup owner; run completion does not
+   delete a shared service used by another registration.
+8. Consolidation: consolidate overlapping external-dependency checks only;
+   preserve Driver-owned PR/release and launched-Writer lifecycle responsibilities.
+
+Limits to understand before activation:
+- Cross-host sends are report-only until installed C4 and directed C5 write-link
+  proof exist for that edge.
+- Consolidation is partial: Driver-owned 60-minute PR/release backstops and
+  supported 5-minute lifecycle/fallback schedules remain, without delegate polling.
+- Scheduled recovery consumes model turns; cost is bounded by the activation-time
+  model, budget and expiry, not by the cadence alone.
+- Recovery does not detect a lost delegate-completion wake by polling. Such work
+  remains active/unknown and can appear long-running in read-only status.
+
+Canonical VOA source ownership and native event support must be established
+before their dependent edits/activation. Recovery-thread designation, model,
+budget and expiry bind at activation; discovery gaps hold only affected actions.
+
+### R7 requirements
+
+R7-1 — Modes and roles. VOA status is read-only. Explicit recovery invocation or
+separately authorized scheduling may send one bounded continuation for an
+evidenced missing diagnostic step or cleared named external dependency to the
+recorded owning Coordinator/Driver. The
+Coordinator owns the overall outcome; each Driver owns project delivery and
+revalidates evidence before acting; Workers do bounded Driver tasks. VOA never
+becomes a second writer or takes over publication/merge. Match exact host/thread
+identities and accepted ownership, not titles, age or parentThreadId alone.
+Unknown ownership is report-only.
+
+R7-2 — Coverage. Inventory io, iobook, iobox, iosatellite and axat-vps. Report
+unreachable hosts and pagination gaps; do not claim complete coverage from
+partial inventory. Coordinate the canonical VOA source repository and owner
+before edits; installed-only changes are not shipped source delivery.
+
+R7-3 — Wait records. Before ending a waiting turn (a turn ending on any recorded wait condition), the owning Coordinator/Driver writes schemaVersion:1, an owner-issued stable
+condition ID, wait kind, diagnosis (a cause or `none`), exact dependency/PR or
+decision, owner host/thread link, last meaningful progress, authorized next
+action, wake mechanism and exact ID, next eligible check, pause/snooze state,
+and cleanup owner. Only the latest owner-authored wait block in its latest
+waiting turn is current; later owner activity without a fresh block, or an
+unknown schema, is report-only. Classify active Worker, own-PR CI/review, external dependency,
+human approval, explicit pause, failed/interrupted execution, completed work
+with cleanup remaining, and unknown state. Diagnose stale reviews/checks and
+look for relevant upstream fixes immediately; timers do not replace reasoning.
+Silence or a completed model turn alone proves neither a stall nor completion.
+
+R7-4 — Wake boundary. Native delegate completion and PR events take priority.
+Never schedule polling of running delegates, keep a model waiting, cancel based
+on silence, or launch duplicate authors. Current platform restrictions supersede
+broad hourly-delegate-watch prose, which implementation must reconcile. Verify
+native PR watching supports the exact external dependency before promising that
+wake; otherwise only that named external condition may be checked by recovery.
+Diagnosis-only continuations within existing authority are also eligible; they
+never clear a human/auth/release gate. Inspect the blocker itself before acting.
+
+R7-5 — Bounded recovery. The implementation follow-up authorizes the bounded
+synthetic/owned-resource canary, with expiry, rollback and exact-ID cleanup.
+Run-scoped activation needs passing canary receipts and recorded ownership:
+recovery host/thread, schedule ID, scope, model/effort, finite budget, expiry and
+cleanup owner. Record the schedule ID at creation and verify its binding before
+any send. These conditions need no additional user approval; a persistent shared
+service beyond this run still needs separate explicit user authorization.
+Under these conditions, use one deduplicated
+30-minute native recovery scope. Reuse a compatible authorized schedule only
+after reconciling ownership, purpose and lifetime. Do not alter unrelated sweeps
+or review managers. A pass skips active work and real human/auth/release holds except the narrowly
+authorized diagnosis below; pending questions and parked user-reply holds have
+no diagnosis exception. It skips
+pauses/snoozes and unclear ownership. Deduplicate continuations for the same
+owner and unresolved condition across passes and queue states; do not infer
+absence from unavailable queue APIs. Revalidate before delivery and record its
+receipt. No scope expansion, unauthorized new thread or gate bypass follows.
+
+R7-6 — Lifetime and cleanup. Record every schedule/watch exact ID, scope, owner
+and lifetime at creation. Completion/cancellation/handoff reconciles ownership,
+deletes only run-owned schedules with absence readback, stops owned watches,
+and clears only identified owned duplicate scheduled messages. Preserve user
+messages and shared persistent schedules. Finishing a run unregisters it from a
+user-authorized shared service; it does not destroy the service. Without shared
+service authority, the recovery schedule ends with its run. Unknown deletion or
+queue state is a scoped cleanup finding, never a reason to redo product work.
+Verify Stop/restart/provider-failure queue behavior; a timer cannot be promised
+to override a held queue. Use advertised interval/fixed-time/webhook operations;
+do not invent a dedicated one-shot trigger.
+
+### R7 acceptance and evidence
+
+- Dry-run classification of the saved eight-workflow evaluation preserves real
+  npm/auth holds, explicit snoozes, active Workers and uncertain ownership.
+- Diagnose stale bot review state before ending a waiting turn; do not dismiss it without
+  authority. A merged upstream fix permits one continuation; its Driver
+  independently revalidates and updates its own PR.
+- Repeated passes produce no duplicate writers, continuations, schedules or
+  notifications for unchanged holds. Unknown queue state admits no duplicate.
+- Completion/cancellation and uncertain-delete cases preserve shared services
+  and user messages, with exact-ID deletion/readback receipts.
+- All five hosts are represented; unreachable hosts remain explicit gaps.
+- Under the implementation follow-up, exercise a bounded
+  synthetic/owned-resource canary with before/after receipts, expiry, rollback
+  and exact-ID cleanup. Never use
+  real held auth or release work as a mutation test.
+- Keep ordinary status read-only; verify native-event preference and absence of
+  scheduled active-delegate polling. Preserve all C1–C6 authority gates.
