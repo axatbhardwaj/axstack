@@ -8,7 +8,7 @@ const lifecycle = () => read('skills/axstack/references/lifecycle.md');
 const pins = [
   'Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.',
   'Completion must match the current attempt key and candidate SHA; an older attempt never completes a newer one.',
-  'End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles all unsettled runs.',
+  'End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles unsettled launched-fallback Writer runs.',
   'Tracking grants no merge, release, model-substitution, or scope authority.',
 ];
 for (const pin of pins) test(`tracking safety: ${pin}`, () => {

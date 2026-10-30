@@ -7,6 +7,19 @@ holds, independent continuation, cross-project binding, null native parents,
 driver handbacks and exclusive PR/record ownership. This proves instructions;
 live multi-driver launch and handback remain separate authorized driver checks.
 
+R7c runtime recovery: `recovery-wait-records.test.js`,
+`recovery-boundaries.test.js` and `delegate-wake-boundary.test.js` cover the
+owner-authored versioned waiting/closing protocol, stable condition dedupe,
+immediate diagnosis, non-reply authority, report-only holds, exact owned cleanup
+and shared-service preservation. Semantic removal/inversion fails and equivalent
+rewording passes; record field names are wire contracts. Existing runtime/watch
+keepers retain native completion, own-PR/release 60-minute backstops and
+launched-fallback Writer/watch fallback 5-minute responsibilities, with zero
+scheduled status checks of running delegates. These checks prove shipped
+instructions only. Native queue/idempotency, Stop/restart/provider failure,
+external-dependency event support and cross-host sends require a separately
+authorized synthetic canary with exact receipts; this recipe activates nothing.
+
 Readable shared specifications: `skills/axstack-spec/SKILL.md` loads its relative
 `references/format.md`; draft-spec diligence checks comprehension alongside
 completeness. `spec-format.test.js` covers brief-first decisions/scope/risks,
@@ -116,6 +129,9 @@ doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/multi-driver.test.js \
+  tests/workflows/recovery-wait-records.test.js \
+  tests/workflows/recovery-boundaries.test.js \
+  tests/workflows/delegate-wake-boundary.test.js \
   tests/workflows/spec-format.test.js \
   tests/workflows/adoption-disposition.test.js \
   tests/workflows/staged-file-tokens.test.js \

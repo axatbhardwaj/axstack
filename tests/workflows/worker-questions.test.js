@@ -44,8 +44,8 @@ for (const path of copies) {
 
 for (const [name, concepts, rewording, inversions] of [
   ['delegated questions keep native wakes', [/delegated-child questions/i, /retain native completion paths/i,
-    /60-minute backstop/i, /when other recovery conditions are clear/i],
-  'When other recovery conditions are clear, delegated-child questions retain native completion paths and use the 60-minute backstop.',
+    /60-minute backstop/i, /existing own-PR\/release watch/i, /when other recovery conditions are clear/i],
+  'When other recovery conditions are clear, delegated-child questions retain native completion paths, and an existing own-PR/release watch uses the 60-minute backstop.',
   [[/retain native completion paths/i, 'lose native completion paths'], [/60-minute backstop/i, '5-minute recovery cadence']]],
   ['marker follow-up records the new native task', [/delegated marker question/i, /answer once/i,
     /t3_thread_send\(childThreadId, mode:queue\)/, /record.*returned taskId/i, /delegated terminal checks/i],

@@ -16,7 +16,7 @@ const loaded = [
 ].map(read).join('\n').replace(/\s+/g, ' ');
 
 test('implement loop: loaded text carries the merge-ready run contract', () => {
-  expect(loaded).toMatch(/T3 run watch[^.]*every unsettled dispatch attempt/i);
+  expect(loaded).toMatch(/T3 run watch[^.]*unsettled launched-fallback Writer runs/i);
   expect(loaded).toMatch(/forge[^.]*blocking check wait[^.]*bounded[^.]*once per revision/i);
   expect(loaded).toMatch(
     /authoring\s*\|\s*published\s*\|\s*in-review\s*\|\s*repairing\(n\)\s*\|\s*merge-ready\s*\|\s*merged\s*\|\s*held/i,

@@ -179,7 +179,7 @@ thread creation/settlement/cancel/interrupt, settings changes, or other owners'
 queue/watch/schedule edits. Its writes are bounded continuations, own-thread
 receipts and only its separately authorized schedule/duplicate-message cleanup.
 Cross-host sends remain report-only until installed C4 instructions and current
-directed C5 write-link proof exist; never redirect or use SSH/Hermes relays.
+directed C5 write-link proof exist; never redirect or relay outside native T3.
 
 ## Role dispatch by permitted writes
 
@@ -293,6 +293,13 @@ After each delegated completion the driver must check its own `HEAD` and
 `git status --porcelain` against their pre-dispatch values: both stay unchanged,
 including untracked entries. Any change is a hold before advancing that work.
 
+Native delegate completion owns the wake for `delegate_task` children. Never
+status-check running delegate_task children on scheduled wakes. Never create a
+schedule merely because delegate_task children exist. A lost completion wake
+remains active/unknown in read-only status, rather than triggering polling,
+silence-based cancellation or a replacement author. Native completion receipts
+are reconciled on delivery, not sought through hourly status checks.
+
 ## Launch recovery, repairs and questions
 
 For a lost delegated dispatch or repair response, retry with the same stable
@@ -343,12 +350,13 @@ A replacement after terminal failure must use `a<n+1>`, a new branch and title;
 the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
-With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true` is armed at the default
-`everyMs:3600000` or for its 5-minute recovery cases in
+The bound lifecycle rule below applies only to owned launched-fallback Writers
+awaiting completion. With an unsettled launched thread, the driver turn must end only while a bound
+`schedule_task` with `bindToCurrentThread:true` is armed at the 5-minute lifecycle
+cadence `everyMs:300000` under
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
-with its ID recorded. Each wake must reconcile all unsettled runs, including a
-writer that died without sending; failed runs hold incomplete work. The watch
+with its ID recorded. Each wake must reconcile unsettled launched-fallback Writer
+runs, including a writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
 T3 queues a scheduled wake even while the driver is busy, so copies pile up.
 After a provider error, server restart or Stop, T3 holds the queue: held
@@ -434,7 +442,7 @@ An open PR left unwatched by a user Stop never triggers the 5-minute recovery ca
 After T3 auto-settles a multi-PR driver on one PR merge, it re-arms remaining
 open members through the recovery steps before ending the turn.
 If rate-limited, use the 5-minute schedule and next-wake recovery above.
-The schedule still reconciles author and review tasks, readiness, and release.
+The schedule reconciles delivered receipts, readiness and release, plus launched-fallback Writer runs.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.
 
