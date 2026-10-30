@@ -60,8 +60,8 @@ do not belong in it.
 Delegation uses the `t3-code` MCP. Use async `delegate_task` for every role, including authors with
 `isolation:"worktree"` in their own SHA-pinned worktrees.
 Every top-level launch, including an author fallback, requires an explicit user request.
-Use `t3_thread_launch` for those explicitly authorized launches; preserve existing
-accepted authorization within its exact scope.
+Top-level drivers use `t3_thread_launch` only after an explicit user request.
+Preserve existing accepted authorization within its exact scope.
 Use `t3_thread_launch` as a rare author fallback only when
 worktree isolation is unavailable and record each use in the run record. Configuration read-back,
 run receipts and revision-bound completion are separate from capability
