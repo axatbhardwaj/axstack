@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { telemetry } from '../../skills/axstack/scripts/fleet-facts.js';
 import { sampleFleet } from '../../skills/axstack/scripts/fleet-sample.js';
-import { readProc, sshArgv, wait } from '../../skills/axstack/scripts/fleet-sample-io.js';
+import { PROC_COMMAND, readProc, sshArgv, wait } from '../../skills/axstack/scripts/fleet-sample-io.js';
 const raw = (v) => `cpu ${v} 0 0 100 0 0 0 0\n\n---AXSTACK-MEM---\nMemTotal: 100 kB\nMemAvailable: 80 kB\n`;
 const hosts = ['a', 'b', 'c'].map((n) => ({ id: `host-${n}`, environmentId: `env-${n}` }));
 const manifest = { schemaVersion: 1, hosts: hosts.map((h) => ({ hostId: h.id, environmentId: h.environmentId,
@@ -37,7 +37,7 @@ test('concurrent fleet reads form one batch, without serial per-host windows', a
   expect(first).toEqual(hosts.map((h) => h.id));
   expect(last).toEqual([]);
   expect(pending).toHaveLength(3);
-  now += 5000; pending.forEach((resolve) => resolve());
+  now += 5000; pending.forEach((resolve) => { resolve(); });
   const { telemetry: samples } = await result;
   expect(last).toEqual(first);
   expect(samples.map((s) => [s.status, s.windowStartedAt, s.durationMs])).toEqual([
@@ -85,9 +85,18 @@ test('per-host malformed/failure/timeout paths are unknown, with real timeout cl
 test('SSH uses argv, a constant read-only command, existing identities and bounded output', async () => {
   const h = manifest.hosts[0];
   const argv = sshArgv({ ...h, user: 'fixture_user' });
-  expect(argv.slice(-5, -1)).toEqual(['-l', 'fixture_user', '--', 'host-a']);
-  expect(argv).toContain('BatchMode=yes'); expect(argv).toContain('StrictHostKeyChecking=yes');
-  expect(argv).toContain('IdentitiesOnly=yes'); expect(argv).toContain('ClearAllForwardings=yes');
+  expect(argv).toEqual(['ssh', '-T', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
+    '-o', 'IdentitiesOnly=yes', '-o', 'ConnectTimeout=3', '-o', 'ConnectionAttempts=1',
+    '-o', 'ServerAliveInterval=2', '-o', 'ServerAliveCountMax=1', '-o', 'ControlMaster=no',
+    '-o', 'ControlPath=none', '-o', 'ClearAllForwardings=yes', '-o', 'PermitLocalCommand=no',
+    '-l', 'fixture_user', '--', 'host-a', PROC_COMMAND]);
+  let spawnArgs;
+  const output = await readProc(h, new AbortController().signal, (...args) => {
+    spawnArgs = args;
+    return { stdout: new Blob([raw(10)]).stream(), exited: Promise.resolve(0), kill() {} };
+  });
+  expect(output).toBe(raw(10));
+  expect(spawnArgs).toEqual([sshArgv(h), { stdin: 'ignore', stdout: 'pipe', stderr: 'ignore' }]);
   let killed = 0; let reaped = false; let resolve;
   const exited = new Promise((r) => { resolve = () => { reaped = true; r(137); }; });
   const controller = new AbortController();
@@ -191,4 +200,26 @@ test('immediate collection failure clears every owned deadline timer', async () 
     for (const t of pending) originalClear(t);
     globalThis.setTimeout = originalSet; globalThis.clearTimeout = originalClear;
   }
+});
+
+
+test('sampling waits a full interval after the first SSH response before the second read', async () => {
+  let now = 100000; let finishFirst;
+  const events = [];
+  const result = sampleFleet({ ...manifest, hosts: [manifest.hosts[0]] }, hosts,
+    { intervalMs: 5000, timeoutMs: 10000 }, {
+      clock: () => now, monotonic: () => now,
+      read: () => {
+        events.push(['read', now]);
+        if (events.length === 1) return new Promise((resolve) => { finishFirst = resolve; });
+        return raw(20);
+      },
+      wait: async (ms) => { events.push(['wait', now, ms]); now += ms; },
+    });
+  await Promise.resolve();
+  expect(events).toEqual([['read', 100000]]);
+  now += 2000; finishFirst(raw(10));
+  const output = await result;
+  expect(events).toEqual([['read', 100000], ['wait', 102000, 5000], ['read', 107000]]);
+  expect(output.telemetry[0]).toMatchObject({ status: 'ok', durationMs: 7000, intervalMs: 5000 });
 });

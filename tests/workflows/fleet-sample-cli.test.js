@@ -1,9 +1,10 @@
-import { expect, test } from 'bun:test';
-import { mkdirSync, writeFileSync, chmodSync } from 'node:fs';
+import { afterAll, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { fixture } from './fleet-route-fixture.js';
 import { recommend } from '../../skills/axstack/scripts/fleet-route.js';
-const root = `${process.env.TMPDIR}/c2-cli-${process.pid}`;
-mkdirSync(root, { mode: 0o700 });
+const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/c2-cli-`);
+chmodSync(root, 0o700);
+afterAll(() => rmSync(root, { recursive: true }));
 const f = fixture();
 const now = Date.now();
 const rebase = (value) => {
@@ -134,3 +135,39 @@ test('collection reuses the C1 account-local config default in a fixture home', 
   expect(r.code).toBe(0); expect(r.err).toBe('');
   expect(JSON.parse(r.out).configDigest).toBe(input.configDigest);
 });
+
+
+test.each(['SIGINT', 'SIGTERM'])('CLI %s returns cancelled telemetry and reaps SSH', async (signal) => {
+  const dir = `${root}/${signal}`;
+  mkdirSync(dir, { mode: 0o700 });
+  const ready = `${dir}/ready`;
+  // Signal only after the actual SSH child starts, so handler installation is proven.
+  writeFileSync(`${dir}/ssh`, `#!${process.execPath}\nawait Bun.write(${JSON.stringify(ready)}, String(process.pid)); setInterval(() => {}, 1000);\n`);
+  chmodSync(`${dir}/ssh`, 0o700);
+  const child = Bun.spawn([process.execPath, 'skills/axstack/scripts/fleet-route.js', 'sample', ...args], {
+    stdin: 'ignore', stdout: 'pipe', stderr: 'pipe',
+    env: { ...process.env, HOME: root, PATH: `${dir}:${process.env.PATH}` },
+  });
+  let sshPid;
+  const deadline = setTimeout(() => child.kill('SIGKILL'), 4000);
+  try {
+    const until = performance.now() + 2000;
+    while (!existsSync(ready) && performance.now() < until) await Bun.sleep(10);
+    expect(existsSync(ready)).toBe(true);
+    sshPid = Number(readFileSync(ready, 'utf8'));
+    child.kill(signal);
+    const [code, out, err] = await Promise.all([child.exited,
+      new Response(child.stdout).text(), new Response(child.stderr).text()]);
+    expect(code).toBe(0);
+    expect(err).toBe('');
+    expect(JSON.parse(out).telemetry).toEqual([expect.objectContaining({
+      hostId: 'worker-a', environmentId: 'env-worker-a', status: 'cancelled',
+    })]);
+    expect(() => process.kill(sshPid, 0)).toThrow();
+  } finally {
+    clearTimeout(deadline);
+    child.kill('SIGKILL');
+    await child.exited;
+    if (sshPid) { try { process.kill(sshPid, 'SIGKILL'); } catch {} }
+  }
+}, 6000);
