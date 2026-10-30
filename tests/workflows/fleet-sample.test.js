@@ -20,7 +20,7 @@ test('valid manifest joins distinct host and environment identities', () => {
 
 test('malformed kernel facts have exact reasons beside a valid positive control', () => {
   expect(parseProc(first)).toBeTruthy();
-  for (const value of [first.replace('cpu  ', 'cpu0 '), first.replace('100 0', '-1 0'),
+  for (const value of [null, first + 'x'.repeat(65536), first.replace('cpu  ', 'cpu0 '), first.replace('100 0', '-1 0'),
     first.replace('100 0', '9007199254740992 0'), first.replace('MemAvailable: 800', 'MemAvailable: 1001'),
     first.replace('MemTotal: 1000', 'MemTotal: 0'), first.replace(' kB', ' MB'), first.replace('100 0 50 800 50 0 0 0 20 0', '100 0'),
     first.replace('100 0 50 800 50 0 0 0 20 0', '100 0 50 800 50 0 0 0 20 0 0'),
@@ -46,6 +46,7 @@ test('manifest rejects each invalid boundary independently', () => {
     [{ ...ssh, hosts: null }, 'manifest-schema'], [{ ...ssh, hosts: Array(65).fill(ssh.hosts[0]) }, 'manifest-schema'],
     [{ ...ssh, hosts: [null] }, 'manifest-schema'],
     [{ ...ssh, hosts: [ssh.hosts[0], ssh.hosts[0]] }, 'manifest-duplicate'],
+    [{ ...ssh, hosts: [ssh.hosts[0], manifest().hosts[0]] }, 'manifest-duplicate'],
     ...[['hostId', 'environment-a', 'manifest-host'], ['environmentId', 'host-a', 'manifest-host'],
       ['transport', 'agent', 'manifest-transport'], ['destination', '-oProxyCommand=x', 'manifest-destination'],
       ['destination', 'host;id', 'manifest-destination'], ['destination', 'user@host', 'manifest-destination'],
