@@ -103,7 +103,10 @@ export function inspectFleetReceipt(receipt, expected) {
   { origin: status?.latestTerminalSummary, destination: final?.text });
   term('receipt-host-path', r.evidence?.hostId === s.hostId && r.evidence?.environmentId === s.environmentId
     && absolute(r.evidence?.path) && finalLine(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
-  if (r.checkout != null || thread?.worktreePath != null || r.requested?.isolation === 'worktree') {
+  if (a?.title?.startsWith('Reviewer: ')) {
+    term('receipt-isolation', r.requested?.isolation === 'worktree', r.requested?.isolation);
+  }
+  if (a?.title?.startsWith('Reviewer: ') || r.checkout != null || thread?.worktreePath != null || r.requested?.isolation === 'worktree') {
     const c = r.checkout;
     term('receipt-checkout', c?.hostId === s.hostId && c?.environmentId === s.environmentId
       && absolute(c?.path) && c.path === thread?.worktreePath

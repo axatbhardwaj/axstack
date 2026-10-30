@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { assignmentCounts } from '../../skills/axstack/scripts/fleet-facts.js';
 import { recommend } from '../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from './fleet-route-fixture.js';
@@ -94,4 +95,41 @@ test('a completed turn with live children is still an active assignment', () => 
   f.input.nativeInventory.tasks[0].task.hasPendingChildRuns = true;
   f.input.nativeInventory.tasks[0].task.workState = 'waiting_for_children';
   expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+});
+
+
+test('real selector CLI spreads native pending batch once per 20/35/40 host without input writes', () => {
+  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/fleet-native-cli-`);
+  const validate = () => {
+    const stat = lstatSync(dir);
+    expect(stat.isSymbolicLink()).toBe(false);
+    expect(stat.uid).toBe(process.getuid());
+    expect(stat.mode & 0o777).toBe(0o700);
+    expect(realpathSync(dir)).toBe(dir);
+  };
+  validate();
+  try {
+    const f = snapshot();
+    f.input.nativeInventory.tasks = [];
+    const input = f.bind();
+    writeFileSync(`${dir}/config.json`, input.configText);
+    for (const [index, host] of ['worker-a', 'worker-b', 'worker-c'].entries()) {
+      const bytes = JSON.stringify(input);
+      writeFileSync(`${dir}/input.json`, bytes);
+      const result = Bun.spawnSync([process.execPath, `${import.meta.dir}/../../skills/axstack/scripts/fleet-route.js`,
+        'recommend', '--input', `${dir}/input.json`, '--config', `${dir}/config.json`, '--now', '100000', '--json'],
+      { env: { ...process.env, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' }, stdout: 'pipe', stderr: 'pipe' });
+      expect(result.exitCode, result.stderr.toString()).toBe(0);
+      const output = JSON.parse(result.stdout.toString());
+      expect(output.selected).toMatchObject({ hostId: host, environmentId: `env-${host}`,
+        projectId: `project-${host}`, execution: { model: 'fixture-model', options: { effort: 'high' } } });
+      expect(output.flags.countsUnknown).toBe(false);
+      expect(readFileSync(`${dir}/input.json`, 'utf8')).toBe(bytes);
+      expect(readFileSync(`${dir}/config.json`, 'utf8')).toBe(input.configText);
+      input.nativeInventory.pending.push({ origin: f.origin, clientRequestId: `batch-${index}`, environmentId: `env-${host}` });
+    }
+  } finally {
+    validate();
+    rmSync(dir, { recursive: true });
+  }
 });

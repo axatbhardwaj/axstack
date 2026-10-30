@@ -369,6 +369,8 @@ test('terminal completion requires an observed native pending-question list', ()
 test('remote reviewer checkout binds owned host/path, candidate and base readback', () => {
   const f = fleet();
   const value = receipt(f);
+  value.fleetAttempt.title = 'Reviewer: run:reader:inspect:a1';
+  value.fleetReceipt.thread.value.thread.title = value.fleetAttempt.title;
   value.fleetReceipt.requested.isolation = 'worktree';
   value.fleetReceipt.thread.value.thread.worktreePath = '/target/isolated-review';
   value.fleetReceipt.checkout = { hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
@@ -376,6 +378,11 @@ test('remote reviewer checkout binds owned host/path, candidate and base readbac
       hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
       candidate: 'a'.repeat(40), base: 'b'.repeat(40), evidence: 'target://exact-sha-check' } };
   expect(f.run(value).output).toContain('MATCH');
+  const shared = structuredClone(value);
+  shared.fleetReceipt.requested.isolation = 'shared';
+  const sharedResult = f.run(shared);
+  expect(sharedResult.status).toBe(2);
+  expect(sharedResult.output).toContain('receipt-isolation: fail');
   for (const [where, key, changed] of [
     ['checkout', 'hostId', 'env-worker-a'], ['checkout', 'environmentId', 'env-worker-b'],
     ['checkout', 'path', '/target/other'], ['checkout', 'base', 'c'.repeat(40)],
