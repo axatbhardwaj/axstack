@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { inspectDestination } from '../../../skills/axstack/scripts/fleet-destination.js';
 import { recommend } from '../../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from '../fleet-route-fixture.js';
 import { configuration, invoke, setup } from './fixtures.js';
@@ -230,4 +231,382 @@ test.each([
   planned(f);
   change(f);
   held(f.run(), code);
+});
+
+// Native saved envelopes; host, environment and project deliberately differ.
+function receipt(f) {
+  const marker = `AXSTACK-DONE key=run:reader:inspect:a1 head=${'a'.repeat(40)} report=/evidence/result.md`;
+  const task = { taskId: 'origin-task', childThreadId: null, childRunId: 'initial-run',
+    remoteChild: { environmentId: 'env-worker-a', threadId: 'same-thread' },
+    providerInstanceId: 'codex', model: 'gpt-6.1-sol',
+    options: [{ id: 'reasoningEffort', value: 'high' }, { id: 'serviceTier', value: 'priority' }],
+    status: 'completed', workState: 'result_available', hasPendingChildRuns: false,
+    hasPendingQuestion: false, pendingApproval: null, latestTerminalRunId: 'continued-run',
+    latestTerminalStatus: 'completed', latestTerminalSummary: marker, summary: 'older summary' };
+  const attempt = { key: 'run:reader:inspect:a1', title: 'Subagent: run:reader:inspect:a1', clientRequestId: 'exact-request',
+    origin: { environmentId: 'env-personal-a', threadId: 'driver', taskId: 'origin-task' },
+    candidate: 'a'.repeat(40), base: 'b'.repeat(40) };
+  const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
+    observedAt: NOW, evidence: 'saved://native-read' });
+  const result = { schemaVersion: 1, attempt, remoteChild: { environmentId: 'env-worker-a', threadId: 'same-thread', runId: 'continued-run' }, recommendationJSON: JSON.stringify(f.saved), configDigest: f.input.configDigest,
+    requested: { target: { environmentId: 'env-worker-a', projectId: 'project-worker-a',
+      providerInstanceId: 'codex', model: 'gpt-6.1-sol', options: task.options }, runtimeMode: 'full-access' },
+    submission: structuredClone(task),
+    status: read('task_status', 'env-personal-a', { taskId: 'origin-task' }, task),
+    thread: read('t3_thread_read', 'env-worker-a', { threadId: 'same-thread' }, {
+      thread: { title: 'Subagent: run:reader:inspect:a1', threadId: 'same-thread', projectId: 'project-worker-a', latestRunId: 'continued-run',
+        activeRunId: null, status: 'completed', providerInstanceId: 'codex', model: 'gpt-6.1-sol',
+        runtimeMode: 'full-access', pendingRequestCount: 0, worktreePath: null },
+      recentRuns: [{ runId: 'initial-run', ordinal: 1, status: 'completed' },
+        { runId: 'continued-run', ordinal: 2, status: 'completed' }],
+      items: [{ runId: 'continued-run', createdBy: 'agent', text: marker }] }),
+    questions: read('t3_pending_request', 'env-worker-a', { action: 'list', threadId: 'same-thread' }, { requests: [] }),
+    terminal: read('t3_thread_wait', 'env-worker-a', { threadId: 'same-thread', runId: 'continued-run' },
+      { threadId: 'same-thread', runId: 'continued-run', status: 'completed', timedOut: false }),
+    evidence: { hostId: 'worker-a', environmentId: 'env-worker-a', path: '/evidence/result.md' } };
+  return { ...f.readback(), fleetAttempt: attempt, fleetReceipt: result };
+}
+
+test('native receipt validates remote null-child completion and newer provider continuation', () => {
+  const f = fleet();
+  const value = receipt(f);
+  const before = JSON.stringify(value);
+  expect(f.run(value).output).toContain('MATCH');
+  expect(JSON.stringify(value)).toBe(before);
+});
+
+test.each([
+  ['receipt-observation', (r) => { r.status.tool = 'worker-self-report'; }],
+  ['receipt-version', (r) => { r.schemaVersion = 2; }],
+  ...Object.entries({ environmentId: 'env-worker-b', projectId: 'project-worker-b', providerInstanceId: 'other-provider', model: 'other-model', options: { reasoningEffort: 'low' } })
+    .map(([key, value]) => ['receipt-requested', (r) => { r.requested.target[key] = value; }]),
+  ...['status', 'thread'].flatMap((where) => ['providerInstanceId', 'model'].map((key) =>
+    ['receipt-effective', (r) => { (where === 'status' ? r.status.value : r.thread.value.thread)[key] = 'other'; }])),
+  ['receipt-origin', (r) => { r.status.value.taskId = 'other-task'; }],
+  ['receipt-origin', (r) => { r.submission.taskId = 'other-task'; }],
+  ['receipt-destination', (r) => { r.submission.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-destination', (r) => { r.submission.remoteChild.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-run', (r) => { r.remoteChild.threadId = 'other-thread'; }],
+  ['receipt-terminal', (r) => { r.status.value.latestTerminalStatus = 'failed'; }],
+  ['receipt-terminal', (r) => { r.thread.value.thread.status = 'running'; }],
+  ['receipt-terminal', (r) => { r.thread.value.thread.activeRunId = 'new-run'; }],
+  ['receipt-terminal', (r) => { r.terminal.value.timedOut = true; }],
+  ['receipt-question', (r) => { r.status.value.hasPendingQuestion = true; }],
+  ['receipt-question', (r) => { r.status.value.pendingApproval = { requestId: 'approval' }; }],
+  ['receipt-question', (r) => { r.questions.tool = 'other-tool'; }],
+  ['receipt-question', (r) => { r.questions.environmentId = 'env-worker-b'; }],
+  ['receipt-question', (r) => { r.questions.args.threadId = 'other-thread'; }],
+  ['receipt-question', (r) => { r.questions.observedAt = -1; }],
+  ['receipt-question', (r) => { r.questions.observedAt = NOW + 1; }],
+  ['receipt-question', (r) => { r.questions.evidence = ''; }],
+  ['receipt-question', (r) => { r.questions.value.requests = { length: 0 }; }],
+  ['receipt-destination', (r) => { r.thread.value.thread.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.terminal.value.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.thread.value.recentRuns.push({ runId: 'newer-run', ordinal: 3, status: 'completed' }); }],
+  ['receipt-run', (r) => { r.thread.value.recentRuns[1].status = 'failed'; }],
+  ['receipt-run', (r) => { r.terminal.value.resultRun = { runId: 'initial-run', status: 'completed' }; }],
+  ['receipt-run', (r) => { r.terminal.value.resultRun = { runId: 'continued-run', status: 'failed' }; }],
+  ['receipt-marker', (r) => { r.thread.value.items[0].createdBy = 'user'; }],
+  ['receipt-effective', (r) => { r.thread.value.thread.runtimeMode = 'auto'; }],
+  ...['status', 'thread', 'terminal'].flatMap((name) => [
+    ['receipt-observation', (r) => { r[name].environmentId = 'env-worker-c'; }],
+    ['receipt-observation', (r) => { r[name].args = { unrelated: 'other-attempt' }; }],
+    ['receipt-observation', (r) => { r[name].observedAt = NOW + 1; }],
+  ]),
+  ['receipt-title', (r) => { r.thread.value.thread.title = 'another attempt'; }],
+  ['receipt-run', (r) => { r.remoteChild.runId = 'initial-run'; }],
+  ['receipt-question', (r) => { r.questions.value.requests.push({ requestId: 'unanswered' }); }],
+  ['receipt-origin', (r) => { r.attempt.origin.environmentId = 'env-worker-c'; }],
+  ['receipt-attempt', (r) => { r.attempt.clientRequestId = 'another-request'; }],
+  ['receipt-recommendation', (r) => { r.recommendationJSON += ' '; }],
+  ['receipt-config', (r) => { r.configDigest = '0'.repeat(64); }],
+  ['receipt-destination', (r) => { r.status.value.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-destination', (r) => { r.thread.environmentId = 'env-worker-b'; }],
+  ['receipt-project', (r) => { r.thread.value.thread.projectId = 'project-worker-b'; }],
+  ['receipt-requested', (r) => { r.requested.runtimeMode = 'auto'; }],
+  ['receipt-effective', (r) => { r.status.value.options[0].value = 'low'; }],
+  ['receipt-effective', (r) => { delete r.status.value.options; }],
+  ['receipt-terminal', (r) => { r.status.value.hasPendingChildRuns = true; }],
+  ['receipt-terminal', (r) => { r.status.value.workState = 'waiting_for_children'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'failed'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'cancelled'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'waiting'; }],
+  ['receipt-question', (r) => { r.thread.value.thread.pendingRequestCount = 1; }],
+  ['receipt-run', (r) => { r.status.value.latestTerminalRunId = 'initial-run'; }],
+  ['receipt-run', (r) => { r.terminal.value.runId = 'initial-run'; }],
+  ['receipt-marker', (r) => { r.status.value.latestTerminalSummary = 'progress only'; }],
+  ['receipt-marker', (r) => { r.thread.value.items[0].runId = 'initial-run'; }],
+  ['receipt-host-path', (r) => { r.evidence.hostId = 'env-worker-a'; }],
+  ['receipt-host-path', (r) => { r.evidence.path = '/different/result.md'; }],
+])('native receipt holds on %s', (code, alter) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  // Clone separately: expected attempt is driver-owned, never aliased to the receipt.
+  value.fleetReceipt = structuredClone(value.fleetReceipt);
+  alter(value.fleetReceipt);
+  const result = f.run(value);
+  expect(result.status, result.output).toBe(2);
+  expect(result.output).toContain(`${code}:`);
+  expect(result.output).not.toContain('MATCH');
+});
+
+function observation(f) {
+  f.capabilities.providers[0].runtimeModes = ['full-access'];
+  f.refreshCatalog();
+  const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
+    observedAt: NOW, evidence: 'saved://native-forwarded' });
+  return {
+    environment: read('t3_environment_read', 'env-worker-a', {}, { environmentId: 'env-worker-a', serverVersion: '0.1.5' }),
+    project: read('t3_project_read', 'env-worker-a', { projectId: 'project-worker-a' }, {
+      id: 'project-worker-a', workspaceRoot: '/actual-target/project', repositoryIdentity: { canonicalKey: 'synthetic/project' } }),
+    capabilities: { ...read('orchestrator_capabilities', 'env-worker-a', {}, null),
+      valueText: JSON.stringify(f.capabilities) },
+    links: read('t3_environment_links', 'env-personal-a', {}, { environmentId: 'env-personal-a', links: [
+      { environmentId: 'env-worker-a', status: 'reachable', access: 'full-access', expiresAt: new Date(NOW + 60000).toISOString() },
+    ] }),
+  };
+}
+
+test.each([
+  ['destination-observation', (o) => { o.capabilities.environmentId = 'env-personal-a'; }],
+  ['destination-project', (o) => { o.project.value.id = 'project-personal-a'; }],
+  ['destination-observation', (o) => { o.project.args.projectId = 'project-worker-b'; }],
+  ['destination-access', (o) => { o.links.value.environmentId = 'env-worker-b'; }],
+  ['destination-access', (o) => { o.links.value.links[0].status = 'expired'; }],
+  ['destination-repository', (o) => { o.project.value.repositoryIdentity.canonicalKey = 'different/repo'; }],
+  ['destination-identity', (o) => { o.environment.value.environmentId = 'worker-a'; }],
+  ['destination-catalog', (o) => { o.capabilities.valueText += ' '; }],
+  ['destination-execution', (o) => { const c = JSON.parse(o.capabilities.valueText); c.providers[0].canRunChildTask = false; o.capabilities.valueText = JSON.stringify(c); }],
+  ['destination-access', (o) => { o.links.value.links[0].access = 'read-only'; }],
+  ['destination-access', (o) => { o.links.value.links[0].expiresAt = new Date(NOW).toISOString(); }],
+  ['destination-observation', (o) => { o.project.observedAt = NOW + 1; }],
+])('native destination evidence holds on %s', (code, alter) => {
+  const f = fleet();
+  f.input.nativeDestination = observation(f);
+  planned(f);
+  alter(f.input.nativeDestination);
+  if (code === 'destination-execution') {
+    Object.assign(f.capabilities, JSON.parse(f.input.nativeDestination.capabilities.valueText));
+    f.refreshCatalog();
+  }
+  held(f.run(), code);
+});
+
+test.each([
+  ['access', 'read-only', false], ['expiresAt', new Date(NOW).toISOString(), false],
+  ['access', 'read-only', true], ['expiresAt', new Date(NOW).toISOString(), true],
+])('destination access uses its own link regardless of position: %s %s reversed=%s', (field, denied, reverse) => {
+  const f = fleet();
+  const o = observation(f);
+  const selected = o.links.value.links[0];
+  const unrelated = { ...selected, environmentId: 'env-worker-b' };
+  o.links.value.links = reverse ? [selected, unrelated] : [unrelated, selected];
+  f.input.nativeDestination = o;
+  planned(f);
+  selected[field] = denied;
+  held(f.run(), 'destination-access');
+});
+
+// Receipt additions are separately test-first: count alone cannot prove question absence.
+test('terminal completion requires an observed native pending-question list', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetReceipt.questions;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-question: unknown');
+});
+
+
+test('remote reviewer checkout binds owned host/path, candidate and base readback', () => {
+  const f = fleet();
+  const value = receipt(f);
+  value.fleetAttempt.title = 'Reviewer: run:reader:inspect:a1';
+  value.fleetReceipt.thread.value.thread.title = value.fleetAttempt.title;
+  value.fleetReceipt.requested.isolation = 'worktree';
+  value.fleetReceipt.thread.value.thread.worktreePath = '/target/isolated-review';
+  value.fleetReceipt.checkout = { hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
+    candidate: 'a'.repeat(40), base: 'b'.repeat(40), readback: {
+      hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
+      candidate: 'a'.repeat(40), base: 'b'.repeat(40), evidence: 'target://exact-sha-check' } };
+  expect(f.run(value).output).toContain('MATCH');
+  // Each authority term must remain explicit even if another term also holds.
+  const missingCheckout = structuredClone(value);
+  delete missingCheckout.fleetReceipt.checkout;
+  missingCheckout.fleetReceipt.thread.value.thread.worktreePath = null;
+  missingCheckout.fleetReceipt.requested.isolation = 'shared';
+  const missingResult = f.run(missingCheckout);
+  expect(missingResult.status).toBe(2);
+  expect(missingResult.output).toContain('receipt-checkout: unknown');
+  for (const change of [
+    (v) => { v.fleetReceipt.checkout.path = v.fleetReceipt.checkout.readback.path = v.fleetReceipt.thread.value.thread.worktreePath = 'relative/path'; },
+    (v) => { v.fleetAttempt.base = v.fleetReceipt.checkout.base = v.fleetReceipt.checkout.readback.base = 'not-a-commit'; },
+  ]) {
+    const bad = structuredClone(value);
+    change(bad);
+    const result = f.run(bad);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain('receipt-checkout: fail');
+  }
+  const misplaced = structuredClone(value);
+  misplaced.fleetReceipt.thread.value.thread.worktreePath = '/target/different-checkout';
+  const misplacedResult = f.run(misplaced);
+  expect(misplacedResult.status).toBe(2);
+  expect(misplacedResult.output).toContain('receipt-checkout: fail');
+  const shared = structuredClone(value);
+  shared.fleetReceipt.requested.isolation = 'shared';
+  const sharedResult = f.run(shared);
+  expect(sharedResult.status).toBe(2);
+  expect(sharedResult.output).toContain('receipt-isolation: fail');
+  for (const [where, key, changed] of [
+    ['checkout', 'hostId', 'env-worker-a'], ['checkout', 'environmentId', 'env-worker-b'],
+    ['checkout', 'path', '/target/other'], ['checkout', 'base', 'c'.repeat(40)],
+    ['checkout', 'candidate', 'c'.repeat(40)], ['readback', 'hostId', 'worker-b'], ['readback', 'evidence', ''],
+    ['readback', 'environmentId', 'env-worker-b'], ['readback', 'path', '/other'],
+    ['readback', 'candidate', 'c'.repeat(40)], ['readback', 'base', 'c'.repeat(40)],
+  ]) {
+    const bad = structuredClone(value);
+    (where === 'checkout' ? bad.fleetReceipt.checkout : bad.fleetReceipt.checkout.readback)[key] = changed;
+    const result = f.run(bad);
+    expect(result.status, result.output).toBe(2);
+    expect(result.output).toContain('receipt-checkout: fail');
+  }
+});
+
+
+test('independently consistent but wrong origin cannot bind to the selected recommendation', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetAttempt.origin.environmentId = 'env-worker-c';
+  value.fleetReceipt.status.environmentId = 'env-worker-c';
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-origin: fail');
+});
+
+test('native binding CLI preserves inputs, creates only explicit output and imports without effects', () => {
+  const f = fleet();
+  f.input.nativeDestination = observation(f);
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  const files = () => readdirSync(f.dir).sort().map((name) => [name, readFileSync(`${f.dir}/${name}`, 'utf8')]);
+  const before = files();
+  expect(f.run(value).output).toContain('MATCH');
+  expect(files()).toEqual(before);
+  const result = f.run(value, ['--out', `${f.dir}/receipt-terms.json`]);
+  expect(result.status).toBe(0);
+  const report = JSON.parse(readFileSync(`${f.dir}/receipt-terms.json`, 'utf8'));
+  expect(report.receiptTerms.length).toBeGreaterThan(10);
+  expect(report.receiptTerms.every((t) => t.state === 'pass' && t.evidence != null)).toBe(true);
+  expect(files().filter(([name]) => name !== 'receipt-terms.json')).toEqual(before);
+  const imported = Bun.spawnSync([process.execPath, '-e',
+    `await import(${JSON.stringify(`${import.meta.dir}/../../../skills/axstack/scripts/dispatch-plan.js`)});`], {
+    cwd: f.dir, env: { ...process.env, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' }, stdout: 'pipe', stderr: 'pipe',
+  });
+  expect(imported.exitCode).toBe(0);
+  expect(imported.stdout.toString() + imported.stderr.toString()).toBe('');
+  expect(files().filter(([name]) => name !== 'receipt-terms.json')).toEqual(before);
+});
+
+test('idle destination still requires the independently completed exact run and final result', () => {
+  const f = fleet();
+  const value = receipt(f);
+  value.fleetReceipt.thread.value.thread.status = 'idle';
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetReceipt.terminal.value.status = 'idle';
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-terminal: fail');
+});
+
+test.each([
+  ['status', 'receipt-terminal'], ['terminal', 'receipt-terminal'],
+  ['thread', 'receipt-project'], ['remoteChild', 'receipt-run'],
+])('missing native %s keeps %s unknown', (field, code) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetReceipt[field];
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain(`${code}: unknown`);
+});
+
+
+test('unadvertised destination execution fields remain unknown with their native evidence', () => {
+  const f = fleet();
+  const observed = observation(f);
+  const inspect = () => inspectDestination(observed, f.saved, observed.capabilities.valueText, NOW);
+  expect(inspect().every((t) => t.state === 'pass')).toBe(true);
+  const catalog = JSON.parse(observed.capabilities.valueText);
+  delete catalog.providers[0].runtimeModes;
+  observed.capabilities.valueText = JSON.stringify(catalog);
+  const term = inspect().find((t) => t.code === 'destination-execution');
+  expect(term.state).toBe('unknown');
+  expect(term.evidence).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
+});
+
+test('incomplete independent origin context cannot accept a self-consistent receipt', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetAttempt.origin.threadId;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-origin: unknown');
+});
+
+
+test.each(['origin', 'destination', 'both'])('native completion permits the T3 PR trailer on %s', (where) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  const trailer = `\nPR https://github.com/example/repo/pull/1, head ${'a'.repeat(40)}, checks and reviews passed`;
+  if (where !== 'destination') value.fleetReceipt.status.value.latestTerminalSummary += trailer;
+  if (where !== 'origin') value.fleetReceipt.thread.value.items[0].text += trailer;
+  const result = f.run(value);
+  expect(result.status, result.output).toBe(0);
+  expect(result.output).toContain('MATCH');
+});
+
+test.each(['AXSTACK-QUESTION key=run:reader:inspect:a1 q=pending', 'AXSTACK-FAILED key=run:reader:inspect:a1', 'unresolved work remains'])('native completion cannot hide a later conflicting line: %s', (tail) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetReceipt.thread.value.items[0].text += `\n${tail}`;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-marker: fail');
+});
+
+for (const where of ['origin', 'destination']) {
+  test.each(['malformed trailer', 'extra tail', 'earlier question'])(`native completion rejects %s on ${where}`, (shape) => {
+    const f = fleet();
+    const value = receipt(f);
+    expect(f.run(value).output).toContain('MATCH');
+    const target = where === 'origin' ? value.fleetReceipt.status.value : value.fleetReceipt.thread.value.items[0];
+    const field = where === 'origin' ? 'latestTerminalSummary' : 'text';
+    const trailer = `PR https://github.com/example/repo/pull/1, head ${'a'.repeat(40)}, checks and reviews passed`;
+    if (shape === 'earlier question') target[field] = `AXSTACK-QUESTION key=run:reader:inspect:a1 q=pending\n${target[field]}`;
+    else target[field] += `\n${shape === 'malformed trailer' ? 'PR needs your answer' : `${trailer}\nunresolved work remains`}`;
+    const result = f.run(value);
+    expect(result.status).toBe(2);
+    expect(result.output).toContain('receipt-marker: fail');
+  });
+}
+
+test.each(['missing requests', 'raw requestIds'])('unextracted question list stays unknown: %s', (shape) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  if (shape === 'missing requests') delete value.fleetReceipt.questions.value.requests;
+  else value.fleetReceipt.questions.value = { requestIds: [] };
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-question: unknown');
+  expect(result.output).not.toContain('receipt-question: fail');
 });

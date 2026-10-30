@@ -409,3 +409,43 @@ For own PRs, automatic merge is the default under the
 [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
 The recorded owning watch thread merges; a missing or idle owner requires
 lifecycle reconciliation and explicit transfer first.
+
+## Fleet nonwriter boundary (C3a)
+
+Before dispatch, the driver must capture capability, project, settings and access
+through native forwarded APIs on the selected destination, following
+[Fleet dispatch and receipts](fleet-dispatch.md). Origin catalogs and caller
+assertions alone cannot establish destination readiness. Preserve exact catalog
+bytes/digest, explicit observation/evaluation times, config digest and recommendation.
+
+`t3_thread_configuration` is currently unavailable in the advertised tools.
+Unavailable effective fields remain unknown; the driver must not invent an API,
+readiness or effective settings. Use advertised dispatch/thread facts, keep requested
+and effective values separate, and hold any required unobserved field.
+
+For ambiguous submission, reconcile the exact clientRequestId/attempt and remote task
+before any retry. Unknown liveness prohibits replacement. A confirmed not-submitted
+failure may exclude that route and recompute from current facts; it never permits
+model or permission substitution. No hidden SSH agent or new top-level thread is
+an execution fallback; a new thread requires an explicit user request.
+
+The driver must read task_status on the origin and terminal/thread facts on the
+actual destination for the latest run. Pending children or an unanswered question
+prevent success even after a completed turn. Read the native pending-question list
+with `t3_pending_request` action `list` on that destination; the older
+`t3_pending_request_list` spelling above is not an advertised callable tool.
+A null local childThreadId, idle state, silence or old summary proves no completion.
+
+The remote author coordinator remains DISABLED: C3b's all-refs-unchanged pilot
+failed because of T3 checkpoint refs. Drivers must not enable or rerun the pilot
+under C3a. Direct remote worktree authors remain ineligible on T3 v0.1.5;
+local isolated authors remain the fallback even when overloaded. C4 personal
+policy/Haoshoku changes and C6 deployment/live acceptance remain later phases.
+
+Remote nonwriters use native `delegate_task` with exact selected target.environmentId,
+projectId, providerInstanceId, model, target.options and runtimeMode. Remote reviewers
+use T3 `isolation:"worktree"`; never make their child checkouts in the shell.
+Use no raw agent CLI over SSH. SSH is restricted to telemetry and authorized
+artifact/commit transport. Follow host-qualified archive/readback/retirement in
+[Fleet dispatch and receipts](fleet-dispatch.md#retrieval-and-retirement).
+Only the driver publishes, links, watches or merges PRs.

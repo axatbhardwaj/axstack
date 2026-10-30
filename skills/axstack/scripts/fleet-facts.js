@@ -1,10 +1,21 @@
+import { nativeAssignments } from './fleet-inventory.js';
 import { canonical, evidence, fail, record, text, time } from './fleet-config.js';
 
 const terminal = new Set(['completed', 'failed', 'cancelled', 'canceled', 'rejected']);
 const states = new Set([...terminal, 'pending', 'queued', 'running', 'waiting', 'blocked']);
 const qualified = (value) => text(value) && /^.+:.+$/.test(value);
 
-export function assignmentCounts(input, hosts) {
+export function assignmentCounts(input, hosts, now) {
+  if (input.nativeInventory !== undefined) {
+    const normalized = nativeAssignments(input.nativeInventory, hosts, now);
+    const counts = assignmentCounts(normalized, hosts);
+    return { ...counts, inventoryReasons: normalized.inventoryReasons,
+      inventoryEvidence: normalized.inventoryEvidence,
+      ...(normalized.inventoryStatus === 'unknown' ? {
+        pendingLowerBound: counts.byEnvironment,
+        byEnvironment: Object.fromEntries(hosts.map((h) => [h.environmentId, null])),
+      } : {}) };
+  }
   const byEnvironment = Object.fromEntries(hosts.map((h) => [h.environmentId, 0]));
   const inventory = new Map();
   const clients = new Map();

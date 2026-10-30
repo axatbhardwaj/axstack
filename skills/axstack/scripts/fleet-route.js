@@ -6,7 +6,7 @@ export { parseFleetConfig } from './fleet-config.js';
 export function recommend(input, now) {
   validateInput(input, now);
   const config = parseFleetConfig(input.configText, input.configDigest);
-  const counts = assignmentCounts(input, config.hosts);
+  const counts = assignmentCounts(input, config.hosts, now);
   const preference = Object.hasOwn(config.taskOrders, input.request.task)
     ? config.taskOrders[input.request.task] : config.defaultOrder;
   const eligible = [];
@@ -46,12 +46,13 @@ export function recommend(input, now) {
   const measured = (h) => h.telemetry.status === 'measured';
   const rank = (h) => preference.indexOf(h.hostId);
   const byLoad = (a, b) => a.telemetry.loadBp - b.telemetry.loadBp || rank(a) - rank(b);
+  const rankingCounts = counts.pendingLowerBound ?? counts.byEnvironment;
   const under = pool.filter((h) => measured(h) && h.telemetry.loadBp <= config.balanceLimitBp);
   let stage; let reason; let selected = null;
   if (!eligible.length) { stage = 'no-route'; reason = 'no-executable-route'; }
   else if (under.length) {
     stage = 'balance'; reason = 'pool-under-limit';
-    selected = under.sort((a, b) => a.assignmentCount - b.assignmentCount || byLoad(a, b))[0];
+    selected = under.sort((a, b) => rankingCounts[a.environmentId] - rankingCounts[b.environmentId] || byLoad(a, b))[0];
   } else if (pool.length && pool.every((h) => !measured(h))) {
     stage = 'pool-unknown'; reason = 'pool-all-unknown'; selected = pool[0];
   } else {
@@ -65,7 +66,7 @@ export function recommend(input, now) {
     }
   }
   const flags = {
-    countsUnknown: input.inventoryStatus === 'unknown', poolEmpty: pool.length === 0,
+    countsUnknown: counts.inventoryStatus === 'unknown', poolEmpty: pool.length === 0,
     poolPartlyUnknown: pool.some(measured) && pool.some((h) => !measured(h)),
     telemetryUnknown: eligible.some((h) => !measured(h)),
     overloaded: selected ? measured(selected) && selected.telemetry.loadBp > selected.fallbackLimitBp : false,

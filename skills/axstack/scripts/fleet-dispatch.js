@@ -1,4 +1,5 @@
 // Bind supplied placement facts to a plan. No reads, dispatch or authority grant.
+import { inspectDestination } from './fleet-destination.js';
 import { canonical, record, text } from './fleet-config.js';
 import { recommend } from './fleet-route.js';
 
@@ -16,6 +17,11 @@ export function bindFleet(input, saved, configDigest, now, capabilitiesText, res
   const digest = selected.destinationCapabilitiesDigest;
   if (typeof digest !== 'string' || !/^[a-f0-9]{64}$/.test(digest)) hold('capabilities-digest-missing');
   if (new Bun.CryptoHasher('sha256').update(capabilitiesText).digest('hex') !== digest) hold('capabilities-digest-mismatch');
+  if (input.nativeDestination !== undefined) {
+    const mismatch = inspectDestination(input.nativeDestination, current, capabilitiesText, now)
+      .find((term) => term.state !== 'pass');
+    if (mismatch) hold(mismatch.code);
+  }
   const request = current.request;
   const { model, providerInstanceId, effortOption } = resolved;
   if (request.providerInstanceId !== providerInstanceId || request.model !== model

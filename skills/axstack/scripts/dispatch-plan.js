@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { inspectFleetReceipt } from './fleet-receipt.js';
 import { bindFleet } from './fleet-dispatch.js';
 
 const fleetFlags = ['--recommendation', '--fleet-input', '--now', '--config-digest'];
@@ -32,6 +33,9 @@ Fleet --capabilities is the selected destination's raw saved catalog, digest-bou
 by its destination facts. It is never the origin catalog by default.
 Fleet verification requires environmentId/projectId and fleetBinding alongside
 the effective T3 configuration. C3 collects that host-qualified evidence envelope.
+Optional input.nativeDestination validates saved native forwarded reads.
+Optional --verify fleetAttempt/fleetReceipt validates host-qualified terminal facts;
+--out retains per-term receipt evidence. Synthetic bindings cannot authenticate reads.
 Coordinator routes remain unsupported here. A plan grants no launch authority.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
@@ -95,7 +99,15 @@ function verify(configuration, provider, model, options, fleet) {
     for (const [field, expected] of Object.entries(fleet.destination)) compare(field, expected, configuration?.[field]);
     for (const [field, expected] of Object.entries(fleet.fleetBinding)) compare(field, expected, configuration?.fleetBinding?.[field]);
   }
-  return { mismatches, ...(selection?.provider == null ? {
+  let receiptTerms;
+  if (fleet && configuration?.fleetReceipt !== undefined) {
+    receiptTerms = inspectFleetReceipt(configuration.fleetReceipt, {
+      attempt: configuration.fleetAttempt, recommendation: fleet.recommendation,
+      recommendationJSON: fleet.recommendationJSON, now: fleet.now,
+    });
+    for (const term of receiptTerms) if (term.state !== 'pass') mismatches.push(`${term.code}: ${term.state}; evidence ${JSON.stringify(term.evidence)}`);
+  }
+  return { mismatches, ...(receiptTerms ? { receiptTerms } : {}), ...(selection?.provider == null ? {
     providerEvidence: `provider: unknown; expected ${JSON.stringify(provider)}; observed missing; `
       + 'provider binding checked via instanceId and saved capabilities',
   } : {}) };
@@ -159,9 +171,14 @@ function plan(argv, io) {
   let fleet;
   if (args['--recommendation']) {
     if (!/^\d+$/.test(args['--now'])) throw new Error('evaluation-time');
-    fleet = bindFleet(readJSON(args['--fleet-input']), readJSON(args['--recommendation']),
+    const recommendationJSON = readFileSync(args['--recommendation'], 'utf8');
+    const recommendation = JSON.parse(recommendationJSON);
+    fleet = bindFleet(readJSON(args['--fleet-input']), recommendation,
       args['--config-digest'], Number(args['--now']), readFileSync(args['--capabilities'], 'utf8'),
       resolution, role.id === 'axstack-author');
+    fleet.recommendation = recommendation;
+    fleet.recommendationJSON = recommendationJSON;
+    fleet.now = Number(args['--now']);
   }
   const options = fleet?.options ?? (effortOption ? [effortOption] : []);
   if (args['--verify']) {
