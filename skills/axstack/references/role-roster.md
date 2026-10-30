@@ -37,6 +37,11 @@ disabled; local isolated authors remain supported even overloaded.
   review round and bounded research, spec, ticket, receipt, and release claims.
 - `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)
   for every interactive page, bound to the exact bytes and SHA-256.
+- `axstack-ui-verifier-sonnet`: `claude/sonnet` high in mixed, read-only;
+  independently drives Android and web/PWA run 2 under [UI checks](ui-verification.md#android-device-and-webpwa-dual-run).
+  `axstack-ui-verifier` (Terra high in mixed) drives run 1; the driver reconciles.
+  `axstack-ui-verifier-sonnet` is intentionally absent in both single-provider presets,
+  leaving dual-run verification unverified; record the absence without substitution.
 - `axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
   `axstack-explore-execution`:

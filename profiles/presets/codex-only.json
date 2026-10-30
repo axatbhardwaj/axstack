@@ -164,6 +164,15 @@
       "modelClass": "sol"
     },
     {
+      "id": "axstack-ui-verifier-sonnet",
+      "name": "Axstack UI verifier Sonnet",
+      "provider": "codex",
+      "model": null,
+      "modeId": "full-access",
+      "thinkingOptionId": "high",
+      "notes": "Intentional single-provider absence: the mixed Sonnet UI pair is unavailable in this preset. Record dual-run verification as unverified without substitution."
+    },
+    {
       "id": "axstack-explore-codebase",
       "name": "Axstack codebase explorer",
       "provider": "codex",

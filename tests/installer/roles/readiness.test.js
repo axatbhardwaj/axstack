@@ -49,6 +49,19 @@ test('single-provider readiness accepts only the intentionally unavailable advis
   );
 });
 
+test('independent UI seat absence is accepted only by single-provider presets', () => {
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const provider = preset === 'codex-only' ? 'codex' : 'claude';
+    const second = { ...role('axstack-ui-verifier-sonnet', null), provider };
+    const result = assessRoleReadiness([second], preset);
+    expect(result).toEqual(preset === 'mixed'
+      ? { ready: false, gaps: ['axstack-ui-verifier-sonnet requires a configured model'] }
+      : { ready: true, gaps: [] });
+    // The base verifier remains required in every preset.
+    expect(assessRoleReadiness([{ ...second, id: 'axstack-ui-verifier' }], preset).ready).toBe(false);
+  }
+});
+
 test('authored pairing accepts all four class routes and newer exact author IDs', () => {
   for (const [preset, author, primary, secondary] of [
     ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
@@ -146,7 +159,7 @@ test('claude-only intentional-absence allowlist contains exactly the accepted ID
     'axstack-research-x',
     'axstack-arena-candidate-grok',
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
-    'axstack-explore-codebase-luna', 'axstack-research-web-sol',
+    'axstack-explore-codebase-luna', 'axstack-research-web-sol', 'axstack-ui-verifier-sonnet',
   ]);
   expect(assessRoleReadiness([
     { id: 'axstack-auditor', name: 'Auditor', provider: 'claude', model: null },

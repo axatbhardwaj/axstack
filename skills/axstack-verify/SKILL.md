@@ -49,6 +49,13 @@ Name the app, surface and invocation conditions in the description.
 - Cleanup: stop only processes started by this run and remove owned scratch.
 - Helpers: explain each helper's purpose and working directory.
 
+For a device surface, require a Device section in generated `verify-<app>` recipes.
+The Device section must use device tools to install and launch the pinned build,
+drive features, capture evidence and shutdown owned devices.
+The Device section must follow [UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
+for dual-run independence and reconciliation, fleet routing and desktop safety.
+Record unavailable device surfaces as unverified.
+
 Write `.agents/skills/verify-<app>/features/README.md` as an index of the top 3-5 user features.
 Write per-feature files in `.agents/skills/verify-<app>/features/` and link them from the index.
 Give each feature file its entry points, prerequisites, drive steps and observable proof.
@@ -79,10 +86,12 @@ Report an unavailable candidate run as unverified.
 
 Execute launch, doctor, drive one mapped feature, capture evidence, clean up and confirm evidence survives.
 Run doctor before each drive.
-The author drives only non-browser surfaces.
-Delegate browser drives through
-[UI verification](../axstack/references/ui-verification.md) to `axstack-ui-verifier`
+The author drives only non-browser, non-device surfaces.
+Delegate a recipe's device checks and explicitly requested app/PWA verification
+to the UI verifier roles for a dual run through
+[UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
 with the feature file path in the brief.
+Delegate other recipe browser drives to one `axstack-ui-verifier` pass.
 Give the verifier the pinned candidate, isolated instance and private evidence path.
 Clean up after every failed attempt.
 Retry once after a drift fix.
@@ -124,10 +133,12 @@ Classify each gap as doc drift, harness gap or product regression:
 Drive every mapped feature live even when source looks clean.
 Use the skill's Launch recipe for an isolated instance.
 Run doctor before each drive.
-The author drives only non-browser surfaces.
-Delegate browser drives through
-[UI verification](../axstack/references/ui-verification.md) to `axstack-ui-verifier`
+The author drives only non-browser, non-device surfaces.
+Delegate a recipe's device checks and explicitly requested app/PWA verification
+to the UI verifier roles for a dual run through
+[UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
 with the feature file path in the brief.
+Delegate other recipe browser drives to one `axstack-ui-verifier` pass.
 Capture actions, resulting states and side effects under its proof standards.
 Report unreachable prerequisites with attempted routes separately from passes.
 Fix a missing prerequisite in the map as doc drift.
