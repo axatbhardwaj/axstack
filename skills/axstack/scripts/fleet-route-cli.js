@@ -29,13 +29,17 @@ function readInput(path) {
   try { return JSON.parse(value); } catch { fail('input-json'); }
 }
 
+function defaultConfigPath() {
+  return process.env.HOME ? `${process.env.HOME}/.config/haoshoku/fleet-routing.json` : null;
+}
+
 export async function main(argv) {
   try {
     if (argv.length === 1 && argv[0] === '--help') {
       process.stdout.write(help + sampleHelp);
       return 0;
     }
-    if (['sample', 'sample-recommend'].includes(argv[0])) return await sampleMain(argv);
+    if (['sample', 'sample-recommend'].includes(argv[0])) return await sampleMain(argv, defaultConfigPath());
     if (argv[0] !== 'recommend') fail('unexpected-command');
     const args = {};
     for (let i = 1; i < argv.length; i++) {
@@ -53,8 +57,7 @@ export async function main(argv) {
     const input = readInput(args['--input']);
     if (!input || typeof input !== 'object' || Array.isArray(input) || input.schemaVersion !== 1) fail('schema-version: input');
     let configText;
-    const configPath = args['--config'] ?? (process.env.HOME
-      ? `${process.env.HOME}/.config/haoshoku/fleet-routing.json` : null);
+    const configPath = args['--config'] ?? defaultConfigPath();
     try {
       if (!configPath) fail('missing-config');
       configText = readFileSync(configPath, 'utf8');

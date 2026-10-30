@@ -123,3 +123,13 @@ test('collection CLI rejects ambiguous flags and malformed manifest/input before
     expect(r.code).toBe(1); expect(r.out).toBe(''); expect(JSON.parse(r.err).error.code).toBe(error);
   }
 });
+
+
+test('collection reuses the C1 account-local config default in a fixture home', () => {
+  mkdirSync(`${root}/.config/haoshoku`, { recursive: true, mode: 0o700 });
+  writeFileSync(`${root}/.config/haoshoku/fleet-routing.json`, input.configText);
+  const argv = args.filter((v, i) => v !== '--config' && args[i - 1] !== '--config');
+  const r = run(['sample', ...argv]);
+  expect(r.code).toBe(0); expect(r.err).toBe('');
+  expect(JSON.parse(r.out).configDigest).toBe(input.configDigest);
+});

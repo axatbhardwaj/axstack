@@ -27,7 +27,7 @@ function read(path, name, json = true) {
   if (!json) return text;
   try { return JSON.parse(text); } catch { fail(`${name}-json`); }
 }
-export async function sampleMain(argv) {
+export async function sampleMain(argv, defaultConfigPath) {
   const command = argv[0]; const args = {};
   const flags = ['--fleet', '--config', '--config-digest', '--interval-ms', '--timeout-ms', '--json',
     ...(command === 'sample-recommend' ? ['--input', '--task'] : [])];
@@ -48,8 +48,7 @@ export async function sampleMain(argv) {
   };
   const options = sampleOptions({ intervalMs: numeric('--interval-ms', 5000, 'sample-interval'),
     timeoutMs: numeric('--timeout-ms', 10000, 'sample-timeout') });
-  const configPath = args['--config'] ?? (process.env.HOME
-    ? `${process.env.HOME}/.config/haoshoku/fleet-routing.json` : null);
+  const configPath = args['--config'] ?? defaultConfigPath;
   const configText = read(configPath, 'config', false);
   const configDigest = args['--config-digest'];
   const config = parseFleetConfig(configText, configDigest);
