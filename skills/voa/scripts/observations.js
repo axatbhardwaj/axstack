@@ -3,12 +3,15 @@ export const activeRuns = new Set(['queued', 'preparing', 'starting', 'running',
 export const pointer = (value) => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9:/._#?=&%+@-]{0,1023}$/.test(value);
 export const instant = (value) => typeof value === 'string' && /^\d{4}-\d\d-\d\dT/.test(value)
   && Number.isFinite(Date.parse(value));
+const threadLink = (value) => typeof value === 'string' && (pointer(value) && value.startsWith('t3-thread://')
+  || value.startsWith('<t3-thread://') && value.endsWith('>') && pointer(value.slice(1, -1)));
 export const identity = (owner) => owner && HOSTS.includes(owner.host)
-  && ['environmentId', 'threadId', 'threadLink'].every((key) => pointer(owner[key]));
+  && ['environmentId', 'threadId'].every((key) => pointer(owner[key])) && threadLink(owner.threadLink);
 export const sameOwner = (a, b) => identity(a) && identity(b)
   && ['host', 'environmentId', 'threadId', 'threadLink'].every((key) => a[key] === b[key]);
 export const sameKey = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === 3 && b.length === 3
   && a.every((value, index) => value === b[index]);
+export const validKey = (key) => Array.isArray(key) && key.length === 3 && HOSTS.includes(key[0]) && key.every(pointer);
 export const term = (name, state, evidence) => ({ term: name, state, evidence });
 
 export function threadStatus(thread, at) {
@@ -44,11 +47,14 @@ export function normalize(input) {
     const known = row?.reachable === true && row?.paginationComplete === true
       && pointer(row.environmentId) && pointer(row.evidence) && Array.isArray(row.threads);
     coverage.push(term(host, known ? 'pass' : 'unknown', row?.evidence ?? 'missing/unreachable/incomplete inventory'));
+    const rows = Array.isArray(row?.threads) ? row.threads : [];
+    const counts = new Map();
+    for (const thread of rows) counts.set(thread.threadId, (counts.get(thread.threadId) ?? 0) + 1);
     // Observed rows on partial hosts remain visible, but cannot prove recovery readiness.
-    for (const thread of (Array.isArray(row?.threads) ? row.threads : [])) {
-      if (!inTime || threads.length >= budget.maxOwners) continue;
+    for (const thread of rows) {
+      if (!inTime || threads.length >= budget.maxOwners) break;
       const owner = { host, environmentId: row.environmentId, threadId: thread.threadId, threadLink: thread.threadLink };
-      threads.push({ owner, inventoryKnown: known, raw: thread, ...threadStatus(thread, at) });
+      threads.push({ owner, inventoryKnown: known && counts.get(thread.threadId) === 1, raw: thread, ...threadStatus(thread, at) });
     }
   }
   const observed = input.hosts.reduce((sum, row) => sum + (Array.isArray(row.threads) ? row.threads.length : 0), 0);

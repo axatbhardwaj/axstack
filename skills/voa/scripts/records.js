@@ -8,8 +8,8 @@ const waitKinds = new Set(['active-worker', 'own-pr-ci-review', 'external-depend
 export function currentRecord(thread, owner, maxMessages) {
   if (thread.historyKnown !== true || !Array.isArray(thread.messages) || thread.messages.length > maxMessages) return null;
   // Native roles and authorship are supplied by the caller, never reconstructed from text.
-  const last = thread.messages.filter((message) => message.role === 'assistant').at(-1);
-  if (!last || last.source !== 'native' || !sameOwner(last.author, owner) || !pointer(last.id)
+  const last = thread.messages.at(-1);
+  if (last?.role !== 'assistant' || last.source !== 'native' || !sameOwner(last.author, owner) || !pointer(last.id)
     || typeof last.text !== 'string') return null;
   let record = null;
   for (const match of last.text.matchAll(/(?:^|\n)```json\s*\n([\s\S]*?)\n```(?=\n|$)/g)) {
@@ -34,13 +34,13 @@ export function currentRecord(thread, owner, maxMessages) {
 }
 
 export function condition(record, blocker, at) {
-  if (!record || record.recordType !== 'waiting-turn' || !blocker
+  if (record?.recordType !== 'waiting-turn' || !blocker
     || blocker.nonHuman !== true || blocker.kind !== record.dependency.kind || blocker.id !== record.dependency.id
     || !['check', 'review', 'upstream-pr', 'dependency'].includes(blocker.kind)
     || !pointer(blocker.evidence) || !instant(blocker.inspectedAt)
     || Date.parse(blocker.inspectedAt) > at || Date.parse(blocker.inspectedAt) < at - 1800000) return null;
   if (record.waitKind === 'external-dependency' && blocker.state === 'cleared') return 'dependency-cleared';
-  if (['own-pr-ci-review', 'external-dependency'].includes(record.waitKind)
+  if (['own-pr-ci-review', 'external-dependency', 'human-approval'].includes(record.waitKind)
     && record.diagnosis === 'none' && blocker.state === 'unexplained'
     && record.nextAction.mode === 'read-only') return 'missing-diagnosis';
   return null;
