@@ -6,7 +6,7 @@ export { parseFleetConfig } from './fleet-config.js';
 export function recommend(input, now) {
   validateInput(input, now);
   const config = parseFleetConfig(input.configText, input.configDigest);
-  const counts = assignmentCounts(input, config.hosts);
+  const counts = assignmentCounts(input, config.hosts, now);
   const preference = Object.hasOwn(config.taskOrders, input.request.task)
     ? config.taskOrders[input.request.task] : config.defaultOrder;
   const eligible = [];
@@ -65,7 +65,7 @@ export function recommend(input, now) {
     }
   }
   const flags = {
-    countsUnknown: input.inventoryStatus === 'unknown', poolEmpty: pool.length === 0,
+    countsUnknown: counts.inventoryStatus === 'unknown', poolEmpty: pool.length === 0,
     poolPartlyUnknown: pool.some(measured) && pool.some((h) => !measured(h)),
     telemetryUnknown: eligible.some((h) => !measured(h)),
     overloaded: selected ? measured(selected) && selected.telemetry.loadBp > selected.fallbackLimitBp : false,
