@@ -262,3 +262,17 @@ test('current T3 values arrays resolve high without normalizing the saved snapsh
   data.providers[0].models[0].options[0].values = [null];
   held(resolve(data), /malformed capabilities/);
 });
+
+test.each([null, undefined])('optionless sibling models do not block resolution (%j)', (options) => {
+  const data = fresh();
+  const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+  const control = resolve(data, ['--model', 'null'], 'grok');
+  expect(control.status).toBe(0);
+  grok.models.push({ id: 'grok-image', options });
+  const result = resolve(data, ['--model', 'null'], 'grok');
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'grok-4.7',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  // An optionless selected model must hold, never borrow a sibling's effort.
+  held(resolve(data, ['--model', 'grok-image'], 'grok'), /unsupported effort high.*grok-image/);
+});

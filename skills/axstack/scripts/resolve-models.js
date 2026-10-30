@@ -38,7 +38,7 @@ function providerFrom(catalog, provider) {
   }
   const instance = matches[0];
   if (!Array.isArray(instance.models) || instance.models.some((model) =>
-    !model || !nonempty(model.id) || !Array.isArray(model.options) || model.options.some((option) =>
+    !model || !nonempty(model.id) || !Array.isArray(model.options ?? []) || (model.options ?? []).some((option) =>
       !option || !nonempty(option.id) || (option.options !== undefined &&
         (!Array.isArray(option.options) || option.options.some((value) => !value || !nonempty(value.id))))
       || (option.values !== undefined && (!Array.isArray(option.values)
@@ -93,7 +93,7 @@ try {
   if ((options.class === 'terra' || /^gpt-\d+(?:\.\d+)*-terra$/.test(model.id)) && effort !== 'high') {
     throw new Error('Terra requires exactly high effort');
   }
-  const effortOptions = model.options.filter((option) => option.id === effortIds[provider]);
+  const effortOptions = (model.options ?? []).filter((option) => option.id === effortIds[provider]);
   if (effortOptions.length !== 1 || !optionValues(effortOptions[0])?.includes(effort)
     || (provider === 'grok' && effort === 'max')) {
     throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);

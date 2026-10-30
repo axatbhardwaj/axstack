@@ -156,3 +156,8 @@ only a temporary account. Network
 isolation plus before/after fixture bytes guard the offline/no-mutation contract.
 `fleetBinding` is evidence, not a supported T3 dispatch parameter. Live C3 must
 collect host-qualified readback independently; fixture MATCH grants no authority.
+
+Current catalog compatibility also covers null or absent model options: an
+optionless sibling does not block a usable model, while selecting an optionless
+model holds for unsupported effort. The resolver regression tests exercise both
+cases through its CLI.
