@@ -4,6 +4,8 @@ One compact Markdown `progress.md` is required for substantive delegated or
 resumable work. One-step direct answers need no record ceremony, but still
 obey their applicable scope identity. This tiny-task exemption is not a
 scope-identity exemption.
+For separate aggregate and project-driver records, follow
+[Coordinating multiple drivers](t3-runtime.md#coordinating-multiple-drivers).
 
 ## Location and identity
 
