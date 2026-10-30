@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { recommend } from '../../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from '../fleet-route-fixture.js';
 import { configuration, invoke, setup } from './fixtures.js';
@@ -315,6 +315,45 @@ test.each([
   expect(result.output).not.toContain('MATCH');
 });
 
+function observation(f) {
+  f.capabilities.providers[0].runtimeModes = ['full-access'];
+  f.refreshCatalog();
+  const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
+    observedAt: NOW, evidence: 'saved://native-forwarded' });
+  return {
+    environment: read('t3_environment_read', 'env-worker-a', {}, { environmentId: 'env-worker-a', serverVersion: '0.1.5' }),
+    project: read('t3_project_read', 'env-worker-a', { projectId: 'project-worker-a' }, {
+      id: 'project-worker-a', workspaceRoot: '/actual-target/project', repositoryIdentity: { canonicalKey: 'synthetic/project' } }),
+    capabilities: { ...read('orchestrator_capabilities', 'env-worker-a', {}, null),
+      valueText: JSON.stringify(f.capabilities) },
+    links: read('t3_environment_links', 'env-personal-a', {}, { environmentId: 'env-personal-a', links: [
+      { environmentId: 'env-worker-a', status: 'reachable', access: 'full-access', expiresAt: new Date(NOW + 60000).toISOString() },
+    ] }),
+  };
+}
+
+test.each([
+  ['destination-observation', (o) => { o.capabilities.environmentId = 'env-personal-a'; }],
+  ['destination-project', (o) => { o.project.value.id = 'project-personal-a'; }],
+  ['destination-repository', (o) => { o.project.value.repositoryIdentity.canonicalKey = 'different/repo'; }],
+  ['destination-identity', (o) => { o.environment.value.environmentId = 'worker-a'; }],
+  ['destination-catalog', (o) => { o.capabilities.valueText += ' '; }],
+  ['destination-execution', (o) => { const c = JSON.parse(o.capabilities.valueText); c.providers[0].canRunChildTask = false; o.capabilities.valueText = JSON.stringify(c); }],
+  ['destination-access', (o) => { o.links.value.links[0].access = 'read-only'; }],
+  ['destination-access', (o) => { o.links.value.links[0].expiresAt = new Date(NOW).toISOString(); }],
+  ['destination-observation', (o) => { o.project.observedAt = NOW + 1; }],
+])('native destination evidence holds on %s', (code, alter) => {
+  const f = fleet();
+  f.input.nativeDestination = observation(f);
+  planned(f);
+  alter(f.input.nativeDestination);
+  if (code === 'destination-execution') {
+    Object.assign(f.capabilities, JSON.parse(f.input.nativeDestination.capabilities.valueText));
+    f.refreshCatalog();
+  }
+  held(f.run(), code);
+});
+
 // Receipt additions are separately test-first: count alone cannot prove question absence.
 test('terminal completion requires an observed native pending-question list', () => {
   const f = fleet();
@@ -361,6 +400,30 @@ test('independently consistent but wrong origin cannot bind to the selected reco
   const result = f.run(value);
   expect(result.status).toBe(2);
   expect(result.output).toContain('receipt-origin: fail');
+});
+
+test('native binding CLI preserves inputs, creates only explicit output and imports without effects', () => {
+  const f = fleet();
+  f.input.nativeDestination = observation(f);
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  const files = () => readdirSync(f.dir).sort().map((name) => [name, readFileSync(`${f.dir}/${name}`, 'utf8')]);
+  const before = files();
+  expect(f.run(value).output).toContain('MATCH');
+  expect(files()).toEqual(before);
+  const result = f.run(value, ['--out', `${f.dir}/receipt-terms.json`]);
+  expect(result.status).toBe(0);
+  const report = JSON.parse(readFileSync(`${f.dir}/receipt-terms.json`, 'utf8'));
+  expect(report.receiptTerms.length).toBeGreaterThan(10);
+  expect(report.receiptTerms.every((t) => t.state === 'pass' && t.evidence != null)).toBe(true);
+  expect(files().filter(([name]) => name !== 'receipt-terms.json')).toEqual(before);
+  const imported = Bun.spawnSync([process.execPath, '-e',
+    `await import(${JSON.stringify(`${import.meta.dir}/../../../skills/axstack/scripts/dispatch-plan.js`)});`], {
+    cwd: f.dir, env: { ...process.env, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' }, stdout: 'pipe', stderr: 'pipe',
+  });
+  expect(imported.exitCode).toBe(0);
+  expect(imported.stdout.toString() + imported.stderr.toString()).toBe('');
+  expect(files().filter(([name]) => name !== 'receipt-terms.json')).toEqual(before);
 });
 
 test('idle destination still requires the independently completed exact run and final result', () => {
