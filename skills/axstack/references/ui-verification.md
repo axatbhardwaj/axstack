@@ -102,9 +102,12 @@ The driver reconciles each feature:
 - When both runs pass, the driver records pass.
 - When both runs fail a feature, the driver records fail and routes it to `axstack-debug`.
 - If runs disagree, the driver holds and requests one Sonnet rerun of that feature.
+  Use a fresh delegated session and a separate private evidence folder for the
+  Sonnet rerun, with the same brief and same pinned build.
+  Never show the Sonnet rerun run 1 or run 2 results.
   If the rerun still disagrees with run 1, report flaky/unverified with all observations.
-  If the rerun agrees with run 1, the agreed result stands and record the initial
-  disagreement in evidence; an agreed failure routes to `axstack-debug`.
+  If the rerun agrees with run 1, the agreed result stands while the driver records
+  the initial disagreement in evidence; an agreed failure routes to `axstack-debug`.
 - Blocked or missing coverage remains unverified, never a pass.
 
 ## Proof standards

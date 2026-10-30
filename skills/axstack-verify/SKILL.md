@@ -87,9 +87,11 @@ Report an unavailable candidate run as unverified.
 Execute launch, doctor, drive one mapped feature, capture evidence, clean up and confirm evidence survives.
 Run doctor before each drive.
 The author drives only non-browser, non-device surfaces.
-Delegate browser drives and device checks through
+Delegate a recipe's device checks and explicitly requested app/PWA verification
+to the UI verifier roles for a dual run through
 [UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
-to the UI verifier roles under its dual-run section with the feature file path in the brief.
+with the feature file path in the brief.
+Delegate other recipe browser drives to one `axstack-ui-verifier` pass.
 Give the verifier the pinned candidate, isolated instance and private evidence path.
 Clean up after every failed attempt.
 Retry once after a drift fix.
@@ -132,9 +134,11 @@ Drive every mapped feature live even when source looks clean.
 Use the skill's Launch recipe for an isolated instance.
 Run doctor before each drive.
 The author drives only non-browser, non-device surfaces.
-Delegate browser drives and device checks through
+Delegate a recipe's device checks and explicitly requested app/PWA verification
+to the UI verifier roles for a dual run through
 [UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
-to the UI verifier roles under its dual-run section with the feature file path in the brief.
+with the feature file path in the brief.
+Delegate other recipe browser drives to one `axstack-ui-verifier` pass.
 Capture actions, resulting states and side effects under its proof standards.
 Report unreachable prerequisites with attempted routes separately from passes.
 Fix a missing prerequisite in the map as doc drift.

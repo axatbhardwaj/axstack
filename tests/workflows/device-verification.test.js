@@ -36,13 +36,23 @@ rule('both failures route debug', ui, [/both runs fail/i, /driver/i, /records? f
 rule('bounded disagreement', ui, [/if runs disagree/i, /driver/i, /holds/i, /one Sonnet rerun/i, /feature/i],
   'If runs disagree, the driver holds and requests one Sonnet rerun of that feature.',
   [[/one Sonnet rerun/i, 'unlimited Sonnet reruns'], [/holds/i, 'passes']]);
+rule('Sonnet rerun has independent resources and pinned inputs', ui,
+  [/Sonnet rerun/i, /(?:fresh|new) delegated session/i, /(?:separate|own) private evidence folder/i,
+    /same brief/i, /same pinned build/i],
+  'Run the Sonnet rerun in a new delegated session with its own private evidence folder, the same brief and same pinned build.',
+  [[/fresh|new/i, 'reused'], [/(?:separate|own) private evidence folder/i, 'shared evidence folder'],
+    [/same pinned build/i, 'latest floating build']]);
+rule('Sonnet rerun is blind to both earlier results', ui,
+  [/Sonnet rerun/i, /run 1/i, /run 2/i, /results/i],
+  'Do not show the Sonnet rerun results from run 1 or run 2.',
+  [[/never show|do not show/i, 'Show']], /never show|do not show/i);
 rule('persistent rerun disagreement', ui,
   [/if (?:the )?rerun still disagrees with run 1/i, /report/i, /flaky\/unverified/i, /all observations/i],
   'If the rerun still disagrees with run 1, report flaky/unverified with all observations.',
   [[/still disagrees/i, 'agrees'], [/flaky\/unverified/i, 'pass']]);
 rule('rerun agreement resolves feature with evidence', ui,
   [/if (?:the )?rerun agrees with run 1/i, /agreed result stands/i, /record/i, /initial disagreement/i, /evidence/i],
-  'If the rerun agrees with run 1, the agreed result stands and record the initial disagreement in evidence.',
+  'If the rerun agrees with run 1, the agreed result stands while the driver records the initial disagreement in evidence.',
   [[/agrees with run 1/i, 'still disagrees with run 1'], [/agreed result stands/i, 'feature remains unverified']]);
 rule('configured verifier roles', ui,
   [/configured UI verifier roles/i, /axstack-ui-verifier(?!-sonnet)\b/i, /axstack-ui-verifier-sonnet/i, /role snapshot/i],
