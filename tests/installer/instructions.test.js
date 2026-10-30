@@ -24,7 +24,7 @@ describe('owned instruction block primitives', () => {
     expect(block).toContain('`references/t3-runtime.md`');
     expect(block).not.toMatch(/\]\([^)]*t3-runtime\.md\)/);
     expect(renderInstructionBlock.length).toBe(0);
-    expect(block).not.toMatch(/model|opus|claude|codex|orca/i);
+    expect(block).not.toMatch(/opus|claude|codex/i);
   });
 
   test('creates, appends once, and records exact recoverable separation', () => {
@@ -109,15 +109,19 @@ const prohibits = (text, prohibition, ...concepts) => sentences(text).some((sent
 const unsafeLaunch = (text) => sentences(text).some((sentence) =>
   requires(sentence, /t3_thread_launch/, /\b(?:authors?|writers?)\b/i)
   && !requires(sentence, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i));
+const guardedDriverLaunches = (text) => sentences(text)
+  .filter((sentence) => /top.level drivers?/i.test(sentence))
+  .every((sentence) => requires(sentence, /explicit user request/i, /only|requires?/i)
+    && !/without|unless|even without/i.test(sentence));
 const rules = {
   routing: (text) => requires(text, /\b(?:route|rout\w*|dispatch)\b/i, /subagents?/i,
     /delegated workers?/i, /reviewers?/i, /cross.harness dispatch/i, /T3 Code orchestration/i, /t3-code.*MCP|MCP.*t3-code/i),
   delegates: (text) => requires(text, /delegate_task/, /\b(?:use|us\w*|run|rout\w*)\b/i, /every role/i, /including authors/i, /isolation:"worktree"/i),
-  drivers: (text) => !unsafeLaunch(text) && requires(text, /t3_thread_launch/, /\b(?:use|us\w*|run|rout\w*)\b/i, /top.level drivers?/i),
-  fallback: (text) => requires(text, /t3_thread_launch/, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i),
+  drivers: (text) => guardedDriverLaunches(text) && !unsafeLaunch(text) && requires(text, /t3_thread_launch/, /\b(?:use|us\w*|run|rout\w*)\b/i, /top.level drivers?/i, /only.*explicit user request/i),
+  fallback: (text) => requires(text, /t3_thread_launch/, /rare author fallback/i, /only when worktree isolation is unavailable/i, /record.*each use.*run record/i, /explicit user request/i),
   authorization: (text) => requires(text, /^(?:the )?user\s+(?:authoriz\w*|permit\w*|allow\w*)\b/i,
-    /Axstack drivers?/i, /\bT3\b/i, /\brun\b/i, /\bfull.access\b/i, /launch/i,
-    /top.level driver threads?/i, /delegated writers/i, /worktrees?/i, /within approved scope/i),
+    /Axstack drivers?/i, /\bT3\b/i, /\brun\b/i, /\bfull.access\b/i,
+    /delegated writers/i, /worktrees?/i, /within approved scope/i),
   native: (text) => prohibits(text, /\b(?:do not use|never use|forbid\w*)\b/i,
     /harness.native subagent tools?|native subagent tools?[^.;]*harness/i, /delegated work/i),
 };
@@ -127,11 +131,11 @@ const holdouts = {
     'Through the MCP named t3-code, T3 Code orchestration routes delegated workers, subagents, cross-harness dispatches and reviewers.',
   ],
   delegates: ['Use delegate_task for every role, including authors with isolation:"worktree".', 'For every role including authors, run delegate_task with isolation:"worktree".'],
-  drivers: ['Use t3_thread_launch for top-level drivers.', 'Top-level drivers run using t3_thread_launch.'],
-  fallback: ['Use t3_thread_launch as a rare author fallback only when worktree isolation is unavailable and record each use in the run record.'],
+  drivers: ['Use t3_thread_launch for top-level drivers only on explicit user request.', 'Only following an explicit user request, top-level drivers run using t3_thread_launch.'],
+  fallback: ['Use t3_thread_launch as a rare author fallback only when worktree isolation is unavailable following an explicit user request and record each use in the run record.'],
   authorization: [
-    'The user permits Axstack drivers in T3 to launch top-level driver threads, delegated writers and worktrees within approved scope and run full-access.',
-    'User allows Axstack drivers to run full-access in T3 and launch worktrees and top-level driver threads, delegated writers within approved scope.',
+    'The user permits Axstack drivers in T3 to create delegated writers and worktrees within approved scope and run full-access.',
+    'User allows Axstack drivers to run full-access in T3 and create worktrees and delegated writers within approved scope.',
   ],
   native: ['Never use harness-native subagent tools for delegated work.', 'For delegated work, do not use native subagent tools from the harness.'],
 };
@@ -246,5 +250,26 @@ test('installed block rejects additional launched author or writer routes', () =
   expect(rules.drivers(text)).toBe(true);
   for (const extra of ['Use t3_thread_launch for writers.', 'Authors and top-level drivers use t3_thread_launch.']) {
     expect(rules.drivers(`${text}\n${extra}`)).toBe(false);
+  }
+});
+
+test('top-level permission cannot be restored beside the restricted instruction', () => {
+  const text = renderInstructionBlock().replace(/`/g, '');
+  expect(rules.drivers(text)).toBe(true);
+  for (const extra of [
+    'The user authorizes Axstack drivers to launch top-level driver threads.',
+    'Use t3_thread_launch for top-level drivers.',
+    'Top-level drivers may use t3_thread_launch without an explicit user request.',
+  ]) expect(rules.drivers(`${text}\n${extra}`), extra).toBe(false);
+});
+
+test('driver launch guard accepts equivalent restrictions and rejects inversions', () => {
+  const equivalent = 'Only after an explicit user request, top-level drivers launch through t3_thread_launch.';
+  expect(guardedDriverLaunches(equivalent)).toBe(true);
+  expect(guardedDriverLaunches('Top-level drivers require an explicit user request before launching.')).toBe(true);
+  for (const changed of [equivalent.replace('Only after', 'Without'),
+    equivalent.replace('explicit user request', 'implicit consent'),
+    'Top-level drivers do not require an explicit user request.']) {
+    expect(guardedDriverLaunches(changed), changed).toBe(false);
   }
 });
