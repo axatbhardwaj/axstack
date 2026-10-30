@@ -134,3 +134,14 @@ test('package recipe requires every entry point and both current publication ref
     }
   });
 });
+
+for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
+  test(`${path}: top-level launch requires an explicit user request`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '').replace(/\s+/g, ' ');
+    const concepts = [/every/i, /top-level launch/i, /including/i, /author fallback/i,
+      /requires/i, /explicit user request/i];
+    checkRule(text, (value) => requires(value, ...concepts),
+      'Every top-level launch, including an author fallback, requires an explicit user request.',
+      [[/requires/i, 'does not require']], concepts);
+  });
+}
