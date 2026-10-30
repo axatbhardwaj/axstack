@@ -46,12 +46,13 @@ export function recommend(input, now) {
   const measured = (h) => h.telemetry.status === 'measured';
   const rank = (h) => preference.indexOf(h.hostId);
   const byLoad = (a, b) => a.telemetry.loadBp - b.telemetry.loadBp || rank(a) - rank(b);
+  const rankingCounts = counts.pendingLowerBound ?? counts.byEnvironment;
   const under = pool.filter((h) => measured(h) && h.telemetry.loadBp <= config.balanceLimitBp);
   let stage; let reason; let selected = null;
   if (!eligible.length) { stage = 'no-route'; reason = 'no-executable-route'; }
   else if (under.length) {
     stage = 'balance'; reason = 'pool-under-limit';
-    selected = under.sort((a, b) => a.assignmentCount - b.assignmentCount || byLoad(a, b))[0];
+    selected = under.sort((a, b) => rankingCounts[a.environmentId] - rankingCounts[b.environmentId] || byLoad(a, b))[0];
   } else if (pool.length && pool.every((h) => !measured(h))) {
     stage = 'pool-unknown'; reason = 'pool-all-unknown'; selected = pool[0];
   } else {

@@ -98,7 +98,7 @@ test('a completed turn with live children is still an active assignment', () => 
 });
 
 
-test('real selector CLI spreads native pending batch once per 20/35/40 host without input writes', () => {
+test.each([true, false])('real selector CLI spreads native pending batch with complete inventory=%s without input writes', (complete) => {
   const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/fleet-native-cli-`);
   const validate = () => {
     const stat = lstatSync(dir);
@@ -111,6 +111,7 @@ test('real selector CLI spreads native pending batch once per 20/35/40 host with
   try {
     const f = snapshot();
     f.input.nativeInventory.tasks = [];
+    f.input.nativeInventory.complete = complete;
     const input = f.bind();
     writeFileSync(`${dir}/config.json`, input.configText);
     for (const [index, host] of ['worker-a', 'worker-b', 'worker-c'].entries()) {
@@ -123,7 +124,8 @@ test('real selector CLI spreads native pending batch once per 20/35/40 host with
       const output = JSON.parse(result.stdout.toString());
       expect(output.selected).toMatchObject({ hostId: host, environmentId: `env-${host}`,
         projectId: `project-${host}`, execution: { model: 'fixture-model', options: { effort: 'high' } } });
-      expect(output.flags.countsUnknown).toBe(false);
+      expect(output.flags.countsUnknown).toBe(!complete);
+      if (!complete) expect(output.selected.assignmentCount).toBeNull();
       expect(readFileSync(`${dir}/input.json`, 'utf8')).toBe(bytes);
       expect(readFileSync(`${dir}/config.json`, 'utf8')).toBe(input.configText);
       input.nativeInventory.pending.push({ origin: f.origin, clientRequestId: `batch-${index}`, environmentId: `env-${host}` });

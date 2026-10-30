@@ -198,3 +198,5 @@ import closure and no archive side effects. Repeat affected tests on the cached
 minimum Bun. The [live procedure](../../../../skills/axstack/references/fleet-verification.md)
 is a separate later C3/C6 action; remote authors stay DISABLED after checkpoint-ref
 pilot failure. Effective fields unavailable from native APIs remain unknown.
+
+The native inventory/receipt suite must spread a pending batch even when native totals are unknown, and accept a single completion marker followed by the required T3 PR trailer while rejecting conflicting markers.

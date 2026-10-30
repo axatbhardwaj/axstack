@@ -559,3 +559,26 @@ test('incomplete independent origin context cannot accept a self-consistent rece
   expect(result.status).toBe(2);
   expect(result.output).toContain('receipt-origin: unknown');
 });
+
+
+test.each(['origin', 'destination', 'both'])('native completion permits the T3 PR trailer on %s', (where) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  const trailer = `\nPR https://github.com/example/repo/pull/1, head ${'a'.repeat(40)}, checks and reviews passed`;
+  if (where !== 'destination') value.fleetReceipt.status.value.latestTerminalSummary += trailer;
+  if (where !== 'origin') value.fleetReceipt.thread.value.items[0].text += trailer;
+  const result = f.run(value);
+  expect(result.status, result.output).toBe(0);
+  expect(result.output).toContain('MATCH');
+});
+
+test.each(['AXSTACK-QUESTION key=run:reader:inspect:a1 q=pending', 'AXSTACK-FAILED key=run:reader:inspect:a1', 'unresolved work remains'])('native completion cannot hide a later conflicting line: %s', (tail) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetReceipt.thread.value.items[0].text += `\n${tail}`;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-marker: fail');
+});

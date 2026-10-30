@@ -60,7 +60,8 @@ taskId?}`. Update a pending entry with its returned taskId; accepted/nested/term
 reflections count once. Ambiguous submissions remain pending until reconciled;
 remove only confirmed not-submitted failures. Client identity includes the driver
 thread, not just its host. Unknown native inventory emits null totals and explicit
-pendingLowerBound/reasons/evidence. Legacy C1 fixtures and 20/35/40 spread remain.
+pendingLowerBound/reasons/evidence. Balance ranking uses that pending lower bound
+while reported totals remain null. Legacy C1 fixtures and 20/35/40 spread remain.
 
 ## Bind and submit once
 
@@ -116,8 +117,11 @@ Task latestTerminalRunId, thread latestRunId/recentRuns ordinal, terminal runId
 same current completed run. Provider continuation may have a different run from
 submission.childRunId; never use lexical ordering of IDs or the original summary.
 Require completed/result_available/no pending children/no unanswered questions or
-approval. Require current final AXSTACK-DONE key/candidate/report on both origin's
+approval. Require exactly one AXSTACK-DONE key/candidate/report marker on both origin's
 latestTerminalSummary and the destination's final current-run agent message.
+A completion marker may be followed by the T3
+`PR <url>, head <sha>, checks and reviews <state>` trailer. Other trailing text
+or additional AXSTACK markers keep the receipt held.
 Old summary, null local child, idle, silence and completed turns with live children
 remain incomplete. Failed/cancelled/interrupted/waiting never succeed.
 

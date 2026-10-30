@@ -165,8 +165,8 @@ These are observations, never reservations or predicted resource costs.
 
 Optional `nativeInventory` is normalized before counts under
 [Fleet dispatch and receipts](fleet-dispatch.md#saved-native-inventory).
-Unknown native totals are null, with separately labelled pendingLowerBound and
-inventoryReasons/evidence; flags.countsUnknown follows normalized status.
+Unknown native totals are null; balance ranking uses the separately labelled
+pendingLowerBound. Counts also retain inventoryReasons/evidence; flags.countsUnknown follows normalized status.
 Optional `nativeDestination` carries observed native forwarded preflight reads.
 The same reference defines terminal receipt validation and its supplied-evidence
 limitation. Live drivers require these observed facts, not synthetic caller claims.

@@ -96,14 +96,23 @@ export function inspectFleetReceipt(receipt, expected) {
   !current || !status?.latestTerminalRunId || !terminal?.runId || !Array.isArray(runs)
     || (remote && !r.remoteChild?.runId));
   const marker = `AXSTACK-DONE key=${a?.key} head=${a?.candidate} report=${r.evidence?.path}`;
-  const finalLine = (v) => typeof v === 'string' ? v.trim().split('\n').at(-1) : null;
+  const finalMarker = (value) => {
+    if (typeof value !== 'string') return null;
+    const lines = value.trim().split('\n');
+    const markers = lines.filter((line) => line.startsWith('AXSTACK-'));
+    if (markers.length !== 1) return null;
+    const trailer = lines.slice(lines.indexOf(markers[0]) + 1);
+    return trailer.length === 0 || (trailer.length === 1
+      && /^PR https?:\/\/\S+, head [a-f0-9]{7,40}, checks and reviews .+$/.test(trailer[0]))
+      ? markers[0] : null;
+  };
   const items = r.thread?.value?.items;
   const final = Array.isArray(items) ? items.filter((v) => v.runId === current && v.createdBy === 'agent').at(-1) : null;
   term('receipt-marker', /^[a-f0-9]{40}$/.test(a?.candidate ?? '')
-    && finalLine(status?.latestTerminalSummary) === marker && finalLine(final?.text) === marker,
+    && finalMarker(status?.latestTerminalSummary) === marker && finalMarker(final?.text) === marker,
   { origin: status?.latestTerminalSummary, destination: final?.text });
   term('receipt-host-path', r.evidence?.hostId === s.hostId && r.evidence?.environmentId === s.environmentId
-    && absolute(r.evidence?.path) && finalLine(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
+    && absolute(r.evidence?.path) && finalMarker(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
   if (a?.title?.startsWith('Reviewer: ')) {
     term('receipt-isolation', r.requested?.isolation === 'worktree', r.requested?.isolation);
   }
