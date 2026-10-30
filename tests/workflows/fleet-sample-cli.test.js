@@ -1,0 +1,125 @@
+import { expect, test } from 'bun:test';
+import { mkdirSync, writeFileSync, chmodSync } from 'node:fs';
+import { fixture } from './fleet-route-fixture.js';
+import { recommend } from '../../skills/axstack/scripts/fleet-route.js';
+const root = `${process.env.TMPDIR}/c2-cli-${process.pid}`;
+mkdirSync(root, { mode: 0o700 });
+const f = fixture();
+const now = Date.now();
+const rebase = (value) => {
+  if (!value || typeof value !== 'object') return;
+  for (const key of Object.keys(value)) {
+    if (['observedAt', 'inventoryObservedAt', 'receivedAt'].includes(key)) value[key] = now;
+    else if (key === 'expiresAt') value[key] = now + 60000;
+    else rebase(value[key]);
+  }
+};
+rebase(f.config); rebase(f.input);
+const input = f.bind();
+// Synthetic SSH failure: no DNS, socket, credential or network dependence.
+writeFileSync(`${root}/ssh`, '#!/bin/sh\nexit 255\n'); chmodSync(`${root}/ssh`, 0o700);
+writeFileSync(`${root}/input.json`, JSON.stringify(input));
+writeFileSync(`${root}/config.json`, input.configText);
+const manifest = { schemaVersion: 1, hosts: [{ hostId: 'worker-a', environmentId: 'env-worker-a',
+  transport: 'ssh', destination: 'synthetic-nonexistent-worker' }] };
+writeFileSync(`${root}/manifest.json`, JSON.stringify(manifest));
+const run = (args) => {
+  const r = Bun.spawnSync([process.execPath, 'skills/axstack/scripts/fleet-route.js', ...args],
+    { stdout: 'pipe', stderr: 'pipe', env: { ...process.env, HOME: root, PATH: `${root}:${process.env.PATH}` }, timeout: 20000 });
+  return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
+};
+const args = ['--fleet', `${root}/manifest.json`, '--config', `${root}/config.json`,
+  '--config-digest', input.configDigest, '--interval-ms', '5000', '--timeout-ms', '6000', '--json'];
+
+test('help describes bounded sample and one-command integration', () => {
+  const r = run(['--help']);
+  expect(r.code).toBe(0);
+  for (const text of ['sample-recommend', '--fleet', '--interval-ms', '--timeout-ms', '5000', '120000']) expect(r.out).toContain(text);
+});
+
+test('sample command returns unknown SSH telemetry without config or route mutation', () => {
+  const before = JSON.stringify(input);
+  const r = run(['sample', ...args]);
+  expect(r.code).toBe(0); expect(r.err).toBe('');
+  const output = JSON.parse(r.out);
+  expect(output.configDigest).toBe(input.configDigest);
+  expect(output.telemetry).toHaveLength(1);
+  expect(output.telemetry[0].ageMs).toBeGreaterThanOrEqual(0);
+  expect(output.telemetry[0].ageMs).toBe(output.collectedAt - output.telemetry[0].receivedAt);
+  expect(output.telemetry[0]).toMatchObject({ environmentId: 'env-worker-a', status: 'failed',
+    source: 'linux-proc-ssh', intervalMs: 5000, timeoutMs: 6000 });
+  expect(JSON.stringify(input)).toBe(before);
+});
+
+test('one-command sample/recommend saves replayable supplied facts and preserves gates', () => {
+  const r = run(['sample-recommend', ...args, '--input', `${root}/input.json`]);
+  expect(r.code).toBe(0); expect(r.err).toBe('');
+  const output = JSON.parse(r.out);
+  expect(output.input.telemetry).toHaveLength(1);
+  expect(output.recommendation.stage).toBe('pool-unknown');
+  expect(output.recommendation.selected).toMatchObject({ hostId: 'worker-a', environmentId: 'env-worker-a',
+    projectId: 'project-worker-a', telemetry: { status: 'unknown', reason: 'failed' } });
+  expect(output.recommendation).toEqual(recommend(output.input, output.evaluatedAt));
+  const denied = structuredClone(output.input);
+  denied.routeFacts.forEach((r) => { r.authorized = false; });
+  expect(recommend(denied, output.evaluatedAt).stage).toBe('no-route');
+});
+
+test('sample flags fail before I/O with exact structured errors', () => {
+  for (const [extra, code] of [[['--interval-ms', '4999'], 'sample-interval'],
+    [['--timeout-ms', '5999'], 'sample-timeout'], [['--interval-ms', '5e3'], 'sample-interval'],
+    [['--now', '100000'], 'unexpected-argument'], [['--input', 'x'], 'unexpected-argument']]) {
+    const base = args.filter((v, i) => !['--interval-ms', '--timeout-ms'].includes(v)
+      && !['--interval-ms', '--timeout-ms'].includes(args[i - 1]));
+    const r = run(['sample', ...base, ...extra]);
+    expect(r.code).toBe(1); expect(r.out).toBe(''); expect(JSON.parse(r.err).error.code).toBe(code);
+  }
+  const missing = run(['sample', '--fleet', `${root}/manifest.json`]);
+  expect(JSON.parse(missing.err).error.code).toBe('missing-config');
+});
+
+test('one-command local sample has real pressure and replayable C1 identity binding', () => {
+  writeFileSync(`${root}/local.json`, JSON.stringify({ schemaVersion: 1, hosts: [
+    { hostId: 'personal-a', environmentId: 'env-personal-a', transport: 'local' },
+  ] }));
+  const argv = args.map((value) => value === `${root}/manifest.json` ? `${root}/local.json` : value);
+  const r = run(['sample-recommend', ...argv, '--input', `${root}/input.json`]);
+  expect(r.code).toBe(0); expect(r.err).toBe('');
+  const output = JSON.parse(r.out);
+  expect(output.input.telemetry[0]).toMatchObject({ source: 'linux-proc-local', status: 'ok',
+    intervalMs: 5000, windowKind: 'collector-bracket' });
+  expect(output.recommendation.eligible.find((h) => h.hostId === 'personal-a')).toMatchObject({
+    environmentId: 'env-personal-a', projectId: 'project-personal-a', telemetry: { status: 'measured' } });
+  expect(output.recommendation.stage).toBe('pool-unknown');
+  expect(output.recommendation.selected.hostId).toBe('worker-a');
+  expect(output.recommendation).toEqual(recommend(output.input, output.evaluatedAt));
+}, 15000);
+
+
+test('collection CLI rejects ambiguous flags and malformed manifest/input before networking', () => {
+  for (const [argv, code] of [
+    [['sample', ...args, '--json'], 'duplicate-argument'],
+    [['sample', ...args, '--fleet'], 'duplicate-argument'],
+    [['sample', '--fleet'], 'missing-argument'],
+    [['sample'], 'missing-argument'],
+    [['sample-recommend', ...args], 'missing-argument'],
+    [['sample-recommend', ...args, '--input', '--json'], 'missing-argument'],
+    [['sample', ...args.filter((v, i) => args[i - 1] !== '--config-digest' && v !== '--config-digest')], 'config-digest'],
+  ]) {
+    const r = run(argv);
+    expect(r.code).toBe(1); expect(r.out).toBe(''); expect(JSON.parse(r.err).error.code).toBe(code);
+  }
+  for (const [name, data, error] of [
+    ['bad-manifest', '{', 'manifest-json'],
+    ['bad-schema', JSON.stringify({ ...manifest, schemaVersion: 2 }), 'schema-version'],
+    ['bad-input', JSON.stringify({ ...input, configDigest: '0'.repeat(64) }), 'config-digest-mismatch'],
+    ['bad-snapshot', JSON.stringify({ ...input, configText: input.configText + ' ' }), 'config-snapshot-mismatch'],
+  ]) {
+    writeFileSync(`${root}/${name}.json`, data);
+    const argv = name.startsWith('bad-m') || name === 'bad-schema'
+      ? ['sample', ...args.map((v) => v === `${root}/manifest.json` ? `${root}/${name}.json` : v)]
+      : ['sample-recommend', ...args, '--input', `${root}/${name}.json`];
+    const r = run(argv);
+    expect(r.code).toBe(1); expect(r.out).toBe(''); expect(JSON.parse(r.err).error.code).toBe(error);
+  }
+});

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { sampleMain, sampleHelp } from './fleet-sample-cli.js';
 import { recommend, parseFleetConfig } from './fleet-route.js';
 
 const help = `Usage: bun fleet-route.js recommend --input <snapshot.json> --now <epoch-ms> [--json]
@@ -17,7 +18,7 @@ No network, authentication, dispatch, config changes or retained state.
 Required session capabilities must be proven on the actual destination session;
 an origin catalog or transferred credentials cannot establish them.
 Exclusions with reasons are supplied in input.exclusions.hosts/routes.
-Sampling is a separate interface, not available in this command.
+Use sample or sample-recommend for bounded collection.
 Exit codes: 0 recommendation/help, 1 input/config error, 2 no executable route.
 `;
 
@@ -28,12 +29,13 @@ function readInput(path) {
   try { return JSON.parse(value); } catch { fail('input-json'); }
 }
 
-export function main(argv) {
+export async function main(argv) {
   try {
     if (argv.length === 1 && argv[0] === '--help') {
-      process.stdout.write(help);
+      process.stdout.write(help + sampleHelp);
       return 0;
     }
+    if (['sample', 'sample-recommend'].includes(argv[0])) return await sampleMain(argv);
     if (argv[0] !== 'recommend') fail('unexpected-command');
     const args = {};
     for (let i = 1; i < argv.length; i++) {
