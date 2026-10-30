@@ -79,6 +79,22 @@ records the driver's completed pilot gates; the selector cannot prove them.
 Changed versions invalidate the route. Direct remote worktree delegation is
 unsupported; a local author requires `worktree-isolation` automatically.
 
+## Device and browser examples
+
+In account-local `taskOrders`, `device` and `playwright` are examples only;
+the user supplies complete host orders in their reviewed configuration.
+Capability names `device:android-emulator`, `browser:headless` and `desktop:user`
+are examples only, using the existing arbitrary-name capability map.
+A device request can require `device:android-emulator`; a headless web request
+can require `browser:headless`, proven at the destination like any capability.
+`desktop:user` describes desktop safety constraints, rather than a requirement
+that would exclude workers; the driver checks it before executing UI work.
+Host identities, preference orders, thermal thresholds and emulator availability
+remain account-local facts, with current evidence collected before execution.
+These examples add no runtime state, built-in task policy or capability inference.
+Follow [UI verification](ui-verification.md#android-device-and-webpwa-dual-run)
+for serial emulator use, desktop safety and declared thermal prechecks.
+
 ## Recommendation snapshot
 
 | Input field | Contract |

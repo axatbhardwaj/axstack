@@ -47,6 +47,57 @@ Report a broken or stale recipe as a `low` finding naming `axstack-verify mainta
 Never let a broken or stale recipe waive existing acceptance obligations.
 Keep browser recipes tool-neutral for the verifier.
 
+## Android device and web/PWA dual run
+
+For Android and web/PWA feature verification, assign run 1 to
+`axstack-ui-verifier` (Terra high).
+Dispatch independent run 2 to `axstack-ui-verifier-sonnet` with the same brief
+and the same pinned build.
+Never show run 2 the run 1 results.
+Start run 2 only after run 1 completes shutdown; use a fresh delegated session
+and a separate private evidence folder.
+The two-provider check requires the mixed preset; an intentional single-provider
+absence leaves dual-run verification unverified, without substitution.
+This dual run does not add a second pass to the inline-page exception above.
+
+Before run 1, record APK SHA-256 (or build SHA) and PWA deploy SHA in the brief.
+Include feature files, prerequisites, target URL and per-feature acceptance checks.
+Select the host through fleet routing using account-local configuration and
+[capability examples](fleet-route-schema.md#device-and-browser-examples).
+On a `desktop:user` host, use only a headless browser and a windowless emulator.
+Never focus windows or switch workspaces on a user desktop.
+Allow only one emulator per host at a time.
+Run a thermal precheck before starting on hosts that declare one; honor their
+account-local start/stop thresholds and hold or route elsewhere if unsafe.
+For iOS without a capable host, report unverified.
+
+Each run follows the same lifecycle:
+
+1. Call `device_list` and confirm `agentDeviceInstalled: true` before `device_open`.
+   Pass the selected device's `hostId` and `id` to `device_open`.
+2. Use `device_open` and its returned `agent-device` command to install, launch
+   and drive the pinned APK; open the app before snapshots or input.
+   Use the returned command's help for supported operations; report unavailable
+   install/build capabilities as unverified rather than inventing commands.
+3. Save a snapshot and `device_screenshot` for each feature end state in private
+   evidence; capture actions, resulting states and side effects.
+4. For web/PWA, use Playwright MCP at 390×844 and 1440×900, driving the same features.
+   Capture console errors as route template and code only.
+5. Return pass, fail or blocked per feature, pinned build identities and evidence
+   paths; keep secrets, recovery phrases, tokens and addresses out of reports.
+   Follow the app's production-testing policy; unattended production money paths
+   stop at read-only actions.
+6. After each run, including failed attempts, use `device_close` with
+   `shutdown: true` and `browser_close` for owned sessions; preserve evidence.
+
+The driver reconciles each feature:
+
+- When both runs pass, the driver records pass.
+- When both runs fail a feature, the driver records fail and routes it to `axstack-debug`.
+- If runs disagree, the driver holds, requests one Sonnet rerun of that feature,
+  then reports flaky/unverified with all observations; a rerun never erases disagreement.
+- Blocked or missing coverage remains unverified, never a pass.
+
 ## Proof standards
 
 Apply these standards wherever referenced, including the verifier's candidate checks

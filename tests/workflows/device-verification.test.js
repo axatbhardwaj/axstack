@@ -65,7 +65,7 @@ rule('pinned evidence', ui, [/record/i, /APK SHA-256|build SHA/i, /PWA deploy SH
   'Before run 1, record APK SHA-256 and PWA deploy SHA in the brief.', [[/before/i, 'after']]);
 rule('recipe device section', recipe, [/require/i, /Device section/i, /verify-<app>/i, /device surface/i],
   'For a device surface, require a Device section in generated verify-<app> recipes.', [[/require/i, 'omit']]);
-rule('recipe device lifecycle', recipe, [/Device section/i, /device tools/i, /install/i, /launch/i, /drive/i, /evidence/i, /shutdown/i],
+rule('recipe device lifecycle', recipe, [/Device section/i, /must use|shall use/i, /device tools/i, /install/i, /launch/i, /drive/i, /evidence/i, /shutdown/i],
   'The Device section must use device tools to install and launch the pinned build, drive features, capture evidence and shutdown owned devices.',
   [[/must use/i, 'can bypass']]);
 rule('recipe dual run reference', recipe, [/Device section/i, /follow/i, /UI verification/i, /dual.run/i],
