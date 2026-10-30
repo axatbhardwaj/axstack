@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-export const PROC_COMMAND = "LC_ALL=C; export LC_ALL; cat /proc/stat && printf '\\n---AXSTACK-MEM---\\n' && cat /proc/meminfo";
+export const PROC_COMMAND = "cat /proc/stat && printf '\\n---AXSTACK-MEM---\\n' && cat /proc/meminfo";
 export function sshArgv(host) {
   return ['ssh', '-T', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes', '-o', 'IdentitiesOnly=yes',
     '-o', 'ConnectTimeout=3', '-o', 'ConnectionAttempts=1', '-o', 'ServerAliveInterval=2',

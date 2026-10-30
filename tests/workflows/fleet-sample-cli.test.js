@@ -171,3 +171,30 @@ test.each(['SIGINT', 'SIGTERM'])('CLI %s returns cancelled telemetry and reaps S
     if (sshPid) { try { process.kill(sshPid, 'SIGKILL'); } catch {} }
   }
 }, 6000);
+
+
+test('invalid C1 request fails before SSH while the valid control invokes it', () => {
+  const dir = `${root}/prevalidate`;
+  mkdirSync(dir, { mode: 0o700 });
+  const calls = `${dir}/calls`;
+  writeFileSync(`${dir}/ssh`, `#!${process.execPath}\nawait Bun.write(${JSON.stringify(calls)}, 'called'); process.exit(255);\n`);
+  chmodSync(`${dir}/ssh`, 0o700);
+  const runInput = (value) => {
+    writeFileSync(`${dir}/input.json`, JSON.stringify(value));
+    return Bun.spawnSync([process.execPath, 'skills/axstack/scripts/fleet-route.js',
+      'sample-recommend', ...args, '--input', `${dir}/input.json`], {
+      stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', timeout: 10000,
+      env: { ...process.env, HOME: root, PATH: `${dir}:${process.env.PATH}` },
+    });
+  };
+  expect(runInput(input).exitCode).toBe(0);
+  expect(readFileSync(calls, 'utf8')).toBe('called');
+  rmSync(calls);
+  const invalid = structuredClone(input);
+  delete invalid.request.repositoryId;
+  const result = runInput(invalid);
+  expect(result.exitCode).toBe(1);
+  expect(result.stdout.toString()).toBe('');
+  expect(JSON.parse(result.stderr.toString()).error.code).toBe('request-schema');
+  expect(existsSync(calls)).toBe(false);
+});

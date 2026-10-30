@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { parseProc } from '../../skills/axstack/scripts/fleet-proc.js';
 import { telemetry } from '../../skills/axstack/scripts/fleet-facts.js';
 import { sampleFleet } from '../../skills/axstack/scripts/fleet-sample.js';
 import { PROC_COMMAND, readProc, sshArgv, wait } from '../../skills/axstack/scripts/fleet-sample-io.js';
@@ -222,4 +223,15 @@ test('sampling waits a full interval after the first SSH response before the sec
   const output = await result;
   expect(events).toEqual([['read', 100000], ['wait', 102000, 5000], ['read', 107000]]);
   expect(output.telemetry[0]).toMatchObject({ status: 'ok', durationMs: 7000, intervalMs: 5000 });
+});
+
+
+test.each(['sh', ...(Bun.which('fish') ? ['fish'] : [])])('remote proc command runs under %s login-shell syntax', (shell) => {
+  const result = Bun.spawnSync([shell, '-c', PROC_COMMAND], { stdout: 'pipe', stderr: 'pipe' });
+  expect(result.exitCode).toBe(0);
+  expect(result.stderr.toString()).toBe('');
+  const parsed = parseProc(result.stdout.toString());
+  expect(parsed.counters).toHaveLength(8);
+  expect(parsed.total).toBeGreaterThan(0n);
+  expect(parsed.used).toBeGreaterThanOrEqual(0n);
 });

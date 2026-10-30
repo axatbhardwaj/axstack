@@ -29,7 +29,9 @@ if (elapsedMs < 5000 || sample.status !== "ok" || sample.durationMs < 5000
 console.log(JSON.stringify({elapsedMs, result, normalized}, null, 2));' > "$EVIDENCE/telemetry-local.json"
 ```
 
-Proof: first-eight-counter CPU includes steal without guest double counting;
+Proof: the remote read command runs under sh and, when installed, fish. A valid
+CLI control invokes the SSH fixture, while an invalid C1 request fails before
+any SSH invocation. First-eight-counter CPU includes steal without guest double counting;
 endpoint-average/latest RAM and integer upward pressure round correctly. Valid
 manifest/config controls precede single-fact failures with exact reasons.
 Three synthetic hosts enter the same collection batch. Real six-second timeout,
