@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { evaluate } from '../../skills/voa/scripts/evaluate.js';
-import { diagnostic, editWait, fixture, key, later, owner, thread } from './voa-fixtures.js';
+import { editWait, fixture, key, later, owner, thread } from './voa-fixtures.js';
 
 const recovery = (input) => evaluate(input, 'recovery');
 const none = (input) => expect(recovery(input).continuations).toEqual([]);
@@ -20,6 +20,11 @@ test('9: five-host coverage reports unknowns and finite budgets never assume uns
   expect(bounded.continuations).toEqual([]);
   input.at = later;
   expect(recovery(input).owners).toEqual([]);
+  const over = fixture(); over.budget.maxOwners = 1;
+  over.hosts[4].threads.push({ ...structuredClone(thread(over)), threadId: 'unprocessed' });
+  const partial = recovery(over);
+  expect(partial.continuations).toEqual([]);
+  expect(partial.cursor).toEqual({ processedOwners: 1, next: { host: 'axat-vps', rowIndex: 1 } });
 });
 
 test('12: status cannot activate recovery; queued wakes suppress but unfired registrations do not', () => {

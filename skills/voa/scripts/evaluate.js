@@ -95,7 +95,8 @@ function classify(row, record, at) {
 export function evaluate(input, mode = 'status') {
   if (!['status', 'recovery', 'cleanup'].includes(mode)) throw Error('unknown mode');
   const saved = normalize(input);
-  const result = { schemaVersion: 1, mode, coverage: saved.coverage, owners: [], continuations: [], cleanup: null };
+  const result = { schemaVersion: 1, mode, coverage: saved.coverage, cursor: saved.cursor,
+    owners: [], continuations: [], cleanup: null };
   if (mode === 'cleanup') result.cleanup = cleanupPlan(input);
   const base = mode === 'recovery' ? activation(input, saved.at) : [];
   for (const row of saved.threads) {

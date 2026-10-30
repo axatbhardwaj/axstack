@@ -10,6 +10,9 @@ The input is schemaVersion 1, with ISO `at` (evaluation clock), `collectedAt`,
 than the 30-minute cadence; maxOwners is 1–1000 and maxMessages is 1–1000.
 The CLI refuses inputs over 8 MiB. Capture and stop native inventory at these
 bounds too; no catch-up loop. `hosts` has one row per fleet host:
+Output `cursor` reports processed owner count and the first unprocessed
+host/rowIndex, or null when none remain. Owners on a budget-truncated host are
+report-only because duplicate inventory identities beyond the bound are unknown.
 
 ```json
 {

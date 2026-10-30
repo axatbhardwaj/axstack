@@ -54,7 +54,7 @@ Closed native agent write allowlist, applied by the owning agent, never helpers:
 Everything else is report-only: forge changes, merge/dismissal, delegation,
 thread creation/settlement/archive/pause/cancel/interrupt, pending-request
 responses, settings, other owners' watches/schedules, queue cancel/reorder or
-promotion, SSH relays and Telegram/Hermes alerts. Cross-host continuation needs
+promotion, SSH relays and external alerts. Cross-host continuation needs
 installed C4 plus unexpired directed C5 write-link proof for that exact edge;
 otherwise report only. Never redirect to another host or owner.
 

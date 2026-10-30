@@ -41,6 +41,7 @@ export function normalize(input) {
     && duration > 0 && duration < 1800000;
   const coverage = [];
   const threads = [];
+  let next = null;
   for (const host of HOSTS) {
     const matches = input.hosts.filter((row) => row.host === host);
     const row = matches.length === 1 ? matches[0] : null;
@@ -48,17 +49,20 @@ export function normalize(input) {
       && pointer(row.environmentId) && pointer(row.evidence) && Array.isArray(row.threads);
     coverage.push(term(host, known ? 'pass' : 'unknown', row?.evidence ?? 'missing/unreachable/incomplete inventory'));
     const rows = Array.isArray(row?.threads) ? row.threads : [];
+    const remaining = inTime ? budget.maxOwners - threads.length : 0;
+    const processed = rows.slice(0, remaining);
+    if (processed.length < rows.length && next === null) next = { host, rowIndex: processed.length };
     const counts = new Map();
-    for (const thread of rows) counts.set(thread.threadId, (counts.get(thread.threadId) ?? 0) + 1);
+    for (const thread of processed) counts.set(thread.threadId, (counts.get(thread.threadId) ?? 0) + 1);
     // Observed rows on partial hosts remain visible, but cannot prove recovery readiness.
-    for (const thread of rows) {
-      if (!inTime || threads.length >= budget.maxOwners) break;
+    for (const thread of processed) {
       const owner = { host, environmentId: row.environmentId, threadId: thread.threadId, threadLink: thread.threadLink };
-      threads.push({ owner, inventoryKnown: known && counts.get(thread.threadId) === 1, raw: thread, ...threadStatus(thread, at) });
+      threads.push({ owner, inventoryKnown: known && processed.length === rows.length && counts.get(thread.threadId) === 1,
+        raw: thread, ...threadStatus(thread, at) });
     }
   }
   const observed = input.hosts.reduce((sum, row) => sum + (Array.isArray(row.threads) ? row.threads.length : 0), 0);
   coverage.push(term('pass-budget', inTime && observed <= threads.length ? 'pass' : 'unknown',
     `${threads.length}/${observed} observed rows; deadline ${budget.deadlineAt}`));
-  return { at, coverage, threads };
+  return { at, coverage, threads, cursor: { processedOwners: threads.length, next } };
 }

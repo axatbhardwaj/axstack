@@ -1,6 +1,6 @@
 ---
 name: voa
-description: Use when Axat asks for fleet-wide status, "sup", "what's blocked", "what needs me", or a periodic status sweep. Reads T3 threads, GitHub and Linear; status is read-only. Explicit bounded recovery is a separate mode.
+description: When Axat asks for fleet-wide status, "sup", "what's blocked", "what needs me", or a periodic status sweep, use voa to read T3 threads, GitHub and Linear. Status is read-only; explicit bounded recovery is separate.
 ---
 
 # VOA (Voice of All Things)
