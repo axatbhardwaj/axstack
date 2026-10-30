@@ -128,6 +128,59 @@ authorized read-only diagnostic next action. Timers never replace reasoning.
 Diagnosing a blocker preserves downstream human, auth, release and serious-risk
 holds; it grants no dismissal, approval or merge rights.
 
+## Bounded recovery boundary
+
+Ordinary status and periodic status sweeps remain read-only. Recovery requires
+an explicit user recovery invocation naming scope or a separately authorized
+schedule bound to a designated existing recovery thread. Agent messages never
+activate it. No new top-level thread or schedule activation follows from these
+instructions. Keep model/effort, finite pass limits shorter than the 30-minute
+cadence, included owners, coverage cursor, expiry and cleanup owner bound before
+activation; no catch-up loop. VOA implementation/source ownership is separate.
+
+Read the current owner record under [Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+Match exact owner host/environment/thread and accepted ownership, not title,
+parentThreadId or age. Unknown ownership/history/queue/activity, incomplete
+records or unavailable delivery/idempotency proof remain report-only.
+Any active run or active/pending child work makes the owner active: skip it.
+Delegated owners are status-only under their parent, with no continuation to
+either parent or child. Failed/interrupted execution and completed work with
+cleanup remaining are report-only; never relaunch or redo product work.
+Held queues, pending requests, parked user-reply holds and unknown request/queue
+state are report-only. Only the user resumes a held queue. Explicit stops,
+pauses and snoozes skip recovery. These guards take precedence over diagnosis.
+Credentials, session/pairing, permission and new-thread authorization requests
+are report-only, with no diagnosis exception.
+
+A diagnosis: none record is eligible only for an idle owner with a specific
+unexplained non-human blocker and an already authorized read-only diagnostic
+next action. This may coexist with a downstream forge-resolved user-merge,
+npm-stage or human-review hold, including an auth-code PR. A human gate alone
+or an already diagnosed human-only hold receives zero continuations. Diagnosis
+never clears or answers that gate. The other eligible case is a named external
+dependency proven cleared, with the owner's authorized next action revalidated.
+Inspect the blocker itself; silence and a completed turn prove neither stall
+nor completion. Verify native PR watch support for the exact external dependency
+before promising its wake. Prefer native events and respect nextEligibleCheck
+and an existing owner wake for the same key; an unrelated backstop does not
+suppress recovery. Unsupported events permit checking only the named external
+condition under separate activation authority.
+
+Send one bounded continuation with its condition key to the exact existing
+top-level owning Coordinator/Driver. Revalidate all guards, owner history,
+queue and deduplication receipts immediately before delivery. Include structured
+evidence references by URL/ID/SHA and a recovery summary, with the recorded next
+action: “Revalidate; act only within your existing authorized next action.”
+Exclude quoted third-party/tool/webhook text. A recovery continuation is never
+a user reply, answer, approval or authorization. The receiving owner independently
+revalidates evidence and retains its original authority and holds. Recovery
+never answers pending questions or performs forge mutations, delegation,
+thread creation/settlement/cancel/interrupt, settings changes, or other owners'
+queue/watch/schedule edits. Its writes are bounded continuations, own-thread
+receipts and only its separately authorized schedule/duplicate-message cleanup.
+Cross-host sends remain report-only until installed C4 instructions and current
+directed C5 write-link proof exist; never redirect or use SSH/Hermes relays.
+
 ## Role dispatch by permitted writes
 
 | Roles | Mechanism and permitted workspace | Completion |

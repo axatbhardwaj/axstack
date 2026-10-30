@@ -130,6 +130,9 @@ wake-ups drive observation; never poll or keep a model active between events.
 
 ## 4. Route each wake
 
+Follow [Bounded recovery boundary](../axstack/references/t3-runtime.md#bounded-recovery-boundary)
+for recovery continuations and waiting-turn records.
+
 Re-read the remote head and base, then reconcile the event against acknowledged
 IDs and the recorded mode. A changed head, CI result, or review comment is an
 event, not repair authority. Stale or ambiguous observations authorize nothing.

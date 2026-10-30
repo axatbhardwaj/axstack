@@ -43,6 +43,27 @@ Preserve unknown files, unmerged author work, ambiguous publication, and evidenc
 Do not force removal, bulk-clean, edit a runtime database, or add a scheduler,
 daemon or state machine. Report other projects' resources; never touch them.
 
+## Wait registrations and owned wakes
+
+Follow [Bounded recovery boundary](../axstack/references/t3-runtime.md#bounded-recovery-boundary)
+and [Waiting-turn and closing records](../axstack/references/run-record.md#waiting-turn-and-closing-records)
+when ending an owner condition. On completion/cancellation/handoff, reconcile
+ownership and delete only run-owned schedule IDs with absence readback.
+Stop owned watches and clear only identified owned duplicate scheduled messages,
+recording exact IDs, scope, owner, lifetime and receipts. Preserve user messages
+and shared persistent schedules. Run completion unregisters only its own
+registration and preserves the shared service and other registrations.
+Without separately authorized shared-service lifetime, recovery ends at run
+close, empty scope or expiry, whichever comes first. Empty scope means no open
+wait registrations, rather than no eligible action in this pass. After expiry,
+perform cleanup-only with zero sends even if deletion failed.
+Unknown deletion or queue state is a scoped cleanup finding, never a reason to
+redo product work. Keep that resource ID and its cleanup owner until reconciled.
+Verify Stop/restart/provider-failure queue behavior before promising a timer
+wake; a timer cannot override a held queue. Use advertised interval/fixed-time/
+webhook operations, never an invented dedicated one-shot trigger. Recovery owns
+only its own resources; each Driver cleans its own watches, queues and schedules.
+
 ## Reconcile each candidate
 
 Take a fresh native inventory and bind every candidate to its exact projectId, attempt key, taskId/childThreadId/childRunId
