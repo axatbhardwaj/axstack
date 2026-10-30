@@ -31,6 +31,8 @@ export function recommend(input, now) {
         accepted = { hostId, environmentId: host.environmentId, projectId: destination.project.id,
           repositoryId: destination.project.repositoryId, routeId: route.id, routeKind: route.kind,
           destinationSnapshotId: destination.snapshotId, destinationObservedAt: destination.observedAt,
+          ...(destination.capabilitiesDigest !== undefined
+            ? { destinationCapabilitiesDigest: destination.capabilitiesDigest } : {}),
           destinationEvidence: destination.evidence, routeEvidence: facts.evidence, versions: destination.versions,
           execution: destination.execution, capabilities: destination.capabilities,
           fallbackLimitBp: host.fallbackLimitBp, assignmentCount: counts.byEnvironment[host.environmentId],
@@ -75,4 +77,9 @@ export function recommend(input, now) {
     originEnvironmentId: input.origin.environmentId, request: input.request,
     stage, reason: flags.localAuthorOnly ? 'author-local-only' : reason, decisionReason: reason,
     selected, flags, counts, eligible, excluded });
+}
+
+if (import.meta.main) {
+  const { main } = await import('./fleet-route-cli.js');
+  process.exitCode = main(process.argv.slice(2));
 }

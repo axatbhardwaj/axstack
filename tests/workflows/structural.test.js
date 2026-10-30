@@ -284,6 +284,12 @@ test('structural: skills stay self-contained (no absolute paths or upstream deps
             + '[playbooks](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/poteto-mode/playbooks/) (MIT).';
           guarded = guarded.replace(credit, 'Pinned pstack credit (MIT).');
         }
+        // The approved account-local config interface names a directory;
+        // it grants no dependency on a separate repository or personal policy.
+        if ([join(skillsDir, 'axstack', 'scripts', 'fleet-route-cli.js'),
+          join(skillsDir, 'axstack', 'references', 'fleet-route-schema.md')].includes(p)) {
+          guarded = guarded.replaceAll('.config/haoshoku/fleet-routing.json', 'account-local-config');
+        }
         for (const f of forbidden) {
           expect(guarded.includes(f), `${p} contains forbidden reference: ${f}`).toBe(false);
         }

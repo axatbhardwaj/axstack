@@ -50,6 +50,7 @@ const migrationPins = [
   ['skills/axstack/references/contracts.md', "Every substitution requires the user's decision: configured alternatives are not defaults."],
   ['skills/axstack/references/contracts.md', 'Rejection, timeout, quota and auth failures hold affected work.'],
   ['skills/axstack/references/routing.md', "Use an explicit model as given; for `model:null` without a class, grok uses the provider's first listed model from saved capabilities and records its exact ID."],
+  ['skills/axstack/references/routing.md', 'A first listed ID without the `grok-` prefix holds that role with no substitution; the prefix checks family, not X access or other live capability.'],
   ['skills/axstack/references/routing.md', 'Later installed or changed roles need an explicit user decision to enter the snapshot.'],
   ['skills/axstack/references/routing.md', 'Replacing a session needs an explicit user decision and revalidation.'],
   ['skills/axstack/references/run-record.md', 'Before changing `Driver` or a task `Owner`, verify that the prior driver is inactive against actual T3 thread and run state, or that an explicit accepted transfer permits reassignment.'],

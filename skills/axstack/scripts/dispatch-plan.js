@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { bindFleet } from './fleet-dispatch.js';
 
-const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--out'];
+const fleetFlags = ['--recommendation', '--fleet-input', '--now', '--config-digest'];
+const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--out', ...fleetFlags];
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
   --capabilities <saved.json> --kind task|launch
@@ -13,6 +15,10 @@ Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabil
 --kind          task emits target and, for axstack-author, isolation:"worktree"; launch emits modelSelection
 --verify        Compare t3_thread_configuration JSON; print evidence then MATCH or each mismatch
 --out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
+--recommendation Saved fleet-route recommendation; requires all following fleet flags
+--fleet-input   Saved complete selector input, including exact reviewed config bytes
+--now           Injected nonnegative epoch-ms evaluation time matching the recommendation
+--config-digest Run-pinned config SHA-256; must match facts and recommendation
 --help          Show all flags and exit codes
 
 Read-only inputs: reads supplied JSON, spawns adjacent resolve-models.js, writes stdout/stderr.
@@ -22,6 +28,11 @@ Large verification retains its exit code, prints mismatches and advises --out on
 An unwritable --out still prints verification mismatches and retains exit 2.
 An omitted provider label is unknown; exact instance/model/options/mode checks still apply.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
+Fleet --capabilities is the selected destination's raw saved catalog, digest-bound
+by its destination facts. It is never the origin catalog by default.
+Fleet verification requires environmentId/projectId and fleetBinding alongside
+the effective T3 configuration. C3 collects that host-qualified evidence envelope.
+Coordinator routes remain unsupported here. A plan grants no launch authority.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
 
@@ -39,8 +50,11 @@ function argumentsFrom(args) {
     if (flag in options) throw new Error(`duplicate argument ${flag}; pass it once`);
     options[flag] = value;
   }
-  for (const flag of flags.filter((flag) => !['--verify', '--out'].includes(flag))) {
+  for (const flag of ['--role', '--roles', '--capabilities', '--kind']) {
     if (!options[flag]) throw new Error(`expected ${flag}; pass ${flag} <value>`);
+  }
+  if (fleetFlags.some((flag) => options[flag])) {
+    for (const flag of fleetFlags) if (!options[flag]) throw new Error(`expected ${flag} for fleet binding`);
   }
   if (!['task', 'launch'].includes(options['--kind'])) throw new Error('expected --kind task|launch; pass --kind task or --kind launch');
   return options;
@@ -60,7 +74,7 @@ function normalizedOptions(options) {
   return JSON.stringify(entries.sort(([left], [right]) => left.localeCompare(right)));
 }
 
-function verify(configuration, provider, model, options) {
+function verify(configuration, provider, model, options, fleet) {
   const mismatches = [];
   const selection = configuration?.modelSelection;
   const compare = (field, expected, observed, equal = expected === observed) => {
@@ -77,6 +91,10 @@ function verify(configuration, provider, model, options) {
   compare('options', options, selection?.options,
     normalizedOptions(options) === normalizedOptions(selection?.options));
   compare('runtimeMode', 'full-access', configuration?.runtimeMode);
+  if (fleet) {
+    for (const [field, expected] of Object.entries(fleet.destination)) compare(field, expected, configuration?.[field]);
+    for (const [field, expected] of Object.entries(fleet.fleetBinding)) compare(field, expected, configuration?.fleetBinding?.[field]);
+  }
   return { mismatches, ...(selection?.provider == null ? {
     providerEvidence: `provider: unknown; expected ${JSON.stringify(provider)}; observed missing; `
       + 'provider binding checked via instanceId and saved capabilities',
@@ -136,16 +154,25 @@ function plan(argv, io) {
     '--effort', role.thinkingOptionId, ...modelArgs], { stdout: 'pipe', stderr: 'pipe' });
   if (resolved.stderr.length) io.stderr(resolved.stderr.toString());
   if (resolved.exitCode !== 0) return resolved.exitCode === 1 ? 2 : 1;
-  const { model, effortOption, providerInstanceId } = JSON.parse(resolved.stdout.toString());
-  const options = effortOption ? [effortOption] : [];
+  const resolution = JSON.parse(resolved.stdout.toString());
+  const { model, effortOption, providerInstanceId } = resolution;
+  let fleet;
+  if (args['--recommendation']) {
+    if (!/^\d+$/.test(args['--now'])) throw new Error('evaluation-time');
+    fleet = bindFleet(readJSON(args['--fleet-input']), readJSON(args['--recommendation']),
+      args['--config-digest'], Number(args['--now']), readFileSync(args['--capabilities'], 'utf8'),
+      resolution, role.id === 'axstack-author');
+  }
+  const options = fleet?.options ?? (effortOption ? [effortOption] : []);
   if (args['--verify']) {
-    const verification = verify(readJSON(args['--verify']), providerInstanceId, model, options);
+    const verification = verify(readJSON(args['--verify']), providerInstanceId, model, options, fleet);
     emit(verification);
     return verification.mismatches.length ? 2 : 0;
   }
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: providerInstanceId,
-    model, options };
+    model, options, ...(args['--kind'] === 'task' ? fleet?.destination : {}) };
   emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
+    ...(fleet ? { fleetBinding: fleet.fleetBinding, ...(args['--kind'] === 'launch' ? fleet.destination : {}) } : {}),
     ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });
   return 0;
 }

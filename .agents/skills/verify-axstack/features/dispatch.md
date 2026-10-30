@@ -47,14 +47,14 @@ These fixture results grant no live dispatch authority. Missing models or
 mismatched readback must hold, not substitute.
 
 
-## Pure fleet recommendations (C1a)
+## Fleet recommendations and destination binding (C1)
 
 Entry point: `skills/axstack/scripts/fleet-route.js`; internal config/fact modules
 are packaged relative imports. Input/output contract:
 `skills/axstack/references/fleet-route-schema.md`. Prerequisites: Launch and
 Doctor, Bun >=1.3.14; synthetic fixture facts only, no network or live config.
-This path imports the production API directly; CLI/dispatch binding and
-sampling are subsequent slices and are not claimed by this recipe.
+The pure API, offline CLI and destination-bound plans are covered here.
+Sampling and live destination receipt collection remain subsequent slices.
 
 ```bash
 doctor > "$EVIDENCE/fleet-doctor.log" 2>&1
@@ -63,13 +63,14 @@ bun -e 'import { recommend } from "./skills/axstack/scripts/fleet-route.js";
 import { fixture, NOW } from "./tests/workflows/fleet-route-fixture.js";
 const f = fixture(); const input = f.bind(); const before = JSON.stringify(input);
 const result = recommend(input, NOW);
-if (result.stage !== "balance" || result.selected.environmentId !== "worker-a"
+if (result.stage !== "balance" || result.selected.hostId !== "worker-a" || result.selected.environmentId !== "env-worker-a"
  || result.selected.projectId !== "project-worker-a" || JSON.stringify(input) !== before)
  throw Error("pure selector binding or mutation failure");
 console.log(JSON.stringify(result, null, 2));' > "$EVIDENCE/fleet-recommendation.json"
 ```
 
-Proof: fixture selection is worker-a/project-worker-a with destination model
+Proof: fixture selection is host worker-a, environment env-worker-a and
+project project-worker-a, with destination model
 settings, exact config digest and provenance; input bytes remain unchanged.
 Tests prove all four ordered stages, 20/35/40 sequential batch spread,
 assignment/pending de-duplication, unknown inventory, required actual sessions,
@@ -85,3 +86,87 @@ No credential, personal host configuration, T3 launch or live telemetry is used.
 Preserve JSON and logs outside scratch selected for deletion. Repeat this drive
 when selector/schema changes; later integration recipes must verify the actual
 destination readback independently rather than treating this output as authority.
+
+Drive the installed-style command and adapter with saved synthetic facts:
+
+```bash
+doctor > "$EVIDENCE/fleet-cli-doctor.log" 2>&1
+bun run test tests/workflows/fleet-route-cli.test.js tests/workflows/dispatch-plan/fleet.test.js \
+  tests/workflows/resolve-models.test.js > "$EVIDENCE/fleet-cli-tests.log" 2>&1
+bun -e 'import { fixture, NOW } from "./tests/workflows/fleet-route-fixture.js";
+const f = fixture(); const root = process.env.EVIDENCE;
+const capsText = await Bun.file("tests/workflows/fixtures/t3-capabilities.json").text();
+const request = f.input.request;
+request.providerInstanceId = "codex"; request.model = "gpt-6.1-sol";
+request.options = {reasoningEffort: "high"};
+const digest = new Bun.CryptoHasher("sha256").update(capsText).digest("hex");
+for (const d of f.input.destinations) {
+  d.execution = {available: true, providerInstanceId: request.providerInstanceId,
+    model: request.model, options: request.options, runtimeMode: request.runtimeMode};
+  d.capabilitiesDigest = digest;
+}
+const input = f.bind();
+await Bun.write(root + "/fleet-input.json", JSON.stringify(input));
+await Bun.write(root + "/fleet-config.json", input.configText);
+await Bun.write(root + "/destination-capabilities.json", capsText);
+await Bun.write(root + "/fleet-roles.json", JSON.stringify({version: 1, roles: [
+  {id: "fixture-reader", provider: "codex", model: "gpt-6.1-sol",
+    thinkingOptionId: "high", modeId: "full-access"}]}));
+await Bun.write(root + "/fleet-pin.txt", input.configDigest);
+await Bun.write(root + "/fleet-readback.json", JSON.stringify({environmentId: "env-worker-a",
+  projectId: "project-worker-a", runtimeMode: "full-access",
+  modelSelection: {instanceId: "codex", model: "gpt-6.1-sol", options: {reasoningEffort: "high"}},
+  fleetBinding: {configDigest: input.configDigest, destinationSnapshotId: "snapshot-worker-a",
+    destinationCapabilitiesDigest: digest}}));
+if (NOW !== 100000) throw Error("fixture evaluation time drift");'
+bun "$SCRIPTS/fleet-route.js" --help > "$EVIDENCE/fleet-help.txt"
+bun "$SCRIPTS/fleet-route.js" recommend --input "$EVIDENCE/fleet-input.json" \
+  --config "$EVIDENCE/fleet-config.json" --now 100000 --json > "$EVIDENCE/fleet-cli.json"
+PIN=$(cat "$EVIDENCE/fleet-pin.txt")
+bun "$SCRIPTS/dispatch-plan.js" --role fixture-reader --roles "$EVIDENCE/fleet-roles.json" \
+  --capabilities "$EVIDENCE/destination-capabilities.json" --kind task \
+  --recommendation "$EVIDENCE/fleet-cli.json" --fleet-input "$EVIDENCE/fleet-input.json" \
+  --now 100000 --config-digest "$PIN" --out "$EVIDENCE/fleet-plan.json" > "$EVIDENCE/fleet-plan.log"
+bun "$SCRIPTS/dispatch-plan.js" --role fixture-reader --roles "$EVIDENCE/fleet-roles.json" \
+  --capabilities "$EVIDENCE/destination-capabilities.json" --kind task \
+  --recommendation "$EVIDENCE/fleet-cli.json" --fleet-input "$EVIDENCE/fleet-input.json" \
+  --now 100000 --config-digest "$PIN" --verify "$EVIDENCE/fleet-readback.json" > "$EVIDENCE/fleet-verify.log"
+test "$(tail -n 1 "$EVIDENCE/fleet-verify.log")" = MATCH
+bun -e 'const root = process.env.EVIDENCE;
+const plan = await Bun.file(root + "/fleet-plan.json").json();
+const rec = await Bun.file(root + "/fleet-cli.json").json();
+if (rec.selected.hostId !== "worker-a" || rec.selected.environmentId !== "env-worker-a"
+ || plan.target.environmentId !== "env-worker-a" || plan.target.projectId !== "project-worker-a"
+ || plan.fleetBinding.configDigest !== rec.configDigest
+ || plan.fleetBinding.destinationCapabilitiesDigest !== rec.selected.destinationCapabilitiesDigest
+ || plan.target.model !== "gpt-6.1-sol" || plan.target.options[0].value !== "high")
+ throw Error("fleet CLI destination binding mismatch");'
+```
+
+Proof: the real CLI selects host worker-a and targets env-worker-a/project-worker-a; saved task target and
+MATCH bind exact config/catalog bytes and requested settings. Tests cover
+current T3 `options.values[]` and legacy `options.options[]`, extra option
+preservation, explicit missing/schema/digest errors, exclusions and mismatch
+holds. Valid positive controls precede independent run-pin, configured role/settings,
+fully proven coordinator, catalog ambiguity/unsupported option and no-route holds.
+Changed catalogs are re-digested and destination execution agrees with the request,
+so earlier selector/digest failures cannot mask those binding checks. These
+pre-plan holds assert exact errors and empty stdout. The default config-path test uses
+only a temporary account. Network
+isolation plus before/after fixture bytes guard the offline/no-mutation contract.
+`fleetBinding` is evidence, not a supported T3 dispatch parameter. Live C3 must
+collect host-qualified readback independently; fixture MATCH grants no authority.
+
+Current catalog compatibility also covers null or absent model options: an
+optionless sibling does not block a usable model, while selecting an optionless
+model holds for unsupported effort. The resolver regression tests exercise both
+cases through its CLI.
+
+Saved-catalog drives must check emitted model IDs and settings, not only exit
+codes. Grok null-model roles hold when the first advertised ID lacks `grok-`;
+they never skip to a later model. Count valid plans and expected identity holds
+separately. A family prefix is not proof of live X access.
+
+Malformed non-null sibling options must hold with the specific malformed-model
+diagnostic; a generic hold or TypeError does not prove validation. The resolver
+tests keep a valid first model so the family guard cannot mask this boundary.

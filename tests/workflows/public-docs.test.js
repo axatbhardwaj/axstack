@@ -94,6 +94,7 @@ test('package recipe requires every entry point and both current publication ref
   const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
     'skills/axstack/scripts/fleet-route.js', 'skills/axstack/scripts/fleet-config.js',
     'skills/axstack/scripts/fleet-facts.js', 'skills/axstack/references/fleet-route-schema.md',
+    'skills/axstack/scripts/fleet-route-cli.js', 'skills/axstack/scripts/fleet-dispatch.js',
     'skills/axstack-spec/references/format.md',
     'profiles/presets/mixed.json', 'skills/axstack/references/candidate-publication.md',
     'skills/axstack/references/preview.md', 'skills/axstack/references/pr-chain.md',

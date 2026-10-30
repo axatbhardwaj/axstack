@@ -143,7 +143,8 @@ test('capabilities holds missing files, malformed JSON and malformed provider/mo
     (p) => { p.models[0].options[0].options = {}; },
     (p) => { p.models[0].options[0].options = [{ id: null }]; },
   ]) {
-    const data = fresh(); change(data.providers[0]); malformed.push(data);
+    const data = fresh(); change(data.providers[0]);
+    held(resolve(data), /malformed capabilities models or options/);
   }
   for (const data of malformed) held(resolve(data), /capabilities/i);
 });
@@ -243,3 +244,81 @@ test('Terra class and explicit pins reject every effort except high without coer
   data.providers[0].models.push(entry('gpt-6.2-terra', 'reasoningEffort', ['xhigh']));
   held(resolve(data, ['--class', 'terra']), /unsupported effort high.*gpt-6.2-terra/i);
 });
+
+
+test('current T3 values arrays resolve high without normalizing the saved snapshot', () => {
+  const data = fresh();
+  for (const provider of data.providers) for (const model of provider.models) {
+    for (const option of model.options) {
+      option.values = option.options.map(({ id }) => id);
+      delete option.options;
+    }
+  }
+  const result = resolve(data);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'gpt-6.1-sol',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  data.providers[0].models[0].options[0].values = ['low'];
+  held(resolve(data), /unsupported effort high/);
+  data.providers[0].models[0].options[0].values = [null];
+  held(resolve(data), /malformed capabilities/);
+});
+
+test.each([null, undefined])('optionless sibling models do not block resolution (%j)', (options) => {
+  const data = fresh();
+  const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+  const control = resolve(data, ['--model', 'null'], 'grok');
+  expect(control.status).toBe(0);
+  grok.models.push({ id: 'grok-image', options });
+  const result = resolve(data, ['--model', 'null'], 'grok');
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'grok-4.7',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  // An optionless selected model must hold, never borrow a sibling's effort.
+  held(resolve(data, ['--model', 'grok-image'], 'grok'), /unsupported effort high.*grok-image/);
+});
+
+
+test.each(['claude-fable-5-1', 'gpt-6-astra', 'codex-auto-review', 'xgrok-4.7'])(
+  'Grok default rejects first-listed %s without selecting a later Grok', (id) => {
+    const data = fresh();
+    const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+    const control = resolve(data, ['--model', 'null'], 'grok');
+    expect(control.status).toBe(0);
+    expect(JSON.parse(control.output)).toMatchObject({ model: 'grok-4.7',
+      effortOption: { id: 'reasoningEffort', value: 'high' } });
+    grok.models.unshift(entry(id));
+    held(resolve(data, ['--model', 'null'], 'grok'), /first listed model .* is not grok-family/);
+    const pinned = resolve(data, ['--model', 'grok-4.7'], 'grok');
+    expect(pinned.status).toBe(0);
+    expect(JSON.parse(pinned.output).model).toBe('grok-4.7');
+  },
+);
+
+test('Grok default keeps the first model or holds; mixed optionless siblings cannot replace it', () => {
+  const data = fresh();
+  const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+  grok.models.push(entry('claude-fable-5-1'), { id: 'gpt-image', options: null },
+    { id: 'grok-tts' }, entry('grok-9'));
+  const result = resolve(data, ['--model', 'null'], 'grok');
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'grok-4.7',
+    effortOption: { id: 'reasoningEffort', value: 'high' } });
+  held(resolve(data, ['--model', 'null', '--exclude', 'grok-4.7'], 'grok'), /missing first listed model/);
+  grok.models[0].options = null;
+  held(resolve(data, ['--model', 'null'], 'grok'), /unsupported effort high.*grok-4.7/);
+});
+
+
+test.each([[{}], ['x'], [false], [0], [''], [[null]], [[{ id: 42 }]]])(
+  'malformed non-null sibling options hold specifically (%j)', (options) => {
+    const data = fresh();
+    const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+    const control = resolve(data, ['--model', 'null'], 'grok');
+    expect(control.status).toBe(0);
+    expect(JSON.parse(control.output)).toMatchObject({ model: 'grok-4.7',
+      effortOption: { id: 'reasoningEffort', value: 'high' } });
+    grok.models.push({ id: 'grok-sibling', options });
+    held(resolve(data, ['--model', 'null'], 'grok'), /malformed capabilities models or options/);
+  },
+);
