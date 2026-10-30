@@ -82,6 +82,9 @@ Store receipt references, not raw output, in the [Run record](run-record.md).
 - Audit receipt: scope, evidenced PASS/FAIL/UNKNOWN counts/denominators and
   proposals. Only an authorized sanitized summary publishes.
 
+Before ending a waiting turn or closing its condition, follow
+[Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+
 ## Execution tracking
 
 Follow [T3 runtime](t3-runtime.md) for native completion, questions, launch

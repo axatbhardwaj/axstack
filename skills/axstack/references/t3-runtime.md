@@ -118,6 +118,16 @@ The Coordinator and Drivers have no default model role in presets. Existing mode
 permission and remote-author restrictions remain in force, with no substitution
 or remote-author enablement. Coordination adds no daemon, scheduler or runtime DB.
 
+## Waiting turns and diagnosis
+
+Before ending a waiting turn, follow [Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+The Driver diagnoses stale reviews, failing checks and relevant upstream fixes
+immediately before ending a waiting turn. Inspect the blocker itself and record
+its cause or a specific unexplained blocker with `diagnosis: none` and an already
+authorized read-only diagnostic next action. Timers never replace reasoning.
+Diagnosing a blocker preserves downstream human, auth, release and serious-risk
+holds; it grants no dismissal, approval or merge rights.
+
 ## Role dispatch by permitted writes
 
 | Roles | Mechanism and permitted workspace | Completion |
