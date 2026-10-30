@@ -50,16 +50,26 @@ human review, with no unsettled worker and no PR needing watch events, set the r
 at once.
 When work restarts, re-evaluate cadence against the recovery conditions below.
 Keep native PR watches for forge-resolved waits.
+Never status-check running delegate_task children on scheduled wakes.
+Delegate existence alone arms no schedule: native completion delivers receipts.
+The Driver-owned 5-minute lifecycle schedule (`everyMs:300000`) covers a
+launched-fallback Writer without native completion. Keep the Driver's 60-minute
+own-PR/release backstop and own-PR watch-unavailable/rate-limited 5-minute
+fallback; recovery never polls launched Writers. Only named external-dependency
+checks move to recovery after owners retire exact old IDs and verify absence.
+Remove active-delegate polling rather than migrating it. Preserve review
+managers and unrelated sweeps; cadence alone establishes no compatible recovery
+service or authority to repurpose one. No retained schedule polls delegates.
 Delegated tasks and native PR watches provide native completion paths: they deliver their own wakes.
 Launched writers, including their resumed marker questions, lack native completion paths.
-With native completion paths for all unsettled work and armed native PR watches,
+For an own-PR/release watch, with native completion paths for all unsettled work and armed native PR watches,
 use the 60-minute backstop (`everyMs:3600000`), including while release is pending.
 While a writer or follow-up is unsettled without a native completion path, use
 the 5-minute cadence (`everyMs:300000`).
 A launched-writer `AXSTACK-QUESTION` marker resume lacks a native completion wake, so it
 keeps the 5-minute cadence (`everyMs:300000`) while any launched writer exists.
-Delegated-child questions retain native completion paths and use the 60-minute backstop
-when other recovery conditions are clear.
+Delegated-child questions retain native completion paths, and an existing own-PR/release
+watch uses the 60-minute backstop when other recovery conditions are clear.
 An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.
 If native `watch_pull_request` is unavailable or unarmed for any open member,
 or re-arming fails, restore the bound chat-run schedule to 5 minutes (`everyMs:300000`).
@@ -69,7 +79,7 @@ fallback conditions in the same turn.
 Apply these conditions before ending each driver turn, including after initial
 arming or a work restart; the parking and forge-resolved wait rules above still apply.
 Read back each schedule update and record its receipt; an uncertain update holds affected work.
-Each wake reconciles all unsettled runs before running the authorized maintenance loop.
+Each wake reconciles unsettled launched-fallback Writer runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime;
 add no daemon and no polling model between wakes.
@@ -89,7 +99,10 @@ Run `scripts/pr-digest.js` only on schedule wakes, using:
 Use a per-repository JSON file in the private run directory for the watermark,
 separate from `progress.md` (for example, `pr-digest-owner-repo.json`).
 Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,
-end the turn with no text or notification. Exit 10 supplies deltas
+and no registered recovery wait remains, end the turn with no text or notification.
+On an unchanged scheduled wake with a registered recovery wait, write only a
+fresh structured wait block. This required record is the sole exception to the
+silent-wake rule; omit repeated progress text and notifications. Exit 10 supplies deltas
 to reconcile with current PR and local state; the driver saves only the printed
 `watermark` field as JSON after disposition. Exit 2 means incomplete coverage:
 readiness is `UNKNOWN`, so hold affected decisions and reconcile the API or

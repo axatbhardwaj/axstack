@@ -283,8 +283,10 @@ For each PR:
    Load and follow [Round-3 step-back](references/step-back.md).
    Load and follow [Review-round budgets](../axstack/references/run-record.md#review-round-budgets) before dispatching any repair from the step-back.
 
-The T3 run watch reconciles every unsettled dispatch attempt; the bounded
-forge check wait is the only other implementation wait.
+The T3 run watch reconciles unsettled launched-fallback Writer runs; native
+completion delivers delegated receipts. Never status-check running delegate_task
+children on scheduled wakes. The bounded forge check wait is the only other
+implementation wait.
 After verified readback of every own PR publication, the driver arms or joins
 its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopilot.md).
 That watch owns the bound T3 schedule wake; its runtime sets the cadence.

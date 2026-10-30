@@ -82,10 +82,14 @@ Store receipt references, not raw output, in the [Run record](run-record.md).
 - Audit receipt: scope, evidenced PASS/FAIL/UNKNOWN counts/denominators and
   proposals. Only an authorized sanitized summary publishes.
 
+Before ending a waiting turn or closing its condition, follow
+[Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+
 ## Execution tracking
 
 Follow [T3 runtime](t3-runtime.md) for native completion, questions, launch
-recovery and run-watch waits. Delegated notifications wake the driver; a launched
+recovery and run-watch waits. Never status-check running delegate_task children on scheduled wakes.
+Delegated notifications wake the driver; a launched
 writer sends its marker with `t3_thread_send` using `mode: queue` to the recorded driver thread.
 Delegated completion requires persisted `task_status` before `t3_thread_read`, terminal `completed`, `result_available`, `hasPendingChildRuns:false`, and final `AXSTACK-DONE`.
 Delegated author completion requires delegated terminal checks plus candidate checks: non-empty diff, clean tree and named red/green logs.
@@ -122,7 +126,7 @@ ready. An unreachable predecessor holds. Update one `Next:` line on each
 transition with owner, last receipt time, next action and hold; reconcile it for
 status questions. Stale receipts remain evidence only.
 
-End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles all unsettled runs.
+End a driver turn with an unsettled launched thread only while the bound run watch is armed; each wake reconciles unsettled launched-fallback Writer runs.
 Use terminal `t3_thread_wait` and the recorded watch as the runtime contract
 requires, re-arming waits on timeout; sleep or poll loops are forbidden. Delete the watch by exact ID and
 verify absence once nothing remains unsettled. After each delegated completion,

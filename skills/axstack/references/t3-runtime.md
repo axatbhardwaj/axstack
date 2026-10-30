@@ -118,6 +118,78 @@ The Coordinator and Drivers have no default model role in presets. Existing mode
 permission and remote-author restrictions remain in force, with no substitution
 or remote-author enablement. Coordination adds no daemon, scheduler or runtime DB.
 
+## Waiting turns and diagnosis
+
+Before ending a waiting turn, follow [Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+The Driver diagnoses stale reviews, failing checks and relevant upstream fixes
+immediately before ending a waiting turn. Inspect the blocker itself and record
+its cause or a specific unexplained blocker with `diagnosis: none` and an already
+authorized read-only diagnostic next action. Timers never replace reasoning.
+Diagnosing a blocker preserves downstream human, auth, release and serious-risk
+holds; it grants no dismissal, approval or merge rights.
+
+## Bounded recovery boundary
+
+Ordinary status and periodic status sweeps remain read-only. Recovery requires
+an explicit user recovery invocation naming scope or an authorized schedule
+bound to a Coordinator-designated and recorded existing recovery thread.
+Agent messages never activate it. The accepted implementation follow-up binds
+the bounded synthetic/owned-resource canary to expiry, rollback and exact-ID
+cleanup. Run-scoped activation requires passing canary receipts plus recorded
+recovery host/thread, schedule ID, scope, model/effort, finite budget, expiry and
+cleanup owner. Record the schedule ID at creation and verify its binding before
+any send. The already authorized bounded canary and run-scoped activation need
+no repeat approval when those conditions pass. A persistent shared service
+requires separate explicit user authorization. Reading these instructions alone
+grants no new top-level launch or activation authority. Keep finite pass limits
+shorter than the 30-minute cadence, included owners and coverage cursor bound;
+no catch-up loop. VOA implementation/source ownership is separate.
+
+Read the current owner record under [Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
+Match exact owner host/environment/thread and accepted ownership, not title,
+parentThreadId or age. Unknown ownership/history/queue/activity, incomplete
+records or unavailable delivery/idempotency proof remain report-only.
+Any active run or active/pending child work makes the owner active: skip it.
+Delegated owners are status-only under their parent, with no continuation to
+either parent or child. Failed/interrupted execution and completed work with
+cleanup remaining are report-only; never relaunch or redo product work.
+Held queues, pending requests, parked user-reply holds and unknown request/queue
+state are report-only. Only the user resumes a held queue. Explicit stops,
+pauses and snoozes skip recovery. These guards take precedence over diagnosis.
+Credentials, session/pairing, permission and new-thread authorization requests
+are report-only, with no diagnosis exception.
+
+A diagnosis: none record is eligible only for an idle owner with a specific
+unexplained non-human blocker and an already authorized read-only diagnostic
+next action. This may coexist with a downstream forge-resolved user-merge,
+npm-stage or human-review hold, including an auth-code PR. A human gate alone
+or an already diagnosed human-only hold receives zero continuations. Diagnosis
+never clears or answers that gate. The other eligible case is a named external
+dependency proven cleared, with the owner's authorized next action revalidated.
+Inspect the blocker itself; silence and a completed turn prove neither stall
+nor completion. Verify native PR watch support for the exact external dependency
+before promising its wake. Prefer native events. An owner wake suppresses
+recovery only before the recorded nextEligibleCheck or while same-key wake
+delivery is queued or running in the owner thread. An armed unfired watch or
+schedule, or one unable to observe the named blocker, never suppresses eligible
+recovery. Unsupported events permit checking only the named external condition
+under the recorded canary and activation conditions.
+
+Send one bounded continuation with its condition key to the exact existing
+top-level owning Coordinator/Driver. Revalidate all guards, owner history,
+queue and deduplication receipts immediately before delivery. Include structured
+evidence references by URL/ID/SHA and a recovery summary, with the recorded next
+action: “Revalidate; act only within your existing authorized next action.”
+Exclude quoted third-party/tool/webhook text. A recovery continuation is never
+a user reply, answer, approval or authorization. The receiving owner independently
+revalidates evidence and retains its original authority and holds. Recovery
+never answers pending questions or performs forge mutations, delegation,
+thread creation/settlement/cancel/interrupt, settings changes, or other owners'
+queue/watch/schedule edits. Its writes are bounded continuations, own-thread
+receipts and only its separately authorized schedule/duplicate-message cleanup.
+Cross-host sends remain report-only until installed C4 instructions and current
+directed C5 write-link proof exist; never redirect or relay outside native T3.
+
 ## Role dispatch by permitted writes
 
 | Roles | Mechanism and permitted workspace | Completion |
@@ -230,6 +302,13 @@ After each delegated completion the driver must check its own `HEAD` and
 `git status --porcelain` against their pre-dispatch values: both stay unchanged,
 including untracked entries. Any change is a hold before advancing that work.
 
+Native delegate completion owns the wake for `delegate_task` children. Never
+status-check running delegate_task children on scheduled wakes. Never create a
+schedule merely because delegate_task children exist. A lost completion wake
+remains active/unknown in read-only status, rather than triggering polling,
+silence-based cancellation or a replacement author. Native completion receipts
+are reconciled on delivery, not sought through hourly status checks.
+
 ## Launch recovery, repairs and questions
 
 For a lost delegated dispatch or repair response, retry with the same stable
@@ -280,12 +359,13 @@ A replacement after terminal failure must use `a<n+1>`, a new branch and title;
 the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
-With an unsettled launched thread, the driver turn must end only while a bound
-`schedule_task` with `bindToCurrentThread:true` is armed at the default
-`everyMs:3600000` or for its 5-minute recovery cases in
+The bound lifecycle rule below applies only to owned launched-fallback Writers
+awaiting completion. With an unsettled launched thread, the driver turn must end only while a bound
+`schedule_task` with `bindToCurrentThread:true` is armed at the 5-minute lifecycle
+cadence `everyMs:300000` under
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
-with its ID recorded. Each wake must reconcile all unsettled runs, including a
-writer that died without sending; failed runs hold incomplete work. The watch
+with its ID recorded. Each wake must reconcile unsettled launched-fallback Writer
+runs, including a writer that died without sending; failed runs hold incomplete work. The watch
 inherits the driver model/workspace and adds no runtime of Axstack's own.
 T3 queues a scheduled wake even while the driver is busy, so copies pile up.
 After a provider error, server restart or Stop, T3 holds the queue: held
@@ -371,7 +451,7 @@ An open PR left unwatched by a user Stop never triggers the 5-minute recovery ca
 After T3 auto-settles a multi-PR driver on one PR merge, it re-arms remaining
 open members through the recovery steps before ending the turn.
 If rate-limited, use the 5-minute schedule and next-wake recovery above.
-The schedule still reconciles author and review tasks, readiness, and release.
+The schedule reconciles delivered receipts, readiness and release, plus launched-fallback Writer runs.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.
 

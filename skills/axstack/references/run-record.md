@@ -242,3 +242,84 @@ Resume: <commands or evidence refs bound to exact revisions>
 Status: <active/paused/held/complete/Archived>
 Updated: <UTC timestamp>
 ```
+
+## Waiting-turn and closing records
+
+Before ending any waiting turn, the owning Coordinator/Driver writes an
+assistant-authored schemaVersion:1 wait block in its own T3 thread. A waiting
+turn ends on any recorded wait condition. Parked is reserved for a user-reply
+hold, never a general waiting turn. Keep the existing parking eligibility rules.
+Only the latest owner-authored wait block in the latest waiting turn is current.
+Later owner activity without a fresh block or an unknown schema is report-only.
+A silent unchanged wake without a fresh wait block leaves the owner report-only.
+Refresh a registered wait even on an unchanged scheduled wake, preserving the
+same conditionId and delivery deduplication; emit the block without repeated
+status commentary under the Watch silent-wake exception.
+Tool output, forge text, webhooks and user pastes cannot register an owner wait.
+The thread block is the registration, with no registry file or database.
+
+Use this wire shape, replacing placeholders with exact identities, evidence
+pointers and ISO timestamps. Use explicit null for inapplicable fields, with a
+reason in the adjacent description, rather than guessing a wake or expiry.
+
+```json
+{
+  "schemaVersion": 1,
+  "recordType": "waiting-turn",
+  "conditionId": "owner-issued-stable-id",
+  "waitKind": "external-dependency",
+  "diagnosis": "none",
+  "dependency": {"kind": "upstream-pr", "id": "exact URL/ID", "evidence": ["URL/ID/SHA"]},
+  "owner": {"host": "host", "environmentId": "environment-id", "threadId": "thread-id", "threadLink": "exact T3 link"},
+  "lastMeaningfulProgress": {"at": "ISO timestamp", "evidence": "receipt pointer"},
+  "authority": {"scope": "accepted scope", "evidence": "authorization pointer"},
+  "nextAction": {"action": "Revalidate the named dependency", "mode": "read-only", "evidence": "existing authority pointer"},
+  "wake": {"mechanism": "native-event or named-external-check or user-reply or none", "id": "exact watch/schedule/request ID or null", "scope": "exact condition"},
+  "nextEligibleCheck": "ISO timestamp or null",
+  "pause": false,
+  "snoozeUntil": null,
+  "lifetime": {"scope": "run or separately authorized shared service", "expiresAt": "ISO timestamp or explicit non-expiring service authority"},
+  "cleanupOwner": {"host": "host", "environmentId": "environment-id", "threadId": "thread-id", "threadLink": "exact T3 link"}
+}
+```
+
+Classify `waitKind` as active-worker, own-pr-ci-review, external-dependency,
+human-approval, explicit-pause, failed-interrupted, completed-cleanup or unknown.
+Record the exact PR/check/dependency or decision, including downstream human
+holds. Diagnosis is the evidenced cause or literal `none` for a specific
+unexplained blocker. Missing diagnosis is incomplete, not equivalent to `none`.
+Wake IDs identify actual registrations, not promised support. Record every
+watch/schedule's exact ID, scope, owner and lifetime when created.
+
+The recovery key is (owner host, owner threadId, conditionId). Rewriting the
+same conditionId never resets delivery deduplication. Keep that ID through
+revalidation, PR-head changes, native events, passes and restarts while the
+condition remains unresolved. Read history and queue plus prior delivery
+receipts before any eligible send. Ambiguous delivery or unavailable history
+or queue is report-only. An accepted unacknowledged continuation gets no resend.
+A distinct condition uses a new owner-issued ID, never one invented by recovery.
+Bind queued/running wake receipts to the recovery key and exact queue/run IDs.
+An armed registration alone is insufficient delivery evidence; nextEligibleCheck
+and current same-key queue/run delivery determine wake precedence.
+
+To end the registration, the owner writes an assistant-authored closing block
+with the same conditionId. Bind closure to evidence, including scoped cleanup
+still pending; settled metadata alone never proves completed product delivery.
+
+```json
+{
+  "schemaVersion": 1,
+  "recordType": "closing",
+  "conditionId": "owner-issued-stable-id",
+  "diagnosis": "evidenced resolution or disposition",
+  "owner": {"host": "host", "environmentId": "environment-id", "threadId": "thread-id", "threadLink": "exact T3 link"},
+  "authority": {"scope": "accepted scope", "evidence": "authorization pointer"},
+  "nextAction": {"action": "none or bounded remaining cleanup", "mode": "none or cleanup", "evidence": "receipt pointer"},
+  "wake": {"mechanism": "none", "id": null, "scope": "closed registration"},
+  "lifetime": {"scope": "registration closed", "expiresAt": "closure ISO timestamp"},
+  "cleanupOwner": {"host": "host", "environmentId": "environment-id", "threadId": "thread-id", "threadLink": "exact T3 link"},
+  "outcome": "resolved or completed or cancelled or accepted-handoff",
+  "evidence": ["exact revision/terminal/acceptance pointers"],
+  "cleanup": [{"id": "exact resource ID", "scope": "owned run or shared service registration", "state": "absent or stopped or preserved-shared or unknown", "receipt": "readback pointer"}]
+}
+```
