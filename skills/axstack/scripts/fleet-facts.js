@@ -55,18 +55,26 @@ function fractionBp(fraction) {
 }
 
 export function telemetry(sample, now) {
-  const unknown = (reason, ageMs = null) => ({ status: 'unknown', reason, ageMs });
+  const provenance = Object.fromEntries(['source', 'scope', 'durationMs', 'intervalMs', 'windowStartedAt',
+    'windowEndedAt', 'windowKind', 'receivedAt', 'timeoutMs'].filter((key) => sample?.[key] !== undefined)
+    .map((key) => [key, sample[key]]));
+  const ageMs = time(sample?.receivedAt) ? now - sample.receivedAt : null;
+  const unknown = (reason) => ({ ...provenance, status: 'unknown', reason, ageMs });
   if (!sample) return unknown('missing');
   if (sample.timedOut === true) return unknown('timeout');
   if (sample.status !== 'ok') return unknown(text(sample.status) ? sample.status : 'failed');
   if (!time(sample.receivedAt)) return unknown('invalid-received-time');
-  const ageMs = now - sample.receivedAt;
-  if (ageMs < 0) return unknown('future', ageMs);
-  if (ageMs > 15000) return unknown('stale', ageMs);
+  if (ageMs < 0) return unknown('future');
+  if (ageMs > 15000) return unknown('stale');
   if (!Number.isSafeInteger(sample.durationMs) || sample.durationMs < 5000
-    || sample.scope !== 'whole-host' || !text(sample.source)) return unknown('unusable-provenance', ageMs);
+    || sample.scope !== 'whole-host' || !text(sample.source)) return unknown('unusable-provenance');
   if (sample.windowStartedAt !== undefined && (!time(sample.windowStartedAt)
-    || sample.receivedAt - sample.windowStartedAt < sample.durationMs)) return unknown('inconsistent-window', ageMs);
+    || sample.receivedAt - sample.windowStartedAt < sample.durationMs)) return unknown('inconsistent-window');
+  if ((sample.intervalMs !== undefined && (!Number.isSafeInteger(sample.intervalMs)
+    || sample.intervalMs < 5000 || sample.intervalMs > 60000 || sample.intervalMs > sample.durationMs))
+    || (sample.windowEndedAt !== undefined && (!time(sample.windowEndedAt)
+      || !time(sample.windowStartedAt) || sample.windowEndedAt > sample.receivedAt
+      || sample.windowEndedAt - sample.windowStartedAt < sample.durationMs))) return unknown('inconsistent-window');
   const toBp = (name) => {
     const points = sample[`${name}Bp`];
     const fraction = sample[`${name}Fraction`];
@@ -77,13 +85,16 @@ export function telemetry(sample, now) {
     return Number.isInteger(points) && points >= 0 && points <= 10000 ? points : null;
   };
   const cpuBp = toBp('cpu'); const ramBp = toBp('ram');
-  if (cpuBp === null || ramBp === null) return unknown('malformed', ageMs);
+  if (cpuBp === null || ramBp === null) return unknown('malformed');
   // If the collector supplies latest RAM as well as an average, retain spikes.
   const latest = sample.ramLatestBp;
-  if (latest !== undefined && (!Number.isInteger(latest) || latest < 0 || latest > 10000)) return unknown('malformed', ageMs);
+  if (latest !== undefined && (!Number.isInteger(latest) || latest < 0 || latest > 10000)) return unknown('malformed');
   return { status: 'measured', ageMs, cpuBp, ramBp, ramLatestBp: latest ?? null,
     loadBp: Math.max(cpuBp, ramBp, latest ?? 0), receivedAt: sample.receivedAt,
-    source: sample.source, scope: sample.scope, durationMs: sample.durationMs };
+    source: sample.source, scope: sample.scope, durationMs: sample.durationMs,
+    windowStartedAt: sample.windowStartedAt ?? null, windowEndedAt: sample.windowEndedAt ?? null,
+    intervalMs: sample.intervalMs ?? null, windowKind: sample.windowKind ?? null,
+    timeoutMs: sample.timeoutMs ?? null };
 }
 
 const versionsMatch = (a, b) => record(a) && record(b) && text(a.t3) && text(a.axstack)

@@ -81,5 +81,5 @@ export function recommend(input, now) {
 
 if (import.meta.main) {
   const { main } = await import('./fleet-route-cli.js');
-  process.exitCode = main(process.argv.slice(2));
+  process.exitCode = await main(process.argv.slice(2));
 }
