@@ -71,3 +71,12 @@ test('R7c wait records are discoverable from runtime and lifecycle', () => {
     expect(loadedReferences(read(path)).some((link) => link.endsWith('run-record.md#waiting-turn-and-closing-records'))).toBe(true);
   }
 });
+
+rule('unchanged registered waits refresh only their record', 'axstack-watch/references/watch-runtime.md',
+  [/unchanged scheduled wake/i, /registered recovery wait/i, /(?:write|emit) only/i, /fresh structured wait block/i],
+  'On an unchanged scheduled wake with a registered recovery wait, emit only a fresh structured wait block.',
+  /(?:write|emit) only/i, 'omit');
+rule('silent wakes cannot retain stale registration', record,
+  [/silent unchanged wake/i, /without a fresh wait block/i, /report-only/i],
+  'A silent unchanged wake without a fresh wait block leaves the owner report-only.',
+  /report-only/i, 'eligible');

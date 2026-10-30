@@ -99,7 +99,10 @@ Run `scripts/pr-digest.js` only on schedule wakes, using:
 Use a per-repository JSON file in the private run directory for the watermark,
 separate from `progress.md` (for example, `pr-digest-owner-repo.json`).
 Exit 0 means unchanged: when no pending local action remains in `Next:` or unsettled runs,
-end the turn with no text or notification. Exit 10 supplies deltas
+and no registered recovery wait remains, end the turn with no text or notification.
+On an unchanged scheduled wake with a registered recovery wait, write only a
+fresh structured wait block. This required record is the sole exception to the
+silent-wake rule; omit repeated progress text and notifications. Exit 10 supplies deltas
 to reconcile with current PR and local state; the driver saves only the printed
 `watermark` field as JSON after disposition. Exit 2 means incomplete coverage:
 readiness is `UNKNOWN`, so hold affected decisions and reconcile the API or

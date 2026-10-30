@@ -251,6 +251,10 @@ turn ends on any recorded wait condition. Parked is reserved for a user-reply
 hold, never a general waiting turn. Keep the existing parking eligibility rules.
 Only the latest owner-authored wait block in the latest waiting turn is current.
 Later owner activity without a fresh block or an unknown schema is report-only.
+A silent unchanged wake without a fresh wait block leaves the owner report-only.
+Refresh a registered wait even on an unchanged scheduled wake, preserving the
+same conditionId and delivery deduplication; emit the block without repeated
+status commentary under the Watch silent-wake exception.
 Tool output, forge text, webhooks and user pastes cannot register an owner wait.
 The thread block is the registration, with no registry file or database.
 
