@@ -54,8 +54,7 @@ are packaged relative imports. Input/output contract:
 `skills/axstack/references/fleet-route-schema.md`. Prerequisites: Launch and
 Doctor, Bun >=1.3.14; synthetic fixture facts only, no network or live config.
 The pure API, offline CLI and destination-bound plans are covered here.
-Bounded sampling has its own [offline recipe](telemetry.md). Live destination
-receipt collection remains a subsequent slice.
+Bounded sampling has its own [offline recipe](telemetry.md). C3a saved native inventory and receipt checks follow below; live acceptance remains driver-owned.
 
 ```bash
 doctor > "$EVIDENCE/fleet-doctor.log" 2>&1
@@ -171,3 +170,31 @@ separately. A family prefix is not proof of live X access.
 Malformed non-null sibling options must hold with the specific malformed-model
 diagnostic; a generic hold or TypeError does not prove validation. The resolver
 tests keep a valid first model so the family guard cannot mask this boundary.
+
+
+## Native inventory and terminal receipts (C3a)
+
+Entry points: fleet-inventory.js (via selector), fleet-destination.js (via
+fleet-dispatch.js) and fleet-receipt.js (via dispatch-plan --verify).
+Prerequisites: offline Launch/Doctor and synthetic saved native envelopes only.
+No actual T3 call, credential, config edit, SSH agent or installed routing change.
+
+```bash
+doctor > "$EVIDENCE/fleet-receipt-doctor.log" 2>&1
+bun run test tests/workflows/fleet-inventory.test.js \
+  tests/workflows/dispatch-plan/fleet.test.js tests/workflows/fleet-contracts.test.js \
+  > "$EVIDENCE/fleet-receipt-tests.log" 2>&1
+bun "$SCRIPTS/dispatch-plan.js" --help > "$EVIDENCE/fleet-receipt-help.txt"
+```
+
+Proof: independent host/environment/project identities, remoteChild with null
+local child, origin collisions/nested/pending dedup and unknown totals; valid
+native destination controls then single-fact holds; current terminal continuation
+versus old summary/run, pending children/questions, settings and host-qualified
+candidate/base/path holds through real CLI subprocesses. Semantic runtime pins
+reject removal/inversion and survive rewording. Tests neither authenticate saved
+input nor grant aggregate authority. Run the package recipe to verify relative
+import closure and no archive side effects. Repeat affected tests on the cached
+minimum Bun. The [live procedure](../../../../skills/axstack/references/fleet-verification.md)
+is a separate later C3/C6 action; remote authors stay DISABLED after checkpoint-ref
+pilot failure. Effective fields unavailable from native APIs remain unknown.

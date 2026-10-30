@@ -28,6 +28,9 @@ for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/fleet-sample.js skills/axstack/scripts/fleet-proc.js \
   skills/axstack/scripts/fleet-sample-cli.js skills/axstack/scripts/fleet-sample-manifest.js \
   skills/axstack/scripts/fleet-sample-io.js \
+  skills/axstack/scripts/fleet-inventory.js skills/axstack/scripts/fleet-destination.js \
+  skills/axstack/scripts/fleet-receipt.js skills/axstack/references/fleet-dispatch.md \
+  skills/axstack/references/fleet-verification.md \
   profiles/presets/mixed.json skills/axstack/references/candidate-publication.md \
   skills/axstack-spec/references/format.md \
   skills/axstack/references/preview.md skills/axstack/references/pr-chain.md \
