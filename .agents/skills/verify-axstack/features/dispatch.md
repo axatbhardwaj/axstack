@@ -166,3 +166,7 @@ Saved-catalog drives must check emitted model IDs and settings, not only exit
 codes. Grok null-model roles hold when the first advertised ID lacks `grok-`;
 they never skip to a later model. Count valid plans and expected identity holds
 separately. A family prefix is not proof of live X access.
+
+Malformed non-null sibling options must hold with the specific malformed-model
+diagnostic; a generic hold or TypeError does not prove validation. The resolver
+tests keep a valid first model so the family guard cannot mask this boundary.

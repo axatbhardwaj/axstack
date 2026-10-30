@@ -143,7 +143,8 @@ test('capabilities holds missing files, malformed JSON and malformed provider/mo
     (p) => { p.models[0].options[0].options = {}; },
     (p) => { p.models[0].options[0].options = [{ id: null }]; },
   ]) {
-    const data = fresh(); change(data.providers[0]); malformed.push(data);
+    const data = fresh(); change(data.providers[0]);
+    held(resolve(data), /malformed capabilities models or options/);
   }
   for (const data of malformed) held(resolve(data), /capabilities/i);
 });
@@ -307,3 +308,17 @@ test('Grok default keeps the first model or holds; mixed optionless siblings can
   grok.models[0].options = null;
   held(resolve(data, ['--model', 'null'], 'grok'), /unsupported effort high.*grok-4.7/);
 });
+
+
+test.each([[{}], ['x'], [false], [0], [''], [[null]], [[{ id: 42 }]]])(
+  'malformed non-null sibling options hold specifically (%j)', (options) => {
+    const data = fresh();
+    const grok = data.providers.find((provider) => provider.providerInstanceId === 'grok');
+    const control = resolve(data, ['--model', 'null'], 'grok');
+    expect(control.status).toBe(0);
+    expect(JSON.parse(control.output)).toMatchObject({ model: 'grok-4.7',
+      effortOption: { id: 'reasoningEffort', value: 'high' } });
+    grok.models.push({ id: 'grok-sibling', options });
+    held(resolve(data, ['--model', 'null'], 'grok'), /malformed capabilities models or options/);
+  },
+);
