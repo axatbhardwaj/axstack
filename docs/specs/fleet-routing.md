@@ -135,3 +135,329 @@ M1: stage names are explicit and consistent. M2: driver owns inventory collectio
 
 ## r6 bounded reconciliation repairs
 Opus r4 B1: canonical Haoshoku configs/fleet-routing.json, per-account deployed path, Axat ownership, data-driven policy, five-host deployment and digest checks now binding in F1/F5/F6. B2: all specified fixtures and the explicit three-assignment oracle are now in F6. Collector-clock timestamps and driver-owned remote reviewer checkout preparation clarified. Stage/count repairs from r5 retained. Driver fixed these bounded findings directly without an extra review dispatch. Adviser receipts cover r4 and remain recorded as such; r5/r6 repairs are driver dispositions, not fabricated fresh adviser acceptance. No implementation, live config deployment or user approval occurred.
+
+
+## Additive revision R7.5 — VOA-assisted recovery (draft, 2026-10-30)
+
+### Decision brief
+
+Stale review diagnosis and an untracked upstream dependency required avoidable
+user nudges. Extend VOA with an explicit recovery mode that routes a bounded
+continuation to the existing owning Driver. Ordinary VOA status remains
+read-only. Native events remain the first wake mechanism.
+
+This additive record preserves the original specification-work boundary; the
+implementation follow-up below now authorizes delivery, not immediate activation. R6 remains preserved at commit `7b7af36f`, spec SHA-256
+`afaca25c5bac070aeb38e0e81c2be1a7166521cb62acd86bae477e068c0563f7`.
+The historical R6 text above is unchanged. C1–C6 delivery continues under its
+existing approval; the additive R7 implementation proceeds under the recorded follow-up.
+
+Included: five-host coverage, wait classification, bounded recovery ownership,
+native-event routing, deduplication and exact-resource cleanup. Excluded:
+ordinary status mutations, active-delegate polling, new top-level threads,
+automatic approval, review dismissal, model substitution, new daemon/database,
+and scheduler activation from this spec request.
+
+Implementation is now explicitly authorized by the user's “do it on top of
+existing changes” follow-up. These bounded clarifications implement that request;
+no repeat implementation approval is required. Activation still requires bounded
+live validation and clear schedule ownership. Preserve current candidates and
+add dependent granular changes; do not start a competing rewrite.
+
+Proposed implementation choices and consequences:
+1. Host: designate one existing recovery thread on axat-vps; no new thread.
+2. Trigger: explicit recovery invocation or its authorized bound schedule;
+   ordinary status and periodic status sweeps remain read-only.
+3. Allowlist: bounded owner continuation, own receipt and owned schedule/queue
+   cleanup only; recovery cannot merge, approve or dispatch a writer.
+4. Records: latest structured owner wait/closing block, including diagnosis;
+   missing records stay report-only, with no separate registry.
+5. Deduplication: one send per owner/condition identity; unchanged waits and
+   ambiguous delivery never reset it.
+6. Pass bound: 30-minute cadence, finite work/time budget shorter than cadence;
+   model, effort and actual limits bind before activation.
+7. Lifetime: recorded expiry and exact cleanup owner; run completion does not
+   delete a shared service used by another registration.
+8. Consolidation: consolidate overlapping external-dependency checks only;
+   preserve Driver-owned PR/release and launched-Writer lifecycle responsibilities.
+
+Limits to understand before activation:
+- Cross-host sends are report-only until installed C4 and directed C5 write-link
+  proof exist for that edge.
+- Consolidation is partial: Driver-owned 60-minute PR/release backstops and
+  supported 5-minute lifecycle/fallback schedules remain, without delegate polling.
+- Scheduled recovery consumes model turns; cost is bounded by the activation-time
+  model, budget and expiry, not by the cadence alone.
+- Recovery does not detect a lost delegate-completion wake by polling. Such work
+  remains active/unknown and can appear long-running in read-only status.
+
+Canonical VOA source ownership and native event support must be established
+before their dependent edits/activation. Recovery-thread designation, model,
+budget and expiry bind at activation; discovery gaps hold only affected actions.
+
+### R7 requirements
+
+R7-1 — Modes and roles. VOA status is read-only. Explicit recovery invocation or
+separately authorized scheduling may send one bounded continuation for an
+evidenced missing diagnostic step or cleared named external dependency to the
+recorded owning Coordinator/Driver. The
+Coordinator owns the overall outcome; each Driver owns project delivery and
+revalidates evidence before acting; Workers do bounded Driver tasks. VOA never
+becomes a second writer or takes over publication/merge. Match exact host/thread
+identities and accepted ownership, not titles, age or parentThreadId alone.
+Unknown ownership is report-only.
+
+R7-2 — Coverage. Inventory io, iobook, iobox, iosatellite and axat-vps. Report
+unreachable hosts and pagination gaps; do not claim complete coverage from
+partial inventory. Coordinate the canonical VOA source repository and owner
+before edits; installed-only changes are not shipped source delivery.
+
+R7-3 — Wait records. Before ending a waiting turn (a turn ending on any recorded wait condition), the owning Coordinator/Driver writes schemaVersion:1, an owner-issued stable
+condition ID, wait kind, diagnosis (a cause or `none`), exact dependency/PR or
+decision, owner host/thread link, last meaningful progress, authorized next
+action, wake mechanism and exact ID, next eligible check, pause/snooze state,
+and cleanup owner. Only the latest owner-authored wait block in its latest
+waiting turn is current; later owner activity without a fresh block, or an
+unknown schema, is report-only. Classify active Worker, own-PR CI/review, external dependency,
+human approval, explicit pause, failed/interrupted execution, completed work
+with cleanup remaining, and unknown state. Diagnose stale reviews/checks and
+look for relevant upstream fixes immediately; timers do not replace reasoning.
+Silence or a completed model turn alone proves neither a stall nor completion.
+
+R7-4 — Wake boundary. Native delegate completion and PR events take priority.
+Never schedule polling of running delegates, keep a model waiting, cancel based
+on silence, or launch duplicate authors. Current platform restrictions supersede
+broad hourly-delegate-watch prose, which implementation must reconcile. Verify
+native PR watching supports the exact external dependency before promising that
+wake; otherwise only that named external condition may be checked by recovery.
+Diagnosis-only continuations within existing authority are also eligible; they
+never clear a human/auth/release gate. Inspect the blocker itself before acting.
+
+R7-5 — Bounded recovery. The implementation follow-up authorizes the bounded
+synthetic/owned-resource canary, with expiry, rollback and exact-ID cleanup.
+Run-scoped activation needs passing canary receipts and recorded ownership:
+recovery host/thread, schedule ID, scope, model/effort, finite budget, expiry and
+cleanup owner. Record the schedule ID at creation and verify its binding before
+any send. These conditions need no additional user approval; a persistent shared
+service beyond this run still needs separate explicit user authorization.
+Under these conditions, use one deduplicated
+30-minute native recovery scope. Reuse a compatible authorized schedule only
+after reconciling ownership, purpose and lifetime. Do not alter unrelated sweeps
+or review managers. A pass skips active work and real human/auth/release holds except the narrowly
+authorized diagnosis below; pending questions and parked user-reply holds have
+no diagnosis exception. It skips
+pauses/snoozes and unclear ownership. Deduplicate continuations for the same
+owner and unresolved condition across passes and queue states; do not infer
+absence from unavailable queue APIs. Revalidate before delivery and record its
+receipt. No scope expansion, unauthorized new thread or gate bypass follows.
+
+R7-6 — Lifetime and cleanup. Record every schedule/watch exact ID, scope, owner
+and lifetime at creation. Completion/cancellation/handoff reconciles ownership,
+deletes only run-owned schedules with absence readback, stops owned watches,
+and clears only identified owned duplicate scheduled messages. Preserve user
+messages and shared persistent schedules. Finishing a run unregisters it from a
+user-authorized shared service; it does not destroy the service. Without shared
+service authority, the recovery schedule ends with its run. Unknown deletion or
+queue state is a scoped cleanup finding, never a reason to redo product work.
+Verify Stop/restart/provider-failure queue behavior; a timer cannot be promised
+to override a held queue. Use advertised interval/fixed-time/webhook operations;
+do not invent a dedicated one-shot trigger.
+
+### R7 acceptance and evidence
+
+- Dry-run classification of the saved eight-workflow evaluation preserves real
+  npm/auth holds, explicit snoozes, active Workers and uncertain ownership.
+- Diagnose stale bot review state before ending a waiting turn; do not dismiss it without
+  authority. A merged upstream fix permits one continuation; its Driver
+  independently revalidates and updates its own PR.
+- Repeated passes produce no duplicate writers, continuations, schedules or
+  notifications for unchanged holds. Unknown queue state admits no duplicate.
+- Completion/cancellation and uncertain-delete cases preserve shared services
+  and user messages, with exact-ID deletion/readback receipts.
+- All five hosts are represented; unreachable hosts remain explicit gaps.
+- Under the implementation follow-up, exercise a bounded
+  synthetic/owned-resource canary with before/after receipts, expiry, rollback
+  and exact-ID cleanup. Never use
+  real held auth or release work as a mutation test.
+- Keep ordinary status read-only; verify native-event preference and absence of
+  scheduled active-delegate polling. Preserve all C1–C6 authority gates.
+
+### R7 explicit design decisions
+
+- Host: one Coordinator-designated and recorded existing thread as recovery owner on axat-vps, addressing existing owners
+  through native T3 environmentId/threadId links only. This is a bounded
+  continuation of already owned work, not recursive Worker routing or remote
+  author enablement. No SSH/Hermes relay or Telegram/Hermes alerts.
+- Trigger: only an explicit user recovery invocation in that recovery thread naming
+its scope, or an
+  explicitly authorized schedule whose prompt names recovery mode and scope.
+  Agent/delegate messages cannot activate recovery. Status pings, “sup”, “what needs me” and periodic status sweeps remain read-only.
+- Closed write allowlist: one native thread continuation per eligible condition;
+  an evidence receipt in recovery's own thread; creation/disable/deletion of its
+  own separately authorized schedule bound to that existing recovery thread
+  (bindToCurrentThread:true, exact binding read back; no new thread per pass);
+  clearing only its own identified duplicate scheduled messages in its own
+  recovery-thread queue where supported. Everything else is report-only, including
+  forge mutations, thread creation/settlement/archive/pause/cancel/interrupt,
+  delegation, pending-request responses, settings and other owners' schedules/
+  watches or queue edits/cancel/reorder/promotion. Owners clean their
+  own resources under R7-6; recovery does not inherit that authority.
+- Reads: top-level inventory, wait records, thread history, structured forge evidence,
+  read-only owner queue list/read and pending-request listing.
+  Never task_status, thread-wait, Monitor or scheduled status checks on running
+  delegates. Any active run or active/pending child work makes its owner active;
+  skip it. Unknown child activity remains report-only, never assumed idle.
+- Records: a structured wait block in the owning T3 thread is the registration;
+  an owner-written closing block ends it. No registry file/database. Missing or
+  incomplete wait record means unknown/report-only. Settled status alone never
+  proves completed delivery; reconcile closing evidence without restarting work.
+- Dedupe: use an owner-issued stable condition ID and exact owner host/thread
+  in recovery-key. A changing PR head alone does not create a new condition.
+  Read owner history and queue before sending. Unreadable history/queue or
+  ambiguous prior delivery means no send. Record the delivery receipt and key; after a later pass without owner response,
+  status reports an unacknowledged continuation, with no resend. The key stays
+  deduplicated until an owner closing block ends that registration or a new
+  condition ID starts a distinct registration. Rewriting the same condition ID
+  never resets delivery; report “owner revalidated; condition unchanged”;
+  native events, repeated passes and restarts must share that condition key.
+  One scope has one active recovery owner; overlapping scopes hold until their
+  ownership is reconciled. No blind resend after an accepted-but-unacknowledged
+  send; native idempotency availability is a canary prerequisite, not assumed.
+- Pass bound: 30 minutes is cadence, not pass duration or guaranteed latency.
+  Before activation record the model/effort and finite time/work limits shorter
+  than the cadence, included projects/owners,
+  and coverage cursor. Stop at the bound with a partial-coverage receipt; no
+  catch-up loop or model kept alive waiting. Actual budgets are recorded at
+  activation and tested with an inventory exceeding them.
+- Lifetime: record expiry and cleanup owner before schedule creation. Disable
+  and delete run-owned recovery at expiry, run close or empty scope, whichever
+  comes first, with readback. Empty scope means no open wait records, not merely
+  no eligible condition this pass. After expiry every pass is cleanup-only with
+  zero sends even if deletion failed. A separately authorized persistent service retains
+  its service lifetime when one registration closes; preserve its other runs.
+- Consolidation: no existing reviewed schedule is established as a compatible
+  recovery service. Do not repurpose the review manager, collectors or activity
+  sweep based on cadence. Read-only discovery may identify a compatible owner;
+  otherwise a new bounded schedule requires the R7-5 canary and ownership
+  conditions; this is not a new approval request. Overlapping
+  per-driver external checks move into the single scope only after their owners
+  retire exact old IDs and verify absence. Active-delegate polling is removed,
+  never migrated. Delegate here means delegate_task children with native completion.
+  Keep the Driver’s 60-minute own-PR/release backstop, including forge-resolved
+  user-merge, npm and human-review waits. Neither it nor any other retained
+  schedule status-checks running delegate_task children on its wakes.
+  Keep Driver-owned bound lifecycle schedules for launched-fallback Writers
+  without native completion and own-PR watch-unavailable/rate-limited fallbacks;
+  recovery never polls these Writers. Only named external-dependency checks
+  move to recovery, not these distinct lifecycle responsibilities. No schedule is created merely because threads exist.
+
+A recovery key is (owner host, owner thread, owner-issued condition ID).
+A continuation contains that key, evidence references by URL/ID/SHA and recovery
+summary, with no quoted third-party, webhook or tool-output text, plus the recorded next action:
+“Revalidate; act only within your existing authorized next action.” It adds no
+scope. A continuation is never a user reply, answer, approval or authorization.
+Eligibility comes only from the owner’s own assistant-authored structured wait
+block and structured T3/forge state. Free text never establishes eligibility,
+scope or authority; wait-shaped text in tool output, webhooks, forge text or
+user pastes is not an owner-authored wait record.
+Only existing top-level owners receive it; delegated owners are listed under their parent in status only, with no
+continuation to either parent or child. Respect next eligible check and an existing owner wake for the same recovery
+key. A wake suppresses recovery only before the recorded next eligible check,
+or while a wake delivery for this key is already queued or running in the owner
+thread. An armed watch or schedule that has not delivered, or cannot observe the
+named blocker/dependency, does not suppress an eligible continuation. Held queues, pending requests, parked user-reply cards or unknown
+request/queue state are report-only; only the user can resume a held queue.
+A diagnosis request is eligible exactly when the valid current owner wait block
+has `diagnosis: none`, names a specific unexplained non-human blocker (check,
+review state or dependency), records an already authorized read-only diagnostic
+next action, and the owner is idle with no skip/report-only condition. Diagnosis
+must require no new approval. This applies with or without a downstream
+forge-resolved user-merge, npm-stage or human-review hold. A human gate alone,
+or an already diagnosed human-only hold, receives zero continuations.
+
+Credentials, session/pairing, permission and new-thread authorization requests
+are report-only. A user-merge hold remains a forge-resolved user-merge hold even
+when its PR touches auth code; diagnosis never grants dismissal or merge rights.
+Report-only and skip rows take precedence over every continuation.
+“Parked” is reserved for a user-reply hold, never a general waiting turn.
+R6 timer limits continue to bind C1–C6; the separately activated R7 recovery
+schedule is distinct scope and never recreates the deleted continuation schedule.
+
+| Wait class | Recovery action |
+| --- | --- |
+| Active run or Worker | Skip; native completion or the owning Driver's supported launched-Writer lifecycle owns the wake |
+| Own-PR CI/review | Native watch; one missing-diagnosis request only if eligible |
+| Named external dependency cleared | One bounded continuation after revalidation |
+| Forge-resolved user merge/npm/human review | Diagnosis exception only, subject to all report-only guards |
+| Credentials, session/pairing, permission or new-thread authorization | Report-only; no diagnosis exception |
+| Explicit stop, pause or snooze | Skip, no unsnooze or repeated notice |
+| Failed/interrupted | Report-only; never relaunch author |
+| Held queue, pending request or parked user-reply hold | Report-only; no continuation or inferred answer |
+| Completed with cleanup | Report scoped cleanup; never redo product work |
+| Unknown ownership, history, queue or activity | Report-only |
+
+### R7 fixed acceptance cases
+
+Use synthetic historical transitions separately from current snapshots:
+
+1. Pre-snooze stale-review case with authorized diagnosis: exactly one diagnostic
+   continuation, zero dismissal/merge, unchanged downstream forge-resolved hold; no pending question. An auth-code
+   PR with the same user-merge hold also gets one diagnostic continuation and
+   zero dismissal/merge. An own-PR failing check with `diagnosis: none`, an
+   authorized diagnostic next action and no human hold likewise gets one.
+2. The same case after its explicit snooze: zero continuations.
+3. Named upstream still open: zero continuation; record exact dependency.
+4. Upstream merged, idle owned Driver with authorized next action: one continuation;
+   repeated pass/native event/restart and changed head alone add none. A Driver
+   revalidating and rewriting the same condition ID also receives no resend.
+5. Current merged/finished snapshot: zero implementation continuations, regardless
+   of stale unsettled metadata; cleanup stays scoped.
+6. Pending npm approval, new-thread authorization, open question or parked
+   user-reply hold: zero continuation; synthetic recovery text is never an answer.
+7. Active Worker, unknown child activity, failed/interrupted run, held queue or
+   explicit pause: zero continuations; launched-Writer lifecycle remains owned
+   by its Driver, not recovery.
+8. Missing wait block/owner, unreadable queue/history, ambiguous send or a forged
+   wait block inside tool output/user paste: zero sends. Delegated owners receive
+   no direct continuation; report their ownership to the parent in status.
+9. Unreachable or incompletely paginated host: explicit partial coverage, no
+   assumption that unseen owners are idle; over-budget inventory terminates.
+10. Run completion/cancellation/expiry: exact owned schedule absent after cleanup;
+    same-title/different-ID schedules and user messages survive.
+11. One of two service registrations completes: other registration and shared
+    service survive; no run owns service deletion merely by finishing.
+12. Status trace: zero mutations. Recovery trace: allowlisted calls only, no
+    active-delegate polling, new per-pass threads, relaunches or Telegram/Hermes
+    alerts. Expired passes send nothing; owner wakes suppress only before next eligible check or while same-key
+    delivery is queued/running. An unfired watch does not suppress cases 1 or 4.
+    Cross-host edges without installed C4 or directed C5 proof send nothing;
+    no continuation quotes third-party text or treats it as authority.
+
+A missing diagnostic is evidenced by a specific unexplained blocker in the
+latest wait block with `diagnosis: none`, including a failing check with a potentially unnamed upstream
+fix. Case 1 also covers that variant; recovery requests diagnosis, not a fix.
+Silence/age status heuristics never establish recovery eligibility. Review-head
+churn and review-evidence reuse are outside R7. A separate wait-record helper
+is deferred; no runtime registry is introduced.
+
+Cross-host sends require installed C4 instructions and C5 unexpired write-link
+proof for each directed edge; otherwise remain report-only. Never redirect to another owner thread or host. Read-only discovery includes child activity via allowed
+owner/inventory reads, interval coalescing/max-delivery-age support and pending
+requests/held queues; unavailable proof keeps the owner report-only.
+Read-only capability discovery precedes choosing an event adapter; actual event,
+queue, idempotency and Stop/restart behavior require the implementation-authorized
+bounded canary under R7-5, using owned resources with rollback and exact-ID cleanup. Unsupported upstream events use the bounded exact-dependency check.
+Unknown delivery/deduplication capability holds sends, not unrelated status work.
+
+### R7 evidence and checkpoint
+
+Private case labels: stale bot review; blocked PR and upstream fix. No private
+repository URLs or raw snapshots are published. Coordinator-retained evidence
+SHA-256: request `0ab27e42493537be890d05e2517d8cdde7885bd29ec1463644d37964b2490977`;
+evaluation `fe0ca3a72d1d2ed29728c502c07975fdc98115ac7d1f186aba29f1de26674265`;
+native snapshots `f56b53408f7b04d47b25caba657f5b9cb0cacb600cd130e3de09e7a18c6ce984`.
+No lost delegate-completion wake was proved. These cases grant no authority to
+bypass auth, human approval, snoozes or merge rules. The user’s implementation follow-up authorizes this additive delivery. Fresh
+advisers/diligence check these clarifications against that accepted scope; they
+do not grant activation or broaden authority. VOA source owner
+and activation details remain explicitly gated, not guessed or activated here.
