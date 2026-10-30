@@ -133,3 +133,66 @@ test('real selector CLI spreads native pending batch once per 20/35/40 host with
     rmSync(dir, { recursive: true });
   }
 });
+
+
+test.each([
+  ['assignment-conflict', (f, n) => { n.tasks.push({ ...f.item('nested', 'env-worker-b'), assignmentRoot: { environmentId: f.origin.environmentId, taskId: 'task-1' } }); }],
+  ['assignment-root-unknown', (f, n) => {
+    n.tasks.push({ ...f.item('nested', 'env-worker-a'), assignmentRoot: { environmentId: f.origin.environmentId, taskId: 'task-1' } });
+    n.tasks.push({ ...f.item('nested-again', 'env-worker-a'), assignmentRoot: { environmentId: f.origin.environmentId, taskId: 'nested' } });
+  }],
+  ['assignment-conflict', (f, n) => { n.tasks.push(f.item('task-1', 'env-worker-b')); }],
+  ['assignment-conflict', (f, n) => { n.pending.push({ origin: f.origin, clientRequestId: 'task-1', taskId: 'task-1', environmentId: 'env-worker-b' }); }],
+  ['assignment-conflict', (f, n) => {
+    n.pending.push({ origin: f.origin, clientRequestId: 'pending', environmentId: 'env-worker-a' });
+    n.pending.push({ origin: f.origin, clientRequestId: 'pending', environmentId: 'env-worker-b' });
+  }],
+  ['inventory-incomplete', (_, n) => { delete n.evidence; }],
+  ['destination-unknown', (_, n) => { delete n.tasks[0].task.remoteChild.threadId; }],
+])('individual native inventory conflict requires %s', (code, alter) => {
+  const f = snapshot();
+  expect(f.counts().inventoryStatus).toBe('known');
+  alter(f, f.input.nativeInventory);
+  expect(f.counts()).toMatchObject({ inventoryStatus: 'unknown', inventoryReasons: [code],
+    byEnvironment: { 'env-worker-a': null } });
+});
+
+test('a pending nested task reflects its root without adding an assignment', () => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.tasks.push({ ...f.item('nested', 'env-worker-a'), assignmentRoot: { environmentId: f.origin.environmentId, taskId: 'task-1' } });
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+  n.pending.push({ origin: f.origin, clientRequestId: 'nested-request', taskId: 'nested', environmentId: 'env-worker-a' });
+  expect(f.counts().inventoryStatus).toBe('known');
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+});
+
+test.each([true, false])('running nested assignment survives terminal root regardless of ordering: %s', (nestedFirst) => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.tasks[0].task.status = 'completed';
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(0);
+  const nested = { ...f.item('nested', 'env-worker-a'), assignmentRoot: { environmentId: f.origin.environmentId, taskId: 'task-1' } };
+  if (nestedFirst) n.tasks.unshift(nested); else n.tasks.push(nested);
+  expect(f.counts().inventoryStatus).toBe('known');
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+});
+
+test.each(['hasPendingChildRuns', 'workState'])('each continuation signal independently keeps a terminal task active: %s', (field) => {
+  const f = snapshot();
+  const task = f.input.nativeInventory.tasks[0].task;
+  task.status = 'completed';
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(0);
+  task[field] = field === 'workState' ? 'waiting_for_children' : true;
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+});
+
+test('incomplete inventory labels known pending counts as a lower bound', () => {
+  const f = snapshot();
+  const n = f.input.nativeInventory;
+  n.pending.push({ origin: f.origin, clientRequestId: 'pending', environmentId: 'env-worker-c' });
+  expect(f.counts().byEnvironment['env-worker-c']).toBe(1);
+  n.complete = false;
+  expect(f.counts()).toMatchObject({ inventoryStatus: 'unknown',
+    byEnvironment: { 'env-worker-c': null }, pendingLowerBound: { 'env-worker-c': 1 } });
+});

@@ -278,6 +278,19 @@ test('native receipt validates remote null-child completion and newer provider c
 test.each([
   ['receipt-observation', (r) => { r.status.tool = 'worker-self-report'; }],
   ['receipt-version', (r) => { r.schemaVersion = 2; }],
+  ['receipt-destination', (r) => { r.thread.value.thread.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.terminal.value.threadId = 'other-thread'; }],
+  ['receipt-run', (r) => { r.thread.value.recentRuns.push({ runId: 'newer-run', ordinal: 3, status: 'completed' }); }],
+  ['receipt-run', (r) => { r.thread.value.recentRuns[1].status = 'failed'; }],
+  ['receipt-run', (r) => { r.terminal.value.resultRun = { runId: 'initial-run', status: 'completed' }; }],
+  ['receipt-run', (r) => { r.terminal.value.resultRun = { runId: 'continued-run', status: 'failed' }; }],
+  ['receipt-marker', (r) => { r.thread.value.items[0].createdBy = 'user'; }],
+  ['receipt-effective', (r) => { r.thread.value.thread.runtimeMode = 'auto'; }],
+  ...['status', 'thread', 'terminal'].flatMap((name) => [
+    ['receipt-observation', (r) => { r[name].environmentId = 'env-worker-c'; }],
+    ['receipt-observation', (r) => { r[name].args = { unrelated: 'other-attempt' }; }],
+    ['receipt-observation', (r) => { r[name].observedAt = NOW + 1; }],
+  ]),
   ['receipt-title', (r) => { r.thread.value.thread.title = 'another attempt'; }],
   ['receipt-run', (r) => { r.remoteChild.runId = 'initial-run'; }],
   ['receipt-question', (r) => { r.questions.value.requests.push({ requestId: 'unanswered' }); }],
@@ -336,6 +349,9 @@ function observation(f) {
 test.each([
   ['destination-observation', (o) => { o.capabilities.environmentId = 'env-personal-a'; }],
   ['destination-project', (o) => { o.project.value.id = 'project-personal-a'; }],
+  ['destination-observation', (o) => { o.project.args.projectId = 'project-worker-b'; }],
+  ['destination-access', (o) => { o.links.value.environmentId = 'env-worker-b'; }],
+  ['destination-access', (o) => { o.links.value.links[0].status = 'expired'; }],
   ['destination-repository', (o) => { o.project.value.repositoryIdentity.canonicalKey = 'different/repo'; }],
   ['destination-identity', (o) => { o.environment.value.environmentId = 'worker-a'; }],
   ['destination-catalog', (o) => { o.capabilities.valueText += ' '; }],
@@ -379,6 +395,11 @@ test('remote reviewer checkout binds owned host/path, candidate and base readbac
       hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
       candidate: 'a'.repeat(40), base: 'b'.repeat(40), evidence: 'target://exact-sha-check' } };
   expect(f.run(value).output).toContain('MATCH');
+  const misplaced = structuredClone(value);
+  misplaced.fleetReceipt.thread.value.thread.worktreePath = '/target/different-checkout';
+  const misplacedResult = f.run(misplaced);
+  expect(misplacedResult.status).toBe(2);
+  expect(misplacedResult.output).toContain('receipt-checkout: fail');
   const shared = structuredClone(value);
   shared.fleetReceipt.requested.isolation = 'shared';
   const sharedResult = f.run(shared);
