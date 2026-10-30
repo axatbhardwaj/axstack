@@ -136,6 +136,17 @@ After accepting task or run completion, the driver invokes
 Axstack creates no heartbeat or substitute scheduler.
 Tracking grants no merge, release, model-substitution, or scope authority.
 
+## Host-qualified fleet receipts
+
+Fleet nonwriters use [Fleet dispatch and receipts](fleet-dispatch.md) in addition
+to the local lifecycle. Origin taskId and destination environment/thread/current
+run are separate identities; remote local-child IDs may be null. Keep exact
+recommendation/config/catalog evidence, requested/effective settings and qualified
+artifact/checkout paths. Read task_status on origin and terminal/question facts
+on destination before advancement. Current completed/result_available with no
+children/questions and an exact final marker is required; an old summary cannot
+complete a provider continuation. Driver-only forge/cleanup ownership is unchanged.
+
 ## Deadline (one rule for every owned timer)
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at

@@ -1,5 +1,13 @@
 # Workspace hygiene for driver-owned T3 runs
 
+For remote nonwriters, apply [host-qualified retrieval and retirement](fleet-dispatch.md#retrieval-and-retirement).
+Resolve task status on origin and thread/run/settlement on the actual destination.
+Archive and read back exact evidence on origin before retiring only the owned
+T3-created reviewer checkout. Bind host/environment/path and candidate/base SHA;
+never use an origin filesystem path as a destination path. Unknown liveness,
+ownership or user takeover preserves that resource. Validation precedes deletion
+in separate sequential calls; preserve unknown ignored artifacts.
+
 This is a prompt contract, not a cleanup daemon. Follow [T3 runtime](t3-runtime.md)
 for native identities, terminal run evidence and schema. Dispatched workers never
 sweep or remove another session. A scheduled pass with recorded cleanup authority

@@ -1,5 +1,11 @@
 # Role roster
 
+Fleet nonwriter placement follows [Fleet dispatch and receipts](fleet-dispatch.md).
+Roles retain exact configured provider/model/options/full-access on the selected
+native destination. Remote reviewers require T3 worktree isolation; no shell child
+checkout. Host names confer no role or permission. Remote authors/coordinator stay
+disabled; local isolated authors remain supported even overloaded.
+
 - Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
   For own PRs, automatic merge is the default under the

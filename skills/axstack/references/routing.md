@@ -57,6 +57,16 @@ infer from slot, driver, owner, or provider. Author and owner never review.
 `axstack-implement` requires `mixed`; single-provider presets hold at
 step (3) for user routing: no substitution or same-provider review.
 
+## Fleet destinations (C3a)
+
+For fleet nonwriters, follow [Fleet dispatch and receipts](fleet-dispatch.md):
+C2 sampling and current native assignment inventory feed C1; the driver explicitly
+binds the selected environment/project/settings to native T3 delegation and reads
+terminal facts on the actual destination. Origin catalogs, SSH agent commands and
+legacy worker/control-center host labels grant no execution route. Any configured
+host may originate or receive proven nonwriter work; personal policy/deployment
+changes remain C4/C6. Remote authors stay disabled; keep local isolated fallback.
+
 ## Direct routes (no spec ceremony)
 
 - Route requests to create or maintain a verification skill to `axstack-verify`.

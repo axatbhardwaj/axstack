@@ -145,6 +145,17 @@ reconciled. An unknown inventory contributes no stale counts; known pending
 records still count. Counts report inventory status/time and pending provenance.
 These are observations, never reservations or predicted resource costs.
 
+### Native inventory and live evidence (C3a)
+
+Optional `nativeInventory` is normalized before counts under
+[Fleet dispatch and receipts](fleet-dispatch.md#saved-native-inventory).
+Unknown native totals are null, with separately labelled pendingLowerBound and
+inventoryReasons/evidence; flags.countsUnknown follows normalized status.
+Optional `nativeDestination` carries observed native forwarded preflight reads.
+The same reference defines terminal receipt validation and its supplied-evidence
+limitation. Live drivers require these observed facts, not synthetic caller claims.
+Legacy normalized input remains unchanged. Remote coordinator remains disabled.
+
 ## Bounded collection (C2)
 
 Collect with the installed helper (no bin/axstack.js subcommand):
