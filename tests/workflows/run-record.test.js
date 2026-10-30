@@ -170,19 +170,24 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     `${root}/skills/axstack/scripts/run-init.js`,
     `${root}/skills/axstack/scripts/single-server.js`,
     `${root}/skills/axstack/scripts/test-repository.js`,
+    `${root}/skills/voa/scripts/cleanup.js`,
+    `${root}/skills/voa/scripts/evaluate.js`,
+    `${root}/skills/voa/scripts/observations.js`,
+    `${root}/skills/voa/scripts/records.js`,
+    `${root}/skills/voa/scripts/voa.js`,
   ].sort());
   expect(read('skills/axstack/scripts/archive-evidence.js')).not.toMatch(/t3_thread_\w+|terminal close|worktree remove/i);
 });
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {
   const skillFiles = filesBelow(`${root}/skills`).filter((path) => path.endsWith('/SKILL.md'));
-  expect(skillFiles).toHaveLength(19);
+  expect(skillFiles).toHaveLength(20);
   for (const path of skillFiles) {
     const lines = readFileSync(path, 'utf8').split('\n');
     const descriptions = lines.filter((line) => line.startsWith('description:'));
     expect(descriptions, `${path}: exactly one description line`).toHaveLength(1);
     expect(descriptions[0], `${path}: intent-first description`).toMatch(
-      /^description: When .+, use axstack(?:-[a-z-]+)? /,
+      /^description: When .+, use (?:axstack(?:-[a-z-]+)?|voa) /,
     );
   }
   expect(read('skills/axstack-watch/SKILL.md')).toMatch(

@@ -3,7 +3,14 @@
 Entry points: `bin/axstack.js` (`--version`, `install`, `check`),
 `src/installer.js`, `src/capabilities.js`; harness: `tests/installer/helpers.js`.
 Owned instructions route every role through `delegate_task`, with author worktree
-isolation, top-level driver launches and a recorded rare author fallback.
+isolation and top-level launches only on explicit user request for a new thread.
+The recorded rare author fallback has the same new-thread restriction.
+Fleet routing keeper: `tests/installer/fleet-instructions.test.js` runs the actual
+installed helper command with account-local config and a run-pinned digest,
+rejects mismatched bytes and no-route, and checks install/check/uninstall ownership.
+Semantic instruction checks cover current routing facts before workers/reviewers
+and authorized launches, destination/settings binding, separate native UI balancing,
+local isolated fallback, coordinator gates and existing scoped authority.
 Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
 reinstalls after validated null/stale legacy metadata, checking explicit-preset
 role selection and inert provenance preservation. It also exercises the real mixed
@@ -51,6 +58,9 @@ bun run test tests/installer/installed-preset-routing.test.js \
   > "$EVIDENCE/install-routing.log" 2>&1 || ROUTING_STATUS=$?
 printf '%s\n' "$ROUTING_STATUS" > "$EVIDENCE/install-routing-exit.txt"
 test "$ROUTING_STATUS" -eq 0
+doctor > "$EVIDENCE/install-fleet-doctor.log" 2>&1
+bun run test tests/installer/fleet-instructions.test.js tests/installer/instructions.test.js \
+  > "$EVIDENCE/install-fleet.log" 2>&1
 ```
 
 Proof: version matches the package; install creates owned skills, preset and
@@ -59,6 +69,16 @@ selected preset; repeat is idempotent; check observes bundle and owned
 instructions. Review the complete check log and exit: missing Git, gh, T3
 are explicit environment gaps, not a successful host check.
 Gotcha: installation alone cannot prove harness discovery or model readiness.
+When verifying Haoshoku profile integration, use a separately pinned, read-only
+candidate source and a private fixture HOME. Run its `syncAgentsConfig({home})`
+before and after actual Axstack install to `.codex/AGENTS.md` and `.claude/CLAUDE.md`.
+Re-run Axstack check and verify each managed block against its manifest hash after
+resync. Uninstall must preserve the account-local policy bytes and every unrelated
+profile byte remaining outside the owned block. Haoshoku preserves existing blocks;
+it deliberately never synthesizes them. Record both revisions, policy digest and
+complete outputs; a synthetic fixture proves ownership compatibility only, never
+deployed policy, route eligibility or live dispatch. An unavailable pinned source
+leaves this cross-repository boundary explicitly unverified.
 Ordinary check must never invoke or require `gh stack`; legacy native-stack
 operations probe it separately. Verify that boundary with the controlled
 toolchain tests. These accept stable T3 >=0.1.0 with bare, `v`, `t3` and
