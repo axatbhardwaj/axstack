@@ -24,8 +24,12 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
    an explicit work/time bound; report unreachable hosts, unknown activity and
    incomplete pages. Never infer unseen owners are idle. Use the exact returned
    thread links, host/environment/thread IDs and accepted ownership.
-   Read flagged owners with `t3_thread_read`, their queue with `t3_queue_list`
-   and pending requests with `t3_pending_request_list`, on each environment.
+   Read flagged owners with `t3_thread_read` on each environment.
+   Read their queue with `t3_queue` using action `list`. Follow queue pagination
+   using the returned `cursor` within the work bound; incomplete pages stay unknown.
+   Read pending questions with `t3_pending_request` using action `list`.
+   That tool excludes approvals. Read approvals from native thread/run state;
+   unavailable approval evidence stays unknown.
    Read child activity through owner/inventory observations; never poll running
    delegates with task_status, waits, Monitor or scheduled delegate checks.
    Native inventory takes precedence over older snapshots. No direct SQLite,
