@@ -361,3 +361,25 @@ test('main accepts argv and captures plan, verification and errors through io in
   expect(module.main([], io)).toBe(1);
   expect(error).toContain('pass');
 });
+
+
+test.each(['task', 'launch'])('Grok role identity holds propagate through %s plans', (kind) => {
+  const f = setup();
+  const role = f.roles.roles.find((role) => role.id === 'axstack-research-x');
+  f.roles.roles.push({ ...role, id: 'axstack-arena-candidate-grok' });
+  const grok = f.capabilities.providers.find((provider) => provider.providerInstanceId === 'grok');
+  for (const id of ['axstack-research-x', 'axstack-arena-candidate-grok']) {
+    const control = f.run(id, kind);
+    expect(control.status).toBe(0);
+    const plan = JSON.parse(control.output);
+    expect(plan.target ?? plan.modelSelection).toMatchObject({ model: 'grok-4.7',
+      options: [{ id: 'reasoningEffort', value: 'high' }] });
+  }
+  grok.models.unshift({ ...structuredClone(grok.models[0]), id: 'claude-fable-5-1' });
+  for (const id of ['axstack-research-x', 'axstack-arena-candidate-grok']) {
+    const result = f.run(id, kind);
+    expect(result.status).toBe(2);
+    expect(result.output).toBe('');
+    expect(result.error).toContain('first listed model claude-fable-5-1 is not grok-family');
+  }
+});

@@ -161,3 +161,8 @@ Current catalog compatibility also covers null or absent model options: an
 optionless sibling does not block a usable model, while selecting an optionless
 model holds for unsupported effort. The resolver regression tests exercise both
 cases through its CLI.
+
+Saved-catalog drives must check emitted model IDs and settings, not only exit
+codes. Grok null-model roles hold when the first advertised ID lacks `grok-`;
+they never skip to a later model. Count valid plans and expected identity holds
+separately. A family prefix is not proof of live X access.

@@ -61,6 +61,7 @@ function modelFrom(models, { provider, model: pin, class: modelClass, excluded }
     }
     const model = models[0];
     if (!model || excluded.includes(model.id)) throw new Error('missing first listed model');
+    if (!model.id.startsWith('grok-')) throw new Error(`first listed model ${model.id} is not grok-family`);
     return model;
   }
   if (!['codex', 'claude'].includes(provider) || !/^[a-z]+$/.test(modelClass)) {
