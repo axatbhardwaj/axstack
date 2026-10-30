@@ -15,16 +15,16 @@ function rule(name, concepts, rewording, direction, inverse, ban, source = runti
   });
 }
 
-rule('authorized parent coordinates project drivers with scoped subagents',
-  [/logical/i, /coordinating parent/i, /can coordinate|supports/i, /multiple project-bound drivers/i, /each/i, /multiple scoped subagents/i, /T3 delegation/i],
-  'A logical coordinating parent supports multiple project-bound drivers, each using T3 delegation for multiple scoped subagents.',
+rule('Coordinator coordinates project Drivers with scoped Workers',
+  [/logical/i, /Coordinator/i, /can coordinate|supports/i, /multiple project-bound drivers/i, /each/i, /multiple scoped Workers/i, /T3 delegation/i],
+  'A logical Coordinator supports multiple project-bound drivers, each using T3 delegation for multiple scoped Workers.',
   /can coordinate|supports/i, 'must not coordinate');
-rule('reuse a suitable current parent',
-  [/reuse|retain/i, /suitable|appropriate/i, /current parent/i],
-  'Retain the appropriate current parent.', /reuse|retain/i, 'replace');
-rule('suggest a new parent only when useful',
-  [/suggest|propose/i, /new parent/i, /only/i, /useful|helps/i],
-  'Propose a new parent only when it helps.', /only/i, 'even when it is not');
+rule('reuse a suitable current Coordinator',
+  [/reuse|retain/i, /suitable|appropriate/i, /current Coordinator/i],
+  'Retain the appropriate current Coordinator.', /reuse|retain/i, 'replace');
+rule('suggest a new Coordinator only when useful',
+  [/suggest|propose/i, /new Coordinator/i, /only/i, /useful|helps/i],
+  'Propose a new Coordinator only when it helps.', /only/i, 'even when it is not');
 rule('every top-level launch requires explicit user request',
   [/every|each/i, /top-level/i, /thread launch/i, /requires?|needs?/i, /explicit user request/i],
   'Each top-level thread launch needs an explicit user request.', /requires?|needs?/i, 'does not require');
@@ -62,9 +62,9 @@ rule('handbacks carry acceptance, completion, dependencies and holds',
 rule('each driver owns its forge, watch and record',
   [/each driver/i, /owns/i, /own PR mutations/i, /watches/i, /sole/i, /own run record/i],
   'Each driver owns its own PR mutations and watches and is sole writer of its own run record.', /owns/i, 'must not own');
-rule('parent owns aggregate coordination',
-  [/parent/i, /owns/i, /aggregate coordination/i],
-  'Aggregate coordination is what the parent owns.', /owns/i, 'must not own');
+rule('Coordinator owns aggregate coordination',
+  [/Coordinator/i, /owns/i, /aggregate coordination/i],
+  'Aggregate coordination is what the Coordinator owns.', /owns/i, 'must not own');
 rule('competing writers stay forbidden',
   [/competing writers/i, /candidate/i, /record/i, /across drivers/i],
   'Never allow competing writers for a candidate or record across drivers.', /never allow/i, 'allow', /never allow/i);
@@ -80,3 +80,16 @@ test('multi-driver guidance is loaded through existing shared entry points', () 
     expect(links.some((link) => /t3-runtime\.md#coordinating-multiple-drivers$/.test(link)), path).toBe(true);
   }
 });
+
+rule('Coordinator owns overall outcome across projects',
+  [/Coordinator/i, /owns/i, /overall outcome/i, /coordinates/i, /across projects/i],
+  'The Coordinator owns the overall outcome and coordinates work across projects.', /owns/i, 'abandons');
+rule('Driver owns project delivery',
+  [/Driver/i, /owns/i, /delivery/i, /one project/i, /implementation/i, /review/i, /merge/i, /deployment/i],
+  'A Driver owns delivery within one project: implementation, review, merge and deployment.', /owns/i, 'abandons');
+rule('Worker performs bounded driver task',
+  [/Worker/i, /performs/i, /bounded task/i, /for a Driver/i, /authoring/i, /research/i, /review/i],
+  'A Worker performs a bounded task for a Driver, including authoring, research or review.', /performs/i, 'rejects');
+rule('parent is a relationship rather than role',
+  [/parent/i, /describes/i, /relationship/i, /not/i, /role name/i],
+  'Parent describes a relationship, not a role name.', /not/i, 'also', /not/i);

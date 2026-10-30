@@ -73,11 +73,16 @@ configuration; unrelated configurations remain eligible.
 
 ## Coordinating multiple drivers
 
-A logical top-level coordinating parent can coordinate multiple project-bound
-drivers, each using T3 delegation for multiple scoped subagents. Reuse a suitable
-current parent. Suggest a new parent only when useful.
+The Coordinator owns the overall outcome and coordinates work across projects.
+A Driver owns delivery within one project: implementation, review, merge and deployment.
+A Worker performs a bounded task for a Driver, including authoring, research or review.
+Parent describes a relationship, not a role name.
+
+A logical Coordinator can coordinate multiple project-bound
+drivers, each using T3 delegation for multiple scoped Workers. Reuse a suitable
+current Coordinator. Suggest a new Coordinator only when useful.
 Every top-level thread launch requires an explicit user request, including a
-new parent, project driver or launch fallback. On resume, preserve existing
+new Coordinator, project driver or launch fallback. On resume, preserve existing
 explicit accepted authorization within its scope. This skill never grants
 blanket launch permission. Missing launch authorization holds only the affected
 launch. After a blocked launch, continue independent authorized work, subject
@@ -92,8 +97,9 @@ invalid project request. A routing failure holds that route and its dependent
 work, rather than the whole authorized run.
 
 Record the logical coordinator link separately from native parentThreadId,
-including when null. A null native parent is compatible with a recorded logical
-owner, not evidence that coordination is missing. For each driver, record its
+including when null. The Coordinator remains the logical role when T3 records project Drivers as
+separate top-level threads with null parentThreadId; native ancestry does not
+change the recorded coordination ownership. For each driver, record its
 exact link, project, worktree, scope, owner and record pointer. Record acceptance
 and completion handbacks, dependencies, held state and resume condition. An
 acceptance handback binds the driver identity to accepted scope and authority;
@@ -102,13 +108,13 @@ completion handbacks carry exact revisions and verified receipt pointers under
 state before advancing dependencies, rather than accepting a message alone.
 
 Each driver owns its own PR mutations and watches and is the sole writer of its
-own run record. The parent owns aggregate coordination and its aggregate record,
+own run record. The Coordinator owns aggregate coordination and its aggregate record,
 using driver handbacks rather than editing their records or taking over their PRs.
 Never allow competing writers for a candidate or record across drivers.
 Existing author exclusivity and accepted-transfer rules still apply.
 
 This is an optional coordination shape: single-driver runs remain unchanged.
-The parent and drivers have no default model role in presets. Existing model,
+The Coordinator and Drivers have no default model role in presets. Existing model,
 permission and remote-author restrictions remain in force, with no substitution
 or remote-author enablement. Coordination adds no daemon, scheduler or runtime DB.
 

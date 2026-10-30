@@ -55,7 +55,7 @@ For substantive delegated or resumable work, use the shared
 [run record](../axstack/references/run-record.md). Reconcile it on restart with
 the approved scope, T3 threads/runs and forge state, exact revisions, tickets, and watches.
 Reuse valid owners and authors; ambiguity holds a replacement writer.
-When a logical parent coordinates project drivers, follow
+When a logical Coordinator coordinates project drivers, follow
 [Coordinating multiple drivers](../axstack/references/t3-runtime.md#coordinating-multiple-drivers).
 
 At execution start, bind work to the T3 driver thread and one authoritative

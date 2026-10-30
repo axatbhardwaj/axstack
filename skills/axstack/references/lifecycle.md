@@ -4,7 +4,7 @@ Phases load through [Standing contracts](contracts.md).
 Driver settlement follows [Workspace hygiene](workspace-hygiene.md).
 Delegated or resumable work uses a driver-owned [Run record](run-record.md)
 binding state and receipts to exact revisions.
-For a logical parent coordinating project drivers, follow
+For a logical Coordinator coordinating project drivers, follow
 [Coordinating multiple drivers](t3-runtime.md#coordinating-multiple-drivers).
 
 ## Roster (compact)
