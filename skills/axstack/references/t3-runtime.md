@@ -131,12 +131,19 @@ holds; it grants no dismissal, approval or merge rights.
 ## Bounded recovery boundary
 
 Ordinary status and periodic status sweeps remain read-only. Recovery requires
-an explicit user recovery invocation naming scope or a separately authorized
-schedule bound to a designated existing recovery thread. Agent messages never
-activate it. No new top-level thread or schedule activation follows from these
-instructions. Keep model/effort, finite pass limits shorter than the 30-minute
-cadence, included owners, coverage cursor, expiry and cleanup owner bound before
-activation; no catch-up loop. VOA implementation/source ownership is separate.
+an explicit user recovery invocation naming scope or an authorized schedule
+bound to a Coordinator-designated and recorded existing recovery thread.
+Agent messages never activate it. The accepted implementation follow-up binds
+the bounded synthetic/owned-resource canary to expiry, rollback and exact-ID
+cleanup. Run-scoped activation requires passing canary receipts plus recorded
+recovery host/thread, schedule ID, scope, model/effort, finite budget, expiry and
+cleanup owner. Record the schedule ID at creation and verify its binding before
+any send. The already authorized bounded canary and run-scoped activation need
+no repeat approval when those conditions pass. A persistent shared service
+requires separate explicit user authorization. Reading these instructions alone
+grants no new top-level launch or activation authority. Keep finite pass limits
+shorter than the 30-minute cadence, included owners and coverage cursor bound;
+no catch-up loop. VOA implementation/source ownership is separate.
 
 Read the current owner record under [Waiting-turn and closing records](run-record.md#waiting-turn-and-closing-records).
 Match exact owner host/environment/thread and accepted ownership, not title,
@@ -161,10 +168,12 @@ never clears or answers that gate. The other eligible case is a named external
 dependency proven cleared, with the owner's authorized next action revalidated.
 Inspect the blocker itself; silence and a completed turn prove neither stall
 nor completion. Verify native PR watch support for the exact external dependency
-before promising its wake. Prefer native events and respect nextEligibleCheck
-and an existing owner wake for the same key; an unrelated backstop does not
-suppress recovery. Unsupported events permit checking only the named external
-condition under separate activation authority.
+before promising its wake. Prefer native events. An owner wake suppresses
+recovery only before the recorded nextEligibleCheck or while same-key wake
+delivery is queued or running in the owner thread. An armed unfired watch or
+schedule, or one unable to observe the named blocker, never suppresses eligible
+recovery. Unsupported events permit checking only the named external condition
+under the recorded canary and activation conditions.
 
 Send one bounded continuation with its condition key to the exact existing
 top-level owning Coordinator/Driver. Revalidate all guards, owner history,

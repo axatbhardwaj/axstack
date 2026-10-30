@@ -294,6 +294,9 @@ condition remains unresolved. Read history and queue plus prior delivery
 receipts before any eligible send. Ambiguous delivery or unavailable history
 or queue is report-only. An accepted unacknowledged continuation gets no resend.
 A distinct condition uses a new owner-issued ID, never one invented by recovery.
+Bind queued/running wake receipts to the recovery key and exact queue/run IDs.
+An armed registration alone is insufficient delivery evidence; nextEligibleCheck
+and current same-key queue/run delivery determine wake precedence.
 
 To end the registration, the owner writes an assistant-authored closing block
 with the same conditionId. Bind closure to evidence, including scoped cleanup
@@ -316,4 +319,3 @@ still pending; settled metadata alone never proves completed product delivery.
   "cleanup": [{"id": "exact resource ID", "scope": "owned run or shared service registration", "state": "absent or stopped or preserved-shared or unknown", "receipt": "readback pointer"}]
 }
 ```
-
