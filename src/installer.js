@@ -239,10 +239,11 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
     throw new Error('bundle skills/ must be a real directory, not a symlink');
   }
   const entries = await readdir(skillsRoot, { withFileTypes: true });
+  const isShippedSkill = (name) => name.startsWith('axstack') || name === 'voa';
   // Symlinked (or non-directory) top-level skill entries must be rejected,
   // not silently skipped: Dirent.isDirectory() is false for symlinks.
   for (const entry of entries) {
-    if (!entry.name.startsWith('axstack')) continue;
+    if (!isShippedSkill(entry.name)) continue;
     const entryStat = await lstat(join(skillsRoot, entry.name));
     if (entryStat.isSymbolicLink() || !entryStat.isDirectory()) {
       throw new Error(
@@ -250,7 +251,7 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
       );
     }
   }
-  const skillDirs = entries.filter((e) => e.isDirectory() && e.name.startsWith('axstack'));
+  const skillDirs = entries.filter((e) => e.isDirectory() && isShippedSkill(e.name));
   if (skillDirs.length === 0) {
     throw new Error('bundle contains no axstack-* skill directories under skills/');
   }
