@@ -54,7 +54,8 @@ are packaged relative imports. Input/output contract:
 `skills/axstack/references/fleet-route-schema.md`. Prerequisites: Launch and
 Doctor, Bun >=1.3.14; synthetic fixture facts only, no network or live config.
 The pure API, offline CLI and destination-bound plans are covered here.
-Sampling and live destination receipt collection remain subsequent slices.
+Bounded sampling has its own [offline recipe](telemetry.md). Live destination
+receipt collection remains a subsequent slice.
 
 ```bash
 doctor > "$EVIDENCE/fleet-doctor.log" 2>&1

@@ -92,7 +92,8 @@ Execute all steps in each selected feature file, including its assertions:
 4. [Inspect the package payload](features/package.md).
 5. [Inspect workflow instruction contracts](features/workflows.md).
 6. [Inspect Anatomy sources and theme](features/anatomy.md).
-7. [Inspect UI workflows and Explain delivery](features/ui.md).
+7. [Collect bounded fleet telemetry](features/telemetry.md).
+8. [Inspect UI workflows and Explain delivery](features/ui.md).
 
 The full suite needs Node for its existing npm staging probe, `ip` for
 loopback fixtures, and an already cached **npm@12.0.2** package including its

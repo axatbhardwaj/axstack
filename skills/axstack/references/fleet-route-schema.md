@@ -3,7 +3,7 @@
 C1a exports `recommend(input, now)` and `parseFleetConfig(configText, configDigest)`
 from `../scripts/fleet-route.js`. Both are synchronous Bun APIs. They perform no
 I/O, use no ambient clock and keep no state. Importing the module launches nothing.
-The CLI wraps this API; the collector is a subsequent slice.
+The CLI wraps this API; bounded collection is separate from pure recommendation.
 
 ```js
 import { recommend } from '../scripts/fleet-route.js';
@@ -145,18 +145,89 @@ reconciled. An unknown inventory contributes no stale counts; known pending
 records still count. Counts report inventory status/time and pending provenance.
 These are observations, never reservations or predicted resource costs.
 
-## Telemetry handoff to C2
+## Bounded collection (C2)
 
-A sample is `{environmentId, status: 'ok', receivedAt, durationMs, source,
-scope: 'whole-host', cpuBp, ramBp, ramLatestBp?}`. `receivedAt` is stamped by the
-collecting driver on receipt; remote wall clocks do not control freshness.
-`durationMs` must be a safe integer >=5000 and `source` nonempty. C2 samples hosts
-concurrently and supplies complete whole-host interval provenance; the pure
-selector cannot verify the collector's assertions. C2 reports timeout/failure
-with a non-`ok` status or `timedOut: true`, which becomes unknown regardless of
-numeric fields. Optional `windowStartedAt` is a collector-clock interval start;
-when present, the receipt must be at least `durationMs` after that start.
-A native history source uses the history window start, not the RPC call start.
+Collect with the installed helper (no bin/axstack.js subcommand):
+
+```bash
+bun fleet-route.js sample --fleet manifest.json --config reviewed.json --config-digest <sha256> --json
+bun fleet-route.js sample-recommend --fleet manifest.json --config reviewed.json \
+  --config-digest <sha256> --input facts.json --json
+```
+
+`sample` emits `{schemaVersion:1,configDigest,collectedAt,telemetry}`; each sample
+includes its ageMs at collectedAt.
+`sample-recommend` emits `{schemaVersion:1,input,evaluatedAt,recommendation}`;
+its complete `input` and explicit `evaluatedAt` replay through pure `recommend`.
+It replaces saved telemetry, validates all supplied C1 facts before networking,
+and uses the collector clock after collection. It neither refreshes route/project
+facts nor enables a route. Both commands require a run-pinned digest; config
+path defaults as above. They write stdout/stderr only. Sample reports are JSON
+with or without `--json`; this flag is accepted for interface consistency.
+
+The caller supplies a separate manifest, never private fleet defaults:
+
+```json
+{"schemaVersion":1,"hosts":[
+  {"hostId":"worker-a","environmentId":"env-worker-a","transport":"local"},
+  {"hostId":"worker-b","environmentId":"env-worker-b","transport":"ssh","destination":"sample-worker","user":"fixture_user"}
+]}
+```
+
+Only these keys are accepted. `hosts` has 1..64 entries, unique host IDs and
+SSH destinations; each host/environment pair must match reviewed config.
+At most one entry is local. Unlisted hosts have unknown telemetry. The caller
+must bind the local identity to its collecting host; a manifest grants no T3
+identity or execution authority. Local entries cannot carry SSH fields.
+SSH destinations are lowercase MagicDNS short names (1..63 ASCII letters,
+digits or interior hyphens, starting/ending alphanumeric, not all digits).
+No aliases with punctuation, addresses, FQDNs, user@host, ports, options or
+commands are accepted. Optional users match `[a-z_][a-z0-9_-]{0,31}`.
+Existing SSH configuration/identities and known-host records must already exist;
+no key paths, credentials, enrollment or interactive prompts are accepted.
+
+`--interval-ms` defaults to 5000, integer range 5000..60000. All manifest hosts
+start concurrently in one batch; each waits the interval after its first read
+returns, then reads again. `--timeout-ms` defaults to 10000, integer range
+interval+1000..120000, covering both reads, transport and waiting per host.
+Long intervals require an explicit larger timeout. Timed-out/cancelled SSH
+processes are killed and reaped, waits cancelled and listeners/timers removed.
+SIGINT/SIGTERM cancel the owned collection and produce unknown telemetry.
+SSH uses argv, noninteractive strict host-key checks and existing identities;
+the only remote command is a constant read of /proc/stat and /proc/meminfo.
+Output is capped at 64KiB per read; stderr details and credentials are not emitted.
+No agent, daemon, schedule, dispatch or persistent collection state is created.
+
+Linux CPU uses the delta of the first eight aggregate /proc/stat counters.
+Busy includes steal and excludes idle/iowait; guest/guest_nice are already in
+user/nice and are not added again. RAM uses MemTotal minus MemAvailable:
+`ramBp` is the upward-rounded mean of the first and latest endpoint pressure,
+`ramLatestBp` is latest pressure. This is an endpoint mean, not continuous RAM
+history. Missing/duplicate/malformed fields, counter regression, zero elapsed
+CPU ticks or changed MemTotal produce unknown, without partial pressure values.
+
+Each collected sample contains host/environment IDs, status, source
+`linux-proc-local` or `linux-proc-ssh`, `scope:whole-host`, intervalMs, timeoutMs,
+durationMs, windowStartedAt and receivedAt. Success additionally contains
+windowEndedAt, cpuBp, ramBp and ramLatestBp. `windowKind:collector-bracket`
+means the collector-clock window brackets both reads, transport and the wait;
+remote counter read times cannot be located more precisely within that bracket.
+`durationMs` uses monotonic elapsed time (integer milliseconds), not a claimed
+native history length. Both sources read whole-host Linux counters, never T3
+process metrics or the cached 200ms delta. No fresh 30-second history is claimed.
+Long windows retain their actual duration. All wall timestamps come from the
+collecting host; remote clocks are neither read nor used for age.
+
+A backwards collector clock, shortened window or forward jump over one second
+relative to monotonic elapsed time produces collector-clock unknown. Per-host
+statuses timeout, cancelled, malformed, inconsistent-counters, collector-clock
+and failed become C1 unknown reasons. Collection failure does not fabricate an
+access failure or load-based hold. C1 preserves source/window/duration and age
+for unknown telemetry where supplied. Offline historical C1 inputs may omit
+window timestamps and interval; when present, start/end must enclose duration,
+end cannot follow receipt, and interval must be 5000..60000 and <=duration.
+Age is solely evaluation time minus collector receipt, including stale/future
+unknown results. Re-run before dispatch; snapshots reserve no capacity.
 
 CPU/RAM basis points must be integers 0..10000. Instead of either `cpuBp` or
 `ramBp`, supply `cpuFraction` or `ramFraction` (finite 0..1). Exactly one
