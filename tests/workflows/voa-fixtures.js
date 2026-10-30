@@ -19,8 +19,8 @@ export function waitRecord() {
 }
 
 export function message(record, role = 'assistant') {
-  return { id: 'native:message-1', source: 'native', role, author: owner, text: `Waiting.\n\n\
-\`\`\`json\n${JSON.stringify(record)}\n\`\`\`` };
+  return { id: 'native:message-1', source: 'native', role, author: owner,
+    text: ['Waiting.', '', '```json', JSON.stringify(record), '```'].join('\n') };
 }
 
 export function fixture() {

@@ -46,6 +46,8 @@ Saved normalized observations can be summarized with
 Read [observations](references/observations.md) for the explicit offline input.
 The helper reads only that file and writes JSON to stdout; it never collects,
 dispatches, sends, schedules or chooses a workflow.
+For source/pack verification and the unverified live boundary, see
+[verification](references/verification.md).
 
 ## Join
 
