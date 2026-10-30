@@ -87,3 +87,11 @@ test('pending client identities include the actual origin driver, not just its h
   n.pending.push({ origin: { ...f.origin, threadId: 'other-driver' }, clientRequestId: 'same-client', environmentId: 'env-worker-c' });
   expect(f.counts().byEnvironment['env-worker-c']).toBe(2);
 });
+
+test('a completed turn with live children is still an active assignment', () => {
+  const f = snapshot();
+  f.input.nativeInventory.tasks[0].task.status = 'completed';
+  f.input.nativeInventory.tasks[0].task.hasPendingChildRuns = true;
+  f.input.nativeInventory.tasks[0].task.workState = 'waiting_for_children';
+  expect(f.counts().byEnvironment['env-worker-a']).toBe(1);
+});

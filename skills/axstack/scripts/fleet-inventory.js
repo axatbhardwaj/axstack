@@ -42,7 +42,8 @@ export function nativeAssignments(snapshot, hosts, now) {
       if (rootEnvironment !== environmentId) { unknown('assignment-conflict'); continue; }
     }
     const previous = assignments.get(rootKey);
-    const state = active.has(task.status) ? 'running' : 'completed';
+    const state = active.has(task.status) || task.hasPendingChildRuns === true
+      || task.workState === 'waiting_for_children' ? 'running' : 'completed';
     // A terminal coordinator with live descendants remains active.
     assignments.set(rootKey, { assignmentId: `task:${rootKey}`, environmentId,
       state: previous?.state === 'running' ? 'running' : state });

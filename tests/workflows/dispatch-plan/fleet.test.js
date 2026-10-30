@@ -231,3 +231,158 @@ test.each([
   change(f);
   held(f.run(), code);
 });
+
+// Native saved envelopes; host, environment and project deliberately differ.
+function receipt(f) {
+  const marker = `AXSTACK-DONE key=run:reader:inspect:a1 head=${'a'.repeat(40)} report=/evidence/result.md`;
+  const task = { taskId: 'origin-task', childThreadId: null, childRunId: 'initial-run',
+    remoteChild: { environmentId: 'env-worker-a', threadId: 'same-thread' },
+    providerInstanceId: 'codex', model: 'gpt-6.1-sol',
+    options: [{ id: 'reasoningEffort', value: 'high' }, { id: 'serviceTier', value: 'priority' }],
+    status: 'completed', workState: 'result_available', hasPendingChildRuns: false,
+    hasPendingQuestion: false, pendingApproval: null, latestTerminalRunId: 'continued-run',
+    latestTerminalStatus: 'completed', latestTerminalSummary: marker, summary: 'older summary' };
+  const attempt = { key: 'run:reader:inspect:a1', title: 'Subagent: run:reader:inspect:a1', clientRequestId: 'exact-request',
+    origin: { environmentId: 'env-personal-a', threadId: 'driver', taskId: 'origin-task' },
+    candidate: 'a'.repeat(40), base: 'b'.repeat(40) };
+  const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
+    observedAt: NOW, evidence: 'saved://native-read' });
+  const result = { schemaVersion: 1, attempt, remoteChild: { environmentId: 'env-worker-a', threadId: 'same-thread', runId: 'continued-run' }, recommendationJSON: JSON.stringify(f.saved), configDigest: f.input.configDigest,
+    requested: { target: { environmentId: 'env-worker-a', projectId: 'project-worker-a',
+      providerInstanceId: 'codex', model: 'gpt-6.1-sol', options: task.options }, runtimeMode: 'full-access' },
+    submission: structuredClone(task),
+    status: read('task_status', 'env-personal-a', { taskId: 'origin-task' }, task),
+    thread: read('t3_thread_read', 'env-worker-a', { threadId: 'same-thread' }, {
+      thread: { title: 'Subagent: run:reader:inspect:a1', threadId: 'same-thread', projectId: 'project-worker-a', latestRunId: 'continued-run',
+        activeRunId: null, status: 'completed', providerInstanceId: 'codex', model: 'gpt-6.1-sol',
+        runtimeMode: 'full-access', pendingRequestCount: 0, worktreePath: null },
+      recentRuns: [{ runId: 'initial-run', ordinal: 1, status: 'completed' },
+        { runId: 'continued-run', ordinal: 2, status: 'completed' }],
+      items: [{ runId: 'continued-run', createdBy: 'agent', text: marker }] }),
+    questions: read('t3_pending_request', 'env-worker-a', { action: 'list', threadId: 'same-thread' }, { requests: [] }),
+    terminal: read('t3_thread_wait', 'env-worker-a', { threadId: 'same-thread', runId: 'continued-run' },
+      { threadId: 'same-thread', runId: 'continued-run', status: 'completed', timedOut: false }),
+    evidence: { hostId: 'worker-a', environmentId: 'env-worker-a', path: '/evidence/result.md' } };
+  return { ...f.readback(), fleetAttempt: attempt, fleetReceipt: result };
+}
+
+test('native receipt validates remote null-child completion and newer provider continuation', () => {
+  const f = fleet();
+  const value = receipt(f);
+  const before = JSON.stringify(value);
+  expect(f.run(value).output).toContain('MATCH');
+  expect(JSON.stringify(value)).toBe(before);
+});
+
+test.each([
+  ['receipt-observation', (r) => { r.status.tool = 'worker-self-report'; }],
+  ['receipt-version', (r) => { r.schemaVersion = 2; }],
+  ['receipt-title', (r) => { r.thread.value.thread.title = 'another attempt'; }],
+  ['receipt-run', (r) => { r.remoteChild.runId = 'initial-run'; }],
+  ['receipt-question', (r) => { r.questions.value.requests.push({ requestId: 'unanswered' }); }],
+  ['receipt-origin', (r) => { r.attempt.origin.environmentId = 'env-worker-c'; }],
+  ['receipt-attempt', (r) => { r.attempt.clientRequestId = 'another-request'; }],
+  ['receipt-recommendation', (r) => { r.recommendationJSON += ' '; }],
+  ['receipt-config', (r) => { r.configDigest = '0'.repeat(64); }],
+  ['receipt-destination', (r) => { r.status.value.remoteChild.environmentId = 'env-worker-b'; }],
+  ['receipt-destination', (r) => { r.thread.environmentId = 'env-worker-b'; }],
+  ['receipt-project', (r) => { r.thread.value.thread.projectId = 'project-worker-b'; }],
+  ['receipt-requested', (r) => { r.requested.runtimeMode = 'auto'; }],
+  ['receipt-effective', (r) => { r.status.value.options[0].value = 'low'; }],
+  ['receipt-effective', (r) => { delete r.status.value.options; }],
+  ['receipt-terminal', (r) => { r.status.value.hasPendingChildRuns = true; }],
+  ['receipt-terminal', (r) => { r.status.value.workState = 'waiting_for_children'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'failed'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'cancelled'; }],
+  ['receipt-terminal', (r) => { r.status.value.status = 'waiting'; }],
+  ['receipt-question', (r) => { r.thread.value.thread.pendingRequestCount = 1; }],
+  ['receipt-run', (r) => { r.status.value.latestTerminalRunId = 'initial-run'; }],
+  ['receipt-run', (r) => { r.terminal.value.runId = 'initial-run'; }],
+  ['receipt-marker', (r) => { r.status.value.latestTerminalSummary = 'progress only'; }],
+  ['receipt-marker', (r) => { r.thread.value.items[0].runId = 'initial-run'; }],
+  ['receipt-host-path', (r) => { r.evidence.hostId = 'env-worker-a'; }],
+  ['receipt-host-path', (r) => { r.evidence.path = '/different/result.md'; }],
+])('native receipt holds on %s', (code, alter) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  // Clone separately: expected attempt is driver-owned, never aliased to the receipt.
+  value.fleetReceipt = structuredClone(value.fleetReceipt);
+  alter(value.fleetReceipt);
+  const result = f.run(value);
+  expect(result.status, result.output).toBe(2);
+  expect(result.output).toContain(`${code}:`);
+  expect(result.output).not.toContain('MATCH');
+});
+
+// Receipt additions are separately test-first: count alone cannot prove question absence.
+test('terminal completion requires an observed native pending-question list', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetReceipt.questions;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-question: unknown');
+});
+
+
+test('remote reviewer checkout binds owned host/path, candidate and base readback', () => {
+  const f = fleet();
+  const value = receipt(f);
+  value.fleetReceipt.requested.isolation = 'worktree';
+  value.fleetReceipt.thread.value.thread.worktreePath = '/target/isolated-review';
+  value.fleetReceipt.checkout = { hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
+    candidate: 'a'.repeat(40), base: 'b'.repeat(40), readback: {
+      hostId: 'worker-a', environmentId: 'env-worker-a', path: '/target/isolated-review',
+      candidate: 'a'.repeat(40), base: 'b'.repeat(40), evidence: 'target://exact-sha-check' } };
+  expect(f.run(value).output).toContain('MATCH');
+  for (const [where, key, changed] of [
+    ['checkout', 'hostId', 'env-worker-a'], ['checkout', 'environmentId', 'env-worker-b'],
+    ['checkout', 'path', '/target/other'], ['checkout', 'base', 'c'.repeat(40)],
+    ['readback', 'environmentId', 'env-worker-b'], ['readback', 'path', '/other'],
+    ['readback', 'candidate', 'c'.repeat(40)], ['readback', 'base', 'c'.repeat(40)],
+  ]) {
+    const bad = structuredClone(value);
+    (where === 'checkout' ? bad.fleetReceipt.checkout : bad.fleetReceipt.checkout.readback)[key] = changed;
+    const result = f.run(bad);
+    expect(result.status, result.output).toBe(2);
+    expect(result.output).toContain('receipt-checkout: fail');
+  }
+});
+
+
+test('independently consistent but wrong origin cannot bind to the selected recommendation', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetAttempt.origin.environmentId = 'env-worker-c';
+  value.fleetReceipt.status.environmentId = 'env-worker-c';
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-origin: fail');
+});
+
+test('idle destination still requires the independently completed exact run and final result', () => {
+  const f = fleet();
+  const value = receipt(f);
+  value.fleetReceipt.thread.value.thread.status = 'idle';
+  expect(f.run(value).output).toContain('MATCH');
+  value.fleetReceipt.terminal.value.status = 'idle';
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-terminal: fail');
+});
+
+test.each([
+  ['status', 'receipt-terminal'], ['terminal', 'receipt-terminal'],
+  ['thread', 'receipt-project'], ['remoteChild', 'receipt-run'],
+])('missing native %s keeps %s unknown', (field, code) => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetReceipt[field];
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain(`${code}: unknown`);
+});
