@@ -20,8 +20,9 @@ export function inspectFleetReceipt(receipt, expected) {
   const a = expected.attempt;
   const s = expected.recommendation.selected;
   const request = expected.recommendation.request;
-  term('receipt-origin', a?.origin?.environmentId === expected.recommendation.originEnvironmentId
-    && same(r.attempt?.origin, a?.origin), r.attempt?.origin);
+  term('receipt-origin', text(a?.origin?.threadId) && a?.origin?.environmentId === expected.recommendation.originEnvironmentId
+    && same(r.attempt?.origin, a?.origin), r.attempt?.origin,
+  !text(a?.origin?.threadId) || r.attempt?.origin == null);
   term('receipt-attempt', text(a?.key) && text(a?.clientRequestId) && text(a?.origin?.taskId)
     && same(r.attempt, a), r.attempt);
   term('receipt-recommendation', r.recommendationJSON === expected.recommendationJSON, r.recommendationJSON);

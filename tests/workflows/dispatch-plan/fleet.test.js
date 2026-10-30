@@ -471,3 +471,13 @@ test('unadvertised destination execution fields remain unknown with their native
   expect(term.state).toBe('unknown');
   expect(term.evidence).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
 });
+
+test('incomplete independent origin context cannot accept a self-consistent receipt', () => {
+  const f = fleet();
+  const value = receipt(f);
+  expect(f.run(value).output).toContain('MATCH');
+  delete value.fleetAttempt.origin.threadId;
+  const result = f.run(value);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('receipt-origin: unknown');
+});
