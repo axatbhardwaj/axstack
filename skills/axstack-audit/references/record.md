@@ -6,7 +6,7 @@ reason when evidence is missing; missing evidence is never a pass.
 
 ```text
 Run: <run identity + scope/authority + audit mode (end-of-run | checkpoint)>
-Baseline: <approved spec rev | peer mode | research mode | maintenance scope>
+Baseline: <approved spec rev | peer mode | research mode | maintenance scope | nonrepo report scope + source SHA-256>
 Acceptance: <passed / failed / unverified + test + SHA traces>
 Steps: <completed / deviated + why + approval per deviation>
 Advisers: <Astra/Opus configured coverage / eligible uses + same-question receipts; Astra/Fable high-stakes AGREE coverage / eligible uses>

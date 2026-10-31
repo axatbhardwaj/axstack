@@ -204,10 +204,10 @@ a candidate follows [UI verification](ui-verification.md).
 
 The driver must be the sole run-record writer and enforce one writer per
 candidate; it never writes tracked candidate source or tests or repairs an author's source.
-For explicit non-repository Research/Explain/Publish only,
+For supported non-repository report-only workflows only,
 [Local artifacts](local-artifacts.md) supplies the artifact branch of this table:
-source readers, diligence, explainers and article/UI reviewers use local shared
-native delegates with separate owned folders and exact SHA-256 snapshots.
+Only the matrix's direct and inherited roles use local shared native delegates
+with separate owned folders and exact SHA-256 snapshots.
 Its role allowlist excludes engineering authors and code reviewers; their native
 Git worktree rules above remain mandatory. Null repository alone grants nothing.
 

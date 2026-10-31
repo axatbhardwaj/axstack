@@ -29,10 +29,12 @@ Prefer parallel independent bounded work; no redundant workers. Fanout is depend
 capacity-driven within host/spending limits. [PR shape](pr-shape.md) covers
 theme/size; queue dependencies under [PR chains](pr-chain.md).
 
-For explicit non-repository Research/Explain/Publish artifacts, use
+For supported non-repository report-only workflows, use
 [Local artifacts](local-artifacts.md) for owned shared delegates and SHA-256
 receipts. The reviewer checkout row above applies to code candidates; article
 review retains independent source/fact and exact-byte UI/design checks.
+Brainstorm candidates and applicable judges retain independent report-only
+arena duties and conditional rounds; this grants no engineering authority.
 Null identity does not waive engineering isolation or authorize remote artifacts.
 
 ## Ownership
@@ -182,6 +184,10 @@ Build no custom scheduler, state engine or legacy fallback. See
 Audit measurement is enabled by default for every substantive run; dispatch
 follows [Close-out](#close-out) or a material-deviation/repeated-repair
 checkpoint. An `axstack-audit` run is excluded; it launches no children.
+For supported nonrepo report runs, keep the originating workflow and inherited
+auditor roles in [Local artifacts](local-artifacts.md); standalone audit uses
+workflow audit and never audits itself. Conditional advice uses that matrix
+and the standing advised-hold/escalation rules, without waiving parent prerequisites.
 Load [axstack-audit](../../axstack-audit/SKILL.md). Accepted proposals
 require a regression scenario and unchanged holdout checks; they change
 nothing without tested independent review.

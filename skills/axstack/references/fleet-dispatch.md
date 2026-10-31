@@ -7,7 +7,7 @@ records and forge actions. Helpers validate explicit saved inputs only: no
 network, clock, dispatch, retry, merge, retained state or aggregate permission grant.
 Synthetic evidence can pass binding checks; helpers cannot authenticate it.
 
-For explicit local non-repository Research/Explain/Publish work, apply
+For supported local non-repository report-only work, apply
 [Local artifacts](local-artifacts.md): its discriminated scope, native read/list
 null-identity proof and owned folders replace only the repository/checkout terms.
 All native execution authority and independent exact-byte review remain required.
