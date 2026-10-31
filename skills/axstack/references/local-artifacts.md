@@ -190,4 +190,13 @@ run and its bytes equal the destination final message. An explicit conflicting
 terminal summary, stale run, other version or remote result does not use this
 fallback. Preserve the raw native fields; do not rewrite them. Never synthesize an effective field from requested settings.
 The driver checks actual bytes and readbacks; helpers validate saved data only.
+For local artifact receipts on observed T3 0.1.5 only, a trimmed requested title
+longer than 72 UTF-16 code units may appear on the child as its first 69 units
+plus three ASCII periods (`...`). Compare that exact native projection, never
+an arbitrary prefix or Unicode ellipsis. Keep the full requested title in the
+independent attempt; do not rewrite either native or expected evidence. Task,
+child, run, parent, marker and artifact bindings still apply: clipped titles are
+not unique identity. Other versions, remote and engineering receipts retain
+exact title equality. Saved replay proves compatibility, not a fresh dispatch.
+
 Keep artifact receipts separate from Git candidate publication/PR/merge receipts.

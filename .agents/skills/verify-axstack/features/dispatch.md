@@ -245,6 +245,9 @@ Live nonrepo regression: include fleet-artifact-receipt tests for T3 0.1.5
 shared parent scratch inheritance and deduplicated local task summaries. Preserve
 raw native observations; require parent/path/run/byte bindings and reject stale
 or conflicting evidence. Replay is not a new live dispatch.
+Cover exact native title clipping at 72/73 UTF-16 units, the observed auditor
+title, wrong projections, and independent version/remote/engineering exclusions.
+A clipped title never replaces exact task/child/run/marker identity.
 
 Brainstorm proof includes configured candidate and applicable judge roles through
 selector/dispatch-plan/SHA-256 receipt, unavailable Grok/Fable holds without

@@ -238,3 +238,52 @@ test.each(reportSeats)('report-only %s configured selector/plan/receipt: %s', (w
   expect(held.status).toBe(2);
   expect(held.output).toContain('receipt-artifact-bytes: fail');
 });
+
+// T3 v0.1.5 subagentThreadTitle clips persisted child titles, not task identity.
+function titleReceipt(title) {
+  const pair = artifactReceipt(article());
+  pair.expected.recommendation.selected.versions = { t3: '0.1.5' };
+  pair.receipt.attempt.title = title;
+  pair.receipt.thread.value.thread.title = title;
+  return pair;
+}
+const titleState = (r, e) => inspectFleetReceipt(r, e).find((t) => t.code === 'receipt-title').state;
+
+test.each([
+  ['boundary72', 'x'.repeat(72), 'x'.repeat(72)],
+  ['boundary73', 'x'.repeat(73), 'x'.repeat(69) + '...'],
+  ['native auditor', 'Subagent: brainstorm-canary-389680b4:axstack-auditor-sol:inherited-audit:a1',
+    'Subagent: brainstorm-canary-389680b4:axstack-auditor-sol:inherited-au...'],
+  ['UTF16', 'x'.repeat(67) + '😀' + 'y'.repeat(5), 'x'.repeat(67) + '😀...'],
+])('local artifact title follows exact native projection: %s', (_, requested, native) => {
+  const { receipt: r, expected: e } = titleReceipt(requested);
+  expect(failedCodes(r, e)).toEqual([]);
+  r.thread.value.thread.title = native;
+  expect(failedCodes(r, e)).toEqual([]);
+  r.thread.value.thread.title = native.slice(0, -1) + '!';
+  expect(failedCodes(r, e)).toEqual(['receipt-title']);
+});
+
+test.each(['version', 'remote', 'engineering', 'prefix', 'ellipsis', 'short title', 'whitespace'])(
+  'native title compatibility rejects %s independently', (boundary) => {
+    const { receipt: r, expected: e } = titleReceipt('x'.repeat(73));
+    expect(failedCodes(r, e)).toEqual([]);
+    r.thread.value.thread.title = 'x'.repeat(69) + '...';
+    expect(failedCodes(r, e)).toEqual([]);
+    if (boundary === 'version') e.recommendation.selected.versions.t3 = '0.1.6';
+    if (boundary === 'remote') e.recommendation.originEnvironmentId = 'other';
+    if (boundary === 'engineering') delete e.recommendation.request.scope;
+    if (boundary === 'prefix') r.thread.value.thread.title = 'x'.repeat(68) + '...';
+    if (boundary === 'ellipsis') r.thread.value.thread.title = 'x'.repeat(69) + '…';
+    if (boundary === 'short title') r.attempt.title = 'x'.repeat(72);
+    if (boundary === 'whitespace') r.attempt.title += ' ';
+    expect(titleState(r, e)).toBe('fail');
+  });
+
+test('projected title never substitutes for exact child identity', () => {
+  const { receipt: r, expected: e } = titleReceipt('x'.repeat(73));
+  r.thread.value.thread.title = 'x'.repeat(69) + '...';
+  expect(failedCodes(r, e)).toEqual([]);
+  r.thread.value.thread.threadId = 'other';
+  expect(failedCodes(r, e)).toEqual(['receipt-destination']);
+});

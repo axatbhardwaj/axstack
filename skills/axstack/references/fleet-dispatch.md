@@ -130,6 +130,8 @@ attempt (key, exact title, clientRequestId, origin environmentId/threadId/taskId
 candidate/base SHAs for repositories, artifact SHA-256/null base for local artifacts),
 requested target/runtimeMode/isolation and native submission. Artifact ownership
 and byte readbacks follow [Local artifacts](local-artifacts.md#receipts).
+That reference also defines the local-only T3 0.1.5 child-title projection;
+the attempt always retains the full exact requested title.
 The driver's independent fleetAttempt is the expected run-record identity;
 never copy it from an arriving receipt to make a comparison pass.
 

@@ -41,7 +41,12 @@ export function inspectFleetReceipt(receipt, expected) {
     && r.thread?.environmentId === s.environmentId && thread?.threadId === child(status),
   { submitted: submitted?.remoteChild ?? submitted?.childThreadId,
     status: status?.remoteChild ?? status?.childThreadId, thread: r.thread?.environmentId });
-  term('receipt-title', text(a?.title) && thread?.title === a.title, thread?.title);
+  // T3 0.1.5 persists subagentThreadTitle's exact projection on local children.
+  // Full attempt/task/run/marker identity remains independently mandatory.
+  const projectedTitle = artifact && !remote && s.versions?.t3 === '0.1.5'
+    && text(a?.title) && a.title === a.title.trim() && a.title.length > 72
+    && thread?.title === a.title.slice(0, 69) + '...';
+  term('receipt-title', text(a?.title) && (thread?.title === a.title || projectedTitle), thread?.title);
   term('receipt-project', thread?.projectId === s.projectId, thread?.projectId);
   for (const [name, tool, environmentId, args] of [
     ['status', 'task_status', a?.origin?.environmentId, { taskId: a?.origin?.taskId }],
