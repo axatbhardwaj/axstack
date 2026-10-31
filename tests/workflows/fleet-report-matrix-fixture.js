@@ -12,7 +12,7 @@ export const reportWorkflows = {
   align: ['axstack-advisor-astra', 'axstack-advisor-opus', ...auditors],
   improve: ['axstack-research-code', 'axstack-research-code-sol', 'axstack-ui-verifier', 'axstack-ui-verifier-sonnet', ...auditors],
   audit: auditors,
-  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable', ...auditors],
+  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable'],
 };
 // Representative configured seats cover every newly supported direct family.
 export const reportSeats = [
@@ -25,7 +25,7 @@ export const reportSeats = [
   ['advice', ['axstack-advisor-astra', 'codex', 'gpt-6-astra', 'reasoningEffort', 'high']],
   ['advice', ['axstack-advisor-opus', 'claudeAgent', 'claude-opus-5-5', 'effort', 'xhigh']],
   ['advice', ['axstack-escalation-fable', 'claudeAgent', 'claude-fable-5-1', 'effort', 'xhigh']],
-  ...Object.keys(reportWorkflows).flatMap((workflow) => [
+  ...Object.keys(reportWorkflows).filter((workflow) => workflow !== 'advice').flatMap((workflow) => [
     [workflow, ['axstack-auditor', 'claudeAgent', 'claude-haiku-5-5', 'effort', 'xhigh']],
     [workflow, ['axstack-auditor-sol', 'codex', 'gpt-6.1-sol', 'reasoningEffort', 'high']],
   ]),

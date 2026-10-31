@@ -52,3 +52,11 @@ test.each(Object.keys(reportWorkflows))('%s never waives null-repo engineering o
   f.scope.environmentId = 'env-worker-a';
   expect(recommend(f.input, NOW).selected).toBeNull();
 });
+
+// Inherited audits retain the parent workflow, never its advice consultation.
+test.each(['axstack-auditor', 'axstack-auditor-sol'])('advice cannot alias parent audit %s', (role) => {
+  const f = report('brainstorm', role);
+  expect(recommend(f.input, NOW).selected).not.toBeNull();
+  f.scope.workflow = 'advice';
+  expect(() => recommend(f.input, NOW)).toThrow('request-schema');
+});

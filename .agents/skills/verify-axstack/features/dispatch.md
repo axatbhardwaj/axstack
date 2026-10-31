@@ -257,7 +257,7 @@ inventory fixture stays synchronized. The driver's real native No-project
 canary and independent review remain separate acceptance obligations.
 
 The explicit matrix also drives pre-repository Align advice, standalone and
-inherited auditor pairs on every supported parent workflow, nonversioned Improve
+inherited auditor pairs on supported parent workflows (never the advice alias), nonversioned Improve
 code/UI discovery and conditional shared advice. Direct caller roles and
 inherited auditor roles stay distinct; cross-workflow leakage and unsupported
 Spec/Tickets/Scout/Debug/Implement/Review-code/Verify/Watch workflows are rejected.

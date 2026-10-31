@@ -64,7 +64,7 @@ An allowlisted role never makes an unavailable seat executable.
 
 ## Workflow and inherited-role matrix
 
-Substantive runs in each supported workflow retain `axstack-auditor` and
+Substantive parent runs in each supported workflow retain `axstack-auditor` and
 `axstack-auditor-sol` under the lifecycle hook. Their passes must remain
 independent on the same bounded evidence, with configured optional-seat and
 mixed-provider rules unchanged. Audit never audits itself; its auditor workers
@@ -79,7 +79,7 @@ a degraded receipt, not evidence of a completed audit.
 | align | `axstack-advisor-astra`, `axstack-advisor-opus` | Both auditors | Pre-repository scope advice; stop before execution |
 | improve | `axstack-research-code`, `axstack-research-code-sol`, `axstack-ui-verifier`, `axstack-ui-verifier-sonnet` | Both auditors | Named nonversioned code/UI discovery only; second UI seat only under its dual-run trigger |
 | audit | `axstack-auditor`, `axstack-auditor-sol` | None; terminal audit | Standalone audit of explicit nonrepo evidence; only assigned `audit.md` is writable |
-| advice | `axstack-advisor-astra`, `axstack-advisor-opus`, `axstack-escalation-fable` | Both auditors for a substantive parent run | Only eligible existing shared advice; Fable retains its trigger |
+| advice | `axstack-advisor-astra`, `axstack-advisor-opus`, `axstack-escalation-fable` | None; audit retains the supported parent's workflow | Only eligible existing shared advice; Fable retains its trigger |
 
 The advice workflow permits only existing advised-hold, high-stakes or bounded
 escalation consultations under [Standing contracts](contracts.md). It never

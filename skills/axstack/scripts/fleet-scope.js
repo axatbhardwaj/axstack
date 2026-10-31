@@ -15,7 +15,7 @@ const workflowRoles = {
   improve: ['axstack-research-code', 'axstack-research-code-sol', 'axstack-ui-verifier',
     'axstack-ui-verifier-sonnet', ...auditRoles],
   audit: auditRoles,
-  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable', ...auditRoles],
+  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable'],
 };
 export const isArtifact = (request) => request?.scope?.kind === 'local-artifact';
 const path = (value) => typeof value === 'string' && value.startsWith('/') && value !== '/'
