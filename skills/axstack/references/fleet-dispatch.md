@@ -149,6 +149,9 @@ submission.childRunId; never use lexical ordering of IDs or the original summary
 Require completed/result_available/no pending children/no unanswered questions or
 approval. Require exactly one AXSTACK-DONE key/candidate/report marker on both origin's
 latestTerminalSummary and the destination's final current-run agent message.
+For local artifacts only, T3 0.1.5's deduplicated summary uses the exact
+run/byte-bound exception in [Local artifacts](local-artifacts.md#receipts);
+never rewrite raw native fields or extend it to remote/engineering receipts.
 A completion marker may be followed by the T3
 `PR <url>, head <sha>, checks and reviews <state>` trailer. Other trailing text
 or additional AXSTACK markers keep the receipt held.
