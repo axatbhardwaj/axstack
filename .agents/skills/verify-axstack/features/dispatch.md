@@ -175,7 +175,7 @@ tests keep a valid first model so the family guard cannot mask this boundary.
 ## Native inventory and terminal receipts (C3a)
 
 Entry points: fleet-inventory.js (via selector), fleet-destination.js (via
-fleet-dispatch.js) and fleet-receipt.js (via dispatch-plan --verify).
+fleet-dispatch.js), fleet-native-receipt.js and fleet-receipt.js (via dispatch-plan --verify).
 Prerequisites: offline Launch/Doctor and synthetic saved native envelopes only.
 No actual T3 call, credential, config edit, SSH agent or installed routing change.
 
@@ -189,7 +189,10 @@ bun "$SCRIPTS/dispatch-plan.js" --help > "$EVIDENCE/fleet-receipt-help.txt"
 
 Proof: independent host/environment/project identities, remoteChild with null
 local child, origin collisions/nested/pending dedup and unknown totals; valid
-native destination controls then single-fact holds; current terminal continuation
+native destination controls then single-fact holds; T3 0.1.5 optional native
+provider mode restrictions and cold project-read identity joined to complete
+host-bound project-list pages, with conflict/pagination/access/provider holds
+and unchanged exact catalog digests; current terminal continuation
 versus old summary/run, pending children/questions, settings and host-qualified
 candidate/base/path holds through real CLI subprocesses. Semantic runtime pins
 reject removal/inversion and survive rewording. Tests neither authenticate saved
@@ -200,3 +203,14 @@ is a separate later C3/C6 action; remote authors stay DISABLED after checkpoint-
 pilot failure. Effective fields unavailable from native APIs remain unknown.
 
 The native inventory/receipt suite must spread a pending batch even when native totals are unknown, and accept a single completion marker followed by the required T3 PR trailer while rejecting conflicting markers.
+
+The receipt drive also covers the T3 0.1.5 remote emitter's omitted options/null
+result-run ID through a host/version/argument-bound native family observation.
+Only a sole initial run with exact origin/destination final text can use that
+join; continuations, conflicting settings, unknown facts and live/unknown family
+members hold. The driver-owned acquisition procedure is in
+[fleet dispatch](../../../../skills/axstack/references/fleet-dispatch.md#t3-015-initial-remote-receipt).
+Read-only authenticated native RPC is distinct from agent execution. Offline
+saved-live replay preserves raw bytes and uses labelled synthetic envelopes; it
+proves no fresh dispatch, authentication, recovery or session lifecycle. Retain
+named negative/mutation logs and rerun restored source green after the probes.

@@ -1,5 +1,6 @@
 // Saved evidence validator. A pass binds supplied facts; it cannot authenticate them.
 import { canonical, record, text, time } from './fleet-config.js';
+import { inspectNativeFamily } from './fleet-native-receipt.js';
 
 function options(value) {
   if (!Array.isArray(value)) return record(value) ? value : null;
@@ -57,12 +58,30 @@ export function inspectFleetReceipt(receipt, expected) {
     && target?.providerInstanceId === request.providerInstanceId && target?.model === request.model
     && same(options(target?.options), request.options) && r.requested?.runtimeMode === request.runtimeMode,
   r.requested);
+  const native = r.nativeFamily === undefined ? null : inspectNativeFamily(r, expected);
+  if (native) terms.push(...native.terms);
+  const shell = native?.shell;
+  const nativeValid = remote && native?.terms.every((t) => t.state === 'pass');
+  if (native) term('receipt-effective', shell?.providerInstanceId === request.providerInstanceId
+    && shell?.modelSelection?.instanceId === request.providerInstanceId
+    && shell?.modelSelection?.model === request.model
+    && Array.isArray(shell?.modelSelection?.options)
+    && same(options(shell?.modelSelection?.options), request.options)
+    && shell?.runtimeMode === request.runtimeMode, shell?.modelSelection);
+  const runs = r.thread?.value?.recentRuns;
+  // Without the origin result-run ID, only the sole initial run can own its summary.
+  const initial = nativeValid && status?.childThreadId === null && submitted?.childThreadId === null
+    && status?.childRunId === null && submitted?.childRunId === null
+    && status?.latestTerminalRunId === null && thread?.runCount === 1
+    && Array.isArray(runs) && runs.length === 1 && runs[0]?.ordinal === 1;
+  const effectiveOptions = status?.options === undefined && initial
+    ? shell?.modelSelection?.options : status?.options;
   term('receipt-effective', status?.providerInstanceId === request.providerInstanceId
     && status?.model === request.model && thread?.providerInstanceId === request.providerInstanceId
-    && thread?.model === request.model && same(options(status?.options), request.options)
+    && thread?.model === request.model && same(options(effectiveOptions), request.options)
     && thread?.runtimeMode === request.runtimeMode, { provider: status?.providerInstanceId,
-    model: status?.model, options: status?.options ?? null, runtimeMode: thread?.runtimeMode },
-  status?.options == null || thread?.runtimeMode == null);
+    model: status?.model, options: effectiveOptions ?? null, runtimeMode: thread?.runtimeMode },
+  effectiveOptions == null || thread?.runtimeMode == null);
   const terminal = r.terminal?.value;
   term('receipt-terminal', status?.status === 'completed' && status?.latestTerminalStatus === 'completed'
     && status?.workState === 'result_available' && status?.hasPendingChildRuns === false
@@ -84,9 +103,8 @@ export function inspectFleetReceipt(receipt, expected) {
     && questions.value.requests.length === 0, questions,
   questions == null || questions.value?.requests === undefined);
   const current = thread?.latestRunId;
-  const runs = r.thread?.value?.recentRuns;
   const latest = Array.isArray(runs) ? runs.find((v) => v.runId === current) : null;
-  term('receipt-run', text(current) && status?.latestTerminalRunId === current
+  term('receipt-run', text(current) && (status?.latestTerminalRunId === current || initial)
     && terminal?.threadId === child(status) && terminal?.runId === current
     && (!terminal?.resultRun || (terminal.resultRun.runId === current && terminal.resultRun.status === 'completed'))
     && (!remote || (r.remoteChild?.environmentId === s.environmentId
@@ -94,7 +112,7 @@ export function inspectFleetReceipt(receipt, expected) {
     && latest?.status === 'completed' && Number.isSafeInteger(latest?.ordinal)
     && runs.every((v) => Number.isSafeInteger(v.ordinal) && v.ordinal <= latest.ordinal),
   { current, originTerminal: status?.latestTerminalRunId, terminal, runs },
-  !current || !status?.latestTerminalRunId || !terminal?.runId || !Array.isArray(runs)
+  !current || (!status?.latestTerminalRunId && !initial) || !terminal?.runId || !Array.isArray(runs)
     || (remote && !r.remoteChild?.runId));
   const marker = `AXSTACK-DONE key=${a?.key} head=${a?.candidate} report=${r.evidence?.path}`;
   const finalMarker = (value) => {
@@ -110,7 +128,8 @@ export function inspectFleetReceipt(receipt, expected) {
   const items = r.thread?.value?.items;
   const final = Array.isArray(items) ? items.filter((v) => v.runId === current && v.createdBy === 'agent').at(-1) : null;
   term('receipt-marker', /^[a-f0-9]{40}$/.test(a?.candidate ?? '')
-    && finalMarker(status?.latestTerminalSummary) === marker && finalMarker(final?.text) === marker,
+    && finalMarker(status?.latestTerminalSummary) === marker && finalMarker(final?.text) === marker
+    && (!initial || status?.latestTerminalSummary === final?.text),
   { origin: status?.latestTerminalSummary, destination: final?.text });
   term('receipt-host-path', r.evidence?.hostId === s.hostId && r.evidence?.environmentId === s.environmentId
     && absolute(r.evidence?.path) && finalMarker(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);

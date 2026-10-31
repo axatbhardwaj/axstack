@@ -25,7 +25,7 @@ Synthetic evidence can pass binding checks; helpers cannot authenticate it.
 3. Keep the model/effort/provider pins from the run; do not re-resolve to another
    model when quota/auth/timeout fails. Missing native `t3_thread_configuration`
    means unavailable effective fields stay unknown. Catalog runtimeModes advertise
-   support; they do not prove effective access. Native task/thread facts supply
+   provider restrictions; they do not prove effective access. Native task/thread facts supply
    only the fields actually returned. A worker assertion is not native readback.
 4. Normalize current driver assignments and the pending batch as below. Sample
    telemetry with C2's bounded command, then recompute C1 immediately before each
@@ -71,7 +71,25 @@ excludes the forwarding environmentId, and evidence points to the preserved raw
 native call/result. environment/project/capabilities are read on the selected
 host; links are read on origin. The capabilities envelope uses `valueText` for
 exact raw catalog bytes instead of value. Project repositoryIdentity.canonicalKey
-must match the requested repositoryId. Unknown mappings hold rather than guessing.
+must match the requested repositoryId. If project-read identity is null/omitted,
+`projectList` may carry an ordered array of `t3_project_list` read envelopes on
+that same environment. Collect from cursor 0 through native nextCursor:null,
+recording actual cursor/limit arguments (native defaults: 0/20, limit at most 100).
+Every page must join without gaps, extra arguments or duplicate project IDs.
+The selected project's ID and workspaceRoot must equal project-read; every
+available canonicalKey must equal repositoryId, including when both reads have
+identity. Missing identity in both, incomplete pagination and any conflict hold.
+
+For observed T3 0.1.5 native Codex/Claude drivers, omitted provider runtimeModes
+means no provider restriction: native resolveRuntimeMode and RuntimePolicy
+preserve the requested mode. Bind this only with catalog runtimeMode equal to
+the request, exactly one selected provider, canRunChildTask:true and an explicit
+empty constraints array. Explicit mode restrictions must include the requested
+mode. Unknown version/driver omission semantics, missing caller authority,
+unavailable providers or restrictions hold. This is preflight support, never
+proof of a child's effective mode; terminal receipts still require actual native
+readback. Preserve the exact catalog bytes/digest; do not synthesize runtimeModes
+or repositoryIdentity in the saved raw reads. Unknown mappings hold rather than guessing.
 The pure `inspectDestination` API returns per-term pass/fail/unknown with evidence;
 `dispatch-plan` holds on a failed/unknown term. This is supplied binding proof only.
 
@@ -131,7 +149,51 @@ For isolated review include checkout with those fields, candidate/base and readb
 Never infer local file existence from a remote absolute path.
 Requested settings remain separate from effective native status.providerInstanceId,
 model/options and thread.providerInstanceId/model/runtimeMode. Missing effective
-options or mode is unknown and holds required verification.
+options or mode is unknown and holds required verification, except for the bounded
+T3 0.1.5 initial remote-launch join below.
+
+### T3 0.1.5 initial remote receipt
+
+The remote `readRemoteTask` emitter omits options and returns null childRunId and
+latestTerminalRunId. Preserve those raw omissions/nulls. A current family shell
+is current thread metadata, not an immutable settings record for an older run.
+Never use it to authorize a continuation from an origin summary lacking a run ID.
+
+For the sole initial remote run, optional receipt `nativeFamily` can corroborate
+settings and run identity. The driver acquires `orchestration.getThreadFamily`
+with exact `{threadId}` on the actual destination using an authenticated native
+RPC read with `orchestration:read` scope. This is metadata access, not agent
+execution or an alternate worker launch path. Record host/environment identity,
+authenticated acquisition provenance, exact request/result, and independently
+observed server version. Do not execute an agent through SSH/CLI to obtain it.
+Temporary read sessions require their authorized lifecycle and revocation; never
+put tokens/tickets into evidence. This contract grants no auth/session authority.
+
+The envelope is `{tool:"orchestration.getThreadFamily",transport:"t3-native-rpc",
+environmentId,serverVersion:"0.1.5",args:{threadId},observedAt,evidence,value}`.
+`value` is the unmodified native `{snapshotSequence,threads}` response. Retain
+raw bytes separately, including any diagnostic/revocation trailer; parse only
+the JSON response into a separate file. Never rewrite the raw response as JSON.
+The version must also match selected destination versions; observe the family
+after thread/wait and no later than receipt evaluation. Missing provenance holds.
+
+Require a unique child with the selected project, exact title/current run,
+provider/model/options/mode and delegatedFrom origin environment/thread. Every
+returned family member must explicitly have idle/completed status, null active
+run/request, zero pending guest input and an empty pendingBackgroundTasks array.
+Unknown or live descendants hold even when remote status claims no pending child.
+
+The fallback requires native thread runCount:1, exactly one recentRuns row at
+ordinal:1, null local child IDs/childRunIds on status/submission, null origin
+latestTerminalRunId, and identical origin/destination final text. Existing
+current-run, completed terminal, marker, question and host/path checks still
+apply. Explicit status options or run IDs cannot be overwritten by family facts.
+T3 remote launch forwards the accepted explicit model selection and uses it for
+both thread creation and the initial message; this is the source-backed scope
+of the join. More runs or missing counts/ordinals hold. Later continuations need
+actual result-run/per-run settings provenance; repeated matching markers or
+current family settings are insufficient. Complete native statuses retain their
+existing run-ID path. Saved inputs cannot authenticate their own provenance.
 
 `inspectFleetReceipt(receipt,{attempt,recommendation,recommendationJSON,now})`
 returns terms, never authority. Existing dispatch-plan --verify can additionally

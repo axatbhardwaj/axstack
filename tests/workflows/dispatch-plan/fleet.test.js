@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { inspectDestination } from '../../../skills/axstack/scripts/fleet-destination.js';
+import { inspectFleetReceipt } from '../../../skills/axstack/scripts/fleet-receipt.js';
 import { recommend } from '../../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from '../fleet-route-fixture.js';
 import { configuration, invoke, setup } from './fixtures.js';
@@ -353,6 +354,8 @@ test.each([
 });
 
 function observation(f) {
+  f.capabilities.runtimeMode = 'full-access';
+  f.capabilities.providers[0].constraints = [];
   f.capabilities.providers[0].runtimeModes = ['full-access'];
   f.refreshCatalog();
   const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
@@ -537,17 +540,18 @@ test.each([
 });
 
 
-test('unadvertised destination execution fields remain unknown with their native evidence', () => {
+test('unadvertised caller execution authority remains unknown with its native evidence', () => {
   const f = fleet();
   const observed = observation(f);
   const inspect = () => inspectDestination(observed, f.saved, observed.capabilities.valueText, NOW);
   expect(inspect().every((t) => t.state === 'pass')).toBe(true);
   const catalog = JSON.parse(observed.capabilities.valueText);
   delete catalog.providers[0].runtimeModes;
+  delete catalog.runtimeMode;
   observed.capabilities.valueText = JSON.stringify(catalog);
   const term = inspect().find((t) => t.code === 'destination-execution');
   expect(term.state).toBe('unknown');
-  expect(term.evidence).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
+  expect(term.evidence.provider).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
 });
 
 test('incomplete independent origin context cannot accept a self-consistent receipt', () => {
@@ -609,4 +613,268 @@ test.each(['missing requests', 'raw requestIds'])('unextracted question list sta
   expect(result.status).toBe(2);
   expect(result.output).toContain('receipt-question: unknown');
   expect(result.output).not.toContain('receipt-question: fail');
+});
+
+// T3 0.1.5: project-list resolves cold identities; native providers omit mode restrictions.
+function nativeOptional(f) {
+  const o = observation(f);
+  const project = structuredClone(o.project.value);
+  o.project.value.repositoryIdentity = null;
+  o.projectList = [{ ...structuredClone(o.project), tool: 't3_project_list', args: { cursor: 0, limit: 100 },
+    value: { projects: [project], nextCursor: null } }];
+  delete f.capabilities.providers[0].runtimeModes;
+  f.capabilities.runtimeMode = 'full-access';
+  f.capabilities.providers[0].constraints = [];
+  f.refreshCatalog();
+  o.capabilities.valueText = JSON.stringify(f.capabilities);
+  f.input.nativeDestination = o;
+  return o;
+}
+
+test.each([null, undefined])('native optional fields bind canonical list identity when read identity is %s', (identity) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  o.project.value.repositoryIdentity = identity;
+  const before = JSON.stringify(o);
+  planned(f);
+  expect(f.run(f.readback()).output).toContain('MATCH');
+  expect(JSON.stringify(o)).toBe(before);
+  expect(f.readback().fleetBinding.destinationCapabilitiesDigest).toBe(
+    new Bun.CryptoHasher('sha256').update(o.capabilities.valueText).digest('hex'));
+});
+
+test.each([
+  ['destination-repository', (o) => { o.project.value.repositoryIdentity = { canonicalKey: 'other/repo' }; }],
+  ['destination-repository', (o) => { o.projectList[0].value.projects[0].repositoryIdentity.canonicalKey = 'other/repo'; }],
+  ['destination-repository', (o) => { o.projectList[0].value.projects[0].repositoryIdentity = null; }],
+  ['destination-project-list', (o) => { o.projectList[0].environmentId = 'env-worker-b'; }],
+  ['destination-project-list', (o) => { o.projectList[0].tool = 'worker-self-report'; }],
+  ['destination-project-list', (o) => { o.projectList[0].observedAt = NOW + 1; }],
+  ['destination-project-list', (o) => { o.projectList[0].args.cursor = 100; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.nextCursor = 100; }],
+  ['destination-project-list', (o) => { delete o.projectList[0].value.nextCursor; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects.push(structuredClone(o.projectList[0].value.projects[0])); }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects[0].id = 'other-project'; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects[0].workspaceRoot = '/different/root'; }],
+  ['destination-project', (o) => { o.project.value.id = 'other-project'; }],
+  ['destination-access', (o) => { o.links.value.links[0].status = 'unreachable'; }],
+  ['destination-access', (o) => { o.links.value.links[0].expiresAt = new Date(NOW).toISOString(); }],
+  ['destination-access', (o) => { o.links.value.links[0].access = 'read-only'; }],
+])('native optional identity/access evidence holds on %s', (code, change) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(o);
+  held(f.run(), code);
+});
+
+test.each([
+  ['unsupported explicit mode', (c) => { c.providers[0].runtimeModes = ['approval-required']; }],
+  ['malformed mode restriction', (c) => { c.providers[0].runtimeModes = null; }],
+  ['disabled provider', (c) => { c.providers[0].canRunChildTask = false; }],
+  ['unknown provider availability', (c) => { delete c.providers[0].canRunChildTask; }],
+  ['unavailable provider', (c) => { c.providers.shift(); }, 'resolver'],
+  ['ambiguous provider', (c) => { c.providers.push(structuredClone(c.providers[0])); }, 'resolver'],
+  ['denied caller mode', (c) => { c.runtimeMode = 'approval-required'; }],
+  ['unknown caller mode', (c) => { delete c.runtimeMode; }],
+  ['provider constraint', (c) => { c.providers[0].constraints = ['unavailable']; }],
+  ['unknown provider constraints', (c) => { delete c.providers[0].constraints; }],
+].map(([name, change, boundary]) => [name, change, boundary ?? 'destination']))('native optional runtime evidence holds: %s', (_, change, boundary) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(f.capabilities);
+  f.refreshCatalog();
+  o.capabilities.valueText = JSON.stringify(f.capabilities);
+  const result = f.run();
+  if (boundary === 'resolver') {
+    expect(result.status).toBe(2);
+    expect(result.error).toBe('model capabilities resolution hold: unknown or ambiguous provider instance codex\n');
+    expect(result.output).toBe('');
+  } else held(result, 'destination-execution');
+});
+
+test('complete native project pagination joins only the selected project', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  const first = o.projectList[0];
+  first.args.limit = 1;
+  const second = structuredClone(first);
+  first.value.projects[0].id = 'unrelated-project';
+  first.value.nextCursor = 1;
+  second.args.cursor = 1;
+  o.projectList.push(second);
+  planned(f);
+  o.projectList.reverse();
+  held(f.run(), 'destination-project-list');
+});
+
+test('unproven schema semantics do not accept omitted provider modes', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  o.environment.value.serverVersion = 'unknown';
+  held(f.run(), 'destination-execution');
+});
+
+function nativeNextProjectPage(o, limit = 1) {
+  const first = o.projectList[0];
+  const second = structuredClone(first);
+  first.args = { cursor: 0, limit };
+  first.value.projects = Array.from({ length: limit }, (_, i) => ({
+    ...structuredClone(second.value.projects[0]), id: `unrelated-${i}`,
+  }));
+  first.value.nextCursor = limit;
+  second.args = { cursor: limit, limit };
+  o.projectList.push(second);
+  return [first, second];
+}
+
+test.each([
+  ['truncated final page', (o) => { o.projectList[0].args.limit = 1; o.projectList[0].value.nextCursor = 1; }],
+  ['cursor gap', (o) => { const [first, second] = nativeNextProjectPage(o); first.value.nextCursor = 2; second.args.cursor = 2; }],
+  ['omitted later cursor', (o) => { const [, second] = nativeNextProjectPage(o); delete second.args.cursor; }],
+  ['extra request argument', (o) => { o.projectList[0].args.search = 'synthetic'; }],
+  ['limit above native maximum', (o) => { o.projectList[0].args.limit = 101; }],
+  ['rows exceed requested limit', (o) => {
+    const page = o.projectList[0];
+    page.args.limit = 1;
+    page.value.projects.unshift({ ...structuredClone(page.value.projects[0]), id: 'unrelated' });
+  }],
+])('native project pagination: %s holds', (_, change) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(o);
+  held(f.run(), 'destination-project-list');
+});
+
+test('native project pagination: omitted cursor and limit use native defaults', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  const [first, second] = nativeNextProjectPage(o, 20);
+  first.args = {};
+  second.args = { cursor: 20 };
+  planned(f);
+});
+
+// Remote 0.1.5 readRemoteTask omits options and returns null result-run IDs.
+function remoteNativeReceipt(f) {
+  const value = receipt(f);
+  const r = value.fleetReceipt;
+  delete r.status.value.options;
+  delete r.submission.options;
+  r.status.value.latestTerminalRunId = null;
+  r.status.value.childRunId = r.submission.childRunId = null;
+  r.thread.value.thread.runCount = 1;
+  r.thread.value.recentRuns = [{ runId: 'continued-run', ordinal: 1, status: 'completed' }];
+  r.nativeFamily = { tool: 'orchestration.getThreadFamily', transport: 't3-native-rpc',
+    environmentId: 'env-worker-a', serverVersion: '0.1.5', args: { threadId: 'same-thread' },
+    observedAt: NOW, evidence: 'saved://authenticated-native-family', value: { snapshotSequence: 42, threads: [{
+      id: 'same-thread', projectId: 'project-worker-a', title: r.attempt.title,
+      providerInstanceId: 'codex', modelSelection: { instanceId: 'codex', model: 'gpt-6.1-sol',
+        options: [{ id: 'reasoningEffort', value: 'high' }, { id: 'serviceTier', value: 'priority' }] },
+      runtimeMode: 'full-access', latestRunId: 'continued-run', status: 'completed', activeRunId: null,
+      pendingBackgroundTasks: [], pendingRuntimeRequest: null, pendingGuestMessageCount: 0,
+      delegatedFrom: { environmentId: 'env-personal-a', threadId: 'driver' },
+    }] } };
+  return value;
+}
+
+test('remote native receipt binds omitted settings and null result-run without fabricating status', () => {
+  const f = fleet();
+  const v = remoteNativeReceipt(f);
+  const before = JSON.stringify(v);
+  const result = f.run(v);
+  expect(result.status, result.output).toBe(0);
+  expect(result.output).toContain('MATCH');
+  expect(JSON.stringify(v)).toBe(before);
+});
+
+test.each([
+  ['missing family', (r) => { delete r.nativeFamily; }],
+  ['wrong tool', (r) => { r.nativeFamily.tool = 'worker-self-report'; }],
+  ['wrong transport', (r) => { r.nativeFamily.transport = 'agent-cli'; }],
+  ['wrong environment', (r) => { r.nativeFamily.environmentId = 'env-worker-b'; }],
+  ['unknown version', (r) => { r.nativeFamily.serverVersion = 'unknown'; }],
+  ['wrong arguments', (r) => { r.nativeFamily.args.threadId = 'another-thread'; }],
+  ['extra arguments', (r) => { r.nativeFamily.args.projectId = 'project-worker-a'; }],
+  ['future observation', (r) => { r.nativeFamily.observedAt = NOW + 1; }],
+  ['missing provenance', (r) => { r.nativeFamily.evidence = ''; }],
+  ['unknown sequence', (r) => { delete r.nativeFamily.value.snapshotSequence; }],
+  ['empty family', (r) => { r.nativeFamily.value.threads = []; }],
+  ['duplicate child', (r) => { r.nativeFamily.value.threads.push(structuredClone(r.nativeFamily.value.threads[0])); }],
+  ...Object.entries({ id: 'other-thread', projectId: 'other-project', latestRunId: 'old-run',
+    runtimeMode: 'auto', status: 'running', activeRunId: 'new-run', providerInstanceId: 'other' })
+    .map(([key, v]) => [key, (r) => { r.nativeFamily.value.threads[0][key] = v; }]),
+  ['wrong origin', (r) => { r.nativeFamily.value.threads[0].delegatedFrom.threadId = 'other-driver'; }],
+  ['wrong origin environment', (r) => { r.nativeFamily.value.threads[0].delegatedFrom.environmentId = 'env-worker-b'; }],
+  ['wrong model', (r) => { r.nativeFamily.value.threads[0].modelSelection.model = 'other'; }],
+  ['wrong instance', (r) => { r.nativeFamily.value.threads[0].modelSelection.instanceId = 'other'; }],
+  ['wrong options', (r) => { r.nativeFamily.value.threads[0].modelSelection.options[0].value = 'low'; }],
+  ['unknown options', (r) => { delete r.nativeFamily.value.threads[0].modelSelection.options; }],
+  ['non-native options shape', (r) => { r.nativeFamily.value.threads[0].modelSelection.options = { reasoningEffort: 'high', serviceTier: 'priority' }; }],
+  ['conflicting status options', (r) => { r.status.value.options = [{ id: 'reasoningEffort', value: 'low' }]; }],
+  ['pending background', (r) => { r.nativeFamily.value.threads[0].pendingBackgroundTasks.push({ id: 'child' }); }],
+  ['unknown background', (r) => { delete r.nativeFamily.value.threads[0].pendingBackgroundTasks; }],
+  ['pending request', (r) => { r.nativeFamily.value.threads[0].pendingRuntimeRequest = { id: 'question' }; }],
+  ['unknown pending request', (r) => { delete r.nativeFamily.value.threads[0].pendingRuntimeRequest; }],
+  ['guest input', (r) => { r.nativeFamily.value.threads[0].pendingGuestMessageCount = 1; }],
+  ['stale continuation', (r) => { r.thread.value.thread.runCount = 2; r.thread.value.recentRuns[0].ordinal = 2; }],
+  ['unknown run count', (r) => { delete r.thread.value.thread.runCount; }],
+  ['contradictory origin run', (r) => { r.status.value.latestTerminalRunId = 'old-run'; }],
+  ['different origin summary', (r) => { r.status.value.latestTerminalSummary = 'old response\n' + r.status.value.latestTerminalSummary; }],
+  ['wrong family title', (r) => { r.nativeFamily.value.threads[0].title = 'other attempt'; }],
+  ['active descendant', (r) => { r.nativeFamily.value.threads.push({ id: 'descendant', status: 'running', activeRunId: 'child-run', pendingBackgroundTasks: [], pendingRuntimeRequest: null, pendingGuestMessageCount: 0 }); }],
+  ['unknown descendant', (r) => { r.nativeFamily.value.threads.push({ id: 'descendant' }); }],
+
+  ['unknown family response', (r) => { delete r.nativeFamily.value; }],
+  ['old native observation', (r) => { r.nativeFamily.observedAt = NOW - 1; }],
+  ['negative sequence', (r) => { r.nativeFamily.value.snapshotSequence = -1; }],
+  ['unknown guest input', (r) => { delete r.nativeFamily.value.threads[0].pendingGuestMessageCount; }],
+  ['local status child', (r) => { r.status.value.childThreadId = 'same-thread'; }],
+  ['local submission child', (r) => { r.submission.childThreadId = 'same-thread'; }],
+  ['status child run', (r) => { r.status.value.childRunId = 'old-run'; }],
+  ['submission child run', (r) => { r.submission.childRunId = 'old-run'; }],
+  ['unknown terminal id', (r) => { delete r.status.value.latestTerminalRunId; }],
+  ['null status options', (r) => { r.status.value.options = null; }],
+  ['second ordinal', (r) => { r.thread.value.recentRuns[0].ordinal = 2; }],
+  ['extra recent run', (r) => { r.thread.value.recentRuns.push({ runId: 'old-run', ordinal: 0, status: 'completed' }); }],
+  ['conflicting thread count', (r) => { r.thread.value.thread.runCount = 2; }],
+  ['unsupported native server version', (r) => { r.nativeFamily.serverVersion = '0.1.4'; }],
+
+])('remote native receipt holds on %s', (_, change) => {
+  const f = fleet();
+  const v = remoteNativeReceipt(f);
+  expect(f.run(v).output).toContain('MATCH');
+  change(v.fleetReceipt);
+  const result = f.run(v);
+  expect(result.status, result.output).toBe(2);
+  expect(result.output).not.toContain('MATCH');
+});
+
+test('complete local native receipt retains the exact run-ID path', () => {
+  const f = fleet();
+  const r = receipt(f).fleetReceipt;
+  const recommendation = structuredClone(f.saved);
+  recommendation.originEnvironmentId = 'env-worker-a';
+  r.recommendationJSON = JSON.stringify(recommendation);
+  r.attempt.origin.environmentId = r.status.environmentId = 'env-worker-a';
+  r.status.value.childThreadId = r.submission.childThreadId = 'same-thread';
+  delete r.status.value.remoteChild;
+  delete r.submission.remoteChild;
+  const terms = inspectFleetReceipt(r, { attempt: structuredClone(r.attempt),
+    recommendation, recommendationJSON: r.recommendationJSON, now: NOW });
+  expect(terms.every((t) => t.state === 'pass')).toBe(true);
+});
+
+test('remote native receipt rejects a different selected destination version', () => {
+  const f = fleet();
+  const r = remoteNativeReceipt(f).fleetReceipt;
+  const recommendation = structuredClone(f.saved);
+  recommendation.selected.versions.t3 = '0.1.6';
+  r.recommendationJSON = JSON.stringify(recommendation);
+  const terms = inspectFleetReceipt(r, { attempt: structuredClone(r.attempt),
+    recommendation, recommendationJSON: r.recommendationJSON, now: NOW });
+  expect(terms.some((t) => t.code === 'receipt-native-family' && t.state !== 'pass')).toBe(true);
 });
