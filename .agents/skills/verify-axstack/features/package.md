@@ -21,7 +21,17 @@ find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
 find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
   > "$EVIDENCE/archives-after.txt"
 cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
-for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
+for MEMBER in skills/axstack-align/SKILL.md \
+  skills/axstack-audit/SKILL.md \
+  skills/axstack-audit/references/record.md \
+  skills/axstack-improve/SKILL.md \
+  skills/axstack/references/contracts.md \
+  skills/axstack/references/lifecycle.md \
+  skills/axstack/references/role-roster.md \
+  skills/axstack/references/t3-runtime.md \
+  skills/axstack/references/ui-verification.md \
+  skills/axstack-brainstorm/SKILL.md \
+  skills/axstack-brainstorm/references/arena.md bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/fleet-route.js skills/axstack/scripts/fleet-config.js \
   skills/axstack/scripts/fleet-facts.js skills/axstack/scripts/fleet-scope.js \
   skills/axstack/references/local-artifacts.md skills/axstack/references/fleet-route-schema.md \
@@ -55,7 +65,7 @@ for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack-watch/references/repair-publication.md; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
-if rg '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
+if grep -Eq '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
   echo 'repository verification skill unexpectedly packaged' >&2
   exit 1
 fi

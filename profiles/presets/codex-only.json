@@ -296,7 +296,7 @@
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Intentional single-provider absence in the codex-only preset; Grok candidate unavailable. Arena holds without substitution."
+      "notes": "Record the intentional single-provider absence of optional Grok in codex-only. Never substitute another model. Required candidate and judge absences still hold their applicable question or round."
     }
   ]
 }

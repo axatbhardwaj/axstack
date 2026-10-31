@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { requires, prohibits, sentences } from './prose-contract.js';
+import { requires, prohibits, sentences, checkRule } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const skill = 'skills/axstack-brainstorm/SKILL.md';
@@ -89,5 +89,19 @@ for (const [name, path, check, paraphrase, inversion] of rules) {
     expect(check(rest.join('. ')), `${name}: removal`).toBe(false);
     expect(check([...rest, inversion].join('. ')), `${name}: directional inversion`).toBe(false);
     expect(check([...rest, paraphrase].join('. ')), `${name}: equivalent rewording`).toBe(true);
+  });
+}
+
+for (const preset of ['codex-only', 'claude-only']) {
+  test(`${preset}: optional Grok absence is recorded without borrowing another model`, () => {
+    const data = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8'));
+    const seat = data.roles.find((r) => r.id === 'axstack-arena-candidate-grok');
+    expect(seat.model).toBeNull();
+    const concepts = [/record/i, /intentional/i, /absence/i, /optional Grok/i];
+    checkRule(seat.notes, (text) => sentences(text).some((sentence) => /optional Grok/i.test(sentence)
+      && requires(sentence.replace(/optional/gi, ''), /record/i, /intentional/i, /absence/i, /Grok/i)),
+      'Record the intentional absence of optional Grok.', [[/record/i, 'Skip recording']], concepts);
+    checkRule(seat.notes, (text) => prohibits(text, /never|do not/i, /substitute/i),
+      'Do not substitute another model.', [[/never|do not/i, 'Always']], [/substitute/i]);
   });
 }

@@ -4,6 +4,22 @@ import { readFileSync } from 'node:fs';
 const root = `${import.meta.dir}/../../skills`;
 const contract = () => readFileSync(`${root}/axstack/references/local-artifacts.md`, 'utf8');
 const rules = [
+  { name: 'substantive report workflows retain independent inherited audit',
+    tests: [/substantive.*each supported workflow/i, /axstack-auditor.*axstack-auditor-sol/i,
+      /(?:must remain|shall stay) independent/i, /audit never audits itself/i],
+    phrase: 'must remain', inverted: 'need not remain', equivalent: 'shall stay' },
+  { name: 'conditional advice cannot waive parent prerequisites',
+    tests: [/advice.*(?:permits only|allows only).*existing.*advised-hold.*high-stakes.*escalation/i,
+      /never.*waives.*parent.*repository.*store.*tracker/i],
+    phrase: 'permits only', inverted: 'permits arbitrary advice beyond', equivalent: 'allows only' },
+  { name: 'Brainstorm is a separate report-only role scope',
+    tests: [/brainstorm (?:permits only|allows only)/i, /candidate.*astra.*opus.*grok/i,
+      /judge.*opus.*fable.*astra/i, /report-only/i, /never.*implementation.*spec approval/i],
+    phrase: 'permits only', inverted: 'permits arbitrary roles alongside', equivalent: 'allows only' },
+  { name: 'Brainstorm independence and conditional judges remain procedural',
+    tests: [/candidates (?:must remain|shall stay) independent/i, /judges never author/i,
+      /rung 1.*no judge/i, /rung 2.*round 1/i, /round 2.*disagreement.*rejection/i],
+    phrase: 'must remain', inverted: 'need not remain', equivalent: 'shall stay' },
   { name: 'explicit scope keeps engineering and remote boundaries',
     tests: [/explicitly bound.*non-repository/i, /null repository identity alone (?:never authorizes|cannot authorize)/i,
       /engineering authors and code reviewers.*(?:still require|must retain).*repository.*native.*worktree isolation/i,
@@ -43,7 +59,10 @@ test('dispatch/schema/lifecycle/role/review and all article callers join the sam
     'axstack/references/t3-runtime.md', 'axstack/references/lifecycle.md', 'axstack/references/role-roster.md',
     'axstack/references/diligence.md', 'axstack/references/ui-verification.md',
     'axstack-review/SKILL.md', 'axstack-research/SKILL.md', 'axstack-explain/SKILL.md',
-    'axstack-publish/SKILL.md', 'axstack-explain/references/visual-qa.md']) {
+    'axstack-publish/SKILL.md', 'axstack-brainstorm/SKILL.md',
+    'axstack-brainstorm/references/arena.md', 'axstack-align/SKILL.md',
+    'axstack-audit/SKILL.md', 'axstack-improve/SKILL.md', 'axstack/references/contracts.md',
+    'axstack-explain/references/visual-qa.md']) {
     const source = readFileSync(`${root}/${file}`, 'utf8');
     const targets = [...source.matchAll(/\]\(([^)]*local-artifacts\.md)(?:#[^)]*)?\)/g)].map((m) => m[1]);
     expect(targets.length, file).toBeGreaterThan(0);

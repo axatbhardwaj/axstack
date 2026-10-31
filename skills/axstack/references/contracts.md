@@ -98,6 +98,11 @@ to the user with no reconciliation and no Fable.
 
 ## Advised holds
 
+For an eligible local nonrepo report-only consultation, follow the explicit
+advice workflow in [Local artifacts](local-artifacts.md). Bind its actual parent
+phase and trigger in the brief; this changes no parent prerequisite, the
+never-advised exclusions below, configured seats or escalation conditions.
+
 Advise when a hold reaches the user and the reply picks between two or more
 paths an agent can then carry out.
 The criterion governs and the examples are illustrative.

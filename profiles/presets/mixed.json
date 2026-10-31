@@ -299,7 +299,7 @@
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Grok Rung 2 design candidate. Use the T3 Grok provider and resolve the model from saved capabilities. Receives the same brief without cross-reading; returns design, rationale, and rejected alternatives."
+      "notes": "Independent optional Grok design candidate for every light arena. Use the T3 Grok provider and resolve the model from saved capabilities. Receives the same brief without cross-reading; returns design, rationale, and rejected alternatives."
     }
   ]
 }

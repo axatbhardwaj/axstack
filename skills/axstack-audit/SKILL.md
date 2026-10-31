@@ -5,6 +5,12 @@ description: When a substantive run needs evidence review, use axstack-audit to 
 
 # Audit
 
+For explicit nonrepo evidence, follow
+[Local artifacts](../axstack/references/local-artifacts.md): standalone audit uses
+workflow audit; inherited audits retain the supported parent's workflow. The
+driver binds owned input snapshots and SHA-256; only the assigned audit.md is
+writable. Missing Git history stays a limitation, never a fabricated revision.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -64,7 +70,7 @@ Use actual records, never memory:
 - the decision log and configured `axstack-advisor-astra` and
   `axstack-advisor-opus` receipts and fresh `axstack-escalation-fable`
   receipts when triggered;
-- exact git revisions;
+- exact git revisions where applicable; owned SHA-256 snapshots for nonrepo evidence;
 - test and review evidence; and
 - the run execution record at its recorded `progress.md` path.
 
