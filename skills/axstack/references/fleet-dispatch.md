@@ -149,7 +149,51 @@ For isolated review include checkout with those fields, candidate/base and readb
 Never infer local file existence from a remote absolute path.
 Requested settings remain separate from effective native status.providerInstanceId,
 model/options and thread.providerInstanceId/model/runtimeMode. Missing effective
-options or mode is unknown and holds required verification.
+options or mode is unknown and holds required verification, except for the bounded
+T3 0.1.5 initial remote-launch join below.
+
+### T3 0.1.5 initial remote receipt
+
+The remote `readRemoteTask` emitter omits options and returns null childRunId and
+latestTerminalRunId. Preserve those raw omissions/nulls. A current family shell
+is current thread metadata, not an immutable settings record for an older run.
+Never use it to authorize a continuation from an origin summary lacking a run ID.
+
+For the sole initial remote run, optional receipt `nativeFamily` can corroborate
+settings and run identity. The driver acquires `orchestration.getThreadFamily`
+with exact `{threadId}` on the actual destination using an authenticated native
+RPC read with `orchestration:read` scope. This is metadata access, not agent
+execution or an alternate worker launch path. Record host/environment identity,
+authenticated acquisition provenance, exact request/result, and independently
+observed server version. Do not execute an agent through SSH/CLI to obtain it.
+Temporary read sessions require their authorized lifecycle and revocation; never
+put tokens/tickets into evidence. This contract grants no auth/session authority.
+
+The envelope is `{tool:"orchestration.getThreadFamily",transport:"t3-native-rpc",
+environmentId,serverVersion:"0.1.5",args:{threadId},observedAt,evidence,value}`.
+`value` is the unmodified native `{snapshotSequence,threads}` response. Retain
+raw bytes separately, including any diagnostic/revocation trailer; parse only
+the JSON response into a separate file. Never rewrite the raw response as JSON.
+The version must also match selected destination versions; observe the family
+after thread/wait and no later than receipt evaluation. Missing provenance holds.
+
+Require a unique child with the selected project, exact title/current run,
+provider/model/options/mode and delegatedFrom origin environment/thread. Every
+returned family member must explicitly have idle/completed status, null active
+run/request, zero pending guest input and an empty pendingBackgroundTasks array.
+Unknown or live descendants hold even when remote status claims no pending child.
+
+The fallback requires native thread runCount:1, exactly one recentRuns row at
+ordinal:1, null local child IDs/childRunIds on status/submission, null origin
+latestTerminalRunId, and identical origin/destination final text. Existing
+current-run, completed terminal, marker, question and host/path checks still
+apply. Explicit status options or run IDs cannot be overwritten by family facts.
+T3 remote launch forwards the accepted explicit model selection and uses it for
+both thread creation and the initial message; this is the source-backed scope
+of the join. More runs or missing counts/ordinals hold. Later continuations need
+actual result-run/per-run settings provenance; repeated matching markers or
+current family settings are insufficient. Complete native statuses retain their
+existing run-ID path. Saved inputs cannot authenticate their own provenance.
 
 `inspectFleetReceipt(receipt,{attempt,recommendation,recommendationJSON,now})`
 returns terms, never authority. Existing dispatch-plan --verify can additionally
