@@ -215,14 +215,16 @@ saved-live replay preserves raw bytes and uses labelled synthetic envelopes; it
 proves no fresh dispatch, authentication, recovery or session lifecycle. Retain
 named negative/mutation logs and rerun restored source green after the probes.
 
-## Explicit local non-repository articles
+## Explicit local non-repository report workflows
 
 Use the run's trusted protected offline launcher when the ordinary Launch recipe
 is unsuitable; never run old root fixtures or use /dev/null as Git configuration.
 With its private HOME, owned TMPDIR and read-only source/Git mounts, run:
 
 ```bash
-bun run test tests/workflows/fleet-artifact.test.js \
+bun run test tests/workflows/fleet-report-matrix.test.js \
+  tests/workflows/fleet-brainstorm.test.js \
+  tests/workflows/fleet-artifact.test.js \
   tests/workflows/fleet-artifact-receipt.test.js \
   tests/workflows/fleet-artifact-contracts.test.js \
   tests/workflows/fleet-route.test.js tests/workflows/fleet-route-eligibility.test.js \
@@ -243,3 +245,26 @@ Live nonrepo regression: include fleet-artifact-receipt tests for T3 0.1.5
 shared parent scratch inheritance and deduplicated local task summaries. Preserve
 raw native observations; require parent/path/run/byte bindings and reject stale
 or conflicting evidence. Replay is not a new live dispatch.
+
+Brainstorm proof includes configured candidate and applicable judge roles through
+selector/dispatch-plan/SHA-256 receipt, unavailable Grok/Fable holds without
+substitution, and isolated wrong workflow/role, null-repo engineering, local-only,
+settings and ownership negatives. Rung/round triggers and independence remain
+procedural; these synthetic saved catalogs prove no live provider execution.
+After recipe edits, run `tests/workflows/public-docs.test.js` and
+`tests/installer/package.test.js`, and execute the package dry-run recipe so the
+inventory fixture stays synchronized. The driver's real native No-project
+canary and independent review remain separate acceptance obligations.
+
+The explicit matrix also drives pre-repository Align advice, standalone and
+inherited auditor pairs on every supported parent workflow, nonversioned Improve
+code/UI discovery and conditional shared advice. Direct caller roles and
+inherited auditor roles stay distinct; cross-workflow leakage and unsupported
+Spec/Tickets/Scout/Debug/Implement/Review-code/Verify/Watch workflows are rejected.
+Improve routing was ambiguous before this mapping, not a proven runtime failure.
+Nested Anatomy/Perf and article-review calls inherit only their routed phase.
+Correct/Cleanup/VOA remain inline. Parent store/tracker/repository duties and
+advice/arena triggers remain procedural prerequisites. See the shipped
+[twenty-skill boundary matrix](../../../../skills/axstack/references/local-artifacts.md#workflow-and-inherited-role-matrix).
+Positive fixture plans/receipts and semantic instruction mutation checks do not
+prove any native dispatch, independent model execution or browser capture.
