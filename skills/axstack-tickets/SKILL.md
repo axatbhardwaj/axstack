@@ -73,11 +73,19 @@ Before mapping, load and follow [Independent delivery](../axstack/references/ind
 ```text
 Spec: <approved revision>
 Capability: <Markdown ref, GitHub issue URL, or Linear issue URL> <title>
+Outcome: <independently deliverable result>
+Scope: <accepted boundary>
+Driver: <accepted or proposed accountable scope driver + record/link>
 Internal task: <task> -> <PR owner> -> <worktree>
+Writes/resources: <write, semantic-interface and shared-resource boundaries>
+Produces/consumes: <interfaces or artifacts>
 Theme: <one behavior or component>
 Size est: <coarse size estimate>
 Acceptance: <checks from approved spec rev>
 Depends: <task IDs or none>
+Milestones: <per dependency: required acceptance state + producer/artifact identity; planned revisions allowed>
+Evidence/invalidation: <required receipt/check + producer changes that invalidate affected consumers>
+Branch: <main/integration target | exact reviewed unfinished code predecessor + reason>
 ```
 
 4. **Reconcile lifecycle state.** Compare each run capability with its required

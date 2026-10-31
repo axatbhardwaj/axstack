@@ -15,6 +15,13 @@ for (const phase of phases) {
   test(`${phase} explicitly loads independent delivery`, () => {
     expect(loadedReferences(entries[phase])).toContain(reference);
     expect(loaded(phase)).toMatch(/independently deliverable outcomes/i);
+    const directive = entries[phase].split(/\n\s*\n/).find((paragraph) => paragraph.includes(reference));
+    const accepts = (text) => loadedReferences(text).includes(reference);
+    expect(accepts(entries[phase].replace(directive, ''))).toBe(false);
+    expect(accepts(entries[phase].replace(directive,
+      directive.replace(/load and follow/i, 'never load or follow')))).toBe(false);
+    expect(accepts(entries[phase].replace(directive,
+      `Before this phase, consult [Independent delivery](${reference}).`))).toBe(true);
   });
 }
 

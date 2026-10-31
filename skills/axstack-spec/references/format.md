@@ -22,6 +22,11 @@ or risk only in supporting detail.
 
 ## Execution requirements
 
+Follow [Independent delivery](../../axstack/references/independent-delivery.md)
+when planning outcomes. In execution requirements, describe each outcome with
+acceptance and produced and consumed interfaces. Keep these in the existing
+specification rather than a separate delivery artifact.
+
 Group precise requirements and observable acceptance by capability, using stable
 IDs where useful. Include behavior, interfaces, data, invariants, failure cases
 and validation that determine success. Put routine file-by-file task and PR
@@ -74,6 +79,9 @@ whole-dataset export and its cleanup cost. Proposed choice: filtered export.
 
 ## Execution requirements
 ### Filtered export
+Outcome: independently deliverable filtered CSV export.
+Produces: CSV rows in visible column order. Consumes: the existing table filter
+and column-order interfaces; no unfinished code predecessor is required.
 EXP-1: On click, capture the active filter and visible column order, label the
 action “Export filtered rows”, and export only matching rows in those columns.
 Acceptance for EXP-1: with a two-row dataset and a filter matching one row,
