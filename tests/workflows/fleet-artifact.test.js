@@ -109,3 +109,29 @@ test('native execution/project authority still holds independently for artifacts
     expect(recommend(f.input, NOW).selected, key).toBeNull();
   }
 });
+
+
+test('native article workspace must match scope even when both native reads agree', () => {
+  const f = article();
+  expect(f.run().status).toBe(0);
+  f.input.nativeDestination.project.value.workspaceRoot = '/other';
+  f.input.nativeDestination.projectList[0].value.projects[0].workspaceRoot = '/other';
+  expect(f.run().status).toBe(2);
+});
+
+test('article readback rejects worktree isolation with unchanged scope', () => {
+  const f = article();
+  const plan = JSON.parse(f.run().output);
+  const readback = { ...configuration(), environmentId: f.scope.environmentId, projectId: f.scope.projectId,
+    fleetBinding: plan.fleetBinding, artifactScope: f.scope, isolation: 'shared' };
+  expect(f.run(f.scope.roleId, 'task', readback).output).toContain('MATCH');
+  readback.isolation = 'worktree';
+  expect(f.run(f.scope.roleId, 'task', readback).status).toBe(2);
+});
+
+test('article evidence root must be inside workspace independently of artifact root', () => {
+  const f = article();
+  expect(recommend(f.input, NOW).selected).not.toBeNull();
+  f.scope.evidenceRoot = '/other/evidence';
+  expect(() => recommend(f.input, NOW)).toThrow();
+});

@@ -83,3 +83,23 @@ test('dispatch-plan verifies an article native receipt and holds changed bytes',
   expect(held.status).toBe(2);
   expect(held.output).toContain('receipt-artifact-bytes: fail');
 });
+
+
+test('article report ownership holds even when both terminal markers match its path', () => {
+  const { receipt, expected } = artifactReceipt(article());
+  expect(inspectFleetReceipt(receipt, expected).every((t) => t.state === 'pass')).toBe(true);
+  const old = receipt.evidence.path;
+  receipt.evidence.path = '/other/report.md';
+  receipt.status.value.latestTerminalSummary = receipt.status.value.latestTerminalSummary.replace(old, receipt.evidence.path);
+  receipt.thread.value.items[0].text = receipt.thread.value.items[0].text.replace(old, receipt.evidence.path);
+  const terms = inspectFleetReceipt(receipt, expected);
+  expect(terms.filter((t) => t.state !== 'pass').map((t) => t.code)).toEqual(['receipt-artifact-scope']);
+});
+
+test('article receipt rejects checkout metadata independently of shared worktreePath', () => {
+  const { receipt, expected } = artifactReceipt(article());
+  expect(inspectFleetReceipt(receipt, expected).every((t) => t.state === 'pass')).toBe(true);
+  receipt.checkout = { path: '/repo' };
+  expect(inspectFleetReceipt(receipt, expected).filter((t) => t.state !== 'pass').map((t) => t.code))
+    .toEqual(['receipt-isolation']);
+});
