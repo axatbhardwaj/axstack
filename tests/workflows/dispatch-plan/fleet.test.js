@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { inspectDestination } from '../../../skills/axstack/scripts/fleet-destination.js';
+import { inspectFleetReceipt } from '../../../skills/axstack/scripts/fleet-receipt.js';
 import { recommend } from '../../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from '../fleet-route-fixture.js';
 import { configuration, invoke, setup } from './fixtures.js';
@@ -755,4 +756,113 @@ test('native project pagination: omitted cursor and limit use native defaults', 
   first.args = {};
   second.args = { cursor: 20 };
   planned(f);
+});
+
+// Remote 0.1.5 readRemoteTask omits options and returns null result-run IDs.
+function remoteNativeReceipt(f) {
+  const value = receipt(f);
+  const r = value.fleetReceipt;
+  delete r.status.value.options;
+  delete r.submission.options;
+  r.status.value.latestTerminalRunId = null;
+  r.status.value.childRunId = r.submission.childRunId = null;
+  r.thread.value.thread.runCount = 1;
+  r.thread.value.recentRuns = [{ runId: 'continued-run', ordinal: 1, status: 'completed' }];
+  r.nativeFamily = { tool: 'orchestration.getThreadFamily', transport: 't3-native-rpc',
+    environmentId: 'env-worker-a', serverVersion: '0.1.5', args: { threadId: 'same-thread' },
+    observedAt: NOW, evidence: 'saved://authenticated-native-family', value: { snapshotSequence: 42, threads: [{
+      id: 'same-thread', projectId: 'project-worker-a', title: r.attempt.title,
+      providerInstanceId: 'codex', modelSelection: { instanceId: 'codex', model: 'gpt-6.1-sol',
+        options: [{ id: 'reasoningEffort', value: 'high' }, { id: 'serviceTier', value: 'priority' }] },
+      runtimeMode: 'full-access', latestRunId: 'continued-run', status: 'completed', activeRunId: null,
+      pendingBackgroundTasks: [], pendingRuntimeRequest: null, pendingGuestMessageCount: 0,
+      delegatedFrom: { environmentId: 'env-personal-a', threadId: 'driver' },
+    }] } };
+  return value;
+}
+
+test('remote native receipt binds omitted settings and null result-run without fabricating status', () => {
+  const f = fleet();
+  const v = remoteNativeReceipt(f);
+  const before = JSON.stringify(v);
+  const result = f.run(v);
+  expect(result.status, result.output).toBe(0);
+  expect(result.output).toContain('MATCH');
+  expect(JSON.stringify(v)).toBe(before);
+});
+
+test.each([
+  ['missing family', (r) => { delete r.nativeFamily; }],
+  ['wrong tool', (r) => { r.nativeFamily.tool = 'worker-self-report'; }],
+  ['wrong transport', (r) => { r.nativeFamily.transport = 'agent-cli'; }],
+  ['wrong environment', (r) => { r.nativeFamily.environmentId = 'env-worker-b'; }],
+  ['unknown version', (r) => { r.nativeFamily.serverVersion = 'unknown'; }],
+  ['wrong arguments', (r) => { r.nativeFamily.args.threadId = 'another-thread'; }],
+  ['extra arguments', (r) => { r.nativeFamily.args.projectId = 'project-worker-a'; }],
+  ['future observation', (r) => { r.nativeFamily.observedAt = NOW + 1; }],
+  ['missing provenance', (r) => { r.nativeFamily.evidence = ''; }],
+  ['unknown sequence', (r) => { delete r.nativeFamily.value.snapshotSequence; }],
+  ['empty family', (r) => { r.nativeFamily.value.threads = []; }],
+  ['duplicate child', (r) => { r.nativeFamily.value.threads.push(structuredClone(r.nativeFamily.value.threads[0])); }],
+  ...Object.entries({ id: 'other-thread', projectId: 'other-project', latestRunId: 'old-run',
+    runtimeMode: 'auto', status: 'running', activeRunId: 'new-run', providerInstanceId: 'other' })
+    .map(([key, v]) => [key, (r) => { r.nativeFamily.value.threads[0][key] = v; }]),
+  ['wrong origin', (r) => { r.nativeFamily.value.threads[0].delegatedFrom.threadId = 'other-driver'; }],
+  ['wrong origin environment', (r) => { r.nativeFamily.value.threads[0].delegatedFrom.environmentId = 'env-worker-b'; }],
+  ['wrong model', (r) => { r.nativeFamily.value.threads[0].modelSelection.model = 'other'; }],
+  ['wrong instance', (r) => { r.nativeFamily.value.threads[0].modelSelection.instanceId = 'other'; }],
+  ['wrong options', (r) => { r.nativeFamily.value.threads[0].modelSelection.options[0].value = 'low'; }],
+  ['unknown options', (r) => { delete r.nativeFamily.value.threads[0].modelSelection.options; }],
+  ['conflicting status options', (r) => { r.status.value.options = [{ id: 'reasoningEffort', value: 'low' }]; }],
+  ['pending background', (r) => { r.nativeFamily.value.threads[0].pendingBackgroundTasks.push({ id: 'child' }); }],
+  ['unknown background', (r) => { delete r.nativeFamily.value.threads[0].pendingBackgroundTasks; }],
+  ['pending request', (r) => { r.nativeFamily.value.threads[0].pendingRuntimeRequest = { id: 'question' }; }],
+  ['unknown pending request', (r) => { delete r.nativeFamily.value.threads[0].pendingRuntimeRequest; }],
+  ['guest input', (r) => { r.nativeFamily.value.threads[0].pendingGuestMessageCount = 1; }],
+  ['stale continuation', (r) => { r.thread.value.thread.runCount = 2; r.thread.value.recentRuns[0].ordinal = 2; }],
+  ['unknown run count', (r) => { delete r.thread.value.thread.runCount; }],
+  ['contradictory origin run', (r) => { r.status.value.latestTerminalRunId = 'old-run'; }],
+  ['different origin summary', (r) => { r.status.value.latestTerminalSummary = 'old response\n' + r.status.value.latestTerminalSummary; }],
+  ['wrong family title', (r) => { r.nativeFamily.value.threads[0].title = 'other attempt'; }],
+  ['active descendant', (r) => { r.nativeFamily.value.threads.push({ id: 'descendant', status: 'running', activeRunId: 'child-run', pendingBackgroundTasks: [], pendingRuntimeRequest: null, pendingGuestMessageCount: 0 }); }],
+  ['unknown descendant', (r) => { r.nativeFamily.value.threads.push({ id: 'descendant' }); }],
+
+  ['unknown family response', (r) => { delete r.nativeFamily.value; }],
+  ['old native observation', (r) => { r.nativeFamily.observedAt = NOW - 1; }],
+  ['negative sequence', (r) => { r.nativeFamily.value.snapshotSequence = -1; }],
+  ['unknown guest input', (r) => { delete r.nativeFamily.value.threads[0].pendingGuestMessageCount; }],
+  ['local status child', (r) => { r.status.value.childThreadId = 'same-thread'; }],
+  ['local submission child', (r) => { r.submission.childThreadId = 'same-thread'; }],
+  ['status child run', (r) => { r.status.value.childRunId = 'old-run'; }],
+  ['submission child run', (r) => { r.submission.childRunId = 'old-run'; }],
+  ['unknown terminal id', (r) => { delete r.status.value.latestTerminalRunId; }],
+  ['null status options', (r) => { r.status.value.options = null; }],
+  ['second ordinal', (r) => { r.thread.value.recentRuns[0].ordinal = 2; }],
+  ['extra recent run', (r) => { r.thread.value.recentRuns.push({ runId: 'old-run', ordinal: 0, status: 'completed' }); }],
+  ['conflicting thread count', (r) => { r.thread.value.thread.runCount = 2; }],
+  ['wrong selector version', (r) => { r.nativeFamily.serverVersion = '0.1.4'; }],
+
+])('remote native receipt holds on %s', (_, change) => {
+  const f = fleet();
+  const v = remoteNativeReceipt(f);
+  expect(f.run(v).output).toContain('MATCH');
+  change(v.fleetReceipt);
+  const result = f.run(v);
+  expect(result.status, result.output).toBe(2);
+  expect(result.output).not.toContain('MATCH');
+});
+
+test('complete local native receipt retains the exact run-ID path', () => {
+  const f = fleet();
+  const r = receipt(f).fleetReceipt;
+  const recommendation = structuredClone(f.saved);
+  recommendation.originEnvironmentId = 'env-worker-a';
+  r.recommendationJSON = JSON.stringify(recommendation);
+  r.attempt.origin.environmentId = r.status.environmentId = 'env-worker-a';
+  r.status.value.childThreadId = r.submission.childThreadId = 'same-thread';
+  delete r.status.value.remoteChild;
+  delete r.submission.remoteChild;
+  const terms = inspectFleetReceipt(r, { attempt: structuredClone(r.attempt),
+    recommendation, recommendationJSON: r.recommendationJSON, now: NOW });
+  expect(terms.every((t) => t.state === 'pass')).toBe(true);
 });
