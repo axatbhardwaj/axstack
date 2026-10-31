@@ -1,3 +1,5 @@
+import { validScope } from './fleet-scope.js';
+
 // Configuration is reviewed data. This module does not read account-local files.
 export function fail(code) { throw new Error(code); }
 export const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -58,7 +60,7 @@ export function validateInput(input, now) {
   const r = input.request;
   if (!record(r) || !text(r.task) || !['reader', 'author'].includes(r.role)
     || !Array.isArray(r.requiredCapabilities) || !r.requiredCapabilities.every(text)
-    || !text(r.repositoryId) || !text(r.providerInstanceId) || !text(r.model)
+    || !validScope(r) || !text(r.providerInstanceId) || !text(r.model)
     || !record(r.options) || !text(r.runtimeMode)) fail('request-schema');
   for (const key of ['destinations', 'routeFacts', 'telemetry', 'assignments', 'pendingAssignments']) {
     if (!Array.isArray(input[key])) fail(`${key}-schema`);

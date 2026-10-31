@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { inspectFleetReceipt } from './fleet-receipt.js';
 import { bindFleet } from './fleet-dispatch.js';
+import { canonical } from './fleet-config.js';
 
 const fleetFlags = ['--recommendation', '--fleet-input', '--now', '--config-digest'];
 const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--out', ...fleetFlags];
@@ -34,6 +35,9 @@ by its destination facts. It is never the origin catalog by default.
 Fleet verification requires environmentId/projectId and fleetBinding alongside
 the effective T3 configuration. C3 collects that host-qualified evidence envelope.
 Optional input.nativeDestination validates saved native forwarded reads.
+Explicit local-artifact scope requires those reads and kind task; emits isolation:"shared".
+artifactScope is preserved evidence only, never a native tool argument.
+Artifact verification also requires artifactScope and independently checked isolation.
 Optional --verify fleetAttempt/fleetReceipt validates host-qualified terminal facts;
 --out retains per-term receipt evidence. Synthetic bindings cannot authenticate reads.
 Coordinator routes remain unsupported here. A plan grants no launch authority.
@@ -98,6 +102,11 @@ function verify(configuration, provider, model, options, fleet) {
   if (fleet) {
     for (const [field, expected] of Object.entries(fleet.destination)) compare(field, expected, configuration?.[field]);
     for (const [field, expected] of Object.entries(fleet.fleetBinding)) compare(field, expected, configuration?.fleetBinding?.[field]);
+    if (fleet.artifactScope) {
+      compare('artifactScope', fleet.artifactScope, configuration?.artifactScope,
+        canonical(fleet.artifactScope) === canonical(configuration?.artifactScope));
+      compare('isolation', 'shared', configuration?.isolation);
+    }
   }
   let receiptTerms;
   if (fleet && configuration?.fleetReceipt !== undefined) {
@@ -175,7 +184,7 @@ function plan(argv, io) {
     const recommendation = JSON.parse(recommendationJSON);
     fleet = bindFleet(readJSON(args['--fleet-input']), recommendation,
       args['--config-digest'], Number(args['--now']), readFileSync(args['--capabilities'], 'utf8'),
-      resolution, role.id === 'axstack-author');
+      resolution, role.id === 'axstack-author', role.id, args['--kind']);
     fleet.recommendation = recommendation;
     fleet.recommendationJSON = recommendationJSON;
     fleet.now = Number(args['--now']);
@@ -189,6 +198,7 @@ function plan(argv, io) {
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: providerInstanceId,
     model, options, ...(args['--kind'] === 'task' ? fleet?.destination : {}) };
   emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
+    ...(fleet?.artifactScope ? { artifactScope: fleet.artifactScope, isolation: fleet.isolation } : {}),
     ...(fleet ? { fleetBinding: fleet.fleetBinding, ...(args['--kind'] === 'launch' ? fleet.destination : {}) } : {}),
     ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });
   return 0;
