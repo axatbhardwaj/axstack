@@ -129,12 +129,19 @@ export function inspectFleetReceipt(receipt, expected) {
   };
   const items = r.thread?.value?.items;
   const final = Array.isArray(items) ? items.filter((v) => v.runId === current && v.createdBy === 'agent').at(-1) : null;
+  // T3 0.1.5 suppresses latestTerminalSummary when it equals summary.
+  // Only the same local result run may use that deduplicated value.
+  const localSummary = artifact && !remote && s.versions?.t3 === '0.1.5'
+    && status?.latestTerminalSummary === null && text(current)
+    && status?.childRunId === current && status?.latestTerminalRunId === current
+    && status?.status === 'completed' && status?.summary === final?.text;
+  const resultSummary = localSummary ? status.summary : status?.latestTerminalSummary;
   term('receipt-marker', (artifact ? /^[a-f0-9]{64}$/ : /^[a-f0-9]{40}$/).test(a?.candidate ?? '')
-    && finalMarker(status?.latestTerminalSummary) === marker && finalMarker(final?.text) === marker
-    && (!initial || status?.latestTerminalSummary === final?.text),
-  { origin: status?.latestTerminalSummary, destination: final?.text });
+    && finalMarker(resultSummary) === marker && finalMarker(final?.text) === marker
+    && (!initial || resultSummary === final?.text),
+  { origin: resultSummary, destination: final?.text });
   term('receipt-host-path', r.evidence?.hostId === s.hostId && r.evidence?.environmentId === s.environmentId
-    && absolute(r.evidence?.path) && finalMarker(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
+    && absolute(r.evidence?.path) && finalMarker(resultSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
   if (artifact) {
     const scope = request.scope;
     const bytes = r.artifact;
@@ -143,8 +150,21 @@ export function inspectFleetReceipt(receipt, expected) {
     term('receipt-artifact-bytes', bytes?.sha256 === a?.candidate && inside(bytes?.path, scope.artifactRoot)
       && bytes?.readback?.path === bytes.path && bytes?.readback?.sha256 === bytes.sha256
       && text(bytes?.readback?.evidence), bytes);
-    term('receipt-isolation', r.requested?.isolation === 'shared' && thread?.worktreePath === null
-      && r.checkout == null, { isolation: r.requested?.isolation, worktreePath: thread?.worktreePath });
+    // Shared native children can inherit a parent's non-Git scratch directory.
+    // Bind that value to an actual parent read; a path alone proves nothing.
+    const parent = r.parent;
+    const parentThread = parent?.value?.thread;
+    const inherited = !remote && s.versions?.t3 === '0.1.5'
+      && parent?.tool === 't3_thread_read' && parent.environmentId === a?.origin?.environmentId
+      && same(parent.args, { threadId: a?.origin?.threadId })
+      && time(parent.observedAt) && parent.observedAt <= expected.now && text(parent.evidence)
+      && parentThread?.threadId === a?.origin?.threadId && parentThread?.projectId === s.projectId
+      && thread?.parentThreadId === parentThread?.threadId && thread?.relationshipToParent === 'subagent'
+      && absolute(parentThread?.worktreePath) && inside(parentThread.worktreePath, scope.workspaceRoot)
+      && thread?.worktreePath === parentThread.worktreePath;
+    term('receipt-isolation', r.requested?.isolation === 'shared'
+      && (thread?.worktreePath === null || inherited) && r.checkout == null,
+    { isolation: r.requested?.isolation, worktreePath: thread?.worktreePath, parent });
   } else if (a?.title?.startsWith('Reviewer: ')) {
     term('receipt-isolation', r.requested?.isolation === 'worktree', r.requested?.isolation);
   }

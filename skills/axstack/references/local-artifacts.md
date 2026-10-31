@@ -81,7 +81,20 @@ For artifact receipts, `attempt.candidate` and marker `head` are the exact
 64-hex artifact SHA-256; `attempt.base` is null. They are not Git revisions.
 Bind `artifactScope` to the requested scope and report to evidenceRoot.
 Supply `artifact:{path,sha256,readback:{path,sha256,evidence}}` for the independently
-hashed owned snapshot. Native thread worktreePath must be null and requested
-isolation shared. Never synthesize an effective field from requested settings.
+hashed owned snapshot. Requested isolation must be shared. Native child worktreePath may be null;
+on T3 0.1.5 it may also inherit the parent's non-Git scratch path. For the latter,
+include `parent` as a saved `t3_thread_read` observation (tool, environmentId,
+args.threadId, observedAt, evidence, value.thread). Bind it to the attempt's
+origin thread, selected project, child parentThreadId/subagent relationship and
+identical canonical path inside workspaceRoot. Verify the actual filesystem;
+this is shared access, not a Git checkout or OS isolation. Checkout metadata
+remains forbidden. Unknown or different parent/path evidence holds.
+
+T3 0.1.5 deduplicates local task results: latestTerminalSummary can be null when
+summary contains the same result. For local artifact receipts only, use that
+summary when childRunId and latestTerminalRunId both equal the current completed
+run and its bytes equal the destination final message. An explicit conflicting
+terminal summary, stale run, other version or remote result does not use this
+fallback. Preserve the raw native fields; do not rewrite them. Never synthesize an effective field from requested settings.
 The driver checks actual bytes and readbacks; helpers validate saved data only.
 Keep artifact receipts separate from Git candidate publication/PR/merge receipts.

@@ -238,3 +238,8 @@ Semantic instruction checks reject boundary removal/inversion and permit equival
 wording. Helpers cannot prove filesystem ownership or authenticate supplied facts.
 The driver's real No-project canary, installed support, Playwright exact-byte
 publication review and live publication remain separately unverified.
+
+Live nonrepo regression: include fleet-artifact-receipt tests for T3 0.1.5
+shared parent scratch inheritance and deduplicated local task summaries. Preserve
+raw native observations; require parent/path/run/byte bindings and reject stale
+or conflicting evidence. Replay is not a new live dispatch.

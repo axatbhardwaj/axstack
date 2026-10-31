@@ -103,3 +103,49 @@ test('article receipt rejects checkout metadata independently of shared worktree
   expect(inspectFleetReceipt(receipt, expected).filter((t) => t.state !== 'pass').map((t) => t.code))
     .toEqual(['receipt-isolation']);
 });
+
+function inheritedArtifactReceipt() {
+  const pair = artifactReceipt(article());
+  const { receipt: r, expected: e } = pair;
+  e.recommendation.selected.versions = { t3: '0.1.5' };
+  const parent = { threadId: e.attempt.origin.threadId, projectId: r.thread.value.thread.projectId,
+    worktreePath: r.artifactScope.workspaceRoot + '/parent-scratch' };
+  r.parent = { tool: 't3_thread_read', environmentId: e.attempt.origin.environmentId,
+    args: { threadId: parent.threadId }, observedAt: NOW, evidence: 'saved://parent', value: { thread: parent } };
+  Object.assign(r.thread.value.thread, { parentThreadId: parent.threadId,
+    relationshipToParent: 'subagent', worktreePath: parent.worktreePath });
+  r.status.value.summary = r.status.value.latestTerminalSummary;
+  r.status.value.latestTerminalSummary = null;
+  return pair;
+}
+
+test('native local shared artifact inherits parent scratch and deduplicated terminal summary', () => {
+  const { receipt, expected } = inheritedArtifactReceipt();
+  expect(inspectFleetReceipt(receipt, expected).filter((t) => t.state !== 'pass')).toEqual([]);
+});
+
+test.each([
+  ['missing parent', (r) => { delete r.parent; }],
+  ['wrong parent tool', (r) => { r.parent.tool = 't3_project_read'; }],
+  ['wrong parent arguments', (r) => { r.parent.args.threadId = 'other'; }],
+  ['wrong parent environment', (r) => { r.parent.environmentId = 'other'; }],
+  ['wrong parent identity', (r) => { r.parent.value.thread.threadId = 'other'; }],
+  ['wrong parent project', (r) => { r.parent.value.thread.projectId = 'other'; }],
+  ['wrong child parent', (r) => { r.thread.value.thread.parentThreadId = 'other'; }],
+  ['wrong child relationship', (r) => { r.thread.value.thread.relationshipToParent = 'fork'; }],
+  ['wrong shared path', (r) => { r.thread.value.thread.worktreePath += '/other'; }],
+  ['path outside workspace', (r) => { r.thread.value.thread.worktreePath = r.parent.value.thread.worktreePath = '/other'; }],
+  ['future parent read', (r) => { r.parent.observedAt = NOW + 1; }],
+  ['missing parent evidence', (r) => { delete r.parent.evidence; }],
+  ['stale summary run', (r) => { r.status.value.childRunId = 'older'; }],
+  ['stale terminal run', (r) => { r.status.value.latestTerminalRunId = 'older'; }],
+  ['conflicting terminal summary', (r) => { r.status.value.latestTerminalSummary = 'conflict'; }],
+  ['different summary bytes', (r) => { r.status.value.summary = 'different\n' + r.status.value.summary; }],
+  ['missing summary', (r) => { delete r.status.value.summary; }],
+  ['unverified T3 version', (_r, e) => { e.recommendation.selected.versions.t3 = '0.1.6'; }],
+])('native artifact receipt holds on %s', (_, change) => {
+  const { receipt, expected } = inheritedArtifactReceipt();
+  expect(inspectFleetReceipt(receipt, expected).every((t) => t.state === 'pass')).toBe(true);
+  change(receipt, expected);
+  expect(inspectFleetReceipt(receipt, expected).some((t) => t.state !== 'pass')).toBe(true);
+});
