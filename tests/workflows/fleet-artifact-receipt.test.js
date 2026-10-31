@@ -143,9 +143,54 @@ test.each([
   ['different summary bytes', (r) => { r.status.value.summary = 'different\n' + r.status.value.summary; }],
   ['missing summary', (r) => { delete r.status.value.summary; }],
   ['unverified T3 version', (_r, e) => { e.recommendation.selected.versions.t3 = '0.1.6'; }],
-])('native artifact receipt holds on %s', (_, change) => {
+])('native artifact receipt holds on %s', (name, change) => {
   const { receipt, expected } = inheritedArtifactReceipt();
   expect(inspectFleetReceipt(receipt, expected).every((t) => t.state === 'pass')).toBe(true);
   change(receipt, expected);
-  expect(inspectFleetReceipt(receipt, expected).some((t) => t.state !== 'pass')).toBe(true);
+  const failed = inspectFleetReceipt(receipt, expected).filter((t) => t.state !== 'pass').map((t) => t.code);
+  const summary = ['receipt-marker', 'receipt-host-path'];
+  const codes = name === 'unverified T3 version' ? [...summary, 'receipt-isolation']
+    : name === 'stale terminal run' ? ['receipt-run', ...summary]
+    : ['stale summary run', 'conflicting terminal summary', 'different summary bytes', 'missing summary'].includes(name)
+      ? summary : ['receipt-isolation'];
+  expect(failed).toEqual(codes);
+});
+
+const failedCodes = (r, e) => inspectFleetReceipt(r, e).filter((t) => t.state !== 'pass').map((t) => t.code);
+
+test('engineering receipts cannot borrow the artifact summary fallback', () => {
+  const { receipt: r, expected: e } = inheritedArtifactReceipt();
+  delete e.recommendation.request.scope;
+  e.recommendation.request.repositoryId = 'github.com/example/repo';
+  r.thread.value.thread.worktreePath = null;
+  r.attempt.title = r.thread.value.thread.title = 'Worker: engineering';
+  const old = r.attempt.candidate;
+  r.attempt.candidate = 'c'.repeat(40);
+  r.status.value.summary = r.status.value.summary.replace(old, r.attempt.candidate);
+  r.thread.value.items[0].text = r.status.value.summary;
+  r.status.value.latestTerminalSummary = r.status.value.summary;
+  expect(failedCodes(r, e)).toEqual([]);
+  r.status.value.latestTerminalSummary = null;
+  expect(failedCodes(r, e)).toEqual(['receipt-marker', 'receipt-host-path']);
+});
+
+test.each(['version', 'remote'])('artifact summary independently rejects %s', (boundary) => {
+  const { receipt: r, expected: e } = inheritedArtifactReceipt();
+  r.thread.value.thread.worktreePath = null;
+  expect(failedCodes(r, e)).toEqual([]);
+  if (boundary === 'version') e.recommendation.selected.versions.t3 = '0.1.6';
+  else e.recommendation.originEnvironmentId = 'other-origin';
+  // Remote receipt identity also holds; check this guard's own terms independently.
+  expect(inspectFleetReceipt(r, e).filter((t) => ['receipt-marker', 'receipt-host-path'].includes(t.code))
+    .map((t) => t.state)).toEqual(['fail', 'fail']);
+});
+
+test.each(['version', 'remote', 'forged parent pair'])('inherited artifact path independently rejects %s', (boundary) => {
+  const { receipt: r, expected: e } = inheritedArtifactReceipt();
+  r.status.value.latestTerminalSummary = r.status.value.summary;
+  expect(failedCodes(r, e)).toEqual([]);
+  if (boundary === 'version') e.recommendation.selected.versions.t3 = '0.1.6';
+  else if (boundary === 'remote') e.recommendation.originEnvironmentId = 'other-origin';
+  else r.parent.value.thread.threadId = r.thread.value.thread.parentThreadId = 'other';
+  expect(inspectFleetReceipt(r, e).find((t) => t.code === 'receipt-isolation').state).toBe('fail');
 });
