@@ -65,6 +65,7 @@ export function inspectFleetReceipt(receipt, expected) {
   if (native) term('receipt-effective', shell?.providerInstanceId === request.providerInstanceId
     && shell?.modelSelection?.instanceId === request.providerInstanceId
     && shell?.modelSelection?.model === request.model
+    && Array.isArray(shell?.modelSelection?.options)
     && same(options(shell?.modelSelection?.options), request.options)
     && shell?.runtimeMode === request.runtimeMode, shell?.modelSelection);
   const runs = r.thread?.value?.recentRuns;

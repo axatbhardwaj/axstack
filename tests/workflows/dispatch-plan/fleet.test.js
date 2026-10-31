@@ -813,6 +813,7 @@ test.each([
   ['wrong instance', (r) => { r.nativeFamily.value.threads[0].modelSelection.instanceId = 'other'; }],
   ['wrong options', (r) => { r.nativeFamily.value.threads[0].modelSelection.options[0].value = 'low'; }],
   ['unknown options', (r) => { delete r.nativeFamily.value.threads[0].modelSelection.options; }],
+  ['non-native options shape', (r) => { r.nativeFamily.value.threads[0].modelSelection.options = { reasoningEffort: 'high', serviceTier: 'priority' }; }],
   ['conflicting status options', (r) => { r.status.value.options = [{ id: 'reasoningEffort', value: 'low' }]; }],
   ['pending background', (r) => { r.nativeFamily.value.threads[0].pendingBackgroundTasks.push({ id: 'child' }); }],
   ['unknown background', (r) => { delete r.nativeFamily.value.threads[0].pendingBackgroundTasks; }],
