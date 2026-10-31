@@ -168,6 +168,11 @@ Optional `nativeInventory` is normalized before counts under
 Unknown native totals are null; balance ranking uses the separately labelled
 pendingLowerBound. Counts also retain inventoryReasons/evidence; flags.countsUnknown follows normalized status.
 Optional `nativeDestination` carries observed native forwarded preflight reads.
+Optional `nativeDestination.projectList` is the complete ordered native project-list
+page envelopes used to join a cold project-read repository identity; preserve
+raw reads and catalogs. Conflicting identities/workspaces or incomplete pages hold.
+T3 0.1.5 native provider mode omissions require the documented caller/provider
+authority evidence, never synthesized catalog fields.
 The same reference defines terminal receipt validation and its supplied-evidence
 limitation. Live drivers require these observed facts, not synthetic caller claims.
 Legacy normalized input remains unchanged. Remote coordinator remains disabled.

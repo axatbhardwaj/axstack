@@ -189,7 +189,10 @@ bun "$SCRIPTS/dispatch-plan.js" --help > "$EVIDENCE/fleet-receipt-help.txt"
 
 Proof: independent host/environment/project identities, remoteChild with null
 local child, origin collisions/nested/pending dedup and unknown totals; valid
-native destination controls then single-fact holds; current terminal continuation
+native destination controls then single-fact holds; T3 0.1.5 optional native
+provider mode restrictions and cold project-read identity joined to complete
+host-bound project-list pages, with conflict/pagination/access/provider holds
+and unchanged exact catalog digests; current terminal continuation
 versus old summary/run, pending children/questions, settings and host-qualified
 candidate/base/path holds through real CLI subprocesses. Semantic runtime pins
 reject removal/inversion and survive rewording. Tests neither authenticate saved

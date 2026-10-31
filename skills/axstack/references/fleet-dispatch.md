@@ -25,7 +25,7 @@ Synthetic evidence can pass binding checks; helpers cannot authenticate it.
 3. Keep the model/effort/provider pins from the run; do not re-resolve to another
    model when quota/auth/timeout fails. Missing native `t3_thread_configuration`
    means unavailable effective fields stay unknown. Catalog runtimeModes advertise
-   support; they do not prove effective access. Native task/thread facts supply
+   provider restrictions; they do not prove effective access. Native task/thread facts supply
    only the fields actually returned. A worker assertion is not native readback.
 4. Normalize current driver assignments and the pending batch as below. Sample
    telemetry with C2's bounded command, then recompute C1 immediately before each
@@ -71,7 +71,25 @@ excludes the forwarding environmentId, and evidence points to the preserved raw
 native call/result. environment/project/capabilities are read on the selected
 host; links are read on origin. The capabilities envelope uses `valueText` for
 exact raw catalog bytes instead of value. Project repositoryIdentity.canonicalKey
-must match the requested repositoryId. Unknown mappings hold rather than guessing.
+must match the requested repositoryId. If project-read identity is null/omitted,
+`projectList` may carry an ordered array of `t3_project_list` read envelopes on
+that same environment. Collect from cursor 0 through native nextCursor:null,
+recording actual cursor/limit arguments (native defaults: 0/20, limit at most 100).
+Every page must join without gaps, extra arguments or duplicate project IDs.
+The selected project's ID and workspaceRoot must equal project-read; every
+available canonicalKey must equal repositoryId, including when both reads have
+identity. Missing identity in both, incomplete pagination and any conflict hold.
+
+For observed T3 0.1.5 native Codex/Claude drivers, omitted provider runtimeModes
+means no provider restriction: native resolveRuntimeMode and RuntimePolicy
+preserve the requested mode. Bind this only with catalog runtimeMode equal to
+the request, exactly one selected provider, canRunChildTask:true and an explicit
+empty constraints array. Explicit mode restrictions must include the requested
+mode. Unknown version/driver omission semantics, missing caller authority,
+unavailable providers or restrictions hold. This is preflight support, never
+proof of a child's effective mode; terminal receipts still require actual native
+readback. Preserve the exact catalog bytes/digest; do not synthesize runtimeModes
+or repositoryIdentity in the saved raw reads. Unknown mappings hold rather than guessing.
 The pure `inspectDestination` API returns per-term pass/fail/unknown with evidence;
 `dispatch-plan` holds on a failed/unknown term. This is supplied binding proof only.
 
