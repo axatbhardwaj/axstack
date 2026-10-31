@@ -25,6 +25,8 @@ no dispatch preflight.
 
 ## Procedure
 
+Before mapping, load and follow [Independent delivery](../axstack/references/independent-delivery.md).
+
 1. **Pin scope and storage.** Confirm the approved spec identity before mapping.
    Hold on unapproved or materially changed scope; a still-valid approval is
    never repeated. Use the explicitly selected Markdown, GitHub Issues, or

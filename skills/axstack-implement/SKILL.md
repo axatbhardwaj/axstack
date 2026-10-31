@@ -19,6 +19,8 @@ run later reconciles merges and closes out.
 
 ## 1. Admit the work
 
+At admission and before dispatch, load and follow [Independent delivery](../axstack/references/independent-delivery.md).
+
 Before consequential work, load the standing contracts, follow their required
 edge into the lifecycle (including its audit hook), then apply shared routing:
 
