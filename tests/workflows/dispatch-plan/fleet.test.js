@@ -841,7 +841,7 @@ test.each([
   ['second ordinal', (r) => { r.thread.value.recentRuns[0].ordinal = 2; }],
   ['extra recent run', (r) => { r.thread.value.recentRuns.push({ runId: 'old-run', ordinal: 0, status: 'completed' }); }],
   ['conflicting thread count', (r) => { r.thread.value.thread.runCount = 2; }],
-  ['wrong selector version', (r) => { r.nativeFamily.serverVersion = '0.1.4'; }],
+  ['unsupported native server version', (r) => { r.nativeFamily.serverVersion = '0.1.4'; }],
 
 ])('remote native receipt holds on %s', (_, change) => {
   const f = fleet();
@@ -866,4 +866,15 @@ test('complete local native receipt retains the exact run-ID path', () => {
   const terms = inspectFleetReceipt(r, { attempt: structuredClone(r.attempt),
     recommendation, recommendationJSON: r.recommendationJSON, now: NOW });
   expect(terms.every((t) => t.state === 'pass')).toBe(true);
+});
+
+test('remote native receipt rejects a different selected destination version', () => {
+  const f = fleet();
+  const r = remoteNativeReceipt(f).fleetReceipt;
+  const recommendation = structuredClone(f.saved);
+  recommendation.selected.versions.t3 = '0.1.6';
+  r.recommendationJSON = JSON.stringify(recommendation);
+  const terms = inspectFleetReceipt(r, { attempt: structuredClone(r.attempt),
+    recommendation, recommendationJSON: r.recommendationJSON, now: NOW });
+  expect(terms.some((t) => t.code === 'receipt-native-family' && t.state !== 'pass')).toBe(true);
 });
