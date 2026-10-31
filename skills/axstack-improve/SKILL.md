@@ -5,6 +5,12 @@ description: When assessing codebase quality, improving a named screen or flow, 
 
 # Improve
 
+For named nonversioned code/UI discovery, use workflow improve under
+[Local artifacts](../axstack/references/local-artifacts.md). Its bounded code
+research/UI roles and inherited audit have separate owned snapshots and SHA-256
+receipts. This resolves the former routing ambiguity; it grants no repository
+readiness, whole-repository Scout, implementation or tracker authority.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 

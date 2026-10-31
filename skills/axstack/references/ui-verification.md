@@ -24,7 +24,7 @@ All other browser checks outside the two named exceptions remain delegated to co
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.
-For explicit non-repository article checks, use the local shared delegate and
+For explicit non-repository article or Improve discovery checks, use the local shared delegate and
 owned SHA-256 snapshot in [Local artifacts](local-artifacts.md); no Git candidate
 is fabricated. Engineering candidate checks retain the checkout requirement.
 Use the configured verifier browser and honor the user browser-tool policy.

@@ -10,6 +10,11 @@ Run inline in the current T3 driver thread. Never delegate a coordinator.
 This procedure is report-only. Do not implement, prototype, or grant execution
 or spec approval. Never interview the user or invoke Align.
 
+For an explicit No-project local report scope, follow
+[Local artifacts](../axstack/references/local-artifacts.md) for bounded candidate/judge
+roles, separate owned folders and SHA-256 receipts. Native null-identity proof,
+exact configured models/settings and arena round conditions remain required.
+
 Load [Standing contracts](../axstack/references/contracts.md) before acting.
 Set the rung from researched facts under the
 [design lens](../axstack/references/design-lens.md); Rung 2 meets its ADR test.

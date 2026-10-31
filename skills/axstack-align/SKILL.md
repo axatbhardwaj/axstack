@@ -8,6 +8,11 @@ description: When exploring or planning engineering work, use axstack-align to s
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 
+Before repository binding, report-only Align advice uses workflow align in
+[Local artifacts](../axstack/references/local-artifacts.md). Research and
+Brainstorm retain their own scopes; inherited audit and eligible shared advice
+follow the same matrix. This grants no Spec/store, tracker or execution authority.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 

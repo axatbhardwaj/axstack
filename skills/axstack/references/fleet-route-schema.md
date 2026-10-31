@@ -116,6 +116,10 @@ for serial emulator use, desktop safety and declared thermal prechecks.
 legacy omitted scope retains that repository requirement. The explicit
 `{kind:"local-artifact", ...}` alternative requires repositoryId:null and the
 workflow, role, native project and ownership fields in [Local artifacts](local-artifacts.md).
+The local-artifact matrix separates direct and inherited roles for research, explain,
+publish, brainstorm, align, improve, audit and conditional advice.
+Brainstorm candidate/judge roles never leak into source/article authority.
+Applicable rung/round duties remain report-only procedural checks, not route authority.
 Artifact destination project also carries workspaceRoot; only the bound local
 environment/project/workspace is eligible. Null alone never selects a route.
 

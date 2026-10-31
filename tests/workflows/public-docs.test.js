@@ -94,9 +94,19 @@ test('an unmatched inline-code delimiter cannot hide later document links', () =
 
 test('package recipe requires every entry point and both current publication references', () => {
   const recipe = readFileSync(`${root}/.agents/skills/verify-axstack/features/package.md`, 'utf8');
-  const assertions = recipe.match(/cmp "\$EVIDENCE\/archives-before.txt" "\$EVIDENCE\/archives-after.txt"\n([\s\S]*?)\nif rg/)?.[1];
+  const assertions = recipe.match(/cmp "\$EVIDENCE\/archives-before.txt" "\$EVIDENCE\/archives-after.txt"\n([\s\S]*?)\nif (?:rg|grep)/)?.[1];
   expect(assertions).toBeTruthy();
-  const members = ['bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
+  const members = ['skills/axstack-align/SKILL.md',
+    'skills/axstack-audit/SKILL.md',
+    'skills/axstack-audit/references/record.md',
+    'skills/axstack-improve/SKILL.md',
+    'skills/axstack/references/contracts.md',
+    'skills/axstack/references/lifecycle.md',
+    'skills/axstack/references/role-roster.md',
+    'skills/axstack/references/t3-runtime.md',
+    'skills/axstack/references/ui-verification.md',
+    'skills/axstack-brainstorm/SKILL.md',
+    'skills/axstack-brainstorm/references/arena.md', 'bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
     'skills/axstack/scripts/fleet-route.js', 'skills/axstack/scripts/fleet-config.js',
     'skills/axstack/scripts/fleet-facts.js', 'skills/axstack/scripts/fleet-scope.js',
     'skills/axstack/references/local-artifacts.md', 'skills/axstack/references/fleet-route-schema.md',
@@ -174,4 +184,23 @@ test('driver launch guard accepts equivalent restrictions and rejects inversions
     'Top-level drivers do not require an explicit user request.']) {
     expect(guardedDriverLaunches(changed), changed).toBe(false);
   }
+});
+
+test('package recipe rejects repository-only verification assets without ripgrep', () => {
+  const recipe = readFileSync(`${root}/.agents/skills/verify-axstack/features/package.md`, 'utf8');
+  const exclusion = recipe.match(/(if (?:rg|grep)[\s\S]*?\nfi)/)?.[1];
+  expect(exclusion).toBeTruthy();
+  fixture((dir, put) => {
+    put('bin/rg', '#!/bin/sh\nexit 127\n');
+    chmodSync(`${dir}/bin/rg`, 0o755);
+    const env = { ...Bun.env, PATH: `${dir}/bin:${Bun.env.PATH ?? ''}`, EVIDENCE: dir };
+    const check = (member) => {
+      put('pack.log', `packed 100B ${member}\n`);
+      return Bun.spawnSync(['/bin/bash', '-e', '-c', exclusion],
+        { env, stdout: 'pipe', stderr: 'pipe' }).exitCode;
+    };
+    expect(check('skills/axstack-brainstorm/SKILL.md')).toBe(0);
+    expect(check('.agents/skills/verify-axstack/SKILL.md')).toBe(1);
+    expect(check('.claude/skills/verify-axstack')).toBe(1);
+  });
 });

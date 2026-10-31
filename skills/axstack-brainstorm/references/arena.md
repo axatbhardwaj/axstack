@@ -40,6 +40,14 @@ hard-to-reverse choices; they replace the critique round for that question.
    For candidate and judge threads, follow the [same-turn settle rule](../../axstack/references/workspace-hygiene.md#settlement).
    The user still decides; spec approval remains the one human checkpoint.
 
+For a No-project arena, use the explicit `workflow:brainstorm` scope in
+[Local artifacts](../../axstack/references/local-artifacts.md). Each candidate
+owns separate artifact/evidence roots; judges receive independently owned
+byte-identical anonymized snapshots after candidates finish and write only
+reports. Preserve exact SHA-256 readbacks and independent sessions, including
+fresh round-2 judges. Shared isolation grants no cross-reading or remote
+artifact permission. The scope allowlist does not waive rung/round triggers.
+
 Record the synthesis note (base, graft sources, rejections, dropouts, judge
 verdicts per round) as `Decisions` rows in the
 [caller's run record](../../axstack/references/run-record.md) when one exists,
