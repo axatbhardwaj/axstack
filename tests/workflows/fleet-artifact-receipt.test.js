@@ -4,8 +4,10 @@ import { inspectFleetReceipt } from '../../skills/axstack/scripts/fleet-receipt.
 import { NOW } from './fleet-route-fixture.js';
 import { configuration } from './dispatch-plan/fixtures.js';
 import { article } from './fleet-artifact-fixture.js';
+import { configuredBrainstorm, seats } from './fleet-brainstorm-fixture.js';
 
 function artifactReceipt(f) {
+  const { providerInstanceId, model, options } = f.input.request;
   const candidate = 'c'.repeat(64);
   const artifactPath = f.scope.artifactRoot + '/article.html';
   const report = f.scope.evidenceRoot + '/report.md';
@@ -18,17 +20,17 @@ function artifactReceipt(f) {
   const task = { taskId: 'task', childThreadId: 'child', childRunId: 'run', status: 'completed',
     latestTerminalStatus: 'completed', latestTerminalRunId: 'run', latestTerminalSummary: marker,
     workState: 'result_available', hasPendingChildRuns: false, hasPendingQuestion: false, pendingApproval: null,
-    providerInstanceId: 'codex', model: 'gpt-6.1-sol', options: [{ id: 'reasoningEffort', value: 'high' }] };
+    providerInstanceId, model, options: Object.entries(options).map(([id, value]) => ({ id, value })) };
   const recommendation = recommend(f.input, NOW);
   const recommendationJSON = JSON.stringify(recommendation);
   const receipt = { schemaVersion: 1, attempt, recommendationJSON, configDigest: f.input.configDigest,
     requested: { target: { environmentId: f.scope.environmentId, projectId: f.scope.projectId,
-      providerInstanceId: 'codex', model: 'gpt-6.1-sol', options: task.options },
+      providerInstanceId, model, options: task.options },
     runtimeMode: 'full-access', isolation: 'shared' }, submission: task,
     status: read('task_status', { taskId: 'task' }, task),
     thread: read('t3_thread_read', { threadId: 'child' }, { thread: { threadId: 'child', title: attempt.title,
       projectId: f.scope.projectId, latestRunId: 'run', activeRunId: null, status: 'completed',
-      providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access', pendingRequestCount: 0,
+      providerInstanceId, model, runtimeMode: 'full-access', pendingRequestCount: 0,
       worktreePath: null }, recentRuns: [{ runId: 'run', ordinal: 1, status: 'completed' }],
     items: [{ runId: 'run', createdBy: 'agent', text: marker }] }),
     terminal: read('t3_thread_wait', { threadId: 'child', runId: 'run' },
@@ -194,3 +196,23 @@ test.each(['version', 'remote', 'forged parent pair'])('inherited artifact path 
   else r.parent.value.thread.threadId = r.thread.value.thread.parentThreadId = 'other';
   expect(inspectFleetReceipt(r, e).find((t) => t.code === 'receipt-isolation').state).toBe('fail');
 });
+
+// Candidate and applicable judge outputs are report bytes, never Git candidates.
+test.each(seats)(
+  'No-project brainstorm selector/plan/receipt round trip: %s', (...seat) => {
+    const f = configuredBrainstorm(seat);
+    const role = seat[0];
+    const result = f.run();
+    expect(result.status, result.error).toBe(0);
+    const plan = JSON.parse(result.output);
+    const { receipt, expected } = artifactReceipt(f);
+    const readback = { modelSelection: { instanceId: seat[1], model: seat[2], options: plan.target.options },
+      runtimeMode: 'full-access', environmentId: f.scope.environmentId, projectId: f.scope.projectId,
+      fleetBinding: plan.fleetBinding, artifactScope: f.scope, isolation: 'shared',
+      fleetAttempt: expected.attempt, fleetReceipt: receipt };
+    expect(f.run(role, 'task', readback).output).toContain('MATCH');
+    receipt.artifact.sha256 = 'd'.repeat(64);
+    const held = f.run(role, 'task', readback);
+    expect(held.status).toBe(2);
+    expect(held.output).toContain('receipt-artifact-bytes: fail');
+  });
