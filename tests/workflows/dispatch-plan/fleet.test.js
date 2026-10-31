@@ -715,3 +715,44 @@ test('unproven schema semantics do not accept omitted provider modes', () => {
   o.environment.value.serverVersion = 'unknown';
   held(f.run(), 'destination-execution');
 });
+
+function nativeNextProjectPage(o, limit = 1) {
+  const first = o.projectList[0];
+  const second = structuredClone(first);
+  first.args = { cursor: 0, limit };
+  first.value.projects = Array.from({ length: limit }, (_, i) => ({
+    ...structuredClone(second.value.projects[0]), id: `unrelated-${i}`,
+  }));
+  first.value.nextCursor = limit;
+  second.args = { cursor: limit, limit };
+  o.projectList.push(second);
+  return [first, second];
+}
+
+test.each([
+  ['truncated final page', (o) => { o.projectList[0].args.limit = 1; o.projectList[0].value.nextCursor = 1; }],
+  ['cursor gap', (o) => { const [first, second] = nativeNextProjectPage(o); first.value.nextCursor = 2; second.args.cursor = 2; }],
+  ['omitted later cursor', (o) => { const [, second] = nativeNextProjectPage(o); delete second.args.cursor; }],
+  ['extra request argument', (o) => { o.projectList[0].args.search = 'synthetic'; }],
+  ['limit above native maximum', (o) => { o.projectList[0].args.limit = 101; }],
+  ['rows exceed requested limit', (o) => {
+    const page = o.projectList[0];
+    page.args.limit = 1;
+    page.value.projects.unshift({ ...structuredClone(page.value.projects[0]), id: 'unrelated' });
+  }],
+])('native project pagination: %s holds', (_, change) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(o);
+  held(f.run(), 'destination-project-list');
+});
+
+test('native project pagination: omitted cursor and limit use native defaults', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  const [first, second] = nativeNextProjectPage(o, 20);
+  first.args = {};
+  second.args = { cursor: 20 };
+  planned(f);
+});
