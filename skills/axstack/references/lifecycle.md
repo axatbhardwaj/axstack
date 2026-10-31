@@ -29,6 +29,12 @@ Prefer parallel independent bounded work; no redundant workers. Fanout is depend
 capacity-driven within host/spending limits. [PR shape](pr-shape.md) covers
 theme/size; queue dependencies under [PR chains](pr-chain.md).
 
+For explicit non-repository Research/Explain/Publish artifacts, use
+[Local artifacts](local-artifacts.md) for owned shared delegates and SHA-256
+receipts. The reviewer checkout row above applies to code candidates; article
+review retains independent source/fact and exact-byte UI/design checks.
+Null identity does not waive engineering isolation or authorize remote artifacts.
+
 ## Ownership
 
 The PR owner is accountable for candidate, fixes, evidence, monitoring.

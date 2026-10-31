@@ -214,3 +214,32 @@ Read-only authenticated native RPC is distinct from agent execution. Offline
 saved-live replay preserves raw bytes and uses labelled synthetic envelopes; it
 proves no fresh dispatch, authentication, recovery or session lifecycle. Retain
 named negative/mutation logs and rerun restored source green after the probes.
+
+## Explicit local non-repository articles
+
+Use the run's trusted protected offline launcher when the ordinary Launch recipe
+is unsuitable; never run old root fixtures or use /dev/null as Git configuration.
+With its private HOME, owned TMPDIR and read-only source/Git mounts, run:
+
+```bash
+bun run test tests/workflows/fleet-artifact.test.js \
+  tests/workflows/fleet-artifact-receipt.test.js \
+  tests/workflows/fleet-artifact-contracts.test.js \
+  tests/workflows/fleet-route.test.js tests/workflows/fleet-route-eligibility.test.js \
+  tests/workflows/dispatch-plan/fleet.test.js > "$EVIDENCE/local-artifact-tests.log" 2>&1
+```
+
+Proof: the actual dispatch-plan CLI emits a shared task for a synthetic No-project
+article, with exact native environment/project/provider/model/options/runtime.
+Absent scope, engineering/code-review roles, remote routes, mismatched native
+reads, unsafe/overlapping ownership and changed artifact bytes hold. SHA-256
+receipts need no fabricated Git revision; existing engineering tests remain.
+Semantic instruction checks reject boundary removal/inversion and permit equivalent
+wording. Helpers cannot prove filesystem ownership or authenticate supplied facts.
+The driver's real No-project canary, installed support, Playwright exact-byte
+publication review and live publication remain separately unverified.
+
+Live nonrepo regression: include fleet-artifact-receipt tests for T3 0.1.5
+shared parent scratch inheritance and deduplicated local task summaries. Preserve
+raw native observations; require parent/path/run/byte bindings and reject stale
+or conflicting evidence. Replay is not a new live dispatch.

@@ -11,6 +11,11 @@ Include [Safe deletion](../axstack/references/workspace-hygiene.md#safe-deletion
 
 Manual review keeps the user’s chat and workspace open.
 
+For non-repository article/source review, follow
+[Local artifacts](../axstack/references/local-artifacts.md); Explain/Publish own
+the independent artifact review. PR/code-review modes below retain repository
+and native worktree requirements; null identity never selects those modes.
+
 Produce evidence-bound findings for an exact revision using the review count
 and model routing required by its mode. Report within the requested authority;
 for own PRs, automatic merge is the default under the

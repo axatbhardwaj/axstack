@@ -1,3 +1,4 @@
+import { isArtifact } from './fleet-scope.js';
 import { nativeAssignments } from './fleet-inventory.js';
 import { canonical, evidence, fail, record, text, time } from './fleet-config.js';
 
@@ -116,6 +117,8 @@ export function routeReasons(route, host, destination, facts, input, now) {
   const add = (code) => { if (!reasons.includes(code)) reasons.push(code); };
   const remote = route.environmentId !== input.origin.environmentId;
   const r = input.request;
+  const artifact = isArtifact(r);
+  if (artifact && (remote || route.kind !== 'local' || r.scope.environmentId !== input.origin.environmentId)) add('artifact-local-only');
   if (Object.hasOwn(input.exclusions.hosts, host.id)) add('excluded-host');
   if (Object.hasOwn(input.exclusions.routes, route.id)) add('excluded-route');
   if (!route.enabled) add('route-disabled');
@@ -134,7 +137,9 @@ export function routeReasons(route, host, destination, facts, input, now) {
       || !evidence(destination.evidence, host.environmentId, now)) add('evidence-unproven');
     if (!text(destination.snapshotId) || facts?.destinationSnapshotId !== destination.snapshotId) add('target-snapshot-mismatch');
     if (!record(destination.project) || !text(destination.project.id)) add('project-missing');
-    else if (destination.project.repositoryId !== r.repositoryId) add('project-mismatch');
+    else if (destination.project.repositoryId !== r.repositoryId
+      || (artifact && (destination.project.id !== r.scope.projectId
+        || destination.project.workspaceRoot !== r.scope.workspaceRoot))) add('project-mismatch');
     const e = destination.execution;
     if (!record(e) || e.available !== true) add('execution-unproven');
     else if (e.providerInstanceId !== r.providerInstanceId || e.model !== r.model

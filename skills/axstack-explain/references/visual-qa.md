@@ -24,7 +24,12 @@ Interaction checks remain with `axstack-ui-verifier`; source-fidelity review is 
 Use this checklist for every HTML explanation and other visual artifacts where
 rendering matters.
 
-Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
+Browser and visual checks use delegated `axstack-ui-verifier`: engineering
+candidates require its own detached checkout; explicit non-repository articles
+use the local shared delegate with an owned exact-byte snapshot under
+[Local artifacts](../../axstack/references/local-artifacts.md). Outputs stay in
+its private evidence folder. Playwright checks and source/design review remain
+bound to the exact final SHA-256 before public publication.
 
 1. Identify the final artifact bytes and theme. The explicit user theme wins;
    otherwise use `prefers-color-scheme`.

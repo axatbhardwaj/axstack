@@ -7,6 +7,12 @@ records and forge actions. Helpers validate explicit saved inputs only: no
 network, clock, dispatch, retry, merge, retained state or aggregate permission grant.
 Synthetic evidence can pass binding checks; helpers cannot authenticate it.
 
+For explicit local non-repository Research/Explain/Publish work, apply
+[Local artifacts](local-artifacts.md): its discriminated scope, native read/list
+null-identity proof and owned folders replace only the repository/checkout terms.
+All native execution authority and independent exact-byte review remain required.
+Engineering/code review and remote routes retain their existing rules.
+
 ## Observe before selecting
 
 1. Record installed Axstack and both T3 versions, directed origin/target link,
@@ -70,7 +76,7 @@ read envelope is `{tool,environmentId,args,observedAt,evidence,value}` where arg
 excludes the forwarding environmentId, and evidence points to the preserved raw
 native call/result. environment/project/capabilities are read on the selected
 host; links are read on origin. The capabilities envelope uses `valueText` for
-exact raw catalog bytes instead of value. Project repositoryIdentity.canonicalKey
+exact raw catalog bytes instead of value. For repository scope, project repositoryIdentity.canonicalKey
 must match the requested repositoryId. If project-read identity is null/omitted,
 `projectList` may carry an ordered array of `t3_project_list` read envelopes on
 that same environment. Collect from cursor 0 through native nextCursor:null,
@@ -78,7 +84,9 @@ recording actual cursor/limit arguments (native defaults: 0/20, limit at most 10
 Every page must join without gaps, extra arguments or duplicate project IDs.
 The selected project's ID and workspaceRoot must equal project-read; every
 available canonicalKey must equal repositoryId, including when both reads have
-identity. Missing identity in both, incomplete pagination and any conflict hold.
+identity. In repository scope, missing identity in both holds; local-artifact
+scope instead requires explicit null in both reads. Incomplete pagination and
+any conflict hold for either scope.
 
 For observed T3 0.1.5 native Codex/Claude drivers, omitted provider runtimeModes
 means no provider restriction: native resolveRuntimeMode and RuntimePolicy
@@ -98,9 +106,11 @@ recommendation, explicit evaluation time and config pin. Compare its target to t
 independently selected host/environment/project/model/options/runtimeMode. Copy only
 native supported fields, never inputs or fleetBinding. Call `delegate_task` with
 that exact target, full-access, a role-labelled title, stable clientRequestId and
-scope. Reviewers require native isolation:"worktree" and pinned candidate/base;
-no shell-created child checkout. Other nonwriters write only their named private
-evidence directory on that host. Preserve requested arguments and native response.
+scope. Code reviewers require native isolation:"worktree" and pinned candidate/base;
+no shell-created child checkout. Explicit local artifact reviewers instead use
+shared isolation and SHA-256 snapshots under [Local artifacts](local-artifacts.md);
+artifact writers use only their owned artifact/evidence folders. Other nonwriters
+write only their named private evidence directory on that host. Preserve requested arguments and native response.
 
 Record taskId on the origin plus remoteChild.environmentId/threadId. The native
 remoteChild schema need not return runId: normalize it from observed task/thread
@@ -117,7 +127,9 @@ recommendation at the same model/permission pins; record the exclusion evidence.
 
 Preserve schemaVersion:1, recommendationJSON (exact bytes), configDigest,
 attempt (key, exact title, clientRequestId, origin environmentId/threadId/taskId,
-candidate/base SHAs), requested target/runtimeMode/isolation and native submission.
+candidate/base SHAs for repositories, artifact SHA-256/null base for local artifacts),
+requested target/runtimeMode/isolation and native submission. Artifact ownership
+and byte readbacks follow [Local artifacts](local-artifacts.md#receipts).
 The driver's independent fleetAttempt is the expected run-record identity;
 never copy it from an arriving receipt to make a comparison pass.
 
@@ -137,6 +149,9 @@ submission.childRunId; never use lexical ordering of IDs or the original summary
 Require completed/result_available/no pending children/no unanswered questions or
 approval. Require exactly one AXSTACK-DONE key/candidate/report marker on both origin's
 latestTerminalSummary and the destination's final current-run agent message.
+For local artifacts only, T3 0.1.5's deduplicated summary uses the exact
+run/byte-bound exception in [Local artifacts](local-artifacts.md#receipts);
+never rewrite raw native fields or extend it to remote/engineering receipts.
 A completion marker may be followed by the T3
 `PR <url>, head <sha>, checks and reviews <state>` trailer. Other trailing text
 or additional AXSTACK markers keep the receipt held.

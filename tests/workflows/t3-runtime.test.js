@@ -50,7 +50,6 @@ for (const [name, sentence] of pins) {
 for (const [path, sentence] of [
   ...pins.filter(([name]) => ['temporary evidence guard', 'temporary path validation'].includes(name))
     .map(([, sentence]) => ['skills/axstack/references/workspace-hygiene.md', sentence]),
-  ['skills/axstack-explain/references/visual-qa.md', 'Browser and visual checks must run in the delegated `axstack-ui-verifier` in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.'],
   ['skills/axstack/references/run-record.md', 'Each dispatch row must record the provider/model echo, configuration read-back, and post-completion HEAD/porcelain check result.'],
 ]) test(`T3 gate safety in ${path}: ${sentence}`, () => {
   expect(exactSentences(read(path))).toContain(sentence);

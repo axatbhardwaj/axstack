@@ -1,15 +1,22 @@
 // Bind supplied placement facts to a plan. No reads, dispatch or authority grant.
+import { isArtifact } from './fleet-scope.js';
 import { inspectDestination } from './fleet-destination.js';
 import { canonical, record, text } from './fleet-config.js';
 import { recommend } from './fleet-route.js';
 
-export function bindFleet(input, saved, configDigest, now, capabilitiesText, resolved, author) {
+export function bindFleet(input, saved, configDigest, now, capabilitiesText, resolved, author, roleId, kind) {
   const hold = (code) => { throw Object.assign(new Error(code), { exitCode: 2 }); };
   if (saved?.schemaVersion !== 1) hold('schema-version: recommendation');
   if (configDigest !== input?.configDigest) hold('config-digest-mismatch');
   let current;
   try { current = recommend(input, now); } catch (error) { hold(error.message); }
   if (canonical(saved) !== canonical(current)) hold('recommendation-mismatch');
+  const artifact = isArtifact(current.request);
+  if (artifact) {
+    if (roleId !== current.request.scope.roleId) hold('artifact-role-mismatch');
+    if (kind !== 'task') hold('artifact-task-only');
+    if (input.nativeDestination === undefined) hold('artifact-native-destination-required');
+  }
   const selected = current.selected;
   if (!selected) hold('no-executable-route');
   // Coordinator enablement/lifecycle is a later capability, never inferred here.
@@ -40,7 +47,8 @@ export function bindFleet(input, saved, configDigest, now, capabilitiesText, res
     return { id, value };
   });
   return {
-    options, destination: { environmentId: selected.environmentId, projectId: selected.projectId },
+    options, ...(artifact ? { artifactScope: current.request.scope, isolation: 'shared' } : {}),
+    destination: { environmentId: selected.environmentId, projectId: selected.projectId },
     fleetBinding: { configDigest, destinationSnapshotId: selected.destinationSnapshotId,
       destinationCapabilitiesDigest: digest },
   };

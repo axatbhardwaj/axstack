@@ -1,5 +1,6 @@
 // Saved evidence validator. A pass binds supplied facts; it cannot authenticate them.
 import { canonical, record, text, time } from './fleet-config.js';
+import { inside, isArtifact } from './fleet-scope.js';
 import { inspectNativeFamily } from './fleet-native-receipt.js';
 
 function options(value) {
@@ -21,6 +22,7 @@ export function inspectFleetReceipt(receipt, expected) {
   const a = expected.attempt;
   const s = expected.recommendation.selected;
   const request = expected.recommendation.request;
+  const artifact = isArtifact(request);
   term('receipt-origin', text(a?.origin?.threadId) && a?.origin?.environmentId === expected.recommendation.originEnvironmentId
     && same(r.attempt?.origin, a?.origin), r.attempt?.origin,
   !text(a?.origin?.threadId) || r.attempt?.origin == null);
@@ -127,16 +129,46 @@ export function inspectFleetReceipt(receipt, expected) {
   };
   const items = r.thread?.value?.items;
   const final = Array.isArray(items) ? items.filter((v) => v.runId === current && v.createdBy === 'agent').at(-1) : null;
-  term('receipt-marker', /^[a-f0-9]{40}$/.test(a?.candidate ?? '')
-    && finalMarker(status?.latestTerminalSummary) === marker && finalMarker(final?.text) === marker
-    && (!initial || status?.latestTerminalSummary === final?.text),
-  { origin: status?.latestTerminalSummary, destination: final?.text });
+  // T3 0.1.5 suppresses latestTerminalSummary when it equals summary.
+  // Only the same local result run may use that deduplicated value.
+  const localSummary = artifact && !remote && s.versions?.t3 === '0.1.5'
+    && status?.latestTerminalSummary === null && text(current)
+    && status?.childRunId === current && status?.latestTerminalRunId === current
+    && status?.status === 'completed' && status?.summary === final?.text;
+  const resultSummary = localSummary ? status.summary : status?.latestTerminalSummary;
+  term('receipt-marker', (artifact ? /^[a-f0-9]{64}$/ : /^[a-f0-9]{40}$/).test(a?.candidate ?? '')
+    && finalMarker(resultSummary) === marker && finalMarker(final?.text) === marker
+    && (!initial || resultSummary === final?.text),
+  { origin: resultSummary, destination: final?.text });
   term('receipt-host-path', r.evidence?.hostId === s.hostId && r.evidence?.environmentId === s.environmentId
-    && absolute(r.evidence?.path) && finalMarker(status?.latestTerminalSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
-  if (a?.title?.startsWith('Reviewer: ')) {
+    && absolute(r.evidence?.path) && finalMarker(resultSummary)?.endsWith(` report=${r.evidence.path}`), r.evidence);
+  if (artifact) {
+    const scope = request.scope;
+    const bytes = r.artifact;
+    term('receipt-artifact-scope', a?.base === null && same(r.artifactScope, scope)
+      && inside(r.evidence?.path, scope.evidenceRoot), r.artifactScope);
+    term('receipt-artifact-bytes', bytes?.sha256 === a?.candidate && inside(bytes?.path, scope.artifactRoot)
+      && bytes?.readback?.path === bytes.path && bytes?.readback?.sha256 === bytes.sha256
+      && text(bytes?.readback?.evidence), bytes);
+    // Shared native children can inherit a parent's non-Git scratch directory.
+    // Bind that value to an actual parent read; a path alone proves nothing.
+    const parent = r.parent;
+    const parentThread = parent?.value?.thread;
+    const inherited = !remote && s.versions?.t3 === '0.1.5'
+      && parent?.tool === 't3_thread_read' && parent.environmentId === a?.origin?.environmentId
+      && same(parent.args, { threadId: a?.origin?.threadId })
+      && time(parent.observedAt) && parent.observedAt <= expected.now && text(parent.evidence)
+      && parentThread?.threadId === a?.origin?.threadId && parentThread?.projectId === s.projectId
+      && thread?.parentThreadId === parentThread?.threadId && thread?.relationshipToParent === 'subagent'
+      && absolute(parentThread?.worktreePath) && inside(parentThread.worktreePath, scope.workspaceRoot)
+      && thread?.worktreePath === parentThread.worktreePath;
+    term('receipt-isolation', r.requested?.isolation === 'shared'
+      && (thread?.worktreePath === null || inherited) && r.checkout == null,
+    { isolation: r.requested?.isolation, worktreePath: thread?.worktreePath, parent });
+  } else if (a?.title?.startsWith('Reviewer: ')) {
     term('receipt-isolation', r.requested?.isolation === 'worktree', r.requested?.isolation);
   }
-  if (a?.title?.startsWith('Reviewer: ') || r.checkout != null || thread?.worktreePath != null || r.requested?.isolation === 'worktree') {
+  if (!artifact && (a?.title?.startsWith('Reviewer: ') || r.checkout != null || thread?.worktreePath != null || r.requested?.isolation === 'worktree')) {
     const c = r.checkout;
     term('receipt-checkout', c?.hostId === s.hostId && c?.environmentId === s.environmentId
       && absolute(c?.path) && c.path === thread?.worktreePath

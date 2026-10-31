@@ -24,8 +24,11 @@ All other browser checks outside the two named exceptions remain delegated to co
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.
+For explicit non-repository article checks, use the local shared delegate and
+owned SHA-256 snapshot in [Local artifacts](local-artifacts.md); no Git candidate
+is fabricated. Engineering candidate checks retain the checkout requirement.
 Use the configured verifier browser and honor the user browser-tool policy.
-Candidate browser and visual checks must run in a delegated UI verifier role in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
+Engineering candidate browser and visual checks must run in a delegated UI verifier role in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
 
 For every interactive page, require a real-browser `axstack-ui-verifier` interaction pass.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.

@@ -1,4 +1,5 @@
 // Validate explicit saved native reads. These bindings do not authenticate input.
+import { isArtifact } from './fleet-scope.js';
 import { canonical, text, time } from './fleet-config.js';
 
 export function inspectDestination(observation, recommendation, capabilitiesText, now) {
@@ -51,9 +52,17 @@ export function inspectDestination(observation, recommendation, capabilitiesText
   }
   // ProjectService.listPage resolves the cold identity cache; getById need not.
   const identities = [project?.repositoryIdentity, listed?.repositoryIdentity].filter((v) => v != null);
-  term('destination-repository', identities.length > 0
-    && identities.every((v) => v.canonicalKey === s.repositoryId), identities,
-  identities.length === 0);
+  if (isArtifact(recommendation.request)) {
+    const scope = recommendation.request.scope;
+    term('destination-artifact-project', project?.repositoryIdentity === null
+      && listed?.repositoryIdentity === null && project?.workspaceRoot === scope.workspaceRoot
+      && s.environmentId === scope.environmentId && s.projectId === scope.projectId,
+    { project, listed });
+  } else {
+    term('destination-repository', identities.length > 0
+      && identities.every((v) => v.canonicalKey === s.repositoryId), identities,
+    identities.length === 0);
+  }
   term('destination-catalog', o.capabilities?.valueText === capabilitiesText, o.capabilities?.valueText);
   const catalog = JSON.parse(capabilitiesText);
   const providers = catalog.providers?.filter((v) => v.providerInstanceId === recommendation.request.providerInstanceId);

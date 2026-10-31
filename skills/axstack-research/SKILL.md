@@ -20,6 +20,10 @@ baseline, ticket map, or author pipeline. Keep it read-only unless requested
 and separately authorized to change product code or publish; otherwise, neither
 is part of research.
 
+For explicit local non-repository work, apply
+[Local artifacts](../axstack/references/local-artifacts.md) before native dispatch.
+Preserve this phase's independent source/fact and exact-byte review requirements.
+
 ## Procedure
 
 1. **Frame the question.** Restate the question, what is in scope, what is
