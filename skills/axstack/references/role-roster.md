@@ -6,6 +6,11 @@ native destination. Remote reviewers require T3 worktree isolation; no shell chi
 checkout. Host names confer no role or permission. Remote authors/coordinator stay
 disabled; local isolated authors remain supported even overloaded.
 
+Explicit non-repository Research/Explain/Publish uses the bounded role allowlist
+and local shared-artifact isolation in [Local artifacts](local-artifacts.md).
+This changes no configured seat, source independence or exact-byte review duty.
+Engineering authors and code reviewers cannot acquire this artifact authority.
+
 - Chat drives (no role ID); `axstack-owner` owns one PR and
   `axstack-author` its sole writer.
   For own PRs, automatic merge is the default under the

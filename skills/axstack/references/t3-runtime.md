@@ -204,6 +204,13 @@ a candidate follows [UI verification](ui-verification.md).
 
 The driver must be the sole run-record writer and enforce one writer per
 candidate; it never writes tracked candidate source or tests or repairs an author's source.
+For explicit non-repository Research/Explain/Publish only,
+[Local artifacts](local-artifacts.md) supplies the artifact branch of this table:
+source readers, diligence, explainers and article/UI reviewers use local shared
+native delegates with separate owned folders and exact SHA-256 snapshots.
+Its role allowlist excludes engineering authors and code reviewers; their native
+Git worktree rules above remain mandatory. Null repository alone grants nothing.
+
 The driver may write planning artifacts (spec, ticket map) in its own worktree when the selected store is repository Markdown.
 Repairs return to that author. Missing or idle sessions grant no ownership transfer.
 The current chat/driver has no role row in any preset.

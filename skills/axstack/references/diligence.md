@@ -5,7 +5,9 @@ and bounded follow-ups are defined in [Peer mode](../../axstack-review/SKILL.md#
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch.
 Dispatch `axstack-diligence` with async `delegate_task` in the driver worktree,
-using a pinned brief and private evidence paths.
+using a pinned brief and private evidence paths. Explicit non-repository
+research/article diligence uses [Local artifacts](local-artifacts.md) with
+local shared isolation and independently reopened sources, without a fake Git repo.
 It is read-only, never authors or edits, and returns `PASS`, `FINDINGS`, or `UNKNOWN`
 with locations, observed evidence, and limits. A stale or missing receipt is
 not a pass. Keep its first pass independent of other reviewers and workers.

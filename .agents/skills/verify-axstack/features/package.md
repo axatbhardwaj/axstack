@@ -23,7 +23,8 @@ find "$REPO" -maxdepth 1 -name '*.tgz' -printf '%f\n' | sort \
 cmp "$EVIDENCE/archives-before.txt" "$EVIDENCE/archives-after.txt"
 for MEMBER in bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/fleet-route.js skills/axstack/scripts/fleet-config.js \
-  skills/axstack/scripts/fleet-facts.js skills/axstack/references/fleet-route-schema.md \
+  skills/axstack/scripts/fleet-facts.js skills/axstack/scripts/fleet-scope.js \
+  skills/axstack/references/local-artifacts.md skills/axstack/references/fleet-route-schema.md \
   skills/axstack/scripts/fleet-route-cli.js skills/axstack/scripts/fleet-dispatch.js \
   skills/axstack/scripts/fleet-sample.js skills/axstack/scripts/fleet-proc.js \
   skills/axstack/scripts/fleet-sample-cli.js skills/axstack/scripts/fleet-sample-manifest.js \

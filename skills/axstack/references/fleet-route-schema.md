@@ -112,6 +112,13 @@ for serial emulator use, desktop safety and declared thermal prechecks.
 | `pendingAssignments` | Array of `{clientRequestId, environmentId, taskId?}` |
 | `exclusions` | `{hosts: {hostId: reason}, routes: {routeId: reason}}`; nonempty reason strings |
 
+`request.scope` may be `{kind:"repository"}` with a nonempty repositoryId;
+legacy omitted scope retains that repository requirement. The explicit
+`{kind:"local-artifact", ...}` alternative requires repositoryId:null and the
+workflow, role, native project and ownership fields in [Local artifacts](local-artifacts.md).
+Artifact destination project also carries workspaceRoot; only the bound local
+environment/project/workspace is eligible. Null alone never selects a route.
+
 `role` is `reader` (all nonwriter roles) or `author`. `requiredCapabilities`
 is an array of strings. An authentication requirement names the actual session
 capability; only the host proving that session is eligible. No credential
@@ -311,7 +318,10 @@ unavailable destination model/options, or role/settings/config disagreement.
 It never reinterprets a requested model pin as a different available model.
 
 Task plans add `environmentId`/`projectId` to `target`; launch plans add them
-beside `modelSelection`. All requested options survive as T3 option entries.
+beside `modelSelection`. All requested options survive as T3 option entries. Explicit local-artifact
+plans require nativeDestination, the exact scope role and task kind; they emit
+isolation:"shared" and artifactScope evidence. The latter is never a native
+argument. Artifact readback compares scope and shared isolation as well.
 Both include `fleetBinding: {configDigest, destinationSnapshotId,
 destinationCapabilitiesDigest}`. This is preserved evidence, not a T3 launch
 parameter. Copy only tool-supported launch fields. Coordinator author routes

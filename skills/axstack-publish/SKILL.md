@@ -10,6 +10,10 @@ The current T3 driver owns publication; workers return checked artifacts.
 Load [Standing contracts](../axstack/references/contracts.md) and follow its
 lifecycle pointers. Keep page bytes, checks and receipts in private run evidence.
 
+For explicit local non-repository work, apply
+[Local artifacts](../axstack/references/local-artifacts.md) before native dispatch.
+Preserve this phase's independent source/fact and exact-byte review requirements.
+
 ## 1. Bind the request
 
 Read host-managed `~/.config/axstack/publish.json` containing string fields

@@ -20,6 +20,10 @@ scope baseline. Ordinary work in the current chat needs no launch preflight;
 load the [T3 runtime boundary](../axstack/references/t3-runtime.md) only
 immediately before an actual profile dispatch.
 
+For explicit local non-repository work, apply
+[Local artifacts](../axstack/references/local-artifacts.md) before native dispatch.
+Preserve this phase's independent source/fact and exact-byte review requirements.
+
 ## 1. Bound the question and evidence
 
 1. Identify the audience, question, requested format, theme, and publication
