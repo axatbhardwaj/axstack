@@ -353,6 +353,8 @@ test.each([
 });
 
 function observation(f) {
+  f.capabilities.runtimeMode = 'full-access';
+  f.capabilities.providers[0].constraints = [];
   f.capabilities.providers[0].runtimeModes = ['full-access'];
   f.refreshCatalog();
   const read = (tool, environmentId, args, value) => ({ tool, environmentId, args, value,
@@ -537,17 +539,18 @@ test.each([
 });
 
 
-test('unadvertised destination execution fields remain unknown with their native evidence', () => {
+test('unadvertised caller execution authority remains unknown with its native evidence', () => {
   const f = fleet();
   const observed = observation(f);
   const inspect = () => inspectDestination(observed, f.saved, observed.capabilities.valueText, NOW);
   expect(inspect().every((t) => t.state === 'pass')).toBe(true);
   const catalog = JSON.parse(observed.capabilities.valueText);
   delete catalog.providers[0].runtimeModes;
+  delete catalog.runtimeMode;
   observed.capabilities.valueText = JSON.stringify(catalog);
   const term = inspect().find((t) => t.code === 'destination-execution');
   expect(term.state).toBe('unknown');
-  expect(term.evidence).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
+  expect(term.evidence.provider).toMatchObject({ providerInstanceId: 'codex', canRunChildTask: true });
 });
 
 test('incomplete independent origin context cannot accept a self-consistent receipt', () => {
@@ -609,4 +612,106 @@ test.each(['missing requests', 'raw requestIds'])('unextracted question list sta
   expect(result.status).toBe(2);
   expect(result.output).toContain('receipt-question: unknown');
   expect(result.output).not.toContain('receipt-question: fail');
+});
+
+// T3 0.1.5: project-list resolves cold identities; native providers omit mode restrictions.
+function nativeOptional(f) {
+  const o = observation(f);
+  const project = structuredClone(o.project.value);
+  o.project.value.repositoryIdentity = null;
+  o.projectList = [{ ...structuredClone(o.project), tool: 't3_project_list', args: { cursor: 0, limit: 100 },
+    value: { projects: [project], nextCursor: null } }];
+  delete f.capabilities.providers[0].runtimeModes;
+  f.capabilities.runtimeMode = 'full-access';
+  f.capabilities.providers[0].constraints = [];
+  f.refreshCatalog();
+  o.capabilities.valueText = JSON.stringify(f.capabilities);
+  f.input.nativeDestination = o;
+  return o;
+}
+
+test.each([null, undefined])('native optional fields bind canonical list identity when read identity is %s', (identity) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  o.project.value.repositoryIdentity = identity;
+  const before = JSON.stringify(o);
+  planned(f);
+  expect(f.run(f.readback()).output).toContain('MATCH');
+  expect(JSON.stringify(o)).toBe(before);
+  expect(f.readback().fleetBinding.destinationCapabilitiesDigest).toBe(
+    new Bun.CryptoHasher('sha256').update(o.capabilities.valueText).digest('hex'));
+});
+
+test.each([
+  ['destination-repository', (o) => { o.project.value.repositoryIdentity = { canonicalKey: 'other/repo' }; }],
+  ['destination-repository', (o) => { o.projectList[0].value.projects[0].repositoryIdentity.canonicalKey = 'other/repo'; }],
+  ['destination-repository', (o) => { o.projectList[0].value.projects[0].repositoryIdentity = null; }],
+  ['destination-project-list', (o) => { o.projectList[0].environmentId = 'env-worker-b'; }],
+  ['destination-project-list', (o) => { o.projectList[0].tool = 'worker-self-report'; }],
+  ['destination-project-list', (o) => { o.projectList[0].observedAt = NOW + 1; }],
+  ['destination-project-list', (o) => { o.projectList[0].args.cursor = 100; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.nextCursor = 100; }],
+  ['destination-project-list', (o) => { delete o.projectList[0].value.nextCursor; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects.push(structuredClone(o.projectList[0].value.projects[0])); }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects[0].id = 'other-project'; }],
+  ['destination-project-list', (o) => { o.projectList[0].value.projects[0].workspaceRoot = '/different/root'; }],
+  ['destination-project', (o) => { o.project.value.id = 'other-project'; }],
+  ['destination-access', (o) => { o.links.value.links[0].status = 'unreachable'; }],
+  ['destination-access', (o) => { o.links.value.links[0].expiresAt = new Date(NOW).toISOString(); }],
+  ['destination-access', (o) => { o.links.value.links[0].access = 'read-only'; }],
+])('native optional identity/access evidence holds on %s', (code, change) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(o);
+  held(f.run(), code);
+});
+
+test.each([
+  ['unsupported explicit mode', (c) => { c.providers[0].runtimeModes = ['approval-required']; }],
+  ['malformed mode restriction', (c) => { c.providers[0].runtimeModes = null; }],
+  ['disabled provider', (c) => { c.providers[0].canRunChildTask = false; }],
+  ['unknown provider availability', (c) => { delete c.providers[0].canRunChildTask; }],
+  ['unavailable provider', (c) => { c.providers.shift(); }, 'resolver'],
+  ['ambiguous provider', (c) => { c.providers.push(structuredClone(c.providers[0])); }, 'resolver'],
+  ['denied caller mode', (c) => { c.runtimeMode = 'approval-required'; }],
+  ['unknown caller mode', (c) => { delete c.runtimeMode; }],
+  ['provider constraint', (c) => { c.providers[0].constraints = ['unavailable']; }],
+  ['unknown provider constraints', (c) => { delete c.providers[0].constraints; }],
+].map(([name, change, boundary]) => [name, change, boundary ?? 'destination']))('native optional runtime evidence holds: %s', (_, change, boundary) => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  change(f.capabilities);
+  f.refreshCatalog();
+  o.capabilities.valueText = JSON.stringify(f.capabilities);
+  const result = f.run();
+  if (boundary === 'resolver') {
+    expect(result.status).toBe(2);
+    expect(result.error).toBe('model capabilities resolution hold: unknown or ambiguous provider instance codex\n');
+    expect(result.output).toBe('');
+  } else held(result, 'destination-execution');
+});
+
+test('complete native project pagination joins only the selected project', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  const first = o.projectList[0];
+  first.args.limit = 1;
+  const second = structuredClone(first);
+  first.value.projects[0].id = 'unrelated-project';
+  first.value.nextCursor = 1;
+  second.args.cursor = 1;
+  o.projectList.push(second);
+  planned(f);
+  o.projectList.reverse();
+  held(f.run(), 'destination-project-list');
+});
+
+test('unproven schema semantics do not accept omitted provider modes', () => {
+  const f = fleet();
+  const o = nativeOptional(f);
+  planned(f);
+  o.environment.value.serverVersion = 'unknown';
+  held(f.run(), 'destination-execution');
 });
