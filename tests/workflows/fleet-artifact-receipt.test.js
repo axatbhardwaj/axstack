@@ -3,14 +3,16 @@ import { recommend } from '../../skills/axstack/scripts/fleet-route.js';
 import { inspectFleetReceipt } from '../../skills/axstack/scripts/fleet-receipt.js';
 import { NOW } from './fleet-route-fixture.js';
 import { configuration } from './dispatch-plan/fixtures.js';
-import { article } from './fleet-artifact-fixture.js';
+import { article, configuredArtifact } from './fleet-artifact-fixture.js';
 import { configuredBrainstorm, seats } from './fleet-brainstorm-fixture.js';
+import { reportSeats } from './fleet-report-matrix-fixture.js';
 
 function artifactReceipt(f) {
   const { providerInstanceId, model, options } = f.input.request;
   const candidate = 'c'.repeat(64);
   const artifactPath = f.scope.artifactRoot + '/article.html';
-  const report = f.scope.evidenceRoot + '/report.md';
+  const report = f.scope.evidenceRoot + (['axstack-auditor', 'axstack-auditor-sol'].includes(f.scope.roleId)
+    ? '/audit.md' : '/report.md');
   const marker = `AXSTACK-DONE key=article:review:a1 head=${candidate} report=${report}`;
   const attempt = { key: 'article:review:a1', title: 'Reviewer: article:review:a1',
     clientRequestId: 'article-review', candidate, base: null,
@@ -216,3 +218,23 @@ test.each(seats)(
     expect(held.status).toBe(2);
     expect(held.output).toContain('receipt-artifact-bytes: fail');
   });
+
+test.each(reportSeats)('report-only %s configured selector/plan/receipt: %s', (workflow, seat) => {
+  const f = configuredArtifact(seat, workflow);
+  const result = f.run();
+  expect(result.status, result.error).toBe(0);
+  const plan = JSON.parse(result.output);
+  expect(plan.target.model).toBe(seat[2]);
+  expect(plan.target.providerInstanceId).toBe(seat[1]);
+  expect(plan.target.options).toEqual([{ id: seat[3], value: seat[4] }]);
+  const { receipt, expected } = artifactReceipt(f);
+  const readback = { modelSelection: { instanceId: seat[1], model: seat[2], options: plan.target.options },
+    runtimeMode: 'full-access', environmentId: f.scope.environmentId, projectId: f.scope.projectId,
+    fleetBinding: plan.fleetBinding, artifactScope: f.scope, isolation: 'shared',
+    fleetAttempt: expected.attempt, fleetReceipt: receipt };
+  expect(f.run(seat[0], 'task', readback).output).toContain('MATCH');
+  receipt.artifact.sha256 = 'd'.repeat(64);
+  const held = f.run(seat[0], 'task', readback);
+  expect(held.status).toBe(2);
+  expect(held.output).toContain('receipt-artifact-bytes: fail');
+});

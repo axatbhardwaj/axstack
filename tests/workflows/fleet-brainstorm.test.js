@@ -45,7 +45,8 @@ test.each(['axstack-research-web', 'axstack-diligence', 'axstack-explainer', 'ax
 test.each([
   ['engineering authority', (f) => { f.input.request.role = 'author'; }],
   ['null-repo engineering without scope', (f) => { delete f.input.request.scope; }],
-  ['unknown workflow', (f) => { f.scope.workflow = 'align'; }],
+  ['unknown workflow', (f) => { f.scope.workflow = 'spec'; }],
+  ['array workflow', (f) => { f.scope.workflow = ['brainstorm']; }],
   ['fabricated repo', (f) => { f.input.request.repositoryId = 'other/repo'; }],
   ['shared artifact root', (f) => { f.scope.artifactRoot = f.scope.workspaceRoot; }],
   ['evidence outside workspace', (f) => { f.scope.evidenceRoot = '/other/evidence'; }],

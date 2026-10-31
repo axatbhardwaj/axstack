@@ -5,8 +5,18 @@ const sourceRoles = ['axstack-research-requirements', 'axstack-research-code', '
 const articleRoles = ['axstack-explainer', 'axstack-explainer-review', 'axstack-ui-verifier', 'axstack-ui-verifier-sonnet'];
 const brainstormRoles = ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok',
   'axstack-arena-judge-opus', 'axstack-escalation-fable', 'axstack-arena-judge-astra'];
-const workflowRoles = { research: sourceRoles, explain: [...sourceRoles, ...articleRoles],
-  publish: [...sourceRoles, ...articleRoles], brainstorm: brainstormRoles };
+const auditRoles = ['axstack-auditor', 'axstack-auditor-sol'];
+const workflowRoles = {
+  research: [...sourceRoles, ...auditRoles],
+  explain: [...sourceRoles, ...articleRoles, ...auditRoles],
+  publish: [...sourceRoles, ...articleRoles, ...auditRoles],
+  brainstorm: [...brainstormRoles, ...auditRoles],
+  align: ['axstack-advisor-astra', 'axstack-advisor-opus', ...auditRoles],
+  improve: ['axstack-research-code', 'axstack-research-code-sol', 'axstack-ui-verifier',
+    'axstack-ui-verifier-sonnet', ...auditRoles],
+  audit: auditRoles,
+  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable', ...auditRoles],
+};
 export const isArtifact = (request) => request?.scope?.kind === 'local-artifact';
 const path = (value) => typeof value === 'string' && value.startsWith('/') && value !== '/'
   && !/[\s\x00-\x1f\x7f]/.test(value) && !value.slice(1).split('/').some((v) => ['', '.', '..'].includes(v));
@@ -18,7 +28,7 @@ export function validScope(request) {
   if (s === undefined) return typeof request.repositoryId === 'string' && request.repositoryId.trim().length > 0;
   if (s?.kind === 'repository') return typeof request.repositoryId === 'string' && request.repositoryId.trim().length > 0;
   if (!isArtifact(request) || request.repositoryId !== null || request.role !== 'reader'
-    || !Object.hasOwn(workflowRoles, s.workflow) || !workflowRoles[s.workflow].includes(s.roleId)
+    || typeof s.workflow !== 'string' || !Object.hasOwn(workflowRoles, s.workflow) || !workflowRoles[s.workflow].includes(s.roleId)
     || ![s.environmentId, s.projectId].every((v) => typeof v === 'string' && v.trim().length > 0)
     || !inside(s.artifactRoot, s.workspaceRoot) || !inside(s.evidenceRoot, s.workspaceRoot)
     || overlaps(s.artifactRoot, s.evidenceRoot) || !Array.isArray(s.reservedRoots)

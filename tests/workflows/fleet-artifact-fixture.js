@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { recommend } from '../../skills/axstack/scripts/fleet-route.js';
 import { fixture, NOW } from './fleet-route-fixture.js';
 import { invoke, setup } from './dispatch-plan/fixtures.js';
@@ -49,4 +50,24 @@ export function article() {
     return invoke(args);
   };
   return { ...f, input, scope, run, refreshCatalog };
+}
+
+export function configuredArtifact(seat, workflow, preset = 'mixed') {
+  const [role, providerInstanceId, model, option, effort] = seat;
+  const f = article();
+  Object.assign(f.scope, { workflow, roleId: role });
+  f.roles.roles = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8')).roles;
+  Object.assign(f.input.request, { providerInstanceId, model, options: { [option]: effort } });
+  f.input.destinations.forEach((d) => {
+    Object.assign(d.execution, { providerInstanceId, model, options: { [option]: effort } });
+  });
+  f.capabilities.providers.forEach((p) => {
+    Object.assign(p, { canRunChildTask: true, constraints: [], runtimeModes: ['full-access'] });
+  });
+  const provider = f.capabilities.providers.find((p) => p.providerInstanceId === providerInstanceId);
+  if (!provider.models.some((m) => m.id === model)) {
+    provider.models.push({ ...structuredClone(provider.models[0]), id: model });
+  }
+  f.refreshCatalog();
+  return f;
 }
