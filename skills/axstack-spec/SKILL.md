@@ -25,6 +25,8 @@ and the lifecycle's [audit skill](../axstack-audit/SKILL.md) hook.
 
 ## Procedure
 
+Before drafting, load and follow [Independent delivery](../axstack/references/independent-delivery.md).
+
 1. **Select the authoritative store.** Use Linear through the executor MCP only
    for repositories in `defi-com`. Keep specs for other repositories on GitHub;
    if the issue, PR or repository-file location is unclear, ask before creating

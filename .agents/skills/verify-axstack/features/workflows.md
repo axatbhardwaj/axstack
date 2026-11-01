@@ -27,6 +27,16 @@ completeness. `spec-format.test.js` covers brief-first decisions/scope/risks,
 binding capability contracts, current criteria versus immutable approved history,
 and a usable example with semantic removal/inversion/rewording probes.
 
+Independent delivery: Spec, its format, Tickets and Implement explicitly load
+`skills/axstack/references/independent-delivery.md`. The
+`independent-delivery{,-maps}.test.js` checks cover loaded outcome/interface
+obligations, conditional separate drivers, accepted authority, launch-only holds,
+execution admission, semantic conflicts, artifact milestones versus Git ancestry,
+current evidence/invalidation and the existing map/receipt templates. Semantic
+rules reject removal/inversion and accept equivalent wording. These are instruction
+contracts: fresh exact-candidate Spec -> Tickets -> Implement decision evaluation
+and actual native multi-driver operation remain separate driver-owned evidence.
+
 `workflow-retirement.test.js` guards active guidance and presets against retired
 workflow routes while preserving the documented installer harness interfaces.
 
@@ -129,6 +139,8 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/independent-delivery.test.js \
+  tests/workflows/independent-delivery-maps.test.js \
   tests/workflows/multi-driver.test.js \
   tests/workflows/recovery-wait-records.test.js \
   tests/workflows/recovery-boundaries.test.js \

@@ -19,6 +19,8 @@ run later reconciles merges and closes out.
 
 ## 1. Admit the work
 
+At admission and before dispatch, load and follow [Independent delivery](../axstack/references/independent-delivery.md).
+
 Before consequential work, load the standing contracts, follow their required
 edge into the lifecycle (including its audit hook), then apply shared routing:
 
@@ -205,6 +207,7 @@ Record: <progress.md path or tiny-task brief>
 Candidate: <PR or branch> base <sha> revision <sha>
 Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
+Delivery map: <record pointer; outcomes/accepted scope drivers; current milestone evidence; held launches>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
 Token limit: <staged-file size check command + observed advisories/errors before each commit>
