@@ -70,7 +70,7 @@ const corruptions = [
   ['scoped aggregate', (u) => { u.limits[0].scope = { model: { display_name: 'Opus' } }; }],
   ['inactive session row', (u) => { u.limits.push({ kind: 'session', group: 'session', is_active: false, percent: 4 }); }],
   ['active session row', (u) => { u.limits.push({ kind: 'session', group: 'session', is_active: true, percent: 4 }); }],
-  ['unknown inactive limit', (u) => { u.limits.push({ kind: 'future_limit', group: 'weekly', is_active: false }); }],
+  ['unknown inactive limit', (u) => { u.limits.push({ ...u.limits[1], kind: 'future_limit' }); }],
   ['missing weekly', (u) => { delete u.seven_day; }],
   ['null weekly', (u) => { u.seven_day = null; }],
   ['string usage', (u) => { u.seven_day.utilization = '20'; u.limits[0].percent = '20'; }],
