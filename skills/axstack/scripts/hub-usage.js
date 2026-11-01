@@ -1,4 +1,26 @@
 import { managementKey } from './hub-secret.js';
+
+// Null alone is ambiguous. Accept only corroborated weekly metadata, never plan names.
+function claudeWeeklyOnly(usage, now) {
+  const weekly = usage.seven_day;
+  const percent = (value) => Number.isFinite(value) && value >= 0 && value <= 100;
+  const reset = (value) => typeof value === 'string' && Number.isFinite(Date.parse(value))
+    && Date.parse(value) > now && Date.parse(value) - now <= 604800000;
+  if (usage.five_hour !== null || Object.hasOwn(usage, 'error') || Object.hasOwn(usage, 'errors')
+    || !percent(weekly?.utilization) || !reset(weekly?.resets_at) || !Array.isArray(usage.limits)
+    || usage.seven_day_opus != null || usage.seven_day_sonnet != null) return false;
+  const aggregate = usage.limits.filter((w) => w?.kind === 'weekly_all');
+  return aggregate.length === 1 && usage.limits.every((w) => {
+    if (!w || w.group !== 'weekly' || typeof w.is_active !== 'boolean' || !percent(w.percent)
+      || !reset(w.resets_at)) return false;
+    if (w.kind === 'weekly_all') return w.is_active === true && w.scope === null
+      && w.percent === weekly.utilization && w.resets_at === weekly.resets_at;
+    // A session row contradicts absence even when inactive. Unknown limits also hold.
+    return w.kind === 'weekly_scoped' && typeof w.scope?.model?.display_name === 'string'
+      && w.scope.model.display_name.trim().length > 0 && w.scope.surface === null;
+  });
+}
+
 // Read-only subset of T3 0.1.3 makeCliproxyApi. Never fetch token files or reset credits.
 async function management(config, path, body) {
   const base = new URL(config.url.endsWith('/') ? config.url : `${config.url}/`);
@@ -54,10 +76,15 @@ async function accountUsage(config, account, now) {
           label: `Weekly · ${w.scope?.model?.display_name ?? ''}`, usedPercent: w.percent, ...(w.resets_at == null ? {} : { resetsAt: w.resets_at }), windowDurationMins: 10080 });
       }
     }
-    const weeklyOnly = driver === 'codex' && usage.rate_limit?.primary_window?.limit_window_seconds === 604800
-      && usage.rate_limit.secondary_window == null && windows.length === 1 && windows[0].kind === 'weekly';
+    let weeklyOnly;
+    if (driver === 'codex' && usage.rate_limit?.primary_window?.limit_window_seconds === 604800
+      && usage.rate_limit.secondary_window == null && windows.length === 1 && windows[0].kind === 'weekly') {
+      weeklyOnly = 'verified Codex weekly-only response';
+    } else if (driver === 'claudeAgent' && claudeWeeklyOnly(usage, now)) {
+      weeklyOnly = 'verified Claude weekly-only response';
+    }
     return { ...base, usageLimits: { checkedAt, windows,
-      ...(weeklyOnly ? { notApplicable: { session: 'verified Codex weekly-only response' } } : {}) } };
+      ...(weeklyOnly ? { notApplicable: { session: weeklyOnly } } : {}) } };
   } catch {
     return { ...base, usageLimits: { checkedAt, windows: [], unavailable: { reason: 'probeFailed' } } };
   }

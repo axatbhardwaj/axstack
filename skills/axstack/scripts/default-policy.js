@@ -24,8 +24,8 @@ function pool(accounts, driver, now) {
     if (u?.unavailable || !fresh(u?.checkedAt, now, 300000) || !Array.isArray(u?.windows)) throw Error(`unknown ${driver} telemetry`);
     const windows = ['session', 'weekly'].map((kind) => {
       const found = u.windows.filter((w) => w.kind === kind && !(driver === 'claudeAgent' && w.id?.startsWith('seven_day_')));
-      if (!found.length && driver === 'codex' && kind === 'session'
-        && u.notApplicable?.session === 'verified Codex weekly-only response') return null;
+      const weeklyOnly = driver === 'codex' ? 'verified Codex weekly-only response' : 'verified Claude weekly-only response';
+      if (!found.length && kind === 'session' && u.notApplicable?.session === weeklyOnly) return null;
       if (found.length !== 1) throw Error(`missing or ambiguous ${driver} ${kind} window`);
       const w = found[0];
       if (!Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100
