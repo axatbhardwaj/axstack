@@ -47,8 +47,27 @@ A successful Codex response containing only a seven-day primary window (secondar
 absent/null) is authoritative single-window telemetry: the adapter explicitly marks
 session n/a. It does not synthesize session capacity. A plain incomplete snapshot
 without this provenance still holds; weekly is always required. An account needs
-remaining quota in every applicable window. Null or absent reset timing is valid for
-Claude session/weekly/scoped Opus and Codex windows. The adapter omits the missing
+remaining quota in every applicable window.
+
+Claude session n/a requires an explicit `five_hour: null`, valid `seven_day` usage
+and future weekly reset, and exactly one active, unscoped `weekly_all` row in
+`limits` with matching percentage and identical reset string. Every limits row
+must be validated weekly metadata: only `weekly_all` and model-scoped
+`weekly_scoped` rows with valid percentages, future weekly resets and boolean
+`is_active` are supported. Scoped rows require a named model and null surface.
+Any session row contradicts n/a, even when `is_active: false`; that flag never
+hides a present session or scoped weekly usage. Unknown/malformed limits,
+non-null legacy `seven_day_opus`/`seven_day_sonnet`, error fields, missing fields
+or null without corroboration hold. No plan name, bootstrap outcome, zero usage
+or fabricated reset establishes n/a. All accounts remain counted; supported scoped
+rows remain in telemetry with existing Opus eligibility checks. Source/account
+freshness and catalog guards still apply.
+This narrowly supported response shape does not establish universal null semantics
+or an account's plan/verification status. Model scope names retain their existing
+meaning; no Fable-to-Opus mapping is inferred.
+
+For ordinary Claude session/weekly/scoped Opus and Codex windows, null or absent
+reset timing is valid. The adapter omits the missing
 reset; it never invents a timestamp. Unknown reset timing alone does **not** mean
 unused or not started: the reported used percentage still governs remaining quota,
 same-account eligibility and the primary-pool reserve, including exhaustion at 100% used.

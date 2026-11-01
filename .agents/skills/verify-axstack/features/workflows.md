@@ -277,6 +277,7 @@ bun run test tests/workflows/default-routing.test.js \
   tests/workflows/default-reset-timing.test.js \
   tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
   tests/workflows/hub-usage.test.js tests/workflows/hub-secret.test.js \
+  tests/workflows/hub-weekly-only.test.js \
   tests/workflows/driver-history.test.js tests/workflows/default-live-input.test.js \
   tests/workflows/default-routing-assets.test.js \
   tests/workflows/pass-self-settle.test.js tests/workflows/hidden-author-dispatch.test.js \
@@ -288,7 +289,13 @@ preserves overrides/text-generation settings, modes and locks. A loopback hub
 drives the management envelope. Policy tests cover same-account eligibility,
 equal-account pooled minima, both-low <30% Sol admission, either-30% exclusion,
 non-low primary preference, scoped/exhausted/unknown holds, weekly-only n/a and
-primary fairness. Forbidden Sol is evicted before hysteresis. Null/absent resets
+primary fairness. Adapter-to-policy fixtures cover mixed/all-weekly-only Claude
+pools, corroborated explicit-null sessions, inactive-but-present 4% sessions,
+weekly/scoped exhaustion and no account discard. Missing or inconsistent weekly
+metadata, unknown/session limits (even inactive), malformed scopes/resets,
+provider errors and stale telemetry hold. Repeat this selection on cached minimum
+Bun 1.3.14 and authoring Bun; it proves no live account's plan or null semantics.
+Forbidden Sol is evicted before hysteresis. Null/absent resets
 retain usage with zero elapsed credit; malformed dates and stale telemetry hold.
 The CLI includes an idle Claude account with a null reset. Fixture masked keys
 resolve without leaking or persisting hydration. Read-only metadata covers
