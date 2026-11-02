@@ -19,7 +19,7 @@ test('packaged guidance stays within the aggregate and always-loaded budgets', (
   // Advised holds adds shared seat, card, wait and authority rules (+5,000 always-loaded).
   // Parked holds adds ordered disable, recovery and answer rules (+5,000 always-loaded).
   // C3a adds native fleet dispatch/receipt and bounded live verification contracts (+100,000 aggregate).
-  // CR-1 aligns lifecycle reviewer isolation and revision checks (+5,000 always-loaded).
+  // CR-1 aligns lifecycle reviewer isolation and revision checks; CR-5 adds Fable timing and meaning-bound receipt validity (+5,000 always-loaded).
   expect(total).toBeLessThanOrEqual(600000);
   expect(alwaysLoaded).toBeLessThanOrEqual(45000);
 });

@@ -93,6 +93,10 @@ discriminating check. A bare "stuck" claim needs pointers to two failed attempts
 setup slips and new user requirements do not count. Each use starts a fresh
 session that never reuses an adviser or candidate context. Escalation never
 resets existing holds or attempt budgets.
+For Align and Spec, when existing triggers apply, run `axstack-escalation-fable`
+only after ordinary high and medium findings settle. Reuse the Fable receipt
+while the reviewed meaning holds. If Fable's own findings change meaning,
+a fresh Fable session reviews the revised result.
 At an advised hold or step-back that is not high-stakes, an adviser split goes
 to the user with no reconciliation and no Fable.
 

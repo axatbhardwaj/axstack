@@ -60,6 +60,17 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    remain unchanged. If either adviser is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
    criteria, exclusions, and both adviser receipts or the reported hold.
+   Run a full adviser round on the first draft and every revision that changes
+   meaning in criteria, scope, decisions or authority.
+   Run `axstack-diligence` on the first draft and the revision presented for approval
+   under [Diligence](../axstack/references/diligence.md).
+   Batch low and wording-only findings into one final pass.
+   Never start a new full adviser round for low or wording-only findings.
+   Never waive high or medium findings.
+   When existing triggers apply, run `axstack-escalation-fable` only after ordinary
+   high and medium findings settle. Reuse the Fable receipt while the reviewed
+   meaning holds. If Fable's own findings change meaning, a fresh Fable session
+   reviews the revised result.
    An optional adviser note may be deferred or rejected in a `Decisions` row
    with the draft unchanged; it needs no new adviser pair.
    By default, changed draft text requires fresh receipts on the new revision.
@@ -73,8 +84,8 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    An unavailable adviser seat holds the affected phase.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
-   require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`
-   session to return plain AGREE. Present one
+   require `axstack-advisor-astra` and `axstack-escalation-fable` to return
+   plain AGREE under step 3's receipt rules. Present one
    reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
    In a T3 thread, the driver also publishes the spec readback as an inline page and
