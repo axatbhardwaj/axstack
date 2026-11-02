@@ -31,7 +31,9 @@ export function invoke(args) {
   return { status: result.exitCode, output: result.stdout.toString(), error: result.stderr.toString() };
 }
 
-export const configuration = () => ({ modelSelection: { instanceId: 'codex', model: 'gpt-6.1-sol',
-  options: [{ id: 'reasoningEffort', value: 'high' }] }, runtimeMode: 'full-access' });
+export const configuration = () => ({
+  thread: { threadId: 'child', providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access' },
+  task: { childThreadId: 'child', options: [{ id: 'reasoningEffort', value: 'high' }] },
+});
 export const planArgs = (f) => ['--role', 'axstack-author', '--roles', f.save('roles', f.roles),
   '--capabilities', f.save('capabilities', f.capabilities), '--kind', 'launch'];

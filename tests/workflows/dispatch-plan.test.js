@@ -68,11 +68,46 @@ test('resolver holds map exit 1 to exit 2 and preserve stderr byte for byte', ()
 });
 
 
+test('verification consumes native thread and task reads without inferring absent settings', () => {
+  const f = setup();
+  const readback = {
+    thread: { threadId: 'child', providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access' },
+    task: { childThreadId: 'child', providerInstanceId: 'codex', model: 'gpt-6.1-sol',
+      options: [{ id: 'reasoningEffort', value: 'high' }] },
+  };
+  expect(f.run('axstack-author', 'task', readback).status).toBe(0);
+  delete readback.task.options;
+  const missing = f.run('axstack-author', 'task', readback);
+  expect(missing.status).toBe(2);
+  expect(missing.output).toContain('options: unknown');
+  expect(missing.output).not.toContain('MATCH');
+});
+
+test('native readback holds conflicting settings and a different child identity', () => {
+  const f = setup();
+  for (const task of [
+    { childThreadId: 'other', options: [{ id: 'reasoningEffort', value: 'high' }] },
+    { childThreadId: 'child', options: [{ id: 'reasoningEffort', value: 'high' }], model: 'wrong' },
+  ]) {
+    const result = f.run('axstack-author', 'task', { task,
+      thread: { threadId: 'child', providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access' } });
+    expect(result.status).toBe(2);
+    expect(result.output).toContain(task.model ? 'model: fail' : 'childThreadId: fail');
+  }
+});
+
+test('remote task readback binds the destination child rather than a missing local child', () => {
+  const data = configuration();
+  data.task.childThreadId = null;
+  data.task.remoteChild = { threadId: 'child', environmentId: 'remote' };
+  expect(setup().run('axstack-author', 'task', data).status).toBe(0);
+});
+
 test('verification matches T3 read-back for either dispatch kind and normalizes option maps', () => {
   const f = setup();
   for (const kind of ['launch', 'task']) {
     for (const options of [[{ id: 'reasoningEffort', value: 'high' }], { reasoningEffort: 'high' }]) {
-      const data = configuration(); data.modelSelection.options = options;
+      const data = configuration(); data.task.options = options;
       const result = f.run('axstack-author', kind, data);
       expect(result.status).toBe(0);
       expect(result.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
@@ -91,7 +126,7 @@ test('verification records the omitted provider label without changing the insta
   expect(full.providerEvidence).toContain('codex');
   expect(full.providerEvidence).toContain('instanceId');
   expect(full.mismatches).toEqual([]);
-  const data = configuration(); data.modelSelection.provider = 'codex';
+  const data = configuration(); data.thread.provider = 'codex';
   const labeled = f.run('axstack-author', 'launch', data);
   expect(labeled.status).toBe(0);
   expect(labeled.output.split('\n').slice(-2)).toEqual(['MATCH', '']);
@@ -99,14 +134,14 @@ test('verification records the omitted provider label without changing the insta
 });
 
 for (const [index, [field, change]] of [
-  ['instance', (data) => { data.modelSelection.instanceId = 'codexAlt'; }],
-  ['provider', (data) => { data.modelSelection.provider = 'grok'; }],
-  ['model', (data) => { data.modelSelection.model = 'gpt-6-sol'; }],
-  ['options', (data) => { data.modelSelection.options[0].value = 'low'; }],
-  ['options', (data) => { data.modelSelection.options = [{ id: 'effort', value: 'high' }]; }],
-  ['options', (data) => { data.modelSelection.options = []; }],
-  ['options', (data) => { data.modelSelection.options.push({ id: 'reasoningEffort', value: 'high' }); }],
-  ['runtimeMode', (data) => { data.runtimeMode = 'approval-required'; }],
+  ['instance', (data) => { data.thread.providerInstanceId = 'codexAlt'; }],
+  ['provider', (data) => { data.thread.provider = 'grok'; }],
+  ['model', (data) => { data.thread.model = 'gpt-6-sol'; }],
+  ['options', (data) => { data.task.options[0].value = 'low'; }],
+  ['options', (data) => { data.task.options = [{ id: 'effort', value: 'high' }]; }],
+  ['options', (data) => { data.task.options = []; }],
+  ['options', (data) => { data.task.options.push({ id: 'reasoningEffort', value: 'high' }); }],
+  ['runtimeMode', (data) => { data.thread.runtimeMode = 'approval-required'; }],
 ].entries()) {
   test(`verification holds and names a mismatched ${field} (case ${index + 1})`, () => {
     const data = configuration(); change(data);
@@ -121,8 +156,8 @@ for (const [index, [field, change]] of [
 for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) {
   test(`verification holds unknown when ${field} read-back is missing`, () => {
     const data = configuration();
-    if (field === 'runtimeMode') delete data.runtimeMode;
-    else delete data.modelSelection[field];
+    if (field === 'options') delete data.task.options;
+    else delete data.thread[field === 'instanceId' ? 'providerInstanceId' : field];
     const result = setup().run('axstack-author', 'task', data);
     expect(result.status).toBe(2);
     expect(result.output).toContain(field);
@@ -132,7 +167,7 @@ for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) {
 
 test('verification prints every mismatch with expected and observed evidence', () => {
   const result = setup().run('axstack-author', 'launch', {
-    modelSelection: { instanceId: 'wrong', model: 'wrong', options: [] }, runtimeMode: 'auto',
+    thread: { providerInstanceId: 'wrong', model: 'wrong', options: [], runtimeMode: 'auto' },
   });
   expect(result.status).toBe(2);
   for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) expect(result.output).toContain(field);
@@ -148,6 +183,11 @@ test('--help lists every flag, exit meaning and read-only side effect contract',
   }
   expect(result.output).toMatch(/0.*ok.*1.*error.*2.*hold/i);
   expect(result.output).toMatch(/read.only/i);
+  for (const field of ['t3_thread_read.thread', 'task_status', 'childThreadId', 'providerInstanceId', 'options']) {
+    expect(result.output).toContain(field);
+  }
+  expect(result.output).not.toContain('t3_thread_configuration');
+  expect(result.output).toMatch(/unreturned fields are unknown/i);
 });
 
 for (const [index, [field, change]] of [
@@ -236,7 +276,7 @@ test('a missing canonical instance holds even when its sibling is advertised', (
 for (const instanceId of ['claudeAgent', 'codexx', 'codexAlt']) {
   test(`verification rejects non-canonical instance ${instanceId}`, () => {
     const f = setup();
-    const data = configuration(); data.modelSelection.instanceId = instanceId;
+    const data = configuration(); data.thread.providerInstanceId = instanceId;
     const result = f.run('axstack-author', 'task', data);
     expect(result.status).toBe(2);
     expect(result.output).toContain('instanceId: fail');
@@ -285,11 +325,11 @@ test('plan and verification name every supplied input path', () => {
 
 test('large verification uses a caller-given artifact and explicit omitted counts', () => {
   const f = setup(), args = planArgs(f), data = configuration();
-  data.modelSelection.model = 'wrong'.repeat(2000);
+  data.thread.model = 'wrong'.repeat(2000);
   const verify = f.save('configuration', data), out = `${f.dir}/full.json`;
   const missingOut = invoke([...args, '--verify', verify]);
   expect(missingOut.status).toBe(2);
-  expect(missingOut.output).toContain(data.modelSelection.model);
+  expect(missingOut.output).toContain(data.thread.model);
   expect(missingOut.error).toContain('pass --out <path>.json for a saved JSON copy');
   const result = invoke([...args, '--verify', verify, '--out', out]);
   expect(result.status).toBe(2);
@@ -297,7 +337,7 @@ test('large verification uses a caller-given artifact and explicit omitted count
   expect(summary.reportPath).toBe(out);
   expect(summary.omittedMismatches).toBe(1);
   expect(summary.omittedPayloadFields).toBe(2);
-  expect(full.mismatches[0]).toContain(data.modelSelection.model);
+  expect(full.mismatches[0]).toContain(data.thread.model);
   expect(result.output.length).toBeLessThan(2000);
 });
 
@@ -327,10 +367,10 @@ test('plans exceeding 4096 bytes require --out and keep stdout empty on error', 
 
 test('unwritable --out preserves all verification mismatches and exit 2', () => {
   const f = setup(), args = planArgs(f), data = configuration();
-  data.modelSelection.instanceId = 'wrong';
-  data.modelSelection.model = 'wrong'.repeat(2000);
-  data.modelSelection.options = [];
-  data.runtimeMode = 'auto';
+  data.thread.providerInstanceId = 'wrong';
+  data.thread.model = 'wrong'.repeat(2000);
+  data.task.options = [];
+  data.thread.runtimeMode = 'auto';
   const verify = f.save('configuration', data);
   // A directory cannot be written as a file, even by a root test process.
   const inline = invoke([...args, '--verify', verify]);
@@ -338,7 +378,7 @@ test('unwritable --out preserves all verification mismatches and exit 2', () => 
   expect(result.status).toBe(2);
   expect(result.output).toBe(inline.output);
   for (const field of ['instanceId', 'model', 'options', 'runtimeMode']) expect(result.output).toContain(field);
-  expect(result.output).toContain(data.modelSelection.model);
+  expect(result.output).toContain(data.thread.model);
   expect(result.output).not.toContain('MATCH');
   expect(result.error).toContain(f.dir);
   expect(result.error).toContain('pass --out <writable report.json path>');

@@ -24,7 +24,7 @@ test('mixed web pair resolves and reads back Terra high; single-provider absence
       expect(result.status).toBe(0);
       expect(JSON.parse(result.output).target).toEqual({ providerInstanceId: 'codex', model: 'gpt-6.1-terra',
         options: [{ id: 'reasoningEffort', value: 'high' }] });
-      const effective = configuration(); effective.modelSelection.model = 'gpt-6.1-terra';
+      const effective = configuration(); effective.thread.model = 'gpt-6.1-terra';
       expect(f.run(id, 'task', effective).status).toBe(0);
     } else {
       expect(role.provider).toBe(name === 'codex-only' ? 'codex' : 'claude');

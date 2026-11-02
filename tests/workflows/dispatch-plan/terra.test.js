@@ -20,9 +20,9 @@ test('Terra dispatches require high and verify effective high for tasks and laun
     expect(valid.status).toBe(0);
     const payload = JSON.parse(valid.output);
     expect((payload.target ?? payload.modelSelection).options).toEqual([{ id: 'reasoningEffort', value: 'high' }]);
-    const effective = configuration(); effective.modelSelection.model = 'gpt-6.1-terra';
+    const effective = configuration(); effective.thread.model = 'gpt-6.1-terra';
     expect(f.run('axstack-author', kind, effective).status).toBe(0);
-    effective.modelSelection.options[0].value = 'xhigh';
+    effective.task.options[0].value = 'xhigh';
     const mismatch = f.run('axstack-author', kind, effective);
     expect(mismatch.status).toBe(2);
     expect(mismatch.output).toContain('options: fail');
