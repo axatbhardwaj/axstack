@@ -31,9 +31,11 @@ An unwritable --out still prints verification mismatches and retains exit 2.
 An omitted provider label is unknown; exact instance/model/options/mode checks still apply.
 Verification input: {"thread": <t3_thread_read.thread>, "task": <task_status (optional)>}.
 Save structured native data, not message text or requested dispatch settings.
-thread fields: threadId, providerInstanceId, model, runtimeMode, options (if returned).
+thread fields: threadId (required non-empty ID), providerInstanceId, model, runtimeMode, options (if returned).
 task fields: childThreadId (or remoteChild.threadId), providerInstanceId, model, options (if returned).
 When task is supplied, its child thread ID must equal thread.threadId.
+Local and remote child IDs must agree when both are returned.
+Remote reads also require envelope environmentId matching task.remoteChild.environmentId.
 Compare every returned setting; conflicting reads hold. Unreturned fields are unknown
 and hold required checks; never fill them from the plan or catalog.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
@@ -94,9 +96,10 @@ function verify(configuration, provider, model, options, fleet) {
   const { thread, task } = configuration ?? {};
   const sources = [thread, task].filter((source) => source && typeof source === 'object');
   const compare = (field, expected, observed, equal = expected === observed) => {
-    if (!equal) mismatches.push(`${field}: ${observed == null ? 'unknown' : 'fail'}; `
+    if (!equal) mismatches.push(`${field}: ${observed == null || expected == null ? 'unknown' : 'fail'}; `
       + `expected ${JSON.stringify(expected)}; observed ${JSON.stringify(observed) ?? 'missing'}`);
   };
+  compare('threadId', 'non-empty native thread ID', thread?.threadId, nonempty(thread?.threadId));
   // A field is unknown only when neither native read returns it.
   for (const [field, nativeField, expected] of [
     ['instanceId', 'providerInstanceId', provider], ['model', 'model', model],
@@ -108,6 +111,13 @@ function verify(configuration, provider, model, options, fleet) {
       field === 'options' ? normalizedOptions(expected) === normalizedOptions(value) : expected === value);
   }
   if (task != null) {
+    if (task.childThreadId != null && task.remoteChild?.threadId != null) {
+      compare('childThreadId', task.remoteChild.threadId, task.childThreadId);
+    }
+    if (task.remoteChild != null) {
+      compare('remoteChild.environmentId', configuration?.environmentId, task.remoteChild.environmentId,
+        nonempty(configuration?.environmentId) && task.remoteChild.environmentId === configuration.environmentId);
+    }
     const childId = task.remoteChild?.threadId ?? task.childThreadId;
     compare('childThreadId', thread?.threadId, childId,
       nonempty(thread?.threadId) && childId === thread.threadId);

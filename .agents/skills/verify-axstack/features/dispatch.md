@@ -4,8 +4,10 @@ Entry points: `skills/axstack/scripts/{resolve-models,dispatch-plan}.js`;
 harness inputs: `tests/workflows/fixtures/{t3-capabilities,dispatch-plan}.json`.
 Prerequisites: Launch; saved fixture catalogs only. Plans never dispatch work.
 `--verify` takes `{thread: <t3_thread_read.thread>, task?: <task_status>}` from
-structured native reads. Task evidence must name the same child through
-`childThreadId` or `remoteChild.threadId`. Unreturned required fields stay
+structured native reads. `thread.threadId` is required. Task evidence must name
+the same child through `childThreadId` or `remoteChild.threadId`; both IDs must
+agree when returned. Remote reads require the envelope's `environmentId` to
+match `task.remoteChild.environmentId`. Unreturned required fields stay
 `unknown` and hold; never fill them from requested settings or the catalog.
 
 ```bash

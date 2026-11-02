@@ -206,8 +206,10 @@ Top-level drivers use `t3_thread_launch` only after an explicit user request.
 Preserve existing accepted authorization within its exact scope.
 Use `t3_thread_launch` as a rare author fallback only when
 worktree isolation is unavailable and record each use in the run record.
-Reviewers and investigators receive driver-made disposable detached checkouts pinned to candidate
-and base. Repairs return
+Reviewers use native `isolation:"worktree"`, enter their own worktree, and verify
+its path differs from the driver's before checking out and verifying the exact
+candidate SHA and base there. Investigators retain driver-made disposable detached
+checkouts pinned to candidate and base. Repairs return
 to the same author and worktree. The current T3 driver owns coordination and
 forge mutations and never writes an author's tracked files.
 
@@ -282,9 +284,9 @@ for explicit ownership transfer.
   the named keepers or vacuity/obsolescence evidence for removals.
 - `axstack-review` gives peer PRs two isolated same-brief reviewers on the first
   review and one reviewer on follow-ups; authored PRs receive one eligible
-  cross-family/preset-mapped reviewer. Every reviewer runs in
-  a separate detached checkout, with private evidence preserved before
-  removal. First peer reviews and authored reviews cover security,
+  cross-family/preset-mapped reviewer. Every reviewer uses native
+  `isolation:"worktree"` and verifies the pinned candidate and base inside its
+  own worktree, with private evidence preserved before removal. First peer reviews and authored reviews cover security,
   correctness, integration, requirements, design, and simplicity; peer follow-ups
   check prior blockers, author replies and the delta, with a full-diff fallback
   when the last-reviewed head or delta cannot be recovered. Report-only

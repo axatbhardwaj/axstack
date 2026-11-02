@@ -20,6 +20,7 @@ This section applies to peer and authored PR modes.
    [Reviewer workspaces and evidence](../../axstack/references/t3-runtime.md#role-dispatch-by-permitted-writes)
    before async `delegate_task`; report-only scope does not waive checkout isolation or
    private per-dispatch artifacts. Reviewers must use native `isolation:"worktree"`.
+   Reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision.
    Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree.
    Preserve private evidence before removal.
    - **Peer:** first review requires exactly two independent final reviewers,

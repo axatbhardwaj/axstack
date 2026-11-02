@@ -214,8 +214,8 @@ existing run-ID path. Saved inputs cannot authenticate their own provenance.
 `inspectFleetReceipt(receipt,{attempt,recommendation,recommendationJSON,now})`
 returns terms, never authority. Existing dispatch-plan --verify can additionally
 consume fleetAttempt/fleetReceipt in its saved envelope; save --out to retain
-full receiptTerms. Legacy configuration-only MATCH checks supplied configuration,
-not native completion. Stable receipt-* / destination-* terms identify the exact
+full receiptTerms. Settings-only MATCH checks supplied native thread/task reads
+and child identity, never terminal completion. Stable receipt-* / destination-* terms identify the exact
 hold and evidence; unknown means incomplete. A passing receipt is no merge grant.
 
 ## Retrieval and retirement

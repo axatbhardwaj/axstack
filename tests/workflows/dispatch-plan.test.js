@@ -100,7 +100,37 @@ test('remote task readback binds the destination child rather than a missing loc
   const data = configuration();
   data.task.childThreadId = null;
   data.task.remoteChild = { threadId: 'child', environmentId: 'remote' };
+  data.environmentId = 'remote';
   expect(setup().run('axstack-author', 'task', data).status).toBe(0);
+});
+
+test('thread-only readback requires a native thread ID', () => {
+  const data = configuration();
+  data.thread.options = data.task.options;
+  delete data.task;
+  const f = setup();
+  expect(f.run('axstack-author', 'launch', data).status).toBe(0);
+  delete data.thread.threadId;
+  const result = f.run('axstack-author', 'launch', data);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain('threadId: unknown');
+  expect(result.output).not.toContain('MATCH');
+});
+
+for (const [name, mutate, field] of [
+  ['conflicting child IDs', (data) => { data.task.childThreadId = 'other'; }, 'childThreadId'],
+  ['wrong remote environment', (data) => { data.task.remoteChild.environmentId = 'other'; }, 'remoteChild.environmentId'],
+  ['unknown read environment', (data) => { delete data.environmentId; }, 'remoteChild.environmentId'],
+]) test(`native readback holds ${name}`, () => {
+  const data = configuration(), f = setup();
+  data.environmentId = 'remote';
+  data.task.remoteChild = { threadId: 'child', environmentId: 'remote' };
+  expect(f.run('axstack-author', 'task', data).status).toBe(0);
+  mutate(data);
+  const result = f.run('axstack-author', 'task', data);
+  expect(result.status).toBe(2);
+  expect(result.output).toContain(`${field}: ${name.startsWith('unknown') ? 'unknown' : 'fail'}`);
+  expect(result.output).not.toContain('MATCH');
 });
 
 test('verification matches T3 read-back for either dispatch kind and normalizes option maps', () => {

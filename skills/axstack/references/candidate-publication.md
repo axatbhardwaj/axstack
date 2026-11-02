@@ -68,6 +68,7 @@ step, subject to recorded release authority and human npm stage approval.
 ## Immutable checkout shape
 
 Reviewers must use async `delegate_task` with native `isolation:"worktree"`.
+Reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision.
 Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree.
 Use `git checkout --detach <candidate-sha>`, then verify `git rev-parse HEAD` and
 `git rev-parse <base-sha>^{commit}` equal the pinned SHAs before inspection.

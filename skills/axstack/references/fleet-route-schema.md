@@ -331,9 +331,12 @@ destinationCapabilitiesDigest}`. This is preserved evidence, not a T3 launch
 parameter. Copy only tool-supported launch fields. Coordinator author routes
 remain explicitly unsupported pending C3 lifecycle enablement.
 
-For `--verify`, supply the effective configuration plus independently observed
+For `--verify`, supply native reads as `{thread: <t3_thread_read.thread>,
+task?: <task_status>}` plus independently observed
 `environmentId`, `projectId` and the preserved `fleetBinding` in one JSON
-envelope. All are compared; missing values hold. Do not synthesize observed
+envelope. The thread ID is required; local and remote child IDs must agree when
+both are returned, and `task.remoteChild.environmentId` must match the envelope's
+`environmentId`. All are compared; missing required values hold. Do not synthesize observed
 fields from the plan. C3 owns live evidence collection and remote receipts;
 C1b verifies supplied evidence only and cannot authenticate its origin.
 Fleet binding mismatches exit 2; malformed CLI/files exit 1. Existing local

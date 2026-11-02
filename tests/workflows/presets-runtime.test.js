@@ -55,7 +55,7 @@ const migrationPins = [
   ['skills/axstack/references/routing.md', 'Replacing a session needs an explicit user decision and revalidation.'],
   ['skills/axstack/references/run-record.md', 'Before changing `Driver` or a task `Owner`, verify that the prior driver is inactive against actual T3 thread and run state, or that an explicit accepted transfer permits reassignment.'],
   ['skills/axstack/references/run-record.md', "The record is derived progress, not authority."],
-  ['skills/axstack-review/SKILL.md', 'Use separate driver-made disposable detached checkouts under the run directory, each detached at the pinned exact source SHA; that source SHA substitutes for the PR base in the reviewer workspace rule.'],
+  ['skills/axstack-review/SKILL.md', 'Reviewers must check out and verify the pinned exact source SHA inside their own worktree; that source SHA substitutes for the PR base in the reviewer workspace rule.'],
   ['skills/axstack-review/SKILL.md', 'Keep reports, probes, and logs in each private per-dispatch evidence folder.'],
   ['skills/axstack-review/SKILL.md', 'Rejection, timeout, quota and auth failures hold affected work without substitution.'],
   ['skills/axstack-spec/SKILL.md', 'Use Linear through the executor MCP only for repositories in `defi-com`.'],

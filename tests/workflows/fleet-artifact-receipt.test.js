@@ -208,7 +208,7 @@ test.each(seats)(
     expect(result.status, result.error).toBe(0);
     const plan = JSON.parse(result.output);
     const { receipt, expected } = artifactReceipt(f);
-    const readback = { thread: { providerInstanceId: seat[1], model: seat[2], options: plan.target.options, runtimeMode: 'full-access' },
+    const readback = { thread: { threadId: 'child', providerInstanceId: seat[1], model: seat[2], options: plan.target.options, runtimeMode: 'full-access' },
       environmentId: f.scope.environmentId, projectId: f.scope.projectId,
       fleetBinding: plan.fleetBinding, artifactScope: f.scope, isolation: 'shared',
       fleetAttempt: expected.attempt, fleetReceipt: receipt };
@@ -228,7 +228,7 @@ test.each(reportSeats)('report-only %s configured selector/plan/receipt: %s', (w
   expect(plan.target.providerInstanceId).toBe(seat[1]);
   expect(plan.target.options).toEqual([{ id: seat[3], value: seat[4] }]);
   const { receipt, expected } = artifactReceipt(f);
-  const readback = { thread: { providerInstanceId: seat[1], model: seat[2], options: plan.target.options, runtimeMode: 'full-access' },
+  const readback = { thread: { threadId: 'child', providerInstanceId: seat[1], model: seat[2], options: plan.target.options, runtimeMode: 'full-access' },
     environmentId: f.scope.environmentId, projectId: f.scope.projectId,
     fleetBinding: plan.fleetBinding, artifactScope: f.scope, isolation: 'shared',
     fleetAttempt: expected.attempt, fleetReceipt: receipt };

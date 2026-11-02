@@ -198,10 +198,14 @@ directed C5 write-link proof exist; never redirect or relay outside native T3.
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = role-labelled dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored) | Reviewers must use async `delegate_task` with native `isolation:"worktree"`, title = role-labelled dispatch key. Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree; tracked candidate files stay read-only and outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Reviewers (peer/authored) | Reviewers must use async `delegate_task` with native `isolation:"worktree"`, title = role-labelled dispatch key. Reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision. Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree; tracked candidate files stay read-only and outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`, `axstack-ui-verifier-sonnet`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
+
+Before reviewer dispatch, the driver must include its resolved absolute worktree path in the brief.
+Reviewers record their resolved worktree path and exact revision checks in the receipt;
+a missing or equal path holds review.
 
 The UI verifier checkout row applies to candidate checks, while a page without
 a candidate follows [UI verification](ui-verification.md).
