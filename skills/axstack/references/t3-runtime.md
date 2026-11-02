@@ -37,8 +37,8 @@ For plan generation, run
 `scripts/dispatch-plan.js --role <id> --roles <roles.json> --capabilities <saved.json> --kind task|launch`
 using the recorded role snapshot and saved capabilities.
 Plan JSON carries `inputs`, which callers omit when copying `target`/`modelSelection` and `runtimeMode` plus `isolation` when present into `delegate_task`/`t3_thread_launch`; large plan output requires `--out`.
-For configuration verification, run `scripts/dispatch-plan.js --verify <configuration.json>`
-with the same plan inputs and saved `t3_thread_configuration` read-back.
+For configuration verification, run `scripts/dispatch-plan.js --verify <native-reads.json>`
+with the same plan inputs and saved native task status and thread reads (shape in `--help`).
 
 Stored permission intent is neither effective parity nor a security boundary.
 
@@ -61,9 +61,12 @@ Advertising Grok alone does not prove that its CLI runs.
 No OpenCode role enters this migration.
 
 The dispatch echo must match the requested provider and model; verify options
-and `runtimeMode` by `t3_thread_configuration` read-back. Record requested and
+and `runtimeMode` using `task_status` and `t3_thread_read` settings readback. Record requested and
 effective values separately; a worker self-report is not configuration proof.
 
+Unreturned effective fields must stay unknown.
+Use `t3_thread_configure` only in read-only form with an explicit child thread ID
+(`{threadId:<child>}` without `modelSelection`), when a supplementary read is needed.
 Missing effort read-back must hold roles requiring effort; never record it as
 satisfied. Other providers' effort read-back remains unverified until exercised.
 
@@ -195,7 +198,8 @@ directed C5 write-link proof exist; never redirect or relay outside native T3.
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = role-labelled dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored), release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`, `axstack-ui-verifier-sonnet`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Reviewers (peer/authored) | Reviewers must use async `delegate_task` with native `isolation:"worktree"`, title = role-labelled dispatch key. Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree; tracked candidate files stay read-only and outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`, `axstack-ui-verifier-sonnet`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
@@ -552,7 +556,7 @@ through native forwarded APIs on the selected destination, following
 assertions alone cannot establish destination readiness. Preserve exact catalog
 bytes/digest, explicit observation/evaluation times, config digest and recommendation.
 
-`t3_thread_configuration` is currently unavailable in the advertised tools.
+Child settings readback uses native task status and thread reads.
 Unavailable effective fields remain unknown; the driver must not invent an API,
 readiness or effective settings. Use advertised dispatch/thread facts, keep requested
 and effective values separate, and hold any required unobserved field.

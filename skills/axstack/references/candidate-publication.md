@@ -67,18 +67,22 @@ step, subject to recorded release authority and human npm stage approval.
 
 ## Immutable checkout shape
 
-The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.
-Follow [T3 runtime](t3-runtime.md) for async `delegate_task`.
+Reviewers must use async `delegate_task` with native `isolation:"worktree"`.
+Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree.
+Use `git checkout --detach <candidate-sha>`, then verify `git rev-parse HEAD` and
+`git rev-parse <base-sha>^{commit}` equal the pinned SHAs before inspection.
+Follow [T3 runtime](t3-runtime.md) for dispatch.
 Bind disposable checkout to exact attempt identity.
 Use the existing repository; never register a duplicate or use a movable branch.
-Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.
+Delegated reviewers inspect their own native detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.
 Snapshot driver HEAD and full status (including untracked) before dispatch.
 After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.
 Peer reviewers have separate checkouts/evidence without first-pass cross-read.
 Later review gets a fresh checkout.
-Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force.
+Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <recorded-native-worktree-path>` without force.
 Verify absence under [Workspace hygiene](workspace-hygiene.md); retain the author
-candidate until merge/closure. Release checks use same driver-made SHA-pinned detached-checkout procedure.
+candidate until merge/closure. Release checks retain driver-made SHA-pinned detached checkouts via
+`git worktree add --detach <run>/checkouts/<key> <sha>`.
 
 For a release PR, dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the release PR body

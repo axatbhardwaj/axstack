@@ -33,12 +33,12 @@
     },
     {
       "id": "delegated-reviewer-isolation",
-      "input": "A delegated reviewer writes in a driver-made detached checkout; after completion the driver status has changed.",
+      "input": "A delegated reviewer writes in a native isolated worktree; after completion the driver status has changed.",
       "contracts": [
-        "The driver creates the immutable review checkout with `git worktree add --detach <run>/checkouts/<key> <sha>` at the confirmed candidate SHA and pinned base.",
-        "Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.",
+        "Reviewers must use async `delegate_task` with native `isolation:\"worktree\"`.",
+        "Delegated reviewers inspect their own native detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.",
         "After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.",
-        "Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <run>/checkouts/<key>` without force."
+        "Before removing a reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <recorded-native-worktree-path>` without force."
       ],
       "expected": {
         "action": "Hold advancement if driver HEAD or status changed; preserve separate checkout and private report, read back evidence before exact removal."

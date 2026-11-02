@@ -120,7 +120,7 @@ rule('UI verifier candidate row preserves the candidate-checkout boundary', shar
   [/UI verifier candidate checks/i, /axstack-ui-verifier/i, /delegate_task/i, /detached checkout/i, /candidate SHA/i, /pinned base/i],
   'UI verifier candidate checks (axstack-ui-verifier) use delegate_task with a detached checkout of candidate SHA and pinned base.',
   [[/candidate checks/i, 'checks'], [/detached checkout/i, 'driver workspace']],
-  (text) => text.split('\n').find((line) => line.startsWith('| Reviewers'))?.replaceAll(';', ',') ?? '');
+  (text) => text.split('\n').find((line) => line.includes('UI verifier candidate checks'))?.replaceAll(';', ',') ?? '');
 
 rule('S5: other machine-specific paths remain prohibited in private records', shared('run-record'),
   [/other machine-specific paths/i, /private records/i],

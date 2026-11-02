@@ -19,8 +19,9 @@ This section applies to peer and authored PR modes.
    branch below. For every reviewer, apply
    [Reviewer workspaces and evidence](../../axstack/references/t3-runtime.md#role-dispatch-by-permitted-writes)
    before async `delegate_task`; report-only scope does not waive checkout isolation or
-   private per-dispatch artifacts. Each reviewer uses a separate driver-made disposable detached checkout;
-   preserve its private evidence before removal.
+   private per-dispatch artifacts. Reviewers must use native `isolation:"worktree"`.
+   Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree.
+   Preserve private evidence before removal.
    - **Peer:** first review requires exactly two independent final reviewers,
      `axstack-reviewer-primary` and `axstack-reviewer-peer` from the routing snapshot.
      Send both the identical six-angle brief, with no first-pass cross-read or children.
