@@ -36,6 +36,10 @@ for (const name of ['axstack-align', 'axstack-spec']) {
     [/new full adviser round/i, /low/i, /wording.only/i, /findings/i],
     'Never start a new full adviser round for low or wording-only findings.',
     [[/\bnever\b/i, 'always']], /never/i);
+  rule(`${name} changed minor wording follows delta confirmation`, source,
+    [/low/i, /wording.only/i, /findings/i, /changed text|edited text/i, /delta confirmation/i],
+    'For low or wording-only findings with edited text, apply delta confirmation.',
+    [[/\b(?:follow|apply)\b/i, 'skip']]);
   rule(`${name} batching never waives blockers`, source,
     [/high/i, /medium/i, /findings/i],
     'Never waive high or medium findings.', [[/\bnever waive\b/i, 'Always waive']], /never waive/i);
@@ -67,6 +71,25 @@ for (const name of ['axstack-align', 'axstack-spec']) {
     'An unavailable adviser seat blocks the affected phase.',
     [[/\b(?:holds?|blocks?)\b/i, 'advances']]);
 }
+
+const checkpoint = () => read('axstack-spec').split('4. **')[1]?.split('5. **')[0] ?? '';
+rule('Spec checkpoint requires plain AGREE from both high-stakes seats', checkpoint,
+  [/high.stakes/i, /axstack-advisor-astra/i, /axstack-escalation-fable/i, /plain AGREE/i],
+  'High-stakes decisions need axstack-advisor-astra and axstack-escalation-fable to return plain AGREE.',
+  [[/\b(?:require|need)\b/i, 'waive'], [/\band\b/i, 'or']]);
+rule('Spec checkpoint starts each Fable use in a fresh session', checkpoint,
+  [/each|every/i, /use/i, /axstack-escalation-fable/i, /fresh session|new session/i],
+  'Every use of axstack-escalation-fable must begin a new session.',
+  [[/\b(?:must start|must begin)\b/i, 'may skip'], [/\bfresh session|new session\b/i, 'reused session']]);
+rule('Spec checkpoint reuses plain-AGREE receipt only while meaning holds', checkpoint,
+  [/Fable/i, /plain.AGREE receipt/i, /reviewed meaning/i, /holds|unchanged/i, /step 3/i],
+  'Reuse the Fable plain-AGREE receipt only while the reviewed meaning is unchanged under step 3.',
+  [[/\breuse\b/i, 'discard'], [/\bonly while\b/i, 'regardless of whether']]);
+rule('Spec checkpoint sends meaning changes to a fresh Fable session', checkpoint,
+  [/reviewed meaning/i, /changes|alters/i, /fresh Fable session|new Fable session/i,
+    /revised result|updated result/i],
+  'When the reviewed meaning alters, a new Fable session must review the updated result.',
+  [[/\bmust review\b/i, 'ignores'], [/\bfresh Fable session|new Fable session\b/i, 'reused Fable session']]);
 
 // Receipt validity and escalation ordering also live at the shared boundary.
 fableRules('standing contracts', () => readFileSync(
