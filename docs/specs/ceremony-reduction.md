@@ -1,4 +1,4 @@
-# Ceremony reduction — r5, draft
+# Ceremony reduction — r5, approved 2026-11-03
 
 Authoritative location: `docs/specs/ceremony-reduction.md` (repo Markdown, axatbhardwaj/axstack)
 Run record: `align-ceremony-20261103` (private run directory under the repository's Git common dir)
