@@ -92,3 +92,27 @@ for (const [name, concepts, equivalent] of [
     && !denied.test(sentence.replace(/first may exist/gi, 'first exists').replace(/never/i, ''))),
   equivalent, [[/never/i, 'always']], concepts.slice(1));
 });
+
+for (const name of ['fleet-dispatch.md', 'fleet-route-schema.md']) {
+  test(`${name}: named-host pilots ignore even malformed intakeSupport`, () => {
+    const concepts = [/explicit named host/i, /pilot/i, /\b(?:ignores?|disregards?)\b/i,
+      /intakeSupport/i, /including|even/i, /malformed|invalid/i, /values|data/i];
+    const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))
+      && !denied.test(s) && !/\b(?:except|excluding|unless)\b/i.test(s));
+    checkRule(source(name), accepts,
+      'An explicit named host (pilot) disregards intakeSupport even when its data is invalid.',
+      [[/ignores?|disregards?/i, 'must validate'], [/including|even/i, 'excluding']], concepts);
+  });
+}
+
+test('runtime requires standing-grant support recorded per launching host and provider', () => {
+  const concepts = [/standing grant/i, /only where|only if/i, /active runtime/i, /accepts/i,
+    /support/i, /recorded/i, /(?:per|each|every) launching host/i, /and provider/i];
+  const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))
+    && !denied.test(s.replace(/may supply/i, 'supplies')) && !/\bwithout\b/i.test(s));
+  checkRule(source('t3-runtime.md'), accepts,
+    'The standing grant may supply the request only if the active runtime accepts it and support is recorded for each launching host and provider.',
+    [[/support (?:is )?recorded/i, 'support is not recorded'],
+      [/(?:per|each|every) launching host/i, 'any destination host'],
+      [/and provider/i, 'regardless of provider']], concepts);
+});
