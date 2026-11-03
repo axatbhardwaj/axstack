@@ -31,9 +31,9 @@ Neither this contract nor a helper grants that authority.
    driver must clone a missing repo through T3 and a failed clone makes the
    host ineligible. Continue to the next host, else stay local. Refresh the
    saved reads after cloning; an attempted clone is never proof of a project.
-3. Require reachability, the correct repository project, worktree isolation,
-   the pinned driver model, a local author and a different-provider reviewer,
-   plus advisers when needed. Collect bounded `fleet-sample` telemetry and
+3. Require reachability, the correct repository project and worktree isolation.
+   Require the pinned driver model, a local author and a different-provider
+   reviewer, plus advisers when needed. Collect bounded `fleet-sample` telemetry and
    current assignment inventory into the facts directory described in
    [the schema](fleet-route-schema.md#whole-task-intake-plan).
 4. Run one `fleet-route.js plan --facts <facts-dir> --now <epoch-ms> --config
