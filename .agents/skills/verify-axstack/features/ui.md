@@ -28,9 +28,11 @@ blindness. For an actual product UI run, the driver delegates Playwright through
 the existing UI verifier with exact revision, protocol and private evidence;
 no browser drive belongs to the author. Preserve all existing delivery gates.
 
-`pr-proof.test.js` checks default PR Proof sections, required UI screenshots and
-interaction recordings, driver-only orphan-branch asset hosting, raw GitHub blob
-embeds, head-sensitive refresh, redaction and explained text-only fallback.
+`pr-proof.test.js` checks mandatory PR Proof sections and UI screenshots, embedded
+GIF recordings with linked MP4 fallback, driver-only orphan-branch assets with
+`[skip ci]` commits, raw GitHub blob image embeds, head-sensitive refresh,
+redaction before commits/posting, unredacted-push prohibition and text fallback.
+The Owner row's permission stays limited to proof assets on the proof branch.
 It also checks the verifier's private asset return and shared PR-body link.
 Removal/inversion/rewording probes prove instructions; actual asset publication
 and GitHub rendering remain driver-owned checks after a PR exists.
