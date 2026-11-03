@@ -184,6 +184,100 @@ diagnostic; a generic hold or TypeError does not prove validation. The resolver
 tests keep a valid first model so the family guard cannot mask this boundary.
 
 
+## Whole-task intake plan and driver launch (CR-3)
+
+Entry points: `skills/axstack/scripts/fleet-route.js plan`, `fleet-route-plan.js`
+and `dispatch-plan.js --kind launch` / `--verify`. Prerequisites: offline
+Launch/Doctor, synthetic `tests/workflows/fleet-route-intake-fixture.js` only.
+The schema-1 request role is `driver`; authors and reviewers run locally on the
+selected host. This drive changes no account policy and makes no T3 launch.
+Its fixture enables intakeRouting only in the evidence-owned saved config.
+
+```bash
+doctor > "$EVIDENCE/intake-doctor.log" 2>&1
+bun run test tests/workflows/fleet-route-intake.test.js \
+  tests/workflows/dispatch-plan/intake.test.js tests/workflows/intake-contracts.test.js \
+  tests/installer/fleet-instructions.test.js > "$EVIDENCE/intake-tests.log" 2>&1
+mkdir -m 700 "$EVIDENCE/intake-facts"
+bun -e 'import { intakeFixture, NOW } from "./tests/workflows/fleet-route-intake-fixture.js";
+const input = intakeFixture().bind(), root = process.env.EVIDENCE;
+const capsText = input.nativeDestinations["env-worker-a"].capabilities.valueText;
+await Bun.write(root + "/intake-facts/input.json", JSON.stringify(input));
+await Bun.write(root + "/intake-config.json", input.configText);
+await Bun.write(root + "/intake-catalog.json", capsText);
+await Bun.write(root + "/intake-pin.txt", input.configDigest);
+await Bun.write(root + "/intake-roles.json", JSON.stringify({version: 1, roles: [
+  {id: "fixture-driver", provider: "codex", model: "gpt-6.1-sol",
+    thinkingOptionId: "high", modeId: "full-access"}]}));
+// Independent synthetic native thread/recentRuns reads, not requested launch settings.
+const native = {environmentId: "env-worker-a", projectId: "project-worker-a",
+  fleetBinding: {configDigest: input.configDigest, destinationSnapshotId: "snapshot-worker-a",
+    destinationCapabilitiesDigest: new Bun.CryptoHasher("sha256").update(capsText).digest("hex")},
+  thread: {threadId: "fixture-driver-child", projectId: "project-worker-a",
+    title: "Implement task [run:driver:task:a1]", providerInstanceId: "codex", model: "gpt-6.1-sol",
+    runtimeMode: "full-access", options: [{id: "reasoningEffort", value: "high"}], latestRunId: "acceptance-run"},
+  recentRuns: [{runId: "acceptance-run", startedAt: "2026-11-03T00:00:00Z", status: "running"}]};
+await Bun.write(root + "/intake-native.json", JSON.stringify(native));
+delete native.recentRuns;
+await Bun.write(root + "/intake-native-missing-run.json", JSON.stringify(native));
+if (input.request.role !== "driver" || NOW !== 100000) throw Error("intake fixture drift");'
+INTAKE_PIN=$(cat "$EVIDENCE/intake-pin.txt")
+bun "$SCRIPTS/fleet-route.js" plan --facts "$EVIDENCE/intake-facts" \
+  --config "$EVIDENCE/intake-config.json" --config-digest "$INTAKE_PIN" \
+  --now 100000 --json > "$EVIDENCE/intake-plan.json"
+bun "$SCRIPTS/dispatch-plan.js" --role fixture-driver --roles "$EVIDENCE/intake-roles.json" \
+  --capabilities "$EVIDENCE/intake-catalog.json" --kind launch \
+  --recommendation "$EVIDENCE/intake-plan.json" --fleet-input "$EVIDENCE/intake-facts/input.json" \
+  --now 100000 --config-digest "$INTAKE_PIN" \
+  --out "$EVIDENCE/intake-launch.json" > "$EVIDENCE/intake-launch.log"
+bun "$SCRIPTS/dispatch-plan.js" --role fixture-driver --roles "$EVIDENCE/intake-roles.json" \
+  --capabilities "$EVIDENCE/intake-catalog.json" --kind launch \
+  --recommendation "$EVIDENCE/intake-plan.json" --fleet-input "$EVIDENCE/intake-facts/input.json" \
+  --now 100000 --config-digest "$INTAKE_PIN" \
+  --verify "$EVIDENCE/intake-native.json" > "$EVIDENCE/intake-verify.log"
+test "$(tail -n 1 "$EVIDENCE/intake-verify.log")" = MATCH
+INTAKE_HOLD=0
+bun "$SCRIPTS/dispatch-plan.js" --role fixture-driver --roles "$EVIDENCE/intake-roles.json" \
+  --capabilities "$EVIDENCE/intake-catalog.json" --kind launch \
+  --recommendation "$EVIDENCE/intake-plan.json" --fleet-input "$EVIDENCE/intake-facts/input.json" \
+  --now 100000 --config-digest "$INTAKE_PIN" --verify "$EVIDENCE/intake-native-missing-run.json" \
+  --out "$EVIDENCE/intake-hold.json" > "$EVIDENCE/intake-hold.log" || INTAKE_HOLD=$?
+test "$INTAKE_HOLD" -eq 2
+bun -e 'const root = process.env.EVIDENCE;
+const input = await Bun.file(root + "/intake-facts/input.json").json();
+const plan = await Bun.file(root + "/intake-plan.json").json();
+const launch = await Bun.file(root + "/intake-launch.json").json();
+const hold = await Bun.file(root + "/intake-hold.json").json();
+const brief = JSON.parse(launch.message);
+if (plan.request.role !== "driver" || plan.disposition !== "launch"
+ || plan.selected.environmentId !== "env-worker-a" || launch.environmentId !== "env-worker-a"
+ || launch.projectId !== "project-worker-a" || launch.runtimeMode !== "full-access"
+ || launch.modelSelection.instanceId !== "codex" || launch.modelSelection.model !== "gpt-6.1-sol"
+ || JSON.stringify(launch.modelSelection.options) !== JSON.stringify([{id:"reasoningEffort",value:"high"}])
+ || launch.clientRequestId !== "run:driver:task:a1" || !launch.title.includes(launch.clientRequestId)
+ || launch.delegatedFrom.environmentId !== "env-personal-a" || launch.delegatedFrom.threadId !== "origin-thread"
+ || launch.delegatedFrom.title !== "Implement task" || brief.routed !== true
+ || brief.taskText !== input.intake.taskText || JSON.stringify(brief.scope) !== JSON.stringify(input.intake.scope)
+ || brief.authority !== input.intake.authority || brief.grantCitation !== input.intake.grantCitation
+ || !brief.acceptanceOnly.includes("AXSTACK-ACCEPT") || !brief.acceptanceOnly.includes("AXSTACK-HANDBACK")
+ || !hold.terms.some(t => t.code === "run-started" && t.state === "unknown") || !hold.mismatches.length)
+ throw Error("intake driver launch/readback contract mismatch");
+console.log("PASS driver intake plan, keyed acceptance-only launch, MATCH readback and missing-run hold");'
+```
+
+Launch verification extends T1's `{thread,task?}` native-read input with
+`recentRuns` from the same thread read and environmentId/projectId/fleetBinding
+evidence. It checks thread identity/title/project, model/options/full-access and
+latestRunId joined to a run with startedAt. Unreturned required fields stay
+unknown; the negative drive must exit 2 rather than infer a started run.
+The input snapshot, raw catalog, plan, launch and both verification reports stay
+in EVIDENCE. Tests cover automatic-switch default false, named-host opt-out,
+second-routing prevention, local staffing, native preflight exclusions and
+semantic acceptance/hand-back/ambiguous-launch rules. Fixture MATCH proves only
+saved-input binding: live runtime-grant support, cross-host same-key retry,
+exact acceptance marker and one idempotent proceed remain driver-owned pilot
+checks under fleet-verification.md. This recipe never dispatches or enables routing.
+
 ## Native inventory and terminal receipts (C3a)
 
 Entry points: fleet-inventory.js (via selector), fleet-destination.js (via
