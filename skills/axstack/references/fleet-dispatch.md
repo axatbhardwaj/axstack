@@ -105,8 +105,8 @@ recommendation, explicit evaluation time and config pin. Compare its target to t
 independently selected host/environment/project/model/options/runtimeMode. Copy only
 native supported fields, never inputs or fleetBinding. Call `delegate_task` with
 that exact target, full-access, a role-labelled title, stable clientRequestId and
-scope. Code reviewers require native isolation:"worktree" and pinned candidate/base;
-no shell-created child checkout. Explicit local artifact reviewers instead use
+scope. Authored code reviewers require native isolation:"worktree" and pinned candidate/base;
+no shell-created child checkout for authored reviews. Explicit local artifact reviewers instead use
 shared isolation and SHA-256 snapshots under [Local artifacts](local-artifacts.md);
 artifact writers use only their owned artifact/evidence folders. Other nonwriters
 write only their named private evidence directory on that host. Preserve requested arguments and native response.

@@ -1,6 +1,5 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
-import { checkRule, requires, sentences } from './prose-contract.js';
 
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
@@ -46,8 +45,7 @@ test('codebase reviewers inherit the runtime checkout and local evidence boundar
   expect(mode).toMatch(/Immediately before each reviewer dispatch, load/i);
   expect(mode).toContain('[T3 runtime](../axstack/references/t3-runtime.md)');
   expect(mode).toContain('[Reviewer workspaces and evidence](../axstack/references/t3-runtime.md#role-dispatch-by-permitted-writes)');
-  checkRule(sentences(mode.replace(/`/g, '')).join('. '), (text) => requires(text, /reviewers/i, /native/i, /isolation:"worktree"/i),
-    'Reviewers must use native isolation:"worktree".', [[/native/i, 'driver-made']], [/isolation:"worktree"/i]);
+  expect(mode).toMatch(/separate driver-made disposable detached checkouts[^.]*detached at the pinned exact\s+source SHA/i);
   expect(mode.replace(/\s+/g, ' ')).toMatch(/reports, probes, and logs[^.]*private per-dispatch evidence folder/i);
 });
 
@@ -67,10 +65,7 @@ test('codebase findings retain trust, escalation, and evidence boundaries', () =
 test('codebase reviewer worktrees bind to the inspected source', () => {
   const review = read('skills/axstack-review/SKILL.md');
   const mode = section(review, '## Codebase findings mode', '\n## Peer mode');
-  checkRule(sentences(mode.replace(/`/g, '')).join('. '), (text) => requires(text, /reviewers/i, /check out/i, /verify/i, /pinned exact source SHA/i, /inside/i, /own worktree/i),
-    'Reviewers must check out and verify the pinned exact source SHA inside their own worktree.',
-    [[/verify/i, 'assume']], [/pinned exact source SHA/i]);
-  expect(mode.replace(/\s+/g, ' ')).toMatch(/source SHA substitutes for the PR base/i);
+  expect(mode.replace(/\s+/g, ' ')).toMatch(/detached checkouts under the run directory[^.]*source SHA[^.]*PR base/i);
 });
 
 test('codebase brief carries the escalation decision', () => {

@@ -11,10 +11,9 @@ The current chat drives this report. Use the run's recorded routing snapshot
 and dispatch `axstack-reviewer-primary` and `axstack-reviewer-secondary`.
 Immediately before each reviewer dispatch, load [T3 runtime](../../axstack/references/t3-runtime.md)
 and [Reviewer workspaces and evidence](../../axstack/references/t3-runtime.md#role-dispatch-by-permitted-writes).
-Reviewers must use native `isolation:"worktree"`.
-Reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision.
-Reviewers must check out and verify the pinned exact source SHA inside their own worktree;
-that source SHA substitutes for the PR base in the reviewer workspace rule. Keep reports, probes, and logs in each private per-dispatch evidence folder.
+Use separate driver-made disposable detached checkouts under the run directory,
+each detached at the pinned exact source SHA; that source SHA substitutes for
+the PR base in the reviewer workspace rule. Keep reports, probes, and logs in each private per-dispatch evidence folder.
 Run disposable probes only in the checkout.
 Give both the identical six-lens brief and
 require an isolated first pass with no cross-read. Verify actual models, session

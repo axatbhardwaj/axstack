@@ -18,7 +18,9 @@ For a logical Coordinator coordinating project drivers, follow
   Workers launch no recursive teams.
 - Reviewers: first peer review = two configured roles with the same brief and isolated first
   pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
-  authored = one eligible role from author provenance. Reviewers use native
+  authored = one eligible role from author provenance. Peer reviewers each use a
+  separate driver-made detached checkout and private per-attempt evidence folder.
+  Authored reviewers use native
   `isolation:"worktree"`, verify their own worktree differs from the driver's,
   and check out and verify the exact candidate SHA and base inside it, with
   private per-attempt evidence folder. Owner and author never review.
@@ -177,10 +179,7 @@ The native review manager uses fresh finite T3 pass threads from its dedicated
 lane project on an hourly T3 scheduled task (`everyMs:3600000`). It admits
 actionable PR events
 within measured host capacity; waiting PRs remain covered without reserving slots.
-Authored/candidate reviewers use native `isolation:"worktree"` and verify the
-pinned candidate and base inside their own worktree. Review-manager PR-job reviewers
-retain separate driver-made detached checkouts from existing host clones as a named
-exception, alongside release/debug/investigator/UI-verifier checks; jobs settle after descendants.
+Bounded PR jobs use driver-made detached checkouts and settle after descendants.
 Build no custom scheduler, state engine or legacy fallback. See
 [Review manager](automations.md) for binding, canary, capacity and schedule health.
 

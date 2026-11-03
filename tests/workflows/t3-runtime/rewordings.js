@@ -34,7 +34,7 @@ export const rewordings = {
   "delegate untouched": "Untracked and tracked files remain untouched.",
   "delegate evidence": "The delegate writes only <run>/evidence/<key>/.",
   "probe delegates": "UI verifier, execution investigators and debug investigators use async delegate_task with title = role-labelled dispatch key.",
-  "reviewer delegates": 'Reviewers must use async delegate_task with native isolation:"worktree" and title = role-labelled dispatch key.',
+  "reviewer delegates": 'Authored reviewers must use async delegate_task with native isolation:"worktree" and title = role-labelled dispatch key.',
   "probe checkout": "Use git worktree add --detach for a disposable detached checkout pinned to candidate SHA and pinned base.",
   "probe cd": "Into it the brief requires cd.",
   "probe outputs": "Only disposable probes write there, and outputs go to <run>/evidence/<key>/.",

@@ -198,13 +198,13 @@ directed C5 write-link proof exist; never redirect or relay outside native T3.
 | Roles | Mechanism and permitted workspace | Completion |
 |---|---|---|
 | Advisers, research, read-only explorers, explainers, diligence, checker, auditor, arena prose candidates and judges, escalation | Must use async `delegate_task` in the driver worktree, title = role-labelled dispatch key; tracked and untracked files stay untouched; writes only `<run>/evidence/<key>/` | Native notification followed by persisted `task_status` |
-| Reviewers (peer/authored) | Reviewers must use async `delegate_task` with native `isolation:"worktree"`, title = role-labelled dispatch key. Reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision. Reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree; tracked candidate files stay read-only and outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
-| Release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`, `axstack-ui-verifier-sonnet`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Reviewers (authored) | Authored reviewers must use async `delegate_task` with native `isolation:"worktree"`, title = role-labelled dispatch key. Authored reviewers must `cd` into their own worktree and verify its resolved path differs from the driver's before inspecting the pinned revision. Authored reviewers must check out and verify the exact candidate SHA and pinned base inside that worktree; tracked candidate files stay read-only and outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
+| Peer reviewers, codebase reviewers, release checks, debug investigators, execution investigators (`axstack-explore-execution`), UI verifier candidate checks (`axstack-ui-verifier`, `axstack-ui-verifier-sonnet`) | Must use async `delegate_task`, title = role-labelled dispatch key; driver makes a disposable detached checkout of candidate SHA and pinned base with `git worktree add --detach <run>/checkouts/<key> <sha>` (plus pinned debug patch); brief requires `cd` into it; only disposable probes write there, outputs go to `<run>/evidence/<key>/` | Same delegated terminal checks |
 | Author and repairs | Fresh authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key, stable `clientRequestId` in their own worktree, kept until PR merges or closes; repairs use `t3_thread_send` to the same child | Delegated terminal checks plus verified candidate |
 | Owner | Driver thread in Driver worktree; never writes tracked candidate source or tests; planning artifacts allowed only for repository Markdown; scope, integration, forge mutations and record | No worker launch |
 
-Before reviewer dispatch, the driver must include its resolved absolute worktree path in the brief.
-Reviewers record their resolved worktree path and exact revision checks in the receipt;
+Before authored reviewer dispatch, the driver must include its resolved absolute worktree path in the brief.
+Authored reviewers record their resolved worktree path and exact revision checks in the receipt;
 a missing or equal path holds review.
 
 The UI verifier checkout row applies to candidate checks, while a page without
@@ -216,8 +216,8 @@ For supported non-repository report-only workflows only,
 [Local artifacts](local-artifacts.md) supplies the artifact branch of this table:
 Only the matrix's direct and inherited roles use local shared native delegates
 with separate owned folders and exact SHA-256 snapshots.
-Its role allowlist excludes engineering authors and code reviewers; their native
-Git worktree rules above remain mandatory. Null repository alone grants nothing.
+Its role allowlist excludes engineering authors and code reviewers; their role-specific
+Git workspace rules above remain mandatory. Null repository alone grants nothing.
 
 The driver may write planning artifacts (spec, ticket map) in its own worktree when the selected store is repository Markdown.
 Repairs return to that author. Missing or idle sessions grant no ownership transfer.
@@ -585,7 +585,7 @@ local isolated authors remain the fallback even when overloaded. C4 personal
 policy/Haoshoku changes and C6 deployment/live acceptance remain later phases.
 
 Remote nonwriters use native `delegate_task` with exact selected target.environmentId,
-projectId, providerInstanceId, model, target.options and runtimeMode. Remote reviewers
+projectId, providerInstanceId, model, target.options and runtimeMode. Remote authored reviewers
 use T3 `isolation:"worktree"`; never make their child checkouts in the shell.
 Use no raw agent CLI over SSH. SSH is restricted to telemetry and authorized
 artifact/commit transport. Follow host-qualified archive/readback/retirement in

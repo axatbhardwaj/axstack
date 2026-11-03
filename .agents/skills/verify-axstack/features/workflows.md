@@ -68,9 +68,9 @@ Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/review-candidate.md`, `references/candidate-brief.md` and
 `references/review-receipt.md` under `skills/axstack-review/`.
 `review-checkout.test.js` guards native authored/candidate reviewer isolation,
-the retained review-manager PR-job host-clone exception, workspace templates and
-the driver-path brief field. It scans shipped skills, top-level docs and README
-for obsolete ordinary reviewer checkout rules, including wording without "driver".
+main’s peer checkout rule, workspace templates and the authored-only driver-path
+brief field. It scans shipped skills, top-level docs and README for driver-made
+authored checkouts or native isolation applied to peer/all reviewers.
 Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/readiness.md`, `references/proven-verification.md`,
 `references/escalation.md` and `references/blocked-on-person.md` under
