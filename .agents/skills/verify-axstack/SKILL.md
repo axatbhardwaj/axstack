@@ -95,9 +95,27 @@ Execute all steps in each selected feature file, including its assertions:
 7. [Collect bounded fleet telemetry](features/telemetry.md).
 8. [Inspect UI workflows and Explain delivery](features/ui.md).
 
-The release credential probe executes the workflow preflight with a synthetic
-credential and a local curl fixture. The full suite needs `ip` for loopback
-fixtures; no cached npm, registry access or publish command is required.
+The release credential preflight uses a synthetic credential and a curl fixture.
+The end-to-end token probe additionally needs Node, `ip` for loopback fixtures,
+and an already cached **npm@12.0.2** package including its bundled dependencies.
+Copy that package into this run's Bunx cache; never download it or point cache
+writes at live HOME. The probe runs npm publish only against a Bun.serve registry
+on 127.0.0.1, with port 0 and a synthetic token in a sandbox HOME `.npmrc`.
+It skips with a stated reason only when the pinned package is not cached in
+TMPDIR; report token transmission as unverified in that case. A cached package
+that fails to run or authenticate fails the test rather than skipping.
+When available, substitute its absolute source path below:
+
+```bash
+NPM_SOURCE=/absolute/offline/npm-12.0.2
+bun -e 'const p = await Bun.file(process.argv[1] + "/package.json").json(); if (p.name !== "npm" || p.version !== "12.0.2") throw Error("need cached npm@12.0.2");' "$NPM_SOURCE"
+BUNX_CACHE="$TMPDIR/bunx-$(id -u)-npm@12.0.2"
+mkdir -p "$BUNX_CACHE/node_modules/.bin"
+cp -R "$NPM_SOURCE" "$BUNX_CACHE/node_modules/npm"
+ln -s ../npm/bin/npm-cli.js "$BUNX_CACHE/node_modules/.bin/npm"
+```
+
+With that cache prepared, or with the missing-cache boundary recorded, run:
 
 ```bash
 SUITE_STATUS=0

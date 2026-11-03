@@ -304,7 +304,12 @@ match, full suite, registry existence check, npm prefetch before auth, and the
 cache-only `npm@12.0.2 publish . --access public` command. Registry-auth remains
 whoami-only. The synthetic credential-preflight fixture verifies successful auth
 writes a private `.npmrc`, missing/invalid auth writes none, and output omits the
-fixture token. It never invokes npm or contacts a registry.
+fixture token. It never invokes npm or contacts a registry. The separate
+`publish-token.test.js` probe uses the pinned offline npm cache from Launch to
+prove npm reads sandbox HOME `.npmrc` and sends a synthetic Bearer token in a
+PUT to a 127.0.0.1 Bun.serve registry (port 0), without staging. It skips only
+when the pinned npm is not cached offline, with an explicit reason; record that
+boundary as unverified. No real registry or credential is used.
 
 After Launch and Doctor, run:
 
@@ -312,6 +317,7 @@ After Launch and Doctor, run:
 doctor > "$EVIDENCE/direct-publish-doctor.log" 2>&1
 bun run test tests/installer/publish-workflow.test.js \
   tests/installer/publish-credential.test.js \
+  tests/installer/publish-token.test.js \
   tests/installer/registry-auth-workflow.test.js \
   tests/workflows/default-auto-merge.test.js \
   tests/workflows/merge-contract-sweep.test.js \
