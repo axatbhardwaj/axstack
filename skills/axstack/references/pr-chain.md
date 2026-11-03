@@ -36,7 +36,10 @@ rewritten parents, external squash or rebase, and missing ancestry hold dependen
 
 Bind evidence to PR, head, base branch identity and base SHA. Base-only retarget
 or base update needs fresh applicable review, diligence, shape, CI and
-approval evaluation. Check new-base workflow coverage at unchanged heads;
+approval evaluation. Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate):
+refresh combined `Scope` with authored review for eligible small non-risk-path
+work; otherwise refresh the separate diligence receipt.
+Check new-base workflow coverage at unchanged heads;
 never reuse old-base receipts. Carryover compares stable patch-id at both recorded
 head/base
 identities and requires a forge-counted human approval under watch §5. Never

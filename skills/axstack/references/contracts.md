@@ -117,8 +117,10 @@ merge cards, a blocked operation after bounded recovery, a scoped no-test-first
 decision, the round-4 step-back hold, major-design urgent escalation in authored
 or codebase review, and authored `Escalate to user` concerns about security,
 permanent on-chain state changes or an architectural change in approach.
-Diligence `UNKNOWN` and a `Learning` contradiction remain driver dispositions,
-advised only if raised to the user as a hold.
+Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate).
+Diligence `UNKNOWN`, combined `Scope: UNKNOWN` and a `Learning` contradiction
+remain driver dispositions, advised only if raised to the user as a hold.
+A disposition never substitutes for required diligence `PASS` or combined `Scope: PASS`.
 
 Never advise spec approval, npm stage approval or collaborator approval.
 Never advise access or credentials.

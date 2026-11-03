@@ -15,7 +15,11 @@ test('review names each defect class and searches the full affected surface', ()
 
 test('implement accepts non-blocking review notes without driver-elected polish', () => {
   const implement = prose('skills/axstack-implement/SKILL.md');
-  expect(implement).toMatch(/APPROVE[^.]*non-blocking findings[^.]*diligence `PASS`[^.]*merge-ready/i);
+  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /APPROVE/i, /non-blocking findings/i, /applicable diligence evidence/i,
+    /merge-ready/i, /full predicate passes/i),
+  'APPROVE with only non-blocking findings plus applicable diligence evidence can be merge-ready when the full predicate passes.',
+  [[/applicable diligence evidence/i, 'CI alone']]);
   expect(implement).toMatch(/driver records[^.]*non-blocking notes[^.]*does not elect a repair/i);
   expect(implement).toMatch(/only the user[^.]*ask for polish/i);
   checkRule(implement.replace(/`/g, ''), (text) => requires(text,

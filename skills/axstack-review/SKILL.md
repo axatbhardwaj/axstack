@@ -178,8 +178,11 @@ These verdicts apply only to PR modes. Codebase findings use coverage status.
   covering the whole brief, all six angles, and applicable acceptance.
 - **Complete verdict:** validated blocking defects permit `REQUEST_CHANGES`;
   complete evidence with no blocker permits `APPROVE`.
-- **Authored diligence:** a current `PASS` is required with reviewer approval for
-  merge-ready; `FINDINGS` return to the author in that round.
+- **Authored diligence:** follow the [applicable diligence gate](../axstack/references/diligence.md#applicable-diligence-gate).
+  Eligible small non-risk-path work needs `APPROVE` plus `Scope: PASS` from the
+  same cross-provider reviewer at the exact head and base; all other work
+  requires separate diligence `PASS`. `FINDINGS` from either route return to
+  the author in that round; `UNKNOWN` holds merge-ready.
 - **Incomplete or stale:** use `INCOMPLETE`; never fabricate `APPROVE` or
   `REQUEST_CHANGES`.
 
@@ -234,7 +237,9 @@ evidence, limitations, validated risk, or an internal `INCOMPLETE` report.
   Peer mode, with validated blockers reported by `REQUEST_CHANGES`; diligence
   is excluded.
 - Authored mode requires its one current eligible configured reviewer receipt and
-  a separate current diligence receipt; applicable scope identity must remain valid.
+  current applicable diligence evidence: combined `Scope: PASS` for eligible
+  small non-risk-path work, otherwise a separate diligence `PASS` receipt;
+  applicable scope identity must remain valid.
 - A missing, mismatched, stale, or materially changed input blocks approval and
   merge-ready declarations while readonly investigation continues.
 

@@ -169,9 +169,13 @@ complete a provider continuation. Driver-only forge/cleanup ownership is unchang
 
 The default 24-hour deadline covers standalone task-owned timers. Stop them at
 deadline and preserve remaining work; the review automation has no task-owned
-deadline. Merge-ready requires applicable review receipt(s) and current diligence
-`PASS` at the exact head; CI/tests alone are insufficient. Merge-ready
-differs from merged.
+deadline. Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate).
+Merge-ready requires applicable review receipt(s) and current diligence evidence
+at the exact head and base: same cross-provider reviewer's `APPROVE` plus
+`Scope: PASS` for eligible small non-risk-path work, otherwise separate diligence
+`PASS`; CI/tests alone are insufficient. `Scope: FINDINGS` or `Scope: UNKNOWN`
+blocks merge-ready, and any head or base change requires refreshed receipts.
+Merge-ready differs from merged.
 
 ## Review automation health
 

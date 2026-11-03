@@ -390,7 +390,12 @@ test('owned-core: driver waits, status routing, and close-out order are explicit
   expect(watch).toMatch(/one accountable owner/i);
   expect(watch).toMatch(/Start no automation for a read-only check/i);
   expect(lifecycle).toMatch(/explicitly invoked phase[^.]*configured roles through T3[^.]*lifecycle close-out/i);
-  expect(lifecycle).toMatch(/merge-ready requires applicable review receipt[^.]*current diligence `PASS` at the exact head; CI\/tests alone are insufficient/i);
+  checkRule(lifecycle.replace(/`/g, ''), (text) => requires(text,
+    /merge-ready requires/i, /applicable review receipt/i, /current diligence evidence/i,
+    /exact head and base/i, /Scope: PASS/i, /eligible small non-risk-path/i,
+    /otherwise separate diligence PASS/i),
+  'Merge-ready requires applicable review receipts and current diligence evidence at the exact head and base: Scope: PASS for eligible small non-risk-path work, otherwise separate diligence PASS.',
+  [[/otherwise separate diligence PASS/i, 'otherwise no diligence']]);
 
   const closeOut = lifecycle.slice(lifecycle.indexOf('## Close-out'));
   const closeOutOrder = [

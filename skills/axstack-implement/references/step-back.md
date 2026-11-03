@@ -17,7 +17,12 @@ Send one advised repair brief to the same author for the extra round only when a
   The path must not break a sketch `Binding` line.
 - No independent hold applies.
 
-The extra round requires fresh independent reviewer and diligence receipts, with a fresh session of the same mapped reviewer role.
+The extra round requires fresh independent reviewer and applicable diligence evidence,
+with a fresh session of the same mapped reviewer role.
+Follow the [applicable diligence gate](../../axstack/references/diligence.md#applicable-diligence-gate):
+refresh the combined Scope receipt only for eligible small non-risk-path work;
+otherwise require fresh separate diligence. A combined `Scope: FINDINGS` counts
+as diligence `FINDINGS` within that round; `Scope: UNKNOWN` blocks merge-ready.
 Do not add an extra reviewer.
 Advisers must never lower a rating or clear a finding.
 Advisers can propose `Pre-existing` with evidence, which the extra-round reviewer validates under

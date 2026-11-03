@@ -3,6 +3,39 @@
 Never dispatch diligence for peer review. Its code/design-only blocking bar
 and bounded follow-ups are defined in [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr).
 
+## Applicable diligence gate
+
+Use combined review only for a snapshotted small-change intent, one PR and a
+non-risk-path classification. The combined reviewer uses a provider that differs
+from every author and repair provider. Keep the authored mode's mapped reviewer,
+non-author/non-owner session independence and checkout rules.
+Review-depth risk includes the [merge-risk list](../../axstack-watch/references/readiness.md),
+changes to merge, dispatch or authority rules, and anything the driver or
+reviewer marks as a security, data-loss or major-design concern.
+These additions affect review depth only; they leave merge authority unchanged.
+Separate diligence is required for substantial work, spec checkpoints, risk
+paths and release reconciliation. Unknown eligibility holds the combined route;
+use separate diligence pending classification.
+
+The combined reviewer performs every applicable diligence check: scope against
+intent for dropped, added or softened obligations, author evidence and red/green
+logs, and PR body and commits against the diff for claims, counts, SHAs and paths.
+Apply all checks and the finding rubric below, including evidence-integrity and
+full-suite failure handling; this replaces a dispatch, not diligence coverage.
+The combined reviewer returns `Scope: PASS|FINDINGS|UNKNOWN` bound to the exact
+head and base, with observed evidence, findings and limitations in the authored
+review receipt. The same reviewer returns the authored verdict and Scope status.
+`APPROVE` plus `Scope: PASS` satisfies the applicable diligence gate only for
+eligible work; otherwise require separate diligence `PASS` with authored approval.
+`Scope: FINDINGS` returns to the same author in the same round and blocks
+merge-ready. `Scope: UNKNOWN` holds merge-ready with the reason recorded for
+driver disposition; a disposition never converts unknown evidence into a pass.
+Every head or base change invalidates the combined receipt and requires fresh
+review and Scope evidence, including unchanged-head base retargets.
+A missing or stale Scope receipt never satisfies this gate.
+
+## Separate diligence and shared checks
+
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch.
 Dispatch `axstack-diligence` with async `delegate_task` in the driver worktree,
 using a pinned brief and private evidence paths. Explicit non-repository
