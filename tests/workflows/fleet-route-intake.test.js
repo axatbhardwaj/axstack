@@ -38,13 +38,18 @@ test.each([
   ['switch false', (f) => { f.config.intakeRouting = false; }, 'routing-disabled'],
   ['here', (f) => { f.input.intake.namedHost = 'here'; }, 'named-local'],
   ['support missing', (f) => { delete f.config.intakeSupport; }, 'routing unsupported'],
+  ['support false', (f) => { f.config.intakeSupport[0].supported = false; }, 'routing unsupported'],
+  ['duplicate support', (f) => { f.config.intakeSupport.push({ ...f.config.intakeSupport[0], supported: false }); }, 'routing unsupported'],
+  ['wrong launching host support', (f) => { f.config.intakeSupport[0].environmentId = 'env-worker-a'; }, 'routing unsupported'],
+  ['support evidence missing', (f) => { delete f.config.intakeSupport[0].evidence; }, 'intake-support-schema', 1],
   ['wrong provider support', (f) => { f.config.intakeSupport[0].providerInstanceId = 'claudeAgent'; }, 'routing unsupported'],
   ['different launching provider', (f) => { f.input.origin.providerInstanceId = 'claudeAgent'; }, 'routing unsupported'],
   ['unknown launching provider', (f) => { delete f.input.origin.providerInstanceId; }, 'routing unsupported'],
-])('%s cannot trigger automatic hand-off', (_, change, reason) => {
+])('%s cannot trigger automatic hand-off', (_, change, reason, status = 0) => {
   const f = intakeFixture(); change(f);
-  const r = run(f); expect(r.status, r.error).toBe(0);
-  expect(r.report).toMatchObject({ disposition: 'stay', reason });
+  const r = run(f); expect(r.status, r.error).toBe(status);
+  if (status === 1) expect(JSON.parse(r.error).error.code).toBe(reason);
+  else expect(r.report).toMatchObject({ disposition: 'stay', reason });
 });
 
 test('explicit named host (pilot) needs neither the automatic switch nor a support record', () => {
@@ -52,6 +57,17 @@ test('explicit named host (pilot) needs neither the automatic switch nor a suppo
   expect(run(f).report).toMatchObject({ disposition: 'launch', selected: { hostId: 'worker-b' } });
   delete f.config.intakeSupport;
   expect(run(f).report).toMatchObject({ disposition: 'launch', selected: { hostId: 'worker-b' } });
+});
+
+test.each([
+  ['non-array', {}],
+  ['malformed record', [{ supported: true }]],
+])('explicit named host (pilot) ignores %s intakeSupport', (_, support) => {
+  const f = intakeFixture(); f.config.intakeRouting = false; f.input.intake.namedHost = 'worker-b';
+  f.config.intakeSupport = support;
+  const r = run(f); expect(r.status, r.error).toBe(0);
+  expect(r.report).toMatchObject({ disposition: 'launch', selected: { hostId: 'worker-b' } });
+  expect(r.report.terms.find((t) => t.code === 'launch-support')).toMatchObject({ state: 'n/a' });
 });
 
 test('an unknown named host is reported explicitly while staying local', () => {

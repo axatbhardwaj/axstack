@@ -4,7 +4,7 @@ import { checkRule, sentences } from './prose-contract.js';
 
 const denied = /\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i;
 
-const source = () => readFileSync(`${import.meta.dir}/../../skills/axstack/references/fleet-dispatch.md`, 'utf8')
+const source = (name = 'fleet-dispatch.md') => readFileSync(`${import.meta.dir}/../../skills/axstack/references/${name}`, 'utf8')
   .replaceAll('`', '').replace(/\s+/g, ' ');
 const rules = [
   ['intake only', [/only/i, /new user.started/i, /before/i, /first.*dispatch/i],
@@ -46,6 +46,35 @@ const rules = [
   ['switch', [/must/i, /intakeRouting/i, /only/i, /automatic decision/i, /missing.*false/i],
     'intakeRouting must gate only the automatic decision, with missing meaning false.'],
 ];
+
+for (const name of ['fleet-dispatch.md', 'fleet-route-schema.md', 'fleet-verification.md']) {
+  test(`${name}: pilot success records the launching host and provider with evidence`, () => {
+    const concepts = [/success/i, /driver/i, /must/i, /write/i, /support record/i,
+      /launching host/i, /provider/i, /fleet-routing\.json/i, /evidence/i];
+    const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s)) && !denied.test(s));
+    checkRule(source(name), accepts,
+      'After pilot success the driver must write a support record in fleet-routing.json for the launching host and provider, with evidence.',
+      [[/must/i, 'skip']], concepts);
+  });
+  test(`${name}: pilot failure removes the destination without writing support`, () => {
+    const concepts = [/fail/i, /driver/i, /must/i, /remove/i, /named destination host/i,
+      /pool list/i, /write no support record/i];
+    const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))
+      && !denied.test(s.replace(/write no support record/i, 'condition')));
+    checkRule(source(name), accepts,
+      'If the pilot fails, the driver must remove the named destination host from the pool list and write no support record.',
+      [[/must/i, 'skip'], [/write no support record/i, 'write a support record']], concepts);
+  });
+}
+
+test('runtime names the pilot support-record exemption', () => {
+  const concepts = [/explicit named host/i, /pilot/i, /needs no support record/i];
+  const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))
+    && !denied.test(s.replace(/needs no support record/i, 'condition')));
+  checkRule(source('t3-runtime.md'), accepts,
+    'An explicit named host (pilot) needs no support record.',
+    [[/needs no support record/i, 'requires a support record']], concepts);
+});
 
 for (const [name, concepts, equivalent] of rules) test(`intake semantic contract: ${name}`, () => {
   const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))

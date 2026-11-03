@@ -25,10 +25,15 @@ worker-host intake exception and standing explicit new-thread grant on all five
 hosts, then pilot one real small task per pool host by explicitly naming it.
 Only T8 flips the account-local switch. Rollback is `intakeRouting:false`.
 
-The driver writes runtime grant support per launching host and provider in
-`fleet-routing.json` from the explicit named host (pilot) outcome: success →
-`supported:true` with evidence; failure → that host leaves the pool. A named-host
-pilot needs no pre-existing support record and bypasses the automatic switch.
+From a successful named-host pilot outcome, the driver must write a support
+record for the launching host and provider in `fleet-routing.json`, with
+`supported:true` and evidence.
+On pilot failure, the driver must remove the named destination host from the
+pool list and write no support record.
+A named-host pilot needs no pre-existing support record and bypasses the
+automatic switch.
+An explicit named host (pilot) ignores `intakeSupport`, including malformed
+values; all other pre-launch, staffing and sole-driver checks still apply.
 Unnamed automatic hand-offs without a record stay local with `routing unsupported`.
 Authority, destination checks, staffing and sole-driver ownership apply to both paths.
 Unreachable/failing pool hosts leave eligibility; one failure does not block

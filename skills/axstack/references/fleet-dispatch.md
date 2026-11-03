@@ -12,10 +12,14 @@ nonwriter contract, pending a separate CR-8 retirement proposal. C3b stays disab
 
 `intakeRouting` must gate only the automatic decision, with missing meaning false.
 An explicit named host (pilot) runs with the switch off under the user's
-explicit request and needs no existing support record. All other pre-launch,
-staffing and sole-driver checks still apply. The driver must write support per
-launching host and provider in `fleet-routing.json` from the named-host pilot
-outcome: success → supported with evidence; failure → that host leaves the pool.
+explicit request and needs no existing support record.
+An explicit named host (pilot) ignores `intakeSupport`, including malformed
+values; all other pre-launch, staffing and sole-driver checks still apply.
+From a successful named-host pilot outcome, the driver must write a support
+record for the launching host and provider in `fleet-routing.json`, with
+`supported:true` and evidence.
+On pilot failure, the driver must remove the named destination host from the
+pool list and write no support record.
 For unnamed automatic hand-offs, read `intakeSupport`: missing = unsupported,
 stay local and record `routing unsupported`. A standing grant is usable only when the
 active T3 runtime accepts it as the user's explicit request for this one thread.

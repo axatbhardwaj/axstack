@@ -89,7 +89,8 @@ new Coordinator, project driver or launch fallback. On resume, preserve existing
 explicit accepted authorization within its scope. For a one-time whole-task
 intake hand-off, the user's standing grant may supply that explicit request
 only where the active runtime accepts it, with support recorded per launching
-host and provider. Follow [intake routing](fleet-dispatch.md#intake-boundary-cr-3)
+host and provider. An explicit named host (pilot) needs no support record.
+Follow [intake routing](fleet-dispatch.md#intake-boundary-cr-3)
 for acceptance-only launch, native verification and sole-driver ownership.
 This skill never grants
 blanket launch permission. Missing launch authorization holds only the affected

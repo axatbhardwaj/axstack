@@ -54,7 +54,15 @@ Plan uses the schema-1 recommendation inputs below, extended as follows:
 | `staffing` | `{author:{providerInstanceId,model},reviewer:{providerInstanceId,model},advisers:[{providerInstanceId,model},...]}`; author/reviewer driverKind must differ |
 | `nativeDestinations` | Map keyed by environmentId, each value is the saved nativeDestination read envelope set below, including fully paginated projectList and exact capabilities.valueText |
 | `config.intakeRouting` | true enables automatic decisions; missing = false; explicit named host (pilot) bypasses the switch and support-record gate |
-| `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}` written by the driver in fleet-routing.json from the named-host pilot outcome per launching host/provider: success → supported with evidence; failure → host leaves the pool. Automatic unnamed hand-offs without a record stay local with `routing unsupported`; malformed records are `intake-support-schema` |
+| `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}`. Automatic unnamed hand-offs without a record stay local with `routing unsupported`; malformed records are `intake-support-schema` |
+
+From a successful named-host pilot outcome, the driver must write a support
+record for the launching host and provider in `fleet-routing.json`, with
+`supported:true` and evidence.
+On pilot failure, the driver must remove the named destination host from the
+pool list and write no support record.
+An explicit named host (pilot) ignores `intakeSupport`, including malformed
+values; all other pre-launch, staffing and sole-driver checks still apply.
 
 The driver request uses repository scope and exact driver model/options/full-access
 pins. Driver placement automatically requires worktree-isolation at both configured
