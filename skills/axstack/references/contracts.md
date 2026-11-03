@@ -122,7 +122,7 @@ Diligence `UNKNOWN`, combined `Scope: UNKNOWN` and a `Learning` contradiction
 remain driver dispositions, advised only if raised to the user as a hold.
 A disposition never substitutes for required diligence `PASS` or combined `Scope: PASS`.
 
-Never advise spec approval, npm stage approval or collaborator approval.
+Never advise spec approval or collaborator approval.
 Never advise access or credentials.
 Never advise forge merges by the user.
 Never advise `Auto-merge: off`.
@@ -223,8 +223,7 @@ eligibility and update the existing text card under the same hold key.
 A parked hold waits only on a user reply in chat.
 A parked hold has no unsettled worker, pending adviser seat or pending receipt.
 A parked run has no forge-resolved hold and no other member PR needing watch events (CI, review, approval or repair).
-Never park holds resolved on the forge, including user merge, npm stage approval
-and human review.
+Never park holds resolved on the forge, including user merge and human review.
 Scoped and forge-resolved holds use a text card only, and watches and the
 60-minute backstop stay.
 

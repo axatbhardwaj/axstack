@@ -207,12 +207,21 @@ for (const path of ['AGENTS.md', 'skills/axstack/references/autopilot.md']) {
       'Merge the release PR under the watch predicate.', [[/under/i, 'without']], concepts);
     expect(accepts(`${compact(read(path))}. The human merges the release PR.`)).toBe(false);
   });
-  test(`human owns npm stage approval: ${path}`, () => {
-    const concepts = [/human/i, /approv/i, /npm stage/i];
-    checkRule(compact(read(path)), (text) => requires(text, ...concepts),
-      'Human approval of the npm stage remains required.', [[/human/i, 'agent']], concepts);
-    const prohibition = /never run/i;
-    checkRule(compact(read(path)), (text) => prohibits(text, prohibition, /agents/i, /npm stage approve/i),
-      'Agents never run npm stage approve.', [[/never run/i, 'run']], [/agents/i, /npm stage approve/i]);
+}
+
+for (const path of ['AGENTS.md', 'skills/axstack/references/autopilot.md', 'docs/workflows.md']) {
+  test(`release publication stays in the tag workflow: ${path}`, () => {
+    const text = compact(read(path));
+    const workflow = [/tag.triggered/i, /publish workflow/i, /publishes/i];
+    checkRule(text, (source) => requires(source, ...workflow),
+      'Releases are what the tag-triggered publish workflow publishes.',
+      [[/publishes/i, 'stages']], workflow);
+    const authority = [/agents/i, /push/i, /signed release tag/i, /only under/i, /recorded release authority/i];
+    checkRule(text, (source) => requires(source, ...authority),
+      'Only under recorded release authority do agents push the signed release tag.',
+      [[/only under/i, 'without']], authority);
+    checkRule(text, (source) => prohibits(source, /never run/i, /agents/i, /npm publish/i, /locally/i),
+      'Locally, agents never run npm publish.', [[/never run/i, 'run']],
+      [/agents/i, /npm publish/i, /locally/i]);
   });
 }

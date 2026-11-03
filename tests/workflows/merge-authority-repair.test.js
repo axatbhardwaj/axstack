@@ -83,7 +83,7 @@ for (const path of surfaces) {
     for (const contradictory of ['The human merges by default.', 'Human merge is default.', 'Default to human merge.']) {
       expect(noHumanDefault(`${text}\n${contradictory}`)).toBe(false);
     }
-    expect(noHumanDefault(`${text}\nThe human approves the npm stage.`)).toBe(true);
+    expect(noHumanDefault(`${text}\nThe human approves the substantial spec.`)).toBe(true);
   });
 }
 

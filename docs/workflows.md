@@ -348,7 +348,7 @@ For parked holds, follow [Parked user-reply holds](../skills/axstack/references/
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
 and the driver ends its turn waiting on the decision.
 These include `verification not proven`, merge cards needing user input,
-spec approval and npm stage approval.
+spec approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
 After bounded safe recovery, raise a genuine blocked operation that still needs
 the user in the T3 driver thread, and the driver ends its turn waiting on it.
@@ -362,8 +362,8 @@ Healthy watch observations remain quiet.
 
 For authorized engineering delivery, [Autopilot](../skills/axstack/references/autopilot.md)
 continues from Align through the eligible phase sequence in the same chat.
-The human approves substantial specs, peer and work deploying-base merges, and the
-npm stage. The recorded owning watch thread is the merge actor,
+The human approves substantial specs, peer and work deploying-base merges.
+The recorded owning watch thread is the merge actor,
 including `axstack-owner` for standalone authorized maintenance and small or
 adopted work. Apply the full
 [watch merge predicate](../skills/axstack-watch/SKILL.md#5-state-readiness-precisely).
@@ -604,8 +604,9 @@ Include `<repo>#<n> waiting <age> on @<login|no reviewer>: <approval|changes|com
 The check runs on existing watch wakes with no new schedule.
 The note is a notification only: when the blocker clears, the PR merges with no reply.
 
-Npm publication still requires human stage approval; agents never run
-`npm stage approve`.
+The tag-triggered publish workflow publishes releases.
+Agents push the signed release tag only under recorded release authority.
+Agents never run `npm publish` locally.
 
 This policy grants no release, npm publish, or host install
 authority. See [Preview authority and operations](host-operations.md#private-pr-previews).

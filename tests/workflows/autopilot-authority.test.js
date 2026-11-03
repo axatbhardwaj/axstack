@@ -69,9 +69,9 @@ for (const path of [spec, autopilot]) {
 }
 
 rule('publish, tag, and install failures retain release holds', autopilot,
-  [/existing version or tag/i, /failed publish/i, /pending approval/i, /uncertain registry result/i,
+  [/existing version or tag/i, /failed publish/i, /uncertain registry result/i,
     /missing host access/i, /failed install verification/i, /resumable hold/i],
-  'An existing version or tag, failed publish, pending approval, uncertain registry result, missing host access, or failed install verification retains a resumable hold, never success.',
+  'An existing version or tag, failed publish, uncertain registry result, missing host access, or failed install verification retains a resumable hold, never success.',
   [[/resumable hold/i, 'success'], [/never success/i, 'success']], /never success/i);
 
 rule('public release authority includes standing grants copied into the run', 'docs/workflows.md',

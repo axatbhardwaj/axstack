@@ -26,8 +26,7 @@ const contradictions = [
   /(?:workers?|reviewers?|monitors?|managers?|nightly triage) (?:may|can|must|shall|always) (?:auto-)?merge/i,
 ];
 // Match the subject and its merge restriction independently within a sentence.
-// Human npm approval is a separate action, including in the old AGENTS rule
-// that assigned release merge and npm approval to the human in one sentence.
+// Release publication is a separate action from merging the release PR.
 const manualMerge = /\b(?:human|user) merges?\b|\bmerged by (?:the )?(?:human|user)\b|\b(?:human|user)[ -]merged\b|\bby (?:the )?(?:human|user)\b.*\bmerged\b/i;
 const agrees = (text) => !sentences(text).some((unit) => {
   const newlyEligible = (/\brelease\b/i.test(unit) && /\bPRs?\b/i.test(unit))
@@ -46,8 +45,7 @@ test('every packaged and public surface agrees with the owning-watch merge bound
       'Release PRs are eligible under the watch predicate.',
       'Under the watch predicate, release PRs are eligible.',
       'Axstack skill and merge-rule text are eligible under the watch predicate.',
-      'The human approves the npm stage after the release PR merges.',
-      'After release PR merge, human npm stage approval remains required.',
+      'The tag-triggered publish workflow publishes after the release PR merges.',
     ]) expect(agrees(`${source}.\n${rewording}`), `${path}: correct policy`).toBe(true);
     for (const contradiction of [
       'The human merges by default.', 'Standalone owners never merge.',
@@ -57,7 +55,7 @@ test('every packaged and public surface agrees with the owning-watch merge bound
       'Release PRs are merged by the user on the forge.',
       'Release PRs are user-merged.',
       'Promotion, release, deploying-base, and peer PRs are merged by the user on the forge.',
-      'The human merges the release PR and approves the npm stage; agents never run npm stage approve.',
+      'The human merges the release PR and then pushes the release tag.',
       'The release PR is merged by the human.',
       'By the user on the forge, release PRs are merged.',
       'User-merged are release PRs.',
@@ -82,5 +80,26 @@ test('every packaged and public surface agrees with the owning-watch merge bound
     checkRule(compact(read(path)), accepts,
       'Under the watch predicate, the recorded owning watch thread merges.',
       [[/recorded owning watch thread/i, 'any worker'], [/under/i, 'without']], concepts);
+  }
+});
+
+// A shipped rule can reintroduce the old hold away from the main release guide.
+const directRelease = (text) => !sentences(text).some((unit) => requires(unit,
+  /human|maintainer/i, /npm.{0,25}stage|stag(?:e|ing).{0,25}approval/i,
+  /approv|wait|await|hold/i));
+test('active release guidance never requires human npm stage approval', () => {
+  for (const path of paths) {
+    const source = read(path);
+    expect(directRelease(source), path).toBe(true);
+    for (const rewording of [
+      'The tag workflow publishes the release directly.',
+      'Human approval is not required to publish the npm stage.',
+    ]) expect(directRelease(`${source}. ${rewording}`)).toBe(true);
+    for (const regression of [
+      'Human npm stage approval is a decision hold.',
+      'Npm publication still requires human stage approval.',
+      'A maintainer must approve the npm stage before installation.',
+      'After release PR merge, human npm stage approval remains required.',
+    ]) expect(directRelease(`${source}. ${regression}`), `${path}: ${regression}`).toBe(false);
   }
 });

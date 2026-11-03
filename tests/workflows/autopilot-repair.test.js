@@ -111,14 +111,19 @@ rule('closed-unmerged runtime holds scope', runtime, 'A required PR closed witho
 
 rule('silence cannot grant release authority', autopilot, 'The small-change intent read-back names', /silence cannot fill a missing authority or target/);
 rule('implement verifies forge state on wake', implement, "driver resumes on the user's next message", /verify merge state through the forge on wake/);
-rule('tag follows confirmed release merge', autopilot, 'Once the forge confirms that merge', /tag and wait for the staged publish/);
+test('tag follows confirmed release merge', () => {
+  const concepts = [/forge/i, /confirms/i, /merge/i, /push/i, /signed release tag/i];
+  checkRule(autopilot(), (text) => requires(text, ...concepts),
+    'Push the signed release tag once the forge confirms the merge.',
+    [[/confirms/i, 'denies']], concepts);
+});
 rule('only original driver advances', autopilot, 'Only the original driver advances', /^Only the original driver advances\.$/);
 rule('original driver owns run record and routing', autopilot, 'The original driver remains', /sole run-record writer and phase router/);
 rule('explicit stop after Align is honored', () => read('skills/axstack-align/SKILL.md'), 'an explicit stop-after-Align request', /ends here/);
 test('workflow human gate remains human', () => {
-  const concepts = [/human/i, /approves/i, /substantial specs/i, /peer/i, /deploying-base merges/i, /npm stage/i];
+  const concepts = [/human/i, /approves/i, /substantial specs/i, /peer/i, /deploying-base merges/i];
   checkRule(read('docs/workflows.md'), (text) => requires(text, ...concepts),
-    'The human approves substantial specs, peer and deploying-base merges, and the npm stage.',
+    'The human approves substantial specs, peer and deploying-base merges.',
     [[/human/i, 'agent']], concepts);
 });
 rule('routing preparation advances', () => read('skills/axstack/references/routing.md'), 'Prepare via `axstack-align`', /handoff, then continue under autopilot when eligible/);

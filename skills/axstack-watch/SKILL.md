@@ -173,7 +173,7 @@ For parked holds, follow [Parked user-reply holds](../axstack/references/contrac
 Raise user-decision holds and serious-risk holds in the T3 driver thread,
 and the driver ends its turn waiting on the decision.
 These include `verification not proven`, merge cards needing user input,
-spec approval and npm stage approval.
+spec approval.
 Raise serious risks immediately; attempt bounded safe recovery for blocked operations.
 After bounded safe recovery, raise a genuine blocked operation that still needs
 the user in the T3 driver thread, and the driver ends its turn waiting on it.
