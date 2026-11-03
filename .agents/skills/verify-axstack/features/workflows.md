@@ -308,8 +308,10 @@ fixture token. It never invokes npm or contacts a registry. The separate
 `publish-token.test.js` probe uses the pinned offline npm cache from Launch to
 prove npm reads sandbox HOME `.npmrc` and sends a synthetic Bearer token in a
 PUT to a 127.0.0.1 Bun.serve registry (port 0), without staging. It skips only
-when the pinned npm is not cached offline, with an explicit reason; record that
-boundary as unverified. No real registry or credential is used.
+on local runs when the pinned npm is not cached offline, with an explicit reason;
+record that boundary as unverified. In CI, a missing cache fails. Both automated
+workflows prefetch npm before tests; Bunx resolves the cache without assuming a
+TMPDIR path. `publish-token-ci.test.js` checks the CI failure and local skip. No real registry or credential is used.
 
 After Launch and Doctor, run:
 
@@ -318,6 +320,7 @@ doctor > "$EVIDENCE/direct-publish-doctor.log" 2>&1
 bun run test tests/installer/publish-workflow.test.js \
   tests/installer/publish-credential.test.js \
   tests/installer/publish-token.test.js \
+  tests/installer/publish-token-ci.test.js \
   tests/installer/registry-auth-workflow.test.js \
   tests/workflows/default-auto-merge.test.js \
   tests/workflows/merge-contract-sweep.test.js \

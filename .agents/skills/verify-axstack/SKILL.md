@@ -101,9 +101,11 @@ and an already cached **npm@12.0.2** package including its bundled dependencies.
 Copy that package into this run's Bunx cache; never download it or point cache
 writes at live HOME. The probe runs npm publish only against a Bun.serve registry
 on 127.0.0.1, with port 0 and a synthetic token in a sandbox HOME `.npmrc`.
-It skips with a stated reason only when the pinned package is not cached in
-TMPDIR; report token transmission as unverified in that case. A cached package
-that fails to run or authenticate fails the test rather than skipping.
+Bunx discovers its own cache through a cache-only version check, without a
+hardcoded cache path. Local runs skip with a stated reason only when npm is not
+cached offline; report token transmission as unverified in that case. CI fails
+on a missing cache. Both CI and the publish workflow prefetch npm before tests.
+A cached package that fails to run or authenticate fails rather than skipping.
 When available, substitute its absolute source path below:
 
 ```bash

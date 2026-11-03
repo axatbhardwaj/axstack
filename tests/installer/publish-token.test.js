@@ -1,17 +1,34 @@
 // The v0.8.2 regression wrote .npmrc, but the publisher never read it.
 // Exercise the pinned npm against loopback; no real registry or token is used.
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 
 const NPM = 'npm@12.0.2';
 const TEMP = Bun.env.TMPDIR ?? '/tmp';
-const cached = join(TEMP, `bunx-${process.getuid?.() ?? 0}-${NPM}/node_modules/npm/package.json`);
-const available = existsSync(cached);
-if (!available) console.warn(`SKIP npm publish token probe: ${NPM} is not cached offline in TMPDIR`);
+// Let Bunx resolve its own cache, with the same TMPDIR presence as the
+// prefetch step. CI does not necessarily set TMPDIR or use a fixed cache path.
+const tempEnv = Bun.env.TMPDIR === undefined ? {} : { TMPDIR: Bun.env.TMPDIR };
+const env = { PATH: process.env.PATH, ...tempEnv };
+const discovery = mkdtempSync(`${TEMP}/axstack-npm-discovery-`);
+let version;
+try {
+  writeFileSync(join(discovery, 'global.npmrc'), '');
+  version = Bun.spawnSync(['bunx', '--no-install', NPM, '--version'], {
+    cwd: discovery,
+    env: { ...env, HOME: discovery, NPM_CONFIG_GLOBALCONFIG: join(discovery, 'global.npmrc') },
+    stdout: 'pipe', stderr: 'pipe',
+  });
+} finally {
+  rmSync(discovery, { recursive: true });
+}
+const missingCache = version.exitCode !== 0 && /Could not find an existing 'npm' binary/i.test(version.stderr.toString());
+const skip = missingCache && !Bun.env.CI;
+if (skip) console.warn(`SKIP npm publish token probe: ${NPM} is not cached offline`);
 
-test.skipIf(!available)('pinned npm reads HOME .npmrc and authenticates a direct loopback PUT', async () => {
-  expect(JSON.parse(readFileSync(cached, 'utf8')).version).toBe('12.0.2');
+test.skipIf(skip)('pinned npm reads HOME .npmrc and authenticates a direct loopback PUT', async () => {
+  expect(version.exitCode, `${NPM} cache check: ${version.stderr}`).toBe(0);
+  expect(version.stdout.toString().trim()).toBe('12.0.2');
   const seen = [];
   const server = Bun.serve({
     hostname: '127.0.0.1',
@@ -37,7 +54,7 @@ test.skipIf(!available)('pinned npm reads HOME .npmrc and authenticates a direct
     const child = Bun.spawn(['bunx', '--no-install', NPM, 'publish', '.', '--access', 'public', '--registry', server.url.href], {
       cwd: pkg,
       // No inherited npm auth/config; leave userconfig unset to prove HOME pickup.
-      env: { PATH: process.env.PATH, HOME: home, TMPDIR: TEMP,
+      env: { ...env, HOME: home,
         NPM_CONFIG_GLOBALCONFIG: join(home, 'global.npmrc'), NPM_CONFIG_CACHE: join(home, 'cache') },
       stdout: 'pipe', stderr: 'pipe',
     });

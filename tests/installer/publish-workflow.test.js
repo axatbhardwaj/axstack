@@ -91,9 +91,9 @@ const TOKEN_ENV = { REGISTRY_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' };
 const EXPECTED_STEPS = [
   { uses: CHECKOUT },
   { uses: SETUP_BUN, with: { 'bun-version': '1.4.2' } },
+  { name: 'Fetch npm before the credential exists', run: PREFETCH },
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
-  { name: 'Fetch npm before the credential exists', run: PREFETCH },
   { name: 'Package must already exist', run: EXISTS_CHECK },
   { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
   { name: 'Publish release', run: PUBLISH },
@@ -137,6 +137,7 @@ test('publish workflow runs the whole suite before it publishes, and refuses a m
   const prefetch = runs.findIndex((run) => /--version/.test(run));
   const credential = runs.findIndex((run) => /_authToken/.test(run));
   expect(prefetch, 'npm must be fetched before the credential is written').toBeLessThan(credential);
+  expect(prefetch, 'the suite must run the cached-npm transport probe').toBeLessThan(test_);
   // Both npm invocations must name the same pinned version.
   const pinned = runs.filter((run) => /bunx (?:--no-install )?npm@/.test(run));
   expect(pinned.length).toBe(2);
@@ -168,4 +169,14 @@ test('every action in the publishing job is pinned to a full commit SHA', () => 
     if (!step.uses) continue;
     expect(step.uses, `${step.uses} must be pinned to a 40-character SHA`).toMatch(/@[0-9a-f]{40}$/);
   }
+});
+
+test('CI prefetches the pinned npm before tests on both supported Bun versions', () => {
+  const job = Bun.YAML.parse(readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8')).jobs.test;
+  expect(job.strategy.matrix.bun).toEqual(['1.3.14', '1.4.2']);
+  const prefetch = job.steps.findIndex((step) => step.run === PREFETCH);
+  const suite = job.steps.findIndex((step) => step.run === 'bun test');
+  expect(prefetch, 'CI must cache npm for the transport keeper').toBeGreaterThanOrEqual(0);
+  expect(suite).toBeGreaterThan(prefetch);
+  expect(job.steps[prefetch]).toEqual({ run: PREFETCH });
 });
