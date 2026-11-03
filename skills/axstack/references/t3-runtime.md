@@ -86,7 +86,12 @@ drivers, each using T3 delegation for multiple scoped Workers. Reuse a suitable
 current Coordinator. Suggest a new Coordinator only when useful.
 Every top-level thread launch requires an explicit user request, including a
 new Coordinator, project driver or launch fallback. On resume, preserve existing
-explicit accepted authorization within its scope. This skill never grants
+explicit accepted authorization within its scope. For a one-time whole-task
+intake hand-off, the user's standing grant may supply that explicit request
+only where the active runtime accepts it, with support recorded per launching
+host and provider. Follow [intake routing](fleet-dispatch.md#intake-boundary-cr-3)
+for acceptance-only launch, native verification and sole-driver ownership.
+This skill never grants
 blanket launch permission. Missing launch authorization holds only the affected
 launch. After a blocked launch, continue independent authorized work, subject
 to its dependencies and scoped holds under [Autopilot](autopilot.md#advance-and-hold).
@@ -552,7 +557,27 @@ For own PRs, automatic merge is the default under the
 The recorded owning watch thread merges; a missing or idle owner requires
 lifecycle reconciliation and explicit transfer first.
 
-## Fleet nonwriter boundary (C3a)
+## Whole-task routing and legacy fleet nonwriter boundary (C3a)
+
+At a new task's intake, use one `fleet-route.js plan` decision under
+[Fleet dispatch and receipts](fleet-dispatch.md). Scheduled/status/follow-up
+work stays local; named hosts bypass automatic selection and routed tasks
+cannot route again. All workers inside that task dispatch locally on its host.
+C3a below is retained for explicitly scoped legacy use, not a per-dispatch
+requirement. The remote author coordinator stays disabled.
+
+An intake launch binds destination environment/project, full-access driver
+model/options, origin `delegatedFrom` including title, and one task-unique
+`clientRequestId` in its title. Its first run checks acceptance only and returns
+exactly `AXSTACK-ACCEPT` or `AXSTACK-HANDBACK <reason>`. The origin waits with
+`t3_thread_wait` and retains ownership until acceptance, then records the link,
+sends one idempotent `proceed` and stops. Follow native wait `next` for acceptance
+and proceed; active or unconfirmed waits hold. No launch means stay local;
+hand-back means continue locally without rerouting. For a lost reply retry once
+with the same key, then search every destination thread-list page with
+`includeSubagents:true`. One verified match is awaited. Doubt, multiple or zero
+matches, incomplete pages, mismatched readback, no started run or a silent first
+run holds the origin; never start a second driver while the first may exist.
 
 Before dispatch, the driver must capture capability, project, settings and access
 through native forwarded APIs on the selected destination, following
@@ -569,7 +594,8 @@ For ambiguous submission, reconcile the exact clientRequestId/attempt and remote
 before any retry. Unknown liveness prohibits replacement. A confirmed not-submitted
 failure may exclude that route and recompute from current facts; it never permits
 model or permission substitution. No hidden SSH agent or new top-level thread is
-an execution fallback; a new thread requires an explicit user request.
+an execution fallback. A new thread requires an explicit user request, including
+only the runtime-accepted standing grant for a whole-task intake hand-off above.
 
 The driver must read task_status on the origin and terminal/thread facts on the
 actual destination for the latest run. Pending children or an unanswered question

@@ -14,7 +14,42 @@ options/full-access, repository/project identities, exact candidate/base, explic
 start/end times and a maximum of one harmless nonwriter per distinct route config.
 No overload stress, installation, global policy edits, raw provider CLI or production
 writes belong to this procedure. Exclude any unverified route from enabled coverage.
-No top-level thread without an explicit new-thread request.
+No top-level thread without an explicit new-thread request, including only a
+runtime-accepted user standing intake grant for its one whole-task hand-off.
+
+## Whole-task intake pilot (CR-3)
+
+T4 ships helpers/rules only. Keep `intakeRouting` off (missing = false) until
+the separate rollout completes. First release these rules, then add the user's
+worker-host intake exception and standing explicit new-thread grant on all five
+hosts, then pilot one real small task per pool host by explicitly naming it.
+Only T8 flips the account-local switch. Rollback is `intakeRouting:false`.
+
+Record runtime grant support per launching host and provider from the first
+unnamed intake in `intakeSupport`; absent evidence means unsupported and stay
+local with `routing unsupported`. A named-host pilot bypasses only the automatic
+decision switch, never support, authority, destination checks or staffing.
+Unreachable/failing pool hosts leave eligibility; one failure does not block
+the other pilots. Record iosatellite's actual provisioning and closed-lid proof
+separately from attended reachability. No credential copying is authorized.
+
+Retain exact facts-directory bytes (sample, links, projects and destination
+catalogs), config pin/time, plan, dispatch-plan output and native thread reads.
+Verify reachable destination, correct project, T3 clone-if-missing (failed clone
+excludes that host, next host else local), isolation, pinned driver and local
+author/different-provider reviewer plus needed advisers. Use `dispatch-plan
+--verify` on native thread/recentRuns; missing fields remain unknown.
+
+Prove acceptance-only first run, exact single marker, origin ownership until
+accept, link recording and one proceed with stable clientRequestId. Both waits
+follow native `next`, holding while active or unconfirmed. Verify the origin
+stops and all later workers run locally at the destination without rerouting.
+Exercise hand-back and local staffing holds, then one owned lost-reply retry
+with the same launch key across hosts. Reconcile by fully paginated destination
+`t3_thread_list` including subagents. Offline controls cover multiple/zero
+matches, missing pages, wrong readback, never-started and silent first runs;
+all hold rather than creating a second driver. Do not create real orphaned
+production tasks for these negative controls. Mark unobserved live rows UNKNOWN.
 
 Create a fresh 0700 scratch outside HOME on each participating host; record each
 literal path with hostId/environmentId. Before use validate owner, realpath and
