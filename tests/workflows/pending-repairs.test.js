@@ -7,16 +7,28 @@ const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 // Structural contract checks only. Fresh model evaluation remains separate.
 
-test('repairs: triggered audits retain the explicitly loaded audit skill and holdouts', () => {
+test('repairs: audits retain the explicitly loaded audit skill and holdouts', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  const concepts = [/audit/i, /only/i, /on request/i, /\bmaterial deviation/i, /repeated repairs/i];
-  checkRule(lifecycle.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' '),
-    (text) => requires(text, ...concepts),
-    'Dispatch audit only on request, on a material deviation or after repeated repairs.',
-    [[/only/i, 'also']], concepts);
   expect(lifecycle).toMatch(/load[^\n]*axstack-audit\/SKILL\.md/i);
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });
+
+for (const path of ['skills/axstack/references/lifecycle.md', 'skills/axstack-audit/SKILL.md']) {
+  const source = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  test(`repairs: ${path} retains default auditing for substantive full-path runs`, () => {
+    const concepts = [/auditing/i, /substantive run/i, /full path/i, /by default/i];
+    checkRule(source, (text) => requires(text, ...concepts),
+      'For every substantive run on the full path, auditing is enabled by default.',
+      [[/full path/i, 'small path'], [/by default/i, 'only on request']], concepts);
+  });
+  test(`repairs: ${path} limits small-path auditing to explicit triggers`, () => {
+    const concepts = [/small-path runs/i, /audit/i, /only/i, /on request/i,
+      /\bmaterial deviation/i, /repeated repairs/i];
+    checkRule(source, (text) => requires(text, ...concepts),
+      'Small-path runs dispatch audit only on request, on a material deviation or after repeated repairs.',
+      [[/only/i, 'also'], [/small-path runs/i, 'full-path runs']], concepts);
+  });
+}
 
 test('repairs: both advisers cover Align, Spec, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {

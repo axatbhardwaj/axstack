@@ -19,8 +19,19 @@ function rule(name, source, concepts, rewording, direction, inverse, ban) {
 
 rule('admission is one recorded intent and one PR', small,
   [/small-change intent/i, /acceptance checks/i, /exclusions/i, /one PR/i],
-  'Use the lean path only for a recorded small-change intent with acceptance checks, exclusions and one PR.',
-  /only/i, 'also');
+  'Use the lean path only for a recorded small-change intent with acceptance checks, exclusions and one PR that is not a risk path.',
+  /only/i, 'also', /not a risk path/i);
+rule('strict TDD and section 6 gates remain required', small,
+  [/§§2-5/i, /ownership/i, /isolation/i, /strict TDD/i, /verification/i,
+    /§6/i, /publication/i, /review/i, /repair/i, /native watch/i, /merge gates/i],
+  'This path keeps §§2-5 ownership, isolation, strict TDD and verification plus §6 publication, review, repair, native watch and merge gates.',
+  /keeps/i, 'drops');
+rule('scope receipts and unknown holds remain mandatory', small,
+  [/head\/base receipts/i, /Scope: FINDINGS/i, /repair/i, /Scope: UNKNOWN/i, /hold/i],
+  'Head/base receipts, Scope: FINDINGS repair and Scope: UNKNOWN hold remain mandatory under the same gate.',
+  /remain mandatory/i, 'become optional');
+rule('review-depth classification grants no merge clearance', small, [/merge clearance/i],
+  'This grants no merge clearance.', /grants no/i, 'grants full', /no/i);
 rule('one isolated writer retains repairs', small,
   [/one isolated author/i, /sole writer/i, /repairs/i, /same author/i],
   'Keep one isolated author as sole writer and return repairs to the same author.',
@@ -78,3 +89,11 @@ rule('new path dependencies are read before use', read('axstack/references/t3-ru
 rule('small-run completion alone does not trigger audit', read('axstack/references/lifecycle.md'),
   [/audit/i, /every small run/i],
   'Never dispatch audit on every small run.', /never/i, 'always', /never/i);
+
+const closeOut = read('axstack/references/lifecycle.md').split('## Close-out')[1] ?? '';
+rule('close-out settles a triggered small-path audit', closeOut,
+  [/small-path runs/i, /when an audit-hook trigger applies/i],
+  'For small-path runs, settle when an audit-hook trigger applies.', /settle/i, 'ignore');
+rule('full-path close-out retains its audit decision', closeOut,
+  [/full-path runs/i, /non-zero\/requested/i, /counts zero/i],
+  'For full-path runs settle non-zero/requested, else counts zero.', /settle/i, 'ignore');

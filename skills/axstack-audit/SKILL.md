@@ -74,8 +74,10 @@ Use actual records, never memory:
 - test and review evidence; and
 - the run execution record at its recorded `progress.md` path.
 
-Auditing is enabled for every substantive run by default. A material deviation
-or repeated repair pattern can justify a checkpoint. Reuse still-valid prior
+Auditing is enabled for every substantive run on the full path by default.
+Small-path runs dispatch audit only on request, on a material deviation or
+after repeated repairs. A material deviation or repeated repair pattern can
+justify a checkpoint. Reuse still-valid prior
 audit evidence rather than repeating a whole-run rescan. A routine small lookup
 may end with a compact audit record; never force research through the full
 implementation pipeline. Cadence uses the core-owned invocation and creates no

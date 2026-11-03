@@ -54,7 +54,8 @@ valid recorded identity and revisions; otherwise report the hold and exact gap.
 ### Small-change path
 
 Use this lean path only for a recorded small-change intent with acceptance
-checks, exclusions and one PR. Substantial work uses the full path below.
+checks, exclusions and one PR that is not a risk path. Substantial work uses
+the full path below.
 This path keeps §§2-5's ownership, isolation, strict TDD and verification
 requirements and §6's publication, review, repair, native watch and merge gates;
 it omits full-path step-back advice until escalation.

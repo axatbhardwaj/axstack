@@ -5,7 +5,10 @@ writer, driver-only publication, mandatory cross-provider review with T5's
 combined/separate diligence branches, native watch and watch §5's full merge
 predicate. Removal/inversion/rewording probes cover all four full-path
 escalation triggers, full-path-only step-back advice, current-path rereads and
-trigger-only audits. Keep the T1 reviewer-checkout, T4 intake, T5 combined-review
+small-path trigger-only audits and full-path default audits in both Lifecycle
+and Audit. The same checks pin triggered-audit settlement, retained strict TDD,
+§6 gates, mandatory Scope receipts and no merge clearance from risk classification.
+Keep the T1 reviewer-checkout, T4 intake, T5 combined-review
 and T7 checkpoint cleanup/watch guards green. This proves shipped instructions,
 not live delivery, adviser behavior or audit dispatch.
 
