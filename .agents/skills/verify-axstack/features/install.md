@@ -5,12 +5,21 @@ Entry points: `bin/axstack.js` (`--version`, `install`, `check`),
 Owned instructions route every role through `delegate_task`, with author worktree
 isolation and top-level launches only on explicit user request for a new thread.
 The recorded rare author fallback has the same new-thread restriction.
-Fleet routing keeper: `tests/installer/fleet-instructions.test.js` runs the actual
-installed helper command with account-local config and a run-pinned digest,
+Fleet routing keeper: `tests/installer/fleet-instructions.test.js` follows the
+global block's pointer to the installed `fleet-dispatch.md` command, then runs it
+with account-local config and a run-pinned digest,
 rejects mismatched bytes and no-route, and checks install/check/uninstall ownership.
 Semantic instruction checks cover current routing facts before workers/reviewers
 and authorized launches, destination/settings binding, separate native UI balancing,
 local isolated fallback, coordinator gates and existing scoped authority.
+The global block stays within 2,100 bytes; removal/inversion and rewording checks
+protect its authority and CR-3 routing invariants, including the missing-switch
+default, named-host pilot and sole-driver rule. Ownership transfer requires
+AXSTACK-ACCEPT and one idempotent proceed under the fleet-dispatch contract. Execution
+and hand-off procedures remain in the installed runtime/fleet references. The
+real install/check/uninstall case has a 60-second timeout for slower CI hosts.
+Codex instruction migration uses a fixed legacy block so current prose changes
+cannot silently turn its upgrade fixture into an unchanged installation.
 Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
 reinstalls after validated null/stale legacy metadata, checking explicit-preset
 role selection and inert provenance preservation. It also exercises the real mixed
@@ -90,7 +99,7 @@ disable Bun's transpiler cache so runtime cache files cannot mask product writes
 ```bash
 doctor > "$EVIDENCE/capabilities-doctor.log" 2>&1
 bun run test tests/installer/capabilities.test.js tests/installer/r2.test.js \
-  tests/installer/instructions.test.js \
+  tests/installer/instructions.test.js tests/installer/codex-canonical-root.test.js \
   > "$EVIDENCE/capabilities-suite.log" 2>&1
 ```
 
