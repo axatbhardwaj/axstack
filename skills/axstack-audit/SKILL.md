@@ -132,6 +132,19 @@ counts with denominators plus the evidence behind the count:
   autonomous driver decisions; size alone never requires user approval.
 - API-dollar cost by model when provider receipts are available, UNKNOWN otherwise.
 
+Report one cost line per PR with dispatches, review rounds, spec revisions,
+active time, wait time, driver tokens and worker tokens, using the
+[run-record counting boundaries](../axstack/references/run-record.md#per-pr-cost).
+Missing cost values are `unknown`; never replace missing cost values with zero.
+Cost reporting never gates work. Keep per-value evidence and coverage denominators,
+and compare only compatible PR attribution, duration units and token accounting
+against the run's recorded baseline path. Exclude review-manager PRs from the
+ceremony baseline comparison; retain unallocated run totals separately.
+
+```text
+PR cost: <PR URL> | dispatches: unknown | review rounds: unknown | spec revisions: unknown | active time: unknown | wait time: unknown | driver tokens: unknown | worker tokens: unknown | evidence: <per-value refs>
+```
+
 Record `UNKNOWN` where evidence is absent. Never count missing evidence as a
 pass or collapse gaps into a vanity score. Prefer parallelism for genuinely
 independent decomposable work, while respecting dependencies and writer

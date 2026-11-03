@@ -83,6 +83,27 @@ owner stops.
 deleted.
 The driver records `paused` on a user request or a hold; idle alone is neither.
 
+## Per-PR cost
+
+Record one cost line per PR with dispatches, review rounds, spec revisions,
+active time, wait time, driver tokens and worker tokens.
+Missing cost values are `unknown`; never replace missing cost values with zero.
+A dispatch counts one native task or launch.
+A review round counts one authored-review pass at one head.
+Count distinct task/launch IDs once, including interrupted attempts, rather
+than counting status reads, messages or retries of the same native task.
+Cost review rounds include passing rounds and are separate from the failing
+`rounds` budget below; diligence and spec-adviser passes are separate work.
+Count distinct recorded spec revisions attributable to the PR, including its
+first draft. Keep shared run costs unallocated rather than copying them to
+each PR. Give durations their units and token totals their receipt basis
+(including any cache accounting); wall-clock elapsed time alone proves neither
+active time nor wait time. Attach evidence for each measured value.
+These measurements never gate work.
+
+Repository baseline: `docs/ceremony-baseline-20261103.md` in the Axstack repo.
+Record that baseline path with the cost lines for later compatible comparisons.
+
 ## Review-round budgets
 
 Each PR membership entry carries `rounds: <n>` and `step-back: unused | used r<n>`.
@@ -222,6 +243,8 @@ Schedules: <scheduledTaskIds of every watch and manager schedule>
 Watch: <member publication/adoption receipts + cadence + last PR event + native lifetime + update/re-arm/stop receipts>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>
 Evidence: <check/review/submission/audit receipt pointers>
+Cost baseline: docs/ceremony-baseline-20261103.md
+PR cost: <PR URL> | dispatches: unknown | review rounds: unknown | spec revisions: unknown | active time: unknown | wait time: unknown | driver tokens: unknown | worker tokens: unknown | evidence: <per-value refs>
 Pending: <launch/acceptance/external receipts + scheduledTaskIds + runIds + deadline>
 Unresolved: <decision -> next owner + next action>
 Learnings: <root cause, gotcha, or pattern -> evidence ref>
