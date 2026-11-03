@@ -76,6 +76,32 @@ test('named-host pilot needs no support record', () => {
     [[/no support record/i, 'a support record']], [/explicit named host/i, /pilot/i]);
 });
 
+test('host-exclusive needs require whole-task routing at intake', () => {
+  const concepts = [/needs?|requires?/i, /only another fleet host has|exclusive to another fleet host/i,
+    /route/i, /whole task/i, /at intake/i, /fleet-route\.js plan/];
+  checkRule(renderInstructionBlock().replaceAll('`', ''), (s) => requires(s, ...concepts),
+    'For resources exclusive to another fleet host that a task requires, route the whole task at intake with fleet-route.js plan.',
+    [[/route the whole task/i, 'skip the whole task']], concepts);
+});
+
+test('cross-host launches are solely the intake hand-off, never workers or replacement launches', () => {
+  const concepts = [/cross.host/i, /t3_thread_launch/, /only/i, /(one|single) intake hand.off/i,
+    /remote workers/i, /subagents/i, /replacement launches/i];
+  checkRule(renderInstructionBlock().replaceAll('`', ''), (s) => prohibits(s, /never/i, ...concepts),
+    'Only that single intake hand-off uses cross-host t3_thread_launch, never for remote workers, replacement launches or subagents.',
+    [[/only/i, 'also'], [/never/i, 'including']], concepts);
+});
+
+test('global cross-host prohibition leaves same-key launch retries available', () => {
+  const text = renderInstructionBlock().replaceAll('`', '');
+  const bansRetry = (s) => prohibits(s, /never/i, /cross.host/i, /t3_thread_launch/, /\bretr(?:y|ies)\b/i);
+  expect(bansRetry(text)).toBe(false);
+  const blanketBan = text.replace(/replacement launches/i, 'retries');
+  expect(blanketBan).not.toBe(text);
+  expect(bansRetry(blanketBan)).toBe(true);
+  expect(bansRetry(blanketBan.replace(/never remote workers/i, 'never for remote workers'))).toBe(true);
+});
+
 test('an uncertain launch cannot create a second driver', () => {
   // "May exist" qualifies uncertainty about the first driver, not optional work.
   checkRule(renderInstructionBlock().replaceAll('`', ''),
@@ -84,8 +110,8 @@ test('an uncertain launch cannot create a second driver', () => {
     [/start a second driver/i, /while the first may exist/i]);
 });
 
-test('global authority and routing block stays below 2100 bytes', () => {
-  expect(Buffer.byteLength(renderInstructionBlock())).toBeLessThanOrEqual(2100);
+test('global authority and routing block stays below 2400 bytes', () => {
+  expect(Buffer.byteLength(renderInstructionBlock())).toBeLessThanOrEqual(2400);
 });
 
 test('installed no-launch path requires local staffing before continuing', () => {

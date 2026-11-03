@@ -276,6 +276,7 @@ so the delegated fresh child must perform step 1 in its own checkout before writ
 
 Keep `t3_thread_launch` for top-level drivers; use `t3_thread_launch` as a rare
 author fallback only when worktree isolation is unavailable and record each use in the run record.
+Cross-host launches follow the single [intake hand-off](fleet-dispatch.md#intake-boundary-cr-3); author fallback stays local.
 For a recorded author launch, use `{type:worktree, baseRef:<SHA>, branch:<encoded branch>, startFromOrigin:false}`.
 A launched fallback author starts on its encoded branch and skips step 1 and the isolation proof.
 The launch-only recovery and completion rules below cover that fallback.
