@@ -1,9 +1,8 @@
 name: registry-auth-check
 
-# Proves the NPM_ACCESS_TOKEN secret actually authenticates, without touching
-# the registry's contents. Run this before tagging a release: bun publish
-# falls back to interactive web auth on a bad token, which in CI prints a
-# login URL and hangs until the job times out.
+# Checks that the direct-publish NPM_ACCESS_TOKEN authenticates using whoami
+# only. Run before tagging a release. This read-only check does not prove
+# package publish permission or the token's 2FA-bypass setting.
 on:
   workflow_dispatch:
 

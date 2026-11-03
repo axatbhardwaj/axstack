@@ -1,4 +1,4 @@
-// A manually runnable credential check. Its whole purpose is to prove the
+// A manually runnable direct-publish credential check. Its whole purpose is to prove the
 // registry token authenticates WITHOUT performing the irreversible publish,
 // so the contract worth enforcing is that it can never publish or mutate.
 //
