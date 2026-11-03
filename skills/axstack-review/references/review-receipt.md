@@ -6,6 +6,7 @@ Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <cand
 Workspace: <T3 taskId/childThreadId/runId + authored: native worktree absolute path | peer: detached checkout absolute path>
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
+Scope: <PASS | FINDINGS | UNKNOWN | n/a — separate diligence>
 Coverage: COMPLETE | INCOMPLETE — <angles + acceptance + executable evidence checked>
 Limitations: <unverified boundaries + why; tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven>
 Final-head check: <command> -> <log path> — <check the reviewer ran at the final head; log kept in the run's evidence folder>
@@ -19,3 +20,6 @@ Safety fact: <the one fact the change itself is safe because of, rather than the
 Escalate to user: <yes | no> — <criterion> — <reason>
 ```
 
+The `Scope:` verdict is bound to the same head and base as the `Reviewer:` line.
+For eligible combined review, report the diligence checks, evidence and limits
+with that verdict; all other authored work uses `n/a — separate diligence`.

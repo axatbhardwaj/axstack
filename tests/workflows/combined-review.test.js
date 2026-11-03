@@ -13,7 +13,7 @@ const proof = 'axstack-watch/references/proven-verification.md';
 // accepts independent wording; the status field is a receipt wire contract.
 function rule(name, path, concepts, wording, direction, inverse, ban) {
   test(`combined review: ${name}`, () => {
-    checkRule(read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/`/g, '').replace(/\s+/g, ' '), (text) => ban
+    checkRule(read(path).replace(/```[\s\S]*?```/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/`/g, '').replace(/\s+/g, ' '), (text) => ban
       ? prohibits(text, ban, ...concepts) : requires(text, ...concepts),
     wording, [[direction, inverse]], concepts);
   });
@@ -79,6 +79,102 @@ rule('every head or base change invalidates the combined receipt', diligence,
   [/every head or base change/i, /invalidates/i, /combined receipt/i, /fresh/i, /review/i, /Scope/i],
   'Every head or base change invalidates the combined receipt and requires fresh review and Scope evidence.',
   /invalidates/i, 'preserves');
+
+// Reviewer M2: pin each source rule at its owning boundary, not a sibling gate.
+rule('driver readback cannot self-issue Scope PASS', publication,
+  [/driver readback/i, /Scope: PASS/],
+  'Driver readback never supplies Scope: PASS.', /never supplies/i, 'supplies', /never supplies/i);
+rule('unknown eligibility holds the combined route', diligence,
+  [/unknown eligibility/i, /holds the combined route/i],
+  'Unknown eligibility holds the combined route.', /holds/i, 'opens');
+rule('unclassified eligibility uses separate diligence', diligence,
+  [/use separate diligence/i, /pending classification|while eligibility remains unclassified/i],
+  'Use separate diligence while eligibility remains unclassified.', /use separate diligence/i, 'waive separate diligence');
+rule('shared gate UNKNOWN holds with a recorded reason', diligence,
+  [/Scope: UNKNOWN/, /holds merge-ready/i, /reason recorded/i, /driver disposition/i],
+  'Scope: UNKNOWN holds merge-ready with its reason recorded for driver disposition.', /holds merge-ready/i, 'permits merge-ready');
+rule('shared gate FINDINGS returns to the author and blocks', diligence,
+  [/Scope: FINDINGS/, /returns to the same author/i, /same round/i, /blocks merge-ready/i],
+  'Scope: FINDINGS returns to the same author in the same round and blocks merge-ready.', /blocks merge-ready/i, 'permits merge-ready');
+rule('disposition cannot convert unknown evidence into PASS', diligence,
+  [/disposition/i, /unknown evidence/i, /pass/i],
+  'A disposition never converts unknown evidence into a pass.', /never converts/i, 'converts', /never converts/i);
+rule('missing or stale Scope receipts cannot satisfy the gate', diligence,
+  [/missing or stale Scope receipt/i, /this gate/i],
+  'A missing or stale Scope receipt never satisfies this gate.', /never satisfies/i, 'satisfies', /never satisfies/i);
+rule('only eligible combined approval satisfies diligence', diligence,
+  [/APPROVE/, /Scope: PASS/, /satisfies the applicable diligence gate/i, /only for eligible work/i],
+  'APPROVE plus Scope: PASS satisfies the applicable diligence gate only for eligible work.', /only for eligible work/i, 'for all work');
+rule('ineligible missing or stale combined receipts block readiness', readiness,
+  [/missing, stale or ineligible combined receipts/i, /block/i],
+  'Missing, stale or ineligible combined receipts block readiness.', /block/i, 'permit readiness');
+rule('separate diligence gaps hold publication', publication,
+  [/diligence UNKNOWN/i, /missing\/stale receipt/i, /holds publication/i],
+  'A diligence UNKNOWN or missing/stale receipt holds publication.', /holds publication/i, 'permits publication');
+rule('base-only retargets require fresh review and diligence evidence', 'axstack-implement/SKILL.md',
+  [/any head or base change/i, /requires fresh review/i, /applicable diligence evidence/i, /base-only retargets/i],
+  'Any head or base change requires fresh review and applicable diligence evidence, including base-only retargets.', /requires fresh review/i, 'retains old review');
+rule('authored review UNKNOWN holds readiness', 'axstack-review/SKILL.md',
+  [/UNKNOWN/, /holds merge-ready/i],
+  'UNKNOWN holds merge-ready.', /holds merge-ready/i, 'permits merge-ready');
+rule('driver dispositions cannot replace required PASS', 'axstack/references/contracts.md',
+  [/disposition/i, /required diligence PASS/i, /combined Scope: PASS/i],
+  'A disposition never substitutes for required diligence PASS or combined Scope: PASS.', /never substitutes/i, 'substitutes', /never substitutes/i);
+rule('implement returns combined findings within the round', 'axstack-implement/SKILL.md',
+  [/combined Scope: FINDINGS/i, /return to the same author/i, /within the review round/i],
+  'Combined Scope: FINDINGS return to the same author within the review round.', /return to the same author/i, 'advance without repair');
+rule('review candidate returns combined findings by the same repair route', review,
+  [/combined Scope: FINDINGS/i, /same repair route/i],
+  'Combined Scope: FINDINGS uses the same repair route.', /same repair route/i, 'approval route');
+rule('combined review preserves mapping independence and checkout rules', diligence,
+  [/keep/i, /authored mode.s mapped reviewer/i, /non-author\/non-owner session independence/i, /checkout rules/i],
+  "Keep the authored mode's mapped reviewer, non-author/non-owner session independence and checkout rules.", /keep/i, 'drop');
+rule('combining replaces a dispatch without reducing diligence coverage', diligence,
+  [/replaces a dispatch/i, /diligence coverage/i],
+  'This replaces a dispatch, not diligence coverage.', /not diligence coverage/i, 'including diligence coverage', /not diligence coverage/i);
+rule('authored publication selects combined or separate evidence', 'axstack-review/SKILL.md',
+  [/authored mode requires/i, /one current eligible configured reviewer receipt/i, /Scope: PASS/,
+    /eligible small non-risk-path/i, /otherwise a separate diligence PASS receipt/i],
+  'Authored mode requires one current eligible configured reviewer receipt and Scope: PASS for eligible small non-risk-path work, otherwise a separate diligence PASS receipt.',
+  /otherwise a separate diligence PASS receipt/i, 'otherwise approval alone');
+
+// Missing producer/eligibility rules are the normal red slice for this repair.
+rule('driver decides combined eligibility', diligence,
+  [/driver decides/i, /eligibility/i, /combined review/i],
+  'The driver decides eligibility for combined review.', /driver decides/i, 'author decides');
+rule('reviewer rechecks eligibility against review-depth risk', diligence,
+  [/combined reviewer/i, /rechecks/i, /eligibility/i, /diff/i, /review-depth risk/i],
+  'The combined reviewer rechecks eligibility against the diff and review-depth risk.', /rechecks/i, 'assumes');
+rule('same-provider mappings are ineligible', diligence,
+  [/same-provider reviewer/i, /single-provider presets/i, /makes combined review ineligible/i],
+  'A same-provider reviewer under single-provider presets makes combined review ineligible.', /makes combined review ineligible/i, 'makes combined review eligible');
+rule('Scope verdict is bound to receipt head and base', 'axstack-review/references/review-receipt.md',
+  [/Scope: verdict/i, /bound to/i, /same head and base/i, /Reviewer: line/i],
+  'The Scope: verdict is bound to the same head and base as the Reviewer: line.', /same head and base/i, 'previous head only');
+rule('brief requests receipt verdict through the distinct combined line', review,
+  [/receipt.s Scope: verdict line/i, /requested by/i, /brief.s Combined review: line/i],
+  "The receipt's Scope: verdict line is requested by the brief's Combined review: line.", /requested by/i, 'unrelated to');
+
+test('combined review: receipt verdict wire follows Verdict and is unambiguous', () => {
+  const source = read('axstack-review/references/review-receipt.md');
+  const line = 'Scope: <PASS | FINDINGS | UNKNOWN | n/a — separate diligence>';
+  const accepts = (text) => /^Verdict:[^\n]*\nScope: <PASS \| FINDINGS \| UNKNOWN \| n\/a — separate diligence>$/m.test(text)
+    && text.match(/^Scope:/gm)?.length === 1;
+  expect(accepts(source)).toBe(true);
+  expect(accepts(source.replace(line, ''))).toBe(false);
+  expect(accepts(source.replace(line, line.replace('UNKNOWN', 'PASS-BY-DEFAULT')))).toBe(false);
+  expect(accepts(source.replace(line, `${line}\n${line}`))).toBe(false);
+});
+test('combined review: brief request wire preserves scope identity', () => {
+  const source = read('axstack-review/references/candidate-brief.md');
+  const line = 'Combined review: <yes — return the Scope verdict | no — separate diligence>';
+  const accepts = (text) => text.split('\n').includes(line)
+    && /^Scope: <spec rev or linked issue \+ ticket \+ current base \+ exclusions>$/m.test(text);
+  expect(accepts(source)).toBe(true);
+  expect(accepts(source.replace(line, ''))).toBe(false);
+  expect(accepts(source.replace(line, line.replace('return the Scope verdict', 'skip the Scope verdict')))).toBe(false);
+  expect(accepts(source.replace(/^Scope:.*$/m, 'Scope: PASS'))).toBe(false);
+});
 
 // Check discoverability at each consumer boundary, rather than copying the full
 // policy into each reader. Existing checks keep separate diligence semantics.

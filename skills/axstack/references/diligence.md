@@ -6,7 +6,11 @@ and bounded follow-ups are defined in [Peer mode](../../axstack-review/SKILL.md#
 ## Applicable diligence gate
 
 Use combined review only for a snapshotted small-change intent, one PR and a
-non-risk-path classification. The combined reviewer uses a provider that differs
+non-risk-path classification. The driver decides eligibility for combined review.
+The combined reviewer rechecks eligibility against the diff and review-depth risk.
+A same-provider reviewer under single-provider presets makes combined review
+ineligible; use separate diligence while retaining the configured review route.
+The combined reviewer uses a provider that differs
 from every author and repair provider. Keep the authored mode's mapped reviewer,
 non-author/non-owner session independence and checkout rules.
 Review-depth risk includes the [merge-risk list](../../axstack-watch/references/readiness.md),

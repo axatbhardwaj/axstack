@@ -7,6 +7,7 @@ Driver worktree: <authored: resolved absolute path for isolation proof | peer: n
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Mode: <peer | authored> Actual author: <provider/model from T3 launch receipt + session | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
+Combined review: <yes — return the Scope verdict | no — separate diligence>
 Angles: <all six; identical brief for peer reviewers>
 Authored receipt requirements:
   Report Coverage: COMPLETE | INCOMPLETE with covered angles, acceptance and executable evidence.

@@ -73,8 +73,9 @@ This section applies to peer and authored PR modes.
    For eligible small non-risk-path work, the same cross-provider reviewer
    returns `Scope: PASS|FINDINGS|UNKNOWN` without a separate diligence dispatch.
    Combined review runs after publication at the confirmed remote head and
-   pinned base. Include all applicable diligence checks and the Scope field in
-   the brief and receipt, bound to that head and base with evidence and limits.
+   pinned base. Include all applicable diligence checks in the brief.
+   The receipt's `Scope:` verdict line is requested by the brief's `Combined review:` line.
+   Bind that verdict to the same head and base, with evidence and limits.
    Otherwise, in authored PR review rounds, dispatch `axstack-diligence`
    independently alongside the configured reviewer(s) on the same exact revision
    and base. A diligence `FINDINGS` receipt returns validated findings to the same

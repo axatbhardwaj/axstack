@@ -145,6 +145,7 @@ doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/review-checkout.test.js \
+  tests/workflows/combined-review.test.js \
   tests/workflows/independent-delivery.test.js \
   tests/workflows/independent-delivery-maps.test.js \
   tests/workflows/multi-driver.test.js \
