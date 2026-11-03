@@ -1,11 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { sampleMain, sampleHelp } from './fleet-sample-cli.js';
 import { recommend, parseFleetConfig } from './fleet-route.js';
+import { planIntake } from './fleet-route-plan.js';
 
 const help = `Usage: bun fleet-route.js recommend --input <snapshot.json> --now <epoch-ms> [--json]
   [--task <name>] [--config <fleet-routing.json>] [--config-digest <sha256>]
+  bun fleet-route.js plan --facts <directory> --now <epoch-ms> [--json]
+  [--config <fleet-routing.json>] [--config-digest <sha256>]
 
 --input          Saved schema-1 facts; no collection or dispatch
+--facts          Intake facts directory containing input.json (sample + saved native reads)
 --now            Required nonnegative integer evaluation time; no ambient clock
 --task           Override the saved request's task preference
 --config         Reviewed account-local config (default: ~/.config/haoshoku/fleet-routing.json)
@@ -19,7 +23,9 @@ Required session capabilities must be proven on the actual destination session;
 an origin catalog or transferred credentials cannot establish them.
 Exclusions with reasons are supplied in input.exclusions.hosts/routes.
 Use sample or sample-recommend for bounded collection.
-Exit codes: 0 recommendation/help, 1 input/config error, 2 no executable route.
+Plan reports each term pass/fail/unknown/n/a with evidence; counts only, no authority.
+intakeRouting gates automatic decisions only; missing means false.
+Exit codes: 0 recommendation/plan/help, 1 input/config error, 2 no executable route or hold.
 `;
 
 const fail = (code) => { throw new Error(code); };
@@ -40,21 +46,23 @@ export async function main(argv) {
       return 0;
     }
     if (['sample', 'sample-recommend'].includes(argv[0])) return await sampleMain(argv, defaultConfigPath());
-    if (argv[0] !== 'recommend') fail('unexpected-command');
+    if (!['recommend', 'plan'].includes(argv[0])) fail('unexpected-command');
+    const planning = argv[0] === 'plan';
     const args = {};
     for (let i = 1; i < argv.length; i++) {
       const flag = argv[i];
-      if (!['--input', '--now', '--task', '--config', '--config-digest', '--json'].includes(flag)) fail('unexpected-argument');
+      if (!['--input', '--facts', '--now', '--task', '--config', '--config-digest', '--json'].includes(flag)) fail('unexpected-argument');
       if (Object.hasOwn(args, flag)) fail('duplicate-argument');
       if (flag === '--json') { args[flag] = true; continue; }
       const value = argv[++i];
       if (!value?.trim() || value.startsWith('--')) fail('missing-argument');
       args[flag] = value;
     }
-    if (!args['--input'] || !args['--now']) fail('missing-argument');
+    if (!(planning ? args['--facts'] : args['--input']) || !args['--now']) fail('missing-argument');
+    if (planning ? args['--input'] || args['--task'] : args['--facts']) fail('unexpected-argument');
     if (!/^\d+$/.test(args['--now'])) fail('evaluation-time');
     const now = Number(args['--now']);
-    const input = readInput(args['--input']);
+    const input = readInput(planning ? `${args['--facts']}/input.json` : args['--input']);
     if (!input || typeof input !== 'object' || Array.isArray(input) || input.schemaVersion !== 1) fail('schema-version: input');
     let configText;
     const configPath = args['--config'] ?? defaultConfigPath();
@@ -66,11 +74,11 @@ export async function main(argv) {
     parseFleetConfig(configText, configDigest);
     if (input.configDigest !== undefined && input.configDigest !== configDigest) fail('config-digest-mismatch');
     if (input.configText !== undefined && input.configText !== configText) fail('config-snapshot-mismatch');
-    const result = recommend({ ...input, configText, configDigest,
+    const result = (planning ? planIntake : recommend)({ ...input, configText, configDigest,
       request: args['--task'] ? { ...input.request, task: args['--task'] } : input.request }, now);
-    process.stdout.write(args['--json'] ? `${JSON.stringify(result)}\n`
+    process.stdout.write(args['--json'] || planning ? `${JSON.stringify(result)}\n`
       : `${result.stage}: ${result.selected?.hostId ?? 'no host'} (${result.reason})\n`);
-    return result.selected ? 0 : 2;
+    return planning ? result.disposition === 'hold' ? 2 : 0 : result.selected ? 0 : 2;
   } catch (error) {
     process.stderr.write(`${JSON.stringify({ error: { code: error.message.split(':')[0], message: error.message } })}\n`);
     return 1;
