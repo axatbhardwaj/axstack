@@ -1,4 +1,107 @@
-# Fleet nonwriter dispatch and receipts (C3a)
+# Whole-task intake routing and fleet receipts
+
+## Intake boundary (CR-3)
+
+Route only new user-started tasks at intake before the first worker dispatch.
+Scheduled work, status requests and follow-up work must stay local.
+The driver must honor an explicit named host (pilot) as the user's placement request.
+The driver must use the routed marker to prevent second routing and mid-task hand-off.
+Never require per-dispatch routing inside a task; all authors, reviewers and
+advisers run locally on its chosen host. C3a below remains an optional legacy
+nonwriter contract, pending a separate CR-8 retirement proposal. C3b stays disabled.
+
+`intakeRouting` must gate only the automatic decision, with missing meaning false.
+An explicit named host (pilot) runs with the switch off under the user's
+explicit request and needs no existing support record.
+An explicit named host (pilot) ignores `intakeSupport`, including malformed
+values; all other pre-launch, staffing and sole-driver checks still apply.
+From a successful named-host pilot outcome, the driver must write a support
+record for the launching host and provider in `fleet-routing.json`, with
+`supported:true` and evidence.
+On pilot failure, the driver must remove the named destination host from the
+pool list and write no support record.
+For unnamed automatic hand-offs, read `intakeSupport`: missing = unsupported,
+stay local and record `routing unsupported`. A standing grant is usable only when the
+active T3 runtime accepts it as the user's explicit request for this one thread.
+Neither this contract nor a helper grants that authority.
+
+## Observe and plan once
+
+1. Record the exact task text, scope identity and content (inline or a
+   destination-readable ref), authority, grant citation, origin environment,
+   thread ID/title and a task-unique launch key. Record `routed:false` only at
+   the original intake. A received routed task preserves `routed:true`.
+   For an unknown named host, report `routing unknown host` and the supplied
+   name to the user, then stay local with staffing checks. An unknown name is
+   never replaced with another destination silently.
+2. Save native environment links, destination environment/project reads,
+   fully paginated project lists and exact destination catalog bytes. The
+   driver must clone a missing repo through T3 and a failed clone makes the
+   host ineligible. Continue to the next host, else stay local. Refresh the
+   saved reads after cloning; an attempted clone is never proof of a project.
+3. Require reachability, the correct repository project and worktree isolation.
+   Require the pinned driver model, a local author and a different-provider
+   reviewer, plus advisers when needed. Collect bounded `fleet-sample` telemetry and
+   current assignment inventory into the facts directory described in
+   [the schema](fleet-route-schema.md#whole-task-intake-plan).
+4. Run one `fleet-route.js plan --facts <facts-dir> --now <epoch-ms> --config
+   <reviewed-config> --config-digest <run-pin> --json`. It combines recommendation
+   and binding evidence. Exclusions, unknown load and local staffing remain
+   explicit; the helper performs no native calls, cloning or dispatch.
+5. For a remote selection, use `dispatch-plan --kind launch` with that saved
+   plan as `--recommendation`, the original `--fleet-input`, the same `--now`
+   and digest, `--role axstack-owner` (or the accepted driver role at the same
+   exact pins), role snapshot and selected destination catalog. Copy only
+   native arguments: environmentId/projectId, modelSelection, runtimeMode,
+   delegatedFrom (including title), clientRequestId, title and message. Keep
+   `inputs`, terms and fleetBinding as evidence, never native arguments.
+   Launch only under the cited explicit user request or accepted standing
+   intake grant. Verify the returned thread using `dispatch-plan --verify`
+   with native thread reads; unreturned settings or run-start evidence hold.
+
+Skip collection for non-intake, already-routed or disabled automatic decisions once
+local staffing is proven. If plan is invoked it still validates the full supplied
+facts. An exit-1 input/config error before any launch means stay local only with
+independent local staffing proof; otherwise hold. Report the helper error, never
+infer a route or silently continue without staffing.
+
+## Acceptance, ownership and outcomes
+
+The origin must remain the owner and owns the task until the destination accepts.
+The destination first run must check only acceptance and end with exactly
+`AXSTACK-ACCEPT` or `AXSTACK-HANDBACK <reason>`. It checks scope/authority,
+readable inputs and local staffing (author, different-provider reviewer and
+advisers if needed), then ends without implementation and awaits `proceed`.
+The origin waits on that exact first run with `t3_thread_wait`, reads its full
+untruncated final response and checks exactly one marker. A quoted marker,
+both markers or multiple markers is ambiguous and holds.
+
+Only after `AXSTACK-ACCEPT`, record the destination link, send one `proceed`
+with a stable `clientRequestId` and stop origin execution. Preserve this send's
+receipt and run ID; the destination becomes the sole driver. Both acceptance
+and proceed waits must follow the wait tool `next` and hold while active or
+unconfirmed. Never infer completion from a timeout. Once proceed is confirmed,
+the origin ends; ongoing implementation belongs only to the destination thread.
+
+With no launch call because of unsupported runtime, no eligible host or
+pre-launch failure, the origin must stay local. After `AXSTACK-HANDBACK` the
+origin must continue locally. Hand-back is terminal for routing: keep the
+routed marker and do not try another destination. Every local stay/continue
+checks staffing too; a missing author or different-provider reviewer holds.
+
+On error or a lost launch reply, the origin must retry once with the same
+`clientRequestId`. The native launch tool documents this retry as safe; the
+cross-host pilot must verify it before enabling automatic routing. After that
+retry the origin must search the destination by launch key using fully
+paginated `t3_thread_list` with `includeSubagents:true`. For one verified match
+the origin must wait for its first run. The origin must hold for multiple
+matches, incomplete listing, readback mismatch, a run that never starts or a
+silent first run without exactly one marker. Zero matches after a launch call,
+an uncertain reply or any unresolved identity also holds. Never start a second
+driver while the first may exist. Reconcile the exact original attempt before
+any further execution; no rerouting, replacement driver or model substitution.
+
+## Legacy nonwriter dispatch and receipts (C3a)
 
 This contract joins C1 recommendation and C2 sampling to native T3 execution.
 It does not deploy a routing switch. Read [T3 runtime](t3-runtime.md) and the
@@ -13,7 +116,7 @@ null-identity proof and owned folders replace only the repository/checkout terms
 All native execution authority and independent exact-byte review remain required.
 Engineering/code review and remote routes retain their existing rules.
 
-## Observe before selecting
+## Observe before selecting (legacy C3a only)
 
 1. Record installed Axstack and both T3 versions, directed origin/target link,
    explicit time, exact reviewed config bytes/digest and installed role snapshot.
@@ -33,8 +136,8 @@ Engineering/code review and remote routes retain their existing rules.
    provider restrictions; they do not prove effective access. Settings readback must use native task status and thread reads, preserving
    only the fields actually returned. A worker assertion is not native readback.
 4. Normalize current driver assignments and the pending batch as below. Sample
-   telemetry with C2's bounded command, then recompute C1 immediately before each
-   dispatch using the collector time and current exclusions. Preserve the full
+   telemetry with C2's bounded command, then recompute C1 for an explicitly
+   scoped legacy route using the collector time and current exclusions. Preserve the full
    recommendation JSON bytes and complete replayable input. Unknown inventory
    is unknown, not a claimed zero; pending lower bounds are labelled separately.
 

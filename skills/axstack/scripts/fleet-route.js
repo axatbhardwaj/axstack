@@ -4,7 +4,11 @@ import { assignmentCounts, routeReasons, telemetry } from './fleet-facts.js';
 export { parseFleetConfig } from './fleet-config.js';
 
 export function recommend(input, now) {
-  validateInput(input, now);
+  // Drivers place the whole task; their authors use local worktree isolation.
+  const driver = input?.request?.role === 'driver';
+  const placement = driver ? { ...input, request: { ...input.request, role: 'reader',
+    requiredCapabilities: [...(input.request.requiredCapabilities ?? []), 'worktree-isolation'] } } : input;
+  validateInput(placement, now);
   const config = parseFleetConfig(input.configText, input.configDigest);
   const counts = assignmentCounts(input, config.hosts, now);
   const preference = Object.hasOwn(config.taskOrders, input.request.task)
@@ -19,7 +23,7 @@ export function recommend(input, now) {
     let accepted = null;
     for (const route of routes) {
       const facts = input.routeFacts.find((f) => f.routeId === route.id);
-      const reasons = routeReasons(route, host, destination, facts, input, now);
+      const reasons = routeReasons(route, host, destination, facts, placement, now);
       if (reasons.length) {
         excluded.push({ hostId, environmentId: host.environmentId, routeId: route.id, reasons,
           exclusion: (Object.hasOwn(input.exclusions.hosts, hostId) ? input.exclusions.hosts[hostId] : null)

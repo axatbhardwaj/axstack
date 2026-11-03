@@ -26,6 +26,79 @@ these errors belongs to the adapter; exceptions never authorize fallback routes.
 object. Missing/invalid configuration and digest mismatches fail explicitly.
 No account path or fleet identity is built into this API.
 
+## Whole-task intake plan
+
+`bun fleet-route.js plan --facts <directory> --now <epoch-ms> --config
+<reviewed.json> --config-digest <sha256> --json` reads `<directory>/input.json`
+and the exact reviewed config bytes. It writes stdout/stderr only. The directory
+is an evidence bundle produced at intake by bounded `fleet-sample` telemetry
+and saved native links/environment/project/catalog reads, not a runtime store.
+No collection, clone, dispatch, retries, authority grants or retained state occur.
+All flags are listed by `--help`; `--input` and `--task` belong to recommend,
+not plan. The default config path and digest checks below apply to both commands.
+
+Plan uses the schema-1 recommendation inputs below, extended as follows:
+
+| Field | Contract |
+| --- | --- |
+| `request.role` | `driver`: place one whole task; authors then run locally, never C3b |
+| `origin.threadId`, `origin.title` | Original native driver identity and title; both nonempty |
+| `origin.providerInstanceId` | Actual launching provider; runtime support is keyed here, not to the requested destination provider |
+| `intake.kind`, `intake.willDispatch` | `new-task` and true for a new user task before its first worker dispatch; scheduled/status/follow-up work stays local |
+| `intake.routed` | true prevents a second decision or mid-task hand-off; origin records false on first intake |
+| `intake.namedHost` | Explicit named host (pilot): configured host ID, or `here`; needs no support record, but still requires authority/preflight; unknown ID returns `routing unknown host` and must be reported to the user |
+| `intake.launchKey` | Task-unique stable key, used as launch clientRequestId and in the title |
+| `intake.taskText` | Exact user task text |
+| `intake.scope` | `{identity,content}` or `{identity,destinationRef}` readable on destination; acceptance run verifies readability |
+| `intake.authority`, `intake.grantCitation` | Exact bounded authority and citation of explicit user request or accepted standing grant |
+| `staffing` | `{author:{providerInstanceId,model},reviewer:{providerInstanceId,model},advisers:[{providerInstanceId,model},...]}`; author/reviewer driverKind must differ |
+| `nativeDestinations` | Map keyed by environmentId, each value is the saved nativeDestination read envelope set below, including fully paginated projectList and exact capabilities.valueText |
+| `config.intakeRouting` | true enables automatic decisions; missing = false; explicit named host (pilot) bypasses the switch and support-record gate |
+| `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}`. Automatic unnamed hand-offs without a record stay local with `routing unsupported`; malformed records are `intake-support-schema` |
+
+From a successful named-host pilot outcome, the driver must write a support
+record for the launching host and provider in `fleet-routing.json`, with
+`supported:true` and evidence.
+On pilot failure, the driver must remove the named destination host from the
+pool list and write no support record.
+An explicit named host (pilot) ignores `intakeSupport`, including malformed
+values; all other pre-launch, staffing and sole-driver checks still apply.
+
+The driver request uses repository scope and exact driver model/options/full-access
+pins. Driver placement automatically requires worktree-isolation at both configured
+and observed host. Plan excludes failed destination native reads, catalog-digest
+mismatches and unproven local staffing. All required model pins must appear exactly
+once in their destination provider catalog, with executable full-access support.
+Options must be advertised. Cloning is the driver's T3 action before plan: a failed
+clone leaves the project absent, excluding that host, then next host else local.
+
+The result is `{schemaVersion:1,kind:"intake-plan",configDigest,evaluatedAt,
+request,disposition,reason,selected,terms,counts,launch?}`. Disposition describes
+the proposed placement (`stay`, `launch`, `hold`), never execution authority or
+an aggregate verdict. Each term has code, state (`pass|fail|unknown|n/a`), evidence
+and optional environmentId; counts summarize states only. Failed terms for excluded
+hosts remain visible even if another host is eligible. Local stay/continue checks
+staffing too. Exit 0 = plan/help, 1 = malformed input/config, 2 = hold/incomplete.
+
+For `launch`, `selected` binds host/environment/project, exact destination catalog
+digest, snapshot, model/options/mode and evidence. `launch` carries native destination,
+`delegatedFrom:{environmentId,threadId,title}`, clientRequestId, title and an
+acceptance-only message with task/scope/authority/routed marker/grant citation.
+Use `dispatch-plan --kind launch --recommendation <plan.json> --fleet-input
+<input.json> --now <same-time> --config-digest <same-pin>` plus role snapshot and
+selected raw catalog and `--role axstack-owner` (or the run's accepted driver role
+with the same exact pins); it replays and checks the complete intake plan before binding
+the role model/options. Never copy plan evidence fields to native launch arguments.
+
+`dispatch-plan --verify` preserves T1's `{thread,task?}` native-read shape. For
+intake launches also save `recentRuns` from the same `t3_thread_read` and the
+environmentId/projectId/fleetBinding evidence envelope. It checks native thread
+title/project, latestRunId and a matching run with nonempty startedAt. Settings
+omitted by native reads remain unknown; no retired configuration API is used.
+This proves a started run, not acceptance: follow the exact-marker, wait `next`,
+ownership, idempotent proceed and lost-launch hold rules in
+[Fleet dispatch](fleet-dispatch.md#acceptance-ownership-and-outcomes).
+
 ### Offline command
 
 `bun fleet-route.js recommend --input snapshot.json --now 100000 --json`
@@ -123,7 +196,8 @@ Applicable rung/round duties remain report-only procedural checks, not route aut
 Artifact destination project also carries workspaceRoot; only the bound local
 environment/project/workspace is eligible. Null alone never selects a route.
 
-`role` is `reader` (all nonwriter roles) or `author`. `requiredCapabilities`
+`role` is `reader` (all nonwriter roles), `author`, or the whole-task `driver`
+used by plan above. `requiredCapabilities`
 is an array of strings. An authentication requirement names the actual session
 capability; only the host proving that session is eligible. No credential
 transfer occurs. `options` is an object keyed by option ID. The adapter must

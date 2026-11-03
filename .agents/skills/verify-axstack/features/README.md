@@ -7,6 +7,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 | --- | --- | --- |
 | Install skills and inspect host setup | [Install/check/version](install.md) | Owned files, repeat install, legacy retirement/retry, stable T3 prerequisite and read-only capability gaps |
 | Recommend a worker from supplied fleet facts | [Selector/CLI/binding](dispatch.md#fleet-recommendations-and-destination-binding-c1) | Ordered stages, eligibility, config/catalog digests, destination readback, spread and clock/precision |
+| Route a whole task once at intake | [Intake plan/driver launch](dispatch.md#whole-task-intake-plan-and-driver-launch-cr-3) | Named-host pilot without prior support, automatic driver request, keyed acceptance-only launch, started-run readback and unknown-run hold |
 | Collect bounded fleet telemetry | [Sampler](telemetry.md) | Linux arithmetic, concurrent batch, deadlines/cancellation, collector clock, replayable C1 integration |
 | Route bounded local non-repository report workflows | [Artifact scope](dispatch.md#explicit-local-non-repository-report-workflows) | Shared native task, exact role/settings/ownership, SHA-256 receipts and engineering exclusions |
 | Resolve saved models and prepare dispatch | [Model/dispatch plans](dispatch.md) | Resolved model, bound instance, MATCH readback |
