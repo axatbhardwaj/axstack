@@ -61,10 +61,11 @@ describe('installer-owned instruction file', () => {
   test('upgrades pristine owned blocks and preserves edited owned blocks as conflicts', async () => {
     const { root, bundle, skills } = fixture();
     const instructions = join(root, 'AGENTS.md');
-    const old = renderInstructionBlock().replace(
-      'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
+    const old = [
+      '<!-- axstack:begin v1 -->',
       'Use Axstack for engineering work. Load the old Axstack entry skill to route the request.',
-    );
+      '<!-- axstack:end -->',
+    ].join('\n');
     writeFileSync(instructions, old);
     mkdirSync(skills, { recursive: true });
     writeFileSync(join(skills, '.axstack-manifest.json'), JSON.stringify({

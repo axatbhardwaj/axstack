@@ -50,10 +50,13 @@ function seedLegacy(f, extra = []) {
 
 function seedOlderManagedInstructions(f, instructions) {
   seedLegacy(f, ['--instructions', instructions, '--no-claude-settings']);
-  const older = readFileSync(instructions, 'utf8').replace(
-    'Do not use a harness native subagent tool for delegated work.',
+  // A fixed legacy snapshot cannot silently become current after prose edits.
+  const older = [
+    '<!-- axstack:begin v1 -->',
+    'Use Axstack for engineering work.',
     'Do not use a native subagent tool for delegated work.',
-  );
+    '<!-- axstack:end -->',
+  ].join('\n');
   writeFileSync(instructions, older);
   const manifestPath = join(f.legacy, '.axstack-manifest.json');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
