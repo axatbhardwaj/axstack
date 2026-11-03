@@ -51,7 +51,11 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    carries a sketch, include the [design lens](../axstack/references/design-lens.md)
    sketch in the approved revision's `Design` section and its `Usage` line in
    acceptance. First record the driver's
-   independent assessment, then load
+   independent assessment. For questions, consult advisers only for consequential
+   decisions and disagreements. Never dispatch advisers for every question,
+   routine factual clarification or settled preferences.
+   For those consequential decisions and disagreements and the required draft
+   rounds below, load
    [T3 runtime](../axstack/references/t3-runtime.md) before dispatching the
    configured `axstack-advisor-astra` and `axstack-advisor-opus` independently,
    without cross-reading, with the same bounded evidence and question. The

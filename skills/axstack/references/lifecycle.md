@@ -149,8 +149,10 @@ unresolved launch receipts and stalls through native state. Idle is not complete
 thread/run identity mismatches rather than borrowing identities. Retain a
 user-taken-over thread without cleanup commands.
 
-After accepting task or run completion, the driver invokes
-[axstack-cleanup](../../axstack-cleanup/SKILL.md) inline; it never dispatches cleanup work.
+At [run checkpoints](../../axstack-cleanup/SKILL.md#run-checkpoints), the driver invokes
+[axstack-cleanup](../../axstack-cleanup/SKILL.md) inline to batch eligible cleanup,
+including reviewer worktree retirement, preserving and reading back evidence first
+with every existing per-resource guard; it never dispatches cleanup work.
 Axstack creates no heartbeat or substitute scheduler.
 Tracking grants no merge, release, model-substitution, or scope authority.
 
