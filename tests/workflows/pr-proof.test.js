@@ -47,11 +47,11 @@ const rules = [
     'Update proof whenever the head revision changes in a way that affects it.',
     [/refresh|update/i, 'skip updating']],
   ['redact sensitive data before committing and posting', shape,
-    [/before (?:committing|posting|publication)/i, /committing (?:any )?proof assets?/i, /posting the description/i,
+    [/before (?:committing|you commit) (?:any )?proof assets?/i, /posting the description/i,
       /redact|mask/i, /secrets/i, /keys/i, /seed\/recovery phrases|seed and recovery phrases/i,
       /invite codes/i, /personal data/i, /private account details/i],
     'Before committing proof assets or posting the description, mask secrets, keys, seed and recovery phrases, invite codes, personal data and private account details.',
-    [/redact|mask/i, 'do not redact']],
+    [/redact|mask/i, 'do not redact'], undefined, [[/before committing/i, 'After committing']]],
   ['unredacted assets never pushed', shape,
     [/push/i, /unredacted asset/i], 'Never push an unredacted asset.',
     [/never/i, 'Always'], /never/i],
@@ -65,14 +65,14 @@ const rules = [
     [/return|save/i, 'do not return']],
 ];
 
-for (const [name, path, concepts, rewording, inversion, prohibition] of rules) {
+for (const [name, path, concepts, rewording, inversion, prohibition, extraInversions = []] of rules) {
   test(`PR proof: ${name}; removal/inversion red, rewording green`, () => {
     const source = path === shape
       ? read(path).split('## PR body')[1]?.split('\n## ')[0] ?? '' : read(path);
     const accepts = (text) => prohibition
       ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
     checkRule(sentences(source).join('. '), accepts, rewording,
-      [inversion, [/^/, 'Do not ']], concepts);
+      [inversion, [/^/, 'Do not '], ...extraInversions], concepts);
   });
 }
 
@@ -94,6 +94,19 @@ test('Owner row permits only proof-branch asset commits; removal/inversion red, 
     'Stores proof assets only on the proof branch under PR body.',
     [[/only/i, 'anywhere beyond the'], [/^/, 'Do not ']], concepts);
 });
+
+for (const role of ['watch', 'review']) {
+  test(`${role} driver exception permits only proof-branch assets; removal/inversion red, rewording green`, () => {
+    const source = sentences(read(`skills/axstack-${role}/SKILL.md`))
+      .find((sentence) => /driver/i.test(sentence) && /proof assets/i.test(sentence)) ?? '';
+    const concepts = [/commits?|stores?/i, /proof assets/i, /only/i, /proof branch/i, /PR body/i];
+    // This sentence grants narrow permission; retain rejection of "may not".
+    const accepts = (text) => requires(text.replace(/\bmay (?=(?:commit|store)\b)/gi, ''), ...concepts);
+    checkRule(source, accepts,
+      'Exception: the driver may store proof assets only on the proof branch per PR body.',
+      [[/only/i, 'anywhere beyond the'], [/^/, 'Do not ']], concepts);
+  });
+}
 
 test('UI verifier points to the shared PR body proof contract', () => {
   expect(read(ui)).toMatch(/\[[^\]]*PR Proof section[^\]]*\]\(pr-shape\.md#pr-body\)/i);
