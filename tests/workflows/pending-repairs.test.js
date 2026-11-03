@@ -1,17 +1,42 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 // Structural contract checks only. Fresh model evaluation remains separate.
 
-test('repairs: substantive runs require the explicitly loaded audit skill and holdouts', () => {
+test('repairs: audits retain the explicitly loaded audit skill and holdouts', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/(?:enabled by default|defaults on)[^.]*substantive run/i);
   expect(lifecycle).toMatch(/load[^\n]*axstack-audit\/SKILL\.md/i);
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });
+
+for (const path of ['skills/axstack/references/lifecycle.md', 'skills/axstack-audit/SKILL.md']) {
+  const source = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  test(`repairs: ${path} retains default auditing except for small-path runs`, () => {
+    const concepts = [/auditing/i, /every substantive run/i,
+      /(?:except|other than) small-path runs/i, /by default/i];
+    const appliesToAll = (text) => sentences(text).some((sentence) => requires(sentence, ...concepts)
+      && !/\b(?:on|in|for|to) (?:the )?(?:full[- ]path|implement(?:ation)?\b)/i.test(sentence));
+    checkRule(source, appliesToAll,
+      'Other than small-path runs, auditing is enabled by default for every substantive run.',
+      [[/(?:except|other than) small-path runs/i, 'on the full path'],
+        [/(?:except|other than) small-path runs/i, 'in Implement only'],
+        [/(?:except|other than) small-path runs/i, 'including small-path runs'],
+        [/every substantive run/i, 'every substantive run on the full path'],
+        [/every substantive run/i, 'every substantive run in Implement only'],
+        [/by default/i, 'only on request']], concepts);
+  });
+  test(`repairs: ${path} limits small-path auditing to explicit triggers`, () => {
+    const concepts = [/small-path runs/i, /audit/i, /only/i, /on request/i,
+      /\bmaterial deviation/i, /repeated repairs/i];
+    checkRule(source, (text) => requires(text, ...concepts),
+      'Small-path runs dispatch audit only on request, on a material deviation or after repeated repairs.',
+      [[/only/i, 'also'], [/small-path runs/i, 'full-path runs']], concepts);
+  });
+}
 
 test('repairs: both advisers cover Align, Spec, and consequential decisions', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {

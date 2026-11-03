@@ -51,6 +51,43 @@ materially changed but unaccepted identity holds affected work; safe
 investigation may continue under the standing contracts. Proceed only with a
 valid recorded identity and revisions; otherwise report the hold and exact gap.
 
+### Small-change path
+
+Use this lean path only for a recorded small-change intent with acceptance
+checks, exclusions and one PR that is not a risk path. Substantial work uses
+the full path below.
+This path keeps §§2-5's ownership, isolation, strict TDD and verification
+requirements and §6's publication, review, repair, native watch and merge gates;
+it omits full-path step-back advice until escalation.
+
+1. Keep one isolated author as the sole writer and return repairs to the same author.
+   Workers never push. The driver verifies author proof and evidence before
+   publication, publishes the exact candidate under candidate-publication and
+   confirms remote readback.
+2. Select one cross-provider reviewer from actual author provenance.
+   Never skip cross-model review for a small change. For eligible work use the
+   combined reviewer under the
+   [applicable diligence gate](../axstack/references/diligence.md#applicable-diligence-gate).
+   Otherwise require separate diligence, including unknown eligibility.
+   The same gate's exact head/base receipts, `Scope: FINDINGS` repair and
+   `Scope: UNKNOWN` hold remain mandatory. Single-provider presets or unavailable
+   mapped reviewers hold review under §6; separate diligence cannot replace it.
+3. After publication and remote readback, arm or join the native watch under §6.
+   The owning watch merges only under [watch §5](../axstack-watch/SKILL.md#5-state-readiness-precisely)
+   and its full predicate. Keep checkpoint cleanup and Close-out under §6.
+4. Escalate to the full path on a second PR, a risk path, review round 3 or a
+   design conflict. Risk path includes the
+   [merge-risk list](../axstack-watch/references/readiness.md), changes to merge,
+   dispatch or authority rules, and anything the driver or reviewer flags as a
+   security, data-loss or major-design concern. This classification changes
+   review depth only; it grants no merge clearance.
+
+Record the trigger and reconcile scope, dependencies and current receipts on
+escalation; preserve the author and review-round budget. Reopen material scope
+or design decisions through shared routing before dependent repair.
+Step-back advisers run only on the full path after escalation, under §6's
+counted-round and unused-budget conditions. Audits follow lifecycle triggers.
+
 ## 2. Establish one owner and one writer
 
 For substantive delegated or resumable work, use the shared
@@ -287,7 +324,8 @@ For each PR:
    the round-3 step-back.
    Failed checks and post-readiness feedback increment `repairs` but never count
    as failing review rounds.
-   On any counted failing review round that leaves `rounds` at 3 or more while
+   Small-path work first escalates to the full path at review round 3.
+   On the full path, on any counted failing review round that leaves `rounds` at 3 or more while
    `step-back: unused`, the driver steps back with both `axstack-advisor-astra`
    and `axstack-advisor-opus` to assess exactly one extra repair round (round 4
    in the normal case).

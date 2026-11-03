@@ -13,6 +13,9 @@ When this run lacks a reference read or the installed version differs from
 the version recorded at the last reference read, the driver must re-read
 the installed phase SKILL.md and every shared reference it will use before any
 dispatch, receipt consumption, settlement or merge.
+Re-read only the files used by the current path: its installed phase entry and
+every shared reference it will use, rather than unrelated phases or branches.
+When the path changes, read newly needed references before using them.
 After re-reading, the driver must record the installed version and reference
 read time in the run record.
 The driver must never rely on an in-context copy from an earlier run or an

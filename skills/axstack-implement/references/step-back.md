@@ -1,5 +1,8 @@
 # Round-3 step-back
 
+This step-back procedure applies only on the full path. Small-change work
+escalates before using it; retain its existing author and review-round budget.
+
 An unavailable step-back seat counts as no agreement and falls to the user with the advised step-back card.
 Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for
 seat attempts, waits, gaps and cards, including the round-4 card's delta-only adviser reuse.

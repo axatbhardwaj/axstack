@@ -191,9 +191,14 @@ Build no custom scheduler, state engine or legacy fallback. See
 
 ## Audit hook (close-out and meaningful checkpoints)
 
-Audit measurement is enabled by default for every substantive run; dispatch
-follows [Close-out](#close-out) or a material-deviation/repeated-repair
-checkpoint. An `axstack-audit` run is excluded; it launches no children.
+Auditing is enabled for every substantive run by default, except small-path runs.
+Small-path runs dispatch audit only on request, on a material deviation or
+after repeated repairs. Dispatch follows [Close-out](#close-out) or a
+material-deviation/repeated-repair checkpoint.
+Never dispatch audit on every small run. Record the small-path trigger or its
+absence in the run record; non-zero counts alone do not require a small-path
+audit. An `axstack-audit` run is
+excluded; it launches no children.
 For supported nonrepo report runs, keep the originating workflow and inherited
 auditor roles in [Local artifacts](local-artifacts.md); standalone audit uses
 workflow audit and never audits itself. Conditional advice uses that matrix
@@ -207,7 +212,9 @@ nothing without tested independent review.
 Close-out requires the [close-out acceptance table](run-record.md#close-out-acceptance).
 
 PRs merge by forge state; close out: (1) settle every T3 worker run and archive eligible threads. Settle each worker thread with `t3_thread_organize` only if needed and read back `settled: true`, because a finished task does not count. For merged or closed PR authors, follow the [native/manual read-first path](t3-runtime.md#native-pr-links-and-watches); (2) compact record with counts and denominators—user
-interventions/deviations from plan/repairs; (3) `axstack-auditor`: settle
+interventions/deviations from plan/repairs; (3) `axstack-auditor`: for small-path runs, settle
+when an audit-hook trigger applies. Otherwise record `not triggered` with the counts
+(`counts zero` when all are zero). All other substantive runs settle
 non-zero/requested, else `counts zero`. A base auditor preflight rejection
 (no delegated task started) records `auditor: UNKNOWN (unlaunchable)` with the
 attempted route and error as the archive receipt; no substitution. A launched
@@ -217,7 +224,7 @@ use `axstack-cleanup`, remove the run's own scheduled tasks under
 (5) mark the
 [Run record](run-record.md) `Archived`. `Archived`—one each:
 settlement receipt; compact record path; close-out acceptance table; auditor decision plus settlement
-receipt, `counts zero`, or the unlaunchable UNKNOWN archive receipt; scheduled-task,
+receipt, `counts zero`, small-path `not triggered` with counts, or the unlaunchable UNKNOWN archive receipt; scheduled-task,
 release, and ticket receipts; archive timestamp.
 `active`/receipt-incomplete record: close-out pending, never done. One-step
 lookups exempt.
