@@ -6,7 +6,7 @@ const runtime = () => readFileSync(`${import.meta.dir}/../../skills/axstack/refe
 const rules = [
   ['native destination', /native (?:forwarded|destination) (?:APIs|reads)/i, /before dispatch/i, /must capture|shall collect/i,
     /capabilit/i, /project/i, /access/i],
-  ['unknown effective settings', /t3_thread_configuration.*unavailable/i, /effective.*unknown/i, /must not invent|never invent/i],
+  ['unknown effective settings', /native task status and thread reads/i, /effective.*unknown/i, /must not invent|never invent/i],
   ['ambiguous submission', /ambiguous submission|submission ambiguity/i, /clientRequestId/i,
     /remote task/i, /unknown liveness/i, /prohibits? replacement|blocks? replacement/i],
   ['remote terminal', /must read task_status|shall inspect task_status/i, /task_status.*origin/i, /terminal.*destination/i, /latest.*run/i,

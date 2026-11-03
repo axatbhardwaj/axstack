@@ -48,12 +48,13 @@ The full pass records in Watermarks `Quiet gate:` as the sorted list and
 The sections below govern full passes; a quiet exit bypasses their teardown
 except the guarded pass-end self-settle.
 
-Configure the lane thread via `t3_thread_configure` with the `axstack-owner`
-binding and verify its read-back. Then `schedule_task` uses the packaged prompt,
+The lane thread must use the recorded `axstack-owner` binding and verify its
+readback through `t3_thread_read`. Then `schedule_task` uses the packaged prompt,
 hourly with `everyMs:3600000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
 Record the schedule ID, project, lane binding and pass thread/run identities.
-Each pass compares its own `t3_thread_configuration` with the recorded binding
+Each pass compares native task status and thread reads for settings readback with the recorded binding
 after any owner-only instance update under [Provider bindings](t3-runtime.md#preflight-and-binding), before admission.
+Unreturned effective fields must stay unknown and hold admission when required.
 A binding mismatch holds admission.
 Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispatch,
 completion and cleanup boundaries; a manager never checks out a PR branch in

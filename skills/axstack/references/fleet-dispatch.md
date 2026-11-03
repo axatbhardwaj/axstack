@@ -29,9 +29,8 @@ Engineering/code review and remote routes retain their existing rules.
    Discovery is not proof that the provider executes. Unknown catalog, project,
    mode, options, access, link or required session excludes that destination.
 3. Keep the model/effort/provider pins from the run; do not re-resolve to another
-   model when quota/auth/timeout fails. Missing native `t3_thread_configuration`
-   means unavailable effective fields stay unknown. Catalog runtimeModes advertise
-   provider restrictions; they do not prove effective access. Native task/thread facts supply
+   model when quota/auth/timeout fails. Unreturned effective fields must stay unknown. Catalog runtimeModes advertise
+   provider restrictions; they do not prove effective access. Settings readback must use native task status and thread reads, preserving
    only the fields actually returned. A worker assertion is not native readback.
 4. Normalize current driver assignments and the pending batch as below. Sample
    telemetry with C2's bounded command, then recompute C1 immediately before each
@@ -215,8 +214,8 @@ existing run-ID path. Saved inputs cannot authenticate their own provenance.
 `inspectFleetReceipt(receipt,{attempt,recommendation,recommendationJSON,now})`
 returns terms, never authority. Existing dispatch-plan --verify can additionally
 consume fleetAttempt/fleetReceipt in its saved envelope; save --out to retain
-full receiptTerms. Legacy configuration-only MATCH checks supplied configuration,
-not native completion. Stable receipt-* / destination-* terms identify the exact
+full receiptTerms. Settings-only MATCH checks supplied native thread/task reads
+and child identity, never terminal completion. Stable receipt-* / destination-* terms identify the exact
 hold and evidence; unknown means incomplete. A passing receipt is no merge grant.
 
 ## Retrieval and retirement

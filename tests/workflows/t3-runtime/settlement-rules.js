@@ -1,7 +1,8 @@
 export const settlementRules = [
   ["delegate untouched", [/\btracked/i, /\buntracked/i, /\bfiles/i, /\buntouched/i]],
   ["delegate evidence", [/\bwrites only/i, /<run>\/evidence\/<key>\//]],
-  ["probe delegates", [/\breviewers/i, /\bdebug investigators/i, /\bexecution investigators/i, /\bUI verifier/i, /\bdelegate_task/, /\basync/i, /\btitle = role-labelled dispatch key/i]],
+  ["probe delegates", [/\bdebug investigators/i, /\bexecution investigators/i, /\bUI verifier/i, /\bdelegate_task/, /\basync/i, /\btitle = role-labelled dispatch key/i]],
+  ["reviewer delegates", [/\bauthored reviewers/i, /delegate_task/, /async/i, /title = role-labelled dispatch key/i, /isolation:"worktree"/]],
   ["probe checkout", [/\bdisposable/i, /\bdetached/i, /\bcandidate SHA/i, /\bpinned base/i, /git worktree add --detach/]],
   ["probe cd", [/\bbrief/i, /\brequir/i, /\bcd/i, /into it/i]],
   ["probe outputs", [/\bdisposable probes/i, /\boutputs/i, /<run>\/evidence\/<key>\//]],

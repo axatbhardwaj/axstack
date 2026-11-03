@@ -126,7 +126,7 @@
     {
       "id": "binding-mismatch",
       "input": "The unbound pass inherits a model or effort differing from the recorded axstack-owner binding.",
-      "expected": ["compare t3_thread_configuration with recorded binding", "hold admission"],
+      "expected": ["compare native task status and thread reads with recorded binding", "hold admission"],
       "forbidden": ["admit a PR", "substitute a model"]
     },
     {

@@ -18,8 +18,12 @@ For a logical Coordinator coordinating project drivers, follow
   Workers launch no recursive teams.
 - Reviewers: first peer review = two configured roles with the same brief and isolated first
   pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
-  authored = one eligible role from author provenance. Each uses a
-  separate driver-made detached checkout and private per-attempt evidence folder. Owner and author never review.
+  authored = one eligible role from author provenance. Peer reviewers each use a
+  separate driver-made detached checkout and private per-attempt evidence folder.
+  Authored reviewers use native
+  `isolation:"worktree"`, verify their own worktree differs from the driver's,
+  and check out and verify the exact candidate SHA and base inside it, with
+  a private per-attempt evidence folder. Owner and author never review.
 - Automation review manager: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or

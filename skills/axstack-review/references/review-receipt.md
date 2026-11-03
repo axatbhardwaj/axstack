@@ -3,7 +3,7 @@
 ```text
 Mode: <peer | authored>
 Reviewer: <reviewer role + provider/model/effort receipt> session <id> rev <candidate sha> base <current base>
-Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>
+Workspace: <T3 taskId/childThreadId/runId + authored: native worktree absolute path | peer: detached checkout absolute path>
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Coverage: COMPLETE | INCOMPLETE — <angles + acceptance + executable evidence checked>

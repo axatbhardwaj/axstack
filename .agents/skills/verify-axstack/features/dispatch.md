@@ -3,6 +3,12 @@
 Entry points: `skills/axstack/scripts/{resolve-models,dispatch-plan}.js`;
 harness inputs: `tests/workflows/fixtures/{t3-capabilities,dispatch-plan}.json`.
 Prerequisites: Launch; saved fixture catalogs only. Plans never dispatch work.
+`--verify` takes `{thread: <t3_thread_read.thread>, task?: <task_status>}` from
+structured native reads. `thread.threadId` is required. Task evidence must name
+the same child through `childThreadId` or `remoteChild.threadId`; both IDs must
+agree when returned. Remote reads require the envelope's `environmentId` to
+match `task.remoteChild.environmentId`. Unreturned required fields stay
+`unknown` and hold; never fill them from requested settings or the catalog.
 
 ```bash
 doctor > "$EVIDENCE/dispatch-doctor.log" 2>&1
@@ -13,17 +19,21 @@ bun "$SCRIPTS/resolve-models.js" --provider codex --class sol \
 bun "$SCRIPTS/dispatch-plan.js" --role axstack-author --roles "$ROLES" \
   --capabilities "$CAPS" --kind task \
   --out "$EVIDENCE/plan.json" > "$EVIDENCE/plan.log"
-# Independent fixture in T3 configuration shape; task plans emit target instead.
-bun -e 'await Bun.write(process.env.TMPDIR + "/configuration.json", JSON.stringify({ modelSelection: { instanceId: "codex", model: "gpt-6.1-sol", options: [{ id: "reasoningEffort", value: "high" }] }, runtimeMode: "full-access" }));'
+# Independent synthetic native reads, retained with the verification evidence.
+bun -e 'await Bun.write(process.env.EVIDENCE + "/native-reads.json", JSON.stringify({
+  thread: {threadId: "fixture-child", providerInstanceId: "codex", model: "gpt-6.1-sol", runtimeMode: "full-access"},
+  task: {childThreadId: "fixture-child", providerInstanceId: "codex", model: "gpt-6.1-sol",
+    options: [{id: "reasoningEffort", value: "high"}]}}));'
 bun "$SCRIPTS/dispatch-plan.js" --role axstack-author --roles "$ROLES" \
   --capabilities "$CAPS" --kind task \
-  --verify "$TMPDIR/configuration.json" > "$EVIDENCE/plan-verify.log"
+  --verify "$EVIDENCE/native-reads.json" > "$EVIDENCE/plan-verify.log"
 test "$(tail -n 1 "$EVIDENCE/plan-verify.log")" = MATCH
 bun -e 'const p = await Bun.file(process.env.EVIDENCE + "/plan.json").json(); const m = await Bun.file(process.env.EVIDENCE + "/model.json").json(); const s = await Bun.file(process.env.EVIDENCE + "/plan.log").json(); if (m.model !== "gpt-6.1-sol" || p.target.providerInstanceId !== "codex" || p.target.model !== m.model || p.runtimeMode !== "full-access" || s.reportPath !== process.env.EVIDENCE + "/plan.json" || s.omittedPayloadFields !== 3 || p.isolation !== "worktree" || s.target !== undefined) throw Error("fixture binding or saved-payload summary mismatch");'
 ```
 
 Proof: resolution outputs the fixture Sol model; the delegated task plan binds the
-fixed Codex instance, full-access mode and worktree isolation; MATCH is the readback's last line.
+fixed Codex instance, full-access mode and worktree isolation; native thread/task
+readback ends in MATCH. The fixture is independent of the requested plan.
 With `--out`, stdout is a summary; copy dispatch fields from the saved JSON.
 The resolver accepts only Codex, Claude and Grok workflow providers. Run
 `bun run test tests/installer/installed-preset-routing.test.js tests/workflows/resolve-models.test.js tests/workflows/dispatch-plan.test.js`
@@ -114,8 +124,10 @@ await Bun.write(root + "/fleet-roles.json", JSON.stringify({version: 1, roles: [
     thinkingOptionId: "high", modeId: "full-access"}]}));
 await Bun.write(root + "/fleet-pin.txt", input.configDigest);
 await Bun.write(root + "/fleet-readback.json", JSON.stringify({environmentId: "env-worker-a",
-  projectId: "project-worker-a", runtimeMode: "full-access",
-  modelSelection: {instanceId: "codex", model: "gpt-6.1-sol", options: {reasoningEffort: "high"}},
+  projectId: "project-worker-a",
+  thread: {threadId: "fleet-child", providerInstanceId: "codex", model: "gpt-6.1-sol", runtimeMode: "full-access"},
+  task: {childThreadId: null, remoteChild: {environmentId: "env-worker-a", threadId: "fleet-child"},
+    providerInstanceId: "codex", model: "gpt-6.1-sol", options: [{id: "reasoningEffort", value: "high"}]},
   fleetBinding: {configDigest: input.configDigest, destinationSnapshotId: "snapshot-worker-a",
     destinationCapabilitiesDigest: digest}}));
 if (NOW !== 100000) throw Error("fixture evaluation time drift");'

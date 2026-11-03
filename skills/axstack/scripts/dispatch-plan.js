@@ -8,14 +8,14 @@ const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--o
 const nonempty = (value) => typeof value === 'string' && value.trim().length > 0;
 const help = `Usage: bun dispatch-plan.js --role <id> --roles <roles.json>
   --capabilities <saved.json> --kind task|launch
-  [--verify <configuration.json>] [--out <report.json>]
+  [--verify <native-reads.json>] [--out <report.json>]
 Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabilities capabilities.json --kind task
 
 --role          Role ID from the supplied snapshot
 --roles         Installed-style roles.json (version 1, roles array)
 --capabilities  Saved orchestrator_capabilities JSON; reuse the run's saved snapshot
 --kind          task emits target and, for axstack-author, isolation:"worktree"; launch emits modelSelection
---verify        Compare t3_thread_configuration JSON; print evidence then MATCH or each mismatch
+--verify        Compare saved native thread/task reads; print evidence then MATCH or each mismatch
 --out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
 --recommendation Saved fleet-route recommendation; requires all following fleet flags
 --fleet-input   Saved complete selector input, including exact reviewed config bytes
@@ -29,11 +29,20 @@ Results name input paths. Plan output over 4096 bytes requires --out.
 Large verification retains its exit code, prints mismatches and advises --out on stderr.
 An unwritable --out still prints verification mismatches and retains exit 2.
 An omitted provider label is unknown; exact instance/model/options/mode checks still apply.
+Verification input: {"thread": <t3_thread_read.thread>, "task": <task_status (optional)>}.
+Save structured native data, not message text or requested dispatch settings.
+thread fields: threadId (required non-empty ID), providerInstanceId, model, runtimeMode, options (if returned).
+task fields: childThreadId (or remoteChild.threadId), providerInstanceId, model, options (if returned).
+When task is supplied, its child thread ID must equal thread.threadId.
+Local and remote child IDs must agree when both are returned.
+Remote reads also require envelope environmentId matching task.remoteChild.environmentId.
+Compare every returned setting; conflicting reads hold. Unreturned fields are unknown
+and hold required checks; never fill them from the plan or catalog.
 Never dispatches or changes snapshots. Reuse recorded exact model pins as given.
 Fleet --capabilities is the selected destination's raw saved catalog, digest-bound
 by its destination facts. It is never the origin catalog by default.
 Fleet verification requires environmentId/projectId and fleetBinding alongside
-the effective T3 configuration. C3 collects that host-qualified evidence envelope.
+the native thread/task reads. C3 collects that host-qualified evidence envelope.
 Optional input.nativeDestination validates saved native forwarded reads.
 Explicit local-artifact scope requires those reads and kind task; emits isolation:"shared".
 artifactScope is preserved evidence only, never a native tool argument.
@@ -84,21 +93,39 @@ function normalizedOptions(options) {
 
 function verify(configuration, provider, model, options, fleet) {
   const mismatches = [];
-  const selection = configuration?.modelSelection;
+  const { thread, task } = configuration ?? {};
+  const sources = [thread, task].filter((source) => source && typeof source === 'object');
   const compare = (field, expected, observed, equal = expected === observed) => {
-    if (!equal) mismatches.push(`${field}: ${observed == null ? 'unknown' : 'fail'}; `
+    if (!equal) mismatches.push(`${field}: ${observed == null || expected == null ? 'unknown' : 'fail'}; `
       + `expected ${JSON.stringify(expected)}; observed ${JSON.stringify(observed) ?? 'missing'}`);
   };
-  // T3 may omit the legacy provider field: the exact instance ID is its binding.
-  if (selection?.provider != null) {
-    compare('provider', provider, selection.provider,
-      (selection.provider === 'claude' ? 'claudeAgent' : selection.provider) === provider);
+  compare('threadId', 'non-empty native thread ID', thread?.threadId, nonempty(thread?.threadId));
+  // A field is unknown only when neither native read returns it.
+  for (const [field, nativeField, expected] of [
+    ['instanceId', 'providerInstanceId', provider], ['model', 'model', model],
+    ['options', 'options', options], ['runtimeMode', 'runtimeMode', 'full-access'],
+  ]) {
+    const observed = sources.map((source) => source[nativeField]).filter((value) => value != null);
+    if (!observed.length) compare(field, expected, undefined);
+    for (const value of observed) compare(field, expected, value,
+      field === 'options' ? normalizedOptions(expected) === normalizedOptions(value) : expected === value);
   }
-  compare('instanceId', provider, selection?.instanceId);
-  compare('model', model, selection?.model);
-  compare('options', options, selection?.options,
-    normalizedOptions(options) === normalizedOptions(selection?.options));
-  compare('runtimeMode', 'full-access', configuration?.runtimeMode);
+  if (task != null) {
+    if (task.childThreadId != null && task.remoteChild?.threadId != null) {
+      compare('childThreadId', task.remoteChild.threadId, task.childThreadId);
+    }
+    if (task.remoteChild != null) {
+      compare('remoteChild.environmentId', configuration?.environmentId, task.remoteChild.environmentId,
+        nonempty(configuration?.environmentId) && task.remoteChild.environmentId === configuration.environmentId);
+    }
+    const childId = task.remoteChild?.threadId ?? task.childThreadId;
+    compare('childThreadId', thread?.threadId, childId,
+      nonempty(thread?.threadId) && childId === thread.threadId);
+  }
+  // T3 may omit the provider label: the exact instance ID is its binding.
+  const labels = sources.map((source) => source.provider).filter((value) => value != null);
+  for (const label of labels) compare('provider', provider, label,
+    (label === 'claude' ? 'claudeAgent' : label) === provider);
   if (fleet) {
     for (const [field, expected] of Object.entries(fleet.destination)) compare(field, expected, configuration?.[field]);
     for (const [field, expected] of Object.entries(fleet.fleetBinding)) compare(field, expected, configuration?.fleetBinding?.[field]);
@@ -116,7 +143,7 @@ function verify(configuration, provider, model, options, fleet) {
     });
     for (const term of receiptTerms) if (term.state !== 'pass') mismatches.push(`${term.code}: ${term.state}; evidence ${JSON.stringify(term.evidence)}`);
   }
-  return { mismatches, ...(receiptTerms ? { receiptTerms } : {}), ...(selection?.provider == null ? {
+  return { mismatches, ...(receiptTerms ? { receiptTerms } : {}), ...(!labels.length ? {
     providerEvidence: `provider: unknown; expected ${JSON.stringify(provider)}; observed missing; `
       + 'provider binding checked via instanceId and saved capabilities',
   } : {}) };

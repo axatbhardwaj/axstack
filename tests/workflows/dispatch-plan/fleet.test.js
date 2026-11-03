@@ -36,7 +36,7 @@ function fleet() {
   const readback = () => ({ ...configuration(), environmentId: 'env-worker-a', projectId: 'project-worker-a',
     fleetBinding: { configDigest: input.configDigest, destinationSnapshotId: 'snapshot-worker-a',
       destinationCapabilitiesDigest: digest() },
-    modelSelection: { ...configuration().modelSelection, options: { reasoningEffort: 'high', serviceTier: 'priority' } } });
+    task: { ...configuration().task, options: { reasoningEffort: 'high', serviceTier: 'priority' } } });
   const refreshCatalog = () => {
     f.save('capabilities', f.capabilities);
     input.destinations.forEach((d) => { d.capabilitiesDigest = digest(); });
@@ -92,8 +92,8 @@ test('fleet readback detects destination, snapshot, settings and config mismatch
     ['destinationSnapshotId', (v) => { v.fleetBinding.destinationSnapshotId = 'other-snapshot'; }],
     ['destinationCapabilitiesDigest', (v) => { v.fleetBinding.destinationCapabilitiesDigest = '0'.repeat(64); }],
     ['configDigest', (v) => { v.fleetBinding.configDigest = '0'.repeat(64); }],
-    ['options', (v) => { delete v.modelSelection.options.serviceTier; }],
-    ['runtimeMode', (v) => { v.runtimeMode = 'auto'; }],
+    ['options', (v) => { delete v.task.options.serviceTier; }],
+    ['runtimeMode', (v) => { v.thread.runtimeMode = 'auto'; }],
     ['environmentId', (v) => { delete v.environmentId; }],
   ]) {
     const value = f.readback(); change(value);
