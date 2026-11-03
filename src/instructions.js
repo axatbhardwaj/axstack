@@ -15,7 +15,7 @@ export function renderInstructionBlock() {
     'Use `t3_thread_launch` as a rare author fallback only when worktree isolation is unavailable following an explicit user request for a new thread and record each use in the run record.',
     'Follow `references/t3-runtime.md` in the installed `axstack` skill for the runtime contract.',
     'At new-task intake before the first worker dispatch, follow `references/fleet-dispatch.md` and `references/fleet-route-schema.md` with current routing facts.',
-    'Route a whole task at most once using `bun <installed-axstack>/scripts/fleet-route.js plan --facts <facts-dir> --now <epoch-ms> --config ~/.config/haoshoku/fleet-routing.json --config-digest <run-pinned-sha256> --json`; missing intakeRouting means false and named hosts opt out of automatic selection.',
+    'Route a whole task at most once using `bun <installed-axstack>/scripts/fleet-route.js plan --facts <facts-dir> --now <epoch-ms> --config ~/.config/haoshoku/fleet-routing.json --config-digest <run-pinned-sha256> --json`; missing intakeRouting means false and an explicit named host (pilot) needs no support record.',
     'Scheduled work, status asks and follow-ups stay local; preserve the routed marker and keep every worker local inside the task without per-dispatch routing.',
     'Bind the selected destination to explicit `environmentId`, `projectId`, provider, model, options and `runtimeMode` from current destination observations.',
     'Never let native main/UI balancing override the explicit worker destination.',

@@ -1,6 +1,8 @@
 import { test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, requires, prohibits, sentences } from './prose-contract.js';
+import { checkRule, sentences } from './prose-contract.js';
+
+const denied = /\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i;
 
 const source = () => readFileSync(`${import.meta.dir}/../../skills/axstack/references/fleet-dispatch.md`, 'utf8')
   .replaceAll('`', '').replace(/\s+/g, ' ');
@@ -9,12 +11,12 @@ const rules = [
     'Route only new user-started tasks at intake before the first worker dispatch.'],
   ['scheduled exclusion', [/scheduled/i, /status/i, /follow.up/i, /stay local/i],
     'Scheduled work, status requests and follow-up work must stay local.'],
-  ['named host opt-out', [/must/i, /named host/i, /automatic/i, /opt.out/i],
-    'The driver must honor a named host as an automatic-routing opt-out.'],
+  ['explicit named host (pilot)', [/must/i, /explicit named host/i, /pilot/i, /placement request/i],
+    'The driver must honor the placement request for an explicit named host (pilot).'],
   ['once', [/must/i, /routed marker/i, /prevent/i, /second routing/i, /mid.task/i],
     'The driver must use the routed marker to prevent second routing and mid-task hand-off.'],
-  ['support', [/must/i, /support/i, /launching host/i, /provider/i, /first unnamed intake/i],
-    'The pilot must record support per launching host and provider from the first unnamed intake.'],
+  ['support', [/must/i, /write/i, /support/i, /launching host/i, /provider/i, /named.host pilot/i, /outcome/i],
+    'The driver must write support per launching host and provider from the named-host pilot outcome.'],
   ['clone', [/must/i, /clone/i, /through T3/i, /missing/i, /failed clone/i, /ineligible/i],
     'The driver must clone a missing repo through T3 and a failed clone makes the host ineligible.'],
   ['acceptance only', [/must/i, /first run/i, /only/i, /acceptance/i, /AXSTACK-ACCEPT/i, /AXSTACK-HANDBACK/i],
@@ -29,6 +31,10 @@ const rules = [
     'With no launch call because of unsupported runtime, no eligible host or pre-launch failure, the origin must stay local.'],
   ['handback', [/must/i, /AXSTACK-HANDBACK/i, /continue locally/i],
     'After AXSTACK-HANDBACK the origin must continue locally.'],
+  ['handback terminates routing', [/hand.back/i, /terminal/i, /routed marker/i, /do not try another destination/i],
+    'Hand-back is terminal for routing, preserve the routed marker and do not try another destination.'],
+  ['zero matches holds', [/zero matches/i, /after a launch call/i, /holds?/i],
+    'Zero matches after a launch call require a hold.'],
   ['retry', [/must/i, /error/i, /lost.*reply/i, /retry once/i, /same clientRequestId/i],
     'On error or a lost launch reply, the origin must retry once with the same clientRequestId.'],
   ['search all', [/must/i, /launch key/i, /fully paginated/i, /includeSubagents:true/i, /destination/i],
@@ -43,8 +49,10 @@ const rules = [
 
 for (const [name, concepts, equivalent] of rules) test(`intake semantic contract: ${name}`, () => {
   const accepts = (value) => sentences(value).some((s) => concepts.every((c) => c.test(s))
-    && requires(s.replace(/no launch call|no eligible host|never starts|without exactly one marker/gi, 'condition'), /^/));
-  checkRule(source(), accepts, equivalent, [[/must|only/i, 'skip']], concepts);
+    && !denied.test(s.replace(/no launch call|no eligible host|never starts|without exactly one marker|do not try another destination/gi, 'condition')));
+  const inversion = name === 'handback terminates routing' ? [/do not try/i, 'may try']
+    : name === 'zero matches holds' ? [/hold/i, 'skip'] : [/must|only/i, 'skip'];
+  checkRule(source(), accepts, equivalent, [inversion], concepts);
 });
 
 for (const [name, concepts, equivalent] of [
@@ -52,6 +60,6 @@ for (const [name, concepts, equivalent] of [
   ['inside task local', [/never/i, /per.dispatch routing/i, /inside/i, /task/i], 'Never require per-dispatch routing inside a task; all workers stay local.'],
 ]) test(`intake prohibition: ${name}`, () => {
   checkRule(source(), (s) => sentences(s).some((sentence) => concepts.every((c) => c.test(sentence))
-    && prohibits(sentence.replace(/first may exist/gi, 'first exists'), /never/i, /^/)),
+    && !denied.test(sentence.replace(/first may exist/gi, 'first exists').replace(/never/i, ''))),
   equivalent, [[/never/i, 'always']], concepts.slice(1));
 });

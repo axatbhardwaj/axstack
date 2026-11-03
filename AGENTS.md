@@ -44,7 +44,7 @@
 - Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
 - Only the new helpers `fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness` and `run-init`
   follow this rule; the existing scripts retain their behavior.
-  Fact and plan helpers (`dispatch-plan`, `pr-shape`, `readiness` without `--run`)
+  Fact and plan helpers (`fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness` without `--run`)
   use explicit inputs, read-only `git`/`gh` or saved T3 JSON, output to stdout
   or a caller-given path, and keep no state between calls.
   Writer helpers (`run-init`, `readiness --run`) disclose every side effect in

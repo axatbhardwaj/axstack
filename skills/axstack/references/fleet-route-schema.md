@@ -46,15 +46,15 @@ Plan uses the schema-1 recommendation inputs below, extended as follows:
 | `origin.providerInstanceId` | Actual launching provider; runtime support is keyed here, not to the requested destination provider |
 | `intake.kind`, `intake.willDispatch` | `new-task` and true for a new user task before its first worker dispatch; scheduled/status/follow-up work stays local |
 | `intake.routed` | true prevents a second decision or mid-task hand-off; origin records false on first intake |
-| `intake.namedHost` | Optional configured host ID, or `here`; opts out of automatic selection; named remote pilots still require support/authority/preflight |
+| `intake.namedHost` | Explicit named host (pilot): configured host ID, or `here`; needs no support record, but still requires authority/preflight; unknown ID returns `routing unknown host` and must be reported to the user |
 | `intake.launchKey` | Task-unique stable key, used as launch clientRequestId and in the title |
 | `intake.taskText` | Exact user task text |
 | `intake.scope` | `{identity,content}` or `{identity,destinationRef}` readable on destination; acceptance run verifies readability |
 | `intake.authority`, `intake.grantCitation` | Exact bounded authority and citation of explicit user request or accepted standing grant |
 | `staffing` | `{author:{providerInstanceId,model},reviewer:{providerInstanceId,model},advisers:[{providerInstanceId,model},...]}`; author/reviewer driverKind must differ |
 | `nativeDestinations` | Map keyed by environmentId, each value is the saved nativeDestination read envelope set below, including fully paginated projectList and exact capabilities.valueText |
-| `config.intakeRouting` | true enables automatic decisions; missing = false; explicit named-host pilots bypass only this switch |
-| `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}` from pilot runtime-grant results, per launching host/provider from first unnamed intake; missing/false/ambiguous = unsupported |
+| `config.intakeRouting` | true enables automatic decisions; missing = false; explicit named host (pilot) bypasses the switch and support-record gate |
+| `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}` written by the driver in fleet-routing.json from the named-host pilot outcome per launching host/provider: success → supported with evidence; failure → host leaves the pool. Automatic unnamed hand-offs without a record stay local with `routing unsupported`; malformed records are `intake-support-schema` |
 
 The driver request uses repository scope and exact driver model/options/full-access
 pins. Driver placement automatically requires worktree-isolation at both configured
@@ -78,7 +78,8 @@ digest, snapshot, model/options/mode and evidence. `launch` carries native desti
 acceptance-only message with task/scope/authority/routed marker/grant citation.
 Use `dispatch-plan --kind launch --recommendation <plan.json> --fleet-input
 <input.json> --now <same-time> --config-digest <same-pin>` plus role snapshot and
-selected raw catalog; it replays and checks the complete intake plan before binding
+selected raw catalog and `--role axstack-owner` (or the run's accepted driver role
+with the same exact pins); it replays and checks the complete intake plan before binding
 the role model/options. Never copy plan evidence fields to native launch arguments.
 
 `dispatch-plan --verify` preserves T1's `{thread,task?}` native-read shape. For

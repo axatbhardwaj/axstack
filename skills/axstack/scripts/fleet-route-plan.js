@@ -1,7 +1,7 @@
 // Whole-task placement over saved facts only. No I/O, dispatch or authority grant.
 import { recommend, parseFleetConfig } from './fleet-route.js';
 import { inspectDestination } from './fleet-destination.js';
-import { canonical, text } from './fleet-config.js';
+import { canonical, record, text } from './fleet-config.js';
 
 const hash = (value) => new Bun.CryptoHasher('sha256').update(value).digest('hex');
 const term = (code, pass, evidence) => ({ code,
@@ -65,19 +65,30 @@ export function planIntake(input, now) {
   if (intake.kind !== 'new-task' || intake.willDispatch !== true) return stay('not-intake');
   const named = intake.namedHost;
   if (named === 'here' || config.hosts.some((h) => h.id === named && h.environmentId === input.origin.environmentId)) return stay('named-local');
+  if (named != null && !config.hosts.some((h) => h.id === named)) {
+    terms.push(term('named-host', false, named));
+    return stay('routing unknown host');
+  }
   if (named == null && config.intakeRouting !== true) return stay('routing-disabled');
-  const support = config.intakeSupport?.filter((s) => s.environmentId === input.origin.environmentId
-    && s.providerInstanceId === input.origin.providerInstanceId);
-  const supported = support?.length === 1 && support[0].supported === true && text(support[0].evidence);
-  terms.push(term('launch-support', supported, support?.length ? support : null));
-  if (!supported) return stay('routing unsupported');
+  if (named == null) {
+    if (config.intakeSupport !== undefined && (!Array.isArray(config.intakeSupport)
+      || !config.intakeSupport.every((s) => record(s) && text(s.environmentId)
+        && text(s.providerInstanceId) && typeof s.supported === 'boolean' && text(s.evidence)))) {
+      throw new Error('intake-support-schema');
+    }
+    const support = config.intakeSupport?.filter((s) => s.environmentId === input.origin.environmentId
+      && s.providerInstanceId === input.origin.providerInstanceId);
+    const supported = support?.length === 1 && support[0].supported === true;
+    terms.push(term('launch-support', supported, support?.length ? support : null));
+    if (!supported) return stay('routing unsupported');
+  } else terms.push({ code: 'launch-support', state: 'n/a', evidence: 'explicit named host (pilot)' });
   const inputsReady = [input.origin.threadId, input.origin.title, intake.launchKey, intake.taskText,
     intake.scope?.identity, intake.scope?.content ?? intake.scope?.destinationRef, intake.authority, intake.grantCitation].every(text);
   terms.push(term('launch-inputs', inputsReady, intake));
   if (!inputsReady) return result('hold', 'launch-inputs-unproven');
   const exclusions = structuredClone(input.exclusions);
   for (const host of config.hosts) {
-    if (named != null && host.id !== named) exclusions.hosts[host.id] = 'named-host-opt-out';
+    if (named != null && host.id !== named) exclusions.hosts[host.id] = 'explicit-named-host';
     const selected = initial.eligible.find((h) => h.hostId === host.id);
     if (!selected) continue;
     const observation = input.nativeDestinations?.[host.environmentId];

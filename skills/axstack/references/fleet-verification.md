@@ -25,10 +25,12 @@ worker-host intake exception and standing explicit new-thread grant on all five
 hosts, then pilot one real small task per pool host by explicitly naming it.
 Only T8 flips the account-local switch. Rollback is `intakeRouting:false`.
 
-Record runtime grant support per launching host and provider from the first
-unnamed intake in `intakeSupport`; absent evidence means unsupported and stay
-local with `routing unsupported`. A named-host pilot bypasses only the automatic
-decision switch, never support, authority, destination checks or staffing.
+The driver writes runtime grant support per launching host and provider in
+`fleet-routing.json` from the explicit named host (pilot) outcome: success →
+`supported:true` with evidence; failure → that host leaves the pool. A named-host
+pilot needs no pre-existing support record and bypasses the automatic switch.
+Unnamed automatic hand-offs without a record stay local with `routing unsupported`.
+Authority, destination checks, staffing and sole-driver ownership apply to both paths.
 Unreachable/failing pool hosts leave eligibility; one failure does not block
 the other pilots. Record iosatellite's actual provisioning and closed-lid proof
 separately from attended reachability. No credential copying is authorized.

@@ -47,11 +47,33 @@ test.each([
   expect(r.report).toMatchObject({ disposition: 'stay', reason });
 });
 
-test('explicit named-host pilot bypasses only the automatic switch', () => {
+test('explicit named host (pilot) needs neither the automatic switch nor a support record', () => {
   const f = intakeFixture(); f.config.intakeRouting = false; f.input.intake.namedHost = 'worker-b';
   expect(run(f).report).toMatchObject({ disposition: 'launch', selected: { hostId: 'worker-b' } });
   delete f.config.intakeSupport;
-  expect(run(f).report).toMatchObject({ disposition: 'stay', reason: 'routing unsupported' });
+  expect(run(f).report).toMatchObject({ disposition: 'launch', selected: { hostId: 'worker-b' } });
+});
+
+test('an unknown named host is reported explicitly while staying local', () => {
+  const f = intakeFixture(); f.input.intake.namedHost = 'worker-typo';
+  const r = run(f); expect(r.status, r.error).toBe(0);
+  expect(r.report).toMatchObject({ disposition: 'stay', reason: 'routing unknown host' });
+  expect(r.report.terms).toContainEqual({ code: 'named-host', state: 'fail', evidence: 'worker-typo' });
+});
+
+test('malformed automatic support config has a named schema error', () => {
+  const f = intakeFixture(); f.config.intakeSupport = {};
+  const r = run(f); expect(r.status).toBe(1);
+  expect(JSON.parse(r.error).error.code).toBe('intake-support-schema');
+});
+
+test('plan --help succeeds without facts and lists its flags', () => {
+  const r = Bun.spawnSync([process.execPath, 'skills/axstack/scripts/fleet-route.js', 'plan', '--help'],
+    { stdout: 'pipe', stderr: 'pipe' });
+  expect(r.exitCode, r.stderr.toString()).toBe(0);
+  for (const flag of ['--facts', '--now', '--config', '--config-digest', '--json', '--help']) {
+    expect(r.stdout.toString()).toContain(flag);
+  }
 });
 
 test.each([
@@ -129,4 +151,46 @@ test('unknown reviewer provider cannot prove cross-provider local staffing', () 
   f.input.destinations[0].capabilitiesDigest = new Bun.CryptoHasher('sha256').update(o.capabilities.valueText).digest('hex');
   const r = run(f); expect(r.status, r.error).toBe(0);
   expect(r.report.selected.hostId).toBe('worker-b');
+});
+
+test('valid same-provider author and reviewer cannot establish staffing', () => {
+  const f = intakeFixture();
+  f.input.staffing.reviewer = { ...f.input.staffing.author };
+  const r = run(f);
+  expect(r.status, r.error).toBe(2);
+  expect(r.report).toMatchObject({ disposition: 'hold', reason: 'local-staffing-unproven' });
+});
+
+test('a required adviser model must exist in the local catalog', () => {
+  const f = intakeFixture();
+  f.input.staffing.advisers.push({ providerInstanceId: 'codex', model: 'missing-adviser' });
+  const r = run(f);
+  expect(r.status, r.error).toBe(2);
+  expect(r.report).toMatchObject({ disposition: 'hold', reason: 'local-staffing-unproven' });
+});
+
+test('only driver requests can enter the intake planner', () => {
+  const f = intakeFixture(); f.input.request.role = 'reader';
+  const r = run(f);
+  expect(r.status).toBe(1);
+  expect(JSON.parse(r.error).error.code).toBe('driver-role-required');
+});
+
+test('selecting the origin stays local instead of emitting a driver launch', () => {
+  const f = intakeFixture();
+  for (const host of f.config.hosts) if (host.environmentId !== f.input.origin.environmentId) {
+    f.input.exclusions.hosts[host.id] = 'fixture: only origin eligible';
+  }
+  const r = run(f); expect(r.status, r.error).toBe(0);
+  expect(r.report).toMatchObject({ disposition: 'stay', reason: 'selected-local', selected: null });
+  expect(r.report).not.toHaveProperty('launch');
+});
+
+test('explicit named host still respects routed and destination eligibility checks', () => {
+  const f = intakeFixture(); f.input.intake.namedHost = 'worker-a';
+  f.config.intakeRouting = false; delete f.config.intakeSupport;
+  f.input.intake.routed = true;
+  expect(run(f).report.reason).toBe('already-routed');
+  f.input.intake.routed = false; f.input.routeFacts[0].reachable = false;
+  expect(run(f).report).toMatchObject({ disposition: 'stay', reason: 'no-eligible-host' });
 });

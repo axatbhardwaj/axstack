@@ -41,7 +41,8 @@ function defaultConfigPath() {
 
 export async function main(argv) {
   try {
-    if (argv.length === 1 && argv[0] === '--help') {
+    if ((argv.length === 1 && argv[0] === '--help')
+      || (argv.length === 2 && argv[0] === 'plan' && argv[1] === '--help')) {
       process.stdout.write(help + sampleHelp);
       return 0;
     }

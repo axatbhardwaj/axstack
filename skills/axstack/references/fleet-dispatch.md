@@ -4,19 +4,20 @@
 
 Route only new user-started tasks at intake before the first worker dispatch.
 Scheduled work, status requests and follow-up work must stay local.
-The driver must honor a named host as an automatic-routing opt-out.
+The driver must honor an explicit named host (pilot) as the user's placement request.
 The driver must use the routed marker to prevent second routing and mid-task hand-off.
 Never require per-dispatch routing inside a task; all authors, reviewers and
 advisers run locally on its chosen host. C3a below remains an optional legacy
 nonwriter contract, pending a separate CR-8 retirement proposal. C3b stays disabled.
 
 `intakeRouting` must gate only the automatic decision, with missing meaning false.
-An explicit named-host pilot can run with the switch off within its recorded
-launch authority. The pilot must record support per launching host and provider
-from the first unnamed intake. Store the observed result in account-local
-`intakeSupport`, including evidence: missing = unsupported. A driver reads this
-record rather than deciding runtime support itself. Unsupported → stay local
-and record `routing unsupported`. A standing grant is usable only when the
+An explicit named host (pilot) runs with the switch off under the user's
+explicit request and needs no existing support record. All other pre-launch,
+staffing and sole-driver checks still apply. The driver must write support per
+launching host and provider in `fleet-routing.json` from the named-host pilot
+outcome: success → supported with evidence; failure → that host leaves the pool.
+For unnamed automatic hand-offs, read `intakeSupport`: missing = unsupported,
+stay local and record `routing unsupported`. A standing grant is usable only when the
 active T3 runtime accepts it as the user's explicit request for this one thread.
 Neither this contract nor a helper grants that authority.
 
@@ -26,6 +27,9 @@ Neither this contract nor a helper grants that authority.
    destination-readable ref), authority, grant citation, origin environment,
    thread ID/title and a task-unique launch key. Record `routed:false` only at
    the original intake. A received routed task preserves `routed:true`.
+   For an unknown named host, report `routing unknown host` and the supplied
+   name to the user, then stay local with staffing checks. An unknown name is
+   never replaced with another destination silently.
 2. Save native environment links, destination environment/project reads,
    fully paginated project lists and exact destination catalog bytes. The
    driver must clone a missing repo through T3 and a failed clone makes the
@@ -42,13 +46,20 @@ Neither this contract nor a helper grants that authority.
    explicit; the helper performs no native calls, cloning or dispatch.
 5. For a remote selection, use `dispatch-plan --kind launch` with that saved
    plan as `--recommendation`, the original `--fleet-input`, the same `--now`
-   and digest, role snapshot and selected destination catalog. Copy only
+   and digest, `--role axstack-owner` (or the accepted driver role at the same
+   exact pins), role snapshot and selected destination catalog. Copy only
    native arguments: environmentId/projectId, modelSelection, runtimeMode,
    delegatedFrom (including title), clientRequestId, title and message. Keep
    `inputs`, terms and fleetBinding as evidence, never native arguments.
    Launch only under the cited explicit user request or accepted standing
    intake grant. Verify the returned thread using `dispatch-plan --verify`
    with native thread reads; unreturned settings or run-start evidence hold.
+
+Skip collection for non-intake, already-routed or disabled automatic decisions once
+local staffing is proven. If plan is invoked it still validates the full supplied
+facts. An exit-1 input/config error before any launch means stay local only with
+independent local staffing proof; otherwise hold. Report the helper error, never
+infer a route or silently continue without staffing.
 
 ## Acceptance, ownership and outcomes
 
