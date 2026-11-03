@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { inspectFleetReceipt } from './fleet-receipt.js';
 import { bindFleet } from './fleet-dispatch.js';
 import { canonical } from './fleet-config.js';
+import { bindIntakePlan } from './fleet-route-plan.js';
 
 const fleetFlags = ['--recommendation', '--fleet-input', '--now', '--config-digest'];
 const flags = ['--role', '--roles', '--capabilities', '--kind', '--verify', '--out', ...fleetFlags];
@@ -18,6 +19,7 @@ Example: bun dispatch-plan.js --role axstack-author --roles roles.json --capabil
 --verify        Compare saved native thread/task reads; print evidence then MATCH or each mismatch
 --out           Save the payload as full JSON here; stdout is an input/path/omitted-count summary
 --recommendation Saved fleet-route recommendation; requires all following fleet flags
+                 Also accepts a fleet-route plan result for a driver intake launch
 --fleet-input   Saved complete selector input, including exact reviewed config bytes
 --now           Injected nonnegative epoch-ms evaluation time matching the recommendation
 --config-digest Run-pinned config SHA-256; must match facts and recommendation
@@ -50,6 +52,11 @@ Artifact verification also requires artifactScope and independently checked isol
 Optional --verify fleetAttempt/fleetReceipt validates host-qualified terminal facts;
 --out retains per-term receipt evidence. Synthetic bindings cannot authenticate reads.
 Coordinator routes remain unsupported here. A plan grants no launch authority.
+Driver intake launches emit environmentId/projectId, delegatedFrom (including title),
+clientRequestId, title and an acceptance-only message from the checked intake plan.
+Driver --verify additionally uses native thread.title/projectId/latestRunId and
+recentRuns from t3_thread_read (runId and nonempty startedAt); missing stays unknown.
+Terms report pass/fail/unknown/n/a with evidence; never an authority verdict.
 Exit codes: 0 ok, 1 error, 2 hold (including incomplete read-back).
 `;
 
@@ -93,9 +100,12 @@ function normalizedOptions(options) {
 
 function verify(configuration, provider, model, options, fleet) {
   const mismatches = [];
+  const terms = [];
   const { thread, task } = configuration ?? {};
   const sources = [thread, task].filter((source) => source && typeof source === 'object');
   const compare = (field, expected, observed, equal = expected === observed) => {
+    if (fleet?.launch) terms.push({ code: field, state: equal ? 'pass' : observed == null || expected == null ? 'unknown' : 'fail',
+      evidence: { expected, observed: observed ?? null } });
     if (!equal) mismatches.push(`${field}: ${observed == null || expected == null ? 'unknown' : 'fail'}; `
       + `expected ${JSON.stringify(expected)}; observed ${JSON.stringify(observed) ?? 'missing'}`);
   };
@@ -129,6 +139,14 @@ function verify(configuration, provider, model, options, fleet) {
   if (fleet) {
     for (const [field, expected] of Object.entries(fleet.destination)) compare(field, expected, configuration?.[field]);
     for (const [field, expected] of Object.entries(fleet.fleetBinding)) compare(field, expected, configuration?.fleetBinding?.[field]);
+    if (fleet.launch) {
+      compare('launch-title', fleet.launch.title, thread?.title);
+      compare('launch-project', fleet.destination.projectId, thread?.projectId);
+      const runs = configuration?.recentRuns;
+      const run = Array.isArray(runs) ? runs.find((r) => r.runId === thread?.latestRunId) : null;
+      compare('run-started', 'native latest run with startedAt', runs,
+        nonempty(thread?.latestRunId) && nonempty(run?.startedAt));
+    }
     if (fleet.artifactScope) {
       compare('artifactScope', fleet.artifactScope, configuration?.artifactScope,
         canonical(fleet.artifactScope) === canonical(configuration?.artifactScope));
@@ -143,7 +161,7 @@ function verify(configuration, provider, model, options, fleet) {
     });
     for (const term of receiptTerms) if (term.state !== 'pass') mismatches.push(`${term.code}: ${term.state}; evidence ${JSON.stringify(term.evidence)}`);
   }
-  return { mismatches, ...(receiptTerms ? { receiptTerms } : {}), ...(!labels.length ? {
+  return { mismatches, ...(fleet?.launch ? { terms } : {}), ...(receiptTerms ? { receiptTerms } : {}), ...(!labels.length ? {
     providerEvidence: `provider: unknown; expected ${JSON.stringify(provider)}; observed missing; `
       + 'provider binding checked via instanceId and saved capabilities',
   } : {}) };
@@ -159,7 +177,8 @@ function plan(argv, io) {
   const emit = (result) => {
     const full = { inputs, ...result };
     const inline = result.mismatches
-      ? `${[JSON.stringify({ inputs }), result.providerEvidence, result.mismatches.join('\n') || 'MATCH'].filter(Boolean).join('\n')}\n`
+      ? `${[JSON.stringify({ inputs }), result.terms ? JSON.stringify({ terms: result.terms }) : null,
+        result.providerEvidence, result.mismatches.join('\n') || 'MATCH'].filter(Boolean).join('\n')}\n`
       : `${JSON.stringify(full)}\n`;
     if (!args['--out']) {
       if (new TextEncoder().encode(inline).length > 4096) {
@@ -209,9 +228,10 @@ function plan(argv, io) {
     if (!/^\d+$/.test(args['--now'])) throw new Error('evaluation-time');
     const recommendationJSON = readFileSync(args['--recommendation'], 'utf8');
     const recommendation = JSON.parse(recommendationJSON);
-    fleet = bindFleet(readJSON(args['--fleet-input']), recommendation,
+    const binder = recommendation?.kind === 'intake-plan' ? bindIntakePlan : bindFleet;
+    fleet = binder(readJSON(args['--fleet-input']), recommendation,
       args['--config-digest'], Number(args['--now']), readFileSync(args['--capabilities'], 'utf8'),
-      resolution, role.id === 'axstack-author', role.id, args['--kind']);
+      resolution, ...(binder === bindIntakePlan ? [args['--kind']] : [role.id === 'axstack-author', role.id, args['--kind']]));
     fleet.recommendation = recommendation;
     fleet.recommendationJSON = recommendationJSON;
     fleet.now = Number(args['--now']);
@@ -225,6 +245,7 @@ function plan(argv, io) {
   const selection = { [args['--kind'] === 'launch' ? 'instanceId' : 'providerInstanceId']: providerInstanceId,
     model, options, ...(args['--kind'] === 'task' ? fleet?.destination : {}) };
   emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
+    ...(fleet?.launch ?? {}),
     ...(fleet?.artifactScope ? { artifactScope: fleet.artifactScope, isolation: fleet.isolation } : {}),
     ...(fleet ? { fleetBinding: fleet.fleetBinding, ...(args['--kind'] === 'launch' ? fleet.destination : {}) } : {}),
     ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });
