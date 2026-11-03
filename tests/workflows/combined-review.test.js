@@ -126,6 +126,12 @@ rule('implement returns combined findings within the round', 'axstack-implement/
 rule('review candidate returns combined findings by the same repair route', review,
   [/combined Scope: FINDINGS/i, /same repair route/i],
   'Combined Scope: FINDINGS uses the same repair route.', /same repair route/i, 'approval route');
+rule('review candidate UNKNOWN holds merge-ready', review,
+  [/Scope: UNKNOWN\s+(?:holds?|blocks?) merge-ready/i],
+  'Scope: UNKNOWN blocks merge-ready.', /holds?|blocks?/i, 'permits');
+rule('receipt uses separate diligence for all other authored work', 'axstack-review/references/review-receipt.md',
+  [/all other authored work\s+(?:uses|reports) n\/a\s*[—–-]\s*separate diligence/i],
+  'All other authored work reports n/a — separate diligence.', /uses|reports/i, 'omits');
 rule('combined review preserves mapping independence and checkout rules', diligence,
   [/keep/i, /authored mode.s mapped reviewer/i, /non-author\/non-owner session independence/i, /checkout rules/i],
   "Keep the authored mode's mapped reviewer, non-author/non-owner session independence and checkout rules.", /keep/i, 'drop');
