@@ -42,7 +42,8 @@ This section applies to peer and authored PR modes.
      | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
      | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
 
-     The diligence receipt is separate and does not count as a reviewer receipt.
+     Separate diligence does not count as a reviewer receipt; eligible combined
+     review carries Scope in the one authored reviewer receipt.
 
      From the recorded exact model ID, derive its class and match provenance
      on provider/class; record effort, but never use effort to create a mapping.
@@ -68,11 +69,20 @@ This section applies to peer and authored PR modes.
 
    Continue only when session receipts prove the required models, non-author
    independence, actual author provenance where applicable, and exact brief.
-   In authored PR review rounds, dispatch `axstack-diligence`
+   Follow the [applicable diligence gate](../../axstack/references/diligence.md#applicable-diligence-gate).
+   For eligible small non-risk-path work, the same cross-provider reviewer
+   returns `Scope: PASS|FINDINGS|UNKNOWN` without a separate diligence dispatch.
+   Combined review runs after publication at the confirmed remote head and
+   pinned base. Include all applicable diligence checks in the brief.
+   The receipt's `Scope:` verdict line is requested by the brief's `Combined review:` line.
+   Bind that verdict to the same head and base, with evidence and limits.
+   Otherwise, in authored PR review rounds, dispatch `axstack-diligence`
    independently alongside the configured reviewer(s) on the same exact revision
-   and base. Follow [Diligence](../../axstack/references/diligence.md). A diligence
-   `FINDINGS` receipt returns validated findings to the same author in the same
-   round; it is not an extra `REQUEST_CHANGES` round.
+   and base. A diligence `FINDINGS` receipt returns validated findings to the same
+   author in the same round; it is not an extra `REQUEST_CHANGES` round.
+   Combined `Scope: FINDINGS` uses that same repair route; `Scope: UNKNOWN`
+   holds merge-ready. Refresh the verdict and applicable diligence evidence
+   after every head or base change.
 3. **Inspect all six angles.** In the first peer review each reviewer covers every angle;
    in authored mode the one reviewer covers all six angles. Peer follow-ups use
    only the bounded checks in Peer mode instead of this full inspection:

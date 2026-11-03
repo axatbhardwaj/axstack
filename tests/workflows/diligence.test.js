@@ -1,5 +1,6 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
+import { checkRule, requires } from './prose-contract.js';
 
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
@@ -49,13 +50,13 @@ test('diligence contract checks intent, claims, metadata and evidence without ed
   expect(rule).toMatch(/never (?:authors|edits)/);
 });
 
-test('every authored review round has independent exact-revision diligence and a PASS gate', () => {
-  const review = compact('skills/axstack-review/SKILL.md');
-  const implement = compact('skills/axstack-implement/SKILL.md');
-  expect(review).toMatch(/In authored PR review rounds, dispatch `axstack-diligence`.*same exact revision/);
-  expect(review).toMatch(/independent.*configured reviewer/);
-  expect(review).toMatch(/diligence `FINDINGS`.*same author.*same round/);
-  expect(implement).toMatch(/Merge-ready.*diligence `PASS`/);
+test('full-path authored review keeps independent exact-revision diligence', () => {
+  const review = compact('skills/axstack-review/SKILL.md').replace(/`/g, '');
+  checkRule(review, (text) => requires(text, /otherwise/i, /authored PR review rounds/i,
+    /dispatch axstack-diligence/i, /independently alongside/i, /configured reviewer/i,
+    /same exact revision and base/i),
+  'Otherwise, in authored PR review rounds, dispatch axstack-diligence independently alongside the configured reviewer on the same exact revision and base.',
+  [[/independently alongside/i, 'instead of']]);
 });
 
 for (const [phase, path, rule] of [

@@ -403,12 +403,24 @@ admin permission. A `defi-com` repository, an extra writer, or an incomplete or
 failed readback classes as work (`team`).
 Every other repository is work (`team`).
 
+Follow the [applicable diligence gate](../skills/axstack/references/diligence.md#applicable-diligence-gate).
+For eligible small non-risk-path work (one PR and a snapshotted small-change
+intent), the same cross-provider reviewer supplies `APPROVE` plus `Scope: PASS`
+at the exact head and base. Substantial work, spec checkpoints, risk paths and
+release reconciliation retain separate diligence. Review-depth risk includes
+watch's merge-risk list, merge/dispatch/authority rule changes and driver- or
+reviewer-flagged security, data-loss or major-design concerns; this leaves the
+merge hold list unchanged. `Scope: FINDINGS` or `Scope: UNKNOWN` blocks merge-ready.
+Before publication the driver reads back the author evidence folder (named
+red/green logs, counts, SHAs and paths); combined review follows remote readback.
 Solo approval is current-head-and-base cross-provider authored-review `APPROVE`
-plus diligence `PASS`. The reviewer differs from every receipt-recorded provider
+plus applicable diligence evidence (combined `Scope: PASS` or separate `PASS`).
+The reviewer differs from every receipt-recorded provider
 that authored or repaired `merge-base..head` commits. Team approval also needs a
 counted non-author collaborator review at the current head. Axstack automation
 votes never count. Unknown or mixed provenance and manually authored PRs need a
-merge card. New heads need fresh authored review, diligence, and CI. A collaborator
+merge card. Every head or base change needs fresh authored review, applicable
+diligence evidence, and CI. A collaborator
 approval carries over only across an unchanged stable patch-id rebase, base-update
 merge or base-only retarget, recorded
 for both heads, while the forge still counts it.
@@ -426,7 +438,10 @@ Proven verification is required for every own PR. Use the authored receipt:
 - Verification requires `Verdict: APPROVE`, `Coverage: COMPLETE`, and
   `Escalate to user: no`.
 - Verification requires a `Safety fact` about the change that is not `unproven`.
-- Verification requires diligence `PASS` at the exact head and base.
+- For eligible small non-risk-path work, `APPROVE` and `Scope: PASS` from the
+  same cross-provider reviewer at the exact head and base satisfy verification's
+  diligence gate. Otherwise verification requires separate diligence `PASS`
+  at the exact head and base. Follow the [applicable diligence gate](../skills/axstack/references/diligence.md#applicable-diligence-gate).
 - Verification requires `Final-head check: <command> -> <log path>` for a check
   the reviewer ran at the final head, with its log kept in the run's evidence folder.
 - Each acceptance check requires passing evidence from the ticket or spec
@@ -458,7 +473,7 @@ reissuing only if a decision is still needed.
 The user's reply in the driver thread or on the forge clears only that
 verification cause. Record `user-accepted unproven: <item>`, never as a pass.
 Treat the accepted item as settled for this head and base and merge when every
-other gate and hold permits it. A reply never waives `APPROVE`, diligence `PASS`
+other gate and hold permits it. A reply never waives `APPROVE`, the applicable diligence gate
 or green CI. A new head or base voids the acceptance.
 Settle an `Escalate to user` for the user-accepted verification cause at its
 accepted head and base while other escalation holds still apply.
@@ -543,8 +558,9 @@ A quoted format inside a bullet never counts as the declaration.
 `Auto-merge: off` for a run or PR makes the merge card wait, and it waits for the user.
 
 Post a merge card for every nonqualifying approval, base, verification, or off case.
-Bind it to the PR head and base SHA; list CI, authored review and diligence at
-those SHAs, counted collaborator approvals and bot votes with each vote's SHA
+Bind it to the PR head and base SHA; list CI, authored review and applicable
+diligence evidence (combined Scope or separate diligence) at those SHAs, counted
+collaborator approvals and bot votes with each vote's SHA
 and stale flag, and the causes holding this merge.
 A card that needs the user's decision (work promotion or work deploying/unknown base,
 `Auto-merge: off`, provenance, or an unclosable verification gap) is a decision

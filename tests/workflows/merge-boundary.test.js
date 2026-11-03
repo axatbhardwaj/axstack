@@ -32,7 +32,11 @@ test('uncertain watch registration state holds new registrations until resolved'
 });
 
 test('merge card binds evidence and parks user decisions in the driver thread', () => {
-  expect(sentence(watch, 'Bind it to the PR')).toMatch(/head and base SHA.*CI.*authored review and diligence.*SHAs.*collaborator approvals and bot votes.*SHA and stale flag/i);
+  checkRule(sentence(watch, 'Bind it to the PR').replace(/;/g, ','), (text) => requires(text,
+    /head and base SHA/i, /CI/i, /authored review/i, /applicable diligence evidence/i,
+    /collaborator approvals and bot votes/i, /SHA and stale flag/i),
+  'Bind it to the PR head and base SHA and list CI, authored review, applicable diligence evidence, collaborator approvals and bot votes with SHA and stale flag.',
+  [[/applicable diligence evidence/i, 'author claims alone']]);
   expect(sentence(watch, 'A card that needs')).toMatch(/decision hold raised in the T3 driver thread.*waiting on the decision/i);
   expect(sentence(watch, 'Revalidate the current head')).toMatch(/head and base.*reply clears only its bound cause/i);
 });
@@ -44,7 +48,10 @@ test('team approval requires counted permission and excludes stale votes', () =>
 });
 
 test('solo approval uses review and diligence; machine markers cannot supply a reply', () => {
-  expect(sentence(watch, '- Approval:')).toMatch(/solo.*authored-review `APPROVE`.*diligence `PASS`.*current head and base/i);
+  checkRule(sentence(watch, '- Approval:').replace(/`/g, ''), (text) => requires(text,
+    /solo/i, /authored-review APPROVE/i, /applicable diligence evidence/i, /current head and base/i),
+  'In solo mode authored-review APPROVE plus applicable diligence evidence bound to the current head and base satisfy approval.',
+  [[/applicable diligence evidence/i, 'CI alone']]);
   const markers = sentence(watch, 'Text carrying a visible machine marker');
   expect(markers).toMatch(/never counts as a user reply/i);
   for (const marker of ['orchestration notices', 'dispatch envelopes', '`<pasted_content>` blocks', 'task notifications', 'tool output', 'PR text']) {
@@ -68,7 +75,10 @@ test('feedback, receipts, dispatches, and vetoes are merge terms', () => {
   checkRule(feedback.replace(/`/g, ''), (text) => prohibits(text, /\bno unresolved\b/i, ...concepts),
     'After the validated Pre-existing thread exception, no unresolved blocking agent-authored thread, top-level blocking comment, or effective blocking review remains.',
     [[/\bno unresolved\b/i, 'unresolved'], [/\bvalidated\b.*\bPre-existing\b.*\bthread exception\b/i, 'no exception']], concepts);
-  expect(sentence(watch, 'Authored review `APPROVE`')).toMatch(/diligence.*`PASS`.*current head and base/i);
+  checkRule(sentence(watch, 'Authored review `APPROVE`').replace(/`/g, ''), (text) => requires(text,
+    /Authored review APPROVE/i, /applicable diligence evidence/i, /bound to the current head and base/i),
+  'Authored review APPROVE and applicable diligence evidence are bound to the current head and base.',
+  [[/current head and base/i, 'previous head']]);
   expect(sentence(watch, 'No `Escalate to user`')).toMatch(/unsettled author Dispatch.*task, PR, dependency, run-wide, or serious-risk.*hold/i);
   expect(sentence(watch, 'Veto:')).toMatch(/no `do-not-merge` label.*no chat `hold`/i);
 });

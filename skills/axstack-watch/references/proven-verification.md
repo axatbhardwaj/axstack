@@ -5,7 +5,10 @@ Proven verification is required for every own PR. Use the authored receipt:
 - Verification requires `Verdict: APPROVE`, `Coverage: COMPLETE`, and
   `Escalate to user: no`.
 - Verification requires a `Safety fact` about the change that is not `unproven`.
-- Verification requires diligence `PASS` at the exact head and base.
+- For eligible small non-risk-path work, `APPROVE` and `Scope: PASS` from the
+  same cross-provider reviewer at the exact head and base satisfy verification's
+  diligence gate. Otherwise verification requires separate diligence `PASS`
+  at the exact head and base. Follow the [applicable diligence gate](../../axstack/references/diligence.md#applicable-diligence-gate).
 - Verification requires `Final-head check: <command> -> <log path>` for a check
   the reviewer ran at the final head, with its log kept in the run's evidence folder.
 - Each acceptance check requires passing evidence from the ticket or spec
@@ -38,7 +41,7 @@ reissuing only if a decision is still needed.
 The user's reply in the driver thread or on the forge clears only that
 verification cause. Record `user-accepted unproven: <item>`, never as a pass.
 Treat the accepted item as settled for this head and base and merge when every
-other gate and hold permits it. A reply never waives `APPROVE`, diligence `PASS`
+other gate and hold permits it. A reply never waives `APPROVE`, the applicable diligence gate
 or green CI. A new head or base voids the acceptance.
 Settle an `Escalate to user` for the user-accepted verification cause at its
 accepted head and base while other escalation holds still apply.

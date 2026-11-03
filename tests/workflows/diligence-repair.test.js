@@ -1,4 +1,4 @@
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
 
@@ -7,35 +7,39 @@ const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
-test('watch and lifecycle require diligence PASS at the exact head', () => {
-  const watch = compact('skills/axstack-watch/SKILL.md').split('## 5. State readiness precisely')[1]?.split('## 6.')[0];
-  expect(watch).toMatch(/A current diligence `PASS` at the exact head is required before any merge-ready statement\./);
-  expect(compact('skills/axstack/references/lifecycle.md')).toMatch(/Merge-ready requires applicable review receipt\(s\) and current diligence `PASS` at the exact head; CI\/tests alone are insufficient\./);
+test('watch and lifecycle preserve the separate PASS gate outside combined eligibility', () => {
+  for (const path of ['skills/axstack-watch/SKILL.md', 'skills/axstack/references/lifecycle.md']) {
+    checkRule(compact(path).replace(/`/g, ''), (text) => requires(text,
+      /(?:all other work requires separate (?:current )?|otherwise separate )diligence/i,
+      /diligence PASS/, /exact head and base/i),
+    'All other work requires separate diligence PASS at the exact head and base.',
+    [[/diligence PASS/, 'diligence UNKNOWN']]);
+  }
 });
 
-test('review keeps diligence independent and requires its PASS for merge-ready', () => {
+test('review sends diligence findings to the same author within the same round', () => {
   const review = compact('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/In authored PR review rounds, dispatch `axstack-diligence` independently alongside the configured reviewer\(s\) on the same exact revision and base\./);
   expect(review).toMatch(/A diligence `FINDINGS` receipt[^.]{0,140}it is not an extra `REQUEST_CHANGES` round\./);
-  expect(review).toMatch(/\*\*Authored diligence:\*\* a current `PASS` is required with reviewer approval for merge-ready;/);
 });
 
-test('authored receipt counts exclude the separate diligence receipt', () => {
+test('authored receipt count excludes separate diligence', () => {
   const review = compact('skills/axstack-review/SKILL.md');
-  expect(review).toMatch(/The diligence receipt is separate and does not count as a reviewer receipt\./);
+  checkRule(review.replace(/`/g, ''), (text) => prohibits(text, /does not count/i,
+    /separate diligence/i, /reviewer receipt/i),
+  'Separate diligence does not count as a reviewer receipt.',
+  [[/does not count/i, 'counts']]);
   expect(review).toMatch(/an authored reviewer receipt count other than one is not the selected mode\./i);
-  expect(review).toMatch(/Authored mode requires its one current eligible configured reviewer receipt and a separate current diligence receipt;/);
 });
 
-test('implement counts one failing round toward step-back and preserves the PASS gate', () => {
-  const implement = compact('skills/axstack-implement/SKILL.md');
-  expect(implement).toMatch(/Merge-ready also requires a current diligence `PASS` at that head; diligence `FINDINGS` return to the same author within the review round\./);
-  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+test('implement counts a combined or separate failing round once toward step-back', () => {
+  const implement = compact('skills/axstack-implement/SKILL.md').replace(/`/g, '');
+  checkRule(implement, (text) => requires(text,
     /\bround with reviewer REQUEST_CHANGES\b.*\bdiligence FINDINGS\b/i,
-    /\bincrements repairs once\b/i, /\bcounts once toward\b.*\bround-3 step-back\b/i),
-  'A round with reviewer REQUEST_CHANGES and/or diligence FINDINGS increments repairs once and counts once toward the round-3 step-back.',
-  [[/\bcounts once\b/i, 'counts twice']]);
-  checkRule(implement.replace(/`/g, ''), (text) => requires(text,
+    /Scope: FINDINGS/i, /\bincrements repairs once\b/i,
+    /\bcounts once toward\b.*\bround-3 step-back\b/i),
+  'A round with reviewer REQUEST_CHANGES and/or diligence FINDINGS (including Scope: FINDINGS) increments repairs once and counts once toward the round-3 step-back.',
+  [[/\bcounts once\b/i, 'counts twice'], [/Scope: FINDINGS/i, 'Scope: PASS']]);
+  checkRule(implement, (text) => requires(text,
     /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
   'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',
   [[/\bsteps back\b/i, 'holds without stepping back']]);

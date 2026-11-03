@@ -36,8 +36,10 @@ A risky-path hold blocks automatic merge.
 Post a merge card for every nonqualifying approval, base, verification, off,
 or risky-path case.
 Follow [Advised holds](../../axstack/references/contracts.md#advised-holds) for eligible merge-card causes.
-Bind it to the PR head and base SHA; list CI, authored review and diligence at
-those SHAs, counted collaborator approvals and bot votes with each vote's SHA
+Follow the [applicable diligence gate](../../axstack/references/diligence.md#applicable-diligence-gate).
+Bind it to the PR head and base SHA; list CI, authored review and applicable
+diligence evidence (combined Scope or separate diligence) at those SHAs, counted
+collaborator approvals and bot votes with each vote's SHA
 and stale flag, and the causes holding this merge.
 A card that needs the user's decision (work promotion or work deploying/unknown
 base, `Auto-merge: off`, risky-path, provenance, or an unclosable verification gap)

@@ -42,7 +42,10 @@ test('readiness never persists across repair while approval carryover remains bo
   const text = compact(read(watchPath));
   expect(text).not.toMatch(/merge-ready statement persists through repairs/i);
   expect(text).toMatch(/approval carries over only[^.]*unchanged[^.]*both heads[^.]*forge still counts/i);
-  expect(text).toMatch(/fresh authored review, diligence, and CI on every new head/i);
+  checkRule(text, (source) => requires(source,
+    /fresh authored review/i, /applicable diligence evidence/i, /CI/i, /every new head/i),
+  'Require fresh authored review, applicable diligence evidence and CI on every new head.',
+  [[/fresh authored review/i, 'historical authored review']]);
 });
 
 const standing = [

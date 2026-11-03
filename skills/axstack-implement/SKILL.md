@@ -258,8 +258,11 @@ For each PR:
    re-evaluate. Timeout, error, or missing wait capability records `held` at
    that revision with reason and resume condition; it never triggers author
    repair. Keep CI-pending state in the T3 driver thread.
-   `APPROVE` with only non-blocking findings plus diligence `PASS` can be
-   `merge-ready` when the full predicate passes. The driver records the
+   Follow the [applicable diligence gate](../axstack/references/diligence.md#applicable-diligence-gate):
+   eligible small non-risk-path work uses the same cross-provider reviewer's
+   `APPROVE` plus `Scope: PASS`; all other work keeps separate diligence `PASS`.
+   `APPROVE` with only non-blocking findings plus applicable diligence evidence
+   can be `merge-ready` when the full predicate passes. The driver records the
    non-blocking notes and does not elect a repair; only the user can ask for
    polish.
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
@@ -268,15 +271,20 @@ For each PR:
    risk records `held`. A changed parent immediately invalidates affected child readiness; refresh
    the next ready children as needed under PR chains before step 1.
    Follow [Advised holds](../axstack/references/contracts.md#advised-holds) for eligible `held` causes.
-   Merge-ready also requires a current diligence `PASS` at that head; diligence
-   `FINDINGS` return to the same author within the review round.
-   Diligence `UNKNOWN` records the PR as `held` with the reason in the run record
-   and blocks merge-ready pending the driver's recorded disposition.
+   Merge-ready also requires current applicable diligence evidence at the exact
+   head and base. Diligence `FINDINGS` or combined `Scope: FINDINGS` return to
+   the same author within the review round.
+   Diligence `UNKNOWN` or combined `Scope: UNKNOWN` records the PR as `held`
+   with the reason in the run record and blocks merge-ready pending the driver's
+   recorded disposition; the disposition never substitutes for `PASS` evidence.
+   Any head or base change requires fresh review and applicable diligence
+   evidence, including base-only retargets.
    Before merge-ready, treat a run-record `Learning` that contradicts a shipped
    rule as a finding on the owning PR and hold merge-ready until the contradiction is resolved.
    An unrelated run-record `Learning` leaves merge-ready eligibility unchanged.
-   A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` increments
-   `repairs` once and counts once toward the round-3 step-back.
+   A round with reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS` (including
+   combined `Scope: FINDINGS`) increments `repairs` once and counts once toward
+   the round-3 step-back.
    Failed checks and post-readiness feedback increment `repairs` but never count
    as failing review rounds.
    On any counted failing review round that leaves `rounds` at 3 or more while

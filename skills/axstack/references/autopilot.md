@@ -22,9 +22,13 @@ holds the potentially affected work until its boundary is resolved. For example,
 tracker access, adviser or arena-seat availability, CI-wait timeout, readiness
 UNKNOWN, dismissed approval, wake or cleanup uncertainty, single-provider routing,
 an existing tag or version, and failed publish hold the work that needs them.
-Diligence FINDINGS during implement
-follow its §6 repair route; at spec, tickets, or release preparation the driver
-resolves them before advancing, and only a recorded hold pauses autopilot.
+Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate):
+eligible small non-risk-path PRs use combined `Scope: PASS` with cross-provider
+`APPROVE`; all other work keeps separate diligence.
+Diligence FINDINGS during implement follow its §6 repair route; at spec, tickets,
+or release preparation the driver resolves them before advancing, and only a
+recorded hold pauses autopilot. Combined `Scope: FINDINGS` follows the same
+implement repair route; `Scope: UNKNOWN` holds merge-ready.
 
 Denied tool calls, including calls denied by automatic approval review, hold
 only that action and its dependants. Never retry, reroute, or delegate around

@@ -38,8 +38,11 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-explainer-review` always reviews every visual; `codex/terra` high in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
-- `axstack-diligence`: read-only [diligence checks](diligence.md) for every authored PR
-  review round and bounded research, spec, ticket, receipt, and release claims.
+- `axstack-diligence`: read-only [diligence checks](diligence.md) for authored PR
+  review rounds and bounded research, spec, ticket, receipt, and release claims.
+  Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate):
+  only eligible small non-risk-path PRs combine these checks into the same
+  cross-provider reviewer's Scope receipt, without a separate diligence dispatch.
 - `axstack-ui-verifier`: owns the inline page interaction pass under [UI checks](ui-verification.md)
   for every interactive page, bound to the exact bytes and SHA-256.
 - `axstack-ui-verifier-sonnet`: `claude/sonnet` high in mixed, read-only;

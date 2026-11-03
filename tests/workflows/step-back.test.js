@@ -67,9 +67,9 @@ for (const [name, concept, wording, direction, inverse, ban] of [
 ]) rule(`round-4 condition: ${name}`, implement, [concept], wording, direction, inverse, ban);
 
 rule('the extra round requires fresh independent same-role review and diligence', implement,
-  [/\bextra round requires\b/i, /\bfresh\b.*\bindependent reviewer and diligence receipts\b/i,
+  [/\bextra round requires\b/i, /\bfresh\b.*\bindependent reviewer and applicable diligence evidence\b/i,
     /\bfresh session\b.*\bsame mapped reviewer role\b/i],
-  'The extra round requires fresh independent reviewer and diligence receipts from a fresh session of the same mapped reviewer role.',
+  'The extra round requires fresh independent reviewer and applicable diligence evidence from a fresh session of the same mapped reviewer role.',
   /\bfresh session\b/i, 'reused session');
 rule('round 4 adds no extra reviewer', implement, [/\bextra reviewer\b/i],
   'Do not add an extra reviewer.', /\bDo not add\b/i, 'Add', /\bDo not add\b/i);
