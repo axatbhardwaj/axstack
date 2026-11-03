@@ -34,9 +34,9 @@ test('managed routing retains holds, separate UI placement and bounded authority
       'Absence of facts never authorizes a route.', [/never/i, 'always'], []],
     [(t) => requires(t, /keep/i, /remote-author-coordinator/i, /off/i, /version.bound lifecycle gates/i),
       'Keep remote-author-coordinator off pending successful version-bound lifecycle gates.', [/off/i, 'on'], [/off/i]],
-    [(t) => requires(t, /hold/i, /routing failures/i, /ambiguous launches/i, /unknown execution authority/i),
-      'Hold unknown execution authority, routing failures and ambiguous launches.', [/hold/i, 'ignore'],
-      [/hold/i, /routing failures/i, /ambiguous launches/i, /unknown execution authority/i]],
+    [(t) => requires(t, /hold/i, /ambiguous launches/i, /unknown execution authority/i),
+      'Hold unknown execution authority and ambiguous launches.', [/hold/i, 'ignore'],
+      [/hold/i, /ambiguous launches/i, /unknown execution authority/i]],
   ]) checkRule(text, accepts, rewording, [inversion], concepts);
 });
 
@@ -50,8 +50,6 @@ for (const [name, concepts, equivalent, inversion] of [
   ['workers stay local', [/preserve/i, /routed marker/i, /every worker local/i, /inside the task/i, /without per.dispatch routing/i],
     'Preserve the routed marker and keep every worker local inside the task without per-dispatch routing.',
     [/without per.dispatch routing/i, 'with per-dispatch routing']],
-  ['accept before ownership transfer', [/transfer ownership/i, /only after/i, /AXSTACK-ACCEPT|destination acceptance/i],
-    'Only after destination acceptance, transfer ownership.', [/only after/i, 'before']],
   ['standing intake grant', [/t3_thread_launch/i, /only on explicit user request/i, /runtime.accepted/i,
     /user standing intake grant/i, /that one hand.off/i],
     'Use t3_thread_launch only on explicit user request, including a runtime-accepted user standing intake grant for that one hand-off.',
@@ -59,6 +57,16 @@ for (const [name, concepts, equivalent, inversion] of [
 ]) test(`installed intake semantic guard: ${name}`, () => {
   const text = renderInstructionBlock().replaceAll('`', '').replace(/\s+/g, ' ');
   checkRule(text, (s) => requires(s, ...concepts), equivalent, [inversion], concepts);
+});
+
+test('ownership transfer requires the accept marker and one idempotent proceed under the fleet contract', () => {
+  const concepts = [/transfer ownership/i, /only after/i, /AXSTACK-ACCEPT/,
+    /one idempotent proceed/i, /references\/fleet-dispatch\.md/];
+  checkRule(renderInstructionBlock().replaceAll('`', ''), (s) => requires(s, ...concepts),
+    'Only after AXSTACK-ACCEPT and one idempotent proceed under references/fleet-dispatch.md, transfer ownership.',
+    [[/only after/i, 'before'], [/AXSTACK-ACCEPT/, 'AXSTACK-HANDBACK'],
+      [/one idempotent proceed/i, 'multiple idempotent proceeds'],
+      [/idempotent/i, 'unconfirmed'], [/fleet-dispatch\.md/, 't3-runtime.md']], concepts);
 });
 
 test('named-host pilot needs no support record', () => {
