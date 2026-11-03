@@ -246,6 +246,7 @@ function plan(argv, io) {
     model, options, ...(args['--kind'] === 'task' ? fleet?.destination : {}) };
   emit({ [args['--kind'] === 'launch' ? 'modelSelection' : 'target']: selection, runtimeMode: 'full-access',
     ...(fleet?.launch ?? {}),
+    ...(fleet?.planTerms ? { terms: fleet.planTerms } : {}),
     ...(fleet?.artifactScope ? { artifactScope: fleet.artifactScope, isolation: fleet.isolation } : {}),
     ...(fleet ? { fleetBinding: fleet.fleetBinding, ...(args['--kind'] === 'launch' ? fleet.destination : {}) } : {}),
     ...(args['--kind'] === 'task' && role.id === 'axstack-author' ? { isolation: 'worktree' } : {}) });

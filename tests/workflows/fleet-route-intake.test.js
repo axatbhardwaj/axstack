@@ -88,3 +88,24 @@ test('launch inputs require authority, scope content and origin identity', () =>
     expect(run(f).status).toBe(2);
   }
 });
+
+test('observed native 0.1.5 mode omission retains supported driver staffing', () => {
+  const f = intakeFixture();
+  for (const [id, o] of Object.entries(f.input.nativeDestinations)) {
+    const catalog = JSON.parse(o.capabilities.valueText);
+    catalog.providers.forEach((p) => { delete p.runtimeModes; });
+    o.capabilities.valueText = JSON.stringify(catalog);
+    f.input.destinations.find((d) => d.environmentId === id).capabilitiesDigest =
+      new Bun.CryptoHasher('sha256').update(o.capabilities.valueText).digest('hex');
+  }
+  const r = run(f); expect(r.status, r.error).toBe(0);
+  expect(r.report.disposition).toBe('launch');
+});
+
+test('malformed catalog excludes only that host and exposes its failing evidence', () => {
+  const f = intakeFixture();
+  f.input.nativeDestinations['env-worker-a'].capabilities.valueText = '{"providers":{}}';
+  const r = run(f); expect(r.status, r.error).toBe(0);
+  expect(r.report.selected.hostId).toBe('worker-b');
+  expect(r.report.terms.some((t) => t.environmentId === 'env-worker-a' && t.state !== 'pass')).toBe(true);
+});

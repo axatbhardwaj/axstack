@@ -7,30 +7,37 @@ const hash = (value) => new Bun.CryptoHasher('sha256').update(value).digest('hex
 const term = (code, pass, evidence) => ({ code,
   state: pass ? 'pass' : evidence == null ? 'unknown' : 'fail', evidence: evidence ?? null });
 
-function modelIn(catalog, pin) {
-  const providers = catalog?.providers?.filter((p) => p.providerInstanceId === pin?.providerInstanceId);
+function modelIn(catalog, pin, serverVersion) {
+  const providers = Array.isArray(catalog?.providers)
+    ? catalog.providers.filter((p) => p?.providerInstanceId === pin?.providerInstanceId) : [];
   const p = providers?.length === 1 ? providers[0] : null;
-  const models = p?.models?.filter((m) => m.id === pin?.model);
-  return p?.canRunChildTask === true && p.constraints?.length === 0
-    && p.runtimeModes?.includes('full-access') && models?.length === 1 ? { provider: p, model: models[0] } : null;
+  const models = Array.isArray(p?.models) ? p.models.filter((m) => m?.id === pin?.model) : [];
+  const unrestricted = p?.runtimeModes === undefined && serverVersion === '0.1.5'
+    && ['codex', 'claudeAgent'].includes(p?.driverKind);
+  return catalog?.runtimeMode === 'full-access' && p?.canRunChildTask === true
+    && Array.isArray(p.constraints) && p.constraints.length === 0
+    && (unrestricted || (Array.isArray(p.runtimeModes) && p.runtimeModes.includes('full-access')))
+    && models.length === 1 ? { provider: p, model: models[0] } : null;
 }
 
 function staffingTerms(input, environmentId) {
   const o = input.nativeDestinations?.[environmentId];
   let catalog;
   try { catalog = JSON.parse(o?.capabilities?.valueText); } catch { /* unknown catalog */ }
-  const driver = modelIn(catalog, input.request);
-  const author = modelIn(catalog, input.staffing?.author);
-  const reviewer = modelIn(catalog, input.staffing?.reviewer);
+  const resolve = (pin) => modelIn(catalog, pin, o?.environment?.value?.serverVersion);
+  const driver = resolve(input.request);
+  const author = resolve(input.staffing?.author);
+  const reviewer = resolve(input.staffing?.reviewer);
   const options = input.request.options;
   const supportedOptions = driver && Object.entries(options).every(([id, value]) => {
-    const definitions = driver.model.options?.filter((v) => v.id === id);
+    const definitions = Array.isArray(driver.model.options) ? driver.model.options.filter((v) => v?.id === id) : [];
     const d = definitions?.length === 1 ? definitions[0] : null;
-    return (d?.values ?? d?.options?.map((v) => v.id))?.includes(value);
+    const values = d?.values ?? (Array.isArray(d?.options) ? d.options.map((v) => v?.id) : []);
+    return Array.isArray(values) && values.includes(value);
   });
   return [term('driver-model', !!driver && supportedOptions && input.request.runtimeMode === 'full-access', catalog),
     term('local-staffing', !!author && !!reviewer && author.provider.driverKind !== reviewer.provider.driverKind
-      && Array.isArray(input.staffing?.advisers) && input.staffing.advisers.every((pin) => modelIn(catalog, pin)),
+      && Array.isArray(input.staffing?.advisers) && input.staffing.advisers.every(resolve),
     { staffing: input.staffing ?? null, catalog: catalog ?? null })];
 }
 
@@ -38,7 +45,9 @@ export function planIntake(input, now) {
   const config = parseFleetConfig(input.configText, input.configDigest);
   if (input.request?.role !== 'driver') throw new Error('driver-role-required');
   const initial = recommend(input, now); // Validate and rank the unchanged supplied facts.
-  const terms = [];
+  const terms = initial.excluded.map((e) => ({ code: 'route-eligibility',
+    state: e.reasons.some((r) => /unproven|missing/.test(r)) ? 'unknown' : 'fail',
+    environmentId: e.environmentId, evidence: e }));
   const intake = input.intake ?? {};
   const local = () => {
     const localTerms = staffingTerms(input, input.origin.environmentId);
@@ -107,7 +116,7 @@ export function bindIntakePlan(input, saved, configDigest, now, capabilitiesText
   const r = input.request;
   if (r.providerInstanceId !== resolved.providerInstanceId || r.model !== resolved.model
     || r.options[resolved.effortOption?.id] !== resolved.effortOption?.value) hold('settings-mismatch');
-  return { launch: current.launch,
+  return { launch: current.launch, planTerms: current.terms,
     options: Object.entries(r.options).sort(([a], [b]) => a.localeCompare(b)).map(([id, value]) => ({ id, value })),
     destination: { environmentId: current.selected.environmentId, projectId: current.selected.projectId },
     fleetBinding: { configDigest, destinationSnapshotId: current.selected.destinationSnapshotId,
