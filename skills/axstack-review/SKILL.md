@@ -149,6 +149,7 @@ This section applies to PR review and watch adoption.
 
 Before dispatch, read [T3 runtime](../axstack/references/t3-runtime.md).
 The T3 driver thread is the sole owner and coordinator; it never writes tracked files or repairs an author’s source.
+Exception: the driver may commit proof assets only on the proof branch under [PR body](../axstack/references/pr-shape.md#pr-body).
 Standalone peer review or watch adoption reuses that driver and any valid
 recorded ownership. `axstack-owner` is a binding, not a separately launched worker.
 Only the driver dispatches workers under the runtime contract.

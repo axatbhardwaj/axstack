@@ -49,6 +49,28 @@ Do not lead with an implementation inventory.
 Use a title that explains why the change matters.
 For repository title conventions, check recently merged PRs.
 
+Every own PR description must include a short `Proof` section:
+what was verified and how, with commands and observed results, CI or evidence links.
+For UI-related changes, embed screenshots in the PR description
+(before/after where meaningful).
+Screenshots are mandatory for UI-related changes, with the text fallback below as the only exception.
+When interaction or motion matters, also embed a short GIF screen recording
+in the PR description; link an MP4 when a GIF is impractical.
+
+Before committing any proof asset or posting the description, redact secrets,
+keys, seed/recovery phrases, invite codes, personal data and private account details.
+Never push an unredacted asset.
+If safe redaction is impossible, describe the proof in text and state why an
+image is omitted.
+
+The driver, as sole forge writer, commits proof assets to the dedicated orphan
+branch `axstack-proof` in the same repository at `<pr-number>/<file>`.
+Put `[skip ci]` in every proof-branch commit message.
+Never commit proof assets to the PR branch.
+Embed screenshots and GIFs using GitHub blob URLs ending `?raw=true`:
+`https://github.com/<owner>/<repo>/blob/axstack-proof/<pr-number>/<file>?raw=true`.
+Refresh proof when the head changes in a way that affects it.
+
 End the description with `Created with <model> in <harness>`.
 Include the author and subagent models that wrote code.
 Use the model name the harness reports.

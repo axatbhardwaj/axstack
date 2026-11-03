@@ -9,7 +9,8 @@ and `skills/axstack/references/ui-improvement-loop.md`.
 ```bash
 doctor > "$EVIDENCE/ui-loop-doctor.log" 2>&1
 bun run test tests/workflows/ui-improvement.test.js \
-  tests/workflows/ui-verification.test.js tests/workflows/perf-loop.test.js \
+  tests/workflows/ui-verification.test.js tests/workflows/pr-proof.test.js \
+  tests/workflows/perf-loop.test.js \
   > "$EVIDENCE/ui-loop.log" 2>&1
 ```
 
@@ -26,6 +27,15 @@ This does not prove a live visual improvement, capture comparability or reviewer
 blindness. For an actual product UI run, the driver delegates Playwright through
 the existing UI verifier with exact revision, protocol and private evidence;
 no browser drive belongs to the author. Preserve all existing delivery gates.
+
+`pr-proof.test.js` checks mandatory PR Proof sections and UI screenshots, embedded
+GIF recordings with linked MP4 fallback, driver-only orphan-branch assets with
+`[skip ci]` commits, raw GitHub blob image embeds, head-sensitive refresh,
+redaction before commits/posting, unredacted-push prohibition and text fallback.
+The Owner row's permission stays limited to proof assets on the proof branch.
+It also checks the verifier's private asset return and shared PR-body link.
+Removal/inversion/rewording probes prove instructions; actual asset publication
+and GitHub rendering remain driver-owned checks after a PR exists.
 
 ## Explain delivery
 

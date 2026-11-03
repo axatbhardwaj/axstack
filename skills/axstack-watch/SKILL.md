@@ -62,6 +62,7 @@ Route MODERNIZE and authorized REWORK through
 author writes in its owned worktree, then independent authored review covers
 the exact rebased or reworked head and base before driver publication.
 The driver never writes tracked files.
+Exception: the driver may commit proof assets only on the proof branch under [PR body](../axstack/references/pr-shape.md#pr-body).
 
 - **MODERNIZE:** for a useful goal whose implementation remains the right shape,
   the repair author rebases onto the freshly fetched actual base.

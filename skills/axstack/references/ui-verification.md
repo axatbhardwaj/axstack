@@ -122,6 +122,7 @@ Drive the real user path.
 Capture the action, the resulting state and its side effects.
 For a dry-run claim, verify what it skips by observing files, network calls or Git refs.
 Keep evidence in the private evidence folder after cleanup.
+Return screenshots and recordings to the private evidence folder for the [PR Proof section](pr-shape.md#pr-body).
 
 Ideas paraphrased from pstack's
 [create-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/create-verification-skill/SKILL.md) (MIT).
