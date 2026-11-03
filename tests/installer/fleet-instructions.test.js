@@ -38,6 +38,31 @@ test('managed routing retains holds, separate UI placement and bounded authority
   ]) checkRule(text, accepts, rewording, [inversion], concepts);
 });
 
+for (const [name, concepts, equivalent, inversion] of [
+  ['once', [/route/i, /whole task/i, /at most once/i],
+    'Route each whole task at most once through intake planning.', [/at most once/i, 'repeatedly']],
+  ['scheduled work stays local', [/scheduled/i, /status/i, /follow.ups/i, /stay local/i],
+    'Status asks, follow-ups and scheduled work stay local.', [/stay local/i, 'route remotely']],
+  ['workers stay local', [/preserve/i, /routed marker/i, /every worker local/i, /inside the task/i, /without per.dispatch routing/i],
+    'Preserve the routed marker and keep every worker local inside the task without per-dispatch routing.',
+    [/without per.dispatch routing/i, 'with per-dispatch routing']],
+  ['accept before ownership transfer', [/transfer ownership/i, /only after AXSTACK-ACCEPT/i, /one idempotent proceed/i],
+    'Transfer ownership only after AXSTACK-ACCEPT and one idempotent proceed.', [/only after/i, 'before']],
+  ['standing intake grant', [/t3_thread_launch/i, /only on explicit user request/i, /runtime.accepted/i,
+    /user standing intake grant/i, /that one hand.off/i],
+    'Use t3_thread_launch only on explicit user request, including a runtime-accepted user standing intake grant for that one hand-off.',
+    [/runtime.accepted/i, 'assumed']],
+]) test(`installed intake semantic guard: ${name}`, () => {
+  const text = renderInstructionBlock().replaceAll('`', '').replace(/\s+/g, ' ');
+  checkRule(text, (s) => requires(s, ...concepts), equivalent, [inversion], concepts);
+});
+
+test('installed no-launch path requires local staffing before continuing', () => {
+  const text = renderInstructionBlock().replaceAll('`', '').replace(/\s+/g, ' ');
+  checkRule(text, (s) => prohibits(s, /no launch call/i, /stay local/i, /check staffing/i),
+    'With no launch call, check staffing and stay local.', [[/stay local/i, 'launch remotely']], [/check staffing/i]);
+});
+
 test('real install owns runnable pinned routing and uninstall preserves account policy', () => {
   const root = makeTempRoot('axstack-fleet-install-');
   const home = join(root, 'home');

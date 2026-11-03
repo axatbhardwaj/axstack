@@ -68,10 +68,41 @@ test.each([
   expect(result.output).not.toContain('MATCH');
 });
 
-test('driver plans cannot bind a delegated task, tampered plan or mismatched catalog', () => {
+test('driver plans cannot bind a delegated task or tampered plan', () => {
   const f = driver();
   const args = f.args(); args[args.indexOf('launch')] = 'task';
   expect(invoke(args).status).toBe(2);
   f.saved.launch.clientRequestId = 'different';
   expect(invoke(f.args()).status).toBe(2);
+});
+
+test('launch binding rejects an actually changed catalog after a valid plan', () => {
+  const f = driver();
+  expect(invoke([...f.args(), '--out', `${f.dir}/valid-launch.json`]).status).toBe(0);
+  const changed = JSON.parse(readFileSync(`${f.dir}/catalog.json`, 'utf8'));
+  changed.fixtureObservation = 'different saved catalog bytes';
+  f.save('catalog', changed);
+  const r = invoke(f.args());
+  expect(r.status).toBe(2);
+  expect(r.error).toBe('dispatch-plan hold: capabilities-digest-mismatch\n');
+  expect(r.output).toBe('');
+});
+
+test('a resolvable role model must still match the planned driver model', () => {
+  const f = driver();
+  for (const d of f.input.destinations) {
+    const o = f.input.nativeDestinations[d.environmentId];
+    const catalog = JSON.parse(o.capabilities.valueText);
+    catalog.providers[0].models.push({ ...catalog.providers[0].models[0], id: 'gpt-6-sol' });
+    o.capabilities.valueText = JSON.stringify(catalog);
+    d.capabilitiesDigest = new Bun.CryptoHasher('sha256').update(o.capabilities.valueText).digest('hex');
+  }
+  f.save('catalog', JSON.parse(f.input.nativeDestinations['env-worker-a'].capabilities.valueText));
+  Object.assign(f.saved, planIntake(f.input, NOW));
+  expect(invoke([...f.args(), '--out', `${f.dir}/valid-launch.json`]).status).toBe(0);
+  f.roles.roles.find((r) => r.id === 'axstack-driver').model = 'gpt-6-sol';
+  const r = invoke(f.args());
+  expect(r.status).toBe(2);
+  expect(r.error).toBe('dispatch-plan hold: settings-mismatch\n');
+  expect(r.output).toBe('');
 });
