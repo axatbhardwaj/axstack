@@ -1,14 +1,19 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
 
 // Structural contract checks only. Fresh model evaluation remains separate.
 
-test('repairs: substantive runs require the explicitly loaded audit skill and holdouts', () => {
+test('repairs: triggered audits retain the explicitly loaded audit skill and holdouts', () => {
   const lifecycle = read('skills/axstack/references/lifecycle.md');
-  expect(lifecycle).toMatch(/(?:enabled by default|defaults on)[^.]*substantive run/i);
+  const concepts = [/audit/i, /only/i, /on request/i, /\bmaterial deviation/i, /repeated repairs/i];
+  checkRule(lifecycle.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' '),
+    (text) => requires(text, ...concepts),
+    'Dispatch audit only on request, on a material deviation or after repeated repairs.',
+    [[/only/i, 'also']], concepts);
   expect(lifecycle).toMatch(/load[^\n]*axstack-audit\/SKILL\.md/i);
   expect(lifecycle).toMatch(/regression scenario[^.]*unchanged\s+holdout/i);
 });

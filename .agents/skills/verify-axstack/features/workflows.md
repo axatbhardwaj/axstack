@@ -1,5 +1,14 @@
 # Inspect workflow instruction contracts
 
+Lean small-change delivery: `small-change-path.test.js` and `pending-repairs.test.js` cover one isolated
+writer, driver-only publication, mandatory cross-provider review with T5's
+combined/separate diligence branches, native watch and watch §5's full merge
+predicate. Removal/inversion/rewording probes cover all four full-path
+escalation triggers, full-path-only step-back advice, current-path rereads and
+trigger-only audits. Keep the T1 reviewer-checkout, T4 intake, T5 combined-review
+and T7 checkpoint cleanup/watch guards green. This proves shipped instructions,
+not live delivery, adviser behavior or audit dispatch.
+
 Multi-project coordination: `multi-driver.test.js` checks the shared runtime
 guidance reached from routing, lifecycle, run-record and Implement. Semantic
 removal/inversion/rewording probes cover authorized fanout, launch-only authority
@@ -155,6 +164,8 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/small-change-path.test.js \
+  tests/workflows/pending-repairs.test.js \
   tests/workflows/review-checkout.test.js \
   tests/workflows/combined-review.test.js \
   tests/workflows/watch-handback.test.js \
