@@ -79,7 +79,11 @@ Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `watch-handback.test.js` covers active-watch continuity with unresolved
 `CHANGES_REQUESTED` or required reviews, one blocked-on-person note without
 re-requesting review, consequential-only Align/Spec question advice, and
-checkpoint cleanup batching with evidence and per-resource guards. Removal and
+checkpoint cleanup batching with evidence and per-resource guards. `cleanup.test.js`
+also rejects per-review timing in Implement, Lifecycle and the workflow guide,
+including contradictory timing added alongside the checkpoint rule.
+The handback checks pin checkpoint events, batch ownership and pending cleanup
+in the private run record. Removal and
 inversion fail; equivalent rewording passes. Existing watch stop, T1 checkout,
 T3 spec-round and T5 combined-review guards remain separate keepers. These are
 instruction checks, not proof of live watch behavior or resource retirement.
@@ -154,6 +158,7 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/review-checkout.test.js \
   tests/workflows/combined-review.test.js \
   tests/workflows/watch-handback.test.js \
+  tests/workflows/cleanup.test.js \
   tests/workflows/autonomy-planning.test.js \
   tests/workflows/independent-delivery.test.js \
   tests/workflows/independent-delivery-maps.test.js \

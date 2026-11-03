@@ -245,10 +245,10 @@ For each PR:
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
    author provenance. State the author's actual provider and model from the
    T3 launch receipt in the review dispatch brief; a `Claude-Session`
-   trailer is attribution, not provenance. After each settled review, run
-   `axstack-cleanup` for its exact reviewer resources before PR merge,
-   preserving and reading back the
-   private evidence archive before eligible worktree retirement. A later review
+   trailer is attribution, not provenance. At
+   [run checkpoints](../axstack-cleanup/SKILL.md#run-checkpoints), batch eligible
+   reviewer worktree retirement through `axstack-cleanup`, preserving and reading back
+   the private evidence archive first with every existing per-resource guard. A later review
    uses a fresh child checkout. Keep the author candidate until its PR merges or
    closes; a cleanup hold preserves only the affected reviewer resource.
 4. Route the verdict. `APPROVE` at that head plus `axstack-watch` §5's full

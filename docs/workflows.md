@@ -59,8 +59,10 @@ Direct routes need no spec ceremony:
 - `axstack-debug` builds a red loop, diagnoses to root cause, escalates hard
   bugs through adviser-directed investigator fan-out, and hands off a
   classified repair without landing a change.
-- `axstack-cleanup` runs inline in the driver after accepted worker, Task, or
-  Run completion, or against an explicitly bounded backlog. It dispatches no
+- `axstack-cleanup` runs inline in the driver at
+  [run checkpoints](../skills/axstack-cleanup/SKILL.md#run-checkpoints) to batch eligible
+  cleanup, including reviewer worktree retirement, preserving and reading back evidence
+  first with every existing per-resource guard, or against an explicitly bounded backlog. It dispatches no
   cleanup worker and preserves protected or uncertain resources.
 - Peer review uses the linked issue, PR description, author comments and repository
   rules as context for code and design defects, not a contract. Accept the author's

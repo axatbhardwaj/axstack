@@ -5,10 +5,9 @@ description: When completed T3 threads and worktrees need bounded retirement, us
 
 # Cleanup
 
-Batch eligible cleanup, including reviewer worktrees, at run checkpoints after
+Batch eligible cleanup, including reviewer worktrees, at [run checkpoints](#run-checkpoints) after
 accepted settlement, or for the exact backlog scope the user named.
-Run the batch inline in the driver; a checkpoint can cover settled reviews
-before merge or accepted run completion.
+Run the batch inline in the driver.
 Per-review invocations preserve evidence and record pending cleanup in the
 existing private run record. Per-review invocations never retire resources individually.
 Before checkpoint retirement, preserve and read back each resource's evidence
@@ -33,10 +32,14 @@ Evidence never lives in a worktree and belongs in private `<run>/evidence/<key>/
 A missing merged or closed author worktree is expected, not a hold.
 Follow the runtime schema, never invent an alternate command protocol.
 
+## Run checkpoints
+
+A run checkpoint is a merge, a phase end, or run close-out.
+
 ## Authority and scope
 
-Inline cleanup may consider only resources owned by the accepted completion it
-is processing. Driver-start orphan sweeps follow the guarded cross-run sweep in
+Each inline checkpoint batch considers only resources owned by its accepted
+completions. Driver-start orphan sweeps follow the guarded cross-run sweep in
 [Workspace hygiene](../axstack/references/workspace-hygiene.md). Backlog
 cleanup requires an explicit bounded selector such as a
 project, run, task set, checkout set, repository, or named age window; age narrows an

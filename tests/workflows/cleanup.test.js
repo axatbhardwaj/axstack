@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
@@ -70,13 +71,29 @@ const restoredRelatedPins = [
     'Completed non-author worktrees with dirty source or unpushed commits use the [Workspace hygiene](workspace-hygiene.md) salvage path before removal; this archive helper never treats source changes as evidence-only cleanup.'],
   ['skills/axstack/references/evidence-archive.md',
     'A user-created or user-taken-over thread, an active or unknown run, an unsettled descendant, ambiguous publication, or an unknown file remains protected.'],
-  ['skills/axstack-implement/SKILL.md',
-    'After each settled review, run `axstack-cleanup` for its exact reviewer resources before PR merge, preserving and reading back the private evidence archive before eligible worktree retirement.'],
 ];
 for (const [path, pin] of restoredRelatedPins) test(`cleanup related exact safety: ${pin}`, () => {
   const text = normalize(read(path));
   expect(text).toContain(pin);
   expect(text.split(pin).length).toBe(2);
+});
+for (const [path, oldTiming] of [
+  ['skills/axstack-implement/SKILL.md', 'After each settled review, run axstack-cleanup for its exact reviewer resources.'],
+  ['skills/axstack/references/lifecycle.md', 'After accepting task or run completion, the driver invokes axstack-cleanup inline.'],
+  ['docs/workflows.md', 'axstack-cleanup runs inline in the driver after accepted worker, Task, or Run completion.'],
+]) test(`cleanup callers batch at checkpoints: ${path}`, () => {
+  const source = sentences(read(path)).join('. ');
+  const concepts = [/run checkpoints/i, /batch/i, /eligible/i, /reviewer worktree retirement/i,
+    /axstack-cleanup/i, /preserv\w*/i, /reading back/i, /evidence/i, /first/i, /every existing per-resource guard/i];
+  if (path.includes('axstack-implement')) concepts.push(/private evidence archive/i);
+  const accepts = (text) => requires(text, ...concepts) && !sentences(text).some((sentence) =>
+    /axstack-cleanup/i.test(sentence) && /\b(?:after|following)\b.*(?:\b(?:each|every)\b.*\breview\b|\baccept(?:ing|ed)?\b.*\bcompletion\b)/i.test(sentence));
+  checkRule(source, accepts,
+    'At run checkpoints, batch eligible reviewer worktree retirement through axstack-cleanup, preserving and reading back the private evidence archive first with every existing per-resource guard.',
+    [[/run checkpoints/i, 'each settled review'], [/preserv\w*/i, 'discarding'],
+      [/every existing per-resource guard/i, 'selected per-resource guards']], concepts);
+  // Reject contradictory old timing even when the checkpoint instruction survives.
+  expect(accepts(`${source}. ${oldTiming}`)).toBe(false);
 });
 test('cleanup uses the shared T3 contract inline and separates operations', () => {
   for (const ref of ['contracts.md', 'lifecycle.md', 'routing.md', 't3-runtime.md', 'workspace-hygiene.md', 'evidence-archive.md']) {
