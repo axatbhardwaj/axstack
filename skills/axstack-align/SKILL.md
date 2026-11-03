@@ -78,7 +78,10 @@ user round, the driver independently drafts the prioritized frontier and
 recommendations, except for brainstorm questions, where the driver frames the
 brief and rubric and assesses after the candidates and required judge rounds
 return. Reuse valid brainstorm receipts to replace the adviser consult for
-that question. For other questions, consult `axstack-advisor-astra` and
+that question. For other questions, consult advisers only for consequential
+decisions and disagreements. Never dispatch advisers for every question,
+routine factual clarification or settled preferences.
+For those consequential decisions and disagreements, consult `axstack-advisor-astra` and
 `axstack-advisor-opus` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts

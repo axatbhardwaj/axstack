@@ -200,6 +200,11 @@ Load and follow [Blocked on a person](references/blocked-on-person.md).
 
 ## 6. End and preserve continuity
 
+While a watch is active, never unwatch or hand back because a forge
+`CHANGES_REQUESTED` or required review remains unresolved.
+Continue repairing and watching review blockers within the recorded mode and authority.
+User cancellation, standalone expiry and existing stop rules remain unchanged.
+
 Reconcile PR links and stop native PR watches under
 [T3 runtime](../axstack/references/t3-runtime.md#native-pr-links-and-watches).
 

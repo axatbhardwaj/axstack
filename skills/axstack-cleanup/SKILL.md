@@ -5,8 +5,14 @@ description: When completed T3 threads and worktrees need bounded retirement, us
 
 # Cleanup
 
-Run cleanup inline in the driver after accepting a worker task or run
-completion, or for the exact backlog scope the user named. This skill never
+Batch eligible cleanup, including reviewer worktrees, at run checkpoints after
+accepted settlement, or for the exact backlog scope the user named.
+Run the batch inline in the driver; a checkpoint can cover settled reviews
+before merge or accepted run completion.
+Per-review invocations preserve evidence and record pending cleanup in the
+existing private run record. Per-review invocations never retire resources individually.
+Before checkpoint retirement, preserve and read back each resource's evidence
+and apply existing eligibility and safety guards. This skill never
 dispatches a cleanup worker and never retires its current driver session.
 
 Before any runtime action, load and follow:

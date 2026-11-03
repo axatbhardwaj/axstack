@@ -132,4 +132,8 @@ the carryover rule above.
 If the forge dismissed it or requires last-push approval, hold and tell the user
 without auto-requesting re-review.
 Initial review requests before any human approval remain allowed.
+For a stale `CHANGES_REQUESTED` whose findings are addressed, use the
+[blocked-on-person hold note](blocked-on-person.md) once per review ID.
+Never re-request review for a PR blocked on a person, including stale
+`CHANGES_REQUESTED`.
 
