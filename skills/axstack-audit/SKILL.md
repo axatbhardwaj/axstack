@@ -74,7 +74,7 @@ Use actual records, never memory:
 - test and review evidence; and
 - the run execution record at its recorded `progress.md` path.
 
-Auditing is enabled for every substantive run on the full path by default.
+Auditing is enabled for every substantive run by default, except small-path runs.
 Small-path runs dispatch audit only on request, on a material deviation or
 after repeated repairs. A material deviation or repeated repair pattern can
 justify a checkpoint. Reuse still-valid prior

@@ -52,6 +52,10 @@ rule('ineligible or unknown work retains separate diligence', small,
   [/otherwise/i, /separate diligence/i, /unknown eligibility/i],
   'Otherwise require separate diligence, including unknown eligibility.',
   /require/i, 'waive');
+rule('single-provider or unavailable reviewers hold review', small,
+  [/single-provider presets/i, /unavailable mapped reviewers/i, /review under §6/i],
+  'Single-provider presets or unavailable mapped reviewers hold review under §6.',
+  /hold/i, 'waive');
 rule('proof precedes driver publication', small,
   [/driver/i, /author.*evidence/i, /before publication/i],
   'The driver verifies author proof and evidence before publication.',
@@ -77,6 +81,23 @@ rule('review-depth risk includes authority and flagged concerns', small,
 rule('advisers start only after full-path escalation', small,
   [/step-back advisers/i, /full path/i],
   'Step-back advisers run only on the full path after escalation.', /only/i, 'also');
+rule('escalation reconciles its trigger, scope and evidence', small,
+  [/trigger/i, /scope/i, /dependencies/i, /current receipts/i, /escalation/i],
+  'On escalation, record the trigger and reconcile scope, dependencies and current receipts.',
+  /reconcile/i, 'ignore');
+rule('escalation preserves author and round budget', small,
+  [/author/i, /review-round budget/i],
+  'On escalation, preserve the author and review-round budget.', /preserve/i, 'reset');
+const loop = implement.split('## 6. Loop until merge-ready')[1] ?? '';
+rule('section 6 escalates before round-3 step-back', loop,
+  [/small-path work/i, /full path/i, /review round 3/i],
+  'Small-path work first escalates at review round 3 to the full path.',
+  /first escalates/i, 'stays');
+rule('section 6 limits counted-round step-back to full path', loop,
+  [/any counted failing review round/i, /rounds.*3 or more/i,
+    /step-back: unused/i, /driver steps back/i],
+  'On the full path, on any counted failing review round leaving rounds at 3 or more with step-back: unused, the driver steps back.',
+  /on the full path/i, 'on either path');
 rule('step-back procedure is restricted to full path', read('axstack-implement/references/step-back.md'),
   [/step-back procedure/i, /full path/i],
   'This step-back procedure applies only on the full path.', /only/i, 'also');
@@ -94,6 +115,6 @@ const closeOut = read('axstack/references/lifecycle.md').split('## Close-out')[1
 rule('close-out settles a triggered small-path audit', closeOut,
   [/small-path runs/i, /when an audit-hook trigger applies/i],
   'For small-path runs, settle when an audit-hook trigger applies.', /settle/i, 'ignore');
-rule('full-path close-out retains its audit decision', closeOut,
-  [/full-path runs/i, /non-zero\/requested/i, /counts zero/i],
-  'For full-path runs settle non-zero/requested, else counts zero.', /settle/i, 'ignore');
+rule('all other substantive runs retain their close-out audit decision', closeOut,
+  [/all other substantive runs/i, /non-zero\/requested/i, /counts zero/i],
+  'All other substantive runs settle non-zero/requested, else counts zero.', /settle/i, 'ignore');

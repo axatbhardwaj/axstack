@@ -191,9 +191,10 @@ Build no custom scheduler, state engine or legacy fallback. See
 
 ## Audit hook (close-out and meaningful checkpoints)
 
-Auditing is enabled for every substantive run on the full path by default.
+Auditing is enabled for every substantive run by default, except small-path runs.
 Small-path runs dispatch audit only on request, on a material deviation or
-after repeated repairs, at [Close-out](#close-out) or a meaningful checkpoint.
+after repeated repairs. Dispatch follows [Close-out](#close-out) or a
+material-deviation/repeated-repair checkpoint.
 Never dispatch audit on every small run. Record the small-path trigger or its
 absence in the run record; non-zero counts alone do not require a small-path
 audit. An `axstack-audit` run is
@@ -211,10 +212,10 @@ nothing without tested independent review.
 Close-out requires the [close-out acceptance table](run-record.md#close-out-acceptance).
 
 PRs merge by forge state; close out: (1) settle every T3 worker run and archive eligible threads. Settle each worker thread with `t3_thread_organize` only if needed and read back `settled: true`, because a finished task does not count. For merged or closed PR authors, follow the [native/manual read-first path](t3-runtime.md#native-pr-links-and-watches); (2) compact record with counts and denominators—user
-interventions/deviations from plan/repairs; (3) `axstack-auditor`: for full-path
-runs settle non-zero/requested, else `counts zero`; for small-path runs, settle
+interventions/deviations from plan/repairs; (3) `axstack-auditor`: for small-path runs, settle
 when an audit-hook trigger applies. Otherwise record `not triggered` with the counts
-(`counts zero` when all are zero). A base auditor preflight rejection
+(`counts zero` when all are zero). All other substantive runs settle
+non-zero/requested, else `counts zero`. A base auditor preflight rejection
 (no delegated task started) records `auditor: UNKNOWN (unlaunchable)` with the
 attempted route and error as the archive receipt; no substitution. A launched
 auditor task must settle; (4) release merged run worktrees and branches;

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -15,11 +15,19 @@ test('repairs: audits retain the explicitly loaded audit skill and holdouts', ()
 
 for (const path of ['skills/axstack/references/lifecycle.md', 'skills/axstack-audit/SKILL.md']) {
   const source = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
-  test(`repairs: ${path} retains default auditing for substantive full-path runs`, () => {
-    const concepts = [/auditing/i, /substantive run/i, /full path/i, /by default/i];
-    checkRule(source, (text) => requires(text, ...concepts),
-      'For every substantive run on the full path, auditing is enabled by default.',
-      [[/full path/i, 'small path'], [/by default/i, 'only on request']], concepts);
+  test(`repairs: ${path} retains default auditing except for small-path runs`, () => {
+    const concepts = [/auditing/i, /every substantive run/i,
+      /(?:except|other than) small-path runs/i, /by default/i];
+    const appliesToAll = (text) => sentences(text).some((sentence) => requires(sentence, ...concepts)
+      && !/\b(?:on|in|for|to) (?:the )?(?:full[- ]path|implement(?:ation)?\b)/i.test(sentence));
+    checkRule(source, appliesToAll,
+      'Other than small-path runs, auditing is enabled by default for every substantive run.',
+      [[/(?:except|other than) small-path runs/i, 'on the full path'],
+        [/(?:except|other than) small-path runs/i, 'in Implement only'],
+        [/(?:except|other than) small-path runs/i, 'including small-path runs'],
+        [/every substantive run/i, 'every substantive run on the full path'],
+        [/every substantive run/i, 'every substantive run in Implement only'],
+        [/by default/i, 'only on request']], concepts);
   });
   test(`repairs: ${path} limits small-path auditing to explicit triggers`, () => {
     const concepts = [/small-path runs/i, /audit/i, /only/i, /on request/i,
