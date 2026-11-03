@@ -2,7 +2,8 @@
 
 ```text
 Candidate: <PR URL> rev <sha> (immutable checkout)
-Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>
+Workspace: <T3 taskId/childThreadId/runId + native worktree absolute path | review-manager PR-job exception: host-clone checkout absolute path>
+Driver worktree: <resolved absolute path for reviewer isolation proof>
 Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Mode: <peer | authored> Actual author: <provider/model from T3 launch receipt + session | n/a>
 Scope: <spec rev or linked issue + ticket + current base + exclusions>

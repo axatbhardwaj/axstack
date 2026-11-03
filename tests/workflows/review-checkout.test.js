@@ -38,7 +38,6 @@ test('later reviews use a fresh checkout', () => {
 
 for (const path of [
   'skills/axstack/references/t3-runtime.md',
-  'skills/axstack/references/automations.md',
   'skills/axstack/references/candidate-publication.md',
   'skills/axstack-review/references/review-candidate.md',
 ]) test(`reviewers use native isolation and verify the candidate and base in ${path}`, () => {
@@ -53,16 +52,19 @@ for (const path of [
 
 // Discover every shipped skill file and top-level guide: an added surface is covered too.
 const shipped = [
+  'README.md',
   ...readdirSync(`${import.meta.dir}/../../skills`, { recursive: true }).map((path) => `skills/${path}`),
   ...readdirSync(`${import.meta.dir}/../../docs`).filter((path) => path.endsWith('.md')).map((path) => `docs/${path}`),
 ].filter((path) => statSync(`${import.meta.dir}/../../${path}`).isFile());
 const driverMadeReviewerCheckout = (text) => text.replace(/`/g, '').replace(/\|\n/g, '|\n\n')
   .split(/\n\s*\n/).some((paragraph) => sentences(paragraph).some((clause) => {
-    if (!requires(clause, /(?:driver[ -](?:made|created)|driver (?:must |shall )?(?:makes?|creates?)|(?:made|created) by the driver)/i,
-      /checkouts?/i)) return false;
+    if (!requires(clause, /(?:driver[ -](?:made|created)|driver (?:must |shall )?(?:makes?|creates?)|(?:made|created) by the driver|detached checkout.*(?:made|created|prepared)|worktree add --detach)/i,
+      /checkouts?|worktree add --detach/i)) return false;
+    if (/review[ -]manager PR[ -]job reviewers/i.test(clause)) return false;
     if (/reviewers?|review checkout|bounded PR jobs/i.test(clause)) return true;
     // These roles keep driver-made checkouts; a nearby reviewer sentence does not change that.
     if (/release checks|investigators?|UI verifier/i.test(clause)) return false;
+    if (/per PR job.*host clone/i.test(clause)) return false; // Manager coordinator, not an ordinary reviewer.
     return /reviewers?|review checkout|bounded PR jobs/i.test(paragraph);
   }));
 test('all shipped reviewer guidance rejects driver-made checkouts', () => {
@@ -74,12 +76,42 @@ test('all shipped reviewer guidance rejects driver-made checkouts', () => {
     'Bounded PR jobs use driver-made detached checkouts.',
     'The driver must create the review checkout with git worktree add --detach.',
     'Reviewers must use async delegate_task and the driver makes a disposable detached checkout of candidate SHA and pinned base.',
+    'Each reviewer uses a separate detached checkout made for the reviewer.',
+    'Each reviewer works in git worktree add --detach <run>/checkouts/<key> <sha> made before dispatch.',
   ]) expect(driverMadeReviewerCheckout(wording)).toBe(true);
+  expect(shipped).toContain('README.md');
+  expect(driverMadeReviewerCheckout('Review-manager PR-job reviewers retain separate driver-made detached checkouts from existing host clones as an exception.')).toBe(false);
   expect(driverMadeReviewerCheckout('Investigators receive driver-made detached checkouts.')).toBe(false);
   expect(driverMadeReviewerCheckout('Reviewers use native isolation. Release checks retain driver-made detached checkouts.')).toBe(false);
+  expect(driverMadeReviewerCheckout('Review-manager PR-job reviewers retain separate driver-made detached checkouts from existing host clones as an exception. Ordinary reviewers use driver-made detached checkouts.')).toBe(true);
   for (const path of shipped) {
     expect(driverMadeReviewerCheckout(`${read(path)}\n\nEach reviewer uses a driver-made detached checkout.`), path).toBe(true);
   }
+});
+
+for (const path of [
+  'skills/axstack/references/automations.md',
+  'skills/axstack/references/lifecycle.md',
+  'docs/host-operations.md',
+]) test(`review-manager host-clone checkout exception in ${path}`, () => {
+  const text = sentences(read(path).replace(/`/g, '')).join('. ');
+  checkRule(text, (source) => requires(source, /review[ -]manager/i, /PR[ -]job reviewers/i,
+    /exception/i, /separate/i, /detached checkouts/i, /host clones/i),
+    'Review-manager PR-job reviewers retain separate detached checkouts from host clones as a named exception.',
+    [[/host clones/i, 'parent repository'], [/PR[ -]job reviewers/i, 'all reviewers']], [/exception/i]);
+});
+test('lifecycle scopes native reviewer worktrees to authored/candidate reviews', () => {
+  const text = sentences(read('skills/axstack/references/lifecycle.md').replace(/`/g, '')).join('. ');
+  checkRule(text, (source) => requires(source, /authored\/candidate reviewers/i, /native/i, /isolation:"worktree"/i),
+    'Authored/candidate reviewers must use native isolation:"worktree".',
+    [[/authored\/candidate reviewers/i, 'all reviewers'], [/isolation:"worktree"/i, 'isolation:"shared"']]);
+});
+test('candidate brief and receipt identify native or retained manager workspaces', () => {
+  for (const path of ['candidate-brief.md', 'review-receipt.md']) {
+    const text = read(`skills/axstack-review/references/${path}`);
+    expect(text).toMatch(/Workspace:.*native worktree.*review-manager.*host-clone checkout/i);
+  }
+  expect(read('skills/axstack-review/references/candidate-brief.md')).toMatch(/^Driver worktree: <resolved absolute path/m);
 });
 
 for (const path of [

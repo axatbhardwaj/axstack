@@ -67,6 +67,10 @@ Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `references/codebase-report.md`, `references/peer-mode.md`,
 `references/review-candidate.md`, `references/candidate-brief.md` and
 `references/review-receipt.md` under `skills/axstack-review/`.
+`review-checkout.test.js` guards native authored/candidate reviewer isolation,
+the retained review-manager PR-job host-clone exception, workspace templates and
+the driver-path brief field. It scans shipped skills, top-level docs and README
+for obsolete ordinary reviewer checkout rules, including wording without "driver".
 Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/readiness.md`, `references/proven-verification.md`,
 `references/escalation.md` and `references/blocked-on-person.md` under
@@ -139,6 +143,7 @@ availability rules while loading the advised-hold exceptions.
 doctor > "$EVIDENCE/workflows-doctor.log" 2>&1
 STATUS=0
 bun run test tests/workflows/completion-guards.test.js \
+  tests/workflows/review-checkout.test.js \
   tests/workflows/independent-delivery.test.js \
   tests/workflows/independent-delivery-maps.test.js \
   tests/workflows/multi-driver.test.js \

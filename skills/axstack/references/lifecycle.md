@@ -177,8 +177,10 @@ The native review manager uses fresh finite T3 pass threads from its dedicated
 lane project on an hourly T3 scheduled task (`everyMs:3600000`). It admits
 actionable PR events
 within measured host capacity; waiting PRs remain covered without reserving slots.
-Reviewers in bounded PR jobs use native `isolation:"worktree"` and verify the
-pinned candidate and base inside their own worktree; jobs settle after descendants.
+Authored/candidate reviewers use native `isolation:"worktree"` and verify the
+pinned candidate and base inside their own worktree. Review-manager PR-job reviewers
+retain separate driver-made detached checkouts from existing host clones as a named
+exception, alongside release/debug/investigator/UI-verifier checks; jobs settle after descendants.
 Build no custom scheduler, state engine or legacy fallback. See
 [Review manager](automations.md) for binding, canary, capacity and schedule health.
 

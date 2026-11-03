@@ -213,9 +213,11 @@ reconcile the coordinator and every descendant, and record the event unserved an
 Uncertain liveness retains the slot only within that five-minute bound;
 unverified settlement after the stop holds lane admission.
 Settlement returns continuity to the manager rather than retaining an idle PR
-coordinator. Reviewers must use native `isolation:"worktree"` and a separate
-private evidence folder. Reviewers must check out and verify the exact candidate SHA
-and pinned base inside that worktree. Read back evidence before removal.
+coordinator. Review-manager PR-job reviewers retain separate driver-made detached
+checkouts from existing host clones as a named exception to native reviewer isolation,
+alongside release/debug/investigator/UI-verifier checks. Each uses a separate private
+evidence folder and verifies the exact candidate SHA and pinned base in its checkout.
+Read back evidence before removal.
 
 Set `TMPDIR` for manager and job commands to an owned 0700 directory under the
 system temp directory, named from the dispatch key and recorded in the receipt,

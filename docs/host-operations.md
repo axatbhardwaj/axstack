@@ -104,8 +104,9 @@ The packaged prompt checks for a quiet exit before skill loading; full passes
 follow the lifecycle below. Each pass starts in a fresh finite worktree from
 `origin/main`, fetches first, and checks its
 binding. Continuity lives outside worktrees at
-`~/.local/share/axstack/runs/review-manager/progress.md`. Per-PR detached
-review checkouts come from existing host clones; a missing clone holds that job.
+`~/.local/share/axstack/runs/review-manager/progress.md`. Review-manager PR-job reviewers
+retain separate detached checkouts from existing host clones as a named exception
+to native reviewer isolation; a missing clone holds that job.
 At pass start, follow [Provider bindings](../skills/axstack/references/t3-runtime.md#preflight-and-binding)
 for provider binding.
 

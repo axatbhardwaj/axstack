@@ -218,7 +218,7 @@ for (const [path, pin] of [
 test('T3 review placement retains the checkout and private evidence receipt interface', () => {
   const review = read('skills/axstack-review/SKILL.md');
   expect(review).toContain('t3-runtime.md#role-dispatch-by-permitted-writes');
-  expect(review).toContain('Workspace: <T3 taskId/childThreadId/runId + detached checkout absolute path>');
+  expect(review).toContain('Workspace: <T3 taskId/childThreadId/runId + native worktree absolute path | review-manager PR-job exception: host-clone checkout absolute path>');
   expect(review).toContain('Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)');
 });
 
