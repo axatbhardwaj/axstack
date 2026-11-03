@@ -28,6 +28,11 @@ jobs:
         with:
           bun-version: '1.4.2'
 
+      # Fetch npm before the credential exists on disk, so the download has
+      # nothing to read. The version is pinned and bunx caches the resolution.
+      - name: Fetch npm before the credential exists
+        run: bunx npm@12.0.2 --version
+
       - run: bun test
 
       - name: Tag must match the manifest version
@@ -40,13 +45,7 @@ jobs:
             exit 1
           fi
 
-      # Fetch npm before the credential exists on disk, so the download has
-      # nothing to read. The version is pinned and bunx caches the resolution.
-      - name: Fetch npm before the credential exists
-        run: bunx npm@12.0.2 --version
-
-      # A stage-only token cannot create a package that does not exist. Say so
-      # actionably here instead of letting npm return a bare 403 at the end.
+      # Preserve the existing-package prerequisite before publishing a release.
       - name: Package must already exist
         run: |
           set -eu
@@ -72,8 +71,7 @@ jobs:
           fi
           if [ "$code" = missing ]; then
             echo "axstack has no published versions on the registry." >&2
-            echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
-            echo "credential, then staged releases work from here." >&2
+            echo "Release publishing requires an existing package; investigate before retrying." >&2
             exit 1
           fi
 
@@ -90,8 +88,7 @@ jobs:
           umask 077
           printf '//registry.npmjs.org/:_authToken=%s\n' "${REGISTRY_TOKEN}" > "${HOME}/.npmrc"
 
-      # The token is stage-only: it defers proof-of-presence, so this stages
-      # the version and a maintainer approves it with `npm stage approve`.
-      # bun has no staging command, so npm is pinned and run through bunx.
-      - name: Stage for approval
-        run: bunx --no-install npm@12.0.2 stage publish . --access public
+      # The direct-publish token allows this tag-triggered job to publish.
+      # Run the pinned, prefetched npm without another download after auth.
+      - name: Publish release
+        run: bunx --no-install npm@12.0.2 publish . --access public

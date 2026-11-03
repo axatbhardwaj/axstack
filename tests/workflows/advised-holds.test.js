@@ -31,7 +31,7 @@ rule('4.6: exhaustive exclusions follow the cause', [/\bnever-advised list\b/i, 
   'The never-advised list is exhaustive and follows the cause rather than reply option wording.', /\bnever-advised\b/i);
 
 const exclusions = [
-  ['approval', /\bspec approval\b.*\bnpm stage approval\b.*\bcollaborator approval\b/i, 'spec approval, npm stage approval or collaborator approval'],
+  ['approval', /\bspec approval\b.*\bcollaborator approval\b/i, 'spec approval or collaborator approval'],
   ['access', /\baccess\b.*\bcredentials\b/i, 'access or credentials'],
   ['forge', /\bforge merges by the user\b/i, 'forge merges by the user'],
   ['off', /\bAuto-merge: off\b/i, 'Auto-merge: off'],

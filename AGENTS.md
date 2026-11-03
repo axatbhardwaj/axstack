@@ -85,8 +85,10 @@
   `.github/workflows/publish.yml`, then reinstall and verify it on io, iobook,
   iobox, iosatellite (SSH as `xzat@iosatellite`) and VPS only under release and
   host-mutation authority recorded for that run.
-  Merge the release PR under the watch predicate. The human approves the npm
-  stage; agents never run `npm stage approve`.
+  Merge the release PR under the watch predicate.
+  The tag-triggered publish workflow publishes releases.
+  Agents push the signed release tag only under recorded release authority.
+  Agents never run `npm publish` locally.
 
 ## Interfaces
 

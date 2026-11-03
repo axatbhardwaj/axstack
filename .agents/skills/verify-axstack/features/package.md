@@ -98,7 +98,7 @@ Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
 
 This comparison additionally requires npm; Bun alone cannot execute it.
 Use a declared absolute npm executable (prefer the cached npm@12.0.2 used by
-staging), a private HOME/cache, and the offline Launch shell. Never install npm
+release publishing), a private HOME/cache, and the offline Launch shell. Never install npm
 to make this optional check pass. Retain its complete JSON and actual exit.
 
 ```bash

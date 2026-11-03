@@ -89,10 +89,10 @@ rule('open PRs have no expiry or reauthorization', runtime,
   [/never/i, 'always'], /never/i);
 for (const path of [runtime, 'axstack/references/t3-runtime.md']) {
   rule(`forge-resolved wait slows at once (${path})`, path,
-    [/forge-resolved human waits/i, /user merge/i, /npm stage approval/i, /human review/i,
+    [/forge-resolved human waits/i, /user merge/i, /human review/i,
       /no unsettled worker/i, /no PR needing watch events/i,
       /cadence/i, /at once|immediately/i],
-    'For forge-resolved human waits, including user merge, npm stage approval and human review, with no unsettled worker and no PR needing watch events, immediately set the run watch cadence to 60 minutes.',
+    'For forge-resolved human waits, including user merge and human review, with no unsettled worker and no PR needing watch events, immediately set the run watch cadence to 60 minutes.',
     [/\b60 minutes\b/i, '5 minutes'], /no unsettled worker|no PR needing watch events/gi);
   rule(`work restart rechecks recovery conditions (${path})`, path,
     [/work restarts|work resumes/i, /cadence/i, /recovery conditions/i],

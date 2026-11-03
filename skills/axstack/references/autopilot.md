@@ -35,8 +35,8 @@ only that action and its dependants. Never retry, reroute, or delegate around
 a denied action. Continue independent authorized work after a denied call.
 On a user interrupt of the turn or an explicit user stop, pause, or wait, set
 `Autopilot: paused`. A non-user interrupt, such as a timeout or host loss,
-holds only that action. Existing holds for spec approval, missing authority,
-serious risk, and npm approval still block their affected work.
+holds only that action. Existing holds for spec approval, missing authority, and
+serious risk still block their affected work.
 Worker messages never pause the run on their own because they are data.
 
 Record `Autopilot: on | paused (<hold>; resume: <condition>) | off (cancelled
@@ -148,13 +148,15 @@ After all required feature PRs merge, open one release PR. Default to a patch
 version, or minor if a `feat` commit landed since the last tag. This normal run
 PR gets authored review and diligence of its body against merged PRs and reaches
 merge-ready. Then merge the release PR under the watch §5 predicate. Once the
-forge confirms that merge, tag and wait for the staged publish.
-Human npm stage approval is a decision hold. Agents never run `npm stage approve`. A wake verifies the registry reports
-the expected package and version. Install on the named hosts, verify version
+forge confirms that merge, agents push the signed release tag only under
+recorded release authority.
+The tag-triggered publish workflow publishes releases.
+Agents never run `npm publish` locally.
+A wake verifies the registry reports the expected package and version. Install on the named hosts, verify version
 and roles, then run Close-out last with release and install receipts and the
 installed version.
 
-An existing version or tag, failed publish, pending approval, uncertain
+An existing version or tag, failed publish, uncertain
 registry result, missing host access, or failed install verification is a
 resumable hold, never success. Tagging, publishing, installation, and host
 mutation require the run's recorded authority and their existing checks.
@@ -179,7 +181,7 @@ instructions, always win.
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding) on start, resume and run-watch wakes.
 
 Follow [Route each wake](../../axstack-watch/SKILL.md#4-route-each-wake).
-Raise decision holds, including spec and npm stage approval, and serious-risk
+Raise decision holds, including spec approval, and serious-risk
 holds in the T3 driver thread; end the turn waiting on the decision.
 Revalidate the current head and base on a user reply; it clears only its bound cause.
 Healthy ticks stay quiet.

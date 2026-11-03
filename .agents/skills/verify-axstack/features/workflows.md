@@ -296,6 +296,43 @@ Confirm `bun "$SCRIPTS/single-server.js" --help` lists all five flags (including
 Only use dry-run for host inspection; live kills and notification delivery require
 separate host-mutation authority. Installation must leave timers disabled.
 
+## Direct release publication
+
+The release contract keepers inspect the entire pinned publish job, including
+version-tag triggers, read-only permissions, timeout, action SHA pins, tag/manifest
+match, full suite, registry existence check, npm prefetch before auth, and the
+cache-only `npm@12.0.2 publish . --access public` command. Registry-auth remains
+whoami-only. The synthetic credential-preflight fixture verifies successful auth
+writes a private `.npmrc`, missing/invalid auth writes none, and output omits the
+fixture token. It never invokes npm or contacts a registry. The separate
+`publish-token.test.js` probe uses the pinned offline npm cache from Launch to
+prove npm reads sandbox HOME `.npmrc` and sends a synthetic Bearer token in a
+PUT to a 127.0.0.1 Bun.serve registry (port 0), without staging. It skips only
+on local runs when the pinned npm is not cached offline, with an explicit reason;
+record that boundary as unverified. In CI, a missing cache fails. Both automated
+workflows prefetch npm before tests; Bunx resolves the cache without assuming a
+TMPDIR path. `publish-token-ci.test.js` checks the CI failure and local skip. No real registry or credential is used.
+
+After Launch and Doctor, run:
+
+```bash
+doctor > "$EVIDENCE/direct-publish-doctor.log" 2>&1
+bun run test tests/installer/publish-workflow.test.js \
+  tests/installer/publish-credential.test.js \
+  tests/installer/publish-token.test.js \
+  tests/installer/publish-token-ci.test.js \
+  tests/installer/registry-auth-workflow.test.js \
+  tests/workflows/default-auto-merge.test.js \
+  tests/workflows/merge-contract-sweep.test.js \
+  tests/workflows/autopilot.test.js > "$EVIDENCE/direct-publish.log" 2>&1
+```
+
+The semantic prose checks cover tag workflow publication, recorded authority for
+signed release tags, prohibition of local npm publication, and a shipped-surface
+sweep rejecting mandatory human stage approval. Removal/inversion and equivalent
+rewording probes prove instruction contracts only. Live token publish permission,
+2FA bypass and npm registry publication remain unverified by this offline recipe.
+
 ## UI and Explain delivery
 
 Follow [UI workflows and Explain delivery](ui.md) for the UI loop source checks

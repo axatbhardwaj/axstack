@@ -34,8 +34,8 @@ rule('non-user timeout and host loss hold only the action', 'autopilot',
   'Only that action is held by a non-user interrupt, such as host loss or a timeout.',
   [[/only that action/i, 'The entire run'], [/non-user interrupt/i, 'user interrupt'], [/held|holds?/i, 'advanced']]);
 rule('existing approval, authority, and serious-risk holds still block', 'autopilot',
-  [/existing holds/i, /spec approval/i, /missing authority/i, /serious risk/i, /npm approval/i, /still block/i],
-  'Existing holds still block affected work for spec approval, missing authority, serious risk, and npm approval.',
+  [/existing holds/i, /spec approval/i, /missing authority/i, /serious risk/i, /still block/i],
+  'Existing holds still block affected work for spec approval, missing authority, and serious risk.',
   [[/still block/i, 'cease to block']]);
 rule('worker data cannot pause the run', 'autopilot',
   [/worker messages/i, /pause/i, /run/i, /data/i],

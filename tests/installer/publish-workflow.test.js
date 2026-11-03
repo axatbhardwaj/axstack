@@ -36,8 +36,7 @@ fi
 // Proves the credential before the irreversible step. bun publish falls back
 // to interactive web auth when the token is missing or invalid, which in CI
 // prints a login URL and hangs until the job times out.
-// A stage-only token cannot create a package that does not exist. Say so
-// here, actionably, instead of letting npm return a bare 403 at the end.
+// Keep the existing-package prerequisite before the irreversible publish.
 const EXISTS_CHECK = `set -eu
 # Distinguish the three outcomes: unreachable registry, no such package, and a
 # tombstone — an unpublished name whose packument still resolves but carries no
@@ -61,8 +60,7 @@ if [ "$code" = 200 ]; then
 fi
 if [ "$code" = missing ]; then
   echo "axstack has no published versions on the registry." >&2
-  echo "A stage-only token cannot create it. Publish once with a direct-capable" >&2
-  echo "credential, then staged releases work from here." >&2
+  echo "Release publishing requires an existing package; investigate before retrying." >&2
   exit 1
 fi
 `;
@@ -75,16 +73,14 @@ umask 077
 printf '//registry.npmjs.org/:_authToken=%s\\n' "\${REGISTRY_TOKEN}" > "\${HOME}/.npmrc"
 `;
 
-// The token is stage-only: it defers proof-of-presence, so CI stages a version
-// and a maintainer approves it. npm is the tool for that — bun has no staging
-// command — and npm reads the credential from .npmrc, not NPM_CONFIG_TOKEN.
+// npm reads the direct-publish credential from .npmrc, not NPM_CONFIG_TOKEN.
 const NPM = 'npm@12.0.2';
 // Fetched before the credential exists on disk, so the download cannot read
 // it. The exact version is pinned; bunx resolves it once and caches it.
 const PREFETCH = `bunx ${NPM} --version`;
 // --no-install: serve from the cache the prefetch filled. Without it bunx can
 // reinstall at this point, which is after the credential is on disk.
-const STAGE = `bunx --no-install ${NPM} stage publish . --access public`;
+const PUBLISH = `bunx --no-install ${NPM} publish . --access public`;
 
 // The complete job. Anything absent here — continue-on-error, an extra step,
 // an artifact upload, a `with:` input, another env var — is a difference.
@@ -95,12 +91,12 @@ const TOKEN_ENV = { REGISTRY_TOKEN: '${{ secrets.NPM_ACCESS_TOKEN }}' };
 const EXPECTED_STEPS = [
   { uses: CHECKOUT },
   { uses: SETUP_BUN, with: { 'bun-version': '1.4.2' } },
+  { name: 'Fetch npm before the credential exists', run: PREFETCH },
   { run: 'bun test' },
   { name: 'Tag must match the manifest version', run: TAG_GUARD },
-  { name: 'Fetch npm before the credential exists', run: PREFETCH },
   { name: 'Package must already exist', run: EXISTS_CHECK },
   { name: 'Registry credential must work', env: TOKEN_ENV, run: AUTH_CHECK },
-  { name: 'Stage for approval', run: STAGE },
+  { name: 'Publish release', run: PUBLISH },
 ];
 
 test('publish workflow fires only on a version tag', () => {
@@ -130,37 +126,36 @@ test('publish workflow job is pinned in full', () => {
 });
 
 test('publish workflow runs the whole suite before it publishes, and refuses a mismatched tag', () => {
-  const runs = EXPECTED_STEPS.map((step) => step.run ?? '');
+  const runs = parsed().jobs.publish.steps.map((step) => step.run ?? '');
   const test_ = runs.findIndex((run) => /\bbun test\b/.test(run));
-  const publish = runs.findIndex((run) => /stage publish/.test(run));
+  const publish = runs.findIndex((run) => /npm@12\.0\.2 publish/.test(run));
   expect(publish, 'publish must not precede the tests').toBeGreaterThan(test_);
-  // Staging only: a direct publish would bypass the approval this token exists
-  // to require.
-  expect(runs.some((run) => /\bnpm publish\b|\bbun publish\b/.test(run)), 'must stage, never publish directly').toBe(false);
-  expect(runs.some((run) => /stage publish/.test(run))).toBe(true);
+  expect(runs.some((run) => /\bstage\s+publish\b/.test(run)), 'releases must publish directly').toBe(false);
+  expect(runs.some((run) => /npm@12\.0\.2 publish/.test(run))).toBe(true);
   // npm must be on disk before the token is, so a compromised or substituted
   // download has nothing to read.
   const prefetch = runs.findIndex((run) => /--version/.test(run));
   const credential = runs.findIndex((run) => /_authToken/.test(run));
   expect(prefetch, 'npm must be fetched before the credential is written').toBeLessThan(credential);
+  expect(prefetch, 'the suite must run the cached-npm transport probe').toBeLessThan(test_);
   // Both npm invocations must name the same pinned version.
   const pinned = runs.filter((run) => /bunx (?:--no-install )?npm@/.test(run));
   expect(pinned.length).toBe(2);
   for (const run of pinned) expect(run).toContain(NPM);
   // The invocation that runs after the credential exists must not reinstall.
-  const stage = runs.find((run) => /stage publish/.test(run));
-  expect(stage, 'the staging invocation must be cache-only').toContain('--no-install');
+  const publishRun = runs.find((run) => /npm@12\.0\.2 publish/.test(run));
+  expect(publishRun, 'the publish invocation must be cache-only').toContain('--no-install');
   expect(PREFETCH, 'the prefetch is what fills that cache').not.toContain('--no-install');
-  // The bootstrap prerequisite must fail loudly and before staging.
+  // The bootstrap prerequisite must fail loudly and before publishing.
   const exists = runs.findIndex((run) => /has no published versions/.test(run));
   expect(exists, 'no step checks the package exists').toBeGreaterThanOrEqual(0);
-  expect(exists).toBeLessThan(runs.findIndex((run) => /stage publish/.test(run)));
+  expect(exists).toBeLessThan(runs.findIndex((run) => /npm@12\.0\.2 publish/.test(run)));
   expect(TAG_GUARD, 'a mismatched tag must fail the job').toMatch(/exit 1/);
 });
 
 test('the registry secret appears exactly once in the whole document', () => {
   const occurrences = source().match(/secrets\.NPM_ACCESS_TOKEN/g) ?? [];
-  // Once: the credential step holds it and writes .npmrc for the stage step.
+  // Once: the credential step holds it and writes .npmrc for the publish step.
   expect(occurrences.length, 'the secret must appear only in the pinned env block').toBe(1);
   // And that one reference is the pinned env entry above, not a workflow- or
   // job-level env that every step would inherit.
@@ -174,4 +169,14 @@ test('every action in the publishing job is pinned to a full commit SHA', () => 
     if (!step.uses) continue;
     expect(step.uses, `${step.uses} must be pinned to a 40-character SHA`).toMatch(/@[0-9a-f]{40}$/);
   }
+});
+
+test('CI prefetches the pinned npm before tests on both supported Bun versions', () => {
+  const job = Bun.YAML.parse(readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8')).jobs.test;
+  expect(job.strategy.matrix.bun).toEqual(['1.3.14', '1.4.2']);
+  const prefetch = job.steps.findIndex((step) => step.run === PREFETCH);
+  const suite = job.steps.findIndex((step) => step.run === 'bun test');
+  expect(prefetch, 'CI must cache npm for the transport keeper').toBeGreaterThanOrEqual(0);
+  expect(suite).toBeGreaterThan(prefetch);
+  expect(job.steps[prefetch]).toEqual({ run: PREFETCH });
 });

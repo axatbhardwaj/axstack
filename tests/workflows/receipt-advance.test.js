@@ -28,7 +28,7 @@ test('autopilot scopes holds by dependency while preserving run-wide gates', () 
   expect(text).toMatch(/task, PR, resource, or operation hold[\s\S]*dependants/i);
   expect(text).toMatch(/unclear impact[\s\S]*potentially affected work/i);
   expect(text).toMatch(/spec approval[\s\S]*human approval/i);
-  expect(text).toMatch(/Human npm stage approval[\s\S]*decision hold/i);
+  expect(text).toMatch(/failed publish[\s\S]*resumable hold/i);
 });
 
 test('run record has one actionable Next line', () => {
@@ -41,7 +41,7 @@ test('receipt advancement evaluator cases are input-only', () => {
   const ids = corpus.cases.map(({ id }) => id);
   expect(new Set(ids).size).toBe(ids.length);
   for (const id of ['same-turn-t01', 'ack-only-redelivery', 'scoped-hold',
-    'spec-approval-hold', 'npm-approval-hold', 'stale-dispatch',
+    'spec-approval-hold', 'publish-failure-hold', 'stale-dispatch',
     'aurora-v301-no-dispatch', 'super-7-no-question', 't03-reachability']) {
     expect(ids).toContain(id);
   }

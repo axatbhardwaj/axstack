@@ -26,7 +26,7 @@ Uncovered surfaces: live fleet sampling/links/dispatch and remote-author pilot g
 use the shipped [bounded live procedure](../../../../skills/axstack/references/fleet-verification.md)
 under separately recorded C3/C6 authority. Offline bindings cannot authenticate
 native evidence or enable routing. Other uncovered surfaces: live T3 MCP launches, driver gating previews, live T3 frame delivery, external Notion/Linear, provider authentication,
-scheduled work, npm staging approval and release installation across hosts.
+scheduled work, direct npm publication and release installation across hosts.
 These require their own authorized isolated verification; never infer them
 from this CLI recipe. The install feature maps retirement/retry fixtures; workflow and Anatomy
 features map reviewer-owned source drives and delegated browser checks.

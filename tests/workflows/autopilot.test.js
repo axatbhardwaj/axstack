@@ -44,8 +44,8 @@ test('release records authority and closes after install', () => {
   checkRule(text, (source) => requires(source, ...review),
     'This normal run PR receives authored review and diligence of its body against merged PRs.',
     [[/authored review/i, 'owner review']], review);
-  expect(text).toMatch(/tag[\s\S]*staged publish[\s\S]*human npm stage approval[\s\S]*registry[\s\S]*install[\s\S]*Close.out last/i);
-  expect(text).toMatch(/never run `npm stage approve`/i);
+  expect(text).toMatch(/tag[\s\S]*tag.triggered publish workflow[\s\S]*publishes[\s\S]*registry[\s\S]*install[\s\S]*Close.out last/i);
+  expect(text).toMatch(/never run `npm publish` locally/i);
   expect(text).toMatch(/closed without merging[\s\S]*incomplete scope/i);
 });
 

@@ -71,7 +71,7 @@ A `clean` revert leaves no data, schema, config, external, or published effect b
 Otherwise use `steps` or `irreversible`.
 Classify a release PR using the same revert criteria.
 Merging a release PR publishes nothing. The later tag/publish is the irreversible
-step, subject to recorded release authority and human npm stage approval.
+step, performed by the tag-triggered workflow under recorded release authority.
 
 ## Immutable checkout shape
 
