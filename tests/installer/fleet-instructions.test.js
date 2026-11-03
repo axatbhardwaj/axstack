@@ -84,12 +84,22 @@ test('host-exclusive needs require whole-task routing at intake', () => {
     [[/route the whole task/i, 'skip the whole task']], concepts);
 });
 
-test('cross-host launches are solely the intake hand-off, never workers or retries', () => {
-  const concepts = [/cross.host/i, /t3_thread_launch/, /only/i, /one intake hand.off/i,
-    /remote workers/i, /subagents/i, /retries/i];
+test('cross-host launches are solely the intake hand-off, never workers or replacement launches', () => {
+  const concepts = [/cross.host/i, /t3_thread_launch/, /only/i, /(one|single) intake hand.off/i,
+    /remote workers/i, /subagents/i, /replacement launches/i];
   checkRule(renderInstructionBlock().replaceAll('`', ''), (s) => prohibits(s, /never/i, ...concepts),
-    'Only that one intake hand-off uses cross-host t3_thread_launch, never remote workers, retries or subagents.',
-    [[/only/i, 'also'], [/never remote workers/i, 'remote workers allowed']], concepts);
+    'Only that single intake hand-off uses cross-host t3_thread_launch, never for remote workers, replacement launches or subagents.',
+    [[/only/i, 'also'], [/never/i, 'including']], concepts);
+});
+
+test('global cross-host prohibition leaves same-key launch retries available', () => {
+  const text = renderInstructionBlock().replaceAll('`', '');
+  const bansRetry = (s) => prohibits(s, /never/i, /cross.host/i, /t3_thread_launch/, /\bretr(?:y|ies)\b/i);
+  expect(bansRetry(text)).toBe(false);
+  const blanketBan = text.replace(/replacement launches/i, 'retries');
+  expect(blanketBan).not.toBe(text);
+  expect(bansRetry(blanketBan)).toBe(true);
+  expect(bansRetry(blanketBan.replace(/never remote workers/i, 'never for remote workers'))).toBe(true);
 });
 
 test('an uncertain launch cannot create a second driver', () => {

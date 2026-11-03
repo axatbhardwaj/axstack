@@ -10,7 +10,7 @@ export function renderInstructionBlock() {
     'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
     'Route subagents, delegated workers, reviewers and cross-harness dispatch through T3 Code orchestration (`t3-code` MCP).',
     'Use `delegate_task` for every role, including authors with `isolation:"worktree"`.',
-    'Use `t3_thread_launch` for top-level drivers only on explicit user request for a new thread, including a runtime-accepted user standing intake grant for that one hand-off. Cross-host `t3_thread_launch` is only that one intake hand-off, never remote workers, subagents or retries.',
+    'Use `t3_thread_launch` for top-level drivers only on explicit user request for a new thread, including a runtime-accepted user standing intake grant for that one hand-off. Cross-host `t3_thread_launch` is only that one intake hand-off, never remote workers, subagents or replacement launches.',
     'Use `t3_thread_launch` as a rare author fallback only when worktree isolation is unavailable on explicit user request for a new thread and record each use in the run record.',
     'Follow `references/t3-runtime.md` in the installed `axstack` skill.',
     'Before first worker dispatch at new-task intake, follow `references/fleet-dispatch.md` and `references/fleet-route-schema.md` with current routing facts.',

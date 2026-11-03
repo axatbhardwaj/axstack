@@ -15,9 +15,17 @@ test('fleet intake routes tasks needing resources exclusive to another host', ()
 });
 
 test('fleet cross-host launches allow only the single intake hand-off', () => {
-  const concepts = [/cross.host/i, /t3_thread_launch/, /only/i, /one intake hand.off/i,
-    /remote workers/i, /subagents/i, /retries/i];
+  const concepts = [/cross.host/i, /t3_thread_launch/, /only/i, /(one|single) intake hand.off/i,
+    /remote workers/i, /subagents/i, /replacement launches/i];
   checkRule(intakeBoundary(), (s) => prohibits(s, /never/i, ...concepts),
-    'Only that one intake hand-off uses cross-host t3_thread_launch, never remote workers, retries or subagents.',
-    [[/only/i, 'also'], [/never remote workers/i, 'remote workers allowed']], concepts);
+    'Only that single intake hand-off uses cross-host t3_thread_launch, never for remote workers, replacement launches or subagents.',
+    [[/only/i, 'also'], [/never/i, 'including']], concepts);
+});
+
+test('a host-bound task whose plan stays local holds and names the needed host', () => {
+  const concepts = [/host.bound task/i, /plan/i, /stays local/i, /hold/i,
+    /name/i, /needed host/i, /user/i];
+  checkRule(intakeBoundary(), (s) => requires(s, ...concepts),
+    'For a host-bound task whose plan stays local, name the needed host to the user and hold.',
+    [[/\bhold\b/i, 'continue'], [/name the needed host/i, 'conceal the needed host']], concepts);
 });

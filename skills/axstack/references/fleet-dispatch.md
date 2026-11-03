@@ -5,8 +5,9 @@
 Route only new user-started tasks at intake before the first worker dispatch.
 If a task needs something only another fleet host has (headed display, device,
 wallet, local data), route the whole task at intake with `fleet-route.js` plan.
+If the plan stays local for a host-bound task, hold and name the needed host to the user.
 Cross-host `t3_thread_launch` is only that one intake hand-off, never remote
-workers, subagents or retries. Same-clientRequestId lost-reply recovery below
+workers, subagents or replacement launches. Same-clientRequestId lost-reply recovery below
 reconciles that hand-off; it never authorizes another thread.
 Scheduled work, status requests and follow-up work must stay local.
 The driver must honor an explicit named host (pilot) as the user's placement request.

@@ -16,7 +16,9 @@ The global block stays within 2,400 bytes; removal/inversion and rewording check
 protect its authority and CR-3 routing invariants, including the missing-switch
 default, named-host pilot and sole-driver rule.
 Host-exclusive resources require whole-task intake planning; cross-host launches
-are only the one intake hand-off, never remote workers, subagents or retries.
+are only the one intake hand-off, never remote workers, subagents or replacement launches.
+Same-key retries remain available. A host-bound task whose plan stays local
+holds and names the needed host to the user; semantic probes protect this rule.
 Ownership transfer requires AXSTACK-ACCEPT and one idempotent proceed under
 the fleet-dispatch contract. Execution
 and hand-off procedures remain in the installed runtime/fleet references. The
