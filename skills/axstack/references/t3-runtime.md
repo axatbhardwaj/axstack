@@ -585,7 +585,7 @@ local isolated authors remain the fallback even when overloaded. C4 personal
 policy/Haoshoku changes and C6 deployment/live acceptance remain later phases.
 
 Remote nonwriters use native `delegate_task` with exact selected target.environmentId,
-projectId, providerInstanceId, model, target.options and runtimeMode. Remote authored reviewers
+projectId, providerInstanceId, model, target.options and runtimeMode. Remote reviewers
 use T3 `isolation:"worktree"`; never make their child checkouts in the shell.
 Use no raw agent CLI over SSH. SSH is restricted to telemetry and authorized
 artifact/commit transport. Follow host-qualified archive/readback/retirement in

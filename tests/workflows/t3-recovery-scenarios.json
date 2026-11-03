@@ -36,7 +36,7 @@
       "input": "A delegated authored reviewer writes in a native isolated worktree; after completion the driver status has changed.",
       "contracts": [
         "Authored reviewers must use async `delegate_task` with native `isolation:\"worktree\"`.",
-        "Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.",
+        "Delegated reviewers must `cd` into their assigned workspace (authored: native worktree; peer: separate detached checkout); tracked candidate files remain read-only and outputs go to their private evidence folder.",
         "After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.",
         "Before removing an authored reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <recorded-native-worktree-path>` without force."
       ],

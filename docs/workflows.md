@@ -286,8 +286,8 @@ for explicit ownership transfer.
   review and one reviewer on follow-ups; authored PRs receive one eligible
   cross-family/preset-mapped reviewer. Peer reviewers run in a separate detached
   checkout, with private evidence preserved before removal. Authored reviewers use native
-  `isolation:"worktree"` and verifies the pinned candidate and base inside its
-  own worktree, with private evidence preserved before removal. First peer reviews and authored reviews cover security,
+  `isolation:"worktree"` and verify the pinned candidate and base inside their
+  own worktrees, with private evidence preserved before removal. First peer reviews and authored reviews cover security,
   correctness, integration, requirements, design, and simplicity; peer follow-ups
   check prior blockers, author replies and the delta, with a full-diff fallback
   when the last-reviewed head or delta cannot be recovered. Report-only

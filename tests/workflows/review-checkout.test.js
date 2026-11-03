@@ -1,13 +1,13 @@
 import { expect, test } from 'bun:test';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { checkRule, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
 const publication = () => read('skills/axstack/references/candidate-publication.md');
 const pins = [
   'Authored reviewers must use async `delegate_task` with native `isolation:"worktree"`.',
-  'Delegated reviewers must `cd` into their separate detached checkout; tracked candidate files remain read-only and outputs go to their private evidence folder.',
+  'Delegated reviewers must `cd` into their assigned workspace (authored: native worktree; peer: separate detached checkout); tracked candidate files remain read-only and outputs go to their private evidence folder.',
   'After each delegated completion, compare the driver HEAD and `git status --porcelain` with their pre-dispatch values; any change holds advancement.',
   'Before removing an authored reviewer checkout, read back its report and supporting evidence, then use exact `git worktree remove <recorded-native-worktree-path>` without force.',
 ];
@@ -59,12 +59,20 @@ const shipped = [
 // Keep role labels attached to mechanisms across punctuation in a table row.
 const scopedText = (text) => text.replace(/`/g, '').split('\n').map((line) =>
   line.startsWith('|') ? line.replace(/[.;] /g, ', ') + '.\n' : line).join('\n');
+// Retain only main's existing native clauses outside the authored rule.
+const retainedNativeRules = new Set([
+  'Remote reviewers use T3 isolation:"worktree"',
+  'Code reviewers require native isolation:"worktree" and pinned candidate/base',
+  'Remote reviewers require T3 worktree isolation',
+  'Engineering authors and code reviewers still require a repository and native Git worktree isolation',
+].map((clause) => clause.toLowerCase()));
 const checkoutViolations = (text, mode = 'mixed') => scopedText(text)
   .split(/\n\s*\n/).flatMap((paragraph) => sentences(paragraph).filter((clause) => {
     const reviewer = /reviewers?|review checkout/i.test(clause);
     const authored = /authored|candidate reviewers/i.test(clause);
     const unscoped = /(?:all|every) (?:other )?reviewers?/i.test(clause);
-    if (reviewer && requires(clause, /isolation:"worktree"/i)) {
+    if (reviewer && requires(clause, /isolation\s*:\s*["']worktree["']|(?:T3 |native )?worktree isolation/i)) {
+      if (retainedNativeRules.has(clause.trim().toLowerCase())) return false;
       return !authored || /peer|all reviewers|every reviewer/i.test(clause);
     }
     const manual = requires(clause, /(?:driver[ -](?:made|created)|driver (?:must |shall )?(?:makes?|creates?)|(?:made|created) by the driver|detached checkout.*(?:made|created|prepared)|worktree add --detach)/i,
@@ -84,6 +92,7 @@ test('shipped checkout rules keep native isolation authored-only', () => {
     'Peer reviewers must use native isolation:"worktree".',
     'Every reviewer must use native isolation:"worktree".',
     'Reviewers (peer/authored) must use native isolation:"worktree".',
+    'Peer reviewers require T3 worktree isolation.',
   ]) expect(checkoutViolations(wording).length, wording).toBeGreaterThan(0);
   expect(checkoutViolations('Peer reviewers use separate driver-made detached checkouts.')).toEqual([]);
   for (const path of shipped) {
@@ -123,4 +132,30 @@ test('reviewer dispatch supplies the driver path for the isolation proof', () =>
   checkRule(text, (source) => requires(source, /before authored reviewer dispatch/i, /driver/i, /resolved/i, /worktree path/i, /brief/i),
     'Before authored reviewer dispatch, the driver shall place its resolved worktree path in the brief.',
     [[/reviewer/i, 'author'], [/resolved/i, 'guessed']], [/worktree path/i]);
+});
+
+for (const [path, subject] of [
+  ['skills/axstack/references/t3-runtime.md', /remote reviewers/i],
+  ['skills/axstack/references/fleet-dispatch.md', /code reviewers/i],
+]) test(`main remote reviewer rules remain required in ${path}`, () => {
+  const text = sentences(scopedText(read(path))).join('. ');
+  checkRule(text, (source) => requires(source, subject, /isolation:"worktree"/i)
+    && !requires(source, /authored/i, subject, /isolation:"worktree"/i),
+    `${subject.source} must use isolation:"worktree".`,
+    [[/isolation:"worktree"/i, 'isolation:"shared"']], [subject]);
+  const noShell = path.includes('fleet-dispatch') ? /no shell-created child checkout/i : /never make their child checkouts in the shell/i;
+  checkRule(text, (source) => prohibits(source, noShell),
+    path.includes('fleet-dispatch') ? 'Require no shell-created child checkout.' : 'Reviewers must never make their child checkouts in the shell.',
+    [[/no shell-created|never make/i, 'allow shell-created']], [noShell]);
+});
+test('publication preserves peer checkout creation and removal', () => {
+  const text = sentences(publication().replace(/`/g, '')).join('. ');
+  checkRule(text, (source) => requires(source, /driver creates/i, /immutable review checkout/i,
+    /git worktree add --detach <run>\/checkouts\/<key> <sha>/i, /confirmed candidate SHA/i, /pinned base/i),
+    'The driver creates the immutable review checkout at the confirmed candidate SHA and pinned base using git worktree add --detach <run>/checkouts/<key> <sha>.',
+    [[/driver creates/i, 'reviewer assumes']], [/pinned base/i]);
+  checkRule(text, (source) => requires(source, /before removing a reviewer checkout/i, /read back/i,
+    /report and supporting evidence/i, /git worktree remove <run>\/checkouts\/<key>/i, /without force/i),
+    'Before removing a reviewer checkout, read back its report and supporting evidence and use git worktree remove <run>/checkouts/<key> without force.',
+    [[/without force/i, 'with force']], [/read back/i]);
 });

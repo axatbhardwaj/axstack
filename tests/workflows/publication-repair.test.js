@@ -60,10 +60,10 @@ const rules = [
     [/bind|tie/i, /disposable/i, /checkout/i, /exact attempt identity/i],
     /exact attempt identity/i, 'any attempt',
     'Tie the disposable checkout to the exact attempt identity.'],
-  ['release checks retain driver-made SHA-pinned detached checkout', publication,
-    [/release checks/i, /driver.made/i, /SHA.pinned/i, /detached.checkout/i, /git worktree add --detach/i],
-    /driver.made/i, 'native',
-    'Release checks must use driver-made SHA-pinned detached checkouts via git worktree add --detach.'],
+  ['release checks reuse driver-made SHA-pinned detached checkout', publication,
+    [/release checks/i, /same/i, /driver.made/i, /SHA.pinned/i, /detached.checkout/i, /procedure/i],
+    /same/i, 'different',
+    'Release checks follow the same driver-made SHA-pinned detached-checkout procedure.'],
 ];
 
 for (const [name, path, concepts, direction, inverse, rewording, prohibition] of rules) {

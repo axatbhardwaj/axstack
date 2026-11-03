@@ -70,7 +70,8 @@ Review entry point: `skills/axstack-review/SKILL.md`; loaded references:
 `review-checkout.test.js` guards native authored/candidate reviewer isolation,
 main’s peer checkout rule, workspace templates and the authored-only driver-path
 brief field. It scans shipped skills, top-level docs and README for driver-made
-authored checkouts or native isolation applied to peer/all reviewers.
+authored checkouts or new local peer/all-reviewer native isolation. It retains
+main’s remote/fleet native rules and pins peer checkout creation and removal.
 Watch readiness entry point: `skills/axstack-watch/SKILL.md`; loaded references:
 `references/readiness.md`, `references/proven-verification.md`,
 `references/escalation.md` and `references/blocked-on-person.md` under

@@ -23,7 +23,7 @@ For a logical Coordinator coordinating project drivers, follow
   Authored reviewers use native
   `isolation:"worktree"`, verify their own worktree differs from the driver's,
   and check out and verify the exact candidate SHA and base inside it, with
-  private per-attempt evidence folder. Owner and author never review.
+  a private per-attempt evidence folder. Owner and author never review.
 - Automation review manager: see
   [Review automation health](#review-automation-health).
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
