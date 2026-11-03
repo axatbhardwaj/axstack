@@ -144,7 +144,8 @@ function verify(configuration, provider, model, options, fleet) {
       compare('launch-project', fleet.destination.projectId, thread?.projectId);
       const runs = configuration?.recentRuns;
       const run = Array.isArray(runs) ? runs.find((r) => r.runId === thread?.latestRunId) : null;
-      compare('run-started', 'native latest run with startedAt', runs,
+      const runEvidence = thread?.latestRunId === undefined || (run && run.startedAt === undefined) ? undefined : runs;
+      compare('run-started', 'native latest run with startedAt', runEvidence,
         nonempty(thread?.latestRunId) && nonempty(run?.startedAt));
     }
     if (fleet.artifactScope) {

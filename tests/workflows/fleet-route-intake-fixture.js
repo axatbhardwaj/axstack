@@ -6,7 +6,7 @@ export function intakeFixture() {
   f.config.intakeRouting = true;
   f.config.intakeSupport = [{ environmentId: f.input.origin.environmentId,
     providerInstanceId: 'codex', supported: true, evidence: 'pilot://origin/codex' }];
-  Object.assign(f.input.origin, { threadId: 'origin-thread', title: 'Implement task' });
+  Object.assign(f.input.origin, { threadId: 'origin-thread', title: 'Implement task', providerInstanceId: 'codex' });
   Object.assign(f.input.request, { role: 'driver', providerInstanceId: 'codex', model: 'gpt-6.1-sol',
     options: { reasoningEffort: 'high' } });
   f.input.intake = { kind: 'new-task', willDispatch: true, routed: false, launchKey: 'run:driver:task:a1',
@@ -37,6 +37,10 @@ export function intakeFixture() {
         links: f.input.destinations.map((host) => ({ environmentId: host.environmentId, status: 'reachable',
           access: 'full-access', expiresAt: new Date(NOW + 60000).toISOString() })) }, f.input.origin.environmentId),
     };
+    const o = f.input.nativeDestinations[d.environmentId];
+    o.projectList = [read('t3_project_list', { cursor: 0, limit: 20 }, {
+      projects: [o.project.value], nextCursor: null,
+    })];
   }
   return f;
 }

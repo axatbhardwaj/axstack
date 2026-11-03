@@ -43,6 +43,7 @@ Plan uses the schema-1 recommendation inputs below, extended as follows:
 | --- | --- |
 | `request.role` | `driver`: place one whole task; authors then run locally, never C3b |
 | `origin.threadId`, `origin.title` | Original native driver identity and title; both nonempty |
+| `origin.providerInstanceId` | Actual launching provider; runtime support is keyed here, not to the requested destination provider |
 | `intake.kind`, `intake.willDispatch` | `new-task` and true for a new user task before its first worker dispatch; scheduled/status/follow-up work stays local |
 | `intake.routed` | true prevents a second decision or mid-task hand-off; origin records false on first intake |
 | `intake.namedHost` | Optional configured host ID, or `here`; opts out of automatic selection; named remote pilots still require support/authority/preflight |
@@ -51,7 +52,7 @@ Plan uses the schema-1 recommendation inputs below, extended as follows:
 | `intake.scope` | `{identity,content}` or `{identity,destinationRef}` readable on destination; acceptance run verifies readability |
 | `intake.authority`, `intake.grantCitation` | Exact bounded authority and citation of explicit user request or accepted standing grant |
 | `staffing` | `{author:{providerInstanceId,model},reviewer:{providerInstanceId,model},advisers:[{providerInstanceId,model},...]}`; author/reviewer driverKind must differ |
-| `nativeDestinations` | Map keyed by environmentId, each value is the saved nativeDestination read envelope set below, including exact capabilities.valueText |
+| `nativeDestinations` | Map keyed by environmentId, each value is the saved nativeDestination read envelope set below, including fully paginated projectList and exact capabilities.valueText |
 | `config.intakeRouting` | true enables automatic decisions; missing = false; explicit named-host pilots bypass only this switch |
 | `config.intakeSupport` | Array of `{environmentId,providerInstanceId,supported,evidence}` from pilot runtime-grant results, per launching host/provider from first unnamed intake; missing/false/ambiguous = unsupported |
 

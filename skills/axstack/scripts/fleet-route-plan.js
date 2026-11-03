@@ -14,7 +14,7 @@ function modelIn(catalog, pin, serverVersion) {
   const models = Array.isArray(p?.models) ? p.models.filter((m) => m?.id === pin?.model) : [];
   const unrestricted = p?.runtimeModes === undefined && serverVersion === '0.1.5'
     && ['codex', 'claudeAgent'].includes(p?.driverKind);
-  return catalog?.runtimeMode === 'full-access' && p?.canRunChildTask === true
+  return catalog?.runtimeMode === 'full-access' && p?.canRunChildTask === true && text(p.driverKind)
     && Array.isArray(p.constraints) && p.constraints.length === 0
     && (unrestricted || (Array.isArray(p.runtimeModes) && p.runtimeModes.includes('full-access')))
     && models.length === 1 ? { provider: p, model: models[0] } : null;
@@ -67,9 +67,10 @@ export function planIntake(input, now) {
   if (named === 'here' || config.hosts.some((h) => h.id === named && h.environmentId === input.origin.environmentId)) return stay('named-local');
   if (named == null && config.intakeRouting !== true) return stay('routing-disabled');
   const support = config.intakeSupport?.filter((s) => s.environmentId === input.origin.environmentId
-    && s.providerInstanceId === input.request.providerInstanceId);
-  if (support?.length !== 1 || support[0].supported !== true || !text(support[0].evidence)) return stay('routing unsupported');
-  terms.push(term('launch-support', true, support[0]));
+    && s.providerInstanceId === input.origin.providerInstanceId);
+  const supported = support?.length === 1 && support[0].supported === true && text(support[0].evidence);
+  terms.push(term('launch-support', supported, support?.length ? support : null));
+  if (!supported) return stay('routing unsupported');
   const inputsReady = [input.origin.threadId, input.origin.title, intake.launchKey, intake.taskText,
     intake.scope?.identity, intake.scope?.content ?? intake.scope?.destinationRef, intake.authority, intake.grantCitation].every(text);
   terms.push(term('launch-inputs', inputsReady, intake));
@@ -82,6 +83,8 @@ export function planIntake(input, now) {
     const observation = input.nativeDestinations?.[host.environmentId];
     const capabilitiesText = observation?.capabilities?.valueText;
     const checks = staffingTerms(input, host.environmentId);
+    checks.push(term('project-list', Array.isArray(observation?.projectList)
+      && observation.projectList.length > 0, observation?.projectList));
     checks.push(term('catalog-digest', typeof capabilitiesText === 'string'
       && hash(capabilitiesText) === selected.destinationCapabilitiesDigest, capabilitiesText));
     if (typeof capabilitiesText === 'string') {

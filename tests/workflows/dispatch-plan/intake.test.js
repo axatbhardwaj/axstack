@@ -54,6 +54,8 @@ test.each([
   ['missing run', (r) => { delete r.recentRuns; }, 'run-started: unknown'],
   ['queued run', (r) => { r.recentRuns[0].startedAt = null; }, 'run-started: fail'],
   ['wrong run', (r) => { r.thread.latestRunId = 'other'; }, 'run-started: fail'],
+  ['missing latestRunId', (r) => { delete r.thread.latestRunId; }, 'run-started: unknown'],
+  ['missing startedAt', (r) => { delete r.recentRuns[0].startedAt; }, 'run-started: unknown'],
   ['wrong title', (r) => { r.thread.title = 'another task'; }, 'launch-title: fail'],
   ['wrong project', (r) => { r.thread.projectId = 'other'; }, 'launch-project: fail'],
   ['missing options', (r) => { delete r.thread.options; }, 'options: unknown'],
