@@ -60,6 +60,19 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    remain unchanged. If either adviser is unavailable, hold Spec without
    substitution. A reviewable draft covers the agreed outcome, acceptance
    criteria, exclusions, and both adviser receipts or the reported hold.
+   Run a full adviser round on the first draft and every revision that changes
+   meaning in criteria, scope, decisions or authority.
+   Before user approval, run `axstack-diligence` on the first draft and the revision
+   presented for approval under [Diligence](../axstack/references/diligence.md) to
+   check the draft against the Align decisions for anything dropped, added, or softened.
+   Batch low and wording-only findings into one final pass.
+   Never start a new full adviser round for low or wording-only findings;
+   for low or wording-only findings with changed text, follow delta confirmation below.
+   Never waive high or medium findings.
+   When existing triggers apply, run `axstack-escalation-fable` only after ordinary
+   high and medium findings settle. Reuse the Fable receipt while the reviewed
+   meaning holds. If Fable's own findings change meaning, a fresh Fable session
+   reviews the revised result.
    An optional adviser note may be deferred or rejected in a `Decisions` row
    with the draft unchanged; it needs no new adviser pair.
    By default, changed draft text requires fresh receipts on the new revision.
@@ -73,9 +86,11 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    An unavailable adviser seat holds the affected phase.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
-   require `axstack-advisor-astra` and a fresh `axstack-escalation-fable`
-   session to return plain AGREE. Present one
-   reviewable, identified revision for this checkpoint. Its user approval
+   require `axstack-advisor-astra` and `axstack-escalation-fable` to return
+   plain AGREE. Each use of `axstack-escalation-fable` must start a fresh session.
+   Reuse the Fable plain-AGREE receipt only while the reviewed meaning holds under step 3.
+   If the reviewed meaning changes, a fresh Fable session must review the revised result.
+   Present one reviewable, identified revision for this checkpoint. Its user approval
    creates the execution baseline.
    In a T3 thread, the driver also publishes the spec readback as an inline page and
    follows [Explain](../axstack-explain/SKILL.md) and
@@ -89,9 +104,6 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    Except for high-stakes decisions, a change confined to a `Decisions` row
    reuses adviser receipts only while draft text, evidence, scope, and question
    remain unchanged.
-   Before user approval, dispatch `axstack-diligence` under
-   [Diligence](../axstack/references/diligence.md) to check the draft against
-   the Align decisions for anything dropped, added, or softened.
 5. **Snapshot the baseline.** Record the approved revision identity and a
    concise repository Markdown counterpart pointing to the same requirements,
    not a second human or agent contract. In Linear mode, the native

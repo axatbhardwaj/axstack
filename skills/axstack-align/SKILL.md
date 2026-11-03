@@ -93,6 +93,19 @@ unchanged receipts. Record compact adviser evidence, the driver's assessment,
 and user-resolved choices for `axstack-spec`. If either adviser is unavailable,
 hold Align; safe fact work may continue without substitution.
 
+For spec drafts, run a full adviser round on the first draft and every revision
+that changes meaning in criteria, scope, decisions or authority.
+Run `axstack-diligence` on the first draft and the revision presented for approval
+under [Diligence](../axstack/references/diligence.md).
+Batch low and wording-only findings into one final pass.
+Never start a new full adviser round for low or wording-only findings;
+for low or wording-only findings with changed text, follow delta confirmation below.
+Never waive high or medium findings.
+When existing triggers apply, run `axstack-escalation-fable` only after ordinary
+high and medium findings settle. Reuse the Fable receipt while the reviewed
+meaning holds. If Fable's own findings change meaning, a fresh Fable session
+reviews the revised result.
+
 An optional adviser note may be deferred or rejected in a `Decisions` row with
 the draft unchanged; it needs no new adviser pair.
 By default, changed draft text requires fresh receipts on the new revision.

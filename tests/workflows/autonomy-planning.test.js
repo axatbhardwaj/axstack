@@ -19,6 +19,31 @@ function rule(name, source, concepts, rewording, inversions, negative) {
 
 for (const name of ['axstack-align', 'axstack-spec']) {
   const source = () => read(name);
+  rule(`${name} full rounds cover first drafts and meaning changes`, source,
+    [/full adviser round/i, /first draft/i, /every|any/i, /revision/i,
+      /changes meaning|alters meaning/i, /criteria/i, /scope/i, /decisions/i, /authority/i],
+    'Perform a full adviser round on the first draft and any revision that alters meaning in criteria, scope, decisions or authority.',
+    [[/\b(?:run|perform)\b/i, 'skip'], [/\b(?:every|any)\b/i, 'no']]);
+  rule(`${name} diligence covers first draft and approval revision`, source,
+    [/axstack-diligence/i, /first draft/i, /revision/i, /presented|submitted/i, /approval/i],
+    'Dispatch axstack-diligence on the first draft and the revision submitted for approval.',
+    [[/\b(?:run|dispatch)\b/i, 'skip']]);
+  rule(`${name} minor findings share one final pass`, source,
+    [/low/i, /wording.only/i, /findings/i, /one|single/i, /final pass/i],
+    'Collect low and wording-only findings into a single final pass.',
+    [[/\b(?:batch|collect)\b/i, 'separate'], [/\b(?:one|single)\b/i, 'repeated']]);
+  rule(`${name} minor findings never restart a full round`, source,
+    [/new full adviser round/i, /low/i, /wording.only/i, /findings/i],
+    'Never start a new full adviser round for low or wording-only findings.',
+    [[/\bnever\b/i, 'always']], /never/i);
+  rule(`${name} changed minor wording follows delta confirmation`, source,
+    [/low/i, /wording.only/i, /findings/i, /changed text|edited text/i, /delta confirmation/i],
+    'For low or wording-only findings with edited text, apply delta confirmation.',
+    [[/\b(?:follow|apply)\b/i, 'skip']]);
+  rule(`${name} batching never waives blockers`, source,
+    [/high/i, /medium/i, /findings/i],
+    'Never waive high or medium findings.', [[/\bnever waive\b/i, 'Always waive']], /never waive/i);
+  fableRules(name, source);
   rule(`${name} changed draft text defaults to fresh receipts`, source,
     [/by default/i, /changed draft text|edited draft wording/i,
       /fresh receipts|new receipts/i, /new revision|updated revision/i],
@@ -45,6 +70,46 @@ for (const name of ['axstack-align', 'axstack-spec']) {
   rule(`${name} unavailable seat holds`, source, [/adviser seat/i, /unavailable/i],
     'An unavailable adviser seat blocks the affected phase.',
     [[/\b(?:holds?|blocks?)\b/i, 'advances']]);
+}
+
+const checkpoint = () => read('axstack-spec').split('4. **')[1]?.split('5. **')[0] ?? '';
+rule('Spec checkpoint requires plain AGREE from both high-stakes seats', checkpoint,
+  [/high.stakes/i, /axstack-advisor-astra/i, /axstack-escalation-fable/i, /plain AGREE/i],
+  'High-stakes decisions need axstack-advisor-astra and axstack-escalation-fable to return plain AGREE.',
+  [[/\b(?:require|need)\b/i, 'waive'], [/\band\b/i, 'or']]);
+rule('Spec checkpoint starts each Fable use in a fresh session', checkpoint,
+  [/each|every/i, /use/i, /axstack-escalation-fable/i, /fresh session|new session/i],
+  'Every use of axstack-escalation-fable must begin a new session.',
+  [[/\b(?:must start|must begin)\b/i, 'may skip'], [/\bfresh session|new session\b/i, 'reused session']]);
+rule('Spec checkpoint reuses plain-AGREE receipt only while meaning holds', checkpoint,
+  [/Fable/i, /plain.AGREE receipt/i, /reviewed meaning/i, /holds|unchanged/i, /step 3/i],
+  'Reuse the Fable plain-AGREE receipt only while the reviewed meaning is unchanged under step 3.',
+  [[/\breuse\b/i, 'discard'], [/\bonly while\b/i, 'regardless of whether']]);
+rule('Spec checkpoint sends meaning changes to a fresh Fable session', checkpoint,
+  [/reviewed meaning/i, /changes|alters/i, /fresh Fable session|new Fable session/i,
+    /revised result|updated result/i],
+  'When the reviewed meaning alters, a new Fable session must review the updated result.',
+  [[/\bmust review\b/i, 'ignores'], [/\bfresh Fable session|new Fable session\b/i, 'reused Fable session']]);
+
+// Receipt validity and escalation ordering also live at the shared boundary.
+fableRules('standing contracts', () => readFileSync(
+  `${import.meta.dir}/../../skills/axstack/references/contracts.md`, 'utf8').replace(/\s+/g, ' '));
+
+function fableRules(name, source) {
+  rule(`${name} Fable follows ordinary blockers under existing triggers`, source,
+    [/existing triggers/i, /axstack-escalation-fable/i, /ordinary/i,
+      /high/i, /medium/i, /findings/i, /settle|resolved/i],
+    'When existing triggers apply, dispatch axstack-escalation-fable only after ordinary high and medium findings are resolved.',
+    [[/\b(?:run|dispatch)\b/i, 'skip'], [/\bonly after\b/i, 'before']]);
+  rule(`${name} Fable receipt remains valid while meaning holds`, source,
+    [/Fable receipt/i, /reviewed meaning/i, /holds|unchanged/i],
+    'Reuse the Fable receipt while the reviewed meaning is unchanged.',
+    [[/\breuse\b/i, 'discard'], [/\bwhile\b/i, 'regardless of whether']]);
+  rule(`${name} Fable-caused meaning change gets fresh Fable review`, source,
+    [/Fable.s own findings/i, /change meaning|alter meaning/i, /fresh Fable session/i,
+      /revised result|updated result/i],
+    "If Fable's own findings alter meaning, a fresh Fable session must review the updated result.",
+    [[/\b(?:reviews?|must review)\b/i, 'ignores'], [/\bfresh\b/i, 'reused']]);
 }
 
 const align = () => read('axstack-align');
