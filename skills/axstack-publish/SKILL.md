@@ -80,6 +80,8 @@ Send the article adaptation, including art direction and standalone light/dark t
 to `axstack-explainer` with a bounded brief.
 The explainer loads and follows Explain's [design guidance](../axstack-explain/references/design.md)
 and reads [frontend-design](../axstack-explain/references/frontend-design/FRONTEND-DESIGN.md).
+Follow [aurora.md](../axstack-explain/references/aurora.md) for shared identity,
+including its published palette defaults and type, layout and chart grammar.
 Require inline defaults and `prefers-color-scheme` so the article works outside T3;
 honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
@@ -92,6 +94,8 @@ Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
 reviewer's design review against FRONTEND-DESIGN.md (calibration defaults, restraint
 and quality floor) plus design.md's hard rules, alongside source-fidelity review.
+Apply frontend-design for content-specific craft subordinate to Aurora and the hard rules;
+include aurora.md in the review brief.
 A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit.
 If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
 Never describe a remaining finding as fixed or a clean pass.

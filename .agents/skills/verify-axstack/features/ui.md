@@ -64,10 +64,15 @@ publication, final-byte previews, external-edit warnings and URL/version/SHA rec
 Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
-Publish and `explain-design.test.js` also check frontend-design's sole design authority,
+Publish and `explain-design.test.js` also check Aurora's shared identity and subordinate frontend-design craft,
 inline font choices and published system stacks, inline colours derived from T3 theme variables,
 theme legibility and the accessibility floor, plus screenshot
 review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
+Aurora keepers reject instruction removal/inversion and accept equivalent wording for
+shared author/reviewer guidance, typography, composition, citations, truthful charts
+and unknown counts. The published token example preserves the selected dark identity
+and verifies 4.5:1 text-accent contrast against both surfaces in both palettes.
+These checks establish guidance, not generated-page quality or live theme contrast.
 Inline pages never switch palettes on `prefers-color-scheme` or redefine T3 variables.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
@@ -79,7 +84,7 @@ candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
 
 Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
-`delivery`, `design`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+`delivery`, `design`, `aurora`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
 After base-revision Launch and Doctor, the authored reviewer runs the declared
 workflow checks above plus the full Explain boundary below at the final head.
 
@@ -94,7 +99,7 @@ test "$STATUS" -eq 0
 ```
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
-700-word counting without card exemptions, frontend-design authority and hard rules,
+700-word counting without card exemptions, Aurora identity, subordinate frontend-design craft and hard rules,
 inline reviewer self-previews and Publish verifier PNGs before review, blocking
 design findings repaired within two rounds and delivered by name after round two
 when only design findings remain, normal holds for other failures, unknown-render holds,

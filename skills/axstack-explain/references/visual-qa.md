@@ -3,6 +3,7 @@
 For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
 Design review against [design.md](design.md) hard rules and [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) covers every inline HTML page and every Publish article adaptation, including its calibration defaults, restraint and quality floor.
+Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
 For inline pages, the reviewer itself renders exact bytes with `html_preview` at
 728px dark and 360px light as a non-publishing self-check.
 This supplements the driver's required previews and any verifier pass.

@@ -65,9 +65,10 @@ Dispatch every visual Explain delivers to `axstack-explainer` with a bounded
 evidence brief, including inline pages, chat Mermaid and anatomy figures.
 The `axstack-explainer` loads [design.md](references/design.md) and reads
 [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
-and every Publish article adaptation, using frontend-design as the sole design authority
-subject to design.md's hard rules.
-Never load either reference for chat Mermaid or anatomy figures.
+and every Publish article adaptation, using frontend-design for content-specific craft
+subordinate to Aurora and design.md's hard rules.
+Follow [aurora.md](references/aurora.md) for shared identity.
+Never load any of these references for chat Mermaid or anatomy figures.
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.

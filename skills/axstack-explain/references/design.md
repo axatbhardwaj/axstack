@@ -1,6 +1,7 @@
 # Design
 
-[FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) is the sole design authority for every visual choice — palette, typography, layout, spacing, structure, motion and self-critique — on every inline HTML page and every Publish article adaptation.
+[aurora.md](aurora.md) establishes the shared visual identity for every inline HTML page and every Publish article adaptation.
+Use [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) for content-specific craft subordinate to Aurora and the hard rules.
 These hard rules win on conflict.
 
 - Never load network resources or font files. Inline pages use T3 font variables or system font stacks. Published articles use system font stacks.

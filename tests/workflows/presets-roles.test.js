@@ -74,8 +74,8 @@ for (const preset of presetNames) {
         [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
           [/390px mobile/i, '390px omitted'], [/1440px desktop/i, '728px intermediate'],
           [/all four widths in both themes/i, 'one theme per width']]],
-      [[/design review/i, /follows/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
-        'Design review follows design.md and FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
+      [[/design review/i, /follows/i, /design\.md/i, /aurora\.md/i, /shared identity/i, /FRONTEND-DESIGN\.md/i, /content.specific craft/i, /subordinate to Aurora and hard rules/i, /every inline HTML page/i, /every Publish article adaptation/i],
+        'Design review follows design.md, aurora.md shared identity and FRONTEND-DESIGN.md content-specific craft subordinate to Aurora and hard rules for every inline HTML page and every Publish article adaptation.',
         [[/follows/i, 'skips'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]],
     ];
     for (const [concepts, rewording, inversions] of rules) {
