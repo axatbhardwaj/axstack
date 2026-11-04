@@ -19,6 +19,7 @@ two repair rounds with the same author by plain prose with the reason.
 For inline HTML pages and Publish article adaptations, judge the exact-byte renders
 against [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md), including its calibration defaults,
 restraint and quality floor, plus [design.md](design.md)'s hard rules.
+Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
 A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit.
 If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
 Never describe a remaining finding as fixed or a clean pass.

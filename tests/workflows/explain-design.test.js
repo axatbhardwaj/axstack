@@ -8,6 +8,7 @@ const explain = 'axstack-explain/SKILL.md';
 const qa = 'axstack-explain/references/visual-qa.md';
 const delivery = 'axstack-explain/references/delivery.md';
 const publish = 'axstack-publish/SKILL.md';
+const aurora = 'axstack-explain/references/aurora.md';
 
 // These contracts check operative instructions, including removal, reversal and
 // equivalent wording. They do not claim that a seat has followed the prompt.
@@ -19,11 +20,84 @@ function rule(path, name, concepts, rewording, inversions, prohibition) {
   });
 }
 
-rule(guide, 'frontend-design is the sole authority for every visual choice on both page kinds',
-  [/FRONTEND-DESIGN\.md/i, /(?:sole|only|exclusive) design authority/i, /every inline HTML page/i, /every Publish article adaptation/i,
-    /palette/i, /typography/i, /layout/i, /spacing/i, /structure/i, /motion/i, /self-critique/i],
-  'For every Publish article adaptation and every inline HTML page, FRONTEND-DESIGN.md is the only design authority for palette, typography, layout, spacing, structure, motion and self-critique.',
-  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(guide, 'Aurora establishes shared identity on both page kinds',
+  [/aurora\.md/i, /establishes|defines/i, /shared.*identity/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'For every Publish article adaptation and every inline HTML page, aurora.md defines the shared visual identity.',
+  [[/establishes|defines/i, 'suggests'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(guide, 'frontend craft stays subordinate to Aurora and hard rules',
+  [/FRONTEND-DESIGN\.md/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /hard rules/i],
+  'Use FRONTEND-DESIGN.md for content-specific craft subordinate to Aurora and the hard rules.',
+  [[/subordinate to/i, 'overriding'], [/content.specific craft/i, 'sole authority']]);
+for (const path of [explain, publish, qa, delivery]) {
+  rule(path, `${path} follows shared Aurora identity`, [/follow/i, /aurora\.md/i, /shared identity/i],
+    'Follow aurora.md for shared identity.', [[/follow/i, 'ignore'], [/shared identity/i, 'optional inspiration']]);
+}
+rule(aurora, 'explicit user themes take precedence', [/explicit user themes/i, /take precedence|override/i, /Aurora defaults/i],
+  'Explicit user themes override Aurora defaults.', [[/take precedence|override/i, 'yield to']]);
+rule(aurora, 'published defaults adapt to system theme',
+  [/published articles/i, /default/i, /Aurora light and dark/i, /prefers-color-scheme/i, /custom tokens/i],
+  'Published articles default to Aurora light and dark with custom tokens using prefers-color-scheme.',
+  [[/default/i, 'ignore'], [/prefers-color-scheme/i, 'a fixed palette']]);
+rule(aurora, 'inline shares grammar with live T3 colors',
+  [/inline pages/i, /use/i, /live T3 theme variables/i, /colou?rs/i, /same type, layout and chart grammar/i],
+  'Inline pages use live T3 theme variables for colors and the same type, layout and chart grammar.',
+  [[/use/i, 'ignore'], [/live T3 theme variables/i, 'published hex values']]);
+rule(aurora, 'typography establishes bounded editorial hierarchy',
+  [/use/i, /system serif headings/i, /system sans body/i, /restrained hierarchy/i, /60.68ch/i, /body measure/i],
+  'Use system serif headings, system sans body and a restrained hierarchy with a 60–68ch body measure.',
+  [[/use/i, 'ignore'], [/system serif headings/i, 'display webfonts'], [/60.68ch/i, 'unbounded']]);
+rule(aurora, 'composition avoids stranded margins',
+  [/use/i, /centered or grid composition/i, /generous.*controlled spacing/i, /prevent/i, /stranded margins/i],
+  'Use centered or grid composition with generous yet controlled spacing to prevent stranded margins.',
+  [[/use/i, 'ignore'], [/prevent/i, 'create']]);
+rule(aurora, 'compact Explain follows content shape',
+  [/keep/i, /Explain/i, /compact and content.shaped/i, /rather than|instead of/i, /shrunken article/i],
+  'Keep Explain compact and content-shaped instead of a shrunken article.',
+  [[/keep/i, 'ignore'], [/rather than|instead of/i, 'as']]);
+rule(aurora, 'citations preserve qualifications adjacent to claims',
+  [/keep/i, /quiet citations/i, /adjacent to claims/i, /preserve/i, /dates and qualifications/i],
+  'Keep quiet citations adjacent to claims and preserve dates and qualifications.',
+  [[/keep/i, 'ignore'], [/preserve/i, 'discard']]);
+rule(aurora, 'unknown counts stay out of proportions', [/unknown counts/i, /proportions/i],
+  'Never visualize unknown counts as proportions.', [[/never/i, 'always']], /never visualize/i);
+rule(aurora, 'truthful charts have labels scales and zero-baseline bars',
+  [/use/i, /direct labels/i, /true scales/i, /zero.baseline bars/i, /text alternatives/i],
+  'Use direct labels, true scales, zero-baseline bars and text alternatives for charts.',
+  [[/use/i, 'ignore'], [/zero.baseline bars/i, 'truncated bars'], [/true scales/i, 'decorative scales']]);
+rule(aurora, 'color carries no exclusive meaning', [/colou?r/i, /sole encoding/i],
+  'Never use color as the sole encoding.', [[/never/i, 'always']], /never use/i);
+rule(aurora, 'decoration and repetitive structures are excluded',
+  [/decorative glow/i, /split.color headlines/i, /repetitive badge legends/i, /obligatory card grids/i, /repeated verdicts/i],
+  'Avoid decorative glow, split-color headlines, repetitive badge legends, obligatory card grids and repeated verdicts.',
+  [[/avoid/i, 'require']], /avoid/i);
+
+test('design: published token example preserves Aurora dark identity and accessible accents', () => {
+  const source = existsSync(base + aurora) ? readFileSync(base + aurora, 'utf8') : '';
+  const css = source.match(/```css\n([\s\S]*?)```/)?.[1] ?? '';
+  const [light, dark] = css.split('@media (prefers-color-scheme: dark)');
+  const tokens = (text) => Object.fromEntries([...text.matchAll(/--aurora-([a-z]+):\s*(#[a-f\d]{6})/gi)]
+    .map(([, role, hex]) => [role, hex.toLowerCase()]));
+  const palettes = [tokens(light), tokens(dark ?? '')];
+  // The selected palette is an exact public visual identity, not prose wording.
+  expect(palettes[1]).toEqual({ ground: '#0a100d', surface: '#12221a', ink: '#fdfffd',
+    data: '#62e2a4', link: '#7dd6c8', comparison: '#a8f0b3', uncertainty: '#e6d59a' });
+  const luminance = (hex) => {
+    const channels = hex.slice(1).match(/../g).map((byte) => {
+      const value = Number.parseInt(byte, 16) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  for (const palette of palettes) {
+    for (const background of ['ground', 'surface']) {
+      for (const role of ['ink', 'data', 'link', 'comparison', 'uncertainty']) {
+        expect(palette[role]).toMatch(/^#[a-f\d]{6}$/);
+        const values = [luminance(palette[role]), luminance(palette[background])].sort((a, b) => b - a);
+        expect((values[0] + 0.05) / (values[1] + 0.05), `${role} on ${background}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+});
 rule(guide, 'hard rules win conflicts', [/hard rules/i, /win|override/i, /conflict/i],
   'On conflict, the hard rules override design choices.', [[/win|override/i, 'yield to']]);
 rule(guide, 'source fidelity wins design choices', [/source fidelity/i, /beats|overrides/i, /design choice/i, /diagram edges/i, /order/i, /tables/i, /code paths/i, /show the source/i],
@@ -158,9 +232,9 @@ rule(explain, 'explainer loads both references for both page kinds',
   'The axstack-explainer loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
   [[/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
 rule(explain, 'explainer authority stays bound by hard rules',
-  [/frontend-design/i, /(?:sole|only|exclusive) design authority/i, /subject to|bound by/i, /design\.md's hard rules/i],
-  "Use frontend-design as the only design authority, bound by design.md's hard rules.",
-  [[/(?:sole|only|exclusive) design authority/i, 'optional inspiration'], [/subject to|bound by/i, 'free from']]);
+  [/frontend-design/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /design\.md's hard rules/i],
+  "Use frontend-design for content-specific craft subordinate to Aurora and design.md's hard rules.",
+  [[/subordinate to/i, 'overriding'], [/content.specific craft/i, 'sole authority']]);
 rule(delivery, 'two-round prose fallback excludes design-only findings',
   [/except for|apart from/i, /design.only findings/i, /replace/i, /visual/i, /two repair rounds/i, /same author/i, /plain prose/i],
   'Apart from design-only findings, replace a visual still failing checks after two repair rounds with the same author by plain prose.',
@@ -169,7 +243,7 @@ rule(publish, 'publication hold excludes only second-round design delivery',
   [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
   'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
   [[/except for|apart from/i, 'including'], [/after the second round/i, 'before the first round'], [/design.only delivery/i, 'any delivery']]);
-rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /either reference/i, /chat Mermaid/i, /anatomy/i],
+rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /(?:either reference|any of these references)/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',
   [/send/i, /article adaptation/i, /art direction/i, /standalone light\/dark theme/i, /axstack-explainer/i, /bounded brief/i],
