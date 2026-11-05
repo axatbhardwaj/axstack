@@ -97,3 +97,17 @@ bun run test tests/workflows/pr-chain.test.js tests/workflows/chat-run-watch.tes
   tests/workflows/structural.test.js tests/workflows/pr-shape-helper.test.js \
   > "$EVIDENCE/chains-suite.log" 2>&1
 ```
+
+## Reconcile dispatch evidence folders
+
+Entry point: `skills/axstack/scripts/ledger-reconcile.js` (read-only JSON stdout).
+After Doctor, run `bun run test tests/workflows/ledger-reconcile.test.js` and save
+the log. The CLI fixtures prove missing-row exit 2 with named folders, complete
+exit 0, help/error exits and unchanged run bytes. Drive a real run read-only:
+`bun skills/axstack/scripts/ledger-reconcile.js --run-dir <run-dir>`.
+The default record is `run-record.md`; use `--record <path>` for `progress.md`.
+Pipe-delimited rows supply a first-cell dispatch key and an evidence path cell;
+matching uses `evidence/<key>/` (or a file inside it), including backticked paths
+and list rows. A dispatch key may differ from its evidence folder key.
+Prose mentions and rows lacking explicit evidence paths do not reconcile folders.
+This reports ledger gaps only; it proves neither live dispatch nor settlement.
