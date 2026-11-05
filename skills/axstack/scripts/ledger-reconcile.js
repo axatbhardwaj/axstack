@@ -11,6 +11,10 @@ Dispatch rows are pipe-delimited (at least three cells), optionally prefixed by
 exactly evidence/<key>/ or evidence/<key>/<file>, optionally in backticks.
 Keys contain no whitespace. Table headings and prose mentions do not count.
 Folder matching uses the evidence key, which can differ from the dispatch key.
+A row whose dispatch key equals a folder is also listed without an evidence cell
+(evidenceKey: null). It reports fail: "dispatch row <key> has no evidence path",
+and exits 2 because the ledger is incomplete. A path to another folder also fails
+and names that mismatch. Only an explicit matching evidence path reports pass.
 Output lists folders, dispatch keys and per-folder pass/fail terms with evidence;
 summary contains counts only. No term grants authority or an aggregate verdict.
 Exit codes: 0 all folders matched, 1 input/read error, 2 incomplete ledger.
@@ -36,16 +40,26 @@ function reconcile(argv) {
     const cells = line.trim().replace(/^[-*]\s+/, '').replace(/^\||\|$/g, '')
       .split('|').map((cell) => cell.trim().replace(/^`|`$/g, ''));
     if (cells.length < 3 || !/^\S+$/.test(cells[0])) continue;
+    let hasEvidence = false;
     for (const cell of cells.slice(1)) {
       const match = /^evidence\/([^/\s`]+)\/[^\s`]*$/.exec(cell);
-      if (match) dispatches.push({ key: cells[0], evidenceKey: match[1] });
+      if (match) {
+        dispatches.push({ key: cells[0], evidenceKey: match[1] });
+        hasEvidence = true;
+      }
     }
+    if (!hasEvidence && folders.includes(cells[0])) dispatches.push({ key: cells[0], evidenceKey: null });
   }
   const terms = folders.map((key) => {
     const matches = dispatches.filter((dispatch) => dispatch.evidenceKey === key);
+    const row = dispatches.find((dispatch) => dispatch.key === key);
+    let missing = `evidence/${key}/ has no dispatch row`;
+    if (row) missing = row.evidenceKey
+      ? `dispatch row ${key} points to evidence/${row.evidenceKey}/ instead of evidence/${key}/`
+      : `dispatch row ${key} has no evidence path`;
     return { key, status: matches.length ? 'pass' : 'fail', evidence: matches.length
       ? `evidence/${key}/ recorded by ${matches.map((dispatch) => dispatch.key).join(', ')}`
-      : `evidence/${key}/ has no dispatch row` };
+      : missing };
   });
   const summary = { pass: 0, fail: 0, unknown: 0, 'n/a': 0 };
   for (const term of terms) summary[term.status]++;

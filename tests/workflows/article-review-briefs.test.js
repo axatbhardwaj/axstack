@@ -8,6 +8,7 @@ const reference = 'skills/axstack-publish/references/review-briefs.md';
 const brief = sentences(read(reference)).join('. ');
 const publish = sentences(read('skills/axstack-publish/SKILL.md')).join('. ');
 const inline = sentences(read('skills/axstack-explain/references/inline-pages.md')).join('. ');
+const explain = sentences(read('skills/axstack-explain/SKILL.md')).join('. ');
 function rule(name, source, concepts, rewording, inversions, prohibition) {
   test(name, () => checkRule(source,
     (text) => prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts),
@@ -56,6 +57,18 @@ rule('the 700-word page and reply cap is inline-only', inline,
   [/count/i, /page and reply together/i, /700-word cap/i, /inline T3 pages only/i],
   'For inline T3 pages only, count page and reply together under the 700-word cap.',
   [[/inline T3 pages only/i, 'all published articles']]);
+rule('Explain scopes its owned cap to inline pages and chat', explain,
+  [/Explain owns/i, /700-word cap for inline T3 pages and chat/i],
+  'Explain owns the 700-word cap for inline T3 pages and chat, plus evidence gathering and delivery.',
+  [[/inline T3 pages and chat/i, 'all formats']]);
+rule('Explain keeps the primary 700-word limit for chat and inline pages', explain,
+  [/maximum of 700 words/i, /chat and inline T3 pages/i],
+  'Keep a maximum of 700 words for the primary explanation in chat and inline T3 pages.',
+  [[/chat and inline T3 pages/i, 'every format']]);
+rule('Explain defers Publish length to the uncapped article rule with reading time', explain,
+  [/Publish articles/i, /follow/i, /Publish.s length rule/i, /reading.time line/i, /near the headline/i],
+  "Publish articles follow Publish's length rule, with a reading-time line near the headline and no word cap.",
+  [[/follow/i, 'ignore'], [/no word cap/i, 'a 700-word cap']], /no word cap/i);
 
 test('Publish preparation and Explain delivery load the shared brief templates', () => {
   const preparation = read('skills/axstack-publish/SKILL.md').split('## 2.')[1].split('## 3.')[0];
@@ -64,7 +77,8 @@ test('Publish preparation and Explain delivery load the shared brief templates',
     [read('skills/axstack-explain/references/delivery.md'), '../../axstack-publish/references/review-briefs.md'],
   ]) {
     expect(source).toContain(link);
-    checkRule(sentences(source).join('. '), (text) => requires(text, /use|follow/i, /review and repair briefs/i),
-      'Follow the shared review and repair briefs for article work.', [[/use|follow/i, 'ignore']]);
+    checkRule(sentences(source).join('. '), (text) => requires(text, /\b(?:use|follow)\b/i, /review and repair briefs/i),
+      'Follow the shared review and repair briefs for article work.',
+      [[/\b(?:use|follow)\b/i, 'ignore'], [/\b(?:use|follow)\b/i, 'because'], [/\b(?:use|follow)\b/i, 'reuse']]);
   }
 });

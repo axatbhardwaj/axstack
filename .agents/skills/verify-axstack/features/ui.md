@@ -124,6 +124,7 @@ Article briefs: after Doctor, run
 `bun run test tests/workflows/article-review-briefs.test.js` and retain its log.
 It checks the shared review/repair links, severity and wording contracts,
 per-finding claim/label/location and before→after receipts, Publish's uncapped
-length with reading time, and the inline-only 700-word cap. Real-source removal
+length with reading time, and the inline-only 700-word cap. Explain's Publish
+exception keeps its chat/inline cap from limiting articles. Real-source removal
 and inversion fail; equivalent rewording passes. This proves instructions only,
 not generated article fidelity, reading-time accuracy or live publication.
