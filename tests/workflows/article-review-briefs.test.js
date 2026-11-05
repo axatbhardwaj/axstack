@@ -57,18 +57,13 @@ rule('the 700-word page and reply cap is inline-only', inline,
   [/count/i, /page and reply together/i, /700-word cap/i, /inline T3 pages only/i],
   'For inline T3 pages only, count page and reply together under the 700-word cap.',
   [[/inline T3 pages only/i, 'all published articles']]);
-rule('Explain scopes its owned cap to inline pages and chat', explain,
-  [/Explain owns/i, /700-word cap for inline T3 pages and chat/i],
-  'Explain owns the 700-word cap for inline T3 pages and chat, plus evidence gathering and delivery.',
-  [[/inline T3 pages and chat/i, 'all formats']]);
-rule('Explain keeps the primary 700-word limit for chat and inline pages', explain,
-  [/maximum of 700 words/i, /chat and inline T3 pages/i],
-  'Keep a maximum of 700 words for the primary explanation in chat and inline T3 pages.',
-  [[/chat and inline T3 pages/i, 'every format']]);
-rule('Explain defers Publish length to the uncapped article rule with reading time', explain,
-  [/Publish articles/i, /follow/i, /Publish.s length rule/i, /reading.time line/i, /near the headline/i],
-  "Publish articles follow Publish's length rule, with a reading-time line near the headline and no word cap.",
-  [[/follow/i, 'ignore'], [/no word cap/i, 'a 700-word cap']], /no word cap/i);
+rule('Explain caps chat, HTML and every other format except Publish articles', explain,
+  [/maximum of 700 words/i, /\bchat\b/i, /\bHTML\b/i, /every other requested format/i,
+    /except Publish articles/i, /\bfollow\b/i, /Publish.s length rule/i, /reading.time line/i, /near the headline/i],
+  "Keep a maximum of 700 words for chat, HTML and every other requested format, except Publish articles, which follow Publish's length rule with a reading-time line near the headline and no word cap.",
+  [[/except Publish articles/i, 'including Publish articles'],
+    [/every other requested format/i, 'inline T3 pages only'],
+    [/\bfollow\b/i, 'ignore'], [/no word cap/i, 'a 700-word cap']], /no word cap/i);
 
 test('Publish preparation and Explain delivery load the shared brief templates', () => {
   const preparation = read('skills/axstack-publish/SKILL.md').split('## 2.')[1].split('## 3.')[0];

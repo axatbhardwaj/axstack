@@ -195,7 +195,7 @@ test('owned-support: explain caps the primary view without losing decisions', ()
   const text = readSkill('axstack-explain');
   const normalized = text.toLowerCase().replace(/\s+/g, ' ');
   expect(text).toMatch(/primary reader-facing explanation[^.]*maximum of 700 words/i);
-  expect(text).toMatch(/maximum of 700 words[^.]*chat[^.]*inline T3 pages/i);
+  expect(text).toMatch(/chat[^.]*HTML[^.]*requested format/i);
   for (const essential of [
     'answer or purpose',
     'key rationale',

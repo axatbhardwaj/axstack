@@ -56,7 +56,7 @@ Preserve this phase's independent source/fact and exact-byte review requirements
 
 ## 2. Choose proportional output
 
-Explain owns evidence gathering, claim labels, the 700-word cap for inline T3 pages and chat, dispatch, and delivery.
+Explain owns evidence gathering, claim labels, the 700-word cap, dispatch, and delivery.
 Choose the best visual for the concept: flowchart, sequence, state, architecture
 map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
 Follow [Fidelity](references/fidelity.md) for every visual.
@@ -80,7 +80,7 @@ Use anatomy only on an explicit isometric, physical-object or anatomy request,
 through [Anatomy](../axstack-anatomy/SKILL.md).
 
 1. Keep the primary reader-facing explanation to a maximum of 700 words in
-   chat and inline T3 pages. Publish articles follow
+   chat, HTML, and every other requested format, except Publish articles, which follow
    [Publish's length rule](../axstack-publish/SKILL.md#2-prepare-the-final-artifact):
    no word cap plus a reading-time line near the headline. Preserve in that primary view
    the answer or purpose, key rationale, meaningful alternatives, main data or
