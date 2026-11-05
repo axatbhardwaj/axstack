@@ -80,7 +80,9 @@ Use anatomy only on an explicit isometric, physical-object or anatomy request,
 through [Anatomy](../axstack-anatomy/SKILL.md).
 
 1. Keep the primary reader-facing explanation to a maximum of 700 words in
-   chat, HTML, and every other requested format. Preserve in that primary view
+   chat, HTML, and every other requested format, except Publish articles, which follow
+   [Publish's length rule](../axstack-publish/SKILL.md#2-prepare-the-final-artifact):
+   no word cap plus a reading-time line near the headline. Preserve in that primary view
    the answer or purpose, key rationale, meaningful alternatives, main data or
    operational boundary, status and uncertainty, and live reader questions
    with evidence-supported answers, labeling any question the inspected

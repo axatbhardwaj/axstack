@@ -70,6 +70,9 @@ Removals and other readers still need their own request.
 
 ## 2. Prepare the final artifact
 
+Publish articles have no word cap. Show a reading-time line near the headline.
+Use the shared [review and repair briefs](references/review-briefs.md) for article work.
+
 For public mode, run the [Explain redaction check](../axstack-explain/SKILL.md#3-verify-and-deliver)
 to remove private paths, IDs, credentials, prompts, messages and internal records.
 For public mode, run Explain's [self-contained asset check](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).

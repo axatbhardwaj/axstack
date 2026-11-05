@@ -128,6 +128,7 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack/systemd/axstack-default-sync.service', 'skills/axstack/systemd/axstack-default-sync.timer',
     'skills/axstack/systemd/axstack-single-server.service', 'skills/axstack/systemd/axstack-single-server.timer',
     'skills/axstack-publish/SKILL.md',
+    'skills/axstack-publish/references/review-briefs.md', 'skills/axstack/scripts/ledger-reconcile.js',
     'skills/axstack-explain/references/design.md',
     'skills/axstack-explain/references/aurora.md',
     'skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md',

@@ -1,5 +1,7 @@
 # Delivery and holds
 
+Use the shared [review and repair briefs](../../axstack-publish/references/review-briefs.md) for article work.
+
 Use this single fallback rule for Explain and direct Anatomy delivery.
 A whiteboard-defense explanation covers a whole system, PR, run or change
 under [Whiteboard defense](whiteboard-defense.md).
