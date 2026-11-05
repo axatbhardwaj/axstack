@@ -119,3 +119,11 @@ Honor user browser-tool policy. The author performs no review browser drive;
 only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
 author logs and preview URLs alone are not. Mark uncovered behavior explicitly
 `changed-behavior: unproven`.
+
+Article briefs: after Doctor, run
+`bun run test tests/workflows/article-review-briefs.test.js` and retain its log.
+It checks the shared review/repair links, severity and wording contracts,
+per-finding claim/label/location and before→after receipts, Publish's uncapped
+length with reading time, and the inline-only 700-word cap. Real-source removal
+and inversion fail; equivalent rewording passes. This proves instructions only,
+not generated article fidelity, reading-time accuracy or live publication.

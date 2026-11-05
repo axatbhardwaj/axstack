@@ -57,7 +57,8 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack/references/thread-title-instructions.txt \
   skills/axstack/systemd/axstack-default-sync.service \
   skills/axstack/systemd/axstack-default-sync.timer \
-  skills/axstack-publish/SKILL.md \
+  skills/axstack-publish/SKILL.md skills/axstack-publish/references/review-briefs.md \
+  skills/axstack/scripts/ledger-reconcile.js \
   skills/axstack-explain/references/design.md \
   skills/axstack-explain/references/aurora.md \
   skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md \

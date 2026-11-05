@@ -35,7 +35,7 @@ Use images as `data:` URIs. Never include absolute local paths in page bytes.
 Allow plain `<a href>` links, with GitHub URLs or `path@<sha>` for source links.
 Use inline SVG or CSS for diagrams, with a text alternative.
 
-Count page and reply together under the 700-word cap.
+Count page and reply together under the 700-word cap for inline T3 pages only.
 Use body `textContent` minus script and style, including collapsed content and SVG labels.
 Inline pages have no card exemption.
 
