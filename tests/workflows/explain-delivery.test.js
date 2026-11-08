@@ -146,11 +146,11 @@ test('factual blockers cannot also count as design-only', () => {
 });
 
 test('held whiteboard explanations cannot bypass review', () => checkRule(normalized(read(delivery)),
-  (s) => prohibits(s, /never/i, /deliver/i, /held whiteboard.defense explanation/i, /unreviewed/i),
-  'Never deliver a held whiteboard-defense explanation unreviewed.', [[/never/i, 'Always']],
-  [/held whiteboard.defense explanation/i, /unreviewed/i]));
+  (s) => prohibits(s, /never/i, /deliver/i, /held whiteboard.defense explanation/i, /unreviewed/i, /as reviewed/i),
+  'Never deliver a held whiteboard-defense explanation unreviewed or describe it as reviewed.', [[/never/i, 'Always']],
+  [/held whiteboard.defense explanation/i, /unreviewed/i, /as reviewed/i]));
 
 test('inline size repairs retain the same author', () => checkRule(normalized(read('skills/axstack-anatomy/SKILL.md')),
-  (s) => requires(s, /explicitly requested inline/i, /return/i, /size repairs/i, /same author/i),
-  'For explicitly requested inline delivery, return size repairs to the same author.', [[/same/i, 'different']],
+  (s) => requires(s, /explicitly requested inline/i, /return|send/i, /size repairs/i, /same author/i),
+  'For explicitly requested inline delivery, send size repairs back to the same author.', [[/same/i, 'different']],
   [/explicitly requested inline/i, /size repairs/i, /same author/i]));
