@@ -83,9 +83,9 @@ for (const path of [delivery, 'skills/axstack-explain/references/visual-qa.md',
     const text = normalized(operativeText(path));
     checkRule(text, (s) => requires(s, /design.only/i, /means|limited to/i, /cosmetic preferences/i),
       'Design-only is limited to cosmetic preferences.', [[/cosmetic preferences/i, 'factual errors']]);
-    const boundary = path === delivery ? /blockers/i : /exclud/i;
+    const boundary = /exclud/i;
     checkRule(text, (s) => requires(s, /factual/i, /citation/i, boundary),
-      path === delivery ? 'Factual and citation failures are blockers.' : 'Factual and citation failures are excluded from the cosmetic exception.',
+      'Factual and citation failures are excluded from the cosmetic exception.',
       [[boundary, 'included']]);
   });
 }
@@ -117,14 +117,15 @@ for (const path of surfaces.filter((p) => p.endsWith('.json'))) {
 // Detect affirmative fallback directives even when the repair count is changed.
 const hasFallback = (text) => sentences(text).some((s) =>
   !/\bnever\b/i.test(s) && (/plain.prose fallback/i.test(s) ||
-    (/after|limit|exhaust|round|count/i.test(s) && /repair|round/i.test(s) &&
-     /replace|use|deliver|answer/i.test(s) && /prose/i.test(s))));
+    (/after|once|limit|exhaust|round|count/i.test(s) && /repair|round|attempt/i.test(s) &&
+     /replace|use|deliver|answer/i.test(s) && /prose|text summary/i.test(s))));
 for (const path of surfaces) {
   test(`no count-based prose replacement: ${path}`, () => {
     const text = operativeText(path);
     expect(hasFallback(text)).toBe(false);
     for (const regression of ['After three repairs, replace the visual with plain prose.',
-      'After 4 rounds, answer in prose.', 'Inline delivery may use the plain-prose fallback above.']) {
+      'After 4 rounds, answer in prose.', 'Once two repairs fail, answer in prose.',
+      'Stop after the third attempt and deliver a text summary.', 'Inline delivery may use the plain-prose fallback above.']) {
       expect(hasFallback(text + '\n' + regression)).toBe(true);
     }
   });
@@ -133,3 +134,23 @@ for (const path of surfaces) {
 test('UI loop names only the cosmetic exception', () => checkRule(normalized(read('skills/axstack/references/ui-improvement-loop.md')),
   (s) => prohibits(s, /does not/i, /Explain/i, /design.only delivery rule/i, /apply.*loop/i),
   "Explain's second-round design-only delivery rule does not apply to this loop.", [[/does not/i, 'does']]));
+
+test('factual blockers cannot also count as design-only', () => {
+  const accepts = (text) => sentences(text).some((s) =>
+    requires(s, /factual/i, /citation/i, /blockers/i, /excluded/i) && !/count as design.only/i.test(s));
+  const text = normalized(read(delivery));
+  checkRule(text, accepts,
+    'Factual and citation failures are blockers, excluded from the cosmetic exception.',
+    [[/blockers/i, 'blockers that also count as design-only'], [/excluded/i, 'included']],
+    [/blockers/i, /excluded/i]);
+});
+
+test('held whiteboard explanations cannot bypass review', () => checkRule(normalized(read(delivery)),
+  (s) => prohibits(s, /never/i, /deliver/i, /held whiteboard.defense explanation/i, /unreviewed/i),
+  'Never deliver a held whiteboard-defense explanation unreviewed.', [[/never/i, 'Always']],
+  [/held whiteboard.defense explanation/i, /unreviewed/i]));
+
+test('inline size repairs retain the same author', () => checkRule(normalized(read('skills/axstack-anatomy/SKILL.md')),
+  (s) => requires(s, /explicitly requested inline/i, /return/i, /size repairs/i, /same author/i),
+  'For explicitly requested inline delivery, return size repairs to the same author.', [[/same/i, 'different']],
+  [/explicitly requested inline/i, /size repairs/i, /same author/i]));
