@@ -14,7 +14,7 @@ Direct `/axstack-anatomy` use follows [Explain](../axstack-explain/SKILL.md)
 dispatch, review, preview and delivery. The driver thread never builds the figure.
 The configured `axstack-explainer` authors it and `axstack-explainer-review`
 reviews the exact final bytes; every interactive page also needs `axstack-ui-verifier`.
-Follow [Delivery](../axstack-explain/references/delivery.md) for holds and repair limits.
+Follow [Delivery](../axstack-explain/references/delivery.md) for progress-based repairs and dependency holds.
 The author returns size class and time estimate first, and the driver asks the
 user before building above Figure. Figure is one mechanism, 40–80 parts,
 SVG with at most one WebGL layer.
@@ -62,6 +62,10 @@ Run `html_preview` at 728px dark and 360px light.
 The driver publishes the exact checked bytes with `html_render` following Inline pages.
 Author previews are optional self-checks; they replace neither driver gating
 previews nor the interactive verifier pass.
+
+For explicitly requested inline delivery, return size repairs to the same author;
+if the tool limit cannot be met within scope, hold inline delivery with the reason.
+Never count an oversized file handoff as completed explicitly requested inline delivery.
 
 Above 512,000 bytes, keep the author and reviewer bindings, exact-bytes network
 scan and ui-verifier loopback pass. The verifier emulates `prefers-color-scheme`

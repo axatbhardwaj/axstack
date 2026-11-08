@@ -35,6 +35,9 @@ Preserve this phase's independent source/fact and exact-byte review requirements
    limitation, never an invented window. Trace the relevant flow, boundaries,
    dependencies, and actual behavior before comparing current versus intended
    behavior.
+   Before design, check every claim including conditions and branches, and verify
+   that its cited source range supports the complete claim.
+   Never treat prior chat as authoritative evidence.
 3. Mark material claims independently as **source implemented**, **tested**,
    **live observed**, **planned/proposed**, or **unknown**. These dimensions can
    coexist; none implies another.
@@ -117,6 +120,8 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    [design review](references/visual-qa.md) and [Delivery](references/delivery.md) rules.
    Consequential claims include gap or missing-claim reports, blast-radius
    safety facts, spec readbacks, and every whiteboard-defense explanation in chat too.
+   On every review, verify the full claim set from the first review onward,
+   including regression of prior findings on subsequent checks.
    Bind it to the exact artifact identity.
    Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet

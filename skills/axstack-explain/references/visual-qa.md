@@ -15,8 +15,9 @@ bounded prose measure, typography, section spacing and chart legibility.
 Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels.
 Check every width and theme for clipping and horizontal scroll, recording defects and observations.
 The driver forwards those paths and SHA-256; changed bytes require fresh screenshots and review.
-A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit.
+A page failing to look decent is a blocking design finding, repaired by the same author.
 If only design findings remain after the second round, deliver the visual with each finding named.
+Design-only means cosmetic preferences under Delivery; factual, citation and other blocking failures are excluded.
 Never describe a remaining finding as fixed or a clean pass.
 Follow [Delivery](delivery.md) for other failure holds and unknown-render holds.
 Chat Mermaid, anatomy and explicitly requested standalone HTML files keep their existing review and Visual QA.

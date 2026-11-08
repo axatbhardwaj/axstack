@@ -85,12 +85,12 @@ for (const preset of presetNames) {
 }
 
 for (const preset of presetNames) {
-  test(`design repair limit: ${preset} explanation reviewer`, () => {
+  test(`design repair ownership: ${preset} explanation reviewer`, () => {
     const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
     for (const [concepts, rewording, inversions] of [
-      [[/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i, /within/i, /two.round/i],
-        'Within the two-round visual limit, the same author repairs a blocking design finding for a page that fails to look decent.',
-        [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/within/i, 'outside']]],
+      [[/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i],
+        'A page that fails to look decent is a blocking design finding repaired by the same author.',
+        [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver']]],
       [[/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
         'Deliver the visual with each finding named if only design findings remain after the second round.',
         [[/second round/i, 'first round'], [/named/i, 'hidden']]],

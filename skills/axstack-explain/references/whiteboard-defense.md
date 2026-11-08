@@ -40,7 +40,7 @@ evidence-backed labelled answer or marked open.
 Give each open gap one line naming the missing evidence and saying to resolve
 it before defending the work.
 Every whiteboard-defense explanation is consequential for review, in chat too.
-Follow [Delivery](delivery.md) for reviewer-outage and two-round holds.
+Follow [Delivery](delivery.md) for progress-based repairs and dependency holds.
 
 If five elements and closing questions exceed 700 words, keep the top level,
 every element and the open gaps as at least one line each.

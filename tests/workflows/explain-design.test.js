@@ -235,10 +235,6 @@ rule(explain, 'explainer authority stays bound by hard rules',
   [/frontend-design/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /design\.md's hard rules/i],
   "Use frontend-design for content-specific craft subordinate to Aurora and design.md's hard rules.",
   [[/subordinate to/i, 'overriding'], [/content.specific craft/i, 'sole authority']]);
-rule(delivery, 'two-round prose fallback excludes design-only findings',
-  [/except for|apart from/i, /design.only findings/i, /replace/i, /visual/i, /two repair rounds/i, /same author/i, /plain prose/i],
-  'Apart from design-only findings, replace a visual still failing checks after two repair rounds with the same author by plain prose.',
-  [[/except for|apart from/i, 'including'], [/design.only findings/i, 'all failures']]);
 rule(publish, 'publication hold excludes only second-round design delivery',
   [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
   'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
@@ -282,10 +278,10 @@ rule(publish, 'Publish screenshots precede independent review',
   [[/before/i, 'after'], [/axstack-ui-verifier/i, 'author'], [/records?/i, 'skips']]);
 
 for (const path of [qa, delivery, publish]) {
-  rule(path, `${path} treats poor appearance as blocking within two rounds`,
-    [/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i, /within/i, /two.round/i],
-    'Within the two-round visual limit, the same author repairs a blocking design finding for a page that fails to look decent.',
-    [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver'], [/within/i, 'outside']]);
+  rule(path, `${path} treats poor appearance as blocking with the same author`,
+    [/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i],
+    'A page that fails to look decent is a blocking design finding repaired by the same author.',
+    [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver']]);
   rule(path, `${path} delivers remaining design findings after round two by name`,
     [/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
     'Deliver the visual with each finding named if only design findings remain after the second round.',
