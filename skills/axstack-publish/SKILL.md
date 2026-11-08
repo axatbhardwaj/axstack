@@ -99,8 +99,9 @@ reviewer's design review against FRONTEND-DESIGN.md (calibration defaults, restr
 and quality floor) plus design.md's hard rules, alongside source-fidelity review.
 Apply frontend-design for content-specific craft subordinate to Aurora and the hard rules;
 include aurora.md in the review brief.
-A page failing to look decent is a blocking design finding, repaired by the same author within the two-round visual limit.
+A page failing to look decent is a blocking design finding, repaired by the same author.
 If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
+Design-only means cosmetic preferences under Delivery; factual, citation and other blocking failures are excluded.
 Never describe a remaining finding as fixed or a clean pass.
 Follow Explain's [Delivery](../axstack-explain/references/delivery.md) for normal holds
 on hard-rule, fidelity, security, asset, theme, accessibility, layout-defect,

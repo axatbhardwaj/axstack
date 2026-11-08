@@ -100,11 +100,19 @@ test "$STATUS" -eq 0
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
 700-word counting without card exemptions, Aurora identity, subordinate frontend-design craft and hard rules,
-inline reviewer self-previews and Publish verifier PNGs before review, blocking
-design findings repaired within two rounds and delivered by name after round two
-when only design findings remain, normal holds for other failures, unknown-render holds,
+inline reviewer self-previews and Publish verifier PNGs before review,
+progress-based same-author repairs preserving requested visual/inline acceptance,
+full source checks before design and full-claim review on every revision,
+no-progress diagnosis, specific dependency holds and interim blocked prose,
+cosmetic-only findings delivered by name after round two, normal holds for other
+failures, unknown-render holds,
 T3 or system fonts inline, published system stacks and no design history, exact-byte network scans, preview
-and interaction gates, bounded delivery holds, and ambiguous-render readback.
+and interaction gates, dependency holds, and ambiguous-render readback.
+`explain-delivery.test.js` covers height repair then facts repair followed by a new
+actionable citation/fact finding, and rejects inherited blocking repair caps across
+Explain, whiteboard, Publish and preset reviewer notes. Its semantic keepers
+reject removal/inversion and accept equivalent rewording; these remain instruction
+checks rather than proof of live agent compliance.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact
 bytes on its own isolated host-loopback instance and checks 728px dark/360px
