@@ -16,8 +16,8 @@ const rules = [
     'Continue measurable-progress repairs with the same author and fresh independent review of the exact final bytes.', /continue/i, 'stop'],
   ['stalled repairs change approach', delivery, [/repeated.*same unresolved failure/i, /no.*progress/i, /diagnos/i, /change.*approach/i, /existing scope/i, /requires/i],
     'Repeated same unresolved failure or no progress requires diagnosis and a change of approach within existing scope.', /requires/i, 'waives'],
-  ['dependency holds are specific', delivery, [/missing.*access/i, /tool/i, /model/i, /evidence/i, /material new scope/i, /hold/i, /specific dependency/i, /reason/i],
-    'Missing access, tool, model or evidence, or material new scope, holds the specific dependency with its reason.', /holds?/i, 'waives'],
+  ['dependency holds are specific', delivery, [/missing.*access/i, /tool/i, /model/i, /evidence/i, /material new scope/i, /hold/i, /specific dependency/i, /reason/i, /resume condition/i],
+    'Missing access, tool, model or evidence, or material new scope, holds the specific dependency with its reason and resume condition.', /holds?/i, 'waives'],
   ['blocked prose is interim', delivery, [/prose status/i, /interim blocked status/i, /requested visual/i, /incomplete/i],
     'Prose status is interim blocked status and leaves the requested visual incomplete.', /incomplete/i, 'complete'],
   ['all source claims before design', explain, [/before design/i, /check|verify/i, /every claim/i, /conditions/i, /branches/i, /source range/i, /supports?/i, /complete claim/i],
@@ -72,3 +72,64 @@ for (const path of surfaces) {
     expect(caps).toEqual([]);
   });
 }
+
+const operativeText = (path) => path.endsWith('.json')
+  ? JSON.parse(read(path)).roles.find((role) => role.id === 'axstack-explainer-review').notes : read(path);
+const normalized = (text) => sentences(text).join('. ');
+
+for (const path of [delivery, 'skills/axstack-explain/references/visual-qa.md',
+  'skills/axstack-publish/SKILL.md', ...surfaces.filter((path) => path.endsWith('.json'))]) {
+  test(`cosmetic exception excludes factual and citation failures: ${path}`, () => {
+    const text = normalized(operativeText(path));
+    checkRule(text, (s) => requires(s, /design.only/i, /means|limited to/i, /cosmetic preferences/i),
+      'Design-only is limited to cosmetic preferences.', [[/cosmetic preferences/i, 'factual errors']]);
+    const boundary = path === delivery ? /blockers/i : /exclud/i;
+    checkRule(text, (s) => requires(s, /factual/i, /citation/i, boundary),
+      path === delivery ? 'Factual and citation failures are blockers.' : 'Factual and citation failures are excluded from the cosmetic exception.',
+      [[boundary, 'included']]);
+  });
+}
+
+test('blind retries are prohibited', () => checkRule(normalized(read(delivery)),
+  (s) => prohibits(s, /never/i, /repeat/i, /blind retries/i),
+  'Never repeat blind retries without a diagnosis.', [[/never/i, 'Always']]));
+
+test('diagnosis without a workable approach holds rather than loops', () => checkRule(normalized(read(delivery)),
+  (s) => prohibits(s, /no workable approach/i, /diagnosis/i, /hold/i, /blocker/i, /resume condition/i),
+  'When diagnosis finds no workable approach within scope, hold with the blocker and resume condition.',
+  [[/hold/i, 'continue']], [/diagnosis/i, /hold/i, /blocker/i, /resume condition/i]));
+
+test('oversized inline delivery holds with a reason', () => checkRule(normalized(read('skills/axstack-anatomy/SKILL.md')),
+  (s) => prohibits(s, /cannot/i, /tool limit/i, /within scope/i, /hold inline delivery/i, /reason/i),
+  'If the tool limit cannot be met within scope, hold inline delivery and state the reason.',
+  [[/hold inline delivery/i, 'complete inline delivery']]));
+
+for (const path of surfaces.filter((p) => p.endsWith('.json'))) {
+  test(`preset preserves progress repairs: ${path}`, () => {
+    const text = normalized(operativeText(path));
+    checkRule(text, (s) => requires(s, /apply|follow/i, /Delivery/i, /progress.based repairs/i, /dependency holds/i),
+      "Follow Delivery's progress-based repairs and dependency holds.", [[/apply|follow/i, 'Skip']]);
+    checkRule(text, (s) => prohibits(s, /never/i, /repair count alone/i, /abandons/i, /requested format/i),
+      'Repair count alone never abandons the requested format.', [[/never/i, 'always']]);
+  });
+}
+
+// Detect affirmative fallback directives even when the repair count is changed.
+const hasFallback = (text) => sentences(text).some((s) =>
+  !/\bnever\b/i.test(s) && (/plain.prose fallback/i.test(s) ||
+    (/after|limit|exhaust|round|count/i.test(s) && /repair|round/i.test(s) &&
+     /replace|use|deliver|answer/i.test(s) && /prose/i.test(s))));
+for (const path of surfaces) {
+  test(`no count-based prose replacement: ${path}`, () => {
+    const text = operativeText(path);
+    expect(hasFallback(text)).toBe(false);
+    for (const regression of ['After three repairs, replace the visual with plain prose.',
+      'After 4 rounds, answer in prose.', 'Inline delivery may use the plain-prose fallback above.']) {
+      expect(hasFallback(text + '\n' + regression)).toBe(true);
+    }
+  });
+}
+
+test('UI loop names only the cosmetic exception', () => checkRule(normalized(read('skills/axstack/references/ui-improvement-loop.md')),
+  (s) => prohibits(s, /does not/i, /Explain/i, /design.only delivery rule/i, /apply.*loop/i),
+  "Explain's second-round design-only delivery rule does not apply to this loop.", [[/does not/i, 'does']]));

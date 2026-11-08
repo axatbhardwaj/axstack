@@ -13,6 +13,8 @@ Record what improved and what remains, including newly found actionable issues.
 Repeated same unresolved failure or no measurable progress requires diagnosis
 and a change of approach within existing scope before another repair.
 Never repeat blind retries.
+If diagnosis finds no workable approach within scope, hold with the blocker
+and resume condition.
 Missing access, tool, model or evidence, or material new scope, holds the
 specific dependency with its reason and resume condition.
 
