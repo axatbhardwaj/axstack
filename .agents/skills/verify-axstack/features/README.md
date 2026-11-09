@@ -14,7 +14,7 @@ its source entry points, prerequisites, drive commands and observable proof.
 | Start run records and assess a candidate | [Records/reports](reports.md) | Owned fixture record, shape totals, pinned static readiness |
 | Inspect distributable contents | [Package contents](package.md) | Full pack listing, excluded repo skill, no archive write |
 | Workflow contracts | [Workflow contracts](workflows.md) | Saved-default fixture CLI/hub, role titles and semantic source contracts |
-| UI improvement and Explain/Publish delivery | [UI workflows/delivery](ui.md) | UI discovery/iteration semantic checks, private audience authority and reviewer/verifier delivery drives |
+| UI improvement and Explain/Publish delivery | [UI workflows/delivery](ui.md) | UI semantic checks, fresh/resumed live Explain delivery regression, private audience authority and reviewer/verifier drives |
 | Build an explicit Anatomy figure | [Anatomy source/theme](anatomy.md) | Source inventory, wrapper/scratch build and delegated frame-theme/compositing drive |
 
 Gotchas: scratch must be outside HOME; installation uses a private temporary HOME

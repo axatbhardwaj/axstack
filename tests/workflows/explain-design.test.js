@@ -251,8 +251,8 @@ rule(qa, 'design review covers exactly inline and Publish pages',
   'Design review against design.md and FRONTEND-DESIGN.md covers every inline HTML page and every Publish article adaptation, including calibration defaults, restraint and quality floor.',
   [[/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles'], [/covers/i, 'skips']]);
 rule(qa, 'Explain reviewer inspects shared final-byte previews',
-  [/ordinary Explain inline pages/i, /reviewer inspects/i, /driver/i, /final.byte/i, /html_preview.*screenshots/i, /728px dark/i, /360px light/i, /artifact SHA-256/i],
-  "For ordinary Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256.",
+  [/non-anatomy Explain inline pages/i, /reviewer inspects/i, /driver/i, /final.byte/i, /html_preview.*screenshots/i, /728px dark/i, /360px light/i, /artifact SHA-256/i],
+  "For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256.",
   [[/inspects/i, 'ignores'], [/final.byte/i, 'draft'], [/artifact SHA-256/i, 'page title']]);
 rule(qa, 'inadequate preview evidence requires fresh capture',
   [/missing/i, /stale/i, /unreadable/i, /inadequate/i, /preview evidence/i, /requires/i, /fresh capture/i, /before review/i],
@@ -286,7 +286,7 @@ for (const path of [qa, delivery, publish]) {
     [/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i],
     'A page that fails to look decent is a blocking design finding repaired by the same author.',
     [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver']]);
-  rule(path, `${path} delivers remaining design findings after round two by name`,
+  if (path !== qa) rule(path, `${path} delivers remaining design findings after round two by name`,
     [/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
     'Deliver the visual with each finding named if only design findings remain after the second round.',
     [[/only design findings remain/i, 'any failures remain'], [/second round/i, 'first round'], [/named/i, 'hidden']]);

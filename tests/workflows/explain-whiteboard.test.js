@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
