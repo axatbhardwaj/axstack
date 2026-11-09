@@ -32,6 +32,9 @@ and a change of approach within existing scope before another repair.
 If still blocked after diagnosis and a changed approach, state a named incomplete
 hold with its blocker and resume condition.
 Factual steps, branches, edges and omissions remain blockers, never cosmetic.
+Cosmetic preferences alone never block Explain delivery.
+Deliver the Explain visual with each remaining cosmetic preference named.
+Decency, hard-rule and factual failures remain blockers.
 Follow [Delivery](references/delivery.md) for missing tools, reviewers, evidence
 and safety holds; interim prose status leaves the requested visual incomplete.
 

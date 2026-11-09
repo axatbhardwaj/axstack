@@ -227,10 +227,10 @@ rule('axstack-explain/references/inline-pages.md', 'inline design authority excl
 rule('axstack-explain/references/inline-pages.md', 'anatomy follows its kit', [/anatomy/i, /follows|uses/i, /kit/i],
   'Anatomy uses its kit.', [[/follows|uses/i, 'skips']]);
 
-rule(explain, 'explainer loads both references for both page kinds',
-  [/axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
-  'The axstack-explainer loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
-  [[/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(explain, 'driver or specialist loads both references for both page kinds',
+  [/driver/i, /axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'The author, whether driver or axstack-explainer, loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
+  [[/driver/i, 'specialist'], [/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
 rule(explain, 'explainer authority stays bound by hard rules',
   [/frontend-design/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /design\.md's hard rules/i],
   "Use frontend-design for content-specific craft subordinate to Aurora and design.md's hard rules.",

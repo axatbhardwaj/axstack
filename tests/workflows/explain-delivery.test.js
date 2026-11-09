@@ -77,6 +77,20 @@ const operativeText = (path) => path.endsWith('.json')
   ? JSON.parse(read(path)).roles.find((role) => role.id === 'axstack-explainer-review').notes : read(path);
 const normalized = (text) => sentences(text).join('. ');
 
+for (const path of [explain, delivery]) {
+  test(`cosmetic preferences cannot withhold Explain delivery: ${path}`, () => {
+    checkRule(normalized(read(path)),
+      (s) => prohibits(s, /never/i, /cosmetic preferences alone/i, /block Explain delivery/i),
+      'Cosmetic preferences alone never block Explain delivery.', [[/never/i, 'always']]);
+    checkRule(normalized(read(path)),
+      (s) => requires(s, /deliver/i, /Explain visual/i, /cosmetic preference/i, /named/i),
+      'Deliver the Explain visual with every remaining cosmetic preference named.', [[/deliver/i, 'withhold']]);
+    checkRule(normalized(read(path)),
+      (s) => requires(s, /decency/i, /hard.rule/i, /factual/i, /remain blockers/i),
+      'Decency, hard-rule and factual failures remain blockers.', [[/remain blockers/i, 'become preferences']]);
+  });
+}
+
 for (const path of [delivery, 'skills/axstack-publish/SKILL.md']) {
   test(`cosmetic exception excludes factual and citation failures: ${path}`, () => {
     const text = normalized(operativeText(path));

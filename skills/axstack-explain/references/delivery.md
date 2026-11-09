@@ -34,6 +34,9 @@ against [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md), including its 
 restraint and quality floor, plus [design.md](design.md)'s hard rules.
 Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
 A page failing to look decent is a blocking design finding, repaired by the same author.
+Cosmetic preferences alone never block Explain delivery.
+Deliver the Explain visual with each remaining cosmetic preference named.
+Decency, hard-rule and factual failures remain blockers.
 Never describe a remaining finding as fixed or a clean pass.
 Hard-rule, fidelity, security, asset, theme, accessibility, layout-defect, interaction
 and publication failures keep their normal holds and repair rules.
