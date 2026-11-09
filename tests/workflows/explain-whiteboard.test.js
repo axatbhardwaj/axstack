@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
@@ -59,8 +59,8 @@ const rules = [
     'Whiteboard-defense plain prose still requires axstack-explainer-review.', [[/requires/i,'waives']]],
   ['unavailable visual seats', delivery, [/required author or reviewer seat.*unavailable/i, /hold.*visual/i, /plain prose/i, /nam(?:e|ing).*held visual/i],
     'If a required author or reviewer seat is unavailable, hold the visual and answer in plain prose naming the held visual.', [[/hold/i,'deliver']]],
-  ['every visual author', skill, [/dispatch/i, /every visual.*delivers/i, /axstack-explainer/i, /bounded evidence brief/i],
-    'Dispatch every visual Explain delivers to axstack-explainer with a bounded evidence brief.', [[/every/i,'some']]],
+  ['ordinary visual author', skill, [/driver authors/i, /ordinary inline HTML/i, /chat Mermaid/i, /by default/i],
+    'By default, the driver authors ordinary inline HTML and chat Mermaid.', [[/driver authors/i,'driver delegates']]],
   ['every visual review', skill, [/axstack-explainer-review/i, /always reviews/i, /every visual/i, /exact final bytes/i, /before delivery/i],
     'The axstack-explainer-review always reviews every visual at its exact final bytes before delivery.', [[/always/i,'sometimes']]],
   ['stale diagram route', skill, [/stale.*axstack-diagram/i, /route.*here only/i],
@@ -126,13 +126,10 @@ for (const [name, path, negation, concepts, rewording, inversions] of [
     (text) => prohibits(text, negation, ...concepts), rewording, inversions));
 }
 
-test('visual routing rejects an inserted no-dispatch Mermaid rule', () => {
-  const source = read(skill);
-  const accepts = (text) => requires(text, /dispatch/i, /every visual/i, /axstack-explainer/i)
-    && !/never dispatch|no dispatch|do not dispatch|do not launch|never launch/i.test(text);
-  expect(accepts(source)).toBe(true);
-  expect(accepts(`${source}\nNever dispatch for chat Mermaid.`)).toBe(false);
-});
+test('specialist delegation retains one writer', () => checkRule(sentences(read(skill)).join('. '),
+  (text) => requires(text, /keep/i, /one writer per visual/i, /specialist delegation/i),
+  'Keep one writer per visual, including specialist delegation.',
+  [[/one writer/i, 'multiple writers']], [/one writer per visual/i, /specialist delegation/i]));
 
 for (const [name, concepts, rewording, flip, inverse] of [
   ['only 2 and 3 may be omitted', [/omissions of \(2\) and \(3\)/i, /require/i, /does not apply/i, /one.line reason/i, /evidence pointer/i],

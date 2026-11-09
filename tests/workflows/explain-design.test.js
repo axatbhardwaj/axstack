@@ -227,10 +227,10 @@ rule('axstack-explain/references/inline-pages.md', 'inline design authority excl
 rule('axstack-explain/references/inline-pages.md', 'anatomy follows its kit', [/anatomy/i, /follows|uses/i, /kit/i],
   'Anatomy uses its kit.', [[/follows|uses/i, 'skips']]);
 
-rule(explain, 'explainer loads both references for both page kinds',
-  [/axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
-  'The axstack-explainer loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
-  [[/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(explain, 'driver or specialist loads both references for both page kinds',
+  [/driver/i, /axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'The author, whether driver or axstack-explainer, loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
+  [[/driver/i, 'specialist'], [/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
 rule(explain, 'explainer authority stays bound by hard rules',
   [/frontend-design/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /design\.md's hard rules/i],
   "Use frontend-design for content-specific craft subordinate to Aurora and design.md's hard rules.",
@@ -250,10 +250,14 @@ rule(qa, 'design review covers exactly inline and Publish pages',
   [/design review/i, /covers/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /calibration defaults/i, /restraint/i, /quality floor/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'Design review against design.md and FRONTEND-DESIGN.md covers every inline HTML page and every Publish article adaptation, including calibration defaults, restraint and quality floor.',
   [[/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles'], [/covers/i, 'skips']]);
-rule(qa, 'inline reviewer renders exact bytes itself',
-  [/inline/i, /reviewer/i, /itself/i, /renders?/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
-  'For inline pages, the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
-  [[/renders?/i, 'skips'], [/itself/i, 'via the author'], [/exact bytes/i, 'earlier bytes'], [/html_preview/i, 'html_render']]);
+rule(qa, 'Explain reviewer inspects shared final-byte previews',
+  [/non-anatomy Explain inline pages/i, /reviewer inspects/i, /driver/i, /final.byte/i, /html_preview.*screenshots/i, /728px dark/i, /360px light/i, /artifact SHA-256/i],
+  "For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256.",
+  [[/inspects/i, 'ignores'], [/final.byte/i, 'draft'], [/artifact SHA-256/i, 'page title']]);
+rule(qa, 'inadequate preview evidence requires fresh capture',
+  [/missing/i, /stale/i, /unreadable/i, /inadequate/i, /preview evidence/i, /requires/i, /fresh capture/i, /before review/i],
+  'Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.',
+  [[/requires/i, 'waives'], [/before review/i, 'after delivery']]);
 rule(qa, 'Publish reviewer opens verifier PNGs bound to final bytes',
   [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /728px dark/i, /360px light/i,
     /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
@@ -282,7 +286,7 @@ for (const path of [qa, delivery, publish]) {
     [/fail(?:ing|s) to look decent/i, /blocking design finding/i, /same author/i],
     'A page that fails to look decent is a blocking design finding repaired by the same author.',
     [[/fail(?:ing|s) to look decent/i, 'looks decent'], [/blocking design finding/i, 'advisory observation'], [/same author/i, 'driver']]);
-  rule(path, `${path} delivers remaining design findings after round two by name`,
+  if (path !== qa) rule(path, `${path} delivers remaining design findings after round two by name`,
     [/only design findings remain/i, /after/i, /second round/i, /deliver/i, /visual/i, /finding/i, /named/i],
     'Deliver the visual with each finding named if only design findings remain after the second round.',
     [[/only design findings remain/i, 'any failures remain'], [/second round/i, 'first round'], [/named/i, 'hidden']]);

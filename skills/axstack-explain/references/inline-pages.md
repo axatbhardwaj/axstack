@@ -67,7 +67,7 @@ for clicks, keyboard, and expanded states.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
 Follow [UI verification](../../axstack/references/ui-verification.md) for that pass.
 
-## Publish or fall back
+## Deliver or hold
 
 Publish one page per answer.
 Only the driver publishes with `html_render` from exactly the checked bytes.

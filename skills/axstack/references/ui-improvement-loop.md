@@ -70,6 +70,6 @@ Stop at the goal, budget exhaustion or plateau and report unverified boundaries.
 Return the best-known revision, attempt/keep/revert ledger, evidence paths,
 criteria met, remaining defects and stop reason. Budget exhaustion may leave
 the UI goal unmet; say so. The driver can finish an authorized bounded run
-without a new human taste approval. Explain's second-round design-only delivery rule does not
+without a new human taste approval. Explain's delivery rules do not
 apply to this loop. Existing exact-revision review, verification and merge gates
 remain required; this comparison grants no publication or merge authority.

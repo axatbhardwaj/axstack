@@ -20,6 +20,24 @@ scope baseline. Ordinary work in the current chat needs no launch preflight;
 load the [T3 runtime boundary](../axstack/references/t3-runtime.md) only
 immediately before an actual profile dispatch.
 
+On resume or skill reload, re-read the current SKILL.md and its linked delivery
+rules before continuing.
+The requested visual or inline format remains an acceptance requirement.
+Never use repair count alone to replace it with prose, declare it done, or require
+renewed permission for ordinary authorized factual, citation or layout corrections.
+Continue measurable-progress repairs with the same author and fresh independent
+review of the exact final bytes.
+Repeated same unresolved failure or no measurable progress requires diagnosis
+and a change of approach within existing scope before another repair.
+If still blocked after diagnosis and a changed approach, state a named incomplete
+hold with its blocker and resume condition.
+Factual steps, branches, edges and omissions remain blockers, never cosmetic.
+Cosmetic preferences alone never block Explain delivery.
+Deliver the Explain visual with each remaining cosmetic preference named.
+Decency, hard-rule and factual failures remain blockers.
+Follow [Delivery](references/delivery.md) for missing tools, reviewers, evidence
+and safety holds; interim prose status leaves the requested visual incomplete.
+
 For explicit local non-repository work, apply
 [Local artifacts](../axstack/references/local-artifacts.md) before native dispatch.
 Preserve this phase's independent source/fact and exact-byte review requirements.
@@ -64,9 +82,13 @@ Choose the best visual for the concept: flowchart, sequence, state, architecture
 map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
 Follow [Fidelity](references/fidelity.md) for every visual.
 For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
-Dispatch every visual Explain delivers to `axstack-explainer` with a bounded
-evidence brief, including inline pages, chat Mermaid and anatomy figures.
-The `axstack-explainer` loads [design.md](references/design.md) and reads
+The driver authors ordinary inline HTML and chat Mermaid by default.
+Use `axstack-explainer` as an optional specialist author with a bounded evidence
+brief when useful. Keep one writer per visual, including specialist delegation;
+repairs return to that author.
+Other visual formats, including anatomy figures, retain delegated
+`axstack-explainer` authorship; Publish retains its article adaptation workflow.
+The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and reads
 [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
 and every Publish article adaptation, using frontend-design for content-specific craft
 subordinate to Aurora and design.md's hard rules.
@@ -98,7 +120,7 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    must not be hidden behind links, and evidence must not be silently discarded.
    Count node labels, headings, captions, and all page text.
 2. Use chat only for an explicit chat request, an answer outside the description's conditions,
-   or inline-page fallback.
+   or interim blocked status under Delivery.
    Use a compact diagram when useful.
 3. For the conditions in the description, create an inline page by default.
    Honor an explicitly requested artifact format.
@@ -133,7 +155,7 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
 4. For a public artifact, remove private paths, identifiers, prompts,
    credentials, messages, and internal records. Local creation does not grant
    authority to publish.
-5. Follow [Delivery](references/delivery.md) for fallback and repair holds.
+5. Follow [Delivery](references/delivery.md) for dependency and repair holds.
    Deliver the smallest useful explanation. Explanation causes no automatic
    design and no automatic implementation; route later change work separately
    only when the user requests it.

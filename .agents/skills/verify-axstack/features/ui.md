@@ -78,7 +78,7 @@ The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
 Preset reviewer-note contracts mirror Publish's four-width, both-theme inputs and
 desktop/mobile inspection duties across mixed, codex-only and claude-only snapshots,
-while preserving the inline-only two-preview self-check.
+while reusing driver previews for non-anatomy Explain inline pages and preserving Anatomy self-checks.
 This offline recipe proves instructions only. The driver separately runs the
 candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
@@ -100,12 +100,13 @@ test "$STATUS" -eq 0
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
 700-word counting without card exemptions, Aurora identity, subordinate frontend-design craft and hard rules,
-inline reviewer self-previews and Publish verifier PNGs before review,
+driver authorship for ordinary inline HTML/chat Mermaid, shared final-byte reviewer previews
+and Publish verifier PNGs before review,
 progress-based same-author repairs preserving requested visual/inline acceptance,
 full source checks before design and full-claim review on every revision,
 no-progress diagnosis, specific dependency holds and interim blocked prose,
-cosmetic-only findings delivered by name after round two, normal holds for other
-failures, unknown-render holds,
+entrypoint resume/reload and incomplete-hold rules, normal blocker and unknown-render holds,
+with legacy cosmetic exceptions scoped only to Anatomy/Publish,
 T3 or system fonts inline, published system stacks and no design history, exact-byte network scans, preview
 and interaction gates, dependency holds, and ambiguous-render readback.
 `explain-delivery.test.js` covers height repair then facts repair followed by a new
@@ -124,9 +125,65 @@ and chart legibility; inspect mobile gutters and readable text/labels, with clip
 and horizontal-scroll checks throughout. A 728px render alone leaves desktop unproven.
 Use [Anatomy](anatomy.md#browser-acceptance-handoff) for figure theme/compositing.
 Honor user browser-tool policy. The author performs no review browser drive;
-only the driver publishes. Reviewer/verifier logs are final-head proof, whereas
+only the driver publishes. For non-anatomy Explain inline pages, the independent reviewer
+inspects adequate driver screenshots/hash without a mandatory duplicate render; missing,
+stale, unreadable or inadequate evidence needs fresh capture. Reviewer/verifier logs are final-head proof, whereas
 author logs and preview URLs alone are not. Mark uncovered behavior explicitly
 `changed-behavior: unproven`.
+
+## Live Explain regression: fresh and resumed inline delivery
+
+This supplements the offline checks. The driver runs it on the real T3 stack
+under recorded session/verification authority; the implementation author does
+not launch sessions or change live homes. Use owned synthetic sessions and
+private evidence. Keep the user's reference threads read-only.
+Record the candidate SHA, loaded skill/reference hashes, host, thread/run links,
+actual author/reviewer settings and final artifact identities. A missing live
+route or unread skill load is unverified, never a pass from the contract suite.
+
+1. Prepare a small source fixture with a stable hash and explicit branches:
+   invalid key rejects; cache hit returns; miss computes, stores, then returns.
+   Keep the expected steps/edges in private evidence. Request an ordinary static
+   inline HTML explanation. Observe driver authorship by default, required
+   design.md, Aurora and FRONTEND-DESIGN.md loads, and an independent reviewer.
+   Also request chat Mermaid in an owned case: driver authorship, accessibility
+   labels and full independent review still apply. Optional specialist authorship
+   keeps one writer; Anatomy and Publish retain their existing paths.
+2. In the fresh inline case, exercise recoverable height/layout and citation
+   findings, followed by a remaining omitted factual step or branch. Verify the
+   driver repairs it within existing authority and obtains a fresh verdict
+   covering every claim and prior finding at each changed artifact SHA-256.
+   Record actual attempts separately from any seeded scenario history; a newly
+   found factual omission remains blocking even when earlier findings are fixed.
+3. Resume/reload an owned case with stale context saying repair rounds are
+   exhausted and prose should replace the page. Label this as seeded regression
+   input, never current authority or observed prior work. Observe rereading the
+   current SKILL.md and linked delivery rules, continued measurable repairs and
+   full review, and actual inline delivery after checks pass. No repair count
+   alone may cause prose completion or a renewed permission request.
+4. For final-byte review, forward the driver's 728px dark and 360px light preview
+   screenshots, paths and SHA-256. Observe independent inspection without a
+   mandatory duplicate render when evidence is adequate. Exercise an inadequate
+   or stale-evidence control: fresh capture is required. Preserve theme, fit,
+   accessibility, network/console and any interactive-verifier checks.
+5. Exercise an unavailable-reviewer/tool control using an observed availability
+   gap or an explicitly labelled synthetic outage input; never disable real
+   providers or invent a successful review. Expect the requested visual to stay
+   incomplete with a named dependency hold and resume condition. A repeated or
+   no-progress repair failure requires diagnosis and an evidence-based changed
+   approach; if still blocked, expect a named incomplete hold, never blind retries
+   or a completed prose substitute. Keep safety holds intact.
+6. Read back the target T3 thread after html_render: confirm the page is present
+   and its delivered bytes equal the reviewed hash. Preserve ambiguous-render
+   readback/no-retry behavior. Save transcript/tool evidence, previews, full
+   review verdicts, repair improvements and final delivery or exact hold.
+
+Report each fresh, resumed, Mermaid and control case as observed pass/fail or
+unverified, distinguishing synthetic inputs from actual tool rejection. These
+finite scenarios establish only the observed candidate/session behavior, not
+universal agent compliance. Browser interaction checks remain delegated under
+UI verification and the user's browser-tool policy. Do not claim offline tests,
+a screenshot alone, or an HTML file on disk proves live inline delivery.
 
 Article briefs: after Doctor, run
 `bun run test tests/workflows/article-review-briefs.test.js` and retain its log.

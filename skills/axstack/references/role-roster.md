@@ -33,8 +33,10 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
-- `axstack-explainer` authors every visual Explain delivers, including pages,
-  chat Mermaid and anatomy figures; mixed pins Sonnet 5.5 high exactly.
+- `axstack-explainer`: for Explain, the driver authors ordinary inline HTML and
+  chat Mermaid by default. The specialist can author these visuals when useful;
+  it retains other visual authorship, including anatomy figures.
+  Mixed pins Sonnet 5.5 high exactly.
 - `axstack-explainer-review` always reviews every visual; `codex/terra` high in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.

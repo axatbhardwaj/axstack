@@ -34,16 +34,23 @@ against [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md), including its 
 restraint and quality floor, plus [design.md](design.md)'s hard rules.
 Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
 A page failing to look decent is a blocking design finding, repaired by the same author.
-If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
-Here design-only means cosmetic preferences; factual, citation and all failures
-listed below are blockers, excluded from this exception.
+Cosmetic preferences alone never block Explain delivery.
+Deliver the Explain visual with each remaining cosmetic preference named.
+Decency, hard-rule and factual failures remain blockers.
 Never describe a remaining finding as fixed or a clean pass.
 Hard-rule, fidelity, security, asset, theme, accessibility, layout-defect, interaction
 and publication failures keep their normal holds and repair rules.
 An unavailable, unreadable or stale render leaves design review unknown and holds
 the visual or publication; report interim prose status as above.
 
-The driver never writes a substitute visual.
+For Anatomy and Publish, the driver never writes a substitute visual.
 Each repair round returns findings to the same author and rechecks the exact final bytes.
 An anatomy page above the size cap follows [Anatomy](../../axstack-anatomy/SKILL.md)
 for oversized delivery, with the same author and reviewer bindings.
+
+## Anatomy and Publish exception
+
+For Anatomy and Publish only, if only design findings remain after the second
+round, deliver the visual with each finding named and recorded in evidence.
+Here design-only means cosmetic preferences; factual, citation and all failures
+listed above are blockers, excluded from this exception.

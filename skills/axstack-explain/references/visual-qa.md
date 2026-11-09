@@ -4,9 +4,13 @@ For inline pages, follow [Inline pages](inline-pages.md) instead of this checkli
 
 Design review against [design.md](design.md) hard rules and [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) covers every inline HTML page and every Publish article adaptation, including its calibration defaults, restraint and quality floor.
 Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
-For inline pages, the reviewer itself renders exact bytes with `html_preview` at
-728px dark and 360px light as a non-publishing self-check.
-This supplements the driver's required previews and any verifier pass.
+For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte
+`html_preview` screenshots at 728px dark and 360px light, bound to the artifact SHA-256.
+Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.
+Reuse adequate driver evidence rather than requiring a duplicate render;
+retain all layout, accessibility, theme and fit checks and any required verifier pass.
+For anatomy inline pages, the reviewer itself renders exact bytes with `html_preview`
+at 728px dark and 360px light as a non-publishing self-check, supplementing driver previews.
 For Publish, the reviewer opens `axstack-ui-verifier` PNGs at 728px dark and
 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes,
 with paths bound to the artifact SHA-256 and recorded before review.
@@ -16,8 +20,7 @@ Inspect the 360px and 390px mobile screenshots for gutters, readable text and ch
 Check every width and theme for clipping and horizontal scroll, recording defects and observations.
 The driver forwards those paths and SHA-256; changed bytes require fresh screenshots and review.
 A page failing to look decent is a blocking design finding, repaired by the same author.
-If only design findings remain after the second round, deliver the visual with each finding named.
-Design-only means cosmetic preferences under Delivery; factual, citation and other blocking failures are excluded.
+For Anatomy and Publish only, retain Delivery's design-only exception.
 Never describe a remaining finding as fixed or a clean pass.
 Follow [Delivery](delivery.md) for other failure holds and unknown-render holds.
 Chat Mermaid, anatomy and explicitly requested standalone HTML files keep their existing review and Visual QA.
