@@ -31,8 +31,8 @@ test('presets: mixed owner independently uses Sol high with full access', () => 
 // Runtime snapshots copy these notes from the presets. The role matrix checks
 // cannot catch stale author/reviewer/verifier responsibilities in that prompt.
 const explanationRoles = [
-  ['axstack-explainer', [/authors every visual Explain delivers/i],
-    'The explainer authors every visual Explain delivers.', [[/every/i, 'some']]],
+  ['axstack-explainer', [/driver authors/i, /ordinary inline HTML/i, /chat Mermaid/i, /by default/i],
+    'By default, the driver authors ordinary inline HTML and chat Mermaid.', [[/driver authors/i, 'driver delegates']]],
   ['axstack-explainer-review', [/always reviews every visual/i],
     'The reviewer always reviews every visual.', [[/always/i, 'sometimes'], [/every/i, 'some']]],
   ['axstack-ui-verifier', [/owns|performs/i, /inline page/i, /interaction pass/i,
@@ -65,9 +65,12 @@ for (const preset of presetNames) {
   test(`design render sources: ${preset} explanation reviewer`, () => {
     const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
     const rules = [
-      [[/inline/i, /reviewer/i, /itself/i, /renders/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
-        'For inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
-        [[/renders/i, 'skips'], [/itself/i, 'via the author'], [/html_preview/i, 'html_render']]],
+      [[/ordinary Explain inline pages/i, /reviewer inspects/i, /driver/i, /final.byte/i, /html_preview screenshots/i, /728px dark/i, /360px light/i, /artifact SHA-256/i],
+        "For ordinary Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256.",
+        [[/inspects/i, 'ignores'], [/final.byte/i, 'draft'], [/artifact SHA-256/i, 'page title']]],
+      [[/missing/i, /stale/i, /unreadable/i, /inadequate/i, /preview evidence/i, /requires/i, /fresh capture/i, /before review/i],
+        'Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.',
+        [[/requires/i, 'waives'], [/before review/i, 'after delivery']]],
       [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /728px dark/i, /360px light/i,
         /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
         'For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes bound to the artifact SHA-256 before review.',

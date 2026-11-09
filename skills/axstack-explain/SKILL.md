@@ -64,9 +64,13 @@ Choose the best visual for the concept: flowchart, sequence, state, architecture
 map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
 Follow [Fidelity](references/fidelity.md) for every visual.
 For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
-Dispatch every visual Explain delivers to `axstack-explainer` with a bounded
-evidence brief, including inline pages, chat Mermaid and anatomy figures.
-The `axstack-explainer` loads [design.md](references/design.md) and reads
+The driver authors ordinary inline HTML and chat Mermaid by default.
+Use `axstack-explainer` as an optional specialist author with a bounded evidence
+brief when useful. Keep one writer per visual, including specialist delegation;
+repairs return to that author.
+Other visual formats, including anatomy figures, retain delegated
+`axstack-explainer` authorship; Publish retains its article adaptation workflow.
+The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and reads
 [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
 and every Publish article adaptation, using frontend-design for content-specific craft
 subordinate to Aurora and design.md's hard rules.

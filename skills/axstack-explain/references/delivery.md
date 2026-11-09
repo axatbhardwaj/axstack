@@ -43,7 +43,7 @@ and publication failures keep their normal holds and repair rules.
 An unavailable, unreadable or stale render leaves design review unknown and holds
 the visual or publication; report interim prose status as above.
 
-The driver never writes a substitute visual.
+For Anatomy and Publish, the driver never writes a substitute visual.
 Each repair round returns findings to the same author and rechecks the exact final bytes.
 An anatomy page above the size cap follows [Anatomy](../../axstack-anatomy/SKILL.md)
 for oversized delivery, with the same author and reviewer bindings.

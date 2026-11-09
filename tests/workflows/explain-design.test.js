@@ -250,10 +250,14 @@ rule(qa, 'design review covers exactly inline and Publish pages',
   [/design review/i, /covers/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /calibration defaults/i, /restraint/i, /quality floor/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'Design review against design.md and FRONTEND-DESIGN.md covers every inline HTML page and every Publish article adaptation, including calibration defaults, restraint and quality floor.',
   [[/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles'], [/covers/i, 'skips']]);
-rule(qa, 'inline reviewer renders exact bytes itself',
-  [/inline/i, /reviewer/i, /itself/i, /renders?/i, /exact bytes/i, /html_preview/i, /728px dark/i, /360px light/i, /non-publishing self-check/i],
-  'For inline pages, the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check.',
-  [[/renders?/i, 'skips'], [/itself/i, 'via the author'], [/exact bytes/i, 'earlier bytes'], [/html_preview/i, 'html_render']]);
+rule(qa, 'Explain reviewer inspects shared final-byte previews',
+  [/ordinary Explain inline pages/i, /reviewer inspects/i, /driver/i, /final.byte/i, /html_preview.*screenshots/i, /728px dark/i, /360px light/i, /artifact SHA-256/i],
+  "For ordinary Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256.",
+  [[/inspects/i, 'ignores'], [/final.byte/i, 'draft'], [/artifact SHA-256/i, 'page title']]);
+rule(qa, 'inadequate preview evidence requires fresh capture',
+  [/missing/i, /stale/i, /unreadable/i, /inadequate/i, /preview evidence/i, /requires/i, /fresh capture/i, /before review/i],
+  'Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.',
+  [[/requires/i, 'waives'], [/before review/i, 'after delivery']]);
 rule(qa, 'Publish reviewer opens verifier PNGs bound to final bytes',
   [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /728px dark/i, /360px light/i,
     /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
