@@ -76,8 +76,10 @@ the settings sidecar preserves the value while any other install still owns it.
   homes and fixtures only.
 
 Explanations default to inline T3 pages. Use Anatomy only on an explicit
-isometric or physical-object figure request. Every visual is authored and
-independently reviewed through the selected preset's explanation roles.
+isometric or physical-object figure request. The driver authors ordinary inline
+HTML and chat Mermaid, with an optional specialist author. Anatomy keeps
+delegated authorship. Every visual receives independent review through the
+selected preset's explanation reviewer.
 Repeat installs leave unchanged files untouched. Legacy tool copies are
 released by ownership on upgrade and uninstall; retained copies report why.
 
