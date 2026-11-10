@@ -10,7 +10,7 @@ const maintain = () => sentences(read().split('## Maintain\n')[1].split(/\n## /)
 const rules = [
   ['index hygiene', [/check/i, /index hygiene/i, /\.agents\/skills\/verify-<app>\/features\/README\.md/i, /sibling files/i, /missing/i, /extra/i, /duplicate/i, /dead/i], 'Check index hygiene against .agents/skills/verify-<app>/features/README.md and sibling files for missing, extra, duplicate and dead entries.', [/check/gi, 'skip']],
   ['feature source', [/read/i, /each mapped feature/i, /source/i, /entry points/i, /citations/i], 'Read each mapped feature from source and record entry points with citations.', [/each mapped feature/gi, 'one convenient feature']],
-  ['serial source', [/parallel source wave/i], 'Never launch a parallel source wave.', [/never/gi, 'Always'], /never/i],
+  ['disjoint verification packages', [/use/i, /disjoint verification-artifact packages/i, /independent map\/recipe/i, /ownership rules/i], 'Use disjoint verification-artifact packages for independent map/recipe work under the ownership rules.', [/disjoint/gi, 'overlapping']],
   ['no schedule', [/schedule/i, /maintain/i], 'Never schedule maintain runs.', [/never/gi, 'Always'], /never/i],
   ['edit boundary', [/edit/i, /only/i, /verification skill/i, /directory/i], "Edit only the verification skill's own directory.", [/only/gi, 'beyond']],
   ['all live', [/drive/i, /every mapped feature/i, /live/i, /even when/i, /source/i, /clean/i], 'Drive every mapped feature live even when source looks clean.', [/every mapped feature/gi, 'one convenient feature']],
@@ -45,11 +45,12 @@ for (const [name, concepts, rewording, inversion, prohibition] of rules) {
   });
 }
 
-test('verify maintain: delivery retains one writer and one PR', () => {
+test('verify maintain: delivery retains exclusive package writers and one integration author', () => {
   const source = sentences(read()).join('. ');
-  checkRule(source, (text) => requires(text, /deliver/i, /maintain/i, /axstack-implement/i, /one writer/i, /one PR/i),
-    'Deliver create and maintain through axstack-implement with one writer and one PR.',
-    [[/one writer/gi, 'parallel writers'], [/one PR/gi, 'several PRs']], [/maintain/i, /one writer/i, /one PR/i]);
+  const terms = [/deliver/i, /maintain/i, /axstack-implement/i, /exclusive package writers/i, /one integration author/i, /final PR/i];
+  checkRule(source, (text) => requires(text, ...terms),
+    'Deliver create and maintain through axstack-implement with exclusive package writers and one integration author for the final PR.',
+    [[/exclusive package writers/gi, 'competing package writers'], [/one integration author/gi, 'several integration authors']], terms);
 });
 
 test('verify maintain: pinned source credit and license', () => {

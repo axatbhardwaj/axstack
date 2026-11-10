@@ -19,9 +19,9 @@ const rules = [
   ['workers request exploration',
     (s) => requires(s, /workers?, authors? and reviewers?/i, /request/i, /driver/i),
     'Workers, authors and reviewers request exploration from their driver.', [/request/i, 'dispatch']],
-  ['facet count and whole-repository search',
-    (s) => requires(s, /1[–-]3 facets/i, /whole repository|entire repository/i, /each facet/i),
-    'Split into 1–3 facets, with each facet searching the entire repository.', [/whole repository|entire repository/i, 'one directory']],
+  ['useful concerns and whole-repository search',
+    (s) => requires(s, /facets/i, /useful independent concerns/i, /observed capacity/i, /whole repository|entire repository/i, /each facet/i),
+    'Split facets by useful independent concerns within observed capacity, with each facet searching the entire repository.', [/whole repository|entire repository/i, 'one directory']],
   ['mixed required pair',
     (s) => requires(s, /mixed/i, /each facet/i, /Haiku/i, /Luna/i, /requires?|required/i),
     'In mixed, each facet requires an independent Haiku and Luna pair.', [/requires?|required/i, 'may use']],
@@ -81,11 +81,11 @@ for (const [name, accepts, rewording, [direction, inversion]] of rules) {
 
 test('Scout contract: scaling by facets retains every required seat', () => {
   checkRule(compact,
-    (s) => requires(s, /scale/i, /facet count|number of facets/i),
-    'Scale only by the number of facets.', [[/facet count|number of facets/i, 'seat availability']]);
+    (s) => prohibits(s, /no fixed facet ceiling(?: and require no worker for every possible concern)?/i, /use/i),
+    'Use no fixed facet ceiling.', [[/no fixed facet ceiling/i, 'a fixed facet ceiling']]);
   checkRule(compact,
-    (s) => requires(s, /keep|retain/i, /every required seat/i, /within each facet|per facet/i),
-    'Retain every required seat per facet.', [[/every required seat/i, 'some seats']]);
+    (s) => requires(s, /keep|retain/i, /every required corroborating seat/i, /within each selected facet|per facet/i),
+    'Retain every required corroborating seat per facet.', [[/every required corroborating seat/i, 'some seats']]);
 });
 
 test('Scout trigger is a semantic agent-facing evidence description', () => {

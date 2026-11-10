@@ -19,9 +19,14 @@ const rules = [
     1, 'automatically', "Act only on the user's request."],
   ['report only', [/write|produce/i, /report only|only a report/i],
     1, 'report and fixes', 'Produce only a report.'],
+  ['repository and live configuration edit boundary', [/edit/i, /repository files/i, /live configuration/i],
+    0, 'Always', 'Never edit repository files or live configuration.', /never|do not/i],
+  ['bounded repository evidence analysis', [/allow/i, /driver/i, /repository mode/i,
+    /bounded read-only evidence analysis/i, /existing research\/exploration roles/i, /selected runs/i],
+    0, 'Forbid', 'Allow the driver in repository mode to assign bounded read-only evidence analysis to existing research/exploration roles within the selected runs.'],
+  ['worker private evidence and no implementation authority', [/workers/i, /write only/i, /private report\/evidence/i],
+    0, 'Always', 'Workers write only private report/evidence and gain no implementation authority.', /no implementation authority/i],
   ...[
-    ['edit files', /\bedit\s+(?:(?:any|a|the)\s+)?files?\b/i],
-    ['dispatch workers', /\bdispatch\s+(?:(?:any|a|the)\s+)?workers?\b/i],
     ['merge', /\bmerge\b/i],
     ['read transcripts', /\bread\s+(?:(?:any|a|the)\s+)?transcripts?\b/i],
   ].map(([action, concept]) => [
@@ -99,11 +104,13 @@ function checkRule(text, rule) {
 
 function checkRewording(text, rule) {
   const [, , , , rewording] = rule;
-  const originals = text.split('\n').filter(acceptsRule(rule));
+  // Preserve every real-source clause while normalizing wrapped Markdown.
+  const compact = sentences(text).join('. ');
+  const originals = sentences(compact).filter(acceptsRule(rule));
   expect(originals).toHaveLength(1);
-  // Substitute in the full real-file string; tests never write tracked files.
-  const reworded = text.replace(originals[0], rewording);
-  if (originals[0] !== rewording) expect(reworded).not.toBe(text);
+  // Substitute in normalized real-source clauses; tests never write tracked files.
+  const reworded = compact.replace(originals[0], rewording);
+  if (originals[0] !== rewording) expect(reworded).not.toBe(compact);
   for (const sibling of rules) checkRule(reworded, sibling);
   return reworded;
 }
@@ -140,8 +147,7 @@ for (const rule of rules) {
 }
 
 const naturalRewordings = [
-  ['edit files', ['Never edit any file.', 'Do not edit a file.']],
-  ['dispatch workers', ['Do not dispatch any worker.']],
+  ['repository and live configuration edit boundary', ['Never edit repository files or live configuration.', 'Do not edit repository files or live configuration.']],
   ['read transcripts', ['Never read any transcript.']],
   ['shipped row misses a later recorded recurrence: enforcement failed', [
     'When a shipped check misses a later recorded recurrence, record enforcement failed.',
@@ -149,11 +155,28 @@ const naturalRewordings = [
   ]],
 ];
 
+test('correct: workers retain scope and cannot dispatch', () => {
+  // Keep the subject with "and never": the shared sentence helper deliberately
+  // splits that conjunction for other contracts.
+  const source = guidance().replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  const clauses = (text) => text.split(/[.!?;]\s+/);
+  const accepts = (text) => clauses(text).some((clause) =>
+    /workers/i.test(clause) && /assigned scope/i.test(clause)
+    && /never dispatch|do not dispatch/i.test(clause));
+  const targets = clauses(source).filter(accepts);
+  expect(targets).toHaveLength(1);
+  expect(accepts(source.replace(targets[0], ''))).toBe(false);
+  expect(accepts(source.replace(/never dispatch/i, 'may dispatch'))).toBe(false);
+  const rewording = 'Workers keep their assigned scope and do not dispatch.';
+  expect(accepts(source.replace(targets[0], rewording))).toBe(true);
+  expect(accepts(source.replace(targets[0], rewording.replace('do not dispatch', 'may dispatch')))).toBe(false);
+});
+
 for (const [name, rewordings] of naturalRewordings) {
   test(`correct natural real-source rewording: ${name}`, () => {
-    const text = guidance();
+    const text = sentences(guidance()).join('. ');
     const rule = rules.find(([ruleName]) => ruleName === name);
-    const originals = text.split('\n').filter(acceptsRule(rule));
+    const originals = sentences(text).filter(acceptsRule(rule));
     expect(originals).toHaveLength(1);
     for (const rewording of rewordings) {
       const reworded = text.replace(originals[0], rewording);

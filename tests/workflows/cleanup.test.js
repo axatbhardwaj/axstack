@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
@@ -100,7 +100,13 @@ test('cleanup uses the shared T3 contract inline and separates operations', () =
     expect(skill()).toContain(`../axstack/references/${ref}`);
   }
   for (const operation of ['t3_thread_organize', 'git worktree remove', 'git branch -d']) expect(skill()).toContain(operation);
-  expect(normalize(skill())).toContain('This skill never dispatches a cleanup worker');
+  const source = sentences(skill()).join('. ');
+  checkRule(source, (text) => prohibits(text, /never delegate/i, /cleanup mutations/i),
+    'Never delegate cleanup mutations.', [[/never delegate/i, 'always delegate']]);
+  const mutation = [/driver/i, /alone/i, /each mutation/i, /fresh ownership/i, /preservation checks/i];
+  checkRule(source, (text) => requires(text, ...mutation),
+    'The driver alone performs each mutation after fresh ownership and preservation checks.',
+    [[/alone/i, 'or a worker']], mutation);
   expect(normalize(skill())).toContain('manifest-bound retirement operation and require an empty pending set');
   expect(skill()).toContain('git clean -nd -- <exact reviewed scratch prefix>');
   expect(skill()).toContain('git clean -fd -- <same exact prefix>');
