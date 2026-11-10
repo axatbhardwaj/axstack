@@ -17,7 +17,7 @@ Review: <exact-rev independent review status + unresolved findings>
 Simplification: <applicability determinations evidenced / total candidate diffs, complete simplification receipts / total candidates, applied, not-applicable, or UNKNOWN with reason + evidence>
 Rework: <cycles + causes>
 Interventions: <avoidable user interventions, or unsupported by records>
-Parallelism: <identified vs dispatched + dependency/writer isolation>
+Parallelism: <packages identified/launched/completed/serialized + reasons and denominator/evidence; native overlap vs queued work/tool calls; joined correctness; unexercised phases>
 Shape: <PRs with an informational size flag / total PRs; full totals + bulk buckets with reproducible commands + measured head/base; UNKNOWN when measurement is missing>
 Cost: <API dollars by model when measured, or UNKNOWN with reason>
 Judgment: <execution outcome vs procedural adherence vs measurement coverage>
@@ -25,6 +25,16 @@ Proposals: <bounded hypothesized changes with regression-first plan, or none>
 Learning candidates: <each candidate's statement + scope + evidence/revision pointers + target instruction surfaces + contradiction/uncertainty + disposition; explicit already-covered no-op, recurred (suggest axstack-correct; audit does not run it), or none>
 Privacy: <local/private default; sanitized summary only when authorized>
 ```
+
+Report packages identified, launched, completed and serialized with reasons and
+evidence denominators. Distinguish native execution overlap from queued work and
+parallel tool calls. Verify useful overlap from native run intervals plus timed
+substantive-activity intersection, excluding queue/prompt/rate-limit/idle waits;
+missing reliable endpoints are UNKNOWN. Require accepted exact outputs and joined
+correctness separately from overlap, and name unexercised phase coverage.
+Never invent cost or duration without trustworthy receipts. Never claim speedup
+without a comparable measured baseline; preserve uncertainty and distinguish
+labelled deterministic/seeded fixtures from native observations or natural repairs.
 
 Treat size flags as informational only.
 

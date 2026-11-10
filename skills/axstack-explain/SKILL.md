@@ -5,6 +5,10 @@ description: When the user asks how, why, explain, or show, asks to diagram, vis
 
 # Explain
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
