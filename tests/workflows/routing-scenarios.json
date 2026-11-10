@@ -5,12 +5,12 @@
     {
       "id": "mixed-analysis-sonnet-high",
       "input": { "preset": "mixed", "work": "audit plus requirements, code, and web research with execution exploration" },
-      "expected": { "routes": ["axstack-auditor: claude/claude-haiku-5-5 xhigh", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6.1-terra high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6.1-terra high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
+      "expected": { "routes": ["axstack-auditor: claude/claude-sonnet-5-5 high", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6.1-terra high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6.1-terra high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
     },
     {
       "id": "claude-only-sol-pairs-absent",
       "input": { "preset": "claude-only", "work": "audit and code research", "pairSeats": "intentional model null" },
-      "expected": { "base": "Sonnet high proceeds alone", "absent": ["axstack-auditor-sol", "axstack-research-code-sol", "axstack-explore-execution-sol"], "forbidden": ["substitute a Sol model", "hold the available Sonnet seat"] }
+      "expected": { "base": "Sonnet medium proceeds alone", "absent": ["axstack-auditor-sol", "axstack-research-code-sol", "axstack-explore-execution-sol"], "forbidden": ["substitute a Sol model", "hold the available Sonnet seat"] }
     },
     {
       "id": "ui-change-rendered-check",
@@ -35,7 +35,7 @@
     {
       "id": "claude-opus-authored",
       "input": { "preset": "claude-only", "mode": "authored", "actualAuthor": "claude/claude-opus-5-5 medium", "candidate": "SHA G", "base": "SHA H" },
-      "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-sonnet-5-5 high"], "independence": "different model, not cross-provider" }
+      "expected": { "reviewers": ["axstack-reviewer-secondary: claude/claude-sonnet-5-5 medium"], "independence": "different model, not cross-provider" }
     },
     {
       "id": "codex-luna-authored-unsupported",
@@ -60,7 +60,7 @@
     {
       "id": "claude-peer",
       "input": { "preset": "claude-only", "mode": "peer", "actualAuthor": "external author", "candidate": "SHA M", "base": "SHA N" },
-      "expected": { "reviewers": ["axstack-reviewer-primary: claude/claude-opus-5-5 medium", "axstack-reviewer-peer: claude/claude-sonnet-5-5 high"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
+      "expected": { "reviewers": ["axstack-reviewer-primary: claude/claude-opus-5-5 medium", "axstack-reviewer-peer: claude/claude-sonnet-5-5 medium"], "rules": ["identical complete briefs", "isolated first passes", "different-model independence only"] }
     },
     {
       "id": "unknown-author-provenance",
@@ -99,7 +99,7 @@
     },
     {
       "id": "claude-sonnet-explanation-exception",
-      "input": { "preset": "claude-only", "artifact": "explanation", "author": "axstack-explainer Sonnet high", "reviewer": "axstack-explainer-review Sonnet high" },
+      "input": { "preset": "claude-only", "artifact": "explanation", "author": "axstack-explainer Sonnet medium", "reviewer": "axstack-explainer-review Sonnet medium" },
       "expected": { "allowed": "separate-session explanation review", "independence": "session independence only", "forbidden": ["cross-provider claim", "same-model code review"] }
     },
     {

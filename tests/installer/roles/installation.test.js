@@ -40,7 +40,7 @@ test('upgrade reports existing role IDs when modelClass or model changes', () =>
 test('installed presets route analysis roles to the selected provider', () => {
   const expected = {
     mixed: ['claude', 'sonnet', 'high'],
-    'claude-only': ['claude', 'sonnet', 'high'],
+    'claude-only': ['claude', 'sonnet', 'medium'],
     'codex-only': null,
   };
   const analysisIds = [
@@ -57,13 +57,12 @@ test('installed presets route analysis roles to the selected provider', () => {
     const byId = Object.fromEntries(roles.map((entry) => [entry.id, entry]));
     for (const id of analysisIds) {
       const actual = byId[id];
-      const mixedAuditor = preset === 'mixed' && id === 'axstack-auditor';
       const codexOnlyRoute = id === 'axstack-auditor'
         ? ['codex', 'luna', 'xhigh']
         : ['codex', 'sol', 'high'];
       expect([actual.provider, actual.modelClass ?? actual.model, actual.thinkingOptionId], `${preset}: ${id}`)
-        .toEqual(mixedAuditor ? ['claude', 'haiku', 'xhigh'] : route ?? codexOnlyRoute);
-      if (mixedAuditor) expect(actual.model).toBe('claude-haiku-5-5');
+        .toEqual(route ?? codexOnlyRoute);
+      if (preset === 'mixed' && id === 'axstack-auditor') expect(actual).not.toHaveProperty('model');
     }
     if (preset === 'mixed') {
       expect(byId['axstack-research-x'].provider).toBe('grok');
@@ -243,7 +242,7 @@ test('installed presets expose the peer seat without changing authored routes', 
   for (const [preset, peer] of [
     ['mixed', { provider: 'claude', modelClass: 'opus', modeId: 'bypassPermissions', thinkingOptionId: 'medium' }],
     ['codex-only', { provider: 'codex', modelClass: 'luna', modeId: 'full-access', thinkingOptionId: 'xhigh' }],
-    ['claude-only', { provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions', thinkingOptionId: 'high' }],
+    ['claude-only', { provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions', thinkingOptionId: 'medium' }],
   ]) {
     const home = makeTempRoot('axstack-peer-install-');
     const skillsDir = join(home, 'installed');

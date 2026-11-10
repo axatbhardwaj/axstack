@@ -24,9 +24,9 @@ export const reportSeats = [
   ['improve', ['axstack-ui-verifier-sonnet', 'claudeAgent', 'claude-sonnet-5-5', 'effort', 'high']],
   ['advice', ['axstack-advisor-astra', 'codex', 'gpt-6-astra', 'reasoningEffort', 'high']],
   ['advice', ['axstack-advisor-opus', 'claudeAgent', 'claude-opus-5-5', 'effort', 'xhigh']],
-  ['advice', ['axstack-escalation-fable', 'claudeAgent', 'claude-fable-5-1', 'effort', 'xhigh']],
+  ['advice', ['axstack-escalation-fable', 'claudeAgent', 'claude-fable-5-1', 'effort', 'high']],
   ...Object.keys(reportWorkflows).filter((workflow) => workflow !== 'advice').flatMap((workflow) => [
-    [workflow, ['axstack-auditor', 'claudeAgent', 'claude-haiku-5-5', 'effort', 'xhigh']],
+    [workflow, ['axstack-auditor', 'claudeAgent', 'claude-sonnet-5-5', 'effort', 'high']],
     [workflow, ['axstack-auditor-sol', 'codex', 'gpt-6.1-sol', 'reasoningEffort', 'high']],
   ]),
 ];

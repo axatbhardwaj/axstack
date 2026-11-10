@@ -67,7 +67,7 @@ test('authored pairing accepts all four class routes and newer exact author IDs'
     ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
     ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
     ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'terra', 'high']],
-    ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
+    ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'medium']],
   ]) {
     const rows = [
       { ...role('axstack-author', author[2]), provider: author[0] },
@@ -195,7 +195,7 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
     { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
       ...role('axstack-reviewer-secondary', 'claude-sonnet-5-5'),
-      provider: 'claude', thinkingOptionId: 'high',
+      provider: 'claude', thinkingOptionId: 'medium',
     },
   ];
 

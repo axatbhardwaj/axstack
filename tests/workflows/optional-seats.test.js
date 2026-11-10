@@ -96,9 +96,9 @@ test('Scout roster keeps the required seats per facet in each preset', () => {
   checkRule(text, (source) => requires(source, ...paired),
     'For Scout, mixed and codex-only must use `axstack-explore-codebase` and `axstack-explore-codebase-luna` for each facet.',
     [[direction, 'may']], paired);
-  const claude = [/claude-only/i, /Haiku high/i, /base seat/i, /per facet|each facet/i, direction];
+  const claude = [/claude-only/i, /Haiku medium/i, /base seat/i, /per facet|each facet/i, direction];
   checkRule(text, (source) => requires(source, ...claude),
-    'In claude-only, the Haiku high base seat must be used for each facet.',
+    'In claude-only, the Haiku medium base seat must be used for each facet.',
     [[direction, 'may']], claude);
 });
 

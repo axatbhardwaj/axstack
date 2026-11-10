@@ -46,7 +46,7 @@ Preserve this phase's independent source/fact and exact-byte review requirements
    `axstack-research-web-sol` (Terra high);
    the execution pair is `axstack-explore-execution` +
    `axstack-explore-execution-sol`. Requirements, code, and web use Sonnet high
-   in mixed/claude-only and Codex in codex-only; X uses Grok.
+   in mixed, Sonnet medium in claude-only, and Codex in codex-only; X uses Grok.
    Give each branch one owner, allow no cross-reading, and require a cited note
    with a URL and access date per claim; re-open sources and never trust a search
    summary. The driver reconciles agreements/disagreements per claim.

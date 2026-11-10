@@ -18,7 +18,7 @@ test('diligence role is configured in every preset with supported effort', () =>
     const { roles } = JSON.parse(read(`profiles/presets/${preset}.json`));
     expect(roles.map(({ id }) => id)).toEqual(JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id));
     expect(roles.find(({ id }) => id === 'axstack-diligence')).toMatchObject({
-      provider, modelClass, thinkingOptionId: 'high',
+      provider, modelClass, thinkingOptionId: preset === 'claude-only' ? 'medium' : 'high',
     });
   }
 });

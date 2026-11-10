@@ -178,8 +178,8 @@
       "name": "Axstack codebase explorer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Haiku 5.5 high codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "thinkingOptionId": "medium",
+      "notes": "Haiku 5.5 medium codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or medium effort holds without substitution.",
       "modelClass": "haiku",
       "model": "claude-haiku-5-5"
     },
@@ -215,10 +215,9 @@
       "name": "Axstack auditor",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "xhigh",
-      "notes": "Haiku 5.5 xhigh read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or xhigh effort holds without substitution.",
-      "modelClass": "haiku",
-      "model": "claude-haiku-5-5"
+      "thinkingOptionId": "high",
+      "notes": "Sonnet high read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "modelClass": "sonnet"
     },
     {
       "id": "axstack-auditor-sol",
@@ -279,7 +278,7 @@
       "name": "Axstack escalation Fable",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "xhigh",
+      "thinkingOptionId": "high",
       "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "fable"
     },

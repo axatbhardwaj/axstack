@@ -56,7 +56,7 @@ test('align arena: synthesis lands in Decisions rows and absent seats hold only 
   expect(text).toMatch(/uncertain dispatch[^.]*reconcile[^.]*never treated as absent/i);
 });
 
-test('align arena: judge seats exist in every preset at xhigh and mirror adviser availability', () => {
+test('align arena: judge seats use configured efforts and mirror adviser availability', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const opus = roles.find(({ id }) => id === 'axstack-arena-judge-opus');
@@ -70,7 +70,7 @@ test('align arena: judge seats exist in every preset at xhigh and mirror adviser
       const judge = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-arena-judge-astra' : 'axstack-escalation-fable'));
       const adviser = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-advisor-astra' : 'axstack-advisor-opus'));
       expect(judge, `${preset}: missing judge ${seat}`).toBeTruthy();
-      expect(judge.thinkingOptionId).toBe('xhigh');
+      expect(judge.thinkingOptionId).toBe(seat === 'fable' && preset !== 'codex-only' ? 'high' : 'xhigh');
       expect(judge.provider).toBe(adviser.provider);
       expect(judge.modelClass ?? judge.model).toBe(seat === 'astra' ? (adviser.modelClass ?? adviser.model) : preset === 'codex-only' ? null : 'fable');
       expect(judge.notes).toMatch(/read-only/i);

@@ -268,7 +268,11 @@ reference-to-head diff for own-run chains.
 
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
-policy; prose budgets use measured bytes. No test result proves native queue
+policy: Sonnet high without a model pin in mixed and Sonnet medium in claude-only.
+The preset matrix protects Fable high, Haiku exploration medium, and all 14
+claude-only Sonnet medium seats. Installed role/readiness tests exercise the
+claude-only reviewer medium contract; resolver tests retain missing-effort holds.
+Prose budgets use measured bytes. No test result proves native queue
 coverage, atomic settlement, or universal English parsing.
 Live acceptance requires the driver's exact task/thread/run identities,
 terminal state, receipt acceptance, settlement and readback, plus a fresh
