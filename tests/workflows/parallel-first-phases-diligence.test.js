@@ -26,4 +26,3 @@ test('M1 Correct retains selected records, explicit invocation and transcript pr
   checkRule(source, (text) => prohibits(text, /never|do not/i, /read transcripts/i),
     'Do not read transcripts.', [[/never|do not/i, 'Always']]);
 });
-
