@@ -82,14 +82,16 @@ Preserve this phase's independent source/fact and exact-byte review requirements
    trust/login prompt, or prompt block; record `absent (<reason>)`, and continue
    with the base seat. A sized mixed research fan-out requires dispatched
    branches spanning at least two different providers; otherwise hold that fan-out.
-   Apply the decomposition exception only to distinct-brief work packages and
+   Apply the decomposition exception only to distinct-brief nonwriter packages and
    same-binding engineering writers under [Authority](../axstack/references/parallel-first.md#authority).
    This exception adds no provider solely for diversity on partitioned work;
    each brief still uses an eligible configured role. Required same-question
    research pairs/source-class floors and other corroborating teams retain their
    configured seats and provider floors, including arena judges, peer first
-   passes and audit pairs. Required mixed corroboration retains Codex and Claude
-   seats or holds; decomposition never replaces independent corroboration.
+   passes and audit pairs. Every other mixed fan-out, except same-binding
+   engineering writers and distinct-brief nonwriter packages, retains at least
+   one Codex and one Claude seat, otherwise hold that fan-out.
+   Decomposition never replaces independent corroboration.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards

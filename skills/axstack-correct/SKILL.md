@@ -16,7 +16,7 @@ Load [Standing contracts](../axstack/references/contracts.md) before acting.
 
 Run only at the user's request.
 Write a report only.
-Never edit repository files or live configuration.
+Never edit files except the report and workers' private evidence.
 Allow the driver in repository mode to assign bounded read-only evidence
 analysis to existing research/exploration roles, partitioned by useful incident
 class within the selected runs. Briefs retain the selected-records/git bounds,
