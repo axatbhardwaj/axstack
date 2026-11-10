@@ -216,8 +216,8 @@ worktree isolation is unavailable and record each use in the run record.
 Authored reviewers use native `isolation:"worktree"`, enter their own worktree, and verify
 its path differs from the driver's before checking out and verifying the exact
 candidate SHA and base there. Peer reviewers and investigators receive driver-made disposable detached
-checkouts pinned to candidate and base. Repairs return
-to the same author and worktree. The current T3 driver owns coordination and
+checkouts pinned to candidate and base. Repairs return to the responsible package
+or integration author in that author's existing session and worktree. The current T3 driver owns coordination and
 forge mutations and never writes an author's tracked files.
 
 Preserve native `taskId/childThreadId/childRunId` or
