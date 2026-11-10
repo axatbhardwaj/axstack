@@ -1,5 +1,46 @@
 # Resolve a model and plan a dispatch
 
+## Parallel-first boundaries
+
+Use the [workflow acceptance recipe](workflows.md#parallel-first-acceptance-outcomes-16)
+for the full Outcomes 1–6 matrix and native gate. The following offline fixtures
+exercise real shipped dispatch-plan/receipt interfaces, not a scheduling mock.
+Retain the existing supported nonrepo and unavailable-role controls in this file;
+same-binding package authorship changes neither configured seats nor provider
+availability. Saved fixture MATCH is not proof of current native execution.
+
+```bash
+doctor > "$EVIDENCE/parallel-dispatch-doctor.log" 2>&1
+bun run test tests/workflows/dispatch-plan.test.js \
+  tests/workflows/fleet-artifact.test.js \
+  tests/workflows/fleet-artifact-receipt.test.js \
+  tests/workflows/fleet-artifact-contracts.test.js \
+  tests/workflows/provider-bindings.test.js \
+  > "$EVIDENCE/parallel-dispatch.log" 2>&1
+```
+
+For native engineering packages, verify each exact task/run, isolated worktree,
+exclusive writer boundary, accepted prerequisite milestone and effective author
+binding. Record every package/integration/repair contributor for independent
+joined-candidate review; divergent or unknown unmapped provenance holds it.
+Internal accepted terminal package outputs need no phantom package PR, but
+cross-PR reviewed-parent and sensitive-action requirements remain. Same-binding
+writer and distinct-brief nonwriter exceptions never replace phase-required
+corroboration or review floors. First-binding rejection holds its configuration's
+siblings; ambiguous identity is reconciled before another writer can launch.
+Test these with bounded labelled controls, never real quota exhaustion or silent
+substitution. Accept native outputs only after current terminal completion and
+exact identities; stale/failed/partial outputs cannot unblock consumers.
+
+The supported nonrepo fixture must use its configured artifact role, shared
+native isolation and disjoint owned directories. Its receipts bind SHA-256 bytes;
+changed artifacts invalidate affected evidence. Require neither synthetic Git
+ancestry nor engineering author roles for that mode. Keep Correct/Cleanup/VOA
+inline in nonrepo mode. Deterministic mode-selection and digest controls are
+separate from any optional native artifact run and required live overlap checks.
+Each concurrent run uses a distinct owned 0700 TMPDIR and private temporary home
+outside real HOME. This offline recipe performs no actual dispatch or home edit.
+
 Entry points: `skills/axstack/scripts/{resolve-models,dispatch-plan}.js`;
 harness inputs: `tests/workflows/fixtures/{t3-capabilities,dispatch-plan}.json`.
 Prerequisites: Launch; saved fixture catalogs only. Plans never dispatch work.

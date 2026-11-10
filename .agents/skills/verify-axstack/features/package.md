@@ -26,6 +26,7 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-audit/references/record.md \
   skills/axstack-improve/SKILL.md \
   skills/axstack/references/contracts.md \
+  skills/axstack/references/parallel-first.md \
   skills/axstack/references/lifecycle.md \
   skills/axstack/references/role-roster.md \
   skills/axstack/references/t3-runtime.md \
@@ -94,6 +95,24 @@ These checks prove packaged instruction contracts, not live publication.
 `package.test.js` also proves Publish's packed bytes, owned installation,
 repeat install and uninstall under all three presets.
 Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
+
+## Parallel-first package acceptance
+
+The member loop above requires the shared `parallel-first.md` contract in the
+actual dry-run listing. Verify relative links/anchors from packaged entrypoints
+against Ready work, Ownership, Dependencies and repairs, Evidence and Authority.
+Run the combined installer/discovery acceptance after all package tips are
+integrated, plus the full suite at that exact head. A missing shared reference
+at a package-only tip is pending integration, never a package PASS or waiver.
+
+Retain `pack.log`, before/after archive lists, candidate head/base, consumed
+package tips and loaded instruction hashes. Run
+`tests/installer/package.test.js` and `tests/workflows/public-docs.test.js` after
+recipe edits; preserve scoped red/green and mutation/rewording evidence.
+Use [workflow acceptance](workflows.md#parallel-first-acceptance-outcomes-16)
+for native Outcomes 3–5; packing, fixture MATCH and instruction tests alone
+cannot clear their merge/release gate. Keep installed-version preflight separate
+from candidate overrides and never edit live home instructions during development.
 
 
 ## Optional npm comparison
