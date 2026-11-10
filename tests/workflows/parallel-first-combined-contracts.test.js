@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { checkRule, sentences } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const shared = 'skills/axstack/references/parallel-first.md';
@@ -127,3 +127,37 @@ test('C4: contributor and owner self-review is forbidden in the joined candidate
     'Every contributor and the owner are ineligible to review the joined candidate.',
     [[/ineligible|must not|cannot|never/i, 'eligible to']]);
 });
+
+// The shared ownership rule alone cannot catch stale routing at a consumer.
+// Check each distinct publication/diligence/hygiene/docs hand-off against its
+// actual source; a general owner sentence elsewhere cannot satisfy it.
+for (const [boundary, path, context, equivalent] of [
+  ['publication evidence mismatch', 'skills/axstack/references/candidate-publication.md',
+    [/missing|mismatched/i, /evidence/i, /hold\w* publication/i],
+    'Missing or mismatched evidence holds publication and returns to the responsible package or integration author.'],
+  ['prepublication findings', 'skills/axstack/references/candidate-publication.md',
+    [/FINDINGS/, /before publish|before publication/i],
+    'Resolve FINDINGS with the responsible package or integration author before publication.'],
+  ['combined diligence findings', 'skills/axstack/references/diligence.md',
+    [/Scope:\s*FINDINGS/, /same round/i, /block\w* merge-ready/i],
+    'Scope: FINDINGS routes to the responsible package or integration author in the same round and blocks merge-ready.'],
+  ['retained author resource', 'skills/axstack/references/workspace-hygiene.md',
+    [/retain|keep/i, /worktree/i, /thread/i, /until/i, /merg/i, /clos/i, /repair/i],
+    'Keep the author worktree and thread until the PR merges or closes, with repairs returning to the responsible package or integration author.'],
+  ['public workflow repair', 'docs/workflows.md',
+    [/repair/i, /worktree/i],
+    'Repairs route to the responsible package or integration author and worktree.'],
+]) {
+  test(`M2: ${boundary} routes to the responsible package or integration author`, () => {
+    const route = /package(?: author)? or integration author|integration(?: author)? or package author/i;
+    const direction = /return\w*|route\w*|resolve/i;
+    const concepts = [...context, /responsible|exclusive|owning/i, route, direction];
+    const accepts = (text) => requires(text, ...concepts);
+    expect(accepts(equivalent), 'equivalent wording preserves the boundary and exclusive owner route').toBe(true);
+    const source = read(path);
+    expect(accepts(source), `${path}: ambiguous same-author routing at ${boundary}`).toBe(true);
+    checkRule(source, accepts, equivalent,
+      [[route, 'same author'], [/responsible|exclusive|owning/i, 'any available'],
+        [direction, 'do not $&']], concepts);
+  });
+}

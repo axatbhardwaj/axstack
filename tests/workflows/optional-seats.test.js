@@ -68,11 +68,8 @@ for (const path of ['skills/axstack/references/role-roster.md', 'skills/axstack-
     checkRule(text, (source) => requires(source, ...other),
       'Required corroborating teams must retain configured seats, including arena judges, peer first passes and audit pairs.',
       [[/required/i, 'optional'], [/retain/i, 'drop']], other);
-    const floor = [/mixed corroboration/i, /retain/i, /Codex/i, /Claude/i];
-    checkRule(text, (source) => requires(source, ...floor),
-      'Mixed corroboration must retain Codex and Claude seats.', [[/retain/i, 'drop']], floor);
   });
-  for (const minimum of [/sized mixed research fan-out/i, /mixed corroboration/i]) {
+  for (const minimum of [/sized mixed research fan-out/i, /(?:every|all) (?:other|remaining) mixed fan[- ]?out/i]) {
     test(`provider loss holds its own fan-out: ${path} ${minimum}`, () => {
       // Keep inline and semicolon-linked consequences with their own minimum.
       const policy = read(path).split(/[.!?]\s+/).find((clause) => minimum.test(clause));
@@ -87,6 +84,30 @@ for (const path of ['skills/axstack/references/role-roster.md', 'skills/axstack-
         'else block the affected fan-out'))).toBe(true);
     });
   }
+}
+
+for (const path of ['skills/axstack/references/role-roster.md',
+  'skills/axstack/references/routing.md', 'skills/axstack-research/SKILL.md']) {
+  test(`M3: residual mixed-provider floor has only the two approved exemptions: ${path}`, () => {
+    // Preserve a semicolon-linked hold with its own minimum, and normalize
+    // links before mutating the actual matched instruction in memory.
+    const text = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/;\s*(?=(?:otherwise|else)\b)/gi, ', ');
+    const concepts = [/(?:every|all) (?:other|remaining) mixed fan[- ]?out/i,
+      /except|apart from|other than|excluding/i, /same[- ]binding/i, /\b(?:writers?|authors?)\b/i,
+      /distinct[- ]brief/i, /non[- ]?writer/i, /packages?/i,
+      /retain|require/i, /at least one Codex/i, /(?:one |and )Claude/i,
+      /otherwise|else|\bor\b/i, /holds?|blocks?/i];
+    const accepts = (source) => requires(source, ...concepts);
+    const equivalent = 'All remaining mixed fan-outs, except same-binding writers and distinct-brief nonwriter packages, require at least one Codex and one Claude seat, else block the affected fan-out.';
+    expect(accepts(equivalent), 'equivalent residual rule includes the exact exemption classes').toBe(true);
+    expect(accepts(text), `${path}: the floor must cover all residual mixed fan-out, not just labelled corroboration`).toBe(true);
+    checkRule(text, accepts, equivalent,
+      [[/at least one Codex/i, 'zero Codex'], [/holds?|blocks?/i, 'do not hold'],
+        [/\b(?:retains?|requires?)\b/i, 'may retain'],
+        [/distinct[- ]brief/i, 'same-brief'], [/non[- ]?writer/i, 'reviewer'],
+        [/(?:every|all) (?:other|remaining) mixed fan[- ]?out/i, 'Mixed corroboration fan-out']], concepts);
+  });
 }
 
 test('Scout roster keeps the required seats per facet in each preset', () => {

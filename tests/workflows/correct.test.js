@@ -19,8 +19,9 @@ const rules = [
     1, 'automatically', "Act only on the user's request."],
   ['report only', [/write|produce/i, /report only|only a report/i],
     1, 'report and fixes', 'Produce only a report.'],
-  ['repository and live configuration edit boundary', [/edit/i, /repository files/i, /live configuration/i],
-    0, 'Always', 'Never edit repository files or live configuration.', /never|do not/i],
+  ['edit files', [/\b(?:edit|modify|change|write)\s+(?:any\s+)?files\b/i,
+    /except|other than|apart from/i, /\breport\b/i, /workers?[’']?/i, /private/i, /evidence/i],
+    0, 'Always', "Do not modify any files other than the report and workers' private evidence.", /never|do not/i],
   ['bounded repository evidence analysis', [/allow/i, /driver/i, /repository mode/i,
     /bounded read-only evidence analysis/i, /existing research\/exploration roles/i, /selected runs/i],
     0, 'Forbid', 'Allow the driver in repository mode to assign bounded read-only evidence analysis to existing research/exploration roles within the selected runs.'],
@@ -147,7 +148,8 @@ for (const rule of rules) {
 }
 
 const naturalRewordings = [
-  ['repository and live configuration edit boundary', ['Never edit repository files or live configuration.', 'Do not edit repository files or live configuration.']],
+  ['edit files', ["Never edit files except the report and workers' private evidence.",
+    "Do not change any files apart from the report and workers' private evidence."]],
   ['read transcripts', ['Never read any transcript.']],
   ['shipped row misses a later recorded recurrence: enforcement failed', [
     'When a shipped check misses a later recorded recurrence, record enforcement failed.',
