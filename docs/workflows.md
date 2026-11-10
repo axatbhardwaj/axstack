@@ -282,8 +282,11 @@ for explicit ownership transfer.
   organization boundary. Only the driver mutates lifecycle state.
 - `axstack-implement` uses strict behavioral RED, GREEN, then refactor. The
   narrow accepted structure-preserving route uses old-green and the same check
-  new-green. One author writes and returns a local receipt without pushing. The
-  owner reconciles it, publishes the unchanged commits through scoped Git push and `gh pr create/edit`, and
+  new-green. Each isolated package author returns a local receipt without pushing;
+  one integration author assembles accepted tips and verifies combined behavior.
+  [Parallel-first delivery](../skills/axstack/references/parallel-first.md) governs
+  ready-work dispatch, internal code milestones, provenance and owner-specific repairs.
+  The owner reconciles the receipts, publishes the unchanged commits through scoped Git push and `gh pr create/edit`, and
   confirms the remote SHA before review. Local green and CI green remain
   separate evidence. Authors apply the shared
   [test-value gate](../skills/axstack/references/test-value.md) to each new or
@@ -301,7 +304,7 @@ for explicit ownership transfer.
   never publishes; authorized submission binds the exact commit.
 - `axstack-watch` adopts an existing PR under observation-only, peer, or
   authorized-maintenance scope. A changed head or comment is an event, not
-  repair authority. Within an implementation run, fixes return to the original
+  repair authority. Within an implementation run, fixes return to their exclusive package or integration
   author and follow its publish-before-review loop. Manual adopted-PR repair
   reviews the exact local SHA and reply bodies before scoped Git push and `gh pr create/edit` publication
   and remote readback.
@@ -386,7 +389,7 @@ Use `axstack-watch` chat-run mode to watch every PR raised by this run,
 including later verified publications and PRs explicitly adopted by the driver.
 See [Watch activation](host-operations.md#chat-run-watch-activation) for wake
 cadence, schedule identity, and exact deletion checks. Independent PRs can repair in parallel
-with one writer per PR; a changed stack ancestor invalidates child evidence.
+with one writer per isolated package and one combined-branch integration writer; a changed stack ancestor invalidates child evidence.
 An incomplete scan leaves readiness `UNKNOWN`.
 
 The chat-run watch never expires or waits for re-authorization while PRs remain open.

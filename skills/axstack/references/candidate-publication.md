@@ -1,9 +1,15 @@
 # Candidate publication
 
+Follow [Parallel-first delivery](parallel-first.md) for joined candidates: verify
+every required package and integration receipt before final publication. Partial
+assembly checks are provisional; package commits need no phantom package PRs.
+
 For an owned candidate, the author returns its revision-bound implementation
 receipt and stops without pushing. Under recorded PR-scoped publication authority,
 the owner reconciles author receipt with actual local candidate SHA/base. The owner
-does not edit the candidate; code changes return to its author.
+does not edit the candidate; code changes return to their exclusive package or
+integration author.
+The final receipt binds every contributor and consumed tip to the integrated head/base.
 
 Before publication, follow the [applicable diligence gate](diligence.md#applicable-diligence-gate).
 For combined review, before publication the driver verifies the author receipt

@@ -1,6 +1,8 @@
 # Standing contracts (standalone phases load this, then follow its pointers)
 
 Apply these authority, scope, and model rules before consequential action.
+Follow [Parallel-first delivery](parallel-first.md) at intake, before dispatch
+and on meaningful dependency/completion transitions.
 
 For user-facing output, follow [STE-inspired writing](ste-writing.md).
 
@@ -289,7 +291,7 @@ remain a serious-risk hold.
 
 ## Authority
 
-- The driver owns scope, cross-PR coordination, integration, and every selected
+- The driver owns scope, cross-PR coordination, integration coordination, and every selected
   external-tracker mutation. Checker reports discrepancies only.
 - One T3 host/server owns a run. No fixed active-PR count; fanout is dependency-
   and capacity-driven within host resource and spending limits. Reduce fanout for

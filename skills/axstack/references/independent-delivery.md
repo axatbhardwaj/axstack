@@ -16,7 +16,7 @@ Tickets must map each outcome to an accountable scope driver marked accepted
 or proposed, write and resource boundaries, dependency milestones, and evidence
 with invalidation conditions. Record what a consumer actually needs: for
 example an accepted immutable interface, a versioned artifact, an exact
-reviewed code revision, or a merged change. Choose the sufficient milestone
+code revision at the applicable milestone, or a merged change. Choose the sufficient milestone
 from acceptance and integration needs rather than requiring every producer to
 be reviewed or merged. Mapping can leave actual SHAs unresolved until execution.
 
@@ -46,8 +46,11 @@ independence. Queue conflicting work or resolve its boundaries before dispatch;
 keep one writer per candidate and record. Driver separation alone grants no
 additional capacity or routing authority.
 
-Use main or the recorded integration target as the branch base unless a genuine
-unfinished code predecessor requires its exact reviewed revision. An artifact-only
+Across PRs, use main or the recorded integration target as the branch base unless
+a genuine unfinished code predecessor requires its exact reviewed revision.
+Within one PR, a verified terminal package receipt, exact code tip and acceptance
+evidence satisfy an internal code dependency without separate package review;
+follow [Parallel-first delivery](parallel-first.md) for this internal milestone. An artifact-only
 dependency can be satisfied by an accepted immutable interface or artifact
 milestone without Git ancestry. Follow [PR chains](pr-chain.md) for actual code
 ancestry, reviewed-parent branching, child invalidation and base updates.
@@ -64,5 +67,6 @@ insufficient execution evidence.
 Follow [Lifecycle receipts](lifecycle.md#receipts-bind-each-decision-to-evidence)
 for current-attempt completion and advancement, [Autopilot](autopilot.md#advance-and-hold)
 for scoped and run-wide holds, and [Implement](../../axstack-implement/SKILL.md)
-for dispatch, review and delivery gates. This contract changes none of their
-ownership, serial preflight, capacity, hold, merge or completion requirements.
+for dispatch, review and delivery gates. Follow [Parallel-first delivery](parallel-first.md)
+for same-PR package milestones, exclusive writers and affected-consumer repairs;
+retain serial preflight, capacity, hold, merge and native completion requirements.

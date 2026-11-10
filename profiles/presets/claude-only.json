@@ -34,7 +34,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Ordinary implementation and repairs. Uses strict red-green-refactor and remains the exclusive writer for a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Ordinary isolated package implementation, integration and owner-specific repairs. Multiple packages can feed one PR; one writer owns each candidate and the combined branch has one integrator. All writers use the same supported snapshotted author binding. Uses strict red-green-refactor and remains the exclusive writer for a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -233,7 +233,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 1. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Opus class at medium effort because it has fewer model families. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Debug investigator seat 1. Axstack-debug dispatches bounded L0 probe packages or L1 investigation with the shared evidence packet and one distinct brief. L0 receipts never satisfy required L1 adviser/investigator receipts; L1 bounds and L2 escalation remain. Each probe preserves isolation and packet rules; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Opus class at medium effort because it has fewer model families. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -242,7 +242,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Debug investigator seat 2. Axstack-debug dispatches bounded L0 probe packages or L1 investigation with the shared evidence packet and one distinct brief. L0 receipts never satisfy required L1 adviser/investigator receipts; L1 bounds and L2 escalation remain. Each probe preserves isolation and packet rules; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -251,7 +251,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 3. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Opus class at medium effort because it has fewer model families. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Debug investigator seat 3. Axstack-debug dispatches bounded L0 probe packages or L1 investigation with the shared evidence packet and one distinct brief. L0 receipts never satisfy required L1 adviser/investigator receipts; L1 bounds and L2 escalation remain. Each probe preserves isolation and packet rules; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Opus class at medium effort because it has fewer model families. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -260,7 +260,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Debug investigator seat 4. Axstack-debug dispatches bounded L0 probe packages or L1 investigation with the shared evidence packet and one distinct brief. L0 receipts never satisfy required L1 adviser/investigator receipts; L1 bounds and L2 escalation remain. Each probe preserves isolation and packet rules; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
