@@ -56,8 +56,15 @@ test('release check has its own linked paragraph', () => {
   expect(rule).toMatch(/For a release PR, dispatch `axstack-diligence` under\n\[Diligence\]\(diligence\.md\) to check the release PR body\nagainst the merged PRs before publication\./);
 });
 
-test('publication returns diligence FINDINGS to the same author before publishing', () => {
-  expect(compact('skills/axstack/references/candidate-publication.md')).toMatch(/Resolve `FINDINGS` with the same author before publishing\./);
+test('publication returns diligence FINDINGS to the responsible writer before publishing', () => {
+  const text = compact('skills/axstack/references/candidate-publication.md').replace(/`/g, '');
+  const owner = /responsible package or integration author/i;
+  const concepts = [/resolve/i, /FINDINGS/, owner, /existing session/i,
+    /worktree/i, /before publish|before publication/i];
+  checkRule(text, (source) => requires(source, ...concepts),
+    'Resolve FINDINGS with the responsible package or integration author in its existing session and worktree before publication.',
+    [[owner, 'a replacement author'], [/existing session/i, 'a new session'],
+      [/before publish\w*|before publication/i, 'after publication']], concepts);
 });
 
 test('diligence FINDINGS are report-only and stay in the owning phase', () => {

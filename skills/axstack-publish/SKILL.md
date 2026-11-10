@@ -5,6 +5,10 @@ description: When the user requests publication of an Explain HTML article, use 
 
 # Publish
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 Publish an existing Explain HTML article through the notes CLI on the configured publish host.
 The current T3 driver owns publication; workers return checked artifacts.
 Load [Standing contracts](../axstack/references/contracts.md) and follow its

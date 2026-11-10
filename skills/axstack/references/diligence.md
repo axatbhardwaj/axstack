@@ -31,7 +31,8 @@ head and base, with observed evidence, findings and limitations in the authored
 review receipt. The same reviewer returns the authored verdict and Scope status.
 `APPROVE` plus `Scope: PASS` satisfies the applicable diligence gate only for
 eligible work; otherwise require separate diligence `PASS` with authored approval.
-`Scope: FINDINGS` returns to the same author in the same round and blocks
+`Scope: FINDINGS` returns to the responsible package or integration author in
+the same round and that author's existing session and worktree, and blocks
 merge-ready. `Scope: UNKNOWN` holds merge-ready with the reason recorded for
 driver disposition; a disposition never converts unknown evidence into a pass.
 Every head or base change invalidates the combined receipt and requires fresh
@@ -73,9 +74,10 @@ check readability alongside completeness using the
 [shared format](../../axstack-spec/references/format.md#readability-review).
 For tickets,
 map every spec acceptance item to a capability's acceptance. Before candidate
-publication, compare the author receipt with its evidence folder: red/green
-logs exist, and counts, SHAs, and paths match. For release preparation, compare
-the release PR body with the merged PRs.
+publication, check every package and integration receipt against its evidence
+folder: red/green logs exist, and counts, SHAs, and paths match. This coverage
+can be batched or overlap independent work; it requires no extra session per package.
+For release preparation, compare the release PR body with the merged PRs.
 
 Retain the full output of every full-suite run as a named log in the dispatch's
 private evidence folder.

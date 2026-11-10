@@ -101,6 +101,7 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack-audit/references/record.md',
     'skills/axstack-improve/SKILL.md',
     'skills/axstack/references/contracts.md',
+    'skills/axstack/references/parallel-first.md',
     'skills/axstack/references/lifecycle.md',
     'skills/axstack/references/role-roster.md',
     'skills/axstack/references/t3-runtime.md',

@@ -5,6 +5,10 @@ description: When a substantive run needs evidence review, use axstack-audit to 
 
 # Audit
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For explicit nonrepo evidence, follow
 [Local artifacts](../axstack/references/local-artifacts.md): standalone audit uses
 workflow audit; inherited audits retain the supported parent's workflow. The
@@ -125,7 +129,12 @@ counts with denominators plus the evidence behind the count:
   applicability and completeness; it is not a quality score.
 - Rework cycles with causes.
 - Avoidable user interventions where records support the call, and no call where they do not.
-- Parallelizable tasks identified versus dispatched, judged with dependency and writer isolation.
+- Package outcomes identified, launched, completed and serialized with reasons,
+  dependencies and writer/resource isolation under
+  [Evidence](../axstack/references/parallel-first.md#evidence). Use the record schema's
+  native useful-overlap and joined-correctness fields; queued work and parallel
+  tool calls do not prove execution overlap. Preserve UNKNOWN timing/cost and
+  unexercised phase coverage; speedup needs a comparable measured baseline.
 - PRs with an informational size flag / total PRs using the actual denominator.
   Record full totals, bulk buckets with reproducible commands, and measured head/base.
   Treat size flags as informational only.

@@ -63,26 +63,51 @@ for (const path of ['skills/axstack/references/role-roster.md', 'skills/axstack-
       'A sized research fan-out in mixed must retain dispatched branches from at least two different providers.',
       [[/at least two/i, 'at least one'], [/different providers/i, 'the same provider'],
         [/requires|must retain/i, 'may retain']], sized);
-    const other = [/every other|all other/i, /mixed fan-out/i, /arena/i, /peer review/i,
-      /retains|must retain/i, /at least one/i, /Codex/i, /Claude/i];
+    const other = [/required/i, /corroborat/i, /arena/i, /peer first/i, /audit pairs/i,
+      /retain/i, /configured seats/i];
     checkRule(text, (source) => requires(source, ...other),
-      'All other mixed fan-outs, including peer review and arena, must retain at least one Claude and one Codex seat.',
-      [[/every other|all other/i, 'research'], [/retains|must retain/i, 'may retain']], other);
+      'Required corroborating teams must retain configured seats, including arena judges, peer first passes and audit pairs.',
+      [[/required/i, 'optional'], [/retain/i, 'drop']], other);
   });
-  for (const minimum of [/sized mixed research fan-out/i, /every other mixed fan-out/i]) {
+  for (const minimum of [/sized mixed research fan-out/i, /(?:every|all) (?:other|remaining) mixed fan[- ]?out/i]) {
     test(`provider loss holds its own fan-out: ${path} ${minimum}`, () => {
-      // Keep each semicolon-linked consequence with its own minimum.
+      // Keep inline and semicolon-linked consequences with their own minimum.
       const policy = read(path).split(/[.!?]\s+/).find((clause) => minimum.test(clause));
       expect(policy).toBeDefined();
-      const holds = (clause) => requires(clause.split(';')[1] ?? '',
-        /otherwise|else/i, /hold|block/i, /fan-out/i);
+      const holds = (clause) => sentences(clause).some((part) => requires(part,
+        /otherwise|else|\bor\b/i, /holds?|blocks?/i, /fan-out|corroboration/i));
       expect(holds(policy)).toBe(true);
-      expect(holds(policy.replace(/;[^;]+$/, ''))).toBe(false);
-      expect(holds(policy.replace(/\b(?:hold|block)\b/i, 'continue with available branches'))).toBe(false);
-      expect(holds(policy.replace(/\b(hold|block)\b/i, 'do not $1'))).toBe(false);
-      expect(holds(policy.replace(/(?:otherwise|else)[^;]+$/i, 'else block the affected fan-out'))).toBe(true);
+      expect(holds(policy.replace(/\b(?:otherwise|else|or)\s+(?:hold|block)s?\b[^;.]*/i, ''))).toBe(false);
+      expect(holds(policy.replace(/\b(?:holds?|blocks?)\b/i, 'continue with available branches'))).toBe(false);
+      expect(holds(policy.replace(/\b(holds?|blocks?)\b/i, 'do not $1'))).toBe(false);
+      expect(holds(policy.replace(/(?:otherwise|else)[^;]+$|\bor holds?[^.]*$/i,
+        'else block the affected fan-out'))).toBe(true);
     });
   }
+}
+
+for (const path of ['skills/axstack/references/role-roster.md',
+  'skills/axstack/references/routing.md', 'skills/axstack-research/SKILL.md']) {
+  test(`M3: residual mixed-provider floor has only the two approved exemptions: ${path}`, () => {
+    // Preserve a semicolon-linked hold with its own minimum, and normalize
+    // links before mutating the actual matched instruction in memory.
+    const text = read(path).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/;\s*(?=(?:otherwise|else)\b)/gi, ', ');
+    const concepts = [/(?:every|all) (?:other|remaining) mixed fan[- ]?out/i,
+      /except|apart from|other than|excluding/i, /same[- ]binding/i, /\b(?:writers?|authors?)\b/i,
+      /distinct[- ]brief/i, /non[- ]?writer/i, /packages?/i,
+      /retain|require/i, /at least one Codex/i, /(?:one |and )Claude/i,
+      /otherwise|else|\bor\b/i, /holds?|blocks?/i];
+    const accepts = (source) => requires(source, ...concepts);
+    const equivalent = 'All remaining mixed fan-outs, except same-binding writers and distinct-brief nonwriter packages, require at least one Codex and one Claude seat, else block the affected fan-out.';
+    expect(accepts(equivalent), 'equivalent residual rule includes the exact exemption classes').toBe(true);
+    expect(accepts(text), `${path}: the floor must cover all residual mixed fan-out, not just labelled corroboration`).toBe(true);
+    checkRule(text, accepts, equivalent,
+      [[/at least one Codex/i, 'zero Codex'], [/holds?|blocks?/i, 'do not hold'],
+        [/\b(?:retains?|requires?)\b/i, 'may retain'],
+        [/distinct[- ]brief/i, 'same-brief'], [/non[- ]?writer/i, 'reviewer'],
+        [/(?:every|all) (?:other|remaining) mixed fan[- ]?out/i, 'Mixed corroboration fan-out']], concepts);
+  });
 }
 
 test('Scout roster keeps the required seats per facet in each preset', () => {
@@ -108,11 +133,12 @@ test('shared rules qualify only optional seats and preserve required holds', () 
   expect(contracts).toMatch(/Optional seats follow \[Role roster\]\(role-roster\.md\)/i);
   expect(contracts).toMatch(/required seats[^.]*model: null[^.]*hold without substitution/i);
   expect(routing).toMatch(/\[Model discipline\]\(contracts\.md#model-discipline\) governs optional seats[^.]*auditor preflight[^.]*required holds/i);
-  expect(routing).toMatch(/\[Role roster\]\(role-roster\.md\) governs[^.]*single-provider absence[^.]*mixed Codex\+Claude fan-out/i);
-  const researchMinimum = [/Role roster/i, /governs/i, /mixed research/i, /at least two/i, /different providers/i];
-  checkRule(sentences(routing).join('. '), (source) => requires(source, ...researchMinimum),
-    'Role roster governs mixed research with at least two different providers.',
-    [[/at least two/i, 'at least one'], [/different providers/i, 'the same provider']], researchMinimum);
+  const scope = [/Role roster/i, /governs/i, /single-provider absence/i,
+    /required research\/corroboration teams/i, /same-binding writer/i,
+    /distinct-brief nonwriter/i, /exceptions/i];
+  checkRule(sentences(routing).join('. '), (source) => requires(source, ...scope),
+    'Role roster governs single-provider absence, required research/corroboration teams and same-binding writer/distinct-brief nonwriter exceptions.',
+    [[/required/i, 'optional'], [/governs/i, 'ignores']], scope);
   for (const prose of [contracts, routing]) expect(prose).not.toContain('absent (<reason>)');
   expect(routing).not.toMatch(/--retry-of|pre-turn Codex rejection/);
   expect(routing).toContain('holds that role with no substitution');

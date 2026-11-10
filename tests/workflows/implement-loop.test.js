@@ -21,7 +21,10 @@ test('implement loop: loaded text carries the merge-ready run contract', () => {
   expect(loaded).toMatch(
     /authoring\s*\|\s*published\s*\|\s*in-review\s*\|\s*repairing\(n\)\s*\|\s*merge-ready\s*\|\s*merged\s*\|\s*held/i,
   );
-  expect(loaded).toMatch(/REQUEST_CHANGES[^.]*same author[^.]*new revision[^.]*repairs/i);
+  checkRule(loaded, (text) => requires(text, /REQUEST_CHANGES/i, /returns/i,
+    /exclusive package author/i, /integration author/i, /new revision/i, /repairs/i),
+  'REQUEST_CHANGES returns findings to the exclusive package author and integration author for a new revision, incrementing repairs.',
+  [[/returns/gi, 'discards']]);
   checkRule(loaded.replace(/`/g, ''), (text) => requires(text,
     /\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i, /\bexactly one extra repair round\b/i),
   'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back to assess exactly one extra repair round.',

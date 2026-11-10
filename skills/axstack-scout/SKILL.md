@@ -5,6 +5,10 @@ description: When an agent needs codebase evidence across several areas or unfam
 
 # Scout
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -22,10 +26,13 @@ current chat. Ordinary file reading also stays in the current chat.
 Only a driver or PR owner dispatches Scout. Workers, authors and reviewers
 request exploration from their driver; they do not launch a fan-out.
 
-Split the question into 1–3 facets, with each facet searching the whole
-repository for its concern, such as definitions, callers, tests or config.
-Facet briefs must never restrict the search to one directory. Scale by facet
-count; keep every required seat within each facet.
+Split facets by useful independent concerns within observed capacity, with each
+facet searching the whole repository for its concern, such as definitions,
+callers, tests or config. Record a concrete capacity/resource/dependency reason
+for serialization and reassess when it changes; unknown telemetry stays unknown.
+Use no fixed facet ceiling and require no worker for every possible concern.
+Facet briefs must never restrict the search to one directory; keep every
+required corroborating seat within each selected facet.
 
 ## 2. Dispatch independent seats
 

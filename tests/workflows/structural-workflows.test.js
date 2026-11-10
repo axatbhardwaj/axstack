@@ -6,7 +6,7 @@ import { publicDocPaths } from './public-docs.js';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
 import { existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { loadedReferences, requires, sentences } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const SEP = '/';
 
@@ -112,7 +112,11 @@ test('structural: PR-shape callers carry planning, delivery, and audit evidence'
   }
   for (const name of ['contracts', 'tickets', 'implement', 'review', 'audit']) {
     expect(callers[name], `${name} must keep routine shape decisions autonomous`).toMatch(/autonomous[^.]*driver|driver[^.]*autonomous/i);
-    expect(callers[name], `${name} must not escalate size alone`).toMatch(/size alone[^.]*never[^.]*user\s+approval/i);
+    const noSizeApproval = /never\s+(?:requires?|needs?)|(?:requires?|needs?)\s+no|does not\s+(?:require|need)/i;
+    const prose = callers[name].replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+    checkRule(prose, (text) => prohibits(text, noSizeApproval, /size alone/i, /user\s+approval/i),
+      'Size alone never needs user approval.',
+      [[noSizeApproval, 'requires']], [/size alone/i, /user\s+approval/i]);
   }
   expect(callers.contracts).toMatch(/fanout[^.]*dependency[^.]*capacity/i);
   expect(callers.contracts).toMatch(/resource[^.]*spending limits/i);

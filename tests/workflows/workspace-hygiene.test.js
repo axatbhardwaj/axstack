@@ -88,11 +88,21 @@ const completionRules = [
   },
   {
     name: 'author resources remain unarchived through merge or closure',
-    concepts: [/keep|retain/i, /author/i, /thread/i, /worktree/i, /unarchived/i, /until/i, /PR/i, /merges/i, /closes/i, /repairs/i, /same author/i],
-    rewording: 'Retain the author thread and worktree unarchived until the PR closes or merges, returning repairs to the same author.',
-    inversions: [[/unarchived/i, 'archived'], [/until/i, 'only before'], [/same author/i, 'another author']],
+    concepts: [/keep|retain/i, /author/i, /thread/i, /worktree/i, /unarchived/i, /until/i, /PR/i, /merges/i, /closes/i],
+    rewording: 'Keep each author thread and worktree unarchived until the PR closes or merges.',
+    inversions: [[/unarchived/i, 'archived'], [/until/i, 'only before']],
     contradiction: 'and archive the author thread',
     forbidden: /(?:archive|remove|abandon) the author/i,
+  },
+  {
+    name: 'repairs continue in the responsible writers existing resources',
+    concepts: [/repairs/i, /return|route/i, /responsible package or integration author/i,
+      /existing session/i, /worktree/i],
+    rewording: 'Route repairs to the responsible package or integration author in its existing session and worktree.',
+    inversions: [[/responsible package or integration author/i, 'another author'],
+      [/existing session/i, 'a new session'], [/worktree/i, 'a replacement checkout']],
+    contradiction: 'and transfer to another writer',
+    forbidden: /transfer to another writer/i,
   },
   {
     name: 'unaccepted or held completion remains visible',
@@ -149,6 +159,16 @@ for (const { id, input, expected, contract } of scenarios) {
       const [, concepts, negative] = settlementRules.find(([key]) => key === name);
       checkRule(text, (source) => prohibits(source.replace(/`/g, ''), negative, ...concepts), contract.replace(/`/g, ''),
         [[negative, 'always allowed']], concepts);
+      return;
+    }
+    if (id === 'author-retained-while-open') {
+      // The historical fixture combines two obligations now expressed in
+      // separate sentences. Both owning rules above retain their full probes.
+      for (const ruleName of ['author resources remain unarchived through merge or closure',
+        'repairs continue in the responsible writers existing resources']) {
+        const rule = completionRules.find(({ name }) => name === ruleName);
+        expect(requires(text, ...rule.concepts), ruleName).toBe(true);
+      }
       return;
     }
     expect(text).toContain(contract);

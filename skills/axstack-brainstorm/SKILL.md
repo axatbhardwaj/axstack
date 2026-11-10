@@ -5,6 +5,10 @@ description: When validating a design approach, use axstack-brainstorm to compar
 
 # Brainstorm
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 Standalone usage: `/axstack-brainstorm <problem + candidate approach>`.
 Run inline in the current T3 driver thread. Never delegate a coordinator.
 This procedure is report-only. Do not implement, prototype, or grant execution

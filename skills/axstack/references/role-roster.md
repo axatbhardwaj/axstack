@@ -1,5 +1,8 @@
 # Role roster
 
+Follow [Parallel-first delivery](parallel-first.md) for package authorship,
+provenance, integration and provider-floor exceptions.
+
 Fleet nonwriter placement follows [Fleet dispatch and receipts](fleet-dispatch.md).
 Roles retain exact configured provider/model/options/full-access on the selected
 native destination. Remote reviewers require T3 worktree isolation; no shell child
@@ -12,7 +15,8 @@ This changes no configured seat, source independence or exact-byte review duty.
 Engineering authors and code reviewers cannot acquire this artifact authority.
 
 - Chat drives (no role ID); `axstack-owner` owns one PR and
-  `axstack-author` its sole writer.
+  `axstack-author` exclusively writes each isolated package or integration candidate.
+  A PR can assemble multiple packages with one combined-branch integration writer.
   For own PRs, automatic merge is the default under the
   [watch predicate](../../axstack-watch/SKILL.md#5-state-readiness-precisely).
   Only the recorded owning watch thread merges, including `axstack-owner`
@@ -91,7 +95,16 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   read-back, and skip it without a relay or substitution. An uncertain
   dispatch is reconciled, not called absent. A sized mixed research fan-out
   requires dispatched branches spanning at least two different providers;
-  otherwise hold that fan-out. Every other mixed fan-out, including arena and
-  first peer review, retains at least one Codex and one Claude seat; otherwise hold that fan-out.
+  otherwise hold that research fan-out. Same-binding package, integration and
+  independent-PR authors are exempt from the blanket mixed fanout floor.
+  Distinct-brief nonwriter packages with eligible configured roles are exempt
+  from the blanket mixed fanout floor. Required corroborating teams retain their
+  configured seats: research pairs/branch floors, arena judges, peer first-pass
+  reviewers and audit pairs, including their independence and absence rules.
+  Every other mixed fan-out, except precisely same-binding writers and
+  distinct-brief nonwriter packages, retains at least one Codex and one Claude
+  seat; otherwise hold that fan-out. These exceptions grant no reviewer substitution.
   Intentional absences in codex-only and claude-only remain unchanged.
-- `axstack-debug-investigator-1..4` probe L1 briefs.
+- `axstack-debug-investigator-1..4` accept bounded L0 probe packages and L1 briefs
+  only through Debug with its isolation/shared-packet rules. L0 outputs never
+  replace required L1 adviser/investigator receipts or expand fix-attempt budgets.

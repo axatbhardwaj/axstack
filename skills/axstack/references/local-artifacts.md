@@ -1,5 +1,9 @@
 # Local non-repository artifacts
 
+Follow [Parallel-first delivery](parallel-first.md) for ready artifact packages,
+exclusive ownership, terminal output verification and stale-hash invalidation.
+Engineering bindings and Git ancestry never replace this matrix or exact-byte review.
+
 The report-only modes in the matrix below may use an explicitly bound
 non-repository artifact scope. Null repository identity alone never authorizes
 a route.
@@ -116,6 +120,10 @@ probes and implementation do not acquire artifact authority.
 | Verify | Unsupported; repository verification-skill authoring routes through Implement |
 | Watch | Unsupported; PR/repository ownership and forge rules remain required |
 | Correct, Cleanup, VOA | Inline only; no worker workflow added; existing identity, ownership and read-only/status limits remain |
+
+Repository-mode Correct/Cleanup may assign bounded read-only evidence analysis
+under their phase constraints. This grants no nonrepo worker workflow and no
+cleanup mutation authority; the inline-only row above remains binding.
 
 This matrix plus the supported rows covers the twenty skills inspected for this
 repair. It describes contract/validator support, not completed native execution.

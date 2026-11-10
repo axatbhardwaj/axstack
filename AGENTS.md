@@ -7,7 +7,10 @@
   `t3-code` MCP, never native subagents.
 - Keep the current T3 thread as driver. Let it own scope, coordination, integration,
   and forge mutations; keep each worker within its assigned files.
-- Keep exactly one writer per candidate. Return source fixes to that author.
+- Follow [Parallel-first delivery](skills/axstack/references/parallel-first.md):
+  dispatch useful independent ready work before waiting. One PR may assemble
+  isolated package candidates, each with one writer, and one integration writer.
+  Return source fixes to the exclusive package or integration author.
 - Use the phase skills under `skills/axstack*/SKILL.md`; keep shared references
   under `skills/axstack/references/`.
 - Select one explicit preset from `profiles/presets/mixed.json`,

@@ -52,8 +52,9 @@ rule('pre-publication evidence readback belongs to driver', publication,
   "Before publication for combined review, the driver verifies the author's evidence folder: named red/green logs exist and counts, SHAs and paths match.",
   /verifies/i, 'assumes');
 rule('evidence gaps block publication', publication,
-  [/missing|mismatched/i, /evidence/i, /holds? publication/i, /same author/i],
-  'Missing or mismatched evidence holds publication and returns to the same author.',
+  [/missing|mismatched/i, /evidence/i, /holds? publication/i,
+    /responsible package or integration author/i, /existing session/i, /worktree/i],
+  'Missing or mismatched evidence holds publication and returns to the responsible package or integration author in its existing session and worktree.',
   /holds? publication/i, 'allows publication');
 rule('combined review follows remote publication', review,
   [/combined review/i, /runs after publication/i, /confirmed remote head/i, /pinned base/i],
@@ -94,8 +95,9 @@ rule('shared gate UNKNOWN holds with a recorded reason', diligence,
   [/Scope: UNKNOWN/, /holds merge-ready/i, /reason recorded/i, /driver disposition/i],
   'Scope: UNKNOWN holds merge-ready with its reason recorded for driver disposition.', /holds merge-ready/i, 'permits merge-ready');
 rule('shared gate FINDINGS returns to the author and blocks', diligence,
-  [/Scope: FINDINGS/, /returns to the same author/i, /same round/i, /blocks merge-ready/i],
-  'Scope: FINDINGS returns to the same author in the same round and blocks merge-ready.', /blocks merge-ready/i, 'permits merge-ready');
+  [/Scope: FINDINGS/, /returns to/i, /responsible package or integration author/i,
+    /existing session/i, /worktree/i, /same round/i, /blocks merge-ready/i],
+  'Scope: FINDINGS returns to the responsible package or integration author in its existing session and worktree in the same round and blocks merge-ready.', /blocks merge-ready/i, 'permits merge-ready');
 rule('disposition cannot convert unknown evidence into PASS', diligence,
   [/disposition/i, /unknown evidence/i, /pass/i],
   'A disposition never converts unknown evidence into a pass.', /never converts/i, 'converts', /never converts/i);
@@ -121,8 +123,8 @@ rule('driver dispositions cannot replace required PASS', 'axstack/references/con
   [/disposition/i, /required diligence PASS/i, /combined Scope: PASS/i],
   'A disposition never substitutes for required diligence PASS or combined Scope: PASS.', /never substitutes/i, 'substitutes', /never substitutes/i);
 rule('implement returns combined findings within the round', 'axstack-implement/SKILL.md',
-  [/combined Scope: FINDINGS/i, /return to the same author/i, /within the review round/i],
-  'Combined Scope: FINDINGS return to the same author within the review round.', /return to the same author/i, 'advance without repair');
+  [/combined Scope: FINDINGS/i, /return to/i, /same package\/integration repair route/i, /within the review round/i],
+  'Combined Scope: FINDINGS return to the same package/integration repair route within the review round.', /return to/i, 'advance without repair');
 rule('review candidate returns combined findings by the same repair route', review,
   [/combined Scope: FINDINGS/i, /same repair route/i],
   'Combined Scope: FINDINGS uses the same repair route.', /same repair route/i, 'approval route');

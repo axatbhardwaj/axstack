@@ -5,14 +5,24 @@ description: When completed T3 threads and worktrees need bounded retirement, us
 
 # Cleanup
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 Batch eligible cleanup, including reviewer worktrees, at [run checkpoints](#run-checkpoints) after
 accepted settlement, or for the exact backlog scope the user named.
 Run the batch inline in the driver.
 Per-review invocations preserve evidence and record pending cleanup in the
 existing private run record. Per-review invocations never retire resources individually.
 Before checkpoint retirement, preserve and read back each resource's evidence
-and apply existing eligibility and safety guards. This skill never
-dispatches a cleanup worker and never retires its current driver session.
+and apply existing eligibility and safety guards. Never retire the current driver
+session. Allow the driver in repository mode to assign bounded read-only
+preservation analysis for disjoint inactive resources to existing research or
+exploration roles; workers write only private evidence/reports. Never delegate
+cleanup mutations. The driver alone performs each mutation after fresh ownership,
+liveness, eligibility and preservation checks; analysis is no removal receipt.
+Leaf workers never delegate cleanup. Tiny reads stay direct; nonrepo Cleanup
+remains inline-only under [Local artifacts](../axstack/references/local-artifacts.md).
 
 Before any runtime action, load and follow:
 

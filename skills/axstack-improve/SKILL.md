@@ -5,6 +5,10 @@ description: When assessing codebase quality, improving a named screen or flow, 
 
 # Improve
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For named nonversioned code/UI discovery, use workflow improve under
 [Local artifacts](../axstack/references/local-artifacts.md). Its bounded code
 research/UI roles and inherited audit have separate owned snapshots and SHA-256
@@ -31,13 +35,27 @@ reconciles findings per claim and never averages them. Record an intentionally
 absent `-sol` pair and proceed with the base seat alone. A configured optional
 `-sol` pair that fails to launch is fenced, recorded `absent (<reason>)`, and
 named once in the next read-back, then skipped without relay or substitution.
-In mixed fan-out retain a Codex and a Claude seat or hold the affected work.
+Every other mixed fan-out, except precisely same-binding writers and
+distinct-brief nonwriter packages, retains at least one Codex and one Claude
+seat, otherwise hold that fan-out. Apply only these exceptions under
+[Authority](../axstack/references/parallel-first.md#authority); they use eligible
+configured roles, add no seat solely for provider diversity and never remove
+required research-pair corroboration.
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 
 For performance work only, load [Performance loop](../axstack/references/perf-loop.md).
 For performance work, discovery remains report-only.
 For performance work, rank candidates in mantra order.
+
+Overlap non-measuring preparation/analysis or probes in isolated non-contending
+environments only. Within each Perf/UI loop preserve frozen workloads, commands
+and environments, noise criteria, cheapest-first early stop, one measured change
+at a time, best-known comparison, keep/revert order and revert-before-next.
+Every candidate-effect probe counted as an experiment by its owning loop consumes
+that loop's finite attempt budget, including failed or parallel preparatory probes;
+parallel work grants no speculative bypass of early stop. Contended measurements
+never support baseline, delta or keep decisions.
 
 ## 1. Bound discovery
 

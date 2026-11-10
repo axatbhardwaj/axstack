@@ -1,5 +1,9 @@
 # Autopilot
 
+Follow [Parallel-first delivery](parallel-first.md) throughout authorized phases,
+including ready package dispatch while unrelated work holds; phase order below
+expresses actual prerequisites rather than a global wave barrier.
+
 This reference applies to authorized engineering-delivery runs. The original
 driver remains the sole run-record writer and phase router in the same chat;
 phase completion is not a native ownership handoff. Explicit planning-only,
@@ -103,8 +107,10 @@ alongside that bound schedule.
 Apply [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
 cadence conditions before ending the turn.
 An explicitly adopted PR joins only with its maintenance snapshot.
-The original driver alone routes work; one author writes each
-candidate. Until a PR is merge-ready, wakes feed implement §6 step 4. After
+The original driver alone routes work; each isolated package candidate has
+one writer, and one integration author writes the combined candidate.
+Repairs follow package/integration ownership, preserving per-PR round budgets.
+Until a PR is merge-ready, wakes feed implement §6 step 4. After
 merge-ready, watch §5 maintenance repairs feedback, updates the base under
 [PR chains](pr-chain.md),
 keeps CI green, and checks approvals without re-requesting human review.

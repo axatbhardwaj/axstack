@@ -61,5 +61,9 @@ A required adviser, candidate, or judge needed for this rung unavailable at
 launch or returning a failed receipt holds that question without substitution;
 record the gap and return a proposed question to the caller about whether to proceed. In mixed fan-out retain at least one Codex and one Claude
 seat, or hold the affected question.
+Preserve configured candidate and judge seats and provider floors during
+decomposition; distinct work packages do not replace independent same-question
+candidates or judge rounds. Ready independent questions can progress without
+waiting for an unrelated question, while dependent synthesis waits for its inputs.
 For an uncertain dispatch, reconcile natively; it is never treated as absent.
 Unaffected fact work and questions continue.

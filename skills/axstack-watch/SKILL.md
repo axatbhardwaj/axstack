@@ -5,6 +5,10 @@ description: When babysitting an existing PR, use axstack-watch to maintain own 
 
 # Watch
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 
@@ -58,7 +62,7 @@ merge base. Inspect base commits since divergence and merged and open PRs for
 the same fix before choosing a disposition.
 
 Route MODERNIZE and authorized REWORK through
-[Repair and publication](references/repair-publication.md): the single repair
+[Repair and publication](references/repair-publication.md): the integration
 author writes in its owned worktree, then independent authored review covers
 the exact rebased or reworked head and base before driver publication.
 The driver never writes tracked files.
@@ -153,8 +157,9 @@ New work routes only under its confirmed scope identity: an approved spec and
 matching ticket map for substantial work, or a snapshotted **small-change
 intent** for small work. An adopted own PR instead uses its accepted maintenance
 snapshot. Missing, stale, or materially changed identity holds repair routing
-while monitoring continues. Accepted fixes return to the same original author
-session only when the run itself launched that session and evidence allows,
+while monitoring continues. Accepted package-local fixes return to the exclusive
+package author, integration-only fixes and base updates to the integration author.
+Reuse each session only when the run itself launched it and evidence allows,
 then receive refreshed review under the authored mode rule before publication.
 If this run did not launch the original author, or historical provenance is
 unknown or mixed, launch a new configured `axstack-author` attempt under

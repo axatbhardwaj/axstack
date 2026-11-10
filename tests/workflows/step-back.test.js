@@ -54,10 +54,14 @@ for (const [name, concept, wording] of [
   [/\beach adviser\b/i, /\bindependently\b/i, /\bgets\b/i, concept],
   `Each adviser independently gets the ${wording}.`, /\bgets\b/i, 'omits');
 
-rule('one advised extra-round repair brief returns to the same author only if all conditions hold', implement,
-  [/\bsend one advised repair brief\b/i, /\bsame author\b/i, /\bextra round only\b/i, /\ball conditions below hold\b/i],
-  'Send one advised repair brief to the same author for the extra round only when all conditions below hold.',
+rule('each advised repair brief requires all extra-round conditions', implement,
+  [/\bsend each advised brief\b/i, /\bonly when\b/i, /\ball conditions below hold\b/i],
+  'Send each advised brief only when all conditions below hold.',
   /\ball conditions below hold\b/i, 'any condition below holds');
+rule('package and integration owners share one per-PR extra round', implement,
+  [/route/i, /package-local repairs/i, /exclusive author/i, /integration author/i, /one per-PR extra round/i],
+  'Route package-local repairs to their exclusive author and integration-only work to the integration author within one per-PR extra round.',
+  /one per-PR extra round/i, 'one extra round per package');
 for (const [name, concept, wording, direction, inverse, ban] of [
   ['driver acceptance', /\bdriver accepts the path\b/i, 'The driver accepts the path.', /\baccepts\b/i, 'rejects'],
   ['both advisers agree', /\bboth advisers agree on the path\b/i, 'Both advisers agree on the path.', /\bboth\b/i, 'Either'],

@@ -76,7 +76,48 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
   expect(improve).toMatch(/driver reconciles[^.]*per claim[^.]*never averages/i);
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
   expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);
-  expect(improve).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
+  const terms = [/(?:every|all) (?:other|remaining) mixed fan[- ]?outs?/i,
+    /except|apart from|other than|excluding/i, /same[- ]binding/i,
+    /\b(?:writers?|authors?)\b/i, /distinct[- ]brief/i, /non[- ]?writer/i, /packages?/i,
+    /retain|require|must include/i, /at least one/i, /Codex/i, /Claude/i,
+    /otherwise|else|\bor\b/i, /holds?|blocks?/i];
+  const writer = /^same[- ]binding (?:engineering )?(?:writers?|authors?)$/i;
+  const nonwriter = /^distinct[- ]brief non[- ]?writer (?:work )?packages?$/i;
+  const accepts = (text) => sentences(text).some((sentence) => {
+    if (!requires(sentence, ...terms)) return false;
+    const exceptions = sentence.match(
+      /(?:except|apart from|other than|excluding)\s+(?:(?:precisely|only)\s+)?(.+?),?\s+(?:must\s+)?(?:retains?|requires?|includes?)\b/i,
+    )?.[1].replace(/,$/, '').split(/\s*(?:,|\band\b|&)\s*/i);
+    // Bound the complete exception list, so an extra class cannot silently
+    // inherit an exemption merely because both approved classes are present.
+    return exceptions?.length === 2
+      && exceptions.some((entry) => writer.test(entry))
+      && exceptions.some((entry) => nonwriter.test(entry))
+      && /at least one (?:Codex|Claude) and (?:at least )?one (?:Codex|Claude)/i.test(sentence);
+  });
+  const equivalent = 'All remaining mixed fan-outs, except same-binding writers and distinct-brief nonwriter packages, require at least one Codex and one Claude seat, else block the affected work.';
+  const reordered = 'Every other mixed fanout, apart from only distinct brief non-writer work packages and same binding engineering authors, must include at least one Claude and one Codex seat, otherwise hold the affected work.';
+  expect(accepts(equivalent)).toBe(true);
+  expect(accepts(reordered)).toBe(true);
+  const extraExemption = [/non[- ]?writer (?:work )?packages?/i, '$& and unnamed work'];
+  expect(accepts(equivalent.replace(...extraExemption))).toBe(false);
+  expect(accepts(reordered.replace(...extraExemption))).toBe(false);
+  const inversions = [
+    [/at least one/i, 'zero'], [/Codex/i, 'another Claude'], [/Claude/i, 'another Codex'],
+    [/holds?|blocks?/i, 'do not hold'],
+    [/\b(?:retains?|requires?|must include)\b/i, 'may retain'],
+    [/same[- ]binding/i, 'any-binding'],
+    [/distinct[- ]brief/i, 'same-brief'], [/non[- ]?writer/i, 'reviewer'],
+    [/(?:every|all) (?:other|remaining) mixed fan[- ]?outs?/i, 'Same-brief mixed corroboration'],
+    extraExemption,
+  ];
+  // Validate the predicate's probes even while the real instruction is red.
+  // This is test-harness evidence, not a passing production contract.
+  checkRule(equivalent, accepts, reordered, inversions, terms);
+  // Normalize links and keep a semicolon-linked hold with its own floor.
+  const floor = sentences(improve.replace(/;\s*(?=(?:otherwise|else)\b)/gi, ', ')).join('. ');
+  expect(accepts(floor), 'Improve must cover every residual mixed fan-out with exactly the approved exemptions').toBe(true);
+  checkRule(floor, accepts, equivalent, inversions, terms);
 });
 
 test('primary auditor roster follows each preset policy', () => {

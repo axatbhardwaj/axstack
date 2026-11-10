@@ -7,9 +7,12 @@ use [guides](guides.md) to choose a journey and [workflows](workflows.md) for po
 ## Driver thread
 
 Your current T3 conversation is the driver. It owns scope, coordination,
-integration and forge actions. Workers return evidence to it; one author writes
+integration coordination and forge actions. Workers return evidence to it; one author writes
 each candidate in an isolated worktree. A different idle thread does not inherit
-ownership. Explicit transfer requires a recorded recipient acceptance.
+ownership. Independent isolated packages can feed one PR with a sole integration
+writer; the driver dispatches useful ready work before waiting under
+[Parallel-first delivery](../skills/axstack/references/parallel-first.md).
+Explicit transfer requires a recorded recipient acceptance.
 
 ## Phases
 

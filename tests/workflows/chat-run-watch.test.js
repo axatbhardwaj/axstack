@@ -65,7 +65,12 @@ test('only original driver routes repairs and writers', () => {
   const text = watch() + runtime();
   expect(text).toMatch(/driver[^.]*alone[^.]*repair/i);
   expect(text).toMatch(/independent PRs[^.]*parallel/i);
-  expect(text).toMatch(/same PR[^.]*one author/i);
+  checkRule(sentences(text).join('. '), (source) => requires(source,
+    /route/i, /package-local repairs/i, /exclusive package author/i, /parallel/i),
+  'Route package-local repairs to their exclusive package author, with independent repairs in parallel.',
+  [[/exclusive package author/i, 'any available writer'], [/route/i, 'skip']]);
+  expect(text).toMatch(/integration-only fixes[^.]*one integration writer/i);
+  expect(text).toMatch(/one per-PR repair\/review budget/i);
   expect(runtime()).toContain('pr-chain.md');
 });
 

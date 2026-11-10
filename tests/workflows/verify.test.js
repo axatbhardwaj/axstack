@@ -10,7 +10,7 @@ const skill = () => read('skills/axstack-verify/SKILL.md');
 const rules = [
   ['single behavior', [/single.behavior/i, /route|send/i, /existing/i, /verify-<app>/i, /UI verification/i], 'Send single-behavior requests to an existing verify-<app> skill or UI verification delegation.', [/existing/gi, 'newly generated']],
   ['creation guard', [/create/i, /single.behavior/i], 'Never use create for single-behavior requests.', [/never/gi, 'Always'], /never/i],
-  ['delivery', [/create/i, /axstack-implement/i, /one writer/i, /one PR/i], 'Deliver create through axstack-implement with one writer and one PR.', [/one writer/gi, 'parallel writers']],
+  ['delivery', [/create/i, /axstack-implement/i, /exclusive package writers/i, /one integration author/i, /final PR/i], 'Deliver create through axstack-implement with exclusive package writers and one integration author for the final PR.', [/exclusive package writers/gi, 'competing package writers']],
   ['repo discovery', [/read|inspect/i, /repository/i, /surface/i, /run/i, /drive/i, /observe/i, /isolate/i], 'Inspect the repository for surface, run, drive, observe and isolate facts.', [/inspect|read/gi, 'skip']],
   ['harness reuse', [/reuse/i, /existing harnesses/i, /before/i, /new/i], 'Reuse existing harnesses before choosing new tools.', [/before/gi, 'after']],
   ['preservation', [/preserve/i, /existing skills/i], 'Preserve existing skills.', [/preserve/gi, 'overwrite']],

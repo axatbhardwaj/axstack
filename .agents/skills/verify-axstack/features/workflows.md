@@ -1,7 +1,197 @@
 # Inspect workflow instruction contracts
 
-Lean small-change delivery: `small-change-path.test.js` and `pending-repairs.test.js` cover one isolated
-writer, driver-only publication, mandatory cross-provider review with T5's
+## Parallel-first acceptance (Outcomes 1–6)
+
+The shared shipped contract is
+[`parallel-first.md`](../../../../skills/axstack/references/parallel-first.md),
+with Ready work, Ownership, Dependencies and repairs, Evidence and Authority
+anchors. Run the semantic checks below with Launch/Doctor isolation. The
+`parallel-first-contracts` checks consume shipped instructions; the
+`parallel-first-evidence` checks protect this recipe's acceptance requirements.
+Both exercise removal/inversion failures and equivalent-rewording acceptance.
+They prove instruction contracts only, never deterministic scheduling or native
+execution. Preserve the existing workflow checks below. Package-local reds
+whose inputs span packages stay pending until integrated green; attribute old
+contract assertions to their owning integration repair rather than waiving them.
+
+For O1, inventory every installer-selected `axstack*` and `voa` entrypoint,
+affected references, roles/presets, public docs and script surfaces: changed,
+already compatible or legitimately serial, each with a source-backed reason.
+Reject contradictory blanket one-author-per-deliverable rules while retaining
+one writer per actual checkout/artifact. Check phase-specific guards: Debug L0
+does not replace L1 evidence or extra fix attempts; Verify keeps product code
+off-limits; repo Correct/Cleanup analysis stays read-only with driver-only
+cleanup mutation; Perf/UI measured attempts stay sequential, frozen, noise-aware
+and budgeted, including candidate-effect probes. Device run-1 shutdown precedes
+run-2, one emulator per host and credential-session ownership remain. No worker
+gains child delegation, forge or sensitive-action authority.
+
+```bash
+doctor > "$EVIDENCE/parallel-first-doctor.log" 2>&1
+STATUS=0
+bun run test tests/workflows/parallel-first*.test.js \
+  > "$EVIDENCE/parallel-first-tests.log" 2>&1 || STATUS=$?
+printf '%s\n' "$STATUS" > "$EVIDENCE/parallel-first-exit.txt"
+test "$STATUS" -eq 0
+```
+
+These commands select all package-owned core/phase/combined checks after
+integration as well as evidence checks. Run the dispatch and package recipes,
+then the full suite from SKILL.md at the exact integrated head. Retain complete
+outputs and dirty-state evidence. Fixture tests and a package-tip green cannot
+replace independent integrated review, diligence or the full-suite requirement.
+
+### Native bounded fixture: preparation and feasibility
+
+Only the authorized driver runs this section, after independent review of the
+integrated candidate. This recipe activates nothing by itself. Use the existing
+Axstack T3 project and current driver on its host; create no project, new driver,
+scheduler, production resource or external disposable PR. Use native-created
+isolated author worktrees and separately owned evidence directories. Give each
+concurrent test its own validated owned 0700 TMPDIR and temporary home outside
+real HOME. Load candidate instructions explicitly for this fixture task, with
+higher-priority instructions intact; leave installed live-home instructions alone.
+Native workers receive explicit bounded fixture scope, output and authority.
+Keep configured roles/models/efforts, current capacity rules, serial first-binding
+preflight, native completion and cancellation guards. An unavailable required
+binding holds that scenario; extra accounts, quota exhaustion and model fallback
+are outside the fixture.
+
+The verifier must record candidate head, constituent tips and every loaded
+instruction hash, separate from installed-version preflight. Include task/run,
+thread, attempt, project/environment, host, worktree, branch, input identities,
+effective provider/model/options/runtime and exact candidate override paths in
+the receipt. Save native raw reads, loaded bytes, command logs and SHA-256
+manifests in private evidence. Each producer and consumer names its input/output
+revision or artifact digest. Changed head, input identities or instruction hashes
+must invalidate affected evidence. Do not reuse stale reviews or timings.
+
+Before launching, inspect native evidence availability read-only. Determine
+whether retained tool/command start/end records or identifiable active model-turn
+records can establish substantive windows. Record endpoint feasibility UNKNOWN
+until demonstrated; catalog availability and run startedAt/completedAt alone
+cannot establish useful work. Unreliable endpoints must yield UNKNOWN and hold
+merge and release. Retain the missing-field/raw-read evidence and report the
+precise gap to the driver; never infer timestamps from prose, file mtimes or
+observer wall-clock samples. Continue independent feasible checks within scope.
+
+### Native execution and timing acceptance
+
+Use a bounded useful engineering fixture: two independent author packages
+produce disjoint parts of one local candidate, for example a parser and a
+formatter consumed together by an integration-owned round-trip check. Settle
+interfaces and assign combined acceptance before writing. Capture meaningful
+red before new combined behavior, then green at the integrated fixture head.
+Preserve package commits through ordinary local merges and keep package
+checkouts available for repairs. Driver-classified mechanical assembly alone
+uses the approved reproducible-tree exception; clean textual merging alone
+does not establish it. The integration author alone edits shared glue; the
+driver verifies terminal native success and exact outputs before consumption.
+Both accepted package outputs must have an integration receipt with ancestry
+and final head/base. Include consumed tips, prerequisite identities, merge
+order/commits, integration edits/conflict resolutions, red/green logs and joined
+acceptance. A queued task, progress message or partial output is insufficient.
+
+Both native run intervals and substantive activity intervals must overlap.
+Require native command endpoints or active model-turn evidence to calculate
+substantive activity intersection and duration. Normalize trustworthy timestamps
+to one time basis and retain their native source IDs. For each worker, form the
+union of its observed active intervals, then intersect the two unions; report
+each intersection interval and total duration, which must be positive. Keep
+native run-envelope overlap as a separate result. Exclude queue, prompt,
+rate-limit, idle waits and overlapping parallel tool calls by one driver from
+substantive evidence. Manufactured sleeps, duplicate busywork and self-reported
+timings are ineligible. Reject incomplete or contradictory endpoint pairs as
+UNKNOWN rather than treating them as zero or extrapolating through waits.
+
+Require rejection of serial controls and staggered controls with overlapping
+runs but disjoint substantive activity. Run these as separately labelled owned
+controls on the same loaded instructions and observation method; collect real
+serial/staggered traces without sleeping to create overlap. Explicit dependency
+gating can stagger useful work while an earlier run waits. Where native
+execution cannot produce a bounded control, use retained labelled deterministic
+interval controls for the calculation and report native control coverage UNKNOWN.
+Expected overlap verdict for both controls is FAIL; their control PASS means
+the misleading overlap was correctly rejected, not that useful overlap occurred.
+
+Require separate native engineering, analysis and verification overlap evidence
+and joined correctness. Analysis uses distinct useful bounded source questions
+with accepted exact artifacts; verification uses independent ready scenarios
+against pinned inputs, each with accepted logs and outputs. Measure each pair
+with the same substantive-window method. One pair cannot stand in for the other
+two. Preserve independent first passes, required corroboration seats, reviewer
+independence and configured floors. Static phase inventory does not prove live
+universal compliance. Report each unexercised phase explicitly.
+
+### Failure and boundary matrix (labelled owned fixtures)
+
+Each row specifies an input perturbation and acceptance against the loaded
+candidate instructions, not a hardcoded PASS response or a toy scheduler. Retain
+the prompt, exact native task/run/artifact where used, observed action/hold,
+and instruction source/hash. Use deterministic source-contract mutation or real
+bounded T3 fixtures as labelled per row. Do not provoke real external failure.
+Require native observation of F1 and F2 alongside deterministic controls.
+Deterministic results alone cannot satisfy those native observations.
+
+| ID | Owned input / seed | Required acceptance and preserved guards |
+| --- | --- | --- |
+| F1 | Delay a producer's accepted terminal input; leave unrelated useful work ready. | A consumer must wait for its input while unrelated work proceeds; verify native launch/consumption order and exact milestone, without a global phase barrier. |
+| F2 | Assign two useful operations the same owned file or fixture resource. | Shared resource conflicts must serialize competing work; observe native ordering and exclusive writer/resource ownership, while disjoint work stays eligible. |
+| F3 | Give a tiny indivisible fixture action. | Tiny indivisible work must stay direct with its reason; extra agents are never a quota. |
+| F4 | Change one producer tip/interface after consumer evidence exists. | Producer revision drift must invalidate affected consumers; preserve unrelated current evidence, and revalidate affected acceptance/reviews. |
+| F5 | Supply labelled failed/unavailable completion or binding evidence. | Failed or unavailable work must preserve its writer and model binding; hold the affected work, prohibit duplicate writers and silent provider/model substitution. |
+| F6 | Supply a labelled first-binding rejection with eligible unrelated configuration. | First-binding rejection must hold siblings while unrelated configurations progress; verify current same-configuration start prerequisites, with unknown telemetry recorded honestly. |
+| F7 | Supply an ambiguous launch identity or lost receipt. | Ambiguous launch identity must be reconciled before replacement; retain current owner/attempt and prohibit a second writer or guessed success. |
+| F8 | Seed package-local, integration-only and initially unattributable combined findings. | Package and integration repair findings must return to their respective owner; integration diagnoses combined/base defects, then routes proven local causes, ordering cross-package repairs without competing writers or implicit transfer. |
+| F9 | Join same-binding package and integration contributors. | Same-binding contributors must retain independent review; exclude every contributing writer and the owner, preserve applicable review pairing and required corroboration floors. |
+| F10 | Supply divergent or unknown contributor session/provider/model evidence. | Divergent or unknown provenance must hold the candidate; never select an unmapped reviewer or infer provenance from attribution trailers. |
+| F11 | Resume an existing attempt and assess cleanup eligibility with retained evidence. | Resume and cleanup must preserve attempt identities and evidence; retain same-author repair, current native completion/settlement checks, package checkouts until merge/close and driver-only mutation/preservation order. |
+| F12 | Seed a package-local defect after its author settles. | The seeded same-author repair must follow settlement; resume the same checkout/branch/author with a new attempt identity and append repair commits, preserving prior evidence. |
+| F13 | Seed independent defects in two packages on one candidate. | Seeded independent repairs must overlap and retain one per-PR budget; exclusive package writers repair their own paths, one integration writer joins accepted tips, without resetting review rounds or attempt limits. |
+| F14 | Use a small-change two-package fixture with eligible bindings and scope. | Small two-package work must retain eligible combined review; splitting alone does not escalate, while all contributors satisfy its review pairing and risk criteria remain. |
+| F15 | Mark an otherwise similar fixture as a dispatch/authority risk path. | Risk-path work must require separate diligence; combined review cannot waive risk classification or existing exact-head/base review and merge holds. |
+
+Require seeded repairs to be labelled fixtures and natural repairs to be
+reported not observed unless they occur. F12/F13 may use real delegates but
+remain seeded, not naturally occurring production repairs. Keep one per-PR
+round budget across all contributors, cancellation and resume. Deterministic
+F5–F7 supplied failures do not demonstrate actual quota rejection, crash or
+ambiguous native launch; disclose that boundary explicitly.
+
+For O5-N, drive the existing dispatch recipe's supported local non-repository
+artifact fixtures and real dispatch-plan/receipt CLI tests. The nonrepo artifact
+fixture must retain configured roles and owned directories without Git or
+engineering author prerequisites. Include independent evidence/check packages,
+changed-byte digest invalidation and ownership conflicts; keep unsupported
+Correct/Cleanup/VOA modes inline. Record deterministic mode-selection proof
+separately from optional actual native artifact execution. Neither proves the
+required native analysis/verification overlap by itself.
+
+### Acceptance handback and delivery boundary
+
+Every required fixture and control must PASS while FAIL or UNKNOWN holds
+acceptance. O3 engineering and O5 analysis/verification each need native useful
+overlap plus joined correctness PASS; F1/F2 additionally need native observation.
+Static tests, deterministic fixture results and driver disposition cannot waive
+merge/release gates. Missing natural incidents and optional native nonrepo
+artifact execution stay explicitly not observed. Any material change to the
+approved gate needs user approval; unavailable endpoints do not relax it.
+
+Return one exact-head receipt covering O1 phase inventory; O2 strict TDD,
+ownership, staleness, full-suite and integrated review/diligence; O3 timing and
+integration outputs; O4 F1–F15 labelled results; O5 the separate analysis,
+verification and nonrepo results; and O6 delivery pending. Include exact evidence
+paths, trustworthy raw endpoint sources/calculation, fixture versus native
+classification, packages identified/launched/completed/serialized with reasons,
+unknown costs/durations and no speedup claim without a comparable baseline.
+Release follows required PASS, independent review/diligence and existing merge
+predicates through the signed-tag workflow; never publish locally. Five-host
+install verification covers io, iobook, iobox, iosatellite and axat-vps, actual
+default-sync timers/pool drop-ins and separate iosatellite provisioning/closed-lid
+evidence under recorded authority. This recipe grants no rollout authority.
+
+Lean small-change delivery: `small-change-path.test.js` and `pending-repairs.test.js` cover one
+writer per isolated candidate, driver-only publication, mandatory cross-provider review with T5's
 combined/separate diligence branches, native watch and watch §5's full merge
 predicate. Removal/inversion/rewording probes cover all four full-path
 escalation triggers, full-path-only step-back advice, current-path rereads and

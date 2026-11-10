@@ -1,21 +1,29 @@
 # Candidate publication
 
+Follow [Parallel-first delivery](parallel-first.md) for joined candidates: verify
+every required package and integration receipt before final publication. Partial
+assembly checks are provisional; package commits need no phantom package PRs.
+
 For an owned candidate, the author returns its revision-bound implementation
 receipt and stops without pushing. Under recorded PR-scoped publication authority,
 the owner reconciles author receipt with actual local candidate SHA/base. The owner
-does not edit the candidate; code changes return to its author.
+does not edit the candidate; code changes return to their exclusive package or
+integration author.
+The final receipt binds every contributor and consumed tip to the integrated head/base.
 
 Before publication, follow the [applicable diligence gate](diligence.md#applicable-diligence-gate).
 For combined review, before publication the driver verifies the author receipt
 against its evidence folder: named red/green logs exist, and counts, SHAs and
 paths match. Record the readback and eligibility at the local candidate head
 and base; missing or mismatched evidence holds publication and returns to the
-same author. The combined cross-provider review follows publication at the
+responsible package or integration author in that author's existing session
+and worktree. The combined cross-provider review follows publication at the
 confirmed remote head and pinned base; driver readback never supplies `Scope: PASS`.
 For all other work, before publication dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the author receipt against its evidence
 folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
-`FINDINGS` with the same author before publishing. A diligence `UNKNOWN` or
+`FINDINGS` with the responsible package or integration author in that author's
+existing session and worktree before publishing. A diligence `UNKNOWN` or
 missing/stale receipt holds publication.
 
 Follow [PR chains](pr-chain.md) for recorded membership and base-bound evidence.
