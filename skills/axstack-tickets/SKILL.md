@@ -5,6 +5,10 @@ description: When an approved capability needs executable tasks, use axstack-tic
 
 # Tickets
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 
@@ -50,7 +54,13 @@ Before mapping, load and follow [Independent delivery](../axstack/references/ind
    [design lens](../axstack/references/design-lens.md) sketch's modules, put
    its named failure in capability acceptance, and treat a task spanning a
    sketch boundary as a split signal. Identify internal tasks, dependencies,
-   PR ownership, and worktrees. For each task the driver records
+   PR ownership, and worktrees. Record each package's outcome, owner, inputs,
+   prerequisite milestone, writes/resources, output, acceptance and state/reason
+   in the existing map, including packages feeding one PR. Choose the earliest
+   sufficient immutable interface, verified terminal internal package tip, review,
+   merge or deployment milestone; retain reviewed-parent rules across PRs.
+   Package count alone neither escalates small work nor changes diligence depth.
+   For each task the driver records
    one theme and a coarse size estimate from the ownership, interface, and
    dependency map. Plan coherent, independently reviewable tasks around those
    boundaries. Treat size flags as informational only.
@@ -85,7 +95,9 @@ Acceptance: <checks from approved spec rev>
 Depends: <task IDs or none>
 Milestones: <per dependency: required acceptance state + producer/artifact identity; planned revisions allowed>
 Evidence/invalidation: <required receipt/check + producer changes that invalidate affected consumers>
-Branch: <main/integration target | exact reviewed unfinished code predecessor + reason>
+Package: <outcome + owner + inputs + prerequisite milestone + output + acceptance + state/reason>
+Combined behavior: <named red-first acceptance owner, or driver-classified mechanical assembly>
+Branch: <main/integration target | verified terminal internal package tip | exact reviewed cross-PR code predecessor + reason>
 ```
 
 4. **Reconcile lifecycle state.** Compare each run capability with its required

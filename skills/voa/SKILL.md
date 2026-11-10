@@ -5,10 +5,18 @@ description: When Axat asks for fleet-wide status, "sup", "what's blocked", "wha
 
 # VOA (Voice of All Things)
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 In One Piece, the Voice of All Things lets Roger, Oden and Luffy hear what
 everything around them is saying. Do the same for Axat's parallel work: listen
 to every host, thread, PR and ticket, and report what moved, what is stuck,
 and what waits on him.
+
+Nonrepo VOA stays inline-only under
+[Local artifacts](../axstack/references/local-artifacts.md); ready-work guidance
+adds no worker workflow or recovery authority.
 
 Default to **status**, including pings and periodic sweeps. Status is read-only:
 never merge, approve, request reviews, reply, push, settle threads, send alerts,

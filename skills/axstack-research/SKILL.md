@@ -5,6 +5,10 @@ description: When one bounded question needs verified answers, use axstack-resea
 
 # Research
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -78,8 +82,14 @@ Preserve this phase's independent source/fact and exact-byte review requirements
    trust/login prompt, or prompt block; record `absent (<reason>)`, and continue
    with the base seat. A sized mixed research fan-out requires dispatched
    branches spanning at least two different providers; otherwise hold that fan-out.
-   Every other mixed fan-out, including arena and peer review, retains at least one
-   Codex and one Claude seat; otherwise hold that fan-out.
+   Apply the decomposition exception only to distinct-brief work packages and
+   same-binding engineering writers under [Authority](../axstack/references/parallel-first.md#authority).
+   This exception adds no provider solely for diversity on partitioned work;
+   each brief still uses an eligible configured role. Required same-question
+   research pairs/source-class floors and other corroborating teams retain their
+   configured seats and provider floors, including arena judges, peer first
+   passes and audit pairs. Required mixed corroboration retains Codex and Claude
+   seats or holds; decomposition never replaces independent corroboration.
 
 3. **Gather primary source evidence.** Inspect the actual documentation, code,
    or tool output for every answer-changing claim. Apply the source standards

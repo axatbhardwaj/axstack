@@ -12,7 +12,10 @@ Each adviser independently gets the per-round deltas.
 Each adviser independently gets blame showing the round in which each flagged line first appeared.
 Each adviser independently gets the approved scope, sketch and approach.
 
-Send one advised repair brief to the same author for the extra round only when all conditions below hold:
+Route package-local repairs to their exclusive author and integration-only work
+to the integration author within one per-PR extra round; split cross-package
+findings with prerequisite order. Send each advised brief only when all conditions
+below hold:
 
 - The driver accepts the path.
 - Both advisers agree on the path.

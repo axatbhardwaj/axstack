@@ -5,12 +5,20 @@ description: When creating or maintaining a repository verification skill, use a
 
 # Verification skills
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 Usage: `/axstack-verify create` or `/axstack-verify maintain`
 
 Route single-behavior requests to an existing `verify-<app>` skill or
 [UI verification](../axstack/references/ui-verification.md) delegation.
 Never use create for single-behavior requests.
-Deliver create and maintain through `axstack-implement` with one writer and one PR.
+Deliver create and maintain through `axstack-implement` with exclusive package
+writers and one integration author for the final PR. Allow disjoint
+verification-artifact packages to feed one skill in one PR. Keep shared index/glue
+with one named integration writer and settle interfaces before dependent writing;
+product code remains off-limits. Use isolated proof environments for each package.
 The driver owns scope and dispatch under Implement's standing contracts.
 
 ## Create
@@ -54,7 +62,9 @@ The Device section must use device tools to install and launch the pinned build,
 drive features, capture evidence and shutdown owned devices.
 The Device section must follow [UI verification](../axstack/references/ui-verification.md#android-device-and-webpwa-dual-run)
 for dual-run independence and reconciliation, fleet routing and desktop safety.
-Record unavailable device surfaces as unverified.
+Record unavailable device surfaces as unverified. Preserve run-1 shutdown before
+run-2, one emulator per host and one owner per credential-sensitive session;
+overlap only unrelated isolated resources, retaining configured model/tool preferences.
 
 Write `.agents/skills/verify-<app>/features/README.md` as an index of the top 3-5 user features.
 Write per-feature files in `.agents/skills/verify-<app>/features/` and link them from the index.
@@ -108,7 +118,8 @@ The exception covers the generated content's executed proof only.
 Locate the existing `verify-<app>` skill and its feature map.
 Edit only the verification skill's own directory.
 Never edit product code or fix the build.
-Never launch a parallel source wave.
+Use disjoint verification-artifact packages for useful independent map/recipe
+work under the ownership rules above; source inspection grants no product edits.
 Never schedule maintain runs.
 Follow [attempt isolation](#isolate-every-attempt) for both modes.
 For a failing build, report it and hold live driving.

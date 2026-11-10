@@ -5,6 +5,10 @@ description: When agreed work needs an approved baseline, use axstack-spec to wr
 
 # Specification baseline
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 

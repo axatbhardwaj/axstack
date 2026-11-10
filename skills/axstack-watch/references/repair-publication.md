@@ -7,8 +7,9 @@ modes stop at a report.
 
 Re-read accepted maintenance snapshot, writable ownership, publication authority,
 remote head/base and feedback. Missing, stale or materially changed boundaries
-hold repair; continue read-only monitoring. Return fixes to the original author
-only if this run launched it and evidence permits; otherwise follow
+hold repair; continue read-only monitoring. Return package-local fixes to their
+exclusive author, integration-only fixes and base updates to the integration
+author, only if this run launched that session and evidence permits; otherwise follow
 [Feedback routing](../SKILL.md#feedback-routing) for a new adopted author.
 Record defect, allowed files/actions, revision, feedback IDs and actual repair
 provenance; pair review from that provenance, never historical authorship.

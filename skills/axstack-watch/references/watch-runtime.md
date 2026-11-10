@@ -137,12 +137,22 @@ Follow [Route each wake](../SKILL.md#4-route-each-wake) for T3 driver-thread
 notes and deduplication. Quiet ticks stay quiet.
 
 The driver alone routes repair.
-The driver routes base updates and review feedback to the PR's author for repair.
+The driver routes base updates and unattributed combined CI defects to the
+integration author for diagnosis; verified package-local causes return to the
+exclusive package owner. Route package-local repairs to their exclusive package
+author, with independent repairs in parallel. Integration-only fixes stay with
+one integration writer; cross-package findings have explicit ownership and
+prerequisite order. Preserve one per-PR repair/review budget and the same current
+attempts; neither package count nor resume resets it.
 For an adopted PR whose author this run did not launch, use a new author attempt
 under the
 [adoption rules](../SKILL.md#feedback-routing). The watch never writes candidate
-source. Re-read remote head/base and T3 ownership. Independent PRs may repair in
-parallel within capacity; two issues on the same PR use one author and candidate.
+source. Re-read remote head/base, inputs and T3 ownership before each repair;
+permit independent packages on one PR within capacity and reconciled disjoint
+write/semantic/resource boundaries. Independent PRs may also repair in parallel
+within capacity. Keep exactly one active writer per candidate.
+Changed tips invalidate affected consumers and review receipts; unrelated repairs
+continue. Follow [Ownership and repair](../../axstack/references/parallel-first.md#dependencies-and-repairs).
 Follow [PR chains](../../axstack/references/pr-chain.md) for invalidation and
 updates. Run-launched PRs follow `axstack-implement`: publication/readback before
 independent review. Adopted PRs follow [Repair and publication](repair-publication.md):
