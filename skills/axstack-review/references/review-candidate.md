@@ -14,6 +14,12 @@ This section applies to peer and authored PR modes.
    exclusions, authority, and all six angles. In authored mode, record the
    author's actual provider and model from the T3 launch receipt in the
    dispatch brief; a `Claude-Session` trailer is attribution, not provenance.
+   In authored mode, verify provenance for every package, integration and repair
+   contributor against the supported snapshotted author binding, using actual T3 sessions.
+   All contributors must satisfy the applicable authored-review route; divergent
+   or unknown provenance without a supported mapping holds the candidate.
+   Include package tips, integration ancestry/input identities and combined
+   acceptance in the brief; package passes alone do not establish joined correctness.
 2. **Materialize the mode-required review.** Immediately before dispatch, read
    [T3 runtime](../../axstack/references/t3-runtime.md), then apply exactly one
    branch below. For every reviewer, apply
@@ -51,8 +57,9 @@ This section applies to peer and authored PR modes.
      selected preset is unsupported and `INCOMPLETE`, including its secondary
      reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
      ask the user. Never derive a reverse pairing from slot position. The
-     reviewer covers the complete brief alone. No author or owner session may
-     review, even if its role or provider label changes.
+     reviewer covers the complete brief alone. No package, integration, repair
+     contributor or owner session may review the joined candidate, even if its
+     role or provider label changes.
 
    Mixed authored review is cross-provider. Single-provider review uses different
    models, not cross-provider independence. The claude-only Sonnet explanation
@@ -174,7 +181,9 @@ This section applies to peer and authored PR modes.
    focused checks to resolve contradictions. For peer unresolved disagreement,
    use the verifier route under [corroboration](peer-mode.md#corroboration).
    Reviewer votes never settle correctness.
-   Accepted fixes return to the actual author. Account for each finding as
+   Accepted package-local fixes return to their exclusive author; integration-only
+   fixes go to the integration author. Split cross-package findings with explicit
+   prerequisite order, preserving one per-PR budget. Account for each finding as
    validated, rejected with evidence, fixed, or explicitly unresolved.
 5. **Bind the current revision and base.** Peer follow-ups apply Peer mode,
    including author replies and closed-point finality. The following refresh

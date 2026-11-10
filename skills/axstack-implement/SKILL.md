@@ -5,6 +5,10 @@ description: When an approved task is ready to build or repair, use axstack-impl
 
 # Implement
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 For authorized delivery runs, follow [Autopilot](../axstack/references/autopilot.md)
 for phase continuation and holds.
 
@@ -60,7 +64,10 @@ This path keeps §§2-5's ownership, isolation, strict TDD and verification
 requirements and §6's publication, review, repair, native watch and merge gates;
 it omits full-path step-back advice until escalation.
 
-1. Keep one isolated author as the sole writer and return repairs to the same author.
+1. Allow isolated package writers for small work with eligible combined review.
+   Package count alone changes neither scope classification nor diligence depth;
+   all contributors must satisfy that review pairing. Keep one writer per candidate
+   and return package-local repairs to its author.
    Workers never push. The driver verifies author proof and evidence before
    publication, publishes the exact candidate under candidate-publication and
    confirms remote readback.
@@ -88,7 +95,7 @@ or design decisions through shared routing before dependent repair.
 Step-back advisers run only on the full path after escalation, under §6's
 counted-round and unused-budget conditions. Audits follow lifecycle triggers.
 
-## 2. Establish one owner and one writer
+## 2. Establish one owner and exclusive candidate writers
 
 For substantive delegated or resumable work, use the shared
 [run record](../axstack/references/run-record.md). Reconcile it on restart with
@@ -110,18 +117,38 @@ Authors must use async `delegate_task` with `isolation:"worktree"`, title = role
 and stable `clientRequestId` under the runtime contract's fresh-checkout bootstrap,
 same-child repair and recorded launch fallback rules.
 
-One persistent owner remains accountable for each PR. Exactly one author writes
-it; accepted repairs return there while its evidence is usable, and the owner
-never edits concurrently. Only an explicit accepted transfer changes ownership;
-ordinary resume reconciles the same sessions and record.
+One persistent owner remains accountable for each PR; the driver coordinates
+integration and forge actions and never edits candidate source. Follow
+[Package ownership](../axstack/references/parallel-first.md#ownership): one
+isolated candidate has one active writer, while several candidates may feed one PR.
+Assign one integration author as sole writer of the final branch. Reuse a package
+author after its package duty ends and the driver records the exclusive scope
+transition, or use a separate native-created worktree; a single package needs no
+extra integrator. Shared files and glue have one named writer or a serialized
+integration step. Separate worktrees alone do not establish semantic independence.
+Only an explicit accepted transfer changes PR ownership; path reassignment needs
+driver reconciliation and no live competing writer, never presumed from idleness.
 
-Fanout follows dependencies and capacity within configured limits. Queue
-conflicts; PR chains owns reviewed-parent branching, immediate child evidence
-invalidation, lazy merge updates and legacy rebasing. A parent need not wait
-for an independently reviewed child. Dispatch only when ownership, worktree, dependency
-revisions, writer exclusivity, and capacity agree with live state. Shape, split,
-fanout, and exceptions are autonomous driver decisions within the approved scope.
-Size alone never requires user approval.
+Dispatch ready independent packages before waiting, within current capacity and
+configured limits; a PR boundary does not determine package boundaries. Consume
+settled immutable interfaces or verified terminal package tips under
+[Dependencies and repairs](../axstack/references/parallel-first.md#dependencies-and-repairs).
+An internal code dependency within one PR needs its exact tip and applicable
+acceptance evidence, without a separate package review. Across PRs, PR chains
+retains reviewed-parent branching, immediate child evidence invalidation, lazy
+merge updates and legacy rebasing. Sensitive-action holds remain in force.
+Failed, stale, partial, unknown or questioned receipts cannot satisfy consumers;
+producer changes invalidate affected consumers while unrelated work continues.
+Keep package worktrees for repairs until the integrated PR merges or closes.
+
+Use one supported snapshotted author binding for package, integration and repair
+writers; record each actual session/provider/model. Same-binding writers are the
+scoped fanout-floor exception, with independent authored review still required.
+Divergent or unknown provenance without a supported review mapping holds the
+candidate. All contributors and the owner are ineligible to review it.
+Dispatch only when ownership, worktree, input revisions, writer exclusivity and
+capacity agree with live state. Shape, split, fanout and exceptions are autonomous
+driver decisions within approved scope; size alone requires no user approval.
 
 ## 3. Establish test-first evidence
 
@@ -188,6 +215,23 @@ files or crosses a new security or infrastructure boundary, stop and reassess
 scope through shared routing. Do not turn a bounded refactor into a sweeping
 campaign.
 
+### Combined behavior and assembly
+
+Require a named owner to record a meaningful behavioral red before implementing
+new combined behavior, then green on the integrated head, including behavior
+emerging without glue. Plan this check before the behavior-producing merge on
+the pinned base or partial assembly; missing-module/setup failures and later tests
+are not historical TDD. Package completion alone does not prove joined correctness.
+
+Only the driver classifies mechanical assembly under
+[Evidence](../axstack/references/parallel-first.md#evidence). Verify input identities
+and merge order, absence of manual resolutions/integration-owned edits, and tree
+equality with a reproducible automatic merge; a clean textual merge is insufficient.
+Reuse package red/green or accepted characterization only for covered behavior,
+run combined acceptance green, and retain independent review. Unknown classification
+holds the exception; new glue, semantic resolutions or emergent behavior needs real
+red first. Green-only assembly never exempts unaccounted combined behavior.
+
 ## 4. Turn the slice green, then refactor
 
 For the normal behavior path, implement only what makes the red check pass.
@@ -236,6 +280,19 @@ Report a broken or stale recipe as a `low` finding naming `axstack-verify mainta
 Never let a broken or stale recipe waive existing acceptance obligations.
 Keep browser recipes tool-neutral for the verifier.
 
+Each package returns the author receipt below with package scope/base/tip,
+current writer attempt, exact input identities and named test logs. Verify consumed
+package tips are ancestors of the final head; default assembly uses ordinary local
+merges preserving package commits and repairs append commits. Guarded necessary
+rewrites supersede affected identities and ancestry evidence. The integration
+receipt adds package-tip ancestry, dependency identities, merge order/commits,
+integration-owned edits/conflict resolutions and final head/base. Publication
+metadata belongs only to the final candidate; package receipts invent no PRs.
+Prepublication receipt checking/diligence covers every package and integration
+receipt and may be batched or overlap other work, without a mandatory extra
+session per package. Partial checks remain provisional until all required inputs
+and combined acceptance pass.
+
 After the last change, pin the exact candidate revision and return this compact
 implementation receipt to the driver:
 
@@ -267,21 +324,25 @@ for its format and classification.
 ## 6. Loop until merge-ready
 
 Inputs are one snapshotted small-change intent or an approved spec and ticket
-map. The unit is that accepted task/PR map: run independent PRs in parallel
-within the fanout rule; run an ordinary dependent PR chain root-first under PR chains, each child
+map. The unit is that accepted package/task/PR map: advance each ready package
+without a global wave barrier and assemble required accepted inputs; run an
+ordinary dependent PR chain root-first under PR chains, each child
 from its reviewed parent; preexisting native stacks retain their legacy path. The driver is owner, sole record writer, dispatcher,
 publisher, and wait-holder for every loop PR it creates. Resume preserves an
 existing live owner absent an accepted transfer.
 
 For each PR:
 
-1. Dispatch `axstack-author` under §§3-5 and consume its strict-TDD receipt.
+1. Dispatch package authors under §§2-5 and consume each verified terminal
+   strict-TDD receipt. The integration author combines accepted tips and returns
+   the integration receipt and combined acceptance before final publication.
 2. Publish through candidate-publication and read back the exact SHA.
    For each own PR, the owner must follow [PR previews](../axstack/references/preview.md)
    to decide whether a preview makes sense.
 3. Dispatch and consume the authored-mode `axstack-review` selected from actual
-   author provenance. State the author's actual provider and model from the
-   T3 launch receipt in the review dispatch brief; a `Claude-Session`
+   author provenance. State every package, integration and repair contributor's
+   actual session/provider/model from T3 launch receipts in the review dispatch
+   brief; a `Claude-Session`
    trailer is attribution, not provenance. At
    [run checkpoints](../axstack-cleanup/SKILL.md#run-checkpoints), batch eligible
    reviewer worktree retirement through `axstack-cleanup`, preserving and reading back
@@ -303,14 +364,19 @@ For each PR:
    non-blocking notes and does not elect a repair; only the user can ask for
    polish.
    `REQUEST_CHANGES`, a failed required check, or post-readiness feedback returns
-   findings to the same author for a new revision, increments `repairs`, and
-   returns to step 1. `INCOMPLETE`, a provenance gap, unavailable model or serious
-   risk records `held`. A changed parent immediately invalidates affected child readiness; refresh
-   the next ready children as needed under PR chains before step 1.
+   package-local findings to the exclusive package author and integration-only
+   findings to the integration author for a new revision, increments `repairs`,
+   and returns to step 1. Split cross-package findings by ownership and prerequisite
+   order. Base updates and unattributed combined CI defects first go to the
+   integrator for diagnosis, then verified local causes return to their package
+   owner without competing writers. Budgets remain per PR, never per package.
+   `INCOMPLETE`, a provenance gap, unavailable model or serious risk records `held`.
+   A changed parent immediately invalidates affected child readiness; refresh the
+   next ready children as needed under PR chains before step 1.
    Follow [Advised holds](../axstack/references/contracts.md#advised-holds) for eligible `held` causes.
    Merge-ready also requires current applicable diligence evidence at the exact
    head and base. Diligence `FINDINGS` or combined `Scope: FINDINGS` return to
-   the same author within the review round.
+   the same package/integration repair route within the review round.
    Diligence `UNKNOWN` or combined `Scope: UNKNOWN` records the PR as `held`
    with the reason in the run record and blocks merge-ready pending the driver's
    recorded disposition; the disposition never substitutes for `PASS` evidence.
