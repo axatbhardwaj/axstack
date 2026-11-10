@@ -27,4 +27,3 @@ for (const [file, name, triggers, rewording] of routes) {
       [[/responsible package or integration author/i, 'a replacement author'], [/^/, 'Never ']], concepts);
   });
 }
-
