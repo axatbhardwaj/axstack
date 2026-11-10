@@ -35,10 +35,12 @@ reconciles findings per claim and never averages them. Record an intentionally
 absent `-sol` pair and proceed with the base seat alone. A configured optional
 `-sol` pair that fails to launch is fenced, recorded `absent (<reason>)`, and
 named once in the next read-back, then skipped without relay or substitution.
-For same-brief corroboration, retain mixed Codex and Claude seats or hold the
-question. Distinct-brief decomposition uses eligible existing roles under
-[Authority](../axstack/references/parallel-first.md#authority); it adds no seat solely
-for provider diversity and never removes required research-pair corroboration.
+Every other mixed fan-out, except precisely same-binding writers and
+distinct-brief nonwriter packages, retains at least one Codex and one Claude
+seat, otherwise hold that fan-out. Apply only these exceptions under
+[Authority](../axstack/references/parallel-first.md#authority); they use eligible
+configured roles, add no seat solely for provider diversity and never remove
+required research-pair corroboration.
 
 For performance claims only, load [Performance checklist](../axstack/references/performance-checklist.md).
 

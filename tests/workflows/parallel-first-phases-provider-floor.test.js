@@ -1,22 +1,43 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (phase) => readFileSync(
   `${import.meta.dir}/../../skills/axstack-${phase}/SKILL.md`, 'utf8',
 ).replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 
-// The residual floor also covers unnamed same-brief mixed work.
-test('M3 every other mixed fanout keeps both providers with only scoped exceptions', () => {
-  checkRule(read('research'), (text) => requires(text,
-    /(?:every|all) other mixed fan.?outs?/i, /except|apart from|excluding/i,
-    /same.binding (?:engineering )?writers/i, /distinct.brief nonwriter packages/i,
-    /retain|require|must include/i, /at least one Codex/i, /one Claude/i, /hold/i),
-  'All other mixed fanouts, excluding same-binding engineering writers and distinct-brief nonwriter packages, must include at least one Codex and one Claude seat, otherwise hold.',
-  [[/retain(?:s)?|require(?:s)?|must include/ig, 'must not retain'],
-    [/same.binding/ig, 'any-binding'], [/distinct.brief/ig, 'same-brief'],
-    [/every|all/ig, 'only corroborating'], [/otherwise hold/i, 'otherwise proceed']],
-  [/Codex/i, /Claude/i, /hold/i]);
+// Enumerate the exception set: mere presence permits an extra exempt team.
+const writers = 'same[- ]binding (?:engineering )?(?:writers|authors)';
+const nonwriters = 'distinct[- ]brief non[- ]?writer packages';
+const exemptions = new RegExp(`(?:except|apart from|excluding) (?:precisely |only )?(?:${writers} and ${nonwriters}|${nonwriters} and ${writers}),`, 'i');
+
+for (const phase of ['research', 'improve']) {
+  test(`M3 ${phase}: all residual mixed fanout retains both providers or holds`, () => {
+    const source = read(phase);
+    const accepts = (text) => requires(text,
+      /(?:every|all) (?:other|remaining) mixed fan[- ]?outs?/i, exemptions,
+      /retain|require|must include/i,
+      /at least one (?:Codex and one Claude|Claude and one Codex)/i,
+      /otherwise|else/i, /hold|block/i);
+    checkRule(source, accepts,
+      'All remaining mixed fanouts, excluding distinct-brief nonwriter packages and same-binding engineering authors, must include at least one Claude and one Codex seat, otherwise hold that fanout.',
+      [[/retain(?:s)?|require(?:s)?|must include/ig, 'must not retain'],
+        [/same.binding/ig, 'any-binding'], [/distinct.brief/ig, 'same-brief'],
+        [/every|all/ig, 'only corroborating'], [/otherwise hold/i, 'otherwise proceed']],
+      [/Codex/i, /Claude/i, /hold/i]);
+    const floor = sentences(source).find(accepts);
+    for (const extra of ['same-brief corroboration', 'reviewers', 'unnamed ad hoc teams']) {
+      expect(accepts(source.replace(floor, floor.replace(exemptions,
+        (set) => `${set.slice(0, -1)} and ${extra},`))), extra).toBe(false);
+    }
+  });
+}
+
+test('Improve decomposition preserves required research-pair corroboration', () => {
+  checkRule(sentences(read('improve')).join('. '), (text) => prohibits(text, /never remove(?:s)?/i,
+    /required research.pair corroboration/i),
+  'These exceptions never remove required research-pair corroboration.',
+  [[/never remove(?:s)?/i, 'always remove']], [/required/i, /research.pair/i]);
 });
 
 test('M3 named corroborating teams retain their configured seats and floors', () => {
