@@ -116,7 +116,19 @@ test('cleanup AC2 scenario pins author retention and ignored-content preservatio
   const scenario = JSON.parse(read('tests/workflows/t3-recovery-scenarios.json')).cases.find(({ id }) => id === 'cleanup-unmerged-or-ignored-content');
   const text = normalize(read('skills/axstack/references/workspace-hygiene.md'));
   expect(scenario.contracts.length).toBe(7);
-  for (const pin of scenario.contracts) {
+  // The first historical pin combines retention and repair ownership. Their
+  // current two-clause form preserves both; the other six safety pins stay exact.
+  const retention = [/keep|retain/i, /author/i, /worktree/i, /thread/i,
+    /unarchived/i, /until/i, /PR/i, /merges/i, /closes/i];
+  checkRule(text, (source) => requires(source, ...retention),
+    'Keep each author thread and worktree unarchived until the PR closes or merges.',
+    [[/unarchived/i, 'archived'], [/until/i, 'only before']], retention);
+  const owner = /responsible package or integration author/i;
+  const repair = [/repairs/i, /return|route/i, owner, /existing session/i, /worktree/i];
+  checkRule(text, (source) => requires(source, ...repair),
+    'Route repairs to the responsible package or integration author in its existing session and worktree.',
+    [[owner, 'another author'], [/existing session/i, 'a new session']], repair);
+  for (const pin of scenario.contracts.slice(1)) {
     expect(text).toContain(pin);
     expect(text.split(pin).length).toBe(2);
   }
