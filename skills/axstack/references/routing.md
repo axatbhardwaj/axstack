@@ -50,7 +50,11 @@ Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
 single-provider absence, required research/corroboration teams and the scoped
 same-binding writer/distinct-brief nonwriter exceptions to blanket provider floors.
-Arena judges and peer first-pass composition remain required.
+Every other mixed fan-out, except precisely same-binding writers and
+distinct-brief nonwriter packages, retains at least one Codex and one Claude
+seat; otherwise hold that fan-out. Research pairs and branch floors, arena judges,
+peer first-pass reviewers and audit pairs remain required under their configured
+independence and absence rules.
 Bundled presets are setup inputs, not runtime readiness proof.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
