@@ -5,6 +5,10 @@ description: When a bug, failing test, regression, or wrong behavior needs a roo
 
 # Debug
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 On driver entry, sweep under [Workspace hygiene](../axstack/references/workspace-hygiene.md); dispatched workers do not sweep.
 For every dispatch brief, name its private `<run dir>/evidence/<dispatch>/` folder.
 
@@ -98,10 +102,18 @@ before any further probe or attempt.
 
 | Rung | Trigger | Who | Output |
 | --- | --- | --- | --- |
-| L0 | entry | driver alone | phases 1–7; at most one fix attempt through `axstack-implement` |
+| L0 | entry | driver with bounded packages | phases 1–7; at most one fix attempt through `axstack-implement` |
 | L1 | the L0 fix attempt failed; or phases 1–3 complete plus at least one discriminating probe (or a recorded reason no safe probe exists) and no hypothesis ranks | the preset's configured advisers, independently, same evidence packet | ranked hypotheses and one investigator brief per hypothesis |
 | L1 fan-out | driver merges the adviser plans | `axstack-debug-investigator-1..4`, identical packet, distinct briefs, no cross-reading | one receipt per brief |
 | L2 | two failed attempts at the same named goal and stated acceptance check (second failure overall); or each fix reveals a new symptom elsewhere | `axstack-advisor-astra` and `axstack-escalation-fable` (fresh session) on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
+
+Permit driver-dispatched bounded safe evidence and probe packages at L0 using
+existing configured roles. Evidence preparation can help establish the loop;
+hypotheses and probes require its reproducible red first. Apply the packet,
+private-evidence, isolation and shared-resource rules below to every L0 probe.
+L0 package receipts never satisfy or bypass L1 adviser and investigator receipt
+requirements. Parallel investigation grants no extra fix attempts: preserve the
+per-bug ledger, L0's one attempt, L1 conditions and L2 user hold before a third.
 
 L1 is inadmissible without a red loop. Ordinary diagnosis is not a high-stakes
 decision: in `mixed` both advisers are consulted and both receipts are

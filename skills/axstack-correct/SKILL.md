@@ -6,14 +6,24 @@ disable-model-invocation: true
 
 # Correct
 
+Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency/completion transitions. Workers keep their assigned
+scope and never dispatch.
+
 Usage: /axstack-correct ["<correction>"] [runs=<ids> | last=<N, default 10>]
 
 Load [Standing contracts](../axstack/references/contracts.md) before acting.
 
 Run only at the user's request.
 Write a report only.
-Never edit files.
-Never dispatch workers.
+Never edit repository files or live configuration.
+Allow the driver in repository mode to assign bounded read-only evidence
+analysis to existing research/exploration roles, partitioned by useful incident
+class within the selected runs. Briefs retain the selected-records/git bounds,
+report-only scope and no-transcripts rule; workers write only their private
+report/evidence and gain no implementation authority. The driver reconciles
+incidents without duplicate counting. Tiny reads stay direct. Nonrepo Correct
+remains inline-only under [Local artifacts](../axstack/references/local-artifacts.md).
 Never merge.
 Never read transcripts.
 
