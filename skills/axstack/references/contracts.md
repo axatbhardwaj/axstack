@@ -1,6 +1,8 @@
 # Standing contracts (standalone phases load this, then follow its pointers)
 
 Apply these authority, scope, and model rules before consequential action.
+Follow [Parallel-first delivery](parallel-first.md) at intake, before dispatch
+and on meaningful dependency/completion transitions.
 
 For user-facing output, follow [STE-inspired writing](ste-writing.md).
 
