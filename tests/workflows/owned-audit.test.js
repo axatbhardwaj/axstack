@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path handling below is local (import.meta.dir), not node:.
 import { readFileSync, existsSync, lstatSync, readdirSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 // NOTE: structural checks only. They verify packaging, frontmatter,
 // relative-reference integrity, declared audit scenarios, and preservation
@@ -174,8 +175,13 @@ test('owned-audit: metrics carry counts, denominators, and evidence', () => {
   expect(/unresolved finding/i.test(text), 'unresolved findings recorded').toBeTruthy();
   expect(/rework cycle/i.test(text), 'rework cycles with causes').toBeTruthy();
   expect(/avoidable.*intervention/i.test(text), 'avoidable user interventions where records support').toBeTruthy();
-  expect(/identified.*dispatched|dispatched.*identified/i.test(text), 'parallelizable identified vs dispatched').toBeTruthy();
-  expect(/writer isolation|dependency.*writer|writer.*dependency/i.test(text), 'parallelism judged with dependency/writer isolation').toBeTruthy();
+  const outcomes = text.slice(text.indexOf('- Package outcomes'), text.indexOf('- PRs with'))
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  const packageMetrics = [/packages?|package outcomes/i, /identified/i, /launched/i,
+    /completed/i, /serialized with reasons/i, /dependencies/i, /writer[\/ ](?:and )?resource isolation/i];
+  checkRule(outcomes, (source) => requires(source, ...packageMetrics),
+    'Report packages identified, launched, completed and serialized with reasons, dependencies and writer and resource isolation.',
+    [[/launched/i, 'never launched'], [/serialized with reasons/i, 'serialized without reasons']], packageMetrics);
   expect(lower).toContain('api-dollar');
   expect(/UNKNOWN otherwise/i.test(text), 'unknown cost when receipts are absent').toBeTruthy();
 });

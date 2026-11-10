@@ -217,7 +217,12 @@ test('review modes: reviewer brief ends with the required escalation field', () 
   expect(raw).toContain('Escalate to user: yes | no — <criterion> — <reason>');
   const brief = raw.slice(raw.indexOf('## Template: candidate review brief'), raw.indexOf('## Template: review receipt'));
   expect(brief).toContain('Escalate to user: yes | no — <criterion> — <reason>');
-  expect(brief).toMatch(/Actual author: <provider\/model from T3 launch receipt[^>]*>/);
+  const provenance = brief.split('\n').find((line) => line.includes('Actual author:')) ?? '';
+  const contributorFields = [/every|all/i, /package/i, /integration/i, /repair/i,
+    /contributor/i, /provider\/model|provider and model/i, /T3 launch receipt/i, /session/i];
+  checkRule(provenance, (text) => requires(text, /Actual author:/, ...contributorFields),
+    'Actual author: <all package, integration and repair contributors: provider and model, T3 launch receipt and session>.',
+    [[/every|all/i, 'selected'], [/T3 launch receipt/i, 'unverified attribution']], contributorFields);
   expect(brief).toMatch(/Claude-Session[^.]*attribution[^.]*not provenance/i);
   const receipt = raw.slice(raw.indexOf('## Template: review receipt'), raw.indexOf('## Prompt-only urgent escalation'));
   expect(receipt).toMatch(/Escalate to user: <yes \| no> — <criterion> — <reason>/);
