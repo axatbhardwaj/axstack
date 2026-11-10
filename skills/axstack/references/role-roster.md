@@ -101,7 +101,8 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   from the blanket mixed fanout floor. Required corroborating teams retain their
   configured seats: research pairs/branch floors, arena judges, peer first-pass
   reviewers and audit pairs, including their independence and absence rules.
-  Other mixed corroboration fan-out retains at least one Codex and one Claude
+  Every other mixed fan-out, except precisely same-binding writers and
+  distinct-brief nonwriter packages, retains at least one Codex and one Claude
   seat; otherwise hold that fan-out. These exceptions grant no reviewer substitution.
   Intentional absences in codex-only and claude-only remain unchanged.
 - `axstack-debug-investigator-1..4` accept bounded L0 probe packages and L1 briefs

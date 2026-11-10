@@ -31,7 +31,8 @@ head and base, with observed evidence, findings and limitations in the authored
 review receipt. The same reviewer returns the authored verdict and Scope status.
 `APPROVE` plus `Scope: PASS` satisfies the applicable diligence gate only for
 eligible work; otherwise require separate diligence `PASS` with authored approval.
-`Scope: FINDINGS` returns to the same author in the same round and blocks
+`Scope: FINDINGS` returns to the responsible package or integration author in
+the same round and that author's existing session and worktree, and blocks
 merge-ready. `Scope: UNKNOWN` holds merge-ready with the reason recorded for
 driver disposition; a disposition never converts unknown evidence into a pass.
 Every head or base change invalidates the combined receipt and requires fresh

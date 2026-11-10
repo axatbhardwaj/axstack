@@ -16,12 +16,14 @@ For combined review, before publication the driver verifies the author receipt
 against its evidence folder: named red/green logs exist, and counts, SHAs and
 paths match. Record the readback and eligibility at the local candidate head
 and base; missing or mismatched evidence holds publication and returns to the
-same author. The combined cross-provider review follows publication at the
+responsible package or integration author in that author's existing session
+and worktree. The combined cross-provider review follows publication at the
 confirmed remote head and pinned base; driver readback never supplies `Scope: PASS`.
 For all other work, before publication dispatch `axstack-diligence` under
 [Diligence](diligence.md) to check the author receipt against its evidence
 folder: red/green logs exist, and counts, SHAs, and paths match. Resolve
-`FINDINGS` with the same author before publishing. A diligence `UNKNOWN` or
+`FINDINGS` with the responsible package or integration author in that author's
+existing session and worktree before publishing. A diligence `UNKNOWN` or
 missing/stale receipt holds publication.
 
 Follow [PR chains](pr-chain.md) for recorded membership and base-bound evidence.

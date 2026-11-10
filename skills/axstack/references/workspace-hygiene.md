@@ -65,7 +65,9 @@ A T3 refusal such as `parent_not_active` (the calling driver's own run is not li
 For close-out holds, follow the [run-record acceptance rules](run-record.md#close-out-acceptance).
 A missing or failed settle readback never triggers author repair: it holds only that dispatch's next advancement (publication, review routing, merge-ready) until resolved.
 Settling never removes, archives or abandons the thread or worktree.
-Retain the author worktree and thread unarchived until the PR merges or closes, with repairs returning to the same author.
+Retain each author worktree and thread unarchived until the PR merges or closes.
+Repairs return to the responsible package or integration author in that author's
+existing session and worktree.
 On forge-confirmed merge or closure, follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
 for same-turn author settlement and its required readback.
 A repair turn automatically un-settles the thread, making it visible while working.
