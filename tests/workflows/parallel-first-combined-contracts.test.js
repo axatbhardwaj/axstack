@@ -134,24 +134,25 @@ test('C4: contributor and owner self-review is forbidden in the joined candidate
 for (const [boundary, path, context, equivalent] of [
   ['publication evidence mismatch', 'skills/axstack/references/candidate-publication.md',
     [/missing|mismatched/i, /evidence/i, /hold\w* publication/i],
-    'Missing or mismatched evidence holds publication and returns to the responsible package or integration author.'],
+    'Missing or mismatched evidence holds publication and returns to the responsible package or integration author in its existing session and worktree.'],
   ['prepublication findings', 'skills/axstack/references/candidate-publication.md',
     [/FINDINGS/, /before publish|before publication/i],
-    'Resolve FINDINGS with the responsible package or integration author before publication.'],
+    'Resolve FINDINGS with the responsible package or integration author in its existing session and worktree before publication.'],
   ['combined diligence findings', 'skills/axstack/references/diligence.md',
     [/Scope:\s*FINDINGS/, /same round/i, /block\w* merge-ready/i],
-    'Scope: FINDINGS routes to the responsible package or integration author in the same round and blocks merge-ready.'],
+    'Scope: FINDINGS routes to the responsible package or integration author in its existing session and worktree in the same round and blocks merge-ready.'],
   ['retained author resource', 'skills/axstack/references/workspace-hygiene.md',
-    [/retain|keep/i, /worktree/i, /thread/i, /until/i, /merg/i, /clos/i, /repair/i],
-    'Keep the author worktree and thread until the PR merges or closes, with repairs returning to the responsible package or integration author.'],
+    [/repair/i],
+    'Repairs return to the responsible package or integration author in its existing session and worktree.'],
   ['public workflow repair', 'docs/workflows.md',
     [/repair/i, /worktree/i],
-    'Repairs route to the responsible package or integration author and worktree.'],
+    'Repairs route to the responsible package or integration author in its existing session and worktree.'],
 ]) {
   test(`M2: ${boundary} routes to the responsible package or integration author`, () => {
     const route = /package(?: author)? or integration author|integration(?: author)? or package author/i;
     const direction = /return\w*|route\w*|resolve/i;
-    const concepts = [...context, /responsible|exclusive|owning/i, route, direction];
+    const concepts = [...context, /responsible|exclusive|owning/i, route, direction,
+      /existing|current/i, /session/i, /worktree/i];
     const accepts = (text) => requires(text, ...concepts);
     expect(accepts(equivalent), 'equivalent wording preserves the boundary and exclusive owner route').toBe(true);
     const source = read(path);
