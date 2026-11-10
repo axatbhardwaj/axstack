@@ -17,7 +17,7 @@ coordination. You can start at the phase you need.
 | Wrong thing built | Align rounds clarify the request; every brainstorm runs a light arena across configured families. Use judges only for Rung 2 hard-to-reverse choices. |
 | Nobody really reviewed it | Strict TDD checks behavior first; mixed authored review is cross-provider, and the first mixed peer review pairs Sol high with Opus medium in isolated sessions at the exact revision. Peer follow-ups use one reviewer. |
 | Design rot | The design lens sketches boundaries before a build; Improve surfaces evidenced changes later. |
-| Agents left a mess | T3 makes delegation visible, one writer owns each PR, cleanup stays bounded, and watched own PRs merge under guarded rules. |
+| Agents left a mess | T3 makes delegation visible, one writer owns each isolated candidate, cleanup stays bounded, and watched own PRs merge under guarded rules. |
 
 ## Prerequisites
 
@@ -99,7 +99,9 @@ Every Explain visual is authored and independently reviewed; plain prose stays p
 
 - The current T3 thread drives scope, coordination, and publication. Delegation uses
   visible T3 orchestration via the `t3-code` MCP; harness-native subagent
-  tools are forbidden. Separate worktrees keep one writer on each candidate.
+  tools are forbidden. Separate worktrees keep one writer on each candidate. Useful isolated packages
+  can feed one PR with one integration writer; dispatch independent ready work
+  before waiting under [Parallel-first delivery](skills/axstack/references/parallel-first.md).
   See the [T3 runtime boundary](skills/axstack/references/t3-runtime.md).
 - Peer PRs receive two independent reviews on the first review and one reviewer
   on follow-ups. Authored changes receive a reviewer
