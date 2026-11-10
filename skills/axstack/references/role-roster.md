@@ -27,10 +27,11 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
-  | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
+  | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
 - `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
   `axstack-arena-candidate-grok` adds a family.
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
+  Fable starts at high effort in mixed/claude-only.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`: for Explain, the driver authors ordinary inline HTML and
@@ -55,17 +56,17 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-research-requirements`/
   `axstack-research-code`/`axstack-research-web`/
   `axstack-explore-execution`:
-  `claude/sonnet` high in mixed/claude-only.
-- `axstack-auditor`: `claude/haiku` xhigh in mixed, pinned to
-  `claude-haiku-5-5`. Missing that exact model or xhigh effort holds without
-  substitution. `claude/sonnet` high in claude-only; `codex/luna` xhigh in codex-only.
-- `axstack-explore-codebase`: `claude/haiku` high in
+  `claude/sonnet` high in mixed and medium in claude-only.
+- `axstack-auditor`: `claude/sonnet` high in mixed, resolved from saved
+  capabilities without an exact model pin. `claude/sonnet` medium in claude-only;
+  `codex/luna` xhigh in codex-only. Missing model or effort holds without substitution.
+- `axstack-explore-codebase`: `claude/haiku` medium in
   mixed/claude-only, pinned to `claude-haiku-5-5`. Missing that exact model
-  or high effort holds this role without substitution.
+  or medium effort holds this role without substitution.
 - Scout requires `axstack-explore-codebase` and
-  `axstack-explore-codebase-luna` per facet in mixed (Haiku high + Luna
+  `axstack-explore-codebase-luna` per facet in mixed (Haiku medium + Luna
   xhigh) and codex-only (Sol high + Luna xhigh). Claude-only requires
-  the Haiku high base seat per facet.
+  the Haiku medium base seat per facet.
 - Sol pairs (stable `-sol` IDs) `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
   mixed/codex-only; intentionally absent in claude-only. In mixed,

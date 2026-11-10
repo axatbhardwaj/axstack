@@ -59,12 +59,12 @@ const expected = {
     g(null, 'high'),
     a('sonnet', 'high'), c('terra', 'high'),
     c('terra', 'high'), a('sonnet', 'high'),
-    a('haiku', 'high'), c('luna', 'xhigh'),
+    a('haiku', 'medium'), c('luna', 'xhigh'),
     a('sonnet', 'high'), c('terra', 'high'),
-    a('haiku', 'xhigh'), c('sol', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
-    c('astra', 'xhigh'), a('fable', 'xhigh'), a('opus', 'xhigh'),
+    c('astra', 'xhigh'), a('fable', 'high'), a('opus', 'xhigh'),
     g(null, 'high'),
   ],
   'codex-only': [
@@ -92,32 +92,32 @@ const expected = {
     a('opus', 'medium'),
     a('opus', 'medium'),
     a('opus', 'medium'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
     a(null, 'high'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
     a(null, 'high'),
     a(null, 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
+    a('sonnet', 'medium'),
     a(null, 'high'),
-    a('haiku', 'high'),
+    a('haiku', 'medium'),
     a(null, 'xhigh'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
     a(null, 'high'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
     a(null, 'high'),
     a('opus', 'medium'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
     a('opus', 'medium'),
-    a('sonnet', 'high'),
+    a('sonnet', 'medium'),
     a(null, 'xhigh'),
-    a('fable', 'xhigh'),
+    a('fable', 'high'),
     a('opus', 'xhigh'),
     a(null, 'high'),
   ],};
@@ -250,20 +250,20 @@ test('presets: auditor route agrees with audit skill and workflow table', () => 
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const auditor = roles.find(({ id }) => id === 'axstack-auditor');
     expect(auditor).toMatchObject(preset === 'mixed'
-      ? { provider: 'claude', modelClass: 'haiku', model: 'claude-haiku-5-5', thinkingOptionId: 'xhigh' }
+      ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high' }
       : preset === 'claude-only'
-        ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'high' }
+        ? { provider: 'claude', modelClass: 'sonnet', thinkingOptionId: 'medium' }
         : { provider: 'codex', modelClass: 'luna', thinkingOptionId: 'xhigh' });
     expect(workflows).toContain(`| \`${preset}\` |`);
     expect(workflows.split('\n').find((line) => line.startsWith(`| \`${preset}\` |`)))
-      .toEndWith(preset === 'mixed' ? '| Haiku xhigh + Sol high |'
-        : preset === 'claude-only' ? '| Sonnet high (Sol absent) |' : '| Luna xhigh + Sol high |');
+      .toEndWith(preset === 'mixed' ? '| Sonnet high + Sol high |'
+        : preset === 'claude-only' ? '| Sonnet medium (Sol absent) |' : '| Luna xhigh + Sol high |');
   }
   checkRule(sentences(audit).join('. '), (text) => requires(text,
-    /axstack-auditor.*profile/i, /claude\/haiku xhigh in mixed/i,
-    /claude\/sonnet high in claude-only/i, /codex\/luna xhigh in codex-only/i),
-  'The axstack-auditor profile uses claude/haiku xhigh in mixed, claude/sonnet high in claude-only, and codex/luna xhigh in codex-only.',
-  [[/haiku xhigh/i, 'haiku high'], [/haiku/i, 'sonnet']]);
+    /axstack-auditor.*profile/i, /claude\/sonnet high in mixed/i,
+    /claude\/sonnet medium in claude-only/i, /codex\/luna xhigh in codex-only/i),
+  'The axstack-auditor profile uses claude/sonnet high in mixed, claude/sonnet medium in claude-only, and codex/luna xhigh in codex-only.',
+  [[/sonnet high/i, 'sonnet medium'], [/sonnet/i, 'haiku']]);
 });
 
 test('presets: Codex explainer reviewer uses the selected class and effort', () => {

@@ -147,7 +147,7 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    Bind it to the exact artifact identity.
    Any byte change invalidates
    that review and requires a fresh check. In `claude-only`, separate Sonnet
-   author high and reviewer high sessions are allowed for explanations and every visual as
+   author medium and reviewer medium sessions are allowed for explanations and every visual as
    session independence only. This exception never permits same-model code
    review or a cross-provider-independence claim.
 3. Report source, tests, rendered observations, independent review, and

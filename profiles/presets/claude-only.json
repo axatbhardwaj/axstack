@@ -43,7 +43,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "medium",
-      "notes": "Primary reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet high. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Primary reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet medium. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
@@ -51,7 +51,7 @@
       "name": "Axstack reviewer (secondary)",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Eligible authored reviewer for an Opus-authored candidate. Never author or owner; review exact SHA and base across all six angles and acceptance. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
@@ -60,8 +60,8 @@
       "name": "Axstack reviewer (peer)",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Second reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet high. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Second reviewer in the ordered claude-only peer pair: Opus medium followed by Sonnet medium. Never author or owner; review exact SHA and base across all six angles and acceptance. Peer first pass stays isolated. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -69,7 +69,7 @@
       "name": "Axstack diligence checker",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Read-only diligence for exact-revision PRs and bounded research, spec, ticket, receipt, and release claims. Returns PASS or FINDINGS with evidence; never authors or edits. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
@@ -78,7 +78,7 @@
       "name": "Axstack tracker checker",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Report-only discrepancy checker for the selected external tracker (Linear or GitHub Issues). Never mutates the tracker; the driver independently verifies evidence before applying updates. An intentionally absent role stays absent; configured null-model bindings resolve from saved T3 capabilities. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
@@ -87,8 +87,8 @@
       "name": "Axstack research requirements",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high research requirements analyst: scopes bounded questions and acceptance for a research task. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Sonnet medium research requirements analyst: scopes bounded questions and acceptance for a research task. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -96,8 +96,8 @@
       "name": "Axstack research code",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high research code investigator: verifies behavior against inspected code and executable evidence. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Sonnet medium research code investigator: verifies behavior against inspected code and executable evidence. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -114,8 +114,8 @@
       "name": "Axstack research web",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high research web reader: gathers primary-source facts efficiently. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Sonnet medium research web reader: gathers primary-source facts efficiently. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -141,7 +141,7 @@
       "name": "Axstack explainer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Visual author: for Explain, the driver authors ordinary inline HTML and chat Mermaid by default. Optional specialist for those visuals; retains other visual authorship, including anatomy figures, with source fidelity. T3 resolves Claude classes from saved capabilities; a Claude rejection holds. Also authors Publish article adaptations.",
       "modelClass": "sonnet"
     },
@@ -150,7 +150,7 @@
       "name": "Axstack explainer reviewer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Independent explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity, including the full claim set on the first and every subsequent review, including conditions, branches, complete cited source ranges and regression of prior findings. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. T3 resolves Claude classes from saved capabilities; a Claude rejection holds. Design review follows design.md hard rules, aurora.md shared identity and FRONTEND-DESIGN.md (content-specific craft subordinate to Aurora and hard rules, including calibration defaults, restraint and quality floor) for every inline HTML page and every Publish article adaptation. For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256. Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review. Reuse adequate driver evidence while retaining layout, accessibility, theme and fit checks. For anatomy inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 and recorded before review. Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins, bounded prose measure, typography, section spacing and chart legibility. Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels. A page failing to look decent is a blocking design finding, repaired by the same author. For Anatomy and Publish only, retain Delivery's design-only exception. Never describe a remaining finding as fixed or a clean pass. Apply Delivery's progress-based repairs and dependency holds; repair count alone never abandons the requested format. Apply Delivery's normal holds for other failures and unknown renders. Chat Mermaid and anatomy keep their existing review.",
       "modelClass": "sonnet"
     },
@@ -159,7 +159,7 @@
       "name": "Axstack UI verifier",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "medium",
       "notes": "Read-only UI verifier: uses the configured verifier browser tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256. Never edits source. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
@@ -177,8 +177,8 @@
       "name": "Axstack codebase explorer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Haiku 5.5 high codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "thinkingOptionId": "medium",
+      "notes": "Haiku 5.5 medium codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or medium effort holds without substitution.",
       "modelClass": "haiku",
       "model": "claude-haiku-5-5"
     },
@@ -196,8 +196,8 @@
       "name": "Axstack execution explorer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high execution explorer: runs bounded checks of runtime behavior where authorized. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Sonnet medium execution explorer: runs bounded checks of runtime behavior where authorized. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -214,8 +214,8 @@
       "name": "Axstack auditor",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Sonnet high read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Sonnet medium read-only end-of-run and checkpoint auditor. Collects scope and outcome evidence with counts and denominators and reports PASS, FAIL, or UNKNOWN without inventing numbers. Never edits, merges, activates, or audits itself. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -241,8 +241,8 @@
       "name": "Axstack debug investigator 2",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at high effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Debug investigator seat 2. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -259,8 +259,8 @@
       "name": "Axstack debug investigator 4",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "high",
-      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at high effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "thinkingOptionId": "medium",
+      "notes": "Debug investigator seat 4. Dispatched only by axstack-debug at L1 with the shared evidence packet and one distinct brief; never reads another investigator's output. Works in its own disposable worktree at the pinned revision plus the recorded dirty patch; may instrument there for probes; never commits, pushes, publishes, or creates children. Returns one receipt per brief. Independence comes from brief isolation, not model diversity. This preset repeats the Sonnet class at medium effort because it has fewer model families; independence comes from brief isolation. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "sonnet"
     },
     {
@@ -277,7 +277,7 @@
       "name": "Axstack escalation Fable",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "xhigh",
+      "thinkingOptionId": "high",
       "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "fable"
     },

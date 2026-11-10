@@ -62,7 +62,7 @@ test('analysis pairs: routing and declared scenarios cover presence and absence'
   expect(absent?.expected?.absent).toEqual([
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
   ]);
-  expect(absent?.expected?.base).toMatch(/Sonnet high proceeds alone/i);
+  expect(absent?.expected?.base).toMatch(/Sonnet medium proceeds alone/i);
   expect(absent?.expected?.forbidden).toContain('substitute a Sol model');
 });
 

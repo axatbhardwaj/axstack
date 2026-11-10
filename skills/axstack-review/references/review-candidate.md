@@ -40,7 +40,7 @@ This section applies to peer and authored PR modes.
      | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
      | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
      | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
-     | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` high) |
+     | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
 
      Separate diligence does not count as a reviewer receipt; eligible combined
      review carries Scope in the one authored reviewer receipt.

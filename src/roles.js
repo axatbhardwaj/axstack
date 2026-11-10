@@ -25,7 +25,7 @@ const AUTHORED_ROUTES = Object.freeze({
     'codex/sol': ['axstack-reviewer-secondary', 'codex/terra', 'high'],
   },
   'claude-only': {
-    'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'high'],
+    'claude/opus': ['axstack-reviewer-secondary', 'claude/sonnet', 'medium'],
   },
 });
 

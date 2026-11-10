@@ -83,7 +83,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
     ['mixed', 'codex/sol', 'axstack-reviewer-secondary', 'claude/opus', 'high'],
     ['mixed', 'claude/opus', 'axstack-reviewer-primary', 'codex/sol', 'high'],
     ['codex-only', 'codex/sol', 'axstack-reviewer-secondary', 'codex/terra', 'high'],
-    ['claude-only', 'claude/opus', 'axstack-reviewer-secondary', 'claude/sonnet', 'high'],
+    ['claude-only', 'claude/opus', 'axstack-reviewer-secondary', 'claude/sonnet', 'medium'],
   ];
   for (const path of ['skills/axstack-review/SKILL.md', 'skills/axstack/references/role-roster.md', 'skills/axstack-audit/SKILL.md']) {
     const source = read(path);
@@ -183,7 +183,7 @@ test('review modes: neutral reviewer IDs carry each ordered preset pair', () => 
   const pairs = {
     mixed: [['codex', 'sol', 'high'], ['claude', 'opus', 'medium']],
     'codex-only': [['codex', 'sol', 'high'], ['codex', 'luna', 'xhigh']],
-    'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'high']],
+    'claude-only': [['claude', 'opus', 'medium'], ['claude', 'sonnet', 'medium']],
   };
   for (const [preset, pair] of Object.entries(pairs)) {
     const profiles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;

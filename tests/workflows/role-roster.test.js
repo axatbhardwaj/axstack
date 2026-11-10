@@ -13,7 +13,7 @@ test('routing loads the extracted roster and keeps the class-resolution contract
 
 test('roster names class routes for Sonnet and Sol analysis seats', () => {
   const roster = read('skills/axstack/references/role-roster.md');
-  expect(roster).toContain('`claude/sonnet` high in mixed/claude-only');
+  expect(roster).toMatch(/`claude\/sonnet`[^.]*high in mixed[^.]*medium in claude-only/);
   expect(roster).toContain('`codex/sol` high in');
 });
 
