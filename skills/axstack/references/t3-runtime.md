@@ -1,5 +1,10 @@
 # T3 runtime boundary
 
+Follow [Parallel-first delivery](parallel-first.md) for ready package batches,
+exclusive worktree writers and verified internal milestones. Keep native dispatch
+and completion checks below; running first-binding proof permits eligible siblings
+without waiting for completion. All workers remain local to the task host.
+
 Read immediately before role dispatch, receipt consumption, or recovery.
 Axstack owns policy, role selection and evidence; T3 owns threads, runs,
 delegated tasks, messaging and native schedules.

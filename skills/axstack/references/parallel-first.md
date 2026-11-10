@@ -97,7 +97,8 @@ tips are ancestors of the final head. A guarded necessary rewrite supersedes
 affected identities/evidence and requires new ancestry proof.
 
 A named owner for each new combined behavior records meaningful behavioral red
-before implementing it and green on the integrated head. This includes behavior
+on the pinned base or a partial assembly before implementing it and green on
+the integrated head. This includes behavior
 emerging from packages without glue; plan its check before the producing merge.
 Missing-module/setup failures and retrospective tests never establish TDD.
 The driver classifies mechanical assembly using tree equality with a reproducible

@@ -1,5 +1,8 @@
 # Shared lifecycle and receipts
 
+Follow [Parallel-first delivery](parallel-first.md) for ready-work dispatch,
+package/integration ownership and internal milestones in every phase.
+
 Phases load through [Standing contracts](contracts.md).
 Driver settlement follows [Workspace hygiene](workspace-hygiene.md).
 Delegated or resumable work uses a driver-owned [Run record](run-record.md)
@@ -10,12 +13,14 @@ For a logical Coordinator coordinating project drivers, follow
 ## Roster (compact)
 
 - Driver: current chat; owns scope, decisions, cross-PR dependencies,
-  external-tracker mutations, integration.
+  external-tracker mutations and integration coordination; never candidate source.
 - Owner: driver for loop PRs; `axstack-owner` for standalone watch/review without
   a live driver. PR-scoped publication is within user authority.
   Own PRs default to automatic merge under watch §5's predicate.
-- Author: exactly one writer per candidate; accepted fixes return there.
-  Workers launch no recursive teams.
+- Author: exactly one writer per candidate; accepted fixes return to their
+  package or integration owner.
+  One PR can assemble several isolated package candidates with one integration
+  writer; workers launch no recursive teams.
 - Reviewers: first peer review = two configured roles with the same brief and isolated first
   pass. Peer follow-up uses one reviewer under [Peer mode](../../axstack-review/SKILL.md#peer-mode-colleague-pr);
   authored = one eligible role from author provenance. Peer reviewers each use a
@@ -29,8 +34,9 @@ For a logical Coordinator coordinating project drivers, follow
 - Auditor (`axstack-auditor`): report-only; never edits, merges, activates, or
   audits itself.
 
-Prefer parallel independent bounded work; no redundant workers. Fanout is dependency- and
-capacity-driven within host/spending limits. [PR shape](pr-shape.md) covers
+Dispatch useful independent ready work before waiting; record concrete serial
+exceptions under Parallel-first. Fanout stays dependency- and capacity-driven
+within host/spending limits, without redundant workers. [PR shape](pr-shape.md) covers
 theme/size; queue dependencies under [PR chains](pr-chain.md).
 
 For supported non-repository report-only workflows, use
@@ -152,7 +158,10 @@ user-taken-over thread without cleanup commands.
 At [run checkpoints](../../axstack-cleanup/SKILL.md#run-checkpoints), the driver invokes
 [axstack-cleanup](../../axstack-cleanup/SKILL.md) inline to batch eligible cleanup,
 including reviewer worktree retirement, preserving and reading back evidence first
-with every existing per-resource guard; it never dispatches cleanup work.
+with every existing per-resource guard; it never delegates cleanup mutation.
+In repository mode, bounded read-only evidence analysis may use existing
+research/exploration roles; the driver
+rechecks ownership and preservation before every mutation.
 Axstack creates no heartbeat or substitute scheduler.
 Tracking grants no merge, release, model-substitution, or scope authority.
 

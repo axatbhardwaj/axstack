@@ -291,7 +291,7 @@ remain a serious-risk hold.
 
 ## Authority
 
-- The driver owns scope, cross-PR coordination, integration, and every selected
+- The driver owns scope, cross-PR coordination, integration coordination, and every selected
   external-tracker mutation. Checker reports discrepancies only.
 - One T3 host/server owns a run. No fixed active-PR count; fanout is dependency-
   and capacity-driven within host resource and spending limits. Reduce fanout for

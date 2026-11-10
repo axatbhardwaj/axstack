@@ -1,5 +1,8 @@
 # Shared routing (every owned phase loads this)
 
+Follow [Parallel-first delivery](parallel-first.md) at intake and each meaningful
+transition; dispatch independent ready work before waiting, within current authority.
+
 Choose a route; load only the phase and references needed next.
 Driver entry sweep follows [Workspace hygiene](workspace-hygiene.md).
 For work spanning project drivers, follow
@@ -45,8 +48,9 @@ Timeout, quota, auth and rejection hold affected work.
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
 [Model discipline](contracts.md#model-discipline) governs optional seats,
 auditor preflight, and required holds; [Role roster](role-roster.md) governs
-single-provider absence, mixed research with at least two different providers,
-and other mixed Codex+Claude fan-out (including arena and peer review).
+single-provider absence, required research/corroboration teams and the scoped
+same-binding writer/distinct-brief nonwriter exceptions to blanket provider floors.
+Arena judges and peer first-pass composition remain required.
 Bundled presets are setup inputs, not runtime readiness proof.
 
 Load the [Role roster](role-roster.md) for configured roles and authored-review pairings.
@@ -54,7 +58,9 @@ Load the [Role roster](role-roster.md) for configured roles and authored-review 
 Provenance is matched on provider/model class derived from the recorded exact ID;
 effort never maps. Missing table-row
 provenance is unsupported and `INCOMPLETE`; report it and ask the user. Never
-infer from slot, driver, owner, or provider. Author and owner never review.
+infer from slot, driver, owner, or provider. Every contributing package,
+integration and repair author and the owner never
+review their joined candidate; validate all actual provenance against the mapping.
 
 `axstack-implement` requires `mixed`; single-provider presets hold at
 step (3) for user routing: no substitution or same-provider review.
@@ -87,9 +93,13 @@ changes remain C4/C6. Remote authors stay disabled; keep local isolated fallback
 - Code quality/refactor or named UI screen/flow discovery -> `axstack-improve`: rank bounded
   candidates with evidence; report only, no source edits.
 - Repeated mistakes need evidence and stronger checks -> `axstack-correct`:
-  user-invoked, report only.
+  user-invoked, report only. In repository-mode Correct and Cleanup, permit
+  bounded read-only evidence analysis using existing research/exploration roles.
+  Correct retains selected-records/no-transcripts limits and no implementation
+  authority; Cleanup mutation remains driver-only with fresh preservation checks.
 - Accepted worker/task/run completion or bounded backlog request -> driver invokes
-  `axstack-cleanup` inline; never dispatch it.
+  `axstack-cleanup` inline; never dispatch cleanup mutation or leaf cleanup.
+  Nonrepo Correct/Cleanup/VOA remains inline-only under Local artifacts.
 - Preparation completion, watch expiry, resume, or reconciliation -> the
   [lifecycle](lifecycle.md#native-handoff-and-resume): reconcile run record,
   keep owner, launch no native handoff.
@@ -125,7 +135,9 @@ reason in the run record, or in the brief for tiny direct work.
   revision, with acceptance checks and dependencies in the explicitly selected
   Markdown, GitHub Issues, or Linear store. Prepare via `axstack-align` -> `axstack-spec`
   (one approval) -> `axstack-tickets` -> handoff, then continue under autopilot when eligible.
-- **Small:** clear, bounded one-PR work. The driver captures the named
+- **Small:** clear, bounded one-PR work, including useful isolated packages;
+  package count alone requires neither escalation nor separate diligence.
+  The driver captures the named
   **small-change intent** from the current request or user-chosen existing
   issue plus explicit acceptance checks and exclusions, snapshots it once, and
   proceeds. No prior snapshot, spec, tickets, or second approval is required; do not route

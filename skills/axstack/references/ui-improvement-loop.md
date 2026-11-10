@@ -1,5 +1,14 @@
 # Bounded UI improvement
 
+Follow [Parallel-first delivery](parallel-first.md) within this loop's constraints.
+Permit parallel non-measuring preparation or probes in isolated non-contending
+environments. Keep measured changes sequential within each loop, including
+keep/revert before the next attempt. Every attempted candidate-effect probe
+consumes the existing attempt budget, including failed or parallel probes that
+the owning loop counts as attempts. Preserve cheapest-first early stop where
+applicable; preparation never bypasses it. Contended measurements cannot support
+baseline, delta or keep decisions.
+
 Use this loop only for authorized UI changes to the named screen or flow.
 Improve owns report-only discovery; Implement owns changes. Reuse the existing
 PR author, `axstack-ui-verifier` and independent authored reviewer from the

@@ -7,7 +7,11 @@ The configured UI verifier roles are `axstack-ui-verifier` and
 `axstack-ui-verifier-sonnet` from the role snapshot; select them under the
 [dual-run trigger](#android-device-and-webpwa-dual-run) below.
 Give each verifier the exact build, URL, or artifact and the private dispatch's evidence folder. The verifier is read-only: it never edits source.
-The PR writer remains the sole writer.
+Each package or integration candidate retains its exclusive writer under
+[Parallel-first delivery](parallel-first.md); verifiers never edit candidate source.
+Parallelize unrelated isolated checks, preserving ordered dual runs and one
+emulator per host. Keep a credential-sensitive session with one worker; never
+share it across workers or dispatch run 1 and run 2 together.
 
 Before using a PR preview URL, the UI verifier must read [PR previews](preview.md).
 

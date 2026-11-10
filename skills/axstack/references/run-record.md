@@ -1,5 +1,8 @@
 # Local run record
 
+Follow [Parallel-first delivery](parallel-first.md) for the compact work map,
+package/integration receipts, earliest sufficient milestones and close-out evidence.
+
 One compact Markdown `progress.md` is required for substantive delegated or
 resumable work. One-step direct answers need no record ceremony, but still
 obey their applicable scope identity. This tiny-task exemption is not a
@@ -82,6 +85,24 @@ owner stops.
 `Archived` is a status in the same record and path. Nothing is moved or
 deleted.
 The driver records `paused` on a user request or a hold; idle alone is neither.
+
+## Packages and parallelism
+
+Use the existing task map for useful packages: outcome, owner/session/worktree,
+inputs and prerequisite milestone, write/resource boundary, output, acceptance
+check, state/reason. Record exact producer identities and invalidation conditions;
+update affected consumers when inputs change. Tiny direct actions remain exempt.
+Keep one integration owner and every contributor's actual provider/model/attempt,
+package base/tip, merge order/commits and final head/base in receipt pointers.
+Review-round and repair budgets stay per PR, independent of package count.
+
+At close-out, report packages identified, launched, completed and serialized with
+reasons. Record native execution overlap separately from queued work and parallel
+tool calls. Link exact evidence and unexercised phase coverage in the existing
+Parallelism field; keep fixture results distinct from native observations.
+Costs and durations without trustworthy receipts remain unknown. Never claim
+speedup or savings without a comparable measured baseline. These fields use this
+record and the audit Parallelism field, never a second metric store.
 
 ## Per-PR cost
 
@@ -242,7 +263,8 @@ Runtime: <host + T3 version + installed Axstack SHA + installed Axstack version/
 Schedules: <scheduledTaskIds of every watch and manager schedule>
 Watch: <member publication/adoption receipts + cadence + last PR event + native lifetime + update/re-arm/stop receipts>
 Worktrees in other repositories: <per-run repository and worktree IDs or none>
-Evidence: <check/review/submission/audit receipt pointers>
+Evidence: <package/integration/check/review/submission/audit receipt pointers>
+Parallelism: <packages identified/launched/completed/serialized + reasons; native overlap evidence separately from queue/tool concurrency; unexercised phases>
 Cost baseline: docs/ceremony-baseline-20261103.md
 PR cost: <PR URL> | dispatches: unknown | review rounds: unknown | spec revisions: unknown | active time: unknown | wait time: unknown | driver tokens: unknown | worker tokens: unknown | evidence: <per-value refs>
 Pending: <launch/acceptance/external receipts + scheduledTaskIds + runIds + deadline>
@@ -254,9 +276,9 @@ Resume: <commands or evidence refs bound to exact revisions>
 | --- | --- | --- | --- | --- |
 | <UTC timestamp> | <what was chosen> | <plain reason> | <SHA/PR/receipt/file:line> | <tests green/reverted/held/open> |
 
-| Task | Dependencies | Owner | State | Revision evidence | Next action |
-| --- | --- | --- | --- | --- | --- |
-| <task> | <task IDs or none> | <role + session ID + worktree, or receipt ref> | <pending/in progress/complete/blocked> | <SHA + check/receipt refs> | <action + owner> |
+| Task | Outcome | Dependencies / inputs / prerequisite milestone | Owner | Write / resource boundary | Output / acceptance check | State | Revision evidence | Next action |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <task> | <outcome> | <identities + sufficient milestone> | <role + session ID + worktree, or receipt ref> | <exclusive scope> | <artifact + check> | <pending/in progress/complete/blocked + reason> | <SHA/hash + receipt refs + invalidation> | <action + owner> |
 
 | Dispatch key | Provider/model echo | Configuration read-back | Completion receipt | Post-completion HEAD/porcelain check result | Settle readback |
 | --- | --- | --- | --- | --- | --- |
