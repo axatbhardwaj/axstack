@@ -44,6 +44,9 @@ test('blocking and exact-revision holdouts still apply', () => {
   expect(review).toMatch(/Any authoring change makes prior receipts stale/i);
   expect(review).toMatch(/Refresh each mode-required receipt for the new exact SHA and current base/i);
   expect(review).toMatch(/validated blocking defects[^.]*REQUEST_CHANGES/i);
-  expect(implement).toMatch(/`REQUEST_CHANGES`[^.]*failed required check[^.]*same author[^.]*new revision/i);
+  checkRule(implement, (text) => requires(text, /REQUEST_CHANGES/i, /failed required check/i,
+    /returns/i, /exclusive package author/i, /integration author/i, /new revision/i),
+  'REQUEST_CHANGES or a failed required check returns findings to the exclusive package author and integration author for a new revision.',
+  [[/returns/gi, 'discards']]);
   expect(spec).toMatch(/driver owns the draft[^.]*user approves it/i);
 });

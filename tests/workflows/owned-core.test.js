@@ -194,10 +194,10 @@ test('owned-core: watch adopts existing PR; observation-only dispatches nothing 
 
 test('owned-core: authorized repairs use original author with reviewed code and exact text', () => {
   const text = skill('axstack-watch');
-  expect(
-    /original author session[^.]*run itself launched|run itself launched[^.]*original author/i.test(text),
-    'authorized repairs reuse the original author only for a session the run itself launched',
-  ).toBeTruthy();
+  checkRule(sentences(text).join('. '), (source) => requires(source,
+    /reuse each session/i, /only/i, /run itself launched it/i, /evidence allows/i),
+  'Reuse each session only when the run itself launched it and evidence allows.',
+  [[/only when/i, 'whether or not']]);
   expect(/actual provenance of its repair author/i.test(text)).toBeTruthy();
   expect(
     /exact[\s\S]*(reply|response|public)[\s\S]*(text|bodies)|exact text/i.test(text),
@@ -313,8 +313,12 @@ test('owned-core: review separates mode-specific completeness from verdict; bind
 
 test('owned-core: standalone review/watch materialize axstack-owner; workers never recurse', () => {
   const lifecycle = readFileSync(join(skillsDir, 'axstack/references/lifecycle.md'), 'utf8').replace(/\s+/g, ' ');
-  expect(lifecycle).toMatch(/prefer[^.]*parallel[^.]*independent[^.]*bounded|prefer[^.]*independent[^.]*parallel[^.]*bounded/i);
-  expect(lifecycle).toMatch(/no redundant workers/i);
+  checkRule(sentences(lifecycle).join('. '), (text) => requires(text,
+    /dispatch/i, /useful independent ready work/i, /before waiting/i),
+  'Dispatch useful independent ready work before waiting.',
+  [[/before waiting/i, 'after waiting'], [/dispatch/i, 'skip']]);
+  expect(requires(lifecycle, /fanout/i, /dependency- and capacity-driven/i, /host\/spending limits/i)).toBe(true);
+  expect(lifecycle).toMatch(/(?:no|without) redundant workers/i);
   for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(text.includes('axstack-owner'), `${name}: must name axstack-owner materialization`).toBeTruthy();

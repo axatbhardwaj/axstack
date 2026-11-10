@@ -63,9 +63,13 @@ rule('implementation uses shared publication rule', implement,
   'After verified readback of each own PR publication, the driver starts or joins the watch under Autopilot.',
   [/\b(?:arms?|starts?)\b/i, 'abandons']);
 rule('repairs stay with the author', runtime,
-  [/driver/i, /base updates/i, /review feedback/i, /repair/i, /\b(?:routes?|sends?|assigns?|passes?)\b/i],
-  "The driver sends review feedback and base updates to the PR's author for repair.",
-  [/\bto (?:the )?PR.s author\b/i, "away from the PR's author"]);
+  [/driver/i, /base updates/i, /integration author/i, /diagnosis/i, /\b(?:routes?|sends?|assigns?|passes?)\b/i],
+  'The driver routes base updates to the integration author for diagnosis.',
+  [/\bto the integration author\b/i, 'away from the integration author']);
+rule('package repairs retain their exclusive owner', runtime,
+  [/route/i, /package-local repairs/i, /exclusive package author/i],
+  'Route package-local repairs to their exclusive package author.',
+  [/exclusive package author/i, 'any available writer']);
 rule('adopted repairs start a new author attempt', runtime,
   [/adopted PR/i, /author/i, /run did not launch/i, /new author attempt/i, /adoption rules/i],
   'For an adopted PR whose author this run did not launch, repairs follow the adoption rules with a new author attempt.',

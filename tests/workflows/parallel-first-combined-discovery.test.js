@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { publicDocPaths, relativeLinks } from './public-docs.js';
 import { isVendored } from './vendored-paths.js';
 import { sentences } from './prose-contract.js';
 
-const root = `${import.meta.dir}/../..`;
+const root = realpathSync(`${import.meta.dir}/../..`);
 const reference = 'skills/axstack/references/parallel-first.md';
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
 const skillFiles = readdirSync(`${root}/skills`, { recursive: true })

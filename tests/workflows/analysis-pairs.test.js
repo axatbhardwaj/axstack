@@ -76,7 +76,10 @@ test('analysis pairs: improve dispatches code research with its Sol pair', () =>
   expect(improve).toMatch(/driver reconciles[^.]*per claim[^.]*never averages/i);
   expect(improve).toMatch(/intentionally absent[^.]*base seat alone/i);
   expect(improve).toMatch(/configured optional[^.]*fails to launch[^.]*fenced/i);
-  expect(improve).toMatch(/mixed fan-out[^.]*Codex[^.]*Claude[^.]*hold/i);
+  const terms = [/same-brief corroboration/i, /retain/i, /mixed/i, /Codex/i, /Claude/i, /hold/i];
+  checkRule(sentences(improve).join('. '), (text) => requires(text, ...terms),
+    'For same-brief corroboration retain mixed Codex and Claude seats or hold the question.',
+    [[/retain/i, 'discard'], [/hold/i, 'continue']], terms);
 });
 
 test('primary auditor roster follows each preset policy', () => {

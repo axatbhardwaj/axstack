@@ -6,7 +6,8 @@ const root = `${import.meta.dir}/../..`;
 const shared = 'skills/axstack/references/parallel-first.md';
 const roster = 'skills/axstack/references/role-roster.md';
 const read = (path) => existsSync(`${root}/${path}`)
-  ? readFileSync(`${root}/${path}`, 'utf8').replaceAll('`', '').replace(/\s+/g, ' ') : '';
+  ? readFileSync(`${root}/${path}`, 'utf8').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replaceAll('`', '').replace(/\s+/g, ' ') : '';
 
 // Assertions read the real instruction owners. They check concepts together in
 // an affirmative instruction, then remove/invert/reword that actual instruction
@@ -34,10 +35,13 @@ contract('C2: distinct-brief decomposition has a scoped diversity exemption', sh
     /exempt|exception|without[^.]*divers|no[^.]*divers/i],
   'Distinct-brief decomposition packages are exempt from extra provider diversity.');
 
-contract('C2: author fanout retains independent authored review for every contributor', shared,
-  [/every|all/i, /contribut|writer/i, /independent|cross[- ]provider/i, /review/i,
-    /require|must|retain|preserv|remain/i],
-  'Every contributing writer must retain the applicable independent authored review.');
+contract('C2: author binding retains independent authored review', shared,
+  [/writers/i, /same/i, /supported/i, /binding/i, /independent authored[- ]review/i],
+  'Ordinary writers must use the same supported author binding for independent authored-review.');
+
+contract('C2: every contributor satisfies the applicable review pairing', shared,
+  [/every|all/i, /contribut/i, /must|require/i, /satisf/i, /review pairing/i],
+  'Every contributor must satisfy the applicable review pairing.');
 
 // These checks join the exemption with its opposite boundary. A broad exemption
 // that also erased corroboration floors must fail even if package fanout works.
@@ -88,7 +92,7 @@ contract('C4: unaffected packages continue while affected dependencies hold', sh
   'Unrelated packages must continue while affected consumers hold.');
 
 contract('C4: package-local repairs return to their exclusive author', shared,
-  [/package[- ]local/i, /repair|fix/i, /return|route/i, /(?:exclusive|own|same) author/i],
+  [/package[- ]local/i, /repair|fix/i, /return|route/i, /(?:exclusive|own|same|package) author/i],
   'Return package-local fixes to their exclusive author.');
 
 contract('C4: integration-only repairs belong to the integration author', shared,

@@ -207,9 +207,14 @@ test('UI verification: visual QA keeps explainer text and fidelity review', () =
   expect(qa).toMatch(/The explainer reviewer checks text and source fidelity/i);
 });
 
-test('UI verification: the PR writer remains the sole writer', () => {
-  const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
-  expect(rule).toMatch(/The PR writer remains the sole writer/i);
+test('UI verification: package and integration candidates retain exclusive writers; verifiers remain read-only', () => {
+  const source = sentences(readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8')).join('. ');
+  const ownership = [/each/i, /package/i, /integration/i, /candidate/i, /exclusive writer/i, /retain/i];
+  checkRule(source, (text) => requires(text, ...ownership),
+    'Each package or integration candidate must retain its exclusive writer.',
+    [[/exclusive writer/i, 'shared writers'], [/retain/i, 'abandon']], ownership);
+  checkRule(source, (text) => prohibits(text, /never edit/i, /verifiers/i, /candidate source/i),
+    'Verifiers never edit candidate source.', [[/never edit/i, 'always edit']]);
 });
 
 test('UI verification: debug delegates both L0 and L1 browser reproductions', () => {

@@ -32,10 +32,10 @@ rule('scope receipts and unknown holds remain mandatory', small,
   /remain mandatory/i, 'become optional');
 rule('review-depth classification grants no merge clearance', small, [/merge clearance/i],
   'This grants no merge clearance.', /grants no/i, 'grants full', /no/i);
-rule('one isolated writer retains repairs', small,
-  [/one isolated author/i, /sole writer/i, /repairs/i, /same author/i],
-  'Keep one isolated author as sole writer and return repairs to the same author.',
-  /sole writer/i, 'additional writer');
+rule('one writer per candidate retains package-local repairs', small,
+  [/one writer per candidate/i, /package-local repairs/i, /its author/i],
+  'Keep one writer per candidate and return package-local repairs to its author.',
+  /one writer per candidate/i, 'competing writers per candidate');
 rule('workers cannot publish', small, [/workers/i, /push/i],
   'Workers never push.', /never/i, 'always', /never/i);
 rule('review remains cross-provider and mapped', small,

@@ -121,8 +121,8 @@ rule('driver dispositions cannot replace required PASS', 'axstack/references/con
   [/disposition/i, /required diligence PASS/i, /combined Scope: PASS/i],
   'A disposition never substitutes for required diligence PASS or combined Scope: PASS.', /never substitutes/i, 'substitutes', /never substitutes/i);
 rule('implement returns combined findings within the round', 'axstack-implement/SKILL.md',
-  [/combined Scope: FINDINGS/i, /return to the same author/i, /within the review round/i],
-  'Combined Scope: FINDINGS return to the same author within the review round.', /return to the same author/i, 'advance without repair');
+  [/combined Scope: FINDINGS/i, /return to/i, /same package\/integration repair route/i, /within the review round/i],
+  'Combined Scope: FINDINGS return to the same package/integration repair route within the review round.', /return to/i, 'advance without repair');
 rule('review candidate returns combined findings by the same repair route', review,
   [/combined Scope: FINDINGS/i, /same repair route/i],
   'Combined Scope: FINDINGS uses the same repair route.', /same repair route/i, 'approval route');
