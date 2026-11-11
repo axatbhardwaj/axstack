@@ -313,7 +313,7 @@ in saved capabilities. The single-provider presets configure the checker and
 keep X research as an intentional absence. Their
 unavailable adviser and round-2 seat remain explicit same-provider
 `model: null` roles, which do not make installation unready;
-Align and Spec still hold until both Astra and Opus can return independent
+Align and Spec still hold until both Codex and Claude advisers can return independent
 receipts. Every brainstorm runs a light arena across configured families.
 Use judges only for Rung 2 hard-to-reverse choices: round 1 needs Opus; round 2,
 if invoked, needs escalation Fable and Astra; a required seat that is unavailable

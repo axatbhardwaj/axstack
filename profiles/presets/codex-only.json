@@ -3,21 +3,21 @@
   "roles": [
     {
       "id": "axstack-advisor-codex",
-      "name": "Axstack Astra adviser",
+      "name": "Axstack Codex adviser (Astra)",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Astra adviser for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as Opus; reuse only unchanged receipts.",
+      "notes": "Independent Codex adviser (Astra high) for Align, Spec, and unresolved consequential decisions. Receives the same bounded evidence and question as the Claude adviser; reuse only unchanged receipts.",
       "modelClass": "astra"
     },
     {
       "id": "axstack-advisor-claude",
-      "name": "Axstack Opus adviser (unavailable)",
+      "name": "Axstack Claude adviser (unavailable)",
       "provider": "codex",
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Opus adviser intentionally absent in codex-only; the explicit null holds Align and Spec without substitution."
+      "notes": "Claude adviser intentionally absent in codex-only; the explicit null holds Align and Spec without substitution."
     },
     {
       "id": "axstack-owner",

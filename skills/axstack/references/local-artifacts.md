@@ -43,7 +43,7 @@ The selected role ID must equal scope.roleId in dispatch-plan.
 No engineering author, code reviewer, owner or arbitrary role can use this scope.
 
 Brainstorm permits only candidate seats Astra (`axstack-advisor-codex`),
-Opus (`axstack-advisor-claude`), Grok (`axstack-arena-candidate-grok`) and judge
+Fable 5.2 (`axstack-advisor-claude`), Grok (`axstack-arena-candidate-grok`) and judge
 seats Opus (`axstack-arena-judge-opus`), Fable (`axstack-escalation-fable`), Astra
 (`axstack-arena-judge-astra`). All outputs are report-only; never grant
 implementation or spec approval. These seats are excluded from Research,
@@ -89,8 +89,8 @@ The advice workflow permits only existing advised-hold, high-stakes or bounded
 escalation consultations under [Standing contracts](contracts.md). It never
 waives the parent phase's repository, store or tracker prerequisites. Record
 the actual parent phase, qualifying trigger, evidence and question in the brief.
-Ordinary advised holds use Astra/Opus; high-stakes use Astra/Fable; other Fable
-uses require the existing bounded escalation trigger and a fresh session.
+Ordinary advised holds use the Codex/Claude advisers; high-stakes use Astra/Fable;
+other escalation-seat uses require the existing bounded escalation trigger and a fresh session.
 Never relabel arbitrary work as advice. Required seats and missing models hold
 without substitution. The helper checks the role matrix; the driver must verify
 these conditional duties, as with arena rounds.

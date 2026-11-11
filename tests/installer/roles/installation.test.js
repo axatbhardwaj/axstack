@@ -193,7 +193,7 @@ test('an installation without diligence reports its added ID', () => {
   }
 });
 
-test('retired Fable seats migrate to Opus adviser and escalation seat once', () => {
+test('retired Fable seats migrate to Claude adviser and escalation seat once', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const rootDir = makeTempRoot('axstack-fable-migration-');
     const skillsDir = join(rootDir, 'installed');

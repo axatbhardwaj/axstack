@@ -90,7 +90,7 @@ another preset or inventing a route. There is no silent fallback.
 Use `axstack-escalation-fable` only for arena round 2, high-stakes decisions,
 or when two attempts at the same named goal fail a stated acceptance check
 (including debug L2 or a spec decision rejected twice). It also applies when
-Astra and Opus still contradict after one reconciliation with no safe
+the Codex and Claude advisers still contradict after one reconciliation with no safe
 discriminating check. A bare "stuck" claim needs pointers to two failed attempts;
 setup slips and new user requirements do not count. Each use starts a fresh
 session that never reuses an adviser or candidate context. Escalation never

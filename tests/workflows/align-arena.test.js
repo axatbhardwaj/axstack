@@ -94,7 +94,7 @@ test('align arena: judge seats use configured efforts and mirror adviser availab
 test('align arena: scenario corpus covers three families and availability holds', () => {
   const cases = readJson('tests/workflows/align-grilling-scenarios.json').cases;
   const byId = Object.fromEntries(cases.map((item) => [item.id, item]));
-  expect(byId['design-rung-2'].expected.join(' ')).toMatch(/Astra[^.]*Opus[^.]*Grok/i);
+  expect(byId['design-rung-2'].expected.join(' ')).toMatch(/Astra[^.]*Fable 5\.2[^.]*Grok/i);
   expect(byId['arena-grok-unavailable'].expected.join(' ')).toMatch(/Fence[^.]*absent[^.]*continue/i);
   expect(byId['arena-single-provider-hold'].expected.join(' ')).toMatch(/Hold[^.]*single-provider/i);
 });

@@ -32,10 +32,11 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
-- `axstack-advisor-codex`/`axstack-advisor-claude` advise and author candidates;
+- `axstack-advisor-codex` (Astra high in mixed/codex-only) and
+  `axstack-advisor-claude` (Fable 5.2 high in mixed/claude-only) advise and author candidates;
   `axstack-arena-candidate-grok` adds a family.
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
-  Fable starts at high effort in mixed/claude-only.
+  Fable escalation starts at high effort in mixed/claude-only.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
 - `axstack-explainer`: for Explain, the driver authors ordinary inline HTML and

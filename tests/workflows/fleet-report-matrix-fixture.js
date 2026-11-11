@@ -17,13 +17,13 @@ export const reportWorkflows = {
 // Representative configured seats cover every newly supported direct family.
 export const reportSeats = [
   ['align', ['axstack-advisor-codex', 'codex', 'gpt-6-astra', 'reasoningEffort', 'high']],
-  ['align', ['axstack-advisor-claude', 'claudeAgent', 'claude-opus-5-5', 'effort', 'xhigh']],
+  ['align', ['axstack-advisor-claude', 'claudeAgent', 'claude-fable-5-2', 'effort', 'high']],
   ['improve', ['axstack-research-code', 'claudeAgent', 'claude-sonnet-5-5', 'effort', 'high']],
   ['improve', ['axstack-research-code-sol', 'codex', 'gpt-6.1-terra', 'reasoningEffort', 'high']],
   ['improve', ['axstack-ui-verifier', 'codex', 'gpt-6.1-terra', 'reasoningEffort', 'high']],
   ['improve', ['axstack-ui-verifier-sonnet', 'claudeAgent', 'claude-sonnet-5-5', 'effort', 'high']],
   ['advice', ['axstack-advisor-codex', 'codex', 'gpt-6-astra', 'reasoningEffort', 'high']],
-  ['advice', ['axstack-advisor-claude', 'claudeAgent', 'claude-opus-5-5', 'effort', 'xhigh']],
+  ['advice', ['axstack-advisor-claude', 'claudeAgent', 'claude-fable-5-2', 'effort', 'high']],
   ['advice', ['axstack-escalation-fable', 'claudeAgent', 'claude-fable-5-1', 'effort', 'high']],
   ...Object.keys(reportWorkflows).filter((workflow) => workflow !== 'advice').flatMap((workflow) => [
     [workflow, ['axstack-auditor', 'claudeAgent', 'claude-sonnet-5-5', 'effort', 'high']],

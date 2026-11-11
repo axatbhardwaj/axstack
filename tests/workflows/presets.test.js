@@ -50,7 +50,7 @@ const g = (model, effort) => ['grok', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('astra', 'high'),
-    a('opus', 'xhigh'),
+    a('fable', 'high'),
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
@@ -88,7 +88,7 @@ const expected = {
   ],
   'claude-only': [
     a(null, 'high'),
-    a('opus', 'xhigh'),
+    a('fable', 'high'),
     a('opus', 'medium'),
     a('opus', 'medium'),
     a('opus', 'medium'),
@@ -154,7 +154,7 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
   for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     for (const role of roles.filter(({ provider, modelClass }) => provider === 'claude' && modelClass)) {
-      expect(role.notes, `${preset}: ${role.id}`).toMatch(/T3 (?:resolves Claude classes|uses the exact claude-haiku-5-5 pin) from saved capabilities; a Claude rejection holds/);
+      expect(role.notes, `${preset}: ${role.id}`).toMatch(/T3 (?:resolves Claude classes|uses the exact claude-(?:haiku-5-5|fable-5-2) pin) from saved capabilities; a Claude rejection holds/);
       expect(role.notes).not.toContain('Codex rejection');
     }
   }

@@ -61,6 +61,27 @@ test('capabilities uses an explicit preset pin as given ahead of a class', () =>
 });
 
 for (const preset of ['mixed', 'claude-only']) {
+  test(`capabilities: ${preset} adviser binds Fable 5.2 high without substitution`, () => {
+    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
+    const role = roles.find(({ id }) => id === 'axstack-advisor-claude');
+    expect(role).toMatchObject({ provider: 'claude', modelClass: 'fable',
+      model: 'claude-fable-5-2', thinkingOptionId: 'high' });
+    const data = fresh();
+    const claude = data.providers.find((p) => p.providerInstanceId === 'claudeAgent');
+    claude.models = ['claude-fable-5-1', 'claude-fable-5-2', 'claude-fable-5-3']
+      .map((id) => entry(id, 'effort', ['medium', 'high']));
+    const args = ['--model', role.model, '--class', role.modelClass];
+    const result = resolve(data, args, role.provider, role.thinkingOptionId);
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.output)).toMatchObject({ provider: 'claude',
+      providerInstanceId: 'claudeAgent', model: 'claude-fable-5-2',
+      effortOption: { id: 'effort', value: 'high' } });
+    claude.models.splice(1, 1);
+    held(resolve(data, args, role.provider, role.thinkingOptionId), /missing requested model claude-fable-5-2/i);
+    claude.models.push(entry('claude-fable-5-2', 'effort', ['medium']));
+    held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort high/i);
+  });
+
   test(`capabilities: ${preset} codebase mapping binds Haiku 5.5 medium without substitution`, () => {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const data = fresh();

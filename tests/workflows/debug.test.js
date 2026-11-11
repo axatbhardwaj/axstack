@@ -160,7 +160,7 @@ test('debug: scenario corpus carries the twenty spec cases', () => {
     'loop-unbuildable': /list what was tried[\s\S]*no advisers/i,
     'probe-failure-vs-fix-failure': /fix attempts remain 0[\s\S]*L1 is not triggered/i,
     'implementation-slip': /ledger stays at 0/i,
-    'first-fix-failed-fanout': /Astra and Opus independently[\s\S]*untested \(queued\)/i,
+    'first-fix-failed-fanout': /Codex and Claude advisers independently[\s\S]*untested \(queued\)/i,
     'advisers-disagree-ranking': /only hypotheses both advisers refute are dropped[\s\S]*no vote/i,
     'five-hypotheses-four-seats': /fifth as untested \(queued\)/i,
     'zero-investigators': /hold[\s\S]*no substitution[\s\S]*L1 is not satisfied/i,
