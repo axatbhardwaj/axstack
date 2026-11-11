@@ -42,8 +42,8 @@ available or change provider/model/effort/options/runtime authority.
 The selected role ID must equal scope.roleId in dispatch-plan.
 No engineering author, code reviewer, owner or arbitrary role can use this scope.
 
-Brainstorm permits only candidate seats Astra (`axstack-advisor-astra`),
-Opus (`axstack-advisor-opus`), Grok (`axstack-arena-candidate-grok`) and judge
+Brainstorm permits only candidate seats Astra (`axstack-advisor-codex`),
+Fable 5.2 (`axstack-advisor-claude`), Grok (`axstack-arena-candidate-grok`) and judge
 seats Opus (`axstack-arena-judge-opus`), Fable (`axstack-escalation-fable`), Astra
 (`axstack-arena-judge-astra`). All outputs are report-only; never grant
 implementation or spec approval. These seats are excluded from Research,
@@ -80,17 +80,17 @@ a degraded receipt, not evidence of a completed audit.
 | research | Source roles listed above | Both auditors | Cited, bounded research; no engineering |
 | explain, publish | Source and article roles listed above | Both auditors | Exact-byte review; publication still needs authority |
 | brainstorm | Six candidate/judge seats listed above | Both auditors | Independent report-only arena and applicable rounds |
-| align | `axstack-advisor-astra`, `axstack-advisor-opus` | Both auditors | Pre-repository scope advice; stop before execution |
+| align | `axstack-advisor-codex`, `axstack-advisor-claude` | Both auditors | Pre-repository scope advice; stop before execution |
 | improve | `axstack-research-code`, `axstack-research-code-sol`, `axstack-ui-verifier`, `axstack-ui-verifier-sonnet` | Both auditors | Named nonversioned code/UI discovery only; second UI seat only under its dual-run trigger |
 | audit | `axstack-auditor`, `axstack-auditor-sol` | None; terminal audit | Standalone audit of explicit nonrepo evidence; only assigned `audit.md` is writable |
-| advice | `axstack-advisor-astra`, `axstack-advisor-opus`, `axstack-escalation-fable` | None; audit retains the supported parent's workflow | Only eligible existing shared advice; Fable retains its trigger |
+| advice | `axstack-advisor-codex`, `axstack-advisor-claude`, `axstack-escalation-fable` | None; audit retains the supported parent's workflow | Only eligible existing shared advice; Fable retains its trigger |
 
 The advice workflow permits only existing advised-hold, high-stakes or bounded
 escalation consultations under [Standing contracts](contracts.md). It never
 waives the parent phase's repository, store or tracker prerequisites. Record
 the actual parent phase, qualifying trigger, evidence and question in the brief.
-Ordinary advised holds use Astra/Opus; high-stakes use Astra/Fable; other Fable
-uses require the existing bounded escalation trigger and a fresh session.
+Ordinary advised holds use the Codex/Claude advisers; high-stakes use Astra/Fable;
+other escalation-seat uses require the existing bounded escalation trigger and a fresh session.
 Never relabel arbitrary work as advice. Required seats and missing models hold
 without substitution. The helper checks the role matrix; the driver must verify
 these conditional duties, as with arena rounds.

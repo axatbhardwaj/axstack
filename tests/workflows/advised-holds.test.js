@@ -57,8 +57,8 @@ rule('pre-advice gap-closing does not spend the advice-driven action',
   [/\bpre-advice gap-closing\b/i, /\bspends\b.*\bone advice-driven action\b/i],
   'The pre-advice gap-closing never spends the one advice-driven action.', /\bnever\b/i);
 rule('mixed adviser seats are independent and equally briefed',
-  [/\bmixed\b/i, /\baxstack-advisor-astra\b/i, /\baxstack-advisor-opus\b/i, /\bindependently\b/i, /\bsame bounded evidence\b.*\bquestion\b/i],
-  'In mixed consult axstack-advisor-astra and axstack-advisor-opus independently with the same bounded evidence packet and question.');
+  [/\bmixed\b/i, /\baxstack-advisor-codex\b/i, /\baxstack-advisor-claude\b/i, /\bindependently\b/i, /\bsame bounded evidence\b.*\bquestion\b/i],
+  'In mixed consult axstack-advisor-codex and axstack-advisor-claude independently with the same bounded evidence packet and question.');
 rule('independence excludes cross-reading', [/\badvisers\b/i, /\bcross-read\b/i],
   'Advisers never cross-read one another.', /\bnever\b/i);
 rule('adviser packet and question omit the driver pick',
@@ -67,11 +67,11 @@ rule('adviser packet and question omit the driver pick',
 rule('single-provider intentional absence', [/\bsingle-provider\b/i, /\bone configured adviser\b/i, /\bother\b.*\bintentional absence\b/i],
   'Single-provider presets use the one configured adviser and record the other as an intentional absence.');
 test('4.2: high stakes overrides ordinary seats without inventing a single-provider mapping', () => {
-  const concepts = [/\bhigh-stakes holds\b/i, /\baxstack-advisor-astra\b/i, /\baxstack-escalation-fable\b/i, /\bplain AGREE\b/i, /\bbounded checks\b/i, /\bordinary seats\b/i];
+  const concepts = [/\bhigh-stakes holds\b/i, /\baxstack-advisor-codex\b/i, /\baxstack-escalation-fable\b/i, /\bplain AGREE\b/i, /\bbounded checks\b/i, /\bordinary seats\b/i];
   const accepts = (text) => sentences(text).some((unit) =>
     requires(unit, ...concepts) && !/\bsingle-provider\b/i.test(unit));
   checkRule(advised(), accepts,
-    'For high-stakes holds, use axstack-advisor-astra and axstack-escalation-fable plain AGREE after bounded checks instead of the ordinary seats.',
+    'For high-stakes holds, use axstack-advisor-codex and axstack-escalation-fable plain AGREE after bounded checks instead of the ordinary seats.',
     [[/^/, 'Do not '], [/\bhigh-stakes holds\b/i, 'high-stakes holds including single-provider'],
       ...concepts.map((concept) => [new RegExp(concept.source, 'gi'), 'other$&wise'])], concepts);
 });

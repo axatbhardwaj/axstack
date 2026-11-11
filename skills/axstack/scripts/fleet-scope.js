@@ -3,7 +3,7 @@ const sourceRoles = ['axstack-research-requirements', 'axstack-research-code', '
   'axstack-explore-execution', 'axstack-explore-execution-sol',
   'axstack-research-web', 'axstack-research-web-sol', 'axstack-research-x', 'axstack-diligence'];
 const articleRoles = ['axstack-explainer', 'axstack-explainer-review', 'axstack-ui-verifier', 'axstack-ui-verifier-sonnet'];
-const brainstormRoles = ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok',
+const brainstormRoles = ['axstack-advisor-codex', 'axstack-advisor-claude', 'axstack-arena-candidate-grok',
   'axstack-arena-judge-opus', 'axstack-escalation-fable', 'axstack-arena-judge-astra'];
 const auditRoles = ['axstack-auditor', 'axstack-auditor-sol'];
 const workflowRoles = {
@@ -11,11 +11,11 @@ const workflowRoles = {
   explain: [...sourceRoles, ...articleRoles, ...auditRoles],
   publish: [...sourceRoles, ...articleRoles, ...auditRoles],
   brainstorm: [...brainstormRoles, ...auditRoles],
-  align: ['axstack-advisor-astra', 'axstack-advisor-opus', ...auditRoles],
+  align: ['axstack-advisor-codex', 'axstack-advisor-claude', ...auditRoles],
   improve: ['axstack-research-code', 'axstack-research-code-sol', 'axstack-ui-verifier',
     'axstack-ui-verifier-sonnet', ...auditRoles],
   audit: auditRoles,
-  advice: ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-escalation-fable'],
+  advice: ['axstack-advisor-codex', 'axstack-advisor-claude', 'axstack-escalation-fable'],
 };
 export const isArtifact = (request) => request?.scope?.kind === 'local-artifact';
 const path = (value) => typeof value === 'string' && value.startsWith('/') && value !== '/'

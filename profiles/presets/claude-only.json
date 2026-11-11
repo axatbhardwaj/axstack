@@ -2,22 +2,23 @@
   "version": 1,
   "roles": [
     {
-      "id": "axstack-advisor-astra",
-      "name": "Axstack Astra adviser (unavailable)",
+      "id": "axstack-advisor-codex",
+      "name": "Axstack Codex adviser (Astra) (unavailable)",
       "provider": "claude",
       "model": null,
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Required independent Astra adviser for Align, Spec, and unresolved consequential decisions; unavailable in claude-only. The explicit null holds Align and Spec without provider substitution."
+      "notes": "Required independent Codex adviser (Astra high) for Align, Spec, and unresolved consequential decisions; unavailable in claude-only. The explicit null holds Align and Spec without provider substitution."
     },
     {
-      "id": "axstack-advisor-opus",
-      "name": "Axstack Opus adviser",
+      "id": "axstack-advisor-claude",
+      "name": "Axstack Claude adviser (Fable 5.2)",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "xhigh",
-      "notes": "Independent Opus adviser for Align, Spec, and debug L1; authors the Claude arena candidate. Same bounded evidence and question as Astra; reuse only unchanged receipts. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
-      "modelClass": "opus"
+      "thinkingOptionId": "high",
+      "notes": "Independent Claude adviser (Fable 5.2 high) for Align, Spec, and debug L1; authors the Claude arena candidate. Same bounded evidence and question as the Codex adviser; reuse only unchanged receipts. T3 uses the exact claude-fable-5-2 pin from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "modelClass": "fable",
+      "model": "claude-fable-5-2"
     },
     {
       "id": "axstack-owner",

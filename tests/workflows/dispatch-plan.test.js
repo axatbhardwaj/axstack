@@ -6,6 +6,22 @@ import { configuration, invoke, planArgs, setup } from './dispatch-plan/fixtures
 const script = `${import.meta.dir}/../../skills/axstack/scripts/dispatch-plan.js`;
 const resolver = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.js`;
 
+for (const preset of ['mixed', 'claude-only']) {
+  test(`${preset} preset adviser role plans the exact Fable 5.2 target`, () => {
+    const f = setup();
+    const bundled = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
+    f.roles.roles = bundled.roles;
+    const claude = f.capabilities.providers.find((p) => p.providerInstanceId === 'claudeAgent');
+    claude.models = ['claude-fable-5-2', 'claude-fable-5-3'].map((id) => ({ id,
+      options: [{ id: 'effort', options: [{ id: 'high' }] }] }));
+    const result = f.run('axstack-advisor-claude', 'task');
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.output)).toMatchObject({ runtimeMode: 'full-access',
+      target: { providerInstanceId: 'claudeAgent', model: 'claude-fable-5-2',
+        options: [{ id: 'effort', value: 'high' }] } });
+  });
+}
+
 test('catalog siblings cannot change the fixed Codex dispatch binding', () => {
   const f = setup();
   expect(f.capabilities.providers.some((p) => p.providerInstanceId === 'codexAlt')).toBe(true);

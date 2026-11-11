@@ -9,8 +9,8 @@ const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
 const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
-  'axstack-advisor-astra',
-  'axstack-advisor-opus',
+  'axstack-advisor-codex',
+  'axstack-advisor-claude',
   'axstack-owner',
   'axstack-author',
   'axstack-reviewer-primary',
@@ -50,7 +50,7 @@ const g = (model, effort) => ['grok', model, 'full-access', effort];
 const expected = {
   mixed: [
     c('astra', 'high'),
-    a('opus', 'xhigh'),
+    a('fable', 'high'),
     c('sol', 'high'), c('sol', 'high'),
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
@@ -88,7 +88,7 @@ const expected = {
   ],
   'claude-only': [
     a(null, 'high'),
-    a('opus', 'xhigh'),
+    a('fable', 'high'),
     a('opus', 'medium'),
     a('opus', 'medium'),
     a('opus', 'medium'),
@@ -154,7 +154,7 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
   for (const preset of presetNames) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     for (const role of roles.filter(({ provider, modelClass }) => provider === 'claude' && modelClass)) {
-      expect(role.notes, `${preset}: ${role.id}`).toMatch(/T3 (?:resolves Claude classes|uses the exact claude-haiku-5-5 pin) from saved capabilities; a Claude rejection holds/);
+      expect(role.notes, `${preset}: ${role.id}`).toMatch(/T3 (?:resolves Claude classes|uses the exact claude-(?:haiku-5-5|fable-5-2) pin) from saved capabilities; a Claude rejection holds/);
       expect(role.notes).not.toContain('Codex rejection');
     }
   }
@@ -289,8 +289,8 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
     const unavailableId = preset === 'codex-only'
-      ? 'axstack-advisor-opus'
-      : 'axstack-advisor-astra';
+      ? 'axstack-advisor-claude'
+      : 'axstack-advisor-codex';
     expect(profiles.find(({ id }) => id === unavailableId)?.model).toBeNull();
   }
   for (const preset of presetNames) {

@@ -13,7 +13,7 @@ const rules = [
       /never.*waives.*parent.*repository.*store.*tracker/i],
     phrase: 'permits only', inverted: 'permits arbitrary advice beyond', equivalent: 'allows only' },
   { name: 'Brainstorm is a separate report-only role scope',
-    tests: [/brainstorm (?:permits only|allows only)/i, /candidate.*astra.*opus.*grok/i,
+    tests: [/brainstorm (?:permits only|allows only)/i, /candidate.*astra.*fable 5\.2.*grok/i,
       /judge.*opus.*fable.*astra/i, /report-only/i, /never.*implementation.*spec approval/i],
     phrase: 'permits only', inverted: 'permits arbitrary roles alongside', equivalent: 'allows only' },
   { name: 'Brainstorm independence and conditional judges remain procedural',

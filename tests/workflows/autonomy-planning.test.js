@@ -74,8 +74,8 @@ for (const name of ['axstack-align', 'axstack-spec']) {
 
 const checkpoint = () => read('axstack-spec').split('4. **')[1]?.split('5. **')[0] ?? '';
 rule('Spec checkpoint requires plain AGREE from both high-stakes seats', checkpoint,
-  [/high.stakes/i, /axstack-advisor-astra/i, /axstack-escalation-fable/i, /plain AGREE/i],
-  'High-stakes decisions need axstack-advisor-astra and axstack-escalation-fable to return plain AGREE.',
+  [/high.stakes/i, /axstack-advisor-codex/i, /axstack-escalation-fable/i, /plain AGREE/i],
+  'High-stakes decisions need axstack-advisor-codex and axstack-escalation-fable to return plain AGREE.',
   [[/\b(?:require|need)\b/i, 'waive'], [/\band\b/i, 'or']]);
 rule('Spec checkpoint starts each Fable use in a fresh session', checkpoint,
   [/each|every/i, /use/i, /axstack-escalation-fable/i, /fresh session|new session/i],

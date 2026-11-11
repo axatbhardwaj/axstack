@@ -61,7 +61,7 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    For those consequential decisions and disagreements and the required draft
    rounds below, load
    [T3 runtime](../axstack/references/t3-runtime.md) before dispatching the
-   configured `axstack-advisor-astra` and `axstack-advisor-opus` independently,
+   configured `axstack-advisor-codex` and `axstack-advisor-claude` independently,
    without cross-reading, with the same bounded evidence and question. The
    driver synthesizes disagreements. Cache both receipts with the draft and
    reuse unchanged receipts only while their evidence, scope, and question
@@ -94,7 +94,7 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    An unavailable adviser seat holds the affected phase.
 4. **Obtain the specification checkpoint.** The driver owns the draft and the
    user approves it; adviser input cannot grant approval. High-stakes decisions
-   require `axstack-advisor-astra` and `axstack-escalation-fable` to return
+   require `axstack-advisor-codex` and `axstack-escalation-fable` to return
    plain AGREE. Each use of `axstack-escalation-fable` must start a fresh session.
    Reuse the Fable plain-AGREE receipt only while the reviewed meaning holds under step 3.
    If the reviewed meaning changes, a fresh Fable session must review the revised result.

@@ -71,8 +71,8 @@ expanding authority to fill it.
 Use actual records, never memory:
 
 - the approved spec, or the accepted peer, research, or maintenance scope;
-- the decision log and configured `axstack-advisor-astra` and
-  `axstack-advisor-opus` receipts and fresh `axstack-escalation-fable`
+- the decision log and configured `axstack-advisor-codex` and
+  `axstack-advisor-claude` receipts and fresh `axstack-escalation-fable`
   receipts when triggered;
 - exact git revisions where applicable; owned SHA-256 snapshots for nonrepo evidence;
 - test and review evidence; and
@@ -100,7 +100,7 @@ counts with denominators plus the evidence behind the count:
 - Configured adviser coverage across Align, Spec creation, Spec revision,
   solution design, and unresolved consequential decisions, including
   independent same-question receipts and disagreement synthesis. Measure
-  Astra/Opus routine coverage and Astra/Fable high-stakes plain AGREE coverage
+  Codex/Claude adviser routine coverage and Astra/Fable high-stakes plain AGREE coverage
   over eligible uses; record escalation triggers, evidence pointers, and whether
   the outcome changed.
 - Debug evidence where `axstack-debug` ran: rung reached, loop command, fix

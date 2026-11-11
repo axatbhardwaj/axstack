@@ -127,11 +127,11 @@ under `profiles/presets/` each contain exactly
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
 
-| Preset | Author | Ordered peer reviewers | Astra / Opus advisers | Auditor |
+| Preset | Author | Ordered peer reviewers | Codex / Claude advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Opus medium | Astra high / Opus xhigh | Sonnet high + Sol high |
+| `mixed` | Sol high | Sol high; Opus medium | Astra high / Fable 5.2 high | Sonnet high + Sol high |
 | `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
-| `claude-only` | Opus medium | Opus medium; Sonnet medium | unavailable / Opus xhigh | Sonnet medium (Sol absent) |
+| `claude-only` | Opus medium | Opus medium; Sonnet medium | unavailable / Fable 5.2 high | Sonnet medium (Sol absent) |
 
 In `mixed` and `claude-only`, `axstack-research-requirements`,
 `axstack-research-code`, `axstack-research-web`, and `axstack-explore-execution`
@@ -157,8 +157,9 @@ keeps delegated authorship; the reviewer covers every Explain visual. The existi
 full-access mode; its read-only browser verification duties stay unchanged.
 An unavailable model or effort holds without substitution.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at medium effort.
-Fable escalation starts at high in mixed/claude-only; the Opus adviser and arena
-judge retain xhigh.
+The Claude adviser `axstack-advisor-claude` pins `claude-fable-5-2` with class
+`fable` at high effort in mixed/claude-only; missing that ID or high effort holds
+without substitution. Fable escalation starts at high in mixed/claude-only; the Opus arena judge retains xhigh.
 The `-sol` research-code and explore-execution seats use Terra high in `mixed`
 and Sol high in `codex-only`; the auditor pair stays Sol high in both.
 `claude-only` records each as intentionally absent. Their stable role IDs remain
@@ -252,12 +253,12 @@ for explicit ownership transfer.
 ## Phases
 
 - `axstack-align` maps facts and dependencies, asks prioritized questions, and
-  consults Astra and Opus independently with the same bounded evidence and
+  consults the Codex and Claude advisers independently with the same bounded evidence and
   question. It synthesizes disagreements and reuses unchanged receipts. For a
   Rung 1 or 2 design question it loads `axstack-brainstorm` inline and reuses
   its receipt instead of consulting twice; Align owns the interview.
 - `axstack-brainstorm` validates an approach standalone or inline in the driver,
-  report-only. Every invocation compares independent Astra, Opus and Grok
+  report-only. Every invocation compares independent Astra, Fable 5.2 and Grok
   candidates, including premise and smallest-change/do-nothing
   checks. The driver scores, picks and grafts; Rung 1 uses no judges. At Rung 2,
   `axstack-arena-judge-opus` judges round 1; disagreement on the base or caller
