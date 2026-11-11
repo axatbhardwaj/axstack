@@ -180,6 +180,7 @@ test('CLI reads the adjacent compact block as its single template source', () =>
   mkdirSync(`${packageDir}/scripts`, { recursive: true });
   mkdirSync(`${packageDir}/references`);
   writeFileSync(`${packageDir}/scripts/run-init.js`, readFileSync(script));
+  writeFileSync(`${packageDir}/scripts/git-argv.js`, readFileSync(`${import.meta.dir}/../../skills/axstack/scripts/git-argv.js`));
   const source = readFileSync(reference, 'utf8').replace('Goal: <bounded task goal>', 'Goal: fixture template revision');
   writeFileSync(`${packageDir}/references/run-record.md`, source);
   const result = Bun.spawnSync([process.execPath, `${packageDir}/scripts/run-init.js`, '--slug', 'source', '--date', '20261008'], {

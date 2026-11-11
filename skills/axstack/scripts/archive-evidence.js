@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { gitArgv } from './git-argv.js';
 import {
   chmod,
   lstat,
@@ -281,7 +282,7 @@ async function verifyRetirementArchive(archiveRoot, archiveDir, identity, files,
 }
 
 function gitOutput(sourceRoot, args) {
-  const result = Bun.spawnSync(['git', '-C', sourceRoot, ...args], { stdout: 'pipe', stderr: 'pipe' });
+  const result = Bun.spawnSync(gitArgv('-C', sourceRoot, ...args), { stdout: 'pipe', stderr: 'pipe' });
   if (result.exitCode !== 0) {
     fail(`git ${args.join(' ')} failed: ${result.stderr.toString().trim() || `exit ${result.exitCode}`}`);
   }

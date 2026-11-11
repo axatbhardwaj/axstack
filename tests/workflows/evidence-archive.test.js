@@ -171,6 +171,7 @@ test('installed skill layout runs without repository source files', () => {
   const installedScript = join(f.root, 'installed', 'axstack', 'scripts', 'archive-evidence.js');
   mkdirSync(join(f.root, 'installed', 'axstack', 'scripts'), { recursive: true });
   copyFileSync(SCRIPT, installedScript);
+  copyFileSync(join(import.meta.dir, '../../skills/axstack/scripts/git-argv.js'), join(installedScript, '../git-argv.js'));
 
   const receipt = runArchive(f, [], { script: installedScript });
 
@@ -383,6 +384,7 @@ test('installed helper retires the observed seven-file manifest set without a sh
   const installedScript = join(f.root, 'installed', 'axstack', 'scripts', 'archive-evidence.js');
   mkdirSync(join(f.root, 'installed', 'axstack', 'scripts'), { recursive: true });
   copyFileSync(SCRIPT, installedScript);
+  copyFileSync(join(import.meta.dir, '../../skills/axstack/scripts/git-argv.js'), join(installedScript, '../git-argv.js'));
   const archive = runArchive(f, [], { files, head, script: installedScript });
 
   const receipt = runArchive(f, [
@@ -440,10 +442,10 @@ test('retirement detects a same-byte source replacement between preflight and un
   const wrapper = join(wrapperDir, 'git');
   mkdirSync(wrapperDir);
   writeFileSync(wrapper, `#!/bin/sh
-if [ "$3" = status ]; then
+case " $* " in *" status "*)
   cp "$RACE_SOURCE" "$RACE_SOURCE.swap"
   mv "$RACE_SOURCE.swap" "$RACE_SOURCE"
-fi
+;; esac
 exec "${Bun.which('git')}" "$@"
 `);
   chmodSync(wrapper, 0o755);

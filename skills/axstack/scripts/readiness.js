@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { gitArgv } from './git-argv.js';
 import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
 import { executeDeclared } from './readiness-run.js';
 
@@ -6,7 +7,7 @@ const scriptVersion = '1.1.0';
 const criteriaVersion = 1;
 
 function gitOutput(repo, args, stdin = 'ignore') {
-  const argv = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false', '-C', repo, ...args];
+  const argv = gitArgv('-C', repo, ...args);
   const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim());
   return result.stdout;
