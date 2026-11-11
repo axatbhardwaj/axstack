@@ -85,6 +85,7 @@ test article; reader-side access requires the authorized AC23 end-to-end run.
 
 Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
 `delivery`, `design`, `aurora`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+Architecture/system-map requests additionally use `architecture-diagram.md`.
 After base-revision Launch and Doctor, the authored reviewer runs the declared
 workflow checks above plus the full Explain boundary below at the final head.
 
@@ -114,6 +115,18 @@ actionable citation/fact finding, and rejects inherited blocking repair caps acr
 Explain, whiteboard, Publish and preset reviewer notes. Its semantic keepers
 reject removal/inversion and accept equivalent rewording; these remain instruction
 checks rather than proof of live agent compliance.
+`explain-architecture.test.js` checks the architecture route, ordered driver
+bounds/scout grounding/conditional research/reconciled author brief, private
+source map, one specialist writer and same-author repairs, full-claim exact-byte
+review every round, actual author/reviewer provider independence, driver preview
+design review, reviewed-byte delivery and unavailable-seat/single-provider holds.
+Each rule rejects removal/inversion and accepts equivalent rewording in memory.
+The bundle link check discovers the new reference without a fixed inventory.
+In an authorized live architecture case, record unchanged-identity scout reuse
+or fresh grounding, the research need/skip reason, actual author/reviewer session
+provenance, preview hashes and full review verdicts at the delivered artifact hash.
+Exercise unavailable-seat and single-provider controls without substituting seats.
+Unrun live cases remain unverified; offline contracts do not prove orchestration.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact
 bytes on its own isolated host-loopback instance and checks 728px dark/360px

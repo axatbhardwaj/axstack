@@ -94,6 +94,8 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 Explanations default to checked inline T3 pages above a short reply.
 Use Anatomy only on an explicit isometric or physical-object figure request.
 Every Explain visual is authored and independently reviewed; plain prose stays proportional.
+[Architecture diagrams](skills/axstack-explain/references/architecture-diagram.md) add scout grounding,
+conditional research, specialist authorship and review by a different provider than the actual author.
 
 ## How work stays controlled
 

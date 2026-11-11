@@ -43,6 +43,11 @@ Direct routes need no spec ceremony:
   is optional for these and retains other visual authorship, including Anatomy.
   Every visual is independently reviewed by `axstack-explainer-review`;
   interactive pages receive a verifier pass.
+  [Architecture and system-map diagrams](../skills/axstack-explain/references/architecture-diagram.md)
+  require scout grounding, research when external facts are needed, delegated
+  `axstack-explainer` authorship, and exact-byte review from a different provider
+  than the actual author before the driver renders. Single-provider presets hold
+  for a user routing choice; ordinary diagrams keep their existing path.
   Whole-work understanding and defense covers high-level flow, decisions,
   data/state, misbehaviour at trust boundaries and visible failure, with open
   evidence gaps. Narrow questions stay proportional.
