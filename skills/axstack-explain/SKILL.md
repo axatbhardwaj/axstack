@@ -86,6 +86,7 @@ Choose the best visual for the concept: flowchart, sequence, state, architecture
 map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
 Follow [Fidelity](references/fidelity.md) for every visual.
 For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
+For architecture and system-map diagram requests, follow [Architecture diagrams](references/architecture-diagram.md).
 The driver authors ordinary inline HTML and chat Mermaid by default.
 Use `axstack-explainer` as an optional specialist author with a bounded evidence
 brief when useful. Keep one writer per visual, including specialist delegation;
