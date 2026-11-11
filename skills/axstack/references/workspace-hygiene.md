@@ -15,6 +15,14 @@ acts as its lane's driver; read-only observers only report leftovers. Uncertain
 ownership, liveness or evidence holds only the affected resource.
 Record each decision and native readback in the private run record.
 
+## Shared Git metadata
+
+Workers never write the repository's shared Git metadata (`.git/config`,
+`.git/hooks`, `.git/info`, or worktree git files).
+Use per-command `-c` overrides instead.
+Driver Git commands in a worktree a worker has written must pass
+`-c core.hooksPath=/dev/null -c core.fsmonitor=false`.
+
 ## Safe deletion
 
 Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { gitArgv } from './git-argv.js';
 // Read only the index. No hooks, configuration writes or working-tree reads.
 import { readFileSync } from 'node:fs';
 
@@ -6,7 +7,7 @@ const ignoredPath = /(^|\/)(?:[^/]*\.lockb?|package-lock\.json|pnpm-lock\.yaml|y
 const asset = /\.(?:svg|png|jpe?g|gif|webp|avif|ico|bmp|tiff?|pdf|woff2?|ttf|otf|eot|mp[34]|wav|ogg|flac|webm|mov|avi|zip|gz|bz2|xz|7z|rar|tar|exe|dll|so|dylib|wasm|bin|class|jar|pyc|sqlite3?|db)$/i;
 let root = process.cwd();
 function git(...args) {
-  const result = Bun.spawnSync(['git', '--literal-pathspecs', ...args], { cwd: root });
+  const result = Bun.spawnSync(gitArgv('--literal-pathspecs', ...args), { cwd: root });
   if (result.exitCode !== 0) throw Error(result.stderr.toString().trim());
   return result.stdout.toString();
 }
