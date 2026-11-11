@@ -159,7 +159,7 @@ An unavailable model or effort holds without substitution.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at medium effort.
 The Claude adviser `axstack-advisor-claude` pins `claude-fable-5-2` with class
 `fable` at high effort in mixed/claude-only; missing that ID or high effort holds
-without substitution. Fable escalation starts at high; the Opus arena judge retains xhigh.
+without substitution. Fable escalation starts at high in mixed/claude-only; the Opus arena judge retains xhigh.
 The `-sol` research-code and explore-execution seats use Terra high in `mixed`
 and Sol high in `codex-only`; the auditor pair stays Sol high in both.
 `claude-only` records each as intentionally absent. Their stable role IDs remain

@@ -56,7 +56,7 @@ A bottom-up `gh stack` of two PRs:
    - **Improve:** uses the same vocabulary and red flags, and returns candidates in sketch form.
 
 6. **All-family design arena (PR B).**
-   - Align's arena, for Rung 2 designs only, fans out one candidate per configured family, each authored independently without cross-reading from the same brief: `axstack-advisor-codex` (Codex), `axstack-advisor-fable` (Claude), and new `axstack-arena-candidate-grok` (Grok) and `axstack-arena-candidate-antigravity` (Antigravity/Gemini).
+   - Align's arena, for Rung 2 designs only, fans out one candidate per configured family, each authored independently without cross-reading from the same brief: `axstack-advisor-astra` (Codex), `axstack-advisor-fable` (Claude), and new `axstack-arena-candidate-grok` (Grok) and `axstack-arena-candidate-antigravity` (Antigravity/Gemini).
    - The judges stay `axstack-arena-judge-astra` and `axstack-arena-judge-fable`, and score anonymized, relabeled candidates against the rubric criteria from the reference. The driver picks per the existing arena procedure, and the user decides.
    - Non-Rung-2 design questions keep the existing two-adviser critique.
    - **Seat availability:** no new exception. Every candidate and judge seat follows the existing contract (`contracts.md` Model discipline, `orca-runtime.md` launch reconciliation). An unavailable seat, meaning an Orca launch refusal or a failed worker receipt, pauses that question and is recorded. The user decides whether to proceed without it. An unsettled or uncertain dispatch is reconciled natively, never treated as absent. Align's hold sentence widens from "either adviser or judge seat" to any configured candidate or judge seat.
