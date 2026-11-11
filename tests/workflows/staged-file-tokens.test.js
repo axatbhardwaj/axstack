@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-staged-file-tokens.js`;
 const large = 'authored content\n'.repeat(1500); // 25,500 bytes.
@@ -223,4 +223,16 @@ test('unmerged index entries are errors even for excluded paths', () => {
   const check = f.run();
   expect(check.exitCode).not.toBe(0);
   expect(check.stderr.toString()).toMatch(/unmerged/i);
+});
+
+test('staged-file measurement never executes a repository-local fsmonitor', () => {
+  const f = fixture();
+  f.stage('source.ts', 'small staged source');
+  const monitor = `${f.cwd}/fsmonitor`;
+  writeFileSync(monitor, `#!/bin/sh\nprintf triggered > "$0.sentinel"\nprintf '\\0'\n`);
+  chmodSync(monitor, 0o700);
+  appendFileSync(`${f.cwd}/.git/config`, `\n[core]\n\tfsmonitor = "${monitor}"\n`);
+
+  expectSilent(f.run());
+  expect(existsSync(`${monitor}.sentinel`)).toBe(false);
 });

@@ -1,3 +1,4 @@
+import { gitArgv } from './git-argv.js';
 import { chmodSync, closeSync, lstatSync, mkdirSync, mkdtempSync, openSync, realpathSync, rmSync, writeFileSync, writeSync } from 'node:fs';
 
 const installs = {
@@ -127,10 +128,9 @@ export async function executeDeclared(repo, revision, paths, criteria, manager, 
       const probe = await run('network-probe', argv, scratch, argv);
       if (probe.exitCode === 0 && !probe.timedOut && !probe.error) result.network = 'isolated';
     }
-    const git = ['git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false'];
-    const clone = await run('clone', [...git, 'clone', '--no-hardlinks', '--no-checkout', '--', realpathSync(repo), cwd], scratch);
+    const clone = await run('clone', gitArgv('clone', '--no-hardlinks', '--no-checkout', '--', realpathSync(repo), cwd), scratch);
     if (clone.exitCode !== 0 || clone.timedOut) throw new Error(`clone failed; see ${clone.logPath}`);
-    const checkout = await run('checkout', [...git, '-C', cwd, 'checkout', '--detach', revision], scratch);
+    const checkout = await run('checkout', gitArgv('-C', cwd, 'checkout', '--detach', revision), scratch);
     if (checkout.exitCode !== 0 || checkout.timedOut) throw new Error(`checkout failed; see ${checkout.logPath}`);
     const install = await run('install', [manager.name, ...installs[manager.name]], cwd);
     if (install.exitCode !== 0 || install.timedOut) {

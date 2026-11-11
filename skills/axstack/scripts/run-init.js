@@ -1,3 +1,4 @@
+import { gitArgv } from './git-argv.js';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 
 const help = `Usage: bun scripts/run-init.js --slug <slug> [--date YYYYMMDD]
@@ -41,7 +42,7 @@ function optionsFrom(argv) {
 }
 
 function git(...args) {
-  const result = Bun.spawnSync(['git', '--no-optional-locks', ...args], { stdout: 'pipe', stderr: 'pipe' });
+  const result = Bun.spawnSync(gitArgv(...args), { stdout: 'pipe', stderr: 'pipe' });
   return result.exitCode === 0 ? result.stdout.toString().trim() : null;
 }
 

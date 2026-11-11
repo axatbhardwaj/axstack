@@ -1,3 +1,4 @@
+import { gitArgv } from './git-argv.js';
 import { existsSync } from 'node:fs';
 
 const lockfiles = ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'];
@@ -41,7 +42,7 @@ function optionsFrom(argv) {
   return options;
 }
 
-const command = (...args) => ['git', '--no-optional-locks', '-c', 'core.attributesFile=/dev/null', ...args];
+const command = (...args) => gitArgv('-c', 'core.attributesFile=/dev/null', ...args);
 function run(argv, input) {
   const result = Bun.spawnSync(argv, { stdin: input === undefined ? 'ignore' : new TextEncoder().encode(input),
     stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GIT_ATTR_NOSYSTEM: '1' } });
