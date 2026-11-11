@@ -58,10 +58,10 @@ Ordinary PR chain with commits of about 200 lines. Each rule gets a prose-contra
    1. The driver closes the gap itself where it can, under the existing rules.
    2. It forms its own assessment.
    3. It consults the preset's configured advisers independently, without cross-reading, with the same bounded evidence packet and question:
-      - `mixed`: `axstack-advisor-astra` and `axstack-advisor-opus`;
+      - `mixed`: `axstack-advisor-codex` and `axstack-advisor-claude`;
       - single-provider presets: the one configured adviser, with the other recorded as an intentional absence.
 3. **Precedence.**
-   - **High stakes.** A hold that involves a high-stakes decision follows the existing high-stakes contract (`axstack-advisor-astra` and `axstack-escalation-fable` plain AGREE) instead of these seats, including the single-provider high-stakes hold.
+   - **High stakes.** A hold that involves a high-stakes decision follows the existing high-stakes contract (`axstack-advisor-codex` and `axstack-escalation-fable` plain AGREE) instead of these seats, including the single-provider high-stakes hold.
      - Only the seats and the handling of disagreement follow that contract: bounded checks first.
      - If Astra and Fable still disagree, the card shows both options with the driver's pick first and marks `high-stakes: no AGREE`.
      - The card lines, wait and authority rules here still apply.
@@ -111,7 +111,7 @@ Ordinary PR chain with commits of about 200 lines. Each rule gets a prose-contra
 1. **Trigger.** A PR's third failing review round. A round fails on reviewer `REQUEST_CHANGES` and/or diligence `FINDINGS`, counted once together as today. The driver steps back instead of holding.
    - Failed checks and post-readiness feedback still increment `repairs`, but do not count as failing review rounds.
 2. **Seats.**
-   - Implement already requires `mixed`, so the step-back always uses both `axstack-advisor-astra` and `axstack-advisor-opus`.
+   - Implement already requires `mixed`, so the step-back always uses both `axstack-advisor-codex` and `axstack-advisor-claude`.
    - An unavailable seat counts as no agreement.
 3. **Adviser brief.** Each adviser gets, independently:
    - the open findings and the author's replies;

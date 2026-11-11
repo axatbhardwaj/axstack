@@ -71,8 +71,8 @@ expanding authority to fill it.
 Use actual records, never memory:
 
 - the approved spec, or the accepted peer, research, or maintenance scope;
-- the decision log and configured `axstack-advisor-astra` and
-  `axstack-advisor-opus` receipts and fresh `axstack-escalation-fable`
+- the decision log and configured `axstack-advisor-codex` and
+  `axstack-advisor-claude` receipts and fresh `axstack-escalation-fable`
   receipts when triggered;
 - exact git revisions where applicable; owned SHA-256 snapshots for nonrepo evidence;
 - test and review evidence; and

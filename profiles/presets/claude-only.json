@@ -2,7 +2,7 @@
   "version": 1,
   "roles": [
     {
-      "id": "axstack-advisor-astra",
+      "id": "axstack-advisor-codex",
       "name": "Axstack Astra adviser (unavailable)",
       "provider": "claude",
       "model": null,
@@ -11,7 +11,7 @@
       "notes": "Required independent Astra adviser for Align, Spec, and unresolved consequential decisions; unavailable in claude-only. The explicit null holds Align and Spec without provider substitution."
     },
     {
-      "id": "axstack-advisor-opus",
+      "id": "axstack-advisor-claude",
       "name": "Axstack Opus adviser",
       "provider": "claude",
       "modeId": "bypassPermissions",

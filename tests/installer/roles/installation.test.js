@@ -199,7 +199,7 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
     const skillsDir = join(rootDir, 'installed');
     const current = JSON.parse(readFileSync(`${root}/profiles/presets/${preset}.json`, 'utf8')).roles;
     const old = current.map((entry) => {
-      if (entry.id === 'axstack-advisor-opus') return { ...entry, id: 'axstack-advisor-fable' };
+      if (entry.id === 'axstack-advisor-claude') return { ...entry, id: 'axstack-advisor-fable' };
       if (entry.id === 'axstack-escalation-fable') return { ...entry, id: 'axstack-arena-judge-fable' };
       return entry;
     });
@@ -209,7 +209,7 @@ test('retired Fable seats migrate to Opus adviser and escalation seat once', () 
     const cli = `${root}/bin/axstack.js`;
     runCli(cli, args(oldBundle), { env: { HOME: rootDir }, expectFail: preset === 'codex-only' });
     const result = runCli(cli, args(newBundle), { env: { HOME: rootDir } });
-    expect(result.out).toContain('added role IDs: axstack-advisor-opus, axstack-escalation-fable');
+    expect(result.out).toContain('added role IDs: axstack-advisor-claude, axstack-escalation-fable');
     expect(result.out).toContain('removed role IDs: axstack-advisor-fable, axstack-arena-judge-fable');
     const installed = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8')).roles;
     expect(installed.map(({ id }) => id)).toEqual(current.map(({ id }) => id));

@@ -97,7 +97,7 @@ close or reject with concrete evidence. Never punt the decision to a third party
 Allow at most five ordinary `REQUEST_CHANGES` per PR, counting bot markers
 on the PR's submitted `CHANGES_REQUESTED` reviews across heads. Do not publish
 a sixth REQUEST_CHANGES before the adviser panel. Instead dispatch
-`axstack-advisor-astra` and `axstack-advisor-opus` independently with the open
+`axstack-advisor-codex` and `axstack-advisor-claude` independently with the open
 blockers, the author's replies, the delta and the code. Advisers have no
 cross-read. Both judge whether the explanation or fix justifies approval.
 Both accept -> APPROVE with one line: advisers accepted the author's explanation.

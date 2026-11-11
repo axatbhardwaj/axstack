@@ -21,12 +21,12 @@ function rule(name, source, concepts, rewording, direction, inverse, prohibition
 
 test('Step-back: eligible failing review replaces the immediate hold with both seats and one extra round', () => {
   const concepts = [/\bany counted failing review round\b/i, /\bleaves rounds at (?:3 or more|least 3)\b/i, /\bwhile step-back: unused\b/i, /\bdriver\b.*\bsteps back\b/i,
-    /\bboth\b.*\baxstack-advisor-astra\b.*\baxstack-advisor-opus\b/i,
+    /\bboth\b.*\baxstack-advisor-codex\b.*\baxstack-advisor-claude\b/i,
     /\bexactly one extra repair round\b/i, /\bround 4\b/i];
   const accepts = (text) => requires(text, ...concepts) && !sentences(text).some((unit) =>
     /\bthird (?:failing )?review round\b.*\brecords? held\b/i.test(unit));
   checkRule(entry.replace(/`/g, '').replace(/\s+/g, ' '), accepts,
-    'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back with both axstack-advisor-astra and axstack-advisor-opus for exactly one extra repair round (round 4).',
+    'On any counted failing review round that leaves rounds at least 3 while step-back: unused, the driver steps back with both axstack-advisor-codex and axstack-advisor-claude for exactly one extra repair round (round 4).',
     [[/\bsteps back\b/i, 'holds without stepping back'], [/$/, '. The third review round records held.']], concepts);
 });
 rule('review and diligence fail together only once', entry,

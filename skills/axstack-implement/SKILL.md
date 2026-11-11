@@ -401,8 +401,8 @@ For each PR:
    as failing review rounds.
    Small-path work first escalates to the full path at review round 3.
    On the full path, on any counted failing review round that leaves `rounds` at 3 or more while
-   `step-back: unused`, the driver steps back with both `axstack-advisor-astra`
-   and `axstack-advisor-opus` to assess exactly one extra repair round (round 4
+   `step-back: unused`, the driver steps back with both `axstack-advisor-codex`
+   and `axstack-advisor-claude` to assess exactly one extra repair round (round 4
    in the normal case).
    Load and follow [Round-3 step-back](references/step-back.md).
    Load and follow [Review-round budgets](../axstack/references/run-record.md#review-round-budgets) before dispatching any repair from the step-back.

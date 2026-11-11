@@ -13,9 +13,9 @@ test('presets: Opus advises and Fable escalates with explicit absence', () => {
     expect(roles.map(({ id }) => id)).toEqual(JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id));
     expect(byId['axstack-advisor-fable']).toBeUndefined();
     expect(byId['axstack-arena-judge-fable']).toBeUndefined();
-    if (preset !== 'claude-only') expect(byId['axstack-advisor-astra'].notes).toContain('question as Opus');
+    if (preset !== 'claude-only') expect(byId['axstack-advisor-codex'].notes).toContain('question as Opus');
     for (const [id, model, effort] of [
-      ['axstack-advisor-opus', 'opus', 'xhigh'],
+      ['axstack-advisor-claude', 'opus', 'xhigh'],
       ['axstack-arena-judge-opus', 'opus', 'xhigh'],
       ['axstack-escalation-fable', 'fable', preset === 'codex-only' ? 'xhigh' : 'high'],
     ]) {
@@ -28,7 +28,7 @@ test('presets: Opus advises and Fable escalates with explicit absence', () => {
 
 test('workflow: escalation is bounded, fresh, and leaves prior holds intact', () => {
   const contracts = prose('skills/axstack/references/contracts.md');
-  expect(contracts).toMatch(/high-stakes[^.]*axstack-advisor-astra[^.]*axstack-escalation-fable[^.]*plain AGREE/i);
+  expect(contracts).toMatch(/high-stakes[^.]*axstack-advisor-codex[^.]*axstack-escalation-fable[^.]*plain AGREE/i);
   expect(contracts).toMatch(/two attempts[^.]*same named goal[^.]*acceptance check/i);
   const trigger = [/\bAstra\b/i, /\bOpus\b/i, /\bone reconciliation\b/i, /\bno safe discriminating check\b/i];
   checkRule(contracts, (text) => prohibits(text, /\bno safe discriminating check\b/i, ...trigger),
@@ -45,8 +45,8 @@ test('workflow: escalation is bounded, fresh, and leaves prior holds intact', ()
   expect(contracts).toMatch(/setup slips[^.]*new user requirements[^.]*do not count/i);
   expect(contracts).toMatch(/fresh session[^.]*never reuses[^.]*adviser[^.]*candidate/i);
   expect(contracts).toMatch(/never resets[^.]*holds[^.]*attempt budgets/i);
-  expect(prose('skills/axstack-debug/SKILL.md')).toMatch(/\| L2 \|[^|]*\| `axstack-advisor-astra` and `axstack-escalation-fable`[^|]*\|/i);
+  expect(prose('skills/axstack-debug/SKILL.md')).toMatch(/\| L2 \|[^|]*\| `axstack-advisor-codex` and `axstack-escalation-fable`[^|]*\|/i);
   expect(prose('skills/axstack-audit/references/record.md')).toMatch(/Decisions:.*escalation trigger.*evidence pointers.*outcome changed/i);
-  expect(prose('skills/axstack-align/SKILL.md')).toContain('`axstack-advisor-opus`');
-  expect(prose('skills/axstack-spec/SKILL.md')).toContain('`axstack-advisor-opus`');
+  expect(prose('skills/axstack-align/SKILL.md')).toContain('`axstack-advisor-claude`');
+  expect(prose('skills/axstack-spec/SKILL.md')).toContain('`axstack-advisor-claude`');
 });

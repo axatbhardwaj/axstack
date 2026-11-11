@@ -35,8 +35,8 @@ test('installed readiness compares role IDs with the selected bundle', () => {
 
 test('single-provider readiness accepts only the intentionally unavailable adviser', () => {
   const roles = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-advisor-codex', 'gpt-6-astra'), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
@@ -155,7 +155,7 @@ test('claude-only intentional-absence allowlist contains exactly the accepted ID
   expect(clause).toBeTruthy();
   const ids = [...clause.matchAll(/'([^']+)'/g)].map((match) => match[1]);
   expect(ids).toEqual([
-    'axstack-advisor-astra', 'axstack-arena-judge-astra',
+    'axstack-advisor-codex', 'axstack-arena-judge-astra',
     'axstack-research-x',
     'axstack-arena-candidate-grok',
     'axstack-auditor-sol', 'axstack-research-code-sol', 'axstack-explore-execution-sol',
@@ -189,8 +189,8 @@ test('arena candidate null models follow their configured family or intentional 
 
 test('claude-only readiness permits the unavailable Astra slot', () => {
   const roles = [
-    { ...role('axstack-advisor-astra', null), provider: 'claude', thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
+    { ...role('axstack-advisor-codex', null), provider: 'claude', thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-claude', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
     { ...role('axstack-author', 'claude-opus-5-5'), provider: 'claude' },
     { ...role('axstack-reviewer-primary', 'claude-opus-5-5'), provider: 'claude' },
     {
@@ -204,8 +204,8 @@ test('claude-only readiness permits the unavailable Astra slot', () => {
 
 test('arena judge seats follow the adviser absence rule per provider preset', () => {
   const codex = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-advisor-codex', 'gpt-6-astra'), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
@@ -219,8 +219,8 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
   ]);
 
   const mixed = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
+    { ...role('axstack-advisor-codex', 'gpt-6-astra'), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-claude', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'claude-opus-5-5'), provider: 'claude', thinkingOptionId: 'high' },
@@ -244,8 +244,8 @@ test('Opus judge is absent only in codex-only readiness', () => {
 
 test('readiness rejects a null model on a non-intentional row such as an investigator seat', () => {
   const roles = [
-    { ...role('axstack-advisor-astra', 'gpt-6-astra'), thinkingOptionId: 'high' },
-    { ...role('axstack-advisor-opus', null), thinkingOptionId: 'xhigh' },
+    { ...role('axstack-advisor-codex', 'gpt-6-astra'), thinkingOptionId: 'high' },
+    { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
     { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },

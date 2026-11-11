@@ -62,7 +62,7 @@ test('debug: L2 preserves both triggers, both architecture seats, and the user c
   const row = read(SKILL).split('\n').find((line) => line.startsWith('| L2 |'));
   expect(row).toMatch(/two failed attempts[^|]*same named goal[^|]*acceptance check/i);
   expect(row).toMatch(/or each fix reveals a new symptom elsewhere/i);
-  expect(row).toMatch(/axstack-advisor-astra[^|]*axstack-escalation-fable[^|]*fresh session/i);
+  expect(row).toMatch(/axstack-advisor-codex[^|]*axstack-escalation-fable[^|]*fresh session/i);
   expect(row).toMatch(/the user decides before any third attempt/i);
   expect(compact(SKILL)).toMatch(/(?:null|unavailable)[^.]*holds L2 without substitution/i);
 });

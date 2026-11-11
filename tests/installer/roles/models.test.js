@@ -57,7 +57,7 @@ test('role rows accept class only, class with matching pin, legacy pin and allow
   const rows = [
     { id: 'axstack-driver', name: 'Driver', provider: 'codex', modelClass: 'sol' },
     { ...role('axstack-monitor', null), modelClass: 'astra' },
-    { ...role('axstack-advisor-opus', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
+    { ...role('axstack-advisor-claude', 'claude-opus-5-5'), provider: 'claude', modelClass: 'opus' },
     { ...role('axstack-research-code', 'gpt-5.6-terra'), thinkingOptionId: 'high' },
     { ...role('axstack-checker', null), provider: 'claude', modelClass: 'sonnet' },
     { ...role('axstack-research-code-sol', null), modelClass: 'terra', thinkingOptionId: 'high' },

@@ -21,7 +21,7 @@ this checkpoint**: it adjusts the mechanics of user-owned D5 ("repair all own
 PRs, no stack rule") by sequencing repair within a stack, and approving this
 revision approves that adjustment. D14 reduces no scope; every own PR remains
 eligible. Adviser receipts are three alignment rounds plus one draft review
-from `axstack-advisor-astra` and `axstack-advisor-fable`, cached in the same
+from `axstack-advisor-codex` and `axstack-advisor-fable`, cached in the same
 run record; both returned AGREE WITH AMENDMENTS on the draft and neither
 escalated. Nothing in the new pair
 is enabled until the acceptance checks in "Acceptance before enabling the

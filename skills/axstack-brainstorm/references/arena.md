@@ -11,7 +11,7 @@ hard-to-reverse choices; they replace the critique round for that question.
    flags as evidence prompts: seeing only opened files, copying the nearest
    example, taking the shortest path that compiles. Treat them as prompts, not defects. Candidates receive only the brief; the rubric is for judging.
 2. **Fan out.** Produce one candidate per configured family independently from the same brief,
-   without cross-reading: `axstack-advisor-astra`, `axstack-advisor-opus`,
+   without cross-reading: `axstack-advisor-codex`, `axstack-advisor-claude`,
    and `axstack-arena-candidate-grok`.
    Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
    The driver drafts no recommendation until every candidate returns.

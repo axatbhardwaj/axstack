@@ -32,7 +32,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
   | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
-- `axstack-advisor-astra`/`axstack-advisor-opus` advise and author candidates;
+- `axstack-advisor-codex`/`axstack-advisor-claude` advise and author candidates;
   `axstack-arena-candidate-grok` adds a family.
   `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
   Fable starts at high effort in mixed/claude-only.

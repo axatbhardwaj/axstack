@@ -4,7 +4,7 @@ import { NOW } from './fleet-route-fixture.js';
 import { article } from './fleet-artifact-fixture.js';
 import { configuredBrainstorm, seats } from './fleet-brainstorm-fixture.js';
 
-const candidates = ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok'];
+const candidates = ['axstack-advisor-codex', 'axstack-advisor-claude', 'axstack-arena-candidate-grok'];
 const judges = ['axstack-arena-judge-opus', 'axstack-escalation-fable', 'axstack-arena-judge-astra'];
 function brainstorm(role = candidates[0]) {
   const f = article();

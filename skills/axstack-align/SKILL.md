@@ -85,8 +85,8 @@ return. Reuse valid brainstorm receipts to replace the adviser consult for
 that question. For other questions, consult advisers only for consequential
 decisions and disagreements. Never dispatch advisers for every question,
 routine factual clarification or settled preferences.
-For those consequential decisions and disagreements, consult `axstack-advisor-astra` and
-`axstack-advisor-opus` independently, without cross-reading, using the same
+For those consequential decisions and disagreements, consult `axstack-advisor-codex` and
+`axstack-advisor-claude` independently, without cross-reading, using the same
 bounded evidence and question. Each adviser challenges assumptions, edges,
 omissions, and alternatives; the driver synthesizes disagreements and accepts
 or rejects each material point with a reason. Use one focused reply when
@@ -177,7 +177,7 @@ approval; record chosen document names and paths once per run.
    When scope changes runnable behavior, the read-back records a Verification decision.
    For an applicable `verify-<app>` skill, record the features that cover the change.
    For a missing skill, the plan always includes `axstack-verify create` as the first PR.
-   Skipping this first PR requires plain AGREE from both `axstack-advisor-astra` and `axstack-advisor-opus` that a verification skill is unnecessary.
+   Skipping this first PR requires plain AGREE from both `axstack-advisor-codex` and `axstack-advisor-claude` that a verification skill is unnecessary.
    Record both advisers' reason in the Verification decision.
 2. Classify the result with the shared
    [proportional scope identity](../axstack/references/routing.md#proportional-scope-identity):

@@ -9,8 +9,8 @@ const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
 const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 const roleIds = [
-  'axstack-advisor-astra',
-  'axstack-advisor-opus',
+  'axstack-advisor-codex',
+  'axstack-advisor-claude',
   'axstack-owner',
   'axstack-author',
   'axstack-reviewer-primary',
@@ -289,8 +289,8 @@ test('presets: provider boundaries, intentional adviser absence, and reviewer id
       new Set([preset === 'codex-only' ? 'codex' : 'claude']),
     );
     const unavailableId = preset === 'codex-only'
-      ? 'axstack-advisor-opus'
-      : 'axstack-advisor-astra';
+      ? 'axstack-advisor-claude'
+      : 'axstack-advisor-codex';
     expect(profiles.find(({ id }) => id === unavailableId)?.model).toBeNull();
   }
   for (const preset of presetNames) {

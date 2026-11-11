@@ -29,7 +29,7 @@
     },
     {
       "id": "model-null-required",
-      "input": { "preset": "codex-only", "phase": "Align", "role": "axstack-advisor-opus", "model": null },
+      "input": { "preset": "codex-only", "phase": "Align", "role": "axstack-advisor-claude", "model": null },
       "expected": { "status": "HOLD Align", "forbidden": ["treat as optional absence", "substitute role"] }
     },
     {

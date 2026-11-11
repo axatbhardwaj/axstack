@@ -2,7 +2,7 @@
   "version": 1,
   "roles": [
     {
-      "id": "axstack-advisor-astra",
+      "id": "axstack-advisor-codex",
       "name": "Axstack Astra adviser",
       "provider": "codex",
       "modeId": "full-access",
@@ -11,7 +11,7 @@
       "modelClass": "astra"
     },
     {
-      "id": "axstack-advisor-opus",
+      "id": "axstack-advisor-claude",
       "name": "Axstack Opus adviser",
       "provider": "claude",
       "modeId": "bypassPermissions",

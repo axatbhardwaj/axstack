@@ -31,7 +31,7 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   }
   expect(text).toMatch(/three to six gradeable rubric criteria/i);
   expect(text).toMatch(/candidates receive only the brief/i);
-  for (const id of ['axstack-advisor-astra', 'axstack-advisor-opus', 'axstack-arena-candidate-grok']) expect(text).toContain(id);
+  for (const id of ['axstack-advisor-codex', 'axstack-advisor-claude', 'axstack-arena-candidate-grok']) expect(text).toContain(id);
   expect(text).toMatch(/one candidate per configured family[^.]*same brief[^.]*without cross-reading/i);
   expect(text).toMatch(/the driver authors no candidate/i);
   expect(text).toMatch(/round 1[^.]*axstack-arena-judge-opus[^.]*score/i);
@@ -68,7 +68,7 @@ test('align arena: judge seats use configured efforts and mirror adviser availab
     expect(opus.notes).toMatch(/read-only.*round 1/i);
     for (const seat of ['astra', 'fable']) {
       const judge = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-arena-judge-astra' : 'axstack-escalation-fable'));
-      const adviser = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-advisor-astra' : 'axstack-advisor-opus'));
+      const adviser = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-advisor-codex' : 'axstack-advisor-claude'));
       expect(judge, `${preset}: missing judge ${seat}`).toBeTruthy();
       expect(judge.thinkingOptionId).toBe(seat === 'fable' && preset !== 'codex-only' ? 'high' : 'xhigh');
       expect(judge.provider).toBe(adviser.provider);

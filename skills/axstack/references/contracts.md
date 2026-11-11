@@ -60,7 +60,7 @@ The current T3 thread is the driver, whatever model runs it; there is no driver
 profile. Record the driver's provider and model in the run record.
 
 For Align and Spec, the driver forms an independent assessment first, then
-consults `axstack-advisor-astra` and `axstack-advisor-opus` independently with
+consults `axstack-advisor-codex` and `axstack-advisor-claude` independently with
 the same bounded evidence and question. The exception covers every brainstorm: the driver frames
 its brief and rubric and assesses only after the candidates and required judge
 rounds return. The driver synthesizes disagreements,
@@ -76,7 +76,7 @@ serious-risk contracts override that rule whenever their conditions arise. A
 configured but unavailable adviser holds debug L1; an unavailable escalation seat holds L2 without substitution.
 Reuse a debug receipt while its evidence packet is unchanged.
 
-High-stakes decisions require `axstack-advisor-astra` and
+High-stakes decisions require `axstack-advisor-codex` and
 `axstack-escalation-fable` plain AGREE plus the driver's accepted assessment. Resolve disagreement with bounded checks; silence and an
 unavailable model do not authorize fallback. Ordinary work uses the configured
 author and reviewer roles selected by review mode and the routing snapshot. The
@@ -139,14 +139,14 @@ Never advise review-manager pass holds; the manager keeps its flagged-thread pat
 Before advice the driver closes the gap where possible under existing rules,
 then forms its own assessment.
 This pre-advice gap-closing never spends the one advice-driven action.
-In `mixed`, consult `axstack-advisor-astra` and `axstack-advisor-opus`
+In `mixed`, consult `axstack-advisor-codex` and `axstack-advisor-claude`
 independently with the same bounded evidence packet and question.
 The evidence packet and question omit the driver's own pick.
 Advisers never cross-read one another.
 Single-provider presets use the one configured adviser and record the other
 as an intentional absence.
 
-For high-stakes holds, use `axstack-advisor-astra` and `axstack-escalation-fable`
+For high-stakes holds, use `axstack-advisor-codex` and `axstack-escalation-fable`
 plain AGREE after bounded checks under the existing high-stakes contract
 instead of the ordinary seats.
 For a single-provider high-stakes hold, pause for an explicit user decision

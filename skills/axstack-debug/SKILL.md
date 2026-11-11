@@ -105,7 +105,7 @@ before any further probe or attempt.
 | L0 | entry | driver with bounded packages | phases 1–7; at most one fix attempt through `axstack-implement` |
 | L1 | the L0 fix attempt failed; or phases 1–3 complete plus at least one discriminating probe (or a recorded reason no safe probe exists) and no hypothesis ranks | the preset's configured advisers, independently, same evidence packet | ranked hypotheses and one investigator brief per hypothesis |
 | L1 fan-out | driver merges the adviser plans | `axstack-debug-investigator-1..4`, identical packet, distinct briefs, no cross-reading | one receipt per brief |
-| L2 | two failed attempts at the same named goal and stated acceptance check (second failure overall); or each fix reveals a new symptom elsewhere | `axstack-advisor-astra` and `axstack-escalation-fable` (fresh session) on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
+| L2 | two failed attempts at the same named goal and stated acceptance check (second failure overall); or each fix reveals a new symptom elsewhere | `axstack-advisor-codex` and `axstack-escalation-fable` (fresh session) on architecture, then the user | wrong-architecture finding, bounded refactor proposal, or one bounded next diagnostic action; the user decides before any third attempt |
 
 Permit driver-dispatched bounded safe evidence and probe packages at L0 using
 existing configured roles. Evidence preparation can help establish the loop;

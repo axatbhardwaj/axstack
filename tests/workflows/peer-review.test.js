@@ -135,9 +135,9 @@ test('B6 sixth change request goes through an independent adviser panel', () => 
     'Allow at most five ordinary REQUEST_CHANGES per PR, counting bot markers.', /five/i, 'six');
   negative(peer(), /do not publish/i, [/sixth/i, /REQUEST_CHANGES/i, /panel/i],
     'Do not publish a sixth REQUEST_CHANGES before the adviser panel.', 'Publish');
-  positive(peer(), [/dispatch/i, /axstack-advisor-astra/i, /axstack-advisor-opus/i, /independently/i,
+  positive(peer(), [/dispatch/i, /axstack-advisor-codex/i, /axstack-advisor-claude/i, /independently/i,
     /open blockers/i, /author.*replies/i, /delta/i, /code/i],
-    'Dispatch axstack-advisor-astra and axstack-advisor-opus independently with open blockers, author replies, delta and code.',
+    'Dispatch axstack-advisor-codex and axstack-advisor-claude independently with open blockers, author replies, delta and code.',
     /independently/i, 'jointly');
   negative(peer(), /no cross-read/i, [/advisers/i], 'Advisers have no cross-read.', 'shared cross-read');
   positive(peer(), [/both judge/i, /explanation or fix/i, /justifies approval/i],
