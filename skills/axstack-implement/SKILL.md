@@ -115,10 +115,11 @@ reading and writing does not require that launch reference.
 
 Before a fresh author dispatch for work bound to an issue or ticket id, the driver
 must search open PRs in the target repository for that id and check closing references
-and PR bodies (e.g. `gh pr list --repo <target-repo> --state open --search "<id>"`).
+and PR bodies (e.g. `gh api -X GET search/issues -f q='repo:<target-repo> is:pr is:open <id>'`).
 A match outside the current run holds only that dispatch and requires reporting the PR URL.
 Exempt the current run's recorded PR for repair/resume.
-A failed or incomplete lookup is unknown and holds only that dispatch.
+A failed or incomplete lookup (non-zero exit, `incomplete_results: true`, or
+`total_count` greater than the number of returned items) is unknown and holds only that dispatch.
 Work without an issue/ticket id is unaffected.
 
 Authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key
