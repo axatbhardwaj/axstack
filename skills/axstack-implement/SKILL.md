@@ -113,6 +113,15 @@ Immediately before an actual role dispatch, read and follow the
 [T3 runtime boundary](../axstack/references/t3-runtime.md). Ordinary local
 reading and writing does not require that launch reference.
 
+Before a fresh author dispatch for work bound to an issue or ticket id, the driver
+must search open PRs in the target repository for that id and check closing references
+and PR bodies (e.g. `gh pr list --repo <target-repo> --state open --search "<id>"`).
+A match outside the current run holds only that dispatch and requires reporting the PR URL.
+Exempt the current run's recorded PR for repair/resume.
+A failed or incomplete lookup is unknown and holds only that dispatch.
+Never treat lookup failure as no match.
+Work without an issue/ticket id is unaffected.
+
 Authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key
 and stable `clientRequestId` under the runtime contract's fresh-checkout bootstrap,
 same-child repair and recorded launch fallback rules.
