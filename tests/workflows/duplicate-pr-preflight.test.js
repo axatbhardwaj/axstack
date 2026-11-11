@@ -1,6 +1,6 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const path = `${import.meta.dir}/../../skills/axstack-implement/SKILL.md`;
 const source = sentences(readFileSync(path, 'utf8').replaceAll('`', '')).join('. ');
@@ -40,3 +40,16 @@ for (const [name, concepts, rewording, inversions] of rules) {
     checkRule(source, (text) => requires(text, ...concepts), rewording, inversions, concepts);
   });
 }
+
+test('duplicate PR preflight: contradictory no-match instructions are rejected', () => {
+  // Mask the expected negative result, not a directive's negation: "never
+  // treat failure as no match" is safe; "treat failure as no match" is not.
+  const contradicts = (text) => prohibits(text, /\b(?:no match|zero matches)\b/i,
+    /lookup|search/i, /fail(?:ed|ure)|incomplete|partial/i, /treat|count|interpret|consider/i);
+  expect(contradicts(source)).toBe(false);
+  for (const instruction of ['Treat lookup failure as no match.',
+    'Count a failed search as zero matches.', 'Consider an incomplete lookup as no match.']) {
+    expect(contradicts(`${source}. ${instruction}`)).toBe(true);
+    expect(contradicts(`${source}. Never ${instruction}`)).toBe(false);
+  }
+});

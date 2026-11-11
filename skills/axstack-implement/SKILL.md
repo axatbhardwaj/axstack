@@ -119,7 +119,6 @@ and PR bodies (e.g. `gh pr list --repo <target-repo> --state open --search "<id>
 A match outside the current run holds only that dispatch and requires reporting the PR URL.
 Exempt the current run's recorded PR for repair/resume.
 A failed or incomplete lookup is unknown and holds only that dispatch.
-Never treat lookup failure as no match.
 Work without an issue/ticket id is unaffected.
 
 Authors must use async `delegate_task` with `isolation:"worktree"`, title = role-labelled dispatch key
