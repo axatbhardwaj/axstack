@@ -58,7 +58,8 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    independent assessment. For questions, consult advisers only for consequential
    decisions and disagreements. Never dispatch advisers for every question,
    routine factual clarification or settled preferences.
-3a. **Prototype deferred questions.** Before the first draft adviser round,
+
+   **3a. Prototype first.** Before the first draft adviser round,
    follow [Prototype](references/prototype.md) for `Open (prototype):` items.
    Return later deferred questions to 3a within the same caps; after approval,
    use Material revisions instead.
