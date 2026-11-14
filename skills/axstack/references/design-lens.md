@@ -65,6 +65,16 @@ Rejected: <alternative -> why>
 Open: <question?>
 ```
 
+Defer a look, behave, or state-model question discussion cannot settle only in
+delivery runs whose substantial work continues to Spec, regardless of rung.
+Otherwise settle it by discussion: no deferral for small-change, planning-only,
+read-only or stop-after-phase work (including "write the spec and stop").
+Tag the sketch's Open line or a read-back item `Open (prototype): <question>`.
+A plain `Open:` retains its existing meaning. A deferral never blocks Align
+completion. Ask questions on deferred items in Spec within Align's cumulative
+count. Questions on deferred items need no refinement opt-in; follow
+[Spec 3a](../../axstack-spec/references/prototype.md).
+
 Keep settled choices in `Decisions` rows. `CONTEXT.md` stays a glossary; ADRs
 keep their existing test. Add no design document or phase.
 
