@@ -132,6 +132,16 @@ question budget. The user still decides; reuse unchanged receipts.
 
 ## Bound the interview
 
+Defer a look, behave, or state-model question discussion cannot settle only in
+delivery runs whose substantial work continues to Spec; rung does not gate it.
+Otherwise settle it by discussion, including small-change, planning-only,
+read-only and stop-after-phase runs (even "write the spec and stop").
+Mark the sketch's Open line or a read-back item with the carrier
+`Open (prototype): <question>`. A plain `Open:` keeps its existing meaning.
+A deferral does not block Align completion. Ask questions on deferred items in
+Spec inside Align's cumulative count. Questions on deferred items need no
+refinement opt-in; follow [Spec 3a](../axstack-spec/references/prototype.md).
+
 Twenty cumulative presented questions is the normal ceiling, not a target.
 Follow-ups, reopened questions, and separate decisions bundled into one prompt
 each count; never discount a presented question later. Before extending beyond
@@ -142,7 +152,7 @@ remains; 20 is not a quota.
 
 At completion or the 35-question cap, read back the result.
 Never make a deeper-refinement offer a completion requirement.
-Ask no further interview or refinement questions
+Except for the deferred prototype items above, ask no further interview or refinement questions
 without opt-in; this does not replace required spec approval or a clarification
 prompt when a configured model is unavailable. An opted-in refinement names
 one area and a separate finite budget of at most five questions; it preserves
