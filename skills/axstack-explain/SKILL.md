@@ -137,6 +137,9 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
 ## 3. Verify and deliver
 
 1. For inline pages, follow [Inline pages](references/inline-pages.md).
+   For prototype pages, follow Inline pages' prototype-page rules and
+   [Delivery](references/delivery.md), including their four exemptions and bounded repairs;
+   they govern the review and word-cap requirements for those pages.
    For every explicitly requested HTML or visual artifact
    outside inline T3 pages, follow [Visual QA](references/visual-qa.md).
 2. Require independent `axstack-explainer-review` for consequential or complex
