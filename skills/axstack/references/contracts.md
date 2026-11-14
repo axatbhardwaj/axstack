@@ -32,6 +32,10 @@ Confirm the identity for the selected mode from the
   without an Axstack-created spec.
 - Read-only research, explanation, improvement discovery, and handoff: no baseline.
 
+The sole pre-baseline prototype exception is bounded by
+[Spec 3a](../../axstack-spec/references/prototype.md#authority-and-build);
+it grants no candidate implementation or publication authority.
+
 Substantial means substantial features, multi-PR work, or stacked work; a
 bounded small feature is not substantial merely because it is called a
 feature. Clarify unclear size, then classify it. Alignment, spec writing, and
