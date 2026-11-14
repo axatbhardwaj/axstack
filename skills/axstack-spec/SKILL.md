@@ -58,7 +58,12 @@ Before drafting, load and follow [Independent delivery](../axstack/references/in
    independent assessment. For questions, consult advisers only for consequential
    decisions and disagreements. Never dispatch advisers for every question,
    routine factual clarification or settled preferences.
-   For those consequential decisions and disagreements and the required draft
+3a. **Prototype deferred questions.** Before the first draft adviser round,
+   follow [Prototype](references/prototype.md) for `Open (prototype):` items.
+   Return later deferred questions to 3a within the same caps; after approval,
+   use Material revisions instead.
+
+   **Review the draft.** For those consequential decisions and disagreements and the required draft
    rounds below, load
    [T3 runtime](../axstack/references/t3-runtime.md) before dispatching the
    configured `axstack-advisor-codex` and `axstack-advisor-claude` independently,
