@@ -84,6 +84,27 @@ multi-PR or stacked work. Unclear work is clarified, then classified. A deeper p
 the same identity before action; missing preparation names the gap and holds
 only affected work.
 
+## Spec prototypes and downstream use
+
+In delivery runs continuing to Spec, Align may defer an open look, behaviour
+or state-model question as `Open (prototype):`. Before the first draft adviser
+round, Spec's [prototype step](../skills/axstack-spec/references/prototype.md)
+uses one isolated author to build a throwaway UI variant or logic demo. Only
+prototype authors use its completion exemption from red/green logs. User
+verdicts become binding `Decisions` rows; the prototype illustrates those rows.
+
+At the verdict the driver makes one create-only `prototype-axstack-<slug>`
+push, outside candidate-publication diligence, review and PR rules because
+the ref never merges. Prototype authors remain retained until capture or
+abandonment. Guarded worktree removal keeps the local branch.
+
+Tickets copy the prototype record into each affected task. Implement reads
+the pinned SHA as reference only, never merging or cherry-picking the branch.
+Copied code goes through strict TDD and ordinary cross-model review. Follow
+the rows for details they do not capture; an unfetchable SHA makes the
+reference unavailable without holding implementation. Brainstorm remains
+report-only under its existing rules.
+
 ## Weekly test-audit activation
 
 The packaged [weekly prompt](../skills/axstack/references/test-audit-weekly.md)
