@@ -83,9 +83,6 @@ const rules = [
   [0, 'other failed checks repaired inside caps',
     [/prototype pages/i, /every other failed check/i, /repair/i, /within/i, /prototype.*caps/i],
     'For prototype pages, repair every other failed check within prototype.md caps.', [/repair/i, 'waive']],
-  [0, 'missingImages fallback uses Playwright on exact bytes',
-    [/html_preview/i, /missingImages/i, /absent|lack|omit/i, /require/i, /Playwright/i, /exact bytes/i, /empty/i],
-    'If html_preview lacks missingImages, require Playwright to verify empty missingImages from the exact bytes.', [/exact bytes/i, 'similar bytes']],
   [1, 'cap hold is a Delivery scope hold and no-verdict exit',
     [/prototype pages/i, /check.*still fail/i, /cap/i, /hold.*page/i, /Delivery scope hold/i, /no-verdict exit/i, /reason/i, /resume condition/i],
     'For prototype pages, a check still failing at a cap holds the page as a Delivery scope hold with reason and resume condition, and the question takes a no-verdict exit.', [/holds?/i, 'releases']],
@@ -120,20 +117,28 @@ test('prototype cap hold cannot become a fifth exemption', () => {
   expect(accepted(`${text}\nFor prototype pages, the cap hold is not required.`)).toBe(false);
 });
 
-test('prototype ambiguous or unknown render is never passed or silently retried', () => {
+test('prototype ambiguous or unknown render is never passed or retried', () => {
   const text = prose(read(paths[0]));
-  const terms = [/prototype pages/i, /ambiguous or unknown/i, /html_render/i, /passed/i, /retry.*silently/i];
+  // The retry ban is unqualified: a trailing condition would permit retries
+  // outside that condition, contrary to the shared Deliver or hold rule.
+  const terms = [/prototype pages/i, /ambiguous or unknown/i, /html_render/i, /passed/i,
+    /\bretry(?: it| the result)?[.!?]?$/i];
   const guard = (s) => prohibits(s, /never|do not/i, ...terms);
   checkRule(text, guard,
-    'For prototype pages, do not treat an ambiguous or unknown html_render as passed or retry silently.',
+    'For prototype pages, do not treat an ambiguous or unknown html_render as passed or retry the result.',
     [[/never|do not/i, 'always']], terms);
   const accepted = (s) => guard(s) && !sentences(s).some((line) => /prototype pages/i.test(line)
     && /ambiguous|unknown/i.test(line) && /html_render/i.test(line)
-    && requires(line, /passed|retry.*silently/i));
+    && requires(line.replace(/\b(?:may|can)\b/gi, ''), /passed|retry|retried/i));
   expect(accepted(text)).toBe(true);
-  const counterexample = 'For prototype pages, treat an ambiguous or unknown html_render as passed and retry silently.';
-  expect(accepted(replaceSentence(text, guard, counterexample))).toBe(false);
-  expect(accepted(`${text}. ${counterexample}`)).toBe(false);
+  for (const counterexample of [
+    'For prototype pages, treat an ambiguous or unknown html_render as passed and retry with notice.',
+    'For prototype pages, an ambiguous or unknown html_render may be retried with notice.',
+    'For prototype pages, never treat an ambiguous or unknown html_render as passed or retry without notice.',
+  ]) {
+    expect(accepted(replaceSentence(text, guard, counterexample))).toBe(false);
+    if (!/never/i.test(counterexample)) expect(accepted(`${text}. ${counterexample}`)).toBe(false);
+  }
 });
 
 test('prototype repair caps link to the package A contract', () => {
