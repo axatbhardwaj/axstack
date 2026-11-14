@@ -18,6 +18,15 @@ and resume condition.
 Missing access, tool, model or evidence, or material new scope, holds the
 specific dependency with its reason and resume condition.
 
+For prototype pages, a check still failing at a cap holds the page as a
+Delivery scope hold with its reason and resume condition, and the question
+takes a no-verdict exit under [prototype.md](../../axstack-spec/references/prototype.md).
+For a prototype, where the cap question applies, ask once first as a Qn if
+budget remains; follow that reference's options before recording the cap hold.
+This applies the existing scope hold rules rather than adding an exemption.
+Inline pages' four prototype exemptions govern the review, word-cap and
+design-and-decency loop requirements below; all other holds and repairs remain.
+
 If the reviewer is unavailable, hold the whiteboard-defense explanation and name the unavailable reviewer.
 Never deliver a held whiteboard-defense explanation unreviewed or describe it as reviewed.
 Visual-only findings follow the visual rule, and claim findings hold the whiteboard-defense explanation.
