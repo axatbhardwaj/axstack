@@ -161,6 +161,14 @@ driver decisions within approved scope; size alone requires no user approval.
 
 ## 3. Establish test-first evidence
 
+When the spec links a prototype, read the pinned prototype commit as reference
+only under [Spec prototypes](../axstack-spec/references/prototype.md).
+Code may be copied into the real change. Copied prototype code must pass strict
+TDD and ordinary review, including cross-model review.
+Never merge the prototype branch. Never cherry-pick the prototype branch.
+`Decisions` rows bind. Where the prototype shows something no row captures,
+follow the rows. An unfetchable SHA makes the reference unavailable, not a hold.
+
 For authorized UI improvement work, load [UI improvement loop](../axstack/references/ui-improvement-loop.md).
 
 For performance work only, load [Performance loop](../axstack/references/perf-loop.md).

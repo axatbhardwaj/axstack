@@ -45,6 +45,17 @@ a duplicate whole spec with separate requirements.
 
 ## Evidence and history
 
+Per prototyped question, put this record line in `Design`, or Evidence and
+history when there is no sketch:
+
+```text
+Prototype: <branch> (never-merge) | https://github.com/<owner>/<repo>/tree/<sha> | entry: <command or file> | question: <question> | verdict: <decision> (Qn)
+```
+
+Pin the author commit SHA in the tree URL. Each verdict's `Decisions` row cites
+its `Qn`; the rows bind and the prototype illustrates. Follow
+[Prototype capture](prototype.md#capture) for a capture-held record.
+
 Keep history, evidence and adviser receipts separate from current requirements.
 Place provenance, commands, review-round dispositions and change logs here or
 link their existing records. They explain the requirements, not override them.
