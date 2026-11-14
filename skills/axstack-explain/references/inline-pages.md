@@ -16,17 +16,13 @@ Prototype pages retain self-contained bytes, no network, no storage (including
 cookies), no modals or popups, and the exact-byte scan.
 Prototype pages retain both driver previews for layout, theme, height, network,
 zero console errors, and empty `missingImages`.
-If `html_preview` lacks `missingImages`, require the Playwright exact-bytes
-fallback to verify empty `missingImages` from the exact bytes.
-Use the verifier's loopback page and report incomplete or zero-`naturalWidth`
-images as missing.
 Prototype pages require semantic, accessible markup and the interactive
 `axstack-ui-verifier` pass.
 Prototype pages retain driver-only `html_render` using precisely the bytes checked
 by these gates.
 These kept rules cannot be exempted; every unlisted rule also stays in force.
 For prototype pages, never treat an ambiguous or unknown `html_render` result
-as passed or retry it silently.
+as passed or retry it.
 
 ## Shape and theme
 
