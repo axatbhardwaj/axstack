@@ -58,15 +58,30 @@ test('prototype downstream: Tickets copy the record into every affected task', (
     [[/copy/i, 'may copy']], terms);
 });
 
-test('prototype downstream: completion log exemption belongs only to prototype authors', () => {
-  const accepts = (source) => sentences(source).some((sentence) =>
-    /^Only prototype authors (?:use|receive) the no-red\/green-log completion exemption\b/i.test(sentence)
-    || /^The no-red\/green-log completion exemption\b.*\bapplies only to prototype authors$/i.test(sentence));
-  checkRule(read('axstack/references/lifecycle.md'), accepts,
-    'The no-red/green-log completion exemption under Spec prototypes applies only to prototype authors',
-    [[/prototype authors/i, 'authors'], [/prototype authors/i, 'prototype authors and repair authors'],
-      [/only/i, 'also'], [/no-red\/green-log/i, 'mandatory-red/green-log']]);
-  expect(raw('axstack/references/lifecycle.md')).toMatch(/\]\(\.\.\/\.\.\/axstack-spec\/references\/prototype\.md\)/);
+for (const path of ['lifecycle.md', 't3-runtime.md']) {
+  test(`prototype downstream: ${path} completion log exemption belongs only to prototype authors`, () => {
+    const accepts = (source) => sentences(source).some((sentence) =>
+      /^Only prototype authors (?:use|receive) the no-red\/green-log completion exemption\b/i.test(sentence)
+      || /^The no-red\/green-log completion exemption\b.*\bapplies only to prototype authors$/i.test(sentence));
+    checkRule(read(`axstack/references/${path}`), accepts,
+      'The no-red/green-log completion exemption under Spec prototypes applies only to prototype authors',
+      [[/prototype authors/i, 'authors'], [/prototype authors/i, 'prototype authors and repair authors'],
+        [/only (?:to )?prototype authors/i, 'all authors'],
+        [/only/i, 'also'], [/no-red\/green-log/i, 'mandatory-red/green-log']]);
+    expect(raw(`axstack/references/${path}`)).toMatch(/\]\(\.\.\/\.\.\/axstack-spec\/references\/prototype\.md\)/);
+  });
+}
+
+test('prototype downstream: runtime capture-or-abandonment retention applies only to prototypes', () => {
+  const accepts = (source) => sentences(source).some((sentence) => {
+    const subject = sentence.match(/^(?:The )?author retention endpoint for (.+?) is /i)?.[1]
+      ?? sentence.match(/^For (.+?), the author retention endpoint is /i)?.[1];
+    return /^prototypes$/i.test(subject ?? '') && requires(sentence, /capture or abandonment/i);
+  });
+  checkRule(runtime(), accepts,
+    'For prototypes, the author retention endpoint is capture or abandonment',
+    [[/prototypes/i, 'all authors'], [/prototypes/i, 'prototypes and candidate authors'],
+      [/capture or abandonment/i, 'any terminal state']], [/prototypes/i, /capture or abandonment/i]);
 });
 
 test('prototype downstream: only the driver create-only prototype push skips candidate rules', () => {
