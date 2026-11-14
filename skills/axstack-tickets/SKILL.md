@@ -59,6 +59,8 @@ Before mapping, load and follow [Independent delivery](../axstack/references/ind
    in the existing map, including packages feeding one PR. Choose the earliest
    sufficient immutable interface, verified terminal internal package tip, review,
    merge or deployment milestone; retain reviewed-parent rules across PRs.
+   Copy the prototype record line from the spec into each affected task under
+   [Spec prototypes](../axstack-spec/references/prototype.md).
    Package count alone neither escalates small work nor changes diligence depth.
    For each task the driver records
    one theme and a coarse size estimate from the ownership, interface, and

@@ -223,6 +223,10 @@ a missing or equal path holds review.
 
 The UI verifier checkout row applies to candidate checks, while a page without
 a candidate follows [UI verification](ui-verification.md).
+For a prototype, the `axstack-ui-verifier` dispatch binds to the prototype SHA
+on a detached checkout under [Spec prototypes](../../axstack-spec/references/prototype.md).
+The author retention endpoint for prototypes is capture or abandonment under
+that reference; keep the author worktree and thread until then.
 
 The driver must be the sole run-record writer and enforce one writer per
 candidate; it never writes tracked candidate source or tests or repairs an author's source.
@@ -253,6 +257,8 @@ during recovery. Substring matches do not establish identity. Branch and task
 identity continue to use the original dispatch key. On title regeneration preserve
 explicit role-labelled dispatch keys and `Needs you:` notices unchanged.
 Each dispatch binds the approved spec or small-change intent, brief, authority, role snapshot, base and candidate to its dispatch key.
+The prototype author dispatch binds to the deferred question and current draft
+revision in place of an approved identity; all other bindings remain required.
 Every dispatch brief must state that dispatched roles never call `html_render`.
 Dispatched roles may call `html_preview` within [UI verification](ui-verification.md).
 
@@ -311,6 +317,8 @@ incomplete even when native status says completed.
 
 Delegated author completion requires delegated terminal checks plus candidate checks:
 non-empty diff, clean tree and named red/green logs.
+Only prototype authors use the no-red/green-log completion exemption in
+[Spec prototypes](../../axstack-spec/references/prototype.md).
 
 Launched writer completion must require terminal `t3_thread_wait` on that run,
 then candidate checks: non-empty diff, clean tree and named red/green logs.

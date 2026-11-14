@@ -1,5 +1,11 @@
 # Candidate publication
 
+Only the driver's create-only `prototype-axstack-<slug>` push skips
+candidate-publication diligence, review and PR rules, because that ref never merges.
+This push is not candidate publication. Follow
+[Spec prototypes](../../axstack-spec/references/prototype.md) for its capture
+guards; no other push or candidate receives this exemption.
+
 Follow [Parallel-first delivery](parallel-first.md) for joined candidates: verify
 every required package and integration receipt before final publication. Partial
 assembly checks are provisional; package commits need no phantom package PRs.
