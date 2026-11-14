@@ -74,6 +74,11 @@ For close-out holds, follow the [run-record acceptance rules](run-record.md#clos
 A missing or failed settle readback never triggers author repair: it holds only that dispatch's next advancement (publication, review routing, merge-ready) until resolved.
 Settling never removes, archives or abandons the thread or worktree.
 Retain each author worktree and thread unarchived until the PR merges or closes.
+For prototype authors only, capture or abandonment replaces that endpoint under
+[Spec prototypes](../../axstack-spec/references/prototype.md). A prototype
+worktree is removable when remote readback matches the author head, or when
+the prototype is abandoned and its tree is clean. Keep the local branch.
+Existing terminal, ownership and evidence guards still apply.
 Repairs return to the responsible package or integration author in that author's
 existing session and worktree.
 On forge-confirmed merge or closure, follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
