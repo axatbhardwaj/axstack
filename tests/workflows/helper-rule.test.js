@@ -4,18 +4,20 @@ import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const guidance = () => sentences(readFileSync(`${import.meta.dir}/../../AGENTS.md`, 'utf8')
   .replace(/[`*]/g, '')).join('. ');
+const newHelperNames = [/usage-split/i, /evidence[- ](?:inspector|inspection)/i, /lane[- ]owner facts/i,
+  /pr-fresh/i, /image[- ]resource extraction/i, /scratch/i, /capture/i, /sandbox/i];
 
 const rules = [
-  ['scope', (text) => requires(text, /only the new helpers/i, /dispatch-plan/, /pr-shape/, /readiness/, /run-init/),
-    'Only the new helpers run-init, readiness, pr-shape and dispatch-plan follow this rule.',
-    [[/only the new helpers/i, 'all scripts']]],
+  ['scope', (text) => requires(text, /only the new helpers/i, /dispatch-plan/, /pr-shape/, /readiness/, /run-init/, ...newHelperNames),
+    'Only the new helpers image resource extraction, sandbox, capture, scratch, pr-fresh, lane owner facts, evidence inspection, usage-split, run-init, readiness, pr-shape and dispatch-plan follow this rule.',
+    [[/only the new helpers/i, 'all scripts']], newHelperNames],
   ['legacy behavior', (text) => requires(text, /existing scripts/i, /retain|keep/i, /behavior/i),
     'The existing scripts keep their behavior.', [[/retain|keep/i, 'change']]],
   ['pure facts', (text) => prohibits(text, /no state between calls/i, /fact.*plan helpers/i,
     /dispatch-plan/, /pr-shape/, /readiness without --run/, /explicit inputs/i, /read-only/i,
-    /git/, /gh/, /saved T3 JSON/, /stdout/, /caller-given path/i),
-    'Fact and plan helpers dispatch-plan, pr-shape and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON, emit to stdout or a caller-given path, and retain no state between calls.',
-    [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']]],
+    /git/, /gh/, /saved T3 JSON/, /SQLite (?:exports|snapshots)/i, /stdout/, /caller-given path/i),
+    'Fact and plan helpers dispatch-plan, pr-shape and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON or SQLite snapshots, emit to stdout or a caller-given path, and retain no state between calls.',
+    [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']], [/SQLite (?:exports|snapshots)/i]],
   ['writer boundaries', (text) => requires(text, /writer helpers/i, /run-init/, /readiness --run/,
     /every side effect/i, /--help/, /write only (?:those|disclosed) paths/i),
     'Writer helpers run-init and readiness --run must list every side effect in --help and write only disclosed paths.',
@@ -39,9 +41,9 @@ const rules = [
     'Every new helper provides --help, which enumerates all flags.', [[/(?:supports|provides) --help/i, 'omits help']]],
 ];
 
-for (const [name, accepts, rewording, inversions] of rules) {
+for (const [name, accepts, rewording, inversions, concepts] of rules) {
   test(`helper rule: ${name} survives rewording and rejects removal or inversion`, () => {
-    checkRule(guidance(), accepts, rewording, inversions);
+    checkRule(guidance(), accepts, rewording, inversions, concepts);
   });
 }
 
