@@ -1,4 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 import { chmodSync, chownSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync,
   symlinkSync, writeFileSync } from 'node:fs';
 
@@ -207,6 +208,16 @@ test('permission gaps remain unknown and hold instead of reporting a measured fa
   expect(JSON.parse(result.out).terms.find((term) => term.id === 'execution').status).toBe('unknown');
 });
 
+test('help distinguishes child results from helper exit and selects the repository explicitly', () => {
+  const help = invoke(['--help'], directory());
+  expect(help.code).toBe(0);
+  expect(requires(help.out, /Child exitCode and signal/i, /stored separately/i)).toBe(true);
+  checkRule(help.out, (text) => prohibits(text, /does not (?:mean|imply)/i, /helper exit 0/i, /child (?:passed|succeeded)/i),
+    'Helper exit 0 does not imply that the child succeeded.',
+    [[/does not (?:mean|imply)/gi, 'means']]);
+  expect(help.out).toContain('run -- bun --cwd=/absolute/repo run test');
+});
+
 test('unknown HOME holds, launch errors exit 1, and help/input errors write nothing', () => {
   const outside = directory(), parent = directory();
   const held = invoke(['run', '--root', parent, '--', ...writer], outside, { HOME: undefined });
@@ -218,6 +229,10 @@ test('unknown HOME holds, launch errors exit 1, and help/input errors write noth
   const help = invoke(['--help'], outside);
   expect(help.code).toBe(0);
   expect(help.out).toMatch(/not filesystem containment/i);
+  const syntax = [/--cwd=/, /required/i, /spaced/i, /prints help/i, /exits 0/i];
+  checkRule(help.out, (text) => requires(text, ...syntax),
+    'The --cwd= form is required because the spaced variant prints help and exits 0.',
+    [[/required/gi, 'optional']], syntax);
   for (const word of ['HOME', 'absolute paths', 'process', 'filesystem', 'network', 'container', 'cleanup', '--root', 'plan', 'exit']) {
     expect(help.out.toLowerCase()).toContain(word.toLowerCase());
   }
