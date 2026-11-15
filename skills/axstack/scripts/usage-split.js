@@ -118,10 +118,23 @@ function measure(cache, rates, state, prs, start, end, term) {
     const ids = native.get(session) ?? new Set(); ids.add(id); native.set(session, ids);
     if (!threads.has(id)) threads.set(id, { thread_id: id, turns: Array.isArray(state.runs) ? 0 : null, usage: meter(), prs: [] });
   }
-  for (const run of state.runs ?? []) {
-    const t = threads.get(run.thread_id);
-    if (t && validCount(run.turns)) t.turns += run.turns;
+  const invalidRows = [], unknownThreads = [];
+  for (const [index, run] of (state.runs ?? []).entries()) {
+    const id = run?.thread_id;
+    let t = threads.get(id);
+    if (!t) {
+      unknownThreads.push({ index, threadId: id ?? null });
+      if (typeof id !== 'string') continue;
+      t = { thread_id: id, turns: null, uncertainTurns: true, usage: meter(), prs: [] };
+      threads.set(id, t);
+    }
+    if (!validCount(run.turns)) {
+      invalidRows.push({ index, threadId: id, turns: run.turns ?? null });
+      t.turns = null; t.uncertainTurns = true;
+    } else t.turns = add(t.turns, run.turns);
   }
+  term('run-counts', !state.runs ? 'n/a' : invalidRows.length || unknownThreads.length ? 'unknown' : 'pass',
+    { invalidRows, unknownThreads, note: 'Absent or invalid aggregate turns and unknown-thread turns remain null.' });
   const totals = meter(), seen = new Set();
   let duplicatesRemoved = 0, ambiguousRecords = 0, invalidRecords = 0, missingComponents = 0, unpricedRecords = 0, maxTs = null;
   for (const v of Object.values(cache.files)) {
@@ -156,7 +169,7 @@ function measure(cache, rates, state, prs, start, end, term) {
   const attribution = { exclusiveTokens: 0, sharedTokens: 0, unattributedTokens: 0, unmatchedTokens: 0 };
   let missingUsageThreads = 0, unknownMetadata = 0;
   for (const t of threads.values()) {
-    if (!t.turns && !t.usage.records && !t.uncertainUsage) continue;
+    if (!t.turns && !t.usage.records && !t.uncertainUsage && !t.uncertainTurns) continue;
     const role = classify(t), missing = !t.usage.records;
     const row = { threadId: t.thread_id, ...role, tokens: missing || t.uncertainUsage ? null : t.usage.tokens,
       observedTokens: t.usage.observedTokens, turns: t.turns, records: t.usage.records };
