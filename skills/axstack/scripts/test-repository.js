@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+export {};
 // Repository test entry point: keep DAC permission fixtures meaningful as root.
 const args = process.argv.slice(2);
 if (args[0] === '--help') {
