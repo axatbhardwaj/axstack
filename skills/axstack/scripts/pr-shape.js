@@ -1,5 +1,5 @@
 import { gitArgv } from './git-argv.js';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const lockfiles = ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'];
 const help = `Usage: bun scripts/pr-shape.js --base <ref> --head <ref>
@@ -106,8 +106,151 @@ function summarize(rows, evidence) {
     } } };
 }
 
+const proofFields = { files: 'Files', additions: 'Lines added', deletions: 'Lines removed',
+  commits: 'Commits', head: 'Head SHA', base: 'Base SHA' };
+const proofHelp = `Usage: bun scripts/pr-shape.js --proof --base <ref> --head <ref> [--body <path>]
+       bun scripts/pr-shape.js --proof --pr <number> --repo <owner/repo> [--body <path>]
+
+--proof Render/check PR Proof facts (separate from the unchanged shape mode)
+--base  Actual current PR base ref, resolved with read-only Git
+--head  Current candidate ref, resolved with read-only Git
+--body  Optional UTF-8 PR body file to check; never modified
+--pr    Positive PR number; read-only gh api fetches current facts and body
+--repo  Explicit owner/repo for --pr; cannot combine --pr with --base/--head
+--help  Show this mode's flags, output and exit codes
+
+JSON: block (Markdown or null if facts unavailable), terms (each status, value,
+evidence including reproducing commands, separate child exit codes/errors,
+and stated body values when checked).
+Git counts use the merge-base diff (-M numstat; binary lines count as zero),
+and commits reachable from head but not base. PR mode uses one REST pull snapshot,
+including numeric commits (no truncated commit-list pagination).
+No --body in Git mode renders only; PR mode checks the fetched body by default.
+Checks require exactly one <!-- axstack:proof --> ... <!-- /axstack:proof -->
+block and one line per field: Files, Lines added, Lines removed, Commits,
+Head SHA, Base SHA. Counts must match; SHA prefixes need at least 7 hex digits.
+Other prose and SHAs are ignored. Refresh refs before checking a local candidate.
+Missing/duplicate/invalid body facts fail; unavailable Git/gh/body data is unknown.
+This fact mode is read-only and stateless: writes nothing, grants no authority,
+and supplies no aggregate verdict. No dispatch, retry, scheduling or merge.
+Exit codes: 0 measured (including failed terms), 1 invalid input,
+2 incomplete (one or more unknown terms).
+`;
+
+function proofOptions(argv) {
+  const options = {};
+  for (let i = 0; i < argv.length; i += 2) {
+    const flag = argv[i], value = argv[i + 1];
+    if (!['--base', '--head', '--body', '--pr', '--repo'].includes(flag) ||
+        !value || value.startsWith('-') || flag in options) throw Error(`invalid proof argument ${flag}; use --proof --help`);
+    options[flag] = value;
+  }
+  if (options['--pr']) {
+    if (!/^[1-9]\d*$/.test(options['--pr']) || !/^[\w.-]+\/[\w.-]+$/.test(options['--repo'] ?? '') ||
+        options['--base'] || options['--head']) throw Error('--pr requires --repo owner/repo and excludes --base/--head');
+  } else if (!options['--base'] || !options['--head'] || options['--repo']) {
+    throw Error('proof requires --base and --head, or --pr and --repo');
+  }
+  return options;
+}
+
+function proof(argv, io) {
+  if (argv.includes('--help')) { io.stdout(proofHelp); return 0; }
+  const options = proofOptions(argv);
+  const terms = Object.keys(proofFields).map((id) => ({ id, status: 'unknown', value: null,
+    evidence: { cwd: process.cwd(), commands: [], results: [], reason: 'data unavailable' } }));
+  const term = (id) => terms.find((t) => t.id === id);
+  const query = (ids, args) => {
+    for (const id of ids) term(id).evidence.commands.push(args);
+    try {
+      const result = run(args);
+      for (const id of ids) term(id).evidence.results.push({ exitCode: result.code, stderr: result.stderr.trim() });
+      if (result.code) {
+        for (const id of ids) term(id).evidence.reason = result.stderr.trim() || `command exit ${result.code}`;
+        return null;
+      }
+      return result.stdout;
+    } catch (error) {
+      for (const id of ids) {
+        term(id).evidence.results.push({ exitCode: null, error: error.message });
+        term(id).evidence.reason = error.message;
+      }
+      return null;
+    }
+  };
+  const assign = (id, value) => {
+    const valid = ['head', 'base'].includes(id) ? /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/i.test(value ?? '')
+      : Number.isSafeInteger(value) && value >= 0;
+    if (valid) Object.assign(term(id), { status: 'pass', value, evidence: { ...term(id).evidence, reason: 'observed current fact' } });
+  };
+  let body, bodyError;
+  if (options['--pr']) {
+    const raw = query(Object.keys(proofFields), ['gh', 'api', `repos/${options['--repo']}/pulls/${options['--pr']}`]);
+    try {
+      const data = JSON.parse(raw ?? '{}');
+      for (const [id, value] of Object.entries({ files: data.changed_files, additions: data.additions,
+        deletions: data.deletions, commits: data.commits, head: data.head?.sha, base: data.base?.sha })) assign(id, value);
+      if (typeof data.body === 'string') body = data.body;
+      else bodyError = 'PR body unavailable in gh response';
+    } catch { bodyError = 'invalid gh JSON response'; }
+  } else {
+    for (const id of ['base', 'head']) {
+      const raw = query([id], command('rev-parse', '--verify', '--end-of-options', `${options[`--${id}`]}^{commit}`));
+      if (raw !== null) assign(id, raw.trim());
+    }
+    const counts = ['files', 'additions', 'deletions', 'commits'];
+    if (term('base').value && term('head').value) {
+      const base = term('base').value, head = term('head').value;
+      const commits = query(['commits'], command('rev-list', '--count', `${base}..${head}`, '--'));
+      if (commits !== null && /^\d+\s*$/.test(commits)) assign('commits', Number(commits));
+      const ids = counts.slice(0, 3);
+      const merge = query(ids, command('merge-base', base, head));
+      if (merge !== null) {
+        const diff = query(ids, command('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${merge.trim()}..${head}`, '--'));
+        if (diff !== null) {
+          const rows = numstat(diff);
+          assign('files', rows.length);
+          assign('additions', rows.reduce((sum, row) => sum + row.additions, 0));
+          assign('deletions', rows.reduce((sum, row) => sum + row.deletions, 0));
+        }
+      }
+    } else {
+      for (const id of counts) term(id).evidence = { ...term(id).evidence,
+        commands: [...term('base').evidence.commands, ...term('head').evidence.commands],
+        results: [...term('base').evidence.results, ...term('head').evidence.results],
+        reason: 'base/head resolution unavailable; counts cannot be measured' };
+    }
+  }
+  const block = terms.every((t) => t.status === 'pass')
+    ? ['<!-- axstack:proof -->', ...terms.map((t) => `${proofFields[t.id]}: ${t.value}`), '<!-- /axstack:proof -->'].join('\n') : null;
+  if (options['--body']) {
+    try { body = readFileSync(options['--body'], 'utf8'); bodyError = null; }
+    catch (error) { bodyError = error.message; }
+  }
+  if (options['--body'] || options['--pr']) {
+    const blocks = [...(body ?? '').matchAll(/<!-- axstack:proof -->\r?\n([\s\S]*?)\r?\n<!-- \/axstack:proof -->/g)];
+    for (const t of terms) {
+      if (options['--body']) t.evidence.bodyPath = options['--body'];
+      if (bodyError) { t.status = 'unknown'; t.evidence.reason = bodyError; continue; }
+      if (t.status === 'unknown') continue;
+      const values = blocks.length === 1 ? blocks[0][1].split(/\r?\n/)
+        .filter((line) => line.startsWith(`${proofFields[t.id]}:`)).map((line) => line.slice(proofFields[t.id].length + 1).trim()) : [];
+      t.evidence.stated = values;
+      const stated = values[0] ?? '';
+      const matches = ['base', 'head'].includes(t.id)
+        ? /^[a-f0-9]{7,64}$/i.test(stated) && t.value.toLowerCase().startsWith(stated.toLowerCase())
+        : /^(0|[1-9]\d*)$/.test(stated) && Number(stated) === t.value;
+      t.status = values.length === 1 && matches ? 'pass' : 'fail';
+      t.evidence.reason = blocks.length !== 1 ? 'expected exactly one facts block' : 'compare stated value with current fact; one field required';
+    }
+  }
+  io.stdout(`${JSON.stringify({ block, terms })}\n`);
+  return terms.some((t) => t.status === 'unknown') ? 2 : 0;
+}
+
 export function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
   try {
+    if (argv[0] === '--proof') return proof(argv.slice(1), io);
     if (argv.includes('--help')) { io.stdout(help); return 0; }
     const options = optionsFrom(argv);
     const root = run(command('rev-parse', '--show-toplevel'));
