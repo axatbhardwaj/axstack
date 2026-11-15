@@ -32,6 +32,7 @@ test('install without HOME refuses pre-mutation and preserves all bytes', () => 
     const { bundle, skillsDir } = seed(root);
     // Successful baseline with a known HOME first.
     runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'], {
+      cwd: root,
       env: { HOME: join(root, 'home') },
     });
     const before = snapshot([
@@ -42,7 +43,7 @@ test('install without HOME refuses pre-mutation and preserves all bytes', () => 
     ]);
     const r = runCli(
       ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir],
-      { ...home, expectFail: true },
+      { ...home, cwd: root, expectFail: true },
     );
     expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
     expectUnchanged(before);
@@ -54,6 +55,7 @@ test('uninstall without HOME refuses pre-mutation and preserves all bytes', () =
     const root = makeTempRoot();
     const { bundle, skillsDir } = seed(root);
     runCli(['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'], {
+      cwd: root,
       env: { HOME: join(root, 'home') },
     });
     const before = snapshot([
@@ -63,6 +65,7 @@ test('uninstall without HOME refuses pre-mutation and preserves all bytes', () =
     ]);
     const r = runCli(['uninstall', '--skills-dir', skillsDir], {
       ...home,
+      cwd: root,
       expectFail: true,
     });
     expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
@@ -75,11 +78,12 @@ test('--yes with missing HOME still completes install and uninstall', () => {
   const { bundle, skillsDir } = seed(root);
   const installed = runCli(
     ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'],
-    { unset: ['HOME'] },
+    { cwd: root, unset: ['HOME'] },
   );
   expect(installed.ok).toBe(true);
   expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(true);
   const removed = runCli(['uninstall', '--skills-dir', skillsDir, '--yes'], {
+    cwd: root,
     unset: ['HOME'],
   });
   expect(removed.ok).toBe(true);
@@ -91,7 +95,7 @@ test('tilde expansion without HOME errors even with --yes', () => {
   const { bundle } = seed(root);
   const r = runCli(
     ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', join('~', 'skills'), '--yes'],
-    { unset: ['HOME'], expectFail: true },
+    { cwd: root, unset: ['HOME'], expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/home|unknown|destination|refus/);
 });
@@ -108,7 +112,7 @@ test('symlink-aliased HOME still guards install without --yes', () => {
 
   const installed = runCli(
     ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'],
-    { env },
+    { cwd: root, env },
   );
   expect(installed.ok).toBe(true);
   const before = snapshot([
@@ -120,7 +124,7 @@ test('symlink-aliased HOME still guards install without --yes', () => {
   // the guard must still refuse before any mutation.
   const r = runCli(
     ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir],
-    { env, expectFail: true },
+    { cwd: root, env, expectFail: true },
   );
   expect(r.out.toLowerCase()).toMatch(/home|--yes|confirm|explicit/);
   expectUnchanged(before);
@@ -138,7 +142,7 @@ test('symlink-aliased HOME still guards uninstall without --yes', () => {
 
   const installed = runCli(
     ['install', '--preset', 'mixed', '--bundle', bundle, '--skills-dir', skillsDir, '--yes'],
-    { env },
+    { cwd: root, env },
   );
   expect(installed.ok).toBe(true);
   const before = snapshot([
@@ -147,6 +151,7 @@ test('symlink-aliased HOME still guards uninstall without --yes', () => {
     join(skillsDir, 'axstack', 'roles.json'),
   ]);
   const r = runCli(['uninstall', '--skills-dir', skillsDir], {
+    cwd: root,
     env,
     expectFail: true,
   });
@@ -155,7 +160,7 @@ test('symlink-aliased HOME still guards uninstall without --yes', () => {
 
   const removed = runCli(
     ['uninstall', '--skills-dir', skillsDir, '--yes'],
-    { env },
+    { cwd: root, env },
   );
   expect(removed.ok).toBe(true);
   expect(existsSync(join(skillsDir, 'axstack-demo', 'SKILL.md'))).toBe(false);
