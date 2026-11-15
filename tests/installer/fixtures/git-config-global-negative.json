@@ -1,0 +1,27 @@
+{
+  "unsafe": [
+    "export GIT_CONFIG_GLOBAL=/dev/null",
+    "env GIT_CONFIG_GLOBAL='/dev/null' git status",
+    "GIT_CONFIG_GLOBAL=\"/dev/null\"; git status",
+    "const env = { GIT_CONFIG_GLOBAL: '/dev/null' };",
+    "{ \"GIT_CONFIG_GLOBAL\": \"/dev/null\" }",
+    "process.env.GIT_CONFIG_GLOBAL = '/dev/null';",
+    "env['GIT_CONFIG_GLOBAL'] = \"/dev/null\";",
+    "env[\"GIT_CONFIG_GLOBAL\"] = `/dev/null`;",
+    "const env = { 'GIT_CONFIG_GLOBAL':\n  '/dev/null' };",
+    "/* private env follows */ env.GIT_CONFIG_GLOBAL = '/dev/null';",
+    "const note = ' // comment marker'; env.GIT_CONFIG_GLOBAL = '/dev/null';"
+  ],
+  "safe": [
+    "export GIT_CONFIG_GLOBAL=\"$TMPDIR/gitconfig\"",
+    "const env = { GIT_CONFIG_GLOBAL: privateFile };",
+    "# GIT_CONFIG_GLOBAL=/dev/null",
+    "// env.GIT_CONFIG_GLOBAL = '/dev/null';",
+    "/* env.GIT_CONFIG_GLOBAL = '/dev/null'; */",
+    "const prose = \"GIT_CONFIG_GLOBAL=/dev/null\";",
+    "export GIT_CONFIG_GLOBAL=/dev/null-other",
+    "echo example # GIT_CONFIG_GLOBAL=/dev/null",
+    "const env = {}; // env.GIT_CONFIG_GLOBAL = '/dev/null';",
+    "const note = \"GIT_CONFIG_GLOBAL='/dev/null' is unsafe\";"
+  ]
+}
