@@ -54,7 +54,7 @@
   use explicit inputs, read-only `git`/`gh` or saved T3 JSON, output to stdout
   or a caller-given path, and keep no state between calls.
   Writer helpers (`run-init`, `readiness --run`, scratch execution, capture, sandbox run/reap)
-  disclose every process, filesystem, container, network and cleanup effect in
+  disclose every side effect (process, filesystem, container, network and cleanup) in
   `--help` and write only those paths. All new helpers report each term as
   `pass`, `fail`, `unknown` or `n/a` with evidence. API, pagination and
   permission gaps are `unknown`. Helpers can add holds but never grant
