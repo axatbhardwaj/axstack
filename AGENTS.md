@@ -2,6 +2,7 @@
 
 ## Operating rules
 
+- In this repository, a PR that changes `tests/workflows/prose-budget.json` or `tests/workflows/prose-size.test.js` stops at merge-ready for the user.
 - Use T3 Code as the only active runtime.
 - Route every delegated worker, reviewer, or cross-harness dispatch through the
   `t3-code` MCP, never native subagents.
