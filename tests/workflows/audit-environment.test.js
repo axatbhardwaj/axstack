@@ -8,7 +8,8 @@ const proposals = () => audit().split(/## 5\.[^\n]*\n/)[1]?.split(/\n## 6\./)[0]
 const clausesOf = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
 // These contracts protect the new proposal scope and evidence/authority limits.
-// Existing owned-audit and correct-integration tests own delivery and §6 parity.
+// owned-audit and correct-integration own delivery, recurrence and §6 parity;
+// code-first-learning owns the default for recurring mechanical classes.
 // Mutations operate on real source in memory; they never edit tracked guidance.
 const rules = [
   ['proposal scope', [/one/i, /bounded/i, /hypothesized/i, /skill or environment change/i],
@@ -19,12 +20,8 @@ const rules = [
     [/consider|inspect/gi, 'ignore'], 'Inspect navigation pointers, automated checks, coding-standard placement for review, steering-file bloat and no-op instructions, tool economy, and information access.', /no.op instructions/i],
   ['trim parity', [/steering.file trims/i, /follow|apply/i, /section 6/i, /AGENTS\.md/i, /CLAUDE\.md/i, /parity rule/i],
     [/follow|apply/gi, 'bypass'], "For steering-file trims, apply section 6's AGENTS.md and CLAUDE.md parity rule."],
-  ['recurrence route', [/repeated mistakes/i, /route|refer/i, /axstack-correct/i, /section 6/i, /proposals/i],
-    [/axstack-correct/gi, 'environment cleanup'], 'Refer repeated mistakes to axstack-correct as section 6 proposals.'],
   ['existing checks first', [/before proposing/i, /new check/i, /report|state/i, /whether/i, /existing check/i, /unwired or broken/i],
     [/before proposing/gi, 'after proposing'], 'Before proposing a new check, state whether an existing check is unwired or broken.'],
-  ['mechanical rules', [/mechanical rule/i, /prefer|favor/i, /deterministic check/i, /over/i, /prose rule/i],
-    [/prefer|favor/gi, 'reject'], 'For a mechanical rule, favor a deterministic check over a prose rule.'],
   ['read boundary', [/read only/i, /evidence/i, /section 2/i, /permits/i, /plus/i, /read.only/i, /AGENTS\.md/i, /CLAUDE\.md/i, /CI configuration/i, /package scripts/i, /at the audited revision/i],
     [/read only/gi, 'read any'], 'Read only the evidence that section 2 permits plus read-only AGENTS.md and CLAUDE.md, CI configuration and package scripts at the audited revision.'],
   ['transcript boundary', [/read/i, /transcripts/i, /environment lens/i],
