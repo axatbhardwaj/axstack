@@ -79,7 +79,7 @@ function classify(t) {
 function readState(bytes) {
   if (bytes.subarray(0, 16).toString() !== 'SQLite format 3\0') {
     const saved = JSON.parse(bytes.toString());
-    return Array.isArray(saved) ? { providers: saved, threads: saved, runs: [] } : saved;
+    return Array.isArray(saved) ? { providers: saved, threads: saved } : saved;
   }
   // Deserialization cannot create journals, WAL/SHM files or mutate the saved DB.
   const db = Database.deserialize(bytes, { readonly: true });
@@ -89,7 +89,6 @@ function readState(bytes) {
       providers: db.query('SELECT thread_id,payload_json FROM orchestration_v2_projection_provider_threads').all(),
       threads: table('orchestration_v2_projection_threads')
         ? db.query('SELECT thread_id,title,payload_json FROM orchestration_v2_projection_threads').all() : [],
-      runs: [],
     };
   } finally { db.close(); }
 }
@@ -110,14 +109,14 @@ function measure(cache, rates, state, prs, start, end, term) {
     const prior = threads.get(id);
     threads.set(id, { ...p, ...row, thread_id: id, lineage: row.lineage ?? p.lineage,
       prs: row.prs ?? [p.linkedPullRequest, p.branchPullRequest, ...p.pullRequests ?? []].filter(Boolean),
-      turns: prior?.turns ?? 0, usage: prior?.usage ?? meter() });
+      turns: prior?.turns ?? (Array.isArray(state.runs) ? 0 : null), usage: prior?.usage ?? meter() });
   }
   const native = new Map();
   for (const row of state.providers ?? []) {
     const id = row.thread_id ?? row.thread, session = row.native ?? payload(row).nativeThreadRef?.nativeId;
     if (typeof id !== 'string' || typeof session !== 'string') continue;
     const ids = native.get(session) ?? new Set(); ids.add(id); native.set(session, ids);
-    if (!threads.has(id)) threads.set(id, { thread_id: id, turns: 0, usage: meter(), prs: [] });
+    if (!threads.has(id)) threads.set(id, { thread_id: id, turns: Array.isArray(state.runs) ? 0 : null, usage: meter(), prs: [] });
   }
   for (const run of state.runs ?? []) {
     const t = threads.get(run.thread_id);
@@ -140,7 +139,7 @@ function measure(cache, rates, state, prs, start, end, term) {
         for (const candidate of ids) threads.get(candidate).uncertainUsage = true;
       }
       const id = ids?.size === 1 ? [...ids][0] : `UNMAPPED:${v.p}:${session ?? key}`;
-      if (!threads.has(id)) threads.set(id, { thread_id: id, unmatched: true, turns: 0, usage: meter(), prs: [] });
+      if (!threads.has(id)) threads.set(id, { thread_id: id, unmatched: true, turns: null, usage: meter(), prs: [] });
       const usage = meter(), parts = fields.map((_, i) => validCount(row[i + 3]) ? row[i + 3] : null);
       for (let i = 0; i < fields.length; i++) usage[fields[i]] = parts[i];
       usage.tokens = parts.reduce(add, 0); usage.observedTokens = parts.reduce((n, x) => n + (x ?? 0), 0); usage.records = 1;
@@ -166,7 +165,8 @@ function measure(cache, rates, state, prs, start, end, term) {
     if (role.type === 'Unknown metadata') unknownMetadata++;
     const cls = classes.get(role.class) ?? { class: role.class, ...meter(), threads: 0, turns: 0, unmatchedSessions: 0, missingUsageThreads: 0 };
     cls.threads += t.unmatched ? 0 : 1; cls.unmatchedSessions += t.unmatched ? 1 : 0;
-    cls.turns += t.turns; cls.missingUsageThreads += missing ? 1 : 0;
+    if (!t.unmatched) cls.turns = add(cls.turns, t.turns);
+    cls.missingUsageThreads += missing ? 1 : 0;
     accumulate(cls, t.usage); classes.set(role.class, cls);
     const links = [...new Set((t.prs ?? []).map(prUrl).filter(Boolean))];
     if (t.unmatched) attribution.unmatchedTokens = add(attribution.unmatchedTokens, row.tokens);
