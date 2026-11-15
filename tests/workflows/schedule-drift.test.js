@@ -72,3 +72,42 @@ test('help documents flags and effects; invalid options exit 1', () => {
   expect(help.stdout.toString()).toContain('No writes');
   expect(Bun.spawnSync([process.execPath, script, '--bad']).exitCode).toBe(1);
 });
+
+for (const [name, keepTask, expected] of [
+  ['declared absent', false, 'n/a'],
+  ['declared absent identity exists', true, 'fail'],
+  ['undeclared missing', false, 'unknown'],
+]) test(`${name} schedule has explicit per-term facts`, () => {
+  const { code, report } = run((d) => {
+    if (name !== 'undeclared missing') d.bindings.schedules[2].absent = true;
+    if (!keepTask) d.export.tasks.pop();
+  });
+  expect(code).toBe(expected === 'unknown' ? 2 : 0);
+  for (const suffix of ['binding', 'prompt', 'cadence', 'enabled']) {
+    expect(status(report, `test-audit-weekly.md.${suffix}`)).toBe(expected);
+  }
+  expect(report.counts['n/a']).toBe(expected === 'n/a' ? 4 : 0);
+});
+test('host may exclude a never-created schedule without inventing a task ID', () => {
+  const { code, report } = run((d) => {
+    d.bindings.schedules[2] = { promptFile: 'test-audit-weekly.md', absent: true };
+    d.export.tasks.pop();
+  });
+  expect(code).toBe(0);
+  expect(report.counts['n/a']).toBe(4);
+});
+for (const [name, change] of [
+  ['stale', (d) => { d.export.exportedAt = '2026-11-15T23:00:00Z'; }],
+  ['incomplete', (d) => { d.export.complete = false; }],
+  ['unavailable', (d) => { d.export = null; }],
+  ['different host', (d) => { d.export.host = 'different-host'; }],
+]) test(`declared absence stays unknown with ${name} export`, () => {
+  const { code, report } = run((d) => {
+    d.bindings.schedules[2].absent = true;
+    change(d);
+  });
+  expect(code).toBe(2);
+  for (const suffix of ['binding', 'prompt', 'cadence', 'enabled']) {
+    expect(status(report, `test-audit-weekly.md.${suffix}`)).toBe('unknown');
+  }
+});
