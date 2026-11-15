@@ -216,9 +216,8 @@ Settlement returns continuity to the manager rather than retaining an idle PR
 coordinator. Each reviewer uses a separate driver-made detached checkout and
 private evidence folder, with evidence read-back before removal.
 
-Set `TMPDIR` for manager and job commands to an owned 0700 directory under the
-system temp directory, named from the dispatch key and recorded in the receipt,
-following [Workspace hygiene](workspace-hygiene.md).
+Run manager and job scratch commands through [scratch.js](../scripts/scratch.js);
+follow its `--help` and record its JSON paths in the dispatch receipt.
 Evidence files stay in the private `<run dir>/evidence/<dispatch>/` folder.
 Never write temporary files under `/` or another shared root. Never delete
 through a broad `TMPDIR` glob, sweep a shared temporary root, or wipe a general
