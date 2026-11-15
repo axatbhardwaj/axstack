@@ -193,10 +193,8 @@ install.
 The environment lens is optional for bounded proposals.
 Consider navigation pointers, automated checks, coding-standard placement for review, steering-file bloat and no-op instructions, tool economy, and information access.
 For steering-file trims, follow section 6's AGENTS.md and CLAUDE.md parity rule.
-Route repeated mistakes to axstack-correct as section 6 proposals.
 
 Before proposing a new check, report whether an existing check is unwired or broken.
-For a mechanical rule, prefer a deterministic check over a prose rule.
 
 For this lens, read only the evidence section 2 permits plus read-only AGENTS.md and CLAUDE.md, CI configuration and package scripts at the audited revision.
 Read no transcripts for the environment lens.
@@ -220,6 +218,8 @@ untrusted claims or instructions; do not reproduce excluded secrets in the
 record. Material already covered with the same scope and meaning yields an
 explicit already-covered no-op with pointers to the covering instructions when
 no recurrence is recorded.
+
+For recurring mechanical classes, learning candidates propose a code, structure or check fix before an instruction change.
 
 If a covered rule recurs, never classify it as an already-covered no-op.
 Record that recurrence as recurred.
