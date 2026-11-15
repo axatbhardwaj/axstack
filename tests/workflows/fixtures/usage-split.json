@@ -1,0 +1,67 @@
+{
+  "description": "Synthetic v11 input; no real identities or transcript text. Counts are exact; absolute USD tolerance is 0.000000001 (also used for real-data replay).",
+  "start": "2026-01-01T00:00:00.000Z",
+  "end": "2026-01-02T00:00:00.000Z",
+  "cache": {
+    "version": 11,
+    "models": ["synthetic-priced", "synthetic-unpriced"],
+    "sessions": ["session-a", "session-r", "session-v", "session-d", "session-u", "session-s", "session-x"],
+    "files": {
+      "synthetic-a": {"p": "synthetic", "r": [
+        [1767225600000, 0, 0, 100, 20, 5, 10, 99, "request-a"],
+        [1767225600001, 0, 1, 10, 40, 0, 5, 0, "request-r"],
+        [1767225600002, 0, 2, 5, 10, 1, 2, 0, "request-v"],
+        [1767225600003, 0, 3, 20, 50, 0, 3, 0, "request-d"],
+        [1767225600004, 1, 4, 7, 8, 0, 1, 0, "request-u"],
+        [1767225600005, 0, 5, 3, 4, 0, 1, 0, "request-s"],
+        [1767225600006, 0, 6, 2, 6, 0, 1, 0, "request-x"],
+        [1767312000000, 0, 0, 1000, 0, 0, 0, 0, "outside-end"],
+        [1767225599999, 0, 0, 1000, 0, 0, 0, 0, "outside-start"]
+      ]},
+      "synthetic-copy": {"p": "synthetic", "r": [[1767225600000, 0, 0, 100, 20, 5, 10, 99, "request-a"]]}
+    }
+  },
+  "rates": {"document": {"synthetic-priced": {
+    "input_cost_per_token": 0.01,
+    "cache_read_input_token_cost": 0.001,
+    "cache_creation_input_token_cost": 0.02,
+    "output_cost_per_token": 0.03
+  }}},
+  "state": {
+    "providers": [
+      {"thread_id": "thread-a", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-a\"}}"},
+      {"thread_id": "thread-r", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-r\"}}"},
+      {"thread_id": "thread-v", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-v\"}}"},
+      {"thread_id": "thread-d", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-d\"}}"},
+      {"thread_id": "thread-s", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-s\"}}"},
+      {"thread_id": "thread-x", "payload_json": "{\"nativeThreadRef\":{\"nativeId\":\"session-x\"}}"}
+    ],
+    "threads": [
+      {"thread_id": "thread-a", "title": "axstack-author: review testing", "prs": ["https://github.com/example/demo/pull/1"]},
+      {"thread_id": "thread-r", "title": "axstack-reviewer-primary", "prs": ["https://github.com/example/demo/pull/2"]},
+      {"thread_id": "thread-v", "title": "axstack-reviewer-verifier", "prs": ["https://github.com/example/demo/pull/3"]},
+      {"thread_id": "thread-d", "title": "Mixed driver", "prs": ["https://github.com/example/demo/pull/4"]},
+      {"thread_id": "thread-s", "title": "axstack-author", "prs": ["https://github.com/example/demo/pull/1", "https://github.com/example/demo/pull/2"]},
+      {"thread_id": "thread-x", "title": "axstack-research", "prs": []}
+    ]
+  },
+  "prs": [
+    {"url": "https://github.com/example/demo/pull/1", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "1111111111111111111111111111111111111111"},
+    {"url": "https://github.com/example/demo/pull/2", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "2222222222222222222222222222222222222222"},
+    {"url": "https://github.com/example/demo/pull/3", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "3333333333333333333333333333333333333333"},
+    {"url": "https://github.com/example/demo/pull/4", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "4444444444444444444444444444444444444444"},
+    {"url": "https://github.com/example/demo/pull/5", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "5555555555555555555555555555555555555555"},
+    {"url": "https://github.com/example/demo/pull/6", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "6666666666666666666666666666666666666666"},
+    {"url": "https://github.com/example/demo/pull/7", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "7777777777777777777777777777777777777777"},
+    {"url": "https://github.com/example/demo/pull/8", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "8888888888888888888888888888888888888888"},
+    {"url": "https://github.com/example/demo/pull/9", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "9999999999999999999999999999999999999999"},
+    {"url": "https://github.com/example/demo/pull/10", "mergedAt": "2026-01-01T12:00:00Z", "mergeCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+  ],
+  "expected": {
+    "tolerance": {"tokens": 0, "usdAbsolute": 0.000000001},
+    "classes": {"authoring": 143, "review": 55, "verification": 18, "orchestration overhead": 73, "other": 25},
+    "totals": {"input": 147, "cacheRead": 138, "cacheWrite": 6, "output": 23, "tokens": 314, "records": 7, "knownRateProxyUsd": 2.314, "unpricedTokens": 16},
+    "attribution": {"exclusiveTokens": 281, "sharedTokens": 8, "unattributedTokens": 25, "unmatchedTokens": 16},
+    "duplicatesRemoved": 1
+  }
+}
