@@ -94,7 +94,7 @@ export const rewordings = {
   "uncertain watch deletion": "The hold and recorded ID are retained on an uncertain delete.",
   "safe deletion in briefs": "In every worker brief, include the Safe-deletion rule.",
   "named private evidence": "In the completion receipt and brief, identify the private <run>/evidence/<key>/ folder.",
-  "worktree path guards": "For worktree-local paths, apply equivalent guards.",
+  "worktree path guards": "For worktree-local paths, validate ownership, the real path and absence of symlinks before use and cleanup.",
   "cache evidence": "Evidence is not incidental caches.",
   "brief confirmation": "The dispatching owner must re-verify started after confirming the brief question once and restating existing authority.",
   "second brief hold": "A second ask holds.",
