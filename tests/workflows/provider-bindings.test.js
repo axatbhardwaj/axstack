@@ -1,18 +1,22 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import { readSkillFile } from './skill-source.js';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, prohibits } from './prose-contract.js';
 
 const runtime = () => readSkillFile(`${import.meta.dir}/../../skills/axstack/references/t3-runtime.md`, 'utf8')
   .replace(/`/g, '').replace(/\s+/g, ' ');
 
-test('every Claude and Codex dispatch binds directly to its single T3 instance', () => {
-  const concepts = [/every dispatch or launch/i, /claude (?:must|shall) bind to claudeAgent\b/i,
-    /codex (?:must|shall) bind to codex\b/i];
-  checkRule(runtime(), (text) => requires(text, ...concepts),
-    'At every dispatch or launch, codex shall bind to codex and claude shall bind to claudeAgent.',
-    [[/claude (?:must|shall) bind to claudeAgent\b/i, 'claude must bind to claudeAlt'],
-      [/codex (?:must|shall) bind to codex\b/i, 'codex must bind to codexAlt'],
-      [/every dispatch or launch/i, 'selected dispatches']], concepts);
+test('runtime provider-binding pointer resolves to its code owner without duplicated prose', () => {
+  const text = runtime();
+  const pointers = [...text.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)]
+    .filter(([, , target]) => target === '../scripts/resolve-models.js');
+  expect(pointers).toHaveLength(1);
+  const [, label, target] = pointers[0];
+  expect(label).toMatch(/provider.*binding|binding.*provider/i);
+  const owner = readFileSync(`${import.meta.dir}/../../skills/axstack/references/${target}`, 'utf8');
+  expect(owner).toMatch(/\bbindings\b/);
+  expect(text).not.toContain('Provider bindings must map');
+  expect(text).not.toContain('For every dispatch or launch, claude must bind');
 });
 
 test('a usage-limited instance holds work without failover', () => {
