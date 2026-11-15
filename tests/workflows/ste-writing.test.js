@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${path}`, 'utf8') : '';
@@ -58,25 +58,17 @@ const rules = [
 const acceptsRule = ([, , concepts, , , , prohibition]) => (text) => prohibition
   ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
 
-function checkRule(text, rule) {
-  const [, , , flip, inverse, rewording, prohibition] = rule;
+function checkContract(text, rule) {
+  const [, , concepts, flip, inverse, rewording, prohibition] = rule;
   const accepts = acceptsRule(rule);
-  expect(accepts(text), 'missing required instruction').toBe(true);
-  const clauses = sentences(text);
-  const matching = clauses.filter(accepts);
-  expect(matching).toHaveLength(1);
-  const rewrite = (replacement) => clauses.map((clause) =>
-    matching.includes(clause) ? replacement(clause) : clause).join('. ');
-  expect(accepts(rewrite(() => '')), 'removal').toBe(false);
-  expect(matching[0]).toMatch(flip);
-  expect(accepts(rewrite((clause) => clause.replace(flip, inverse))), 'inversion').toBe(false);
-  expect(accepts(rewrite(() => rewording)), 'equivalent rewording').toBe(true);
-  if (!prohibition) expect(accepts(rewrite(() => `Do not ${rewording}`)), 'negated rewording').toBe(false);
+  expect(sentences(text).filter(accepts)).toHaveLength(1);
+  checkRule(text, accepts, rewording,
+    [[flip, inverse], ...(!prohibition ? [[/^/, 'Do not ']] : [])], concepts);
 }
 
 for (const rule of rules) {
   const [name, source, , , , rewording] = rule;
-  test(`STE-inspired writing: ${name}`, () => checkRule(source(), rule));
+  test(`STE-inspired writing: ${name}`, () => checkContract(source(), rule));
   test(`STE-inspired writing real-source rewording: ${name}`, () => {
     const text = source();
     // Keep raw Markdown links while matching normalized, possibly wrapped prose.
@@ -86,7 +78,7 @@ for (const rule of rules) {
       word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'));
     expect(text).toMatch(pattern);
     const reworded = text.replace(pattern, rewording.replace(/[.!?]$/, ''));
-    for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
+    for (const sibling of rules.filter((row) => row[1] === source)) checkContract(reworded, sibling);
   });
 }
 
