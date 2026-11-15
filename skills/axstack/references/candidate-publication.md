@@ -43,8 +43,8 @@ justified lease; a mismatch holds publication. If push outcome is ambiguous,
 inspect remote state before retrying.
 
 Before reviewer dispatch, read the remote ref back, confirm its SHA equals candidate SHA,
-and pin the current base. Render and check the PR facts using
-[PR body proof mode](pr-shape.md#pr-body), rather than hand-editing counts or SHAs.
+pin the current base, and render and check the PR facts using
+[PR body proof mode](pr-shape.md#pr-body).
 After every push, before post-push diligence or merge-ready, run proof mode against
 the live PR body and retain its JSON evidence. Hold publication progression on any
 failed or unknown term; the helper grants no authority.
