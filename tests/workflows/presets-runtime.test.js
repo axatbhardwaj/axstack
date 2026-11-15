@@ -1,12 +1,9 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
-import { publicDocPaths } from './public-docs.js';
-import { existsSync, readdirSync } from 'node:fs';
-import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
+import { loadedReferences, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
-const presetDir = `${root}/profiles/presets`;
 const presetNames = ['mixed', 'codex-only', 'claude-only'];
 // T5a migration contracts: instruction checks, not live T3 execution proof.
 const phaseNames = ['align', 'audit', 'debug', 'explain', 'implement', 'improve',

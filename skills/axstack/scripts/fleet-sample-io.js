@@ -7,6 +7,7 @@ export function sshArgv(host) {
     '-o', 'ClearAllForwardings=yes', '-o', 'PermitLocalCommand=no',
     ...(host.user ? ['-l', host.user] : []), '--', host.destination, PROC_COMMAND];
 }
+/** @returns {Promise<void>} */
 export function wait(ms, signal) {
   return new Promise((resolve, reject) => {
     const cancel = () => { clearTimeout(timer); signal.removeEventListener('abort', cancel); reject(signal.reason); };

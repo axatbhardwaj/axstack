@@ -5,6 +5,7 @@ const installs = {
   bun: ['install', '--frozen-lockfile'], npm: ['ci'],
   pnpm: ['install', '--frozen-lockfile'], yarn: ['install', '--immutable'],
 };
+/** @type {[string, string[]][]} */
 const groups = [['env.build', ['build']], ['testing.test', ['test']], ['testing.lint-typecheck', ['lint', 'typecheck']]];
 const drainGraceMs = 200;
 // No shell interpolation, and the wrapper preserves the command's allowlisted env.
@@ -57,6 +58,7 @@ async function runCommand(commands, paths, kind, argv, cwd, env, limits, state, 
       clearTimeout(timer);
       killGroup(proc);
     });
+    /** @type {Promise<void>} */
     const timeout = new Promise((resolve) => {
       timer = setTimeout(() => { step.timedOut = true; killGroup(proc); resolve(); }, limits.timeoutMs);
     });

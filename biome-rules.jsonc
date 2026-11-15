@@ -1,7 +1,17 @@
 {
+  // Exclusions in biome.json: skills/axstack-anatomy/{kit,scripts,references,examples}/**
+  // are vendored upstream assets (all lint rules); its listed Markdown/LICENSE files and
+  // skills/axstack-explain/references/frontend-design/{FRONTEND-DESIGN.md,LICENSE.txt}
+  // are upstream prose, outside the JavaScript linter. .github is maintained by CI owners.
+  // jsconfig.json checks all src/, bin/ and skills/axstack/scripts/ JavaScript:
+  // tests (fixture types) and other skills (vendored/browser code) are outside its baseline.
   "overrides": [
     {
-      "includes": ["tests/**"],
+      "includes": [
+        "tests/installer/publish-workflow.test.js",
+        "tests/installer/registry-auth-workflow.test.js",
+        "tests/workflows/t3-runtime.test.js"
+      ],
       "linter": { "rules": { "suspicious": {
         // noTemplateCurlyInString: tests assert literal GitHub expressions and prompt markers.
         "noTemplateCurlyInString": "off"
@@ -11,6 +21,11 @@
       "includes": ["skills/axstack/scripts/readiness.js"],
       // noAssignInExpressions: preserve #412; defer accumulator cleanup to a follow-up.
       "linter": { "rules": { "suspicious": { "noAssignInExpressions": "off" } } }
+    },
+    {
+      "includes": ["skills/axstack/scripts/fleet-scope.js"],
+      // noControlCharactersInRegex: deliberately reject ASCII controls in supplied paths.
+      "linter": { "rules": { "suspicious": { "noControlCharactersInRegex": "off" } } }
     }
   ]
 }

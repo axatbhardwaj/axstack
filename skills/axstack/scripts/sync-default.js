@@ -60,6 +60,7 @@ async function main() {
     try { history = JSON.parse(fs.readFileSync(options['--history-file'], 'utf8')); }
     catch { history = { unavailable: 'history file unavailable or malformed' }; }
   } else history = readHistory(path, now, options['--history-db']);
+  /** @type {ReturnType<typeof decide> & { mode?: string }} */
   const result = decide(settings, usage, catalogs, now, history);
   if (result.action === 'update' && options['--apply']) {
     const status = commit(path, original, result.selection);

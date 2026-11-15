@@ -6,6 +6,7 @@ import { executeDeclared } from './readiness-run.js';
 const scriptVersion = '1.1.0';
 const criteriaVersion = 1;
 
+/** @param {"ignore" | Uint8Array} [stdin] */
 function gitOutput(repo, args, stdin = 'ignore') {
   const argv = gitArgv('-C', repo, ...args);
   const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin });
@@ -110,10 +111,12 @@ const definitions = [
 ];
 
 function packageManager(files, pkg) {
-  const locks = [
+  /** @type {[string, string[]][]} */
+  const lockfiles = [
     ['bun', ['bun.lock', 'bun.lockb']], ['npm', ['package-lock.json', 'npm-shrinkwrap.json']],
     ['pnpm', ['pnpm-lock.yaml']], ['yarn', ['yarn.lock']],
-  ].filter(([, names]) => names.some(files.has));
+  ];
+  const locks = lockfiles.filter(([, names]) => names.some(files.has));
   if (!locks.length) {
     const dependencyFields = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies', 'workspaces'];
     if (!files.has('pnpm-workspace.yaml') && dependencyFields.every((field) => !pkg?.[field] || Object.keys(pkg[field]).length === 0)) {
@@ -130,7 +133,9 @@ function packageManager(files, pkg) {
 
 function declaredCommands(files, pkg, manager, set, invalidPackage) {
   const prose = files.paths.filter((path) => /\.md$/i.test(path)).map((path) => files.read(path)).join('\n');
-  for (const [id, names] of [['env.build', ['build']], ['testing.test', ['test']], ['testing.lint-typecheck', ['lint', 'typecheck']]]) {
+  /** @type {[string, string[]][]} */
+  const groups = [['env.build', ['build']], ['testing.test', ['test']], ['testing.lint-typecheck', ['lint', 'typecheck']]];
+  for (const [id, names] of groups) {
     if (invalidPackage) {
       set(id, 'unknown', [`git show ${files.revision}:package.json`], 'invalid package.json');
       continue;
@@ -189,9 +194,9 @@ function assess(files) {
   const codeql = [];
   for (const path of workflows) {
     try {
-      const workflow = Bun.YAML.parse(files.read(path));
+      const workflow = /** @type {{ on?: string | string[] | Record<string, unknown>, jobs?: Record<string, { steps?: { run?: string, uses?: string }[] }> }} */ (Bun.YAML.parse(files.read(path)));
       const trigger = workflow?.on;
-      const pr = trigger === 'pull_request' || (Array.isArray(trigger) ? trigger.includes('pull_request') : trigger && Object.hasOwn(trigger, 'pull_request'));
+      const pr = trigger === 'pull_request' || (Array.isArray(trigger) ? trigger.includes('pull_request') : trigger && Object.hasOwn(/** @type {Record<string, unknown>} */ (trigger), 'pull_request'));
       const steps = Object.values(workflow?.jobs ?? {}).flatMap((job) => job?.steps ?? []);
       const runs = steps.map((step) => step?.run).filter((run) => typeof run === 'string');
       if (steps.some((step) => typeof step?.uses === 'string' && /^github\/codeql-action\//.test(step.uses))) codeql.push(path);

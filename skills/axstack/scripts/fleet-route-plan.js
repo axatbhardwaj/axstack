@@ -45,6 +45,7 @@ export function planIntake(input, now) {
   const config = parseFleetConfig(input.configText, input.configDigest);
   if (input.request?.role !== 'driver') throw new Error('driver-role-required');
   const initial = recommend(input, now); // Validate and rank the unchanged supplied facts.
+  /** @type {{ code: string, state: string, environmentId?: string, evidence: unknown }[]} */
   const terms = initial.excluded.map((e) => ({ code: 'route-eligibility',
     state: e.reasons.some((r) => /unproven|missing/.test(r)) ? 'unknown' : 'fail',
     environmentId: e.environmentId, evidence: e }));
@@ -54,7 +55,7 @@ export function planIntake(input, now) {
     terms.push(...localTerms.map((t) => ({ ...t, environmentId: input.origin.environmentId })));
     return localTerms.every((t) => t.state === 'pass');
   };
-  const result = (disposition, reason, selected = null, extra = {}) => structuredClone({
+  const result = (disposition, reason, selected = null, extra = /** @type {{ launch?: object }} */ ({})) => structuredClone({
     schemaVersion: 1, kind: 'intake-plan', configDigest: input.configDigest, evaluatedAt: now,
     request: input.request, disposition, reason, selected, terms,
     counts: Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((s) => [s, terms.filter((t) => t.state === s).length])),
