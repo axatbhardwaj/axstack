@@ -1,7 +1,7 @@
 # Create run records and inspect repositories
 
 Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness,scratch}.js`;
-fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper,scratch}.test.js`.
+fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper,scratch,scratch-consumers}.test.js`.
 The pr-shape fixtures cover the optional `--source` sync term: fast-forward
 containment after source advancement, no-ff promotion trees, unrelated history,
 lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
@@ -34,7 +34,7 @@ SCRATCH_ROOT=$(bun -e 'console.log((await Bun.file(process.env.EVIDENCE + "/scra
 bun "$INSTALLED" plan --root "$SCRATCH_ROOT" > "$EVIDENCE/scratch-plan.json"
 bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/scratch-plan.json").json();
   if (!r.terms.length || r.terms.some(t => t.status !== "pass")) throw Error("scratch plan mismatch");'
-bun run test tests/workflows/scratch.test.js > "$EVIDENCE/scratch-tests.log" 2>&1
+bun run test tests/workflows/scratch.test.js tests/workflows/scratch-consumers.test.js > "$EVIDENCE/scratch-tests.log" 2>&1
 ```
 
 Proof: installed execution creates stamped owned paths, preserves the child exit
@@ -43,6 +43,10 @@ inventory and reject unsafe explicit parents; absent/unsafe inherited TMPDIR
 uses a fresh private system-temp root. The helper retains scratch for validated
 cleanup under Launch's outer root. It is not filesystem or process containment;
 these fixtures prove no protection against absolute-path or HOME writes.
+Repository commands wrapped by scratch must select the repository explicitly;
+use the [repository command recipe](../../../../skills/axstack/references/workspace-hygiene.md#safe-deletion)
+and check the JSON child exit fields. Consumer fixtures execute that documented
+pattern against a deliberately failing repository test, preventing false greens.
 
 Run the readiness CLI fixtures in the offline shell. These use real PEM
 certificate and key bytes. The escaped-writer fixtures stop their exact child
