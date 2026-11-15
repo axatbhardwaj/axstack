@@ -6,6 +6,16 @@ const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/scratch-test-`);
 const helper = `${import.meta.dir}/../../skills/axstack/scripts/scratch.js`;
 afterAll(() => rmSync(root, { recursive: true }));
 function directory(prefix = 'case-') { return mkdtempSync(`${root}/${prefix}`); }
+let canChangeOwner = false;
+if (process.getuid() === 0) {
+  const probe = directory('owner-probe-');
+  try { chownSync(probe, 65534, 65534); canChangeOwner = true; } catch (error) {
+    if (!['EPERM', 'EINVAL'].includes(error.code)) throw error;
+  } finally {
+    if (canChangeOwner) chownSync(probe, process.getuid(), process.getgid());
+    rmSync(probe, { recursive: true });
+  }
+}
 function invoke(args, cwd, env = {}) {
   const result = Bun.spawnSync([process.execPath, helper, ...args], {
     cwd, env: { ...process.env, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0', ...env },
@@ -78,9 +88,9 @@ test.each(['absent', 'world-writable', 'under HOME', 'repeated slash', 'dot comp
   }
 });
 
-test.each(['world-writable', 'other-owned', 'under HOME', 'symlink', 'ancestor symlink'])('%s explicit parent holds without launching or writing', (kind) => {
+for (const kind of ['world-writable', 'other-owned', 'under HOME', 'symlink', 'ancestor symlink']) {
+test.skipIf(kind === 'other-owned' && !canChangeOwner)(`${kind} explicit parent holds without launching or writing`, () => {
   const outside = directory(), home = directory(), parent = directory();
-  if (kind === 'other-owned' && process.getuid() !== 0) return; // chown unavailable to non-root
   let path = parent;
   if (kind === 'world-writable') chmodSync(parent, 0o777);
   if (kind === 'other-owned') chownSync(parent, 65534, 65534);
@@ -107,6 +117,7 @@ test.each(['world-writable', 'other-owned', 'under HOME', 'symlink', 'ancestor s
     if (kind === 'other-owned') chownSync(parent, process.getuid(), process.getgid());
   }
 });
+}
 
 test('plan measures only named roots and never changes bytes or inventories', () => {
   const outside = directory(), parent = directory();
