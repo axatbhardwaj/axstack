@@ -23,17 +23,24 @@ function fixture() {
   return { cwd, git, stage, run };
 }
 
-function expectSilent(result) {
+function expectQuietSuccess(result) {
   expect(result.exitCode).toBe(0);
+  expect(result.stdout.toString()).toBe('Staged-file token check passed.\n');
   expect(result.stderr.toString()).toBe('');
+}
+
+function expectFailure(result, message) {
+  expect(result.exitCode).toBe(1);
+  expect(result.stdout.toString()).toBe('');
+  expect(result.stderr.toString()).toBe(`Staged-file token check failed: ${message}\n`);
 }
 
 test('small, empty and exactly 20,000-byte staged blobs pass', () => {
   const f = fixture();
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
   f.stage('small.ts', 'export const small = true;');
   f.stage('limit.ts', 'x'.repeat(20000));
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
 });
 
 test('new source and docs above the byte boundary produce exact-size advisories', () => {
@@ -44,6 +51,7 @@ test('new source and docs above the byte boundary produce exact-size advisories'
   f.stage('CHANGELOG.md', large);
   const result = f.run();
   expect(result.exitCode).toBe(0);
+  expect(result.stdout.toString()).toBe('Staged-file token check passed.\n');
   const message = result.stderr.toString();
   expect(message).toMatch(/advisory/i);
   for (const [path, bytes] of [['foo.ts', 25500], ['odd\tname\n[1].rs', 20001],
@@ -81,7 +89,7 @@ test('uses staged bytes and includes files outside the current subdirectory', ()
   const f = fixture();
   f.stage('foo.ts', 'small staged blob');
   writeFileSync(`${f.cwd}/foo.ts`, large);
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
   f.stage('foo.ts', large);
   writeFileSync(`${f.cwd}/foo.ts`, 'small working tree');
   mkdirSync(`${f.cwd}/sub`);
@@ -95,7 +103,7 @@ test('deleted staged files are ignored', () => {
   f.stage('removed.ts', large);
   f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
   f.git('rm', 'removed.ts');
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
 });
 
 for (const path of ['bun.lock', 'nested/tool.lockb', 'nested/package-lock.json', 'pnpm-lock.yaml',
@@ -106,7 +114,7 @@ for (const path of ['bun.lock', 'nested/tool.lockb', 'nested/package-lock.json',
   test(`skips non-authored path ${path} without exempting authored neighbours`, () => {
     const f = fixture();
     f.stage(path, large);
-    expectSilent(f.run());
+    expectQuietSuccess(f.run());
     f.stage('authored.ts', large);
     const result = f.run();
     expect(result.exitCode).toBe(0);
@@ -121,7 +129,7 @@ for (const banner of ['// @generated', '// AUTO-GENERATED', '// auto generated',
     const f = fixture();
     f.stage('code.ts', `one\ntwo\nthree\nfour\n${banner}\n${large.repeat(10)}`);
     writeFileSync(`${f.cwd}/code.ts`, large); // Banner detection must read the index.
-    expectSilent(f.run());
+    expectQuietSuccess(f.run());
     f.stage('code.ts', `one\ntwo\nthree\nfour\nfive\n${banner}\n${large}`);
     const result = f.run();
     expect(result.exitCode).toBe(0);
@@ -132,7 +140,7 @@ for (const banner of ['// @generated', '// AUTO-GENERATED', '// auto generated',
 test('skips Git-detected binary blobs even without a known extension', () => {
   const f = fixture();
   f.stage('payload.unknown', `\0${large}`);
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
 });
 
 test('uses repo-local ignore globs and comments without writing repository files', () => {
@@ -141,7 +149,7 @@ test('uses repo-local ignore globs and comments without writing repository files
   f.stage('recordings/other.json', large);
   writeFileSync(`${f.cwd}/.git/info/token-limit-ignore`, '# Recorded data\n\nrecordings/**/*.txt\nrecordings/*.json\n');
   const before = f.git('status', '--porcelain', '--untracked-files=all');
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
   expect(f.git('status', '--porcelain', '--untracked-files=all')).toBe(before);
   f.stage('outside.ts', large);
   const result = f.run();
@@ -160,7 +168,7 @@ test('linked worktrees share main-repo ignores', () => {
   mkdirSync(`${linked}/recordings`);
   writeFileSync(`${linked}/recordings/session.txt`, large);
   f.git('-C', linked, 'add', 'recordings/session.txt');
-  expectSilent(f.run(`${linked}/recordings`));
+  expectQuietSuccess(f.run(`${linked}/recordings`));
   writeFileSync(`${linked}/authored.ts`, large);
   f.git('-C', linked, 'add', 'authored.ts');
   const result = f.run(linked);
@@ -175,7 +183,7 @@ test('skips submodule gitlinks and checks renamed files', () => {
   f.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture');
   // A gitlink can refer to an object absent from this repository.
   f.git('update-index', '--add', '--cacheinfo', `160000,${'1'.repeat(40)},submodule`);
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
   f.git('mv', 'old.ts', 'renamed.ts');
   const result = f.run();
   expect(result.exitCode).toBe(0);
@@ -207,8 +215,8 @@ for (const size of ['NaN', '', '-1', '1.5', '20001oops', '9007199254740992', 'er
     const result = Bun.spawnSync([process.execPath, script], {
       cwd: f.cwd, env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
     });
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr.toString()).toMatch(/check failed/i);
+    expectFailure(result, size === 'error' ? 'blob read failed'
+      : `Invalid blob size for "file.ts": ${JSON.stringify(size)}`);
   });
 }
 
@@ -221,8 +229,7 @@ test('unmerged index entries are errors even for excluded paths', () => {
   });
   expect(result.exitCode).toBe(0);
   const check = f.run();
-  expect(check.exitCode).not.toBe(0);
-  expect(check.stderr.toString()).toMatch(/unmerged/i);
+  expectFailure(check, 'Unmerged index entries must be resolved before measurement');
 });
 
 test('staged-file measurement never executes a repository-local fsmonitor', () => {
@@ -233,6 +240,6 @@ test('staged-file measurement never executes a repository-local fsmonitor', () =
   chmodSync(monitor, 0o700);
   appendFileSync(`${f.cwd}/.git/config`, `\n[core]\n\tfsmonitor = "${monitor}"\n`);
 
-  expectSilent(f.run());
+  expectQuietSuccess(f.run());
   expect(existsSync(`${monitor}.sentinel`)).toBe(false);
 });
