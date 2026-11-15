@@ -4,8 +4,6 @@ export const rewordings = {
   "role snapshot": "Source, time and resolved ID accompany the requested settings and stable role IDs in a snapshot of the selected preset from roles.json.",
   "snapshot resume": "With no re-resolution, the snapshot is preserved on resume.",
   "snapshot change": "The user's explicit decision is required for changes.",
-  "provider mapping": "Bindings are grok→grok, claude→claudeAgent and codex→codex.",
-  "mandatory agent-ID bindings": "Bindings are required to map grok to grok.",
   "dispatch plan pointer": "Invoke scripts/dispatch-plan.js with --kind, --capabilities, --roles and --role using saved capabilities and the recorded role snapshot to generate the plan.",
   "dispatch verification pointer": "Invoke scripts/dispatch-plan.js --verify with saved native task status and thread reads and the same plan inputs.",
   "permission intent limitation": "Stored permission intent supplies neither effective parity nor a security boundary.",

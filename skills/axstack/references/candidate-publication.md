@@ -42,17 +42,12 @@ Before a history rewrite, confirm expected-old remote SHA and use a narrowly
 justified lease; a mismatch holds publication. If push outcome is ambiguous,
 inspect remote state before retrying.
 
-Before reviewer dispatch, read the remote ref back, confirm its SHA equals candidate SHA, pin
-current base and refresh PR body counts and base from confirmed candidate SHA
-and that base under [PR shape](pr-shape.md).
-After every push, before post-push diligence or merge-ready, compare the PR body's
-stated head SHA with `Confirmed remote SHA` and record `PR body head SHA: <sha or none>`.
-Accept `none` for a PR body without a stated head SHA.
-Accept a stated full head SHA only when it equals `Confirmed remote SHA`.
-Accept a stated abbreviated head SHA only when it is a matching prefix of
-`Confirmed remote SHA` with at least 7 hexadecimal characters.
-Hold on a mismatched head SHA or an abbreviation shorter than 7 characters.
-Leave other SHAs in the PR body unchanged.
+Before reviewer dispatch, read the remote ref back, confirm its SHA equals candidate SHA,
+pin the current base, and render and check the PR facts using
+[PR body proof mode](pr-shape.md#pr-body).
+After every push, before post-push diligence or merge-ready, run proof mode against
+the live PR body and retain its JSON evidence. Hold publication progression on any
+failed or unknown term; the helper grants no authority.
 Record:
 
 ```text
@@ -62,7 +57,7 @@ Base: <sha>
 Remote ref: <branch>
 Expected-old remote SHA: <sha | absent>
 Confirmed remote SHA: <sha>
-PR body head SHA: <sha or none>
+PR proof: <proof-mode JSON evidence path>
 PR: <url>
 CI: <run ID or URL and triggered/pending/completed status>
 ```

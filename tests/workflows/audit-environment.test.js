@@ -8,7 +8,8 @@ const proposals = () => audit().split(/## 5\.[^\n]*\n/)[1]?.split(/\n## 6\./)[0]
 const clausesOf = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
 // These contracts protect the new proposal scope and evidence/authority limits.
-// Existing owned-audit and correct-integration tests own delivery and §6 parity.
+// owned-audit and correct-integration own delivery, covered recurrence and §6
+// parity; code-first-learning owns the recurring mechanical learning default.
 // Mutations operate on real source in memory; they never edit tracked guidance.
 const rules = [
   ['proposal scope', [/one/i, /bounded/i, /hypothesized/i, /skill or environment change/i],

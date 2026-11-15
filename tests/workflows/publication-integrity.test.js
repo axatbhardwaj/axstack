@@ -2,47 +2,34 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
-const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
+// Match checkRule's link normalization when substituting real-source rewordings.
+const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8')
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 const publication = 'skills/axstack/references/candidate-publication.md';
 const diligence = 'skills/axstack/references/diligence.md';
 const readiness = 'skills/axstack-implement/SKILL.md';
 
 // Declared prompt contracts, not a test-only policy interpreter or live agent proof.
-// Existing diligence checks cover revision binding, not these three auditor gaps.
+// Existing diligence checks cover revision binding, not these auditor gaps.
+// PR fact comparisons are covered by pr-shape-proof.test.js (R1).
 // Each direction targets its rule; an independent paraphrase must also pass.
 const rules = [
-  ['A-P5: check after every push before diligence and merge-ready', publication,
-    [/(?:after|following) (?:each|every) push/i, /(?:before|ahead of) (?:post-push )?diligence (?:or|and) merge-ready/i, /compare|check|verify/i, /PR body|PR body's/i, /head SHA/i, /Confirmed remote SHA/i],
-    /(?:before|ahead of) (?:post-push )?diligence/i, 'after diligence',
-    'Following each push, verify the PR body head SHA against Confirmed remote SHA ahead of diligence and merge-ready and log PR body head SHA: <sha or none>.'],
-  ['A-P5: record the body head after each push', publication,
-    [/(?:after|following) (?:each|every) push/i, /record|enter|log/i, /PR body head SHA/i, /sha or none/i],
-    /record|enter|log/i, 'omit',
-    'Following each push, log PR body head SHA: <sha or none> and check the PR body head SHA against Confirmed remote SHA before diligence or merge-ready.'],
-  ['A-P5 holdout: absent head uses none and passes', publication,
-    [/accept|allow|passes/i, /`none`/i, /without (?:a )?(?:stated )?head SHA/i, /PR body/i],
-    /accept|allow|passes/i, 'reject',
-    'A PR body without a head SHA passes with `none`.'],
-  ['A-P5 holdout: matching full head passes', publication,
-    [/accept|allow|passes/i, /full head SHA/i, /only (?:when|if)/i, /equals|matches/i, /Confirmed remote SHA/i],
-    /only (?:when|if)/i, 'even unless',
-    'A full head SHA passes only if it matches Confirmed remote SHA.'],
-  ['A-P5 holdout: matching abbreviated head passes at seven characters', publication,
-    [/accept|allow|passes/i, /abbreviated head SHA/i, /only (?:when|if)/i, /matching prefix/i, /Confirmed remote SHA/i, /(?:at least (?:7|seven)|(?:7|seven) or more) (?:hexadecimal|hex) characters/i],
-    /at least (?:7|seven)|(?:7|seven) or more/i, 'at least 6',
-    'An abbreviated head SHA passes only if it is a matching prefix of Confirmed remote SHA with seven or more hex characters.'],
-  ['A-P5: stale body head holds the candidate', publication,
-    [/hold|block|stop/i, /mismatched head SHA|head SHA differs from `?Confirmed remote SHA`?/i],
-    /hold|block|stop/i, 'advance',
-    'Stop on a mismatched head SHA or an abbreviation shorter than seven characters.'],
-  ['short abbreviations cannot bypass the match', publication,
-    [/hold|block|stop/i, /abbreviation/i, /shorter than (?:7|seven) characters/i],
-    /shorter than (?:7|seven)/i, 'longer than 7',
-    'Stop on an abbreviation shorter than seven characters or a mismatched head SHA.'],
-  ['other body SHAs remain untouched', publication,
-    [/leave|keep|preserve/i, /other SHAs/i, /PR body/i, /unchanged|untouched/i],
-    /unchanged|untouched/i, 'updated',
-    'Preserve other SHAs in the PR body untouched.'],
+  ['proof is rendered and checked before reviewer dispatch', publication,
+    [/(?:before|ahead of) reviewer dispatch/i, /render/i, /check|verify/i, /PR facts/i, /proof mode/i],
+    /before|ahead of/i, 'after',
+    'Ahead of reviewer dispatch, render and verify PR facts using PR body proof mode.'],
+  ['proof runs after every push before diligence or merge-ready', publication,
+    [/(?:after|following) (?:every|each) push/i, /(?:before|ahead of) (?:post-push )?diligence (?:or|and) merge-ready/i, /run|execute/i, /proof mode/i, /live PR body/i],
+    /before|ahead of/i, 'after',
+    'Following each push, ahead of diligence or merge-ready, execute proof mode against the live PR body and save its JSON evidence.'],
+  ['proof JSON is retained after every push', publication,
+    [/(?:after|following) (?:every|each) push/i, /retain|keep|save/i, /JSON evidence/i],
+    /retain|keep|save/i, 'discard',
+    'Following each push, ahead of diligence or merge-ready, execute proof mode against the live PR body and save its JSON evidence.'],
+  ['failed or unknown terms hold publication progression', publication,
+    [/hold|block|stop/i, /publication (?:progression|progress)/i, /any|every/i, /failed or unknown/i, /term/i],
+    /hold|block|stop/i, 'continue',
+    'Block publication progress on every failed or unknown term.'],
   ['B1: keep output from every full-suite run', diligence,
     [/retain|keep|save/i, /(?:full|complete) output/i, /(?:each|every) full[- ]suite run/i, /named log|log file/i, /private evidence (?:folder|directory)/i],
     /(?:each|every) full[- ]suite run/i, 'successful full-suite runs',
@@ -110,9 +97,3 @@ for (const rule of rules) {
     expect(read(source), 'source remains unchanged').toBe(originalSource);
   });
 }
-
-test('publication receipt records the head SHA or none alongside confirmed remote SHA', () => {
-  const template = read(publication).match(/```text\n([\s\S]*?)```/)?.[1];
-  expect(template).toMatch(/^Confirmed remote SHA: <sha>$/m);
-  expect(template).toMatch(/^PR body head SHA: <sha or none>$/m);
-});
