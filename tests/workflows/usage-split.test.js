@@ -36,6 +36,7 @@ test('fixture pins deduplication, interval edges, four token components, class p
   expect(report.duplicatesRemoved).toBe(1);
   expect(report.interval).toEqual({ start: fixture.start, end: fixture.end, endExclusive: true });
   expect(report.billedCost).toBeNull();
+  expect(report.classes.find((row) => row.class === 'authoring').turns).toBeNull();
   expect(term(report, 'rates').status).toBe('unknown');
   expect(term(report, 'billed-cost').status).toBe('unknown');
   expect(term(report, 'merged-prs').status).toBe('pass');
