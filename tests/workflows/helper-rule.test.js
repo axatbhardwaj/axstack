@@ -5,11 +5,14 @@ import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const guidance = () => sentences(readFileSync(`${import.meta.dir}/../../AGENTS.md`, 'utf8')
   .replace(/[`*]/g, '')).join('. ');
 const newHelperNames = [/usage-split/i, /evidence[- ](?:inspector|inspection)/i, /lane[- ]owner facts/i,
-  /pr-fresh/i, /image[- ]resource extraction/i, /scratch/i, /capture/i, /sandbox/i];
+  /pr-fresh/i, /image[- ]resource extraction/i, /scratch/i, /capture/i, /sandbox/i,
+  /drift[- ](?:check|inspection)/i, /quiet[- ]gate (?:facts|observations)/i];
+const writerConcepts = [/process(?:es)?\b/i, /file[- ]?system/i, /containers?\b/i, /networks?\b/i,
+  /clean[- ]?up/i, /scratch (?:execution|running)/i, /capture/i, /sandbox (?:run\/reap|reap\/run)/i];
 
 const rules = [
   ['scope', (text) => requires(text, /only the new helpers/i, /dispatch-plan/, /pr-shape/, /readiness/, /run-init/, ...newHelperNames),
-    'Only the new helpers image resource extraction, sandbox, capture, scratch, pr-fresh, lane owner facts, evidence inspection, usage-split, run-init, readiness, pr-shape and dispatch-plan follow this rule.',
+    'Only the new helpers quiet gate observations, drift inspection, image resource extraction, sandbox, capture, scratch, pr-fresh, lane owner facts, evidence inspection, usage-split, run-init, readiness, pr-shape and dispatch-plan follow this rule.',
     [[/only the new helpers/i, 'all scripts']], newHelperNames],
   ['legacy behavior', (text) => requires(text, /existing scripts/i, /retain|keep/i, /behavior/i),
     'The existing scripts keep their behavior.', [[/retain|keep/i, 'change']]],
@@ -19,9 +22,9 @@ const rules = [
     'Fact and plan helpers dispatch-plan, pr-shape and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON or SQLite snapshots, emit to stdout or a caller-given path, and retain no state between calls.',
     [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']], [/SQLite (?:exports|snapshots)/i]],
   ['writer boundaries', (text) => requires(text, /writer helpers/i, /run-init/, /readiness --run/,
-    /every side effect/i, /--help/, /write only (?:those|disclosed) paths/i),
-    'Writer helpers run-init and readiness --run must list every side effect in --help and write only disclosed paths.',
-    [[/write only (?:those|disclosed) paths/i, 'write any paths'], [/every side effect/i, 'selected side effects']]],
+    /every side effect/i, /--help/, /write only (?:those|disclosed) paths/i, ...writerConcepts),
+    'Writer helpers capture, scratch running, sandbox reap/run, readiness --run and run-init must list every side effect in --help covering processes, file system, containers, networks and clean-up, and write only disclosed paths.',
+    [[/write only (?:those|disclosed) paths/i, 'write any paths'], [/every side effect/i, 'selected side effects']], writerConcepts],
   ['term evidence', (text) => requires(text, /all new helpers/i, /report each term/i,
     /pass/, /fail/, /unknown/, /n\/a/, /evidence/i),
     'All new helpers report each term with evidence as n/a, unknown, fail or pass.',
