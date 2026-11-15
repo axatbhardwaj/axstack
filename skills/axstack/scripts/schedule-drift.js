@@ -7,6 +7,9 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
                   projectId,prompt,schedule,enabled}]}. Export every relevant project; never use a live database.
   --bindings FILE Private JSON: {host,schedules:[{promptFile,scheduledTaskId,projectId,enabled,schedule,
                   values:{HOST_TOKEN:"literal value"}}]}. Declare all three packaged prompt filenames exactly once.
+                  For intentional host exclusions use {promptFile,absent:true,scheduledTaskId?:expectedId}.
+                  Fresh complete matching-host coverage yields n/a; any matching declared task ID fails.
+                  Without a task ID, absent:true is an explicit host-scope declaration, not identity discovery.
                   Values substitute only explicit {{HOST_TOKEN}} placeholders. No implicit trim or normalization.
                   Schedule is the exact host declaration; review-manager additionally requires interval 1800000.
   --prompts DIR   Directory containing the three packaged prompt files; default: installed ../references.
@@ -14,7 +17,7 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
   --max-age-seconds N Maximum export age, inclusive; positive integer, default 300. Future exports are unknown.
   --help         Show flags, schema, effects and limitations.
 No writes, subprocesses, network, database access, schedule mutations or persistent state.
-Stdout reports per-term pass/fail/unknown with evidence and counts only; no aggregate verdict or authority.
+Stdout reports per-term pass/fail/unknown/n/a with evidence and counts only; no aggregate verdict or authority.
 Exports and bindings stay private. Output contains hashes and filenames, never prompts, IDs or host values.
 Missing, malformed, unavailable, stale or incomplete evidence is unknown; no comparison passes without fresh coverage.
 Exit: 0 measured (including failed facts), 1 invalid CLI/error, 2 incomplete (unknown facts).
@@ -70,6 +73,13 @@ function compare(args) {
     const tasks = fresh && nonempty(binding?.scheduledTaskId)
       ? source.tasks.filter((t) => t?.scheduledTaskId === binding.scheduledTaskId) : [];
     const task = tasks.length === 1 ? tasks[0] : null;
+    if (binding?.absent === true) {
+      const status = !fresh || source.host !== bindings.host ? 'unknown' : tasks.length ? 'fail' : 'n/a';
+      for (const suffix of ['binding', 'prompt', 'cadence', 'enabled']) {
+        term(`${file}.${suffix}`, status, 'explicit host exclusion; fresh complete matching-host export required; any declared task ID must be absent');
+      }
+      continue;
+    }
     const usable = fresh && declared && rows.length === 1 && task !== null;
     const fact = (suffix, known, matches, evidence) => term(`${file}.${suffix}`,
       !usable || !known ? 'unknown' : matches ? 'pass' : 'fail', evidence);
