@@ -24,6 +24,24 @@ function run(change = () => {}) {
   return { code: result.exitCode, report: JSON.parse(result.stdout.toString()), dir };
 }
 const status = (report, id) => report.terms.find((t) => t.id === id)?.status;
+for (const value of ['{{HOST_HOME}}', '{{HOST_INCOMPLETE']) {
+  test(`unfilled live host token fails even when bound bytes match: ${value}`, () => {
+    const { code, report } = run((d) => {
+      d.bindings.schedules[0].values.HOST_HOME = value;
+      d.export.tasks[0].prompt = d.prompts['review-manager-prompt.md'].replace('{{HOST_HOME}}', value);
+    });
+    expect(code).toBe(0);
+    expect(status(report, 'review-manager-prompt.md.prompt')).toBe('fail');
+  });
+}
+test('unfilled live host token fails even when the host binding is missing a value', () => {
+  const { code, report } = run((d) => {
+    delete d.bindings.schedules[0].values.HOST_HOME;
+    d.export.tasks[0].prompt = d.prompts['review-manager-prompt.md'];
+  });
+  expect(code).toBe(0);
+  expect(status(report, 'review-manager-prompt.md.prompt')).toBe('fail');
+});
 test('fresh complete export compares bound bytes, cadence and enabled state without writes', () => {
   const { code, report } = run();
   expect(code).toBe(0);

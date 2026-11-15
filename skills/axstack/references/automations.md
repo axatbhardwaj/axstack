@@ -49,7 +49,10 @@ The sections below govern full passes; a quiet exit bypasses their teardown
 except the guarded pass-end self-settle.
 
 The lane thread must use the recorded `axstack-owner` binding and verify its
-readback through `t3_thread_read`. Then `schedule_task` uses the packaged prompt,
+readback through `t3_thread_read`. Before `schedule_task`, render the packaged prompt
+by filling every `{{HOST_*}}` placeholder from the private host binding used by
+`schedule-drift.js`. Never deploy a prompt containing an unfilled `{{HOST_*}}` placeholder.
+Then `schedule_task` uses the rendered packaged prompt,
 every 30 minutes with `everyMs:1800000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
 Record the schedule ID, project, lane binding and pass thread/run identities.
 Each pass compares native task status and thread reads for settings readback with the recorded binding
