@@ -37,8 +37,7 @@ preset and stable role IDs, requested provider/model/class/mode/effort, resolved
 ID, source and time once. Resume preserves that snapshot with no re-resolution;
 changes require the user's explicit decision. Bundled presets are setup inputs.
 
-Provider bindings must map codex→`codex`, claude→`claudeAgent` and grok→`grok`.
-For every dispatch or launch, claude must bind to `claudeAgent` and codex must bind to `codex`.
+[Provider bindings](../scripts/resolve-models.js) are enforced in code.
 A usage-limited instance must hold the work without failover.
 
 For plan generation, run
