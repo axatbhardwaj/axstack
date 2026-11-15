@@ -28,6 +28,7 @@ Driver Git commands in a worktree a worker has written must pass
 Use [scratch.js](../scripts/scratch.js) for command scratch. Repository commands
 must explicitly select the repository, because the helper's cwd is empty:
 `bun <installed-axstack>/scripts/scratch.js run -- bun --cwd=<repo> run test <test-path>`.
+The `--cwd=` form is required because the spaced `bun --cwd <repo>` form prints help and exits 0, a false green.
 For Git and other tools use their explicit repository/cwd option or absolute paths.
 Check JSON `child.exitCode` and `child.signal`; helper exit 0 only means measured.
 Record its JSON paths in the dispatch receipt; inspect declared roots with
