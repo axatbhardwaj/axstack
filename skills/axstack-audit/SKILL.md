@@ -193,8 +193,10 @@ install.
 The environment lens is optional for bounded proposals.
 Consider navigation pointers, automated checks, coding-standard placement for review, steering-file bloat and no-op instructions, tool economy, and information access.
 For steering-file trims, follow section 6's AGENTS.md and CLAUDE.md parity rule.
+Route repeated mistakes to axstack-correct as section 6 proposals.
 
 Before proposing a new check, report whether an existing check is unwired or broken.
+For a mechanical rule, prefer a deterministic check over a prose rule.
 
 For this lens, read only the evidence section 2 permits plus read-only AGENTS.md and CLAUDE.md, CI configuration and package scripts at the audited revision.
 Read no transcripts for the environment lens.
