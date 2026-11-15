@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
 import { mkdtempSync, writeFileSync, readFileSync, readdirSync, linkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/usage-split.json`).json();
 const script = `${import.meta.dir}/../../skills/axstack/scripts/usage-split.js`;
@@ -8,7 +9,7 @@ const term = (report, id) => report.terms.find((item) => item.id === id);
 function setup(change = () => {}) {
   const data = structuredClone(fixture);
   change(data);
-  const dir = mkdtempSync(`${process.env.TMPDIR}/usage-split-`);
+  const dir = mkdtempSync(`${tmpdir()}/usage-split-`);
   for (const key of ['cache', 'rates', 'state', 'prs']) writeFileSync(`${dir}/${key}.json`, JSON.stringify(data[key]));
   const args = ['--cache', `${dir}/cache.json`, '--rates', `${dir}/rates.json`, '--state', `${dir}/state.json`,
     '--prs', `${dir}/prs.json`, '--start', data.start, '--end', data.end];
@@ -127,6 +128,23 @@ test('declared turns without usage remain unknown and role-labelled IDs override
   expect(author).toMatchObject({ tokens: 143, threads: 3, turns: 2, missingUsageThreads: 1 });
   expect(term(report, 'usage-coverage').status).toBe('unknown');
   expect(report.roleMapping.find((row) => row.threadId.includes('delegated-task')).tokens).toBeNull();
+});
+
+test.each([
+  ['invalid turns', 'thread-a', 'authoring', [
+    { thread_id: 'thread-a', turns: 3 },
+    { thread_id: 'thread-a', turns: 'invalid' },
+    { thread_id: 'thread-a', turns: 2 },
+  ]],
+  ['unknown thread', 'thread-absent', 'other', [{ thread_id: 'thread-absent', turns: 7 }]],
+])('%s cannot produce a known turn total', (_name, threadId, roleClass, runs) => {
+  const { report, code } = run(setup((data) => { data.state.runs = runs; }));
+  expect(report.classes.find((row) => row.class === roleClass).turns).toBeNull();
+  expect(report.roleMapping.find((row) => row.threadId === threadId)?.turns).toBeNull();
+  expect(code).toBe(2);
+  expect(term(report, 'run-counts')).toMatchObject({ status: 'unknown', evidence: [
+    expect.objectContaining({ invalidRows: expect.any(Array), unknownThreads: expect.any(Array) }),
+  ] });
 });
 
 test('complete supplied accounting exits measured; zero-use interval has n/a attribution', () => {
