@@ -251,7 +251,7 @@ function proof(argv, io) {
 export function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
   try {
     if (argv[0] === '--proof') return proof(argv.slice(1), io);
-    if (argv.includes('--help')) { io.stdout(help); return 0; }
+    if (argv.includes('--help')) { io.stdout(`${help}\n${proofHelp}`); return 0; }
     const options = optionsFrom(argv);
     const root = run(command('rev-parse', '--show-toplevel'));
     if (root.code) throw new Error('run this helper from a Git checkout');
