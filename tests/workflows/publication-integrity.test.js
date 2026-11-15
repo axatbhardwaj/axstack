@@ -2,7 +2,10 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
-const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
+// Match checkRule's link normalization when substituting real-source rewordings.
+const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8')
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+const publication = 'skills/axstack/references/candidate-publication.md';
 const diligence = 'skills/axstack/references/diligence.md';
 const readiness = 'skills/axstack-implement/SKILL.md';
 
@@ -11,6 +14,22 @@ const readiness = 'skills/axstack-implement/SKILL.md';
 // PR fact comparisons are covered by pr-shape-proof.test.js (R1).
 // Each direction targets its rule; an independent paraphrase must also pass.
 const rules = [
+  ['proof is rendered and checked before reviewer dispatch', publication,
+    [/(?:before|ahead of) reviewer dispatch/i, /render/i, /check|verify/i, /PR facts/i, /proof mode/i],
+    /before|ahead of/i, 'after',
+    'Ahead of reviewer dispatch, render and verify PR facts using PR body proof mode.'],
+  ['proof runs after every push before diligence or merge-ready', publication,
+    [/(?:after|following) (?:every|each) push/i, /(?:before|ahead of) (?:post-push )?diligence (?:or|and) merge-ready/i, /run|execute/i, /proof mode/i, /live PR body/i],
+    /before|ahead of/i, 'after',
+    'Following each push, ahead of diligence or merge-ready, execute proof mode against the live PR body and save its JSON evidence.'],
+  ['proof JSON is retained after every push', publication,
+    [/(?:after|following) (?:every|each) push/i, /retain|keep|save/i, /JSON evidence/i],
+    /retain|keep|save/i, 'discard',
+    'Following each push, ahead of diligence or merge-ready, execute proof mode against the live PR body and save its JSON evidence.'],
+  ['failed or unknown terms hold publication progression', publication,
+    [/hold|block|stop/i, /publication (?:progression|progress)/i, /any|every/i, /failed or unknown/i, /term/i],
+    /hold|block|stop/i, 'continue',
+    'Block publication progress on every failed or unknown term.'],
   ['B1: keep output from every full-suite run', diligence,
     [/retain|keep|save/i, /(?:full|complete) output/i, /(?:each|every) full[- ]suite run/i, /named log|log file/i, /private evidence (?:folder|directory)/i],
     /(?:each|every) full[- ]suite run/i, 'successful full-suite runs',
