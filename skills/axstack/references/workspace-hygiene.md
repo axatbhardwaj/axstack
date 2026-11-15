@@ -25,8 +25,10 @@ Driver Git commands in a worktree a worker has written must pass
 
 ## Safe deletion
 
-Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.
-Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.
+Run scratch commands through [scratch.js](../scripts/scratch.js):
+`bun <installed-axstack>/scripts/scratch.js run -- <command> [args...]`.
+Record its JSON paths in the dispatch receipt; inspect declared roots with
+`plan --root <root>` and consult `--help` for effects and cleanup responsibilities.
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
 
 Run each cleanup as a single command.
