@@ -40,8 +40,8 @@ unshare --user --map-root-user --net -- env -i PATH="$(dirname "$BUN"):$NODE_DIR
 
 Inside that offline shell, initialize these handles. The fresh network
 namespace has only loopback; failure of `unshare` holds driving.
-Rootless user mapping presents the host owner (for example uid1000) as inner
-uid0, never host root. Validate ownership against `id -u` in each namespace: the
+User mapping presents the host owner as inner uid0; the host owner may already
+be uid0 (for example on axat-vps). Validate ownership against `id -u` in each namespace: the
 outer scratch check uses host uid, Doctor uses inner uid. Record both IDs and
 network namespace identities. The full suite drops DAC override/read-search
 capabilities even inside this user namespace.
@@ -54,7 +54,9 @@ cd "$REPO"
 REV=$(git rev-parse HEAD)
 SCRIPTS="$REPO/skills/axstack/scripts"
 export REV SCRIPTS
-export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$TMPDIR/gitconfig"
+: > "$GIT_CONFIG_GLOBAL"
+chmod 600 "$GIT_CONFIG_GLOBAL"
 printf '%s\n' "$REV" > "$EVIDENCE/revision.txt"
 printf '%s\n' "shell PID=$$; no background services" > "$EVIDENCE/processes.txt"
 printf '%s\n' "host uid=$HOST_UID; inner uid=$(id -u); host net=$HOST_NET; inner net=$(readlink /proc/self/ns/net)" > "$EVIDENCE/namespaces.log"
