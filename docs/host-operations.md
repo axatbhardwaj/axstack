@@ -43,8 +43,8 @@ Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
 Missing schedule capability holds activation.
-The optional review manager uses an unbound hourly T3 schedule
-(`everyMs:3600000`) and requires
+The optional review manager uses an unbound 30-minute T3 schedule
+(`everyMs:1800000`) and requires
 its separate native canary before activation. Installed guidance does not prove
 live behavior. See [Review manager](../skills/axstack/references/automations.md).
 
@@ -99,7 +99,7 @@ with the PR; remove the exact unit and route after settlement.
 
 The optional native review manager uses the VPS T3 project `axstack-review-lane`
 on the existing host clone. Configure and read back the lane's `axstack-owner`
-binding, then create an unbound hourly T3 schedule (`everyMs:3600000`).
+binding, then create an unbound 30-minute T3 schedule (`everyMs:1800000`).
 The packaged prompt checks for a quiet exit before skill loading; full passes
 follow the lifecycle below. Each pass starts in a fresh finite worktree from
 `origin/main`, fetches first, and checks its
