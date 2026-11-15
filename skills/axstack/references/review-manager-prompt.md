@@ -12,7 +12,7 @@ Search omits head OIDs: obtain them with read-only `gh pr view --json headRefOid
 A result count at or above 1000 in either query makes coverage incomplete.
 Inventory every page of T3 lane threads and their run liveness, including recorded
 PR-job descendants, using exact lane identities.
-Read continuity at `{{HOST_CONTINUITY_PATH}}` and
+Read continuity at `~/.local/share/axstack/runs/review-manager/progress.md` and
 compare its Watermarks with the inventory:
 
 - Run the full pass when the sorted list differs from `Quiet gate:`.
@@ -56,7 +56,7 @@ Use host-clone detached per-PR checkouts; preserve exact ownership and receipts.
 Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves and
 reads back continuity at
-`{{HOST_CONTINUITY_PATH}}` using
+`~/.local/share/axstack/runs/review-manager/progress.md` using
 `run-record.md#review-manager-continuity-template`.
 The full pass records in Watermarks `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
