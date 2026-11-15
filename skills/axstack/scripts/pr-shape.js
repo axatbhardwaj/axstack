@@ -123,8 +123,9 @@ JSON: block (Markdown or null if facts unavailable), terms (each status, value,
 evidence including reproducing commands, separate child exit codes/errors,
 and stated body values when checked).
 Git counts use the merge-base diff (-M numstat; binary lines count as zero),
-and commits reachable from head but not base. PR mode uses one REST pull snapshot,
-including numeric commits (no truncated commit-list pagination).
+and commits reachable from head but not base. PR mode reads REST pull facts,
+including numeric commits (no truncated commit-list pagination), then resolves
+the live base tip via git/ref/heads/<base.ref>. Evidence keeps snapshot/live SHAs.
 No --body in Git mode renders only; PR mode checks the fetched body by default.
 Checks require exactly one <!-- axstack:proof --> ... <!-- /axstack:proof -->
 block and one line per field: Files, Lines added, Lines removed, Commits,
@@ -189,7 +190,21 @@ function proof(argv, io) {
     try {
       const data = JSON.parse(raw ?? '{}');
       for (const [id, value] of Object.entries({ files: data.changed_files, additions: data.additions,
-        deletions: data.deletions, commits: data.commits, head: data.head?.sha, base: data.base?.sha })) assign(id, value);
+        deletions: data.deletions, commits: data.commits, head: data.head?.sha })) assign(id, value);
+      const base = term('base');
+      Object.assign(base.evidence, { snapshotSha: data.base?.sha ?? null, liveSha: null,
+        baseRef: typeof data.base?.ref === 'string' ? data.base.ref : null });
+      if (base.evidence.baseRef) {
+        const ref = base.evidence.baseRef.split('/').map(encodeURIComponent).join('/');
+        const live = query(['base'], ['gh', 'api', `repos/${options['--repo']}/git/ref/heads/${ref}`]);
+        if (live !== null) {
+          try {
+            base.evidence.liveSha = JSON.parse(live)?.object?.sha ?? null;
+            base.evidence.reason = 'live base ref response has no valid commit SHA';
+            assign('base', base.evidence.liveSha);
+          } catch { base.evidence.reason = 'invalid live base ref JSON response'; }
+        }
+      } else base.evidence.reason = 'PR base.ref unavailable; cannot resolve live base tip';
       if (typeof data.body === 'string') body = data.body;
       else bodyError = 'PR body unavailable in gh response';
     } catch { bodyError = 'invalid gh JSON response'; }
@@ -241,7 +256,8 @@ function proof(argv, io) {
         ? /^[a-f0-9]{7,64}$/i.test(stated) && t.value.toLowerCase().startsWith(stated.toLowerCase())
         : /^(0|[1-9]\d*)$/.test(stated) && Number(stated) === t.value;
       t.status = values.length === 1 && matches ? 'pass' : 'fail';
-      t.evidence.reason = blocks.length !== 1 ? 'expected exactly one facts block' : 'compare stated value with current fact; one field required';
+      t.evidence.reason = blocks.length === 0 ? 'no facts block; render with --proof and paste the returned block into the PR body'
+        : blocks.length !== 1 ? 'expected exactly one facts block' : 'compare stated value with current fact; one field required';
     }
   }
   io.stdout(`${JSON.stringify({ block, terms })}\n`);
