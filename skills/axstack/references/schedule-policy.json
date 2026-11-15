@@ -76,6 +76,28 @@
         "kind": "verbatim",
         "decidedAt": "2026-11-15"
       }
+    },
+    {
+      "id": "operational-limits",
+      "status": "host-only",
+      "sourceClauseSha256": "9c99d7e2cb60e54a190092001e164f2a2513b62c4ddafab7e0bfba038b5ed3d5",
+      "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
+      "disposition": {
+        "kind": "host-only",
+        "decidedAt": "2026-11-15",
+        "reason": "Retain operational limits only in the private host binding; packaged guidance applies host-declared limits generically."
+      }
+    },
+    {
+      "id": "alert-command",
+      "status": "dropped",
+      "sourceClauseSha256": "d80e3cc4f5d026c3bc9218df7ec860a684806abf1bd4840160f7789dd2ae7ca1",
+      "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
+      "disposition": {
+        "kind": "dropped",
+        "decidedAt": "2026-11-15",
+        "reason": "Drop external notifications entirely; retain neither prompt text nor a host binding."
+      }
     }
   ],
   "review": {
