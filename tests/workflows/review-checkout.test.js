@@ -115,6 +115,29 @@ test('review templates distinguish authored worktrees from peer checkouts', () =
   expect(read('skills/axstack-review/references/candidate-brief.md')).toMatch(/^Driver worktree: <authored: resolved absolute path.*peer: n\/a>/m);
 });
 
+// T3 identity comes from the driver's dispatch receipt. GitHub comment/thread
+// IDs remain review evidence; their field must not be mistaken for T3 identity.
+const workerIdentityRequests = (text) => text.split('\n').filter((line) => {
+  const ids = line.match(/\b(?:task|(?:child[ _-]?)?thread|(?:child[ _-]?)?run)[ _-]*(?:ids?|identifiers?)\b/gi) ?? [];
+  return ids.some((id) => !/thread/i.test(id) || !/comment|github|forge/i.test(line) || /\bT3\b/i.test(line));
+});
+test('review receipt never asks workers to supply T3 execution IDs', () => {
+  const receipt = read('skills/axstack-review/references/review-receipt.md');
+  expect(workerIdentityRequests(receipt)).toEqual([]);
+  for (const request of [
+    'Workspace: <T3 taskId/childThreadId/runId + checkout path>',
+    'Execution: <task identifier>',
+    'Reviewer: include your T3 thread ID in the report.',
+    'Return the child run identifier with your verdict.',
+    'Report your task, thread and run IDs.',
+  ]) expect(workerIdentityRequests(`${receipt}\n${request}`), request).not.toEqual([]);
+  expect(workerIdentityRequests(receipt
+    .replace('Workspace:', 'Checkout:')
+    .replace('Findings:', 'Review findings:')
+    .replace('Agent-authored comment and thread IDs:', 'GitHub comment identifiers and thread identifiers:')
+    .replace('native worktree absolute path', 'absolute path of the assigned worktree'))).toEqual([]);
+});
+
 for (const path of [
   'skills/axstack/references/t3-runtime.md',
   'skills/axstack/references/candidate-publication.md',
