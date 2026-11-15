@@ -59,14 +59,12 @@ test('a cwd/TMPDIR-honouring child leaves the outside inventory unchanged', () =
   expect(readdirSync(temp)).toEqual([report.root.slice(temp.length + 1)]);
 });
 
-test.each(['absent', 'world-writable', 'under HOME', 'repeated slash', 'dot components', 'symlink', 'ancestor symlink'])('%s TMPDIR falls back to a private stamped root', (kind) => {
+test.each(['absent', 'world-writable', 'under HOME', 'symlink', 'ancestor symlink'])('%s TMPDIR falls back to a private stamped root', (kind) => {
   const outside = directory(), home = directory(), temp = directory();
   let inherited = temp;
   if (kind === 'absent') inherited = undefined;
   if (kind === 'world-writable') chmodSync(temp, 0o777);
   if (kind === 'under HOME') inherited = home;
-  if (kind === 'repeated slash') inherited = `/${home}`;
-  if (kind === 'dot components') inherited = `${temp}/../${home.split('/').at(-1)}`;
   if (kind.includes('symlink')) {
     symlinkSync(temp, `${outside}/link`);
     inherited = `${outside}/link`;
@@ -86,6 +84,44 @@ test.each(['absent', 'world-writable', 'under HOME', 'repeated slash', 'dot comp
   } finally {
     if (report.root.startsWith('/tmp/axstack-scratch-')) rmSync(report.root, { recursive: true });
   }
+});
+
+test.each(['trailing slash', 'doubled slash'])('%s TMPDIR outside HOME records paths accepted by plan', (kind) => {
+  const outside = directory(), home = directory(), parent = directory();
+  const inherited = kind === 'trailing slash' ? `${parent}/` : `/${parent}`;
+  const result = invoke(['run', '--', ...writer], outside, { HOME: home, TMPDIR: inherited });
+  expect(result.code, result.err).toBe(0);
+  const run = JSON.parse(result.out);
+  expect(run.root.startsWith(`${parent}/axstack-scratch-`)).toBe(true);
+  expect(run.root).not.toContain('//');
+  const plan = invoke(['plan', '--root', run.root], outside, { HOME: home });
+  expect(plan.code).toBe(0);
+  expect(JSON.parse(plan.out).terms.every((term) => term.status === 'pass')).toBe(true);
+});
+
+test('dot components outside HOME are rejected independently of the HOME boundary', () => {
+  const outside = directory(), home = directory(), parent = directory();
+  const inherited = `${parent}/../${parent.split('/').at(-1)}`;
+  const result = invoke(['run', '--', ...writer], outside, { HOME: home, TMPDIR: inherited });
+  expect(result.code, result.err).toBe(0);
+  const run = JSON.parse(result.out);
+  try {
+    expect(run.root.startsWith('/tmp/axstack-scratch-')).toBe(true);
+    expect(run.terms.find((term) => term.id === 'path').status).toBe('fail');
+    expect(readdirSync(parent)).toEqual([]);
+  } finally {
+    if (run.root.startsWith('/tmp/axstack-scratch-')) rmSync(run.root, { recursive: true });
+  }
+});
+
+test('world-writable non-sticky ancestor holds before any child runs', () => {
+  const outside = directory(), ancestor = directory();
+  const parent = `${ancestor}/parent`;
+  mkdirSync(parent, { mode: 0o700 });
+  chmodSync(ancestor, 0o777);
+  const result = invoke(['run', '--root', parent, '--', ...writer], outside);
+  expect(result.code).toBe(2);
+  expect(readdirSync(parent)).toEqual([]);
 });
 
 for (const kind of ['world-writable', 'other-owned', 'under HOME', 'symlink', 'ancestor symlink']) {
