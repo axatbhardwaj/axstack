@@ -51,6 +51,12 @@ test('excluded clause hashes are absent from shipped lines', () => {
   const hashes = new Set(shipped.map(hash));
   for (const c of excluded) expect(hashes.has(c.sourceClauseSha256)).toBe(false);
 });
+test('dropped alerts and private legacy resource exclusions cannot return', () => {
+  const shipped = ['review-manager-prompt.md', 'schedule-policy.json']
+    .map((name) => readFileSync(`${root}/${name}`, 'utf8')).join('\n');
+  expect(shipped).not.toMatch(/Alert command|hermes\s+send|telegram/i);
+  expect(shipped).not.toMatch(/carried over from|[\w-]+-owned resources|\/(?:root|home)\//i);
+});
 test('host-specific continuity and operational limits use explicit host bindings', () => {
   const prompt = readFileSync(`${root}/review-manager-prompt.md`, 'utf8');
   expect(prompt).toContain('Durable continuity: {{HOST_CONTINUITY_PATH}}');
@@ -82,11 +88,6 @@ for (const file of ['skills/axstack/references/automations.md', 'docs/host-opera
       [[/rendered/i, 'raw'], [/rendered/i, 'unrendered']], [/rendered(?: packaged)? prompt/i]);
   });
 }
-test('private legacy resource exclusions cannot return', () => {
-  const shipped = ['review-manager-prompt.md', 'schedule-policy.json']
-    .map((name) => readFileSync(`${root}/${name}`, 'utf8')).join('\n');
-  expect(shipped).not.toMatch(/carried over from|[\w-]+-owned resources|\/(?:root|home)\//i);
-});
 test('absent authoritative admission and submission policies remain explicit unknowns', () => {
   const p = policy();
   for (const phase of ['admission', 'submission']) {
