@@ -78,7 +78,8 @@ Test helper logic red/green before implementation.
 
 ### Isolate every attempt
 
-Launch with an owned 0700 TMPDIR outside HOME for data, home and port bookkeeping.
+Use [scratch.js](../axstack/scripts/scratch.js) for command scratch; consult
+`--help` and the [workspace recipe](../axstack/references/workspace-hygiene.md#safe-deletion).
 Listen on loopback only.
 Never use production secrets.
 Keep evidence in the private evidence folder after cleanup.
