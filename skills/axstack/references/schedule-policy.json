@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "reviewManagerEveryMs": 1800000,
   "provenance": "Clause SHA-256 covers its exact UTF-8 line, excluding the line terminator. Source export hashes cover the complete private JSON bytes. No private exports or schedule identities are packaged.",
   "clauses": [
     {
