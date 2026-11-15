@@ -41,6 +41,8 @@ const rules = [
   ['product boundary', [/edit product code/i, /fix the build/i], 'Never edit product code or fix the build.', [/never/gi, 'Always'], /never/i],
   ['build hold', [/failing build/i, /report/i, /hold/i], 'For a failing build, report it and hold generation.', [/hold/gi, 'continue']],
   ['isolation hold', [/isolation.*unavailable/i, /report/i, /gap/i, /hold live driving/i], 'When isolation is unavailable, report the gap and hold live driving.', [/hold live driving/gi, 'continue live driving']],
+  ['Launch state', [/Launch/i, /owned 0700 directory/i, /outside HOME/i, /data/i, /home/i, /port bookkeeping/i], 'Launch must allocate an owned 0700 directory outside HOME for data, home and port bookkeeping.', [/outside HOME/gi, 'inside HOME']],
+  ['persistent Launch state', [/keep/i, /same directory/i, /Launch/i, /Doctor/i, /Drive/i], 'Keep the same directory from Launch through Doctor and Drive.', [/same directory/gi, 'fresh directory per command']],
   ['loopback', [/listen/i, /loopback only/i], 'Listen on loopback only.', [/loopback only/gi, 'all interfaces']],
   ['secrets', [/production secrets/i], 'Never use production secrets.', [/never/gi, 'Always'], /never/i],
   ['literal cleanup', [/clean up/i, /literal absolute paths/i, /owned/i], 'Clean up owned resources by literal absolute paths.', [/literal absolute paths/gi, 'shared roots']],
