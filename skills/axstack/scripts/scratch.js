@@ -30,7 +30,16 @@ Reports per-term pass/fail/unknown/n/a with evidence, no aggregate verdict.
 Exit 0: measured, including failed plan criteria or a nonzero child exit.
 Exit 1: invalid input or execution error. Exit 2: hold or incomplete observation.
 Child exitCode and signal are stored separately in the JSON child field.
+Check those fields: helper exit 0 does not mean the child passed.
+Repository commands must select the repository explicitly, for example:
+  run -- bun --cwd=/absolute/repo run test tests/example.test.js
+HOME means the canonical environment HOME at startup, not the account database.
+With a fixture HOME, the caller must independently exclude the account's home.
+Path components reject symlinks and world-writable directories without sticky
+mode. Hostile concurrent path replacement remains the caller's responsibility.
 `;
+
+const normalize = (path) => path.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
 
 function options(argv) {
   const mode = argv[0];
@@ -43,7 +52,7 @@ function options(argv) {
     if (flags[i] !== '--root' || !path?.startsWith('/') || path.includes('\0') || path.split('/').some((p) => p === '..' || p === '.')) {
       throw Error('pass --root <absolute-path> without dot components; see --help');
     }
-    roots.push(path.replace(/\/+/g, '/').replace(/\/$/, '') || '/');
+    roots.push(normalize(path));
   }
   const command = separator < 0 ? [] : argv.slice(separator + 1);
   if (mode === 'run' ? roots.length > 1 || !command.length : !roots.length || separator >= 0) {
@@ -52,13 +61,15 @@ function options(argv) {
   return { mode, roots, command };
 }
 
-function noLinks(path) {
+function unsafeComponent(path) {
   let component = '';
   for (const part of path.split('/').filter(Boolean)) {
     component += `/${part}`;
-    if (lstatSync(component).isSymbolicLink()) return false;
+    const stat = lstatSync(component);
+    if (stat.isSymbolicLink()) return { component, reason: 'symlink; not followed' };
+    if ((stat.mode & 0o002) && !(stat.mode & 0o1000)) return { component, reason: 'world-writable without sticky mode' };
   }
-  return true;
+  return null;
 }
 
 function inspect(path, home, terms, systemParent = false) {
@@ -68,11 +79,12 @@ function inspect(path, home, terms, systemParent = false) {
       add('path', 'fail', 'absolute path without dot components required');
       return false;
     }
-    if (!noLinks(path)) {
-      add('symlinks', 'fail', 'a path component is a symlink; not followed');
+    const unsafe = unsafeComponent(path);
+    if (unsafe) {
+      add('path-components', 'fail', unsafe);
       return false;
     }
-    add('symlinks', 'pass', 'no symlink components');
+    add('path-components', 'pass', 'no symlinks or world-writable non-sticky components');
     const stat = lstatSync(path);
     const actual = realpathSync(path);
     const outside = actual !== home && !actual.startsWith(`${home === '/' ? '' : home}/`);
@@ -145,7 +157,7 @@ export async function main(argv) {
       let parent = roots[0];
       if (!parent && process.env.TMPDIR) {
         // Rejected environment candidates are facts, but do not prevent fallback.
-        const candidate = process.env.TMPDIR;
+        const candidate = normalize(process.env.TMPDIR);
         if (inspect(candidate, home, report.terms)) parent = candidate;
         else report.terms.push({ id: 'fallback', status: 'pass', evidence: 'unsafe TMPDIR ignored; using /tmp' });
       }
