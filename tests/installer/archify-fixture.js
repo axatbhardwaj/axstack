@@ -3,8 +3,10 @@ import { join } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
 export function git(repo, ...args) {
+  const gitConfig = join(repo, '..', 'gitconfig');
+  writeFileSync(gitConfig, '', { flag: 'a', mode: 0o600 });
   const result = Bun.spawnSync(['git', '-C', repo, ...args], {
-    env: { ...Bun.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' },
+    env: { ...Bun.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: gitConfig },
     stdout: 'pipe', stderr: 'pipe',
   });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
