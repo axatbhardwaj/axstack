@@ -1,9 +1,13 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 const script = `${import.meta.dir}/../../skills/axstack/scripts/schedule-drift.js`;
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/schedule-drift.json`).json();
 const roots = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true }); });
+function snapshot(dir) {
+  return readdirSync(dir, { withFileTypes: true }).map((e) => [e.name,
+    e.isDirectory() ? snapshot(`${dir}/${e.name}`) : readFileSync(`${dir}/${e.name}`, 'utf8')]);
+}
 function run(change = () => {}) {
   const data = structuredClone(fixture);
   change(data);
@@ -11,11 +15,12 @@ function run(change = () => {}) {
   roots.push(dir);
   for (const [name, prompt] of Object.entries(data.prompts)) writeFileSync(`${dir}/${name}`, prompt);
   for (const name of ['export', 'bindings']) writeFileSync(`${dir}/${name}.json`, JSON.stringify(data[name]));
-  const before = readdirSync(dir).map((p) => [p, readFileSync(`${dir}/${p}`, 'utf8')]);
+  mkdirSync(`${dir}/.bun/install/cache`, { recursive: true }); // Bun creates its empty runtime cache on startup.
+  const before = snapshot(dir);
   const result = Bun.spawnSync([process.execPath, script, '--export', `${dir}/export.json`,
     '--bindings', `${dir}/bindings.json`, '--prompts', dir, '--now', data.now],
-  { stdout: 'pipe', stderr: 'pipe', env: { ...process.env, HOME: dir } });
-  expect(readdirSync(dir).map((p) => [p, readFileSync(`${dir}/${p}`, 'utf8')])).toEqual(before);
+  { stdout: 'pipe', stderr: 'pipe', env: { ...process.env, HOME: dir, BUN_INSTALL_CACHE_DIR: dir, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' } });
+  expect(snapshot(dir)).toEqual(before);
   return { code: result.exitCode, report: JSON.parse(result.stdout.toString()), dir };
 }
 const status = (report, id) => report.terms.find((t) => t.id === id)?.status;
@@ -28,6 +33,7 @@ test('fresh complete export compares bound bytes, cadence and enabled state with
   expect(report).not.toHaveProperty('verdict');
 });
 for (const [name, change, id] of [
+  ['edited packaged bytes', (d) => { d.prompts['review-manager-prompt.md'] += 'extra'; }, 'review-manager-prompt.md.prompt'],
   ['edited prompt', (d) => { d.export.tasks[0].prompt += 'extra'; }, 'review-manager-prompt.md.prompt'],
   ['cadence mismatch', (d) => { d.export.tasks[0].schedule.everyMs = 3600000; }, 'review-manager-prompt.md.cadence'],
   ['false host cadence declaration', (d) => { d.bindings.schedules[0].schedule.everyMs = d.export.tasks[0].schedule.everyMs = 3600000; }, 'review-manager-prompt.md.cadence'],
