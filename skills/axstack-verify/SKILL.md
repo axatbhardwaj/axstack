@@ -79,7 +79,13 @@ Test helper logic red/green before implementation.
 ### Isolate every attempt
 
 Use [scratch.js](../axstack/scripts/scratch.js) for command scratch; consult
-`--help` and the [workspace recipe](../axstack/references/workspace-hygiene.md#safe-deletion).
+`--help` and the [workspace recipe](../axstack/references/workspace-hygiene.md#safe-deletion)
+for explicit repository selection and child exit checks.
+Launch must allocate an owned 0700 directory outside HOME for data, home and port bookkeeping.
+Keep the same directory from Launch through Doctor and Drive.
+Allocate it once with `scratch.js run -- bun -e ''`, save its JSON outside scratch,
+and reuse the printed root for Launch state, creating the fixture home inside it.
+Per-command scratch roots do not replace this persistent state root.
 Listen on loopback only.
 Never use production secrets.
 Keep evidence in the private evidence folder after cleanup.
