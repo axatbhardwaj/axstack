@@ -1,62 +1,81 @@
 {
   "version": 1,
-  "provenance": "Clause SHA-256 covers its exact UTF-8 line, excluding the line terminator. Source export hashes cover the complete private JSON bytes. No private exports or schedule identities are packaged.",
+  "provenance": "Clause SHA-256 covers the shipped exact UTF-8 line, excluding the line terminator; sourceClauseSha256 covers the original exported line. Source export hashes cover the complete private JSON bytes. No private exports or schedule identities are packaged.",
   "clauses": [
     {
       "id": "operating-context",
-      "status": "user-hold",
-      "sha256": "53deef1cad7603e10ce6fbfcf4c13b4caa750c2a5f233a59a19ae4924dc2e430",
+      "status": "imported",
+      "sha256": "4796b30d9b1bda286449d118962be7d2c74d60dc859752d0a1e98fe98ac6a40f",
+      "sourceClauseSha256": "53deef1cad7603e10ce6fbfcf4c13b4caa750c2a5f233a59a19ae4924dc2e430",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Historical private manager identity requires removal or substitution."
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "edited",
+        "decidedAt": "2026-11-15",
+        "reason": "Remove historical manager provenance; retain operating scope."
+      }
     },
     {
       "id": "durable-continuity",
-      "status": "user-hold",
-      "sha256": "0b97611ce39738ae739af27787062349bd293bb683b4d293fa8916e0e47bc998",
+      "status": "imported",
+      "sha256": "243ef7be96dc3c5f5f75101ec12e836e316efa48b77a659ef8aa06ce2819231e",
+      "sourceClauseSha256": "0b97611ce39738ae739af27787062349bd293bb683b4d293fa8916e0e47bc998",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Absolute private home path would need a declared host binding."
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "edited",
+        "decidedAt": "2026-11-15",
+        "reason": "Bind the continuity path privately on the host."
+      }
     },
     {
       "id": "temporary-directory-and-shell",
       "status": "imported",
       "sha256": "a5ba61875a968d5e56ed8365e9da733dd847d6fb6d52b824492549c7e2e3a203",
+      "sourceClauseSha256": "a5ba61875a968d5e56ed8365e9da733dd847d6fb6d52b824492549c7e2e3a203",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "promptFile": "review-manager-prompt.md"
-    },
-    {
-      "id": "operational-limits",
-      "status": "user-hold",
-      "sha256": "9c99d7e2cb60e54a190092001e164f2a2513b62c4ddafab7e0bfba038b5ed3d5",
-      "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Repository-specific admission priority names a repository absent from shipped guidance; portable policy requires a decision."
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "verbatim",
+        "decidedAt": "2026-11-15"
+      }
     },
     {
       "id": "peer-scope",
       "status": "imported",
       "sha256": "d6ce8d0d30e90a5c9844132fe45fbe37e4dca07cc387c0dcc09a76783d35b04a",
+      "sourceClauseSha256": "d6ce8d0d30e90a5c9844132fe45fbe37e4dca07cc387c0dcc09a76783d35b04a",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "promptFile": "review-manager-prompt.md"
-    },
-    {
-      "id": "alert-command",
-      "status": "user-hold",
-      "sha256": "d80e3cc4f5d026c3bc9218df7ec860a684806abf1bd4840160f7789dd2ae7ca1",
-      "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Live external alert mandate conflicts with current driver-thread-only holds; replacement requires user disposition."
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "verbatim",
+        "decidedAt": "2026-11-15"
+      }
     },
     {
       "id": "leftover-sweep",
-      "status": "user-hold",
-      "sha256": "dbff4b530eeae1ad56ec828d46fe25a7d941e5dcf31179b07cff4ce6b1548d04",
+      "status": "imported",
+      "sha256": "bd0a2144c4d3436a8379c642d2b8bf8d2c2c951ca9776889a9109fb30cff5b0d",
+      "sourceClauseSha256": "dbff4b530eeae1ad56ec828d46fe25a7d941e5dcf31179b07cff4ce6b1548d04",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Private legacy resource path would need a declared host binding."
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "edited",
+        "decidedAt": "2026-11-15",
+        "reason": "Remove the legacy resource exclusion; preserve the remaining clause verbatim."
+      }
     },
     {
       "id": "pass-branches",
       "status": "imported",
       "sha256": "329cf4d1392ca4425c08eab2c12e5228a5c7d4dc2c34cd7e2bdc03d64307d39f",
+      "sourceClauseSha256": "329cf4d1392ca4425c08eab2c12e5228a5c7d4dc2c34cd7e2bdc03d64307d39f",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "promptFile": "review-manager-prompt.md"
+      "promptFile": "review-manager-prompt.md",
+      "disposition": {
+        "kind": "verbatim",
+        "decidedAt": "2026-11-15"
+      }
     }
   ],
   "review": {
