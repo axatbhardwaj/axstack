@@ -46,12 +46,15 @@
 
 - Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
 - Only the new helpers `fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness`,
-  `run-init`, `usage-split` (fact), scratch (W2-4), capture (W3-1), and sandbox (W3-4)
+  `run-init`, `usage-split` (fact), and this run's planned helpers: scratch (W2-4),
+  capture (W3-1), evidence inspector (W3-2), sandbox (W3-4), lane-owner facts
+  (W4-3), and `pr-fresh` review admission facts (W4-4)
   follow this rule; the existing scripts retain their behavior.
   Fact and plan helpers (`fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness` without `--run`, `usage-split`, and the new helpers' fact/plan modes)
   use explicit inputs, read-only `git`/`gh` or saved T3 JSON, output to stdout
   or a caller-given path, and keep no state between calls.
-  Writer helpers (`run-init`, `readiness --run`, scratch execution, capture, sandbox run/reap) disclose every side effect in
+  Writer helpers (`run-init`, `readiness --run`, scratch execution, capture, sandbox run/reap)
+  disclose every process, filesystem, container, network and cleanup effect in
   `--help` and write only those paths. All new helpers report each term as
   `pass`, `fail`, `unknown` or `n/a` with evidence. API, pagination and
   permission gaps are `unknown`. Helpers can add holds but never grant
