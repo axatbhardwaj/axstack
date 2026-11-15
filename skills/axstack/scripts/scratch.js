@@ -185,7 +185,7 @@ export async function main(argv) {
         stdin: 'inherit', stdout: 2, stderr: 'inherit',
       });
       report.child = { exitCode: await child.exited, signal: child.signalCode };
-      report.terms.push({ id: 'child', status: 'pass', evidence: report.child });
+      report.terms.push({ id: 'child', status: report.child.exitCode === 0 && !report.child.signal ? 'pass' : 'fail', evidence: report.child });
     }
     console.log(JSON.stringify(report));
     // An observed unsafe inherited TMPDIR is complete once the safe fallback runs.
