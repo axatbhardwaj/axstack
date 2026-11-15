@@ -1,0 +1,96 @@
+{
+  "now": "2026-11-16T00:00:00.000Z",
+  "export": {
+    "version": 1,
+    "host": "fixture-host",
+    "exportedAt": "2026-11-15T23:59:00.000Z",
+    "complete": true,
+    "tasks": [
+      {
+        "scheduledTaskId": "synthetic-0",
+        "projectId": "synthetic-project",
+        "prompt": "# Synthetic review-manager-prompt.md\nContinuity: /fixture/home/state.\n",
+        "enabled": true,
+        "schedule": {
+          "type": "interval",
+          "everyMs": 1800000
+        }
+      },
+      {
+        "scheduledTaskId": "synthetic-1",
+        "projectId": "synthetic-project",
+        "prompt": "# Synthetic pr-triage-nightly.md\nContinuity: /fixture/home/state.\n",
+        "enabled": true,
+        "schedule": {
+          "type": "fixed_time",
+          "timeOfDay": "02:00"
+        }
+      },
+      {
+        "scheduledTaskId": "synthetic-2",
+        "projectId": "synthetic-project",
+        "prompt": "# Synthetic test-audit-weekly.md\nContinuity: /fixture/home/state.\n",
+        "enabled": true,
+        "schedule": {
+          "type": "fixed_time",
+          "timeOfDay": "03:00",
+          "weekdays": [
+            0
+          ]
+        }
+      }
+    ]
+  },
+  "bindings": {
+    "host": "fixture-host",
+    "schedules": [
+      {
+        "promptFile": "review-manager-prompt.md",
+        "scheduledTaskId": "synthetic-0",
+        "projectId": "synthetic-project",
+        "enabled": true,
+        "schedule": {
+          "type": "interval",
+          "everyMs": 1800000
+        },
+        "values": {
+          "HOST_HOME": "/fixture/home"
+        }
+      },
+      {
+        "promptFile": "pr-triage-nightly.md",
+        "scheduledTaskId": "synthetic-1",
+        "projectId": "synthetic-project",
+        "enabled": true,
+        "schedule": {
+          "type": "fixed_time",
+          "timeOfDay": "02:00"
+        },
+        "values": {
+          "HOST_HOME": "/fixture/home"
+        }
+      },
+      {
+        "promptFile": "test-audit-weekly.md",
+        "scheduledTaskId": "synthetic-2",
+        "projectId": "synthetic-project",
+        "enabled": true,
+        "schedule": {
+          "type": "fixed_time",
+          "timeOfDay": "03:00",
+          "weekdays": [
+            0
+          ]
+        },
+        "values": {
+          "HOST_HOME": "/fixture/home"
+        }
+      }
+    ]
+  },
+  "prompts": {
+    "review-manager-prompt.md": "# Synthetic review-manager-prompt.md\nContinuity: {{HOST_HOME}}/state.\n",
+    "pr-triage-nightly.md": "# Synthetic pr-triage-nightly.md\nContinuity: {{HOST_HOME}}/state.\n",
+    "test-audit-weekly.md": "# Synthetic test-audit-weekly.md\nContinuity: {{HOST_HOME}}/state.\n"
+  }
+}
