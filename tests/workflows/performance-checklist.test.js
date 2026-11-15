@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { requires, sentences } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const referencePath = 'skills/axstack/references/performance-checklist.md';
@@ -38,32 +38,24 @@ const rules = [
 
 const acceptsRule = ([, , concepts]) => (text) => requires(text, ...concepts);
 
-function checkRule(text, rule) {
-  const [, , concepts, flipIndex, inverse] = rule;
+function checkContract(text, rule) {
+  const [, , concepts, flipIndex, inverse, rewording] = rule;
   const accepts = acceptsRule(rule);
-  expect(accepts(text), 'missing required instruction').toBe(true);
-  const clauses = sentences(text);
-  const matching = clauses.filter(accepts);
-  expect(matching).toHaveLength(1);
-  const rewrite = (replacement) => clauses.map((clause) =>
-    matching.includes(clause) ? replacement(clause) : clause).join('. ');
-  expect(accepts(rewrite(() => '')), 'removal must be red').toBe(false);
-  // Use the accepted concept itself, including every spelling and occurrence.
-  const flip = new RegExp(concepts[flipIndex].source, 'gi');
-  expect(matching[0]).toMatch(flip);
-  expect(accepts(rewrite((clause) => clause.replace(flip, inverse))), 'inversion must be red').toBe(false);
+  expect(sentences(text).filter(accepts)).toHaveLength(1);
+  checkRule(text, accepts, rewording,
+    [[new RegExp(concepts[flipIndex].source, 'gi'), inverse]], concepts);
 }
 
 for (const rule of rules) {
   const [name, source, , , , rewording] = rule;
-  test(`performance checklist: ${name}`, () => checkRule(source(), rule));
+  test(`performance checklist: ${name}`, () => checkContract(source(), rule));
   test(`performance checklist real-source rewording: ${name}`, () => {
     const text = source();
     const originals = text.split('\n').filter(acceptsRule(rule));
     expect(originals).toHaveLength(1);
     // Replace the real instruction in the full file string; never write the file.
     const reworded = text.replace(originals[0], rewording);
-    for (const sibling of rules.filter((row) => row[1] === source)) checkRule(reworded, sibling);
+    for (const sibling of rules.filter((row) => row[1] === source)) checkContract(reworded, sibling);
     if (name.endsWith('conditional load')) checkLink(reworded);
   });
 }
