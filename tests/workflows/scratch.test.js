@@ -57,6 +57,9 @@ test('a cwd/TMPDIR-honouring child leaves the outside inventory unchanged', () =
     root: report.root, cwd: report.cwd, tmp: report.tmp,
   });
   expect(report.child.exitCode).toBe(0);
+  expect(report.terms.find((term) => term.id === 'child')).toEqual({
+    id: 'child', status: 'pass', evidence: { exitCode: 0, signal: null },
+  });
   expect(readdirSync(temp)).toEqual([report.root.slice(temp.length + 1)]);
 });
 
@@ -196,8 +199,24 @@ test('child failure is separate from helper measurement and child output stays o
   const outside = directory(), parent = directory();
   const result = invoke(['run', '--root', parent, '--', process.execPath, '-e', 'console.log("child stdout"); process.exit(7)'], outside);
   expect(result.code).toBe(0);
-  expect(JSON.parse(result.out).child.exitCode).toBe(7);
+  const report = JSON.parse(result.out);
+  expect(report.child.exitCode).toBe(7);
+  expect(report.terms.find((term) => term.id === 'child')).toEqual({
+    id: 'child', status: 'fail', evidence: { exitCode: 7, signal: null },
+  });
   expect(result.err).toContain('child stdout');
+});
+
+test('a signalled child fails its term while helper measurement still exits zero', () => {
+  const result = invoke(['run', '--root', directory(), '--', process.execPath, '-e',
+    "process.kill(process.pid, 'SIGTERM')"], directory());
+  expect(result.code).toBe(0);
+  const report = JSON.parse(result.out);
+  expect(report.child.signal).toBe('SIGTERM');
+  expect(report.child.exitCode).not.toBe(0);
+  expect(report.terms.find((term) => term.id === 'child')).toEqual({
+    id: 'child', status: 'fail', evidence: report.child,
+  });
 });
 
 test('permission gaps remain unknown and hold instead of reporting a measured failure', () => {
