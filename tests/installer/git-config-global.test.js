@@ -9,8 +9,9 @@ const examples = JSON.parse(readFileSync(`${root}/${negativeFixture}`, 'utf8'));
 function unsafeAssignments(text, markdown = false) {
   // Recipes are executable fenced blocks; prose and comments are not assignments.
   if (markdown) text = [...text.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].map((m) => m[1]).join('\n');
-  // Consume comments and other strings whole so their examples cannot match.
-  const tokens = /(?:\bGIT_CONFIG_GLOBAL\b|["']GIT_CONFIG_GLOBAL["'])\s*\]?\s*[:=]\s*(["'`]?)\/dev\/null\1(?=\s|[,;})]|$)|#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`/g;
+  // Skip comments and strings; ordinary quotes stop at newline so a regex's quote
+  // cannot swallow later code. Template literals can legitimately span lines.
+  const tokens = /(?:\bGIT_CONFIG_GLOBAL\b|["']GIT_CONFIG_GLOBAL["'])\s*\]?\s*[:=]\s*(["'`]?)\/dev\/null\1(?=\s|[&,;|})]|$)|#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\[^\n]|[^"\\\n])*"|'(?:\\[^\n]|[^'\\\n])*'|`(?:\\[\s\S]|[^`\\])*`/g;
   return [...text.matchAll(tokens)].filter((match) => match[1] !== undefined);
 }
 
@@ -31,10 +32,27 @@ test('shell, JavaScript and config assignments cannot redirect global git writes
 });
 
 test('scan recognizes unsafe assignment forms and ignores comments, prose and private files', () => {
-  for (const source of examples.unsafe) expect(unsafeAssignments(source).length).toBe(1);
-  for (const source of examples.safe) expect(unsafeAssignments(source)).toEqual([]);
+  for (const source of examples.unsafe) expect(unsafeAssignments(source).length, source).toBe(1);
+  for (const source of examples.safe) expect(unsafeAssignments(source), source).toEqual([]);
   expect(unsafeAssignments(examples.unsafe[0], true)).toEqual([]);
   expect(unsafeAssignments(`\`\`\`bash\n${examples.unsafe[0]}\n\`\`\``, true).length).toBe(1);
+});
+
+test('quote-bearing regexes in real source cannot hide later unsafe assignments', () => {
+  const placements = [
+    ['skills/axstack/scripts/readiness.js', ['  return JSON.parse(stripped.replace(', 'function pemStatus(text) {']],
+    ['tests/workflows/approval-carryover.test.js', ['  checkRule(watch,', "test('carryover requires"]],
+  ];
+  for (const [path, anchors] of placements) {
+    const source = readFileSync(`${root}/${path}`, 'utf8');
+    expect(unsafeAssignments(source)).toHaveLength(0);
+    for (const anchor of anchors) {
+      const offset = source.indexOf(anchor);
+      expect(offset).toBeGreaterThanOrEqual(0);
+      const injected = `${source.slice(0, offset)}${examples.unsafe[5]}\n${source.slice(offset)}`;
+      expect(unsafeAssignments(injected), `${path}: before ${anchor}`).toHaveLength(1);
+    }
+  }
 });
 
 test('scan covers code, config and recipes while excluding docs and only its isolated negative fixture', () => {
