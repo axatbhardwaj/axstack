@@ -48,8 +48,9 @@ integrated candidate. This recipe activates nothing by itself. Use the existing
 Axstack T3 project and current driver on its host; create no project, new driver,
 scheduler, production resource or external disposable PR. Use native-created
 isolated author worktrees and separately owned evidence directories. Give each
-concurrent test its own validated owned 0700 TMPDIR and temporary home outside
-real HOME. Load candidate instructions explicitly for this fixture task, with
+concurrent test its own [Launch state root and fixture HOME](../SKILL.md#launch);
+use the [repository command recipe](../../../../skills/axstack/references/workspace-hygiene.md#safe-deletion)
+for command scratch. Load candidate instructions explicitly for this fixture task, with
 higher-priority instructions intact; leave installed live-home instructions alone.
 Native workers receive explicit bounded fixture scope, output and authority.
 Keep configured roles/models/efforts, current capacity rules, serial first-binding
@@ -576,7 +577,7 @@ authorization; unsupported T3 title settings remain held.
 
 The five routing fixture files follow the existing `TMPDIR ?? '/tmp'` pattern so
 CI's bare `bun test` entrypoint works without an exported TMPDIR. Each mkdtemp root
-is owned/private (0700); normal verification still supplies an owned 0700 TMPDIR
-outside HOME. For CI-equivalent reproduction, unset TMPDIR only in the isolated
+is owned/private (0700); normal verification uses [Launch](../SKILL.md#launch)
+and its state root. For CI-equivalent reproduction, unset TMPDIR only in the isolated
 child test process and run those five files, retaining its setup-failure/pass logs.
 Run that check and the full recipe on both matrix Bun versions when available.
