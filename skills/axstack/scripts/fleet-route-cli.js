@@ -78,8 +78,8 @@ export async function main(argv) {
     const result = (planning ? planIntake : recommend)({ ...input, configText, configDigest,
       request: args['--task'] ? { ...input.request, task: args['--task'] } : input.request }, now);
     process.stdout.write(args['--json'] || planning ? `${JSON.stringify(result)}\n`
-      : `${result.stage}: ${result.selected?.hostId ?? 'no host'} (${result.reason})\n`);
-    return planning ? result.disposition === 'hold' ? 2 : 0 : result.selected ? 0 : 2;
+      : `${/** @type {ReturnType<typeof recommend>} */ (result).stage}: ${result.selected?.hostId ?? 'no host'} (${result.reason})\n`);
+    return planning ? /** @type {ReturnType<typeof planIntake>} */ (result).disposition === 'hold' ? 2 : 0 : result.selected ? 0 : 2;
   } catch (error) {
     process.stderr.write(`${JSON.stringify({ error: { code: error.message.split(':')[0], message: error.message } })}\n`);
     return 1;
