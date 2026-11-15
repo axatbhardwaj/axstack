@@ -11,7 +11,7 @@ function claudeWeeklyOnly(usage, now) {
     || usage.seven_day_opus != null || usage.seven_day_sonnet != null) return false;
   const aggregate = usage.limits.filter((w) => w?.kind === 'weekly_all');
   return aggregate.length === 1 && usage.limits.every((w) => {
-    if (!w || w.group !== 'weekly' || typeof w.is_active !== 'boolean' || !percent(w.percent)
+    if (w?.group !== 'weekly' || typeof w.is_active !== 'boolean' || !percent(w.percent)
       || !reset(w.resets_at)) return false;
     if (w.kind === 'weekly_all') return w.is_active === true && w.scope === null
       && w.percent === weekly.utilization && w.resets_at === weekly.resets_at;
