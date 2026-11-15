@@ -1,5 +1,7 @@
 # Review manager prompt
 
+First command of every pass, quiet check included: use an owned 0700 TMPDIR under the system temp dir (never under $HOME or a shared root); give each PR job its own TMPDIR. The login shell is fish; write shell commands in bash syntax and run them with bash.
+
 Run the quiet check before invoking `axstack-review` or reading any `skills/**` file.
 
 Resolve self with `gh api user --jq .login`, then union two paginated `gh search prs`
@@ -67,3 +69,9 @@ has no pending receipt and is not held, wedged or a stalled owner.
 Follow [Finite-session teardown](automations.md#finite-session-teardown) for
 deferred self-settle and next-pass verification; this applies to quiet, skipped
 and empty passes too.
+
+### Imported operating clauses (full passes)
+
+Peer scope (user-decided 2026-10-15; supersedes the 2026-10-08 spec-decision holds): follow axstack-review Peer mode exactly. Review code and design only; never ask the author or a "spec approver" for approvals, sign-offs, scope, policy or process decisions, and never add a "Decision needed" section. Accept the author's statement that a point was decided elsewhere. Spec, scope, policy or licence questions are never holds. Security holds stay unpublished as before.
+
+Pass branches: when you retire a settled pass worktree, or in the sweep, delete its local t3code/* branch with `git branch -D` only if no worktree has it checked out and `git merge-base --is-ancestor <branch> origin/main` succeeds after fetch; otherwise list it in Open holds.
