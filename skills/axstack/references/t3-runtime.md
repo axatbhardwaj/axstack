@@ -498,8 +498,8 @@ and keep its link.
 Put the [Safe-deletion rule](workspace-hygiene.md#safe-deletion) in every worker brief.
 Name the private `<run>/evidence/<key>/` folder in the brief and completion receipt.
 
-Before use, commands must scope `TMPDIR` to an owned 0700 directory under the system temp directory, never under `$HOME`, named from the dispatch key and recorded in the receipt.
-Validate its real path, absence of symlinks and ownership before use and cleanup; remove it afterwards by literal absolute path.
+Use [scratch.js](../scripts/scratch.js) for command scratch; follow its `--help`
+and the [workspace recipe](workspace-hygiene.md#safe-deletion). Record its JSON paths in the dispatch receipt.
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
 Apply equivalent guards to worktree-local paths. Uncertain paths are preserved for reconciliation.
 
