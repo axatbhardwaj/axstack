@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { join } from '../../../src/posixpath.js';
 import { assessInstalledRoleSnapshot, assessRoleReadiness, installedRoleBytes } from '../../../src/roles.js';
 
 const role = (id, model = 'model') => ({
