@@ -44,6 +44,13 @@ test('excluded clauses retain dated dispositions without shipping their text', (
     for (const key of ['sha256', 'promptFile', 'clause', 'text']) expect(c).not.toHaveProperty(key);
   }
 });
+test('excluded clause hashes are absent from shipped lines', () => {
+  const excluded = policy().clauses.filter((c) => ['dropped', 'host-only'].includes(c.status));
+  const shipped = ['review-manager-prompt.md', 'pr-triage-nightly.md', 'test-audit-weekly.md', 'schedule-policy.json']
+    .flatMap((name) => readFileSync(`${root}/${name}`, 'utf8').split('\n'));
+  const hashes = new Set(shipped.map(hash));
+  for (const c of excluded) expect(hashes.has(c.sourceClauseSha256)).toBe(false);
+});
 test('host-specific continuity and operational limits use explicit host bindings', () => {
   const prompt = readFileSync(`${root}/review-manager-prompt.md`, 'utf8');
   expect(prompt).toContain('Durable continuity: {{HOST_CONTINUITY_PATH}}');
@@ -51,9 +58,9 @@ test('host-specific continuity and operational limits use explicit host bindings
   expect(prompt.match(/~\/\.local\/share\/axstack\/runs\/review-manager\/progress\.md/g)).toHaveLength(2);
   expect(prompt).toContain('{{HOST_OPERATIONAL_LIMITS}}');
   checkRule(prompt, (text) => requires(text, /apply/i, /host-declared operational limits/i),
-    'For each full pass, apply host-declared operational limits.', [[/apply/i, 'Never apply']],
+    'For each full pass, apply host-declared operational limits.',
+    [[/apply/i, 'Never apply'], [/apply/i, 'Optionally apply']],
     [/apply/i, /host-declared operational limits/i]);
-  expect(prompt).not.toMatch(/at most TWO|~6 GB|Admission order:|No missed-slot replay/);
 });
 for (const file of ['skills/axstack/references/automations.md', 'docs/host-operations.md']) {
   test(`${file} requires host rendering before schedule creation`, () => {
@@ -68,12 +75,16 @@ for (const file of ['skills/axstack/references/automations.md', 'docs/host-opera
     checkRule(text, (value) => prohibits(value, forbidden, ...guards),
       'When {{HOST_*}} placeholders remain unfilled, never deploy the prompt.',
       [[forbidden, 'always deploy']], guards);
+    const submission = file.endsWith('automations.md') ? [/schedule_task/, /uses/i] : [/create/i, /schedule/i];
+    checkRule(text, (value) => requires(value, ...submission, /rendered(?: packaged)? prompt/i),
+      file.endsWith('automations.md') ? 'schedule_task uses the rendered packaged prompt.'
+        : 'Create the schedule with the rendered prompt.',
+      [[/rendered/i, 'raw'], [/rendered/i, 'unrendered']], [/rendered(?: packaged)? prompt/i]);
   });
 }
-test('dropped alerts and private legacy resource exclusions cannot return', () => {
+test('private legacy resource exclusions cannot return', () => {
   const shipped = ['review-manager-prompt.md', 'schedule-policy.json']
     .map((name) => readFileSync(`${root}/${name}`, 'utf8')).join('\n');
-  expect(shipped).not.toMatch(/Alert command|hermes\s+send|telegram/i);
   expect(shipped).not.toMatch(/carried over from|[\w-]+-owned resources|\/(?:root|home)\//i);
 });
 test('absent authoritative admission and submission policies remain explicit unknowns', () => {
