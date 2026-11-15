@@ -6,7 +6,6 @@ const read = (path) => readFileSync(`${import.meta.dir}/../../skills/${path}`, '
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
 const lifecycle = 'axstack/references/lifecycle.md';
 const runtime = 'axstack/references/t3-runtime.md';
-const publication = 'axstack/references/candidate-publication.md';
 const hygiene = 'axstack/references/workspace-hygiene.md';
 
 // Independent prompt contracts: current coverage misses these AC8 ordering and
@@ -58,12 +57,7 @@ rule('failed fetch or verification holds the dispatch', runtime,
   [[/\b(?:hold|block)\b/i, 'continue'], [/\bfails\b/i, 'succeeds'],
     [/\bfetch or verification\b/i, 'fetch and verification']]);
 
-rule('PR body counts and base are refreshed before review', publication,
-  [/before/i, /reviewer dispatch/i, /PR body/i, /counts/i, /base/i,
-    /confirmed candidate SHA/i, /current base/i, /PR shape/i],
-  'Before reviewer dispatch, update the PR body counts and base from the confirmed candidate SHA and current base under PR shape.',
-  [[/\b(?:refresh|update)\b/i, 'retain stale'], [/\bbefore\b/i, 'after'],
-    [/\bcurrent base\b/i, 'previous base']]);
+// Computed PR facts are covered by pr-shape-proof.test.js (R1).
 
 rule('cleanup runs as a single command', hygiene, [/each cleanup/i],
   'Execute each cleanup as one command.',
