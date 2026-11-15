@@ -25,8 +25,11 @@ Driver Git commands in a worktree a worker has written must pass
 
 ## Safe deletion
 
-Run scratch commands through [scratch.js](../scripts/scratch.js):
-`bun <installed-axstack>/scripts/scratch.js run -- <command> [args...]`.
+Use [scratch.js](../scripts/scratch.js) for command scratch. Repository commands
+must explicitly select the repository, because the helper's cwd is empty:
+`bun <installed-axstack>/scripts/scratch.js run -- bun --cwd=<repo> run test <test-path>`.
+For Git and other tools use their explicit repository/cwd option or absolute paths.
+Check JSON `child.exitCode` and `child.signal`; helper exit 0 only means measured.
 Record its JSON paths in the dispatch receipt; inspect declared roots with
 `plan --root <root>` and consult `--help` for effects and cleanup responsibilities.
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
@@ -35,7 +38,7 @@ Run each cleanup as a single command.
 Never use `rm -f` or chain cleanup commands.
 
 Every shell deletion targets a literal absolute path or a `${VAR:?}`-guarded expansion, only inside the worker's own evidence folder, `TMPDIR`, or worktree.
-For validated owned scratch, use `rm -r /tmp/<dispatch-key>/scratch` on a literal absolute path inside the evidence folder, `TMPDIR`, or worktree.
+Before deleting helper scratch by literal absolute path, require every term in `plan --root <recorded-root>` to pass for that exact recorded root, including ownership and path terms.
 Never use a bare `$VAR`, a glob on a variable, `/`, `HOME`, or a shared root as a deletion target.
 Prefer `git clean -- <exact prefix>` or tool-native cleanup. A safety prompt that
 still appears is a hold; agents do not answer it.
