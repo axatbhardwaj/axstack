@@ -33,6 +33,7 @@ test('fresh complete export compares bound bytes, cadence and enabled state with
   expect(report).not.toHaveProperty('verdict');
 });
 for (const [name, change, id] of [
+  ['added UTF-8 BOM', (d) => { d.prompts['review-manager-prompt.md'] = `\uFEFF${d.prompts['review-manager-prompt.md']}`; }, 'review-manager-prompt.md.prompt'],
   ['edited packaged bytes', (d) => { d.prompts['review-manager-prompt.md'] += 'extra'; }, 'review-manager-prompt.md.prompt'],
   ['edited prompt', (d) => { d.export.tasks[0].prompt += 'extra'; }, 'review-manager-prompt.md.prompt'],
   ['cadence mismatch', (d) => { d.export.tasks[0].schedule.everyMs = 3600000; }, 'review-manager-prompt.md.cadence'],
