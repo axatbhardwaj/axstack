@@ -273,8 +273,10 @@ test('retained entry points preserve routing and safe-deletion links', () => {
 test('safe deletion contract limits shell targets and preserves prompt holds', () => {
   const safe = hygiene().split('## Safe deletion')[1]?.split('\n## ')[0] ?? '';
   expect(safe).toMatch(/literal absolute path|\$\{VAR:\?\}/i);
-  // Exact safety pin for the command, validation prerequisite, and literal target.
-  expect(safe).toContain('For validated owned scratch, use `rm -r /tmp/<dispatch-key>/scratch` on a literal absolute path inside the evidence folder, `TMPDIR`, or worktree.');
+  const concepts = [/literal absolute path/i, /plan --root/i, /ownership/i, /path terms/i, /pass/i, /exact recorded root/i];
+  checkRule(safe, (text) => requires(text, ...concepts),
+    'For the exact recorded root, require plan --root ownership and path terms to pass before deleting scratch by literal absolute path.',
+    [[/pass/gi, 'fail']], concepts);
   expect(safe).toMatch(/own evidence folder.*TMPDIR.*worktree/is);
   expect(safe).toMatch(/bare `\$VAR`.*glob on a\s+variable.*`\/`.*`HOME`.*shared root/is);
   expect(safe).toMatch(/git clean -- <exact prefix>.*tool-native cleanup/is);

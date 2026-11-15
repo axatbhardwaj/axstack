@@ -62,7 +62,7 @@ export const settlementRules = [
   ["uncertain watch deletion", [/\buncertain delete/i, /\bpreserve|retain/i, /\b(?:holds?|held)\b/i, /\brecorded ID/i]],
   ["safe deletion in briefs", [/\bput|include/i, /\bsafe.deletion rule/i, /\bevery worker brief/i]],
   ["named private evidence", [/\bname|identify/i, /\bprivate/i, /<run>\/evidence\/<key>\//, /\bbrief/i, /\bcompletion receipt/i]],
-  ["worktree path guards", [/\bequivalent guards/i, /\bworktree.local paths/i]],
+  ["worktree path guards", [/\bworktree.local paths/i, /\bvalidate/i, /\breal path/i, /\babsence of symlinks/i, /\bownership/i, /\bbefore use and cleanup/i]],
   ["cache evidence", [/incidental caches/i, /\bevidence/i], /\bnot/i],
   ["brief confirmation", [/\bdispatching owner/i, /\bconfirm/i, /\bbrief question once/i, /\bexisting authority/i, /\bre.verify/i, /\bstarted/i]],
   ["second brief hold", [/\bsecond/i, /\bask/i, /\b(?:holds?|held)\b/i]],

@@ -58,9 +58,9 @@ matches, missing pages, wrong readback, never-started and silent first runs;
 all hold rather than creating a second driver. Do not create real orphaned
 production tasks for these negative controls. Mark unobserved live rows UNKNOWN.
 
-Create a fresh 0700 scratch outside HOME on each participating host; record each
-literal path with hostId/environmentId. Before use validate owner, realpath and
-no symlink. Use a separately owned persistent evidence folder on origin and target,
+Use [scratch.js](../scripts/scratch.js) on each participating host, following
+the [repository command recipe](workspace-hygiene.md#safe-deletion); record each
+printed root with hostId/environmentId. Use a separately owned persistent evidence folder on origin and target,
 outside scratch selected for deletion. Put only a tiny fixture README/candidate in
 an explicitly provisioned test project. Record its root HEAD/status/all refs before
 and after; no shared project or unknown ignored artifacts may be cleaned.

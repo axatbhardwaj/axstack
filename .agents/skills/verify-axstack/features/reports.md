@@ -1,7 +1,7 @@
 # Create run records and inspect repositories
 
-Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness}.js`;
-fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper}.test.js`.
+Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness,scratch}.js`;
+fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper,scratch,scratch-consumers}.test.js`.
 The pr-shape fixtures cover the optional `--source` sync term: fast-forward
 containment after source advancement, no-ff promotion trees, unrelated history,
 lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
@@ -15,6 +15,38 @@ These checks prove shipped instruction contracts and local Git behavior, not liv
 forge retargeting or agent compliance.
 Prerequisites: Launch; a new local Git fixture, never the driver's run namespace.
 Run-init writes only its fixture Git common directory and owned scratch.
+
+## Run commands in owned scratch
+
+After Launch/Doctor and the install feature, invoke the installed helper:
+
+```bash
+doctor > "$EVIDENCE/scratch-doctor.log" 2>&1
+INSTALLED="$HOME/.agents/skills/axstack/scripts/scratch.js"
+bun "$INSTALLED" --help > "$EVIDENCE/scratch-help.txt"
+bun "$INSTALLED" run --root "$TMPDIR" -- bun -e \
+  'await Bun.write("relative.txt", "cwd"); await Bun.write(process.env.TMPDIR + "/temporary.txt", "tmp"); process.exit(7)' \
+  > "$EVIDENCE/scratch-run.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/scratch-run.json").json();
+  if (r.child.exitCode !== 7 || await Bun.file(r.cwd + "/relative.txt").text() !== "cwd" ||
+      await Bun.file(r.tmp + "/temporary.txt").text() !== "tmp") throw Error("scratch run mismatch");'
+SCRATCH_ROOT=$(bun -e 'console.log((await Bun.file(process.env.EVIDENCE + "/scratch-run.json").json()).root)')
+bun "$INSTALLED" plan --root "$SCRATCH_ROOT" > "$EVIDENCE/scratch-plan.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/scratch-plan.json").json();
+  if (!r.terms.length || r.terms.some(t => t.status !== "pass")) throw Error("scratch plan mismatch");'
+bun run test tests/workflows/scratch.test.js tests/workflows/scratch-consumers.test.js > "$EVIDENCE/scratch-tests.log" 2>&1
+```
+
+Proof: installed execution creates stamped owned paths, preserves the child exit
+separately, and plan observes them without deletion. Fixtures compare the outside
+inventory and reject unsafe explicit parents; absent/unsafe inherited TMPDIR
+uses a fresh private system-temp root. The helper retains scratch for validated
+cleanup under Launch's outer root. It is not filesystem or process containment;
+these fixtures prove no protection against absolute-path or HOME writes.
+Repository commands wrapped by scratch must select the repository explicitly;
+use the [repository command recipe](../../../../skills/axstack/references/workspace-hygiene.md#safe-deletion)
+and check the JSON child exit fields. Consumer fixtures execute that documented
+pattern against a deliberately failing repository test, preventing false greens.
 
 Run the readiness CLI fixtures in the offline shell. These use real PEM
 certificate and key bytes. The escaped-writer fixtures stop their exact child

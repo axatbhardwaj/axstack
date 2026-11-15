@@ -38,8 +38,10 @@ changed artifacts invalidate affected evidence. Require neither synthetic Git
 ancestry nor engineering author roles for that mode. Keep Correct/Cleanup/VOA
 inline in nonrepo mode. Deterministic mode-selection and digest controls are
 separate from any optional native artifact run and required live overlap checks.
-Each concurrent run uses a distinct owned 0700 TMPDIR and private temporary home
-outside real HOME. This offline recipe performs no actual dispatch or home edit.
+Each concurrent run follows [Launch](../SKILL.md#launch) with a distinct state
+root and fixture HOME; for command scratch use the
+[repository command recipe](../../../../skills/axstack/references/workspace-hygiene.md#safe-deletion).
+This offline recipe performs no actual dispatch or home edit.
 
 Entry points: `skills/axstack/scripts/{resolve-models,dispatch-plan}.js`;
 harness inputs: `tests/workflows/fixtures/{t3-capabilities,dispatch-plan}.json`.
