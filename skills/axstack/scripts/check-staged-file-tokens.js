@@ -46,6 +46,7 @@ try {
 ${advisories.join('\n')}
 Review file structure and responsibilities; no size-only split or approval is required.`);
   }
+  console.log('Staged-file token check passed.');
 } catch (error) {
   console.error(`Staged-file token check failed: ${error.message}`);
   process.exit(1);
