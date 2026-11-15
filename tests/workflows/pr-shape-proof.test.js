@@ -38,6 +38,20 @@ function invoke(repo, args, env = {}) {
   return { code: result.exitCode, stdout, stderr: result.stderr.toString(),
     data: stdout.startsWith('{') ? JSON.parse(stdout) : null };
 }
+function forgeEnv(snapshot, liveBase) {
+  const gh = `${root}/gh`;
+  writeFileSync(gh, `#!${process.execPath}
+if (process.argv[2] !== 'api') process.exit(9);
+const isBase = process.argv[3] === process.env.PROOF_BASE_ENDPOINT;
+if (!isBase && process.argv[3] !== 'repos/owner/repo/pulls/42') process.exit(9);
+process.stdout.write(process.env[isBase ? 'PROOF_BASE_RESPONSE' : 'PROOF_RESPONSE'] ?? '');
+process.exit(Number(process.env[isBase ? 'PROOF_BASE_EXIT' : 'PROOF_EXIT'] ?? 0));
+`);
+  chmodSync(gh, 0o700);
+  return { PATH: root, PROOF_RESPONSE: JSON.stringify(snapshot),
+    PROOF_BASE_RESPONSE: JSON.stringify({ object: { sha: liveBase } }),
+    PROOF_BASE_ENDPOINT: 'repos/owner/repo/git/ref/heads/main' };
+}
 function statuses(result) {
   expect(result.data, result.stderr).not.toBeNull();
   return Object.fromEntries(result.data.terms.map((term) => [term.id, term.status]));
@@ -105,7 +119,11 @@ test('missing facts block and duplicate fields fail; matching SHA prefixes requi
     [block(base, head) + '\n' + block(base, head), Object.fromEntries(Object.keys(passing).map((id) => [id, 'fail']))],
   ]) {
     writeFileSync(body, text);
-    expect(statuses(invoke(repo, ['--base', base, '--head', head, '--body', body]))).toEqual(expected);
+    const result = invoke(repo, ['--base', base, '--head', head, '--body', body]);
+    expect(statuses(result)).toEqual(expected);
+    if (text === 'Tests passed.') {
+      expect(result.data.terms.every((t) => /render.*--proof.*paste.*block/i.test(t.evidence.reason))).toBe(true);
+    }
   }
 });
 
@@ -127,12 +145,9 @@ test('unavailable Git data or body is unknown rather than zero or a match', () =
 
 test('forge snapshot checks live body and uses unknown for unavailable or incomplete gh data', () => {
   const { repo, base, head } = fixture();
-  const gh = `${root}/gh`;
-  writeFileSync(gh, `#!${process.execPath}\nprocess.stdout.write(process.env.PROOF_RESPONSE ?? ''); process.exit(Number(process.env.PROOF_EXIT ?? 0));\n`);
-  chmodSync(gh, 0o700);
   const snapshot = { changed_files: 2, additions: 3, deletions: 1, commits: 2,
-    head: { sha: head }, base: { sha: base }, body: block(base, head) };
-  const env = { PATH: root, PROOF_RESPONSE: JSON.stringify(snapshot) };
+    head: { sha: head }, base: { sha: base, ref: 'main' }, body: block(base, head) };
+  const env = forgeEnv(snapshot, base);
   const args = ['--pr', '42', '--repo', 'owner/repo'];
   const result = invoke(repo, args, env);
   expect(statuses(result)).toEqual(passing);
@@ -144,6 +159,37 @@ test('forge snapshot checks live body and uses unknown for unavailable or incomp
     expect(unavailable.code).toBe(2);
     expect(Object.values(statuses(unavailable)).every((s) => s === 'unknown')).toBe(true);
     expect(unavailable.data.terms[0].evidence.results[0].exitCode).toBe(extra.PROOF_EXIT ? 1 : 0);
+  }
+});
+
+test('PR mode checks the live base tip rather than the pull snapshot and records both', () => {
+  const { repo, base, head } = fixture();
+  const live = 'e'.repeat(40);
+  const snapshot = { changed_files: 2, additions: 3, deletions: 1, commits: 2,
+    head: { sha: head }, base: { sha: base, ref: 'release/topic#1' }, body: block(base, head) };
+  const env = { ...forgeEnv(snapshot, live), PROOF_BASE_ENDPOINT: 'repos/owner/repo/git/ref/heads/release/topic%231' };
+  const args = ['--pr', '42', '--repo', 'owner/repo'];
+  const stale = invoke(repo, args, env);
+  expect(statuses(stale)).toEqual({ ...passing, base: 'fail' });
+  expect(stale.code).toBe(0);
+  const evidence = stale.data.terms.find((t) => t.id === 'base').evidence;
+  expect(evidence).toMatchObject({ snapshotSha: base, liveSha: live, baseRef: 'release/topic#1' });
+  expect(evidence.commands).toEqual([
+    ['gh', 'api', 'repos/owner/repo/pulls/42'],
+    ['gh', 'api', env.PROOF_BASE_ENDPOINT],
+  ]);
+  const current = invoke(repo, args, { ...env,
+    PROOF_RESPONSE: JSON.stringify({ ...snapshot, body: block(live, head) }) });
+  expect(statuses(current)).toEqual(passing);
+  expect(current.data.block).toBe(block(live, head));
+  for (const extra of [
+    { PROOF_BASE_EXIT: '1' }, { PROOF_BASE_RESPONSE: '{}' }, { PROOF_BASE_RESPONSE: 'not JSON' },
+    { PROOF_RESPONSE: JSON.stringify({ ...snapshot, base: { sha: base } }) },
+  ]) {
+    const unknown = invoke(repo, args, { ...env, ...extra });
+    expect(statuses(unknown)).toEqual({ ...passing, base: 'unknown' });
+    expect(unknown.code).toBe(2);
+    expect(unknown.data.terms.find((t) => t.id === 'base').evidence.snapshotSha).toBe(base);
   }
 });
 
