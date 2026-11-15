@@ -1,12 +1,9 @@
 import { expect, test } from 'bun:test';
-import { publicDocPaths } from './public-docs.js';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
+import { readFileSync } from 'node:fs';
+import { checkRule, requires, sentences } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const readJson = (path) => JSON.parse(readFileSync(`${root}/${path}`, 'utf8'));
-const presetDir = `${root}/profiles/presets`;
-const presetNames = ['mixed', 'codex-only', 'claude-only'];
 test('presets: X research uses the Grok route only in mixed', () => {
   const research = readFileSync(`${root}/skills/axstack-research/SKILL.md`, 'utf8');
   expect(research).toContain(
