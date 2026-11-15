@@ -114,3 +114,25 @@ Same-key rows without evidence paths appear in the dispatch list with
 Rows pointing to another folder fail with that mismatched path named.
 Prose mentions do not count as rows; only explicit matching paths pass.
 This reports ledger gaps only; it proves neither live dispatch nor settlement.
+
+## Canonical schedule drift
+
+Entry: `skills/axstack/scripts/schedule-drift.js`; contracts:
+`tests/workflows/{schedule-drift,schedule-cadence,schedule-policy}.test.js`.
+After Doctor, run those three files with `bun run test` and retain the log.
+The synthetic saved export covers exact prompt bytes after explicit host-token
+binding, the 30-minute review interval, enabled state, project/host identity,
+missing schedules, stale/future/incomplete/unavailable input and read-only output.
+Run the files once more with TMPDIR unset to exercise the CI fallback.
+The policy check binds each verbatim imported clause to its private export hash;
+missing admission/submission age and pending-check policies remain unknown (T30).
+
+After pack and temporary-home install, confirm `schedule-drift.js` and
+`references/schedule-policy.json` are in the pack inventory and byte-identical
+at the installed location. Run the installed helper's `--help`, then drive the
+same committed synthetic export, bindings and prompt files from owned scratch
+with `--export`, `--bindings`, `--prompts`, `--now` from the fixture. Expect exit 0
+and only pass terms. Append a byte to the exported prompt and expect its prompt
+term to fail (measured exit 0); remove the export and expect unknown (exit 2).
+Never use live HOME, mutate schedules or commit a host export. Live T10 deployment
+and native schedule delivery remain separate, unverified boundaries.
