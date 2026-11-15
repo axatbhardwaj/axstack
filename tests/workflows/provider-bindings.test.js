@@ -7,13 +7,20 @@ const runtime = () => readSkillFile(`${import.meta.dir}/../../skills/axstack/ref
   .replace(/`/g, '').replace(/\s+/g, ' ');
 
 test('every dispatch and launch takes its binding from dispatch-plan output', () => {
-  const concepts = [/\b(?:every|each|all)\b/i, /dispatch(?:es)?/i, /launch(?:es)?/i,
-    /bindings?/i, /\b(?:takes?|uses?)\b/i, /from dispatch-plan(?:\.js)? output/i];
-  checkRule(runtime(), (text) => requires(text, ...concepts),
+  const verb = /\b(?:takes?|uses?|comes?|cop(?:y|ies))\b/i;
+  const concepts = [/\b(?:every|each|all)\b/i, /dispatch(?:es)?\b(?!-plan)/i, /launch(?:es)?/i,
+    /bindings?/i, verb, /from dispatch-plan(?:\.js)? output/i];
+  for (const rewording of [
     'All launches and dispatches use bindings from dispatch-plan output.',
-    [[/\b(?:every|each|all)\b/i, 'selected'],
-      [/\b(?:takes?|uses?)\b/i, 'must not use'],
-      [/from dispatch-plan(?:\.js)? output/i, 'from hand-built payloads']], concepts);
+    'Bindings for every dispatch and launch come from dispatch-plan output.',
+    'Every dispatch or launch copies its binding from dispatch-plan output.',
+  ]) {
+    checkRule(runtime(), (text) => requires(text, ...concepts), rewording,
+      [[/\b(?:every|each|all)\b/i, 'selected'],
+        [/\bdispatch(?:es)?(?!-plan)(?: or)?/i, ''],
+        [verb, 'must not use'],
+        [/from dispatch-plan(?:\.js)? output/i, 'from hand-built payloads']], concepts);
+  }
 });
 
 test('runtime provider-binding pointer resolves to its code owner without duplicated prose', () => {
