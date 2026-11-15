@@ -22,5 +22,8 @@ jobs:
         with:
           bun-version: ${{ matrix.bun }}
       - run: bunx npm@12.0.2 --version
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
       - run: bun test
       - run: bun pm pack --dry-run
