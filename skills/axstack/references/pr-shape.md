@@ -51,6 +51,14 @@ For repository title conventions, check recently merged PRs.
 
 Every own PR description must include a short `Proof` section:
 what was verified and how, with commands and observed results, CI or evidence links.
+Render its facts with
+`bun skills/axstack/scripts/pr-shape.js --proof --base <base> --head <head>`
+and paste the JSON `block` under `Proof`. Keep the returned per-term evidence.
+Check the published body against live GitHub facts with
+`bun skills/axstack/scripts/pr-shape.js --proof --pr <number> --repo <owner/repo>`.
+For a local body, use `--proof --base <base> --head <head> --body <path>`.
+Use `--proof --help` for the block format, fact definitions and unknown-data behavior.
+
 For UI-related changes, embed screenshots in the PR description
 (before/after where meaningful).
 Screenshots are mandatory for UI-related changes, with the text fallback below as the only exception.
