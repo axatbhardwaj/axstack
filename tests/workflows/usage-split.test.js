@@ -1,22 +1,32 @@
-import { expect, test } from 'bun:test';
+import { afterEach, expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, linkSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, linkSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/usage-split.json`).json();
 const script = `${import.meta.dir}/../../skills/axstack/scripts/usage-split.js`;
 const term = (report, id) => report.terms.find((item) => item.id === id);
+const roots = [];
+afterEach(() => {
+  for (const dir of roots.splice(0)) rmSync(dir, { recursive: true });
+});
 function setup(change = () => {}) {
   const data = structuredClone(fixture);
   change(data);
   const dir = mkdtempSync(`${tmpdir()}/usage-split-`);
+  roots.push(dir);
   for (const key of ['cache', 'rates', 'state', 'prs']) writeFileSync(`${dir}/${key}.json`, JSON.stringify(data[key]));
   const args = ['--cache', `${dir}/cache.json`, '--rates', `${dir}/rates.json`, '--state', `${dir}/state.json`,
     '--prs', `${dir}/prs.json`, '--start', data.start, '--end', data.end];
   return { dir, data, args };
 }
 function run(input, extra = []) {
-  const result = Bun.spawnSync([process.execPath, script, ...input.args, ...extra], { stdout: 'pipe', stderr: 'pipe' });
+  const args = [...input.args];
+  for (let i = 0; i < extra.length; i += 2) {
+    const index = args.indexOf(extra[i]);
+    if (index >= 0) args.splice(index, 2);
+  }
+  const result = Bun.spawnSync([process.execPath, script, ...args, ...extra], { stdout: 'pipe', stderr: 'pipe' });
   return { code: result.exitCode, report: result.stdout.length ? JSON.parse(result.stdout.toString()) : null,
     error: result.stderr.toString() };
 }
@@ -97,11 +107,15 @@ test('missing components, rate fields and ambiguous joins stay unknown', () => {
 });
 
 test('saved sqlite and exported provider rows agree and create no database sidecars', () => {
-  const input = setup();
+  const input = setup((data) => { data.state.runs = [{ thread_id: 'thread-a', turns: 2 }]; });
   const path = `${input.dir}/state.sqlite`;
   const db = new Database(path);
   db.run('CREATE TABLE orchestration_v2_projection_provider_threads (thread_id TEXT, payload_json TEXT)');
   db.run('CREATE TABLE orchestration_v2_projection_threads (thread_id TEXT, title TEXT, payload_json TEXT)');
+  db.run('CREATE TABLE orchestration_v2_projection_runs (thread_id TEXT, requested_at TEXT)');
+  for (const requestedAt of [fixture.start, '2026-01-01T12:00:00.000Z', fixture.end, '2025-12-31T23:59:59.999Z']) {
+    db.run('INSERT INTO orchestration_v2_projection_runs VALUES (?, ?)', ['thread-a', requestedAt]);
+  }
   for (const row of input.data.state.providers) db.run('INSERT INTO orchestration_v2_projection_provider_threads VALUES (?, ?)',
     [row.thread_id, row.payload_json]);
   for (const row of input.data.state.threads) db.run('INSERT INTO orchestration_v2_projection_threads VALUES (?, ?, ?)',
@@ -112,11 +126,22 @@ test('saved sqlite and exported provider rows agree and create no database sidec
   const { report } = run(input, ['--state', path]);
   expect(report.totals).toEqual(expected.totals);
   expect(report.classes).toEqual(expected.classes);
+  expect(report.classes.find((row) => row.class === 'authoring').turns).toBe(2);
+  expect(term(report, 'run-counts').status).toBe('pass');
   expect(report.prs).toEqual(expected.prs);
   expect(readFileSync(path)).toEqual(before);
   expect(readdirSync(input.dir).filter((f) => f.startsWith('state.sqlite'))).toEqual(['state.sqlite']);
   writeFileSync(`${path}-wal`, 'unsaved WAL');
   expect(run(input, ['--state', path]).code).toBe(2);
+});
+
+test('state sidecars are refused before reading or hashing the saved database', () => {
+  const input = setup();
+  writeFileSync(`${input.dir}/state.json-wal`, 'unmerged state');
+  const { report, code } = run(input);
+  expect(code).toBe(2);
+  expect(report.snapshot.inputs.state).toBeUndefined();
+  expect(term(report, 'input:state').status).toBe('unknown');
 });
 
 test('declared turns without usage remain unknown and role-labelled IDs override generic titles', () => {
@@ -147,20 +172,47 @@ test.each([
   ] });
 });
 
-test('complete supplied accounting exits measured; zero-use interval has n/a attribution', () => {
+test.each([false, true])('zero observed usage requires explicit run coverage (runs supplied: %s)', (runsSupplied) => {
   const input = setup((data) => {
     data.rates.document['synthetic-unpriced'] = data.rates.document['synthetic-priced'];
     data.cache.files['synthetic-a'].r = [];
     delete data.cache.files['synthetic-copy'];
+    if (runsSupplied) data.state.runs = [];
   });
   const billed = `${input.dir}/billed.json`;
   writeFileSync(billed, JSON.stringify({ usd: 0, start: fixture.start, end: fixture.end, evidence: 'synthetic statement' }));
   const { code, report } = run(input, ['--billed', billed]);
-  expect(code).toBe(0);
+  expect(code).toBe(runsSupplied ? 0 : 2);
   expect(report.billedCost.usd).toBe(0);
-  expect(term(report, 'pr:1').status).toBe('n/a');
+  expect(term(report, 'run-counts').status).toBe(runsSupplied ? 'pass' : 'unknown');
+  expect(term(report, 'usage-coverage').status).toBe(runsSupplied ? 'pass' : 'unknown');
+  expect(term(report, 'pr:1').status).toBe(runsSupplied ? 'n/a' : 'unknown');
   expect(report.totals.tokens).toBe(0);
   expect(report.classes).toEqual([]);
+});
+
+test('unattributed usage retains its observed sum alongside missing thread usage', () => {
+  const { report } = run(setup((data) => {
+    data.state.threads.push({ thread_id: 'thread-gap', title: 'Unlinked driver' });
+    data.state.runs = [{ thread_id: 'thread-gap', turns: 1 }];
+  }));
+  expect(report.attribution.unattributedTokens).toBeNull();
+  expect(report.attribution.observedUnattributedTokens).toBe(25);
+});
+
+test('shared-only attribution is a known limitation, not n/a', () => {
+  const { report } = run(setup((data) => {
+    data.state.providers.push({ thread_id: 'thread-u', native: 'session-u' });
+    data.state.threads.push({ thread_id: 'thread-u', title: 'Unmatched author', prs: [data.prs[0].url] });
+    data.state.threads.find((row) => row.thread_id === 'thread-x').prs = [data.prs[0].url];
+  }));
+  expect(report.attribution.unattributedTokens).toBe(0);
+  expect(report.attribution.sharedTokens).toBe(8);
+  expect(term(report, 'attribution').status).toBe('unknown');
+});
+
+test('repeated flags are input errors even when their values agree', () => {
+  expect(run(setup(), ['--start', fixture.start, '--start', fixture.start]).code).toBe(1);
 });
 
 test('invalid identities are measured failures, while absent/unsupported inputs are incomplete', () => {
