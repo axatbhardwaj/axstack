@@ -307,7 +307,8 @@ usage-limit holds without failover, with removal, inversion and rewording probes
 and model-discipline contracts with removal, inversion and rewording probes.
 Staged-file size advisory: `tests/workflows/staged-file-tokens.test.js` drives
 packaged `check-staged-file-tokens.js` in temporary Git repos. Successful
-measurements exit 0 and report exact bytes above 20,000, including new source,
+measurements exit 0 with exactly one stdout line, `Staged-file token check passed.`,
+and report exact bytes above 20,000 on stderr, including new source,
 legacy edits, unchanged incoming merge blobs and docs/changelogs. The boundary
 is byte-based; any token estimate must be explicitly rough. Git, read,
 malformed-size and unmerged-index errors exit nonzero, including conflicts on
