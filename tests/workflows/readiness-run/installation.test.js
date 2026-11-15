@@ -1,6 +1,5 @@
 import { expect, test, afterAll } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, readdirSync, lstatSync, readlinkSync, rmSync, statSync, symlinkSync } from 'node:fs';
-import { main } from '../../../skills/axstack/scripts/readiness.js';
+import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, readdirSync, lstatSync, readlinkSync, rmSync, symlinkSync } from 'node:fs';
 
 const script = `${import.meta.dir}/../../../skills/axstack/scripts/readiness.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-run-`);
