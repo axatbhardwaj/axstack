@@ -174,12 +174,12 @@ test('full passes record quiet watermarks in durable continuity', () => {
   expect(template).toMatch(/## Watermarks[\s\S]*Last full pass:[^\n]*UTC/i);
 });
 
-test('documented review-manager schedules are hourly', () => {
+test('documented review-manager schedules run every 30 minutes', () => {
   for (const path of ['skills/axstack/references/automations.md',
     'skills/axstack/references/lifecycle.md', 'docs/host-operations.md', 'README.md']) {
     const text = compact(path);
     expect(text, path).not.toMatch(/15-minute|every 15 minutes|everyMs:900000/i);
-    expect(text, path).toMatch(/hourly|every hour/i);
-    expect(text, path).toContain('everyMs:3600000');
+    expect(text, path).toMatch(/30-minute|every 30 minutes/i);
+    expect(text, path).toContain('everyMs:1800000');
   }
 });

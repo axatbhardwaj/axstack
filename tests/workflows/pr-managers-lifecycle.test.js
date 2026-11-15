@@ -47,7 +47,7 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
 
 test('manager sessions reconcile before admission in the dedicated workspace', () => {
   const text = compact('skills/axstack/references/automations.md');
-  expect(text).toMatch(/schedule_task[^.]*everyMs:3600000[^.]*bindToCurrentThread:false/i);
+  expect(text).toMatch(/schedule_task[^.]*everyMs:1800000[^.]*bindToCurrentThread:false/i);
   expect(text).toMatch(/reconcile[^.]*saved state[^.]*GitHub[^.]*native T3[^.]*before[^.]*admission/i);
   expect(text).toMatch(/live manager[^.]*same lane[^.]*authoritative/i);
   expect(text).toMatch(/duplicate[^.]*no PR work[^.]*no further shared-record write/i);

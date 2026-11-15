@@ -50,7 +50,7 @@ except the guarded pass-end self-settle.
 
 The lane thread must use the recorded `axstack-owner` binding and verify its
 readback through `t3_thread_read`. Then `schedule_task` uses the packaged prompt,
-hourly with `everyMs:3600000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
+every 30 minutes with `everyMs:1800000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
 Record the schedule ID, project, lane binding and pass thread/run identities.
 Each pass compares native task status and thread reads for settings readback with the recorded binding
 after any owner-only instance update under [Provider bindings](t3-runtime.md#preflight-and-binding), before admission.
