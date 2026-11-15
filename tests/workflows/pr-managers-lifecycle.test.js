@@ -69,7 +69,8 @@ test('manager jobs use private per-Dispatch scratch without broad cleanup', () =
   expect(runtime).toContain('Evidence files still go to the private `<run>/evidence/<key>/` folder.');
   expect(runtime).toMatch(/exact validated owned path[^.]*no glob[^.]*no parent-root deletion/i);
   expect(runtime).toMatch(/Uncertain paths[^.]*preserv/i);
-  expect(runtime).toMatch(/equivalent guards[^.]*worktree-local paths/i);
+  expect(requires(runtime, /worktree.local paths/i, /validate/i, /real path/i,
+    /absence of symlinks/i, /ownership/i, /before use and cleanup/i)).toBe(true);
   expect(manager).toContain('Evidence files stay in the private `<run dir>/evidence/<dispatch>/` folder.');
   expect(manager).toMatch(/Never delete[^.]*broad `TMPDIR` glob/i);
   expect(manager).toMatch(/never[^.]*wipe[^.]*cache/i);
