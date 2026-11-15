@@ -10,8 +10,14 @@ function shipped(dir) {
 }
 const hourly = /hourly|every (?:one |1 )?hour|60[ -]minutes?|everyMs\s*:\s*3600000/i;
 function hourlyManager(text) {
-  return text.split(/\n\s*\n/).filter((block) =>
-    /review[ -]manager|lane thread/i.test(block) && hourly.test(block));
+  const manager = /review[ -]manager|lane thread/i;
+  return text.split(/\n\s*\n/).flatMap((block) => block.split(/[.!?;]\s+/).filter((statement) => {
+    if (!hourly.test(statement)) return false;
+    if (/lane thread/i.test(block) && /schedule_task/.test(statement)) return true;
+    const owner = statement.search(manager);
+    const watch = statement.search(/\bwatch\b/i);
+    return owner >= 0 && (watch < 0 || owner < watch);
+  }));
 }
 test('shipped instructions contain no hourly review-manager schedule', () => {
   const files = ['README.md', ...shipped('docs').filter((p) => !p.includes('/specs/') && !p.includes('/plans/')), ...shipped('skills')];
@@ -24,4 +30,9 @@ test('hourly detector rejects cadence drift while preserving watch backstops', (
   }
   expect(hourlyManager('The review manager runs every 30 minutes.')).toEqual([]);
   expect(hourlyManager('The run watch uses a 60-minute backstop.')).toEqual([]);
+});
+test('a watch statement naming the review manager does not inherit its cadence', () => {
+  expect(hourlyManager('The review manager runs every 30 minutes. The run watch keeps an hourly backstop.')).toEqual([]);
+  expect(hourlyManager('The run watch observes the review manager on a 60-minute backstop.')).toEqual([]);
+  expect(hourlyManager('The lane thread uses its recorded binding. Then schedule_task uses the packaged prompt hourly.')).toHaveLength(1);
 });
