@@ -1,4 +1,5 @@
 {
+  // Coverage and intentional lint exclusions are documented in biome-rules.jsonc.
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -10,5 +11,5 @@
     "skipLibCheck": true,
     "strict": false
   },
-  "include": ["src/**/*.js", "bin/**/*.js"]
+  "include": ["src/**/*.js", "bin/**/*.js", "skills/axstack/scripts/**/*.js"]
 }
