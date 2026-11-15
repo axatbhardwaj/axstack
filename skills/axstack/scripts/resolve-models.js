@@ -48,7 +48,9 @@ function providerFrom(catalog, provider) {
   return instance;
 }
 
-function modelFrom(models, { provider, model: pin, class: modelClass, excluded }) {
+/** @param {{ provider?: string, model?: string, class?: string, excluded: string[] }} options */
+function modelFrom(models, options) {
+  const { provider, model: pin, class: modelClass, excluded } = options;
   if (pin && pin !== 'null') {
     const model = models.find((model) => model.id === pin && !excluded.includes(model.id));
     if (!model) throw new Error(`missing requested model ${pin}`);
