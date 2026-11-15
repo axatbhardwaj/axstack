@@ -18,6 +18,11 @@ test('explicit regex stems still accept inflected directives', () => {
   expect(requires('Record verified evidence.', /record/i, /verif/i)).toBe(true);
 });
 
+test('optional directives cannot satisfy a requirement', () => {
+  checkRule('Record evidence.', (text) => requires(text, /record|save/i, /evidence/i),
+    'Save evidence.', [[/^/, 'Optionally '], [/^/, 'Optional: ']]);
+});
+
 test('concept regex state cannot change repeated acceptance results', () => {
   const concept = /record/gi;
   for (let attempt = 0; attempt < 3; attempt++) {

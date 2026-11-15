@@ -99,7 +99,10 @@ with the PR; remove the exact unit and route after settlement.
 
 The optional native review manager uses the VPS T3 project `axstack-review-lane`
 on the existing host clone. Configure and read back the lane's `axstack-owner`
-binding, then create an unbound 30-minute T3 schedule (`everyMs:1800000`).
+binding. Before `schedule_task`, render the packaged prompt by filling every
+`{{HOST_*}}` placeholder from the private host binding used by `schedule-drift.js`.
+Never deploy a prompt containing an unfilled `{{HOST_*}}` placeholder.
+Then create an unbound 30-minute T3 schedule (`everyMs:1800000`) with this rendered prompt.
 The packaged prompt checks for a quiet exit before skill loading; full passes
 follow the lifecycle below. Each pass starts in a fresh finite worktree from
 `origin/main`, fetches first, and checks its

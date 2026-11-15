@@ -1,5 +1,15 @@
 # Inspect workflow instruction contracts
 
+## Schedule prompt bindings
+
+After Launch and Doctor, run `bun run test tests/workflows/schedule-policy.test.js
+tests/workflows/schedule-drift.test.js tests/workflows/schedule-cadence.test.js`.
+These checks cover dated shipped/excluded clause dispositions, host-limit and
+deployment-rendering instruction mutations, and exact bound prompt comparison.
+A live prompt containing an unfilled `{{HOST_` token must report `fail`, including
+when a binding value reintroduces the token or a binding value is missing.
+Fixture and saved-export comparisons do not prove current live schedule delivery.
+
 ## Parallel-first acceptance (Outcomes 1–6)
 
 The shared shipped contract is

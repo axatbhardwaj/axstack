@@ -70,8 +70,16 @@ Follow [Finite-session teardown](automations.md#finite-session-teardown) for
 deferred self-settle and next-pass verification; this applies to quiet, skipped
 and empty passes too.
 
-### Imported operating clauses (full passes)
+Host operating policy (user-authorized; adapted to T3). Except for the TMPDIR rule and guarded pass-end settlement/next-pass verification, it applies to full passes only; a quiet pass follows the quiet check and guarded settlement above:
+
+Durable continuity: {{HOST_CONTINUITY_PATH}} — the fixed four-section template from run-record.md (Lane state, Open holds, Watermarks, Last pass), overwritten every full pass and read back before your turn ends. Superseded history goes once to progress.history.md beside it; read history only for a specific recovery question.
+
+Apply the host-declared operational limits:
+
+{{HOST_OPERATIONAL_LIMITS}}
 
 Peer scope (user-decided 2026-10-15; supersedes the 2026-10-08 spec-decision holds): follow axstack-review Peer mode exactly. Review code and design only; never ask the author or a "spec approver" for approvals, sign-offs, scope, policy or process decisions, and never add a "Decision needed" section. Accept the author's statement that a point was decided elsewhere. Spec, scope, policy or licence questions are never holds. Security holds stay unpublished as before.
+
+Leftover sweep: at the start of each full pass, after lane reconciliation, run the axstack-cleanup driver-start sweep for this host's repositories: remove settled pass worktrees and PR-job checkouts of this lane and other provably settled Axstack leftovers whose heads are on the remote (salvage bundle first where required), and list the rest in Open holds. Never touch user chats, live managers or workers, genuine user_takeover, or anything without provable Axstack provenance.
 
 Pass branches: when you retire a settled pass worktree, or in the sweep, delete its local t3code/* branch with `git branch -D` only if no worktree has it checked out and `git merge-base --is-ancestor <branch> origin/main` succeeds after fetch; otherwise list it in Open holds.

@@ -11,6 +11,7 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
                   Fresh complete matching-host coverage yields n/a; any matching declared task ID fails.
                   Without a task ID, absent:true is an explicit host-scope declaration, not identity discovery.
                   Values substitute only explicit {{HOST_TOKEN}} placeholders. No implicit trim or normalization.
+                  A live prompt containing any unfilled {{HOST_ prefix fails, even if bound bytes match.
                   Schedule is the exact host declaration; review-manager additionally requires interval 1800000.
   --prompts DIR   Directory containing the three packaged prompt files; default: installed ../references.
   --now ISO       Observation time with timezone; default: current UTC. Saved times prove no live delivery.
@@ -95,8 +96,9 @@ function compare(args) {
         return binding.values[key];
       });
     } catch { expected = null; }
-    fact('prompt', expected !== null && nonempty(task?.prompt), expected === task?.prompt,
-      `exact UTF-8 bytes after declared host-token substitution; packaged sha256 ${packagedSha256 ?? 'unavailable'}`);
+    const unfilled = nonempty(task?.prompt) && task.prompt.includes('{{HOST_');
+    fact('prompt', nonempty(task?.prompt) && (unfilled || expected !== null), !unfilled && expected === task?.prompt,
+      `live host tokens must be filled; exact UTF-8 bytes after declared host-token substitution; packaged sha256 ${packagedSha256 ?? 'unavailable'}`);
     const scheduleKnown = validSchedule(binding?.schedule) && validSchedule(task?.schedule);
     const canonical = file !== files[0] || equal(binding?.schedule, { type: 'interval', everyMs: 1800000 });
     fact('cadence', scheduleKnown, canonical && equal(task?.schedule, binding?.schedule), 'exact declared schedule; review-manager interval fixed at 1800000ms');

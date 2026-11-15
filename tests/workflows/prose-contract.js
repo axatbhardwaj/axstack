@@ -6,7 +6,7 @@ export const sentences = (text) => text
   .replace(/\s+/g, ' ')
   .split(/[.!?;]\s+|\s+and (?=never\b)/i);
 
-const denied = /\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i;
+const denied = /\b(?:no|not|never|skip|avoid\w*|optional(?:ly)?|may)\b/i;
 const pattern = (expression, global = false) => new RegExp(expression.source,
   expression.flags.replace(/[gy]/g, '') + (global ? 'g' : ''));
 // Concepts start at a word boundary; explicit stems may still match inflections.
