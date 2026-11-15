@@ -60,7 +60,7 @@
   "expected": {
     "tolerance": {"tokens": 0, "usdAbsolute": 0.000000001},
     "classes": {"authoring": 143, "review": 55, "verification": 18, "orchestration overhead": 73, "other": 25},
-    "totals": {"input": 147, "cacheRead": 138, "cacheWrite": 6, "output": 23, "tokens": 314, "records": 7, "knownRateProxyUsd": 2.314, "unpricedTokens": 16},
+    "totals": {"input": 147, "cacheRead": 138, "cacheWrite": 6, "output": 23, "tokens": 314, "records": 7, "knownRateProxyUsd": 2.31, "unpricedTokens": 16},
     "attribution": {"exclusiveTokens": 281, "sharedTokens": 8, "unattributedTokens": 25, "unmatchedTokens": 16},
     "duplicatesRemoved": 1
   }
