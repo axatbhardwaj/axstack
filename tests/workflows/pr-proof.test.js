@@ -51,7 +51,7 @@ const rules = [
       /redact|mask/i, /secrets/i, /keys/i, /seed\/recovery phrases|seed and recovery phrases/i,
       /invite codes/i, /personal data/i, /private account details/i],
     'Before committing proof assets or posting the description, mask secrets, keys, seed and recovery phrases, invite codes, personal data and private account details.',
-    [/redact|mask/i, 'do not redact'], undefined, [[/before committing/i, 'After committing']]],
+    [/redact|mask/i, 'do not redact'], undefined, [[/before (?:committing|you commit)/i, 'After committing']]],
   ['unredacted assets never pushed', shape,
     [/push/i, /unredacted asset/i], 'Never push an unredacted asset.',
     [/never/i, 'Always'], /never/i],
@@ -65,16 +65,28 @@ const rules = [
     [/return|save/i, 'do not return']],
 ];
 
-for (const [name, path, concepts, rewording, inversion, prohibition, extraInversions = []] of rules) {
+function checkProof(source, [, , concepts, rewording, inversion, prohibition, extraInversions = []]) {
+  const accepts = (text) => prohibition
+    ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
+  checkRule(sentences(source).join('. '), accepts, rewording,
+    [inversion, [/^/, 'Do not '], ...extraInversions], concepts);
+}
+
+for (const rule of rules) {
+  const [name, path] = rule;
   test(`PR proof: ${name}; removal/inversion red, rewording green`, () => {
     const source = path === shape
       ? read(path).split('## PR body')[1]?.split('\n## ')[0] ?? '' : read(path);
-    const accepts = (text) => prohibition
-      ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
-    checkRule(sentences(source).join('. '), accepts, rewording,
-      [inversion, [/^/, 'Do not '], ...extraInversions], concepts);
+    checkProof(source, rule);
   });
 }
+
+test('PR proof: Before you commit rewording retains redaction and sibling checks', () => {
+  const source = read(shape).split('## PR body')[1].split('\n## ')[0]
+    .replace(/before committing/i, 'Before you commit');
+  expect(source).toMatch(/Before you commit any proof asset/i);
+  for (const rule of rules.filter((row) => row[1] === shape)) checkProof(source, rule);
+});
 
 test('every proof-branch commit suppresses CI; removal/inversion red, rewording green', () => {
   const concepts = [/\[skip ci\]/i, /put|include|add/i, /every|each/i, /proof.branch commit message/i];

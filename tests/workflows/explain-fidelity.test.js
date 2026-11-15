@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const router = 'skills/axstack-explain/SKILL.md';
@@ -78,25 +78,17 @@ const acceptsRule = ([, , concepts, , , , prohibition, conflicts]) => (text) =>
   (prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts))
   && !conflicts?.(text);
 
-function checkRule(text, rule) {
-  const [name, , , flip, inverse, rewording, prohibition] = rule;
+function checkContract(text, rule) {
+  const [name, , concepts, flip, inverse, rewording, prohibition] = rule;
   const accepts = acceptsRule(rule);
-  expect(accepts(text), `${name}: missing required instruction`).toBe(true);
-  const clauses = sentences(text);
-  const matching = clauses.filter(accepts);
-  expect(matching, `${name}: one instruction owns this rule`).toHaveLength(1);
-  const rewrite = (replacement) => clauses.map((clause) =>
-    matching.includes(clause) ? replacement(clause) : clause).join('. ');
-  expect(accepts(rewrite(() => '')), `${name}: removal`).toBe(false);
-  expect(matching[0]).toMatch(flip);
-  expect(accepts(rewrite((clause) => clause.replace(flip, inverse))), `${name}: inversion`).toBe(false);
-  expect(accepts(rewrite(() => rewording)), `${name}: equivalent wording`).toBe(true);
-  if (!prohibition) expect(accepts(rewrite(() => `Do not ${rewording}`)), `${name}: whole-rule negation`).toBe(false);
+  expect(sentences(text).filter(accepts), `${name}: one instruction owns this rule`).toHaveLength(1);
+  checkRule(text, accepts, rewording,
+    [[flip, inverse], ...(!prohibition ? [[/^/, 'Do not ']] : [])], concepts);
 }
 
 for (const rule of rules) {
   const [name, path, , , , rewording] = rule;
-  test(`explain fidelity: ${name}`, () => checkRule(read(path), rule));
+  test(`explain fidelity: ${name}`, () => checkContract(read(path), rule));
   test(`explain real-source rewording: ${name}`, () => {
     const source = read(path);
     const original = source.replace(/\s+/g, ' ').split(/[.!?;]\s+/).find(acceptsRule(rule));
@@ -105,7 +97,7 @@ for (const rule of rules) {
       word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'));
     expect(source).toMatch(pattern);
     const reworded = source.replace(pattern, rewording.replace(/[.!?]$/, ''));
-    for (const sibling of rules.filter((row) => row[1] === path)) checkRule(reworded, sibling);
+    for (const sibling of rules.filter((row) => row[1] === path)) checkContract(reworded, sibling);
   });
 }
 

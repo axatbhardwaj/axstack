@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const path = `${import.meta.dir}/../../skills/axstack-correct/SKILL.md`;
 const guidance = () => existsSync(path) ? readFileSync(path, 'utf8') : '';
@@ -87,20 +87,13 @@ const lifecycleExemption = [
 const acceptsRule = ([, concepts, , , , prohibition]) => (text) => prohibition
   ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
 
-function checkRule(text, rule) {
-  const [, concepts, flipIndex, inverse, , prohibition] = rule;
+function checkContract(text, rule) {
+  const [, concepts, flipIndex, inverse, rewording, prohibition] = rule;
   const accepts = acceptsRule(rule);
-  const clauses = sentences(text);
-  const matching = clauses.filter(accepts);
-  expect(matching, 'required directive').toHaveLength(1);
-  const rewrite = (replace) => clauses.map((clause) =>
-    matching.includes(clause) ? replace(clause) : clause).join('. ');
-  expect(accepts(rewrite(() => '')), 'removal must be red').toBe(false);
-  // Flip every occurrence of the accepted concept, with all accepted spellings.
+  expect(sentences(text).filter(accepts), 'required directive').toHaveLength(1);
   const flip = new RegExp((prohibition ?? concepts[flipIndex]).source, 'gi');
-  expect(matching[0]).toMatch(flip);
-  expect(accepts(rewrite((clause) => clause.replace(flip, inverse))), 'inversion must be red').toBe(false);
-  if (!prohibition) expect(accepts(rewrite((clause) => `Do not ${clause}`)), 'negated directive').toBe(false);
+  checkRule(text, accepts, rewording,
+    [[flip, inverse], ...(!prohibition ? [[/^/, 'Do not ']] : [])], concepts);
 }
 
 function checkRewording(text, rule) {
@@ -112,7 +105,7 @@ function checkRewording(text, rule) {
   // Substitute in normalized real-source clauses; tests never write tracked files.
   const reworded = compact.replace(originals[0], rewording);
   if (originals[0] !== rewording) expect(reworded).not.toBe(compact);
-  for (const sibling of rules) checkRule(reworded, sibling);
+  for (const sibling of rules) checkContract(reworded, sibling);
   return reworded;
 }
 
@@ -125,7 +118,7 @@ test('correct: user invocation has its frontmatter backstop', () => {
   expect(frontmatter?.[1]).toMatch(/^disable-model-invocation:\s*true\s*$/m);
 });
 
-test('correct: report-only lifecycle exemption', () => checkRule(contracts(), lifecycleExemption));
+test('correct: report-only lifecycle exemption', () => checkContract(contracts(), lifecycleExemption));
 test('correct real-source rewording: report-only lifecycle exemption', () => {
   const text = contracts();
   const accepts = acceptsRule(lifecycleExemption);
@@ -134,12 +127,12 @@ test('correct real-source rewording: report-only lifecycle exemption', () => {
     block.match(/[\s\S]*?(?:\.(?=\s|$)|$)/g) ?? []).filter(accepts);
   expect(originals).toHaveLength(1);
   const reworded = text.replace(originals[0], lifecycleExemption[4]);
-  checkRule(reworded, lifecycleExemption);
+  checkContract(reworded, lifecycleExemption);
 });
 
 for (const rule of rules) {
   const [name] = rule;
-  test(`correct: ${name}`, () => checkRule(guidance(), rule));
+  test(`correct: ${name}`, () => checkContract(guidance(), rule));
   test(`correct real-source rewording: ${name}`, () => {
     const reworded = checkRewording(guidance(), rule);
     // The same checks must pass when the source already uses the holdout wording.
@@ -182,7 +175,7 @@ for (const [name, rewordings] of naturalRewordings) {
     expect(originals).toHaveLength(1);
     for (const rewording of rewordings) {
       const reworded = text.replace(originals[0], rewording);
-      for (const sibling of rules) checkRule(reworded, sibling);
+      for (const sibling of rules) checkContract(reworded, sibling);
       checkRewording(reworded, rule);
     }
   });

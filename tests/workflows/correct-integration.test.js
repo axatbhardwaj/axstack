@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { prohibits, requires, sentences } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const audit = () => readFileSync(`${root}/skills/axstack-audit/SKILL.md`, 'utf8');
@@ -30,22 +30,13 @@ const rules = [
 const acceptsRule = ([, , negative, concepts]) => (text) => negative
   ? prohibits(text, negative, ...concepts) : requires(text, ...concepts);
 
-function checkRule(text, rule) {
-  const [, , negative, concepts, flipIndex, inverse] = rule;
+function checkContract(text, rule) {
+  const [, , negative, concepts, flipIndex, inverse, rewording] = rule;
   const accepts = acceptsRule(rule);
-  expect(accepts(text), rule[0]).toBe(true);
-  const clauses = sentences(text);
-  const matching = clauses.filter(accepts);
-  expect(matching).toHaveLength(1);
-  const rewrite = (replacement) => clauses.map((clause) =>
-    matching.includes(clause) ? replacement(clause) : clause).join('. ');
-  expect(accepts(rewrite(() => '')), 'removal must be red').toBe(false);
-  // Flip the entire accepted concept, not a narrower spelling.
+  expect(sentences(text).filter(accepts)).toHaveLength(1);
   const flip = new RegExp((negative ?? concepts[flipIndex]).source, 'gi');
-  expect(accepts(rewrite((clause) => clause.replace(flip, inverse))), 'inversion must be red').toBe(false);
-  if (!negative) {
-    expect(accepts(rewrite((clause) => `Do not ${clause}`)), 'negation must be red').toBe(false);
-  }
+  checkRule(text, accepts, rewording,
+    [[flip, inverse], ...(!negative ? [[/^/, 'Do not ']] : [])], concepts);
 }
 
 function checkRewording(text, rule, rewording = rule[6]) {
@@ -53,13 +44,13 @@ function checkRewording(text, rule, rewording = rule[6]) {
   expect(originals).toHaveLength(1);
   // Replace the actual instruction in the full source string, without writes.
   const reworded = text.replace(originals[0], rewording);
-  for (const sibling of rules.filter((row) => row[1] === rule[1])) checkRule(reworded, sibling);
+  for (const sibling of rules.filter((row) => row[1] === rule[1])) checkContract(reworded, sibling);
   return reworded;
 }
 
 for (const rule of rules) {
   const [name, source] = rule;
-  test(`correct integration: ${name}`, () => checkRule(source(), rule));
+  test(`correct integration: ${name}`, () => checkContract(source(), rule));
   test(`correct integration real-source rewording: ${name}`, () => {
     const reworded = checkRewording(source(), rule);
     // Already-reworded source still satisfies the same contract.
@@ -135,6 +126,6 @@ for (const [name, source, fieldPattern] of dispositionFields) {
     const reworded = checkDispositionRewording(source(), fieldPattern);
     // Re-run substitution and probes when the source already uses this wording.
     checkDispositionRewording(reworded, fieldPattern);
-    for (const sibling of rules.filter((rule) => rule[1] === source)) checkRule(reworded, sibling);
+    for (const sibling of rules.filter((rule) => rule[1] === source)) checkContract(reworded, sibling);
   });
 }

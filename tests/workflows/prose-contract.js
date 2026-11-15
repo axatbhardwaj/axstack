@@ -7,31 +7,39 @@ export const sentences = (text) => text
   .split(/[.!?;]\s+|\s+and (?=never\b)/i);
 
 const denied = /\b(?:no|not|never|skip|avoid\w*|optional|may)\b/i;
+const pattern = (expression, global = false) => new RegExp(expression.source,
+  expression.flags.replace(/[gy]/g, '') + (global ? 'g' : ''));
+// Concepts start at a word boundary; explicit stems may still match inflections.
+// This excludes "settled" inside "unsettled" and "expected" inside "unexpected".
+const matches = (text, concept) => new RegExp(`(?<!\\w)(?:${concept.source})`,
+  concept.flags.replace(/[gy]/g, '')).test(text);
 export const requires = (text, ...concepts) => sentences(text).some((sentence) =>
-  !denied.test(sentence) && concepts.every((concept) => concept.test(sentence)));
+  !denied.test(sentence) && concepts.every((concept) => matches(sentence, concept)));
 
 // A prohibition must state its negative concept explicitly. Mask only that
 // expected phrase, then apply the same denial guard to the rest of the sentence.
 export const prohibits = (text, prohibition, ...concepts) => sentences(text).some((sentence) =>
-  new RegExp(prohibition.source, prohibition.flags.replace(/[gy]/g, '')).test(sentence) && concepts.every((concept) => concept.test(sentence))
-  && requires(sentence.replace(prohibition, ''), /^/));
+  matches(sentence, prohibition) && concepts.every((concept) => matches(sentence, concept))
+  && requires(sentence.replace(pattern(prohibition, prohibition.global), ''), /^/));
 
-// Both recovery suites mutate only their accepted real-source sentences in memory.
+// Mutate normalized clauses in memory, so wrapped Markdown and links cannot
+// prevent substitution. Keep every sibling clause in each mutated document.
 export function checkRule(text, accepts, rewording, inversions, concepts = []) {
   expect(accepts(text)).toBe(true);
-  const targets = sentences(text).filter(accepts);
+  const clauses = sentences(text);
+  const targets = clauses.filter(accepts);
   expect(targets.length).toBeGreaterThan(0);
-  const substitute = (transform) => targets.reduce((source, target) =>
-    source.replace(target, transform(target)), text);
+  const substitute = (transform) => clauses.map((clause) =>
+    targets.includes(clause) ? transform(clause) : clause).join('. ');
   expect(accepts(substitute(() => ''))).toBe(false);
   for (const concept of concepts) {
-    const occurrences = new RegExp(concept.source, `${concept.flags}g`);
+    const occurrences = pattern(concept, true);
     expect(accepts(substitute((target) => target.replace(occurrences, '')))).toBe(false);
   }
   expect(accepts(substitute(() => rewording))).toBe(true);
   for (const [direction, inversion] of inversions) {
     const invert = (target) => {
-      const mutated = target.replace(direction, inversion);
+      const mutated = target.replace(pattern(direction, true), inversion);
       expect(mutated).not.toBe(target);
       return mutated;
     };
