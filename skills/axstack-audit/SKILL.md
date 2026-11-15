@@ -221,6 +221,8 @@ record. Material already covered with the same scope and meaning yields an
 explicit already-covered no-op with pointers to the covering instructions when
 no recurrence is recorded.
 
+For recurring mechanical classes, learning candidates propose a code, structure or check fix before an instruction change.
+
 If a covered rule recurs, never classify it as an already-covered no-op.
 Record that recurrence as recurred.
 Suggest `axstack-correct` for the recurrence.

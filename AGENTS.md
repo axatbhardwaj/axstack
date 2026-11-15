@@ -45,6 +45,7 @@
 ## Engineering
 
 - Keep changes simple and modular. Follow KISS, YAGNI, and SOLID.
+- For recurring mechanical classes, prefer a code, structure or check fix before an instruction change.
 - Only the new helpers `fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness`,
   `run-init`, `usage-split` (fact), and this run's planned helpers: scratch
   (W2-4 writer execution and plan), capture (W3-1 writer), evidence inspector
