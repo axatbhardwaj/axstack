@@ -1,8 +1,9 @@
 # Local verification and live boundary
 
 In an Axstack source checkout, use the repository `verify-axstack` Launch and
-Doctor with an owned 0700 TMPDIR outside HOME, an isolated fixture HOME and
-offline network namespace. Run these actual interfaces:
+Doctor with [scratch.js](../../axstack/scripts/scratch.js) command scratch,
+an isolated fixture HOME and offline network namespace. Consult the helper's
+`--help` for effects. Run these actual interfaces:
 
 ```bash
 bun run test tests/workflows/voa-install.test.js \
