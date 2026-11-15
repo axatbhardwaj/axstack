@@ -1,7 +1,6 @@
 // Migration lock: shipped runtime must be Bun with only the node:fs
 // exception. Fails until every non-fs node: import is gone from src/bin,
 // tests run on bun:test, and packaging names Bun.
-// Only usage-split's fixture may use node:os for the requested portable tmpdir().
 import { describe, expect, test } from 'bun:test';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
@@ -20,15 +19,14 @@ function sourceFiles(dir) {
 }
 
 describe('bun-native import surface', () => {
-  test('only declared Bun-backed node: imports in src, bin, or tests', () => {
+  test('no non-fs node: imports in src, bin, or tests', () => {
     const offenders = [];
     for (const dir of SCAN_DIRS) {
       for (const file of sourceFiles(join(ROOT, dir))) {
         const text = readFileSync(file, 'utf8');
         for (const match of text.matchAll(/from\s+['"](node:[^'"]+)['"]/g)) {
           const spec = match[1];
-          const fixtureTmpdir = file === join(ROOT, 'tests/workflows/usage-split.test.js') && spec === 'node:os';
-          if (spec !== 'node:fs' && spec !== 'node:fs/promises' && !fixtureTmpdir) {
+          if (spec !== 'node:fs' && spec !== 'node:fs/promises') {
             offenders.push(`${file}: ${spec}`);
           }
         }
