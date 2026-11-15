@@ -31,7 +31,9 @@ Exit 0: measured, including failed plan criteria or a nonzero child exit.
 Exit 1: invalid input or execution error. Exit 2: hold or incomplete observation.
 Child exitCode and signal are stored separately in the JSON child field.
 Check those fields: helper exit 0 does not mean the child passed.
-Repository commands must select the repository explicitly, for example:
+Repository commands must select the repository explicitly.
+The --cwd= form is required because the spaced bun --cwd <repo> form prints help
+and exits 0, a false green. For example:
   run -- bun --cwd=/absolute/repo run test tests/example.test.js
 HOME means the canonical environment HOME at startup, not the account database.
 With a fixture HOME, the caller must independently exclude the account's home.
