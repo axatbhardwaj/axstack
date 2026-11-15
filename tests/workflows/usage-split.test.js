@@ -1,7 +1,6 @@
 import { afterEach, expect, test } from 'bun:test';
 import { Database } from 'bun:sqlite';
 import { mkdtempSync, writeFileSync, readFileSync, readdirSync, linkSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/usage-split.json`).json();
 const script = `${import.meta.dir}/../../skills/axstack/scripts/usage-split.js`;
@@ -13,7 +12,7 @@ afterEach(() => {
 function setup(change = () => {}) {
   const data = structuredClone(fixture);
   change(data);
-  const dir = mkdtempSync(`${tmpdir()}/usage-split-`);
+  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/usage-split-`);
   roots.push(dir);
   for (const key of ['cache', 'rates', 'state', 'prs']) writeFileSync(`${dir}/${key}.json`, JSON.stringify(data[key]));
   const args = ['--cache', `${dir}/cache.json`, '--rates', `${dir}/rates.json`, '--state', `${dir}/state.json`,
@@ -187,6 +186,8 @@ test.each([false, true])('zero observed usage requires explicit run coverage (ru
   expect(term(report, 'run-counts').status).toBe(runsSupplied ? 'pass' : 'unknown');
   expect(term(report, 'usage-coverage').status).toBe(runsSupplied ? 'pass' : 'unknown');
   expect(term(report, 'pr:1').status).toBe(runsSupplied ? 'n/a' : 'unknown');
+  expect(report.prs[0].exclusiveTokens).toBe(runsSupplied ? 0 : null);
+  expect(report.prs[0].sharedTokens).toBe(runsSupplied ? 0 : null);
   expect(report.totals.tokens).toBe(0);
   expect(report.classes).toEqual([]);
 });
