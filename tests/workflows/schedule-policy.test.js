@@ -25,3 +25,6 @@ test('absent authoritative admission and submission policies remain explicit unk
   }
   expect(p.review?.dependentHold).toBe('T30');
 });
+test('the clause policy does not duplicate the helper cadence setting', () => {
+  expect(policy()).not.toHaveProperty('reviewManagerEveryMs');
+});
