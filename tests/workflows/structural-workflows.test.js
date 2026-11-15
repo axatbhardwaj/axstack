@@ -1,14 +1,12 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
-import { isVendored } from './vendored-paths.js';
 import { publicDocPaths } from './public-docs.js';
 // Filesystem access uses the approved narrow exception: node:fs and
 // node:fs/promises are Bun-implemented built-ins. No Node.js runtime is
 // required. Path/URL handling below is local (import.meta.dir), not node:.
-import { existsSync, lstatSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
+import { readdirSync } from 'node:fs';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 
-const SEP = '/';
 
 function splitSegs(p) {
   return p.split('/').filter((s) => s !== '');
@@ -36,12 +34,6 @@ function dirname(p) {
   if (i < 0) return '.';
   if (i === 0) return '/';
   return clean.slice(0, i);
-}
-
-// Local resolve for a base dir plus a relative link target (handles ../).
-function resolve(from, rel) {
-  if (rel.startsWith('/')) return '/' + normalizeSegs(splitSegs(rel)).join('/');
-  return join(from, rel);
 }
 
 const here = import.meta.dir;
