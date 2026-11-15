@@ -499,9 +499,9 @@ Put the [Safe-deletion rule](workspace-hygiene.md#safe-deletion) in every worker
 Name the private `<run>/evidence/<key>/` folder in the brief and completion receipt.
 
 Use [scratch.js](../scripts/scratch.js) for command scratch; follow its `--help`
-and the [workspace recipe](workspace-hygiene.md#safe-deletion). Record its JSON paths in the dispatch receipt.
+and the [workspace recipe](workspace-hygiene.md#safe-deletion) for explicit repository selection and child exit checks. Record its JSON paths in the dispatch receipt.
 Evidence files still go to the private `<run>/evidence/<key>/` folder.
-Apply equivalent guards to worktree-local paths. Uncertain paths are preserved for reconciliation.
+Apply equivalent guards to worktree-local paths: validate their real path, absence of symlinks and ownership before use and cleanup. Uncertain paths are preserved for reconciliation.
 
 Deletion must target an exact validated owned path inside evidence, TMPDIR or
 the worktree, using a literal absolute path or `${VAR:?}`-guarded path: no glob,
