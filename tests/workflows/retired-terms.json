@@ -1,0 +1,29 @@
+[
+  {
+    "pattern": "\\b(?:gemini|antigravity)\\b|axstack-(?:research-web-google|explore-codebase-flash|arena-candidate-antigravity)\\b",
+    "reason": "Gemini, Antigravity and their retired workflow routes are no longer supported workflow choices.",
+    "exceptions": [
+      {
+        "path": "docs/installation.md",
+        "text": "`--harness antigravity` defaults to `~/.gemini/GEMINI.md`."
+      },
+      {
+        "path": "docs/installation.md",
+        "text": "`antigravity` skill directory."
+      },
+      {
+        "path": "docs/installation.md",
+        "text": "Antigravity (IDE and `agy` CLI) reads `~/.gemini/config/skills`"
+      },
+      {
+        "path": "docs/installation.md",
+        "text": "| Antigravity IDE / `agy` CLI | `~/.gemini/config/skills` | documented upstream |"
+      }
+    ]
+  },
+  {
+    "pattern": "\\bread[-\\s]+only\\b[^.!?]{0,160}\\bsymlink(?:s|ed|ing)?\\b|\\bsymlink(?:s|ed|ing)?\\b[^.!?]{0,160}\\bread[-\\s]+only\\b",
+    "reason": "K06: a symlink grants no containment or read-only access to host dependencies; reviewers wrote to the host roughly 50 times.",
+    "exceptions": []
+  }
+]
