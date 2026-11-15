@@ -49,7 +49,8 @@
   `run-init`, `usage-split` (fact), and this run's planned helpers: scratch
   (W2-4 writer execution and plan), capture (W3-1 writer), evidence inspector
   (W3-2 fact), sandbox (W3-4 writer run/reap and plan), lane-owner facts
-  (W4-3 fact), `pr-fresh` admission facts (W4-4 fact), and image-resource extraction (W3-6)
+  (W4-3 fact), `pr-fresh` admission facts (W4-4 fact), image-resource extraction (W3-6),
+  the drift check (W2-1 fact check), and quiet-gate facts (W4-2 fact mode)
   follow this rule; the existing scripts retain their behavior.
   Fact and plan helpers (`fleet-route plan`, `dispatch-plan`, `pr-shape`, `readiness` without `--run`, `usage-split`, and the new helpers' fact/plan modes)
   use explicit inputs, read-only `git`/`gh` or saved T3 JSON or SQLite exports, output to stdout
