@@ -22,6 +22,7 @@ function pool(accounts, driver, now) {
   const rows = members.map((a) => {
     const u = a.usageLimits;
     if (u?.unavailable || !fresh(u?.checkedAt, now, 300000) || !Array.isArray(u?.windows)) throw Error(`unknown ${driver} telemetry`);
+    /** @type {{ used: number, elapsed: number | null, resetKnown?: boolean }[]} */
     const windows = ['session', 'weekly'].map((kind) => {
       const found = u.windows.filter((w) => w.kind === kind && !(driver === 'claudeAgent' && w.id?.startsWith('seven_day_')));
       const weeklyOnly = driver === 'codex' ? 'verified Codex weekly-only response' : 'verified Claude weekly-only response';
