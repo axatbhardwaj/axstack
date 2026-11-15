@@ -43,7 +43,7 @@
       "status": "user-hold",
       "sha256": "d80e3cc4f5d026c3bc9218df7ec860a684806abf1bd4840160f7789dd2ae7ca1",
       "sourceExportSha256": "fbb03192166b80423f5861ab79602fde87f1d5af97ec6f2ef762d3ce7f182a1c",
-      "reason": "Live Telegram alert mandate conflicts with current driver-thread-only holds; replacement requires user disposition."
+      "reason": "Live external alert mandate conflicts with current driver-thread-only holds; replacement requires user disposition."
     },
     {
       "id": "leftover-sweep",
