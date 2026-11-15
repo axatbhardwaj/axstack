@@ -13,7 +13,9 @@ const HELP = `usage-split — offline cost baseline (R2 fact mode)
                  or {providers:[],threads:[],runs:[]}. Provider rows: thread_id and payload_json
                  with nativeThreadRef.nativeId; normalized {thread,native} also accepted.
                  Optional thread metadata: thread_id,title,lineage,prs (URLs or {url}); runs: thread_id,turns.
-                 SQLite reads provider_threads plus optional threads; JSON payload_json metadata accepted.
+                 SQLite reads provider_threads, optional threads, and interval-filtered aggregate runs.
+                 Without a runs export/table, turn and usage coverage remain unknown.
+                 JSON payload_json metadata accepted.
                  Export titles/lineage/PR links for full role inference. Absent metadata stays unknown.
   --prs FILE     JSON array of ten {url,mergedAt,mergeCommit} identities (40-char SHA).
                  Merge dates must lie in the interval. Supplied identities are not verified online.
@@ -76,7 +78,7 @@ function classify(t) {
   return result('other', 'Other role / unresolved');
 }
 
-function readState(bytes) {
+function readState(bytes, start, end) {
   if (bytes.subarray(0, 16).toString() !== 'SQLite format 3\0') {
     const saved = JSON.parse(bytes.toString());
     return Array.isArray(saved) ? { providers: saved, threads: saved } : saved;
@@ -89,6 +91,8 @@ function readState(bytes) {
       providers: db.query('SELECT thread_id,payload_json FROM orchestration_v2_projection_provider_threads').all(),
       threads: table('orchestration_v2_projection_threads')
         ? db.query('SELECT thread_id,title,payload_json FROM orchestration_v2_projection_threads').all() : [],
+      runs: table('orchestration_v2_projection_runs')
+        ? db.query('SELECT thread_id,count(*) AS turns FROM orchestration_v2_projection_runs WHERE requested_at>=? AND requested_at<? GROUP BY thread_id').all(start, end) : undefined,
     };
   } finally { db.close(); }
 }
@@ -133,7 +137,9 @@ function measure(cache, rates, state, prs, start, end, term) {
       t.turns = null; t.uncertainTurns = true;
     } else t.turns = add(t.turns, run.turns);
   }
-  term('run-counts', !state.runs ? 'n/a' : invalidRows.length || unknownThreads.length ? 'unknown' : 'pass',
+  const runsSupplied = Array.isArray(state.runs);
+  const runDataComplete = runsSupplied && !invalidRows.length && !unknownThreads.length;
+  term('run-counts', runDataComplete ? 'pass' : 'unknown',
     { invalidRows, unknownThreads, note: 'Absent or invalid aggregate turns and unknown-thread turns remain null.' });
   const totals = meter(), seen = new Set();
   let duplicatesRemoved = 0, ambiguousRecords = 0, invalidRecords = 0, missingComponents = 0, unpricedRecords = 0, maxTs = null;
@@ -166,7 +172,7 @@ function measure(cache, rates, state, prs, start, end, term) {
     }
   }
   const classes = new Map(), roleMapping = [], shared = [], unattributed = [], exclusive = new Map(), perPrShared = new Map();
-  const attribution = { exclusiveTokens: 0, sharedTokens: 0, unattributedTokens: 0, unmatchedTokens: 0 };
+  const attribution = { exclusiveTokens: 0, sharedTokens: 0, unattributedTokens: 0, unmatchedTokens: 0, observedUnattributedTokens: 0 };
   let missingUsageThreads = 0, unknownMetadata = 0;
   for (const t of threads.values()) {
     if (!t.turns && !t.usage.records && !t.uncertainUsage && !t.uncertainTurns) continue;
@@ -191,20 +197,21 @@ function measure(cache, rates, state, prs, start, end, term) {
       attribution.exclusiveTokens = add(attribution.exclusiveTokens, row.tokens);
     } else {
       unattributed.push({ ...row, prs: links }); attribution.unattributedTokens = add(attribution.unattributedTokens, row.tokens);
+      attribution.observedUnattributedTokens += row.observedTokens;
     }
   }
   term('token-components', missingComponents || invalidRecords ? 'unknown' : 'pass', { missingComponents, invalidRecords, formula: fields.join(' + '), reasoningIncludedInOutput: true });
   term('native-join', ambiguousRecords ? 'unknown' : 'pass', { ambiguousRecords, unmatchedTokens: attribution.unmatchedTokens });
-  term('usage-coverage', missingUsageThreads ? 'unknown' : 'pass', { missingUsageThreads, note: 'Class tokens count observed cache records only; missing-thread tokens remain null.' });
+  term('usage-coverage', !runDataComplete || missingUsageThreads ? 'unknown' : 'pass', { runsSupplied, missingUsageThreads, note: 'Class tokens count observed cache records only; missing-thread tokens remain null.' });
   term('role-mapping', unknownMetadata ? 'unknown' : 'pass', { unknownMetadata, method: 'audit role precedence; inferred roles; root drivers contain mixed work' });
   term('rates', unpricedRecords ? 'unknown' : 'pass', { unpricedRecords, unpricedTokens: totals.unpricedTokens, method: 'exact model name, base per-token rates; premiums unknown' });
-  term('attribution', unattributed.length ? 'unknown' : shared.length ? 'n/a' : 'pass', { ...attribution, note: 'Thread associations only; shared work is reported without allocation.' });
+  term('attribution', unattributed.length || shared.length ? 'unknown' : 'pass', { ...attribution, note: 'Thread associations only; shared work is reported without allocation.' });
   const prReports = prs.map((pr, i) => {
-    const hasData = exclusive.has(pr.url) || perPrShared.has(pr.url), empty = !totals.records && !missingUsageThreads;
+    const hasData = exclusive.has(pr.url) || perPrShared.has(pr.url), empty = runDataComplete && !totals.records && !missingUsageThreads;
     const ex = hasData || empty ? exclusive.has(pr.url) ? exclusive.get(pr.url) : 0 : null;
     const sh = hasData || empty ? perPrShared.has(pr.url) ? perPrShared.get(pr.url) : 0 : null;
     const observed = add(ex, sh), fraction = observed ? ex / observed : null;
-    term(`pr:${i + 1}`, empty ? 'n/a' : !hasData || observed === null ? 'unknown' : 'pass', { url: pr.url, exclusiveTokens: ex, sharedTokens: sh, exclusiveFraction: fraction, denominator: 'only observed tokens linked to this PR; total real PR cost unknown' });
+    term(`pr:${i + 1}`, !runDataComplete ? 'unknown' : empty ? 'n/a' : !hasData || observed === null ? 'unknown' : 'pass', { url: pr.url, exclusiveTokens: ex, sharedTokens: sh, exclusiveFraction: fraction, denominator: 'only observed tokens linked to this PR; total real PR cost unknown' });
     return { ...pr, exclusiveTokens: ex, sharedTokens: sh, observedTokens: observed, exclusiveFraction: fraction };
   });
   return { totals, classes: [...classes.values()].sort((a, b) => b.observedTokens - a.observedTokens), roleMapping,
@@ -213,11 +220,15 @@ function measure(cache, rates, state, prs, start, end, term) {
 }
 
 async function main(argv) {
-  if (argv.includes('--help')) { console.log(HELP); return 0; }
+  if (argv.includes('--help')) {
+    if (argv.length !== 1) throw Error('Use --help alone');
+    console.log(HELP); return 0;
+  }
   const flags = {}, allowed = ['cache', 'rates', 'state', 'prs', 'start', 'end', 'billed', 'out'];
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i].slice(2), value = argv[i + 1];
     if (!argv[i].startsWith('--') || !allowed.includes(key) || !value || value.startsWith('--')) throw Error(`Invalid flag/value: ${argv[i]}`);
+    if (Object.hasOwn(flags, key)) throw Error(`Repeated flag: --${key}`);
     flags[key] = value;
   }
   for (const key of allowed.slice(0, 6)) if (!flags[key]) throw Error(`Required --${key}; see --help`);
@@ -229,12 +240,12 @@ async function main(argv) {
   for (const key of ['cache', 'rates', 'state', 'prs', 'billed']) {
     if (!flags[key]) continue;
     try {
-      const bytes = Buffer.from(await Bun.file(flags[key]).arrayBuffer());
-      inputs[key] = { path: flags[key], bytes: bytes.length, sha256: sha256(bytes) };
       if (key === 'state' && (existsSync(`${flags[key]}-wal`) || existsSync(`${flags[key]}-shm`))) {
         term('input:state', 'unknown', 'Require standalone saved SQLite, without WAL/SHM sidecars'); continue;
       }
-      data[key] = key === 'state' ? readState(bytes) : JSON.parse(bytes.toString());
+      const bytes = Buffer.from(await Bun.file(flags[key]).arrayBuffer());
+      inputs[key] = { path: flags[key], bytes: bytes.length, sha256: sha256(bytes) };
+      data[key] = key === 'state' ? readState(bytes, interval.start, interval.end) : JSON.parse(bytes.toString());
       term(`input:${key}`, 'pass', inputs[key]);
     } catch (error) {
       if (['ENOENT', 'EACCES', 'EPERM', 'EBUSY'].includes(error.code)) term(`input:${key}`, 'unknown', { path: flags[key], error: error.code });
