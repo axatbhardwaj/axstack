@@ -52,3 +52,10 @@ test('caller fields, unpinned images, unsafe sidecar paths and policy swaps are 
     expect(() => make(input)).toThrow();
   }
 });
+test('only fetch receives the fixed proxy endpoint; proxy has the same internal alias each run', () => {
+  const p = make(fixture());
+  expect(p.containers.find(c => c.role === 'fetch').argv).toContain('HTTPS_PROXY=http://axstack-proxy:3128');
+  expect(p.containers.find(c => c.role === 'test').argv.some(a => a.startsWith('HTTPS_PROXY='))).toBe(false);
+  const a = p.containers.find(c => c.role === 'proxy').argv;
+  expect(a[a.indexOf('--network-alias') + 1]).toBe('axstack-proxy');
+});
