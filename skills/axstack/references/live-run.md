@@ -13,9 +13,13 @@ directory outside source/cwd/writable roots, and `RELEASE_HEAD` to the full
 release commit SHA. Keep the raw installed-version check and T3 receipts there.
 The catalog comes from that checkout's existing `tests/workflows/*scenarios.json`;
 tests are not installed with the package. No live-home edits are needed.
-Trace rechecks that catalog's realpath/hash inside the captured source, the
-package version at the captured head, and the planning helper's realpath/hash
-against the helper running the trace. Use the same installed helper in both phases.
+Trace requires the current and planned catalog hashes to match its committed
+blob at the captured head; an unreadable blob remains unknown. A `--snapshot`
+cannot substitute different catalog bytes or a path absent from that commit.
+It also checks the package version at that head and the planning helper's
+realpath/hash against the trace helper. Use the same installed helper and Bun
+realpath in both captures. The trace trusts its own interpreter: a fake bun earlier
+on PATH than the trace's own bun stays undetectable; verify that interpreter independently.
 
 ## Before launch
 
