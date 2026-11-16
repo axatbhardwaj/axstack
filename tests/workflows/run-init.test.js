@@ -29,12 +29,12 @@ function invoke(repo, argv, env = {}) {
   const previous = { HOME: process.env.HOME, TMPDIR: process.env.TMPDIR };
   let stdout = '', stderr = '';
   try {
-    process.chdir(repo);
+    process.chdir(root);
     for (const [key, value] of Object.entries({ TMPDIR: root, ...env })) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
     }
-    const code = main(argv, { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
+    const code = main(['--repo', repo, ...argv], { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
     return { code, stdout, stderr, data: stdout.startsWith('{') ? JSON.parse(stdout) : null };
   } finally {
     process.chdir(cwd);
@@ -111,7 +111,7 @@ test('help works outside Git, advertises inputs, a complete example and every wr
   const before = readdirSync(root).sort();
   const result = invoke(root, ['--help']);
   expect(result.code, result.stderr).toBe(0);
-  for (const flag of ['--help', '--slug', '--date']) expect(result.stdout).toContain(flag);
+  for (const flag of ['--help', '--slug', '--date', '--repo']) expect(result.stdout).toContain(flag);
   expect(result.stdout).toMatch(/bun .*run-init\.js --slug [a-z0-9-]+ --date \d{8}/);
   for (const path of ['axstack/runs', 'progress.md', 'evidence/', 'scratch', '0700', 'HOME', 'TMPDIR']) {
     expect(result.stdout).toContain(path);
@@ -183,8 +183,8 @@ test('CLI reads the adjacent compact block as its single template source', () =>
   writeFileSync(`${packageDir}/scripts/git-argv.js`, readFileSync(`${import.meta.dir}/../../skills/axstack/scripts/git-argv.js`));
   const source = readFileSync(reference, 'utf8').replace('Goal: <bounded task goal>', 'Goal: fixture template revision');
   writeFileSync(`${packageDir}/references/run-record.md`, source);
-  const result = Bun.spawnSync([process.execPath, `${packageDir}/scripts/run-init.js`, '--slug', 'source', '--date', '20261008'], {
-    cwd: fixture(), env: { ...process.env, TMPDIR: root }, stdout: 'pipe', stderr: 'pipe',
+  const result = Bun.spawnSync([process.execPath, `${packageDir}/scripts/run-init.js`, '--repo', fixture(), '--slug', 'source', '--date', '20261008'], {
+    cwd: root, env: { ...process.env, TMPDIR: root }, stdout: 'pipe', stderr: 'pipe',
   });
   expect(result.exitCode, result.stderr.toString()).toBe(0);
   const data = JSON.parse(result.stdout.toString());
