@@ -1,0 +1,108 @@
+import { execute } from './probes-exec.js';
+
+/** Inspect every process returned by Docker top, including pid 1, without image tools. */
+export function inspectIdentity(statuses) {
+  if (!statuses.length) return { status: 'unknown', evidence: ['no live process statuses'] };
+  let failed = false;
+  for (const text of statuses) {
+    const uid = text.match(/^Uid:\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$/m);
+    const caps = ['CapInh', 'CapPrm', 'CapEff', 'CapBnd', 'CapAmb'].map((field) => text.match(new RegExp(`^${field}:\\s+([a-fA-F0-9]+)\\s*$`, 'm')));
+    const nnp = text.match(/^NoNewPrivs:\s+([01])\s*$/m);
+    if (!uid || caps.some((c) => !c) || !nnp) return { status: 'unknown', evidence: ['missing process security fields'] };
+    if (uid.slice(1).some((id) => Number(id) === 0) || caps.some((c) => BigInt(`0x${c[1]}`) !== 0n) || nnp[1] !== '1') failed = true;
+  }
+  return { status: failed ? 'fail' : 'pass', evidence: statuses };
+}
+
+/** A connected socket is reachable even if TLS/HTTP fails after connection. */
+export function classifyConnection(result, target, expected) {
+  const unknown = () => ({ status: 'unknown', evidence: [JSON.stringify(result)] });
+  if (result.timedOut || result.truncated) return unknown();
+  let reachable;
+  if (target.protocol === 'udp' || target.kind === 'dns') {
+    if (/status: (NOERROR|NXDOMAIN|REFUSED|SERVFAIL)/.test(result.stdout) && result.exitCode === 0) {
+      reachable = target.kind === 'dns' ? /ANSWER:\s*[1-9]\d*/.test(result.stdout) : true;
+    }
+    else if (target.kind === 'dns' && result.exitCode === 9 && /no servers could be reached|timed out/.test(result.stdout)) reachable = false;
+    // An arbitrary UDP listener may silently consume a packet. Silence proves nothing.
+    else return unknown();
+  } else {
+    let output;
+    try { output = JSON.parse(result.stdout); } catch { return unknown(); }
+    if (Number(output.http_connect) === 403) reachable = false;
+    else if (output.remote_ip) reachable = true;
+    else if ([7, 28].includes(result.exitCode)) reachable = false;
+    else return unknown();
+  }
+  return { status: reachable === (expected === 'allow') ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
+}
+
+async function liveContainer(id) {
+  if (!/^[a-zA-Z0-9][\w.-]*$/.test(id)) throw Error('invalid container id');
+  const result = await execute(['docker', 'inspect', '--type', 'container', id]);
+  if (result.exitCode !== 0 || result.timedOut || result.truncated) throw Error('container inspect unavailable');
+  const [container] = JSON.parse(result.stdout);
+  if (!container?.State?.Running || !Number.isSafeInteger(container.State.Pid) || container.State.Pid < 2) throw Error('container not live');
+  return container;
+}
+
+async function identity(id) {
+  const container = await liveContainer(id);
+  const top = await execute(['docker', 'top', id, '-eo', 'pid']);
+  if (top.exitCode !== 0 || top.timedOut || top.truncated) throw Error('container process enumeration unavailable');
+  const pids = top.stdout.trim().split('\n').slice(1).map((s) => Number(s.trim()));
+  if (!pids.includes(container.State.Pid) || pids.some((pid) => !Number.isSafeInteger(pid) || pid < 2)) throw Error('incomplete process enumeration');
+  const statuses = await Promise.all(pids.map((pid) => Bun.file(`/proc/${pid}/status`).text()));
+  const after = await liveContainer(id);
+  const next = await execute(['docker', 'top', id, '-eo', 'pid']);
+  if (after.State.Pid !== container.State.Pid || next.exitCode !== 0 || next.stdout !== top.stdout) throw Error('process set changed during identity probe');
+  return inspectIdentity(statuses);
+}
+
+async function network(id, expected, target, proxyId) {
+  if (!['allow', 'deny'].includes(expected)) throw Error('invalid expected outcome');
+  const container = await liveContainer(id), pid = container.State.Pid;
+  const start = await Bun.file(`/proc/${pid}/stat`).text();
+  const prefix = ['nsenter', '--target', String(pid), '--net', '--', 'setpriv', '--reuid=65534', '--regid=65534', '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '--'];
+  let argv;
+  if (target.kind === 'dns' || target.protocol === 'udp') {
+    const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : '8.8.8.8' : target.address;
+    argv = ['dig', `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
+  } else {
+    const host = target.address.includes(':') ? `[${target.address}]` : target.address;
+    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '%{json}', '--noproxy', '*'];
+    if (proxyId) {
+      const proxy = await liveContainer(proxyId);
+      const peers = Object.entries(proxy.NetworkSettings.Networks).filter(([name]) => container.NetworkSettings.Networks[name]);
+      const address = peers[0]?.[1]?.IPAddress;
+      const config = await Bun.file(new URL('./proxy-config.json', import.meta.url)).json();
+      if (!address || !Number.isInteger(config.port) || config.port < 1 || config.port > 65535) throw Error('proxy endpoint unavailable');
+      argv.splice(-2, 2, '--noproxy', '', '--proxy', `http://${address}:${config.port}`, '--proxytunnel');
+    }
+    argv.push(`${target.port === 80 ? 'http' : 'https'}://${host}:${target.port ?? 443}/`);
+  }
+  const result = await execute([...prefix, ...argv]);
+  const after = await liveContainer(id);
+  if (after.State.Pid !== pid || await Bun.file(`/proc/${pid}/stat`).text() !== start) {
+    // /proc stat CPU counters may advance; compare start-time field, not all bytes.
+    const ticks = (text) => text.slice(text.lastIndexOf(')') + 2).split(' ')[19];
+    if (after.State.Pid !== pid || ticks(await Bun.file(`/proc/${pid}/stat`).text()) !== ticks(start)) throw Error('container process replaced');
+  }
+  return classifyConnection(result, target, expected);
+}
+
+if (import.meta.main) {
+  const [mode, id, expected, raw, proxyId] = Bun.argv.slice(2);
+  if (mode === '--help') {
+    console.log('Usage: bun probes-check.js identity CONTAINER | network CONTAINER allow|deny TARGET_JSON [PROXY_CONTAINER]\nTrusted synthetic probes only. Reads Docker inspect/top and /proc; starts bounded docker, nsenter, setpriv, curl/dig processes; temporarily enters the container network namespace only; drops user/capabilities before sockets. No mounts, files, rules or containers created. No cleanup assets. Requires host root, Docker, util-linux, curl and dnsutils. Outputs one pass/fail/unknown term; grants no authority. Exit 0 facts, 1 invalid input, 2 incomplete.');
+  } else {
+    let result;
+    try {
+      if (mode === 'identity') result = await identity(id);
+      else if (mode === 'network') result = await network(id, expected, JSON.parse(raw), proxyId);
+      else throw Error('invalid probe mode; use --help');
+    } catch (error) { result = { status: 'unknown', evidence: [String(error)] }; }
+    console.log(JSON.stringify(result));
+    if (result.status === 'unknown') process.exitCode = 2;
+  }
+}
