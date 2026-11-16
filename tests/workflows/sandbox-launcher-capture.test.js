@@ -86,3 +86,12 @@ test('a failed fresh D filesystem check prevents capture from spawning any PR co
   await expect(recordCapture(p, evidence, () => { if (!checked) throw Error('capture phase reached before storage check'); }, async () => { checked = true; throw Object.assign(Error('synthetic changed filesystem'), { sandboxHold: true }); })).rejects.toThrow('synthetic changed filesystem');
   expect(checked).toBe(true);
 });
+
+test('capture reserves the existing full plan once while keeping the fixed receipt cap', async () => {
+  const { p, step } = await captured();
+  const evidence = step.receiptPath.slice(0, step.receiptPath.lastIndexOf('/'));
+  p.policy.receiptMaxBytes = 4 * 1024 ** 2;
+  p.enumeration.terms.push({ id: 'fleet-observations', status: 'pass', evidence: ['x'.repeat(1100000)] });
+  writeFileSync(`${evidence}/effective-plan.json`, JSON.stringify(p));
+  await expect(recordCapture(p, evidence, () => { throw Error('must check storage first'); }, async () => { throw Error('storage gate reached'); })).rejects.toThrow('storage gate reached');
+});
