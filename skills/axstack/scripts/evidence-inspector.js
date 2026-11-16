@@ -34,12 +34,16 @@ Decisions: decision:{itemId,repository,head,base,boundary,role,by,at,reason,refe
  Decision must postdate change and limitation. Acceptance stays explicitly unproven.
 Source-dependent proof needs snapshotScope.files=tracked+untracked-nonignored.
  Ignored bytes are never covered by the capture source term. Missing scope stays
- unknown; external boundaries do not rely on source coverage. Timestamps are
- caller declarations: capture v1 does not attest wall-clock chronology.
+ unknown; external boundaries do not rely on source coverage. Timestamps and proof
+ kind are caller declarations: capture v1 does not attest chronology or proof kind.
 Fail: ${rules.fail}.
 Unknown: ${rules.unknown}. Invalid packet/flags are errors.
 Effects: reads input, named receipt JSON and captured log files only; stdout JSON
- has one term per item, accepted kinds, rules, evidence and status counts only.
+ has one term per item, stable reasonCode, accepted kinds, rules, evidence and
+ status counts only. Consumers must read each term's disposition: summary.pass
+ includes proved, reviewer-withdrawn and user-accepted-unproven records; it does
+ not count proven behaviors. Rebind item head/base to current packet revisions
+ while preserving original IDs, boundaries and previousEvidence.
  No writes, subprocesses, network, retained state, dispatch, retry or cleanup.
  Pass measures consistency, not semantic sufficiency. Reviewer owns judgment;
  this cannot grant review/merge authority or an aggregate verdict.
@@ -52,61 +56,61 @@ function readReceipt(receipt, directory) {
 }
 
 function evaluate(item, dispositions, expected, directory, allDispositions) {
-  const outcome = (status, reason, details = null) => ({ status, evidence: { reason, details } });
-  if (item.head !== expected.head || item.base !== expected.base) return outcome('fail', 'item head/base is stale');
-  if (!text(item.boundary)) return outcome('unknown', 'missing item boundary');
-  if (dispositions.length === 0) return outcome('unknown', 'missing disposition');
-  if (dispositions.length !== 1) return outcome('fail', 'multiple dispositions');
+  const outcome = (status, reasonCode, reason, details = null) => ({ status, reasonCode, evidence: { reason, details } });
+  if (item.head !== expected.head || item.base !== expected.base) return outcome('fail', 'item-revision-mismatch', 'item head/base is stale');
+  if (!text(item.boundary)) return outcome('unknown', 'item-boundary-missing', 'missing item boundary');
+  if (dispositions.length === 0) return outcome('unknown', 'disposition-missing', 'missing disposition');
+  if (dispositions.length !== 1) return outcome('fail', 'disposition-conflict', 'multiple dispositions');
   const d = dispositions[0];
-  if (d.head !== expected.head || d.base !== expected.base) return outcome('fail', 'disposition head/base is stale');
-  if (d.boundary !== item.boundary) return outcome('fail', 'disposition boundary differs');
-  if (d.status === 'open') return outcome('fail', 'limitation remains open');
-  if (!['proved', 'withdrawn-by-reviewer', 'user-accepted-unproven'].includes(d.status)) return outcome('fail', 'invalid disposition');
+  if (d.head !== expected.head || d.base !== expected.base) return outcome('fail', 'disposition-revision-mismatch', 'disposition head/base is stale');
+  if (d.boundary !== item.boundary) return outcome('fail', 'disposition-boundary-mismatch', 'disposition boundary differs');
+  if (d.status === 'open') return outcome('fail', 'limitation-open', 'limitation remains open');
+  if (!['proved', 'withdrawn-by-reviewer', 'user-accepted-unproven'].includes(d.status)) return outcome('fail', 'disposition-invalid', 'invalid disposition');
   const decision = d.status !== 'proved';
   const proof = decision ? d.decision : d.proof;
-  if (!proof || typeof proof !== 'object') return outcome('unknown', decision ? 'missing decision receipt' : 'missing proof receipt');
-  if (proof.itemId !== item.id) return outcome('fail', 'evidence belongs to another item');
+  if (!proof || typeof proof !== 'object') return outcome('unknown', decision ? 'decision-missing' : 'proof-missing', decision ? 'missing decision receipt' : 'missing proof receipt');
+  if (proof.itemId !== item.id) return outcome('fail', 'evidence-item-mismatch', 'evidence belongs to another item');
   const at = time(decision ? proof.at : proof.observedAt), changed = time(item.changedAt), raised = time(item.raisedAt);
-  if (![at, changed, raised].every(Number.isFinite)) return outcome('unknown', 'missing/invalid declared chronology');
-  if (at <= Math.max(changed, raised)) return outcome('fail', 'evidence predates change or limitation', { at, changed, raised });
+  if (![at, changed, raised].every(Number.isFinite)) return outcome('unknown', 'chronology-invalid', 'missing/invalid declared chronology');
+  if (at <= Math.max(changed, raised)) return outcome('fail', 'evidence-predates-limitation', 'evidence predates change or limitation', { at, changed, raised });
   if (decision) {
     const role = d.status === 'withdrawn-by-reviewer' ? 'reviewer' : 'user';
-    if (proof.repository !== expected.repository || proof.head !== expected.head || proof.base !== expected.base || proof.boundary !== item.boundary) return outcome('fail', 'decision repository/head/base/boundary differs');
-    if (proof.role !== role) return outcome('fail', 'invalid decision role');
-    if (![proof.by, proof.reason, proof.reference].every(text)) return outcome('unknown', 'incomplete decision receipt');
-    return outcome('pass', d.status === 'user-accepted-unproven' ? 'recorded user acceptance; behavior remains unproven' : 'recorded reviewer withdrawal', proof);
+    if (proof.repository !== expected.repository || proof.head !== expected.head || proof.base !== expected.base || proof.boundary !== item.boundary) return outcome('fail', 'decision-binding-mismatch', 'decision repository/head/base/boundary differs');
+    if (proof.role !== role) return outcome('fail', 'decision-role-invalid', 'invalid decision role');
+    if (![proof.by, proof.reason, proof.reference].every(text)) return outcome('unknown', 'decision-incomplete', 'incomplete decision receipt');
+    return outcome('pass', d.status === 'user-accepted-unproven' ? 'user-accepted-unproven' : 'reviewer-withdrawn', d.status === 'user-accepted-unproven' ? 'recorded user acceptance; behavior remains unproven' : 'recorded reviewer withdrawal', proof);
   }
-  if (!Array.isArray(item.acceptedProofKinds) || !item.acceptedProofKinds.length || item.acceptedProofKinds.some(k => !kinds.includes(k))) return outcome('unknown', 'missing/invalid accepted proof kinds');
-  if (!kinds.includes(proof.kind) || !item.acceptedProofKinds.includes(proof.kind)) return outcome('fail', 'proof kind is not accepted');
-  if (!text(proof.id)) return outcome('unknown', 'missing named evidence ID');
+  if (!Array.isArray(item.acceptedProofKinds) || !item.acceptedProofKinds.length || item.acceptedProofKinds.some(k => !kinds.includes(k))) return outcome('unknown', 'accepted-kinds-invalid', 'missing/invalid accepted proof kinds');
+  if (!kinds.includes(proof.kind) || !item.acceptedProofKinds.includes(proof.kind)) return outcome('fail', 'proof-kind-rejected', 'proof kind is not accepted');
+  if (!text(proof.id)) return outcome('unknown', 'proof-id-missing', 'missing named evidence ID');
   const siblings = allDispositions.filter(other => other.id !== item.id && other.status === 'proved' && other.proof);
-  if (siblings.some(other => other.proof.id === proof.id)) return outcome('fail', 'named proof assigned to another item');
-  if (!Array.isArray(item.previousEvidence ?? [])) return outcome('unknown', 'invalid previous evidence inventory');
-  if ((item.previousEvidence ?? []).some(p => p.id === proof.id)) return outcome('fail', 'reused evidence without changed disposition');
+  if (siblings.some(other => other.proof.id === proof.id)) return outcome('fail', 'sibling-proof-reused', 'named proof assigned to another item');
+  if (!Array.isArray(item.previousEvidence ?? []) || (item.previousEvidence ?? []).some(p => !p || typeof p !== 'object' || Array.isArray(p))) return outcome('unknown', 'previous-evidence-invalid', 'invalid previous evidence inventory');
+  if ((item.previousEvidence ?? []).some(p => p.id === proof.id)) return outcome('fail', 'previous-proof-reused', 'reused evidence without changed disposition');
   let receipt = proof.receipt;
-  if (!receipt) return outcome('unknown', 'missing capture receipt');
+  if (!receipt) return outcome('unknown', 'capture-receipt-missing', 'missing capture receipt');
   try { receipt = readReceipt(receipt, directory); }
-  catch (error) { return outcome(error instanceof SyntaxError ? 'fail' : 'unknown', 'invalid or unavailable capture receipt', error.message); }
-  if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt)) return outcome('fail', 'invalid capture receipt');
+  catch (error) { return outcome(error instanceof SyntaxError ? 'fail' : 'unknown', error instanceof SyntaxError ? 'capture-json-invalid' : 'capture-receipt-unavailable', 'invalid or unavailable capture receipt', error.message); }
+  if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt)) return outcome('fail', 'capture-receipt-invalid', 'invalid capture receipt');
   const terms = captureTerms(receipt, expected);
   // captureTerms intentionally reports malformed schema as unknown; here it is
   // a supplied invalid receipt, distinct from an unavailable log/capture tail.
-  if (terms[0].status === 'unknown') return outcome('fail', 'invalid capture receipt schema', terms);
-  if (terms.some(t => t.status === 'fail')) return outcome('fail', 'capture validation failed', terms);
-  if (terms.some(t => t.status === 'unknown')) return outcome('unknown', 'capture validation incomplete', terms);
+  if (terms[0].status === 'unknown') return outcome('fail', 'capture-schema-invalid', 'invalid capture receipt schema', terms);
+  if (terms.some(t => t.status === 'fail')) return outcome('fail', 'capture-validation-failed', 'capture validation failed', terms);
+  if (terms.some(t => t.status === 'unknown')) return outcome('unknown', 'capture-validation-incomplete', 'capture validation incomplete', terms);
   for (const other of siblings) {
     try {
       const sibling = readReceipt(other.proof.receipt, directory);
-      if (sibling?.logPath && realpathSync(sibling.logPath) === realpathSync(receipt.logPath)) return outcome('fail', 'capture log assigned to another item');
+      if (sibling?.logSha256 === receipt.logSha256 || (sibling?.logPath && realpathSync(sibling.logPath) === realpathSync(receipt.logPath))) return outcome('fail', 'sibling-log-reused', 'capture log assigned to another item');
     } catch { /* That item's own term reports its unavailable/invalid receipt. */ }
   }
-  if ((item.previousEvidence ?? []).some(p => p.logSha256 === receipt.logSha256)) return outcome('fail', 'reused log evidence without changed disposition');
-  if (!Number.isInteger(item.expectedExitCode ?? 0)) return outcome('unknown', 'invalid expected exit code');
-  if (receipt.exitCode !== (item.expectedExitCode ?? 0)) return outcome('fail', 'captured exit differs from item policy', { actual: receipt.exitCode, expected: item.expectedExitCode ?? 0 });
-  if (item.sourceScope === 'ignored') return outcome('unknown', 'ignored bytes are not bound by source capture');
-  if (!['external', 'tracked+untracked-nonignored'].includes(item.sourceScope)) return outcome('unknown', 'missing/invalid source scope');
-  if (item.sourceScope !== 'external' && receipt.snapshotScope?.files !== 'tracked+untracked-nonignored') return outcome('unknown', 'capture snapshot scope unavailable');
-  return outcome('pass', 'new item-bound capture is consistent; semantic sufficiency requires reviewer judgment', { id: proof.id, kind: proof.kind, declaredObservedAt: proof.observedAt, chronology: 'caller-declared, not capture-attested', terms });
+  if ((item.previousEvidence ?? []).some(p => p.logSha256 === receipt.logSha256)) return outcome('fail', 'previous-log-reused', 'reused log evidence without changed disposition');
+  if (!Number.isInteger(item.expectedExitCode ?? 0)) return outcome('unknown', 'expected-exit-invalid', 'invalid expected exit code');
+  if (receipt.exitCode !== (item.expectedExitCode ?? 0)) return outcome('fail', 'capture-exit-mismatch', 'captured exit differs from item policy', { actual: receipt.exitCode, expected: item.expectedExitCode ?? 0 });
+  if (item.sourceScope === 'ignored') return outcome('unknown', 'source-ignored', 'ignored bytes are not bound by source capture');
+  if (!['external', 'tracked+untracked-nonignored'].includes(item.sourceScope)) return outcome('unknown', 'source-scope-invalid', 'missing/invalid source scope');
+  if (item.sourceScope !== 'external' && receipt.snapshotScope?.files !== 'tracked+untracked-nonignored') return outcome('unknown', 'snapshot-scope-missing', 'capture snapshot scope unavailable');
+  return outcome('pass', 'capture-consistent', 'new item-bound capture is consistent; semantic sufficiency requires reviewer judgment', { id: proof.id, kind: proof.kind, declaredObservedAt: proof.observedAt, chronology: 'caller-declared, not capture-attested', terms });
 }
 
 export function inspectEvidence(packet, directory = '.') {
