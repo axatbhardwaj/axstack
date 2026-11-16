@@ -138,3 +138,13 @@ test.each(['missing-output', 'public-output', 'non-git'])('invocation error %s e
   expect(run(f).code).toBe(1);
   expect(readdirSync(f.out)).toEqual([]);
 });
+
+test.each(['head', 'base'])('missing local --%s commit names the flag and value', (flag) => {
+  const f = fixture(), missing = 'f'.repeat(40);
+  f.args[f.args.indexOf(`--${flag}`) + 1] = missing;
+  const result = run(f);
+  expect(result.code).toBe(1);
+  expect(result.stderr).toContain(`--${flag}`);
+  expect(result.stderr).toContain(missing);
+  expect(readdirSync(f.out)).toEqual([]);
+});
