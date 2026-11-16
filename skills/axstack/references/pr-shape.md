@@ -2,7 +2,7 @@
 
 ## Measure
 Resolve `<installed-axstack>`: absolute installed `axstack` skill directory.
-Run examples from trusted cwd `/`; measure the PR base:
+Run examples from trusted cwd `/`; measure actual PR base:
 ```sh
 bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <path> --base <base> --head <head>
 ```
