@@ -194,7 +194,7 @@ CAPTURE_HEAD=$(git -C "$TMPDIR/capture-repo" rev-parse HEAD)
 CAPTURE="$HOME/.agents/skills/axstack/scripts/check-run.js"
 bun "$CAPTURE" --help > "$EVIDENCE/capture-help.log"
 bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture --head HEAD --base HEAD --out "$EVIDENCE/capture" -- bun -e 'process.exit(7)' > "$EVIDENCE/capture-run.json"
-bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json(); if (r.schemaVersion !== 1 || r.exitCode !== 7 || r.requested.head !== r.sourceBefore.head || r.requested.base !== r.sourceBefore.base || r.requestedRefs.head !== "HEAD" || r.terms.some(t => t.status !== "pass")) throw Error("capture protocol mismatch");'
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json(); if (r.schemaVersion !== 1 || r.exitCode !== 7 || r.requested.head !== r.sourceBefore.head || r.requested.base !== r.sourceBefore.base || r.requestedRefs.head !== "HEAD" || !r.snapshotScope.ignoreSources.includes(".git/info/exclude") || r.terms.some(t => t.status !== "pass")) throw Error("capture protocol mismatch");'
 bun run test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-tests.log" 2>&1
 env -u TMPDIR bun test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-unset.log" 2>&1
 ```
