@@ -79,7 +79,7 @@ test('service allow probes enumerate live listening ports rather than image EXPO
   ownLive.push({ Id: id, Name: '/run-nginx', Config: { Image: image, ExposedPorts: { '80/tcp': {} } }, State: { Running: true, Pid: 1234 }, NetworkSettings: { Networks: { [own.name]: { IPAddress: '172.30.0.2', GlobalIPv6Address: '' } } } });
   const runner = async (argv) => {
     const reply = (data) => ({ exitCode: 0, stdout: typeof data === 'string' ? data : JSON.stringify(data) });
-    if (argv[0] === 'nsenter') return reply('tcp LISTEN 0 128 0.0.0.0:8080 0.0.0.0:*\n');
+    if (argv[0] === 'nsenter') return reply('tcp LISTEN 0 128 0.0.0.0:8080 0.0.0.0:*\nudp UNCONN 0 0 0.0.0.0:50000 0.0.0.0:*\n');
     if (argv[1] === 'network' && argv[2] === 'inspect') return reply(ownRows);
     if (argv[1] === 'inspect') return reply(ownLive);
     if (argv[1] === 'ps') return reply(ownLive.map((c) => c.Id).join('\n'));
@@ -90,6 +90,7 @@ test('service allow probes enumerate live listening ports rather than image EXPO
   expect(observed.terms.every((t) => t.status === 'pass')).toBe(true);
   expect(observed.targets.some((t) => t.id.startsWith('service|run-nginx:') && t.port === 8080)).toBe(true);
   expect(observed.targets.some((t) => t.id.startsWith('service|run-nginx:') && t.port === 80)).toBe(false);
+  expect(observed.targets.some(t => t.id.startsWith('service|') && t.protocol === 'udp')).toBe(false);
 });
 
 test('DNS probes cover the embedded Docker resolver over TCP and UDP for external and tailnet names', async () => {
@@ -206,4 +207,23 @@ test('runtime host address and wildcard listener enumeration preserve IPv6 link-
   const e = await tools.enumerateTargets({ runId: 'run', networks: [own] });
   expect(e.targets.some(t => t.kind === 'host-address' && t.address === 'fe80::1%bridge0')).toBe(true);
   expect(e.targets.some(t => t.kind === 'host-listener' && t.address === 'fe80::1%bridge0')).toBe(true);
+});
+
+test('a sidecar without a listener holds and identifies that exact owned container', async () => {
+  const image = (await Bun.file(new URL('../../skills/axstack/sandbox/sidecars.json', import.meta.url)).json()).images[0].image;
+  const base = fixture(), ownRows = structuredClone(rows), ownLive = structuredClone(live), id = 'd'.repeat(64);
+  ownRows[0].Containers[id] = { Name: 'run-db', IPv4Address: '172.30.0.2/24', IPv6Address: '' };
+  ownLive.push({ Id: id, Name: '/run-db', Config: { Image: image }, State: { Running: true, Pid: 1234 }, NetworkSettings: { Networks: { [own.name]: { IPAddress: '172.30.0.2', GlobalIPv6Address: '' } } } });
+  const runner = async argv => {
+    const reply = data => ({ exitCode: 0, stdout: typeof data === 'string' ? data : JSON.stringify(data) });
+    if (argv[0] === 'nsenter') return reply('');
+    if (argv[1] === 'network' && argv[2] === 'inspect') return reply(ownRows);
+    if (argv[1] === 'inspect') return reply(ownLive);
+    if (argv[1] === 'ps') return reply(ownLive.map(c => c.Id).join('\n'));
+    return base.runner(argv);
+  };
+  const e = await createProbeTools({ runner }).enumerateTargets({ runId: 'run', networks: [own] });
+  const term = e.terms.find(t => t.id === 'docker-containers');
+  expect(term.status).toBe('unknown');
+  expect(term.evidence.join(' ')).toContain('/run-db');
 });
