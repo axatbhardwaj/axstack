@@ -1,7 +1,6 @@
-# Sandbox interface v1 — phase 1
+# Sandbox interface v1
 
-This is the shared B–E boundary, not an executable sandbox. Every exported
-function throws `Error('not implemented')`. Int owns this document,
+This is the shared B–E implementation boundary. Int owns this document,
 `launcher-contracts.js`, `launcher-contract.schema.json` and the contract test;
 packages keep these interfaces stable and return conflicts to Int.
 
@@ -34,13 +33,23 @@ Plan works on every host, using supplied observations; missing observations
 produce `unknown` terms, never execution permission. B run refreshes host facts,
 image configs and enumeration, then materializes and records the effective plan
 before any untrusted command. Probes use that run's own containers and networks.
+E refreshes enumeration once more immediately before probing. B supplies an
+optional trusted `onPlan(plan)` callback to `runProbes({ plan, onPlan })` to save
+that exact fresh plan before sockets run; without it, changed targets hold.
+Probe IDs are local to their enclosing run plan. The private network-client argv
+encodes `[kind, address, port, protocol, optionalDnsId, optionalRedirect, optionalService]`; full
+endpoint provenance remains in the enumeration. Host IPv6 link-local addresses
+retain their interface zone, which maps to the container link or proves fresh
+namespace/bridge separation. Silent UDP alone never passes: denial needs one
+reserved-source-port datagram and one unchanged run-owned drop-counter increment,
+or fresh kernel no-route observations before and after the attempt.
 Every required gate must pass; a failed/erroring/unknown probe or incomplete
 enumeration holds. Plans and probe results are never reusable execution permits.
 
 ## File formats and fixed assets
 
 Paths below are relative to this directory, resolved from `import.meta.url`,
-never the caller's cwd. Only formats are provided now; B/C/E populate real assets.
+never the caller's cwd. B/C/E populate the fixed packaged assets.
 Missing/null identity, budget, policy or image pins hold execution.
 
 - `launcher-host.json` → `$defs.hostBinding`: literal hostname `axat-vps` **and**
