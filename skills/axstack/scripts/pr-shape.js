@@ -2,7 +2,8 @@ import { gitArgv } from './git-argv.js';
 import { existsSync, readFileSync } from 'node:fs';
 
 const lockfiles = ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'];
-const sandboxPrefix = 'skills/axstack/sandbox/';
+const sandboxDirectory = 'skills/axstack/sandbox';
+const sandboxPrefix = `${sandboxDirectory}/`;
 const help = `Usage: bun scripts/pr-shape.js --base <ref> --head <ref>
 Example: bun scripts/pr-shape.js --base main --head HEAD
 
@@ -23,7 +24,8 @@ Never subtract buckets; formatter-only changes require manual disclosure.
 Sync reports B <= H AND (H <= S OR (B <= S AND H tree == S tree)).
 Ancestor exit 1 means fail; other Git errors or missing source objects mean unknown.
 Shape term sandbox-path: fail (user-merge hold) when either rename endpoint or
-another changed path starts with ${sandboxPrefix}; otherwise pass.
+another changed path equals ${sandboxDirectory} or starts with ${sandboxPrefix}; otherwise pass.
+Shape diff overrides submodule-ignore settings so committed gitlink changes stay visible.
 Unavailable path evidence is unknown, including Git errors (existing exits retained).
 No term grants authority. No cohesion or approval verdict.
 Exit codes: 0 measured (including failed terms), 1 input/Git error,
@@ -299,11 +301,12 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       return 2;
     }
     const mergeBase = merge.stdout.trim();
-    const diffCommand = gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
+    const diffCommand = gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--ignore-submodules=none', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
     const diff = query(diffCommand);
     if (diff.code) throw new Error(`diff unavailable; verify --base and --head refer to readable commits: ${diff.stderr.trim()}`);
     const rows = numstat(diff.stdout);
-    const sandboxFiles = rows.filter((row) => [row.sourcePath, row.path].some((path) => path?.startsWith(sandboxPrefix))).length;
+    const sandboxFiles = rows.filter((row) => [row.sourcePath, row.path]
+      .some((path) => path === sandboxDirectory || path?.startsWith(sandboxPrefix))).length;
     sandboxPath = { status: sandboxFiles ? 'fail' : 'pass', evidence: { commands: [diffCommand],
       prefix: sandboxPrefix, files: sandboxFiles,
       reason: sandboxFiles ? 'sandbox paths touched; user merge required on the forge' : 'no sandbox paths touched' } };
