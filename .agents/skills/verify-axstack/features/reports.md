@@ -8,6 +8,16 @@ containment after source advancement, no-ff promotion trees, unrelated history,
 lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
 missing source objects and absent-source n/a.
 They bind the proof to resolved SHAs and check that Git remains unchanged.
+Shape mode also emits `sandbox-path`: fail (user-merge hold) for the
+`skills/axstack/sandbox` entry or paths under it, including either rename endpoint; pass otherwise,
+unknown for unavailable Git evidence. Existing exits and proof mode stay unchanged.
+Run `pr-shape-helper.test.js` and `watch-sandbox-path.test.js` for additions,
+modifications, deletions, renames in/out, untouched/empty diffs, the
+`sandbox-other/` near-miss, Git errors, bare symlink/gitlink entries and gitlink
+changes despite PR `.gitmodules`, local/global diff or submodule-ignore settings.
+Status display settings also leave committed paths visible. Watch §5 resolves
+the installed helper independently, runs from `/` with `--no-env-file` and explicit
+`--repo`, and holds every non-pass outcome; PR Bun preloads and dotenv stay inert.
 Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`;
 contract checks exercise ancestor-first repair and genuine paraphrases with removal/
 inversion negatives; local history fixtures cover three layers, siblings,
@@ -128,9 +138,18 @@ git -C "$TMPDIR/reports-repo" -c user.name=Fixture \
   -c user.email=fixture@example.invalid commit -qm 'fixture feature'
 (cd "$TMPDIR/reports-repo"; bun "$SCRIPTS/run-init.js" \
   --slug verify-fixture --date 20261008) > "$EVIDENCE/run-init.json"
-(cd "$TMPDIR/reports-repo"; bun "$SCRIPTS/pr-shape.js" \
-  --base "$BASE" --head HEAD) > "$EVIDENCE/shape.json"
-bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/run-init.json").json(); const s = await Bun.file(e + "/shape.json").json(); if (r.terms.some(t => t.status !== "pass") || !(await Bun.file(r.recordPath).text()).includes("Run: " + r.runId) || s.totals.additions !== 1 || s.totals.deletions !== 0) throw Error("fixture report mismatch"); await Bun.write(e + "/fixture-progress.md", await Bun.file(r.recordPath).text());'
+(cd /; bun --no-env-file "$HOME/.agents/skills/axstack/scripts/pr-shape.js" \
+  --repo "$TMPDIR/reports-repo" --base "$BASE" --head HEAD) > "$EVIDENCE/shape.json"
+bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/run-init.json").json(); const s = await Bun.file(e + "/shape.json").json(); if (r.terms.some(t => t.status !== "pass") || !(await Bun.file(r.recordPath).text()).includes("Run: " + r.runId) || s.totals.additions !== 1 || s.totals.deletions !== 0 || s["sandbox-path"].status !== "pass") throw Error("fixture report mismatch"); await Bun.write(e + "/fixture-progress.md", await Bun.file(r.recordPath).text());'
+SANDBOX_BASE=$(git -C "$TMPDIR/reports-repo" rev-parse HEAD)
+mkdir -p "$TMPDIR/reports-repo/skills/axstack/sandbox"
+printf 'fixture\n' > "$TMPDIR/reports-repo/skills/axstack/sandbox/check.js"
+git -C "$TMPDIR/reports-repo" add skills/axstack/sandbox/check.js
+git -C "$TMPDIR/reports-repo" -c user.name=Fixture \
+  -c user.email=fixture@example.invalid commit -qm 'fixture sandbox change'
+(cd /; bun --no-env-file "$HOME/.agents/skills/axstack/scripts/pr-shape.js" \
+  --repo "$TMPDIR/reports-repo" --base "$SANDBOX_BASE" --head HEAD) > "$EVIDENCE/sandbox-shape.json"
+bun -e 'const s = await Bun.file(process.env.EVIDENCE + "/sandbox-shape.json").json(); if (s["sandbox-path"].status !== "fail" || s["sandbox-path"].evidence.files !== 1) throw Error("sandbox hold missing");'
 ```
 
 Outputs: run-init returns owned paths, template record and per-term facts;
@@ -170,7 +189,7 @@ clone is bookkeeping, not an archival source bundle.
 ```bash
 doctor > "$EVIDENCE/chains-doctor.log" 2>&1
 bun run test tests/workflows/pr-chain.test.js tests/workflows/chat-run-watch.test.js \
-  tests/workflows/structural.test.js tests/workflows/pr-shape-helper.test.js \
+  tests/workflows/structural.test.js tests/workflows/pr-shape-helper.test.js tests/workflows/watch-sandbox-path.test.js \
   > "$EVIDENCE/chains-suite.log" 2>&1
 ```
 

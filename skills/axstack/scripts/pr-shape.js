@@ -2,11 +2,14 @@ import { gitArgv } from './git-argv.js';
 import { existsSync, readFileSync } from 'node:fs';
 
 const lockfiles = ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'];
+const sandboxDirectory = 'skills/axstack/sandbox';
+const sandboxPrefix = `${sandboxDirectory}/`;
 const help = `Usage: bun scripts/pr-shape.js --base <ref> --head <ref>
 Example: bun scripts/pr-shape.js --base main --head HEAD
 
 --base  Required actual PR base (parent branch for a stacked child)
 --head  Required candidate commit or branch
+--repo  Optional Git checkout path for shape mode; defaults to the current repository
 --source Optional source ref for the read-only sync term; no source means n/a
 --help  Show flags, example, bucket definitions and exit codes
 
@@ -14,6 +17,7 @@ Read-only Git; writes nothing, retains no state. Prints a bounded JSON summary:
 input refs and resolved SHAs, merge-base, full additions/deletions, rename and
 binary counts, and overlapping lockfile/generated buckets, with status and
 reproducing argv plus calculation instructions. No path inventory is emitted.
+For untrusted checkouts, use --repo from a trusted cwd with bun --no-env-file.
 Lockfiles match these exact basenames at any depth: ${lockfiles.join(', ')}.
 Generated means linguist-generated set or true in .gitattributes at the head;
 uses the destination path for renames. Unset, false and unspecified are excluded.
@@ -21,6 +25,10 @@ Ignores system/global attributes; local info/attributes causes an unknown bucket
 Never subtract buckets; formatter-only changes require manual disclosure.
 Sync reports B <= H AND (H <= S OR (B <= S AND H tree == S tree)).
 Ancestor exit 1 means fail; other Git errors or missing source objects mean unknown.
+Shape term sandbox-path: fail (user-merge hold) when either rename endpoint or
+another changed path equals ${sandboxDirectory} or starts with ${sandboxPrefix}; otherwise pass.
+Shape diff overrides submodule-ignore settings so committed gitlink changes stay visible.
+Unavailable path evidence is unknown, including Git errors (existing exits retained).
 No term grants authority. No cohesion or approval verdict.
 Exit codes: 0 measured (including failed terms), 1 input/Git error,
 2 incomplete (unknown sync, no merge-base or unavailable committed-attribute evidence).
@@ -30,7 +38,7 @@ function optionsFrom(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
-    if (!['--base', '--head', '--source'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
+    if (!['--base', '--head', '--source', '--repo'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
     if (!value || value.startsWith('-')) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
@@ -85,8 +93,9 @@ function numstat(text) {
     const added = tokens[i].slice(0, firstTab), deleted = tokens[i].slice(firstTab + 1, secondTab);
     let path = tokens[i].slice(secondTab + 1);
     const renamed = path === '';
-    if (renamed) { i++; path = tokens[++i]; } // -z rename: empty path, old path, new path.
-    rows.push({ path, renamed, binary: added === '-', additions: added === '-' ? 0 : Number(added),
+    let sourcePath;
+    if (renamed) { sourcePath = tokens[++i]; path = tokens[++i]; } // -z rename: empty path, old path, new path.
+    rows.push({ path, sourcePath, renamed, binary: added === '-', additions: added === '-' ? 0 : Number(added),
       deletions: deleted === '-' ? 0 : Number(deleted) });
   }
   return rows;
@@ -265,16 +274,19 @@ function proof(argv, io) {
 }
 
 export function main(argv, io = { stdout: (text) => process.stdout.write(text), stderr: (text) => process.stderr.write(text) }) {
+  let sandboxPath;
   try {
     if (argv[0] === '--proof') return proof(argv.slice(1), io);
     if (argv.includes('--help')) { io.stdout(`${help}\n${proofHelp}`); return 0; }
     const options = optionsFrom(argv);
-    const root = run(command('rev-parse', '--show-toplevel'));
-    if (root.code) throw new Error('run this helper from a Git checkout');
+    sandboxPath = { status: 'unknown', evidence: { prefix: sandboxPrefix, commands: [] } };
+    const query = (argv) => { sandboxPath.evidence.commands.push(argv); return run(argv); };
+    const root = query(command(...(options['--repo'] ? ['-C', options['--repo']] : []), 'rev-parse', '--show-toplevel'));
+    if (root.code) throw new Error(options['--repo'] ? 'invalid --repo; pass --repo <Git-checkout-path>' : 'run this helper from a Git checkout');
     const repo = root.stdout.replace(/\n$/, '');
     const gitCommand = (...args) => command('-C', repo, ...args);
     const resolve = (flag) => {
-      const result = run(gitCommand('rev-parse', '--verify', '--end-of-options', `${options[flag]}^{commit}`));
+      const result = query(gitCommand('rev-parse', '--verify', '--end-of-options', `${options[flag]}^{commit}`));
       if (result.code) throw new Error(`unresolved ${flag}; pass ${flag} <existing-commit-or-branch>`);
       return result.stdout.trim();
     };
@@ -282,18 +294,24 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
     if (options['--source']) inputs.sourceRef = options['--source'];
     const sync = syncTerm(inputs, gitCommand);
     const mergeCommand = gitCommand('merge-base', inputs.base, inputs.head);
-    const merge = run(mergeCommand);
+    const merge = query(mergeCommand);
     if (merge.code) {
       const unknown = { status: 'unknown', evidence: { commands: [mergeCommand], reason: merge.stderr.trim() || 'no common ancestor' } };
       io.stdout(`${JSON.stringify({ inputs, sync, mergeBase: { ...unknown, value: null }, totals: unknown,
-        buckets: { lockfiles: unknown, generated: unknown } })}\n`);
+        buckets: { lockfiles: unknown, generated: unknown },
+        'sandbox-path': { ...unknown, evidence: { ...unknown.evidence, prefix: sandboxPrefix } } })}\n`);
       return 2;
     }
     const mergeBase = merge.stdout.trim();
-    const diffCommand = gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
-    const diff = run(diffCommand);
+    const diffCommand = gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--ignore-submodules=none', '--numstat', '-z', `${mergeBase}..${inputs.head}`, '--');
+    const diff = query(diffCommand);
     if (diff.code) throw new Error(`diff unavailable; verify --base and --head refer to readable commits: ${diff.stderr.trim()}`);
     const rows = numstat(diff.stdout);
+    const sandboxFiles = rows.filter((row) => [row.sourcePath, row.path]
+      .some((path) => path === sandboxDirectory || path?.startsWith(sandboxPrefix))).length;
+    sandboxPath = { status: sandboxFiles ? 'fail' : 'pass', evidence: { commands: [diffCommand],
+      prefix: sandboxPrefix, files: sandboxFiles,
+      reason: sandboxFiles ? 'sandbox paths touched; user merge required on the forge' : 'no sandbox paths touched' } };
     const attrCommand = gitCommand('check-attr', `--source=${inputs.head}`, '--stdin', '-z', 'linguist-generated');
     const attrEvidence = { commands: [diffCommand, attrCommand], environment: { GIT_ATTR_NOSYSTEM: '1' },
       stdin: 'feed check-attr the NUL-separated destination paths from the full numstat records',
@@ -312,7 +330,8 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       }
       generated = summarize(rows.filter((row) => paths.has(row.path)), attrEvidence);
     }
-    io.stdout(`${JSON.stringify({ inputs, sync, mergeBase: { status: 'pass', value: mergeBase, evidence: { commands: [mergeCommand] } },
+    io.stdout(`${JSON.stringify({ inputs, sync, 'sandbox-path': sandboxPath,
+      mergeBase: { status: 'pass', value: mergeBase, evidence: { commands: [mergeCommand] } },
       totals: summarize(rows, { commands: [diffCommand], select: 'all records; no exclusions' }),
       buckets: { lockfiles: summarize(rows.filter((row) => lockfiles.includes(row.path.split('/').at(-1))),
         { commands: [diffCommand], select: 'destination basename is exactly one of lockfileNames', lockfileNames: lockfiles }), generated },
@@ -320,6 +339,9 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
     })}\n`);
     return generated.status === 'unknown' || sync.status === 'unknown' ? 2 : 0;
   } catch (error) {
+    if (sandboxPath) io.stdout(`${JSON.stringify({ 'sandbox-path': {
+      status: 'unknown', evidence: { ...sandboxPath.evidence, reason: error.message },
+    } })}\n`);
     io.stderr(`pr-shape error: ${error.message}\n`);
     return 1;
   }
