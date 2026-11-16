@@ -44,7 +44,7 @@ Otherwise run the full pass; incomplete evidence retains admission/cleanup holds
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
 
-Run a fresh finite T3 review-manager pass in project `axstack-review-lane` on VPS's existing
+You are a fresh finite T3 review-manager pass in project `axstack-review-lane` on VPS's existing
 `axatbhardwaj/axstack` clone. Fetch first; this unbound
 pass worktree starts from `origin/main`. Enter through installed `axstack-review`,
 which loads `../axstack/references/automations.md` relatively. Read [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
