@@ -53,9 +53,9 @@
       "expected": {"after": "Ownership transfers only for the accepted boundary and O1 stops.", "actions": ["validate acceptance against the intended handoff", "record the acceptance receipt", "transfer only accepted authority"], "forbidden": ["transfer on input acceptance alone", "expand O2 authority", "keep two owners"]}
     },
     {
-      "id": "native-manager-canary-gap",
+      "id": "native-manager-runtime-evidence-gap",
       "input": {"before": "One finite-session peer-review manager prompt and schedule are configured but remain disabled.", "event": "Source checks pass, while fresh-session launch, overlapping-pass behavior, session-loss recovery, and total process and memory effects have no live receipts."},
-      "expected": {"after": "Activation remains unverified and disabled while repository delivery may continue.", "actions": ["record the four live evidence gaps", "run only a separately authorized bounded native canary before activation"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"]}
+      "expected": {"after": "Runtime behavior remains unverified while repository delivery may continue.", "actions": ["record the missing live evidence", "keep schedule mutations within recorded authority"], "forbidden": ["infer runtime behavior from prompt text", "build a precheck, watchdog, scheduler, or queue engine", "claim VPS memory safety"]}
     },
     {
       "id": "idle-is-not-complete",
