@@ -4,8 +4,51 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
+const hasRetiredActivationGate = (text) => {
+  const scheduling = /\b(?:activat\w*|enabl\w*|admission|admit)\b/i;
+  const proof = /\b(?:live|native|trial|proof|prov\w*|validat\w*|verif\w*|demonstrat\w*|evidence)\b/i;
+  const prerequisite = /\b(?:before|until|only after|requir\w*|needs?|must|wait\w*|depends? on|held|holds?|blocked)\b/i;
+  const outcomes = [
+    /\b(?:overlap\w*|simultaneous|concurrent)\b/i,
+    /\b(?:killed|terminated|interrupted)\b[\s-]+predecessor\b/i,
+    /\b(?:temporary|storage|worktree)\b[^.]*\blimit\b|\blimit\b[^.]*\b(?:current count|disables?)\b/i,
+    /\b(?:real|actual)\b[\s-]+(?:PR|event)\b/i,
+    /\bhost validation\b/i,
+  ];
+  // A preceding disclaimer must not mask a directive after its colon.
+  const clauses = sentences(text).flatMap((sentence) => [sentence, ...sentence.split(/:\s+/).slice(1)]);
+  return clauses.some((sentence) => {
+    // "Only after proof may activation proceed" grants conditional permission.
+    const conditional = /\bonly after\b/i.test(sentence)
+      ? sentence.replace(/\bmay\b/i, '') : sentence;
+    return outcomes.some((outcome) =>
+      requires(conditional, scheduling, prerequisite, proof, outcome)
+      || prohibits(sentence,
+        /\b(?:(?:do|must|shall) not|never|cannot)\s+(?:activate|enable|admit)\b|\bno (?:activation|enablement|admission)\b/i,
+        /\b(?:before|until|without)\b/i, proof, outcome));
+  });
+};
+
+test.each([
+  ['gate after a disclaimer', 'This is prompt policy, not an atomic lock: the overlap canary must demonstrate one admission owner before activation.', true],
+  ['reworded requirement', 'Before activation, a live trial must run two overlapping run_scheduled_task_now passes proving one admission owner, reconcile a killed predecessor, and show the limit disables the schedule.', true],
+  ['harmless product name', 'Chrome Canary builds are not supported.', false],
+  ['overlap prerequisite', 'Enablement requires live proof that simultaneous passes admit only one owner.', true],
+  ['predecessor prerequisite', 'Before enabling the schedule, a live trial must verify recovery of a killed predecessor.', true],
+  ['storage prerequisite', 'Activation waits for live evidence that a temporary storage limit disables the schedule.', true],
+  ['event prerequisite', 'Only after a live trial reviews one real PR event may activation proceed.', true],
+  ['negative enablement gate', 'Do not enable the schedule until live proof shows overlapping passes have one owner.', true],
+  ['negated requirement', 'Activation does not require live proof of overlapping passes.', false],
+  ['runtime uncertainty', 'Source checks do not prove live overlap or predecessor recovery.', false],
+  ['authority safeguard', 'Missing authority holds activation.', false],
+  ['undefined host validation', 'Activation needs live host validation.', true],
+])('retirement guard: %s', (_name, text, gated) => {
+  expect(hasRetiredActivationGate(text)).toBe(gated);
+});
+
 test('manager and weekly scheduling no longer require the retired activation canary', () => {
   for (const path of [
+    'README.md',
     'skills/axstack/references/automations.md',
     'skills/axstack/references/lifecycle.md',
     'skills/axstack/references/test-audit-weekly.md',
@@ -14,7 +57,16 @@ test('manager and weekly scheduling no longer require the retired activation can
     'tests/workflows/pr-manager-scenarios.json',
     'tests/workflows/tracking-scenarios.json',
   ]) {
-    expect(read(path), path).not.toMatch(/\bcanar(?:y|ies)\b/i);
+    const sources = [];
+    if (path.endsWith('.json')) {
+      JSON.parse(read(path), (_key, value) => {
+        if (typeof value === 'string') sources.push(value);
+        return value;
+      });
+    } else sources.push(read(path));
+    for (const source of sources) {
+      expect(hasRetiredActivationGate(source), `${path}: ${source}`).toBe(false);
+    }
   }
 });
 
