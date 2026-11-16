@@ -23,10 +23,16 @@ async function cleanup(p, deps) {
   if (!await deps.containersGone(p)) hold(`containers remain for ${p.runId}; rules retained`);
   terms.push(fact('containers-gone', 'pass', p.containers.map(c => c.id).join(', ')));
   const network = networkPlan(p);
-  const n = await deps.cleanupNetwork({ owner: p.owner, plan: network });
-  requirePass(n, 'network cleanup'); terms.push(...n);
+  // Containers are independently gone; storage cleanup is safe even when a
+  // network readback is uncertain. Retain the owner plan until both succeed.
+  let networkError;
+  try {
+    const n = await deps.cleanupNetwork({ owner: p.owner, plan: network });
+    requirePass(n, 'network cleanup'); terms.push(...n);
+  } catch (error) { networkError = error; }
   const s = await deps.cleanupStorage({ owner: p.owner, plan: p.storage });
   requirePass(s, 'storage cleanup'); terms.push(...s);
+  if (networkError) throw networkError;
   await deps.removeRecord(p);
   return terms;
 }
