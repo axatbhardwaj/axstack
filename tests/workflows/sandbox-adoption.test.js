@@ -38,7 +38,10 @@ test('held sandbox records unknown and hold while review continues from code and
   checkRule(ban, source => requires(source, /held/i, /failed/i, /unavailable/i, /limitation/i, /test term unknown/i, /hold/i, /continu.*code reading and CI/i),
     'A held, failed or unavailable sandbox records a limitation, test term unknown and hold, continuing from code reading and CI.',
     [[/continu\w*/i, 'stopping']], [/held/i, /failed/i, /unavailable/i, /limitation/i, /test term unknown/i, /hold/i]);
-  for (const concept of [/private submodules/i, /host binding/i, /concurrency cap/i, /held sandbox/i]) expect(ban).toMatch(concept);
+  const concepts = [/record/i, /private submodules/i, /host binding/i, /concurrency (?:cap|limit)/i, /held sandbox/i];
+  checkRule(ban, text => requires(text, ...concepts),
+    'Record private submodules, host binding, the concurrency limit and a held sandbox where relevant.',
+    [[/record/i, 'omit']], concepts);
 });
 
 test('only manager includes reap and does so before quiet-pass exit', () => {
@@ -54,16 +57,60 @@ test('only manager includes reap and does so before quiet-pass exit', () => {
   expect(loadedReferences(read(briefPath))).not.toContain('../../axstack/sandbox/reap.md');
 });
 
-test('reap failure or absent Docker is recorded and pass continues, including quiet passes', () => {
+test('reap failure or missing Docker is recorded and full pass continues', () => {
   const source = read(reapPath);
-  checkRule(source, text => requires(text, /failing reap/i, /absent Docker/i, /record/i, /continue/i, /pass/i),
-    'For failing reap or absent Docker, record the limitation and continue the pass.',
-    [[/continue/i, 'stop'], [/^.*$/, 'Stop the pass if reap fails.']], [/failing reap/i, /absent Docker/i, /record/i, /continue/i]);
+  const failure = /failing reap|reap fails/i, docker = /absent Docker|Docker is missing/i;
+  const concepts = [failure, docker, /record/i, /continue/i, /pass/i];
+  checkRule(source, text => requires(text, ...concepts),
+    'If reap fails or Docker is missing, record the limitation and continue the full pass.',
+    [[/continue/i, 'stop'], [/^.*$/, 'Stop the pass if reap fails.']], concepts);
   expect(source).toMatch(/bun --no-env-file <resolved-launcher> reap/);
   expect(source).toMatch(/trusted cwd\s+`\/`/);
   checkRule(read(managerPath), text => requires(text, /start of every pass/i, /before.*quiet/i, /follow/i, /reap/i),
     'At the start of every pass before the quiet exit, follow the reap step.',
     [[/before/i, 'after']], [/start of every pass/i, /before/i, /quiet/i, /reap/i]);
+});
+
+for (const [name, path, prohibition, concepts, rewording, inversions] of [
+  ['peer policy loads from installed skills', briefPath, null,
+    [/peer mode/i, /follow/i, /Peer execution/i, /installed Axstack skills/i],
+    'For peer mode, follow Peer execution from installed Axstack skills.',
+    [[/follow/i, 'ignore'], [/installed Axstack skills/i, 'PR checkout']]],
+  ['peer policy never loads from PR checkout', briefPath, /never load/i,
+    [/Peer execution/i, /PR checkout/i], 'Never load Peer execution from the PR checkout.',
+    [[/never load/i, 'always load']]],
+  ['launcher resolves from installed skills, never PR code', banPath, /never PR code/i,
+    [/resolve/i, /launcher/i, /installed/i],
+    'Resolve the launcher from installed skills, never PR code.',
+    [[/never PR code/i, 'from PR code'], [/installed/i, 'repository']]],
+  ['launcher uses trusted cwd and disables Bun env loading', banPath, null,
+    [/use/i, /trusted cwd `?\/`?/, /--no-env-file/],
+    'Use trusted cwd / with bun --no-env-file.',
+    [[/trusted cwd `?\/`?/, 'PR checkout cwd'], [/--no-env-file/, '--env-file']]],
+  ['inspector review supplied even without limitations', banPath, null,
+    [/supply|provide/i, /inspector/i, /review/i, /even (?:without|with zero) limitations/i],
+    'Provide inspector review even with zero limitations.',
+    [[/supply|provide/i, 'omit'], [/even (?:without|with zero) limitations/i, 'only with limitations']]],
+  ['reap uses the installed launcher', reapPath, null,
+    [/use/i, /installed/i, /launcher/i],
+    'Use the installed launcher for reap.', [[/installed/i, 'repository'], [/use/i, 'avoid']]],
+  ['manager attaches sandbox receipt and inspector report', managerPath, null,
+    [/attach/i, /sandbox receipt/i, /inspector report/i],
+    'Attach the sandbox receipt and inspector report.', [[/attach/i, 'omit']]],
+  ...[managerPath, reapPath].map(path => [
+    `reap failure forces full pass: ${path}`, path, null,
+    [/reap fails|failing reap/i, /Docker is missing|absent Docker/i, /run (?:the )?full pass/i],
+    'If reap fails or Docker is missing, run the full pass.', [[/run (?:the )?full pass/i, 'exit quietly']]]),
+  ['peer inspector runs even without limitations', 'skills/axstack/references/capture-receipts.md', null,
+    [/peer reviews/i, /supply/i, /review/i, /even (?:without|with zero) limitations/i],
+    'Peer reviews supply inspector review even with zero limitations.', [[/supply/i, 'omit']]],
+]) test(name, () => {
+  checkRule(read(path), text => {
+    // The CLI flag contains the word "no", rather than a prose negation.
+    const normalized = text.replaceAll('--no-env-file', '--env-disabled');
+    const patterns = concepts.map(c => new RegExp(c.source.replace('--no-env-file', '--env-disabled'), c.flags));
+    return prohibition ? prohibits(normalized, prohibition, ...patterns) : requires(normalized, ...patterns);
+  }, rewording, inversions, concepts);
 });
 
 const temporary = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/sandbox-adoption-`);
