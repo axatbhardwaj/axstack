@@ -55,7 +55,7 @@ async function runCommand(argv, cwd = '/') {
   return output.trim();
 }
 
-async function install(pins) {
+async function install(pins, artifactsOnly = false) {
   if (process.env.AXSTACK_IMAGE_BUILD !== '1' || process.getuid() !== 0) throw Error('run only in the Dockerfile image build');
   await mkdir('/tmp/axstack-image-home', { recursive: true });
   await Bun.write('/tmp/axstack-image-gitconfig', '');
@@ -88,6 +88,17 @@ async function install(pins) {
   await runCommand(['/opt/python-3.12/bin/python3', '-m', 'ensurepip']);
   await mkdir('/opt/android/licenses', { recursive: true });
   await Bun.write('/opt/android/licenses/android-sdk-license', `${pins.androidLicense.sha1}\n`);
+  if (artifactsOnly) {
+    for (const path of ['/tmp/axstack-image-home', '/tmp/axstack-image-cargo', '/tmp/axstack-image-gitconfig']) await rm(path, { recursive: true });
+    return;
+  }
+  await preload();
+}
+
+async function preload() {
+  if (process.env.AXSTACK_IMAGE_BUILD !== '1' || process.getuid() !== 0) throw Error('run only in the Dockerfile image build');
+  await mkdir('/tmp/axstack-image-home', { recursive: true });
+  await Bun.write('/tmp/axstack-image-gitconfig', '');
   // Pre-resolve AGP/Kotlin's transitive build artifacts with a trusted synthetic project.
   const project = '/tmp/axstack-image-gradle';
   await mkdir(project);
@@ -103,12 +114,13 @@ async function install(pins) {
 
 if (import.meta.main) {
   const mode = Bun.argv[2];
-  if (mode === '--help') console.log('Usage: bun probes-image-build.js --plan|--run|--help\n--plan: read bundled pins, print pending per-artifact terms and exact download/install argv; no writes/network. --run: Dockerfile build only (root plus AXSTACK_IMAGE_BUILD=1), downloads pinned HTTPS artifacts, verifies published checksums, installs toolchains under /opt, creates /usr/local/bin links, uses/removes fixed /tmp/axstack-image-* scratch, preloads /opt/gradle-build-cache through a trusted synthetic project (network to upstream registries), moves its read-only dependency cache to /opt/gradle-cache. Public Solidity content is unpacked and Git-tree checked, no content scripts run. No host config, containers, mounts, credentials, dispatch or publication. Cleanup failure stops build. Exit 0 facts, 1 error; plan terms remain unknown until build and integration smoke.');
+  if (mode === '--help') console.log('Usage: bun probes-image-build.js --plan|--run|--artifacts|--preload|--help\n--plan: read bundled pins, print pending per-artifact terms and exact download/install argv; no writes/network. --artifacts installs verified artifacts only; --preload builds the synthetic Android project only; --run does both. Writers: Dockerfile build only (root plus AXSTACK_IMAGE_BUILD=1), downloads pinned HTTPS artifacts, verifies published checksums, installs toolchains under /opt, creates /usr/local/bin links, uses/removes fixed /tmp/axstack-image-* scratch, preloads /opt/gradle-build-cache through a trusted synthetic project (network to upstream registries), moves its read-only dependency cache to /opt/gradle-cache. Public Solidity content is unpacked and Git-tree checked, no content scripts run. No host config, containers, mounts, credentials, dispatch or publication. Cleanup failure stops build. Exit 0 facts, 1 error; plan terms remain unknown until build and integration smoke.');
   else {
     try {
       const pins = await Bun.file(new URL('./probes-image-pins.json', import.meta.url)).json();
       if (mode === '--plan') console.log(JSON.stringify(provisionPlan(pins), null, 2));
-      else if (mode === '--run') await install(pins);
+      else if (mode === '--run' || mode === '--artifacts') await install(pins, mode === '--artifacts');
+      else if (mode === '--preload') await preload();
       else throw Error('use --plan, --run or --help');
     } catch (error) { console.error(String(error)); process.exitCode = 1; }
   }
