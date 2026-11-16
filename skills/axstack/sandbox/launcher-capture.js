@@ -27,7 +27,7 @@ export function verifyCapture(path, p, argv) {
   return { schemaVersion: 1, receiptPath: realpathSync(path), receiptSha256: sha256(bytes) };
 }
 export async function recordCapture(p, evidenceDir, active, checkStorage = role => checkFilesystem({ storage: p.storage, containerId: p.containers.find(c => c.role === role).id })) {
-  const registryPlanBytes = new TextEncoder().encode(`${JSON.stringify(p, null, 2)}\n`).length;
+  const registryPlanBytes = new TextEncoder().encode(`${JSON.stringify(p)}\n`).length;
   if (receiptBytes(evidenceDir) + registryPlanBytes > p.policy.receiptMaxBytes / 2) hold('insufficient receipt directory budget');
   const initial = sourceIdentity(p.request);
   const binding = { ...p.request, snapshot: initial.snapshot, tool: { name: 'axstack-sandbox', version: '1.0.0' }, sandboxImageDigest: p.containers.find(c => c.role === 'test').image.split('@')[1], writableRoots: [p.sourceExport.path] };
@@ -57,7 +57,7 @@ export async function recordCapture(p, evidenceDir, active, checkStorage = role 
   hold('test capture unavailable');
 }
 export async function saveReceipt(receipt, evidenceDir, p) {
-  const bytes = `${JSON.stringify(receipt, null, 2)}\n`;
+  const bytes = `${JSON.stringify(receipt)}\n`;
   if (receiptBytes(evidenceDir) + new TextEncoder().encode(bytes).length > p.policy.receiptMaxBytes) hold('sandbox envelope exceeds receipt directory cap');
   writeFileSync(`${evidenceDir}/${p.runId}-sandbox.json`, bytes, { flag: 'wx', mode: 0o600 });
 }
