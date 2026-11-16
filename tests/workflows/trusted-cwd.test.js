@@ -1,4 +1,5 @@
 import { afterAll, afterEach, expect, test } from 'bun:test';
+import { checkRule, requires } from './prose-contract.js';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const source = `${import.meta.dir}/../..`;
@@ -73,6 +74,7 @@ for (const [document, count] of [
       .map(m => m[0]);
     expect(templates.length).toBe(count);
     for (const template of templates) {
+      expect(argv(template), template).toContain('--no-env-file');
       // Negative control: starting the trusted installed helper in this peer runs the preload.
       const old = run([process.execPath, `${installed}/scripts/pr-shape.js`, '--base', head, '--head', head], peer);
       expect(old.exitCode, old.stderr.toString()).toBe(0);
@@ -80,7 +82,7 @@ for (const [document, count] of [
       expect(existsSync(preload)).toBe(true);
       rmSync(preload);
       // Execute the documented startup location too, so a cwd regression reaches the attack.
-      const result = run(argv(template), /trusted cwd `\/`/.test(text) ? '/' : peer);
+      const result = run(argv(template), /trusted (?:cwd|working directory) `\/`/i.test(text) ? '/' : peer);
       expect(existsSync(preload), template).toBe(false);
       expect(existsSync(filter), template).toBe(false);
       expect(result.exitCode, `${template}\n${result.stderr}`).toBe(0);
@@ -109,4 +111,14 @@ test('equals-form empty config and no-env-file block both startup vectors inside
   expect(safe.exitCode, safe.stderr.toString()).toBe(0);
   expect(existsSync(preload)).toBe(false);
   expect(existsSync(filter)).toBe(false);
+});
+
+test('installed-axstack resolves to an absolute installed skill directory at each new use site', () => {
+  const shape = readFileSync(`${source}/skills/axstack/references/pr-shape.md`, 'utf8').replace(/`/g, '');
+  const concepts = [/resolve/i, /<installed-axstack>/, /absolute/i, /installed/i, /axstack/i, /skill directory/i];
+  checkRule(shape, text => requires(text, ...concepts),
+    "Resolve <installed-axstack> as the installed axstack skill directory's absolute path.",
+    [[/installed axstack skill directory/i, 'peer checkout']], concepts);
+  const record = readFileSync(`${source}/skills/axstack/references/run-record.md`, 'utf8');
+  expect(record).toMatch(/\[[^\]]+\]\(pr-shape\.md#measure\)/);
 });
