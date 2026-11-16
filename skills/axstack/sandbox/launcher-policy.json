@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "user": "1000:1000",
+  "user": "61234:61234",
   "environment": [
     {
       "name": "HOME",
@@ -8,7 +8,7 @@
     },
     {
       "name": "PATH",
-      "value": "/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib/postgresql/16/bin:/usr/lib/postgresql/17/bin:/usr/share/grafana/bin"
+      "value": "/opt/swift/usr/bin:/opt/swiftlint:/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib/postgresql/16/bin:/usr/lib/postgresql/17/bin:/usr/share/grafana/bin"
     },
     {
       "name": "LANG",
