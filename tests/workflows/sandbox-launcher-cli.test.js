@@ -21,7 +21,10 @@ test('packaged CLI prints exact plan argv/rules with interface fakes and wrong-h
     mkdirSync(`${root}/scripts`);
     for (const file of ['capture-identity.js', 'command-capture.js', 'git-argv.js']) cpSync(`${import.meta.dir}/../../skills/axstack/scripts/${file}`, `${root}/scripts/${file}`);
     const fake = planners();
-    for (const [file, name] of [['network', 'planNetwork'], ['storage', 'planStorage'], ['probes', 'planProbes']]) writeFileSync(`${root}/sandbox/${file}.js`, `const image = ${JSON.stringify(image)}; export const ${name} = ${fake[name].toString()};\n`);
+    for (const [file, name] of [['network', 'planNetwork'], ['storage', 'planStorage'], ['probes', 'planProbes']]) {
+      cpSync(`${root}/sandbox/${file}.js`, `${root}/sandbox/${file}-real.js`);
+      writeFileSync(`${root}/sandbox/${file}.js`, `export * from './${file}-real.js'; const image = ${JSON.stringify(image)}; export const ${name} = ${fake[name].toString()};\n`);
+    }
     writeFileSync(`${root}/input.json`, JSON.stringify(fixture()));
     const argv = [process.execPath, `${root}/sandbox/launcher.js`];
     const result = Bun.spawnSync([...argv, 'plan', '--input', `${root}/input.json`]);
