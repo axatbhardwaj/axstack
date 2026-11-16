@@ -62,3 +62,12 @@ test('curl socket failures and proxy denials produce parseable proof with zero H
     expect(JSON.parse(JSON.parse(result.evidence[0]).stdout).http_code).toBe('000');
   }
 });
+
+test('registry socket proofs stop at the first response and explicit redirect proofs follow the chain', async () => {
+  const tools = fixture();
+  await tools.network('proxy', 'allow', { kind: 'fixed', address: 'registry.npmjs.org', port: 443, protocol: 'tcp' });
+  expect(tools.calls.find(a => a.includes('curl'))).not.toContain('--location');
+  tools.calls.length = 0;
+  await tools.network('fetch', 'deny', { kind: 'fixed', address: 'dl.google.com', port: 443, protocol: 'tcp', redirect: true });
+  expect(tools.calls.find(a => a.includes('curl'))).toContain('--location');
+});
