@@ -10,14 +10,8 @@ Integration: <package tips + ancestry + input identities + combined acceptance |
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Combined review: <yes — return the Scope verdict | no — separate diligence>
 Angles: <all six; identical brief for peer reviewers>
-Authored receipt requirements:
-  Report Coverage: COMPLETE | INCOMPLETE with covered angles, acceptance and executable evidence.
-  Tag each limitation leaving changed behavior unexercised or unverified, in whatever words, changed-behavior: unproven.
-  Record Final-head check: <command> -> <log path> for a check the reviewer ran at the final head; keep the log in the run's evidence folder.
-  Applicable verify-<app>: Final-head check records the reviewer's local drive of each affected feature at the pinned final head. Use n/a — <reason> when no skill covers the affected behavior.
-  Record a Safety fact: about the change itself rather than the review process.
-  Rate each non-agent comment at the current head above low | low | addressed | uncertain.
-  Re-rate each non-agent comment at every new head.
+Follow [Capture receipts](../../axstack/references/capture-receipts.md).
+Authored receipt requirements: Follow [Review receipt](review-receipt.md), including final-head feature drives, coverage, safety judgment and comment ratings.
 Escalate to user: yes | no — <criterion> — <reason>
 ```
 
