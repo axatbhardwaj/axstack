@@ -1,19 +1,18 @@
 # R5 release trace
 
-For affected-skills releases, the driver runs one capped T3 scenario on the
+For skills releases, the driver runs one capped T3 scenario on the
 installed release. Failure, unavailability and exhausted budgets are recorded
 and never block publication. Helpers capture facts, never launch T3, enforce
 budgets, schedule, retry or grant authority.
 
-Use installed `scripts/check-run.js` for both captures. Follow `--help` for
+Use installed `scripts/check-run.js` twice. Follow `--help` for
 captured-head validation, trust limits and independent Git object/environment/
-binary and trace-Bun verification. Require identical helper/Bun realpaths and
-matching helper hashes. No live-home edits.
+binary and trace-Bun verification. Require equal helper/Bun realpaths and hashes. No live-home edits.
 
-Set REPO=clean release-tag checkout, RELEASE_HEAD=full tag SHA, ORIGIN=Git origin
+Set REPO=clean tag checkout, RELEASE_HEAD=full tag SHA, ORIGIN=Git origin
 URL, CAPTURE=absolute installed helper, OUT=existing owned 0700 evidence outside
-source/cwd/writable roots. Retain release/install version/skill checks and T3
-receipts there. Use REPO/tests/workflows/*scenarios.json; catalogs are not installed.
+source/cwd/writable roots. Verify package version and installed skills; retain
+checks and T3 receipts there. Use REPO/tests/workflows/*scenarios.json; catalogs are not installed.
 
 Wrap both modes with check-run using `--repo REPO --repository ORIGIN
 --head RELEASE_HEAD --base RELEASE_HEAD --out OUT -- bun CAPTURE MODE ...`.
@@ -39,7 +38,7 @@ controls and report the gap; never claim helper enforcement.
 
 ## After observation
 
-Retain raw T3 observations. Write `$OUT/after.json`: planSha256=PLAN_SHA256,
+Retain T3 observations. Write `$OUT/after.json`: planSha256=PLAN_SHA256,
 nonce, version, host, attempt:1, requested/effective {provider,model,options},
 outcome, threadId, runId, startedAt, finishedAt, tokensUsed, output, reason citing
 raw observations. Read settings from launch/readback; never infer equality.
@@ -47,8 +46,8 @@ Unavailable=null; output=actual final response including nonce;
 finishedAt=terminal observation time.
 
 Outcomes: completed, failed, unavailable, budget-exhausted, cancelled.
-Unavailable with observed thread/run IDs is terminal; absent IDs and scenario
-outcome stay unknown. Without another attempt, capture
+Unavailable with observed thread/run IDs is terminal; absent IDs stay unknown.
+Its scenario outcome stays unknown either way. Capture without another attempt:
 `r5-trace --plan-receipt PLAN_RECEIPT --result "$OUT/after.json"
 --repository ORIGIN --head RELEASE_HEAD --base RELEASE_HEAD`.
 
