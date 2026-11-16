@@ -131,3 +131,7 @@ test('receipt cannot supply its own expected repository and revisions', async ()
   const step = await capture(fixture());
   expect(captureTerms(step).find(t => t.id === 'identity').status).toBe('unknown');
 });
+
+test('filesystem-root writable mount excludes every output directory', async () => {
+  await expect(capture(fixture(), 'void 0;', { writableRoots: ['/'] })).rejects.toThrow(/outside|writable/);
+});
