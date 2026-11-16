@@ -51,6 +51,10 @@ export function networkRules(networks, addresses, proxy, hash) {
     rawRule(network, chain, tokens, expr, direction);
   }
   for (const network of networks) {
+    // Link-local kernel neighbour discovery is required before IPv6 data can
+    // reach the host-input drop. It exposes no host data socket or routed path.
+    rule(network, 'input', ['icmpv6', 'type', '{ nd-neighbor-solicit, nd-neighbor-advert }', 'ip6', 'hoplimit', '255', 'return'],
+      [match({ payload: { protocol: 'icmpv6', field: 'type' } }, { set: ['nd-neighbor-solicit', 'nd-neighbor-advert'] }), match({ payload: { protocol: 'ip6', field: 'hoplimit' } }, 255), { return: null }]);
     rule(network, 'input', ['drop'], [{ drop: null }]);
     // No unsolicited traffic into a run, even if an unrelated Docker rule accepts it.
     rule(network, 'forward', ['iifname', '!=', JSON.stringify(network.interface), 'ct', 'state', '!=', '{ established, related }', 'drop'],
