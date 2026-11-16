@@ -209,8 +209,9 @@ capture facts do not establish proof sufficiency or malicious-code containment.
 
 ## Capture-backed R5 release traces
 
-After Launch/Doctor, pack and temporary-home install, reuse the clean Git
-`capture-repo` fixture above and installed `CAPTURE`. The two new modes extend
+After Launch/Doctor, pack and temporary-home install, reuse installed `CAPTURE`.
+Create a separate clean release fixture with a committed catalog and package version.
+The two new modes extend
 check-run; no additional script is installed. Both phases run offline here;
 the [live recipe](../../../../skills/axstack/references/live-run.md) leaves the
 single T3 launch to the release driver. This fixture proves trace generation,
@@ -221,27 +222,36 @@ doctor > "$EVIDENCE/r5-doctor.log" 2>&1
 bun run test tests/workflows/live-run.test.js > "$EVIDENCE/r5-tests.log" 2>&1
 env -u TMPDIR bun test tests/workflows/live-run.test.js > "$EVIDENCE/r5-unset.log" 2>&1
 mkdir -m 700 "$EVIDENCE/r5"
+mkdir "$TMPDIR/r5-repo"
+git -C "$TMPDIR/r5-repo" init -q
+git -C "$TMPDIR/r5-repo" remote add origin fixture:r5
+cp "$REPO/tests/workflows/run-record-scenarios.json" "$TMPDIR/r5-repo/catalog.json"
+printf '%s\n' '{"version":"fixture-release"}' > "$TMPDIR/r5-repo/package.json"
+git -C "$TMPDIR/r5-repo" add .
+git -C "$TMPDIR/r5-repo" -c user.name=Fixture -c user.email=f@x commit -qm fixture
+R5_HEAD=$(git -C "$TMPDIR/r5-repo" rev-parse HEAD)
 bun -e 'const e = process.env.EVIDENCE; await Bun.write(e + "/r5/before.json", JSON.stringify({
-  catalog: process.env.REPO + "/tests/workflows/run-record-scenarios.json", scenario: "stale-evidence-hold",
+  catalog: process.env.TMPDIR + "/r5-repo/catalog.json", scenario: "stale-evidence-hold",
   version: "fixture-release", host: "fixture-host", tokenLimit: 4000, timeLimitMs: 60000, attempt: 1,
-  nonce: "offline-fixture-nonce", recordedAt: "2026-11-16T00:00:00Z",
+  nonce: crypto.randomUUID(), recordedAt: new Date().toISOString(),
   requested: {provider: "codex", model: "fixture-model", options: {reasoningEffort: "low"}}
 }));'
-bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture \
-  --head "$CAPTURE_HEAD" --base "$CAPTURE_HEAD" --out "$EVIDENCE/r5" -- \
+bun "$CAPTURE" --repo "$TMPDIR/r5-repo" --repository fixture:r5 \
+  --head "$R5_HEAD" --base "$R5_HEAD" --out "$EVIDENCE/r5" -- \
   bun "$CAPTURE" r5-plan --input "$EVIDENCE/r5/before.json" > "$EVIDENCE/r5-before-capture.json"
 PLAN_RECEIPT=$(bun -e 'console.log((await Bun.file(process.env.EVIDENCE + "/r5-before-capture.json").json()).receiptPath)')
 bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/r5-before-capture.json").json();
   const bytes = await Bun.file(r.logPath).arrayBuffer(); const p = JSON.parse(new TextDecoder().decode(bytes));
   if (r.exitCode !== 0 || r.terms.some(t => t.status !== "pass") || p.terms.some(t => t.status !== "pass")) throw Error("before capture failed");
+  const start = Date.now();
   await Bun.write(e + "/r5/after.json", JSON.stringify({planSha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
     nonce: p.nonce, version: p.version, host: p.host, attempt: 1, requested: p.requested, effective: p.requested,
     outcome: "completed", threadId: "synthetic-thread", runId: "synthetic-run", tokensUsed: 100,
-    startedAt: "2026-11-16T00:00:01Z", finishedAt: "2026-11-16T00:00:02Z", output: "nonce: " + p.nonce}));'
-bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture \
-  --head "$CAPTURE_HEAD" --base "$CAPTURE_HEAD" --out "$EVIDENCE/r5" -- \
+    startedAt: new Date(start).toISOString(), finishedAt: new Date(start + 1000).toISOString(), output: "nonce: " + p.nonce}));'
+bun "$CAPTURE" --repo "$TMPDIR/r5-repo" --repository fixture:r5 \
+  --head "$R5_HEAD" --base "$R5_HEAD" --out "$EVIDENCE/r5" -- \
   bun "$CAPTURE" r5-trace --plan-receipt "$PLAN_RECEIPT" --result "$EVIDENCE/r5/after.json" \
-    --repository fixture:capture --head "$CAPTURE_HEAD" --base "$CAPTURE_HEAD" > "$EVIDENCE/r5-after-capture.json"
+    --repository fixture:r5 --head "$R5_HEAD" --base "$R5_HEAD" > "$EVIDENCE/r5-after-capture.json"
 bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/r5-after-capture.json").json();
   const t = await Bun.file(r.logPath).json();
   if (r.schemaVersion !== 1 || r.exitCode !== 0 || r.terms.some(x => x.status !== "pass") ||
