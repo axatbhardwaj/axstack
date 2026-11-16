@@ -15,7 +15,7 @@ At the top, prototype pages say "prototype" and use colours with
 Prototype pages retain self-contained bytes, no network, no storage (including
 cookies), no modals or popups, and the exact-byte scan.
 Prototype pages retain both driver previews for layout, theme, height, network,
-zero console errors, and empty `missingImages`.
+and zero console errors.
 Prototype pages require semantic, accessible markup and the interactive
 `axstack-ui-verifier` pass.
 Prototype pages retain driver-only `html_render` using precisely the bytes checked
@@ -77,8 +77,10 @@ Reject scan matches except local `url(#id)` references such as SVG markers and g
 
 Before publishing, run `html_preview` at 728px dark and 360px light.
 The driver's two previews are a named browser exception to delegated browser checks.
-Require correct layout, theme, height, network, word count, zero console errors,
-and empty `missingImages`.
+Require correct layout, theme, height, network, word count, and zero console errors.
+The reviewing seat runs [image-evidence.js](../../axstack/scripts/image-evidence.js)
+on the exact published bytes and records resource observations through the Playwright MCP;
+unobservable resources report unknown.
 Check every claim against its source.
 Inspect both screenshots for clipping, overflow, and readable labels.
 For an explicit theme override, also check that requested theme.
