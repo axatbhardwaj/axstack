@@ -103,7 +103,6 @@ for (const path of watchCopies) {
   );
 }
 for (const [name, start, end] of [
-  ['brief', '## Template: candidate review brief', '## Template: review receipt'],
   ['receipt', '## Template: review receipt', '## Prompt-only urgent escalation'],
 ]) {
   rules.push([`Review ${name} applicable final-head drive`, () => section(review(), start, end),
