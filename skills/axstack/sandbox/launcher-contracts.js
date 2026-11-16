@@ -1,7 +1,6 @@
 /**
  * Shared interface v1. JSON wire shapes are authoritative in launcher-contract.schema.json.
  * B–E may add private helpers; changes to these shared signatures belong to Int.
- * All functions currently throw Error('not implemented'), with no side effects.
  * Implementations: invalid input/I/O errors throw Error (CLI exit 1); failed/unknown
  * containment throws Error with sandboxHold:true (CLI exit 2), before untrusted code.
  * Fact results use Term; they never grant review, merge or execution authority.
