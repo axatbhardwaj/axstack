@@ -1,12 +1,12 @@
 # Build context: skills/axstack/sandbox; build/smoke only in T21 integration.
 # linux/amd64; every required artifact's version/checksum/source is in probes-image-pins.json.
-# Base source: https://registry-1.docker.io/v2/library/debian/manifests/bookworm-slim
-FROM docker.io/library/debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+# Base source: https://registry-1.docker.io/v2/library/debian/manifests/trixie-slim
+FROM docker.io/library/debian@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl unzip xz-utils tar git build-essential pkg-config clang cmake \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev \
-    libcurl4-openssl-dev libxml2-dev libedit2 libicu72 libatomic1 libcurl4 libsqlite3-0 libncurses6 libpython3.11 liblzma-dev libncurses-dev libgdbm-dev uuid-dev libzstd-dev && \
+    libcurl4-openssl-dev libxml2-dev libedit2 libicu76 libatomic1 libcurl4t64 libsqlite3-0 libncurses6 libpython3.13 liblzma-dev libncurses-dev libgdbm-dev uuid-dev libzstd-dev && \
     rm -r /var/lib/apt/lists/* && groupadd --gid 61234 reviewer && \
     useradd --uid 61234 --gid 61234 --home-dir /sandbox-home --create-home --shell /bin/bash reviewer
 # Bootstrap source: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/SHASUMS256.txt
