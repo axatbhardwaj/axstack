@@ -1,0 +1,341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axstack.dev/schemas/sandbox-contract-v1.json",
+  "$ref": "#/$defs/plan",
+  "$defs": {
+    "term": {
+      "type": "object",
+      "required": ["id", "status", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "fail", "unknown", "n/a"]},
+        "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+      }
+    },
+    "owner": {
+      "type": "object",
+      "required": ["label", "runId", "pid", "startTimeTicks", "bootId"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {"const": "axstack.sandbox"},
+        "runId": {"type": "string", "minLength": 1},
+        "pid": {"type": "integer", "minimum": 1},
+        "startTimeTicks": {"type": "string", "minLength": 1},
+        "bootId": {"type": "string", "minLength": 1}
+      }
+    },
+    "hostBinding": {
+      "type": "object",
+      "required": ["schemaVersion", "hostname", "machineIdSha256"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "hostname": {"const": "axat-vps"},
+        "machineIdSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "hostBudget": {
+      "type": "object",
+      "required": ["schemaVersion", "host", "inventoryDate", "maxConcurrent", "memoryBudgetBytes", "diskBudgetBytes", "reserveMemoryBytes", "reserveDiskBytes"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "host": {"const": "axat-vps"},
+        "inventoryDate": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "maxConcurrent": {"const": 2},
+        "memoryBudgetBytes": {"type": "integer", "minimum": 1},
+        "diskBudgetBytes": {"type": "integer", "minimum": 1},
+        "reserveMemoryBytes": {"type": "integer", "minimum": 1},
+        "reserveDiskBytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "containerCaps": {
+      "type": "object",
+      "required": ["cpus", "memoryBytes", "memorySwapBytes", "pids", "logMaxBytes", "logMaxFiles", "logDriver", "restart"],
+      "additionalProperties": false,
+      "properties": {
+        "cpus": {"type": "number", "exclusiveMinimum": 0},
+        "memoryBytes": {"type": "integer", "minimum": 1},
+        "memorySwapBytes": {"type": "integer", "minimum": 1},
+        "pids": {"type": "integer", "minimum": 1},
+        "logMaxBytes": {"type": "integer", "minimum": 1},
+        "logMaxFiles": {"const": 1},
+        "logDriver": {"const": "local"},
+        "restart": {"const": "no"}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["name", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "value": {"type": "string"}
+      }
+    },
+    "launchPolicy": {
+      "type": "object",
+      "required": ["schemaVersion", "user", "environment", "workloadCaps", "proxyCaps", "sidecarCaps", "writableBytes", "dependencyBytes", "dependencyInodes", "sourceMaxBytes", "captureMaxBytes", "receiptMaxBytes", "wallTimeSeconds", "graceSeconds", "maxWallTimeSeconds"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "user": {"type": "string", "pattern": "^[1-9][0-9]*:[1-9][0-9]*$"},
+        "environment": {"type": "array", "items": {"$ref": "#/$defs/environment"}},
+        "workloadCaps": {"$ref": "#/$defs/containerCaps"},
+        "proxyCaps": {"$ref": "#/$defs/containerCaps"},
+        "sidecarCaps": {"$ref": "#/$defs/containerCaps"},
+        "writableBytes": {"type": "integer", "minimum": 1},
+        "dependencyBytes": {"type": "integer", "minimum": 1},
+        "dependencyInodes": {"type": "integer", "minimum": 1},
+        "sourceMaxBytes": {"type": "integer", "minimum": 1},
+        "captureMaxBytes": {"type": "integer", "minimum": 1},
+        "receiptMaxBytes": {"type": "integer", "minimum": 1},
+        "wallTimeSeconds": {"type": "integer", "minimum": 1},
+        "graceSeconds": {"type": "integer", "minimum": 1},
+        "maxWallTimeSeconds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "proxyConfig": {
+      "type": "object",
+      "required": ["schemaVersion", "image", "allowlistFile", "allowlistPointer", "resolverIpv4", "resolverIpv6", "port"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "image": {"$ref": "#/$defs/image"},
+        "allowlistFile": {"const": "inventory.json"},
+        "allowlistPointer": {"const": "/registryAllowlist"},
+        "resolverIpv4": {"type": "string", "minLength": 1},
+        "resolverIpv6": {"type": "string", "minLength": 1},
+        "port": {"type": "integer", "minimum": 1}
+      }
+    },
+    "image": {"type": "string", "pattern": "^.+@sha256:[a-f0-9]{64}$"},
+    "tmpfs": {
+      "type": "object",
+      "required": ["path", "bytes", "uid", "gid", "mode", "noexec"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "bytes": {"type": "integer", "minimum": 1},
+        "uid": {"type": "integer", "minimum": 1},
+        "gid": {"type": "integer", "minimum": 1},
+        "mode": {"type": "string", "minLength": 1},
+        "noexec": {"type": "boolean"}
+      }
+    },
+    "sidecar": {
+      "type": "object",
+      "required": ["id", "image", "argv", "declaredVolumes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "image": {"$ref": "#/$defs/image"},
+        "argv": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "declaredVolumes": {"type": "array", "items": {"$ref": "#/$defs/tmpfs"}}
+      }
+    },
+    "sidecars": {
+      "type": "object",
+      "required": ["schemaVersion", "images"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "images": {"type": "array", "items": {"$ref": "#/$defs/sidecar"}}
+      }
+    },
+    "network": {
+      "type": "object",
+      "required": ["id", "name", "interface", "profile", "internal", "subnets", "createArgv", "removeArgv"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "interface": {"type": "string", "minLength": 1},
+        "profile": {"enum": ["fetch", "service", "egress"]},
+        "internal": {"type": "boolean"},
+        "subnets": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "createArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "removeArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "family", "table", "chain", "interfaces", "expression", "installArgv", "checkArgv", "removeArgv"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "family": {"const": "inet"},
+        "table": {"const": "axstack_sandbox"},
+        "chain": {"type": "string", "minLength": 1},
+        "interfaces": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "expression": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "installArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "checkArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "removeArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+      }
+    },
+    "container": {
+      "type": "object",
+      "required": ["id", "role", "image", "networkIds", "argv", "caps", "tmpfs"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "role": {"enum": ["fetch", "test", "proxy", "sidecar", "probe"]},
+        "image": {"$ref": "#/$defs/image"},
+        "networkIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "argv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "caps": {"$ref": "#/$defs/containerCaps"},
+        "tmpfs": {"type": "array", "items": {"$ref": "#/$defs/tmpfs"}}
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "phase", "executor", "containerId", "argv", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "phase": {"enum": ["prepare", "check", "cleanup"]},
+        "executor": {"enum": ["host", "container"]},
+        "containerId": {"type": ["string", "null"]},
+        "argv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "path": {"type": "string", "minLength": 1}
+      }
+    },
+    "storage": {
+      "type": "object",
+      "required": ["imageFile", "volumeName", "filesystem", "bytes", "inodes", "mountOptions", "keepFreeLoops", "autoclear", "steps", "checks", "cleanup"],
+      "additionalProperties": false,
+      "properties": {
+        "imageFile": {"type": "string", "minLength": 1},
+        "volumeName": {"type": "string", "minLength": 1},
+        "filesystem": {"const": "ext4"},
+        "bytes": {"type": "integer", "minimum": 1},
+        "inodes": {"type": "integer", "minimum": 1},
+        "mountOptions": {"const": ["nosuid", "nodev"]},
+        "keepFreeLoops": {"const": 1},
+        "autoclear": {"const": false},
+        "steps": {"type": "array", "items": {"$ref": "#/$defs/step"}, "minItems": 1},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/step"}, "minItems": 1},
+        "cleanup": {"type": "array", "items": {"$ref": "#/$defs/step"}, "minItems": 1}
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["id", "kind", "address", "port", "protocol", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["host-listener", "host-address", "gateway", "other-container", "tailnet", "fixed", "dns"]},
+        "address": {"type": "string", "minLength": 1},
+        "port": {"type": ["integer", "null"]},
+        "protocol": {"enum": ["tcp", "udp", "icmp"]},
+        "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+      }
+    },
+    "enumeration": {
+      "type": "object",
+      "required": ["runId", "terms", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "runId": {"type": "string", "minLength": 1},
+        "terms": {"type": "array", "items": {"$ref": "#/$defs/term"}, "minItems": 1},
+        "targets": {"type": "array", "items": {"$ref": "#/$defs/target"}, "minItems": 1}
+      }
+    },
+    "probe": {
+      "type": "object",
+      "required": ["id", "containerId", "position", "targetIds", "argv", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "containerId": {"type": "string", "minLength": 1},
+        "position": {"enum": ["fetch", "none", "service", "proxy-bypassed"]},
+        "targetIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "argv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "expected": {"enum": ["deny", "allow", "non-root-empty-caps", "capped-filesystem"]}
+      }
+    },
+    "networkPlan": {
+      "type": "object",
+      "required": ["networks", "rules", "proxy"],
+      "additionalProperties": false,
+      "properties": {
+        "networks": {"type": "array", "items": {"$ref": "#/$defs/network"}},
+        "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
+        "proxy": {"type": "object", "required": ["image", "networkIds", "environment"], "additionalProperties": false, "properties": {"image": {"$ref": "#/$defs/image"}, "networkIds": {"type": "array", "items": {"type": "string", "minLength": 1}}, "environment": {"type": "array", "items": {"$ref": "#/$defs/environment"}}}}
+      }
+    },
+    "caps": {
+      "type": "object",
+      "required": ["maxConcurrent", "perRunMemoryBytes", "perRunDiskBytes", "sourceMaxBytes", "captureMaxBytes", "receiptMaxBytes", "wallTimeSeconds", "graceSeconds"],
+      "additionalProperties": false,
+      "properties": {
+        "maxConcurrent": {"const": 2},
+        "perRunMemoryBytes": {"type": "integer", "minimum": 1},
+        "perRunDiskBytes": {"type": "integer", "minimum": 1},
+        "sourceMaxBytes": {"type": "integer", "minimum": 1},
+        "captureMaxBytes": {"type": "integer", "minimum": 1},
+        "receiptMaxBytes": {"type": "integer", "minimum": 1},
+        "wallTimeSeconds": {"type": "integer", "minimum": 1},
+        "graceSeconds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["repo", "repository", "head", "base", "pr", "fetchArgv", "testArgv", "sidecarIds"],
+      "additionalProperties": false,
+      "properties": {
+        "repo": {"type": "string", "minLength": 1},
+        "repository": {"type": "string", "minLength": 1},
+        "head": {"type": "string", "minLength": 1},
+        "base": {"type": "string", "minLength": 1},
+        "pr": {"type": ["string", "null"]},
+        "fetchArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "testArgv": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "sidecarIds": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": ["schemaVersion", "runId", "owner", "request", "hostBinding", "hostBudget", "policy", "sourceExport", "containers", "networks", "rules", "storage", "enumeration", "probes", "caps", "terms"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "runId": {"type": "string", "minLength": 1},
+        "owner": {"$ref": "#/$defs/owner"},
+        "request": {"$ref": "#/$defs/request"},
+        "hostBinding": {"$ref": "#/$defs/hostBinding"},
+        "hostBudget": {"$ref": "#/$defs/hostBudget"},
+        "policy": {"$ref": "#/$defs/launchPolicy"},
+        "sourceExport": {"type": "object", "required": ["path", "commit", "maxBytes"], "additionalProperties": false, "properties": {"path": {"type": "string", "minLength": 1}, "commit": {"type": "string", "minLength": 1}, "maxBytes": {"type": "integer", "minimum": 1}}},
+        "containers": {"type": "array", "items": {"$ref": "#/$defs/container"}, "minItems": 1},
+        "networks": {"type": "array", "items": {"$ref": "#/$defs/network"}},
+        "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
+        "storage": {"$ref": "#/$defs/storage"},
+        "enumeration": {"$ref": "#/$defs/enumeration"},
+        "probes": {"type": "array", "items": {"$ref": "#/$defs/probe"}, "minItems": 1},
+        "caps": {"$ref": "#/$defs/caps"},
+        "terms": {"type": "array", "items": {"$ref": "#/$defs/term"}, "minItems": 1}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["schemaVersion", "runId", "planSha256", "owner", "hostBinding", "engineVersion", "imageDigests", "effectivePolicy", "probeResults", "terms", "capture"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "runId": {"type": "string", "minLength": 1},
+        "planSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "owner": {"$ref": "#/$defs/owner"},
+        "hostBinding": {"$ref": "#/$defs/hostBinding"},
+        "engineVersion": {"type": "string", "minLength": 1},
+        "imageDigests": {"type": "array", "items": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "minItems": 1},
+        "effectivePolicy": {"$ref": "#/$defs/launchPolicy"},
+        "probeResults": {"type": "array", "items": {"$ref": "#/$defs/term"}, "minItems": 1},
+        "terms": {"type": "array", "items": {"$ref": "#/$defs/term"}, "minItems": 1},
+        "capture": {"type": "object", "required": ["schemaVersion", "receiptPath", "receiptSha256"], "additionalProperties": false, "properties": {"schemaVersion": {"const": 1}, "receiptPath": {"type": "string", "minLength": 1}, "receiptSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}
+      }
+    }
+  }
+}
