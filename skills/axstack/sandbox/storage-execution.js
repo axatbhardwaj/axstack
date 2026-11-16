@@ -20,7 +20,7 @@ export function createStorage({ run = runCommand } = {}) {
     if (JSON.stringify(canonical) !== JSON.stringify(plan)) throw Error('Modified storage plan');
     await privateDirectory(context.dir);
     const terms = [];
-    for (const binary of ['truncate', 'fallocate', 'mkfs.ext4', 'dumpe2fs', 'losetup', 'docker', 'modprobe', 'test', 'cat']) {
+    for (const binary of ['truncate', 'fallocate', 'mkfs.ext4', 'dumpe2fs', 'losetup', 'lsblk', 'docker', 'modprobe', 'test', 'cat']) {
       await checked(['which', binary]);
     }
     await checked(['test', '-c', '/dev/loop-control']);
@@ -38,7 +38,8 @@ export function createStorage({ run = runCommand } = {}) {
     if (ownLoops(before, plan).length || await statOrNull(plan.imageFile) || await statOrNull(context.record) || await inspectVolume(raw, plan)) {
       throw hold('Leftover owned loop, image, record or volume requires cleanup before admission');
     }
-    if (!/^\/dev\/loop\d+$/.test(await checked(['losetup', '--find']))) throw hold('No allocatable loop device');
+    const candidate = await checked(['losetup', '--find']);
+    terms.push(await reserveBeforeAttach(before, candidate, plan));
     const record = { owner, imageFile: plan.imageFile, volumeName: plan.volumeName, bytes: plan.bytes, inodes: plan.inodes };
     // Reserve ownership before creating the image: a SIGKILL cannot leave an
     // unlabelled image between creation and loop/volume registration.
@@ -76,5 +77,34 @@ export function createStorage({ run = runCommand } = {}) {
     validateVolume(volume, owner, loopDevice);
     terms.push(term('storage-prepared', plan.imageFile, loopDevice, plan.volumeName, 'autoclear=false; nosuid,nodev; no host mount'));
     return { loopDevice, terms };
+  }
+
+  async function reserveBeforeAttach(before, candidate, plan) {
+    const evidence = [`attachment candidate=${candidate}`, 'No image created or loop attached by this preparation'];
+    const uncertain = reason => Object.assign(hold('One further free/allocatable loop device is unproven before attachment'), {
+      terms: [{ id: 'free-loop-reserve', status: 'unknown', evidence: [...evidence, reason] }],
+    });
+    let result;
+    try { result = await raw(plan.steps.find(step => step.id === 'reserve-before-attach').argv); }
+    catch (error) { throw uncertain(`Loop capacity observation unavailable: ${error.message}`); }
+    if (result.exitCode !== 0) throw uncertain(`Loop capacity observation failed: ${result.stderr}`);
+    let devices;
+    try { devices = JSON.parse(result.stdout).blockdevices; } catch { throw uncertain('Invalid loop capacity JSON'); }
+    if (!Array.isArray(devices) || devices.some(device => !device || typeof device.type !== 'string')) throw uncertain('Loop capacity enumeration is incomplete');
+    const loopDevices = devices.filter(device => device.type === 'loop');
+    if (loopDevices.some(device => !/^\/dev\/loop\d+$/.test(device.path ?? '') ||
+        !/^\d+$/.test(String(device.size)) || !Number.isSafeInteger(Number(device.size)))) throw uncertain('Loop capacity fields are incomplete');
+    const available = [...new Set(loopDevices.filter(device => Number(device.size) === 0 &&
+      !before.some(loop => loop.name === device.path)).map(device => device.path))];
+    evidence.push(`observed unbound loop devices=${JSON.stringify(available)}`);
+    const spare = available.find(device => device !== candidate);
+    if (!available.includes(candidate) || !spare) throw uncertain('Two distinct unbound devices required; configuration alone does not prove an allocatable spare');
+    for (const device of [candidate, spare]) {
+      let node;
+      try { node = await raw(['test', '-b', device]); }
+      catch (error) { throw uncertain(`Loop device node observation unavailable: ${device}: ${error.message}`); }
+      if (node.exitCode !== 0) throw uncertain(`Observed loop device node unavailable: ${device}: ${node.stderr}`);
+    }
+    return term('free-loop-reserve-before-attach', ...evidence, `spare=${spare}; admission lock is caller-held`);
   }
 }
