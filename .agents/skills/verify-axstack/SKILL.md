@@ -180,7 +180,7 @@ JSON reports still exist. The evidence-owned separate Git directory is retained.
 No custom helpers are needed. Recipes reuse `bin/axstack.js`, scripts under
 `skills/axstack/scripts/`, and existing `tests/installer` / `tests/workflows`
 fixtures. Invoke them from REPO except run-init and report checks, which run
-from their explicit fixture Git repositories. SCRIPTS is resolved from the
+from trusted cwd `/` with fixture repositories selected by `--repo`. SCRIPTS is resolved from the
 real skill directory's repository; the Claude symlink works identically.
 Each helper invocation and its output is documented in the feature files;
 consult the packaged helper's `--help` for flags (resolve-models uses its
