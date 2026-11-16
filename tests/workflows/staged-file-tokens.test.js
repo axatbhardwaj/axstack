@@ -19,7 +19,7 @@ function fixture() {
     writeFileSync(`${cwd}/${path}`, content);
     git('--literal-pathspecs', 'add', '--', path);
   };
-  const run = (directory = cwd) => Bun.spawnSync([process.execPath, script], { cwd: directory });
+  const run = (directory = cwd) => Bun.spawnSync([process.execPath, '--no-env-file', script, '--repo', directory], { cwd: '/' });
   return { cwd, git, stage, run };
 }
 
@@ -212,8 +212,8 @@ for (const size of ['NaN', '', '-1', '1.5', '20001oops', '9007199254740992', 'er
     const response = size === 'error' ? 'echo "blob read failed" >&2; exit 1' : `printf '%s' '${size}'`;
     writeFileSync(`${bin}/git`, `#!/bin/sh\ncase "$*" in *"cat-file -s"*) ${response};; *) exec "${realGit}" "$@";; esac\n`);
     chmodSync(`${bin}/git`, 0o700);
-    const result = Bun.spawnSync([process.execPath, script], {
-      cwd: f.cwd, env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+    const result = Bun.spawnSync([process.execPath, '--no-env-file', script, '--repo', f.cwd], {
+      cwd: '/', env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
     });
     expectFailure(result, size === 'error' ? 'blob read failed'
       : `Invalid blob size for "file.ts": ${JSON.stringify(size)}`);
