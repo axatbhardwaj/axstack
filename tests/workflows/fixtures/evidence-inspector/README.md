@@ -14,5 +14,7 @@ These adapters test reconciliation, not historical execution authenticity.
 #645's reported provider launch has no retained capture receipt; its in-flight
 closure reused an earlier fixture that was already insufficient at review time.
 #643's adherence closure does not close its separate rate-limit item.
+Its rate-limit `open` status models the PR body's still-declared limitation;
+the historical packet retained no separate closure disposition for it.
 #644 and #646 retain their proved changed-behavior items. Their unrelated,
 out-of-scope limitations are not converted into changed-behavior failures.
