@@ -32,6 +32,7 @@ test('fixed sidecars cover required services and every image-declared volume wit
 test('runtime uid agrees across policy, image and all writable sidecars', async () => {
   const policy = await asset('launcher-policy.json').json();
   expect(policy.user).toBe('61234:61234');
+  expect(policy.environment.find(e => e.name === 'TMPDIR')?.value).toBe('/work');
   const sidecars = await asset('sidecars.json').json();
   for (const image of sidecars.images) {
     if (image.id.startsWith('postgres')) {
