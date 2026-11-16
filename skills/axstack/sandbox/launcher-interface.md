@@ -1,33 +1,26 @@
 # Sandbox interface v1
 
-This is the shared B–E implementation boundary. Int owns this document,
-`launcher-contracts.js`, `launcher-contract.schema.json` and the contract test;
-packages keep these interfaces stable and return conflicts to Int.
+Int owns this B–E boundary, its JSDoc types in `launcher-contracts.js`, the
+JSON wire formats in `launcher-contract.schema.json` (`$defs`), and contract tests.
+Packages preserve these interfaces and return conflicts to Int.
 
 ## Ownership and composition
 
-| Package | Module / assets | API |
-| --- | --- | --- |
-| B | `launcher.js`, `launcher-host.json`, `launcher-host-budget.json`, `launcher-policy.json` | `plan(input)`, `run(input)`, `reap(input)` |
-| C | `network.js`, `proxy-config.json` and proxy implementation/config assets | `planNetwork(input)`, `installNetwork(input)`, `cleanupNetwork(input)` |
-| D | `storage.js` | `planStorage(input)`, `prepareStorage(input)`, `cleanupStorage(input)` |
-| E | `probes.js`, `Dockerfile`, `sidecars.json` | `enumerateTargets(input)`, `planProbes(input)`, `runProbes(input)` |
+| Package | API |
+| --- | --- |
+| B: launcher | `plan(input)`, `run(input)`, `reap(input)` |
+| C: network/proxy | `planNetwork(input)`, `installNetwork(input)`, `cleanupNetwork(input)` |
+| D: storage | `planStorage(input)`, `prepareStorage(input)`, `cleanupStorage(input)` |
+| E: probes/image/sidecars | `enumerateTargets(input)`, `planProbes(input)`, `runProbes(input)` |
 
-JSDoc input/output types are in `launcher-contracts.js`; the draft-2020-12 JSON
-schema's `$defs` define the wire formats. Each API takes one object; planning
-functions are synchronous/pure, observation and writer functions return promises.
-Extra private exports are allowed. B composes C's `NetworkPlan`, D's `StoragePlan`
-and E's `Probe[]` into `Plan`, constructing the fixed-policy argv for **every**
-container, including the proxy, sidecars and synthetic probe containers.
-
-`Plan` includes requested repository/head/base, source export, ownership,
-explicit argv arrays (executable first, no shell), all rules, ordered storage
-steps/checks/cleanup, enumeration, probes, per-container caps and host totals.
-Network creation/removal argv live on each network; every rule carries install,
-readback and removal argv plus its run-owned interface scope. C owns any required
-shared table/chain setup internally; it never changes a base-chain policy.
-D returns the observed loop-device path from preparation; B binds any dependent
-storage commands after attachment and records those observations as facts.
+APIs take one object: pure synchronous plans, async observers/writers; private
+exports allowed. B composes C's networks/rules,
+D's ordered storage steps/checks/cleanup and E's probes with repository identity,
+source export, owner, fixed argv/caps for every container and host totals.
+Argv arrays include the executable; no shell expansion. Each network carries
+create/remove argv; each rule carries install/check/remove argv and run-owned
+interface scope. C owns shared table/chain setup without changing base policies.
+D returns the observed loop path; B binds dependent commands and records facts.
 
 Plan works on every host, using supplied observations; missing observations
 produce `unknown` terms, never execution permission. B run refreshes host facts,
@@ -48,8 +41,7 @@ enumeration holds. Plans and probe results are never reusable execution permits.
 
 ## File formats and fixed assets
 
-Paths below are relative to this directory, resolved from `import.meta.url`,
-never the caller's cwd. B/C/E populate the fixed packaged assets.
+`import.meta.url` resolves fixed assets from this directory, never caller cwd.
 Missing/null identity, budget, policy or image pins hold execution.
 
 - `launcher-host.json` → `$defs.hostBinding`: literal hostname `axat-vps` **and**
@@ -98,7 +90,7 @@ sandbox image digest and log hash. Preserve the real capture's snapshot scope
 Capture's child exit is separate from proof sufficiency; timeout, interruption,
 truncation, spawn failure or missing identity cannot close a required proof.
 Probe terms, effective policy, engine version and all image digests stay in the
-host-owned sandbox envelope. The reference is not permission to trust a file.
+host-owned sandbox envelope. References grant no trust.
 
 Implementations throw ordinary `Error` for malformed input/I/O (CLI exit 1),
 or `Error` with `sandboxHold:true` for failed/unknown containment, wrong host,
