@@ -162,17 +162,17 @@ test('Claude class notes state saved capabilities resolution and rejection hold'
 
 test('UI verification routes rendered checks to the read-only verifier', () => {
   const rule = readFileSync(`${root}/skills/axstack/references/ui-verification.md`, 'utf8');
-  // The shared routing boundary must retain delegation outside both exceptions.
+  // The shared routing boundary retains delegation outside the three named exceptions.
   const concepts = [/every Playwright, browser, or rendered-UI check/i,
-    /outside.*two named (?:author|browser) exceptions/i,
+    /outside.*three named (?:author|browser) exceptions/i,
     /async.*delegate_task/i, /configured UI verifier role/i];
   for (const terminology of ['author', 'browser']) {
     const source = sentences(rule).join('. ')
-      .replace(/two named (?:author|browser) exceptions/gi, `two named ${terminology} exceptions`);
+      .replace(/three named (?:author|browser) exceptions/gi, `three named ${terminology} exceptions`);
     checkRule(source, (text) => requires(text, ...concepts),
-      `Outside the two named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to a configured UI verifier role.`,
-      [[/outside/i, 'including'], [/two named (?:author|browser) exceptions/i, 'all browser checks'],
-        [/two/i, 'three'], [/named/i, 'unnamed'], [/async/i, 'synchronous'],
+      `Outside the three named ${terminology} exceptions, every Playwright, browser, or rendered-UI check uses async delegate_task to a configured UI verifier role.`,
+      [[/outside/i, 'including'], [/three named (?:author|browser) exceptions/i, 'all browser checks'],
+        [/three/i, 'two'], [/named/i, 'unnamed'], [/async/i, 'synchronous'],
         [/delegate_task/i, 't3_thread_launch'], [/configured UI verifier role/i, 'driver']], concepts);
   }
   expect(rule).toMatch(/read-only/i);
