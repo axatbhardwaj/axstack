@@ -50,9 +50,10 @@ export function classifyConnection(result, target, expected) {
   return { status: reachable === (expected === 'allow') ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
 }
 
+export function createProbeChecker({ runner = execute, readText = (path) => Bun.file(path).text(), readNamespace = readlink, readProxyConfig = () => Bun.file(new URL('./proxy-config.json', import.meta.url)).json() } = {}) {
 async function liveContainer(id) {
   if (!/^[a-zA-Z0-9][\w.-]*$/.test(id)) throw Error('invalid container id');
-  const result = await execute(['docker', 'inspect', '--type', 'container', id]);
+  const result = await runner(['docker', 'inspect', '--type', 'container', id]);
   if (result.exitCode !== 0 || result.timedOut || result.truncated) throw Error('container inspect unavailable');
   const [container] = JSON.parse(result.stdout);
   if (!container?.State?.Running || !Number.isSafeInteger(container.State.Pid) || container.State.Pid < 2) throw Error('container not live');
@@ -61,13 +62,13 @@ async function liveContainer(id) {
 
 async function identity(id) {
   const container = await liveContainer(id);
-  const top = await execute(['docker', 'top', id, '-eo', 'pid']);
+  const top = await runner(['docker', 'top', id, '-eo', 'pid']);
   if (top.exitCode !== 0 || top.timedOut || top.truncated) throw Error('container process enumeration unavailable');
   const pids = top.stdout.trim().split('\n').slice(1).map((s) => Number(s.trim()));
   if (!pids.includes(container.State.Pid) || pids.some((pid) => !Number.isSafeInteger(pid) || pid < 2)) throw Error('incomplete process enumeration');
-  const statuses = await Promise.all(pids.map((pid) => Bun.file(`/proc/${pid}/status`).text()));
+  const statuses = await Promise.all(pids.map((pid) => readText(`/proc/${pid}/status`)));
   const after = await liveContainer(id);
-  const next = await execute(['docker', 'top', id, '-eo', 'pid']);
+  const next = await runner(['docker', 'top', id, '-eo', 'pid']);
   if (after.State.Pid !== container.State.Pid || next.exitCode !== 0 || next.stdout !== top.stdout) throw Error('process set changed during identity probe');
   return inspectIdentity(statuses);
 }
@@ -75,14 +76,14 @@ async function identity(id) {
 async function network(id, expected, target, proxyId) {
   if (!['allow', 'deny'].includes(expected)) throw Error('invalid expected outcome');
   const container = await liveContainer(id), pid = container.State.Pid;
-  const start = await Bun.file(`/proc/${pid}/stat`).text();
+  const start = await readText(`/proc/${pid}/stat`);
   if (loopback(target.address)) {
-    const [hostNetworkNamespace, containerNetworkNamespace] = await Promise.all([readlink('/proc/self/ns/net'), readlink(`/proc/${pid}/ns/net`)]);
+    const [hostNetworkNamespace, containerNetworkNamespace] = await Promise.all([readNamespace('/proc/self/ns/net'), readNamespace(`/proc/${pid}/ns/net`)]);
     if ((await liveContainer(id)).State.Pid !== pid) throw Error('container replaced during namespace observation');
     return classifyConnection({ hostNetworkNamespace, containerNetworkNamespace }, target, expected);
   }
   const prefix = ['nsenter', '--target', String(pid), '--net', '--', 'setpriv', '--reuid=65534', '--regid=65534', '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '--'];
-  let argv;
+  let argv, resolution;
   if (target.protocol === 'icmp') {
     argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
   } else if (target.kind === 'dns' || target.protocol === 'udp') {
@@ -95,21 +96,34 @@ async function network(id, expected, target, proxyId) {
       const proxy = await liveContainer(proxyId);
       const peers = Object.entries(proxy.NetworkSettings.Networks).filter(([name]) => container.NetworkSettings.Networks[name]);
       const address = peers[0]?.[1]?.IPAddress;
-      const config = await Bun.file(new URL('./proxy-config.json', import.meta.url)).json();
+      const config = await readProxyConfig();
       if (!address || !Number.isInteger(config.port) || config.port < 1 || config.port > 65535) throw Error('proxy endpoint unavailable');
       argv.splice(-2, 2, '--noproxy', '', '--proxy', `http://${address}:${config.port}`, '--proxytunnel');
     }
+    if (!proxyId && !target.address.includes(':') && !/^(?:\d+\.){3}\d+$/.test(target.address)) {
+      const config = await readProxyConfig();
+      if (!/^(?:\d+\.){3}\d+$/.test(config.resolverIpv4)) throw Error('fixed public resolver unavailable');
+      resolution = await runner([...prefix, 'dig', `@${config.resolverIpv4}`, '+time=2', '+tries=1', '+short', target.address, 'A']);
+      const answers = resolution.stdout.trim().split(/\s+/).filter((address) => /^(?:\d+\.){3}\d+$/.test(address) && address.split('.').every((part) => Number(part) <= 255));
+      if (resolution.exitCode !== 0 || resolution.timedOut || resolution.truncated || !answers.length) return classifyConnection(resolution, { ...target, kind: 'dns', protocol: 'udp' }, expected);
+      argv.push('--resolve', `${target.address}:${target.port ?? 443}:${answers.join(',')}`);
+    }
     argv.push(`${target.port === 80 ? 'http' : 'https'}://${host}:${target.port ?? 443}/`);
   }
-  const result = await execute([...prefix, ...argv]);
+  const result = { ...await runner([...prefix, ...argv]), ...(resolution ? { dns: resolution } : {}) };
   const after = await liveContainer(id);
-  if (after.State.Pid !== pid || await Bun.file(`/proc/${pid}/stat`).text() !== start) {
+  if (after.State.Pid !== pid || await readText(`/proc/${pid}/stat`) !== start) {
     // /proc stat CPU counters may advance; compare start-time field, not all bytes.
     const ticks = (text) => text.slice(text.lastIndexOf(')') + 2).split(' ')[19];
-    if (after.State.Pid !== pid || ticks(await Bun.file(`/proc/${pid}/stat`).text()) !== ticks(start)) throw Error('container process replaced');
+    if (after.State.Pid !== pid || ticks(await readText(`/proc/${pid}/stat`)) !== ticks(start)) throw Error('container process replaced');
   }
   return classifyConnection(result, target, expected);
 }
+
+return { identity, network };
+}
+
+const checker = createProbeChecker();
 
 if (import.meta.main) {
   const [mode, id, expected, raw, proxyId] = Bun.argv.slice(2);
@@ -118,8 +132,8 @@ if (import.meta.main) {
   } else {
     let result;
     try {
-      if (mode === 'identity') result = await identity(id);
-      else if (mode === 'network') result = await network(id, expected, JSON.parse(raw), proxyId);
+      if (mode === 'identity') result = await checker.identity(id);
+      else if (mode === 'network') result = await checker.network(id, expected, JSON.parse(raw), proxyId);
       else throw Error('invalid probe mode; use --help');
     } catch (error) { result = { status: 'unknown', evidence: [String(error)] }; }
     console.log(JSON.stringify(result));
