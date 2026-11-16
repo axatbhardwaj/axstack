@@ -121,3 +121,11 @@ test('unknown free capacity holds before admission rather than becoming a passin
   await expect(h.launcher().run({ plan: p, evidenceDir: '/evidence' })).rejects.toMatchObject({ sandboxHold: true });
   expect(h.events).toEqual([]);
 });
+
+test('network cleanup uncertainty still cleans bounded storage and retains the owner record', async () => {
+  const h = harness();
+  h.deps.cleanupNetwork = async () => { h.events.push('network-clean'); throw Object.assign(Error('network readback uncertain'), { sandboxHold: true }); };
+  await expect(h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' })).rejects.toThrow('network readback uncertain');
+  expect(h.events).toContain('storage-clean');
+  expect(h.events).not.toContain('record-clean');
+});
