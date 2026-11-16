@@ -36,16 +36,18 @@ Exit codes: 0 measured (including failed terms), 1 input/Git error,
 
 function optionsFrom(argv) {
   const options = {};
+  const missing = (flag) => new Error(flag === '--repo'
+    ? 'missing path; pass --repo <Git-checkout-path>' : `missing ref; pass ${flag} <commit-or-branch>`);
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
     if (!['--base', '--head', '--source', '--repo'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
-    if (!value || value.startsWith('-')) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
+    if (!value || value.startsWith('-')) throw missing(flag);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
     options[flag] = value;
   }
   for (const flag of ['--base', '--head', '--repo']) {
-    if (!options[flag]) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
+    if (!options[flag]) throw missing(flag);
   }
   return options;
 }
