@@ -59,7 +59,7 @@ export async function reapRuns({ assets: _suppliedAssets, host: _suppliedHost },
     const fresh = await deps.observeHost(assets);
     checkHost(assets, fresh); requirePass(fresh.terms, 'fresh host process visibility');
     return (await reapInside(assets, deps)).terms;
-  });
+  }, undefined, true);
 }
 function checkVolumes(p, imageVolumes) {
   for (const c of p.containers) {
