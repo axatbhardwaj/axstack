@@ -12,7 +12,7 @@ For separate aggregate and project-driver records, follow
 
 ## Location and identity
 
-From trusted cwd `/`, initialize for a Git repository:
+Resolve `<installed-axstack>` as in [PR shape](pr-shape.md#measure); from trusted cwd `/`, initialize for a Git repository:
 
 ```sh
 bun --no-env-file <installed-axstack>/scripts/run-init.js --repo <repo-path> --slug local-progress
