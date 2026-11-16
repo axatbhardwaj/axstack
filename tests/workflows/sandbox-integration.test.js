@@ -93,7 +93,8 @@ test('a full fleet listener inventory fits the fixed receipt budget without losi
     const a = await input(), owned = `${root}/owned`, evidence = `${root}/evidence`, repo = `${root}/repo`;
     for (const dir of [owned, evidence, repo]) mkdirSync(dir, { mode: 0o700 });
     a.assets.ownedDir = owned; a.request.repo = repo;
-    a.enumeration.targets = Array.from({ length: 900 }, (_, i) => ({ id: `host-listener:100.64.0.1:${i + 1}:tcp`, kind: 'host-listener', address: '100.64.0.1', port: i + 1, protocol: 'tcp', evidence: [`tcp LISTEN 0 128 0.0.0.0:${i + 1} 0.0.0.0:*`] }));
+    a.runId = 't21-integration-synthetic'; a.owner.runId = a.runId; a.enumeration.runId = a.runId;
+    a.enumeration.targets = Array.from({ length: 1400 }, (_, i) => ({ id: `host-listener:100.64.0.1:${i + 1}:tcp`, kind: 'host-listener', address: '100.64.0.1', port: i + 1, protocol: 'tcp', evidence: [`tcp LISTEN 0 128 0.0.0.0:${i + 1} 0.0.0.0:*`] }));
     const p = plan(a);
     const bytes = await savePlan(p, evidence, owned);
     expect(JSON.parse(bytes)).toEqual(p);
