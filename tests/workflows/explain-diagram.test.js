@@ -98,6 +98,8 @@ const rules = [
     /require|check/i, 'waive', 'Check layout, theme, height, network, word count, and zero console errors.'],
   ['reviewer image evidence', pages, [/reviewing seat/i, /axstack-explainer-review/i, /runs|uses/i, /image-evidence\.js/i, /exact final bytes/i, /before delivery/i, /resource observations/i, /Playwright MCP/i],
     /runs|uses/i, 'skips', 'Before delivery the reviewing seat axstack-explainer-review uses image-evidence.js on the exact final bytes and saves resource observations through the Playwright MCP.'],
+  ['unobservable image evidence stays unknown', pages, [/unobservable resources/i, /report|mark|classify/i, /\bunknown\b/i],
+    /unknown/i, 'pass', 'Classify unobservable resources as unknown.'],
   ['source fidelity', pages, [/check|verify/i, /every claim/i, /against its source/i],
     /every/i, 'some', 'Verify every claim against its source.'],
   ['verifier interaction route', pages, [/interactive page/i, /require|obtain/i, /real-browser/i, /axstack-ui-verifier/i, /clicks/i, /keyboard/i, /expanded states/i],
