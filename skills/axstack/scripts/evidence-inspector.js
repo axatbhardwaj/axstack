@@ -27,7 +27,7 @@ Proved: proof:{id,itemId,kind,observedAt,receipt}. receipt is a capture schema-v
  and reads its logPath; never trusts cached terms. New evidence must postdate both
  change and limitation, and cannot reuse a previous ID or log digest. A named
  proof or captured log cannot belong to multiple items. Its kind
- must be accepted by that item. expectedExitCode belongs to the item policy.
+ must be accepted by that item. Sibling logs are compared by digest; identical honest logs fail closed. expectedExitCode belongs to the item policy.
 Decisions: decision:{itemId,repository,head,base,boundary,role,by,at,reason,reference}.
  role must be reviewer for withdrawal, user for acceptance. These are caller-
  supplied decision records, not authenticated identities or proof of behavior.
