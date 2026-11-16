@@ -123,3 +123,46 @@ test('running containers with network none are explicitly inspected without inve
   const result = await createProbeTools({ runner }).enumerateTargets({ runId: 'run', networks: [own] });
   expect(result.terms.find((t) => t.id === 'docker-containers').status).toBe('pass');
 });
+
+test('Docker host and none drivers with null IPAM do not hide bridged targets or make enumeration incomplete', async () => {
+  const base = fixture();
+  const extra = [{ Id: 'f'.repeat(64), Name: 'host', Driver: 'host', IPAM: { Config: null }, Containers: {} }, { Id: '0'.repeat(64), Name: 'none', Driver: 'null', IPAM: { Config: null }, Containers: {} }];
+  const runner = async argv => {
+    if (argv[1] === 'network') return { exitCode: 0, stdout: argv[2] === 'ls' ? [...rows, ...extra].map(r => r.Id).join('\n') : JSON.stringify([...rows, ...extra]) };
+    return base.runner(argv);
+  };
+  const e = await createProbeTools({ runner }).enumerateTargets({ runId: 'run', networks: [own] });
+  expect(e.terms.every(t => t.status === 'pass')).toBe(true);
+  expect(e.targets.some(t => t.kind === 'other-container' && t.address === 'fd12::2')).toBe(true);
+});
+
+test('target evidence retains observed endpoints without copying unrelated network metadata into every probe', async () => {
+  const base = fixture(), large = structuredClone(rows);
+  large[1].Options = { unrelatedMetadata: 'x'.repeat(200000) };
+  const runner = async argv => argv[1] === 'network' && argv[2] === 'inspect' ? { exitCode: 0, stdout: JSON.stringify(large) } : base.runner(argv);
+  const e = await createProbeTools({ runner }).enumerateTargets({ runId: 'run', networks: [own] });
+  expect(e.terms.every(t => t.status === 'pass')).toBe(true);
+  expect(JSON.stringify(e).length).toBeLessThan(128 * 1024);
+  const foreign = e.targets.find(t => t.kind === 'other-container');
+  expect(foreign.evidence.join(' ')).toContain('172.31.0.2');
+});
+
+test('large probe sets use bounded parallel clients while reserved-port UDP counter observations stay serial', async () => {
+  const base = fixture();
+  let active = 0, peak = 0, udpActive = 0, udpPeak = 0;
+  const runner = async argv => {
+    if (!argv.some(a => a.endsWith('/probes-check.js'))) return base.runner(argv);
+    const udp = argv[2] === 'network' && JSON.parse(argv[5]).protocol === 'udp' && JSON.parse(argv[5]).kind !== 'dns';
+    active++; peak = Math.max(peak, active);
+    if (udp) { udpActive++; udpPeak = Math.max(udpPeak, udpActive); }
+    await new Promise(resolve => setTimeout(resolve, 5));
+    active--; if (udp) udpActive--;
+    return { exitCode: 0, stdout: '{"status":"pass"}' };
+  };
+  const tools = createProbeTools({ runner }), p = await planned(tools);
+  expect((await tools.runProbes({ plan: p })).length).toBe(p.probes.length);
+  expect(peak).toBeGreaterThan(1);
+  expect(peak).toBeLessThanOrEqual(16);
+  expect(udpPeak).toBe(1);
+  expect(active).toBe(0);
+});
