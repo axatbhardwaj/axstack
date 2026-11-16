@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { readFileSync, realpathSync } from 'node:fs';
-import { captureTerms } from './capture-identity.js';
+import { captureTerms, sha256 } from './capture-identity.js';
+import { validate } from '../sandbox/launcher-policy.js';
 
 const kinds = ['runtime', 'fixture', 'instruction-contract'];
 const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -15,6 +16,14 @@ Read-only, stateless schema-v1 limitation reconciliation. Flags:
   --input PATH  JSON packet with schemaVersion:1, repository, full head/base SHAs,
                 items and dispositions. Relative receipt paths resolve beside input.
   --help        Show this schema, rules and effects; reads no packet.
+Optional review:{mode:peer|authored, localTests:boolean, sandboxReceipt:<envelope
+ object or JSON path>, limitation, hold}. Review consumers must supply it even
+ with no limitations (items/dispositions may then be empty). Authored yields n/a.
+ Peer local test claims without an envelope fail; unavailable/held sandbox without
+ a test claim is unknown with limitation/hold retained. The peer-sandbox term
+ revalidates the envelope schema, containment/cleanup terms, capture digest,
+ repository/head/base, log/source identity and sandbox tool/test/image binding.
+ This measures receipt consistency, not authenticated isolation or test success.
 Items: unique stable id, head, base, boundary, changedAt, raisedAt (ISO times),
  acceptedProofKinds (runtime | fixture | instruction-contract), sourceScope
  (tracked+untracked-nonignored | ignored | external), optional expectedExitCode
@@ -113,9 +122,37 @@ function evaluate(item, dispositions, expected, directory, allDispositions) {
   return outcome('pass', 'capture-consistent', 'new item-bound capture is consistent; semantic sufficiency requires reviewer judgment', { id: proof.id, kind: proof.kind, declaredObservedAt: proof.observedAt, chronology: 'caller-declared, not capture-attested', terms });
 }
 
+function peerSandbox(review, expected, directory) {
+  const result = (status, reasonCode, evidence = {}) => ({ id: 'peer-sandbox', status, reasonCode, evidence });
+  if (review?.mode === 'authored') return result('n/a', 'authored-local-checks');
+  if (review?.mode !== 'peer' || typeof review.localTests !== 'boolean') return result('unknown', 'review-mode-missing');
+  if (!review.sandboxReceipt) return review.localTests
+    ? result('fail', 'sandbox-receipt-missing')
+    : result('unknown', 'sandbox-unavailable', { limitation: review.limitation ?? null, hold: review.hold ?? null });
+  try {
+    const envelope = readReceipt(review.sandboxReceipt, directory);
+    validate('receipt', envelope);
+    if ([...envelope.terms, ...envelope.probeResults].some(t => !['pass', 'n/a'].includes(t.status))) throw Error('containment/cleanup incomplete');
+    const path = envelope.capture.receiptPath;
+    const bytes = readFileSync(path.startsWith('/') ? path : `${directory}/${path}`);
+    if (sha256(bytes) !== envelope.capture.receiptSha256) throw Error('capture digest differs');
+    const capture = JSON.parse(bytes.toString()), terms = captureTerms(capture, expected);
+    if (terms.some(t => t.status === 'fail')) throw Error('capture identity/log/source differs');
+    if (capture.tool?.name !== 'axstack-sandbox' || capture.tool.version !== '1.0.0'
+      || capture.kind !== 'sandbox-test' || !envelope.imageDigests.includes(capture.sandboxImageDigest)
+      || capture.spawnArgv?.[0] !== 'docker' || capture.spawnArgv?.[1] !== 'exec'
+      || !capture.spawnArgv.includes(`${envelope.runId}-test`)) throw Error('capture is not the sandbox test');
+    if (terms.some(t => t.status === 'unknown')) return result('unknown', 'sandbox-capture-incomplete', { terms });
+    return result('pass', 'sandbox-consistent', { capture: envelope.capture, terms, exitCode: capture.exitCode });
+  } catch (error) {
+    return result(error.code === 'ENOENT' || error.code === 'EACCES' ? 'unknown' : 'fail',
+      error.code === 'ENOENT' || error.code === 'EACCES' ? 'sandbox-receipt-unavailable' : 'sandbox-validation-failed', { reason: error.message });
+  }
+}
+
 export function inspectEvidence(packet, directory = '.') {
   if (packet?.schemaVersion !== 1 || !text(packet.repository) || !sha(packet.head) || !sha(packet.base)
-    || !Array.isArray(packet.items) || !packet.items.length || !Array.isArray(packet.dispositions)) throw Error('schema v1 requires repository, full head/base, nonempty items and dispositions arrays');
+    || !Array.isArray(packet.items) || (!packet.items.length && !packet.review) || !Array.isArray(packet.dispositions)) throw Error('schema v1 requires repository, full head/base, items and dispositions arrays (nonempty items unless review supplied)');
   const ids = packet.items.map(item => item?.id);
   if (!ids.every(text) || new Set(ids).size !== ids.length) throw Error('item IDs must be nonempty and unique');
   if (packet.dispositions.some(d => !d || !ids.includes(d.id))) throw Error('disposition references an unknown item');
@@ -125,6 +162,7 @@ export function inspectEvidence(packet, directory = '.') {
     return { id: item.id, boundary: item.boundary, disposition: dispositions.length === 1 ? dispositions[0].status : null,
       acceptedProofKinds: item.acceptedProofKinds ?? [], rules, ...evaluate(item, dispositions, expected, directory, packet.dispositions) };
   });
+  if (packet.review) terms.push(peerSandbox(packet.review, expected, directory));
   const summary = { pass: 0, fail: 0, unknown: 0, 'n/a': 0 };
   for (const term of terms) summary[term.status]++;
   return { schemaVersion: 1, terms, summary };
