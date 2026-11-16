@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { proxyArgv } from './network.js';
 
 const definitions = JSON.parse(readFileSync(new URL('./launcher-contract.schema.json', import.meta.url), 'utf8')).$defs;
 export const fact = (id, status, evidence) => ({ id, status, evidence: [String(evidence)] });
@@ -106,13 +107,12 @@ export function buildPlan(input, deps) {
   };
   const common = { policy: a.policy, owner, source: sourceExport.path, storage, networks: network.networks };
   const definitions = [
-    { id: `${runId}-fetch`, role: 'fetch', image: a.workloadImage, networkIds: [findNetwork('fetch')], caps: a.policy.workloadCaps, environment: [...a.policy.environment, ...['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'].map(name => ({ name, value: `http://axstack-proxy:${a.proxy.port}` }))] },
+    { id: `${runId}-fetch`, role: 'fetch', image: a.workloadImage, networkIds: [findNetwork('fetch')], caps: a.policy.workloadCaps, environment: [...a.policy.environment, ...['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'].map(name => ({ name, value: `http://${runId}-proxy:${a.proxy.port}` })), ...['NO_PROXY', 'no_proxy'].map(name => ({ name, value: '' }))] },
     { id: `${runId}-test`, role: 'test', image: a.workloadImage, networkIds: selected.length ? [findNetwork('service')] : [], caps: a.policy.workloadCaps, environment: a.policy.environment },
-    { id: `${runId}-proxy`, role: 'proxy', image: network.proxy.image, networkIds: network.proxy.networkIds, caps: a.policy.proxyCaps, environment: [...a.policy.environment, ...network.proxy.environment], command: undefined },
+    { id: `${runId}-proxy`, role: 'proxy', image: network.proxy.image, networkIds: network.proxy.networkIds, caps: a.policy.proxyCaps, environment: [...a.policy.environment, ...network.proxy.environment], command: proxyArgv() },
     ...selected.map(s => ({ id: `${runId}-${s.id}`, role: 'sidecar', image: s.image, networkIds: [findNetwork('service')], caps: a.policy.sidecarCaps, declaredVolumes: s.declaredVolumes, environment: a.policy.environment, command: s.argv })),
   ];
-  // Proxy image supplies a trusted ENTRYPOINT; no PR-supplied command is started yet.
-  const containers = definitions.map(d => container({ ...common, ...d, command: d.role === 'proxy' ? [] : d.command }));
+  const containers = definitions.map(d => container({ ...common, ...d }));
   /** @type {import('./launcher-contracts.js').Caps} */
   const caps = { maxConcurrent: 2,
     // Conservative accounting also reserves tmpfs in addition to cgroup memory.
