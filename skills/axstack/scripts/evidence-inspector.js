@@ -24,6 +24,7 @@ Optional review:{mode:peer|authored, localTests:boolean, sandboxReceipt:<envelop
  revalidates the envelope schema, containment/cleanup terms, capture digest,
  repository/head/base, log/source identity and sandbox tool/test/image binding.
  This measures receipt consistency, not authenticated isolation or test success.
+ Capture cwd is not checked: the envelope lacks an expected source path.
 Items: unique stable id, head, base, boundary, changedAt, raisedAt (ISO times),
  acceptedProofKinds (runtime | fixture | instruction-contract), sourceScope
  (tracked+untracked-nonignored | ignored | external), optional expectedExitCode
@@ -145,7 +146,7 @@ function peerSandbox(review, expected, directory) {
     if (terms.some(t => t.status === 'unknown')) return result('unknown', 'sandbox-capture-incomplete', { terms });
     return result('pass', 'sandbox-consistent', { capture: envelope.capture, terms, exitCode: capture.exitCode });
   } catch (error) {
-    return result(error.code === 'ENOENT' || error.code === 'EACCES' ? 'unknown' : 'fail',
+    return result((error.code === 'ENOENT' || error.code === 'EACCES') && !review.localTests ? 'unknown' : 'fail',
       error.code === 'ENOENT' || error.code === 'EACCES' ? 'sandbox-receipt-unavailable' : 'sandbox-validation-failed', { reason: error.message });
   }
 }
