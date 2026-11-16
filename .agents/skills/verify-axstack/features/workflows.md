@@ -1,5 +1,26 @@
 # Inspect workflow instruction contracts
 
+## Peer sandbox adoption
+
+After Launch and Doctor, run `bun run test tests/workflows/sandbox-adoption.test.js
+ tests/workflows/evidence-inspector.test.js tests/workflows/evidence-inspector-cli.test.js
+ tests/workflows/pr-managers.test.js tests/workflows/sandbox-launcher-runtime.test.js`.
+This drives the peer-only execution ban, sandbox receipt binding, unknown held
+sandbox, authored n/a and manager-only nonblocking reap before quiet exits.
+A failed reap/missing Docker forces a full pass that records the failure. Peer
+policy loads from installed skills; foreign-head and unavailable-receipt claims
+fail. Capture cwd remains unchecked because the envelope lacks an expected path.
+Contracts also preserve launcher exclusivity, current-pass identity and both
+failed-reap record destinations (pass evidence and continuity).
+Removal/inversion and equivalent wording checks protect the prompt contracts;
+the held-run fake runner compares full fixture clone bytes (including ignored
+files) and its container inventory. It makes no live Docker claim.
+Pack and install in the temporary HOME, invoke the installed inspector on a
+peer packet, and retain JSON/exit evidence. Real peer-review execution, failing
+reap/no-Docker pass completion and schedule deployment need driver-owned live
+receipts; instruction checks cannot prove model compliance. Deploy through the
+T10 procedure only after the user's A2 merge.
+
 ## Schedule prompt bindings
 
 After Launch and Doctor, run `bun run test tests/workflows/schedule-policy.test.js

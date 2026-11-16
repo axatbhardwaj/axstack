@@ -1,7 +1,8 @@
 import { afterAll, expect, test } from 'bun:test';
-import { copyFileSync, linkSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, linkSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { inspectEvidence } from '../../skills/axstack/scripts/evidence-inspector.js';
 import history from './fixtures/evidence-inspector/history.json';
+import { fixture, pass } from './sandbox-launcher-fixture.js';
 
 const temporary = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-inspector-`);
 afterAll(() => rmSync(temporary, { recursive: true }));
@@ -191,4 +192,71 @@ test('independent sibling observations can close their own items', () => {
   expect(inspectEvidence(p).terms.map(t => [t.status, t.reasonCode])).toEqual([
     ['pass', 'capture-consistent'], ['pass', 'capture-consistent'],
   ]);
+});
+
+// Peer execution is an additional term, independent of limitation dispositions.
+const peerTerm = p => inspectEvidence(p).terms.find(t => t.id === 'peer-sandbox');
+test('peer local tests require a sandbox receipt; authored tests are outside this term', () => {
+  const p = packet();
+  p.review = { mode: 'peer', localTests: true };
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-missing' });
+  p.review.mode = 'authored';
+  expect(peerTerm(p)).toMatchObject({ status: 'n/a' });
+});
+
+test('a held peer sandbox is unknown with its recorded limitation and hold', () => {
+  const p = packet();
+  p.review = { mode: 'peer', localTests: false, limitation: 'private submodules; sandbox held', hold: 'host binding' };
+  expect(peerTerm(p)).toMatchObject({ status: 'unknown', reasonCode: 'sandbox-unavailable', evidence: { limitation: p.review.limitation, hold: p.review.hold } });
+  p.review.localTests = true;
+  expect(peerTerm(p).status).toBe('fail');
+});
+
+function sandboxReview() {
+  const f = fixture(), capture = receipt();
+  Object.assign(capture, { tool: { name: 'axstack-sandbox', version: '1.0.0' }, kind: 'sandbox-test',
+    sandboxImageDigest: `sha256:${'a'.repeat(64)}`, spawnArgv: ['docker', 'exec', '--user', '1000:1000', '--workdir', '/work', 'r1-test', '/bin/sh', '-c', 'exec "$@"', 'axstack', ...capture.argv] });
+  const receiptPath = `${temporary}/${crypto.randomUUID()}.json`;
+  const bytes = JSON.stringify(capture); writeFileSync(receiptPath, bytes);
+  const envelope = { schemaVersion: 1, runId: f.runId, owner: f.owner, hostBinding: f.assets.hostBinding,
+    planSha256: 'd'.repeat(64), engineVersion: 'fixture-engine', imageDigests: [capture.sandboxImageDigest],
+    effectivePolicy: f.assets.policy, probeResults: [pass('probe')], terms: [pass('cleanup')],
+    capture: { schemaVersion: 1, receiptPath, receiptSha256: hash(bytes) } };
+  return { mode: 'peer', localTests: true, sandboxReceipt: envelope };
+}
+test('peer sandbox envelope binds a revalidated test capture and unchanged captured log', () => {
+  const p = packet(); p.review = sandboxReview();
+  expect(peerTerm(p)).toMatchObject({ status: 'pass', reasonCode: 'sandbox-consistent' });
+  writeFileSync(p.review.sandboxReceipt.capture.receiptPath, '{}');
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed' });
+});
+for (const [name, change] of [
+  ['missing envelope', r => { r.sandboxReceipt = {}; }],
+  ['failed containment', r => { r.sandboxReceipt.probeResults[0].status = 'fail'; }],
+  ['unknown cleanup', r => { r.sandboxReceipt.terms[0].status = 'unknown'; }],
+  ['wrong capture digest', r => { r.sandboxReceipt.capture.receiptSha256 = '0'.repeat(64); }],
+  ['wrong image', r => { r.sandboxReceipt.imageDigests = [`sha256:${'b'.repeat(64)}`]; }],
+]) test(`peer sandbox rejects ${name}`, () => {
+  const p = packet(); p.review = sandboxReview(); change(p.review);
+  expect(peerTerm(p).status).toBe('fail');
+});
+
+
+test('peer local test claim with an unavailable envelope or capture path fails', () => {
+  const p = packet();
+  p.review = { mode: 'peer', localTests: true, sandboxReceipt: `${temporary}/absent-envelope.json` };
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-unavailable' });
+  p.review = sandboxReview(); p.review.sandboxReceipt.capture.receiptPath = `${temporary}/absent-capture.json`;
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-unavailable' });
+});
+
+test('peer term rejects a capture for a different head with a valid envelope digest', () => {
+  const p = packet(); p.review = sandboxReview();
+  const reference = p.review.sandboxReceipt.capture;
+  const capture = JSON.parse(readFileSync(reference.receiptPath, 'utf8'));
+  const foreign = 'f'.repeat(40);
+  capture.requested.head = foreign;
+  for (const source of [capture.sourceBefore, capture.sourceAfter]) Object.assign(source, { head: foreign, requestedHead: foreign });
+  const bytes = JSON.stringify(capture); writeFileSync(reference.receiptPath, bytes); reference.receiptSha256 = hash(bytes);
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed' });
 });
