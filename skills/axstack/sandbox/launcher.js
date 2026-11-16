@@ -60,6 +60,7 @@ Evidence requires a fresh owned 0700 --evidence-dir on the budgeted filesystem:
 W3-1 capture .log/.json files and <runId>-sandbox.json, bounded by packaged caps.
 Run creates tracked-only source exports, capped ext4 storage, containers, networks,
 scoped axstack_sandbox packet-filter rules, host capture logs and receipt files.
+Pinned sidecars get a fixed 10-second startup grace inside the wall-time.
 Run checks fresh per-run containment probes before PR commands; no reused results.
 Reap removes only non-live labelled runs: containers before rules, volume before
 matching loop detach/readback and image deletion. No unrelated state is pruned.
