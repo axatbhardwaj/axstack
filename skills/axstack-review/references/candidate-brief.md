@@ -19,8 +19,7 @@ Escalate to user: yes | no — <criterion> — <reason>
 
 `Claude-Session` is attribution, not provenance.
 
-Every brief ends with `Escalate to user`, answered in receipt. Peer: only serious
-security/funds only, never scope/design/process approval. Authored: security concern,
+Every brief ends with `Escalate to user`, answered in receipt. Peer: serious security/funds only; never scope, design or process approval. Authored: security concern,
 permanent on-chain state change or architectural change in approach. Health is not a reviewer criterion.
 Input, not a veto/verdict; [Native PR managers](../../axstack/references/automations.md)
 owns manager-chat hold.
