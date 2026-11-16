@@ -8,7 +8,7 @@
     },
     {
       "name": "PATH",
-      "value": "/opt/axstack/bin:/usr/local/bin:/usr/bin:/bin"
+      "value": "/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin"
     },
     {
       "name": "LANG",
@@ -45,6 +45,30 @@
     {
       "name": "GRADLE_USER_HOME",
       "value": "/dependencies/gradle"
+    },
+    {
+      "name": "JAVA_HOME",
+      "value": "/opt/jdk-25"
+    },
+    {
+      "name": "JAVA_11_HOME",
+      "value": "/opt/jdk-11"
+    },
+    {
+      "name": "ANDROID_HOME",
+      "value": "/opt/android"
+    },
+    {
+      "name": "ANDROID_SDK_ROOT",
+      "value": "/opt/android"
+    },
+    {
+      "name": "SVM_HOME",
+      "value": "/opt/svm"
+    },
+    {
+      "name": "GRADLE_RO_DEP_CACHE",
+      "value": "/opt/gradle-cache/caches/modules-2"
     }
   ],
   "workloadCaps": {
