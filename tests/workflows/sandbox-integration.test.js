@@ -105,3 +105,16 @@ test('the proxy embedded DNS forwards only to the fixed public resolvers, never 
   const a = await input(), p = plan(a), proxy = p.containers.find(c => c.role === 'proxy');
   expect(proxy.argv.flatMap((v, i) => v === '--dns' ? [proxy.argv[i + 1]] : [])).toEqual([a.assets.proxy.resolverIpv4, a.assets.proxy.resolverIpv6]);
 });
+
+test('explicit owned evidence under run metadata is allowed while source paths still reject Git internals', async () => {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/sandbox-int-evidence-`);
+  try {
+    const a = await input(), owned = `${root}/owned`, evidence = `${root}/.git/evidence`, repo = `${root}/repo`;
+    for (const dir of [owned, `${root}/.git`, evidence, repo]) mkdirSync(dir, { mode: 0o700 });
+    a.assets.ownedDir = owned; a.request.repo = repo;
+    const p = plan(a);
+    expect(JSON.parse(await savePlan(p, evidence, owned))).toEqual(p);
+    a.request.repo = `${root}/.git/repo`;
+    expect(() => plan(a)).toThrow('unsafe absolute path');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
