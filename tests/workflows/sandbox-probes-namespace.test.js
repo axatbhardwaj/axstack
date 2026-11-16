@@ -46,3 +46,19 @@ test('explicit public DNS probes use the same fixed resolver as proxy destinatio
   await tools.network('proxy', 'allow', { id: 'external-dns:example.com:53:udp', kind: 'dns', address: 'example.com', protocol: 'udp', port: 53 });
   expect(tools.calls.find(a => a.includes('dig'))).toContain('@9.9.9.9');
 });
+
+
+test('curl socket failures and proxy denials produce parseable proof with zero HTTP codes', async () => {
+  const container = { State: { Running: true, Pid: 1234 }, NetworkSettings: { Networks: { fetch: { IPAddress: '172.30.0.2' } } } };
+  for (const [connect, exitCode] of [['000', 7], ['403', 56]]) {
+    const runner = async (argv) => {
+      if (argv[0] === 'docker') return { exitCode: 0, stdout: JSON.stringify([container]) };
+      const format = argv[argv.indexOf('--write-out') + 1];
+      return { exitCode, stdout: format.replace('%{remote_ip}', '').replace('%{http_connect}', connect).replace('%{http_code}', '000') };
+    };
+    const checker = createProbeChecker({ runner, readText: async () => '1234 (sleep) S 0 0 0' });
+    const result = await checker.network('fetch', 'deny', { kind: 'fixed', address: '10.0.0.1', port: 443, protocol: 'tcp' });
+    expect(result.status).toBe('pass');
+    expect(JSON.parse(JSON.parse(result.evidence[0]).stdout).http_code).toBe('000');
+  }
+});
