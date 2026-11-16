@@ -39,6 +39,7 @@ bun "$INSPECTOR" --input "$EVIDENCE/inspector-input.json" > "$EVIDENCE/inspector
 cmp "$TMPDIR/inspector-before.json" "$EVIDENCE/inspector-input.json"
 bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/inspector-run.json").json();
   if (r.terms.length !== 1 || r.terms[0].id !== "rate-limit" || r.terms[0].status !== "fail" ||
+      r.terms[0].reasonCode !== "limitation-open" ||
       r.summary.fail !== 1 || Object.keys(r).sort().join() !== "schemaVersion,summary,terms")
     throw Error("inspector must measure the open item without granting authority");'
 bun run test tests/workflows/evidence-inspector.test.js \
@@ -48,13 +49,16 @@ bun run test tests/workflows/evidence-inspector.test.js \
 
 Proof: installed fact mode measures an open item as fail with exit 0 and leaves
 input unchanged. Fixtures preserve #643/#645 closure regressions and #644/#646
-holdout outcomes; sibling IDs or reused capture logs cannot close another item.
+holdout outcomes and reasons; sibling IDs or reused capture logs (including
+copies and hard links with equal digests) cannot close another item.
 The CLI fixture creates and consumes a real W3-1 receipt, revalidates its log,
 ignores cached terms, checks unchanged bytes, and distinguishes exits 0/1/2.
 Synthetic historical adapters are labeled; they do not replay those executions.
 Ignored bytes stay unbound. Capture v1 does not attest chronology; timestamps,
 item policy and reviewer/user decision identities are caller declarations.
 Semantic proof sufficiency and review/merge authority remain human judgments.
+Consumers use stable `reasonCode` and read each term's `disposition`;
+`summary.pass` includes withdrawal and unproven acceptance, not just proved items.
 
 ## Run commands in owned scratch
 
