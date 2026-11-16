@@ -6,7 +6,7 @@ Inspected scope: <paths and question>
 Exclusions: <outside scope>
 Coverage: <COMPLETE | INCOMPLETE> — <lenses and receipt evidence>
 Checks: <capture receipt paths + identities>
-Limitations: <ledger path + inspector report + item IDs/dispositions, or none>
+Limitations: <ledger path + inspector report + item IDs/dispositions, or none>; record every unexamined or missing-evidence area as a limitation.
 Validated defects and risks: <location, evidence, consequence, check or none>
 Improvement opportunities: <location, benefit, tradeoff or none>
 Unverified leads: <location, hypothesis, next check or none>
