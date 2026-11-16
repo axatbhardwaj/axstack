@@ -9,8 +9,9 @@ Proven verification is required for every own PR. Use the authored receipt:
   same cross-provider reviewer at the exact head and base satisfy verification's
   diligence gate. Otherwise verification requires separate diligence `PASS`
   at the exact head and base. Follow the [applicable diligence gate](../../axstack/references/diligence.md#applicable-diligence-gate).
-- Verification requires `Final-head check: <check-run receipt path + identity (#/argv -> #/logPath, #/exitCode)>`
+- Verification requires `Final-head check: <check-run receipt path + identity + cited fields: #/argv -> #/logPath, #/exitCode>`
   for a check the reviewer ran at the final head, with receipt and log in the run's evidence folder.
+  Follow [Capture receipts](../../axstack/references/capture-receipts.md) for identity and compare `#/requested/head` and `#/requested/base` with candidate head/base.
 - Each acceptance check requires passing evidence from the ticket or spec
   criteria, or the PR body for adopted and ticketless PRs.
   Earlier-head red-to-green evidence in the PR's patch lineage counts only when
