@@ -20,12 +20,11 @@ test('provision plan verifies each frozen download before installing it and neve
   }
 });
 
-test('required toolchains are provisioned with version and published checksum, apart from recorded Swift scope', async () => {
+test('required toolchains are provisioned with version and published checksum', async () => {
   const inventory = await Bun.file(new URL('../../skills/axstack/sandbox/inventory.json', import.meta.url)).json();
   const ids = new Set(pins.artifacts.map((a) => a.id));
   for (const entry of inventory.requiredToolchains) {
     const mapped = { 'node-next': 'node-20', 'node-dashboard': 'node-20', 'python-312': 'python-3.12', 'python-313': 'python-3.13' }[entry.id] ?? entry.id;
-    if (['swift', 'swiftlint'].includes(mapped)) continue;
     expect(ids.has(mapped), entry.id).toBe(true);
   }
   for (const a of pins.artifacts) {
