@@ -58,8 +58,12 @@ facts and counts. Wrap each mode with ordinary check-run to retain schema-v1
 receipts; keep the before receipt before launching the scenario yourself.
 The plan stamps its own plannedAt and helper realpath/SHA256. Caller recordedAt
 must not be future-dated; the literal placeholder nonce is rejected. Trace reads
-package.json at the captured Git head through one local read-only git subprocess
-with hooks/fsmonitor disabled, and rechecks the source-contained catalog hash.
+committed package.json and catalog bytes through local read-only git subprocesses
+with hooks/fsmonitor disabled. Planned/current catalog hashes must match the blob
+at the captured head. Unreadable committed bytes stay unknown.
+Both R5 captures and trace's planning-command check require the same realpath Bun
+as process.execPath. Trace trusts its own interpreter: a fake bun earlier on PATH
+than the trace's own bun stays undetectable. Verify that interpreter independently.
 The trace binds result bytes to the plan hash and nonce and rechecks capture
 identity/log integrity. T3 observations are caller-supplied, never authenticated
 by this helper. Missing observations stay unknown. Failed criteria exit 0;
@@ -83,15 +87,29 @@ function fileIdentity(path) {
   try { return { path: realpathSync(path), sha256: sha256(readFileSync(path)) }; }
   catch (error) { return { path: null, sha256: null, error: error.message }; }
 }
+function interpreterPath(executable) {
+  try { return realpathSync(Bun.which(executable) ?? executable); }
+  catch { return null; }
+}
+function committedFile(source, path) {
+  if (!source?.root || !/^[a-f0-9]{40,64}$/.test(source.head)) throw Error('missing captured source identity');
+  const r = Bun.spawnSync(gitArgv('-C', source.root, 'show', `${source.head}:${path}`), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+  if (r.exitCode !== 0) throw Error(r.stderr.toString().trim());
+  return r.stdout;
+}
 function capturedVersion(source) {
   try {
-    if (!source?.root || !/^[a-f0-9]{40,64}$/.test(source.head)) throw Error('missing captured source identity');
-    const r = Bun.spawnSync(gitArgv('-C', source.root, 'show', `${source.head}:package.json`), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
-    if (r.exitCode !== 0) throw Error(r.stderr.toString().trim());
-    const { version } = JSON.parse(r.stdout.toString());
+    const { version } = JSON.parse(committedFile(source, 'package.json').toString());
     if (!text(version)) throw Error('package version missing');
     return { version, head: source.head };
   } catch (error) { return { version: null, error: error.message }; }
+}
+function capturedCatalog(source, catalog) {
+  try {
+    if (!catalog.path?.startsWith(`${source?.root}/`)) throw Error('catalog outside captured source');
+    const path = catalog.path.slice(source.root.length + 1);
+    return { path, head: source.head, sha256: sha256(committedFile(source, path)) };
+  } catch (error) { return { sha256: null, error: error.message }; }
 }
 function r5Plan(input) {
   const plannedAt = new Date().toISOString();
@@ -121,6 +139,8 @@ function r5Trace(flags) {
   const resultBytes = readFileSync(flags.result), after = JSON.parse(resultBytes.toString());
   const planner = fileIdentity(import.meta.path), command = fileIdentity(receipt.argv?.[1]);
   const catalog = fileIdentity(before.catalog?.path), source = receipt.sourceBefore;
+  const committedCatalog = capturedCatalog(source, catalog);
+  const interpreter = interpreterPath(receipt.argv?.[0]), trustedInterpreter = realpathSync(process.execPath);
   const version = capturedVersion(source);
   const unavailable = after.outcome === 'unavailable';
   const elapsed = timestamp(after.startedAt) && timestamp(after.finishedAt) ? Date.parse(after.finishedAt) - Date.parse(after.startedAt) : null;
@@ -128,13 +148,14 @@ function r5Trace(flags) {
     ...captureTerms(receipt, { repository: flags.repository, head: flags.head, base: flags.base }).map(t => ({ ...t, id: `plan-${t.id}` })),
     term('plan-kind', before.schemaVersion === 1 && before.kind === 'r5-plan' && receipt.exitCode === 0
       && receipt.tool?.name === 'check-run' && receipt.argv?.length === 5
-      && command.path === planner.path && receipt.argv[2] === 'r5-plan' && receipt.argv[3] === '--input',
-      { kind: before.kind, exitCode: receipt.exitCode, argv: receipt.argv }),
+      && command.path === planner.path && receipt.argv[2] === 'r5-plan' && receipt.argv[3] === '--input' && interpreter === trustedInterpreter,
+      { kind: before.kind, exitCode: receipt.exitCode, argv: receipt.argv, interpreter, trustedInterpreter }),
     term('plan-tool', !command.path || !planner.path ? null : command.path === planner.path
       && before.planner?.path === planner.path && before.planner?.sha256 === planner.sha256,
       { current: planner, captured: before.planner ?? null, command }),
-    term('catalog', !catalog.path || !source?.root ? null : catalog.path.startsWith(`${source.root}/`) && catalog.sha256 === before.catalog.sha256,
-      { sourceRoot: source?.root, planned: before.catalog, observed: catalog }),
+    term('catalog', !catalog.path || !source?.root ? null : catalog.path.startsWith(`${source.root}/`)
+      && (committedCatalog.sha256 === null ? null : catalog.sha256 === before.catalog.sha256 && committedCatalog.sha256 === before.catalog.sha256),
+      { sourceRoot: source?.root, planned: before.catalog, observed: catalog, committed: committedCatalog }),
     ...(Array.isArray(before.terms) ? before.terms.map(t => ({ ...t, id: `before-${t.id}` })) : [term('before', null, 'missing plan terms')]),
     term('installation', version.version === null ? null : after.version === before.version && after.host === before.host && before.version === version.version,
       { planned: { version: before.version, host: before.host }, observed: { version: after.version, host: after.host }, capturedPackage: version, basis: 'package at captured head plus caller-supplied T3 observations' }),
@@ -209,6 +230,8 @@ export async function main(args, io = { stdout: console.log, stderr: console.err
   process.on('SIGTERM', sigterm);
   process.on('SIGHUP', sighup);
   try {
+    if (['r5-plan', 'r5-trace'].includes(argv[2]) && fileIdentity(argv[1]).path === realpathSync(import.meta.path)
+      && interpreterPath(argv[0]) !== realpathSync(process.execPath)) throw Object.assign(Error('R5 capture requires this helper\'s Bun interpreter'), { captureHold: true });
     const repo = realpathSync(flags.repo), cwd = realpathSync(flags.cwd ?? flags.repo);
     const binding = { tool: { name: 'check-run', version: captureVersion }, repo, repository: flags.repository, head: flags.head, base: flags.base,
       snapshot: flags.snapshot, pr: flags.pr, sandboxImageDigest: flags['image-digest'] ?? null, writableRoots };
