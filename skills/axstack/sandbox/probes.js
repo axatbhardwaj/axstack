@@ -153,11 +153,18 @@ export function createProbeTools({ runner = execute } = {}) {
         const publicTarget = ['1.1.1.1', '2606:4700:4700::1111', 'example.com'].includes(target.address) || registry;
         const allowed = (registry && position === 'fetch') || (service && position === 'service') || (position === 'proxy-bypassed' && publicTarget && !target.id.startsWith('tailnet-dns'));
         const viaProxy = position === 'fetch' && (registry || target.id.startsWith('arbitrary-https:'));
-        const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(target), viaProxy ? proxy?.id ?? '' : ''];
+        if (viaProxy && !proxy) throw Error('fetch proxy missing');
+        const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(target), ...(viaProxy ? [proxy.id] : [])];
         add(c, position, allowed ? 'allow' : 'deny', [target.id], args);
       }
-      const checks = storage.checks.filter((step) => step.containerId === c.id);
-      if (storage.volumeName && c.argv?.some((arg) => arg.split(',').some((part) => part === `source=${storage.volumeName}` || part === `src=${storage.volumeName}`)) && !checks.length) throw Error(`missing capped filesystem check for ${c.id}`);
+      const mounting = storage.volumeName && c.argv?.some(arg => arg.split(',').some(part => part === `source=${storage.volumeName}` || part === `src=${storage.volumeName}`));
+      const templates = storage.checks.filter(step => step.containerId === null);
+      const checks = storage.checks.filter(step => step.containerId === c.id);
+      if (mounting && templates.length) {
+        if (!['non-root', 'filesystem', 'total-size'].every(id => templates.some(step => step.id === id))) throw Error(`missing capped filesystem check for ${c.id}`);
+        checks.push({ argv: [process.execPath, `${import.meta.dir}/probes-storage.js`, JSON.stringify(storage), c.id] });
+      }
+      if (mounting && !checks.length) throw Error(`missing capped filesystem check for ${c.id}`);
       for (const check of checks) {
         // D owns exact type/total-size verification and its non-root container argv.
         probes.push({ id: `${runId}:${c.id}:${probes.length}`, containerId: c.id, position, expected: 'capped-filesystem', targetIds: [], argv: [...check.argv] });
