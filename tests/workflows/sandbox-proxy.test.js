@@ -93,3 +93,36 @@ test('fixed DNS accepts an authoritative alias NODATA family while incomplete al
     else await expect(resolveRegistry('registry.npmjs.org', { exchange })).rejects.toThrow();
   }
 });
+
+test('large allowed tunnels preserve bytes under backpressure including upstream EOF', async () => {
+ for (const finish of [false, true]) {
+  const total = 16 * 1024 * 1024, chunk = Buffer.alloc(65536, 0x61);
+  const send = socket => {
+    while (socket.data.sent < total) {
+      const bytes = chunk.subarray(0, Math.min(chunk.length, total - socket.data.sent));
+      const count = socket.write(bytes); if (count < 0) return;
+      socket.data.sent += count; if (count < bytes.length) return;
+    }
+    if (finish && !socket.data.ended) { socket.data.ended = true; socket.end(); }
+  };
+  const upstream = Bun.listen({ hostname: '127.0.0.1', port: 0, socket: {
+    open(socket) { socket.data = { sent: 0 }; }, data: send, drain: send,
+  } });
+  const server = startProxy({ port: 0, hostAddresses: [], resolve: async () => ['104.16.26.34'], connect: options => Bun.connect({ ...options, hostname: '127.0.0.1', port: upstream.port }) });
+  let client, timer;
+  try {
+    const received = await new Promise((resolve, reject) => {
+      let headers = true, bytes = 0;
+      timer = setTimeout(() => resolve(bytes), 3000);
+      Bun.connect({ hostname: '127.0.0.1', port: server.port, socket: {
+        open(socket) { client = socket; socket.write('CONNECT registry.npmjs.org:443 HTTP/1.1\r\n\r\n'); },
+        data(socket, data) {
+          if (headers) { headers = false; socket.pause(); socket.write('start'); setTimeout(() => socket.resume(), 250); return; }
+          bytes += data.length; if (bytes === total) resolve(bytes);
+        }, close() { resolve(bytes); }, error(_socket, error) { reject(error); },
+      } }).catch(reject);
+    });
+    expect(received).toBe(total);
+  } finally { clearTimeout(timer); client?.terminate(); server.stop(); upstream.stop(true); }
+ }
+}, 8000);
