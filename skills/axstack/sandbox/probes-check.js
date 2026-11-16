@@ -100,7 +100,7 @@ async function network(id, expected, target, proxyId) {
   if (target.protocol === 'icmp') {
     argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
   } else if (target.kind === 'dns' || target.protocol === 'udp') {
-    const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : '8.8.8.8' : target.address;
+    const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : (await readProxyConfig()).resolverIpv4 : target.address;
     argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
     const host = target.address.includes(':') ? `[${target.address}]` : target.address;
