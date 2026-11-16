@@ -33,15 +33,20 @@ function snapshotTree(root) {
   walk('');
   return hash.digest('hex');
 }
+function requestedCommit(repo, flag, ref) {
+  try { return git(repo, 'rev-parse', '--verify', `${ref}^{commit}`); }
+  catch (error) { throw Error(`--${flag} ${JSON.stringify(ref)}: commit unavailable locally; ${error.message}`); }
+}
 // Binds tracked and non-ignored untracked entries; ignored bytes and Git metadata are excluded.
 export function sourceIdentity(binding) {
   const repo = realpathSync(binding.repo);
   if (realpathSync(git(repo, 'rev-parse', '--show-toplevel')) !== repo) throw Error('repo must be the source root');
+  const requestedHead = requestedCommit(repo, 'head', binding.head);
+  const base = requestedCommit(repo, 'base', binding.base);
   return {
     root: repo, repository: git(repo, 'remote', 'get-url', 'origin'),
     head: git(repo, 'rev-parse', '--verify', 'HEAD^{commit}'),
-    requestedHead: git(repo, 'rev-parse', '--verify', `${binding.head}^{commit}`),
-    base: git(repo, 'rev-parse', '--verify', `${binding.base}^{commit}`),
+    requestedHead, base,
     dirty: Boolean(git(repo, 'status', '--porcelain', '--untracked-files=all')),
     snapshot: snapshotTree(repo),
   };
@@ -74,6 +79,7 @@ export function finishCapture(step, binding, before, cwd, signal) {
     repository: binding.repository, pr: binding.pr ?? null,
     requested: { head: before.requestedHead, base: before.base },
     requestedRefs: { head: binding.head, base: binding.base },
+    snapshotScope: { files: 'tracked+untracked-nonignored', ignoreSources: ['.gitignore', '.git/info/exclude', 'core.excludesFile-or-git-default'] },
     cwd, sandboxImageDigest: binding.sandboxImageDigest ?? null,
     declaredSnapshot: binding.snapshot ?? null, sourceBefore: before, sourceAfter: null,
     interrupted: signal, logSha256: sha256(readFileSync(step.logPath)),
