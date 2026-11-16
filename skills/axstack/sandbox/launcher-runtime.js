@@ -131,7 +131,10 @@ export async function runPlan({ plan: supplied, evidenceDir }, deps) {
     p.probes = deps.planProbes({ runId: p.runId, containers: p.containers, networks: p.networks, enumeration, storage: p.storage });
     validate('plan', p);
     planBytes = await deps.savePlan(p, evidenceDir);
-    const probeResults = await deps.runProbes({ plan: p });
+    const probeResults = await deps.runProbes({ plan: p, onPlan: async candidate => {
+      active(); validate('plan', candidate);
+      planBytes = await deps.savePlan(candidate, evidenceDir);
+    } });
     requirePass(probeResults, 'per-run containment probes');
     if (p.probes.some(probe => !probeResults.some(t => t.id === probe.id && t.status === 'pass'))) hold('missing per-run probe result');
     active();
