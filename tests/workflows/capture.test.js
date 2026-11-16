@@ -183,11 +183,19 @@ test('evidence must be an owned private directory before the child starts', asyn
   await expect(capture(f)).rejects.toThrow(/owned 0700/);
   expect(readdirSync(f.evidence)).toEqual([]);
   chmodSync(f.evidence, 0o700);
-  if (process.getuid() === 0) {
-    chownSync(f.evidence, 65534, 65534);
-    try { await expect(capture(f)).rejects.toThrow(/owned 0700/); }
-    finally { chownSync(f.evidence, 0, 0); }
-  }
+});
+let foreignOwnerAvailable = false;
+try {
+  foreignOwnerAvailable = process.getuid() === 0 && readFileSync('/proc/self/uid_map', 'utf8').trim().split('\n').some(line => {
+    const [start, , count] = line.trim().split(/\s+/).map(Number);
+    return start <= 65534 && 65534 < start + count;
+  });
+} catch { /* A different owner requires a mapped Linux UID. */ }
+test.skipIf(!foreignOwnerAvailable)('evidence ownership rejects a different mapped owner before capture', async () => {
+  const f = fixture();
+  chownSync(f.evidence, 65534, 65534);
+  try { await expect(capture(f)).rejects.toThrow(/owned 0700/); }
+  finally { chownSync(f.evidence, 0, 0); }
 });
 test('snapshot hashes the symlink target even when link mode and target contents match', () => {
   const f = fixture();
