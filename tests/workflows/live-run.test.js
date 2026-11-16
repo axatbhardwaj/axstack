@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/live-run-`);
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-run.js`;
@@ -377,4 +377,57 @@ test('release flow requires the live recipe link: removal/inversion fail and rew
   expect(accepts(source.replace('](live-run.md)', '](elsewhere.md)'))).toBe(false);
   expect(accepts(source.replace(paragraph, paragraph.replace(/\b(?:record|follow|use|consult)\b/i, 'skip')))).toBe(false);
   expect(accepts(source.replace(paragraph, 'For a release touching skills, follow the [live check](live-run.md) before closing the run.'))).toBe(true);
+});
+
+
+test.each(['commit', 'tree', 'catalog-blob', 'package-blob'])('Git replacement cannot forge release bytes: %s', kind => {
+  const f = fixture(), head = f.git('rev-parse', 'HEAD');
+  const forgeCatalog = kind !== 'package-blob', forgePackage = kind !== 'catalog-blob';
+  const original = f.git('rev-parse', kind === 'commit' ? 'HEAD' : kind === 'tree' ? 'HEAD^{tree}'
+    : `HEAD:${forgeCatalog ? 'catalog.json' : 'package.json'}`);
+  if (forgeCatalog) json(f.input.catalog, { cases: [{ id: f.input.scenario, title: 'Forged', input: 'forged easy input' }] });
+  if (forgePackage) {
+    json(`${f.repo}/package.json`, { version: '9.9.9' });
+    f.input.version = '9.9.9'; json(f.inputPath, f.input);
+  }
+  let replacement;
+  if (kind === 'commit' || kind === 'tree') {
+    f.git('add', '.'); replacement = f.git('write-tree');
+    if (kind === 'commit') replacement = f.git('-c', 'user.name=Fixture', '-c', 'user.email=f@x', 'commit-tree', replacement, '-m', 'forged');
+  } else replacement = f.git('hash-object', '-w', forgeCatalog ? 'catalog.json' : 'package.json');
+  f.git('replace', original, replacement);
+  expect(f.git('rev-parse', 'HEAD')).toBe(head);
+  const before = kind.endsWith('blob') ? preparedDirty(f) : prepared(f);
+  const response = trace(f, before, resultFor(f, before)), report = JSON.parse(response.stdout);
+  expect(response.code).toBe(0);
+  expect(report.terms.find(t => t.id === 'catalog').status).toBe(forgeCatalog ? 'fail' : 'pass');
+  expect(report.terms.find(t => t.id === 'installation').status).toBe(forgePackage ? 'fail' : 'pass');
+  expect(report.terms.filter(t => !['catalog', 'installation'].includes(t.id)).every(t => t.status === 'pass')).toBe(true);
+});
+
+test('an option-shaped captured head leaves the filesystem untouched and committed reads unknown', () => {
+  const f = fixture(), before = prepared(f), result = resultFor(f, before);
+  before.sourceBefore.head = `--output=${f.dir}/WRITTEN`;
+  json(before.receiptPath, before);
+  const resultPath = json(`${f.dir}/after.json`, result), files = readdirSync(f.dir, { recursive: true }).sort();
+  const response = cli('r5-trace', '--plan-receipt', before.receiptPath, '--result', resultPath, ...f.expected);
+  expect(readdirSync(f.dir, { recursive: true }).sort()).toEqual(files);
+  expect(response.code).toBe(2);
+  const report = JSON.parse(response.stdout);
+  for (const id of ['catalog', 'installation']) expect(report.terms.find(t => t.id === id).status).toBe('unknown');
+});
+
+test('bare bun resolves through a symlink first on the child PATH for both R5 phases', () => {
+  const f = fixture(), bin = `${f.dir}/bin`;
+  mkdirSync(bin); symlinkSync(realpathSync(process.execPath), `${bin}/bun`);
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}` };
+  const run = args => Bun.spawnSync([process.execPath, script, ...args], { env, stdout: 'pipe', stderr: 'pipe' });
+  const capture = run([...f.binding, '--', 'bun', script, 'r5-plan', '--input', f.inputPath]);
+  expect(capture.exitCode).toBe(0);
+  const before = JSON.parse(capture.stdout.toString());
+  expect(before.argv[0]).toBe('bun'); expect(before.exitCode).toBe(0);
+  const resultPath = json(`${f.dir}/after.json`, resultFor(f, before));
+  const response = run(['r5-trace', '--plan-receipt', before.receiptPath, '--result', resultPath, ...f.expected]);
+  expect(response.exitCode).toBe(0);
+  expect(JSON.parse(response.stdout.toString()).terms.every(t => t.status === 'pass')).toBe(true);
 });
