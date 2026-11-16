@@ -4,7 +4,8 @@
 // after the migration, or unchanged owned files would silently lose
 // ownership (or, worse, gain it spuriously).
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 import { join } from '../../src/posixpath.js';
 import { hashContent, hashObject, readManifest } from '../../src/manifest.js';
 
@@ -26,7 +27,7 @@ describe('old-implementation hash compatibility', () => {
   });
 
   test('manifest shape from the old implementation still parses', async () => {
-    const dir = mkdtempSync(join(Bun.env.TMPDIR ?? '/tmp', 'axstack-compat-'));
+    const dir = makeTempDir(join(Bun.env.TMPDIR ?? '/tmp', 'axstack-compat-'));
     writeFileSync(join(dir, '.axstack-manifest.json'), readFileSync(join(FIX, 'manifest.json'), 'utf8'));
     const parsed = await readManifest(dir);
     expect(parsed.version).toBe(1);

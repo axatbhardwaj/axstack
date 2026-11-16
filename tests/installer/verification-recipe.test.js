@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 // The runnable recipe is the interface; this does not prove harness discovery.
 const packageScripts = JSON.parse(readFileSync(`${import.meta.dir}/../../package.json`, 'utf8')).scripts;
 const fullSuiteUsesRunner = (text, scripts) => /```bash\n[^`]*^bun\s+run\s+test:all(?:\s|$)/m.test(text)
-  && /^bun\s+skills\/axstack\/scripts\/test-repository\.js$/.test(scripts['test:all']);
+  && /^bun\s+tests\/run-all\.js$/.test(scripts['test:all']);
 const recipe = readFileSync(`${import.meta.dir}/../../.agents/skills/verify-axstack/SKILL.md`, 'utf8');
 test('verification launch uses rootless user/network namespaces and retains offline ownership guards', () => {
   const launch = recipe.split('## Launch')[1].split('## Doctor')[0];

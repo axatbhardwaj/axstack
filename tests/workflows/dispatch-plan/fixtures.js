@@ -1,15 +1,12 @@
-import { afterEach } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { makeTempDir } from '../../temp-dir.js';
 
 const script = `${import.meta.dir}/../../../skills/axstack/scripts/dispatch-plan.js`;
 const fixture = JSON.parse(readFileSync(`${import.meta.dir}/../fixtures/dispatch-plan.json`, 'utf8'));
 const catalog = JSON.parse(readFileSync(`${import.meta.dir}/../fixtures/t3-capabilities.json`, 'utf8'));
-const roots = [];
-afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true }); });
 
 export function setup() {
-  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/dispatch-plan-`);
-  roots.push(dir);
+  const dir = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/dispatch-plan-`);
   const roles = { version: fixture.version, preset: fixture.preset, roles: structuredClone(fixture.roles) };
   const capabilities = structuredClone(catalog);
   const save = (name, data) => {

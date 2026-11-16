@@ -29,6 +29,49 @@ forge retargeting or agent compliance.
 Prerequisites: Launch; a new local Git fixture, never the driver's run namespace.
 Run-init writes only its fixture Git common directory and owned scratch.
 
+## Reconcile limitation evidence
+
+Entry point: `skills/axstack/scripts/evidence-inspector.js`; fixtures:
+`tests/workflows/evidence-inspector{,-cli}.test.js` and
+`tests/workflows/fixtures/evidence-inspector/`. After Launch/Doctor and install:
+
+```bash
+doctor > "$EVIDENCE/inspector-doctor.log" 2>&1
+INSPECTOR="$HOME/.agents/skills/axstack/scripts/evidence-inspector.js"
+bun "$INSPECTOR" --help > "$EVIDENCE/inspector-help.txt"
+bun -e 'const head = "a".repeat(40), base = "b".repeat(40);
+  const item = {id:"rate-limit",head,base,boundary:"HTTP 403/429",
+    acceptedProofKinds:["runtime"],sourceScope:"external",
+    changedAt:"2026-01-01T00:00:00Z",raisedAt:"2026-01-02T00:00:00Z"};
+  await Bun.write(process.env.EVIDENCE + "/inspector-input.json", JSON.stringify({
+    schemaVersion:1,repository:"https://github.com/example/project.git",head,base,
+    items:[item],dispositions:[{id:item.id,head,base,boundary:item.boundary,status:"open"}]}));'
+cp "$EVIDENCE/inspector-input.json" "$TMPDIR/inspector-before.json"
+bun "$INSPECTOR" --input "$EVIDENCE/inspector-input.json" > "$EVIDENCE/inspector-run.json"
+cmp "$TMPDIR/inspector-before.json" "$EVIDENCE/inspector-input.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/inspector-run.json").json();
+  if (r.terms.length !== 1 || r.terms[0].id !== "rate-limit" || r.terms[0].status !== "fail" ||
+      r.terms[0].reasonCode !== "limitation-open" ||
+      r.summary.fail !== 1 || Object.keys(r).sort().join() !== "schemaVersion,summary,terms")
+    throw Error("inspector must measure the open item without granting authority");'
+bun run test tests/workflows/evidence-inspector.test.js \
+  tests/workflows/evidence-inspector-cli.test.js tests/workflows/run-record.test.js \
+  > "$EVIDENCE/inspector-tests.log" 2>&1
+```
+
+Proof: installed fact mode measures an open item as fail with exit 0 and leaves
+input unchanged. Fixtures preserve #643/#645 closure regressions and #644/#646
+holdout outcomes and reasons; sibling IDs or reused capture logs (including
+copies and hard links with equal digests) cannot close another item.
+The CLI fixture creates and consumes a real W3-1 receipt, revalidates its log,
+ignores cached terms, checks unchanged bytes, and distinguishes exits 0/1/2.
+Synthetic historical adapters are labeled; they do not replay those executions.
+Ignored bytes stay unbound. Capture v1 does not attest chronology; timestamps,
+item policy and reviewer/user decision identities are caller declarations.
+Semantic proof sufficiency and review/merge authority remain human judgments.
+Consumers use stable `reasonCode` and read each term's `disposition`;
+`summary.pass` includes withdrawal and unproven acceptance, not just proved items.
+
 ## Run commands in owned scratch
 
 After Launch/Doctor and the install feature, invoke the installed helper:
@@ -227,3 +270,95 @@ resolved head/base/source identity, missing fields, log integrity, dirty snapsho
 and their printed digest, ignored-file exclusion, output placement, timeout,
 truncation, spawn failure and SIGINT/SIGTERM/SIGHUP cleanup. These
 capture facts do not establish proof sufficiency or malicious-code containment.
+
+## Receipt consumers
+
+Review, Implement and generated verification recipes follow
+`skills/axstack/references/capture-receipts.md`. After the capture above,
+reconcile its deliberate negative-check boundary through the installed inspector:
+
+```bash
+bun -e '
+const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json();
+const item = { id: "negative-check", head: r.requested.head, base: r.requested.base,
+  boundary: "fixture child exits seven", changedAt: "2026-01-01T00:00:00Z",
+  raisedAt: "2026-01-02T00:00:00Z", acceptedProofKinds: ["fixture"],
+  sourceScope: "tracked+untracked-nonignored", expectedExitCode: 7, previousEvidence: [] };
+const packet = { schemaVersion: 1, repository: r.repository, head: item.head, base: item.base,
+  items: [item], dispositions: [{ id: item.id, head: item.head, base: item.base,
+    boundary: item.boundary, status: "proved", proof: { id: "negative-capture", itemId: item.id,
+      kind: "fixture", observedAt: new Date().toISOString(), receipt: r.receiptPath } }] };
+await Bun.write(process.env.EVIDENCE + "/ledger.json", JSON.stringify(packet, null, 2));'
+bun "$HOME/.agents/skills/axstack/scripts/evidence-inspector.js" \
+  --input "$EVIDENCE/ledger.json" > "$EVIDENCE/inspector.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/inspector.json").json();
+if (r.terms.length !== 1 || r.terms.some(t => t.id !== "negative-check" || t.status !== "pass" ||
+  t.disposition !== "proved" || t.reasonCode !== "capture-consistent")) throw Error("item not proved");'
+bun run test tests/workflows/receipt-wiring.test.js tests/workflows/evidence-inspector.test.js \
+  tests/workflows/evidence-inspector-cli.test.js > "$EVIDENCE/receipt-consumers.log" 2>&1
+```
+
+This offline fixture demonstrates citation and reconciliation, not the live review
+acceptance. The driver reviews this candidate using the new receipt, judges each
+term's disposition and proof sufficiency, and records that real review separately.
+
+## Capture-backed R5 release traces
+
+After Launch/Doctor, pack and temporary-home install, reuse installed `CAPTURE`.
+Create a separate clean release fixture with a committed catalog and package version.
+The two new modes extend
+check-run; no additional script is installed. Both phases run offline here;
+the [live recipe](../../../../skills/axstack/references/live-run.md) leaves the
+single T3 launch to the release driver. This fixture proves trace generation,
+not a live model result or token-budget enforcement.
+
+```bash
+doctor > "$EVIDENCE/r5-doctor.log" 2>&1
+bun run test tests/workflows/live-run.test.js > "$EVIDENCE/r5-tests.log" 2>&1
+env -u TMPDIR bun test tests/workflows/live-run.test.js > "$EVIDENCE/r5-unset.log" 2>&1
+mkdir -m 700 "$EVIDENCE/r5"
+mkdir "$TMPDIR/r5-repo"
+git -C "$TMPDIR/r5-repo" init -q
+git -C "$TMPDIR/r5-repo" remote add origin fixture:r5
+cp "$REPO/tests/workflows/run-record-scenarios.json" "$TMPDIR/r5-repo/catalog.json"
+printf '%s\n' '{"version":"fixture-release"}' > "$TMPDIR/r5-repo/package.json"
+git -C "$TMPDIR/r5-repo" add .
+git -C "$TMPDIR/r5-repo" -c user.name=Fixture -c user.email=f@x commit -qm fixture
+R5_HEAD=$(git -C "$TMPDIR/r5-repo" rev-parse HEAD)
+bun -e 'const e = process.env.EVIDENCE; await Bun.write(e + "/r5/before.json", JSON.stringify({
+  catalog: process.env.TMPDIR + "/r5-repo/catalog.json", scenario: "stale-evidence-hold",
+  version: "fixture-release", host: "fixture-host", tokenLimit: 4000, timeLimitMs: 60000, attempt: 1,
+  nonce: crypto.randomUUID(), recordedAt: new Date().toISOString(),
+  requested: {provider: "codex", model: "fixture-model", options: {reasoningEffort: "low"}}
+}));'
+bun "$CAPTURE" --repo "$TMPDIR/r5-repo" --repository fixture:r5 \
+  --head "$R5_HEAD" --base "$R5_HEAD" --out "$EVIDENCE/r5" -- \
+  bun "$CAPTURE" r5-plan --input "$EVIDENCE/r5/before.json" > "$EVIDENCE/r5-before-capture.json"
+PLAN_RECEIPT=$(bun -e 'console.log((await Bun.file(process.env.EVIDENCE + "/r5-before-capture.json").json()).receiptPath)')
+bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/r5-before-capture.json").json();
+  const bytes = await Bun.file(r.logPath).arrayBuffer(); const p = JSON.parse(new TextDecoder().decode(bytes));
+  if (r.exitCode !== 0 || r.terms.some(t => t.status !== "pass") || p.terms.some(t => t.status !== "pass")) throw Error("before capture failed");
+  const start = Date.now();
+  await Bun.write(e + "/r5/after.json", JSON.stringify({planSha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
+    nonce: p.nonce, version: p.version, host: p.host, attempt: 1, requested: p.requested, effective: p.requested,
+    outcome: "completed", threadId: "synthetic-thread", runId: "synthetic-run", tokensUsed: 100,
+    startedAt: new Date(start).toISOString(), finishedAt: new Date(start + 1000).toISOString(), output: "nonce: " + p.nonce}));'
+bun "$CAPTURE" --repo "$TMPDIR/r5-repo" --repository fixture:r5 \
+  --head "$R5_HEAD" --base "$R5_HEAD" --out "$EVIDENCE/r5" -- \
+  bun "$CAPTURE" r5-trace --plan-receipt "$PLAN_RECEIPT" --result "$EVIDENCE/r5/after.json" \
+    --repository fixture:r5 --head "$R5_HEAD" --base "$R5_HEAD" > "$EVIDENCE/r5-after-capture.json"
+bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/r5-after-capture.json").json();
+  const t = await Bun.file(r.logPath).json();
+  if (r.schemaVersion !== 1 || r.exitCode !== 0 || r.terms.some(x => x.status !== "pass") ||
+      t.terms.some(x => x.status !== "pass") || t.after.runId !== "synthetic-run") throw Error("R5 trace mismatch");
+  await Bun.write(e + "/r5-trace.json", JSON.stringify(t, null, 2));'
+```
+
+Retain both capture receipts, their logs, structured inputs and `r5-trace.json`.
+The behavioral negatives cover changed nonce/plan/log bytes, wrong invocation,
+stale timestamps, wrong release/host, settings drift, exceeded budgets and
+missing observations. Fact modes print measured failures with exit 0, unknown
+with exit 2, and invalid invocation/JSON with exit 1. They write nothing and
+dispatch nothing. In live use cite the after capture receipt and trace log in
+the release record even for unavailable or exhausted runs; never retry the
+scenario to turn its outcome green.

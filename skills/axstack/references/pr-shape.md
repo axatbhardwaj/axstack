@@ -47,7 +47,7 @@ Use a title that explains why the change matters.
 For repository title conventions, check recently merged PRs.
 
 Every own PR description must include a short `Proof` section:
-what was verified and how, with commands and observed results, CI or evidence links.
+what was verified and how, with check-run receipt citations (paths/identities) for commands and observed results, CI or evidence links.
 Render its facts with
 `bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --repo <repo-path> --base <base> --head <head>`
 and paste the JSON `block` under `Proof`. Keep the returned per-term evidence.

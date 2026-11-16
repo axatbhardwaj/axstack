@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, statSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, mkdirSync, writeFileSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 
 const root = `${import.meta.dir}/../..`;
 const { scripts, engines, dependencies } = JSON.parse(readFileSync(`${root}/package.json`, 'utf8'));
@@ -37,7 +38,7 @@ test('tooling adds no runtime dependencies', () => {
 const skipMessage = 'axstack pre-commit: dev tools not installed; run `bun install` to enable lint/typecheck; skipping';
 
 function hookFixture(tools) {
-  const cwd = mkdtempSync(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-hook-`);
+  const cwd = makeTempDir(`${Bun.env.TMPDIR ?? '/tmp'}/axstack-hook-`);
   mkdirSync(`${cwd}/node_modules/.bin`, { recursive: true });
   for (const tool of tools) writeFileSync(`${cwd}/node_modules/.bin/${tool}`, '', { mode: 0o755 });
   return cwd;

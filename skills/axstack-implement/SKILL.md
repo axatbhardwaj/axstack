@@ -283,8 +283,8 @@ Record the staged-file size check result in the implementation receipt.
 
 ## 5. Verify and return the candidate
 
-Run the acceptance checks and affected integration boundaries. Record commands,
-observed outputs, and verified states. UI work includes rendered interaction
+Run the acceptance checks and affected integration boundaries following
+[Capture receipts](../axstack/references/capture-receipts.md). UI work includes rendered interaction
 evidence through [UI verification](../axstack/references/ui-verification.md)
 when relevant. Name every unavailable OS, harness, credential, or other
 boundary instead of implying coverage.
@@ -324,9 +324,9 @@ Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
 Token limit: <staged-file size check command + observed advisories/errors before each commit>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
-Acceptance: <checks + observed results>
+Acceptance: <check-run receipt paths + identities mapped to criteria>
 Dependencies: <parent revisions or none>
-Unverified: <boundaries + reasons>
+Unverified: <limitation ledger + inspector report/item dispositions, or none>
 Next: <owner reconciles receipt, uses candidate-publication to push exact revision, confirms
 remote readback, then routes it to axstack-review>
 ```
