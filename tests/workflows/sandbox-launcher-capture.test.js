@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { runCommand } from '../../skills/axstack/scripts/command-capture.js';
-import { verifyCapture } from '../../skills/axstack/sandbox/launcher-capture.js';
+import { saveReceipt, verifyCapture } from '../../skills/axstack/sandbox/launcher-capture.js';
 import { createLauncher } from '../../skills/axstack/sandbox/launcher.js';
 import { fixture, planners } from './sandbox-launcher-fixture.js';
 
@@ -38,4 +38,42 @@ test('host capture reference hashes exact retained bytes; changed log or image i
   expect(reference.receiptSha256).toBe(new Bun.CryptoHasher('sha256').update(readFileSync(step.receiptPath)).digest('hex'));
   writeFileSync(step.logPath, 'tampered');
   expect(() => verifyCapture(step.receiptPath, p, p.request.testArgv)).toThrow();
+});
+
+async function boundCapture() {
+  const { p, step } = await captured(), c = p.containers.find(c => c.role === 'test');
+  step.kind = 'sandbox-test';
+  step.spawnArgv = ['docker', 'exec', '--user', p.policy.user, '--workdir', '/work', c.id, '/bin/sh', '-c', 'cp -R /source/. /work/ && chmod -R u+w /work && cd /work && exec "$@"', 'axstack', ...p.request.testArgv];
+  writeFileSync(step.receiptPath, `${JSON.stringify(step)}\n`);
+  return { p, step };
+}
+test('capture logical argv must match the requested command even when actual spawn argv matches', async () => {
+  const { p, step } = await boundCapture(); step.argv = ['another-command'];
+  writeFileSync(step.receiptPath, JSON.stringify(step));
+  expect(() => verifyCapture(step.receiptPath, p, p.request.testArgv)).toThrow();
+});
+
+test('capture cwd must match the canonical source root', async () => {
+  const { p, step } = await boundCapture(); step.cwd = '/another-source';
+  writeFileSync(step.receiptPath, JSON.stringify(step));
+  expect(() => verifyCapture(step.receiptPath, p, p.request.testArgv)).toThrow();
+});
+
+test('capture sandbox digest must match the effective workload image', async () => {
+  const { p, step } = await boundCapture(); step.sandboxImageDigest = `sha256:${'0'.repeat(64)}`;
+  writeFileSync(step.receiptPath, JSON.stringify(step));
+  expect(() => verifyCapture(step.receiptPath, p, p.request.testArgv)).toThrow();
+});
+
+test('capture tool version must match the launcher capture adapter', async () => {
+  const { p, step } = await boundCapture(); step.tool.version = 'another-version';
+  writeFileSync(step.receiptPath, JSON.stringify(step));
+  expect(() => verifyCapture(step.receiptPath, p, p.request.testArgv)).toThrow();
+});
+
+test('sandbox envelope is rejected before writing beyond the receipt directory cap', async () => {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/launcher-envelope-`); chmodSync(root, 0o700); roots.push(root);
+  const p = createLauncher(planners()).plan(fixture()); p.policy.receiptMaxBytes = 1;
+  await expect(saveReceipt({ schemaVersion: 1 }, root, p)).rejects.toMatchObject({ sandboxHold: true });
+  expect(readdirSync(root)).toEqual([]);
 });
