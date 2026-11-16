@@ -32,7 +32,7 @@ const result = p => inspectEvidence(p).terms[0];
 
 test('new exact-item evidence passes with counts only and no aggregate verdict', () => {
   const report = inspectEvidence(packet());
-  expect(report.terms[0]).toMatchObject({ id: 'one', status: 'pass', disposition: 'proved', acceptedProofKinds: ['runtime'] });
+  expect(report.terms[0]).toMatchObject({ id: 'one', status: 'pass', reasonCode: 'capture-consistent', disposition: 'proved', acceptedProofKinds: ['runtime'] });
   expect(report.summary).toEqual({ pass: 1, fail: 0, unknown: 0, 'n/a': 0 });
   expect(Object.keys(report).sort()).toEqual(['schemaVersion', 'summary', 'terms']);
 });
@@ -57,48 +57,51 @@ for (const row of history) test(`frozen PR #${row.pr} per-item outcomes`, () => 
   ]));
 });
 
-for (const [name, change, status, reason] of [
-  ['open item', p => { p.dispositions[0].status = 'open'; }, 'fail', /open/],
-  ['missing disposition', p => { p.dispositions = []; }, 'unknown', /missing/],
-  ['duplicate disposition', p => p.dispositions.push(p.dispositions[0]), 'fail', /multiple/],
-  ['sibling proof', p => { p.dispositions[0].proof.itemId = 'sibling'; }, 'fail', /another item/],
-  ['stale item head', p => { p.items[0].head = base; }, 'fail', /head\/base/],
-  ['stale disposition base', p => { p.dispositions[0].base = head; }, 'fail', /head\/base/],
-  ['changed boundary', p => { p.dispositions[0].boundary = 'other branch'; }, 'fail', /boundary/],
-  ['unsupported proof kind', p => { p.dispositions[0].proof.kind = 'fixture'; }, 'fail', /kind/],
-  ['old evidence', p => { p.dispositions[0].proof.observedAt = old; }, 'fail', /predates/],
-  ['evidence predates change', p => { p.items[0].changedAt = '2026-01-04T00:00:00Z'; }, 'fail', /predates/],
-  ['missing chronology', p => { delete p.dispositions[0].proof.observedAt; }, 'unknown', /chronology/],
-  ['reused evidence ID', p => { p.items[0].previousEvidence = [{ id: 'new-run' }]; }, 'fail', /reused/],
-  ['renamed reused log', p => { p.items[0].previousEvidence = [{ logSha256: p.dispositions[0].proof.receipt.logSha256 }]; }, 'fail', /reused/],
-  ['missing receipt', p => { delete p.dispositions[0].proof.receipt; }, 'unknown', /receipt/],
-  ['malformed receipt', p => { p.dispositions[0].proof.receipt = {}; }, 'fail', /receipt/],
-  ['wrong repository', p => { p.dispositions[0].proof.receipt.repository = 'other'; }, 'fail', /capture/],
-  ['stale capture', p => { p.dispositions[0].proof.receipt.requested.head = base; }, 'fail', /capture/],
-  ['source changed', p => { p.dispositions[0].proof.receipt.sourceAfter.snapshot = 'd'.repeat(64); }, 'fail', /capture/],
-  ['altered log', p => { p.dispositions[0].proof.receipt.logSha256 = '0'.repeat(64); }, 'fail', /capture/],
-  ['unavailable log', p => { p.dispositions[0].proof.receipt.logPath = `${temporary}/absent`; }, 'unknown', /capture/],
-  ['timeout', p => { p.dispositions[0].proof.receipt.timedOut = true; }, 'unknown', /capture/],
-  ['truncation', p => { p.dispositions[0].proof.receipt.omittedBytes = 10; }, 'unknown', /capture/],
-  ['interruption', p => { p.dispositions[0].proof.receipt.interrupted = 'SIGTERM'; }, 'unknown', /capture/],
-  ['failed check', p => { p.dispositions[0].proof.receipt.exitCode = 1; }, 'fail', /exit/],
-  ['missing snapshot scope', p => { delete p.dispositions[0].proof.receipt.snapshotScope; }, 'unknown', /scope/],
-  ['ignored bytes', p => { p.items[0].sourceScope = 'ignored'; }, 'unknown', /ignored/],
-  ['unknown disposition', p => { p.dispositions[0].status = 'approved'; }, 'fail', /disposition/],
-  ['missing item boundary', p => { delete p.items[0].boundary; delete p.dispositions[0].boundary; }, 'unknown', /missing item boundary/],
-  ['missing accepted kinds', p => { delete p.items[0].acceptedProofKinds; }, 'unknown', /accepted proof kinds/],
-  ['empty accepted kinds', p => { p.items[0].acceptedProofKinds = []; }, 'unknown', /accepted proof kinds/],
-  ['invalid accepted kinds', p => { p.items[0].acceptedProofKinds = ['unrecognized']; }, 'unknown', /accepted proof kinds/],
-  ['missing proof ID', p => { delete p.dispositions[0].proof.id; }, 'unknown', /missing named evidence ID/],
-  ['non-array previous evidence', p => { p.items[0].previousEvidence = {}; }, 'unknown', /invalid previous evidence inventory/],
-  ['null previous evidence entry', p => { p.items[0].previousEvidence = [null]; }, 'unknown', /invalid previous evidence inventory/],
-  ['array receipt', p => { p.dispositions[0].proof.receipt = []; }, 'fail', /invalid capture receipt"/],
-  ['invalid expected exit', p => { p.items[0].expectedExitCode = '0'; }, 'unknown', /invalid expected exit code/],
-  ['missing source scope', p => { delete p.items[0].sourceScope; }, 'unknown', /missing\/invalid source scope/],
+for (const [name, change, status, reasonCode, reason] of [
+  ['open item', p => { p.dispositions[0].status = 'open'; }, 'fail', 'limitation-open', /open/],
+  ['missing disposition', p => { p.dispositions = []; }, 'unknown', 'disposition-missing', /missing/],
+  ['duplicate disposition', p => p.dispositions.push(p.dispositions[0]), 'fail', 'disposition-conflict', /multiple/],
+  ['sibling proof', p => { p.dispositions[0].proof.itemId = 'sibling'; }, 'fail', 'evidence-item-mismatch', /another item/],
+  ['stale item head', p => { p.items[0].head = base; }, 'fail', 'item-revision-mismatch', /head\/base/],
+  ['stale disposition base', p => { p.dispositions[0].base = head; }, 'fail', 'disposition-revision-mismatch', /head\/base/],
+  ['changed boundary', p => { p.dispositions[0].boundary = 'other branch'; }, 'fail', 'disposition-boundary-mismatch', /boundary/],
+  ['unsupported proof kind', p => { p.dispositions[0].proof.kind = 'fixture'; }, 'fail', 'proof-kind-rejected', /kind/],
+  ['old evidence', p => { p.dispositions[0].proof.observedAt = old; }, 'fail', 'evidence-predates-limitation', /predates/],
+  ['evidence predates change', p => { p.items[0].changedAt = '2026-01-04T00:00:00Z'; }, 'fail', 'evidence-predates-limitation', /predates/],
+  ['missing chronology', p => { delete p.dispositions[0].proof.observedAt; }, 'unknown', 'chronology-invalid', /chronology/],
+  ['reused evidence ID', p => { p.items[0].previousEvidence = [{ id: 'new-run' }]; }, 'fail', 'previous-proof-reused', /reused/],
+  ['renamed reused log', p => { p.items[0].previousEvidence = [{ logSha256: p.dispositions[0].proof.receipt.logSha256 }]; }, 'fail', 'previous-log-reused', /reused/],
+  ['missing receipt', p => { delete p.dispositions[0].proof.receipt; }, 'unknown', 'capture-receipt-missing', /receipt/],
+  ['malformed receipt', p => { p.dispositions[0].proof.receipt = {}; }, 'fail', 'capture-schema-invalid', /receipt/],
+  ['wrong repository', p => { p.dispositions[0].proof.receipt.repository = 'other'; }, 'fail', 'capture-validation-failed', /capture/],
+  ['stale capture', p => { p.dispositions[0].proof.receipt.requested.head = base; }, 'fail', 'capture-validation-failed', /capture/],
+  ['source changed', p => { p.dispositions[0].proof.receipt.sourceAfter.snapshot = 'd'.repeat(64); }, 'fail', 'capture-validation-failed', /capture/],
+  ['altered log', p => { p.dispositions[0].proof.receipt.logSha256 = '0'.repeat(64); }, 'fail', 'capture-validation-failed', /capture/],
+  ['unavailable log', p => { p.dispositions[0].proof.receipt.logPath = `${temporary}/absent`; }, 'unknown', 'capture-validation-incomplete', /capture/],
+  ['timeout', p => { p.dispositions[0].proof.receipt.timedOut = true; }, 'unknown', 'capture-validation-incomplete', /capture/],
+  ['truncation', p => { p.dispositions[0].proof.receipt.omittedBytes = 10; }, 'unknown', 'capture-validation-incomplete', /capture/],
+  ['interruption', p => { p.dispositions[0].proof.receipt.interrupted = 'SIGTERM'; }, 'unknown', 'capture-validation-incomplete', /capture/],
+  ['failed check', p => { p.dispositions[0].proof.receipt.exitCode = 1; }, 'fail', 'capture-exit-mismatch', /exit/],
+  ['missing snapshot scope', p => { delete p.dispositions[0].proof.receipt.snapshotScope; }, 'unknown', 'snapshot-scope-missing', /scope/],
+  ['ignored bytes', p => { p.items[0].sourceScope = 'ignored'; }, 'unknown', 'source-ignored', /ignored/],
+  ['unknown disposition', p => { p.dispositions[0].status = 'approved'; }, 'fail', 'disposition-invalid', /disposition/],
+  ['missing item boundary', p => { delete p.items[0].boundary; delete p.dispositions[0].boundary; }, 'unknown', 'item-boundary-missing', /missing item boundary/],
+  ['missing accepted kinds', p => { delete p.items[0].acceptedProofKinds; }, 'unknown', 'accepted-kinds-invalid', /accepted proof kinds/],
+  ['empty accepted kinds', p => { p.items[0].acceptedProofKinds = []; }, 'unknown', 'accepted-kinds-invalid', /accepted proof kinds/],
+  ['invalid accepted kinds', p => { p.items[0].acceptedProofKinds = ['unrecognized']; }, 'unknown', 'accepted-kinds-invalid', /accepted proof kinds/],
+  ['missing proof ID', p => { delete p.dispositions[0].proof.id; }, 'unknown', 'proof-id-missing', /missing named evidence ID/],
+  ['non-array previous evidence', p => { p.items[0].previousEvidence = {}; }, 'unknown', 'previous-evidence-invalid', /invalid previous evidence inventory/],
+  ['null previous evidence entry', p => { p.items[0].previousEvidence = [null]; }, 'unknown', 'previous-evidence-invalid', /invalid previous evidence inventory/],
+  ['array receipt', p => { p.dispositions[0].proof.receipt = []; }, 'fail', 'capture-receipt-invalid', /invalid capture receipt"/],
+  ['invalid expected exit', p => { p.items[0].expectedExitCode = '0'; }, 'unknown', 'expected-exit-invalid', /invalid expected exit code/],
+  ['missing source scope', p => { delete p.items[0].sourceScope; }, 'unknown', 'source-scope-invalid', /missing\/invalid source scope/],
+  ['missing proof', p => { delete p.dispositions[0].proof; }, 'unknown', 'proof-missing', /proof/],
+  ['missing receipt file', p => { p.dispositions[0].proof.receipt = `${temporary}/absent.json`; }, 'unknown', 'capture-receipt-unavailable', /receipt/],
+  ['invalid receipt JSON', p => { const path = `${temporary}/invalid.json`; writeFileSync(path, '{'); p.dispositions[0].proof.receipt = path; }, 'fail', 'capture-json-invalid', /receipt/],
 ]) test(name, () => {
   const p = packet(); change(p);
   expect(result(p).status).toBe(status);
-  expect(result(p).reasonCode).toMatch(/^[a-z][a-z0-9-]+$/);
+  expect(result(p).reasonCode).toBe(reasonCode);
   expect(JSON.stringify(result(p).evidence)).toMatch(reason);
 });
 
@@ -112,11 +115,11 @@ for (const [status, role] of [['withdrawn-by-reviewer', 'reviewer'], ['user-acce
     expect(result(p)).toMatchObject({ status: 'pass', disposition: status });
     expect(result(p).reasonCode).toBe(role === 'user' ? 'user-accepted-unproven' : 'reviewer-withdrawn');
     d.decision.role = role === 'user' ? 'reviewer' : 'author';
-    expect(result(p).status).toBe('fail');
+    expect(result(p)).toMatchObject({ status: 'fail', reasonCode: 'decision-role-invalid' });
     d.decision.role = role; d.decision.itemId = 'sibling';
-    expect(result(p).status).toBe('fail');
+    expect(result(p)).toMatchObject({ status: 'fail', reasonCode: 'evidence-item-mismatch' });
     delete d.decision;
-    expect(result(p).status).toBe('unknown');
+    expect(result(p)).toMatchObject({ status: 'unknown', reasonCode: 'decision-missing' });
   });
   for (const field of ['repository', 'head', 'base', 'boundary', 'by', 'reason', 'reference']) {
     test(`${status} rejects a missing or mismatched decision ${field}`, () => {
@@ -126,10 +129,10 @@ for (const [status, role] of [['withdrawn-by-reviewer', 'reviewer'], ['user-acce
         by: 'named-person', at: fresh, reason: 'explicit disposition', reference: 'saved-decision:one' };
       if (['by', 'reason', 'reference'].includes(field)) {
         delete d.decision[field];
-        expect(result(p)).toMatchObject({ status: 'unknown', evidence: { reason: 'incomplete decision receipt' } });
+        expect(result(p)).toMatchObject({ status: 'unknown', reasonCode: 'decision-incomplete', evidence: { reason: 'incomplete decision receipt' } });
       } else {
         d.decision[field] = field === 'head' ? base : field === 'base' ? head : 'other';
-        expect(result(p)).toMatchObject({ status: 'fail', evidence: { reason: 'decision repository/head/base/boundary differs' } });
+        expect(result(p)).toMatchObject({ status: 'fail', reasonCode: 'decision-binding-mismatch', evidence: { reason: 'decision repository/head/base/boundary differs' } });
       }
     });
   }
@@ -160,7 +163,9 @@ test('one named proof cannot be assigned to multiple items even with separate ca
   const sibling = structuredClone(p.dispositions[0]);
   sibling.id = 'sibling'; sibling.proof.itemId = 'sibling'; sibling.proof.receipt = receipt();
   p.dispositions.push(sibling);
-  expect(inspectEvidence(p).terms.map(t => t.status)).toEqual(['fail', 'fail']);
+  expect(inspectEvidence(p).terms.map(t => [t.status, t.reasonCode])).toEqual([
+    ['fail', 'sibling-proof-reused'], ['fail', 'sibling-proof-reused'],
+  ]);
 });
 
 for (const [name, duplicate] of [['copied', copyFileSync], ['hard-linked', linkSync]]) {
