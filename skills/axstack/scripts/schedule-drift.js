@@ -10,7 +10,8 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
                   For intentional host exclusions use {promptFile,absent:true,scheduledTaskId?:expectedId}.
                   Fresh complete matching-host coverage yields n/a; any matching declared task ID fails.
                   Without a task ID, absent:true is an explicit host-scope declaration, not identity discovery.
-                  Values substitute only explicit {{HOST_TOKEN}} placeholders. No implicit trim or normalization.
+                  Values substitute only explicit {{HOST_TOKEN}} placeholders.
+                  Prompt comparison ignores trailing LF characters only; all other whitespace remains exact.
                   A live prompt containing any unfilled {{HOST_ prefix fails, even if bound bytes match.
                   Schedule is the exact host declaration; review-manager additionally requires interval 1800000.
   --prompts DIR   Directory containing the three packaged prompt files; default: installed ../references.
@@ -97,8 +98,9 @@ function compare(args) {
       });
     } catch { expected = null; }
     const unfilled = nonempty(task?.prompt) && task.prompt.includes('{{HOST_');
-    fact('prompt', nonempty(task?.prompt) && (unfilled || expected !== null), !unfilled && expected === task?.prompt,
-      `live host tokens must be filled; exact UTF-8 bytes after declared host-token substitution; packaged sha256 ${packagedSha256 ?? 'unavailable'}`);
+    fact('prompt', nonempty(task?.prompt) && (unfilled || expected !== null),
+      !unfilled && expected !== null && nonempty(task?.prompt) && expected.replace(/\n+$/, '') === task.prompt.replace(/\n+$/, ''),
+      `live host tokens must be filled; exact UTF-8 bytes after declared host-token substitution, excluding trailing LF; packaged sha256 ${packagedSha256 ?? 'unavailable'}`);
     const scheduleKnown = validSchedule(binding?.schedule) && validSchedule(task?.schedule);
     const canonical = file !== files[0] || equal(binding?.schedule, { type: 'interval', everyMs: 1800000 });
     fact('cadence', scheduleKnown, canonical && equal(task?.schedule, binding?.schedule), 'exact declared schedule; review-manager interval fixed at 1800000ms');
