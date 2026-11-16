@@ -86,3 +86,13 @@ test('toolchain provisioning gaps cannot become accepted limitations', () => {
     expect(() => validate(invalid)).toThrow(/unapproved limitation type/);
   }
 });
+
+test('selected build pins resolve source ranges without rewriting frozen repository declarations', async () => {
+  const pins = await Bun.file(new URL('../../skills/axstack/sandbox/probes-image-pins.json', import.meta.url)).json();
+  const selected = inventory.selectedProvisioning ?? [];
+  for (const id of ['node-20', 'python-3.12', 'python-3.13', 'jdk-11', 'jdk-25', 'android-build-tools', 'android-cmdline', 'go']) {
+    const pin = pins.artifacts.find(p => p.id === id);
+    expect(selected.find(p => p.id === id)).toEqual({ id, version: pin.version, algorithm: pin.algorithm, checksum: pin.checksum, source: pin.source });
+  }
+  expect(inventory.requiredToolchains.find(t => t.id === 'node-20').version).toBe('20');
+});
