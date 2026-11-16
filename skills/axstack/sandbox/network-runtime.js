@@ -77,6 +77,19 @@ export function createNetworkRuntime({ runner = commandRunner } = {}) {
         existing.push(network);
       }
     }
+    // Storage preparation can fail before this run creates any network/table.
+    // Prove global absence rather than treating a failed table read as absence.
+    if (!existing.length) {
+      const listed = await runner(['nft', '-j', 'list', 'tables']);
+      if (listed.exitCode !== 0) throw hold('Cannot enumerate firewall tables during cleanup');
+      let tables;
+      try { tables = JSON.parse(listed.stdout).nftables; if (!Array.isArray(tables)) throw Error(); }
+      catch { throw hold('Malformed cleanup table enumeration'); }
+      if (!tables.some(item => item.table?.family === 'inet' && item.table?.name === 'axstack_sandbox')) {
+        await assertContainersGone(owner);
+        return [pass('network-absent', ['Owned containers, networks and sandbox firewall table independently absent'])];
+      }
+    }
     const snapshot = await firewall.checkChains();
     // Verify the full initial ruleset before removal. A fully reaped run is idempotent.
     if (existing.length) for (const rule of plan.rules) {
