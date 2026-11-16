@@ -93,7 +93,7 @@ async function install(pins) {
   await mkdir(project);
   await Bun.write(`${project}/settings.gradle.kts`, 'pluginManagement { repositories { maven { url = uri("/opt/android-maven") }; google(); mavenCentral(); gradlePluginPortal() } }\ndependencyResolutionManagement { repositories { google(); mavenCentral() } }\nrootProject.name = "sandbox-preload"\n');
   await Bun.write(`${project}/gradle.properties`, 'android.builtInKotlin=false\nandroid.newDsl=false\n');
-  await Bun.write(`${project}/build.gradle.kts`, 'plugins { id("com.android.library") version "9.4.1"; id("org.jetbrains.kotlin.android") version "2.2.10" }\nandroid { namespace = "sandbox.preload"; compileSdk = 37; defaultConfig { minSdk = 26 } }\n');
+  await Bun.write(`${project}/build.gradle.kts`, 'plugins { id("com.android.library") version "9.4.1"; id("org.jetbrains.kotlin.android") version "2.2.10" }\nandroid { namespace = "sandbox.preload"; compileSdk = 37; buildToolsVersion = "37.0.0"; defaultConfig { minSdk = 26 } }\n');
   await runCommand(['mkdir', '-p', `${project}/src/main`]);
   await Bun.write(`${project}/src/main/AndroidManifest.xml`, '<manifest xmlns:android="http://schemas.android.com/apk/res/android"/>');
   await runCommand(['/opt/gradle/gradle-9.6.0/bin/gradle', '--no-daemon', '--gradle-user-home', '/opt/gradle-build-cache', 'assembleDebug'], project);
