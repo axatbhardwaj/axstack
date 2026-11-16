@@ -23,8 +23,8 @@ Use per-command `-c` overrides instead.
 Driver Git commands in a worktree a worker has written must pass
 `-c core.hooksPath=/dev/null -c core.fsmonitor=false`.
 
-Run installed helpers from a trusted cwd with `--repo`/`-C` and `--no-env-file` to block peer `.env`; the Git scrub covers inherited `GIT_*` only.
-Never start Bun in a peer checkout; if required there, use `bun --config=<empty-file> --no-env-file`.
+Run installed helpers from trusted cwd: --repo/-C and --no-env-file block peer .env; Git scrub covers inherited GIT_* only.
+Never start Bun in a peer checkout; if required there use `bun --config=<empty-file> --no-env-file`.
 
 ## Safe deletion
 
