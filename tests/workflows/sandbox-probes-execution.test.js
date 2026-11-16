@@ -200,3 +200,10 @@ test('allowed registry reachability has a separate forbidden-redirect probe thro
   expect(JSON.parse(redirect.argv[5])[5]).toBe(true);
   expect(probes.find(t => t.containerId === 'fetch' && t.targetIds.includes('registry:dl.google.com:443:tcp')).expected).toBe('allow');
 });
+
+test('runtime host address and wildcard listener enumeration preserve IPv6 link-local zones', async () => {
+  const base = fixture(), tools = createProbeTools({ runner: async argv => argv[0] === 'ip' ? { exitCode: 0, stdout: JSON.stringify([{ ifname: 'bridge0', addr_info: [{ family: 'inet6', local: 'fe80::1', scope: 'link' }] }]) } : base.runner(argv) });
+  const e = await tools.enumerateTargets({ runId: 'run', networks: [own] });
+  expect(e.targets.some(t => t.kind === 'host-address' && t.address === 'fe80::1%bridge0')).toBe(true);
+  expect(e.targets.some(t => t.kind === 'host-listener' && t.address === 'fe80::1%bridge0')).toBe(true);
+});
