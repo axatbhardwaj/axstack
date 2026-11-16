@@ -2,6 +2,7 @@
 import { readFileSync, realpathSync } from 'node:fs';
 import { captureTerms, captureVersion, sha256 } from './capture-identity.js';
 import { killGroup, runCommand } from './command-capture.js';
+import { gitArgv } from './git-argv.js';
 
 export const help = `Usage: check-run.js --repo PATH --repository ORIGIN --head REF --base REF --out DIR [options] -- COMMAND [ARG...]
 Capture v${captureVersion}; receipt schema v1. Flags:
@@ -43,7 +44,7 @@ Exit: 0 measured (child may fail), 1 invocation/writer error, 2 hold/incomplete.
  leave capture unknown; changed source fails source identity. Neither closes a
  proof term that needs the missing evidence. No dispatch, retry, schedule or merge.
 
-R5 read-only modes (no child, writes, network, cleanup or runtime enforcement):
+R5 read-only modes (no writes, network, cleanup or runtime enforcement):
   check-run.js r5-plan --input FILE
   check-run.js r5-trace --plan-receipt FILE --result FILE --repository ORIGIN --head SHA --base SHA
   --input FILE         Before JSON: catalog path, scenario id, version, host,
@@ -52,9 +53,13 @@ R5 read-only modes (no child, writes, network, cleanup or runtime enforcement):
   --plan-receipt FILE  Schema-v1 receipt of a captured r5-plan invocation
   --result FILE        After JSON; see references/live-run.md for its fields
   --repository ORIGIN --head SHA --base SHA  Independent full capture identities
-These modes read explicit local JSON/catalog/receipt/log files and print per-term
+These modes read explicit local JSON/catalog/receipt/log/helper files and print per-term
 facts and counts. Wrap each mode with ordinary check-run to retain schema-v1
 receipts; keep the before receipt before launching the scenario yourself.
+The plan stamps its own plannedAt and helper realpath/SHA256. Caller recordedAt
+must not be future-dated; the literal placeholder nonce is rejected. Trace reads
+package.json at the captured Git head through one local read-only git subprocess
+with hooks/fsmonitor disabled, and rechecks the source-contained catalog hash.
 The trace binds result bytes to the plan hash and nonce and rechecks capture
 identity/log integrity. T3 observations are caller-supplied, never authenticated
 by this helper. Missing observations stay unknown. Failed criteria exit 0;
@@ -74,23 +79,39 @@ function canonical(value) {
 const equal = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 const term = (id, ok, evidence) => ({ id, status: ok === null ? 'unknown' : ok ? 'pass' : 'fail', evidence });
 const readJSON = path => JSON.parse(readFileSync(path, 'utf8'));
+function fileIdentity(path) {
+  try { return { path: realpathSync(path), sha256: sha256(readFileSync(path)) }; }
+  catch (error) { return { path: null, sha256: null, error: error.message }; }
+}
+function capturedVersion(source) {
+  try {
+    if (!source?.root || !/^[a-f0-9]{40,64}$/.test(source.head)) throw Error('missing captured source identity');
+    const r = Bun.spawnSync(gitArgv('-C', source.root, 'show', `${source.head}:package.json`), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+    if (r.exitCode !== 0) throw Error(r.stderr.toString().trim());
+    const { version } = JSON.parse(r.stdout.toString());
+    if (!text(version)) throw Error('package version missing');
+    return { version, head: source.head };
+  } catch (error) { return { version: null, error: error.message }; }
+}
 function r5Plan(input) {
+  const plannedAt = new Date().toISOString();
   const bytes = readFileSync(input.catalog);
   const catalog = JSON.parse(bytes.toString());
   const matches = catalog.cases?.filter(c => c.id === input.scenario) ?? [];
   const scenario = matches.length === 1 ? matches[0] : null;
   return { schemaVersion: 1, kind: 'r5-plan', version: input.version, host: input.host,
     tokenLimit: input.tokenLimit, timeLimitMs: input.timeLimitMs, attempt: input.attempt,
-    nonce: input.nonce, recordedAt: input.recordedAt, requested: input.requested,
+    nonce: input.nonce, recordedAt: input.recordedAt, plannedAt, planner: fileIdentity(import.meta.path), requested: input.requested,
     catalog: { path: realpathSync(input.catalog), sha256: sha256(bytes) },
-    scenario: scenario ? { id: scenario.id, title: scenario.title, input: scenario.input } : null,
+    scenario: scenario ? { id: scenario.id, title: scenario.title ?? scenario.id, input: scenario.input } : null,
     terms: [
-      term('scenario', Boolean(scenario?.input && text(scenario.title)), { catalog: input.catalog, id: input.scenario, matches: matches.length }),
+      term('scenario', Boolean(scenario?.input), { catalog: input.catalog, id: input.scenario, matches: matches.length }),
       term('installation', text(input.version) && text(input.host), { version: input.version, host: input.host, basis: 'caller declaration; verify installed release before launch' }),
       term('limits', positive(input.tokenLimit) && positive(input.timeLimitMs) && input.attempt === 1,
         { tokenLimit: input.tokenLimit, timeLimitMs: input.timeLimitMs, attempt: input.attempt, enforcement: 'agent/runtime, not this helper' }),
       term('settings', Boolean(settings(input.requested)), input.requested ?? null),
-      term('freshness', text(input.nonce) && input.nonce.length >= 16 && timestamp(input.recordedAt), { nonce: input.nonce, recordedAt: input.recordedAt }),
+      term('freshness', text(input.nonce) && input.nonce.length >= 16 && input.nonce !== 'replace-with-fresh-uuid'
+        && timestamp(input.recordedAt) && Date.parse(input.recordedAt) <= Date.parse(plannedAt), { nonce: input.nonce, recordedAt: input.recordedAt, plannedAt }),
     ] };
 }
 function r5Trace(flags) {
@@ -98,35 +119,44 @@ function r5Trace(flags) {
   const receipt = JSON.parse(receiptBytes.toString());
   const planBytes = readFileSync(receipt.logPath), before = JSON.parse(planBytes.toString());
   const resultBytes = readFileSync(flags.result), after = JSON.parse(resultBytes.toString());
+  const planner = fileIdentity(import.meta.path), command = fileIdentity(receipt.argv?.[1]);
+  const catalog = fileIdentity(before.catalog?.path), source = receipt.sourceBefore;
+  const version = capturedVersion(source);
   const unavailable = after.outcome === 'unavailable';
   const elapsed = timestamp(after.startedAt) && timestamp(after.finishedAt) ? Date.parse(after.finishedAt) - Date.parse(after.startedAt) : null;
   const terms = [
     ...captureTerms(receipt, { repository: flags.repository, head: flags.head, base: flags.base }).map(t => ({ ...t, id: `plan-${t.id}` })),
     term('plan-kind', before.schemaVersion === 1 && before.kind === 'r5-plan' && receipt.exitCode === 0
       && receipt.tool?.name === 'check-run' && receipt.argv?.length === 5
-      && receipt.argv[1].endsWith('/check-run.js') && receipt.argv[2] === 'r5-plan' && receipt.argv[3] === '--input',
+      && command.path === planner.path && receipt.argv[2] === 'r5-plan' && receipt.argv[3] === '--input',
       { kind: before.kind, exitCode: receipt.exitCode, argv: receipt.argv }),
+    term('plan-tool', !command.path || !planner.path ? null : command.path === planner.path
+      && before.planner?.path === planner.path && before.planner?.sha256 === planner.sha256,
+      { current: planner, captured: before.planner ?? null, command }),
+    term('catalog', !catalog.path || !source?.root ? null : catalog.path.startsWith(`${source.root}/`) && catalog.sha256 === before.catalog.sha256,
+      { sourceRoot: source?.root, planned: before.catalog, observed: catalog }),
     ...(Array.isArray(before.terms) ? before.terms.map(t => ({ ...t, id: `before-${t.id}` })) : [term('before', null, 'missing plan terms')]),
-    term('installation', after.version === before.version && after.host === before.host,
-      { planned: { version: before.version, host: before.host }, observed: { version: after.version, host: after.host }, basis: 'caller-supplied T3 observations' }),
+    term('installation', version.version === null ? null : after.version === before.version && after.host === before.host && before.version === version.version,
+      { planned: { version: before.version, host: before.host }, observed: { version: after.version, host: after.host }, capturedPackage: version, basis: 'package at captured head plus caller-supplied T3 observations' }),
     term('settings', !settings(after.effective) || !settings(after.requested) ? null : equal(after.requested, before.requested) && equal(after.effective, before.requested),
       { requested: before.requested, observedRequested: after.requested ?? null, effective: after.effective ?? null }),
-    term('terminal', !text(after.threadId) || !text(after.runId) ? null : ['completed', 'failed', 'budget-exhausted', 'cancelled'].includes(after.outcome),
+    term('terminal', !text(after.outcome) || !text(after.threadId) || !text(after.runId) ? null : ['completed', 'failed', 'unavailable', 'budget-exhausted', 'cancelled'].includes(after.outcome),
       { outcome: after.outcome, threadId: after.threadId ?? null, runId: after.runId ?? null }),
-    term('stale-result', after.planSha256 === sha256(planBytes) && after.nonce === before.nonce && after.attempt === 1
+    term('stale-result', !unavailable && after.output == null ? null : after.planSha256 === sha256(planBytes) && after.nonce === before.nonce && after.attempt === 1
       && (unavailable || (typeof after.output === 'string' && after.output.split(/\r?\n/).includes(`nonce: ${before.nonce}`))),
       { planSha256: sha256(planBytes), observedPlanSha256: after.planSha256, nonce: after.nonce, attempt: after.attempt, nonceEchoRequired: !unavailable }),
     term('tokens', !Number.isSafeInteger(after.tokensUsed) || after.tokensUsed < 0 ? null : after.tokensUsed <= before.tokenLimit,
       { used: after.tokensUsed ?? null, limit: before.tokenLimit }),
-    term('time', elapsed === null || !timestamp(before.recordedAt) ? null : Date.parse(after.startedAt) >= Date.parse(before.recordedAt) && elapsed >= 0 && elapsed <= before.timeLimitMs,
-      { recordedAt: before.recordedAt, startedAt: after.startedAt ?? null, finishedAt: after.finishedAt ?? null, elapsedMs: elapsed, limitMs: before.timeLimitMs }),
-    term('scenario-outcome', unavailable ? null : after.outcome === 'completed', { outcome: after.outcome, reason: after.reason ?? null }),
+    term('time', elapsed === null || !timestamp(before.plannedAt) ? null : Date.parse(after.startedAt) >= Date.parse(before.plannedAt) && elapsed >= 0 && elapsed <= before.timeLimitMs,
+      { plannedAt: before.plannedAt, startedAt: after.startedAt ?? null, finishedAt: after.finishedAt ?? null, elapsedMs: elapsed, limitMs: before.timeLimitMs }),
+    term('scenario-outcome', !text(after.outcome) || unavailable ? null : after.outcome === 'completed', { outcome: after.outcome, reason: after.reason ?? null }),
   ];
   return { schemaVersion: 1, kind: 'r5-trace',
     planReceipt: { path: realpathSync(flags['plan-receipt']), sha256: sha256(receiptBytes) },
     result: { path: realpathSync(flags.result), sha256: sha256(resultBytes) }, before, after, terms };
 }
 function r5Main(args, io) {
+  if (args.length === 2 && args[1] === '--help') { io.stdout(help); return 0; }
   try {
     const [mode, ...rest] = args;
     const required = mode === 'r5-plan' ? ['input'] : ['plan-receipt', 'result', 'repository', 'head', 'base'];
