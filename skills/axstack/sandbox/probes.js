@@ -199,8 +199,8 @@ export function createProbeTools({ runner = execute } = {}) {
         const r = await runner(probe.argv);
         const reported = probe.expected === 'capped-filesystem' ? (r.exitCode === 0 ? 'pass' : 'fail') : JSON.parse(r.stdout).status;
         const status = r.timedOut || r.truncated ? 'unknown' : reported === 'unknown' ? 'unknown' : r.exitCode !== 0 ? 'fail' : reported;
-        term = { id: probe.id, status: ['pass', 'fail', 'unknown'].includes(status) ? status : 'unknown', evidence: [JSON.stringify(probe), JSON.stringify(r)] };
-      } catch (error) { term = { id: probe.id, status: 'unknown', evidence: [JSON.stringify(probe), String(error)] }; }
+        term = { id: probe.id, status: ['pass', 'fail', 'unknown'].includes(status) ? status : 'unknown', evidence: [JSON.stringify(r)] };
+      } catch (error) { term = { id: probe.id, status: 'unknown', evidence: [String(error)] }; }
       results[i] = term;
       if (term.status !== 'pass' && !failed) failed = term;
     }
