@@ -34,3 +34,10 @@ test('required toolchains are provisioned with version and published checksum, a
     expect(a.checksum).toMatch(new RegExp(`^[a-f0-9]{${{ sha1: 40, sha256: 64, sha512: 128 }[a.algorithm]}}$`));
   }
 });
+
+test('Android platform uses its official package path so Gradle can discover the verified SDK', () => {
+  const platform = pins.artifacts.find(a => a.id === 'android-sdk');
+  expect(platform.destination).toBe('/opt/android/platforms/android-37.0');
+  const step = provisionPlan(pins).find(p => p.id === 'android-sdk');
+  expect(step.steps.at(-1).argv.at(-1)).toBe(platform.destination);
+});
