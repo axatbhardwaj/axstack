@@ -66,8 +66,9 @@ function checkVolumes(p, imageVolumes) {
     const observed = imageVolumes[c.image];
     if (!Array.isArray(observed)) hold(`image VOLUME configuration unavailable: ${c.image}`);
     for (const path of observed) if (!c.tmpfs.some(t => t.path === path)) hold(`uncovered image VOLUME: ${c.id} ${path}`);
-    const declared = c.tmpfs.filter(t => !['/work', '/tmp'].includes(t.path));
-    if (declared.some(t => !observed.includes(t.path))) hold(`image VOLUME expectations changed: ${c.id}`);
+    // Fixed policy may also cap a required writable data path (e.g. Grafana)
+    // when the pinned image has no VOLUME instruction. Effective mounts are
+    // independently checked; every actual image VOLUME must still match above.
   }
 }
 export async function runPlan({ plan: supplied, evidenceDir }, deps) {
@@ -124,6 +125,7 @@ export async function runPlan({ plan: supplied, evidenceDir }, deps) {
       active();
     }
     requirePass(await deps.inspectMounts(p), 'effective mounts');
+    if (p.containers.some(c => c.role === 'sidecar')) { await deps.settleSidecars(); active(); }
     const enumeration = await deps.enumerateTargets({ runId: p.runId, networks: p.networks });
     validate('enumeration', enumeration); requirePass(enumeration.terms, 'fresh target enumeration');
     if (enumeration.runId !== p.runId) hold('stale target enumeration');
