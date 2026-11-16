@@ -41,7 +41,7 @@ function verdict(plan, chain, packet) {
         const { left, right, op } = expr.match;
         const field = left.meta?.key ?? left.ct?.key ?? left.payload?.field;
         if (left.payload && (left.payload.protocol === 'ip' || left.payload.protocol === 'ip6') && packet.family !== left.payload.protocol) { matches = false; break; }
-        if (left.payload && ['tcp', 'udp'].includes(left.payload.protocol) && packet.protocol !== left.payload.protocol) { matches = false; break; }
+        if (left.payload && ['tcp', 'udp', 'icmpv6'].includes(left.payload.protocol) && packet.protocol !== left.payload.protocol) { matches = false; break; }
         let equal;
         if (right.prefix) {
           const shift = BigInt((packet.family === 'ip' ? 32 : 128) - right.prefix.len);
@@ -77,4 +77,14 @@ test('unknown host addresses hold; caller registry additions and mutable proxy c
   expect(() => planNetwork({ ...input, registryAllowlist: [...input.registryAllowlist, 'evil.example'] })).toThrow('inventory');
   expect(() => planNetwork({ ...input, proxy: { ...proxy, resolverIpv4: '100.100.100.100' } })).toThrow('proxy');
   expect(() => planNetwork({ ...input, runId: '../other' })).toThrow('run');
+});
+
+test('IPv6 neighbour discovery can resolve only on owned interfaces while every host data socket stays dropped', () => {
+  const plan = planNetwork(input), iface = plan.networks[0].interface;
+  const packet = { family: 'ip6', protocol: 'icmpv6', iifname: iface, type: 'nd-neighbor-solicit', hoplimit: 255 };
+  expect(verdict(plan, 'input', packet)).toBe('continue');
+  expect(verdict(plan, 'input', { ...packet, type: 'nd-neighbor-advert' })).toBe('continue');
+  expect(verdict(plan, 'input', { ...packet, hoplimit: 254 })).toBe('drop');
+  expect(verdict(plan, 'input', { ...packet, type: 'echo-request' })).toBe('drop');
+  for (const protocol of ['tcp', 'udp']) expect(verdict(plan, 'input', { ...packet, protocol, type: undefined, dport: 8317 })).toBe('drop');
 });
