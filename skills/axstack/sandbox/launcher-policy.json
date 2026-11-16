@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "user": "1000:1000",
+  "environment": [
+    {
+      "name": "HOME",
+      "value": "/work"
+    },
+    {
+      "name": "PATH",
+      "value": "/opt/axstack/bin:/usr/local/bin:/usr/bin:/bin"
+    },
+    {
+      "name": "LANG",
+      "value": "C.UTF-8"
+    },
+    {
+      "name": "CI",
+      "value": "true"
+    },
+    {
+      "name": "TMPDIR",
+      "value": "/tmp"
+    },
+    {
+      "name": "npm_config_cache",
+      "value": "/dependencies/npm"
+    },
+    {
+      "name": "PIP_CACHE_DIR",
+      "value": "/dependencies/pip"
+    },
+    {
+      "name": "CARGO_HOME",
+      "value": "/dependencies/cargo"
+    },
+    {
+      "name": "GOCACHE",
+      "value": "/dependencies/go-build"
+    },
+    {
+      "name": "GOMODCACHE",
+      "value": "/dependencies/go-mod"
+    },
+    {
+      "name": "GRADLE_USER_HOME",
+      "value": "/dependencies/gradle"
+    }
+  ],
+  "workloadCaps": {
+    "cpus": 2,
+    "memoryBytes": 2147483648,
+    "memorySwapBytes": 2147483648,
+    "pids": 256,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "proxyCaps": {
+    "cpus": 0.5,
+    "memoryBytes": 268435456,
+    "memorySwapBytes": 268435456,
+    "pids": 64,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "sidecarCaps": {
+    "cpus": 0.5,
+    "memoryBytes": 268435456,
+    "memorySwapBytes": 268435456,
+    "pids": 128,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "writableBytes": 268435456,
+  "dependencyBytes": 8589934592,
+  "dependencyInodes": 1048576,
+  "sourceMaxBytes": 268435456,
+  "captureMaxBytes": 8388608,
+  "receiptMaxBytes": 4194304,
+  "wallTimeSeconds": 900,
+  "graceSeconds": 10,
+  "maxWallTimeSeconds": 910
+}
