@@ -156,6 +156,7 @@ test('symbolic requests are resolved to commits and cannot validate against a re
   const f = fixture(), step = await capture(f, 'void 0;', { head: 'HEAD', base: 'HEAD' });
   expect(step.requested).toEqual({ head: f.head, base: f.base });
   expect(step.requestedRefs).toEqual({ head: 'HEAD', base: 'HEAD' });
+  expect(step.terms.every(t => t.status === 'pass')).toBe(true);
   expect(captureTerms(step, f).find(t => t.id === 'identity').status).toBe('pass');
   expect(captureTerms(step, { ...f, head: 'HEAD' }).find(t => t.id === 'identity').status).not.toBe('pass');
   expect(captureTerms(step, f).find(t => t.id === 'identity').evidence).toMatchObject({ expected: { head: f.head, base: f.base }, requested: { head: f.head, base: f.base } });
@@ -206,4 +207,50 @@ test('snapshot hashes the symlink target even when link mode and target contents
   unlinkSync(`${f.repo}/link`);
   symlinkSync('same-bytes-b', `${f.repo}/link`);
   expect(sourceIdentity(f).snapshot).not.toBe(before);
+});
+
+test.each(['repository', 'head', 'base'])('intact receipt fails against a different expected %s', async (field) => {
+  const f = fixture(), step = await capture(f);
+  expect(step.terms.every(t => t.status === 'pass')).toBe(true);
+  git(f.repo, '-c', 'user.name=F', '-c', 'user.email=f@x', 'commit', '--allow-empty', '-qm', 'different real commit');
+  const other = field === 'repository' ? 'https://example.invalid/other.git' : git(f.repo, 'rev-parse', 'HEAD');
+  expect(captureTerms(step, { ...f, [field]: other }).find(t => t.id === 'identity').status).toBe('fail');
+});
+test('dirty receipt cannot lose its declared snapshot', async () => {
+  const f = fixture();
+  writeFileSync(`${f.repo}/source`, 'dirty');
+  const step = await capture(f, 'void 0;', { snapshot: sourceIdentity(f).snapshot });
+  expect(step.terms.every(t => t.status === 'pass')).toBe(true);
+  step.declaredSnapshot = null;
+  expect(captureTerms(step, f).find(t => t.id === 'identity').status).toBe('fail');
+});
+test('same-length altered log fails its hash check', async () => {
+  const f = fixture(), step = await capture(f, 'console.log("alpha")');
+  writeFileSync(step.logPath, 'bravo\n');
+  expect(readFileSync(step.logPath).length).toBe(step.logBytes);
+  expect(captureTerms(step, f).find(t => t.id === 'log').status).toBe('fail');
+});
+test('unchanged log fails when its recorded length is wrong', async () => {
+  const f = fixture(), step = await capture(f, 'console.log("alpha")');
+  step.logBytes += 1;
+  expect(captureTerms(step, f).find(t => t.id === 'log').status).toBe('fail');
+});
+test('capture error prevents complete evidence even with a successful exit', async () => {
+  const f = fixture(), step = await capture(f);
+  step.error = 'stream read failed';
+  expect(step.exitCode).toBe(0);
+  expect(captureTerms(step, f).find(t => t.id === 'capture').status).toBe('unknown');
+});
+test('receipt records snapshot ignore sources including local and user excludes', async () => {
+  const f = fixture(), before = sourceIdentity(f).snapshot;
+  writeFileSync(`${f.repo}/.git/info/exclude`, 'local-hidden\n');
+  const excludes = `${root}/user-ignore-${crypto.randomUUID()}`;
+  writeFileSync(excludes, 'user-hidden\n');
+  git(f.repo, 'config', 'core.excludesFile', excludes);
+  writeFileSync(`${f.repo}/local-hidden`, 'local ignored bytes');
+  writeFileSync(`${f.repo}/user-hidden`, 'user ignored bytes');
+  const step = await capture(f);
+  expect(step.sourceBefore.snapshot).toBe(before);
+  expect(step.sourceBefore.dirty).toBe(false);
+  expect(receipt(step).snapshotScope).toEqual({ files: 'tracked+untracked-nonignored', ignoreSources: ['.gitignore', '.git/info/exclude', 'core.excludesFile-or-git-default'] });
 });
