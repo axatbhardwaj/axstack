@@ -58,9 +58,12 @@ facts and counts. Wrap each mode with ordinary check-run to retain schema-v1
 receipts; keep the before receipt before launching the scenario yourself.
 The plan stamps its own plannedAt and helper realpath/SHA256. Caller recordedAt
 must not be future-dated; the literal placeholder nonce is rejected. Trace reads
-committed package.json and catalog bytes through local read-only git subprocesses
-with hooks/fsmonitor disabled. Planned/current catalog hashes must match the blob
-at the captured head. Unreadable committed bytes stay unknown.
+package.json and catalog bytes at the captured head through read-only git with
+replacement objects, hooks and fsmonitor disabled; unreadable bytes stay unknown.
+Trace trusts the release checkout's object database as Git reads it, the Git
+environment and git binary. Overwritten loose objects or a redirected
+GIT_OBJECT_DIRECTORY are not detected. git fsck in a clean environment helps
+but does not close the redirected-object-directory case. Verify independently.
 Both R5 captures and trace's planning-command check require the same realpath Bun
 as process.execPath. Trace trusts its own interpreter: a fake bun earlier on PATH
 than the trace's own bun stays undetectable. Verify that interpreter independently.
@@ -93,7 +96,7 @@ function interpreterPath(executable) {
 }
 function committedFile(source, path) {
   if (!source?.root || !/^[a-f0-9]{40,64}$/.test(source.head)) throw Error('missing captured source identity');
-  const r = Bun.spawnSync(gitArgv('-C', source.root, 'show', `${source.head}:${path}`), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+  const r = Bun.spawnSync(gitArgv('--no-replace-objects', '-C', source.root, 'show', `${source.head}:${path}`), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
   if (r.exitCode !== 0) throw Error(r.stderr.toString().trim());
   return r.stdout;
 }
