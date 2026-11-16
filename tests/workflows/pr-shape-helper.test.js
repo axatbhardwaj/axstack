@@ -104,13 +104,32 @@ test('measures the stacked merge-base with renames, binaries and unusual paths w
 test('help advertises every flag, a complete example, fixed buckets and read-only behavior', () => {
   const result = invoke(root, ['--help']);
   expect(result.code, result.stderr).toBe(0);
-  for (const flag of ['--help', '--base', '--head', '--source']) expect(result.stdout).toContain(flag);
+  const shapeHelp = result.stdout.split('Usage: bun scripts/pr-shape.js --proof')[0];
+  for (const flag of ['--help', '--base', '--head', '--source', '--repo']) expect(shapeHelp).toContain(flag);
   expect(result.stdout).toMatch(/bun scripts\/pr-shape\.js --base main --head HEAD/);
   expect(result.stdout).toMatch(/read-only/i);
   expect(result.stdout).toContain('linguist-generated');
   for (const name of ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock']) {
     expect(result.stdout).toContain(name);
   }
+});
+
+test('explicit repo inspects the same Git facts from a trusted cwd without changing the caller', () => {
+  const { repo, parent: base, head } = fixture();
+  const argv = ['--base', base, '--head', head, '--source', head];
+  const expected = invoke(repo, argv);
+  const cwd = process.cwd();
+  const result = invoke('/', ['--repo', repo, ...argv]);
+  expect(result.code, result.stderr).toBe(0);
+  expect(result.data).toEqual(expected.data);
+  expect(process.cwd()).toBe(cwd);
+});
+
+test('unavailable explicit repo retains Git error exit and unknown path evidence', () => {
+  const result = invoke('/', ['--repo', `${root}/missing-repo`, '--base', 'main', '--head', 'HEAD']);
+  expect(result.code).toBe(1);
+  expect(result.stderr).toMatch(/--repo.*Git.checkout/i);
+  expect(result.data?.['sandbox-path']?.status).toBe('unknown');
 });
 
 test('sync proves fast-forward containment even after the source advances, without mutation', () => {
