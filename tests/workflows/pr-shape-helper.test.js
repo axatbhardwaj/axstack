@@ -232,10 +232,12 @@ test('outside Git and unresolved refs give actionable errors', () => {
   const outside = invoke(root, ['--base', 'main', '--head', 'HEAD']);
   expect(outside.code).toBe(1);
   expect(outside.stderr).toMatch(/Git checkout/i);
+  expect(outside.data?.['sandbox-path']?.status).toBe('unknown');
   const { repo } = fixture();
   const invalid = invoke(repo, ['--base', 'missing', '--head', 'HEAD']);
   expect(invalid.code).toBe(1);
   expect(invalid.stderr).toMatch(/--base.*commit/i);
+  expect(invalid.data?.['sandbox-path']?.status).toBe('unknown');
 });
 
 test('unrelated histories retain every measurement as unknown rather than inventing zero counts', () => {
@@ -245,12 +247,60 @@ test('unrelated histories retain every measurement as unknown rather than invent
   const result = invoke(repo, ['--base', base, '--head', head]);
   expect(result.code).toBe(2);
   expect(result.data.inputs).toMatchObject({ base, head });
-  for (const term of [result.data.mergeBase, result.data.totals, result.data.buckets?.lockfiles, result.data.buckets?.generated]) {
+  for (const term of [result.data.mergeBase, result.data.totals, result.data.buckets?.lockfiles, result.data.buckets?.generated,
+    result.data['sandbox-path']]) {
     expect(term?.status).toBe('unknown');
     expect(term.evidence.commands[0].slice(-3)).toEqual(['merge-base', base, head]);
     expect(term.evidence.reason).toMatch(/no common ancestor/);
     expect(term).not.toHaveProperty('additions');
   }
+});
+
+test.each([
+  ['added', null, 'skills/axstack/sandbox/deep/tab\tline\n.txt', 'fail'],
+  ['modified', 'skills/axstack/sandbox/file.js', 'skills/axstack/sandbox/file.js', 'fail'],
+  ['deleted', 'skills/axstack/sandbox/file.js', null, 'fail'],
+  ['renamed into sandbox', 'outside.js', 'skills/axstack/sandbox/file.js', 'fail'],
+  ['renamed out of sandbox', 'skills/axstack/sandbox/file.js', 'outside.js', 'fail'],
+  ['near-miss prefix', null, 'skills/axstack/sandbox-other/file.js', 'pass'],
+  ['untouched', null, 'ordinary.js', 'pass'],
+  ['empty diff', null, null, 'pass'],
+])('sandbox-path: %s', (name, before, after, status) => {
+  const repo = mkdtempSync(`${root}/sandbox-`);
+  git(repo, 'init', '-q', '-b', 'main');
+  const put = (path, content) => {
+    mkdirSync(`${repo}/${path.split('/').slice(0, -1).join('/')}`, { recursive: true });
+    writeFileSync(`${repo}/${path}`, content);
+  };
+  put('README.md', 'fixture\n');
+  if (before) put(before, 'original\n'.repeat(12));
+  const base = commit(repo, 'base');
+  if (before && after && before !== after) {
+    mkdirSync(`${repo}/${after.split('/').slice(0, -1).join('/')}`, { recursive: true });
+    git(repo, 'mv', before, after);
+  } else if (after) put(after, 'updated\n');
+  else if (before) git(repo, 'rm', before);
+  const head = before || after ? commit(repo, name) : base;
+  const result = invoke(repo, ['--base', base, '--head', head]);
+  expect(result.code, result.stderr).toBe(0); // A measured hold never changes the exit contract.
+  expect(result.data?.['sandbox-path']).toMatchObject({ status, evidence: {
+    prefix: 'skills/axstack/sandbox/', files: status === 'fail' ? 1 : 0,
+  } });
+  const [argv] = result.data['sandbox-path'].evidence.commands;
+  expect(argv).toContain('--numstat');
+  expect(Bun.spawnSync(argv, { cwd: repo }).exitCode).toBe(0);
+  if (before && after && before !== after) expect(result.data.totals.renames).toBe(1);
+});
+
+test('unreadable diff keeps the Git error exit and reports sandbox-path unknown', () => {
+  const { repo, parent: base, head } = fixture();
+  const tree = git(repo, 'rev-parse', `${head}^{tree}`);
+  rmSync(`${repo}/.git/objects/${tree.slice(0, 2)}/${tree.slice(2)}`);
+  const result = invoke(repo, ['--base', base, '--head', head]);
+  expect(result.code).toBe(1);
+  expect(result.stderr).toMatch(/diff unavailable/i);
+  expect(result.data?.['sandbox-path']).toMatchObject({ status: 'unknown' });
+  expect(result.data['sandbox-path'].evidence.commands.at(-1)).toContain('--numstat');
 });
 
 // Local Git characterization only: forge retargeting is a separate boundary.
