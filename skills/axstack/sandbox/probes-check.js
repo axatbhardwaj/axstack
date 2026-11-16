@@ -1,5 +1,6 @@
 import { readlink } from 'node:fs/promises';
 import { execute } from './probes-exec.js';
+import { scopeLinkLocal } from './probes-link-local.js';
 import { udpSnapshot, udpDenial, udpProbePort } from './probes-udp.js';
 
 const loopback = (address) => /^127\./.test(address) || address === '::1';
@@ -88,6 +89,12 @@ async function network(id, expected, target, proxyId) {
     return classifyConnection({ hostNetworkNamespace, containerNetworkNamespace }, target, expected);
   }
   const prefix = ['nsenter', '--target', String(pid), '--net', '--', 'setpriv', '--reuid=65534', '--regid=65534', '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '--'];
+  if (['host-address', 'host-listener'].includes(target.kind) && /^fe[89ab][0-9a-f]:/i.test(target.address)) {
+    const scoped = await scopeLinkLocal(target, container, runner, readNamespace, prefix);
+    if ((await liveContainer(id)).State.Pid !== pid) throw Error('container replaced during link-local observation');
+    if (scoped.separated) return { status: expected === 'deny' ? 'pass' : 'fail', evidence: scoped.evidence };
+    target = scoped.target;
+  }
   const udpDenied = target.protocol === 'udp' && target.kind !== 'dns' && expected === 'deny';
   const noRoute = async () => {
     const r = await runner([...prefix, 'ip', '-j', ...(target.address.includes(':') ? ['-6'] : ['-4']), 'route', 'get', target.address]);
@@ -109,7 +116,7 @@ async function network(id, expected, target, proxyId) {
     const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : (await readProxyConfig()).resolverIpv4 : target.address;
     argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
-    const host = target.address.includes(':') ? `[${target.address}]` : target.address;
+    const host = target.address.includes(':') ? `[${target.address.replace('%', '%25')}]` : target.address;
     argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', ...(target.redirect ? ['--location', '--max-redirs', '5'] : []), '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":"%{http_connect}","http_code":"%{http_code}","num_redirects":"%{num_redirects}"}', '--noproxy', '*'];
     if (proxyId) {
       const proxy = await liveContainer(proxyId);
