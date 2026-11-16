@@ -51,7 +51,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
       flush(session.client, Buffer.from('HTTP/1.1 200 Connection Established\r\n\r\n'));
       if (session.waiting.length) flush(upstream, session.waiting);
       session.waiting = Buffer.alloc(0);
-    } catch { deny(session); }
+    } catch (error) { console.error('proxy tunnel denied:', String(error.message).slice(0, 256)); deny(session); }
   }
   const listener = Bun.listen({ hostname: '::', port, data: undefined, socket: {
     open(client) {
