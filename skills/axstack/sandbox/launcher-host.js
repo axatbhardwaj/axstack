@@ -160,3 +160,6 @@ export function onSignal(cancel) {
   for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) { const fn = () => cancel(signal); process.on(signal, fn); listeners.set(signal, fn); }
   return () => { for (const [signal, fn] of listeners) process.off(signal, fn); };
 }
+
+// Fixed startup grace for trusted pinned sidecars, inside the run wall-time.
+export async function settleSidecars() { await Bun.sleep(10000); }
