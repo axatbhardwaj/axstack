@@ -109,6 +109,9 @@ export function createProbeTools({ runner = execute } = {}) {
           for (const line of sockets.stdout.trim().split('\n').filter(Boolean)) {
             const fields = line.trim().split(/\s+/), local = fields[4]?.match(/^(.*):(\d+)$/);
             if (!local || !['tcp', 'udp'].includes(fields[0])) throw Error('unparsed sidecar listener');
+            // Inventoried sidecars provide TCP services. UDP UNCONN rows here
+            // include outbound DNS/telemetry clients, not declared UDP services.
+            if (fields[0] === 'udp') continue;
             const bind = strip(local[1].replace(/^\[|\]$/g, ''));
             for (const address of [net.IPAddress, net.GlobalIPv6Address].filter(Boolean)) {
               if (bind !== address && bind !== '*' && bind !== (address.includes(':') ? '::' : '0.0.0.0')) continue;
@@ -116,7 +119,7 @@ export function createProbeTools({ runner = execute } = {}) {
               found = true;
             }
           }
-          if (!found) throw Error('sidecar has no reachable listener');
+          if (!found) throw Error(`sidecar has no reachable listener: ${c.Name}`);
         }
       }
     });
@@ -165,7 +168,7 @@ export function createProbeTools({ runner = execute } = {}) {
         const redirect = target.id.startsWith('redirect:');
         const viaProxy = position === 'fetch' && (registry || redirect || target.id.startsWith('arbitrary-https:'));
         if (viaProxy && !proxy) throw Error('fetch proxy missing');
-        const endpoint = [target.kind, target.address, target.port, target.protocol, target.kind === 'dns' ? target.id : null, redirect];
+        const endpoint = [target.kind, target.address, target.port, target.protocol, ...(target.kind === 'dns' ? [target.id] : redirect ? [null, true] : service ? [null, false, true] : [])];
         const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(endpoint), ...(viaProxy ? [proxy.id] : [])];
         add(c, position, allowed ? 'allow' : 'deny', [target.id], args);
       }
@@ -185,6 +188,10 @@ export function createProbeTools({ runner = execute } = {}) {
     return probes;
   }
 
+  /** @param {{plan:import('./launcher-contracts.js').Plan,onPlan?:(plan:import('./launcher-contracts.js').Plan)=>Promise<void>}} input
+   * The trusted launcher callback persists the final fresh target set before probes.
+   * Failed persistence or any failed/unknown observation throws a sandbox hold.
+   */
   async function runProbes({ plan, onPlan }) {
     validRun(plan.runId);
     const original = planProbes(plan);
