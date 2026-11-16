@@ -152,7 +152,7 @@ test('large probe sets use bounded parallel clients while reserved-port UDP coun
   let active = 0, peak = 0, udpActive = 0, udpPeak = 0;
   const runner = async argv => {
     if (!argv.some(a => a.endsWith('/probes-check.js'))) return base.runner(argv);
-    const udp = argv[2] === 'network' && JSON.parse(argv[5]).protocol === 'udp' && JSON.parse(argv[5]).kind !== 'dns';
+    const udp = argv[2] === 'network' && JSON.parse(argv[5])[3] === 'udp' && JSON.parse(argv[5])[0] !== 'dns';
     active++; peak = Math.max(peak, active);
     if (udp) { udpActive++; udpPeak = Math.max(udpPeak, udpActive); }
     await new Promise(resolve => setTimeout(resolve, 5));
@@ -165,4 +165,38 @@ test('large probe sets use bounded parallel clients while reserved-port UDP coun
   expect(peak).toBeLessThanOrEqual(16);
   expect(udpPeak).toBe(1);
   expect(active).toBe(0);
+});
+
+test('a final fresh enumeration is persisted before probes and includes newly opened host sockets', async () => {
+  const base = fixture();
+  let changed = false, persisted = false;
+  const runner = async argv => {
+    if (argv[0] === 'ss' && changed) return { exitCode: 0, stdout: 'tcp LISTEN 0 128 100.64.0.10:9001 0.0.0.0:*\n' };
+    if (argv.some(a => a.endsWith('/probes-check.js'))) expect(persisted).toBe(true);
+    return base.runner(argv);
+  };
+  const tools = createProbeTools({ runner }), p = await planned(tools);
+  changed = true;
+  const results = await tools.runProbes({ plan: p, onPlan: async candidate => {
+    expect(candidate.enumeration.targets.some(t => t.port === 9001)).toBe(true);
+    expect(candidate.probes.some(t => t.targetIds.includes('host-listener:100.64.0.10:9001:tcp'))).toBe(true);
+    persisted = true;
+  } });
+  expect(results.length).toBe(p.probes.length);
+  expect(persisted).toBe(true);
+  const calls = base.calls.length;
+  await expect(tools.runProbes({ plan: p, onPlan: async () => { throw Error('receipt full'); } })).rejects.toThrow('receipt full');
+  expect(base.calls.slice(calls).some(a => a.includes('identity'))).toBe(false);
+});
+
+test('allowed registry reachability has a separate forbidden-redirect probe through the fetch proxy', async () => {
+  const base = fixture(), tools = createProbeTools({ runner: base.runner }), p = await planned(tools);
+  p.containers = [{ id: 'fetch', role: 'fetch', networkIds: [own.id] }, { id: 'proxy', role: 'proxy', networkIds: [own.id] }];
+  p.networks[0] = { ...own, profile: 'fetch' };
+  const probes = tools.planProbes(p), redirect = probes.find(t => t.containerId === 'fetch' && t.targetIds.some(id => id.startsWith('redirect:')));
+  expect(redirect).toBeDefined();
+  expect(redirect.expected).toBe('deny');
+  expect(redirect.argv.at(-1)).toBe('proxy');
+  expect(JSON.parse(redirect.argv[5])[5]).toBe(true);
+  expect(probes.find(t => t.containerId === 'fetch' && t.targetIds.includes('registry:dl.google.com:443:tcp')).expected).toBe('allow');
 });
