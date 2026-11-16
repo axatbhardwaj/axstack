@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, linkSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { inspectEvidence } from '../../skills/axstack/scripts/evidence-inspector.js';
 import history from './fixtures/evidence-inspector/history.json';
 
@@ -16,7 +16,7 @@ function packet() {
     proof: { id: 'new-run', itemId: 'one', kind: 'runtime', observedAt: fresh, receipt: receipt() } }] };
 }
 function receipt(h = head, b = base, origin = repository) {
-  const log = 'sanitized synthetic runtime observation\n';
+  const log = `sanitized synthetic runtime observation ${crypto.randomUUID()}\n`;
   const logPath = `${temporary}/${crypto.randomUUID()}.log`;
   writeFileSync(logPath, log);
   const source = { root: '/sanitized/source', repository: origin, head: h, requestedHead: h,
@@ -49,7 +49,12 @@ for (const row of history) test(`frozen PR #${row.pr} per-item outcomes`, () => 
       receipt: item.missingReceipt ? null : receipt(row.head, row.base) };
     p.items.push(original); p.dispositions.push(disposition);
   }
-  expect(inspectEvidence(p).terms.map(t => [t.id, t.status])).toEqual(row.items.map(i => [i.id, i.expected]));
+  const terms = inspectEvidence(p).terms;
+  expect(terms.map(t => [t.id, t.status, t.reasonCode, t.evidence.reason])).toEqual(row.items.map(i => [
+    i.id, i.expected,
+    i.status === 'open' ? 'limitation-open' : i.missingReceipt ? 'capture-receipt-missing' : i.reusedFixture ? 'evidence-predates-limitation' : 'capture-consistent',
+    i.status === 'open' ? 'limitation remains open' : i.missingReceipt ? 'missing capture receipt' : i.reusedFixture ? 'evidence predates change or limitation' : 'new item-bound capture is consistent; semantic sufficiency requires reviewer judgment',
+  ]));
 });
 
 for (const [name, change, status, reason] of [
@@ -80,9 +85,20 @@ for (const [name, change, status, reason] of [
   ['missing snapshot scope', p => { delete p.dispositions[0].proof.receipt.snapshotScope; }, 'unknown', /scope/],
   ['ignored bytes', p => { p.items[0].sourceScope = 'ignored'; }, 'unknown', /ignored/],
   ['unknown disposition', p => { p.dispositions[0].status = 'approved'; }, 'fail', /disposition/],
+  ['missing item boundary', p => { delete p.items[0].boundary; delete p.dispositions[0].boundary; }, 'unknown', /missing item boundary/],
+  ['missing accepted kinds', p => { delete p.items[0].acceptedProofKinds; }, 'unknown', /accepted proof kinds/],
+  ['empty accepted kinds', p => { p.items[0].acceptedProofKinds = []; }, 'unknown', /accepted proof kinds/],
+  ['invalid accepted kinds', p => { p.items[0].acceptedProofKinds = ['unrecognized']; }, 'unknown', /accepted proof kinds/],
+  ['missing proof ID', p => { delete p.dispositions[0].proof.id; }, 'unknown', /missing named evidence ID/],
+  ['non-array previous evidence', p => { p.items[0].previousEvidence = {}; }, 'unknown', /invalid previous evidence inventory/],
+  ['null previous evidence entry', p => { p.items[0].previousEvidence = [null]; }, 'unknown', /invalid previous evidence inventory/],
+  ['array receipt', p => { p.dispositions[0].proof.receipt = []; }, 'fail', /invalid capture receipt"/],
+  ['invalid expected exit', p => { p.items[0].expectedExitCode = '0'; }, 'unknown', /invalid expected exit code/],
+  ['missing source scope', p => { delete p.items[0].sourceScope; }, 'unknown', /missing\/invalid source scope/],
 ]) test(name, () => {
   const p = packet(); change(p);
   expect(result(p).status).toBe(status);
+  expect(result(p).reasonCode).toMatch(/^[a-z][a-z0-9-]+$/);
   expect(JSON.stringify(result(p).evidence)).toMatch(reason);
 });
 
@@ -94,6 +110,7 @@ for (const [status, role] of [['withdrawn-by-reviewer', 'reviewer'], ['user-acce
       by: 'named-person', at: fresh, reason: 'explicit disposition', reference: 'saved-decision:one' };
     delete d.proof;
     expect(result(p)).toMatchObject({ status: 'pass', disposition: status });
+    expect(result(p).reasonCode).toBe(role === 'user' ? 'user-accepted-unproven' : 'reviewer-withdrawn');
     d.decision.role = role === 'user' ? 'reviewer' : 'author';
     expect(result(p).status).toBe('fail');
     d.decision.role = role; d.decision.itemId = 'sibling';
@@ -101,6 +118,21 @@ for (const [status, role] of [['withdrawn-by-reviewer', 'reviewer'], ['user-acce
     delete d.decision;
     expect(result(p).status).toBe('unknown');
   });
+  for (const field of ['repository', 'head', 'base', 'boundary', 'by', 'reason', 'reference']) {
+    test(`${status} rejects a missing or mismatched decision ${field}`, () => {
+      const p = packet(), d = p.dispositions[0];
+      d.status = status;
+      d.decision = { itemId: 'one', repository, head, base, boundary: d.boundary, role,
+        by: 'named-person', at: fresh, reason: 'explicit disposition', reference: 'saved-decision:one' };
+      if (['by', 'reason', 'reference'].includes(field)) {
+        delete d.decision[field];
+        expect(result(p)).toMatchObject({ status: 'unknown', evidence: { reason: 'incomplete decision receipt' } });
+      } else {
+        d.decision[field] = field === 'head' ? base : field === 'base' ? head : 'other';
+        expect(result(p)).toMatchObject({ status: 'fail', evidence: { reason: 'decision repository/head/base/boundary differs' } });
+      }
+    });
+  }
 }
 
 test('sibling closure cannot close a separate open item', () => {
@@ -129,4 +161,29 @@ test('one named proof cannot be assigned to multiple items even with separate ca
   sibling.id = 'sibling'; sibling.proof.itemId = 'sibling'; sibling.proof.receipt = receipt();
   p.dispositions.push(sibling);
   expect(inspectEvidence(p).terms.map(t => t.status)).toEqual(['fail', 'fail']);
+});
+
+for (const [name, duplicate] of [['copied', copyFileSync], ['hard-linked', linkSync]]) {
+  test(`${name} sibling log under a new proof ID cannot close either item`, () => {
+    const p = packet(), sibling = structuredClone(p.dispositions[0]);
+    p.items.push({ ...p.items[0], id: 'sibling' });
+    const path = `${temporary}/${crypto.randomUUID()}.log`;
+    duplicate(sibling.proof.receipt.logPath, path);
+    sibling.id = 'sibling'; sibling.proof.itemId = 'sibling'; sibling.proof.id = 'renamed-copy';
+    sibling.proof.receipt.logPath = path;
+    p.dispositions.push(sibling);
+    expect(inspectEvidence(p).terms.map(t => [t.status, t.reasonCode])).toEqual([
+      ['fail', 'sibling-log-reused'], ['fail', 'sibling-log-reused'],
+    ]);
+  });
+}
+
+test('independent sibling observations can close their own items', () => {
+  const p = packet(), sibling = structuredClone(p.dispositions[0]);
+  p.items.push({ ...p.items[0], id: 'sibling' });
+  sibling.id = 'sibling'; sibling.proof.itemId = 'sibling'; sibling.proof.id = 'independent';
+  sibling.proof.receipt = receipt(); p.dispositions.push(sibling);
+  expect(inspectEvidence(p).terms.map(t => [t.status, t.reasonCode])).toEqual([
+    ['pass', 'capture-consistent'], ['pass', 'capture-consistent'],
+  ]);
 });
