@@ -10,8 +10,8 @@ Integration: <package tips + ancestry + input identities + combined acceptance |
 Scope: <spec rev or linked issue + ticket + current base + exclusions>
 Combined review: <yes — return the Scope verdict | no — separate diligence>
 Angles: <all six; identical brief for peer reviewers>
-Follow [Capture receipts](../../axstack/references/capture-receipts.md).
-Authored receipt requirements: Follow [Review receipt](review-receipt.md), including final-head feature drives, coverage, safety judgment and comment ratings.
+Follow Capture receipts at skills/axstack/references/capture-receipts.md, resolved from the absolute Workspace checkout.
+Authored receipt requirements: Follow Review receipt at skills/axstack-review/references/review-receipt.md, resolved from the absolute Workspace checkout.
 Escalate to user: yes | no — <criterion> — <reason>
 ```
 
