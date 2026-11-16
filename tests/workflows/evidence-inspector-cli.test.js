@@ -20,6 +20,7 @@ test('help lists the only flags, reads no input and grants no authority', () => 
   expect(r.exitCode).toBe(0);
   expect(r.stdout.toString()).toContain('--input');
   expect(r.stdout.toString()).toContain('--help');
+  expect(r.stdout.toString()).toMatch(/sibling logs[^.]*digest[^.]*identical honest logs fail closed/i);
   expect(r.stdout.toString()).toContain('cannot grant review/merge authority');
 });
 
