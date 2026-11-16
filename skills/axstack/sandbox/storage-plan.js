@@ -43,6 +43,7 @@ export function planStorage({ runId, ownedDir, policy }) {
       step('loop-module-limit', 'prepare', ['cat', '/sys/module/loop/parameters/max_loop']),
       step('loops-before', 'prepare', LOOP_LIST),
       step('free-loop', 'prepare', ['losetup', '--find']),
+      step('reserve-before-attach', 'prepare', ['lsblk', '--all', '--json', '--bytes', '--output', 'PATH,TYPE,SIZE']),
       step('truncate', 'prepare', ['truncate', '--size', String(policy.dependencyBytes), names.imageFile]),
       step('preallocate', 'prepare', ['fallocate', '--length', String(policy.dependencyBytes), names.imageFile]),
       step('format', 'prepare', ['mkfs.ext4', '-F', '-b', '4096', '-I', '256', '-N', String(policy.dependencyInodes), '-m', '0',
