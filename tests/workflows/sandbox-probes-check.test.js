@@ -62,3 +62,19 @@ test('HTTP evidence keeps socket/CONNECT outcomes without retaining unrelated cu
   expect(result.evidence.join(' ')).toContain('1.1.1.1');
   expect(JSON.stringify(result).length).toBeLessThan(1024);
 });
+
+test('an explicit ICMP kernel no-route error proves denial without treating permission errors as proof', () => {
+  const target = { protocol: 'icmp', kind: 'gateway' };
+  const result = { exitCode: 2, stdout: '', stderr: 'ping: connect: Network is unreachable\n' };
+  expect(classifyConnection(result, target, 'deny').status).toBe('pass');
+  expect(classifyConnection(result, target, 'allow').status).toBe('fail');
+  expect(classifyConnection({ ...result, stderr: 'ping: socket: Operation not permitted' }, target, 'deny').status).toBe('unknown');
+});
+
+test('redirect denial requires evidence that an allowed initial endpoint actually redirected', () => {
+  const target = { protocol: 'tcp', kind: 'fixed', redirect: true };
+  for (const [redirects, expected] of [[0, 'unknown'], [1, 'pass']]) {
+    expect(classifyConnection({ exitCode: 56, stdout: JSON.stringify({ http_connect: '403', num_redirects: String(redirects), remote_ip: '' }) }, target, 'deny').status).toBe(expected);
+  }
+  expect(classifyConnection({ exitCode: 0, stdout: '{"remote_ip":"1.1.1.1","num_redirects":"1","http_connect":"200"}' }, target, 'deny').status).toBe('fail');
+});
