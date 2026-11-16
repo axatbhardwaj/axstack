@@ -19,7 +19,7 @@ function harness() {
     removeRecord: async () => { events.push('record-clean'); },
     execute: async argv => { events.push(argv); return { exitCode: 0, stdout: '', stderr: '' }; },
     removeContainer: async (_owner, c) => { events.push(['docker', 'rm', '--force', c.id]); },
-    inspectMounts: async () => [pass('mounts')], containersGone: async () => true,
+    settleSidecars: async () => {}, inspectMounts: async () => [pass('mounts')], containersGone: async () => true,
     recordCapture: async () => { events.push(['docker', 'exec', 'r1-test', 'bun', 'test']); return { schemaVersion: 1, receiptPath: '/evidence/capture.json', receiptSha256: 'c'.repeat(64) }; },
     saveReceipt: async () => {}, onSignal: () => () => {}, setDeadline: () => () => {},
   };
@@ -142,4 +142,30 @@ test('launcher saves the final fresh probe plan before allowing its probes to co
     return plan.probes.map(p => pass(p.id));
   };
   await h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' });
+});
+
+test('fixed capped sidecar data tmpfs is allowed when the image has no VOLUME instruction', async () => {
+  const h = harness();
+  h.deps.inspectImages = async () => ({ [h.input.assets.workloadImage]: [], [dbImage]: [] });
+  const receipt = await h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' });
+  expect(receipt.capture.schemaVersion).toBe(1);
+  expect(h.events).toContain('probes');
+});
+
+test('a held enumeration retains the exact unknown observer term after ordered cleanup', async () => {
+  const h = harness(), term = { id: 'docker-containers', status: 'unknown', evidence: ['sidecar has no reachable listener'] };
+  h.deps.enumerateTargets = async () => ({ ...h.input.enumeration, terms: [term] });
+  await expect(h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' })).rejects.toMatchObject({ sandboxHold: true, terms: [term] });
+  expect(h.events).toContain('storage-clean');
+});
+
+
+test('trusted sidecars receive their fixed startup grace before listener enumeration and PR capture', async () => {
+  const h = harness();
+  h.deps.settleSidecars = async () => { h.events.push('settle-sidecars'); };
+  h.deps.enumerateTargets = async () => { h.events.push('enumerate'); return h.input.enumeration; };
+  await h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' });
+  expect(h.events).toContain('settle-sidecars');
+  expect(h.events.indexOf('settle-sidecars')).toBeLessThan(h.events.indexOf('enumerate'));
+  expect(h.events.indexOf('settle-sidecars')).toBeGreaterThan(h.events.findIndex(e => Array.isArray(e) && e[1] === 'start'));
 });
